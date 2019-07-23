@@ -6,6 +6,7 @@ at https://home-assistant.io/components/zha.climate/
 """
 from datetime import timedelta
 import enum
+import functools
 import logging
 from random import randint
 import time
@@ -36,36 +37,43 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.const import (
-    ATTR_TEMPERATURE, PRECISION_HALVES, STATE_OFF, TEMP_CELSIUS)
+    ATTR_TEMPERATURE,
+    PRECISION_HALVES,
+    STATE_OFF,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.event import (
-    async_call_later, async_track_time_interval)
 from homeassistant.helpers.temperature import convert_temperature
 
 from .core.const import (
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, SIGNAL_ATTR_UPDATED, THERMOSTAT_CHANNEL,
-    ZHA_DISCOVERY_NEW)
+    CHANNEL_FAN,
+    CHANNEL_THERMOSTAT,
+    DATA_ZHA,
+    DATA_ZHA_DISPATCHERS,
+    SIGNAL_ATTR_UPDATED,
+    ZHA_DISCOVERY_NEW,
+)
+from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
-DEPENDENCIES = ['zha']
+DEPENDENCIES = ["zha"]
 
-ATTR_SYS_MODE = 'system_mode'
-ATTR_RUNNING_MODE = 'running_mode'
-ATTR_SETPT_CHANGE_SRC = 'setpoint_change_source'
-ATTR_SETPT_CHANGE_AMT = 'setpoint_change_amount'
-ATTR_OCCUPANCY = 'occupancy'
-ATTR_OCCP_COOL_SETPT = 'occupied_cooling_setpoint'
-ATTR_OCCP_HEAT_SETPT = 'occupied_heating_setpoint'
-ATTR_UNACCP_HEAT_SETPT = 'unoccupied_heating_setpoint'
-ATTR_UNACCP_COOL_SETPT = 'unoccupied_cooling_setpoint'
+ATTR_SYS_MODE = "system_mode"
+ATTR_RUNNING_MODE = "running_mode"
+ATTR_SETPT_CHANGE_SRC = "setpoint_change_source"
+ATTR_SETPT_CHANGE_AMT = "setpoint_change_amount"
+ATTR_OCCUPANCY = "occupancy"
+ATTR_PI_COOLING_DEMAND = "pi_cooling_demand"
+ATTR_PI_HEATING_DEMAND = "pi_heating_demand"
+ATTR_OCCP_COOL_SETPT = "occupied_cooling_setpoint"
+ATTR_OCCP_HEAT_SETPT = "occupied_heating_setpoint"
+ATTR_UNOCCP_HEAT_SETPT = "unoccupied_heating_setpoint"
+ATTR_UNOCCP_COOL_SETPT = "unoccupied_cooling_setpoint"
 
 
-RUNNING_MODE = {
-    0x00: STATE_OFF,
-    0x03: STATE_COOL,
-    0x04: STATE_HEAT,
-}
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
+RUNNING_MODE = {0x00: HVAC_MODE_OFF, 0x03: HVAC_MODE_COOL, 0x04: HVAC_MODE_HEAT}
 
 SEQ_OF_OPERATION = {
     0x00: [HVAC_MODE_OFF, HVAC_MODE_COOL],  # cooling only
@@ -115,55 +123,56 @@ SYSTEM_MODE_2_HVAC = {
 }
 
 ZCL_TEMP = 100
-SECS_2000_01_01 = 946702800
+SECS_2000_01_01 = 946_702_800
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_devices,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Old way of setting up Zigbee Home Automation sensors."""
     pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation sensor from config entry."""
+
     async def async_discover(discovery_info):
-        await _async_setup_entities(hass, config_entry, async_add_entities,
-                                    [discovery_info])
+        await _async_setup_entities(
+            hass, config_entry, async_add_entities, [discovery_info]
+        )
 
     unsub = async_dispatcher_connect(
-        hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover)
+        hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover
+    )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
     climate_entities = hass.data.get(DATA_ZHA, {}).get(DOMAIN)
     if climate_entities is not None:
-        await _async_setup_entities(hass, config_entry, async_add_entities,
-                                    climate_entities.values())
+        await _async_setup_entities(
+            hass, config_entry, async_add_entities, climate_entities.values()
+        )
         del hass.data[DATA_ZHA][DOMAIN]
 
 
-async def _async_setup_entities(hass, config_entry, async_add_entities,
-                                discovery_infos):
+async def _async_setup_entities(
+    hass, config_entry, async_add_entities, discovery_infos
+):
     """Set up the ZHA sensors."""
     entities = []
     for discovery_info in discovery_infos:
         entities.append(await get_climate(discovery_info))
 
-    async_add_entities(entities)
+    if entities:
+        async_add_entities(entities)
 
 
 async def get_climate(discovery_info):
     """Create ZHA climate entity."""
-    zha_dev = discovery_info.get('zha_device')
-    if zha_dev is not None:
-        manufacturer = zha_dev.manufacturer
-        if manufacturer.startswith('Sinope Technologies'):
-            thermostat = SinopeTechnologiesThermostat(**discovery_info)
-    else:
-        thermostat = Thermostat(**discovery_info)
+    zha_dev = discovery_info.get("zha_device")
+    channels = discovery_info["channels"]
 
-    return thermostat
+    entity = ZHA_ENTITIES.get_entity(DOMAIN, zha_dev, channels, Thermostat)
+    return entity(**discovery_info)
 
 
 class Thermostat(ZhaEntity, ClimateDevice):
@@ -178,37 +187,14 @@ class Thermostat(ZhaEntity, ClimateDevice):
     def __init__(self, **kwargs):
         """Initialize ZHA Thermostat instance."""
         super().__init__(**kwargs)
-        self._thrm = self.cluster_channels.get(THERMOSTAT_CHANNEL)
+        self._thrm = self.cluster_channels.get(CHANNEL_THERMOSTAT)
         self._preset = None
         self._presets = None
         self._supported_flags = SUPPORT_TARGET_TEMPERATURE
-        if FAN_CHANNEL in self.cluster_channels:
+        if CHANNEL_FAN in self.cluster_channels:
             self._supported_flags |= SUPPORT_FAN_MODE
         self._target_temp = None
         self._target_range = (None, None)
-
-    @property
-    def preset_mode(self) -> Optional[str]:
-        return self._preset
-
-    @property
-    def preset_modes(self) -> Optional[List[str]]:
-        return self._presets
-
-    @property
-    def hvac_mode(self) -> str:
-        """Return current HVAC operation mode."""
-        mode = SYSTEM_MODE_2_HVAC.get(self._thrm.system_mode)
-        if mode is None:
-            self.error(
-                "can't map 'system_mode: %s' to a HVAC mode", self._thrm.system_mode
-            )
-        return mode
-
-    @property
-    def is_aux_heat(self) -> Optional[bool]:
-        """Return True if aux heat is on."""
-        return self._thrm.system_mode == SystemMode.AUX_HEAT
 
     @property
     def current_temperature(self):
@@ -247,16 +233,6 @@ class Thermostat(ZhaEntity, ClimateDevice):
         return data
 
     @property
-    def hvac_modes(self) -> List[str]:
-        """Return the list of available HVAC operation modes."""
-        return SEQ_OF_OPERATION.get(self._thrm.ctrl_seqe_of_oper, [HVAC_MODE_OFF])
-
-    @property
-    def precision(self):
-        """Return the precision of the system."""
-        return PRECISION_HALVES
-
-    @property
     def hvac_action(self) -> Optional[str]:
         """Return the current HVAC action."""
         if self._thrm.running_mode is None:
@@ -265,6 +241,42 @@ class Thermostat(ZhaEntity, ClimateDevice):
         if action == CURRENT_HVAC_IDLE and self.hvac_mode == HVAC_MODE_OFF:
             return CURRENT_HVAC_OFF
         return action
+
+    @property
+    def hvac_mode(self) -> Optional[str]:
+        """Return HVAC operation mode."""
+        try:
+            return SYSTEM_MODE_2_HVAC[self._thrm.system_mode]
+        except KeyError:
+            self.error(
+                "can't map 'system_mode: %s' to a HVAC mode", self._thrm.system_mode
+            )
+        return None
+
+    @property
+    def hvac_modes(self) -> List[str]:
+        """Return the list of available HVAC operation modes."""
+        return SEQ_OF_OPERATION.get(self._thrm.ctrl_seqe_of_oper, [HVAC_MODE_OFF])
+
+    @property
+    def is_aux_heat(self) -> Optional[bool]:
+        """Return True if aux heat is on."""
+        return self._thrm.system_mode == SystemMode.AUX_HEAT
+
+    @property
+    def precision(self):
+        """Return the precision of the system."""
+        return PRECISION_HALVES
+
+    @property
+    def preset_mode(self) -> Optional[str]:
+        """Return current preset mode."""
+        return self._preset
+
+    @property
+    def preset_modes(self) -> Optional[List[str]]:
+        """Return supported preset modes."""
+        return self._presets
 
     @property
     def supported_features(self):
@@ -352,6 +364,13 @@ class Thermostat(ZhaEntity, ClimateDevice):
             return self.DEFAULT_MIN_TEMP
         return round(min(temps) / ZCL_TEMP, 1)
 
+    async def async_added_to_hass(self):
+        """Run when about to be added to hass."""
+        await super().async_added_to_hass()
+        await self.async_accept_signal(
+            self._thrm, SIGNAL_ATTR_UPDATED, self.async_attribute_updated
+        )
+
     async def async_attribute_updated(self, record):
         """Handle attribute update from device."""
         if (
@@ -365,6 +384,37 @@ class Thermostat(ZhaEntity, ClimateDevice):
             if occupancy is True:
                 self._preset = None
 
+        self.async_schedule_update_ha_state()
+
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+        """Set new target operation mode."""
+        if hvac_mode not in self.hvac_modes:
+            self.warning(
+                "can't set '%s' mode. Supported modes are: %s",
+                hvac_mode,
+                self.hvac_modes,
+            )
+            return
+
+        if await self._thrm.async_set_operation_mode(HVAC_MODE_2_SYSTEM[hvac_mode]):
+            self.async_write_ha_state()
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        if preset_mode and preset_mode not in self.preset_modes:
+            self.debug("preset mode '%s' is not supported", preset_mode)
+            return
+
+        if self.preset_mode and self.preset_mode != preset_mode:
+            if not await self.preset_handler(self.preset_mode, enable=False):
+                self.debug("Couldn't turn off '%s' preset", self.preset_mode)
+                return
+
+        if preset_mode is not None:
+            if not await self.preset_handler(preset_mode, enable=True):
+                self.debug("Couldn't turn on '%s' preset", preset_mode)
+                return
+        self._preset = preset_mode
         self.async_schedule_update_ha_state()
 
     async def async_set_temperature(self, **kwargs):
@@ -419,34 +469,6 @@ class Thermostat(ZhaEntity, ClimateDevice):
         if success:
             self.async_schedule_update_ha_state()
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
-        """Set new target operation mode."""
-        if hvac_mode not in self.hvac_modes:
-            self.warn(
-                "can't set '%s' mode. Supported modes are: %s",
-                hvac_mode,
-                self.hvac_modes,
-            )
-            return
-
-        system_mode = HVAC_MODE_2_SYSTEM.get(hvac_mode)
-        if system_mode is None:
-            self.error("Couldn't map operation %s to system_mode", hvac_mode)
-            return
-
-        if await self._thrm.async_set_operation_mode(system_mode):
-            self.async_schedule_update_ha_state()
-
-    async def async_update_outdoor_temperature(self, temperature):
-        """Update outdoor temperature display."""
-        pass
-
-    async def async_added_to_hass(self):
-        """Run when about to be added to hass."""
-        await super().async_added_to_hass()
-        await self.async_accept_signal(
-            self._thrm, SIGNAL_ATTR_UPDATED, self.async_attribute_updated)
-
     async def async_turn_aux_heat_off(self) -> None:
         """Turn off aux heater."""
         if await self._thrm.async_set_operation_mode(SystemMode.HEAT):
@@ -457,23 +479,9 @@ class Thermostat(ZhaEntity, ClimateDevice):
         if await self._thrm.async_set_operation_mode(SystemMode.AUX_HEAT):
             self.async_schedule_update_ha_state()
 
-    async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set new preset mode."""
-        if preset_mode and preset_mode not in self.preset_modes:
-            self.debug("preset mode '%s' is not supported", preset_mode)
-            return
-
-        if self.preset_mode and self.preset_mode != preset_mode:
-            if not await self.preset_handler(self.preset_mode, enable=False):
-                self.debug("Couldn't turn off '%s' preset", self.preset_mode)
-                return
-
-        if preset_mode is not None:
-            if not await self.preset_handler(preset_mode, enable=True):
-                self.debug("Couldn't turn on '%s' preset", preset_mode)
-                return
-        self._preset = preset_mode
-        self.async_schedule_update_ha_state()
+    async def async_update_outdoor_temperature(self, temperature):
+        """Update outdoor temperature display."""
+        pass
 
     async def preset_handler(self, preset: str, enable: bool = False) -> bool:
         handler = getattr(self, f"async_preset_handler_{preset}", None)
@@ -484,6 +492,7 @@ class Thermostat(ZhaEntity, ClimateDevice):
         return await handler(enable)
 
 
+@STRICT_MATCH(channel_names=CHANNEL_THERMOSTAT, manufacturers="Sinope Technologies")
 class SinopeTechnologiesThermostat(Thermostat):
     """Sinope Technologies Thermostat."""
 
@@ -496,12 +505,33 @@ class SinopeTechnologiesThermostat(Thermostat):
         self._presets = [PRESET_AWAY]
         self._supported_flags |= SUPPORT_PRESET_MODE
 
+    async def _async_update_time(self, timestamp=None):
+        """Update thermostat's time display."""
+
+        secs_since_2k = int(time.mktime(time.localtime()) - SECS_2000_01_01)
+        self.debug("Updating time: %s", secs_since_2k)
+        cluster = self.endpoint.sinope_manufacturer_specific
+        res = await cluster.write_attributes(
+            {"secs_since_2k": secs_since_2k}, manufacturer=self.manufacturer
+        )
+        self.debug("Write Attr: %s", res)
+
     async def async_added_to_hass(self):
         """Run when about to be added to Hass."""
         await super().async_added_to_hass()
-        #async_track_time_interval(self.hass, self._async_update_time,
+        # async_track_time_interval(self.hass, self._async_update_time,
         #                          self.update_time_interval)
-        #async_call_later(self.hass, randint(30, 45), self._async_update_time)
+        # async_call_later(self.hass, randint(30, 45), self._async_update_time)
+
+    async def async_preset_handler_away(self, is_away: bool = False) -> bool:
+        """Set occupancy."""
+        mfg_code = self._zha_device.manufacturer_code
+        res = await self._thrm.write_attributes(
+            {"set_occupancy": 0 if is_away else 1}, manufacturer=mfg_code
+        )
+
+        self.debug("set occupancy to %s. Status: %s", 0 if is_away else 1, res)
+        return res
 
     async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
@@ -516,32 +546,12 @@ class SinopeTechnologiesThermostat(Thermostat):
     async def async_update_outdoor_temperature(self, temperature):
         """Update Outdoor temperature display service call."""
         outdoor_temp = convert_temperature(
-            temperature, self.hass.config.units.temperature_unit, TEMP_CELSIUS)
+            temperature, self.hass.config.units.temperature_unit, TEMP_CELSIUS
+        )
         outdoor_temp = int(outdoor_temp * ZCL_TEMP)
         self.debug("Updating outdoor temp to %s", outdoor_temp)
         cluster = self.endpoint.sinope_manufacturer_specific
         res = await cluster.write_attributes(
-            {'outdoor_temp': outdoor_temp}, manufacturer=self.manufacturer
+            {"outdoor_temp": outdoor_temp}, manufacturer=self.manufacturer
         )
         self.debug("Write Attr: %s", res)
-
-    async def _async_update_time(self, timestamp=None):
-        """Update thermostat's time display."""
-
-        secs_since_2k = int(time.mktime(time.localtime()) - SECS_2000_01_01)
-        self.debug("Updating time: %s", secs_since_2k)
-        cluster = self.endpoint.sinope_manufacturer_specific
-        res = await cluster.write_attributes(
-            {'secs_since_2k': secs_since_2k}, manufacturer=self.manufacturer
-        )
-        self.debug("Write Attr: %s", res)
-
-    async def async_preset_handler_away(self, is_away: bool = False) -> bool:
-        """Set occupancy."""
-        mfg_code = self._zha_device.manufacturer_code
-        res = await self._thrm.write_attributes(
-            {"set_occupancy": 0 if is_away else 1}, manufacturer=mfg_code
-        )
-
-        self.debug("set occupancy to %s. Status: %s", 0 if is_away else 1, res)
-        return res

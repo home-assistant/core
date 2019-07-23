@@ -230,6 +230,11 @@ class ThermostatChannel(ZigbeeChannel):
         return self._pi_heating_demand
 
     @property
+    def running_mode(self) -> Optional[int]:
+        """Thermostat running mode."""
+        return self._running_mode
+
+    @property
     def setpoint_change_amount(self) -> Optional[int]:
         """Change amount."""
         return self._setpoint_change_amount
@@ -243,11 +248,6 @@ class ThermostatChannel(ZigbeeChannel):
     def system_mode(self) -> Optional[int]:
         """System mode."""
         return self._system_mode
-
-    @property
-    def running_mode(self) -> Optional[int]:
-        """Thermostat running mode."""
-        return self._running_mode
 
     @property
     def unoccupied_cooling_setpoint(self) -> Optional[int]:
@@ -379,13 +379,6 @@ class ThermostatChannel(ZigbeeChannel):
         except zigpy.exceptions.ZigbeeException as ex:
             self.debug("Couldn't read 'occupancy' attribute: %s", ex)
 
-    @staticmethod
-    def check_result(res: list) -> bool:
-        if not isinstance(res, list):
-            return False
-
-        return all([record.status == Status.SUCCESS for record in res[0]])
-
     async def write_attributes(self, data, **kwargs):
         """Write attributes helper."""
         try:
@@ -396,6 +389,13 @@ class ThermostatChannel(ZigbeeChannel):
 
         self.debug("wrote %s attrs, Status: %s", data, res)
         return self.check_result(res)
+
+    @staticmethod
+    def check_result(res: list) -> bool:
+        if not isinstance(res, list):
+            return False
+
+        return all([record.status == Status.SUCCESS for record in res[0]])
 
     def log(self, level, msg, *args) -> None:
         """Log helper."""

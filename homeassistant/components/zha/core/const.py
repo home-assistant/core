@@ -88,6 +88,7 @@ CHANNEL_POWER_CONFIGURATION = "power"
 CHANNEL_PRESSURE = "pressure"
 CHANNEL_SMARTENERGY_METERING = "smartenergy_metering"
 CHANNEL_TEMPERATURE = "temperature"
+CHANNEL_THERMOSTAT = "thermostat"
 CHANNEL_ZDO = "zdo"
 CHANNEL_ZONE = ZONE = "ias_zone"
 
