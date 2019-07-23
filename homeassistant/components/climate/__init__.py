@@ -53,15 +53,15 @@ _LOGGER = logging.getLogger(__name__)
 SET_AUX_HEAT_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_AUX_HEAT): cv.boolean,
 })
-SET_TEMPERATURE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(vol.All(
+SET_TEMPERATURE_SCHEMA = vol.Schema(vol.All(
     cv.has_at_least_one_key(
         ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW),
-    {
+    ENTITY_SERVICE_SCHEMA.exten({
         vol.Exclusive(ATTR_TEMPERATURE, 'temperature'): vol.Coerce(float),
         vol.Inclusive(ATTR_TARGET_TEMP_HIGH, 'temperature'): vol.Coerce(float),
         vol.Inclusive(ATTR_TARGET_TEMP_LOW, 'temperature'): vol.Coerce(float),
         vol.Optional(ATTR_HVAC_MODE): vol.In(HVAC_MODES),
-    }
+    })
 ))
 SET_FAN_MODE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_FAN_MODE): cv.string,
