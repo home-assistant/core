@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import npi_gpio
+from . import setup_input, read_input, edge_detect
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.const import DEVICE_DEFAULT_NAME
@@ -35,12 +35,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Raspberry PI GPIO devices."""
-    pull_mode = config.get(CONF_PULL_MODE)
-    bouncetime = config.get(CONF_BOUNCETIME)
-    invert_logic = config.get(CONF_INVERT_LOGIC)
+    pull_mode = config[CONF_PULL_MODE]
+    bouncetime = config[CONF_BOUNCETIME]
+    invert_logic = config[CONF_INVERT_LOGIC]
 
     binary_sensors = []
-    ports = config.get('ports')
+    ports = config[CONF_PORTS]
     for port_num, port_name in ports.items():
         binary_sensors.append(NPiGPIOBinarySensor(port_name, port_num,
                                                   pull_mode, bouncetime,
@@ -60,14 +60,14 @@ class NPiGPIOBinarySensor(BinarySensorDevice):
         self._invert_logic = invert_logic
         self._state = None
 
-        npi_gpio.setup_input(self._port, self._pull_mode)
+        setup_input(self._port, self._pull_mode)
 
         def read_gpio(port):
             """Read state from GPIO."""
-            self._state = npi_gpio.read_input(self._port)
+            self._state = read_input(self._port)
             self.schedule_update_ha_state()
 
-        npi_gpio.edge_detect(self._port, read_gpio, self._bouncetime)
+        edge_detect(self._port, read_gpio, self._bouncetime)
 
     @property
     def should_poll(self):
@@ -86,4 +86,4 @@ class NPiGPIOBinarySensor(BinarySensorDevice):
 
     def update(self):
         """Update the GPIO state."""
-        self._state = npi_gpio.read_input(self._port)
+        self._state = read_input(self._port)

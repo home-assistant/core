@@ -1,12 +1,12 @@
 """Support for controlling a Nano Pi cover."""
 import logging
-from time import sleep
+from asyncio import sleep as asleep
 
 import voluptuous as vol
 
 from homeassistant.components.cover import CoverDevice, PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
-from homeassistant.components import npi_gpio
+from . import setup_output, setup_input, write_output, read_input
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,13 +47,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NPi cover platform."""
-    initial = config.get(CONF_INITIAL)
-    relay_time = config.get(CONF_RELAY_TIME)
-    state_pull_mode = config.get(CONF_STATE_PULL_MODE)
-    invert_state = config.get(CONF_INVERT_STATE)
-    invert_relay = config.get(CONF_INVERT_RELAY)
+    initial = config[CONF_INITIAL]
+    relay_time = config[CONF_RELAY_TIME]
+    state_pull_mode = config[CONF_STATE_PULL_MODE]
+    invert_state = config[CONF_INVERT_STATE]
+    invert_relay = config[CONF_INVERT_RELAY]
     covers = []
-    covers_conf = config.get(CONF_COVERS)
+    covers_conf = config[CONF_COVERS]
 
     for cover in covers_conf:
         covers.append(NPiGPIOCover(cover[CONF_NAME], cover[CONF_RELAY_PORT],
@@ -77,9 +77,9 @@ class NPiGPIOCover(CoverDevice):
         self._relay_time = relay_time
         self._invert_state = invert_state
         self._invert_relay = invert_relay
-        npi_gpio.setup_output(self._relay_port)
-        npi_gpio.setup_input(self._state_port, self._state_pull_mode)
-        npi_gpio.write_output(self._relay_port, 0 if self._invert_relay else 1)
+        setup_output(self._relay_port)
+        setup_input(self._state_port, self._state_pull_mode)
+        write_output(self._relay_port, 0 if self._invert_relay else 1)
 
     @property
     def name(self):
@@ -88,25 +88,31 @@ class NPiGPIOCover(CoverDevice):
 
     def update(self):
         """Update the state of the cover."""
-        self._state = npi_gpio.read_input(self._state_port)
+        self._state = read_input(self._state_port)
 
     @property
     def is_closed(self):
         """Return true if cover is closed."""
         return self._state != self._invert_state
-
-    def _trigger(self):
+      
+    async def _async_trigger(self):
         """Trigger the cover."""
-        npi_gpio.write_output(self._relay_port, 1 if self._invert_relay else 0)
-        sleep(self._relay_time)
-        npi_gpio.write_output(self._relay_port, 0 if self._invert_relay else 1)
-
-    def close_cover(self, **kwargs):
+        await self.hass.async_add_executor_job(
+          write_output,
+          self._relay_port,
+          1 if self._invert_relay else 0)
+        await asleep(self._relay_time)
+        await self.hass.async_add_executor_job(
+          write_output,
+          self._relay_port,
+          0 if self._invert_relay else 1)
+        
+    async def async_close_cover(self, **kwargs):
         """Close the cover."""
         if not self.is_closed:
-            self._trigger()
-
-    def open_cover(self, **kwargs):
+            await self._async_trigger()    
+            
+    async def async_open_cover(self, **kwargs):
         """Open the cover."""
         if self.is_closed:
-            self._trigger()
+            await self._async_trigger()
