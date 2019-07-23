@@ -13,6 +13,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import DEPENDENCY_BLACKLIST
 from homeassistant.util.async_ import run_callback_threadsafe
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 EVENT_LOAD_PLATFORM = 'load_platform.{}'
 ATTR_PLATFORM = 'platform'
 

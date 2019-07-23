@@ -33,7 +33,8 @@ def convert(volume: float, from_unit: str, to_unit: str) -> float:
     if not isinstance(volume, Number):
         raise TypeError('{} is not of numeric type'.format(volume))
 
-    if from_unit == to_unit:
+    # type ignore: https://github.com/python/mypy/issues/7207
+    if from_unit == to_unit:  # type: ignore
         return volume
 
     result = volume

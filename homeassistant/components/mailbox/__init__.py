@@ -30,7 +30,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 async def async_setup(hass, config):
     """Track states and offer events for mailboxes."""
     mailboxes = []
-    await hass.components.frontend.async_register_built_in_panel(
+    hass.components.frontend.async_register_built_in_panel(
         'mailbox', 'mailbox', 'mdi:mailbox')
     hass.http.register_view(MailboxPlatformsView(mailboxes))
     hass.http.register_view(MailboxMessageView(mailboxes))
@@ -82,7 +82,7 @@ async def async_setup(hass, config):
                    in config_per_platform(config, DOMAIN)]
 
     if setup_tasks:
-        await asyncio.wait(setup_tasks, loop=hass.loop)
+        await asyncio.wait(setup_tasks)
 
     async def async_platform_discovered(platform, info):
         """Handle for discovered platform."""
@@ -241,9 +241,8 @@ class MailboxMediaView(MailboxView):
         """Retrieve media."""
         mailbox = self.get_mailbox(platform)
 
-        hass = request.app['hass']
         with suppress(asyncio.CancelledError, asyncio.TimeoutError):
-            with async_timeout.timeout(10, loop=hass.loop):
+            with async_timeout.timeout(10):
                 try:
                     stream = await mailbox.async_get_media(msgid)
                 except StreamError as err:

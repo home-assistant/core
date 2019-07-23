@@ -88,7 +88,7 @@ class WorxLandroidSensor(Entity):
 
         try:
             session = async_get_clientsession(self.hass)
-            with async_timeout.timeout(self.timeout, loop=self.hass.loop):
+            with async_timeout.timeout(self.timeout):
                 auth = aiohttp.helpers.BasicAuth('admin', self.pin)
                 mower_response = await session.get(self.url, auth=auth)
         except (asyncio.TimeoutError, aiohttp.ClientError):

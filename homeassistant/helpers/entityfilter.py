@@ -1,5 +1,5 @@
 """Helper class to implement include/exclude of entities and domains."""
-from typing import Callable, Dict, Iterable
+from typing import Callable, Dict, List
 
 import voluptuous as vol
 
@@ -12,7 +12,7 @@ CONF_EXCLUDE_DOMAINS = 'exclude_domains'
 CONF_EXCLUDE_ENTITIES = 'exclude_entities'
 
 
-def _convert_filter(config: Dict[str, Iterable[str]]) -> Callable[[str], bool]:
+def _convert_filter(config: Dict[str, List[str]]) -> Callable[[str], bool]:
     filt = generate_filter(
         config[CONF_INCLUDE_DOMAINS],
         config[CONF_INCLUDE_ENTITIES],
@@ -20,6 +20,8 @@ def _convert_filter(config: Dict[str, Iterable[str]]) -> Callable[[str], bool]:
         config[CONF_EXCLUDE_ENTITIES],
     )
     setattr(filt, 'config', config)
+    setattr(
+        filt, 'empty_filter', sum(len(val) for val in config.values()) == 0)
     return filt
 
 
@@ -34,10 +36,10 @@ FILTER_SCHEMA = vol.All(
     }), _convert_filter)
 
 
-def generate_filter(include_domains: Iterable[str],
-                    include_entities: Iterable[str],
-                    exclude_domains: Iterable[str],
-                    exclude_entities: Iterable[str]) -> Callable[[str], bool]:
+def generate_filter(include_domains: List[str],
+                    include_entities: List[str],
+                    exclude_domains: List[str],
+                    exclude_entities: List[str]) -> Callable[[str], bool]:
     """Return a function that will filter entities based on the args."""
     include_d = set(include_domains)
     include_e = set(include_entities)

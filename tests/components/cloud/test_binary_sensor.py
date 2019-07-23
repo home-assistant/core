@@ -11,6 +11,15 @@ async def test_remote_connection_sensor(hass):
     bin_sensor.WAIT_UNTIL_CHANGE = 0
 
     assert await async_setup_component(hass, 'cloud', {'cloud': {}})
+    await hass.async_block_till_done()
+
+    assert hass.states.get('binary_sensor.remote_ui') is None
+
+    # Fake connection/discovery
+    org_cloud = hass.data['cloud']
+    await org_cloud.iot._on_connect[-1]()
+
+    # Mock test env
     cloud = hass.data['cloud'] = Mock()
     cloud.remote.certificate = None
     await hass.async_block_till_done()

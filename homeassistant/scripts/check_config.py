@@ -3,21 +3,15 @@
 import argparse
 import logging
 import os
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict
 from glob import glob
 from typing import Dict, List, Sequence
 from unittest.mock import patch
 
-import attr
-import voluptuous as vol
-
-from homeassistant import bootstrap, core, loader
-from homeassistant.config import (
-    get_default_config_dir, CONF_CORE, CORE_CONFIG_SCHEMA,
-    CONF_PACKAGES, merge_packages_config, _format_config_error,
-    find_config_file, load_yaml_config_file,
-    extract_domain_configs, config_per_platform)
-from homeassistant.util import yaml
+from homeassistant import bootstrap, core
+from homeassistant.config import get_default_config_dir
+from homeassistant.helpers.check_config import async_check_ha_config_file
+import homeassistant.util.yaml.loader as yaml_loader
 from homeassistant.exceptions import HomeAssistantError
 
 REQUIREMENTS = ('colorlog==4.0.2',)
@@ -25,12 +19,14 @@ REQUIREMENTS = ('colorlog==4.0.2',)
 _LOGGER = logging.getLogger(__name__)
 # pylint: disable=protected-access
 MOCKS = {
-    'load': ("homeassistant.util.yaml.load_yaml", yaml.load_yaml),
-    'load*': ("homeassistant.config.load_yaml", yaml.load_yaml),
-    'secrets': ("homeassistant.util.yaml.secret_yaml", yaml.secret_yaml),
+    'load': ("homeassistant.util.yaml.loader.load_yaml",
+             yaml_loader.load_yaml),
+    'load*': ("homeassistant.config.load_yaml", yaml_loader.load_yaml),
+    'secrets': ("homeassistant.util.yaml.loader.secret_yaml",
+                yaml_loader.secret_yaml),
 }
 SILENCE = (
-    'homeassistant.scripts.check_config.yaml.clear_secret_cache',
+    'homeassistant.scripts.check_config.yaml_loader.clear_secret_cache',
 )
 
 PATCHES = {}
@@ -195,15 +191,16 @@ def check(config_dir, secrets=False):
 
     if secrets:
         # Ensure !secrets point to the patched function
-        yaml.yaml.SafeLoader.add_constructor('!secret', yaml.secret_yaml)
+        yaml_loader.yaml.SafeLoader.add_constructor('!secret',
+                                                    yaml_loader.secret_yaml)
 
     try:
         hass = core.HomeAssistant()
         hass.config.config_dir = config_dir
 
-        res['components'] = check_ha_config_file(hass)
-        res['secret_cache'] = OrderedDict(yaml.__SECRET_CACHE)
-
+        res['components'] = hass.loop.run_until_complete(
+            async_check_ha_config_file(hass))
+        res['secret_cache'] = OrderedDict(yaml_loader.__SECRET_CACHE)
         for err in res['components'].errors:
             domain = err.domain or ERROR_STR
             res['except'].setdefault(domain, []).append(err.message)
@@ -220,7 +217,8 @@ def check(config_dir, secrets=False):
             pat.stop()
         if secrets:
             # Ensure !secrets point to the original function
-            yaml.yaml.SafeLoader.add_constructor('!secret', yaml.secret_yaml)
+            yaml_loader.yaml.SafeLoader.add_constructor(
+                '!secret', yaml_loader.secret_yaml)
         bootstrap.clear_secret_cache()
 
     return res
@@ -238,7 +236,7 @@ def line_info(obj, **kwargs):
 def dump_dict(layer, indent_count=3, listi=False, **kwargs):
     """Display a dict.
 
-    A friendly version of print yaml.yaml.dump(config).
+    A friendly version of print yaml_loader.yaml.dump(config).
     """
     def sort_dict_key(val):
         """Return the dict key for sorting."""
@@ -262,150 +260,3 @@ def dump_dict(layer, indent_count=3, listi=False, **kwargs):
                 dump_dict(i, indent_count + 2, True)
             else:
                 print(' ', indent_str, i)
-
-
-CheckConfigError = namedtuple(
-    'CheckConfigError', "message domain config")
-
-
-@attr.s
-class HomeAssistantConfig(OrderedDict):
-    """Configuration result with errors attribute."""
-
-    errors = attr.ib(default=attr.Factory(list))
-
-    def add_error(self, message, domain=None, config=None):
-        """Add a single error."""
-        self.errors.append(CheckConfigError(str(message), domain, config))
-        return self
-
-
-def check_ha_config_file(hass):
-    """Check if Home Assistant configuration file is valid."""
-    config_dir = hass.config.config_dir
-    result = HomeAssistantConfig()
-
-    def _pack_error(package, component, config, message):
-        """Handle errors from packages: _log_pkg_error."""
-        message = "Package {} setup failed. Component {} {}".format(
-            package, component, message)
-        domain = 'homeassistant.packages.{}.{}'.format(package, component)
-        pack_config = core_config[CONF_PACKAGES].get(package, config)
-        result.add_error(message, domain, pack_config)
-
-    def _comp_error(ex, domain, config):
-        """Handle errors from components: async_log_exception."""
-        result.add_error(
-            _format_config_error(ex, domain, config), domain, config)
-
-    # Load configuration.yaml
-    try:
-        config_path = find_config_file(config_dir)
-        if not config_path:
-            return result.add_error("File configuration.yaml not found.")
-        config = load_yaml_config_file(config_path)
-    except HomeAssistantError as err:
-        return result.add_error(
-            "Error loading {}: {}".format(config_path, err))
-    finally:
-        yaml.clear_secret_cache()
-
-    # Extract and validate core [homeassistant] config
-    try:
-        core_config = config.pop(CONF_CORE, {})
-        core_config = CORE_CONFIG_SCHEMA(core_config)
-        result[CONF_CORE] = core_config
-    except vol.Invalid as err:
-        result.add_error(err, CONF_CORE, core_config)
-        core_config = {}
-
-    # Merge packages
-    hass.loop.run_until_complete(merge_packages_config(
-        hass, config, core_config.get(CONF_PACKAGES, {}), _pack_error))
-    core_config.pop(CONF_PACKAGES, None)
-
-    # Filter out repeating config sections
-    components = set(key.split(' ')[0] for key in config.keys())
-
-    # Process and validate config
-    for domain in components:
-        try:
-            integration = hass.loop.run_until_complete(
-                loader.async_get_integration(hass, domain))
-        except loader.IntegrationNotFound:
-            result.add_error("Integration not found: {}".format(domain))
-            continue
-
-        try:
-            component = integration.get_component()
-        except ImportError:
-            result.add_error("Component not found: {}".format(domain))
-            continue
-
-        if hasattr(component, 'CONFIG_SCHEMA'):
-            try:
-                config = component.CONFIG_SCHEMA(config)
-                result[domain] = config[domain]
-            except vol.Invalid as ex:
-                _comp_error(ex, domain, config)
-                continue
-
-        if (not hasattr(component, 'PLATFORM_SCHEMA') and
-                not hasattr(component, 'PLATFORM_SCHEMA_BASE')):
-            continue
-
-        platforms = []
-        for p_name, p_config in config_per_platform(config, domain):
-            # Validate component specific platform schema
-            try:
-                if hasattr(component, 'PLATFORM_SCHEMA_BASE'):
-                    p_validated = \
-                        component.PLATFORM_SCHEMA_BASE(  # type: ignore
-                            p_config)
-                else:
-                    p_validated = component.PLATFORM_SCHEMA(  # type: ignore
-                        p_config)
-            except vol.Invalid as ex:
-                _comp_error(ex, domain, config)
-                continue
-
-            # Not all platform components follow same pattern for platforms
-            # So if p_name is None we are not going to validate platform
-            # (the automation component is one of them)
-            if p_name is None:
-                platforms.append(p_validated)
-                continue
-
-            try:
-                p_integration = hass.loop.run_until_complete(
-                    loader.async_get_integration(hass, p_name))
-            except loader.IntegrationNotFound:
-                result.add_error(
-                    "Integration {} not found when trying to verify its {} "
-                    "platform.".format(p_name, domain))
-                continue
-
-            try:
-                platform = p_integration.get_platform(domain)
-            except ImportError:
-                result.add_error(
-                    "Platform not found: {}.{}".format(domain, p_name))
-                continue
-
-            # Validate platform specific schema
-            if hasattr(platform, 'PLATFORM_SCHEMA'):
-                try:
-                    p_validated = platform.PLATFORM_SCHEMA(p_validated)
-                except vol.Invalid as ex:
-                    _comp_error(
-                        ex, '{}.{}'.format(domain, p_name), p_validated)
-                    continue
-
-            platforms.append(p_validated)
-
-        # Remove config for current component and add validated config back in.
-        for filter_comp in extract_domain_configs(config, domain):
-            del config[filter_comp]
-        result[domain] = platforms
-
-    return result

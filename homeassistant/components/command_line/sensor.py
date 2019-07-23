@@ -165,7 +165,7 @@ class CommandSensorData:
             command = str(' '.join([prog] + shlex.split(rendered_args)))
             shell = True
         try:
-            _LOGGER.info("Running command: %s", command)
+            _LOGGER.debug("Running command: %s", command)
             return_value = subprocess.check_output(
                 command, shell=shell, timeout=self.timeout)
             self.value = return_value.strip().decode('utf-8')

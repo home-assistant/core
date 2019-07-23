@@ -8,10 +8,10 @@ import pytest
 from homeassistant.setup import async_setup_component
 from homeassistant.components.frontend import (
     DOMAIN, CONF_JS_VERSION, CONF_THEMES, CONF_EXTRA_HTML_URL,
-    CONF_EXTRA_HTML_URL_ES5)
+    CONF_EXTRA_HTML_URL_ES5, EVENT_PANELS_UPDATED)
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 
-from tests.common import mock_coro
+from tests.common import mock_coro, async_capture_events
 
 
 CONFIG_THEMES = {
@@ -89,10 +89,6 @@ def test_frontend_and_static(mock_http_client, mock_onboarded):
 @asyncio.coroutine
 def test_dont_cache_service_worker(mock_http_client):
     """Test that we don't cache the service worker."""
-    resp = yield from mock_http_client.get('/service_worker_es5.js')
-    assert resp.status == 200
-    assert 'cache-control' not in resp.headers
-
     resp = yield from mock_http_client.get('/service_worker.js')
     assert resp.status == 200
     assert 'cache-control' not in resp.headers
@@ -233,23 +229,23 @@ def test_extra_urls(mock_http_client_with_urls, mock_onboarded):
     resp = yield from mock_http_client_with_urls.get('/states?latest')
     assert resp.status == 200
     text = yield from resp.text()
-    assert text.find("href='https://domain.com/my_extra_url.html'") >= 0
+    assert text.find('href="https://domain.com/my_extra_url.html"') >= 0
 
 
-@asyncio.coroutine
-def test_extra_urls_es5(mock_http_client_with_urls, mock_onboarded):
-    """Test that es5 extra urls are loaded."""
-    resp = yield from mock_http_client_with_urls.get('/states?es5')
-    assert resp.status == 200
-    text = yield from resp.text()
-    assert text.find("href='https://domain.com/my_extra_url_es5.html'") >= 0
-
-
-async def test_get_panels(hass, hass_ws_client):
+async def test_get_panels(hass, hass_ws_client, mock_http_client):
     """Test get_panels command."""
-    await async_setup_component(hass, 'frontend', {})
-    await hass.components.frontend.async_register_built_in_panel(
+    events = async_capture_events(hass, EVENT_PANELS_UPDATED)
+
+    resp = await mock_http_client.get('/map')
+    assert resp.status == 404
+
+    hass.components.frontend.async_register_built_in_panel(
         'map', 'Map', 'mdi:tooltip-account', require_admin=True)
+
+    resp = await mock_http_client.get('/map')
+    assert resp.status == 200
+
+    assert len(events) == 1
 
     client = await hass_ws_client(hass)
     await client.send_json({
@@ -268,14 +264,21 @@ async def test_get_panels(hass, hass_ws_client):
     assert msg['result']['map']['title'] == 'Map'
     assert msg['result']['map']['require_admin'] is True
 
+    hass.components.frontend.async_remove_panel('map')
+
+    resp = await mock_http_client.get('/map')
+    assert resp.status == 404
+
+    assert len(events) == 2
+
 
 async def test_get_panels_non_admin(hass, hass_ws_client, hass_admin_user):
     """Test get_panels command."""
     hass_admin_user.groups = []
     await async_setup_component(hass, 'frontend', {})
-    await hass.components.frontend.async_register_built_in_panel(
+    hass.components.frontend.async_register_built_in_panel(
         'map', 'Map', 'mdi:tooltip-account', require_admin=True)
-    await hass.components.frontend.async_register_built_in_panel(
+    hass.components.frontend.async_register_built_in_panel(
         'history', 'History', 'mdi:history')
 
     client = await hass_ws_client(hass)
@@ -330,15 +333,17 @@ async def test_auth_authorize(mock_http_client):
     resp = await mock_http_client.get(
         '/auth/authorize?response_type=code&client_id=https://localhost/&'
         'redirect_uri=https://localhost/&state=123%23456')
+    assert resp.status == 200
+    # No caching of auth page.
+    assert 'cache-control' not in resp.headers
 
-    assert str(resp.url.relative()) == (
-        '/frontend_es5/authorize.html?response_type=code&client_id='
-        'https://localhost/&redirect_uri=https://localhost/&state=123%23456')
+    text = await resp.text()
 
-    resp = await mock_http_client.get(
-        '/auth/authorize?latest&response_type=code&client_id='
-        'https://localhost/&redirect_uri=https://localhost/&state=123%23456')
+    # Test we can retrieve authorize.js
+    authorizejs = re.search(
+        r'(?P<app>\/frontend_latest\/authorize.[A-Za-z0-9]{8}.js)', text)
 
-    assert str(resp.url.relative()) == (
-        '/frontend_latest/authorize.html?latest&response_type=code&client_id='
-        'https://localhost/&redirect_uri=https://localhost/&state=123%23456')
+    assert authorizejs is not None, text
+    resp = await mock_http_client.get(authorizejs.groups(0)[0])
+    assert resp.status == 200
+    assert 'public' in resp.headers.get('cache-control')

@@ -60,7 +60,7 @@ def load_codes(path):
     codes = []
     if os.path.exists(path):
         with open(path) as code_file:
-            data = yaml.load(code_file) or []
+            data = yaml.safe_load(code_file) or []
         for code in data:
             try:
                 codes.append(CODE_SCHEMA(code))

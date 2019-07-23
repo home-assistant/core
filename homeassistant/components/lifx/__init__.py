@@ -4,10 +4,10 @@ import homeassistant.helpers.config_validation as cv
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PORT
-from homeassistant.helpers import config_entry_flow
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from .const import DOMAIN
 
-DOMAIN = 'lifx'
+
 CONF_SERVER = 'server'
 CONF_BROADCAST = 'broadcast'
 
@@ -55,15 +55,3 @@ async def async_unload_entry(hass, entry):
     await hass.config_entries.async_forward_entry_unload(entry, LIGHT_DOMAIN)
 
     return True
-
-
-async def _async_has_devices(hass):
-    """Return if there are devices that can be discovered."""
-    import aiolifx
-
-    lifx_ip_addresses = await aiolifx.LifxScan(hass.loop).scan()
-    return len(lifx_ip_addresses) > 0
-
-
-config_entry_flow.register_discovery_flow(
-    DOMAIN, 'LIFX', _async_has_devices, config_entries.CONN_CLASS_LOCAL_POLL)

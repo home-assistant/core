@@ -5,9 +5,9 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries
 import homeassistant.helpers.translation as translation
 from homeassistant.setup import async_setup_component
+from homeassistant.generated import config_flows
 from tests.common import mock_coro
 
 
@@ -15,7 +15,7 @@ from tests.common import mock_coro
 def mock_config_flows():
     """Mock the config flows."""
     flows = []
-    with patch.object(config_entries, 'FLOWS', flows):
+    with patch.object(config_flows, 'FLOWS', flows):
         yield flows
 
 

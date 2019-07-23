@@ -1,6 +1,5 @@
 """APNS Notification platform."""
 import logging
-import os
 
 import voluptuous as vol
 
@@ -149,7 +148,8 @@ class ApnsNotificationService(BaseNotificationService):
         self.devices = {}
         self.device_states = {}
         self.topic = topic
-        if os.path.isfile(self.yaml_path):
+
+        try:
             self.devices = {
                 str(key): ApnsDevice(
                     str(key),
@@ -160,6 +160,8 @@ class ApnsNotificationService(BaseNotificationService):
                 for (key, value) in
                 load_yaml_config_file(self.yaml_path).items()
             }
+        except FileNotFoundError:
+            pass
 
         tracking_ids = [
             device.full_tracking_device_id

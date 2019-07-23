@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant.components.air_quality import (
     PLATFORM_SCHEMA, AirQualityEntity)
 from homeassistant.const import CONF_NAME
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -40,7 +41,7 @@ async def async_setup_platform(
 
     if 'name' not in osm_api.api.data:
         _LOGGER.error("Station %s is not available", station_id)
-        return
+        raise PlatformNotReady
 
     station_name = osm_api.api.data['name'] if name is None else name
 

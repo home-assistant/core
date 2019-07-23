@@ -203,7 +203,7 @@ async def async_setup_platform(hass, config, async_add_entities,
             update_tasks.append(target_device.async_update_ha_state(True))
 
         if update_tasks:
-            await asyncio.wait(update_tasks, loop=hass.loop)
+            await asyncio.wait(update_tasks)
 
     for xiaomi_miio_service in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[xiaomi_miio_service].get(

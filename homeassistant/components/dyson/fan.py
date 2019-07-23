@@ -474,7 +474,8 @@ class DysonPureCoolDevice(FanEntity):
                      FanSpeed.FAN_SPEED_6.value: SPEED_MEDIUM,
                      FanSpeed.FAN_SPEED_7.value: SPEED_MEDIUM,
                      FanSpeed.FAN_SPEED_8.value: SPEED_HIGH,
-                     FanSpeed.FAN_SPEED_9.value: SPEED_HIGH}
+                     FanSpeed.FAN_SPEED_9.value: SPEED_HIGH,
+                     FanSpeed.FAN_SPEED_10.value: SPEED_HIGH}
 
         return speed_map[self._device.state.speed]
 

@@ -7,6 +7,8 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 
 
+# mypy: allow-untyped-calls, allow-untyped-defs
+
 class _BaseFlowManagerView(HomeAssistantView):
     """Foundation for flow manager views."""
 
@@ -58,7 +60,7 @@ class FlowManagerIndexView(_BaseFlowManagerView):
         except data_entry_flow.UnknownHandler:
             return self.json_message('Invalid handler specified', 404)
         except data_entry_flow.UnknownStep:
-            return self.json_message('Handler does not support init', 400)
+            return self.json_message('Handler does not support user', 400)
 
         result = self._prepare_result_json(result)
 

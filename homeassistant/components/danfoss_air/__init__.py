@@ -85,5 +85,9 @@ class DanfossAir:
             = self._client.command(ReadCommand.boost)
         self._data[ReadCommand.battery_percent] \
             = self._client.command(ReadCommand.battery_percent)
+        self._data[ReadCommand.bypass] \
+            = self._client.command(ReadCommand.bypass)
+        self._data[ReadCommand.automatic_bypass] \
+            = self._client.command(ReadCommand.automatic_bypass)
 
         _LOGGER.debug("Done fetching data from Danfoss Air CCM module")

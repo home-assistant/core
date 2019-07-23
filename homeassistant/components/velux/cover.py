@@ -60,7 +60,16 @@ class VeluxCover(CoverDevice):
 
     @property
     def device_class(self):
-        """Define this cover as a window."""
+        """Define this cover as either window/blind/awning/shutter."""
+        from pyvlx.opening_device import Blind, RollerShutter, Window, Awning
+        if isinstance(self.node, Window):
+            return 'window'
+        if isinstance(self.node, Blind):
+            return 'blind'
+        if isinstance(self.node, RollerShutter):
+            return 'shutter'
+        if isinstance(self.node, Awning):
+            return 'awning'
         return 'window'
 
     @property

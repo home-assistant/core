@@ -3,8 +3,10 @@ import enum
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
+from homeassistant.components.lock import DOMAIN as LOCK
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
 
@@ -18,15 +20,16 @@ DATA_ZHA = 'zha'
 DATA_ZHA_CONFIG = 'config'
 DATA_ZHA_BRIDGE_ID = 'zha_bridge_id'
 DATA_ZHA_DISPATCHERS = 'zha_dispatchers'
-DATA_ZHA_CORE_COMPONENT = 'zha_core_component'
 DATA_ZHA_CORE_EVENTS = 'zha_core_events'
 DATA_ZHA_GATEWAY = 'zha_gateway'
 ZHA_DISCOVERY_NEW = 'zha_discovery_new_{}'
 
 COMPONENTS = (
     BINARY_SENSOR,
+    DEVICE_TRACKER,
     FAN,
     LIGHT,
+    LOCK,
     SENSOR,
     SWITCH,
 )
@@ -56,6 +59,7 @@ ATTR_COMMAND = 'command'
 ATTR_COMMAND_TYPE = 'command_type'
 ATTR_ARGS = 'args'
 ATTR_ENDPOINT_ID = 'endpoint_id'
+ATTR_AVAILABLE = 'available'
 
 IN = 'in'
 OUT = 'out'
@@ -65,6 +69,9 @@ SERVER = 'server'
 IEEE = 'ieee'
 MODEL = 'model'
 NAME = 'name'
+LQI = 'lqi'
+RSSI = 'rssi'
+LAST_SEEN = 'last_seen'
 
 SENSOR_TYPE = 'sensor_type'
 HUMIDITY = 'humidity'
@@ -74,7 +81,10 @@ PRESSURE = 'pressure'
 METERING = 'metering'
 ELECTRICAL_MEASUREMENT = 'electrical_measurement'
 GENERIC = 'generic'
+BATTERY = 'battery'
 UNKNOWN = 'unknown'
+UNKNOWN_MANUFACTURER = 'unk_manufacturer'
+UNKNOWN_MODEL = 'unk_model'
 OPENING = 'opening'
 OCCUPANCY = 'occupancy'
 ACCELERATION = 'acceleration'
@@ -92,6 +102,7 @@ ZONE_CHANNEL = ZONE = 'ias_zone'
 ELECTRICAL_MEASUREMENT_CHANNEL = 'electrical_measurement'
 POWER_CONFIGURATION_CHANNEL = 'power'
 EVENT_RELAY_CHANNEL = 'event_relay'
+DOORLOCK_CHANNEL = 'door_lock'
 
 SIGNAL_ATTR_UPDATED = 'attribute_updated'
 SIGNAL_MOVE_LEVEL = "move_level"
@@ -104,6 +115,8 @@ QUIRK_APPLIED = 'quirk_applied'
 QUIRK_CLASS = 'quirk_class'
 MANUFACTURER_CODE = 'manufacturer_code'
 POWER_SOURCE = 'power_source'
+MAINS_POWERED = 'Mains'
+BATTERY_OR_UNKNOWN = 'Battery or Unknown'
 
 BELLOWS = 'bellows'
 ZHA = 'homeassistant.components.zha'

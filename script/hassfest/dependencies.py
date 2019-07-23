@@ -22,9 +22,15 @@ def grep_dir(path: pathlib.Path, glob_pattern: str, search_pattern: str) \
     return found
 
 
-# These components will always be set up
 ALLOWED_USED_COMPONENTS = {
+    # This component will always be set up
     'persistent_notification',
+    # These allow to register things without being set up
+    'conversation',
+    'frontend',
+    'hassio',
+    'system_health',
+    'websocket_api',
 }
 
 
@@ -35,6 +41,7 @@ def validate_dependencies(integration: Integration):
                           r"hass\.components\.(\w+)")
     referenced -= ALLOWED_USED_COMPONENTS
     referenced -= set(integration.manifest['dependencies'])
+    referenced -= set(integration.manifest.get('after_dependencies', []))
 
     if referenced:
         for domain in sorted(referenced):
@@ -61,5 +68,5 @@ def validate(integrations: Dict[str, Integration], config):
             if dep not in integrations:
                 integration.add_error(
                     'dependencies',
-                    "Dependency {} does not exist"
+                    "Dependency {} does not exist".format(dep)
                 )

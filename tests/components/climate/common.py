@@ -5,76 +5,43 @@ components. Instead call the service directly.
 """
 from homeassistant.components.climate import _LOGGER
 from homeassistant.components.climate.const import (
-    ATTR_AUX_HEAT, ATTR_AWAY_MODE, ATTR_FAN_MODE, ATTR_HOLD_MODE,
-    ATTR_HUMIDITY, ATTR_OPERATION_MODE, ATTR_SWING_MODE, ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW, DOMAIN, SERVICE_SET_AWAY_MODE, SERVICE_SET_HOLD_MODE,
-    SERVICE_SET_AUX_HEAT, SERVICE_SET_TEMPERATURE, SERVICE_SET_HUMIDITY,
-    SERVICE_SET_FAN_MODE, SERVICE_SET_OPERATION_MODE, SERVICE_SET_SWING_MODE)
+    ATTR_AUX_HEAT, ATTR_FAN_MODE, ATTR_HUMIDITY, ATTR_HVAC_MODE,
+    ATTR_PRESET_MODE, ATTR_SWING_MODE, ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW, DOMAIN, SERVICE_SET_AUX_HEAT, SERVICE_SET_FAN_MODE,
+    SERVICE_SET_HUMIDITY, SERVICE_SET_HVAC_MODE, SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_SWING_MODE, SERVICE_SET_TEMPERATURE)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_TEMPERATURE)
-from homeassistant.core import callback
+    ATTR_ENTITY_ID, ATTR_TEMPERATURE, SERVICE_TURN_OFF, SERVICE_TURN_ON)
 from homeassistant.loader import bind_hass
 
 
-@callback
-@bind_hass
-def async_set_away_mode(hass, away_mode, entity_id=None):
-    """Turn all or specified climate devices away mode on."""
+async def async_set_preset_mode(hass, preset_mode, entity_id=None):
+    """Set new preset mode."""
     data = {
-        ATTR_AWAY_MODE: away_mode
+        ATTR_PRESET_MODE: preset_mode
     }
 
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
 
-    hass.async_create_task(
-        hass.services.async_call(DOMAIN, SERVICE_SET_AWAY_MODE, data))
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SET_PRESET_MODE, data, blocking=True)
 
 
 @bind_hass
-def set_away_mode(hass, away_mode, entity_id=None):
-    """Turn all or specified climate devices away mode on."""
+def set_preset_mode(hass, preset_mode, entity_id=None):
+    """Set new preset mode."""
     data = {
-        ATTR_AWAY_MODE: away_mode
+        ATTR_PRESET_MODE: preset_mode
     }
 
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
 
-    hass.services.call(DOMAIN, SERVICE_SET_AWAY_MODE, data)
+    hass.services.call(DOMAIN, SERVICE_SET_PRESET_MODE, data)
 
 
-@callback
-@bind_hass
-def async_set_hold_mode(hass, hold_mode, entity_id=None):
-    """Set new hold mode."""
-    data = {
-        ATTR_HOLD_MODE: hold_mode
-    }
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.async_create_task(
-        hass.services.async_call(DOMAIN, SERVICE_SET_HOLD_MODE, data))
-
-
-@bind_hass
-def set_hold_mode(hass, hold_mode, entity_id=None):
-    """Set new hold mode."""
-    data = {
-        ATTR_HOLD_MODE: hold_mode
-    }
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SET_HOLD_MODE, data)
-
-
-@callback
-@bind_hass
-def async_set_aux_heat(hass, aux_heat, entity_id=None):
+async def async_set_aux_heat(hass, aux_heat, entity_id=None):
     """Turn all or specified climate devices auxiliary heater on."""
     data = {
         ATTR_AUX_HEAT: aux_heat
@@ -83,8 +50,8 @@ def async_set_aux_heat(hass, aux_heat, entity_id=None):
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
 
-    hass.async_create_task(
-        hass.services.async_call(DOMAIN, SERVICE_SET_AUX_HEAT, data))
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SET_AUX_HEAT, data, blocking=True)
 
 
 @bind_hass
@@ -100,11 +67,9 @@ def set_aux_heat(hass, aux_heat, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SET_AUX_HEAT, data)
 
 
-@callback
-@bind_hass
-def async_set_temperature(hass, temperature=None, entity_id=None,
-                          target_temp_high=None, target_temp_low=None,
-                          operation_mode=None):
+async def async_set_temperature(hass, temperature=None, entity_id=None,
+                                target_temp_high=None, target_temp_low=None,
+                                hvac_mode=None):
     """Set new target temperature."""
     kwargs = {
         key: value for key, value in [
@@ -112,18 +77,18 @@ def async_set_temperature(hass, temperature=None, entity_id=None,
             (ATTR_TARGET_TEMP_HIGH, target_temp_high),
             (ATTR_TARGET_TEMP_LOW, target_temp_low),
             (ATTR_ENTITY_ID, entity_id),
-            (ATTR_OPERATION_MODE, operation_mode)
+            (ATTR_HVAC_MODE, hvac_mode)
         ] if value is not None
     }
     _LOGGER.debug("set_temperature start data=%s", kwargs)
-    hass.async_create_task(
-        hass.services.async_call(DOMAIN, SERVICE_SET_TEMPERATURE, kwargs))
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SET_TEMPERATURE, kwargs, blocking=True)
 
 
 @bind_hass
 def set_temperature(hass, temperature=None, entity_id=None,
                     target_temp_high=None, target_temp_low=None,
-                    operation_mode=None):
+                    hvac_mode=None):
     """Set new target temperature."""
     kwargs = {
         key: value for key, value in [
@@ -131,24 +96,22 @@ def set_temperature(hass, temperature=None, entity_id=None,
             (ATTR_TARGET_TEMP_HIGH, target_temp_high),
             (ATTR_TARGET_TEMP_LOW, target_temp_low),
             (ATTR_ENTITY_ID, entity_id),
-            (ATTR_OPERATION_MODE, operation_mode)
+            (ATTR_HVAC_MODE, hvac_mode)
         ] if value is not None
     }
     _LOGGER.debug("set_temperature start data=%s", kwargs)
     hass.services.call(DOMAIN, SERVICE_SET_TEMPERATURE, kwargs)
 
 
-@callback
-@bind_hass
-def async_set_humidity(hass, humidity, entity_id=None):
+async def async_set_humidity(hass, humidity, entity_id=None):
     """Set new target humidity."""
     data = {ATTR_HUMIDITY: humidity}
 
     if entity_id is not None:
         data[ATTR_ENTITY_ID] = entity_id
 
-    hass.async_create_task(
-        hass.services.async_call(DOMAIN, SERVICE_SET_HUMIDITY, data))
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SET_HUMIDITY, data, blocking=True)
 
 
 @bind_hass
@@ -162,17 +125,15 @@ def set_humidity(hass, humidity, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SET_HUMIDITY, data)
 
 
-@callback
-@bind_hass
-def async_set_fan_mode(hass, fan, entity_id=None):
+async def async_set_fan_mode(hass, fan, entity_id=None):
     """Set all or specified climate devices fan mode on."""
     data = {ATTR_FAN_MODE: fan}
 
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
 
-    hass.async_create_task(
-        hass.services.async_call(DOMAIN, SERVICE_SET_FAN_MODE, data))
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SET_FAN_MODE, data, blocking=True)
 
 
 @bind_hass
@@ -186,41 +147,37 @@ def set_fan_mode(hass, fan, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SET_FAN_MODE, data)
 
 
-@callback
-@bind_hass
-def async_set_operation_mode(hass, operation_mode, entity_id=None):
+async def async_set_hvac_mode(hass, hvac_mode, entity_id=None):
     """Set new target operation mode."""
-    data = {ATTR_OPERATION_MODE: operation_mode}
+    data = {ATTR_HVAC_MODE: hvac_mode}
 
     if entity_id is not None:
         data[ATTR_ENTITY_ID] = entity_id
 
-    hass.async_create_task(
-        hass.services.async_call(DOMAIN, SERVICE_SET_OPERATION_MODE, data))
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SET_HVAC_MODE, data, blocking=True)
 
 
 @bind_hass
-def set_operation_mode(hass, operation_mode, entity_id=None):
+def set_operation_mode(hass, hvac_mode, entity_id=None):
     """Set new target operation mode."""
-    data = {ATTR_OPERATION_MODE: operation_mode}
+    data = {ATTR_HVAC_MODE: hvac_mode}
 
     if entity_id is not None:
         data[ATTR_ENTITY_ID] = entity_id
 
-    hass.services.call(DOMAIN, SERVICE_SET_OPERATION_MODE, data)
+    hass.services.call(DOMAIN, SERVICE_SET_HVAC_MODE, data)
 
 
-@callback
-@bind_hass
-def async_set_swing_mode(hass, swing_mode, entity_id=None):
+async def async_set_swing_mode(hass, swing_mode, entity_id=None):
     """Set new target swing mode."""
     data = {ATTR_SWING_MODE: swing_mode}
 
     if entity_id is not None:
         data[ATTR_ENTITY_ID] = entity_id
 
-    hass.async_create_task(
-        hass.services.async_call(DOMAIN, SERVICE_SET_SWING_MODE, data))
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SET_SWING_MODE, data, blocking=True)
 
 
 @bind_hass
@@ -232,3 +189,25 @@ def set_swing_mode(hass, swing_mode, entity_id=None):
         data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_SET_SWING_MODE, data)
+
+
+async def async_turn_on(hass, entity_id=None):
+    """Turn on device."""
+    data = {}
+
+    if entity_id is not None:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_ON, data, blocking=True)
+
+
+async def async_turn_off(hass, entity_id=None):
+    """Turn off device."""
+    data = {}
+
+    if entity_id is not None:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, data, blocking=True)

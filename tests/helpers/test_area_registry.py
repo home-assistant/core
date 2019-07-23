@@ -4,6 +4,7 @@ import asyncio
 import asynctest
 import pytest
 
+from homeassistant.core import callback
 from homeassistant.helpers import area_registry
 from tests.common import mock_area_registry, flush_store
 
@@ -12,6 +13,21 @@ from tests.common import mock_area_registry, flush_store
 def registry(hass):
     """Return an empty, loaded, registry."""
     return mock_area_registry(hass)
+
+
+@pytest.fixture
+def update_events(hass):
+    """Capture update events."""
+    events = []
+
+    @callback
+    def async_capture(event):
+        events.append(event.data)
+
+    hass.bus.async_listen(area_registry.EVENT_AREA_REGISTRY_UPDATED,
+                          async_capture)
+
+    return events
 
 
 async def test_list_areas(registry):
@@ -23,15 +39,22 @@ async def test_list_areas(registry):
     assert len(areas) == len(registry.areas)
 
 
-async def test_create_area(registry):
+async def test_create_area(hass, registry, update_events):
     """Make sure that we can create an area."""
     area = registry.async_create('mock')
 
     assert area.name == 'mock'
     assert len(registry.areas) == 1
 
+    await hass.async_block_till_done()
 
-async def test_create_area_with_name_already_in_use(registry):
+    assert len(update_events) == 1
+    assert update_events[0]['action'] == 'create'
+    assert update_events[0]['area_id'] == area.id
+
+
+async def test_create_area_with_name_already_in_use(hass, registry,
+                                                    update_events):
     """Make sure that we can't create an area with a name already in use."""
     area1 = registry.async_create('mock')
 
@@ -40,16 +63,27 @@ async def test_create_area_with_name_already_in_use(registry):
         assert area1 != area2
         assert e_info == "Name is already in use"
 
+    await hass.async_block_till_done()
+
     assert len(registry.areas) == 1
+    assert len(update_events) == 1
 
 
-async def test_delete_area(registry):
+async def test_delete_area(hass, registry, update_events):
     """Make sure that we can delete an area."""
     area = registry.async_create('mock')
 
     await registry.async_delete(area.id)
 
     assert not registry.areas
+
+    await hass.async_block_till_done()
+
+    assert len(update_events) == 2
+    assert update_events[0]['action'] == 'create'
+    assert update_events[0]['area_id'] == area.id
+    assert update_events[1]['action'] == 'remove'
+    assert update_events[1]['area_id'] == area.id
 
 
 async def test_delete_non_existing_area(registry):
@@ -62,7 +96,7 @@ async def test_delete_non_existing_area(registry):
     assert len(registry.areas) == 1
 
 
-async def test_update_area(registry):
+async def test_update_area(hass, registry, update_events):
     """Make sure that we can read areas."""
     area = registry.async_create('mock')
 
@@ -71,6 +105,14 @@ async def test_update_area(registry):
     assert updated_area != area
     assert updated_area.name == 'mock1'
     assert len(registry.areas) == 1
+
+    await hass.async_block_till_done()
+
+    assert len(update_events) == 2
+    assert update_events[0]['action'] == 'create'
+    assert update_events[0]['area_id'] == area.id
+    assert update_events[1]['action'] == 'update'
+    assert update_events[1]['area_id'] == area.id
 
 
 async def test_update_area_with_same_name(registry):

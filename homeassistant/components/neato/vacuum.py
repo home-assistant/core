@@ -159,6 +159,8 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             self._clean_state = STATE_ERROR
             self._status_state = ERRORS.get(self._state['error'])
 
+        self._battery_level = self._state['details']['charge']
+
         if not self._mapdata.get(self._robot_serial, {}).get('maps', []):
             return
         self.clean_time_start = (
@@ -182,16 +184,13 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         self.clean_battery_end = (
             self._mapdata[self._robot_serial]['maps'][0]['run_charge_at_end'])
 
-        self._battery_level = self._state['details']['charge']
-
         if self._robot_has_map:
             if self._state['availableServices']['maps'] != "basic-1":
                 if self._robot_maps[self._robot_serial]:
-                    robot_map_id = (
-                        self._robot_maps[self._robot_serial][0]['id'])
-
-                    self._robot_boundaries = self.robot.get_map_boundaries(
-                        robot_map_id).json()
+                    allmaps = self._robot_maps[self._robot_serial]
+                    for maps in allmaps:
+                        self._robot_boundaries = self.robot.get_map_boundaries(
+                            maps['id']).json()
 
     @property
     def name(self):

@@ -26,15 +26,14 @@ async def get_service(hass, config, discovery_info=None):
     url = '{}{}'.format(_RESOURCE, access_token)
     session = async_get_clientsession(hass)
 
-    return FlockNotificationService(url, session, hass.loop)
+    return FlockNotificationService(url, session)
 
 
 class FlockNotificationService(BaseNotificationService):
     """Implement the notification service for Flock."""
 
-    def __init__(self, url, session, loop):
+    def __init__(self, url, session):
         """Initialize the Flock notification service."""
-        self._loop = loop
         self._url = url
         self._session = session
 
@@ -45,7 +44,7 @@ class FlockNotificationService(BaseNotificationService):
         _LOGGER.debug("Attempting to call Flock at %s", self._url)
 
         try:
-            with async_timeout.timeout(10, loop=self._loop):
+            with async_timeout.timeout(10):
                 response = await self._session.post(self._url, json=payload)
                 result = await response.json()
 

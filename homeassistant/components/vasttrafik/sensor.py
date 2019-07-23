@@ -1,5 +1,4 @@
 """Support for Västtrafik public transport."""
-from datetime import datetime
 from datetime import timedelta
 import logging
 
@@ -10,6 +9,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+from homeassistant.util.dt import now
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,7 +107,7 @@ class VasttrafikDepartureSensor(Entity):
             self._departureboard = self._planner.departureboard(
                 self._departure['id'],
                 direction=self._heading['id'] if self._heading else None,
-                date=datetime.now()+self._delay)
+                date=now()+self._delay)
         except self._vasttrafik.Error:
             _LOGGER.debug("Unable to read departure board, updating token")
             self._planner.update_token()

@@ -178,7 +178,7 @@ async def test_awair_humid(hass):
     await setup_awair(hass)
 
     sensor = hass.states.get("sensor.awair_humidity")
-    assert sensor.state == "32.73"
+    assert sensor.state == "32.7"
     assert sensor.attributes["device_class"] == DEVICE_CLASS_HUMIDITY
     assert sensor.attributes["unit_of_measurement"] == "%"
 
@@ -291,7 +291,7 @@ async def test_async_update(hass):
     assert score_sensor.state == "79"
 
     assert hass.states.get("sensor.awair_temperature").state == "23.4"
-    assert hass.states.get("sensor.awair_humidity").state == "33.73"
+    assert hass.states.get("sensor.awair_humidity").state == "33.7"
     assert hass.states.get("sensor.awair_co2").state == "613"
     assert hass.states.get("sensor.awair_voc").state == "1013"
     assert hass.states.get("sensor.awair_pm2_5").state == "7.2"

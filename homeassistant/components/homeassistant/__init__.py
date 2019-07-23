@@ -14,7 +14,7 @@ from homeassistant.helpers import intent
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
     SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART,
-    RESTART_EXIT_CODE)
+    RESTART_EXIT_CODE, ATTR_LATITUDE, ATTR_LONGITUDE)
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,6 +22,7 @@ DOMAIN = ha.DOMAIN
 SERVICE_RELOAD_CORE_CONFIG = 'reload_core_config'
 SERVICE_CHECK_CONFIG = 'check_config'
 SERVICE_UPDATE_ENTITY = 'update_entity'
+SERVICE_SET_LOCATION = 'set_location'
 SCHEMA_UPDATE_ENTITY = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids
 })
@@ -64,7 +65,7 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
             tasks.append(hass.services.async_call(
                 domain, service.service, data, blocking))
 
-        await asyncio.wait(tasks, loop=hass.loop)
+        await asyncio.wait(tasks)
 
     hass.services.async_register(
         ha.DOMAIN, SERVICE_TURN_OFF, async_handle_turn_service)
@@ -131,7 +132,22 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
         await conf_util.async_process_ha_core_config(
             hass, conf.get(ha.DOMAIN) or {})
 
-    hass.services.async_register(
-        ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG, async_handle_reload_config)
+    hass.helpers.service.async_register_admin_service(
+        ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG, async_handle_reload_config
+    )
+
+    async def async_set_location(call):
+        """Service handler to set location."""
+        await hass.config.async_update(
+            latitude=call.data[ATTR_LATITUDE],
+            longitude=call.data[ATTR_LONGITUDE],
+        )
+
+    hass.helpers.service.async_register_admin_service(
+        ha.DOMAIN, SERVICE_SET_LOCATION, async_set_location, vol.Schema({
+            ATTR_LATITUDE: cv.latitude,
+            ATTR_LONGITUDE: cv.longitude,
+        })
+    )
 
     return True

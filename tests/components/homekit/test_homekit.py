@@ -4,20 +4,23 @@ from unittest.mock import patch, ANY, Mock
 import pytest
 
 from homeassistant import setup
+
 from homeassistant.components.homekit import (
     generate_aid, HomeKit, MAX_DEVICES, STATUS_READY,
     STATUS_RUNNING, STATUS_STOPPED, STATUS_WAIT)
 from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
     CONF_AUTO_START, CONF_SAFE_MODE, BRIDGE_NAME, DEFAULT_PORT,
-    DEFAULT_SAFE_MODE, DOMAIN, HOMEKIT_FILE, SERVICE_HOMEKIT_START)
+    DEFAULT_SAFE_MODE, DOMAIN, HOMEKIT_FILE, SERVICE_HOMEKIT_START,
+    SERVICE_HOMEKIT_RESET_ACCESSORY)
 from homeassistant.const import (
-    CONF_NAME, CONF_IP_ADDRESS, CONF_PORT,
+    ATTR_ENTITY_ID, CONF_NAME, CONF_IP_ADDRESS, CONF_PORT,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import State
 from homeassistant.helpers.entityfilter import generate_filter
 
 from tests.components.homekit.common import patch_debounce
+
 
 IP_ADDRESS = '127.0.0.1'
 PATH_HOMEKIT = 'homeassistant.components.homekit'
@@ -164,6 +167,19 @@ async def test_homekit_add_accessory():
         mock_bridge.add_accessory.assert_called_with('acc')
 
 
+async def test_homekit_remove_accessory():
+    """Remove accessory from bridge."""
+    homekit = HomeKit('hass', None, None, None, lambda entity_id: True, {},
+                      None)
+    homekit.driver = 'driver'
+    homekit.bridge = mock_bridge = Mock()
+    mock_bridge.accessories = {'light.demo': 'acc'}
+
+    acc = homekit.remove_bridge_accessory('light.demo')
+    assert acc == 'acc'
+    assert len(mock_bridge.accessories) == 0
+
+
 async def test_homekit_entity_filter(hass):
     """Test the entity filter."""
     entity_filter = generate_filter(['cover'], ['demo.test'], [], [])
@@ -233,6 +249,36 @@ async def test_homekit_stop(hass):
     homekit.status = STATUS_RUNNING
     await hass.async_add_job(homekit.stop)
     assert homekit.driver.stop.called is True
+
+
+async def test_homekit_reset_accessories(hass):
+    """Test adding too many accessories to HomeKit."""
+    entity_id = 'light.demo'
+    homekit = HomeKit(hass, None, None, None, {}, {entity_id: {}}, None)
+    homekit.bridge = Mock()
+
+    with patch(PATH_HOMEKIT + '.HomeKit', return_value=homekit), \
+        patch(PATH_HOMEKIT + '.HomeKit.setup'), \
+        patch('pyhap.accessory.Bridge.add_accessory') as \
+        mock_add_accessory, \
+        patch('pyhap.accessory_driver.AccessoryDriver.config_changed') as \
+            hk_driver_config_changed:
+
+        assert await setup.async_setup_component(
+            hass, DOMAIN, {DOMAIN: {}})
+
+        aid = generate_aid(entity_id)
+        homekit.bridge.accessories = {aid: 'acc'}
+        homekit.status = STATUS_RUNNING
+
+        await hass.services.async_call(
+            DOMAIN, SERVICE_HOMEKIT_RESET_ACCESSORY,
+            {ATTR_ENTITY_ID: entity_id}, blocking=True)
+        await hass.async_block_till_done()
+
+        assert 2 == hk_driver_config_changed.call_count
+        assert mock_add_accessory.called
+        homekit.status = STATUS_READY
 
 
 async def test_homekit_too_many_accessories(hass, hk_driver):

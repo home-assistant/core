@@ -19,6 +19,7 @@ ATTR_CONFIG_VALUE = "value"
 ATTR_POLL_INTENSITY = "poll_intensity"
 ATTR_VALUE_INDEX = "value_index"
 ATTR_VALUE_INSTANCE = "value_instance"
+ATTR_UPDATE_IDS = 'update_ids'
 NETWORK_READY_WAIT_SECS = 300
 NODE_READY_WAIT_SECS = 30
 

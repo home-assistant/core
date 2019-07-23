@@ -280,7 +280,7 @@ async def test_call_with_required_features(hass, mock_entities):
         Mock(entities=mock_entities)
     ], test_service_mock, ha.ServiceCall('test_domain', 'test_service', {
         'entity_id': 'all'
-    }), required_features=1)
+    }), required_features=[1])
     assert len(mock_entities) == 2
     # Called once because only one of the entities had the required features
     assert test_service_mock.call_count == 1

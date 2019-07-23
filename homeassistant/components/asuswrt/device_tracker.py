@@ -47,6 +47,6 @@ class AsusWrtDeviceScanner(DeviceScanner):
 
         Return boolean if scanning successful.
         """
-        _LOGGER.info('Checking Devices')
+        _LOGGER.debug('Checking Devices')
 
         self.last_results = await self.connection.async_get_connected_devices()

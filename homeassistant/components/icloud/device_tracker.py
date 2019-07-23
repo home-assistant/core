@@ -6,14 +6,17 @@ import os
 import voluptuous as vol
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
-from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA, DOMAIN, ATTR_ATTRIBUTES, ENTITY_ID_FORMAT, DeviceScanner)
-from homeassistant.components.zone.zone import active_zone
+from homeassistant.components.device_tracker import PLATFORM_SCHEMA
+from homeassistant.components.device_tracker.const import (
+    DOMAIN, ATTR_ATTRIBUTES, ENTITY_ID_FORMAT)
+from homeassistant.components.device_tracker.legacy import DeviceScanner
+from homeassistant.components.zone import async_active_zone
 from homeassistant.helpers.event import track_utc_time_change
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 from homeassistant.util.location import distance
+from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -328,7 +331,10 @@ class Icloud(DeviceScanner):
 
     def determine_interval(self, devicename, latitude, longitude, battery):
         """Calculate new interval."""
-        currentzone = active_zone(self.hass, latitude, longitude)
+        currentzone = run_callback_threadsafe(
+            self.hass.loop,
+            async_active_zone, self.hass, latitude, longitude
+        ).result()
 
         if ((currentzone is not None and
              currentzone == self._overridestates.get(devicename)) or
@@ -470,10 +476,13 @@ class Icloud(DeviceScanner):
             devicestate = self.hass.states.get(devid)
             if interval is not None:
                 if devicestate is not None:
-                    self._overridestates[device] = active_zone(
+                    self._overridestates[device] = run_callback_threadsafe(
+                        self.hass.loop,
+                        async_active_zone,
                         self.hass,
                         float(devicestate.attributes.get('latitude', 0)),
-                        float(devicestate.attributes.get('longitude', 0)))
+                        float(devicestate.attributes.get('longitude', 0))
+                    ).result()
                     if self._overridestates[device] is None:
                         self._overridestates[device] = 'away'
                 self._intervals[device] = interval

@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_setup_ingress(hass: HomeAssistantType, host: str):
+def async_setup_ingress_view(hass: HomeAssistantType, host: str):
     """Auth setup."""
     websession = hass.helpers.aiohttp_client.async_get_clientsession()
 
@@ -65,6 +65,8 @@ class HassIOIngress(HomeAssistantView):
     post = _handle
     put = _handle
     delete = _handle
+    patch = _handle
+    options = _handle
 
     async def _handle_websocket(
             self, request: web.Request, token: str, path: str
@@ -117,8 +119,12 @@ class HassIOIngress(HomeAssistantView):
         source_header = _init_header(request, token)
 
         async with self._websession.request(
-                request.method, url, headers=source_header,
-                params=request.query, data=data
+                request.method,
+                url,
+                headers=source_header,
+                params=request.query,
+                allow_redirects=False,
+                data=data
         ) as result:
             headers = _response_header(result)
 
@@ -209,8 +215,8 @@ def _is_websocket(request: web.Request) -> bool:
     """Return True if request is a websocket."""
     headers = request.headers
 
-    if headers.get(hdrs.CONNECTION) == "Upgrade" and \
-            headers.get(hdrs.UPGRADE) == "websocket":
+    if "upgrade" in headers.get(hdrs.CONNECTION, "").lower() and \
+            headers.get(hdrs.UPGRADE, "").lower() == "websocket":
         return True
     return False
 

@@ -1,60 +1,24 @@
 """Support for displaying collected data over SNMP."""
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT, CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
-    CONF_USERNAME, CONF_VALUE_TEMPLATE)
+    CONF_HOST, CONF_NAME, CONF_PORT, CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME,
+    CONF_VALUE_TEMPLATE, STATE_UNKNOWN)
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+
+from .const import (
+    CONF_ACCEPT_ERRORS, CONF_AUTH_KEY, CONF_AUTH_PROTOCOL, CONF_BASEOID,
+    CONF_COMMUNITY, CONF_DEFAULT_VALUE, CONF_PRIV_KEY, CONF_PRIV_PROTOCOL,
+    CONF_VERSION, DEFAULT_AUTH_PROTOCOL, DEFAULT_COMMUNITY, DEFAULT_HOST,
+    DEFAULT_NAME, DEFAULT_PORT, DEFAULT_PRIV_PROTOCOL, DEFAULT_VERSION,
+    MAP_AUTH_PROTOCOLS, MAP_PRIV_PROTOCOLS, SNMP_VERSIONS)
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_BASEOID = 'baseoid'
-CONF_COMMUNITY = 'community'
-CONF_VERSION = 'version'
-CONF_AUTH_KEY = 'auth_key'
-CONF_AUTH_PROTOCOL = 'auth_protocol'
-CONF_PRIV_KEY = 'priv_key'
-CONF_PRIV_PROTOCOL = 'priv_protocol'
-CONF_ACCEPT_ERRORS = 'accept_errors'
-CONF_DEFAULT_VALUE = 'default_value'
-
-DEFAULT_COMMUNITY = 'public'
-DEFAULT_HOST = 'localhost'
-DEFAULT_NAME = 'SNMP'
-DEFAULT_PORT = '161'
-DEFAULT_VERSION = '1'
-DEFAULT_AUTH_PROTOCOL = 'none'
-DEFAULT_PRIV_PROTOCOL = 'none'
-
-SNMP_VERSIONS = {
-    '1': 0,
-    '2c': 1,
-    '3': None
-}
-
-MAP_AUTH_PROTOCOLS = {
-    'none': 'usmNoAuthProtocol',
-    'hmac-md5': 'usmHMACMD5AuthProtocol',
-    'hmac-sha': 'usmHMACSHAAuthProtocol',
-    'hmac128-sha224': 'usmHMAC128SHA224AuthProtocol',
-    'hmac192-sha256': 'usmHMAC192SHA256AuthProtocol',
-    'hmac256-sha384': 'usmHMAC256SHA384AuthProtocol',
-    'hmac384-sha512': 'usmHMAC384SHA512AuthProtocol',
-}
-
-MAP_PRIV_PROTOCOLS = {
-    'none': 'usmNoPrivProtocol',
-    'des': 'usmDESPrivProtocol',
-    '3des-ede': 'usm3DESEDEPrivProtocol',
-    'aes-cfb-128': 'usmAesCfb128Protocol',
-    'aes-cfb-192': 'usmAesCfb192Protocol',
-    'aes-cfb-256': 'usmAesCfb256Protocol',
-}
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -194,7 +158,7 @@ class SnmpData:
 
     async def async_update(self):
         """Get the latest data from the remote SNMP capable host."""
-        from pysnmp.hlapi.asyncio import (getCmd, ObjectType, ObjectIdentity)
+        from pysnmp.hlapi.asyncio import getCmd, ObjectType, ObjectIdentity
 
         errindication, errstatus, errindex, restable = await getCmd(
             *self._request_args, ObjectType(ObjectIdentity(self._baseoid)))

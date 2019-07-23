@@ -44,7 +44,7 @@ def request_stream(hass, stream_source, *, fmt='hls',
                    keepalive=False, options=None):
     """Set up stream with token."""
     if DOMAIN not in hass.config.components:
-        raise HomeAssistantError("Stream component is not set up.")
+        raise HomeAssistantError("Stream integration is not set up.")
 
     if options is None:
         options = {}
@@ -53,6 +53,7 @@ def request_stream(hass, stream_source, *, fmt='hls',
     if isinstance(stream_source, str) \
             and stream_source[:7] == 'rtsp://' and not options:
         options['rtsp_flags'] = 'prefer_tcp'
+        options['stimeout'] = '5000000'
 
     try:
         streams = hass.data[DOMAIN][ATTR_STREAMS]

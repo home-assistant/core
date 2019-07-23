@@ -9,13 +9,17 @@ from homekit.model.characteristics import (
     AbstractCharacteristic, CharacteristicPermissions, CharacteristicsTypes)
 from homekit.model import Accessory, get_id
 from homekit.exceptions import AccessoryNotFoundError
-from homeassistant.components.homekit_controller import SERVICE_HOMEKIT
+
+from homeassistant import config_entries
 from homeassistant.components.homekit_controller.const import (
-    DOMAIN, HOMEKIT_ACCESSORY_DISPATCH)
+    CONTROLLER, DOMAIN, HOMEKIT_ACCESSORY_DISPATCH)
+from homeassistant.components.homekit_controller import (
+    config_flow)
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from tests.common import (
-    async_fire_time_changed, fire_service_discovered, load_fixture)
+    async_fire_time_changed, load_fixture, MockConfigEntry
+)
 
 
 class FakePairing:
@@ -95,12 +99,13 @@ class FakeController:
 class Helper:
     """Helper methods for interacting with HomeKit fakes."""
 
-    def __init__(self, hass, entity_id, pairing, accessory):
+    def __init__(self, hass, entity_id, pairing, accessory, config_entry):
         """Create a helper for a given accessory/entity."""
         self.hass = hass
         self.entity_id = entity_id
         self.pairing = pairing
         self.accessory = accessory
+        self.config_entry = config_entry
 
         self.characteristics = {}
         for service in self.accessory.services:
@@ -111,9 +116,7 @@ class Helper:
 
     async def poll_and_get_state(self):
         """Trigger a time based poll and return the current entity state."""
-        next_update = dt_util.utcnow() + timedelta(seconds=60)
-        async_fire_time_changed(self.hass, next_update)
-        await self.hass.async_block_till_done()
+        await time_changed(self.hass, 60)
 
         state = self.hass.states.get(self.entity_id)
         assert state is not None
@@ -128,7 +131,15 @@ class FakeCharacteristic(AbstractCharacteristic):
     needed even though it doesn't add any methods.
     """
 
-    pass
+    def to_accessory_and_service_list(self):
+        """Serialize the characteristic."""
+        # Upstream doesn't correctly serialize valid_values
+        # This fix will be upstreamed and this function removed when it
+        # is fixed.
+        record = super().to_accessory_and_service_list()
+        if self.valid_values:
+            record['valid-values'] = self.valid_values
+        return record
 
 
 class FakeService(AbstractService):
@@ -149,6 +160,13 @@ class FakeService(AbstractService):
         ]
         self.characteristics.append(char)
         return char
+
+
+async def time_changed(hass, seconds):
+    """Trigger time changed."""
+    next_update = dt_util.utcnow() + timedelta(seconds)
+    async_fire_time_changed(hass, next_update)
+    await hass.async_block_till_done()
 
 
 async def setup_accessories_from_file(hass, path):
@@ -180,6 +198,12 @@ async def setup_accessories_from_file(hass, path):
                     char.description = char_data['description']
                 if 'value' in char_data:
                     char.value = char_data['value']
+                if 'minValue' in char_data:
+                    char.minValue = char_data['minValue']
+                if 'maxValue' in char_data:
+                    char.maxValue = char_data['maxValue']
+                if 'valid-values' in char_data:
+                    char.valid_values = char_data['valid-values']
                 service.characteristics.append(char)
 
             accessory.services.append(service)
@@ -203,28 +227,77 @@ async def setup_platform(hass):
     return fake_controller
 
 
-async def setup_test_accessories(hass, accessories, capitalize=False):
-    """Load a fake homekit accessory based on a homekit accessory model.
-
-    If capitalize is True, property names will be in upper case.
-    """
+async def setup_test_accessories(hass, accessories):
+    """Load a fake homekit device based on captured JSON profile."""
     fake_controller = await setup_platform(hass)
     pairing = fake_controller.add(accessories)
 
     discovery_info = {
+        'name': 'TestDevice',
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
-            ('MD' if capitalize else 'md'): 'TestDevice',
-            ('ID' if capitalize else 'id'): '00:00:00:00:00:00',
-            ('C#' if capitalize else 'c#'): 1,
+            'md': 'TestDevice',
+            'id': '00:00:00:00:00:00',
+            'c#': 1,
         }
     }
 
-    fire_service_discovered(hass, SERVICE_HOMEKIT, discovery_info)
-    await hass.async_block_till_done()
+    pairing.pairing_data.update({
+        'AccessoryPairingID': discovery_info['properties']['id'],
+    })
 
-    return pairing
+    config_entry = MockConfigEntry(
+        version=1,
+        domain='homekit_controller',
+        entry_id='TestData',
+        data=pairing.pairing_data,
+        title='test',
+        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH
+    )
+
+    config_entry.add_to_hass(hass)
+
+    pairing_cls_loc = 'homekit.controller.ip_implementation.IpPairing'
+    with mock.patch(pairing_cls_loc) as pairing_cls:
+        pairing_cls.return_value = pairing
+        await config_entry.async_setup(hass)
+        await hass.async_block_till_done()
+
+    return config_entry, pairing
+
+
+async def device_config_changed(hass, accessories):
+    """Discover new devices added to HomeAssistant at runtime."""
+    # Update the accessories our FakePairing knows about
+    controller = hass.data[CONTROLLER]
+    pairing = controller.pairings['00:00:00:00:00:00']
+    pairing.accessories = accessories
+
+    discovery_info = {
+        'name': 'TestDevice',
+        'host': '127.0.0.1',
+        'port': 8080,
+        'properties': {
+            'md': 'TestDevice',
+            'id': '00:00:00:00:00:00',
+            'c#': '2',
+            'sf': '0',
+        }
+    }
+
+    # Config Flow will abort and notify us if the discovery event is of
+    # interest - in this case c# has incremented
+    flow = config_flow.HomekitControllerFlowHandler()
+    flow.hass = hass
+    flow.context = {}
+    result = await flow.async_step_zeroconf(discovery_info)
+    assert result['type'] == 'abort'
+    assert result['reason'] == 'already_configured'
+
+    # Wait for services to reconfigure
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
 
 async def setup_test_component(hass, services, capitalize=False, suffix=None):
@@ -246,7 +319,8 @@ async def setup_test_component(hass, services, capitalize=False, suffix=None):
     accessory = Accessory('TestDevice', 'example.com', 'Test', '0001', '0.1')
     accessory.services.extend(services)
 
-    pairing = await setup_test_accessories(hass, [accessory], capitalize)
-
+    config_entry, pairing = await setup_test_accessories(hass, [accessory])
     entity = 'testdevice' if suffix is None else 'testdevice_{}'.format(suffix)
-    return Helper(hass, '.'.join((domain, entity)), pairing, accessory)
+    return Helper(
+        hass, '.'.join((domain, entity)), pairing, accessory, config_entry
+    )

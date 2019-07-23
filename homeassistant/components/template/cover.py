@@ -5,14 +5,14 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components.cover import (
-    ENTITY_ID_FORMAT, CoverDevice, PLATFORM_SCHEMA,
+    ENTITY_ID_FORMAT, CoverDevice, PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA,
     SUPPORT_OPEN_TILT, SUPPORT_CLOSE_TILT, SUPPORT_STOP_TILT,
     SUPPORT_SET_TILT_POSITION, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP,
     SUPPORT_SET_POSITION, ATTR_POSITION, ATTR_TILT_POSITION)
 from homeassistant.const import (
     CONF_FRIENDLY_NAME, CONF_ENTITY_ID,
     EVENT_HOMEASSISTANT_START, MATCH_ALL,
-    CONF_VALUE_TEMPLATE, CONF_ICON_TEMPLATE,
+    CONF_VALUE_TEMPLATE, CONF_ICON_TEMPLATE, CONF_DEVICE_CLASS,
     CONF_ENTITY_PICTURE_TEMPLATE, CONF_OPTIMISTIC,
     STATE_OPEN, STATE_CLOSED)
 from homeassistant.exceptions import TemplateError
@@ -53,6 +53,7 @@ COVER_SCHEMA = vol.Schema({
     vol.Optional(CONF_TILT_TEMPLATE): cv.template,
     vol.Optional(CONF_ICON_TEMPLATE): cv.template,
     vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
     vol.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
@@ -79,6 +80,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         entity_picture_template = device_config.get(
             CONF_ENTITY_PICTURE_TEMPLATE)
+        device_class = device_config.get(CONF_DEVICE_CLASS)
         open_action = device_config.get(OPEN_ACTION)
         close_action = device_config.get(CLOSE_ACTION)
         stop_action = device_config.get(STOP_ACTION)
@@ -125,7 +127,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         covers.append(
             CoverTemplate(
                 hass,
-                device, friendly_name, state_template,
+                device, friendly_name, device_class, state_template,
                 position_template, tilt_template, icon_template,
                 entity_picture_template, open_action, close_action,
                 stop_action, position_action, tilt_action,
@@ -143,7 +145,8 @@ async def async_setup_platform(hass, config, async_add_entities,
 class CoverTemplate(CoverDevice):
     """Representation of a Template cover."""
 
-    def __init__(self, hass, device_id, friendly_name, state_template,
+    def __init__(self, hass, device_id, friendly_name, device_class,
+                 state_template,
                  position_template, tilt_template, icon_template,
                  entity_picture_template, open_action, close_action,
                  stop_action, position_action, tilt_action,
@@ -157,6 +160,7 @@ class CoverTemplate(CoverDevice):
         self._position_template = position_template
         self._tilt_template = tilt_template
         self._icon_template = icon_template
+        self._device_class = device_class
         self._entity_picture_template = entity_picture_template
         self._open_script = None
         if open_action is not None:
@@ -248,6 +252,11 @@ class CoverTemplate(CoverDevice):
     def entity_picture(self):
         """Return the entity picture to use in the frontend, if any."""
         return self._entity_picture
+
+    @property
+    def device_class(self):
+        """Return the device class of the cover."""
+        return self._device_class
 
     @property
     def supported_features(self):

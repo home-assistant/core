@@ -39,20 +39,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class AmbientWeatherBinarySensor(AmbientWeatherEntity, BinarySensorDevice):
     """Define an Ambient binary sensor."""
 
-    def __init__(
-            self, ambient, mac_address, station_name, sensor_type, sensor_name,
-            device_class):
-        """Initialize the sensor."""
-        super().__init__(
-            ambient, mac_address, station_name, sensor_type, sensor_name)
-
-        self._device_class = device_class
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
-
     @property
     def is_on(self):
         """Return the status of the sensor."""

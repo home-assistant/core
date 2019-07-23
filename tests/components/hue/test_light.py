@@ -640,7 +640,6 @@ async def test_light_turn_on_service(hass, mock_bridge):
         'bri': 100,
         'on': True,
         'ct': 300,
-        'effect': 'none',
         'alert': 'none',
     }
 
@@ -661,7 +660,6 @@ async def test_light_turn_on_service(hass, mock_bridge):
     assert mock_bridge.mock_requests[3]['json'] == {
         'on': True,
         'xy': (0.138, 0.08),
-        'effect': 'none',
         'alert': 'none',
     }
 

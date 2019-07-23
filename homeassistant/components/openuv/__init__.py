@@ -162,7 +162,13 @@ async def async_setup_entry(hass, config_entry):
     async def update_data(service):
         """Refresh OpenUV data."""
         _LOGGER.debug('Refreshing OpenUV data')
-        await openuv.async_update()
+
+        try:
+            await openuv.async_update()
+        except OpenUvError as err:
+            _LOGGER.error('Error during data update: %s', err)
+            return
+
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
     hass.services.async_register(DOMAIN, 'update_data', update_data)

@@ -388,7 +388,7 @@ class BrData:
                     tasks.append(dev.async_update_ha_state())
 
             if tasks:
-                await asyncio.wait(tasks, loop=self.hass.loop)
+                await asyncio.wait(tasks)
 
     async def schedule_update(self, minute=1):
         """Schedule an update after minute minutes."""
@@ -407,7 +407,7 @@ class BrData:
         resp = None
         try:
             websession = async_get_clientsession(self.hass)
-            with async_timeout.timeout(10, loop=self.hass.loop):
+            with async_timeout.timeout(10):
                 resp = await websession.get(url)
 
                 result[STATUS_CODE] = resp.status

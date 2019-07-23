@@ -127,6 +127,36 @@ async def test_setup_existing_cloud_user(hass, hass_storage):
     assert hass_storage[STORAGE_KEY]['data']['cloud_user'] == user.id
 
 
+async def test_setup_invalid_cloud_user(hass, hass_storage):
+    """Test setup with API push default data."""
+    hass_storage[STORAGE_KEY] = {
+        'version': 1,
+        'data': {
+            'cloud_user': 'non-existing'
+        }
+    }
+    with patch('hass_nabucasa.Cloud.start', return_value=mock_coro()):
+        result = await async_setup_component(hass, 'cloud', {
+            'http': {},
+            'cloud': {
+                cloud.CONF_MODE: cloud.MODE_DEV,
+                'cognito_client_id': 'test-cognito_client_id',
+                'user_pool_id': 'test-user_pool_id',
+                'region': 'test-region',
+                'relayer': 'test-relayer',
+            }
+        })
+        assert result
+
+    assert hass_storage[STORAGE_KEY]['data']['cloud_user'] != 'non-existing'
+    cloud_user = await hass.auth.async_get_user(
+        hass_storage[STORAGE_KEY]['data']['cloud_user']
+    )
+
+    assert cloud_user
+    assert cloud_user.groups[0].id == GROUP_ID_ADMIN
+
+
 async def test_setup_setup_cloud_user(hass, hass_storage):
     """Test setup with API push default data."""
     hass_storage[STORAGE_KEY] = {
@@ -154,3 +184,25 @@ async def test_setup_setup_cloud_user(hass, hass_storage):
 
     assert cloud_user
     assert cloud_user.groups[0].id == GROUP_ID_ADMIN
+
+
+async def test_on_connect(hass, mock_cloud_fixture):
+    """Test cloud on connect triggers."""
+    cl = hass.data['cloud']
+
+    assert len(cl.iot._on_connect) == 4
+
+    assert len(hass.states.async_entity_ids('binary_sensor')) == 0
+
+    assert 'async_setup' in str(cl.iot._on_connect[-1])
+    await cl.iot._on_connect[-1]()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids('binary_sensor')) == 1
+
+    with patch('homeassistant.helpers.discovery.async_load_platform',
+               side_effect=mock_coro) as mock_load:
+        await cl.iot._on_connect[-1]()
+        await hass.async_block_till_done()
+
+    assert len(mock_load.mock_calls) == 0

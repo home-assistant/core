@@ -5,7 +5,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_SELECT_SOUND_MODE, SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP)
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 import homeassistant.util.dt as dt_util
 
@@ -35,7 +36,7 @@ YOUTUBE_PLAYER_SUPPORT = \
 MUSIC_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_CLEAR_PLAYLIST | \
-    SUPPORT_PLAY | SUPPORT_SHUFFLE_SET | \
+    SUPPORT_PLAY | SUPPORT_SHUFFLE_SET | SUPPORT_VOLUME_STEP | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_SELECT_SOUND_MODE
 
@@ -51,7 +52,7 @@ class AbstractDemoPlayer(MediaPlayerDevice):
 
     # We only implement the methods that we support
 
-    def __init__(self, name):
+    def __init__(self, name, device_class=None):
         """Initialize the demo device."""
         self._name = name
         self._player_state = STATE_PLAYING
@@ -60,6 +61,7 @@ class AbstractDemoPlayer(MediaPlayerDevice):
         self._shuffle = False
         self._sound_mode_list = SOUND_MODE_LIST
         self._sound_mode = DEFAULT_SOUND_MODE
+        self._device_class = device_class
 
     @property
     def should_poll(self):
@@ -101,6 +103,11 @@ class AbstractDemoPlayer(MediaPlayerDevice):
         """Return a list of available sound modes."""
         return self._sound_mode_list
 
+    @property
+    def device_class(self):
+        """Return the device class of the media player."""
+        return self._device_class
+
     def turn_on(self):
         """Turn the media player on."""
         self._player_state = STATE_PLAYING
@@ -114,6 +121,16 @@ class AbstractDemoPlayer(MediaPlayerDevice):
     def mute_volume(self, mute):
         """Mute the volume."""
         self._volume_muted = mute
+        self.schedule_update_ha_state()
+
+    def volume_up(self):
+        """Increase volume."""
+        self._volume_level = min(1.0, self._volume_level + 0.1)
+        self.schedule_update_ha_state()
+
+    def volume_down(self):
+        """Decrease volume."""
+        self._volume_level = max(0.0, self._volume_level - 0.1)
         self.schedule_update_ha_state()
 
     def set_volume_level(self, volume):

@@ -71,13 +71,11 @@ class HassIOView(HomeAssistantView):
         This method is a coroutine.
         """
         read_timeout = _get_timeout(path)
-        hass = request.app['hass']
-
         data = None
         headers = _init_header(request)
 
         try:
-            with async_timeout.timeout(10, loop=hass.loop):
+            with async_timeout.timeout(10):
                 data = await request.read()
 
             method = getattr(self._websession, request.method.lower())

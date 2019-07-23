@@ -44,7 +44,8 @@ def convert(value: float, unit_1: str, unit_2: str) -> float:
     if not isinstance(value, Number):
         raise TypeError('{} is not of numeric type'.format(value))
 
-    if unit_1 == unit_2 or unit_1 not in VALID_UNITS:
+    # type ignore: https://github.com/python/mypy/issues/7207
+    if unit_1 == unit_2 or unit_1 not in VALID_UNITS:  # type: ignore
         return value
 
     pascals = value / UNIT_CONVERSION[unit_1]

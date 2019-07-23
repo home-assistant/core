@@ -11,8 +11,8 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
-    BaseNotificationService)
+    ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_MESSAGE,
+    PLATFORM_SCHEMA, BaseNotificationService)
 
 CONF_DATA = 'data'
 CONF_DATA_TEMPLATE = 'data_template'
@@ -110,6 +110,8 @@ class RestNotificationService(BaseNotificationService):
         if self._data:
             data.update(self._data)
         elif self._data_template:
+            kwargs[ATTR_MESSAGE] = message
+
             def _data_template_creator(value):
                 """Recursive template creator helper function."""
                 if isinstance(value, list):
@@ -119,6 +121,7 @@ class RestNotificationService(BaseNotificationService):
                             for key, item in value.items()}
                 value.hass = self._hass
                 return value.async_render(kwargs)
+
             data.update(_data_template_creator(self._data_template))
 
         if self._method == 'POST':

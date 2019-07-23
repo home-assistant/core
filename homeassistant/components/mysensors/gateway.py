@@ -20,7 +20,7 @@ from .const import (
     CONF_TOPIC_IN_PREFIX, CONF_TOPIC_OUT_PREFIX, CONF_VERSION, DOMAIN,
     MYSENSORS_GATEWAY_READY, MYSENSORS_GATEWAYS)
 from .handler import HANDLERS
-from .helpers import discover_mysensors_platform, validate_child
+from .helpers import discover_mysensors_platform, validate_child, validate_node
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -151,9 +151,9 @@ async def finish_setup(hass, hass_config, gateways):
         start_tasks.append(_gw_start(hass, gateway))
     if discover_tasks:
         # Make sure all devices and platforms are loaded before gateway start.
-        await asyncio.wait(discover_tasks, loop=hass.loop)
+        await asyncio.wait(discover_tasks)
     if start_tasks:
-        await asyncio.wait(start_tasks, loop=hass.loop)
+        await asyncio.wait(start_tasks)
 
 
 async def _discover_persistent_devices(hass, hass_config, gateway):
@@ -161,6 +161,8 @@ async def _discover_persistent_devices(hass, hass_config, gateway):
     tasks = []
     new_devices = defaultdict(list)
     for node_id in gateway.sensors:
+        if not validate_node(gateway, node_id):
+            continue
         node = gateway.sensors[node_id]
         for child in node.children.values():
             validated = validate_child(gateway, node_id, child)
@@ -170,7 +172,7 @@ async def _discover_persistent_devices(hass, hass_config, gateway):
         tasks.append(discover_mysensors_platform(
             hass, hass_config, platform, dev_ids))
     if tasks:
-        await asyncio.wait(tasks, loop=hass.loop)
+        await asyncio.wait(tasks)
 
 
 async def _gw_start(hass, gateway):
@@ -194,7 +196,7 @@ async def _gw_start(hass, gateway):
     hass.data[gateway_ready_key] = gateway_ready
 
     try:
-        with async_timeout.timeout(GATEWAY_READY_TIMEOUT, loop=hass.loop):
+        with async_timeout.timeout(GATEWAY_READY_TIMEOUT):
             await gateway_ready
     except asyncio.TimeoutError:
         _LOGGER.warning(

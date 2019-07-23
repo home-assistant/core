@@ -23,7 +23,8 @@ from homeassistant.const import (
     __version__, EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, CONF_UNIT_SYSTEM,
     ATTR_NOW, EVENT_TIME_CHANGED, EVENT_TIMER_OUT_OF_SYNC, ATTR_SECONDS,
     EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_CLOSE,
-    EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED, EVENT_CALL_SERVICE)
+    EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED, EVENT_CALL_SERVICE,
+    EVENT_CORE_CONFIG_UPDATE)
 
 from tests.common import get_test_home_assistant, async_mock_service
 
@@ -183,7 +184,7 @@ class TestHomeAssistant(unittest.TestCase):
             self.hass.add_job(test_coro())
 
         run_coroutine_threadsafe(
-            asyncio.wait(self.hass._pending_tasks, loop=self.hass.loop),
+            asyncio.wait(self.hass._pending_tasks),
             loop=self.hass.loop
         ).result()
 
@@ -205,8 +206,8 @@ class TestHomeAssistant(unittest.TestCase):
         @asyncio.coroutine
         def wait_finish_callback():
             """Wait until all stuff is scheduled."""
-            yield from asyncio.sleep(0, loop=self.hass.loop)
-            yield from asyncio.sleep(0, loop=self.hass.loop)
+            yield from asyncio.sleep(0)
+            yield from asyncio.sleep(0)
 
         run_coroutine_threadsafe(
             wait_finish_callback(), self.hass.loop).result()
@@ -226,8 +227,8 @@ class TestHomeAssistant(unittest.TestCase):
         @asyncio.coroutine
         def wait_finish_callback():
             """Wait until all stuff is scheduled."""
-            yield from asyncio.sleep(0, loop=self.hass.loop)
-            yield from asyncio.sleep(0, loop=self.hass.loop)
+            yield from asyncio.sleep(0)
+            yield from asyncio.sleep(0)
 
         for _ in range(2):
             self.hass.add_job(test_executor)
@@ -251,8 +252,8 @@ class TestHomeAssistant(unittest.TestCase):
         @asyncio.coroutine
         def wait_finish_callback():
             """Wait until all stuff is scheduled."""
-            yield from asyncio.sleep(0, loop=self.hass.loop)
-            yield from asyncio.sleep(0, loop=self.hass.loop)
+            yield from asyncio.sleep(0)
+            yield from asyncio.sleep(0)
 
         for _ in range(2):
             self.hass.add_job(test_callback)
@@ -744,6 +745,28 @@ class TestServiceRegistry(unittest.TestCase):
         self.hass.block_till_done()
         assert 1 == len(calls)
 
+    def test_async_service_partial(self):
+        """Test registering and calling an wrapped async service."""
+        calls = []
+
+        async def service_handler(call):
+            """Service handler coroutine."""
+            calls.append(call)
+
+        self.services.register(
+            'test_domain', 'register_calls',
+            functools.partial(service_handler))
+        self.hass.block_till_done()
+
+        assert len(self.calls_register) == 1
+        assert self.calls_register[-1].data['domain'] == 'test_domain'
+        assert self.calls_register[-1].data['service'] == 'register_calls'
+
+        assert self.services.call('test_domain', 'REGISTER_CALLS',
+                                  blocking=True)
+        self.hass.block_till_done()
+        assert len(calls) == 1
+
     def test_callback_service(self):
         """Test registering and calling an async service."""
         calls = []
@@ -849,7 +872,7 @@ class TestConfig(unittest.TestCase):
     # pylint: disable=invalid-name
     def setUp(self):
         """Set up things to be run when tests are started."""
-        self.config = ha.Config()
+        self.config = ha.Config(None)
         assert self.config.config_dir is None
 
     def test_path_with_file(self):
@@ -868,16 +891,17 @@ class TestConfig(unittest.TestCase):
         """Test as dict."""
         self.config.config_dir = '/tmp/ha-config'
         expected = {
-            'latitude': None,
-            'longitude': None,
-            'elevation': None,
+            'latitude': 0,
+            'longitude': 0,
+            'elevation': 0,
             CONF_UNIT_SYSTEM: METRIC_SYSTEM.as_dict(),
-            'location_name': None,
+            'location_name': "Home",
             'time_zone': 'UTC',
             'components': set(),
             'config_dir': '/tmp/ha-config',
             'whitelist_external_dirs': set(),
             'version': __version__,
+            'config_source': "default",
         }
 
         assert expected == self.config.as_dict()
@@ -917,6 +941,32 @@ class TestConfig(unittest.TestCase):
 
             with pytest.raises(AssertionError):
                 self.config.is_allowed_path(None)
+
+
+async def test_event_on_update(hass, hass_storage):
+    """Test that event is fired on update."""
+    events = []
+
+    @ha.callback
+    def callback(event):
+        events.append(event)
+
+    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, callback)
+
+    assert hass.config.latitude != 12
+
+    await hass.config.async_update(latitude=12)
+    await hass.async_block_till_done()
+
+    assert hass.config.latitude == 12
+    assert len(events) == 1
+    assert events[0].data == {'latitude': 12}
+
+
+async def test_bad_timezone_raises_value_error(hass):
+    """Test bad timezone raises ValueError."""
+    with pytest.raises(ValueError):
+        await hass.config.async_update(time_zone='not_a_timezone')
 
 
 @patch('homeassistant.core.monotonic')

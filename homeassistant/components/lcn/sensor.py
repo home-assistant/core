@@ -1,10 +1,13 @@
 """Support for LCN sensors."""
+import pypck
+
 from homeassistant.const import CONF_ADDRESS, CONF_UNIT_OF_MEASUREMENT
 
-from . import LcnDevice, get_connection
+from . import LcnDevice
 from .const import (
     CONF_CONNECTIONS, CONF_SOURCE, DATA_LCN, LED_PORTS, S0_INPUTS, SETPOINTS,
     THRESHOLDS, VARIABLES)
+from .helpers import get_connection
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
@@ -12,8 +15,6 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     """Set up the LCN sensor platform."""
     if discovery_info is None:
         return
-
-    import pypck
 
     devices = []
     for config in discovery_info:
@@ -41,8 +42,8 @@ class LcnVariableSensor(LcnDevice):
         """Initialize the LCN sensor."""
         super().__init__(config, address_connection)
 
-        self.variable = self.pypck.lcn_defs.Var[config[CONF_SOURCE]]
-        self.unit = self.pypck.lcn_defs.VarUnit.parse(
+        self.variable = pypck.lcn_defs.Var[config[CONF_SOURCE]]
+        self.unit = pypck.lcn_defs.VarUnit.parse(
             config[CONF_UNIT_OF_MEASUREMENT])
 
         self._value = None
@@ -50,9 +51,8 @@ class LcnVariableSensor(LcnDevice):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        self.hass.async_create_task(
-            self.address_connection.activate_status_request_handler(
-                self.variable))
+        await self.address_connection.activate_status_request_handler(
+            self.variable)
 
     @property
     def state(self):
@@ -66,7 +66,7 @@ class LcnVariableSensor(LcnDevice):
 
     def input_received(self, input_obj):
         """Set sensor value when LCN input object (command) is received."""
-        if not isinstance(input_obj, self.pypck.inputs.ModStatusVar) or \
+        if not isinstance(input_obj, pypck.inputs.ModStatusVar) or \
                 input_obj.get_var() != self.variable:
             return
 
@@ -82,18 +82,17 @@ class LcnLedLogicSensor(LcnDevice):
         super().__init__(config, address_connection)
 
         if config[CONF_SOURCE] in LED_PORTS:
-            self.source = self.pypck.lcn_defs.LedPort[config[CONF_SOURCE]]
+            self.source = pypck.lcn_defs.LedPort[config[CONF_SOURCE]]
         else:
-            self.source = self.pypck.lcn_defs.LogicOpPort[config[CONF_SOURCE]]
+            self.source = pypck.lcn_defs.LogicOpPort[config[CONF_SOURCE]]
 
         self._value = None
 
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        self.hass.async_create_task(
-            self.address_connection.activate_status_request_handler(
-                self.source))
+        await self.address_connection.activate_status_request_handler(
+            self.source)
 
     @property
     def state(self):
@@ -103,13 +102,13 @@ class LcnLedLogicSensor(LcnDevice):
     def input_received(self, input_obj):
         """Set sensor value when LCN input object (command) is received."""
         if not isinstance(input_obj,
-                          self.pypck.inputs.ModStatusLedsAndLogicOps):
+                          pypck.inputs.ModStatusLedsAndLogicOps):
             return
 
-        if self.source in self.pypck.lcn_defs.LedPort:
+        if self.source in pypck.lcn_defs.LedPort:
             self._value = input_obj.get_led_state(
                 self.source.value).name.lower()
-        elif self.source in self.pypck.lcn_defs.LogicOpPort:
+        elif self.source in pypck.lcn_defs.LogicOpPort:
             self._value = input_obj.get_logic_op_state(
                 self.source.value).name.lower()
 

@@ -69,7 +69,7 @@ def _entry_dict(entry):
         'name': entry.name,
         'sw_version': entry.sw_version,
         'id': entry.id,
-        'hub_device_id': entry.hub_device_id,
+        'via_device_id': entry.via_device_id,
         'area_id': entry.area_id,
         'name_by_user': entry.name_by_user,
     }
