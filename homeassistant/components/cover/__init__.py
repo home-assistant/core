@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import (  # noqa
     PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.components import group
 from homeassistant.helpers import intent
 from homeassistant.const import (
@@ -18,7 +18,7 @@ from homeassistant.const import (
     SERVICE_STOP_COVER, SERVICE_TOGGLE, SERVICE_OPEN_COVER_TILT,
     SERVICE_CLOSE_COVER_TILT, SERVICE_STOP_COVER_TILT,
     SERVICE_SET_COVER_TILT_POSITION, SERVICE_TOGGLE_COVER_TILT,
-    STATE_OPEN, STATE_CLOSED, STATE_OPENING, STATE_CLOSING, ATTR_ENTITY_ID)
+    STATE_OPEN, STATE_CLOSED, STATE_OPENING, STATE_CLOSING)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,16 +70,12 @@ ATTR_TILT_POSITION = 'tilt_position'
 INTENT_OPEN_COVER = 'HassOpenCover'
 INTENT_CLOSE_COVER = 'HassCloseCover'
 
-COVER_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-})
-
-COVER_SET_COVER_POSITION_SCHEMA = COVER_SERVICE_SCHEMA.extend({
+COVER_SET_COVER_POSITION_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_POSITION):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
 })
 
-COVER_SET_COVER_TILT_POSITION_SCHEMA = COVER_SERVICE_SCHEMA.extend({
+COVER_SET_COVER_TILT_POSITION_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_TILT_POSITION):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
 })
@@ -100,12 +96,12 @@ async def async_setup(hass, config):
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_OPEN_COVER, COVER_SERVICE_SCHEMA,
+        SERVICE_OPEN_COVER, ENTITY_SERVICE_SCHEMA,
         'async_open_cover'
     )
 
     component.async_register_entity_service(
-        SERVICE_CLOSE_COVER, COVER_SERVICE_SCHEMA,
+        SERVICE_CLOSE_COVER, ENTITY_SERVICE_SCHEMA,
         'async_close_cover'
     )
 
@@ -115,27 +111,27 @@ async def async_setup(hass, config):
     )
 
     component.async_register_entity_service(
-        SERVICE_STOP_COVER, COVER_SERVICE_SCHEMA,
+        SERVICE_STOP_COVER, ENTITY_SERVICE_SCHEMA,
         'async_stop_cover'
     )
 
     component.async_register_entity_service(
-        SERVICE_TOGGLE, COVER_SERVICE_SCHEMA,
+        SERVICE_TOGGLE, ENTITY_SERVICE_SCHEMA,
         'async_toggle'
     )
 
     component.async_register_entity_service(
-        SERVICE_OPEN_COVER_TILT, COVER_SERVICE_SCHEMA,
+        SERVICE_OPEN_COVER_TILT, ENTITY_SERVICE_SCHEMA,
         'async_open_cover_tilt'
     )
 
     component.async_register_entity_service(
-        SERVICE_CLOSE_COVER_TILT, COVER_SERVICE_SCHEMA,
+        SERVICE_CLOSE_COVER_TILT, ENTITY_SERVICE_SCHEMA,
         'async_close_cover_tilt'
     )
 
     component.async_register_entity_service(
-        SERVICE_STOP_COVER_TILT, COVER_SERVICE_SCHEMA,
+        SERVICE_STOP_COVER_TILT, ENTITY_SERVICE_SCHEMA,
         'async_stop_cover_tilt'
     )
 
@@ -145,7 +141,7 @@ async def async_setup(hass, config):
     )
 
     component.async_register_entity_service(
-        SERVICE_TOGGLE_COVER_TILT, COVER_SERVICE_SCHEMA,
+        SERVICE_TOGGLE_COVER_TILT, ENTITY_SERVICE_SCHEMA,
         'async_toggle_tilt'
     )
 
