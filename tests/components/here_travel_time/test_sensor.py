@@ -1,5 +1,6 @@
 """The test for the here_travel_time sensor platform."""
 from unittest.mock import patch
+import logging
 import urllib
 
 import pytest
@@ -11,7 +12,7 @@ from homeassistant.components.here_travel_time.sensor import (
     ICON_PUBLIC, ICON_TRUCK, ROUTE_MODE_FASTEST, ROUTE_MODE_SHORTEST,
     SCAN_INTERVAL, TRAFFIC_MODE_DISABLED, TRAFFIC_MODE_ENABLED,
     TRAVEL_MODE_CAR, TRAVEL_MODE_PEDESTRIAN, TRAVEL_MODE_PUBLIC,
-    TRAVEL_MODE_TRUCK, UNIT_OF_MEASUREMENT)
+    TRAVEL_MODE_TRUCK, UNIT_OF_MEASUREMENT, NO_ROUTE_ERROR_MESSAGE)
 from homeassistant.const import ATTR_ICON
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -639,87 +640,17 @@ async def test_location_device_tracker(hass, requests_mock_truck_response):
 
 
 async def test_location_device_tracker_added_after_update(
-        hass, requests_mock_truck_response):
+        hass, requests_mock_truck_response, caplog):
     """Test that device_tracker added after first update works."""
-    with patch(
-        'homeassistant.components.here_travel_time.sensor._LOGGER.error'
-    ) as mock_error:
-        utcnow = dt_util.utcnow()
-        # Patching 'utcnow' to gain more control over the timed update.
-        with patch('homeassistant.util.dt.utcnow', return_value=utcnow):
-            config = {DOMAIN: {
-                'platform': PLATFORM,
-                'name': 'test',
-                'origin': "device_tracker.origin",
-                'destination': "device_tracker.destination",
-                'app_id': APP_ID,
-                'app_code': APP_CODE,
-                'mode': TRAVEL_MODE_TRUCK
-            }}
-            assert await async_setup_component(hass, DOMAIN, config)
-
-            sensor = hass.states.get('sensor.test')
-            assert sensor.state == 'unknown'
-            assert mock_error.call_count == 2
-
-            # Device tracker appear after first update
-            hass.states.async_set(
-                'device_tracker.origin',
-                "unknown",
-                {
-                    "latitude": float(TRUCK_ORIGIN.split(",")[0]),
-                    "longitude": float(TRUCK_ORIGIN.split(",")[1])
-                }
-            )
-            hass.states.async_set(
-                'device_tracker.destination',
-                "unknown",
-                {
-                    "latitude": float(TRUCK_DESTINATION.split(",")[0]),
-                    "longitude": float(TRUCK_DESTINATION.split(",")[1])
-                }
-            )
-
-            # Test that update works more than once
-            async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
-            await hass.async_block_till_done()
-
-            sensor = hass.states.get('sensor.test')
-            _assert_truck_sensor(sensor)
-            assert mock_error.call_count == 2
-
-
-async def test_location_device_tracker_in_zone(
-        hass, requests_mock_truck_response):
-    """Test that device_tracker in zone uses device_tracker state works."""
-    with patch(
-        'homeassistant.components.here_travel_time.sensor._LOGGER.debug'
-    ) as mock_debug:
-        zone_config = {
-            "zone": [
-                {
-                    'name': 'Origin',
-                    'latitude': TRUCK_ORIGIN.split(",")[0],
-                    'longitude': TRUCK_ORIGIN.split(",")[1],
-                    'radius': 250,
-                    'passive': False
-                }
-            ]
-        }
-        assert await async_setup_component(hass, "zone", zone_config)
-        hass.states.async_set(
-            'device_tracker.origin',
-            "origin",
-            {
-                "latitude": None,
-                "longitude": None
-            }
-        )
+    caplog.set_level(logging.ERROR)
+    utcnow = dt_util.utcnow()
+    # Patching 'utcnow' to gain more control over the timed update.
+    with patch('homeassistant.util.dt.utcnow', return_value=utcnow):
         config = {DOMAIN: {
             'platform': PLATFORM,
             'name': 'test',
             'origin': "device_tracker.origin",
-            'destination': TRUCK_DESTINATION,
+            'destination': "device_tracker.destination",
             'app_id': APP_ID,
             'app_code': APP_CODE,
             'mode': TRAVEL_MODE_TRUCK
@@ -727,12 +658,80 @@ async def test_location_device_tracker_in_zone(
         assert await async_setup_component(hass, DOMAIN, config)
 
         sensor = hass.states.get('sensor.test')
+        assert len(caplog.records) == 2
+        assert "Unable to find entity" in caplog.text
+        caplog.clear()
+
+        # Device tracker appear after first update
+        hass.states.async_set(
+            'device_tracker.origin',
+            "unknown",
+            {
+                "latitude": float(TRUCK_ORIGIN.split(",")[0]),
+                "longitude": float(TRUCK_ORIGIN.split(",")[1])
+            }
+        )
+        hass.states.async_set(
+            'device_tracker.destination',
+            "unknown",
+            {
+                "latitude": float(TRUCK_DESTINATION.split(",")[0]),
+                "longitude": float(TRUCK_DESTINATION.split(",")[1])
+            }
+        )
+
+        # Test that update works more than once
+        async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
+        await hass.async_block_till_done()
+
+        sensor = hass.states.get('sensor.test')
         _assert_truck_sensor(sensor)
-        assert mock_debug.call_count == 1
+        assert len(caplog.records) == 0
 
 
-async def test_route_not_found(hass, requests_mock):
+async def test_location_device_tracker_in_zone(
+        hass, requests_mock_truck_response, caplog):
+    """Test that device_tracker in zone uses device_tracker state works."""
+    caplog.set_level(logging.DEBUG)
+    zone_config = {
+        "zone": [
+            {
+                'name': 'Origin',
+                'latitude': TRUCK_ORIGIN.split(",")[0],
+                'longitude': TRUCK_ORIGIN.split(",")[1],
+                'radius': 250,
+                'passive': False
+            }
+        ]
+    }
+    assert await async_setup_component(hass, "zone", zone_config)
+    hass.states.async_set(
+        'device_tracker.origin',
+        "origin",
+        {
+            "latitude": None,
+            "longitude": None
+        }
+    )
+    config = {DOMAIN: {
+        'platform': PLATFORM,
+        'name': 'test',
+        'origin': "device_tracker.origin",
+        'destination': TRUCK_DESTINATION,
+        'app_id': APP_ID,
+        'app_code': APP_CODE,
+        'mode': TRAVEL_MODE_TRUCK
+    }}
+    assert await async_setup_component(hass, DOMAIN, config)
+
+    sensor = hass.states.get('sensor.test')
+    _assert_truck_sensor(sensor)
+    assert ", getting zone location" in caplog.text
+
+
+async def test_route_not_found(hass, requests_mock, caplog):
     """Test that route not found error is correctly handled."""
+    caplog.set_level(logging.ERROR)
     origin = "52.5160,13.3779"
     destination = "47.013399,-10.171986"
     modes = ";".join(
@@ -761,15 +760,14 @@ async def test_route_not_found(hass, requests_mock):
         'app_id': APP_ID,
         'app_code': APP_CODE
     }}
-    with patch(
-        'homeassistant.components.here_travel_time.sensor._LOGGER.error'
-    ) as mock_error:
-        assert await async_setup_component(hass, DOMAIN, config)
-        assert mock_error.call_count == 1
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert len(caplog.records) == 1
+    assert NO_ROUTE_ERROR_MESSAGE in caplog.text
 
 
-async def test_pattern_origin(hass):
+async def test_pattern_origin(hass, caplog):
     """Test that pattern matching the origin works."""
+    caplog.set_level(logging.ERROR)
     config = {DOMAIN: {
         'platform': PLATFORM,
         'name': 'test',
@@ -778,15 +776,14 @@ async def test_pattern_origin(hass):
         'app_id': APP_ID,
         'app_code': APP_CODE
     }}
-    with patch(
-        'homeassistant.components.here_travel_time.sensor._LOGGER.error'
-    ) as mock_error:
-        assert await async_setup_component(hass, DOMAIN, config)
-        assert mock_error.call_count == 1
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert len(caplog.records) == 1
+    assert "Origin has the wrong format:" in caplog.text
 
 
-async def test_pattern_destination(hass):
+async def test_pattern_destination(hass, caplog):
     """Test that pattern matching the destination works."""
+    caplog.set_level(logging.ERROR)
     config = {DOMAIN: {
         'platform': PLATFORM,
         'name': 'test',
@@ -795,15 +792,14 @@ async def test_pattern_destination(hass):
         'app_id': APP_ID,
         'app_code': APP_CODE
     }}
-    with patch(
-        'homeassistant.components.here_travel_time.sensor._LOGGER.error'
-    ) as mock_error:
-        assert await async_setup_component(hass, DOMAIN, config)
-        assert mock_error.call_count == 1
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert len(caplog.records) == 1
+    assert "Destination has the wrong format:" in caplog.text
 
 
-async def test_invalid_credentials(hass, requests_mock):
+async def test_invalid_credentials(hass, requests_mock, caplog):
     """Test that invalid credentials error is correctly handled."""
+    caplog.set_level(logging.ERROR)
     origin = "52.5160,13.3779"
     destination = "47.013399,-10.171986"
     modes = ";".join(
@@ -832,8 +828,6 @@ async def test_invalid_credentials(hass, requests_mock):
         'app_id': 'invalid',
         'app_code': 'invalid'
     }}
-    with patch(
-        'homeassistant.components.here_travel_time.sensor._LOGGER.error'
-    ) as mock_error:
-        assert await async_setup_component(hass, DOMAIN, config)
-        assert mock_error.call_count == 1
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert len(caplog.records) == 1
+    assert "API returned error" in caplog.text
