@@ -62,7 +62,7 @@ def test_new_version_shows_entity_true(
         yield from hass.async_block_till_done()
 
     assert hass.states.is_state(updater.ENTITY_ID, 'on')
-    assert hass.states.get(updater.ENTITY_ID).attributes['newest_version'] is \
+    assert hass.states.get(updater.ENTITY_ID).attributes['newest_version'] == \
         NEW_VERSION
 
 
@@ -83,7 +83,7 @@ def test_same_version_shows_entity_false(
         yield from hass.async_block_till_done()
 
     assert hass.states.is_state(updater.ENTITY_ID, 'off')
-    assert hass.states.get(updater.ENTITY_ID).attributes['newest_version'] is \
+    assert hass.states.get(updater.ENTITY_ID).attributes['newest_version'] == \
         MOCK_VERSION
 
 
@@ -189,5 +189,5 @@ def test_new_version_shows_entity_after_hour_hassio(
         yield from hass.async_block_till_done()
 
     assert hass.states.is_state(updater.ENTITY_ID, 'on')
-    assert hass.states.get(updater.ENTITY_ID).attributes['newest_version'] is \
+    assert hass.states.get(updater.ENTITY_ID).attributes['newest_version'] == \
         "999.0"
