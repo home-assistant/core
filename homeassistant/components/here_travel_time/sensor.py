@@ -65,6 +65,10 @@ SCAN_INTERVAL = timedelta(minutes=5)
 TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone', 'person']
 DATA_KEY = 'here_travel_time'
 
+NO_ROUTE_ERRORS = [
+    'NGEO_ERROR_GRAPH_DISCONNECTED',
+    'NGEO_ERROR_ROUTE_NO_END_POINT'
+]
 NO_ROUTE_ERROR_MESSAGE = "HERE could not find a route based on the input"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -206,18 +210,11 @@ class HERETravelTimeSensor(Entity):
         # Convert device_trackers to HERE friendly location
         if self._origin_entity_id is not None:
             self._here_data.origin = await self._get_location_from_entity(
-                self._origin_entity_id
-            )
+                self._origin_entity_id)
 
         if self._destination_entity_id is not None:
             self._here_data.destination = await self._get_location_from_entity(
-                self._destination_entity_id
-            )
-
-        self._here_data.destination = await self._resolve_zone(
-            self._here_data.destination)
-        self._here_data.origin = await self._resolve_zone(
-            self._here_data.origin)
+                self._destination_entity_id)
 
         await self._hass.async_add_executor_job(self._here_data.update)
 
@@ -257,14 +254,6 @@ class HERETravelTimeSensor(Entity):
         return "{},{}".format(
             attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE)
         )
-
-    async def _resolve_zone(self, friendly_name):
-        entities = self._hass.states.async_all()
-        for entity in entities:
-            if entity.domain == 'zone' and entity.name == friendly_name:
-                return self._get_location_from_attributes(entity)
-
-        return friendly_name
 
 
 class HERETravelTimeData():
@@ -319,8 +308,8 @@ class HERETravelTimeData():
                 [self.travel_mode, self.route_mode, traffic_mode],
             )
             if isinstance(response, herepy.error.HEREError):
-                # Better error message for cryptic error code
-                if 'NGEO_ERROR_GRAPH_DISCONNECTED' in response.message:
+                # Better error message for cryptic no route error codes
+                if any(error in response.message for error in NO_ROUTE_ERRORS):
                     _LOGGER.error(NO_ROUTE_ERROR_MESSAGE)
                 else:
                     _LOGGER.error("API returned error %s", response.message)
