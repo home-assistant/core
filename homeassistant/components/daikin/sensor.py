@@ -58,28 +58,14 @@ class DaikinClimateSensor(Entity):
         return "{}-{}".format(self._api.mac, self._device_attribute)
 
     def get(self, key):
-        """Retrieve device settings from API library cache."""
-        value = None
-        cast_to_float = False
-
+        """Retrieve device readings from API library cache."""
         if key == ATTR_INSIDE_TEMPERATURE:
-            value = self._api.device.values.get('htemp')
-            cast_to_float = True
+            return self._api.device.inside_temperature
         elif key == ATTR_OUTSIDE_TEMPERATURE:
-            value = self._api.device.values.get('otemp')
+            return self._api.device.outside_temperature
 
-        if value is None:
-            _LOGGER.warning("Invalid value requested for key %s", key)
-        else:
-            if value in ("-", "--"):
-                value = None
-            elif cast_to_float:
-                try:
-                    value = float(value)
-                except ValueError:
-                    value = None
-
-        return value
+        _LOGGER.warning("Invalid value requested for key %s", key)
+        return
 
     @property
     def icon(self):

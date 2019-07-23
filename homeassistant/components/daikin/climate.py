@@ -112,54 +112,35 @@ class DaikinClimate(ClimateDevice):
 
     def get(self, key):
         """Retrieve device settings from API library cache."""
-        value = None
-        cast_to_float = False
-
         if key in [ATTR_TEMPERATURE, ATTR_INSIDE_TEMPERATURE,
                    ATTR_CURRENT_TEMPERATURE]:
-            key = ATTR_INSIDE_TEMPERATURE
+            return self._api.device.inside_temperature
+        if key == ATTR_TARGET_TEMPERATURE:
+            return self._api.device.target_temperature
+        if key == ATTR_OUTSIDE_TEMPERATURE:
+            return self._api.device.outside_temperature
 
         daikin_attr = HA_ATTR_TO_DAIKIN.get(key)
 
-        if key == ATTR_INSIDE_TEMPERATURE:
-            value = self._api.device.values.get(daikin_attr)
-            cast_to_float = True
-        elif key == ATTR_TARGET_TEMPERATURE:
-            value = self._api.device.values.get(daikin_attr)
-            cast_to_float = True
-        elif key == ATTR_OUTSIDE_TEMPERATURE:
-            value = self._api.device.values.get(daikin_attr)
-            cast_to_float = True
-        elif key == ATTR_FAN_MODE:
-            value = self._api.device.represent(daikin_attr)[1].title()
-        elif key == ATTR_SWING_MODE:
-            value = self._api.device.represent(daikin_attr)[1].title()
-        elif key == ATTR_HVAC_MODE:
+        if key == ATTR_FAN_MODE:
+            return self._api.device.represent(daikin_attr)[1].title()
+        if key == ATTR_SWING_MODE:
+            return self._api.device.represent(daikin_attr)[1].title()
+        if key == ATTR_HVAC_MODE:
             # Daikin can return also internal states auto-1 or auto-7
             # and we need to translate them as AUTO
             daikin_mode = re.sub(
                 '[^a-z]', '',
                 self._api.device.represent(daikin_attr)[1])
-            ha_mode = DAIKIN_TO_HA_STATE.get(daikin_mode)
-            value = ha_mode
+            return DAIKIN_TO_HA_STATE.get(daikin_mode)
         elif key == ATTR_PRESET_MODE:
             if self._api.device.represent(
                     daikin_attr)[1] == HA_PRESET_TO_DAIKIN[PRESET_AWAY]:
                 return PRESET_AWAY
             return PRESET_NONE
 
-        if value is None:
-            _LOGGER.error("Invalid value requested for key %s", key)
-        else:
-            if value in ("-", "--"):
-                value = None
-            elif cast_to_float:
-                try:
-                    value = float(value)
-                except ValueError:
-                    value = None
-
-        return value
+        _LOGGER.error("Invalid value requested for key %s", key)
+        return
 
     async def _set(self, settings):
         """Set device settings using API."""
