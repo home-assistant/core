@@ -8,7 +8,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, STATE_OFFLINE, STATE_ONLINE)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,8 +17,6 @@ CONF_ACCOUNTS = 'accounts'
 
 ICON = 'mdi:steam'
 
-STATE_OFFLINE = 'offline'
-STATE_ONLINE = 'online'
 STATE_BUSY = 'busy'
 STATE_AWAY = 'away'
 STATE_SNOOZE = 'snooze'

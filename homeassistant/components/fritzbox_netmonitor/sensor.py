@@ -6,7 +6,7 @@ from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_HOST, STATE_UNAVAILABLE)
+from homeassistant.const import (CONF_NAME, CONF_HOST, STATE_UNAVAILABLE, STATE_ONLINE, STATE_OFFLINE)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -29,9 +29,6 @@ ATTR_UPTIME = 'uptime'
 ATTR_WAN_ACCESS_TYPE = 'wan_access_type'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
-
-STATE_ONLINE = 'online'
-STATE_OFFLINE = 'offline'
 
 ICON = 'mdi:web'
 

@@ -28,7 +28,9 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED,
     STATE_CLOSED, STATE_HOME, STATE_LOCKED, STATE_NOT_HOME, STATE_OFF,
     STATE_ON, STATE_OPEN, STATE_UNKNOWN,
-    STATE_UNLOCKED, SERVICE_SELECT_OPTION)
+    STATE_UNLOCKED, SERVICE_SELECT_OPTION,
+    STATE_ONLINE, STATE_OFFLINE,
+    STATE_UNAVAILABLE)
 from homeassistant.core import (
     Context, State, DOMAIN as HASS_DOMAIN)
 from homeassistant.util.async_ import run_coroutine_threadsafe
@@ -219,10 +221,11 @@ def state_as_number(state: State) -> float:
     Raises ValueError if this is not possible.
     """
     if state.state in (STATE_ON, STATE_LOCKED, STATE_ABOVE_HORIZON,
-                       STATE_OPEN, STATE_HOME):
+                       STATE_OPEN, STATE_HOME, STATE_ONLINE):
         return 1
     if state.state in (STATE_OFF, STATE_UNLOCKED, STATE_UNKNOWN,
-                       STATE_BELOW_HORIZON, STATE_CLOSED, STATE_NOT_HOME):
+                       STATE_BELOW_HORIZON, STATE_CLOSED, STATE_NOT_HOME,
+                       STATE_OFFLINE, STATE_UNAVAILABLE):
         return 0
 
     return float(state.state)

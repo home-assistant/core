@@ -217,6 +217,10 @@ STATE_UNLOCKED = 'unlocked'
 STATE_UNAVAILABLE = 'unavailable'
 STATE_OK = 'ok'
 STATE_PROBLEM = 'problem'
+STATE_ONLINE = 'online'
+STATE_OFFLINE = 'offline'
+
+
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Attribution
