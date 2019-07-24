@@ -5,6 +5,9 @@ import os
 
 from homeassistant.util.yaml import _SECRET_NAMESPACE
 
+
+# mypy: allow-untyped-defs
+
 REQUIREMENTS = ['keyring==17.1.1', 'keyrings.alt==3.1.1']
 
 
@@ -39,9 +42,9 @@ def run(args):
         return 1
 
     if args.action == 'set':
-        the_secret = getpass.getpass(
+        entered_secret = getpass.getpass(
             'Please enter the secret for {}: '.format(args.name))
-        keyring.set_password(_SECRET_NAMESPACE, args.name, the_secret)
+        keyring.set_password(_SECRET_NAMESPACE, args.name, entered_secret)
         print('Secret {} set successfully'.format(args.name))
     elif args.action == 'get':
         the_secret = keyring.get_password(_SECRET_NAMESPACE, args.name)

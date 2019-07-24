@@ -5,17 +5,22 @@ from contextlib import suppress
 from datetime import datetime
 import logging
 from timeit import default_timer as timer
+from typing import Callable, Dict
 
 from homeassistant import core
 from homeassistant.const import (
     ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED)
 from homeassistant.util import dt as dt_util
 
-BENCHMARKS = {}
+
+# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
+# mypy: no-warn-return-any
+
+BENCHMARKS = {}  # type: Dict[str, Callable]
 
 
 def run(args):
-    """Handle ensure configuration commandline script."""
+    """Handle benchmark commandline script."""
     # Disable logging
     logging.getLogger('homeassistant.core').setLevel(logging.CRITICAL)
 
@@ -39,8 +44,6 @@ def run(args):
             print('Benchmark {} done in {}s'.format(bench.__name__, runtime))
             loop.run_until_complete(hass.async_stop())
             loop.close()
-
-    return 0
 
 
 def benchmark(func):

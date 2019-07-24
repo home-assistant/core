@@ -10,6 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config import get_default_config_dir
 
 
+# mypy: allow-untyped-calls, allow-untyped-defs
+
 def run(args):
     """Handle Home Assistant auth provider script."""
     parser = argparse.ArgumentParser(
