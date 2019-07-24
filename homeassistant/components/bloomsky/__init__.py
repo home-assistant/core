@@ -69,7 +69,7 @@ class BloomSky:
         if response.status_code == 401:
             raise RuntimeError("Invalid API_KEY")
         if response.status_code == 405:
-            _LOGGER.error("You have no bloomsky devices configured: %s", response.status_code)
+            _LOGGER.error("You have no bloomsky devices configured")
             return
         if response.status_code != 200:
             _LOGGER.error("Invalid HTTP response: %s", response.status_code)
