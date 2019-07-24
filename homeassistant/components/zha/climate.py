@@ -228,12 +228,13 @@ class Thermostat(ZhaEntity, ClimateDevice):
     @property
     def hvac_action(self) -> Optional[str]:
         """Return the current HVAC action."""
-        if self._thrm.running_mode is None:
-            return None
-        action = RUNNING_MODE.get(self._thrm.running_mode)
-        if action == CURRENT_HVAC_IDLE and self.hvac_mode == HVAC_MODE_OFF:
-            return CURRENT_HVAC_OFF
-        return action
+        if self._thrm.pi_heating_demand > 0:
+            return CURRENT_HVAC_HEAT
+        if self._thrm.pi_cooling_demand > 0:
+            return CURRENT_HVAC_COOL
+        if self.hvac_mode != HVAC_MODE_OFF:
+            return CURRENT_HVAC_IDLE
+        return CURRENT_HVAC_OFF
 
     @property
     def hvac_mode(self) -> Optional[str]:
