@@ -13,7 +13,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_HEAT_COOL,
     HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY,
     PRESET_AWAY, PRESET_NONE,
-    ATTR_CURRENT_TEMPERATURE, ATTR_FAN_MODE,
+    ATTR_FAN_MODE,
     ATTR_HVAC_MODE, ATTR_SWING_MODE,
     ATTR_PRESET_MODE)
 import homeassistant.helpers.config_validation as cv
@@ -112,14 +112,6 @@ class DaikinClimate(ClimateDevice):
 
     def get(self, key):
         """Retrieve device settings from API library cache."""
-        if key in [ATTR_TEMPERATURE, ATTR_INSIDE_TEMPERATURE,
-                   ATTR_CURRENT_TEMPERATURE]:
-            return self._api.device.inside_temperature
-        if key == ATTR_TARGET_TEMPERATURE:
-            return self._api.device.target_temperature
-        if key == ATTR_OUTSIDE_TEMPERATURE:
-            return self._api.device.outside_temperature
-
         daikin_attr = HA_ATTR_TO_DAIKIN.get(key)
 
         if key == ATTR_FAN_MODE:
@@ -194,12 +186,12 @@ class DaikinClimate(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self.get(ATTR_CURRENT_TEMPERATURE)
+        return self._api.device.inside_temperature
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self.get(ATTR_TARGET_TEMPERATURE)
+        return self._api.device.target_temperature
 
     @property
     def target_temperature_step(self):
