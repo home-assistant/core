@@ -12,7 +12,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_SWING_MODE,
     HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_HEAT_COOL,
     HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY,
-    PRESET_AWAY, PRESET_HOME,
+    PRESET_AWAY, PRESET_NONE,
     ATTR_CURRENT_TEMPERATURE, ATTR_FAN_MODE,
     ATTR_HVAC_MODE, ATTR_SWING_MODE,
     ATTR_PRESET_MODE)
@@ -20,7 +20,8 @@ import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN as DAIKIN_DOMAIN
 from .const import (
-    ATTR_INSIDE_TEMPERATURE, ATTR_OUTSIDE_TEMPERATURE, ATTR_TARGET_TEMPERATURE)
+    ATTR_INSIDE_TEMPERATURE, ATTR_OUTSIDE_TEMPERATURE, ATTR_STATE_OFF,
+    ATTR_STATE_ON, ATTR_TARGET_TEMPERATURE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ DAIKIN_TO_HA_STATE = {
 
 HA_PRESET_TO_DAIKIN = {
     PRESET_AWAY: 'on',
-    PRESET_HOME: 'off'
+    PRESET_NONE: 'off'
 }
 
 HA_ATTR_TO_DAIKIN = {
@@ -142,9 +143,10 @@ class DaikinClimate(ClimateDevice):
             ha_mode = DAIKIN_TO_HA_STATE.get(daikin_mode)
             value = ha_mode
         elif key == ATTR_PRESET_MODE:
-            away = (self._api.device.represent(daikin_attr)[1]
-                    != HA_STATE_TO_DAIKIN[HVAC_MODE_OFF])
-            value = PRESET_AWAY if away else PRESET_HOME
+            if self._api.device.represent(
+                    daikin_attr)[1] == HA_PRESET_TO_DAIKIN[PRESET_AWAY]:
+                return PRESET_AWAY
+            return PRESET_NONE
 
         if value is None:
             _LOGGER.error("Invalid value requested for key %s", key)
@@ -164,7 +166,7 @@ class DaikinClimate(ClimateDevice):
         values = {}
 
         for attr in [ATTR_TEMPERATURE, ATTR_FAN_MODE, ATTR_SWING_MODE,
-                     ATTR_HVAC_MODE, ATTR_PRESET_MODE]:
+                     ATTR_HVAC_MODE]:
             value = settings.get(attr)
             if value is None:
                 continue
@@ -173,8 +175,6 @@ class DaikinClimate(ClimateDevice):
             if daikin_attr is not None:
                 if attr == ATTR_HVAC_MODE:
                     values[daikin_attr] = HA_STATE_TO_DAIKIN[value]
-                elif attr == ATTR_PRESET_MODE:
-                    values[daikin_attr] = HA_PRESET_TO_DAIKIN[value]
                 elif value in self._list[attr]:
                     values[daikin_attr] = value.lower()
                 else:
@@ -273,16 +273,19 @@ class DaikinClimate(ClimateDevice):
 
     @property
     def preset_mode(self):
-        """Return the fan setting."""
+        """Return the preset_mode."""
         return self.get(ATTR_PRESET_MODE)
 
     async def async_set_preset_mode(self, preset_mode):
-        """Set new target temperature."""
-        await self._set({ATTR_PRESET_MODE: preset_mode})
+        """Set preset mode."""
+        if preset_mode == PRESET_AWAY:
+            await self._api.device.set_holiday(ATTR_STATE_ON)
+        else:
+            await self._api.device.set_holiday(ATTR_STATE_OFF)
 
     @property
     def preset_modes(self):
-        """List of available swing modes."""
+        """List of available preset modes."""
         return list(HA_PRESET_TO_DAIKIN)
 
     async def async_update(self):
