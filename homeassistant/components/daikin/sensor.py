@@ -74,10 +74,7 @@ class DaikinClimateSensor(Entity):
             return self._api.device.inside_temperature
         if self._device_attribute == ATTR_OUTSIDE_TEMPERATURE:
             return self._api.device.outside_temperature
-
-        _LOGGER.warning("Invalid value requested for key %s",
-                        self._device_attribute)
-        return
+        return None
 
     @property
     def unit_of_measurement(self):
