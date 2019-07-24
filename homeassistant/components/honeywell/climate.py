@@ -12,8 +12,9 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     FAN_AUTO, FAN_DIFFUSE, FAN_ON,
     SUPPORT_AUX_HEAT, SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_TEMPERATURE_RANGE,
-    CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, CURRENT_HVAC_OFF,
+    SUPPORT_TARGET_HUMIDITY, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
+    CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, CURRENT_HVAC_FAN,
     HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_HEAT_COOL,
     PRESET_AWAY, PRESET_NONE,
 )
@@ -58,8 +59,8 @@ HW_MODE_TO_HVAC_MODE = {
     'auto': HVAC_MODE_HEAT_COOL,
 }
 HW_MODE_TO_HA_HVAC_ACTION = {
-    'off': CURRENT_HVAC_OFF,
-    'fan': CURRENT_HVAC_IDLE,
+    'off': CURRENT_HVAC_IDLE,
+    'fan': CURRENT_HVAC_FAN,
     'heat': CURRENT_HVAC_HEAT,
     'cool': CURRENT_HVAC_COOL,
 }
@@ -126,30 +127,33 @@ class HoneywellUSThermostat(ClimateDevice):
         self._username = username
         self._password = password
 
-        self._supported_features = (SUPPORT_PRESET_MODE |
-                                    SUPPORT_TARGET_TEMPERATURE_RANGE)
+        _LOGGER.debug("latestData = %s ", device._data)  # noqa; pylint: disable=protected-access
 
-        # pylint: disable=protected-access
-        _LOGGER.debug("uiData = %s ", device._data['uiData'])
-
-        # not all honeywell HVACs upport all modes
+        # not all honeywell HVACs support all modes
         mappings = [v for k, v in HVAC_MODE_TO_HW_MODE.items()
-                    if k in device._data['uiData']]
+                    if device.raw_ui_data[k]]
         self._hvac_mode_map = {k: v for d in mappings for k, v in d.items()}
 
-        if device._data['canControlHumidification']:
+        self._supported_features = \
+            SUPPORT_PRESET_MODE | \
+            SUPPORT_TARGET_TEMPERATURE | \
+            SUPPORT_TARGET_TEMPERATURE_RANGE
+
+        if device._data['canControlHumidification']:  # noqa; pylint: disable=protected-access
             self._supported_features |= SUPPORT_TARGET_HUMIDITY
-        if device._data['uiData']['SwitchEmergencyHeatAllowed']:
+
+        if device.raw_ui_data['SwitchEmergencyHeatAllowed']:
             self._supported_features |= SUPPORT_AUX_HEAT
 
-        if not device._data['hasFan']:
+        if not device._data['hasFan']:  # pylint: disable=protected-access
             return
 
-        self._supported_features |= SUPPORT_FAN_MODE
         # not all honeywell fans support all modes
         mappings = [v for k, v in FAN_MODE_TO_HW.items()
-                    if k in device._data['fanData']]
+                    if device.raw_fan_data[k]]
         self._fan_mode_map = {k: v for d in mappings for k, v in d.items()}
+
+        self._supported_features |= SUPPORT_FAN_MODE
 
     @property
     def name(self) -> Optional[str]:
@@ -159,17 +163,35 @@ class HoneywellUSThermostat(ClimateDevice):
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
         """Return the device specific state attributes."""
-        # pylint: disable=protected-access
         data = {}
-        if self._device._data['hasFan']:
-            data[ATTR_FAN_ACTION] = \
-                'running' if self._device.fan_running else 'idle'
+        data[ATTR_FAN_ACTION] = \
+            'running' if self._device.fan_running else 'idle'
+        if self._device.raw_dr_data:
+            data['dr_phase'] = self._device.raw_dr_data.get('Phase')
         return data
 
     @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
         return self._supported_features
+
+    @property
+    def min_temp(self) -> float:
+        """Return the minimum temperature."""
+        if self.hvac_mode in [HVAC_MODE_COOL, HVAC_MODE_HEAT_COOL]:
+            return self._device.raw_ui_data['CoolLowerSetptLimit']
+        if self.hvac_mode == HVAC_MODE_HEAT:
+            return self._device.raw_ui_data['HeatLowerSetptLimit']
+        return None
+
+    @property
+    def max_temp(self) -> float:
+        """Return the maximum temperature."""
+        if self.hvac_mode == HVAC_MODE_COOL:
+            return self._device.raw_ui_data['CoolUpperSetptLimit']
+        if self.hvac_mode in [HVAC_MODE_HEAT, HVAC_MODE_HEAT_COOL]:
+            return self._device.raw_ui_data['HeatUpperSetptLimit']
+        return None
 
     @property
     def temperature_unit(self) -> str:
@@ -195,6 +217,8 @@ class HoneywellUSThermostat(ClimateDevice):
     @property
     def hvac_action(self) -> Optional[str]:
         """Return the current running hvac operation if supported."""
+        if self.hvac_mode == HVAC_MODE_OFF:
+            return None
         return HW_MODE_TO_HA_HVAC_ACTION[self._device.equipment_output_status]
 
     @property
@@ -207,19 +231,23 @@ class HoneywellUSThermostat(ClimateDevice):
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVAC_MODE_COOL:
             return self._device.setpoint_cool
-        if self.hvac_mode != HVAC_MODE_HEAT:
+        if self.hvac_mode == HVAC_MODE_HEAT:
             return self._device.setpoint_heat
         return None
 
     @property
     def target_temperature_high(self) -> Optional[float]:
         """Return the highbound target temperature we try to reach."""
-        return self._device.setpoint_cool
+        if self.hvac_mode == HVAC_MODE_HEAT_COOL:
+            return self._device.setpoint_cool
+        return None
 
     @property
     def target_temperature_low(self) -> Optional[float]:
         """Return the lowbound target temperature we try to reach."""
-        return self._device.setpoint_heat
+        if self.hvac_mode == HVAC_MODE_HEAT_COOL:
+            return self._device.setpoint_heat
+        return None
 
     @property
     def preset_mode(self) -> Optional[str]:
@@ -348,7 +376,10 @@ class HoneywellUSThermostat(ClimateDevice):
 
     def turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
-        self._device.system_mode = 'auto'
+        if HVAC_MODE_HEAT in self.hvac_modes:
+            self.set_hvac_mode(HVAC_MODE_HEAT)
+        else:
+            self.set_hvac_mode(HVAC_MODE_OFF)
 
     def _retry(self) -> bool:
         """Recreate a new somecomfort client.
@@ -396,3 +427,5 @@ class HoneywellUSThermostat(ClimateDevice):
                     raise exp
                 _LOGGER.error(
                     "SomeComfort update failed, Retrying - Error: %s", exp)
+
+        _LOGGER.debug("latestData = %s ", self._device._data)  # noqa; pylint: disable=protected-access
