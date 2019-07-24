@@ -11,7 +11,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON, STATE_OFF, STATE_ON, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa
-    ENTITY_SERVICE_SCHEMA, PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
@@ -50,34 +50,34 @@ CONVERTIBLE_ATTRIBUTE = [
 
 _LOGGER = logging.getLogger(__name__)
 
-SET_AUX_HEAT_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+SET_AUX_HEAT_SCHEMA = {
     vol.Required(ATTR_AUX_HEAT): cv.boolean,
-})
+}
 SET_TEMPERATURE_SCHEMA = vol.Schema(vol.All(
     cv.has_at_least_one_key(
         ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW),
-    ENTITY_SERVICE_SCHEMA.extend({
+    {
         vol.Exclusive(ATTR_TEMPERATURE, 'temperature'): vol.Coerce(float),
         vol.Inclusive(ATTR_TARGET_TEMP_HIGH, 'temperature'): vol.Coerce(float),
         vol.Inclusive(ATTR_TARGET_TEMP_LOW, 'temperature'): vol.Coerce(float),
         vol.Optional(ATTR_HVAC_MODE): vol.In(HVAC_MODES),
-    })
+    }
 ))
-SET_FAN_MODE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+SET_FAN_MODE_SCHEMA = {
     vol.Required(ATTR_FAN_MODE): cv.string,
-})
-SET_PRESET_MODE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+}
+SET_PRESET_MODE_SCHEMA = {
     vol.Required(ATTR_PRESET_MODE): cv.string,
-})
-SET_HVAC_MODE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+}
+SET_HVAC_MODE_SCHEMA = {
     vol.Required(ATTR_HVAC_MODE): vol.In(HVAC_MODES),
-})
-SET_HUMIDITY_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+}
+SET_HUMIDITY_SCHEMA = {
     vol.Required(ATTR_HUMIDITY): vol.Coerce(float),
-})
-SET_SWING_MODE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+}
+SET_SWING_MODE_SCHEMA = {
     vol.Required(ATTR_SWING_MODE): cv.string,
-})
+}
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
@@ -87,11 +87,11 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_TURN_ON, ENTITY_SERVICE_SCHEMA,
+        SERVICE_TURN_ON, {},
         'async_turn_on'
     )
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, ENTITY_SERVICE_SCHEMA,
+        SERVICE_TURN_OFF, {},
         'async_turn_off'
     )
     component.async_register_entity_service(

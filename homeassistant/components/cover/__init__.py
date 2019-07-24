@@ -10,7 +10,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import (  # noqa
     PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.components import group
 from homeassistant.helpers import intent
 from homeassistant.const import (
@@ -70,15 +69,15 @@ ATTR_TILT_POSITION = 'tilt_position'
 INTENT_OPEN_COVER = 'HassOpenCover'
 INTENT_CLOSE_COVER = 'HassCloseCover'
 
-COVER_SET_COVER_POSITION_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+COVER_SET_COVER_POSITION_SCHEMA = {
     vol.Required(ATTR_POSITION):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
-})
+}
 
-COVER_SET_COVER_TILT_POSITION_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+COVER_SET_COVER_TILT_POSITION_SCHEMA = {
     vol.Required(ATTR_TILT_POSITION):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
-})
+}
 
 
 @bind_hass
@@ -96,12 +95,12 @@ async def async_setup(hass, config):
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_OPEN_COVER, ENTITY_SERVICE_SCHEMA,
+        SERVICE_OPEN_COVER, {},
         'async_open_cover'
     )
 
     component.async_register_entity_service(
-        SERVICE_CLOSE_COVER, ENTITY_SERVICE_SCHEMA,
+        SERVICE_CLOSE_COVER, {},
         'async_close_cover'
     )
 
@@ -111,27 +110,27 @@ async def async_setup(hass, config):
     )
 
     component.async_register_entity_service(
-        SERVICE_STOP_COVER, ENTITY_SERVICE_SCHEMA,
+        SERVICE_STOP_COVER, {},
         'async_stop_cover'
     )
 
     component.async_register_entity_service(
-        SERVICE_TOGGLE, ENTITY_SERVICE_SCHEMA,
+        SERVICE_TOGGLE, {},
         'async_toggle'
     )
 
     component.async_register_entity_service(
-        SERVICE_OPEN_COVER_TILT, ENTITY_SERVICE_SCHEMA,
+        SERVICE_OPEN_COVER_TILT, {},
         'async_open_cover_tilt'
     )
 
     component.async_register_entity_service(
-        SERVICE_CLOSE_COVER_TILT, ENTITY_SERVICE_SCHEMA,
+        SERVICE_CLOSE_COVER_TILT, {},
         'async_close_cover_tilt'
     )
 
     component.async_register_entity_service(
-        SERVICE_STOP_COVER_TILT, ENTITY_SERVICE_SCHEMA,
+        SERVICE_STOP_COVER_TILT, {},
         'async_stop_cover_tilt'
     )
 
@@ -141,7 +140,7 @@ async def async_setup(hass, config):
     )
 
     component.async_register_entity_service(
-        SERVICE_TOGGLE_COVER_TILT, ENTITY_SERVICE_SCHEMA,
+        SERVICE_TOGGLE_COVER_TILT, {},
         'async_toggle_tilt'
     )
 

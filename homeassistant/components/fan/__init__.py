@@ -12,7 +12,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import (  # noqa
-    ENTITY_SERVICE_SCHEMA, PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,21 +54,21 @@ PROP_TO_ATTR = {
     'direction': ATTR_DIRECTION,
 }  # type: dict
 
-FAN_SET_SPEED_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+FAN_SET_SPEED_SCHEMA = {
     vol.Required(ATTR_SPEED): cv.string
-})  # type: dict
+}  # type: dict
 
-FAN_TURN_ON_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+FAN_TURN_ON_SCHEMA = {
     vol.Optional(ATTR_SPEED): cv.string
-})  # type: dict
+}  # type: dict
 
-FAN_OSCILLATE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+FAN_OSCILLATE_SCHEMA = {
     vol.Required(ATTR_OSCILLATING): cv.boolean
-})  # type: dict
+}  # type: dict
 
-FAN_SET_DIRECTION_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+FAN_SET_DIRECTION_SCHEMA = {
     vol.Optional(ATTR_DIRECTION): cv.string
-})  # type: dict
+}  # type: dict
 
 
 @bind_hass
@@ -91,11 +91,11 @@ async def async_setup(hass, config: dict):
         'async_turn_on'
     )
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, ENTITY_SERVICE_SCHEMA,
+        SERVICE_TURN_OFF, {},
         'async_turn_off'
     )
     component.async_register_entity_service(
-        SERVICE_TOGGLE, ENTITY_SERVICE_SCHEMA,
+        SERVICE_TOGGLE, {},
         'async_toggle'
     )
     component.async_register_entity_service(

@@ -42,14 +42,14 @@ SERVICE_START = 'start'
 SERVICE_PAUSE = 'pause'
 SERVICE_STOP = 'stop'
 
-VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA = {
     vol.Required(ATTR_FAN_SPEED): cv.string,
-})
+}
 
-VACUUM_SEND_COMMAND_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+VACUUM_SEND_COMMAND_SERVICE_SCHEMA = {
     vol.Required(ATTR_COMMAND): cv.string,
     vol.Optional(ATTR_PARAMS): vol.Any(dict, cv.ensure_list),
-})
+}
 
 STATE_CLEANING = 'cleaning'
 STATE_DOCKED = 'docked'
@@ -91,43 +91,43 @@ async def async_setup(hass, config):
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_TURN_ON, ENTITY_SERVICE_SCHEMA,
+        SERVICE_TURN_ON, {},
         'async_turn_on'
     )
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, ENTITY_SERVICE_SCHEMA,
+        SERVICE_TURN_OFF, {},
         'async_turn_off'
     )
     component.async_register_entity_service(
-        SERVICE_TOGGLE, ENTITY_SERVICE_SCHEMA,
+        SERVICE_TOGGLE, {},
         'async_toggle'
     )
     component.async_register_entity_service(
-        SERVICE_START_PAUSE, ENTITY_SERVICE_SCHEMA,
+        SERVICE_START_PAUSE, {},
         'async_start_pause'
     )
     component.async_register_entity_service(
-        SERVICE_START, ENTITY_SERVICE_SCHEMA,
+        SERVICE_START, {},
         'async_start'
     )
     component.async_register_entity_service(
-        SERVICE_PAUSE, ENTITY_SERVICE_SCHEMA,
+        SERVICE_PAUSE, {},
         'async_pause'
     )
     component.async_register_entity_service(
-        SERVICE_RETURN_TO_BASE, ENTITY_SERVICE_SCHEMA,
+        SERVICE_RETURN_TO_BASE, {},
         'async_return_to_base'
     )
     component.async_register_entity_service(
-        SERVICE_CLEAN_SPOT, ENTITY_SERVICE_SCHEMA,
+        SERVICE_CLEAN_SPOT, {},
         'async_clean_spot'
     )
     component.async_register_entity_service(
-        SERVICE_LOCATE, ENTITY_SERVICE_SCHEMA,
+        SERVICE_LOCATE, {},
         'async_locate'
     )
     component.async_register_entity_service(
-        SERVICE_STOP, ENTITY_SERVICE_SCHEMA,
+        SERVICE_STOP, {},
         'async_stop'
     )
     component.async_register_entity_service(

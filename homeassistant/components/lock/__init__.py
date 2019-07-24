@@ -9,7 +9,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import (  # noqa
-    ENTITY_SERVICE_SCHEMA, PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_CODE, ATTR_CODE_FORMAT, STATE_LOCKED, STATE_UNLOCKED, SERVICE_LOCK,
@@ -28,9 +28,9 @@ GROUP_NAME_ALL_LOCKS = 'all locks'
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-LOCK_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+LOCK_SERVICE_SCHEMA = {
     vol.Optional(ATTR_CODE): cv.string,
-})
+}
 
 # Bitfield of features supported by the lock entity
 SUPPORT_OPEN = 1

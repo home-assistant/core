@@ -13,7 +13,7 @@ from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
 from homeassistant.components import group
 from homeassistant.helpers.config_validation import (  # noqa
-    ENTITY_SERVICE_SCHEMA, PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,25 +46,25 @@ DEFAULT_HOLD_SECS = 0
 
 SUPPORT_LEARN_COMMAND = 1
 
-REMOTE_SERVICE_ACTIVITY_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+REMOTE_SERVICE_ACTIVITY_SCHEMA = {
     vol.Optional(ATTR_ACTIVITY): cv.string
-})
+}
 
-REMOTE_SERVICE_SEND_COMMAND_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+REMOTE_SERVICE_SEND_COMMAND_SCHEMA = {
     vol.Required(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_DEVICE): cv.string,
     vol.Optional(
         ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS): cv.positive_int,
     vol.Optional(ATTR_DELAY_SECS): vol.Coerce(float),
     vol.Optional(ATTR_HOLD_SECS, default=DEFAULT_HOLD_SECS): vol.Coerce(float),
-})
+}
 
-REMOTE_SERVICE_LEARN_COMMAND_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+REMOTE_SERVICE_LEARN_COMMAND_SCHEMA = {
     vol.Optional(ATTR_DEVICE): cv.string,
     vol.Optional(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_ALTERNATIVE): cv.boolean,
     vol.Optional(ATTR_TIMEOUT): cv.positive_int
-})
+}
 
 
 @bind_hass

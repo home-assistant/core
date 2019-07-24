@@ -4,7 +4,6 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME, CONF_MODE)
 from homeassistant.helpers.entity_component import EntityComponent
@@ -30,9 +29,9 @@ ATTR_MODE = 'mode'
 
 SERVICE_SET_VALUE = 'set_value'
 
-SERVICE_SET_VALUE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+SERVICE_SET_VALUE_SCHEMA = {
     vol.Required(ATTR_VALUE): cv.string,
-})
+}
 
 
 def _cv_input_text(cfg):

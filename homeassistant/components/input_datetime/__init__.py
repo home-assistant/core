@@ -7,7 +7,6 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_DATE, ATTR_TIME, CONF_ICON, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
@@ -28,11 +27,11 @@ ATTR_DATETIME = 'datetime'
 
 SERVICE_SET_DATETIME = 'set_datetime'
 
-SERVICE_SET_DATETIME_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+SERVICE_SET_DATETIME_SCHEMA = {
     vol.Optional(ATTR_DATE): cv.date,
     vol.Optional(ATTR_TIME): cv.time,
     vol.Optional(ATTR_DATETIME): cv.datetime,
-})
+}
 
 
 def has_date_or_time(conf):

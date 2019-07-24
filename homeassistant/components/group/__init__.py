@@ -16,7 +16,6 @@ from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from .reproduce_state import async_reproduce_states  # noqa
@@ -46,9 +45,9 @@ SERVICE_REMOVE = 'remove'
 
 CONTROL_TYPES = vol.In(['hidden', None])
 
-SET_VISIBILITY_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+SET_VISIBILITY_SERVICE_SCHEMA = {
     vol.Required(ATTR_VISIBLE): cv.boolean
-})
+}
 
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 

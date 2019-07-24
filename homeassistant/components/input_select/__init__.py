@@ -5,7 +5,6 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_ICON, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -22,9 +21,9 @@ ATTR_OPTIONS = 'options'
 
 SERVICE_SELECT_OPTION = 'select_option'
 
-SERVICE_SELECT_OPTION_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+SERVICE_SELECT_OPTION_SCHEMA = {
     vol.Required(ATTR_OPTION): cv.string,
-})
+}
 
 SERVICE_SELECT_NEXT = 'select_next'
 
@@ -32,10 +31,10 @@ SERVICE_SELECT_PREVIOUS = 'select_previous'
 
 SERVICE_SET_OPTIONS = 'set_options'
 
-SERVICE_SET_OPTIONS_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+SERVICE_SET_OPTIONS_SCHEMA = {
     vol.Required(ATTR_OPTIONS):
         vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
-})
+}
 
 
 def _cv_input_select(cfg):
@@ -83,12 +82,12 @@ async def async_setup(hass, config):
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_NEXT, ENTITY_SERVICE_SCHEMA,
+        SERVICE_SELECT_NEXT, {},
         lambda entity, call: entity.async_offset_index(1)
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_PREVIOUS, ENTITY_SERVICE_SCHEMA,
+        SERVICE_SELECT_PREVIOUS, {},
         lambda entity, call: entity.async_offset_index(-1)
     )
 
