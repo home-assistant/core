@@ -54,7 +54,7 @@ async def test_abort_if_already_setup(hass):
     result = await flow.async_step_import(
         {CONF_PORT: PORT_TCP, CONF_NAME: 'velbus import test'})
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result['reason'] == 'already_imported'
+    assert result['reason'] == 'port_exists'
 
     result = await flow.async_step_user(
         {CONF_PORT: PORT_TCP, CONF_NAME: 'velbus import test'})

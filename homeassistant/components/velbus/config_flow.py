@@ -88,6 +88,6 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
             # if the velbus import is already in the config
             # we should not proceed the import
             return self.async_abort(
-                reason='already_imported'
+                reason='port_exists'
                 )
         return await self.async_step_user(user_input)
