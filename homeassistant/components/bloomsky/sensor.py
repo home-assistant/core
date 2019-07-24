@@ -4,7 +4,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (TEMP_FAHRENHEIT, TEMP_CELSIUS, CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (TEMP_FAHRENHEIT,
+                                 TEMP_CELSIUS,
+                                 CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
