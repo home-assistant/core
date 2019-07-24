@@ -45,8 +45,6 @@ def run(args):
             loop.run_until_complete(hass.async_stop())
             loop.close()
 
-    return 0
-
 
 def benchmark(func):
     """Decorate to mark a benchmark."""
