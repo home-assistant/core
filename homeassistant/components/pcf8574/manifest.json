@@ -3,7 +3,7 @@
     "name": "PCF8574 I/O Expander",
     "documentation": "https://www.home-assistant.io/components/pcf8574",
     "requirements": [
-      "pcf8574=0.0.5"
+      "pcf8574==0.0.5"
       ],
     "dependencies": [],
     "codeowners": ["@misiu"]
