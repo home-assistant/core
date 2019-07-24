@@ -15,9 +15,12 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_SOURCES = 'sources'
+
 DEFAULT_NAME = 'Pioneer AVR'
 DEFAULT_PORT = 23   # telnet default. Some Pioneer AVRs use 8102
 DEFAULT_TIMEOUT = None
+DEFAULT_SOURCES = {}
 
 SUPPORT_PIONEER = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
                   SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
@@ -31,14 +34,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.socket_timeout,
+    vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES):
+        {cv.string: cv.string},
 })
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Pioneer platform."""
     pioneer = PioneerDevice(
-        config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT),
-        config.get(CONF_TIMEOUT))
+        config[CONF_NAME], config[CONF_HOST], config[CONF_PORT],
+        config[CONF_TIMEOUT], config[CONF_SOURCES])
 
     if pioneer.update():
         add_entities([pioneer])
@@ -47,7 +52,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class PioneerDevice(MediaPlayerDevice):
     """Representation of a Pioneer device."""
 
-    def __init__(self, name, host, port, timeout):
+    def __init__(self, name, host, port, timeout, sources):
         """Initialize the Pioneer device."""
         self._name = name
         self._host = host
@@ -57,8 +62,8 @@ class PioneerDevice(MediaPlayerDevice):
         self._volume = 0
         self._muted = False
         self._selected_source = ''
-        self._source_name_to_number = {}
-        self._source_number_to_name = {}
+        self._source_name_to_number = sources
+        self._source_number_to_name = dict((v, k) for k, v in sources.items())
 
     @classmethod
     def telnet_request(cls, telnet, command, expected_prefix):
