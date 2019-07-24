@@ -14,6 +14,8 @@ from homeassistant.util.package import (
     install_package, is_virtual_env, is_installed)
 
 
+# mypy: allow-untyped-defs, allow-incomplete-defs, no-warn-return-any
+
 def run(args: List) -> int:
     """Run a script."""
     scripts = []
@@ -57,7 +59,7 @@ def run(args: List) -> int:
             print('Aborting script, could not install dependency', req)
             return 1
 
-    return script.run(args[1:])
+    return script.run(args[1:])  # type: ignore
 
 
 def extract_config_dir(args=None) -> str:

@@ -1,4 +1,5 @@
 homeassistant/*.py
 homeassistant/auth/
 homeassistant/helpers/
+homeassistant/scripts/
 homeassistant/util/
