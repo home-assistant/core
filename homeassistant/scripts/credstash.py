@@ -4,6 +4,9 @@ import getpass
 
 from homeassistant.util.yaml import _SECRET_NAMESPACE
 
+
+# mypy: allow-untyped-defs
+
 REQUIREMENTS = ['credstash==1.15.0']
 
 

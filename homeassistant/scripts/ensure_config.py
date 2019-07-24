@@ -6,6 +6,8 @@ from homeassistant.core import HomeAssistant
 import homeassistant.config as config_util
 
 
+# mypy: allow-untyped-calls, allow-untyped-defs
+
 def run(args):
     """Handle ensure config commandline script."""
     parser = argparse.ArgumentParser(

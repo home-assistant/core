@@ -5,7 +5,7 @@ import logging
 import os
 from collections import OrderedDict
 from glob import glob
-from typing import Dict, List, Sequence
+from typing import Dict, List, Sequence, Any, Tuple, Callable
 from unittest.mock import patch
 
 from homeassistant import bootstrap, core
@@ -13,6 +13,9 @@ from homeassistant.config import get_default_config_dir
 from homeassistant.helpers.check_config import async_check_ha_config_file
 import homeassistant.util.yaml.loader as yaml_loader
 from homeassistant.exceptions import HomeAssistantError
+
+
+# mypy: allow-untyped-calls, allow-untyped-defs
 
 REQUIREMENTS = ('colorlog==4.0.2',)
 
@@ -24,7 +27,7 @@ MOCKS = {
     'load*': ("homeassistant.config.load_yaml", yaml_loader.load_yaml),
     'secrets': ("homeassistant.util.yaml.loader.secret_yaml",
                 yaml_loader.secret_yaml),
-}
+}  # type: Dict[str, Tuple[str, Callable]]
 SILENCE = (
     'homeassistant.scripts.check_config.yaml_loader.clear_secret_cache',
 )
@@ -49,7 +52,7 @@ def color(the_color, *args, reset=None):
 
 
 def run(script_args: List) -> int:
-    """Handle ensure config commandline script."""
+    """Handle check config commandline script."""
     parser = argparse.ArgumentParser(
         description="Check Home Assistant configuration.")
     parser.add_argument(
@@ -81,7 +84,7 @@ def run(script_args: List) -> int:
 
     res = check(config_dir, args.secrets)
 
-    domain_info = []
+    domain_info = []  # type: List[str]
     if args.info:
         domain_info = args.info.split(',')
 
@@ -121,7 +124,7 @@ def run(script_args: List) -> int:
                 dump_dict(res['components'].get(domain, None))
 
     if args.secrets:
-        flatsecret = {}
+        flatsecret = {}  # type: Dict[str, str]
 
         for sfn, sdict in res['secret_cache'].items():
             sss = []
@@ -152,9 +155,9 @@ def check(config_dir, secrets=False):
         'yaml_files': OrderedDict(),  # yaml_files loaded
         'secrets': OrderedDict(),  # secret cache and secrets loaded
         'except': OrderedDict(),  # exceptions raised (with config)
-        'components': None,  # successful components
+        #'components' is a HomeAssistantConfig  # noqa: E265
         'secret_cache': None,
-    }
+    }  # type: Dict[str, Any]
 
     # pylint: disable=possibly-unused-variable
     def mock_load(filename):
