@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/sonos",
   "requirements": [
-    "pysonos==0.0.21"
+    "pysonos==0.0.22"
   ],
   "dependencies": [],
   "ssdp": {
