@@ -610,7 +610,7 @@ hole==0.3.0
 holidays==0.9.10
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190721.0
+home-assistant-frontend==20190721.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.4
@@ -1033,7 +1033,7 @@ pyalarmdotcom==0.3.2
 pyarlo==0.2.3
 
 # homeassistant.components.netatmo
-pyatmo==2.1.1
+pyatmo==2.1.2
 
 # homeassistant.components.apple_tv
 pyatv==0.3.12
@@ -1078,7 +1078,7 @@ pycsspeechtts==1.0.2
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==1.4.6
+pydaikin==1.5.1
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1378,7 +1378,7 @@ pysmarty==0.8
 pysnmp==4.4.9
 
 # homeassistant.components.sonos
-pysonos==0.0.21
+pysonos==0.0.22
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
