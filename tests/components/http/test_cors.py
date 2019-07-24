@@ -1,4 +1,5 @@
 """Test cors for the HTTP component."""
+from pathlib import Path
 from unittest.mock import patch
 
 from aiohttp import web
@@ -152,3 +153,22 @@ async def test_cors_works_with_frontend(hass, hass_client):
     client = await hass_client()
     resp = await client.get('/')
     assert resp.status == 200
+
+
+async def test_cors_on_static_files(hass, hass_client):
+    """Test that we enable CORS for static files."""
+    assert await async_setup_component(hass, 'frontend', {
+        'http': {
+            'cors_allowed_origins': ['http://www.example.com']
+        }
+    })
+    hass.http.register_static_path('/something', Path(__file__).parent)
+
+    client = await hass_client()
+    resp = await client.options('/something/__init__.py', headers={
+        'origin': 'http://www.example.com',
+        ACCESS_CONTROL_REQUEST_METHOD: 'GET',
+    })
+    assert resp.status == 200
+    assert resp.headers[ACCESS_CONTROL_ALLOW_ORIGIN] == \
+        'http://www.example.com'
