@@ -52,7 +52,7 @@ def color(the_color, *args, reset=None):
 
 
 def run(script_args: List) -> int:
-    """Handle ensure config commandline script."""
+    """Handle check config commandline script."""
     parser = argparse.ArgumentParser(
         description="Check Home Assistant configuration.")
     parser.add_argument(

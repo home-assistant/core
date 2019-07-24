@@ -20,7 +20,7 @@ BENCHMARKS = {}  # type: Dict[str, Callable]
 
 
 def run(args):
-    """Handle ensure configuration commandline script."""
+    """Handle benchmark commandline script."""
     # Disable logging
     logging.getLogger('homeassistant.core').setLevel(logging.CRITICAL)
 
