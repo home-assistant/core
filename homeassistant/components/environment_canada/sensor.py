@@ -19,6 +19,8 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_INTERVAL = timedelta(minutes=10)
+
 ATTR_UPDATED = 'updated'
 ATTR_STATION = 'station'
 ATTR_DETAIL = 'alert detail'
@@ -70,8 +72,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class ECSensor(Entity):
     """Implementation of an Environment Canada sensor."""
-
-    SCAN_INTERVAL = timedelta(minutes=10)
 
     def __init__(self, sensor_type, ec_data):
         """Initialize the sensor."""
