@@ -44,9 +44,8 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
         except Exception:  # pylint: disable=broad-except
             self._errors[CONF_PORT] = 'connection_failed'
             return False
-        else:
-            controller.stop()
-            return True
+        controller.stop()
+        return True
 
     def _prt_in_configuration_exists(self, prt: str) -> bool:
         """Return True if port exists in configuration."""
@@ -84,7 +83,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
     async def async_step_import(self, user_input=None):
         """Import a config entry."""
         user_input[CONF_NAME] = 'Velbus Import'
-        prt = user_input.get(CONF_PORT)
+        prt = user_input[CONF_PORT]
         if self._prt_in_configuration_exists(prt):
             # if the velbus import is already in the config
             # we should not proceed the import
