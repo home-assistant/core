@@ -46,15 +46,11 @@ DEFAULT_HOLD_SECS = 0
 
 SUPPORT_LEARN_COMMAND = 1
 
-# Keep this in place so that platforms don't have to directly know about
-# ENTITY_SERVICE_SCHEMA:
-REMOTE_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA
-
-REMOTE_SERVICE_ACTIVITY_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
+REMOTE_SERVICE_ACTIVITY_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_ACTIVITY): cv.string
 })
 
-REMOTE_SERVICE_SEND_COMMAND_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
+REMOTE_SERVICE_SEND_COMMAND_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_DEVICE): cv.string,
     vol.Optional(
@@ -63,7 +59,7 @@ REMOTE_SERVICE_SEND_COMMAND_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_HOLD_SECS, default=DEFAULT_HOLD_SECS): vol.Coerce(float),
 })
 
-REMOTE_SERVICE_LEARN_COMMAND_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
+REMOTE_SERVICE_LEARN_COMMAND_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_DEVICE): cv.string,
     vol.Optional(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_ALTERNATIVE): cv.boolean,
