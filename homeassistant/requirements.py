@@ -7,12 +7,47 @@ from typing import Any, Dict, List, Optional
 
 import homeassistant.util.package as pkg_util
 from homeassistant.core import HomeAssistant
+from homeassistant.loader import async_get_integration, Integration
 
 DATA_PIP_LOCK = "pip_lock"
 DATA_PKG_CACHE = "pkg_cache"
 CONSTRAINT_FILE = "package_constraints.txt"
 PROGRESS_FILE = ".pip_progress"
 _LOGGER = logging.getLogger(__name__)
+
+
+class RequirementsNotFound(Exception):
+    """Raised when a component is not found."""
+
+    def __init__(self, domain: str, requirements: List) -> None:
+        """Initialize a component not found error."""
+        super().__init__(
+            "Requirements for {} not found: {}.".format(domain, requirements)
+        )
+        self.domain = domain
+        self.requirements = requirements
+
+
+async def async_get_integration_with_requirements(
+    hass: HomeAssistant, domain: str
+) -> Integration:
+    """Get an integration with installed requirements.
+
+    This can raise IntegrationNotFound if manifest or integration
+    is invalid, RequirementNotFound if there was some type of
+    failure to install requirements.
+    """
+    integration = await async_get_integration(hass, domain)
+
+    if hass.config.skip_pip or not integration.requirements:
+        return integration
+
+    if not await async_process_requirements(
+        hass, integration.domain, integration.requirements
+    ):
+        raise RequirementsNotFound(integration.domain, integration.requirements)
+
+    return integration
 
 
 async def async_process_requirements(
