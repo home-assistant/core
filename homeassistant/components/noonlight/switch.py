@@ -7,6 +7,8 @@ from homeassistant.components import persistent_notification
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.helpers.event import async_track_time_interval
 
+from noonlight import NoonlightClient
+
 from . import (DOMAIN, EVENT_NOONLIGHT_TOKEN_REFRESHED,
                NOTIFICATION_ALARM_CREATE_FAILURE)
 
@@ -76,7 +78,7 @@ class NoonlightSwitch(SwitchDevice):
                         }
                     }
                 )
-            except Exception as e:
+            except NoonlightClient.ClientError as e:
                 persistent_notification.create(
                         self.hass,
                         "Failed to send an alarm to Noonlight!\n\n"
@@ -110,7 +112,7 @@ class NoonlightSwitch(SwitchDevice):
                     )
 
     async def async_turn_off(self, **kwargs):
-        """Turn off the switch if the active alarm is canceled"""
+        """Turn off the switch if the active alarm is canceled."""
         if self._alarm is not None:
             if self._alarm.status == CONST_ALARM_STATUS_CANCELED:
                 self._alarm = None
