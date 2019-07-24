@@ -5,6 +5,7 @@ from contextlib import suppress
 from datetime import datetime
 import logging
 from timeit import default_timer as timer
+from typing import Callable, Dict
 
 from homeassistant import core
 from homeassistant.const import (
@@ -15,7 +16,7 @@ from homeassistant.util import dt as dt_util
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 # mypy: no-warn-return-any
 
-BENCHMARKS = {}
+BENCHMARKS = {}  # type: Dict[str, Callable]
 
 
 def run(args):
