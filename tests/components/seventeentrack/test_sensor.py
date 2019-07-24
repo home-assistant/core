@@ -126,10 +126,10 @@ class SeventeenTrackDataMock(SeventeenTrackData):
         SeventeenTrackDataMock.block = True
         SeventeenTrackDataMock.first = True
 
-    def __init__(self, hass, client, async_add_entities, scan_interval,
+    def __init__(self, client, async_add_entities, scan_interval,
                  show_archived, show_delivered):
         """Override constructor to preserve _async_update."""
-        super().__init__(hass, client, async_add_entities, scan_interval,
+        super().__init__(client, async_add_entities, scan_interval,
                          show_archived, show_delivered)
         self.async_update = self.new_async_update
 
@@ -264,7 +264,7 @@ class TestSeventeentrack(unittest.TestCase):
     @patch('homeassistant.components.seventeentrack.sensor.SeventeenTrackData',
            new=SeventeenTrackDataMock)
     def test_friendly_name_changed(self, py17track_mock):
-        """Test friendly name change"""
+        """Test friendly name change."""
         package = Package('456', 206, 'friendly name 1', 'info text 1',
                           'location 1', 206, 2)
         ProfileMock.package_list = [package]

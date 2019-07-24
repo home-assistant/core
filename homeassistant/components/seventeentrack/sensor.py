@@ -75,9 +75,9 @@ async def async_setup_platform(
 
     scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
-    data = SeventeenTrackData(
-        hass, client, async_add_entities, scan_interval,
-        config[CONF_SHOW_ARCHIVED], config[CONF_SHOW_DELIVERED])
+    data = SeventeenTrackData(client, async_add_entities, scan_interval,
+                              config[CONF_SHOW_ARCHIVED],
+                              config[CONF_SHOW_DELIVERED])
     await data.async_update()
 
 
@@ -169,7 +169,6 @@ class SeventeenTrackPackageSensor(Entity):
         self._state = package.status
         self._tracking_number = package.tracking_number
         self.entity_id = ENTITY_ID_TEMPLATE.format(self._tracking_number)
-        self._removed = False
 
     @property
     def available(self):
@@ -210,16 +209,16 @@ class SeventeenTrackPackageSensor(Entity):
         await self._data.async_update()
 
         if not self.available:
-            await self._remove()
+            self.hass.async_create_task(self._remove())
             return
 
         package = self._data.packages.get(self._tracking_number, None)
 
-        # If the user has selected to not see delivered packages and one gets
+        # If the user has elected to not see delivered packages and one gets
         # delivered, post a notification:
         if package.status == VALUE_DELIVERED and not self._data.show_delivered:
             self._notify_delivered()
-            await self._remove()
+            self.hass.async_create_task(self._remove())
             return
 
         self._attrs.update({
@@ -228,11 +227,6 @@ class SeventeenTrackPackageSensor(Entity):
         })
         self._state = package.status
         self._friendly_name = package.friendly_name
-
-    def _async_write_ha_state(self):
-        """Avoid writing state, so the entity is really removed."""
-        if not self._removed:
-            return super()._async_write_ha_state()
 
     async def _remove(self):
         """Remove entity itself."""
@@ -245,8 +239,6 @@ class SeventeenTrackPackageSensor(Entity):
                 self._data.account_id, self._tracking_number))
         if entity_id:
             reg.async_remove(entity_id)
-
-        self._removed = True
 
     def _notify_delivered(self):
         """Notify when package is delivered."""
@@ -267,13 +259,11 @@ class SeventeenTrackPackageSensor(Entity):
 class SeventeenTrackData:
     """Define a data handler for 17track.net."""
 
-    def __init__(
-            self, hass, client, async_add_entities, scan_interval,
-            show_archived, show_delivered):
+    def __init__(self, client, async_add_entities, scan_interval,
+                 show_archived, show_delivered):
         """Initialize."""
         self._async_add_entities = async_add_entities
         self._client = client
-        self._hass = hass
         self._scan_interval = scan_interval
         self._show_archived = show_archived
         self.account_id = client.profile.account_id
