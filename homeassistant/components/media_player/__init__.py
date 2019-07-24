@@ -17,16 +17,16 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_SEEK, SERVICE_MEDIA_STOP, SERVICE_SHUFFLE_SET,
-    SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE, SERVICE_VOLUME_SET, SERVICE_VOLUME_UP, STATE_IDLE,
-    STATE_OFF, STATE_PLAYING)
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK,
+    SERVICE_MEDIA_STOP, SERVICE_SHUFFLE_SET, SERVICE_TOGGLE, SERVICE_TURN_OFF,
+    SERVICE_TURN_ON, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET, SERVICE_VOLUME_UP, STATE_IDLE, STATE_OFF,
+    STATE_PLAYING)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa
-    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
+    ENTITY_SERVICE_SCHEMA, PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import bind_hass
@@ -78,38 +78,34 @@ DEVICE_CLASSES = [
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 # Service call validation schemas
-MEDIA_PLAYER_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.comp_entity_ids,
-})
-
-MEDIA_PLAYER_SET_VOLUME_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+MEDIA_PLAYER_SET_VOLUME_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float,
 })
 
-MEDIA_PLAYER_MUTE_VOLUME_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+MEDIA_PLAYER_MUTE_VOLUME_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_VOLUME_MUTED): cv.boolean,
 })
 
-MEDIA_PLAYER_MEDIA_SEEK_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+MEDIA_PLAYER_MEDIA_SEEK_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_SEEK_POSITION):
         vol.All(vol.Coerce(float), vol.Range(min=0)),
 })
 
-MEDIA_PLAYER_SELECT_SOURCE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+MEDIA_PLAYER_SELECT_SOURCE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_INPUT_SOURCE): cv.string,
 })
 
-MEDIA_PLAYER_SELECT_SOUND_MODE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+MEDIA_PLAYER_SELECT_SOUND_MODE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_SOUND_MODE): cv.string,
 })
 
-MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
     vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
     vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
 })
 
-MEDIA_PLAYER_SET_SHUFFLE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+MEDIA_PLAYER_SET_SHUFFLE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_SHUFFLE): cv.boolean,
 })
 
@@ -174,51 +170,51 @@ async def async_setup(hass, config):
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_TURN_ON, MEDIA_PLAYER_SCHEMA,
+        SERVICE_TURN_ON, ENTITY_SERVICE_SCHEMA,
         'async_turn_on', [SUPPORT_TURN_ON]
     )
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, MEDIA_PLAYER_SCHEMA,
+        SERVICE_TURN_OFF, ENTITY_SERVICE_SCHEMA,
         'async_turn_off', [SUPPORT_TURN_OFF]
     )
     component.async_register_entity_service(
-        SERVICE_TOGGLE, MEDIA_PLAYER_SCHEMA,
+        SERVICE_TOGGLE, ENTITY_SERVICE_SCHEMA,
         'async_toggle', [SUPPORT_TURN_OFF | SUPPORT_TURN_ON]
     )
     component.async_register_entity_service(
-        SERVICE_VOLUME_UP, MEDIA_PLAYER_SCHEMA,
+        SERVICE_VOLUME_UP, ENTITY_SERVICE_SCHEMA,
         'async_volume_up', [SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP]
     )
     component.async_register_entity_service(
-        SERVICE_VOLUME_DOWN, MEDIA_PLAYER_SCHEMA,
+        SERVICE_VOLUME_DOWN, ENTITY_SERVICE_SCHEMA,
         'async_volume_down', [SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP]
     )
     component.async_register_entity_service(
-        SERVICE_MEDIA_PLAY_PAUSE, MEDIA_PLAYER_SCHEMA,
+        SERVICE_MEDIA_PLAY_PAUSE, ENTITY_SERVICE_SCHEMA,
         'async_media_play_pause', [SUPPORT_PLAY | SUPPORT_PAUSE]
     )
     component.async_register_entity_service(
-        SERVICE_MEDIA_PLAY, MEDIA_PLAYER_SCHEMA,
+        SERVICE_MEDIA_PLAY, ENTITY_SERVICE_SCHEMA,
         'async_media_play', [SUPPORT_PLAY]
     )
     component.async_register_entity_service(
-        SERVICE_MEDIA_PAUSE, MEDIA_PLAYER_SCHEMA,
+        SERVICE_MEDIA_PAUSE, ENTITY_SERVICE_SCHEMA,
         'async_media_pause', [SUPPORT_PAUSE]
     )
     component.async_register_entity_service(
-        SERVICE_MEDIA_STOP, MEDIA_PLAYER_SCHEMA,
+        SERVICE_MEDIA_STOP, ENTITY_SERVICE_SCHEMA,
         'async_media_stop', [SUPPORT_STOP]
     )
     component.async_register_entity_service(
-        SERVICE_MEDIA_NEXT_TRACK, MEDIA_PLAYER_SCHEMA,
+        SERVICE_MEDIA_NEXT_TRACK, ENTITY_SERVICE_SCHEMA,
         'async_media_next_track', [SUPPORT_NEXT_TRACK]
     )
     component.async_register_entity_service(
-        SERVICE_MEDIA_PREVIOUS_TRACK, MEDIA_PLAYER_SCHEMA,
+        SERVICE_MEDIA_PREVIOUS_TRACK, ENTITY_SERVICE_SCHEMA,
         'async_media_previous_track', [SUPPORT_PREVIOUS_TRACK]
     )
     component.async_register_entity_service(
-        SERVICE_CLEAR_PLAYLIST, MEDIA_PLAYER_SCHEMA,
+        SERVICE_CLEAR_PLAYLIST, ENTITY_SERVICE_SCHEMA,
         'async_clear_playlist', [SUPPORT_CLEAR_PLAYLIST]
     )
     component.async_register_entity_service(
