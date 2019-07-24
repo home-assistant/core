@@ -1,18 +1,19 @@
 """The test for the here_travel_time sensor platform."""
-from unittest.mock import patch
 import logging
+from unittest.mock import patch
 import urllib
 
 import pytest
 
 from homeassistant.components.here_travel_time.sensor import (
-    ATTR_ATTRIBUTION, ATTR_DESTINATION_NAME, ATTR_DISTANCE, ATTR_DURATION,
-    ATTR_DURATION_WITHOUT_TRAFFIC, ATTR_ORIGIN_NAME, ATTR_ROUTE, CONF_MODE,
-    CONF_TRAFFIC_MODE, CONF_UNIT_SYSTEM, ICON_CAR, ICON_PEDESTRIAN,
-    ICON_PUBLIC, ICON_TRUCK, ROUTE_MODE_FASTEST, ROUTE_MODE_SHORTEST,
+    ATTR_ATTRIBUTION, ATTR_DESTINATION, ATTR_DESTINATION_NAME, ATTR_DISTANCE,
+    ATTR_DURATION, ATTR_DURATION_WITHOUT_TRAFFIC, ATTR_ORIGIN,
+    ATTR_ORIGIN_NAME, ATTR_ROUTE, CONF_MODE, CONF_TRAFFIC_MODE,
+    CONF_UNIT_SYSTEM, ICON_CAR, ICON_PEDESTRIAN, ICON_PUBLIC, ICON_TRUCK,
+    NO_ROUTE_ERROR_MESSAGE, ROUTE_MODE_FASTEST, ROUTE_MODE_SHORTEST,
     SCAN_INTERVAL, TRAFFIC_MODE_DISABLED, TRAFFIC_MODE_ENABLED,
     TRAVEL_MODE_CAR, TRAVEL_MODE_PEDESTRIAN, TRAVEL_MODE_PUBLIC,
-    TRAVEL_MODE_TRUCK, UNIT_OF_MEASUREMENT, NO_ROUTE_ERROR_MESSAGE)
+    TRAVEL_MODE_TRUCK, UNIT_OF_MEASUREMENT)
 from homeassistant.const import ATTR_ICON
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -50,7 +51,7 @@ def _build_mock_url(origin, destination, modes, app_id, app_code, departure):
 
 
 def _assert_truck_sensor(sensor):
-    """Assert that states and attributes are correct."""
+    """Assert that states and attributes are correct for truck_response."""
     assert sensor.state == '14'
     assert sensor.attributes.get(
         'unit_of_measurement'
@@ -67,6 +68,8 @@ def _assert_truck_sensor(sensor):
     assert sensor.attributes.get(
         ATTR_DURATION_WITHOUT_TRAFFIC
         ) == 13.533333333333333
+    assert sensor.attributes.get(ATTR_ORIGIN) == TRUCK_ORIGIN
+    assert sensor.attributes.get(ATTR_DESTINATION) == TRUCK_DESTINATION
     assert sensor.attributes.get(ATTR_ORIGIN_NAME) == ''
     assert sensor.attributes.get(
         ATTR_DESTINATION_NAME
@@ -148,6 +151,8 @@ async def test_car(hass, requests_mock_car_disabled_response):
         "I-495 N - Capital Beltway; MD-187 S - Old Georgetown Rd")
     assert sensor.attributes.get(CONF_UNIT_SYSTEM) == 'metric'
     assert sensor.attributes.get(ATTR_DURATION_WITHOUT_TRAFFIC) == 30.05
+    assert sensor.attributes.get(ATTR_ORIGIN) == CAR_DISABLED_ORIGIN
+    assert sensor.attributes.get(ATTR_DESTINATION) == CAR_DISABLED_DESTINATION
     assert sensor.attributes.get(ATTR_ORIGIN_NAME) == '22nd St NW'
     assert sensor.attributes.get(ATTR_DESTINATION_NAME) == 'Service Rd S'
     assert sensor.attributes.get(CONF_MODE) == TRAVEL_MODE_CAR
@@ -361,6 +366,8 @@ async def test_public_transport(hass, requests_mock):
     assert sensor.attributes.get(
         ATTR_DURATION_WITHOUT_TRAFFIC
         ) == 89.16666666666667
+    assert sensor.attributes.get(ATTR_ORIGIN) == origin
+    assert sensor.attributes.get(ATTR_DESTINATION) == destination
     assert sensor.attributes.get(ATTR_ORIGIN_NAME) == "Mannheim Rd"
     assert sensor.attributes.get(ATTR_DESTINATION_NAME) == ''
     assert sensor.attributes.get(CONF_MODE) == TRAVEL_MODE_PUBLIC
@@ -419,6 +426,8 @@ async def test_pedestrian(hass, requests_mock):
     assert sensor.attributes.get(
         ATTR_DURATION_WITHOUT_TRAFFIC
         ) == 210.51666666666668
+    assert sensor.attributes.get(ATTR_ORIGIN) == origin
+    assert sensor.attributes.get(ATTR_DESTINATION) == destination
     assert sensor.attributes.get(ATTR_ORIGIN_NAME) == "Mannheim Rd"
     assert sensor.attributes.get(ATTR_DESTINATION_NAME) == ''
     assert sensor.attributes.get(CONF_MODE) == TRAVEL_MODE_PEDESTRIAN

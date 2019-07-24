@@ -54,6 +54,8 @@ UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
 ATTR_DURATION = 'duration'
 ATTR_DISTANCE = 'distance'
 ATTR_ROUTE = 'route'
+ATTR_ORIGIN = 'origin'
+ATTR_DESTINATION = 'destination'
 
 ATTR_DURATION_WITHOUT_TRAFFIC = 'duration_without_traffic'
 ATTR_ORIGIN_NAME = 'origin_name'
@@ -184,6 +186,8 @@ class HERETravelTimeSensor(Entity):
         res[ATTR_ROUTE] = self._here_data.route
         res[CONF_UNIT_SYSTEM] = self._here_data.units
         res[ATTR_DURATION_WITHOUT_TRAFFIC] = self._here_data.base_time / 60
+        res[ATTR_ORIGIN] = self._here_data.origin
+        res[ATTR_DESTINATION] = self._here_data.destination
         res[ATTR_ORIGIN_NAME] = self._here_data.origin_name
         res[ATTR_DESTINATION_NAME] = self._here_data.destination_name
         res[CONF_MODE] = self._here_data.travel_mode
