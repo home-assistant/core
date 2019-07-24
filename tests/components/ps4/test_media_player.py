@@ -121,7 +121,7 @@ async def setup_mock_component(hass, entry=None):
     else:
         mock_entry = entry
 
-    mock_entry.add_to_manager(hass.config_entries)
+    mock_entry.add_to_hass(hass)
 
     # Don't use an actual file.
     with patch(MOCK_LOAD, return_value={}),\
