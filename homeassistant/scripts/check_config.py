@@ -155,7 +155,7 @@ def check(config_dir, secrets=False):
         'yaml_files': OrderedDict(),  # yaml_files loaded
         'secrets': OrderedDict(),  # secret cache and secrets loaded
         'except': OrderedDict(),  # exceptions raised (with config)
-        'components': None,  # successful components
+        #'components' is a HomeAssistantConfig  # noqa: E265
         'secret_cache': None,
     }  # type: Dict[str, Any]
 
