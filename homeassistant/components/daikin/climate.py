@@ -109,26 +109,6 @@ class DaikinClimate(ClimateDevice):
         if self._api.device.support_swing_mode:
             self._supported_features |= SUPPORT_SWING_MODE
 
-    def get(self, key):
-        """Retrieve device settings from API library cache."""
-        daikin_attr = HA_ATTR_TO_DAIKIN.get(key)
-
-        if key == ATTR_FAN_MODE:
-            return self._api.device.represent(daikin_attr)[1].title()
-        if key == ATTR_SWING_MODE:
-            return self._api.device.represent(daikin_attr)[1].title()
-        if key == ATTR_HVAC_MODE:
-            daikin_mode = self._api.device.represent(daikin_attr)[1]
-            return DAIKIN_TO_HA_STATE.get(daikin_mode, HVAC_MODE_HEAT_COOL)
-        if key == ATTR_PRESET_MODE:
-            if self._api.device.represent(
-                    daikin_attr)[1] == HA_PRESET_TO_DAIKIN[PRESET_AWAY]:
-                return PRESET_AWAY
-            return PRESET_NONE
-
-        _LOGGER.error("Invalid value requested for key %s", key)
-        return
-
     async def _set(self, settings):
         """Set device settings using API."""
         values = {}
@@ -200,7 +180,9 @@ class DaikinClimate(ClimateDevice):
     @property
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
-        return self.get(ATTR_HVAC_MODE)
+        daikin_mode = self._api.device.represent(
+            HA_ATTR_TO_DAIKIN[ATTR_HVAC_MODE])[1]
+        return DAIKIN_TO_HA_STATE.get(daikin_mode, HVAC_MODE_HEAT_COOL)
 
     @property
     def hvac_modes(self):
@@ -214,7 +196,8 @@ class DaikinClimate(ClimateDevice):
     @property
     def fan_mode(self):
         """Return the fan setting."""
-        return self.get(ATTR_FAN_MODE)
+        return self._api.device.represent(
+            HA_ATTR_TO_DAIKIN[ATTR_FAN_MODE])[1].title()
 
     async def async_set_fan_mode(self, fan_mode):
         """Set fan mode."""
@@ -228,7 +211,8 @@ class DaikinClimate(ClimateDevice):
     @property
     def swing_mode(self):
         """Return the fan setting."""
-        return self.get(ATTR_SWING_MODE)
+        return self._api.device.represent(
+            HA_ATTR_TO_DAIKIN[ATTR_SWING_MODE])[1].title()
 
     async def async_set_swing_mode(self, swing_mode):
         """Set new target temperature."""
@@ -242,7 +226,10 @@ class DaikinClimate(ClimateDevice):
     @property
     def preset_mode(self):
         """Return the preset_mode."""
-        return self.get(ATTR_PRESET_MODE)
+        if self._api.device.represent(HA_ATTR_TO_DAIKIN[ATTR_PRESET_MODE]
+                                      )[1] == HA_PRESET_TO_DAIKIN[PRESET_AWAY]:
+            return PRESET_AWAY
+        return PRESET_NONE
 
     async def async_set_preset_mode(self, preset_mode):
         """Set preset mode."""
