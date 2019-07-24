@@ -1,6 +1,5 @@
 """Support for the Daikin HVAC."""
 import logging
-import re
 
 import voluptuous as vol
 
@@ -119,13 +118,9 @@ class DaikinClimate(ClimateDevice):
         if key == ATTR_SWING_MODE:
             return self._api.device.represent(daikin_attr)[1].title()
         if key == ATTR_HVAC_MODE:
-            # Daikin can return also internal states auto-1 or auto-7
-            # and we need to translate them as AUTO
-            daikin_mode = re.sub(
-                '[^a-z]', '',
-                self._api.device.represent(daikin_attr)[1])
-            return DAIKIN_TO_HA_STATE.get(daikin_mode)
-        elif key == ATTR_PRESET_MODE:
+            daikin_mode = self._api.device.represent(daikin_attr)[1]
+            return DAIKIN_TO_HA_STATE.get(daikin_mode, HVAC_MODE_HEAT_COOL)
+        if key == ATTR_PRESET_MODE:
             if self._api.device.represent(
                     daikin_attr)[1] == HA_PRESET_TO_DAIKIN[PRESET_AWAY]:
                 return PRESET_AWAY
