@@ -54,8 +54,9 @@ class BloomSky:
     def __init__(self, api_key, is_metric):
         """Initialize the BookSky."""
         self._api_key = api_key
-        self.endpoint_argument = 'unit=intl' if is_metric else ''
+        self._endpoint_argument = 'unit=intl' if is_metric else ''
         self.devices = {}
+        self.is_metric = is_metric
         _LOGGER.debug("Initial BloomSky device load...")
         self.refresh_devices()
 
@@ -64,7 +65,7 @@ class BloomSky:
         """Use the API to retrieve a list of devices."""
         _LOGGER.debug("Fetching BloomSky update")
         response = requests.get(
-            "{}?{}".format(self.API_URL, self.endpoint_argument),
+            "{}?{}".format(self.API_URL, self._endpoint_argument),
             headers={AUTHORIZATION: self._api_key}, timeout=10)
         if response.status_code == 401:
             raise RuntimeError("Invalid API_KEY")
