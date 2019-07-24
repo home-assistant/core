@@ -4,17 +4,14 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate.const import (
+    ATTR_FAN_MODE, ATTR_HVAC_MODE, ATTR_PRESET_MODE, ATTR_SWING_MODE,
+    HVAC_MODE_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL, HVAC_MODE_OFF, PRESET_AWAY, PRESET_NONE,
+    SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE, SUPPORT_SWING_MODE,
+    SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, TEMP_CELSIUS)
-from homeassistant.components.climate.const import (
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE,
-    SUPPORT_SWING_MODE,
-    HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY,
-    PRESET_AWAY, PRESET_NONE,
-    ATTR_FAN_MODE,
-    ATTR_HVAC_MODE, ATTR_SWING_MODE,
-    ATTR_PRESET_MODE)
 import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN as DAIKIN_DOMAIN
