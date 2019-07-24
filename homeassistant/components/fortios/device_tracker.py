@@ -27,7 +27,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_scanner(hass, config):
     """Validate the configuration and return a FortiOSDeviceScanner."""
-
     host = config[DOMAIN][CONF_HOST]
     verify_ssl = config[DOMAIN][CONF_VERIFY_SSL]
     token = config[DOMAIN][CONF_TOKEN]
