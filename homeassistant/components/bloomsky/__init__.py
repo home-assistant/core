@@ -68,7 +68,10 @@ class BloomSky:
             headers={AUTHORIZATION: self._api_key}, timeout=10)
         if response.status_code == 401:
             raise RuntimeError("Invalid API_KEY")
-        elif response.status_code != 200:
+        if response.status_code == 405:
+            _LOGGER.error("You have no bloomsky devices configured: %s", response.status_code)
+            return
+        if response.status_code != 200:
             _LOGGER.error("Invalid HTTP response: %s", response.status_code)
             return
         # Create dictionary keyed off of the device unique id
