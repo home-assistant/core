@@ -5,6 +5,9 @@ ATTR_TARGET_TEMPERATURE = 'target_temperature'
 ATTR_INSIDE_TEMPERATURE = 'inside_temperature'
 ATTR_OUTSIDE_TEMPERATURE = 'outside_temperature'
 
+ATTR_STATE_ON = 'on'
+ATTR_STATE_OFF = 'off'
+
 SENSOR_TYPE_TEMPERATURE = 'temperature'
 
 SENSOR_TYPES = {
