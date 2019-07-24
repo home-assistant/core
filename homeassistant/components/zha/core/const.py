@@ -59,6 +59,7 @@ ATTR_COMMAND = 'command'
 ATTR_COMMAND_TYPE = 'command_type'
 ATTR_ARGS = 'args'
 ATTR_ENDPOINT_ID = 'endpoint_id'
+ATTR_AVAILABLE = 'available'
 
 IN = 'in'
 OUT = 'out'

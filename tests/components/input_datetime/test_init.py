@@ -9,8 +9,8 @@ import voluptuous as vol
 from homeassistant.core import CoreState, State, Context
 from homeassistant.setup import async_setup_component
 from homeassistant.components.input_datetime import (
-    DOMAIN, ATTR_ENTITY_ID, ATTR_DATE, ATTR_DATETIME, ATTR_TIME,
-    SERVICE_SET_DATETIME)
+    DOMAIN, ATTR_DATE, ATTR_DATETIME, ATTR_TIME, SERVICE_SET_DATETIME)
+from homeassistant.const import ATTR_ENTITY_ID
 
 from tests.common import mock_restore_cache
 

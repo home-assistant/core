@@ -12,7 +12,7 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_AUX_HEAT, SUPPORT_TARGET_TEMPERATURE_RANGE, SUPPORT_FAN_MODE,
     PRESET_AWAY, FAN_AUTO, FAN_ON, CURRENT_HVAC_OFF, CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_COOL, SUPPORT_PRESET_MODE
+    CURRENT_HVAC_COOL, SUPPORT_PRESET_MODE, PRESET_NONE
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
@@ -49,6 +49,7 @@ PRESET_TO_ECOBEE_HOLD = {
 }
 
 PRESET_MODES = [
+    PRESET_NONE,
     PRESET_AWAY,
     PRESET_HOME,
     PRESET_SLEEP
@@ -331,7 +332,7 @@ class Thermostat(ClimateDevice):
                 self.thermostat_index, PRESET_TO_ECOBEE_HOLD[preset_mode],
                 self.hold_preference())
 
-        elif preset_mode is None:
+        elif preset_mode is PRESET_NONE:
             self.data.ecobee.resume_program(self.thermostat_index)
 
         else:

@@ -6,13 +6,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import group
-from homeassistant.const import (SERVICE_TURN_ON, SERVICE_TOGGLE,
-                                 SERVICE_TURN_OFF, ATTR_ENTITY_ID)
+from homeassistant.const import (
+    SERVICE_TURN_ON, SERVICE_TOGGLE, SERVICE_TURN_OFF)
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import (  # noqa
-    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
+    ENTITY_SERVICE_SCHEMA, PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,31 +54,19 @@ PROP_TO_ATTR = {
     'direction': ATTR_DIRECTION,
 }  # type: dict
 
-FAN_SET_SPEED_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
+FAN_SET_SPEED_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_SPEED): cv.string
 })  # type: dict
 
-FAN_TURN_ON_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
+FAN_TURN_ON_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_SPEED): cv.string
 })  # type: dict
 
-FAN_TURN_OFF_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids
-})  # type: dict
-
-FAN_OSCILLATE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
+FAN_OSCILLATE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_OSCILLATING): cv.boolean
 })  # type: dict
 
-FAN_TOGGLE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids
-})
-
-FAN_SET_DIRECTION_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
+FAN_SET_DIRECTION_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_DIRECTION): cv.string
 })  # type: dict
 
@@ -103,11 +91,11 @@ async def async_setup(hass, config: dict):
         'async_turn_on'
     )
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, FAN_TURN_OFF_SCHEMA,
+        SERVICE_TURN_OFF, ENTITY_SERVICE_SCHEMA,
         'async_turn_off'
     )
     component.async_register_entity_service(
-        SERVICE_TOGGLE, FAN_TOGGLE_SCHEMA,
+        SERVICE_TOGGLE, ENTITY_SERVICE_SCHEMA,
         'async_toggle'
     )
     component.async_register_entity_service(

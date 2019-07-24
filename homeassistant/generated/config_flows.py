@@ -57,6 +57,7 @@ FLOWS = [
     "unifi",
     "upnp",
     "velbus",
+    "vesync",
     "wemo",
     "wwlln",
     "zha",

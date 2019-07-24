@@ -229,6 +229,9 @@ aurorapy==0.2.6
 # homeassistant.components.stream
 av==6.1.2
 
+# homeassistant.components.avea
+avea==1.2.8
+
 # homeassistant.components.avion
 # avion==0.10
 
@@ -256,7 +259,7 @@ batinfo==0.4.2
 beautifulsoup4==4.7.1
 
 # homeassistant.components.zha
-bellows-homeassistant==0.8.2
+bellows-homeassistant==0.9.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.5.3
@@ -490,6 +493,9 @@ flux_led==0.22
 # homeassistant.components.foobot
 foobot_async==0.3.1
 
+# homeassistant.components.fortios
+fortiosapi==0.10.8
+
 # homeassistant.components.free_mobile
 freesms==0.1.2
 
@@ -511,7 +517,7 @@ gearbest_parser==1.0.7
 geizhals==0.0.9
 
 # homeassistant.components.geniushub
-geniushub-client==0.4.12
+geniushub-client==0.4.15
 
 # homeassistant.components.geo_json_events
 # homeassistant.components.nsw_rural_fire_service_feed
@@ -616,7 +622,7 @@ hole==0.3.0
 holidays==0.9.10
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190718.0
+home-assistant-frontend==20190721.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.4
@@ -733,7 +739,7 @@ liveboxplaytv==2.0.2
 lmnotify==0.0.4
 
 # homeassistant.components.google_maps
-locationsharinglib==3.0.11
+locationsharinglib==4.0.2
 
 # homeassistant.components.logi_circle
 logi_circle==0.2.2
@@ -1039,7 +1045,7 @@ pyalarmdotcom==0.3.2
 pyarlo==0.2.3
 
 # homeassistant.components.netatmo
-pyatmo==2.1.1
+pyatmo==2.1.2
 
 # homeassistant.components.apple_tv
 pyatv==0.3.12
@@ -1084,7 +1090,7 @@ pycsspeechtts==1.0.2
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==1.4.6
+pydaikin==1.5.1
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1387,7 +1393,7 @@ pysmarty==0.8
 pysnmp==4.4.9
 
 # homeassistant.components.sonos
-pysonos==0.0.21
+pysonos==0.0.22
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -1397,6 +1403,9 @@ pystiebeleltron==0.0.1.dev2
 
 # homeassistant.components.stride
 pystride==0.1.7
+
+# homeassistant.components.suez_water
+pysuez==0.1.17
 
 # homeassistant.components.supla
 pysupla==0.0.3
@@ -1447,7 +1456,7 @@ python-gc100==1.0.3a
 python-gitlab==1.6.0
 
 # homeassistant.components.hp_ilo
-python-hpilo==3.9
+python-hpilo==4.3
 
 # homeassistant.components.joaoapps_join
 python-join-api==0.0.4
@@ -1559,7 +1568,7 @@ pyuptimerobot==0.0.5
 pyvera==0.3.2
 
 # homeassistant.components.vesync
-pyvesync_v2==0.9.7
+pyvesync==1.1.0
 
 # homeassistant.components.vizio
 pyvizio==0.0.7
@@ -1714,7 +1723,7 @@ smarthab==0.20
 smhi-pkg==1.0.10
 
 # homeassistant.components.snapcast
-snapcast==2.0.9
+snapcast==2.0.10
 
 # homeassistant.components.socialblade
 socialbladeclient==0.2
@@ -1855,7 +1864,7 @@ uscisstatus==0.1.1
 uvcclient==0.11.0
 
 # homeassistant.components.vallox
-vallox-websocket-api==2.0.0
+vallox-websocket-api==2.2.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.7
@@ -1951,7 +1960,7 @@ zengge==0.2
 zeroconf==0.23.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.18
+zha-quirks==0.0.19
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9

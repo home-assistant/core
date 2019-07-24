@@ -72,6 +72,6 @@ async def async_reproduce_states(hass: HomeAssistantType,
                                  states: Iterable[State],
                                  context: Optional[Context] = None) -> None:
     """Reproduce component states."""
-    await asyncio.gather(*[
+    await asyncio.gather(*(
         _async_reproduce_states(hass, state, context)
-        for state in states])
+        for state in states))

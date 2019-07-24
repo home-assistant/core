@@ -83,14 +83,14 @@ async def _async_get_custom_components(
     dirs = await hass.async_add_executor_job(
         get_sub_directories, custom_components.__path__)
 
-    integrations = await asyncio.gather(*[
+    integrations = await asyncio.gather(*(
         hass.async_add_executor_job(
             Integration.resolve_from_root,
             hass,
             custom_components,
             comp.name)
         for comp in dirs
-    ])
+    ))
 
     return {
         integration.domain: integration
@@ -236,7 +236,7 @@ async def async_get_integration(hass: 'HomeAssistant', domain: str)\
         cache = hass.data[DATA_INTEGRATIONS] = {}
 
     int_or_evt = cache.get(
-        domain, _UNDEF)  # type: Optional[Union[Integration, asyncio.Event]]
+        domain, _UNDEF)  # type: Union[Integration, asyncio.Event, None]
 
     if isinstance(int_or_evt, asyncio.Event):
         await int_or_evt.wait()

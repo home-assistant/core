@@ -3,7 +3,7 @@ import unittest
 
 from homeassistant.components import vacuum
 from homeassistant.components.vacuum import (
-    ATTR_BATTERY_LEVEL, ATTR_COMMAND, ATTR_ENTITY_ID, ATTR_FAN_SPEED,
+    ATTR_BATTERY_LEVEL, ATTR_COMMAND, ATTR_FAN_SPEED,
     ATTR_FAN_SPEED_LIST, ATTR_PARAMS, ATTR_STATUS, DOMAIN,
     ENTITY_ID_ALL_VACUUMS,
     SERVICE_SEND_COMMAND, SERVICE_SET_FAN_SPEED,
@@ -13,7 +13,8 @@ from homeassistant.components.demo.vacuum import (
     DEMO_VACUUM_BASIC, DEMO_VACUUM_COMPLETE, DEMO_VACUUM_MINIMAL,
     DEMO_VACUUM_MOST, DEMO_VACUUM_NONE, DEMO_VACUUM_STATE, FAN_SPEEDS)
 from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES, CONF_PLATFORM, STATE_OFF, STATE_ON)
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, CONF_PLATFORM, STATE_OFF,
+    STATE_ON)
 from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant, mock_service
