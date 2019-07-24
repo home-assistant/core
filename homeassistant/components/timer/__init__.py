@@ -37,11 +37,7 @@ SERVICE_PAUSE = 'pause'
 SERVICE_CANCEL = 'cancel'
 SERVICE_FINISH = 'finish'
 
-# Keep this in place so that platforms don't have to directly know about
-# ENTITY_SERVICE_SCHEMA:
-TIMER_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA
-
-SERVICE_SCHEMA_DURATION = TIMER_SERVICE_SCHEMA.extend({
+SERVICE_SCHEMA_DURATION = ENTITY_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_DURATION,
                  default=timedelta(DEFAULT_DURATION)): cv.time_period,
 })
@@ -81,13 +77,13 @@ async def async_setup(hass, config):
         SERVICE_START, SERVICE_SCHEMA_DURATION,
         'async_start')
     component.async_register_entity_service(
-        SERVICE_PAUSE, TIMER_SERVICE_SCHEMA,
+        SERVICE_PAUSE, ENTITY_SERVICE_SCHEMA,
         'async_pause')
     component.async_register_entity_service(
-        SERVICE_CANCEL, TIMER_SERVICE_SCHEMA,
+        SERVICE_CANCEL, ENTITY_SERVICE_SCHEMA,
         'async_cancel')
     component.async_register_entity_service(
-        SERVICE_FINISH, TIMER_SERVICE_SCHEMA,
+        SERVICE_FINISH, ENTITY_SERVICE_SCHEMA,
         'async_finish')
 
     await component.async_add_entities(entities)
