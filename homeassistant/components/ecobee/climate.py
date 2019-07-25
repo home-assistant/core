@@ -377,7 +377,8 @@ class Thermostat(ClimateDevice):
             self.data.ecobee.resume_program(self.thermostat_index)
 
         else:
-            _LOGGER.warning("Received unknown preset mode: %s", preset_mode)
+            self.data.ecobee.set_climate_hold(
+                self.thermostat_index, preset_mode, self.hold_preference())
 
     @property
     def preset_modes(self):
