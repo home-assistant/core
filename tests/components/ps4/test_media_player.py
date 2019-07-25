@@ -161,16 +161,15 @@ def mock_ps4_device(hass, mock_device):
 async def test_media_player_is_setup_correctly_with_entry(hass):
     """Test entity is setup correctly with entry correctly."""
     mock_entity_id = await setup_mock_component(hass)
-    mock_entities = hass.states.async_entity_ids()
+    mock_state = hass.states.get(mock_entity_id).state
 
     # Assert status updated callback is added to protocol.
     assert len(hass.data[PS4_DATA].protocol.callbacks) == 1
 
     # Test that entity is added to hass.
-    assert len(hass.data[PS4_DATA].devices) == 1
     assert hass.data[PS4_DATA].protocol is not None
-    assert hass.data[PS4_DATA].devices[0].entity_id in mock_entities
     assert mock_entity_id == 'media_player.{}'.format(MOCK_NAME)
+    assert mock_state == STATE_UNKNOWN
 
 
 async def test_state_off_is_set(hass):
