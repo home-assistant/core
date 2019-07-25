@@ -1,4 +1,6 @@
 """Tests for the Velbus config flow."""
+from unittest.mock import patch
+
 from homeassistant import data_entry_flow
 from homeassistant.components.velbus import config_flow
 from homeassistant.const import CONF_PORT, CONF_NAME
@@ -24,15 +26,38 @@ async def test_user(hass):
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'user'
 
-    result = await flow.async_step_user({
-        CONF_NAME: 'Velbus Test Serial', CONF_PORT: PORT_SERIAL})
-    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
-    assert result['errors'] == {'port': 'connection_failed'}
+    with patch('homeassistant.components.velbus.config_flow.'
+               'VelbusConfigFlow._test_connection', return_value=True):
+        result = await flow.async_step_user({
+            CONF_NAME: 'Velbus Test Serial', CONF_PORT: PORT_SERIAL})
+        assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result['title'] == 'velbus_test_serial'
+        assert result['data'][CONF_PORT] == PORT_SERIAL
 
-    result = await flow.async_step_user({
-        CONF_NAME: 'Velbus Test TCP', CONF_PORT: PORT_TCP})
-    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
-    assert result['errors'] == {'port': 'connection_failed'}
+        result = await flow.async_step_user({
+            CONF_NAME: 'Velbus Test TCP', CONF_PORT: PORT_TCP})
+        assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result['title'] == 'velbus_test_tcp'
+        assert result['data'][CONF_PORT] == PORT_TCP
+
+    with patch('homeassistant.components.velbus.config_flow.'
+               'VelbusConfigFlow') as velbus_patch:
+        # pylint: disable=W0212
+        velbus_patch._test_connection.return_value \
+            = False
+        velbus_patch._errors[CONF_PORT] \
+            = 'connection_failed'
+        # pylint: enable=W0212
+
+        result = await flow.async_step_user({
+            CONF_NAME: 'Velbus Test Serial', CONF_PORT: PORT_SERIAL})
+        assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+        assert result['errors'] == {CONF_PORT: 'connection_failed'}
+
+        result = await flow.async_step_user({
+            CONF_NAME: 'Velbus Test TCP', CONF_PORT: PORT_TCP})
+        assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+        assert result['errors'] == {CONF_PORT: 'connection_failed'}
 
 
 async def test_import(hass):
