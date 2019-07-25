@@ -169,8 +169,15 @@ group.ais_rss_help_remote:
   context_answer: OK, wybierz pilotem stronę pomocy
   remote_group_view: Pomoc
   order: 2
-group.all_switches:
+
+group.all_ais_persons:
   order: 1
+  friendly_name: Osoby
+  context_key_words: osoby
+  context_answer: OK, osoby
+  remote_group_view: Mój Dom
+group.all_switches:
+  order: 2
   hidden: false
   control: hidden
   context_key_words: przełaczniki
@@ -179,7 +186,7 @@ group.all_switches:
   friendly_name: Przełączniki
   remote_group_view: Mój Dom
 group.all_lights:
-  order: 2
+  order: 3
   hidden: false
   control: hidden
   context_key_words: światła
@@ -187,36 +194,30 @@ group.all_lights:
   friendly_name: Światła
   remote_group_view: Mój Dom
 group.all_ais_sensors:
-  order: 3
+  order: 4
   hidden: false
   context_key_words: czujniki
   context_answer: OK, wybrano wszystkie czujniki.
   friendly_name: Czujniki
   remote_group_view: Mój Dom
 group.all_fans:
-  order: 4
+  order: 5
   hidden: false
   context_key_words: wentylatory
   context_answer: OK, wybrano wszystkie wentylatory.
   friendly_name: Wentylatory
   remote_group_view: Mój Dom
-group.all_devices:
-  order: 4
-  hidden: false
-  context_key_words: urządzenia
-  context_answer: OK, urządzenia
-  friendly_name: Urządzenia
-  remote_group_view: Mój Dom
 group.ais_pogoda:
   remote_group_view: Mój Dom
-  order: 5
-group.all_automations:
-  order: 7
-  hidden: true
-  friendly_name: Wszystkie automatyzacje
+  order: 6
 group.day_info:
-  order: 8
+  order: 7
   friendly_name: Kalendarium
+  remote_group_view: Mój Dom
+group.all_automations:
+  order: 8
+  hidden: true
+  friendly_name: Automatyzacje
   remote_group_view: Mój Dom
 
 #group.ais_wyszukiwarka:

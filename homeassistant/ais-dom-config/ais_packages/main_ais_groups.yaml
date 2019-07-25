@@ -19,4 +19,5 @@ group:
     name: Dyski
     entities:
       - sensor.ais_drives
-
+  all_ais_persons:
+    name: Osoby

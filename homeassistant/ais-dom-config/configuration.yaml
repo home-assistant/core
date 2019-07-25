@@ -95,7 +95,7 @@ media_extractor:
 
 # Enables the frontend
 frontend:
-  development_repo: /home/andrzej/Projects/AIS-home-assistant-polymer
+  # development_repo: /home/andrzej/Projects/AIS-home-assistant-polymer
   javascript_version: latest
   themes: !include_dir_merge_named themes
 
@@ -107,10 +107,6 @@ http:
    api_password: dom
    base_url: localhost:8180
    server_port: 8180
-   #ssl_certificate: /data/data/pl.sviete.dom/files/home/AIS/servercert.pem
-   #ssl_key: /data/data/pl.sviete.dom/files/home/AIS/privekey.pem
-
-
 
 # AIS Service for AI
 # Allows you to issue voice commands
