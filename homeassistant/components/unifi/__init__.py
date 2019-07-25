@@ -7,8 +7,8 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
-    CONF_CONTROLLER, CONF_DETECTION_TIME, CONF_SITE_ID, CONF_SSID_FILTER,
-    CONTROLLER_ID, DOMAIN, UNIFI_CONFIG)
+    CONF_BLOCK_CLIENT, CONF_CONTROLLER, CONF_DETECTION_TIME, CONF_SITE_ID,
+    CONF_SSID_FILTER, CONTROLLER_ID, DOMAIN, UNIFI_CONFIG)
 from .controller import UniFiController
 
 CONF_CONTROLLERS = 'controllers'
@@ -16,9 +16,11 @@ CONF_CONTROLLERS = 'controllers'
 CONTROLLER_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_SITE_ID): cv.string,
+    vol.Optional(CONF_BLOCK_CLIENT, default=[]): vol.All(
+        cv.ensure_list, [cv.string]),
     vol.Optional(CONF_DETECTION_TIME): vol.All(
         cv.time_period, cv.positive_timedelta),
-    vol.Optional(CONF_SSID_FILTER): vol.All(cv.ensure_list, [cv.string])
+    vol.Optional(CONF_SSID_FILTER): vol.All(cv.ensure_list, [cv.string]),
 })
 
 CONFIG_SCHEMA = vol.Schema({
