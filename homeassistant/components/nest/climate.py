@@ -28,6 +28,15 @@ NEST_MODE_HEAT = 'heat'
 NEST_MODE_COOL = 'cool'
 NEST_MODE_OFF = 'off'
 
+HASS_TO_NEST = {
+    HVAC_MODE_AUTO: NEST_MODE_HEAT_COOL,
+    HVAC_MODE_HEAT: NEST_MODE_HEAT,
+    HVAC_MODE_COOL: NEST_MODE_COOL,
+    HVAC_MODE_OFF: NEST_MODE_OFF,
+}
+
+NEST_TO_HASS = {v: k for k, v in HASS_TO_NEST.items()}
+
 PRESET_MODES = [PRESET_NONE, PRESET_AWAY, PRESET_ECO]
 
 
@@ -157,15 +166,11 @@ class NestThermostat(ClimateDevice):
     @property
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
-        if self._mode in \
-                (NEST_MODE_HEAT, NEST_MODE_COOL, NEST_MODE_OFF):
-            return self._mode
         if self._mode == NEST_MODE_ECO:
             # We assume the first operation in operation list is the main one
             return self._operation_list[0]
-        if self._mode == NEST_MODE_HEAT_COOL:
-            return HVAC_MODE_AUTO
-        return None
+
+        return NEST_TO_HASS[self._mode]
 
     @property
     def target_temperature(self):
@@ -216,16 +221,7 @@ class NestThermostat(ClimateDevice):
 
     def set_hvac_mode(self, hvac_mode):
         """Set operation mode."""
-        if hvac_mode in (HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_OFF):
-            device_mode = hvac_mode
-        elif hvac_mode == HVAC_MODE_AUTO:
-            device_mode = NEST_MODE_HEAT_COOL
-        else:
-            device_mode = HVAC_MODE_OFF
-            _LOGGER.error(
-                "An error occurred while setting device mode. "
-                "Invalid operation mode: %s", hvac_mode)
-        self.device.mode = device_mode
+        self.device.mode = HASS_TO_NEST[hvac_mode]
 
     @property
     def hvac_modes(self):
@@ -259,7 +255,7 @@ class NestThermostat(ClimateDevice):
             self.structure.away = True
 
         if self.preset_mode == PRESET_ECO:
-            self.device.mode = self._operation_list[0]
+            self.device.mode = HASS_TO_NEST[self._operation_list[0]]
         elif preset_mode == PRESET_ECO:
             self.device.mode = NEST_MODE_ECO
 
