@@ -28,7 +28,6 @@ ATTR_RESUME_ALL = 'resume_all'
 DEFAULT_RESUME_ALL = False
 PRESET_TEMPERATURE = 'temp'
 PRESET_VACATION = 'vacation'
-PRESET_AUX_HEAT_ONLY = 'aux_heat_only'
 PRESET_HOLD_NEXT_TRANSITION = 'next_transition'
 PRESET_HOLD_INDEFINITE = 'indefinite'
 AWAY_MODE = 'awayMode'
@@ -276,9 +275,6 @@ class Thermostat(ClimateDevice):
             if event['type'] == 'vacation':
                 self.vacation = event['name']
                 return PRESET_VACATION
-
-        if self.is_aux_heat:
-            return PRESET_AUX_HEAT_ONLY
 
         return None
 
