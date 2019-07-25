@@ -1,5 +1,5 @@
 """Provide CORS support for the HTTP component."""
-from aiohttp.web_urldispatcher import Resource, ResourceRoute
+from aiohttp.web_urldispatcher import Resource, ResourceRoute, StaticResource
 from aiohttp.hdrs import ACCEPT, CONTENT_TYPE, ORIGIN, AUTHORIZATION
 
 from homeassistant.const import (
@@ -9,7 +9,7 @@ from homeassistant.core import callback
 ALLOWED_CORS_HEADERS = [
     ORIGIN, ACCEPT, HTTP_HEADER_X_REQUESTED_WITH, CONTENT_TYPE,
     HTTP_HEADER_HA_AUTH, AUTHORIZATION]
-VALID_CORS_TYPES = (Resource, ResourceRoute)
+VALID_CORS_TYPES = (Resource, ResourceRoute, StaticResource)
 
 
 @callback
@@ -56,7 +56,7 @@ def setup_cors(app, origins):
 
     async def cors_startup(app):
         """Initialize CORS when app starts up."""
-        for route in list(app.router.routes()):
-            _allow_cors(route)
+        for resource in list(app.router.resources()):
+            _allow_cors(resource)
 
     app.on_startup.append(cors_startup)
