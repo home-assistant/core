@@ -163,9 +163,16 @@ class Thermostat(ClimateDevice):
         self.hold_temp = hold_temp
         self.vacation = None
         self._climate_list = self.climate_list
-        self._operation_list = [
-            HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_OFF
-        ]
+
+        self._operation_list = []
+        if self.thermostat['settings']['heatStages']:
+            self._operation_list.append(HVAC_MODE_HEAT)
+        if self.thermostat['settings']['coolStages']:
+            self._operation_list.append(HVAC_MODE_COOL)
+        if len(self._operation_list) == 2:
+            self._operation_list.insert(0, HVAC_MODE_AUTO)
+        self._operation_list.append(HVAC_MODE_OFF)
+
         self._fan_modes = [FAN_AUTO, FAN_ON]
         self.update_without_throttle = False
 
