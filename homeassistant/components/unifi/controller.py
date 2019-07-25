@@ -56,7 +56,7 @@ class UniFiController:
     @property
     def block_clients(self):
         """Return list of clients to block."""
-        return self.unifi_config[CONF_BLOCK_CLIENT]
+        return self.unifi_config.get(CONF_BLOCK_CLIENT, [])
 
     @property
     def mac(self):

@@ -122,6 +122,7 @@ async def test_no_clients(hass, mock_controller):
     """Test the update_clients function when no clients are found."""
     mock_controller.mock_client_responses.append({})
     mock_controller.mock_device_responses.append({})
+
     await setup_controller(hass, mock_controller)
     assert len(mock_controller.mock_requests) == 2
     assert len(hass.states.async_all()) == 2
