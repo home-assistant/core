@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_API_KEY, DEVICE_CLASS_TIMESTAMP)
+    ATTR_ATTRIBUTION, DEVICE_CLASS_TIMESTAMP)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -43,7 +43,6 @@ def due_in_minutes(timestamp):
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Create the sensor."""
-
     api_key = config[CONF_API_KEY]
     name = DEFAULT_NAME
 
@@ -53,7 +52,11 @@ async def async_setup_platform(
     for nextpassage in config[CONF_NEXT_DEPARTURE]:
         stop_id = nextpassage[CONF_STOP_ID]
         number_of_departures = nextpassage[CONF_NUMBER_OF_DEPARTURES]
-        line = Passages(hass.loop, stop_id, number_of_departures, api_key, session)
+        line = Passages(hass.loop,
+                        stop_id,
+                        number_of_departures,
+                        api_key,
+                        session)
         await line.get_passages()
         if line.passages is None:
             _LOGGER.error("No data recieved from De Lijn")
@@ -84,9 +87,11 @@ class DeLijnPublicTransportSensor(Entity):
             first = self.line.passages[0]
             local_timezone = pytz.timezone("Europe/Brussels")
             if first['due_at_rt'] is not None:
-                first_passage_naive = dt_util.parse_datetime(first['due_at_rt'])
+                first_passage_naive = dt_util.parse_datetime(
+                    first['due_at_rt'])
             else:
-                first_passage_naive = dt_util.parse_datetime(first['due_at_sch'])
+                first_passage_naive = dt_util.parse_datetime(
+                    first['due_at_sch'])
             first_passage_local = local_timezone.localize(first_passage_naive)
             first_passage_utc = dt_util.as_utc(first_passage_local)
             self._state = first_passage_utc.isoformat()
