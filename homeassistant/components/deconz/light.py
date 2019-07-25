@@ -196,8 +196,8 @@ class DeconzGroup(DeconzLight):
         bridgeid = self.gateway.api.config.bridgeid
 
         return {
-            'connections': {(CONNECTION_ZIGBEE, self.unique_id)},
             'identifiers': {(DECONZ_DOMAIN, self.unique_id)},
+            'manufacturer': 'Dresden Elektronik',
             'model': 'deCONZ group',
             'name': self._device.name,
             'via_device': (DECONZ_DOMAIN, bridgeid),
