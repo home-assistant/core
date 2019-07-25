@@ -11,8 +11,9 @@ from homeassistant.components.climate.const import (
     DOMAIN, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF,
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_AUX_HEAT, SUPPORT_TARGET_TEMPERATURE_RANGE, SUPPORT_FAN_MODE,
-    PRESET_AWAY, FAN_AUTO, FAN_ON, CURRENT_HVAC_OFF, CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_COOL, SUPPORT_PRESET_MODE, PRESET_NONE
+    PRESET_AWAY, FAN_AUTO, FAN_ON, CURRENT_HVAC_IDLE, CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_COOL, SUPPORT_PRESET_MODE, PRESET_NONE, CURRENT_HVAC_FAN,
+    CURRENT_HVAC_DRY,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
@@ -43,6 +44,25 @@ ECOBEE_HVAC_TO_HASS = collections.OrderedDict([
     ('auxHeatOnly', HVAC_MODE_HEAT),
 ])
 
+ECOBEE_HVAC_ACTION_TO_HASS = {
+    # Map to None if we do not know how to represent.
+    "heatPump": CURRENT_HVAC_HEAT,
+    "heatPump2": CURRENT_HVAC_HEAT,
+    "heatPump3": CURRENT_HVAC_HEAT,
+    "compCool1": CURRENT_HVAC_COOL,
+    "compCool2": CURRENT_HVAC_COOL,
+    "auxHeat1": CURRENT_HVAC_HEAT,
+    "auxHeat2": CURRENT_HVAC_HEAT,
+    "auxHeat3": CURRENT_HVAC_HEAT,
+    "fan": CURRENT_HVAC_FAN,
+    "humidifier": None,
+    "dehumidifier": CURRENT_HVAC_DRY,
+    "ventilator": CURRENT_HVAC_FAN,
+    "economizer": CURRENT_HVAC_FAN,
+    "compHotWater": None,
+    "auxHotWater": None,
+}
+
 PRESET_TO_ECOBEE_HOLD = {
     PRESET_HOLD_NEXT_TRANSITION: 'nextTransition',
     PRESET_HOLD_INDEFINITE: 'indefinite',
@@ -51,8 +71,11 @@ PRESET_TO_ECOBEE_HOLD = {
 PRESET_MODES = [
     PRESET_NONE,
     PRESET_AWAY,
+    PRESET_TEMPERATURE,
     PRESET_HOME,
-    PRESET_SLEEP
+    PRESET_SLEEP,
+    PRESET_HOLD_NEXT_TRANSITION,
+    PRESET_HOLD_INDEFINITE
 ]
 
 SERVICE_SET_FAN_MIN_ON_TIME = 'ecobee_set_fan_min_on_time'
@@ -277,18 +300,29 @@ class Thermostat(ClimateDevice):
 
     @property
     def hvac_action(self):
-        """Return current HVAC action."""
-        status = self.thermostat['equipmentStatus']
-        operation = None
+        """Return current HVAC action.
 
-        if status == '':
-            operation = CURRENT_HVAC_OFF
-        elif 'Cool' in status:
-            operation = CURRENT_HVAC_COOL
-        elif 'auxHeat' in status or 'heatPump' in status:
-            operation = CURRENT_HVAC_HEAT
+        Ecobee returns a CSV string with different equipment that is active.
+        We are prioritizing any heating/cooling equipment, otherwase look at
+        drying/fanning. Idle if nothing going on.
 
-        return operation
+        We are unable to map all actions to HA equivalents.
+        """
+        if self.thermostat['equipmentStatus'] == "":
+            return CURRENT_HVAC_IDLE
+
+        actions = [
+            ECOBEE_HVAC_ACTION_TO_HASS[status] for status in
+            self.thermostat['equipmentStatus'].split(",")
+            if ECOBEE_HVAC_ACTION_TO_HASS[status] is not None
+        ]
+
+        for action in (CURRENT_HVAC_HEAT, CURRENT_HVAC_COOL,
+                       CURRENT_HVAC_DRY, CURRENT_HVAC_FAN):
+            if action in actions:
+                return action
+
+        return CURRENT_HVAC_IDLE
 
     @property
     def device_state_attributes(self):
@@ -332,13 +366,11 @@ class Thermostat(ClimateDevice):
                 self.thermostat_index, PRESET_TO_ECOBEE_HOLD[preset_mode],
                 self.hold_preference())
 
-        elif preset_mode is PRESET_NONE:
+        elif preset_mode == PRESET_NONE:
             self.data.ecobee.resume_program(self.thermostat_index)
 
         else:
-            self.data.ecobee.set_climate_hold(
-                self.thermostat_index, preset_mode, self.hold_preference())
-            self.update_without_throttle = True
+            _LOGGER.warning("Received unknown preset mode: %s", preset_mode)
 
     @property
     def preset_modes(self):
