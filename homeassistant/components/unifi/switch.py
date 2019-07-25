@@ -60,11 +60,13 @@ def update_items(controller, async_add_entities, switches):
             LOGGER.debug("Updating UniFi block switch %s (%s)",
                          switches[block_client_id].entity_id,
                          switches[block_client_id].client.mac)
-            print(controller.api.clients[client_id])
             switches[block_client_id].async_schedule_update_ha_state()
             continue
 
-        client = controller.api.clients[client_id]
+        if client_id not in controller.api.clients_all:
+            continue
+
+        client = controller.api.clients_all[client_id]
         switches[block_client_id] = UniFiBlockClientSwitch(client, controller)
         new_switches.append(switches[block_client_id])
         LOGGER.debug(
@@ -198,13 +200,6 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchDevice):
 class UniFiBlockClientSwitch(UniFiClient, SwitchDevice):
     """Representation of a blockable client."""
 
-    def __init__(self, client, controller):
-        """Set up block client switch."""
-        super().__init__(client, controller)
-        self.blocked = None
-        if self.blocked != True:
-            self.blocked = False
-
     @property
     def unique_id(self):
         """Return a unique identifier for this switch."""
@@ -212,20 +207,18 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchDevice):
 
     @property
     def is_on(self):
-        """Return true if POE is active."""
-        return self.blocked is not True
+        """Return true if client is blocked."""
+        return self.client.blocked
 
     @property
     def available(self):
-        """Return if switch is available."""
+        """Return if controller is available."""
         return self.controller.available
 
     async def async_turn_on(self, **kwargs):
-        """Enable POE for client."""
-        self.blocked = False
-        await self.controller.api.clients.async_unblock(self.client.mac)
+        """Block client."""
+        await self.controller.api.clients.async_block(self.client.mac)
 
     async def async_turn_off(self, **kwargs):
-        """Disable POE for client."""
-        self.blocked = True
-        await self.controller.api.clients.async_block(self.client.mac)
+        """Unblock client."""
+        await self.controller.api.clients.async_unblock(self.client.mac)

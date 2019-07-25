@@ -13,7 +13,8 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
-    CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID, LOGGER, UNIFI_CONFIG)
+    CONF_BLOCK_CLIENT, CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID, LOGGER,
+    UNIFI_CONFIG)
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -52,9 +53,10 @@ class UniFiController:
         """Return the site user role of this controller."""
         return self._site_role
 
+    @property
     def block_clients(self):
         """Return list of clients to block."""
-        return ['dc:a6:32:05:81:90']
+        return self.unifi_config[CONF_BLOCK_CLIENT]
 
     @property
     def mac(self):
@@ -88,6 +90,8 @@ class UniFiController:
             with async_timeout.timeout(10):
                 await self.api.clients.update()
                 await self.api.devices.update()
+                if self.block_clients:
+                    await self.api.clients_all.update()
 
         except aiounifi.LoginRequired:
             try:
@@ -132,14 +136,14 @@ class UniFiController:
         except CannotConnect:
             raise ConfigEntryNotReady
 
-        except Exception:  # pylint: disable=broad-except
+        except Exception as err:  # pylint: disable=broad-except
             LOGGER.error(
-                'Unknown error connecting with UniFi controller.')
+                'Unknown error connecting with UniFi controller: %s', err)
             return False
 
         for unifi_config in hass.data[UNIFI_CONFIG]:
             if self.host == unifi_config[CONF_HOST] and \
-                    self.site == unifi_config[CONF_SITE_ID]:
+                    self.site_name == unifi_config[CONF_SITE_ID]:
                 self.unifi_config = unifi_config
                 break
 
