@@ -388,6 +388,12 @@ def test_max(hass):
                              hass).async_render() == '3'
 
 
+def test_ord(hass):
+    """Test the ord filter."""
+    assert template.Template('{{ "d" | ord }}',
+                             hass).async_render() == '100'
+
+
 def test_base64_encode(hass):
     """Test the base64_encode filter."""
     assert template.Template('{{ "homeassistant" | base64_encode }}',
