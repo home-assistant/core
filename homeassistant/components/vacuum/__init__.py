@@ -218,7 +218,7 @@ class _BaseVacuum(Entity):
         """
         await self.hass.async_add_executor_job(
             partial(self.clean_spot, **kwargs))
-    
+
     def clean_edge(self, **kwargs):
         """Perform an edge clean."""
         raise NotImplementedError()
