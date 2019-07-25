@@ -3,6 +3,8 @@ import os
 import time
 
 
+# mypy: allow-untyped-calls, allow-untyped-defs
+
 def install_osx():
     """Set up to run via launchd on OS X."""
     with os.popen('which hass') as inp:

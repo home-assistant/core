@@ -6,6 +6,7 @@ import logging
 
 from vallox_websocket_api import PROFILE as VALLOX_PROFILE, Vallox
 from vallox_websocket_api.constants import vlxDevConstants
+from vallox_websocket_api.exceptions import ValloxApiException
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -110,9 +111,13 @@ async def async_setup(hass, config):
                                      service_handler.async_handle,
                                      schema=schema)
 
-    # Fetch initial state once before bringing up the platforms.
-    await state_proxy.async_update(None)
-
+    # The vallox hardware expects quite strict timings for websocket
+    # requests. Timings that machines with less processing power, like
+    # Raspberries, cannot live up to during the busy start phase of Home
+    # Asssistant. Hence, async_add_entities() for fan and sensor in respective
+    # code will be called with update_before_add=False to intentionally delay
+    # the first request, increasing chance that it is issued only when the
+    # machine is less busy again.
     hass.async_create_task(
         async_load_platform(hass, 'sensor', DOMAIN, {}, config))
     hass.async_create_task(
@@ -164,7 +169,7 @@ class ValloxStateProxy:
             self._profile = await self._client.get_profile()
             self._valid = True
 
-        except OSError as err:
+        except (OSError, ValloxApiException) as err:
             _LOGGER.error("Error during state cache update: %s", err)
             self._valid = False
 
@@ -187,7 +192,7 @@ class ValloxServiceHandler:
             await self._client.set_profile(STR_TO_PROFILE[profile])
             return True
 
-        except OSError as err:
+        except (OSError, ValloxApiException) as err:
             _LOGGER.error("Error setting ventilation profile: %s", err)
             return False
 
@@ -201,7 +206,7 @@ class ValloxServiceHandler:
                 {METRIC_KEY_PROFILE_FAN_SPEED_HOME: fan_speed})
             return True
 
-        except OSError as err:
+        except (OSError, ValloxApiException) as err:
             _LOGGER.error("Error setting fan speed for Home profile: %s", err)
             return False
 
@@ -215,7 +220,7 @@ class ValloxServiceHandler:
                 {METRIC_KEY_PROFILE_FAN_SPEED_AWAY: fan_speed})
             return True
 
-        except OSError as err:
+        except (OSError, ValloxApiException) as err:
             _LOGGER.error("Error setting fan speed for Away profile: %s", err)
             return False
 
@@ -229,7 +234,7 @@ class ValloxServiceHandler:
                 {METRIC_KEY_PROFILE_FAN_SPEED_BOOST: fan_speed})
             return True
 
-        except OSError as err:
+        except (OSError, ValloxApiException) as err:
             _LOGGER.error("Error setting fan speed for Boost profile: %s",
                           err)
             return False

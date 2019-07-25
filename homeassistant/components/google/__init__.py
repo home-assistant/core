@@ -8,7 +8,6 @@ import voluptuous as vol
 from voluptuous.error import Error as VoluptuousError
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.setup import setup_component
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_time_change
@@ -311,9 +310,6 @@ def do_setup(hass, hass_config, config):
                                         bool, DEFAULT_CONF_TRACK_NEW)
     setup_services(hass, hass_config, track_new_found_calendars,
                    calendar_service)
-
-    # Ensure component is loaded
-    setup_component(hass, 'calendar', config)
 
     for calendar in hass.data[DATA_INDEX].values():
         discovery.load_platform(hass, 'calendar', DOMAIN, calendar,

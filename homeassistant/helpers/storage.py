@@ -3,13 +3,17 @@ import asyncio
 from json import JSONEncoder
 import logging
 import os
-from typing import Dict, List, Optional, Callable, Union
+from typing import Dict, List, Optional, Callable, Union, Any, Type
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 from homeassistant.util import json as json_util
 from homeassistant.helpers.event import async_call_later
+
+
+# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: no-warn-return-any
 
 STORAGE_DIR = '.storage'
 _LOGGER = logging.getLogger(__name__)
@@ -48,17 +52,17 @@ class Store:
     """Class to help storing data."""
 
     def __init__(self, hass, version: int, key: str, private: bool = False, *,
-                 encoder: JSONEncoder = None):
+                 encoder: Optional[Type[JSONEncoder]] = None):
         """Initialize storage class."""
         self.version = version
         self.key = key
         self.hass = hass
         self._private = private
-        self._data = None
+        self._data = None  # type: Optional[Dict[str, Any]]
         self._unsub_delay_listener = None
         self._unsub_stop_listener = None
         self._write_lock = asyncio.Lock()
-        self._load_task = None
+        self._load_task = None  # type: Optional[asyncio.Future]
         self._encoder = encoder
 
     @property
@@ -66,7 +70,7 @@ class Store:
         """Return the config path."""
         return self.hass.config.path(STORAGE_DIR, self.key)
 
-    async def async_load(self) -> Optional[Union[Dict, List]]:
+    async def async_load(self) -> Union[Dict, List, None]:
         """Load data.
 
         If the expected version does not match the given version, the migrate

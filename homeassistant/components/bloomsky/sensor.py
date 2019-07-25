@@ -4,7 +4,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (TEMP_FAHRENHEIT, CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (TEMP_FAHRENHEIT,
+                                 TEMP_CELSIUS,
+                                 CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -21,11 +23,18 @@ SENSOR_TYPES = ['Temperature',
                 'Voltage']
 
 # Sensor units - these do not currently align with the API documentation
-SENSOR_UNITS = {'Temperature': TEMP_FAHRENHEIT,
-                'Humidity': '%',
-                'Pressure': 'inHg',
-                'Luminance': 'cd/m²',
-                'Voltage': 'mV'}
+SENSOR_UNITS_IMPERIAL = {'Temperature': TEMP_FAHRENHEIT,
+                         'Humidity': '%',
+                         'Pressure': 'inHg',
+                         'Luminance': 'cd/m²',
+                         'Voltage': 'mV'}
+
+# Metric units
+SENSOR_UNITS_METRIC = {'Temperature': TEMP_CELSIUS,
+                       'Humidity': '%',
+                       'Pressure': 'mbar',
+                       'Luminance': 'cd/m²',
+                       'Voltage': 'mV'}
 
 # Which sensors to format numerically
 FORMAT_NUMBERS = ['Temperature', 'Pressure', 'Voltage']
@@ -77,7 +86,9 @@ class BloomSkySensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the sensor units."""
-        return SENSOR_UNITS.get(self._sensor_name, None)
+        if self._bloomsky.is_metric:
+            return SENSOR_UNITS_METRIC.get(self._sensor_name, None)
+        return SENSOR_UNITS_IMPERIAL.get(self._sensor_name, None)
 
     def update(self):
         """Request an update from the BloomSky API."""

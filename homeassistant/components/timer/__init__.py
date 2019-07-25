@@ -4,8 +4,9 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
+from homeassistant.const import CONF_ICON, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -36,12 +37,7 @@ SERVICE_PAUSE = 'pause'
 SERVICE_CANCEL = 'cancel'
 SERVICE_FINISH = 'finish'
 
-SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-})
-
-SERVICE_SCHEMA_DURATION = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
+SERVICE_SCHEMA_DURATION = ENTITY_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_DURATION,
                  default=timedelta(DEFAULT_DURATION)): cv.time_period,
 })
@@ -81,13 +77,13 @@ async def async_setup(hass, config):
         SERVICE_START, SERVICE_SCHEMA_DURATION,
         'async_start')
     component.async_register_entity_service(
-        SERVICE_PAUSE, SERVICE_SCHEMA,
+        SERVICE_PAUSE, ENTITY_SERVICE_SCHEMA,
         'async_pause')
     component.async_register_entity_service(
-        SERVICE_CANCEL, SERVICE_SCHEMA,
+        SERVICE_CANCEL, ENTITY_SERVICE_SCHEMA,
         'async_cancel')
     component.async_register_entity_service(
-        SERVICE_FINISH, SERVICE_SCHEMA,
+        SERVICE_FINISH, ENTITY_SERVICE_SCHEMA,
         'async_finish')
 
     await component.async_add_entities(entities)

@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 
 from functools import partial
+from urllib.parse import urlparse
 import json
 import logging
 import time
@@ -534,10 +535,6 @@ def add_jwt(timestamp, target, tag, jwt_secret):
 def create_vapid_headers(vapid_email, subscription_info, vapid_private_key):
     """Create encrypted headers to send to WebPusher."""
     from py_vapid import Vapid
-    try:
-        from urllib.parse import urlparse
-    except ImportError:  # pragma: no cover
-        from urlparse import urlparse
     if (vapid_email and vapid_private_key and
             ATTR_ENDPOINT in subscription_info):
         url = urlparse(subscription_info.get(ATTR_ENDPOINT))

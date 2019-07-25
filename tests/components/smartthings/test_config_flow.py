@@ -13,7 +13,8 @@ from homeassistant.components.smartthings.config_flow import (
 from homeassistant.components.smartthings.const import (
     CONF_INSTALLED_APP_ID, CONF_INSTALLED_APPS, CONF_LOCATION_ID,
     CONF_REFRESH_TOKEN, DOMAIN)
-from homeassistant.config_entries import ConfigEntry
+
+from tests.common import MockConfigEntry
 
 
 async def test_step_user(hass):
@@ -64,13 +65,10 @@ async def test_token_already_setup(hass):
     flow = SmartThingsFlowHandler()
     flow.hass = hass
     token = str(uuid4())
-    entries = [ConfigEntry(
-        version='', domain='', title='', data={'access_token': token},
-        source='', connection_class='')]
+    entry = MockConfigEntry(domain=DOMAIN, data={'access_token': token})
+    entry.add_to_hass(hass)
 
-    with patch.object(hass.config_entries, 'async_entries',
-                      return_value=entries):
-        result = await flow.async_step_user({'access_token': token})
+    result = await flow.async_step_user({'access_token': token})
 
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'user'

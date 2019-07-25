@@ -38,8 +38,8 @@ async def auth_manager_from_config(
     store = auth_store.AuthStore(hass)
     if provider_configs:
         providers = await asyncio.gather(
-            *[auth_provider_from_config(hass, store, config)
-              for config in provider_configs])
+            *(auth_provider_from_config(hass, store, config)
+              for config in provider_configs))
     else:
         providers = ()
     # So returned auth providers are in same order as config
@@ -50,8 +50,8 @@ async def auth_manager_from_config(
 
     if module_configs:
         modules = await asyncio.gather(
-            *[auth_mfa_module_from_config(hass, config)
-              for config in module_configs])
+            *(auth_mfa_module_from_config(hass, config)
+              for config in module_configs))
     else:
         modules = ()
     # So returned auth modules are in same order as config

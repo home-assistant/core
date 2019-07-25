@@ -1,4 +1,4 @@
-"""Support for RitAssist Platform."""
+"""Support for FleetGO Platform."""
 import logging
 
 import requests
@@ -27,18 +27,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_scanner(hass, config: dict, see, discovery_info=None):
     """Set up the DeviceScanner and check if login is valid."""
-    scanner = RitAssistDeviceScanner(config, see)
+    scanner = FleetGoDeviceScanner(config, see)
     if not scanner.login(hass):
-        _LOGGER.error('RitAssist authentication failed')
+        _LOGGER.error('FleetGO authentication failed')
         return False
     return True
 
 
-class RitAssistDeviceScanner:
-    """Define a scanner for the RitAssist platform."""
+class FleetGoDeviceScanner:
+    """Define a scanner for the FleetGO platform."""
 
     def __init__(self, config, see):
-        """Initialize RitAssistDeviceScanner."""
+        """Initialize FleetGoDeviceScanner."""
         from ritassist import API
 
         self._include = config.get(CONF_INCLUDE)
@@ -57,7 +57,7 @@ class RitAssistDeviceScanner:
                               second=range(0, 60, 30))
 
     def login(self, hass):
-        """Perform a login on the RitAssist API."""
+        """Perform a login on the FleetGO API."""
         if self._api.login():
             self.setup(hass)
             return True
@@ -81,4 +81,4 @@ class RitAssistDeviceScanner:
                               icon='mdi:car')
 
         except requests.exceptions.ConnectionError:
-            _LOGGER.error('ConnectionError: Could not connect to RitAssist')
+            _LOGGER.error('ConnectionError: Could not connect to FleetGO')

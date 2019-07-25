@@ -245,10 +245,10 @@ class NextBusDepartureSensor(Entity):
         ))
 
         # Chain all predictions together
-        predictions = list(chain(*[
+        predictions = list(chain(*(
             listify(direction.get('prediction', []))
             for direction in directions
-        ]))
+        )))
 
         # Short circuit if we don't have any actual bus predictions
         if not predictions:

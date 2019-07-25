@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_RESOURCE, CONF_HOST, CONF_NAME, CONF_MONITORED_CONDITIONS)
+    CONF_RESOURCE, CONF_HOST, CONF_NAME)
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
@@ -40,10 +40,6 @@ DEFAULT_MONITORED_CONDITIONS.extend(
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(
-        CONF_MONITORED_CONDITIONS,
-        default=DEFAULT_MONITORED_CONDITIONS
-    ): vol.All(cv.ensure_list, [vol.In(DEFAULT_MONITORED_CONDITIONS)])
 })
 
 
@@ -60,11 +56,11 @@ async def async_setup_platform(hass,
         host = discovery_info.get(CONF_HOST)
         name = discovery_info.get(CONF_NAME, DEFAULT_NAME)
         # Main device, always added
-        monitored = DEFAULT_MONITORED_CONDITIONS
     else:
         host = config.get(CONF_RESOURCE)
         name = config.get(CONF_NAME)
-        monitored = config.get(CONF_MONITORED_CONDITIONS)
+    # always pass through all of the obtained information
+    monitored = DEFAULT_MONITORED_CONDITIONS
 
     session = aiohttp_client.async_get_clientsession(hass)
 

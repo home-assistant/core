@@ -272,25 +272,25 @@ async def _async_set_up_integrations(
     debuggers = domains & DEBUGGER_INTEGRATIONS
     if debuggers:
         _LOGGER.debug("Starting up debuggers %s", debuggers)
-        await asyncio.gather(*[
+        await asyncio.gather(*(
             async_setup_component(hass, domain, config)
-            for domain in debuggers])
+            for domain in debuggers))
         domains -= DEBUGGER_INTEGRATIONS
 
     # Resolve all dependencies of all components so we can find the logging
     # and integrations that need faster initialization.
-    resolved_domains_task = asyncio.gather(*[
+    resolved_domains_task = asyncio.gather(*(
         loader.async_component_dependencies(hass, domain)
         for domain in domains
-    ], return_exceptions=True)
+    ), return_exceptions=True)
 
     # Set up core.
     _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)
 
-    if not all(await asyncio.gather(*[
+    if not all(await asyncio.gather(*(
             async_setup_component(hass, domain, config)
             for domain in CORE_INTEGRATIONS
-    ])):
+    ))):
         _LOGGER.error("Home Assistant core failed to initialize. "
                       "Further initialization aborted")
         return
@@ -312,10 +312,10 @@ async def _async_set_up_integrations(
     if logging_domains:
         _LOGGER.info("Setting up %s", logging_domains)
 
-        await asyncio.gather(*[
+        await asyncio.gather(*(
             async_setup_component(hass, domain, config)
             for domain in logging_domains
-        ])
+        ))
 
     # Kick off loading the registries. They don't need to be awaited.
     asyncio.gather(
@@ -324,18 +324,18 @@ async def _async_set_up_integrations(
         hass.helpers.area_registry.async_get_registry())
 
     if stage_1_domains:
-        await asyncio.gather(*[
+        await asyncio.gather(*(
             async_setup_component(hass, domain, config)
             for domain in stage_1_domains
-        ])
+        ))
 
     # Load all integrations
     after_dependencies = {}  # type: Dict[str, Set[str]]
 
-    for int_or_exc in await asyncio.gather(*[
+    for int_or_exc in await asyncio.gather(*(
             loader.async_get_integration(hass, domain)
             for domain in stage_2_domains
-    ], return_exceptions=True):
+    ), return_exceptions=True):
         # Exceptions are handled in async_setup_component.
         if (isinstance(int_or_exc, loader.Integration) and
                 int_or_exc.after_dependencies):
@@ -360,10 +360,10 @@ async def _async_set_up_integrations(
 
         _LOGGER.debug("Setting up %s", domains_to_load)
 
-        await asyncio.gather(*[
+        await asyncio.gather(*(
             async_setup_component(hass, domain, config)
             for domain in domains_to_load
-        ])
+        ))
 
         last_load = domains_to_load
         stage_2_domains -= domains_to_load
@@ -373,10 +373,10 @@ async def _async_set_up_integrations(
     if stage_2_domains:
         _LOGGER.debug("Final set up: %s", stage_2_domains)
 
-        await asyncio.gather(*[
+        await asyncio.gather(*(
             async_setup_component(hass, domain, config)
             for domain in stage_2_domains
-        ])
+        ))
 
     # Wrap up startup
     await hass.async_block_till_done()

@@ -95,10 +95,10 @@ async def async_extract_config(hass, config):
     """Extract device tracker config and split between legacy and modern."""
     legacy = []
 
-    for platform in await asyncio.gather(*[
+    for platform in await asyncio.gather(*(
             async_create_platform_type(hass, config, p_type, p_config)
             for p_type, p_config in config_per_platform(config, DOMAIN)
-    ]):
+    )):
         if platform is None:
             continue
 

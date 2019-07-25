@@ -5,6 +5,8 @@ import yaml
 from .objects import NodeListClass
 
 
+# mypy: allow-untyped-calls, no-warn-return-any
+
 def dump(_dict: dict) -> str:
     """Dump YAML to a string and remove null."""
     return yaml.safe_dump(

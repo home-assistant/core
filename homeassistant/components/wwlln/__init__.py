@@ -29,9 +29,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up the WWLLN component."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_CLIENT] = {}
-
     if DOMAIN not in config:
         return True
 
@@ -43,6 +40,11 @@ async def async_setup(hass, config):
     identifier = '{0}, {1}'.format(latitude, longitude)
     if identifier in configured_instances(hass):
         return True
+
+    if conf[CONF_WINDOW] < DEFAULT_WINDOW:
+        _LOGGER.warning(
+            'Setting a window smaller than %s seconds may cause Home Assistant \
+            to miss events', DEFAULT_WINDOW.total_seconds())
 
     if hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
         unit_system = CONF_UNIT_SYSTEM_IMPERIAL
@@ -66,6 +68,9 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up the WWLLN as config entry."""
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][DATA_CLIENT] = {}
+
     websession = aiohttp_client.async_get_clientsession(hass)
 
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = Client(websession)
@@ -83,5 +88,25 @@ async def async_unload_entry(hass, config_entry):
 
     await hass.config_entries.async_forward_entry_unload(
         config_entry, 'geo_location')
+
+    return True
+
+
+async def async_migrate_entry(hass, config_entry):
+    """Migrate the config entry upon new versions."""
+    version = config_entry.version
+    data = config_entry.data
+
+    default_total_seconds = DEFAULT_WINDOW.total_seconds()
+
+    _LOGGER.debug('Migrating from version %s', version)
+
+    # 1 -> 2: Expanding the default window to 1 hour (if needed):
+    if version == 1:
+        if data[CONF_WINDOW] < default_total_seconds:
+            data[CONF_WINDOW] = default_total_seconds
+        version = config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, data=data)
+        _LOGGER.info('Migration to version %s successful', version)
 
     return True

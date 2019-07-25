@@ -30,15 +30,20 @@ ICON_SPACE = 'mdi:crop-square'
 def setup_platform(
         hass, config, add_entities, discovery_info=None):
     """Set up the N26 sensor platform."""
-    api_data = hass.data[DOMAIN][DATA]
+    if discovery_info is None:
+        return
 
-    sensor_entities = [N26Account(api_data)]
+    api_list = hass.data[DOMAIN][DATA]
 
-    for card in api_data.cards:
-        sensor_entities.append(N26Card(api_data, card))
+    sensor_entities = []
+    for api_data in api_list:
+        sensor_entities.append(N26Account(api_data))
 
-    for space in api_data.spaces["spaces"]:
-        sensor_entities.append(N26Space(api_data, space))
+        for card in api_data.cards:
+            sensor_entities.append(N26Card(api_data, card))
+
+        for space in api_data.spaces["spaces"]:
+            sensor_entities.append(N26Space(api_data, space))
 
     add_entities(sensor_entities)
 
@@ -204,7 +209,8 @@ class N26Space(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of the entity."""
-        return "space_{}".format(self._space["name"].lower())
+        return "space_{}_{}".format(self._data.balance["iban"][-4:],
+                                    self._space["name"].lower())
 
     @property
     def name(self) -> str:

@@ -4,10 +4,11 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    SERVICE_TOGGLE, STATE_ON)
+    CONF_ICON, CONF_NAME, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_TOGGLE,
+    STATE_ON)
 from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -19,10 +20,6 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 _LOGGER = logging.getLogger(__name__)
 
 CONF_INITIAL = 'initial'
-
-SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: cv.schema_with_slug_keys(
@@ -61,17 +58,17 @@ async def async_setup(hass, config):
         return False
 
     component.async_register_entity_service(
-        SERVICE_TURN_ON, SERVICE_SCHEMA,
+        SERVICE_TURN_ON, ENTITY_SERVICE_SCHEMA,
         'async_turn_on'
     )
 
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, SERVICE_SCHEMA,
+        SERVICE_TURN_OFF, ENTITY_SERVICE_SCHEMA,
         'async_turn_off'
     )
 
     component.async_register_entity_service(
-        SERVICE_TOGGLE, SERVICE_SCHEMA,
+        SERVICE_TOGGLE, ENTITY_SERVICE_SCHEMA,
         'async_toggle'
     )
 

@@ -12,7 +12,9 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID, LOGGER
+from .const import (
+    CONF_BLOCK_CLIENT, CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID, LOGGER,
+    UNIFI_CONFIG)
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -27,10 +29,34 @@ class UniFiController:
         self.api = None
         self.progress = None
 
+        self._site_name = None
+        self._site_role = None
+        self.unifi_config = {}
+
     @property
     def host(self):
         """Return the host of this controller."""
         return self.config_entry.data[CONF_CONTROLLER][CONF_HOST]
+
+    @property
+    def site(self):
+        """Return the site of this config entry."""
+        return self.config_entry.data[CONF_CONTROLLER][CONF_SITE_ID]
+
+    @property
+    def site_name(self):
+        """Return the nice name of site."""
+        return self._site_name
+
+    @property
+    def site_role(self):
+        """Return the site user role of this controller."""
+        return self._site_role
+
+    @property
+    def block_clients(self):
+        """Return list of clients to block."""
+        return self.unifi_config.get(CONF_BLOCK_CLIENT, [])
 
     @property
     def mac(self):
@@ -44,9 +70,7 @@ class UniFiController:
     def event_update(self):
         """Event specific per UniFi entry to signal new data."""
         return 'unifi-update-{}'.format(
-            CONTROLLER_ID.format(
-                host=self.host,
-                site=self.config_entry.data[CONF_CONTROLLER][CONF_SITE_ID]))
+            CONTROLLER_ID.format(host=self.host, site=self.site))
 
     async def request_update(self):
         """Request an update."""
@@ -63,9 +87,11 @@ class UniFiController:
         failed = False
 
         try:
-            with async_timeout.timeout(4):
+            with async_timeout.timeout(10):
                 await self.api.clients.update()
                 await self.api.devices.update()
+                if self.block_clients:
+                    await self.api.clients_all.update()
 
         except aiounifi.LoginRequired:
             try:
@@ -99,17 +125,32 @@ class UniFiController:
                 self.hass, **self.config_entry.data[CONF_CONTROLLER])
             await self.api.initialize()
 
+            sites = await self.api.sites()
+
+            for site in sites.values():
+                if self.site == site['name']:
+                    self._site_name = site['desc']
+                    self._site_role = site['role']
+                    break
+
         except CannotConnect:
             raise ConfigEntryNotReady
 
-        except Exception:  # pylint: disable=broad-except
+        except Exception as err:  # pylint: disable=broad-except
             LOGGER.error(
-                'Unknown error connecting with UniFi controller.')
+                'Unknown error connecting with UniFi controller: %s', err)
             return False
 
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(
-                self.config_entry, 'switch'))
+        for unifi_config in hass.data[UNIFI_CONFIG]:
+            if self.host == unifi_config[CONF_HOST] and \
+                    self.site_name == unifi_config[CONF_SITE_ID]:
+                self.unifi_config = unifi_config
+                break
+
+        for platform in ['device_tracker', 'switch']:
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(
+                    self.config_entry, platform))
 
         return True
 
@@ -123,8 +164,11 @@ class UniFiController:
         if self.api is None:
             return True
 
-        return await self.hass.config_entries.async_forward_entry_unload(
-            self.config_entry, 'switch')
+        for platform in ['device_tracker', 'switch']:
+            await self.hass.config_entries.async_forward_entry_unload(
+                self.config_entry, platform)
+
+        return True
 
 
 async def get_controller(

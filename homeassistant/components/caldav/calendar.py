@@ -1,4 +1,5 @@
 """Support for WebDav Calendar."""
+import copy
 from datetime import datetime, timedelta
 import logging
 import re
@@ -6,37 +7,38 @@ import re
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
-    PLATFORM_SCHEMA, CalendarEventDevice, get_date)
+    ENTITY_ID_FORMAT, PLATFORM_SCHEMA, CalendarEventDevice, calculate_offset,
+    get_date, is_offset_reached)
 from homeassistant.const import (
     CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.util import Throttle, dt
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DEVICE_ID = 'device_id'
 CONF_CALENDARS = 'calendars'
 CONF_CUSTOM_CALENDARS = 'custom_calendars'
 CONF_CALENDAR = 'calendar'
 CONF_SEARCH = 'search'
 
+OFFSET = '!!'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     # pylint: disable=no-value-for-parameter
     vol.Required(CONF_URL): vol.Url(),
     vol.Optional(CONF_CALENDARS, default=[]):
-        vol.All(cv.ensure_list, vol.Schema([
-            cv.string
-        ])),
+        vol.All(cv.ensure_list, [cv.string]),
     vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
     vol.Optional(CONF_CUSTOM_CALENDARS, default=[]):
-        vol.All(cv.ensure_list, vol.Schema([
+        vol.All(cv.ensure_list, [
             vol.Schema({
                 vol.Required(CONF_CALENDAR): cv.string,
                 vol.Required(CONF_NAME): cv.string,
                 vol.Required(CONF_SEARCH): cv.string,
             })
-        ])),
+        ]),
     vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean
 })
 
@@ -47,12 +49,12 @@ def setup_platform(hass, config, add_entities, disc_info=None):
     """Set up the WebDav Calendar platform."""
     import caldav
 
-    url = config.get(CONF_URL)
+    url = config[CONF_URL]
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    client = caldav.DAVClient(url, None, username, password,
-                              ssl_verify_cert=config.get(CONF_VERIFY_SSL))
+    client = caldav.DAVClient(
+        url, None, username, password, ssl_verify_cert=config[CONF_VERIFY_SSL])
 
     calendars = client.principal().calendars()
 
@@ -60,64 +62,82 @@ def setup_platform(hass, config, add_entities, disc_info=None):
     for calendar in list(calendars):
         # If a calendar name was given in the configuration,
         # ignore all the others
-        if (config.get(CONF_CALENDARS)
-                and calendar.name not in config.get(CONF_CALENDARS)):
+        if (config[CONF_CALENDARS]
+                and calendar.name not in config[CONF_CALENDARS]):
             _LOGGER.debug("Ignoring calendar '%s'", calendar.name)
             continue
 
         # Create additional calendars based on custom filtering rules
-        for cust_calendar in config.get(CONF_CUSTOM_CALENDARS):
+        for cust_calendar in config[CONF_CUSTOM_CALENDARS]:
             # Check that the base calendar matches
-            if cust_calendar.get(CONF_CALENDAR) != calendar.name:
+            if cust_calendar[CONF_CALENDAR] != calendar.name:
                 continue
 
-            device_data = {
-                CONF_NAME: cust_calendar.get(CONF_NAME),
-                CONF_DEVICE_ID: "{} {}".format(
-                    cust_calendar.get(CONF_CALENDAR),
-                    cust_calendar.get(CONF_NAME)),
-            }
-
+            name = cust_calendar[CONF_NAME]
+            device_id = "{} {}".format(
+                cust_calendar[CONF_CALENDAR], cust_calendar[CONF_NAME])
+            entity_id = generate_entity_id(
+                ENTITY_ID_FORMAT, device_id, hass=hass)
             calendar_devices.append(
                 WebDavCalendarEventDevice(
-                    hass, device_data, calendar, True,
-                    cust_calendar.get(CONF_SEARCH)))
+                    name, calendar, entity_id, True,
+                    cust_calendar[CONF_SEARCH]))
 
         # Create a default calendar if there was no custom one
-        if not config.get(CONF_CUSTOM_CALENDARS):
-            device_data = {
-                CONF_NAME: calendar.name,
-                CONF_DEVICE_ID: calendar.name,
-            }
+        if not config[CONF_CUSTOM_CALENDARS]:
+            name = calendar.name
+            device_id = calendar.name
+            entity_id = generate_entity_id(
+                ENTITY_ID_FORMAT, device_id, hass=hass)
             calendar_devices.append(
-                WebDavCalendarEventDevice(hass, device_data, calendar)
+                WebDavCalendarEventDevice(name, calendar, entity_id)
             )
 
-    add_entities(calendar_devices)
+    add_entities(calendar_devices, True)
 
 
 class WebDavCalendarEventDevice(CalendarEventDevice):
     """A device for getting the next Task from a WebDav Calendar."""
 
-    def __init__(self, hass, device_data, calendar, all_day=False,
-                 search=None):
+    def __init__(self, name, calendar, entity_id, all_day=False, search=None):
         """Create the WebDav Calendar Event Device."""
         self.data = WebDavCalendarData(calendar, all_day, search)
-        super().__init__(hass, device_data)
+        self.entity_id = entity_id
+        self._event = None
+        self._name = name
+        self._offset_reached = False
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        if self.data.event is None:
-            # No tasks, we don't REALLY need to show anything.
-            return {}
+        return {
+            'offset_reached': self._offset_reached,
+        }
 
-        attributes = super().device_state_attributes
-        return attributes
+    @property
+    def event(self):
+        """Return the next upcoming event."""
+        return self._event
+
+    @property
+    def name(self):
+        """Return the name of the entity."""
+        return self._name
 
     async def async_get_events(self, hass, start_date, end_date):
         """Get all events in a specific time frame."""
         return await self.data.async_get_events(hass, start_date, end_date)
+
+    def update(self):
+        """Update event data."""
+        self.data.update()
+        event = copy.deepcopy(self.data.event)
+        if event is None:
+            self._event = event
+            return
+        event = calculate_offset(event, OFFSET)
+        self._offset_reached = is_offset_reached(event)
+        self._event = event
 
 
 class WebDavCalendarData:
@@ -174,10 +194,12 @@ class WebDavCalendarData:
         ))
 
         vevent = next((
-            event.instance.vevent for event in results
+            event.instance.vevent
+            for event in results
             if (self.is_matching(event.instance.vevent, self.search)
-                and (not self.is_all_day(event.instance.vevent)
-                     or self.include_all_day)
+                and (
+                    not self.is_all_day(event.instance.vevent)
+                    or self.include_all_day)
                 and not self.is_over(event.instance.vevent))), None)
 
         # If no matching event could be found
@@ -186,7 +208,7 @@ class WebDavCalendarData:
                 "No matching event found in the %d results for %s",
                 len(results), self.calendar.name)
             self.event = None
-            return True
+            return
 
         # Populate the entity attributes with the event values
         self.event = {
@@ -196,7 +218,6 @@ class WebDavCalendarData:
             "location": self.get_attr_value(vevent, "location"),
             "description": self.get_attr_value(vevent, "description")
         }
-        return True
 
     @staticmethod
     def is_matching(vevent, search):
@@ -205,12 +226,13 @@ class WebDavCalendarData:
             return True
 
         pattern = re.compile(search)
-        return (hasattr(vevent, "summary")
-                and pattern.match(vevent.summary.value)
-                or hasattr(vevent, "location")
-                and pattern.match(vevent.location.value)
-                or hasattr(vevent, "description")
-                and pattern.match(vevent.description.value))
+        return (
+            hasattr(vevent, "summary")
+            and pattern.match(vevent.summary.value)
+            or hasattr(vevent, "location")
+            and pattern.match(vevent.location.value)
+            or hasattr(vevent, "description")
+            and pattern.match(vevent.description.value))
 
     @staticmethod
     def is_all_day(vevent):

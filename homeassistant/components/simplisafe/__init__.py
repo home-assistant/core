@@ -10,9 +10,10 @@ from homeassistant.const import (
     CONF_CODE, CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_USERNAME)
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.service import verify_domain_control
 
 from homeassistant.helpers import config_validation as cv
 
@@ -21,9 +22,25 @@ from .const import DATA_CLIENT, DEFAULT_SCAN_INTERVAL, DOMAIN, TOPIC_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_PIN_LABEL = 'label'
+ATTR_PIN_LABEL_OR_VALUE = 'label_or_pin'
+ATTR_PIN_VALUE = 'pin'
+ATTR_SYSTEM_ID = 'system_id'
+
 CONF_ACCOUNTS = 'accounts'
 
 DATA_LISTENER = 'listener'
+
+SERVICE_REMOVE_PIN_SCHEMA = vol.Schema({
+    vol.Required(ATTR_SYSTEM_ID): cv.string,
+    vol.Required(ATTR_PIN_LABEL_OR_VALUE): cv.string,
+})
+
+SERVICE_SET_PIN_SCHEMA = vol.Schema({
+    vol.Required(ATTR_SYSTEM_ID): cv.string,
+    vol.Required(ATTR_PIN_LABEL): cv.string,
+    vol.Required(ATTR_PIN_VALUE): cv.string,
+})
 
 ACCOUNT_CONFIG_SCHEMA = vol.Schema({
     vol.Required(CONF_USERNAME): cv.string,
@@ -47,6 +64,20 @@ def _async_save_refresh_token(hass, config_entry, token):
         config_entry, data={
             **config_entry.data, CONF_TOKEN: token
         })
+
+
+async def async_register_base_station(hass, system, config_entry_id):
+    """Register a new bridge."""
+    device_registry = await dr.async_get_registry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry_id,
+        identifiers={
+            (DOMAIN, system.serial)
+        },
+        manufacturer='SimpliSafe',
+        model=system.version,
+        name=system.address,
+    )
 
 
 async def async_setup(hass, config):
@@ -83,6 +114,8 @@ async def async_setup_entry(hass, config_entry):
     from simplipy import API
     from simplipy.errors import InvalidCredentialsError, SimplipyError
 
+    _verify_domain_control = verify_domain_control(hass, DOMAIN)
+
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
@@ -106,9 +139,9 @@ async def async_setup_entry(hass, config_entry):
 
     async def refresh(event_time):
         """Refresh data from the SimpliSafe account."""
-        tasks = [system.update() for system in systems]
+        tasks = [system.update() for system in systems.values()]
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        for system, result in zip(systems, results):
+        for system, result in zip(systems.values(), results):
             if isinstance(result, SimplipyError):
                 _LOGGER.error(
                     'There was error updating "%s": %s', system.address,
@@ -128,6 +161,31 @@ async def async_setup_entry(hass, config_entry):
             hass,
             refresh,
             timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL]))
+
+    # Register the base station for each system:
+    for system in systems.values():
+        hass.async_create_task(
+            async_register_base_station(
+                hass, system, config_entry.entry_id))
+
+    @_verify_domain_control
+    async def remove_pin(call):
+        """Remove a PIN."""
+        system = systems[int(call.data[ATTR_SYSTEM_ID])]
+        await system.remove_pin(call.data[ATTR_PIN_LABEL_OR_VALUE])
+
+    @_verify_domain_control
+    async def set_pin(call):
+        """Set a PIN."""
+        system = systems[int(call.data[ATTR_SYSTEM_ID])]
+        await system.set_pin(
+            call.data[ATTR_PIN_LABEL], call.data[ATTR_PIN_VALUE])
+
+    for service, method, schema in [
+            ('remove_pin', remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
+            ('set_pin', set_pin, SERVICE_SET_PIN_SCHEMA),
+    ]:
+        hass.services.async_register(DOMAIN, service, method, schema=schema)
 
     return True
 

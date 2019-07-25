@@ -1,4 +1,6 @@
 """Basic checks for HomeKitSwitch."""
+from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
+
 from tests.components.homekit_controller.common import (
     FakeService, setup_test_component)
 
@@ -152,3 +154,23 @@ async def test_light_becomes_unavailable_but_recovers(hass, utcnow):
     assert state.state == 'on'
     assert state.attributes['brightness'] == 255
     assert state.attributes['color_temp'] == 400
+
+
+async def test_light_unloaded(hass, utcnow):
+    """Test entity and HKDevice are correctly unloaded."""
+    bulb = create_lightbulb_service_with_color_temp()
+    helper = await setup_test_component(hass, [bulb])
+
+    # Initial state is that the light is off
+    state = await helper.poll_and_get_state()
+    assert state.state == 'off'
+
+    unload_result = await helper.config_entry.async_unload(hass)
+    assert unload_result is True
+
+    # Make sure entity is unloaded
+    assert hass.states.get(helper.entity_id) is None
+
+    # Make sure HKDevice is no longer set to poll this accessory
+    conn = hass.data[KNOWN_DEVICES]['00:00:00:00:00:00']
+    assert not conn.pollable_characteristics

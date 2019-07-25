@@ -19,6 +19,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.helpers.typing import HomeAssistantType
 
+
+# mypy: allow-incomplete-defs, allow-untyped-defs, no-check-untyped-defs
+
 CONF_SERVICE = 'service'
 CONF_SERVICE_TEMPLATE = 'service_template'
 CONF_SERVICE_ENTITY_ID = 'entity_id'
@@ -189,9 +192,9 @@ async def async_get_all_descriptions(hass):
     loaded = {}
 
     if missing:
-        contents = await asyncio.gather(*[
+        contents = await asyncio.gather(*(
             _load_services_file(hass, domain) for domain in missing
-        ])
+        ))
 
         for domain, content in zip(missing, contents):
             loaded[domain] = content

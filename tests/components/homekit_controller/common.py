@@ -14,10 +14,12 @@ from homeassistant import config_entries
 from homeassistant.components.homekit_controller.const import (
     CONTROLLER, DOMAIN, HOMEKIT_ACCESSORY_DISPATCH)
 from homeassistant.components.homekit_controller import (
-    async_setup_entry, config_flow)
+    config_flow)
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from tests.common import async_fire_time_changed, load_fixture
+from tests.common import (
+    async_fire_time_changed, load_fixture, MockConfigEntry
+)
 
 
 class FakePairing:
@@ -97,12 +99,13 @@ class FakeController:
 class Helper:
     """Helper methods for interacting with HomeKit fakes."""
 
-    def __init__(self, hass, entity_id, pairing, accessory):
+    def __init__(self, hass, entity_id, pairing, accessory, config_entry):
         """Create a helper for a given accessory/entity."""
         self.hass = hass
         self.entity_id = entity_id
         self.pairing = pairing
         self.accessory = accessory
+        self.config_entry = config_entry
 
         self.characteristics = {}
         for service in self.accessory.services:
@@ -113,9 +116,7 @@ class Helper:
 
     async def poll_and_get_state(self):
         """Trigger a time based poll and return the current entity state."""
-        next_update = dt_util.utcnow() + timedelta(seconds=60)
-        async_fire_time_changed(self.hass, next_update)
-        await self.hass.async_block_till_done()
+        await time_changed(self.hass, 60)
 
         state = self.hass.states.get(self.entity_id)
         assert state is not None
@@ -159,6 +160,13 @@ class FakeService(AbstractService):
         ]
         self.characteristics.append(char)
         return char
+
+
+async def time_changed(hass, seconds):
+    """Trigger time changed."""
+    next_update = dt_util.utcnow() + timedelta(seconds)
+    async_fire_time_changed(hass, next_update)
+    await hass.async_block_till_done()
 
 
 async def setup_accessories_from_file(hass, path):
@@ -239,18 +247,24 @@ async def setup_test_accessories(hass, accessories):
         'AccessoryPairingID': discovery_info['properties']['id'],
     })
 
-    config_entry = config_entries.ConfigEntry(
-        1, 'homekit_controller', 'TestData', pairing.pairing_data,
-        'test', config_entries.CONN_CLASS_LOCAL_PUSH
+    config_entry = MockConfigEntry(
+        version=1,
+        domain='homekit_controller',
+        entry_id='TestData',
+        data=pairing.pairing_data,
+        title='test',
+        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH
     )
+
+    config_entry.add_to_hass(hass)
 
     pairing_cls_loc = 'homekit.controller.ip_implementation.IpPairing'
     with mock.patch(pairing_cls_loc) as pairing_cls:
         pairing_cls.return_value = pairing
-        await async_setup_entry(hass, config_entry)
+        await config_entry.async_setup(hass)
         await hass.async_block_till_done()
 
-    return pairing
+    return config_entry, pairing
 
 
 async def device_config_changed(hass, accessories):
@@ -305,6 +319,8 @@ async def setup_test_component(hass, services, capitalize=False, suffix=None):
     accessory = Accessory('TestDevice', 'example.com', 'Test', '0001', '0.1')
     accessory.services.extend(services)
 
-    pairing = await setup_test_accessories(hass, [accessory])
+    config_entry, pairing = await setup_test_accessories(hass, [accessory])
     entity = 'testdevice' if suffix is None else 'testdevice_{}'.format(suffix)
-    return Helper(hass, '.'.join((domain, entity)), pairing, accessory)
+    return Helper(
+        hass, '.'.join((domain, entity)), pairing, accessory, config_entry
+    )

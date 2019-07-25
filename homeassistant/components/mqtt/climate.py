@@ -15,7 +15,8 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE_RANGE, PRESET_NONE)
 from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_DEVICE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_ON)
+    ATTR_TEMPERATURE, CONF_DEVICE, CONF_NAME, CONF_VALUE_TEMPLATE,
+    PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE, STATE_ON)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -31,6 +32,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'MQTT HVAC'
 
+CONF_ACTION_TEMPLATE = 'action_template'
+CONF_ACTION_TOPIC = 'action_topic'
 CONF_AUX_COMMAND_TOPIC = 'aux_command_topic'
 CONF_AUX_STATE_TEMPLATE = 'aux_state_template'
 CONF_AUX_STATE_TOPIC = 'aux_state_topic'
@@ -56,6 +59,7 @@ CONF_PAYLOAD_ON = 'payload_on'
 CONF_POWER_COMMAND_TOPIC = 'power_command_topic'
 CONF_POWER_STATE_TEMPLATE = 'power_state_template'
 CONF_POWER_STATE_TOPIC = 'power_state_topic'
+CONF_PRECISION = 'precision'
 CONF_SEND_IF_OFF = 'send_if_off'
 CONF_SWING_MODE_COMMAND_TOPIC = 'swing_mode_command_topic'
 CONF_SWING_MODE_LIST = 'swing_modes'
@@ -83,6 +87,7 @@ TEMPLATE_KEYS = (
     CONF_HOLD_STATE_TEMPLATE,
     CONF_MODE_STATE_TEMPLATE,
     CONF_POWER_STATE_TEMPLATE,
+    CONF_ACTION_TEMPLATE,
     CONF_SWING_MODE_STATE_TEMPLATE,
     CONF_TEMP_HIGH_STATE_TEMPLATE,
     CONF_TEMP_LOW_STATE_TEMPLATE,
@@ -103,6 +108,7 @@ TOPIC_KEYS = (
     CONF_MODE_STATE_TOPIC,
     CONF_POWER_COMMAND_TOPIC,
     CONF_POWER_STATE_TOPIC,
+    CONF_ACTION_TOPIC,
     CONF_SWING_MODE_COMMAND_TOPIC,
     CONF_SWING_MODE_STATE_TOPIC,
     CONF_TEMP_COMMAND_TOPIC,
@@ -147,8 +153,12 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_POWER_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_POWER_STATE_TEMPLATE): cv.template,
     vol.Optional(CONF_POWER_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_PRECISION): vol.In(
+        [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
     vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
     vol.Optional(CONF_SEND_IF_OFF, default=True): cv.boolean,
+    vol.Optional(CONF_ACTION_TEMPLATE): cv.template,
+    vol.Optional(CONF_ACTION_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_SWING_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_SWING_MODE_LIST,
                  default=[STATE_ON, HVAC_MODE_OFF]): cv.ensure_list,
@@ -214,6 +224,7 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         self._sub_state = None
 
         self.hass = hass
+        self._action = None
         self._aux = False
         self._away = False
         self._current_fan_mode = None
@@ -279,6 +290,7 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self._current_swing_mode = HVAC_MODE_OFF
         if self._topic[CONF_MODE_STATE_TOPIC] is None:
             self._current_operation = HVAC_MODE_OFF
+        self._action = None
         self._away = False
         self._hold = None
         self._aux = False
@@ -313,6 +325,17 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         def render_template(msg, template_name):
             template = self._value_templates[template_name]
             return template(msg.payload)
+
+        @callback
+        def handle_action_received(msg):
+            """Handle receiving action via MQTT."""
+            payload = render_template(msg, CONF_ACTION_TEMPLATE)
+
+            self._action = payload
+            self.async_write_ha_state()
+
+        add_subscription(topics, CONF_ACTION_TOPIC,
+                         handle_action_received)
 
         @callback
         def handle_temperature_received(msg, template_name, attr):
@@ -502,6 +525,11 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     def target_temperature_high(self):
         """Return the high target temperature we try to reach."""
         return self._target_temp_high
+
+    @property
+    def hvac_action(self):
+        """Return the current running hvac operation if supported."""
+        return self._action
 
     @property
     def hvac_mode(self):
@@ -758,3 +786,10 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     def max_temp(self):
         """Return the maximum temperature."""
         return self._config[CONF_TEMP_MAX]
+
+    @property
+    def precision(self):
+        """Return the precision of the system."""
+        if self._config.get(CONF_PRECISION) is not None:
+            return self._config.get(CONF_PRECISION)
+        return super().precision

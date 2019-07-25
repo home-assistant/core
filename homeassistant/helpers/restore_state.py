@@ -15,6 +15,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import Store  # noqa  pylint_disable=unused-import
 
+
+# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
+# mypy: no-warn-return-any
+
 DATA_RESTORE_STATE_TASK = 'restore_state_task'
 
 _LOGGER = logging.getLogger(__name__)
@@ -182,8 +186,8 @@ class RestoreStateData():
         # we're going to serialize it to JSON and then re-load it.
         if state is not None:
             state = State.from_dict(_encode_complex(state.as_dict()))
-
-        self.last_states[entity_id] = StoredState(state, dt_util.utcnow())
+        if state is not None:
+            self.last_states[entity_id] = StoredState(state, dt_util.utcnow())
 
         self.entity_ids.remove(entity_id)
 
@@ -219,6 +223,7 @@ class RestoreEntity(Entity):
 
     async def async_internal_added_to_hass(self) -> None:
         """Register this entity as a restorable entity."""
+        assert self.hass is not None
         _, data = await asyncio.gather(
             super().async_internal_added_to_hass(),
             RestoreStateData.async_get_instance(self.hass),
@@ -227,6 +232,7 @@ class RestoreEntity(Entity):
 
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
+        assert self.hass is not None
         _, data = await asyncio.gather(
             super().async_internal_will_remove_from_hass(),
             RestoreStateData.async_get_instance(self.hass),

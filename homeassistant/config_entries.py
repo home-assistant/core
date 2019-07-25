@@ -3,7 +3,9 @@ import asyncio
 import logging
 import functools
 import uuid
-from typing import Callable, List, Optional, Set  # noqa pylint: disable=unused-import
+from typing import (
+    Any, Callable, List, Optional, Set  # noqa pylint: disable=unused-import
+)
 import weakref
 
 from homeassistant import data_entry_flow, loader
@@ -11,6 +13,9 @@ from homeassistant.core import callback, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ConfigEntryNotReady
 from homeassistant.setup import async_setup_component, async_process_deps_reqs
 from homeassistant.util.decorator import Registry
+
+
+# mypy: allow-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 _UNDEF = object()
@@ -121,11 +126,13 @@ class ConfigEntry:
         self.update_listeners = []  # type: list
 
         # Function to cancel a scheduled retry
-        self._async_cancel_retry_setup = None
+        self._async_cancel_retry_setup = \
+            None  # type: Optional[Callable[[], Any]]
 
     async def async_setup(
             self, hass: HomeAssistant, *,
-            integration: Optional[loader.Integration] = None, tries=0) -> None:
+            integration: Optional[loader.Integration] = None, tries: int = 0) \
+            -> None:
         """Set up an entry."""
         if integration is None:
             integration = await loader.async_get_integration(hass, self.domain)
@@ -187,7 +194,9 @@ class ConfigEntry:
         else:
             self.state = ENTRY_STATE_SETUP_ERROR
 
-    async def async_unload(self, hass, *, integration=None) -> bool:
+    async def async_unload(
+            self, hass: HomeAssistant, *,
+            integration: Optional[loader.Integration] = None) -> bool:
         """Unload an entry.
 
         Returns if unload is possible and was successful.
@@ -217,7 +226,8 @@ class ConfigEntry:
             return False
 
         try:
-            result = await component.async_unload_entry(hass, self)
+            result = await component.async_unload_entry(  # type: ignore
+                hass, self)
 
             assert isinstance(result, bool)
 
