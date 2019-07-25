@@ -36,6 +36,7 @@ class SwitchBot(SwitchDevice, RestoreEntity):
         import switchbot
 
         self._state = None
+        self._last_run_error = None
         self._name = name
         self._mac = mac
         self._device = switchbot.Switchbot(mac=mac)
@@ -52,11 +53,17 @@ class SwitchBot(SwitchDevice, RestoreEntity):
         """Turn device on."""
         if self._device.turn_on():
             self._state = True
+            self._last_run_error = False
+        else:
+            self._last_run_error = True
 
     def turn_off(self, **kwargs) -> None:
         """Turn device off."""
         if self._device.turn_off():
             self._state = False
+            self._last_run_error = False
+        else:
+            self._last_run_error = True
 
     @property
     def assumed_state(self) -> bool:
@@ -77,3 +84,10 @@ class SwitchBot(SwitchDevice, RestoreEntity):
     def name(self) -> str:
         """Return the name of the switch."""
         return self._name
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            'last_run_error': self._last_run_error,
+        }
