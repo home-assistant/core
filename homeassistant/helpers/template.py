@@ -857,6 +857,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters['regex_findall_index'] = regex_findall_index
         self.filters['bitwise_and'] = bitwise_and
         self.filters['bitwise_or'] = bitwise_or
+        self.filters['ord'] = ord
         self.globals['log'] = logarithm
         self.globals['sin'] = sine
         self.globals['cos'] = cosine
