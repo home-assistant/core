@@ -8,7 +8,8 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, FAN_AUTO, FAN_ON,
     HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF,
     SUPPORT_PRESET_MODE, SUPPORT_FAN_MODE, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE, PRESET_AWAY, PRESET_ECO, PRESET_NONE)
+    SUPPORT_TARGET_TEMPERATURE_RANGE, PRESET_AWAY, PRESET_ECO, PRESET_NONE,
+    CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE, CURRENT_HVAC_COOL)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -27,6 +28,21 @@ NEST_MODE_ECO = 'eco'
 NEST_MODE_HEAT = 'heat'
 NEST_MODE_COOL = 'cool'
 NEST_MODE_OFF = 'off'
+
+MODE_HASS_TO_NEST = {
+    HVAC_MODE_AUTO: NEST_MODE_HEAT_COOL,
+    HVAC_MODE_HEAT: NEST_MODE_HEAT,
+    HVAC_MODE_COOL: NEST_MODE_COOL,
+    HVAC_MODE_OFF: NEST_MODE_OFF,
+}
+
+MODE_NEST_TO_HASS = {v: k for k, v in MODE_HASS_TO_NEST.items()}
+
+ACTION_NEST_TO_HASS = {
+    'off': CURRENT_HVAC_IDLE,
+    'heating': CURRENT_HVAC_HEAT,
+    'cooling': CURRENT_HVAC_COOL,
+}
 
 PRESET_MODES = [PRESET_NONE, PRESET_AWAY, PRESET_ECO]
 
@@ -95,6 +111,7 @@ class NestThermostat(ClimateDevice):
         self._temperature = None
         self._temperature_scale = None
         self._mode = None
+        self._action = None
         self._fan = None
         self._eco_temperature = None
         self._is_locked = None
@@ -157,15 +174,16 @@ class NestThermostat(ClimateDevice):
     @property
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
-        if self._mode in \
-                (NEST_MODE_HEAT, NEST_MODE_COOL, NEST_MODE_OFF):
-            return self._mode
         if self._mode == NEST_MODE_ECO:
             # We assume the first operation in operation list is the main one
             return self._operation_list[0]
-        if self._mode == NEST_MODE_HEAT_COOL:
-            return HVAC_MODE_AUTO
-        return None
+
+        return MODE_NEST_TO_HASS[self._mode]
+
+    @property
+    def hvac_action(self):
+        """Return the current hvac action."""
+        return ACTION_NEST_TO_HASS[self._action]
 
     @property
     def target_temperature(self):
@@ -216,16 +234,7 @@ class NestThermostat(ClimateDevice):
 
     def set_hvac_mode(self, hvac_mode):
         """Set operation mode."""
-        if hvac_mode in (HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_OFF):
-            device_mode = hvac_mode
-        elif hvac_mode == HVAC_MODE_AUTO:
-            device_mode = NEST_MODE_HEAT_COOL
-        else:
-            device_mode = HVAC_MODE_OFF
-            _LOGGER.error(
-                "An error occurred while setting device mode. "
-                "Invalid operation mode: %s", hvac_mode)
-        self.device.mode = device_mode
+        self.device.mode = MODE_HASS_TO_NEST[hvac_mode]
 
     @property
     def hvac_modes(self):
@@ -259,7 +268,7 @@ class NestThermostat(ClimateDevice):
             self.structure.away = True
 
         if self.preset_mode == PRESET_ECO:
-            self.device.mode = self._operation_list[0]
+            self.device.mode = MODE_HASS_TO_NEST[self._operation_list[0]]
         elif preset_mode == PRESET_ECO:
             self.device.mode = NEST_MODE_ECO
 
@@ -301,6 +310,7 @@ class NestThermostat(ClimateDevice):
         self._humidity = self.device.humidity
         self._temperature = self.device.temperature
         self._mode = self.device.mode
+        self._action = self.device.hvac_state
         self._target_temperature = self.device.target
         self._fan = self.device.fan
         self._away = self.structure.away == 'away'
