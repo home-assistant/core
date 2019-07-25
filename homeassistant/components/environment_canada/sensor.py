@@ -15,10 +15,11 @@ from homeassistant.const import (
     TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE, ATTR_ATTRIBUTION,
     ATTR_LOCATION)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(minutes=10)
 
 ATTR_UPDATED = 'updated'
 ATTR_STATION = 'station'
@@ -28,8 +29,6 @@ ATTR_TIME = 'alert time'
 CONF_ATTRIBUTION = "Data provided by Environment Canada"
 CONF_STATION = 'station'
 CONF_LANGUAGE = 'language'
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 
 def validate_station(station):
@@ -110,7 +109,6 @@ class ECSensor(Entity):
         """Return the units of measurement."""
         return self._unit
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update current conditions."""
         self.ec_data.update()
