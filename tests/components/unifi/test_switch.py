@@ -7,7 +7,7 @@ import pytest
 from tests.common import mock_coro
 
 import aiounifi
-from aiounifi.clients import Clients
+from aiounifi.clients import Clients, ClientsAll
 from aiounifi.devices import Devices
 
 from homeassistant import config_entries
@@ -170,6 +170,29 @@ DEVICE_1 = {
     ]
 }
 
+BLOCKED = {
+    'blocked': True,
+    'hostname': 'block_client_1',
+    'ip': '10.0.0.1',
+    'is_guest': False,
+    'is_wired': False,
+    'mac': '00:00:00:00:01:01',
+    'name': 'Block Client 1',
+    'noted': True,
+    'oui': 'Producer',
+}
+UNBLOCKED = {
+    'blocked': False,
+    'hostname': 'block_client_2',
+    'ip': '10.0.0.2',
+    'is_guest': False,
+    'is_wired': True,
+    'mac': '00:00:00:00:01:02',
+    'name': 'Block Client 2',
+    'noted': True,
+    'oui': 'Producer',
+}
+
 CONTROLLER_DATA = {
     CONF_HOST: 'mock-host',
     CONF_USERNAME: 'mock-user',
@@ -199,6 +222,7 @@ def mock_controller(hass):
 
     controller.mock_client_responses = deque()
     controller.mock_device_responses = deque()
+    controller.mock_client_all_responses = deque()
 
     async def mock_request(method, path, **kwargs):
         kwargs['method'] = method
@@ -208,10 +232,13 @@ def mock_controller(hass):
             return controller.mock_client_responses.popleft()
         if path == 's/{site}/stat/device':
             return controller.mock_device_responses.popleft()
+        if path == 's/{site}/rest/user':
+            return controller.mock_client_all_responses.popleft()
         return None
 
     controller.api.clients = Clients({}, mock_request)
     controller.api.devices = Devices({}, mock_request)
+    controller.api.clients_all = ClientsAll({}, mock_request)
 
     return controller
 
@@ -277,12 +304,17 @@ async def test_switches(hass, mock_controller):
     """Test the update_items function with some clients."""
     mock_controller.mock_client_responses.append([CLIENT_1, CLIENT_4])
     mock_controller.mock_device_responses.append([DEVICE_1])
+    mock_controller.mock_client_all_responses.append(
+        [BLOCKED, UNBLOCKED, CLIENT_1])
+    mock_controller.unifi_config = {
+        unifi.CONF_BLOCK_CLIENT: [BLOCKED['mac'], UNBLOCKED['mac']]
+    }
 
     await setup_controller(hass, mock_controller)
-    assert len(mock_controller.mock_requests) == 2
-    assert len(hass.states.async_all()) == 2
+    assert len(mock_controller.mock_requests) == 3
+    assert len(hass.states.async_all()) == 4
 
-    switch_1 = hass.states.get('switch.client_1')
+    switch_1 = hass.states.get('switch.poe_client_1')
     assert switch_1 is not None
     assert switch_1.state == 'on'
     assert switch_1.attributes['power'] == '2.56'
@@ -292,8 +324,16 @@ async def test_switches(hass, mock_controller):
     assert switch_1.attributes['port'] == 1
     assert switch_1.attributes['poe_mode'] == 'auto'
 
-    switch_4 = hass.states.get('switch.client_4')
+    switch_4 = hass.states.get('switch.poe_client_4')
     assert switch_4 is None
+
+    blocked = hass.states.get('switch.block_client_1')
+    assert blocked is not None
+    assert blocked.state == 'on'
+
+    unblocked = hass.states.get('switch.block_client_2')
+    assert unblocked is not None
+    assert unblocked.state == 'off'
 
 
 async def test_new_client_discovered(hass, mock_controller):
@@ -310,7 +350,7 @@ async def test_new_client_discovered(hass, mock_controller):
 
     # Calling a service will trigger the updates to run
     await hass.services.async_call('switch', 'turn_off', {
-        'entity_id': 'switch.client_1'
+        'entity_id': 'switch.poe_client_1'
     }, blocking=True)
     assert len(mock_controller.mock_requests) == 5
     assert len(hass.states.async_all()) == 3
@@ -326,7 +366,7 @@ async def test_new_client_discovered(hass, mock_controller):
     }
 
     await hass.services.async_call('switch', 'turn_on', {
-        'entity_id': 'switch.client_1'
+        'entity_id': 'switch.poe_client_1'
     }, blocking=True)
     assert len(mock_controller.mock_requests) == 7
     assert mock_controller.mock_requests[5] == {
@@ -340,7 +380,7 @@ async def test_new_client_discovered(hass, mock_controller):
         'path': 's/{site}/rest/device/mock-id'
     }
 
-    switch_2 = hass.states.get('switch.client_2')
+    switch_2 = hass.states.get('switch.poe_client_2')
     assert switch_2 is not None
     assert switch_2.state == 'on'
 
@@ -384,7 +424,7 @@ async def test_failed_update_unreachable_controller(hass, mock_controller):
 
     # Calling a service will trigger the updates to run
     await hass.services.async_call('switch', 'turn_off', {
-        'entity_id': 'switch.client_1'
+        'entity_id': 'switch.poe_client_1'
     }, blocking=True)
 
     assert len(mock_controller.mock_requests) == 3
@@ -406,7 +446,7 @@ async def test_ignore_multiple_poe_clients_on_same_port(hass, mock_controller):
     # 1 All Lights group, 2 lights
     assert len(hass.states.async_all()) == 0
 
-    switch_1 = hass.states.get('switch.client_1')
-    switch_2 = hass.states.get('switch.client_2')
+    switch_1 = hass.states.get('switch.poe_client_1')
+    switch_2 = hass.states.get('switch.poe_client_2')
     assert switch_1 is None
     assert switch_2 is None
