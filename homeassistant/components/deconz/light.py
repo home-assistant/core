@@ -8,7 +8,8 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
-from .const import COVER_TYPES, NEW_GROUP, NEW_LIGHT, SWITCH_TYPES
+from .const import (
+    COVER_TYPES, DOMAIN as DECONZ_DOMAIN, NEW_GROUP, NEW_LIGHT, SWITCH_TYPES)
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
@@ -44,7 +45,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         for group in groups:
             if group.lights and gateway.allow_deconz_groups:
-                entities.append(DeconzLight(group, gateway))
+                entities.append(DeconzGroup(group, gateway))
 
         async_add_entities(entities, True)
 
@@ -59,7 +60,7 @@ class DeconzLight(DeconzDevice, Light):
     """Representation of a deCONZ light."""
 
     def __init__(self, device, gateway):
-        """Set up light and add update callback to get data from websocket."""
+        """Set up light."""
         super().__init__(device, gateway)
 
         self._features = SUPPORT_BRIGHTNESS
@@ -170,3 +171,33 @@ class DeconzLight(DeconzDevice, Light):
             attributes['all_on'] = self._device.all_on
 
         return attributes
+
+
+class DeconzGroup(DeconzLight):
+    """Representation of a deCONZ group."""
+
+    def __init__(self, device, gateway):
+        """Set up group and create an unique id."""
+        super().__init__(device, gateway)
+
+        self._unique_id = '{}-{}'.format(
+            self.gateway.api.config.bridgeid,
+            self._device.deconz_id)
+
+    @property
+    def unique_id(self):
+        """Return a unique identifier for this device."""
+        return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        bridgeid = self.gateway.api.config.bridgeid
+
+        return {
+            'identifiers': {(DECONZ_DOMAIN, self.unique_id)},
+            'manufacturer': 'Dresden Elektronik',
+            'model': 'deCONZ group',
+            'name': self._device.name,
+            'via_device': (DECONZ_DOMAIN, bridgeid),
+        }
