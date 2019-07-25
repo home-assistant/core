@@ -52,7 +52,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Establish connection with velbus."""
-
     hass.data.setdefault(DOMAIN, {})
 
     controller = velbus.Controller(entry.data[CONF_PORT])
@@ -94,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
-    """Remove the velbus connection"""
+    """Remove the velbus connection."""
     await asyncio.wait([
         hass.config_entries.async_forward_entry_unload(entry, component)
         for component in COMPONENT_TYPES
@@ -143,6 +142,7 @@ class VelbusEntity(Entity):
 
     @property
     def device_info(self):
+        """Return the device info."""
         return {
             'identifiers': {
                 (DOMAIN, self._module.get_module_address(),

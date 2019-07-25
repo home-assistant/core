@@ -25,11 +25,11 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self) -> None:
-        """ Initialize the velbus config flow."""
+        """Initialize the velbus config flow."""
         self._errors = {}
 
     def _create_device(self, name: str, prt: str):
-        """ The call to create the device itself."""
+        """Create an antry async."""
         return self.async_create_entry(
             title=name,
             data={
@@ -38,7 +38,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
         )
 
     def _test_connection(self, prt):
-        """ This call will load the velbus controller with the port"""
+        """Try to connect to the velbus with the port specified."""
         try:
             controller = velbus.Controller(prt)
         except Exception:  # pylint: disable=broad-except
@@ -54,7 +54,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
         return False
 
     async def async_step_user(self, user_input=None):
-        """Step when user intializes a integration"""
+        """Step when user intializes a integration."""
         self._errors = {}
         if user_input is not None:
             name = slugify(user_input[CONF_NAME])
