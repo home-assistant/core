@@ -5,7 +5,6 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
     SUPPORT_FLASH, SUPPORT_TRANSITION, Light)
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
