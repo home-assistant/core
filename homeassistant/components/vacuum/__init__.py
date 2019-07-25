@@ -7,12 +7,12 @@ import voluptuous as vol
 
 from homeassistant.components import group
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_COMMAND, SERVICE_TOGGLE, SERVICE_TURN_OFF,
-    SERVICE_TURN_ON, STATE_ON, STATE_PAUSED, STATE_IDLE)
+    ATTR_BATTERY_LEVEL, ATTR_COMMAND, ATTR_ENTITY_ID, SERVICE_TOGGLE,
+    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON, STATE_PAUSED, STATE_IDLE)
 from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa
-    ENTITY_SERVICE_SCHEMA, PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import (ToggleEntity, Entity)
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -33,6 +33,7 @@ ATTR_PARAMS = 'params'
 ATTR_STATUS = 'status'
 
 SERVICE_CLEAN_SPOT = 'clean_spot'
+SERVICE_CLEAN_EDGE = 'clean_edge'
 SERVICE_LOCATE = 'locate'
 SERVICE_RETURN_TO_BASE = 'return_to_base'
 SERVICE_SEND_COMMAND = 'send_command'
@@ -42,11 +43,15 @@ SERVICE_START = 'start'
 SERVICE_PAUSE = 'pause'
 SERVICE_STOP = 'stop'
 
-VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+VACUUM_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
+})
+
+VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_FAN_SPEED): cv.string,
 })
 
-VACUUM_SEND_COMMAND_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
+VACUUM_SEND_COMMAND_SERVICE_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_COMMAND): cv.string,
     vol.Optional(ATTR_PARAMS): vol.Any(dict, cv.ensure_list),
 })
@@ -74,6 +79,7 @@ SUPPORT_CLEAN_SPOT = 1024
 SUPPORT_MAP = 2048
 SUPPORT_STATE = 4096
 SUPPORT_START = 8192
+SUPPORT_CLEAN_EDGE = 16384
 
 
 @bind_hass
@@ -91,43 +97,47 @@ async def async_setup(hass, config):
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_TURN_ON, ENTITY_SERVICE_SCHEMA,
+        SERVICE_TURN_ON, VACUUM_SERVICE_SCHEMA,
         'async_turn_on'
     )
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, ENTITY_SERVICE_SCHEMA,
+        SERVICE_TURN_OFF, VACUUM_SERVICE_SCHEMA,
         'async_turn_off'
     )
     component.async_register_entity_service(
-        SERVICE_TOGGLE, ENTITY_SERVICE_SCHEMA,
+        SERVICE_TOGGLE, VACUUM_SERVICE_SCHEMA,
         'async_toggle'
     )
     component.async_register_entity_service(
-        SERVICE_START_PAUSE, ENTITY_SERVICE_SCHEMA,
+        SERVICE_START_PAUSE, VACUUM_SERVICE_SCHEMA,
         'async_start_pause'
     )
     component.async_register_entity_service(
-        SERVICE_START, ENTITY_SERVICE_SCHEMA,
+        SERVICE_START, VACUUM_SERVICE_SCHEMA,
         'async_start'
     )
     component.async_register_entity_service(
-        SERVICE_PAUSE, ENTITY_SERVICE_SCHEMA,
+        SERVICE_PAUSE, VACUUM_SERVICE_SCHEMA,
         'async_pause'
     )
     component.async_register_entity_service(
-        SERVICE_RETURN_TO_BASE, ENTITY_SERVICE_SCHEMA,
+        SERVICE_RETURN_TO_BASE, VACUUM_SERVICE_SCHEMA,
         'async_return_to_base'
     )
     component.async_register_entity_service(
-        SERVICE_CLEAN_SPOT, ENTITY_SERVICE_SCHEMA,
+        SERVICE_CLEAN_SPOT, VACUUM_SERVICE_SCHEMA,
         'async_clean_spot'
     )
     component.async_register_entity_service(
-        SERVICE_LOCATE, ENTITY_SERVICE_SCHEMA,
+        SERVICE_CLEAN_EDGE, VACUUM_SERVICE_SCHEMA,
+        'async_clean_edge'
+    )
+    component.async_register_entity_service(
+        SERVICE_LOCATE, VACUUM_SERVICE_SCHEMA,
         'async_locate'
     )
     component.async_register_entity_service(
-        SERVICE_STOP, ENTITY_SERVICE_SCHEMA,
+        SERVICE_STOP, VACUUM_SERVICE_SCHEMA,
         'async_stop'
     )
     component.async_register_entity_service(
@@ -212,6 +222,18 @@ class _BaseVacuum(Entity):
         """
         await self.hass.async_add_executor_job(
             partial(self.clean_spot, **kwargs))
+
+    def clean_edge(self, **kwargs):
+        """Perform an edge clean."""
+        raise NotImplementedError()
+
+    async def async_clean_edge(self, **kwargs):
+        """Perform an edge clean.
+
+        This method must be run in the event loop.
+        """
+        await self.hass.async_add_executor_job(
+            partial(self.clean_edge, **kwargs))
 
     def locate(self, **kwargs):
         """Locate the vacuum cleaner."""
