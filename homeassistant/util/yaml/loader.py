@@ -24,6 +24,8 @@ from .const import _SECRET_NAMESPACE, SECRET_YAML
 from .objects import NodeListClass, NodeStrClass
 
 
+# mypy: allow-untyped-calls, no-warn-return-any
+
 _LOGGER = logging.getLogger(__name__)
 __SECRET_CACHE = {}  # type: Dict[str, JSON_TYPE]
 
