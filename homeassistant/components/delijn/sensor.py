@@ -80,7 +80,6 @@ class DeLijnPublicTransportSensor(Entity):
             else:
                 first_passage = first['due_at_schedule']
             self._state = first_passage
-
             self._name = first['stopname']
             self._attributes['stopname'] = first['stopname']
             self._attributes['line_number_public'] = first[
@@ -90,11 +89,9 @@ class DeLijnPublicTransportSensor(Entity):
             self._attributes['final_destination'] = first['final_destination']
             self._attributes['due_at_schedule'] = first['due_at_schedule']
             self._attributes['due_at_realtime'] = first['due_at_realtime']
-            self._attributes['due_in_min'] = first['due_in_min']
             self._attributes['next_passages'] = self.line.passages
-            self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
         except (KeyError, IndexError) as error:
-            _LOGGER.debug("Error getting data from De Lijn, {}".format(error))
+            _LOGGER.debug("Error getting data from De Lijn: %s", error)
 
     @property
     def device_class(self):
