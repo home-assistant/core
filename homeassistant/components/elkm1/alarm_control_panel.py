@@ -22,7 +22,8 @@ ELK_ALARM_SERVICE_SCHEMA = vol.Schema({
 
 DISPLAY_MESSAGE_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
-    vol.Optional('clear', default=2): vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
+    vol.Optional('clear', default=2): vol.All(vol.Coerce(int),
+                                              vol.In([0, 1, 2])),
     vol.Optional('beep', default=False): cv.boolean,
     vol.Optional('timeout', default=0): vol.All(vol.coerce(int),
                                                 vol.Range(min=0, max=65535)),

@@ -66,8 +66,10 @@ def _elk_range_validator(rng):
 
 
 def _has_all_unique_prefixes(value):
-    """Validate that each m1 configured has a unique,
-    case-independent prefix."""
+    """Validate that each m1 configured has a unique prefix.
+
+    Uniqueness is determined case-independently.
+    """
     prefixes = [device[CONF_PREFIX] for device in value]
     schema = vol.Schema(vol.Unique())
     schema(prefixes)
