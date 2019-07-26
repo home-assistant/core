@@ -25,7 +25,7 @@ ATTR_PUBLICATION_DATE = 'publication_date'
 DEFAULT_ATTRIBUTION = 'Data provided by the WWLLN'
 DEFAULT_EVENT_NAME = 'Lightning Strike: {0}'
 DEFAULT_ICON = 'mdi:flash'
-DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
+DEFAULT_UPDATE_INTERVAL = timedelta(minutes=10)
 
 SIGNAL_DELETE_ENTITY = 'delete_entity_{0}'
 
