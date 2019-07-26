@@ -1051,7 +1051,7 @@ pydanfossair==0.1.0
 pydeconz==59
 
 # homeassistant.components.delijn
-pydelijn==0.4.0
+pydelijn==0.5.1
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
