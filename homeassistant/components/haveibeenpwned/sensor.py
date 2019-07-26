@@ -147,13 +147,9 @@ class HaveIBeenPwnedData:
         """Get the latest data for current email from REST service."""
         try:
             url = "{}{}?truncateResponse=false".format(URL, self._email)
-
+            header = {USER_AGENT: HA_USER_AGENT, "hibp-api-key": self._api_key}
             _LOGGER.debug("Checking for breaches for email: %s", self._email)
-
-            req = requests.get(
-                               url, headers={
-                               USER_AGENT: HA_USER_AGENT,
-                               "hibp-api-key": self._api_key},
+            req = requests.get(url, headers=header,
                                allow_redirects=True, timeout=5)
 
         except requests.exceptions.RequestException:
