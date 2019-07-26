@@ -19,6 +19,7 @@
 		"python.linting.enabled": true,
 		"files.trimTrailingWhitespace": true,
 		"editor.rulers": [80],
-		"terminal.integrated.shell.linux": "/bin/bash"
+		"terminal.integrated.shell.linux": "/bin/bash",
+		"yaml.customTags": ["!secret scalar"]
 	}
 }
