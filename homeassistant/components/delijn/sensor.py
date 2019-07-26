@@ -2,7 +2,6 @@
 import logging
 
 from pydelijn.api import Passages
-import pytz
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -11,7 +10,6 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,14 +30,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def due_in_minutes(timestamp):
-    """Get the time in minutes from a timestamp."""
-    if timestamp is None:
-        return None
-    diff = timestamp - dt_util.now()
-    return int(diff.total_seconds() / 60)
-
-
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Create the sensor."""
@@ -56,10 +46,11 @@ async def async_setup_platform(
                         stop_id,
                         number_of_departures,
                         api_key,
-                        session)
+                        session,
+                        True)
         await line.get_passages()
         if line.passages is None:
-            _LOGGER.error("No data recieved from De Lijn")
+            _LOGGER.warning("No data recieved from De Lijn")
             return
         sensors.append(DeLijnPublicTransportSensor(line, name))
 
@@ -75,33 +66,30 @@ class DeLijnPublicTransportSensor(Entity):
         self._attributes = {}
         self._name = name
         self._state = None
+        self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
 
     async def async_update(self):
         """Get the latest data from the De Lijn API."""
         await self.line.get_passages()
         if self.line.passages is None:
-            _LOGGER.error("No data recieved from De Lijn")
+            _LOGGER.warning("No data recieved from De Lijn")
             return
         try:
             attributes = {}
             first = self.line.passages[0]
-            local_timezone = pytz.timezone("Europe/Brussels")
-            if first['due_at_rt'] is not None:
-                first_passage_naive = dt_util.parse_datetime(
-                    first['due_at_rt'])
+            if first['due_at_realtime'] is not None:
+                first_passage = first['due_at_realtime']
             else:
-                first_passage_naive = dt_util.parse_datetime(
-                    first['due_at_sch'])
-            first_passage_local = local_timezone.localize(first_passage_naive)
-            first_passage_utc = dt_util.as_utc(first_passage_local)
-            self._state = first_passage_utc.isoformat()
+                first_passage = first['due_at_schedule']
+            self._state = first_passage
+
             self._name = first['stopname']
             attributes['stopname'] = first['stopname']
             attributes['line_number_public'] = first['line_number_public']
             attributes['line_transport_type'] = first['line_transport_type']
             attributes['final_destination'] = first['final_destination']
-            attributes['due_at_schedule'] = first['due_at_sch']
-            attributes['due_at_realtime'] = first['due_at_rt']
+            attributes['due_at_schedule'] = first['due_at_schedule']
+            attributes['due_at_realtime'] = first['due_at_realtime']
             attributes['due_in_min'] = first['due_in_min']
             attributes['next_passages'] = self.line.passages
             self._attributes = attributes
