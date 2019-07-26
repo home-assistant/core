@@ -1,7 +1,5 @@
 """Tests for the seventeentrack sensor."""
 import datetime
-import os
-import shutil
 from typing import Union
 
 import pytest
@@ -11,10 +9,9 @@ from py17track.package import Package
 from homeassistant.components.seventeentrack.sensor \
     import CONF_SHOW_ARCHIVED, CONF_SHOW_DELIVERED
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
-from tests.common import get_test_home_assistant, MockDependency, \
-    get_test_config_dir, fire_time_changed
+from tests.common import MockDependency, async_fire_time_changed
 
 VALID_CONFIG_MINIMAL = {
     'sensor': {
@@ -129,19 +126,7 @@ def fixture_mock_client(mock_py17track):
     ProfileMock.reset()
 
 
-@pytest.fixture(name="hass")
-def fixture_hass(mock_client):
-    """Create hass instance and clean it."""
-    hass = get_test_home_assistant()
-    hass.components.persistent_notification = mock.MagicMock()
-    yield hass
-    hass.stop()
-    storage_dir = get_test_config_dir('.storage')
-    if os.path.isdir(storage_dir):
-        shutil.rmtree(storage_dir)
-
-
-def _setup_seventeentrack(hass, config=None, summary_data=None):
+async def _setup_seventeentrack(hass, config=None, summary_data=None):
     """Set up component using config."""
     if not config:
         config = VALID_CONFIG_MINIMAL
@@ -149,68 +134,66 @@ def _setup_seventeentrack(hass, config=None, summary_data=None):
         summary_data = {}
 
     ProfileMock.summary_data = summary_data
-    assert setup_component(hass, 'sensor', config)
-    hass.block_till_done()
+    assert await async_setup_component(hass, 'sensor', config)
+    # hass.block_till_done()()
 
 
-def _goto_future(hass, future=None):
+async def _goto_future(hass, future=None):
     """Move to future."""
     if not future:
         future = utcnow() + datetime.timedelta(minutes=10)
     with mock.patch('homeassistant.util.utcnow', return_value=future):
-        fire_time_changed(hass, future)
-        hass.block_till_done()
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
 
 
-def test_full_valid_config(hass):
+async def test_full_valid_config(hass):
     """Ensure everything starts correctly."""
-    assert setup_component(hass, 'sensor', VALID_CONFIG_FULL)
-    hass.block_till_done()
-
-    assert len(hass.states.entity_ids()) == len(
+    assert await async_setup_component(hass, 'sensor', VALID_CONFIG_FULL)
+    assert len(hass.states.async_entity_ids()) == len(
         ProfileMock.summary_data.keys())
 
 
-def test_valid_config(hass):
+async def test_valid_config(hass):
     """Ensure everything starts correctly."""
-    assert setup_component(hass, 'sensor', VALID_CONFIG_MINIMAL)
-    hass.block_till_done()
+    assert await async_setup_component(hass, 'sensor', VALID_CONFIG_MINIMAL)
+    # hass.block_till_done()()
 
-    assert len(hass.states.entity_ids()) == len(
+    assert len(hass.states.async_entity_ids()) == len(
         ProfileMock.summary_data.keys())
 
 
-def test_invalid_config(hass):
+async def test_invalid_config(hass):
     """Ensure nothing is created when config is wrong."""
-    assert setup_component(hass, 'sensor', INVALID_CONFIG)
-    hass.block_till_done()
+    assert await async_setup_component(hass, 'sensor', INVALID_CONFIG)
+    # hass.block_till_done()()
 
-    assert not hass.states.entity_ids()
+    assert not hass.states.async_entity_ids()
 
 
-def test_add_package(hass):
+async def test_add_package(hass):
     """Ensure package is added correctly when user add a new package."""
     package = Package('456', 206, 'friendly name 1', 'info text 1',
                       'location 1', 206, 2)
     ProfileMock.package_list = [package]
 
-    _setup_seventeentrack(hass)
+    await _setup_seventeentrack(hass)
     assert hass.states.get(
         'sensor.seventeentrack_package_456') is not None
-    assert len(hass.states.entity_ids()) == 1
+    assert len(hass.states.async_entity_ids()) == 1
 
     package2 = Package('789', 206, 'friendly name 2', 'info text 2',
                        'location 2', 206, 2)
     ProfileMock.package_list = [package, package2]
 
-    _goto_future(hass)
+    await _goto_future(hass)
 
     assert hass.states.get(
         'sensor.seventeentrack_package_789') is not None
-    assert len(hass.states.entity_ids()) == 2
+    assert len(hass.states.async_entity_ids()) == 2
 
 
-def test_remove_package(hass):
+async def test_remove_package(hass):
     """Ensure entity is not there anymore if package is not there."""
     package1 = Package('456', 206, 'friendly name 1', 'info text 1',
                        'location 1', 206, 2)
@@ -219,109 +202,113 @@ def test_remove_package(hass):
 
     ProfileMock.package_list = [package1, package2]
 
-    _setup_seventeentrack(hass)
+    await _setup_seventeentrack(hass)
 
     assert hass.states.get(
         'sensor.seventeentrack_package_456') is not None
     assert hass.states.get(
         'sensor.seventeentrack_package_789') is not None
-    assert len(hass.states.entity_ids()) == 2
+    assert len(hass.states.async_entity_ids()) == 2
 
     ProfileMock.package_list = [package2]
 
-    _goto_future(hass)
+    await _goto_future(hass)
 
     assert hass.states.get(
         'sensor.seventeentrack_package_456') is None
     assert hass.states.get(
         'sensor.seventeentrack_package_789') is not None
-    assert len(hass.states.entity_ids()) == 1
+    assert len(hass.states.async_entity_ids()) == 1
 
 
-def test_friendly_name_changed(hass):
+async def test_friendly_name_changed(hass):
     """Test friendly name change."""
     package = Package('456', 206, 'friendly name 1', 'info text 1',
                       'location 1', 206, 2)
     ProfileMock.package_list = [package]
 
-    _setup_seventeentrack(hass)
+    await _setup_seventeentrack(hass)
 
     assert hass.states.get(
         'sensor.seventeentrack_package_456') is not None
-    assert len(hass.states.entity_ids()) == 1
+    assert len(hass.states.async_entity_ids()) == 1
 
     package = Package('456', 206, 'friendly name 2', 'info text 1',
                       'location 1', 206, 2)
     ProfileMock.package_list = [package]
 
-    _goto_future(hass)
+    await _goto_future(hass)
 
     assert hass.states.get(
         'sensor.seventeentrack_package_456') is not None
     entity = hass.data['entity_components']['sensor'].get_entity(
         'sensor.seventeentrack_package_456')
     assert entity.name == 'Seventeentrack Package: friendly name 2'
-    assert len(hass.states.entity_ids()) == 1
+    assert len(hass.states.async_entity_ids()) == 1
 
 
-def test_delivered_not_shown(hass):
+async def test_delivered_not_shown(hass):
     """Ensure delivered packages are not shown."""
     package = Package('456', 206, 'friendly name 1', 'info text 1',
                       'location 1', 206, 2, 40)
     ProfileMock.package_list = [package]
 
-    _setup_seventeentrack(hass, VALID_CONFIG_FULL_NO_DELIVERED)
-    assert not hass.states.entity_ids()
+    hass.components.persistent_notification = mock.MagicMock()
+    await _setup_seventeentrack(hass, VALID_CONFIG_FULL_NO_DELIVERED)
+    assert not hass.states.async_entity_ids()
     hass.components.persistent_notification.create.assert_called()
 
 
-def test_delivered_shown(hass):
+async def test_delivered_shown(hass):
     """Ensure delivered packages are show when user choose to show them."""
     package = Package('456', 206, 'friendly name 1', 'info text 1',
                       'location 1', 206, 2, 40)
     ProfileMock.package_list = [package]
-    _setup_seventeentrack(hass, VALID_CONFIG_FULL)
+
+    hass.components.persistent_notification = mock.MagicMock()
+    await _setup_seventeentrack(hass, VALID_CONFIG_FULL)
 
     assert hass.states.get(
         'sensor.seventeentrack_package_456') is not None
-    assert len(hass.states.entity_ids()) == 1
+    assert len(hass.states.async_entity_ids()) == 1
     hass.components.persistent_notification.create.assert_not_called()
 
 
-def test_becomes_delivered_not_shown_notification(hass):
+async def test_becomes_delivered_not_shown_notification(hass):
     """Ensure notification is triggered when package becomes delivered."""
     package = Package('456', 206, 'friendly name 1', 'info text 1',
                       'location 1', 206, 2)
     ProfileMock.package_list = [package]
 
-    _setup_seventeentrack(hass, VALID_CONFIG_FULL_NO_DELIVERED)
+    await _setup_seventeentrack(hass, VALID_CONFIG_FULL_NO_DELIVERED)
 
     assert hass.states.get(
         'sensor.seventeentrack_package_456') is not None
-    assert len(hass.states.entity_ids()) == 1
+    assert len(hass.states.async_entity_ids()) == 1
 
     package_delivered = Package('456', 206, 'friendly name 1',
                                 'info text 1', 'location 1', 206, 2, 40)
     ProfileMock.package_list = [package_delivered]
 
-    _goto_future(hass)
+    hass.components.persistent_notification = mock.MagicMock()
+    await _goto_future(hass)
 
     hass.components.persistent_notification.create.assert_called()
-    assert not hass.states.entity_ids()
+    assert not hass.states.async_entity_ids()
 
 
-def test_summary_correctly_updated(hass):
+async def test_summary_correctly_updated(hass):
     """Ensure summary entities are not duplicated."""
-    _setup_seventeentrack(hass, summary_data=DEFAULT_SUMMARY)
+    await _setup_seventeentrack(hass, summary_data=DEFAULT_SUMMARY)
 
-    assert len(hass.states.entity_ids()) == 7
-    for state in hass.states.all():
+    assert len(hass.states.async_entity_ids()) == 7
+    for state in hass.states.async_all():
         assert state.state == '0'
 
     ProfileMock.summary_data = NEW_SUMMARY_DATA
 
-    _goto_future(hass)
+    await _goto_future(hass)
 
-    assert len(hass.states.entity_ids()) == 7
-    for state in hass.states.all():
+    assert len(hass.states.async_entity_ids()) == 7
+    for state in hass.states.async_all():
         assert state.state == '1'
