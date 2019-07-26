@@ -63,10 +63,9 @@ class DeLijnPublicTransportSensor(Entity):
     def __init__(self, line, name):
         """Initialize the sensor."""
         self.line = line
-        self._attributes = {}
+        self._attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self._name = name
         self._state = None
-        self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
 
     async def async_update(self):
         """Get the latest data from the De Lijn API."""
@@ -75,7 +74,6 @@ class DeLijnPublicTransportSensor(Entity):
             _LOGGER.warning("No data recieved from De Lijn")
             return
         try:
-            attributes = {}
             first = self.line.passages[0]
             if first['due_at_realtime'] is not None:
                 first_passage = first['due_at_realtime']
@@ -84,15 +82,15 @@ class DeLijnPublicTransportSensor(Entity):
             self._state = first_passage
 
             self._name = first['stopname']
-            attributes['stopname'] = first['stopname']
-            attributes['line_number_public'] = first['line_number_public']
-            attributes['line_transport_type'] = first['line_transport_type']
-            attributes['final_destination'] = first['final_destination']
-            attributes['due_at_schedule'] = first['due_at_schedule']
-            attributes['due_at_realtime'] = first['due_at_realtime']
-            attributes['due_in_min'] = first['due_in_min']
-            attributes['next_passages'] = self.line.passages
-            self._attributes = attributes
+            self._attributes['stopname'] = first['stopname']
+            self._attributes['line_number_public'] = first['line_number_public']
+            self._attributes['line_transport_type'] = first['line_transport_type']
+            self._attributes['final_destination'] = first['final_destination']
+            self._attributes['due_at_schedule'] = first['due_at_schedule']
+            self._attributes['due_at_realtime'] = first['due_at_realtime']
+            self._attributes['due_in_min'] = first['due_in_min']
+            self._attributes['next_passages'] = self.line.passages
+            self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
         except (KeyError, IndexError) as error:
             _LOGGER.debug("Error getting data from De Lijn, {}".format(error))
 
@@ -119,5 +117,4 @@ class DeLijnPublicTransportSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return attributes for the sensor."""
-        self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
         return self._attributes
