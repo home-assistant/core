@@ -25,7 +25,7 @@ DISPLAY_MESSAGE_SERVICE_SCHEMA = vol.Schema({
     vol.Optional('clear', default=2): vol.All(vol.Coerce(int),
                                               vol.In([0, 1, 2])),
     vol.Optional('beep', default=False): cv.boolean,
-    vol.Optional('timeout', default=0): vol.All(vol.coerce(int),
+    vol.Optional('timeout', default=0): vol.All(vol.Coerce(int),
                                                 vol.Range(min=0, max=65535)),
     vol.Optional('line1', default=''): cv.string,
     vol.Optional('line2', default=''): cv.string,
