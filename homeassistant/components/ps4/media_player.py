@@ -166,6 +166,7 @@ class PS4Device(MediaPlayerDevice):
                         if self._use_saved():
                             _LOGGER.debug(
                                 "Using saved data for media: %s", title_id)
+                            self.schedule_update()
                             return
 
                         self._media_title = name
