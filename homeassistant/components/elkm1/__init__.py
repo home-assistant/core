@@ -66,8 +66,9 @@ def _elk_range_validator(rng):
 
 
 def _has_all_unique_prefixes(value):
-    """Validate that each m1 configured has a unique prefix."""
-    prefixes = [device.get(CONF_PREFIX, "").lower() for device in value]
+    """Validate that each m1 configured has a unique,
+    case-independent prefix."""
+    prefixes = [device[CONF_PREFIX] for device in value]
     schema = vol.Schema(vol.Unique())
     schema(prefixes)
     return value
@@ -81,7 +82,7 @@ DEVICE_SCHEMA_SUBDOMAIN = vol.Schema({
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PREFIX, default=''): cv.string,
+    vol.Optional(CONF_PREFIX, default=''): vol.All(cv.string, vol.Lower),
     vol.Optional(CONF_USERNAME, default=''): cv.string,
     vol.Optional(CONF_PASSWORD, default=''): cv.string,
     vol.Optional(CONF_TEMPERATURE_UNIT, default='F'):
