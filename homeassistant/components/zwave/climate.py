@@ -130,6 +130,8 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             support |= SUPPORT_FAN_MODE
         if self._zxt_120 == 1 and self.values.zxt_120_swing_mode:
             support |= SUPPORT_SWING_MODE
+        if self._preset_list:
+            support |= SUPPORT_PRESET_MODE
         return support
 
     def update_properties(self):
@@ -161,7 +163,9 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             self._hvac_mode = next(
                 (key for key, value in self._hvac_mapping.items()
                  if value == current_mode), current_mode)
-            # TODO: Set self._preset_mode
+            self._preset_mode = next(
+                (key for key, value in self._preset_mapping.items()
+                 if value == current_mode), PRESET_NONE)
         _LOGGER.debug("self._hvac_list=%s", self._hvac_list)
         _LOGGER.debug("self._hvac_action=%s", self._hvac_action)
 
@@ -318,7 +322,11 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         self.values.mode.data = self._hvac_mapping.get(hvac_mode, hvac_mode)
 
     def set_preset_mode(self, preset_mode):
-        raise NotImplementedError
+        """Set new target preset mode."""
+        if not self.values.mode:
+            return
+        self.values.mode.data = self._preset_mapping.get(
+            preset_mode, preset_mode)
 
     def set_swing_mode(self, swing_mode):
         """Set new target swing mode."""
