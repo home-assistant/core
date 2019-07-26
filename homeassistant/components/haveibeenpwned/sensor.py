@@ -151,8 +151,8 @@ class HaveIBeenPwnedData:
             _LOGGER.debug("Checking for breaches for email: %s", self._email)
 
             req = requests.get(
-                    url, headers={USER_AGENT: HA_USER_AGENT, "hibp-api-key": self._api_key}, allow_redirects=True,
-                timeout=5)
+                    url, headers={USER_AGENT: HA_USER_AGENT, "hibp-api-key": self._api_key}, 
+                    allow_redirects=True, timeout=5)
 
         except requests.exceptions.RequestException:
             _LOGGER.error("Failed fetching data for %s", self._email)
