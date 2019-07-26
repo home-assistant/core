@@ -21,8 +21,6 @@ resources:
   - container: 37
     image: homeassistant/ci-azure:3.7
 variables:
-  - name: ArtifactFeed
-    value: '2df3ae11-3bf6-49bc-a809-ba0d340d6a6d'
   - name: PythonMain
     value: '35'
   - group: codecov
@@ -84,15 +82,14 @@ stages:
           python.container: '37'
     container: $[ variables['python.container'] ]
     steps:
-    - script: |
-        python --version > .cache
-      displayName: 'Set python $(python.container) for requirement cache'
-    - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreCacheV1.RestoreCache@1
+    - task: CacheBeta@0
       displayName: 'Restore artifacts based on Requirements'
       inputs:
-        keyfile: 'requirements_test_all.txt, .cache'
-        targetfolder: './venv'
-        vstsFeed: '$(ArtifactFeed)' 
+        key: |
+          requirements_test_all.txt
+          $(python.container)
+        path: ./venv
+        cacheHitVar: CacheRestored
     - script: |
         set -e
         python -m venv venv
@@ -103,14 +100,6 @@ stages:
         pip install pytest-azurepipelines -c homeassistant/package_constraints.txt
       displayName: 'Create Virtual Environment & Install Requirements'
       condition: and(succeeded(), ne(variables['CacheRestored'], 'true'))
-    # Explicit Cache Save (instead of using RestoreAndSaveCache)
-    # Dont wait with cache save for all the other task in this job to complete (±30 minutes), other parallel jobs might utilize this 
-    - task: 1ESLighthouseEng.PipelineArtifactCaching.SaveCacheV1.SaveCache@1	
-      displayName: 'Save artifacts based on Requirements'	
-      inputs:	
-        keyfile: 'requirements_test_all.txt, .cache'	
-        targetfolder: './venv'	
-        vstsFeed: '$(ArtifactFeed)'
     - script: | 
         . venv/bin/activate
         pip install -e .
@@ -121,9 +110,11 @@ stages:
       displayName: 'Run pytest for python $(python.container)'
       condition: and(succeeded(), ne(variables['python.container'], variables['PythonMain']))
     - script: |
+        set -e
+
         . venv/bin/activate
-        pytest --timeout=9 --durations=10 --junitxml=test-results.xml --cov --cov-report=xml -qq -o console_output_style=count -p no:sugar tests
-        codecov
+        pytest --timeout=9 --durations=10 --junitxml=test-results.xml --cov --cov-report=html -qq -o console_output_style=count -p no:sugar tests
+        codecov || true
       displayName: 'Run pytest for python $(python.container) / coverage'
       env:
         CODECOV_TOKEN: '$(codecovToken)'
@@ -136,7 +127,7 @@ stages:
     - task: PublishCodeCoverageResults@1
       inputs:
         codeCoverageTool: cobertura
-        summaryFileLocation: coverage.xml
+        summaryFileLocation: coverage.html
       displayName: 'publish coverage artifact'
       condition: and(succeeded(), eq(variables['python.container'], variables['PythonMain']))
 
@@ -149,15 +140,15 @@ stages:
       vmImage: 'ubuntu-latest'
     container: $[ variables['PythonMain'] ]
     steps:
-    - script: |
-        python --version > .cache
-      displayName: 'Set python $(PythonMain) for requirement cache'
-    - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreCacheV1.RestoreCache@1
+    - task: CacheBeta@0
       displayName: 'Restore artifacts based on Requirements'
       inputs:
-        keyfile: 'requirements_all.txt, requirements_test.txt, .cache'
-        targetfolder: './venv'
-        vstsFeed: '$(ArtifactFeed)' 
+        key: |
+          requirements_all.txt
+          requirements_test.txt
+          $(PythonMain)
+        path: ./venv
+        cacheHitVar: CacheRestored
     - script: |
         set -e
         python -m venv venv
@@ -168,12 +159,6 @@ stages:
         pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
       displayName: 'Create Virtual Environment & Install Requirements'
       condition: and(succeeded(), ne(variables['CacheRestored'], 'true'))
-    - task: 1ESLighthouseEng.PipelineArtifactCaching.SaveCacheV1.SaveCache@1
-      displayName: 'Save artifacts based on Requirements'
-      inputs:
-        keyfile: 'requirements_all.txt, requirements_test.txt, .cache'
-        targetfolder: './venv'
-        vstsFeed: '$(ArtifactFeed)'
     - script: | 
         . venv/bin/activate
         pip install -e .
