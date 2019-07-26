@@ -162,7 +162,7 @@ async def test_cors_on_static_files(hass, hass_client):
             'cors_allowed_origins': ['http://www.example.com']
         }
     })
-    hass.http.register_static_path('/something', Path(__file__).parent)
+    hass.http.register_static_path('/something', str(Path(__file__).parent))
 
     client = await hass_client()
     resp = await client.options('/something/__init__.py', headers={
