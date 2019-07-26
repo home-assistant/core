@@ -195,7 +195,7 @@ class RoombaVacuum(VacuumDevice):
         self._is_on = False
 
     async def async_locate(self, **kwargs):
-        """Pause the cleaning cycle."""
+        """Located vacuum."""
         await self.hass.async_add_job(self.vacuum.send_command, 'find')
 
     async def async_set_fan_speed(self, fan_speed, **kwargs):
