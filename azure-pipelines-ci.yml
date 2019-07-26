@@ -83,7 +83,6 @@ stages:
     container: $[ variables['python.container'] ]
     steps:
     - task: CacheBeta@0
-      displayName: 'Restore artifacts based on Requirements'
       inputs:
         key: |
           $(Build.SourcesDirectory)/requirements_test_all.txt
@@ -141,7 +140,6 @@ stages:
     container: $[ variables['PythonMain'] ]
     steps:
     - task: CacheBeta@0
-      displayName: 'Restore artifacts based on Requirements'
       inputs:
         key: |
           $(Build.SourcesDirectory)/requirements_all.txt
