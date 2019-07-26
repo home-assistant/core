@@ -86,7 +86,7 @@ stages:
       displayName: 'Restore artifacts based on Requirements'
       inputs:
         key: |
-          requirements_test_all.txt
+          $(Build.SourcesDirectory)/requirements_test_all.txt
           $(python.container)
         path: ./venv
         cacheHitVar: CacheRestored
@@ -144,8 +144,8 @@ stages:
       displayName: 'Restore artifacts based on Requirements'
       inputs:
         key: |
-          requirements_all.txt
-          requirements_test.txt
+          $(Build.SourcesDirectory)/requirements_all.txt
+          $(Build.SourcesDirectory)/requirements_test.txt
           $(PythonMain)
         path: ./venv
         cacheHitVar: CacheRestored
