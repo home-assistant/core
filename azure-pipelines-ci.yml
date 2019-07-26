@@ -21,6 +21,8 @@ resources:
   - container: 37
     image: homeassistant/ci-azure:3.7
 variables:
+  - name: ArtifactFeed
+    value: '2df3ae11-3bf6-49bc-a809-ba0d340d6a6d'
   - name: PythonMain
     value: '35'
   - group: codecov
@@ -34,27 +36,12 @@ stages:
       vmImage: 'ubuntu-latest'
     container: $[ variables['PythonMain'] ]
     steps:
-    - task: CacheBeta@0
-      inputs:
-        key: |
-          $(Build.SourcesDirectory)/requirements_test.txt
-          $(PythonMain)
-        path: $(Pipeline.Workspace)/venv.tar.gz
-        cacheHitVar: CacheRestored
     - script: |
-        set -e
         python -m venv venv
 
         . venv/bin/activate
-        pip install -r requirements_test.txt
-
-        tar -czf $(Pipeline.Workspace)/venv.tar.gz venv
-      displayName: 'Create Virtual Environment & Install Requirements'
-      condition: and(succeeded(), ne(variables['CacheRestored'], 'true'))
-    - script: |
-        tar -xzf $(Pipeline.Workspace)/venv.tar.gz
-      displayName: 'Restore Virtual Environment'
-      condition: and(succeeded(), eq(variables['CacheRestored'], 'true'))
+        pip install flake8
+      displayName: 'Setup Env'
     - script: |
         . venv/bin/activate
         flake8 homeassistant tests script
@@ -97,29 +84,33 @@ stages:
           python.container: '37'
     container: $[ variables['python.container'] ]
     steps:
-    - task: CacheBeta@0
+    - script: |
+        python --version > .cache
+      displayName: 'Set python $(python.container) for requirement cache'
+    - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreCacheV1.RestoreCache@1
+      displayName: 'Restore artifacts based on Requirements'
       inputs:
-        key: |
-          $(Build.SourcesDirectory)/requirements_test_all.txt
-          $(python.container)
-        path: $(Pipeline.Workspace)/venv.tar.gz
-        cacheHitVar: CacheRestored
+        keyfile: 'requirements_test_all.txt, .cache'
+        targetfolder: './venv'
+        vstsFeed: '$(ArtifactFeed)' 
     - script: |
         set -e
         python -m venv venv
-
+        
         . venv/bin/activate
         pip install -U pip setuptools
         pip install -r requirements_test_all.txt -c homeassistant/package_constraints.txt
         pip install pytest-azurepipelines -c homeassistant/package_constraints.txt
-
-        tar -czf $(Pipeline.Workspace)/venv.tar.gz venv
       displayName: 'Create Virtual Environment & Install Requirements'
       condition: and(succeeded(), ne(variables['CacheRestored'], 'true'))
-    - script: |
-        tar -xzf $(Pipeline.Workspace)/venv.tar.gz
-      displayName: 'Restore Virtual Environment'
-      condition: and(succeeded(), eq(variables['CacheRestored'], 'true'))
+    # Explicit Cache Save (instead of using RestoreAndSaveCache)
+    # Dont wait with cache save for all the other task in this job to complete (±30 minutes), other parallel jobs might utilize this 
+    - task: 1ESLighthouseEng.PipelineArtifactCaching.SaveCacheV1.SaveCache@1	
+      displayName: 'Save artifacts based on Requirements'	
+      inputs:	
+        keyfile: 'requirements_test_all.txt, .cache'	
+        targetfolder: './venv'	
+        vstsFeed: '$(ArtifactFeed)'
     - script: | 
         . venv/bin/activate
         pip install -e .
@@ -133,7 +124,7 @@ stages:
         set -e
 
         . venv/bin/activate
-        pytest --timeout=9 --durations=10 --junitxml=test-results.xml --cov --cov-report=html -qq -o console_output_style=count -p no:sugar tests
+        pytest --timeout=9 --durations=10 --junitxml=test-results.xml --cov --cov-report=xml -qq -o console_output_style=count -p no:sugar tests
         codecov --token=$(codecovToken)
       displayName: 'Run pytest for python $(python.container) / coverage'
       condition: and(succeeded(), eq(variables['python.container'], variables['PythonMain']))
@@ -145,7 +136,7 @@ stages:
     - task: PublishCodeCoverageResults@1
       inputs:
         codeCoverageTool: cobertura
-        summaryFileLocation: coverage.html
+        summaryFileLocation: coverage.xml
       displayName: 'publish coverage artifact'
       condition: and(succeeded(), eq(variables['python.container'], variables['PythonMain']))
 
@@ -158,14 +149,15 @@ stages:
       vmImage: 'ubuntu-latest'
     container: $[ variables['PythonMain'] ]
     steps:
-    - task: CacheBeta@0
+    - script: |
+        python --version > .cache
+      displayName: 'Set python $(PythonMain) for requirement cache'
+    - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreCacheV1.RestoreCache@1
+      displayName: 'Restore artifacts based on Requirements'
       inputs:
-        key: |
-          $(Build.SourcesDirectory)/requirements_all.txt
-          $(Build.SourcesDirectory)/requirements_test.txt
-          $(PythonMain)
-        path: $(Pipeline.Workspace)/venv.tar.gz
-        cacheHitVar: CacheRestored
+        keyfile: 'requirements_all.txt, requirements_test.txt, .cache'
+        targetfolder: './venv'
+        vstsFeed: '$(ArtifactFeed)' 
     - script: |
         set -e
         python -m venv venv
@@ -174,14 +166,14 @@ stages:
         pip install -U pip setuptools
         pip install -r requirements_all.txt -c homeassistant/package_constraints.txt
         pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
-
-        tar -czf $(Pipeline.Workspace)/venv.tar.gz venv
       displayName: 'Create Virtual Environment & Install Requirements'
       condition: and(succeeded(), ne(variables['CacheRestored'], 'true'))
-    - script: |
-        tar -xzf $(Pipeline.Workspace)/venv.tar.gz
-      displayName: 'Restore Virtual Environment'
-      condition: and(succeeded(), eq(variables['CacheRestored'], 'true'))
+    - task: 1ESLighthouseEng.PipelineArtifactCaching.SaveCacheV1.SaveCache@1
+      displayName: 'Save artifacts based on Requirements'
+      inputs:
+        keyfile: 'requirements_all.txt, requirements_test.txt, .cache'
+        targetfolder: './venv'
+        vstsFeed: '$(ArtifactFeed)'
     - script: | 
         . venv/bin/activate
         pip install -e .
