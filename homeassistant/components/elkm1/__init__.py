@@ -219,8 +219,20 @@ class ElkEntity(Entity):
         self._element = element
         self._prefix = elk_data['prefix']
         self._temperature_unit = elk_data['config']['temperature_unit']
-        self._unique_id = 'elkm1_{prefix}_{name}'.format(
-            prefix=self._prefix,
+        # unique_id starts with elkm1_ iff there is no prefix
+        # it starts with elkm1m_{prefix} iff there is a prefix
+        # this is to avoid a conflict between
+        # prefix=foo, name=bar  (which would be elkm1_foo_bar)
+        # and
+        # prefix="", name="foo bar" (which would be elkm1_foo_bar also)
+        # we could have used elkm1__foo_bar for the latter, but that
+        # would have been a breaking change
+        if self._prefix != "":
+            uid_start = 'elkm1m_{prefix}'.format(prefix=self._prefix)
+        else:
+            uid_start = 'elkm1'
+        self._unique_id = '{uid_start}_{name}'.format(
+            uid_start=uid_start,
             name=self._element.default_name('_')).lower()
 
     @property
