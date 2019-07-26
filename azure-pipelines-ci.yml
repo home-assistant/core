@@ -87,7 +87,7 @@ stages:
         key: |
           $(Build.SourcesDirectory)/requirements_test_all.txt
           $(python.container)
-        path: $(Build.SourcesDirectory)/venv
+        path: $(Pipeline.Workspace)/venv.tar.gz
         cacheHitVar: CacheRestored
     - script: |
         set -e
@@ -97,8 +97,14 @@ stages:
         pip install -U pip setuptools
         pip install -r requirements_test_all.txt -c homeassistant/package_constraints.txt
         pip install pytest-azurepipelines -c homeassistant/package_constraints.txt
+
+        tar -czf $(Pipeline.Workspace)/venv.tar.gz venv
       displayName: 'Create Virtual Environment & Install Requirements'
       condition: and(succeeded(), ne(variables['CacheRestored'], 'true'))
+    - script: |
+        tar -xzf $(Pipeline.Workspace)/venv.tar.gz
+      displayName: 'Restore Virtual Environment'
+      condition: and(succeeded(), eq(variables['CacheRestored'], 'true'))
     - script: | 
         . venv/bin/activate
         pip install -e .
@@ -143,7 +149,7 @@ stages:
           $(Build.SourcesDirectory)/requirements_all.txt
           $(Build.SourcesDirectory)/requirements_test.txt
           $(PythonMain)
-        path: $(Build.SourcesDirectory)/venv
+        path: $(Pipeline.Workspace)/venv.tar.gz
         cacheHitVar: CacheRestored
     - script: |
         set -e
@@ -153,8 +159,14 @@ stages:
         pip install -U pip setuptools
         pip install -r requirements_all.txt -c homeassistant/package_constraints.txt
         pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
+
+        tar -czf $(Pipeline.Workspace)/venv.tar.gz venv
       displayName: 'Create Virtual Environment & Install Requirements'
       condition: and(succeeded(), ne(variables['CacheRestored'], 'true'))
+    - script: |
+        tar -xzf $(Pipeline.Workspace)/venv.tar.gz
+      displayName: 'Restore Virtual Environment'
+      condition: and(succeeded(), eq(variables['CacheRestored'], 'true'))
     - script: | 
         . venv/bin/activate
         pip install -e .
