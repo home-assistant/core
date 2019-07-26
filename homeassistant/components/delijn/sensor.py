@@ -83,8 +83,10 @@ class DeLijnPublicTransportSensor(Entity):
 
             self._name = first['stopname']
             self._attributes['stopname'] = first['stopname']
-            self._attributes['line_number_public'] = first['line_number_public']
-            self._attributes['line_transport_type'] = first['line_transport_type']
+            self._attributes['line_number_public'] = first[
+                'line_number_public']
+            self._attributes['line_transport_type'] = first[
+                'line_transport_type']
             self._attributes['final_destination'] = first['final_destination']
             self._attributes['due_at_schedule'] = first['due_at_schedule']
             self._attributes['due_at_realtime'] = first['due_at_realtime']
