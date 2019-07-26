@@ -223,7 +223,7 @@ class ElkEntity(Entity):
         # it starts with elkm1m_{prefix} iff there is a prefix
         # this is to avoid a conflict between
         # prefix=foo, name=bar  (which would be elkm1_foo_bar)
-        # and
+        #   - and -
         # prefix="", name="foo bar" (which would be elkm1_foo_bar also)
         # we could have used elkm1__foo_bar for the latter, but that
         # would have been a breaking change
