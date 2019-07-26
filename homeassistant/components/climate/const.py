@@ -56,6 +56,9 @@ PRESET_SLEEP = 'sleep'
 # Device is reacting to activity (e.g. movement sensors)
 PRESET_ACTIVITY = 'activity'
 
+# Device is in manufacturer specific mode (e.g. setting the valve manually)
+PRESET_MANUFACTURER_SPECIFIC = 'Manufacturer Specific'
+
 
 # Possible fan state
 FAN_ON = "on"
