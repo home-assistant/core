@@ -173,7 +173,7 @@ class SeventeenTrackPackageSensor(Entity):
     @property
     def available(self):
         """Return whether the entity is available."""
-        return self._data.packages.get(self._tracking_number, None) is not None
+        return self._data.packages.get(self._tracking_number) is not None
 
     @property
     def device_state_attributes(self):
@@ -285,7 +285,7 @@ class SeventeenTrackData:
 
             new_packages = {p.tracking_number: p for p in packages}
 
-            to_add = set(new_packages.keys()) - set(self.packages.keys())
+            to_add = set(new_packages) - set(self.packages)
 
             _LOGGER.debug('Will add new tracking numbers: %s', to_add)
             if to_add:

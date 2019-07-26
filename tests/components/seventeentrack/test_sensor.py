@@ -1,20 +1,20 @@
 """Tests for the seventeentrack sensor."""
-
+import datetime
 import os
 import shutil
-import unittest
-from unittest.mock import patch
 from typing import Union
 
-from mock import MagicMock
+import pytest
+import mock
 from py17track.package import Package
 
 from homeassistant.components.seventeentrack.sensor \
-    import CONF_SHOW_ARCHIVED, CONF_SHOW_DELIVERED, SeventeenTrackData
+    import CONF_SHOW_ARCHIVED, CONF_SHOW_DELIVERED
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.setup import setup_component
+from homeassistant.util import utcnow
 from tests.common import get_test_home_assistant, MockDependency, \
-    get_test_config_dir
+    get_test_config_dir, fire_time_changed
 
 VALID_CONFIG_MINIMAL = {
     'sensor': {
@@ -114,269 +114,214 @@ class ProfileMock:
         return self.__class__.summary_data
 
 
-class SeventeenTrackDataMock(SeventeenTrackData):
-    """Remove the throttling on the async_update function."""
-
-    block = True
-    first = True
-
-    @classmethod
-    def reset(cls):
-        """Block update as throttling would do."""
-        SeventeenTrackDataMock.block = True
-        SeventeenTrackDataMock.first = True
-
-    def __init__(self, client, async_add_entities, scan_interval,
-                 show_archived, show_delivered):
-        """Override constructor to preserve _async_update."""
-        super().__init__(client, async_add_entities, scan_interval,
-                         show_archived, show_delivered)
-        self.async_update = self.new_async_update
-
-    async def new_async_update(self):
-        """Mock method for update."""
-        if SeventeenTrackDataMock.block and not SeventeenTrackDataMock.first:
-            return
-        SeventeenTrackDataMock.first = False
-        return await super()._async_update()
+@pytest.fixture(autouse=True, name="mock_py17track")
+def fixture_mock_py17track():
+    """Mock py17track dependency."""
+    with MockDependency('py17track'):
+        yield
 
 
-class TestSeventeentrack(unittest.TestCase):
-    """Main test class."""
+@pytest.fixture(autouse=True, name="mock_client")
+def fixture_mock_client(mock_py17track):
+    """Mock py17track client."""
+    with mock.patch('py17track.Client', new=ClientMock):
+        yield
+    ProfileMock.reset()
 
-    def setUp(self):
-        """Start hass."""
-        self.hass = get_test_home_assistant()
 
-    def tearDown(self):
-        """Clean stuff."""
-        ProfileMock.reset()
-        SeventeenTrackDataMock.reset()
-        self.hass.stop()
-        storage_dir = get_test_config_dir('.storage')
-        if os.path.isdir(storage_dir):
-            shutil.rmtree(storage_dir)
+@pytest.fixture(name="hass")
+def fixture_hass(mock_client):
+    """Create hass instance and clean it."""
+    hass = get_test_home_assistant()
+    hass.components.persistent_notification = mock.MagicMock()
+    yield hass
+    hass.stop()
+    storage_dir = get_test_config_dir('.storage')
+    if os.path.isdir(storage_dir):
+        shutil.rmtree(storage_dir)
 
-    def setup_component(self, config):
-        """Set up component using config."""
-        ProfileMock.summary_data = {}
-        assert setup_component(self.hass, 'sensor', config)
-        self.hass.block_till_done()
 
-    @MockDependency('py17track')
-    @patch('py17track.Client', new=ClientMock)
-    def test_full_valid_config(self, py17track_mock):
-        """Ensure everything starts correctly."""
-        assert setup_component(self.hass, 'sensor', VALID_CONFIG_FULL)
-        self.hass.block_till_done()
+def _setup_seventeentrack(hass, config=None, summary_data=None):
+    """Set up component using config."""
+    if not config:
+        config = VALID_CONFIG_MINIMAL
+    if not summary_data:
+        summary_data = {}
 
-        assert len(self.hass.states.entity_ids()) == len(
-            ProfileMock.summary_data.keys())
+    ProfileMock.summary_data = summary_data
+    assert setup_component(hass, 'sensor', config)
+    hass.block_till_done()
 
-    @MockDependency('py17track')
-    @patch('py17track.Client', new=ClientMock)
-    def test_valid_config(self, py17track_mock):
-        """Ensure everything starts correctly."""
-        assert setup_component(self.hass, 'sensor', VALID_CONFIG_MINIMAL)
-        self.hass.block_till_done()
 
-        assert len(self.hass.states.entity_ids()) == len(
-            ProfileMock.summary_data.keys())
+def _goto_future(hass, future=None):
+    """Move to future."""
+    if not future:
+        future = utcnow() + datetime.timedelta(minutes=10)
+    with mock.patch('homeassistant.util.utcnow', return_value=future):
+        fire_time_changed(hass, future)
+        hass.block_till_done()
 
-    @MockDependency('py17track')
-    @patch('py17track.Client', new=ClientMock)
-    def test_invalid_config(self, py17track_mock):
-        """Ensure nothing is created when config is wrong."""
-        assert setup_component(self.hass, 'sensor', INVALID_CONFIG)
-        self.hass.block_till_done()
 
-        assert not self.hass.states.entity_ids()
+def test_full_valid_config(hass):
+    """Ensure everything starts correctly."""
+    assert setup_component(hass, 'sensor', VALID_CONFIG_FULL)
+    hass.block_till_done()
 
-    @MockDependency('py17track')
-    @patch('py17track.Client', new=ClientMock)
-    @patch('homeassistant.components.seventeentrack.sensor.SeventeenTrackData',
-           new=SeventeenTrackDataMock)
-    def test_add_package(self, py17track_mock):
-        """Ensure package is added correctly when user add a new package."""
-        package = Package('456', 206, 'friendly name 1', 'info text 1',
-                          'location 1', 206, 2)
-        ProfileMock.package_list = [package]
+    assert len(hass.states.entity_ids()) == len(
+        ProfileMock.summary_data.keys())
 
-        self.setup_component(VALID_CONFIG_MINIMAL)
-        assert self.hass.states.get(
-            'sensor.seventeentrack_package_456') is not None
-        assert len(self.hass.states.entity_ids()) == 1
 
-        package2 = Package('789', 206, 'friendly name 2', 'info text 2',
-                           'location 2', 206, 2)
-        ProfileMock.package_list = [package, package2]
-        SeventeenTrackDataMock.reset()
+def test_valid_config(hass):
+    """Ensure everything starts correctly."""
+    assert setup_component(hass, 'sensor', VALID_CONFIG_MINIMAL)
+    hass.block_till_done()
 
-        self.hass.async_create_task(
-            self.hass.data['entity_components']['sensor'].get_entity(
-                'sensor.seventeentrack_package_456')
-            .async_update_ha_state(force_refresh=True))
-        self.hass.block_till_done()
+    assert len(hass.states.entity_ids()) == len(
+        ProfileMock.summary_data.keys())
 
-        assert self.hass.states.get(
-            'sensor.seventeentrack_package_789') is not None
-        assert len(self.hass.states.entity_ids()) == 2
 
-    @MockDependency('py17track')
-    @patch('py17track.Client', new=ClientMock)
-    @patch('homeassistant.components.seventeentrack.sensor.SeventeenTrackData',
-           new=SeventeenTrackDataMock)
-    def test_remove_package(self, py17track_mock):
-        """Ensure entity is not there anymore if package is not there."""
-        package1 = Package('456', 206, 'friendly name 1', 'info text 1',
-                           'location 1', 206, 2)
-        package2 = Package('789', 206, 'friendly name 2', 'info text 2',
-                           'location 2', 206, 2)
+def test_invalid_config(hass):
+    """Ensure nothing is created when config is wrong."""
+    assert setup_component(hass, 'sensor', INVALID_CONFIG)
+    hass.block_till_done()
 
-        ProfileMock.package_list = [package1, package2]
+    assert not hass.states.entity_ids()
 
-        self.setup_component(VALID_CONFIG_MINIMAL)
 
-        assert self.hass.states.get(
-            'sensor.seventeentrack_package_456') is not None
-        assert self.hass.states.get(
-            'sensor.seventeentrack_package_789') is not None
-        assert len(self.hass.states.entity_ids()) == 2
+def test_add_package(hass):
+    """Ensure package is added correctly when user add a new package."""
+    package = Package('456', 206, 'friendly name 1', 'info text 1',
+                      'location 1', 206, 2)
+    ProfileMock.package_list = [package]
 
-        ProfileMock.package_list = [package2]
-        SeventeenTrackDataMock.reset()
+    _setup_seventeentrack(hass)
+    assert hass.states.get(
+        'sensor.seventeentrack_package_456') is not None
+    assert len(hass.states.entity_ids()) == 1
 
-        self.hass.async_create_task(
-            self.hass.data['entity_components']['sensor'].get_entity(
-                'sensor.seventeentrack_package_456')
-            .async_update_ha_state(force_refresh=True))
-        self.hass.block_till_done()
+    package2 = Package('789', 206, 'friendly name 2', 'info text 2',
+                       'location 2', 206, 2)
+    ProfileMock.package_list = [package, package2]
 
-        assert self.hass.states.get(
-            'sensor.seventeentrack_package_456') is None
+    _goto_future(hass)
 
-        assert self.hass.states.get(
-            'sensor.seventeentrack_package_789') is not None
-        assert len(self.hass.states.entity_ids()) == 1
+    assert hass.states.get(
+        'sensor.seventeentrack_package_789') is not None
+    assert len(hass.states.entity_ids()) == 2
 
-    @MockDependency('py17track')
-    @patch('py17track.Client', new=ClientMock)
-    @patch('homeassistant.components.seventeentrack.sensor.SeventeenTrackData',
-           new=SeventeenTrackDataMock)
-    def test_friendly_name_changed(self, py17track_mock):
-        """Test friendly name change."""
-        package = Package('456', 206, 'friendly name 1', 'info text 1',
-                          'location 1', 206, 2)
-        ProfileMock.package_list = [package]
 
-        self.setup_component(VALID_CONFIG_MINIMAL)
+def test_remove_package(hass):
+    """Ensure entity is not there anymore if package is not there."""
+    package1 = Package('456', 206, 'friendly name 1', 'info text 1',
+                       'location 1', 206, 2)
+    package2 = Package('789', 206, 'friendly name 2', 'info text 2',
+                       'location 2', 206, 2)
 
-        assert self.hass.states.get(
-            'sensor.seventeentrack_package_456') is not None
-        assert len(self.hass.states.entity_ids()) == 1
+    ProfileMock.package_list = [package1, package2]
 
-        package = Package('456', 206, 'friendly name 2', 'info text 1',
-                          'location 1', 206, 2)
-        ProfileMock.package_list = [package]
-        SeventeenTrackDataMock.reset()
+    _setup_seventeentrack(hass)
 
-        self.hass.async_create_task(
-            self.hass.data['entity_components']['sensor'].get_entity(
-                'sensor.seventeentrack_package_456')
-            .async_update_ha_state(force_refresh=True))
-        self.hass.block_till_done()
+    assert hass.states.get(
+        'sensor.seventeentrack_package_456') is not None
+    assert hass.states.get(
+        'sensor.seventeentrack_package_789') is not None
+    assert len(hass.states.entity_ids()) == 2
 
-        assert self.hass.states.get(
-            'sensor.seventeentrack_package_456') is not None
-        entity = self.hass.data['entity_components']['sensor'].get_entity(
-            'sensor.seventeentrack_package_456')
-        assert entity.name == 'Seventeentrack Package: friendly name 2'
-        assert len(self.hass.states.entity_ids()) == 1
+    ProfileMock.package_list = [package2]
 
-    @MockDependency('py17track')
-    @patch('py17track.Client', new=ClientMock)
-    @patch('homeassistant.components.seventeentrack.sensor.SeventeenTrackData',
-           new=SeventeenTrackDataMock)
-    def test_delivered_not_shown(self, py17track_mock):
-        """Ensure delivered packages are not shown."""
-        package = Package('456', 206, 'friendly name 1', 'info text 1',
-                          'location 1', 206, 2, 40)
-        ProfileMock.package_list = [package]
+    _goto_future(hass)
 
-        self.hass.components.persistent_notification = MagicMock()
-        self.setup_component(VALID_CONFIG_FULL_NO_DELIVERED)
-        assert not self.hass.states.entity_ids()
-        self.hass.components.persistent_notification.create.assert_called()
+    assert hass.states.get(
+        'sensor.seventeentrack_package_456') is None
+    assert hass.states.get(
+        'sensor.seventeentrack_package_789') is not None
+    assert len(hass.states.entity_ids()) == 1
 
-    @MockDependency('py17track')
-    @patch('py17track.Client', new=ClientMock)
-    @patch('homeassistant.components.seventeentrack.sensor.SeventeenTrackData',
-           new=SeventeenTrackDataMock)
-    def test_delivered_shown(self, py17track_mock):
-        """Ensure delivered packages are show when user choose to show them."""
-        package = Package('456', 206, 'friendly name 1', 'info text 1',
-                          'location 1', 206, 2, 40)
-        ProfileMock.package_list = [package]
-        self.hass.components.persistent_notification = MagicMock()
-        self.setup_component(VALID_CONFIG_FULL)
 
-        assert self.hass.states.get(
-            'sensor.seventeentrack_package_456') is not None
-        assert len(self.hass.states.entity_ids()) == 1
-        self.hass.components.persistent_notification.create.assert_not_called()
+def test_friendly_name_changed(hass):
+    """Test friendly name change."""
+    package = Package('456', 206, 'friendly name 1', 'info text 1',
+                      'location 1', 206, 2)
+    ProfileMock.package_list = [package]
 
-    @MockDependency('py17track')
-    @patch('py17track.Client', new=ClientMock)
-    @patch('homeassistant.components.seventeentrack.sensor.SeventeenTrackData',
-           new=SeventeenTrackDataMock)
-    def test_becomes_delivered_not_shown_notification(self, py17track_mock):
-        """Ensure notification is triggered when package becomes delivered."""
-        package = Package('456', 206, 'friendly name 1', 'info text 1',
-                          'location 1', 206, 2)
-        ProfileMock.package_list = [package]
+    _setup_seventeentrack(hass)
 
-        self.setup_component(VALID_CONFIG_FULL_NO_DELIVERED)
+    assert hass.states.get(
+        'sensor.seventeentrack_package_456') is not None
+    assert len(hass.states.entity_ids()) == 1
 
-        assert self.hass.states.get(
-            'sensor.seventeentrack_package_456') is not None
-        assert len(self.hass.states.entity_ids()) == 1
+    package = Package('456', 206, 'friendly name 2', 'info text 1',
+                      'location 1', 206, 2)
+    ProfileMock.package_list = [package]
 
-        package_delivered = Package('456', 206, 'friendly name 1',
-                                    'info text 1', 'location 1', 206, 2, 40)
-        ProfileMock.package_list = [package_delivered]
-        self.hass.components.persistent_notification = MagicMock()
-        SeventeenTrackDataMock.reset()
+    _goto_future(hass)
 
-        self.hass.async_create_task(
-            self.hass.data['entity_components']['sensor'].get_entity(
-                'sensor.seventeentrack_package_456')
-            .async_update_ha_state(force_refresh=True))
-        self.hass.block_till_done()
+    assert hass.states.get(
+        'sensor.seventeentrack_package_456') is not None
+    entity = hass.data['entity_components']['sensor'].get_entity(
+        'sensor.seventeentrack_package_456')
+    assert entity.name == 'Seventeentrack Package: friendly name 2'
+    assert len(hass.states.entity_ids()) == 1
 
-        self.hass.components.persistent_notification.create.assert_called()
 
-    @MockDependency('py17track')
-    @patch('py17track.Client', new=ClientMock)
-    @patch('homeassistant.components.seventeentrack.sensor.SeventeenTrackData',
-           new=SeventeenTrackDataMock)
-    def test_summary_no_correctly_updated(self, py17track_mock):
-        """Ensure summary entities are not duplicated."""
-        assert setup_component(self.hass, 'sensor', VALID_CONFIG_MINIMAL)
-        self.hass.block_till_done()
+def test_delivered_not_shown(hass):
+    """Ensure delivered packages are not shown."""
+    package = Package('456', 206, 'friendly name 1', 'info text 1',
+                      'location 1', 206, 2, 40)
+    ProfileMock.package_list = [package]
 
-        assert len(self.hass.states.entity_ids()) == 7
-        for state in self.hass.states.all():
-            assert state.state == '0'
+    _setup_seventeentrack(hass, VALID_CONFIG_FULL_NO_DELIVERED)
+    assert not hass.states.entity_ids()
+    hass.components.persistent_notification.create.assert_called()
 
-        SeventeenTrackDataMock.reset()
-        ProfileMock.summary_data = NEW_SUMMARY_DATA
 
-        for entity_id in self.hass.states.entity_ids():
-            self.hass.async_create_task(
-                self.hass.data['entity_components']['sensor'].get_entity(
-                    entity_id).async_update_ha_state(force_refresh=True))
-        self.hass.block_till_done()
+def test_delivered_shown(hass):
+    """Ensure delivered packages are show when user choose to show them."""
+    package = Package('456', 206, 'friendly name 1', 'info text 1',
+                      'location 1', 206, 2, 40)
+    ProfileMock.package_list = [package]
+    _setup_seventeentrack(hass, VALID_CONFIG_FULL)
 
-        assert len(self.hass.states.entity_ids()) == 7
-        for state in self.hass.states.all():
-            assert state.state == '1'
+    assert hass.states.get(
+        'sensor.seventeentrack_package_456') is not None
+    assert len(hass.states.entity_ids()) == 1
+    hass.components.persistent_notification.create.assert_not_called()
+
+
+def test_becomes_delivered_not_shown_notification(hass):
+    """Ensure notification is triggered when package becomes delivered."""
+    package = Package('456', 206, 'friendly name 1', 'info text 1',
+                      'location 1', 206, 2)
+    ProfileMock.package_list = [package]
+
+    _setup_seventeentrack(hass, VALID_CONFIG_FULL_NO_DELIVERED)
+
+    assert hass.states.get(
+        'sensor.seventeentrack_package_456') is not None
+    assert len(hass.states.entity_ids()) == 1
+
+    package_delivered = Package('456', 206, 'friendly name 1',
+                                'info text 1', 'location 1', 206, 2, 40)
+    ProfileMock.package_list = [package_delivered]
+
+    _goto_future(hass)
+
+    hass.components.persistent_notification.create.assert_called()
+    assert not hass.states.entity_ids()
+
+
+def test_summary_correctly_updated(hass):
+    """Ensure summary entities are not duplicated."""
+    _setup_seventeentrack(hass, summary_data=DEFAULT_SUMMARY)
+
+    assert len(hass.states.entity_ids()) == 7
+    for state in hass.states.all():
+        assert state.state == '0'
+
+    ProfileMock.summary_data = NEW_SUMMARY_DATA
+
+    _goto_future(hass)
+
+    assert len(hass.states.entity_ids()) == 7
+    for state in hass.states.all():
+        assert state.state == '1'
