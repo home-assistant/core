@@ -165,6 +165,7 @@ TEST_REQUIREMENTS = (
     "zigpy-homeassistant",
     "bellows-homeassistant",
     "py17track",
+    "vr900-connector",
 )
 
 IGNORE_PIN = ("colorlog>2.1,<3", "keyring>=9.3,<10.0", "urllib3")
