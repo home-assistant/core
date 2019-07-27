@@ -269,7 +269,7 @@ class HomeAssistantHTTP:
         for the redirect, otherwise it has to be a string with placeholders in
         rule syntax.
         """
-        def redirect(request):
+        async def redirect(request):
             """Redirect to location."""
             raise HTTPMovedPermanently(redirect_to)
 
