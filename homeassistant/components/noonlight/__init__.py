@@ -175,9 +175,8 @@ class NoonlightIntegration():
                                   .format(self.access_token_expiry,
                                           self.access_token_expires_in
                                               .total_seconds()/3600.0))
-                    self.hass.bus.fire(EVENT_NOONLIGHT_TOKEN_REFRESHED, {
-                            'token': self.client._token
-                        })
+                    self.hass.helpers.dispatcher.async_dispatcher_send(
+                        EVENT_NOONLIGHT_TOKEN_REFRESHED)
                     return True
                 raise NoonlightException("unexpected token_response: {}"
                                 .format(token_response))

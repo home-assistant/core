@@ -27,11 +27,11 @@ async def async_setup_platform(
     noonlight_switch = NoonlightSwitch(noonlight_integration)
     async_add_entities([noonlight_switch])
 
-    def noonlight_token_refreshed(event):
+    def noonlight_token_refreshed():
         noonlight_switch.schedule_update_ha_state()
 
-    hass.bus.async_listen(EVENT_NOONLIGHT_TOKEN_REFRESHED,
-                          noonlight_token_refreshed)
+    hass.helpers.dispatcher.async_dispatcher_connect(
+        EVENT_NOONLIGHT_TOKEN_REFRESHED, noonlight_token_refreshed)
 
 
 class NoonlightSwitch(SwitchDevice):
