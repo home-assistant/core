@@ -1,9 +1,10 @@
 """Code to handle a Firmata board."""
 import logging
 
+from pymata_aio.pymata_core import PymataCore
+
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.entity import Entity
-from pymata_aio.pymata_core import PymataCore
 
 from .const import (CONF_ARDUINO_WAIT, CONF_HANDSHAKE, CONF_PORT, CONF_REMOTE,
                     CONF_SERIAL_PORT, CONF_SLEEP_TUNE, CONF_SWITCHES, DOMAIN,
@@ -136,6 +137,7 @@ class FirmataBoardPin(Entity):
         self._identifiers = {
             (DOMAIN, self._unique_id)
         }
+        self._attributes = {}
 
     def _set_attributes(self):
         """Set the entity's attributes."""
@@ -186,6 +188,7 @@ class FirmataBoardPin(Entity):
 
     @property
     def device_info(self) -> dict:
+        """Return device info."""
         device_info = {
             'name': self.name
         }

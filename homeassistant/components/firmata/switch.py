@@ -2,12 +2,13 @@
 
 import logging
 
-from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import CONF_NAME
 from pymata_aio.constants import Constants as PymataConstants
 
+from homeassistant.components.switch import SwitchDevice
+from homeassistant.const import CONF_NAME
+
 from .board import FirmataBoardPin
-from .const import (CONF_INITIAL_STATE, CONF_NEGATE_STATE, CONF_PIN_MODE,
+from .const import (CONF_INITIAL_STATE, CONF_NEGATE_STATE,
                     CONF_PIN_MODE_OUTPUT, DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,6 +33,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
                             switch.pin)
 
     async_add_devices(new_entities)
+
 
 class FirmataDigitalOut(FirmataBoardPin, SwitchDevice):
     """Representation of a Firmata Digital Output Pin."""
@@ -60,9 +62,10 @@ class FirmataDigitalOut(FirmataBoardPin, SwitchDevice):
         """Return true if switch is on."""
         return self._state
 
-    async def async_turn_on(self, update_state=True, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn on switch."""
         _LOGGER.debug("Turning switch %s on", self._name)
+        update_state = kwargs.get('update_state', True)
         new_pin_state = True and not self._conf[CONF_NEGATE_STATE]
         await self._board.api.digital_pin_write(self._firmata_pin,
                                                 new_pin_state)
@@ -70,9 +73,10 @@ class FirmataDigitalOut(FirmataBoardPin, SwitchDevice):
         if update_state:
             self.async_write_ha_state()
 
-    async def async_turn_off(self, update_state=True, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn off switch."""
         _LOGGER.debug("Turning switch %s off", self._name)
+        update_state = kwargs.get('update_state', True)
         new_pin_state = False or self._conf[CONF_NEGATE_STATE]
         await self._board.api.digital_pin_write(self._firmata_pin,
                                                 new_pin_state)

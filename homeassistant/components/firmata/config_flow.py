@@ -8,11 +8,13 @@ from homeassistant.core import callback
 
 from .const import DOMAIN, CONF_SERIAL_PORT, CONF_PORT
 
+
 @callback
 def configured_boards(hass):
     """Return a set of all configured boards."""
     return {entry.data[CONF_NAME]: entry for entry
             in hass.config_entries.async_entries(DOMAIN)}
+
 
 @config_entries.HANDLERS.register(DOMAIN)
 class FirmataFlowHandler(config_entries.ConfigFlow):
@@ -38,7 +40,6 @@ class FirmataFlowHandler(config_entries.ConfigFlow):
         If more than one board is found let user choose board to link.
         If no board is found allow user to manually input configuration.
         """
-
         if user_input is not None:
             self.firmata_config = user_input
             return await self._create_entry()

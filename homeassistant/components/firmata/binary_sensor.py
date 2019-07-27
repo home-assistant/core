@@ -2,18 +2,20 @@
 
 import logging
 
+from pymata_aio.constants import Constants as PymataConstants
+
 from homeassistant.core import callback
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import CONF_NAME, ATTR_TRIPPED
-from pymata_aio.constants import Constants as PymataConstants
 
 from .board import FirmataBoardPin
-from .const import (CONF_NEGATE_STATE, CONF_PIN_MODE, CONF_PIN_MODE_INPUT,
+from .const import (CONF_NEGATE_STATE, CONF_PIN_MODE_INPUT,
                     CONF_PIN_MODE_PULLUP, DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
 PYMATA_ASYNC = PymataConstants.CB_TYPE_ASYNCIO
+
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the Firmata binary sensors."""
@@ -35,6 +37,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 %d', binary_sensor.pin)
 
     async_add_devices(new_entities)
+
 
 class FirmataDigitalBinaryInput(FirmataBoardPin, BinarySensorDevice):
     """Representation of a Firmata Digital Input Pin."""
@@ -71,6 +74,7 @@ sensor %s', str(self._pin), self._name)
 
     @callback
     async def latch_callback(self, data):
+        """Update pin state on callback."""
         if data[0] == self._firmata_pin:
             new_state = bool(data[1])
             if self._conf[CONF_NEGATE_STATE]:

@@ -5,7 +5,6 @@ LOGGER = logging.getLogger('.')
 
 CONF_ARDUINO_WAIT = 'arduino_wait'
 CONF_BINARY_SENSORS = 'binary_sensors'
-CONF_DIGITAL_PULLUP = 'pullup'
 CONF_HANDSHAKE = 'handshake'
 CONF_INITIAL_STATE = 'initial'
 CONF_NAME = 'name'

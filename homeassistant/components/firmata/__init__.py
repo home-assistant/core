@@ -6,10 +6,9 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, CONF_NAME
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
 
 from .board import FirmataBoard
-from . import config_flow
+from . import config_flow  # noqa: F401
 from .const import (CONF_ARDUINO_WAIT, CONF_HANDSHAKE, CONF_INITIAL_STATE,
                     CONF_NEGATE_STATE, CONF_PIN, CONF_PORT, CONF_REMOTE,
                     CONF_SERIAL_PORT, CONF_SLEEP_TUNE, CONF_SWITCHES,
@@ -87,6 +86,7 @@ async def async_setup(hass, config):
             ))
     return True
 
+
 async def async_setup_entry(hass, config_entry):
     """Set up a Firmata board for a config entry.
 
@@ -107,10 +107,10 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DOMAIN][board.name] = board
 
     await board.async_update_device_registry()
-    if (CONF_BINARY_SENSORS in config_entry.data):
+    if CONF_BINARY_SENSORS in config_entry.data:
         hass.async_add_job(hass.config_entries.async_forward_entry_setup(
             config_entry, 'binary_sensor'))
-    if (CONF_SWITCHES in config_entry.data):
+    if CONF_SWITCHES in config_entry.data:
         hass.async_add_job(hass.config_entries.async_forward_entry_setup(
             config_entry, 'switch'))
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, board.async_reset)
@@ -123,6 +123,5 @@ async def async_populate_options(hass, config_entry):
     Called by setup_entry and unload_entry.
     Makes sure there is always one board available.
     """
-
     options = {}
     hass.config_entries.async_update_entry(config_entry, options=options)
