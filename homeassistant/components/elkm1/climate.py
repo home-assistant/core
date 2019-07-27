@@ -21,9 +21,14 @@ async def async_setup_platform(hass, config, async_add_entities,
     if discovery_info is None:
         return
 
-    elk = hass.data[ELK_DOMAIN]['elk']
-    async_add_entities(create_elk_entities(
-        hass, elk.thermostats, 'thermostat', ElkThermostat, []), True)
+    elk_datas = hass.data[ELK_DOMAIN]
+    entities = []
+    for elk_data in elk_datas.values():
+        elk = elk_data['elk']
+        entities = create_elk_entities(elk_data, elk.thermostats,
+                                       'thermostat', ElkThermostat,
+                                       entities)
+    async_add_entities(entities, True)
 
 
 class ElkThermostat(ElkEntity, ClimateDevice):
