@@ -267,7 +267,7 @@ async def async_setup_entry(hass, config_entry):
     # Merge config entry and yaml config
     config = config_entry.data
     if DATA_ZWAVE_CONFIG in hass.data:
-        config.update(hass.data[DATA_ZWAVE_CONFIG])
+        config = {**config, **hass.data[DATA_ZWAVE_CONFIG]}
 
     # Update hass.data with merged config so we can access it elsewhere
     hass.data[DATA_ZWAVE_CONFIG] = config
