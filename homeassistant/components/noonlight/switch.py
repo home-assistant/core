@@ -23,8 +23,8 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Create a switch to create an alarm with the Noonlight service"""
-    noonlight_platform = hass.data[DOMAIN]
-    noonlight_switch = NoonlightSwitch(noonlight_platform)
+    noonlight_integration = hass.data[DOMAIN]
+    noonlight_switch = NoonlightSwitch(noonlight_integration)
     async_add_entities([noonlight_switch])
 
     def noonlight_token_refreshed(event):
@@ -37,9 +37,9 @@ async def async_setup_platform(
 class NoonlightSwitch(SwitchDevice):
     """Representation of a Noonlight alarm switch."""
 
-    def __init__(self, noonlight_platform):
+    def __init__(self, noonlight_integration):
         """Initialize the Noonlight switch."""
-        self.noonlight = noonlight_platform
+        self.noonlight = noonlight_integration
         self._name = DEFAULT_NAME
         self._alarm = None
         self._state = False
