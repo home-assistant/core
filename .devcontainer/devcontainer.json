@@ -20,6 +20,12 @@
 		"files.trimTrailingWhitespace": true,
 		"editor.rulers": [80],
 		"terminal.integrated.shell.linux": "/bin/bash",
-		"yaml.customTags": ["!secret scalar"]
+		"yaml.customTags": [
+			"!secret scalar",
+			"!include_dir_named scalar",
+			"!include_dir_list scalar",
+			"!include_dir_merge_list scalar",
+			"!include_dir_merge_named scalar"
+		]
 	}
 }
