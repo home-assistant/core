@@ -115,9 +115,8 @@ class LovelaceStorage:
         if self._data is None:
             await self._load()
         self._data['config'] = config
-        await self._store.async_save(self._data)
-
         self._hass.bus.async_fire(EVENT_LOVELACE_UPDATED)
+        await self._store.async_save(self._data)
 
     async def _load(self):
         """Load the config."""
@@ -148,7 +147,12 @@ class LovelaceYAML:
 
     async def async_load(self, force):
         """Load config."""
-        return await self.hass.async_add_executor_job(self._load_config, force)
+        is_updated, config = await self.hass.async_add_executor_job(
+            self._load_config, force
+        )
+        if is_updated:
+            self.hass.bus.async_fire(EVENT_LOVELACE_UPDATED)
+        return config
 
     def _load_config(self, force):
         """Load the actual config."""
@@ -158,7 +162,9 @@ class LovelaceYAML:
             config, last_update = self._cache
             modtime = os.path.getmtime(fname)
             if config and last_update > modtime:
-                return config
+                return False, config
+
+        is_updated = self._cache is not None
 
         try:
             config = load_yaml(fname)
@@ -166,7 +172,7 @@ class LovelaceYAML:
             raise ConfigNotFound from None
 
         self._cache = (config, time.time())
-        return config
+        return is_updated, config
 
     async def async_save(self, config):
         """Save config."""

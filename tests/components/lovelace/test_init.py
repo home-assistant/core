@@ -4,7 +4,7 @@ from unittest.mock import patch
 from homeassistant.setup import async_setup_component
 from homeassistant.components import frontend, lovelace
 
-from tests.common import get_system_health_info
+from tests.common import get_system_health_info, async_capture_events
 
 
 async def test_lovelace_from_storage(hass, hass_ws_client, hass_storage):
@@ -26,6 +26,8 @@ async def test_lovelace_from_storage(hass, hass_ws_client, hass_storage):
     assert response['error']['code'] == 'config_not_found'
 
     # Store new config
+    events = async_capture_events(hass, lovelace.EVENT_LOVELACE_UPDATED)
+
     await client.send_json({
         'id': 6,
         'type': 'lovelace/config/save',
@@ -38,6 +40,7 @@ async def test_lovelace_from_storage(hass, hass_ws_client, hass_storage):
     assert hass_storage[lovelace.STORAGE_KEY]['data'] == {
         'config': {'yo': 'hello'}
     }
+    assert len(events) == 1
 
     # Load new config
     await client.send_json({
@@ -108,6 +111,8 @@ async def test_lovelace_from_yaml(hass, hass_ws_client):
     assert not response['success']
 
     # Patch data
+    events = async_capture_events(hass, lovelace.EVENT_LOVELACE_UPDATED)
+
     with patch('homeassistant.components.lovelace.load_yaml', return_value={
         'hello': 'yo'
     }):
@@ -119,6 +124,24 @@ async def test_lovelace_from_yaml(hass, hass_ws_client):
 
     assert response['success']
     assert response['result'] == {'hello': 'yo'}
+
+    assert len(events) == 0
+
+    # Fake new data to see we fire event
+    with patch('homeassistant.components.lovelace.load_yaml', return_value={
+        'hello': 'yo2'
+    }):
+        await client.send_json({
+            'id': 8,
+            'type': 'lovelace/config',
+            'force': True,
+        })
+        response = await client.receive_json()
+
+    assert response['success']
+    assert response['result'] == {'hello': 'yo2'}
+
+    assert len(events) == 1
 
 
 async def test_system_health_info_autogen(hass):
