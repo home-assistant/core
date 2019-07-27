@@ -1,5 +1,6 @@
 """Support for Switchbot."""
 import logging
+from typing import Any, Dict
 
 import voluptuous as vol
 
@@ -36,6 +37,7 @@ class SwitchBot(SwitchDevice, RestoreEntity):
         import switchbot
 
         self._state = None
+        self._last_run_success = None
         self._name = name
         self._mac = mac
         self._device = switchbot.Switchbot(mac=mac)
@@ -52,11 +54,17 @@ class SwitchBot(SwitchDevice, RestoreEntity):
         """Turn device on."""
         if self._device.turn_on():
             self._state = True
+            self._last_run_success = True
+        else:
+            self._last_run_success = False
 
     def turn_off(self, **kwargs) -> None:
         """Turn device off."""
         if self._device.turn_off():
             self._state = False
+            self._last_run_success = True
+        else:
+            self._last_run_success = False
 
     @property
     def assumed_state(self) -> bool:
@@ -77,3 +85,8 @@ class SwitchBot(SwitchDevice, RestoreEntity):
     def name(self) -> str:
         """Return the name of the switch."""
         return self._name
+
+    @property
+    def device_state_attributes(self) -> Dict[str, Any]:
+        """Return the state attributes."""
+        return {'last_run_success': self._last_run_success}
