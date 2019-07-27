@@ -40,8 +40,11 @@ class LcnOutputsCover(LcnDevice, CoverDevice):
 
         self.output_ids = [pypck.lcn_defs.OutputPort['OUTPUTUP'].value,
                            pypck.lcn_defs.OutputPort['OUTPUTDOWN'].value]
-        self.reverse_time = pypck.lcn_defs.MotorReverseTime[
-            config[CONF_REVERSE_TIME]]
+        if CONF_REVERSE_TIME in config:
+            self.reverse_time = pypck.lcn_defs.MotorReverseTime[
+                config[CONF_REVERSE_TIME]]
+        else:
+            self.reverse_time = None
         self._closed = None
         self.state_up = False
         self.state_down = False
@@ -65,7 +68,7 @@ class LcnOutputsCover(LcnDevice, CoverDevice):
 
         state = pypck.lcn_defs.MotorStateModifier.DOWN
         self.address_connection.control_motors_outputs(
-            state, self.reverse_time)
+            state)
         await self.async_update_ha_state()
 
     async def async_open_cover(self, **kwargs):

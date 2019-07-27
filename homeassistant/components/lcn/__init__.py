@@ -4,12 +4,12 @@ import logging
 import pypck
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
 from homeassistant.const import (
     CONF_ADDRESS, CONF_BINARY_SENSORS, CONF_COVERS, CONF_HOST, CONF_LIGHTS,
     CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_SENSORS, CONF_SWITCHES,
     CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT)
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
 
@@ -52,8 +52,8 @@ COVERS_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_ADDRESS): is_address,
     vol.Required(CONF_MOTOR): vol.All(vol.Upper, vol.In(MOTOR_PORTS)),
-    vol.Optional(CONF_REVERSE_TIME, default=None):
-        vol.Any(vol.All(vol.Upper, vol.In(MOTOR_REVERSE_TIME)), None)
+    vol.Optional(CONF_REVERSE_TIME): vol.All(vol.Upper,
+                                             vol.In(MOTOR_REVERSE_TIME))
 })
 
 LIGHTS_SCHEMA = vol.Schema({
