@@ -151,6 +151,7 @@ FLOWS = [
     'dialogflow',
     'esphome',
     'emulated_roku',
+    'firmata',
     'geofency',
     'gpslogger',
     'hangouts',
