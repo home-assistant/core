@@ -32,7 +32,7 @@ from .const import (
     CONF_USB_STICK_PATH, CONF_CONFIG_PATH, CONF_NETWORK_KEY,
     DEFAULT_CONF_AUTOHEAL, DEFAULT_CONF_USB_STICK_PATH,
     DEFAULT_POLLING_INTERVAL, DEFAULT_DEBUG, DOMAIN,
-    DATA_DEVICES, DATA_NETWORK, DATA_ENTITY_VALUES)
+    DATA_DEVICES, DATA_NETWORK, DATA_ENTITY_VALUES, DATA_ZWAVE_CONFIG)
 from .node_entity import ZWaveBaseEntity, ZWaveNodeEntity
 from . import workaround
 from .discovery_schemas import DISCOVERY_SCHEMAS
@@ -55,8 +55,6 @@ CONF_REFRESH_DELAY = 'delay'
 CONF_DEVICE_CONFIG = 'device_config'
 CONF_DEVICE_CONFIG_GLOB = 'device_config_glob'
 CONF_DEVICE_CONFIG_DOMAIN = 'device_config_domain'
-
-DATA_ZWAVE_CONFIG = 'zwave_config'
 
 DEFAULT_CONF_IGNORED = False
 DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS = False
@@ -266,9 +264,13 @@ async def async_setup_entry(hass, config_entry):
     from openzwave.network import ZWaveNetwork
     from openzwave.group import ZWaveGroup
 
-    config = {}
+    # Merge config entry and yaml config
+    config = config_entry.data
     if DATA_ZWAVE_CONFIG in hass.data:
-        config = hass.data[DATA_ZWAVE_CONFIG]
+        config = {**config, **hass.data[DATA_ZWAVE_CONFIG]}
+
+    # Update hass.data with merged config so we can access it elsewhere
+    hass.data[DATA_ZWAVE_CONFIG] = config
 
     # Load configuration
     use_debug = config.get(CONF_DEBUG, DEFAULT_DEBUG)
@@ -279,8 +281,7 @@ async def async_setup_entry(hass, config_entry):
         config.get(CONF_DEVICE_CONFIG_DOMAIN),
         config.get(CONF_DEVICE_CONFIG_GLOB))
 
-    usb_path = config.get(
-        CONF_USB_STICK_PATH, config_entry.data[CONF_USB_STICK_PATH])
+    usb_path = config[CONF_USB_STICK_PATH]
 
     _LOGGER.info('Z-Wave USB path is %s', usb_path)
 
@@ -292,8 +293,8 @@ async def async_setup_entry(hass, config_entry):
 
     options.set_console_output(use_debug)
 
-    if config_entry.data.get(CONF_NETWORK_KEY):
-        options.addOption("NetworkKey", config_entry.data[CONF_NETWORK_KEY])
+    if config.get(CONF_NETWORK_KEY):
+        options.addOption("NetworkKey", config[CONF_NETWORK_KEY])
 
     await hass.async_add_executor_job(options.lock)
     network = hass.data[DATA_NETWORK] = ZWaveNetwork(options, autostart=False)
