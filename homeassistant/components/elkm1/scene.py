@@ -9,8 +9,12 @@ async def async_setup_platform(
     """Create the Elk-M1 scene platform."""
     if discovery_info is None:
         return
-    elk = hass.data[ELK_DOMAIN]['elk']
-    entities = create_elk_entities(hass, elk.tasks, 'task', ElkTask, [])
+    elk_datas = hass.data[ELK_DOMAIN]
+    entities = []
+    for elk_data in elk_datas.values():
+        elk = elk_data['elk']
+        entities = create_elk_entities(elk_data, elk.tasks,
+                                       'task', ElkTask, entities)
     async_add_entities(entities, True)
 
 

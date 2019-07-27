@@ -22,9 +22,11 @@ ELK_ALARM_SERVICE_SCHEMA = vol.Schema({
 
 DISPLAY_MESSAGE_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
-    vol.Optional('clear', default=2): vol.In([0, 1, 2]),
+    vol.Optional('clear', default=2): vol.All(vol.Coerce(int),
+                                              vol.In([0, 1, 2])),
     vol.Optional('beep', default=False): cv.boolean,
-    vol.Optional('timeout', default=0): vol.Range(min=0, max=65535),
+    vol.Optional('timeout', default=0): vol.All(vol.Coerce(int),
+                                                vol.Range(min=0, max=65535)),
     vol.Optional('line1', default=''): cv.string,
     vol.Optional('line2', default=''): cv.string,
 })
@@ -36,8 +38,12 @@ async def async_setup_platform(hass, config, async_add_entities,
     if discovery_info is None:
         return
 
-    elk = hass.data[ELK_DOMAIN]['elk']
-    entities = create_elk_entities(hass, elk.areas, 'area', ElkArea, [])
+    elk_datas = hass.data[ELK_DOMAIN]
+    entities = []
+    for elk_data in elk_datas.values():
+        elk = elk_data['elk']
+        entities = create_elk_entities(elk_data, elk.areas,
+                                       'area', ElkArea, entities)
     async_add_entities(entities, True)
 
     def _dispatch(signal, entity_ids, *args):
@@ -103,7 +109,7 @@ class ElkArea(ElkEntity, alarm.AlarmControlPanel):
             return
         if changeset.get('last_user') is not None:
             self._changed_by_entity_id = self.hass.data[
-                ELK_DOMAIN]['keypads'].get(keypad.index, '')
+                ELK_DOMAIN][self._prefix]['keypads'].get(keypad.index, '')
             self.async_schedule_update_ha_state(True)
 
     @property
