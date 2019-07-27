@@ -63,6 +63,13 @@ SENSOR = {
         "type": "ZHAPower",
         "state": {"current": 2, "power": 6, "voltage": 3},
         "config": {"reachable": True}
+    },
+    "8": {
+        "id": "Sensor 8 id",
+        "name": "Sensor 8 name",
+        "type": "ZHAConsumption",
+        "state": {"consumption": 2, "power": 6},
+        "config": {"reachable": True}
     }
 }
 
@@ -130,7 +137,7 @@ async def test_sensors(hass):
     assert "sensor.sensor_3_name_battery_level" not in gateway.deconz_ids
     assert "sensor.sensor_4_name" not in gateway.deconz_ids
     assert "sensor.sensor_4_name_battery_level" in gateway.deconz_ids
-    assert len(hass.states.async_all()) == 5
+    assert len(hass.states.async_all()) == 6
 
     gateway.api.sensors['1'].async_update({'state': {'on': False}})
     gateway.api.sensors['4'].async_update({'config': {'battery': 75}})
