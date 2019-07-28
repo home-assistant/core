@@ -12,6 +12,7 @@ from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
 ATTR_CURRENT = 'current'
+ATTR_POWER = 'power'
 ATTR_DAYLIGHT = 'daylight'
 ATTR_EVENT_ID = 'event_id'
 
@@ -103,6 +104,9 @@ class DeconzSensor(DeconzDevice):
         if self.unit_of_measurement == 'W':
             attr[ATTR_CURRENT] = self._device.current
             attr[ATTR_VOLTAGE] = self._device.voltage
+
+        if self.unit_of_measurement == 'kWh':
+            attr[ATTR_POWER] = self._device.power
 
         if self._device.SENSOR_CLASS == 'daylight':
             attr[ATTR_DAYLIGHT] = self._device.daylight
