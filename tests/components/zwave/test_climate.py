@@ -162,9 +162,9 @@ def test_operation_value_set(device):
     assert device.values.mode.data == 'another_test'
     device.values.mode = None
     device.set_hvac_mode('test_set_failes')
-    assert device.values.mode == None
+    assert device.values.mode is None
     device.set_preset_mode('test_set_failes')
-    assert device.values.mode == None
+    assert device.values.mode is None
 
 
 def test_operation_value_set_mapping(device_mapping):
@@ -190,7 +190,7 @@ def test_fan_mode_value_set(device):
     assert device.values.fan_mode.data == 'test_fan_set'
     device.values.fan_mode = None
     device.set_fan_mode('test_fan_set_failes')
-    assert device.values.fan_mode == None
+    assert device.values.fan_mode is None
 
 
 def test_target_value_changed(device):
