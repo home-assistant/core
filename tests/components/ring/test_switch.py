@@ -38,9 +38,6 @@ class TestRingSensorSetup(unittest.TestCase):
             'password': 'bar',
         }
 
-    def async_schedule_update_ha_state(self, callUpdate):
-        """Test creating a task"""
-
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
@@ -78,8 +75,9 @@ class TestRingSensorSetup(unittest.TestCase):
             assert not device.should_poll
 
     @requests_mock.Mocker()
-    @asynctest.mock.patch('homeassistant.components.ring.switch.SirenSwitch.async_schedule_update_ha_state')
-    def test_switches_correctly_turn_on(self, mock, mockScheduleUpdate):
+    @asynctest.mock.patch('homeassistant.components.ring.switch.SirenSwitch'
+                          + '.async_schedule_update_ha_state')
+    def test_switches_correctly_turn_on(self, mock, mock_schedule_update):
         """Test the Ring sensor class and methods."""
         mock.post('https://oauth.ring.com/oauth/token',
                   text=load_fixture('ring_oauth.json'))
@@ -93,8 +91,8 @@ class TestRingSensorSetup(unittest.TestCase):
                  text=load_fixture('ring_doorboot_health_attrs.json'))
         mock.get('https://api.ring.com/clients_api/chimes/999999/health',
                  text=load_fixture('ring_chime_health_attrs.json'))
-        mock.put('https://api.ring.com/clients_api/doorbots/987652/siren_on?api_version=9&auth_token=None&duration=1',
-                  text=load_fixture('ring_doorbot_siren_on_response.json'))
+        mock.put('https://api.ring.com/clients_api/doorbots/987652/siren_on',
+                 text=load_fixture('ring_doorbot_siren_on_response.json'))
 
         base_ring.setup(self.hass, VALID_CONFIG)
         ring.setup_platform(self.hass,
@@ -106,12 +104,13 @@ class TestRingSensorSetup(unittest.TestCase):
         assert not first_device.is_on
         first_device.turn_on()
         assert first_device.is_on
-        # Even though the api mock returns that the siren isn't on, calling update
-        # shouldn't update the state as we have a timer in place to prevent it.
+        # Even though the api mock returns that the siren isn't on,
+        # calling update shouldn't update the state as we have a timer in place
+        # to prevent it.
         first_device.update()
         assert first_device.is_on
-        mockScheduleUpdate.assert_called()
-        # Set the timer to force the update to take place, turning the switch off
+        mock_schedule_update.assert_called()
+        # Set the timer to force the update to take place
         first_device._no_updates_until = datetime.now()
         first_device.update()
         assert not first_device.is_on
