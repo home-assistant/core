@@ -33,11 +33,14 @@ DATA_SUMMARY = 'summary_data'
 DEFAULT_ATTRIBUTION = 'Data provided by 17track.net'
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
 
-ENTITY_ID_TEMPLATE = 'package_{0}_{1}'
+UNIQUE_ID_TEMPLATE = 'package_{0}_{1}'
+ENTITY_ID_TEMPLATE = 'sensor.seventeentrack_package_{0}'
 
-NOTIFICATION_DELIVERED_ID_SCAFFOLD = 'package_delivered_{0}'
-NOTIFICATION_DELIVERED_TITLE = 'Package Delivered'
-NOTIFICATION_DELIVERED_URL_SCAFFOLD = 'https://t.17track.net/track#nums={0}'
+NOTIFICATION_DELIVERED_ID = 'package_delivered_{0}'
+NOTIFICATION_DELIVERED_TITLE = 'Package {0} delivered'
+NOTIFICATION_DELIVERED_MESSAGE = 'Package Delivered: {0}<br />' + \
+                                 'Visit 17.track for more information: ' \
+                                 'https://t.17track.net/track#nums={1}'
 
 VALUE_DELIVERED = 'Delivered'
 
@@ -72,20 +75,10 @@ async def async_setup_platform(
 
     scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
-    data = SeventeenTrackData(
-        hass, client, async_add_entities, scan_interval,
-        config[CONF_SHOW_ARCHIVED], config[CONF_SHOW_DELIVERED])
+    data = SeventeenTrackData(client, async_add_entities, scan_interval,
+                              config[CONF_SHOW_ARCHIVED],
+                              config[CONF_SHOW_DELIVERED])
     await data.async_update()
-
-    sensors = []
-
-    for status, quantity in data.summary.items():
-        sensors.append(SeventeenTrackSummarySensor(data, status, quantity))
-
-    for package in data.packages:
-        sensors.append(SeventeenTrackPackageSensor(data, package))
-
-    async_add_entities(sensors, True)
 
 
 class SeventeenTrackSummarySensor(Entity):
@@ -139,7 +132,7 @@ class SeventeenTrackSummarySensor(Entity):
         await self._data.async_update()
 
         package_data = []
-        for package in self._data.packages:
+        for package in self._data.packages.values():
             if package.status != self._status:
                 continue
 
@@ -175,14 +168,12 @@ class SeventeenTrackPackageSensor(Entity):
         self._friendly_name = package.friendly_name
         self._state = package.status
         self._tracking_number = package.tracking_number
+        self.entity_id = ENTITY_ID_TEMPLATE.format(self._tracking_number)
 
     @property
     def available(self):
         """Return whether the entity is available."""
-        return bool([
-            p for p in self._data.packages
-            if p.tracking_number == self._tracking_number
-        ])
+        return self._data.packages.get(self._tracking_number) is not None
 
     @property
     def device_state_attributes(self):
@@ -210,44 +201,24 @@ class SeventeenTrackPackageSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return ENTITY_ID_TEMPLATE.format(
+        return UNIQUE_ID_TEMPLATE.format(
             self._data.account_id, self._tracking_number)
 
     async def async_update(self):
         """Update the sensor."""
         await self._data.async_update()
 
-        if not self._data.packages:
+        if not self.available:
+            self.hass.async_create_task(self._remove())
             return
 
-        try:
-            package = next((
-                p for p in self._data.packages
-                if p.tracking_number == self._tracking_number))
-        except StopIteration:
-            # If the package no longer exists in the data, log a message and
-            # delete this entity:
-            _LOGGER.info(
-                'Deleting entity for stale package: %s', self._tracking_number)
-            reg = await self.hass.helpers.entity_registry.async_get_registry()
-            self.hass.async_create_task(reg.async_remove(self.entity_id))
-            self.hass.async_create_task(self.async_remove())
-            return
+        package = self._data.packages.get(self._tracking_number, None)
 
         # If the user has elected to not see delivered packages and one gets
         # delivered, post a notification:
         if package.status == VALUE_DELIVERED and not self._data.show_delivered:
-            _LOGGER.info('Package delivered: %s', self._tracking_number)
-            self.hass.components.persistent_notification.create(
-                'Package Delivered: {0}<br />'
-                'Visit 17.track for more infomation: {1}'
-                ''.format(
-                    self._tracking_number,
-                    NOTIFICATION_DELIVERED_URL_SCAFFOLD.format(
-                        self._tracking_number)),
-                title=NOTIFICATION_DELIVERED_TITLE,
-                notification_id=NOTIFICATION_DELIVERED_ID_SCAFFOLD.format(
-                    self._tracking_number))
+            self._notify_delivered()
+            self.hass.async_create_task(self._remove())
             return
 
         self._attrs.update({
@@ -255,26 +226,53 @@ class SeventeenTrackPackageSensor(Entity):
             ATTR_LOCATION: package.location,
         })
         self._state = package.status
+        self._friendly_name = package.friendly_name
+
+    async def _remove(self):
+        """Remove entity itself."""
+        await self.async_remove()
+
+        reg = await self.hass.helpers.entity_registry.async_get_registry()
+        entity_id = reg.async_get_entity_id(
+            'sensor', 'seventeentrack',
+            UNIQUE_ID_TEMPLATE.format(
+                self._data.account_id, self._tracking_number))
+        if entity_id:
+            reg.async_remove(entity_id)
+
+    def _notify_delivered(self):
+        """Notify when package is delivered."""
+        _LOGGER.info('Package delivered: %s', self._tracking_number)
+
+        identification = self._friendly_name if self._friendly_name else \
+            self._tracking_number
+        message = NOTIFICATION_DELIVERED_MESSAGE.format(self._tracking_number,
+                                                        identification)
+        title = NOTIFICATION_DELIVERED_TITLE.format(identification)
+        notification_id = NOTIFICATION_DELIVERED_TITLE\
+            .format(self._tracking_number)
+
+        self.hass.components.persistent_notification\
+            .create(message, title=title, notification_id=notification_id)
 
 
 class SeventeenTrackData:
     """Define a data handler for 17track.net."""
 
-    def __init__(
-            self, hass, client, async_add_entities, scan_interval,
-            show_archived, show_delivered):
+    def __init__(self, client, async_add_entities, scan_interval,
+                 show_archived, show_delivered):
         """Initialize."""
         self._async_add_entities = async_add_entities
         self._client = client
-        self._hass = hass
         self._scan_interval = scan_interval
         self._show_archived = show_archived
         self.account_id = client.profile.account_id
-        self.packages = []
+        self.packages = {}
         self.show_delivered = show_delivered
         self.summary = {}
 
         self.async_update = Throttle(self._scan_interval)(self._async_update)
+        self.first_update = True
 
     async def _async_update(self):
         """Get updated data from 17track.net."""
@@ -285,46 +283,36 @@ class SeventeenTrackData:
                 show_archived=self._show_archived)
             _LOGGER.debug('New package data received: %s', packages)
 
-            if not self.show_delivered:
-                packages = [p for p in packages if p.status != VALUE_DELIVERED]
+            new_packages = {p.tracking_number: p for p in packages}
 
-            packages_map = {p.tracking_number: p for p in packages}
-            # Add new packages:
+            to_add = set(new_packages) - set(self.packages)
 
-            already_tracked_nbr = [p.tracking_number for p in self.packages]
-            received_tracked_nbr = [p.tracking_number for p in packages]
-
-            to_add = set(received_tracked_nbr) - set(already_tracked_nbr)
             _LOGGER.debug('Will add new tracking numbers: %s', to_add)
-            if self.packages and to_add:
+            if to_add:
                 self._async_add_entities([
                     SeventeenTrackPackageSensor(self,
-                                                packages_map[tracking_number])
+                                                new_packages[tracking_number])
                     for tracking_number in to_add
                 ], True)
 
-            # Remove archived packages from the entity registry:
-            to_remove = set(received_tracked_nbr) - set(already_tracked_nbr)
-            _LOGGER.debug('Will remove tracking number: %s', to_remove)
-            reg = await self._hass.helpers.entity_registry.async_get_registry()
-            for tracking_number in to_remove:
-                entity_id = reg.async_get_entity_id(
-                    'sensor', 'seventeentrack',
-                    ENTITY_ID_TEMPLATE.format(
-                        self.account_id, tracking_number))
-                if not entity_id:
-                    continue
-                self._hass.async_create_task(reg.async_remove(entity_id))
-
-            self.packages = packages
+            self.packages = new_packages
         except SeventeenTrackError as err:
             _LOGGER.error('There was an error retrieving packages: %s', err)
-            self.packages = []
 
         try:
             self.summary = await self._client.profile.summary(
                 show_archived=self._show_archived)
             _LOGGER.debug('New summary data received: %s', self.summary)
+
+            # creating summary sensors on first update
+            if self.first_update:
+                self.first_update = False
+
+                self._async_add_entities([
+                    SeventeenTrackSummarySensor(self, status, quantity)
+                    for status, quantity in self.summary.items()
+                ], True)
+
         except SeventeenTrackError as err:
             _LOGGER.error('There was an error retrieving the summary: %s', err)
             self.summary = {}
