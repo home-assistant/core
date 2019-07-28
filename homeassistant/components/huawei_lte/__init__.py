@@ -3,6 +3,7 @@ from datetime import timedelta
 from functools import reduce
 import logging
 import operator
+from typing import Any, Callable
 
 import voluptuous as vol
 import attr
@@ -80,21 +81,26 @@ class RouterData:
         self._update()
 
     def _update(self) -> None:
+        from huawei_lte_api.exceptions import \
+            ResponseErrorNotSupportedException
         debugging = _LOGGER.isEnabledFor(logging.DEBUG)
-        if debugging or "device_information" in self._subscriptions:
-            self.device_information = self.client.device.information()
-            _LOGGER.debug("device_information=%s", self.device_information)
-        if debugging or "device_signal" in self._subscriptions:
-            self.device_signal = self.client.device.signal()
-            _LOGGER.debug("device_signal=%s", self.device_signal)
-        if debugging or "monitoring_traffic_statistics" in self._subscriptions:
-            self.monitoring_traffic_statistics = \
-                self.client.monitoring.traffic_statistics()
-            _LOGGER.debug("monitoring_traffic_statistics=%s",
-                          self.monitoring_traffic_statistics)
-        if debugging or "wlan_host_list" in self._subscriptions:
-            self.wlan_host_list = self.client.wlan.host_list()
-            _LOGGER.debug("wlan_host_list=%s", self.wlan_host_list)
+
+        def get_data(path: str, func: Callable[[None], Any]) -> None:
+            if debugging or path in self._subscriptions:
+                try:
+                    setattr(self, path, func())
+                except ResponseErrorNotSupportedException as ex:
+                    _LOGGER.warning(
+                        "%s not supported by device", path, exc_info=ex)
+                    self._subscriptions.discard(path)
+                finally:
+                    _LOGGER.debug("%s=%s", path, getattr(self, path))
+
+        get_data("device_information", self.client.device.information)
+        get_data("device_signal", self.client.device.signal)
+        get_data("monitoring_traffic_statistics",
+                 self.client.monitoring.traffic_statistics)
+        get_data("wlan_host_list", self.client.wlan.host_list)
 
 
 @attr.s
