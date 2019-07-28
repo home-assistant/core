@@ -156,7 +156,6 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                         self._preset_list.append(ha_preset)
                     else:
                         # If nothing matches
-                        _LOGGER.debug("%s is nothing", mode)
                         self._hvac_list.append(mode)
 
             current_mode = self.values.mode.data
