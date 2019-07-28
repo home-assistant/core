@@ -3,14 +3,13 @@ import os
 import unittest
 import requests_mock
 import asynctest
-from unittest.mock import Mock, patch
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 import homeassistant.components.ring.switch as ring
 from homeassistant.components import ring as base_ring
 
-from tests.components.ring.test_init import ATTRIBUTION, VALID_CONFIG
+from tests.components.ring.test_init import VALID_CONFIG
 from tests.common import (
     get_test_config_dir, get_test_home_assistant, load_fixture)
 
@@ -107,7 +106,7 @@ class TestRingSensorSetup(unittest.TestCase):
         assert not first_device.is_on
         first_device.turn_on()
         assert first_device.is_on
-        # Even though the api returns that the siren isn't on, calling update
+        # Even though the api mock returns that the siren isn't on, calling update
         # shouldn't update the state as we have a timer in place to prevent it.
         first_device.update()
         assert first_device.is_on
@@ -116,4 +115,3 @@ class TestRingSensorSetup(unittest.TestCase):
         first_device._no_updates_until = datetime.now()
         first_device.update()
         assert not first_device.is_on
-
