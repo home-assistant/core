@@ -12,6 +12,7 @@ from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
 from homeassistant.core import callback
 from homeassistant.const import (
     CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_VERIFY_SSL)
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -79,6 +80,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
     controller = hass.data[unifi.DOMAIN][controller_id]
     tracked = {}
+
+    registry = await entity_registry.async_get_registry(hass)
+
+    # Restore clients that is not a part of active clients list.
+    for entity in registry.entities.values():
+
+        if entity.config_entry_id == config_entry.entry_id and \
+                entity.unique_id.startswith('dt-'):
+            _, mac, _ = entity.unique_id.split('-', 2)
+
+            if mac in controller.api.clients or \
+                    mac not in controller.api.clients_all:
+                continue
+
+            client = controller.api.clients_all[mac]
+            controller.api.clients.process_raw([client.raw])
 
     @callback
     def update_controller():
@@ -155,7 +172,7 @@ class UniFiClientTracker(ScannerEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this client."""
-        return '{}-{}'.format(self.client.mac, self.controller.site)
+        return 'dt-{}-{}'.format(self.client.mac, self.controller.site)
 
     @property
     def available(self) -> bool:
