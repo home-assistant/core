@@ -273,7 +273,3 @@ class Light(ZhaEntity, light.Light):
     async def refresh(self, time):
         """Call async_get_state at an interval."""
         await self.async_get_state(from_cache=False)
-
-    def debug(self, msg, *args):
-        """Log debug message."""
-        _LOGGER.debug('%s: ' + msg, self.entity_id, *args)
