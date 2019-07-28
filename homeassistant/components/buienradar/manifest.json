@@ -6,11 +6,7 @@
     "buienradar==1.0.1"
   ],
   "dependencies": [],
-<<<<<<< HEAD
-  "codeowners": ["@ties"]
-=======
   "codeowners": [
     "@mjj4791", "@ties"
   ]
->>>>>>> Update to json api; and additional sensors
 }
