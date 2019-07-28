@@ -265,7 +265,7 @@ def test_operation_value_changed_preset(device_mapping):
     assert device.preset_mode == PRESET_NONE
     device.values.mode.data = PRESET_ECO
     value_changed(device.values.mode)
-    assert device.hvac_mode == None
+    assert device.hvac_mode is None
     assert device.preset_mode == PRESET_ECO
     device.values.mode = None
     assert device.preset_mode == PRESET_NONE
@@ -293,14 +293,15 @@ def test_operation_value_changed_mapping_preset(device_mapping):
     assert device.preset_mode == PRESET_NONE
     device.values.mode.data = 'Heat Eco'
     value_changed(device.values.mode)
-    assert device.hvac_mode == None
+    assert device.hvac_mode is None
     assert device.preset_mode == PRESET_ECO
     device.values.mode.data = 'Full Power'
     value_changed(device.values.mode)
-    assert device.hvac_mode == None
+    assert device.hvac_mode is None
     assert device.preset_mode == PRESET_BOOST
     device.values.mode = None
     assert device.preset_mode == PRESET_NONE
+
 
 def test_operation_value_changed_unknown(device_unknown):
     """Test preset changed for climate device. Unknown"""
@@ -309,7 +310,7 @@ def test_operation_value_changed_unknown(device_unknown):
     assert device.preset_mode == PRESET_NONE
     device.values.mode.data = 'Abcdefg'
     value_changed(device.values.mode)
-    assert device.hvac_mode == None
+    assert device.hvac_mode is None
     assert device.preset_mode == 'Abcdefg'
 
 
