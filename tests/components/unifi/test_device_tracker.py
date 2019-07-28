@@ -6,7 +6,7 @@ from datetime import timedelta
 
 import pytest
 
-from aiounifi.clients import Clients
+from aiounifi.clients import Clients, ClientsAll
 from aiounifi.devices import Devices
 
 from homeassistant import config_entries
@@ -75,6 +75,7 @@ def mock_controller(hass):
 
     controller.mock_client_responses = deque()
     controller.mock_device_responses = deque()
+    controller.mock_client_all_responses = deque()
 
     async def mock_request(method, path, **kwargs):
         kwargs['method'] = method
@@ -84,10 +85,13 @@ def mock_controller(hass):
             return controller.mock_client_responses.popleft()
         if path == 's/{site}/stat/device':
             return controller.mock_device_responses.popleft()
+        if path == 's/{site}/rest/user':
+            return controller.mock_client_all_responses.popleft()
         return None
 
     controller.api.clients = Clients({}, mock_request)
     controller.api.devices = Devices({}, mock_request)
+    controller.api.clients_all = ClientsAll({}, mock_request)
 
     return controller
 
@@ -98,7 +102,7 @@ async def setup_controller(hass, mock_controller):
     hass.data[unifi.DOMAIN] = {CONTROLLER_ID: mock_controller}
     config_entry = config_entries.ConfigEntry(
         1, unifi.DOMAIN, 'Mock Title', ENTRY_CONFIG, 'test',
-        config_entries.CONN_CLASS_LOCAL_POLL)
+        config_entries.CONN_CLASS_LOCAL_POLL, entry_id=1)
     mock_controller.config_entry = config_entry
 
     await mock_controller.async_update()
@@ -159,3 +163,26 @@ async def test_tracked_devices(hass, mock_controller):
 
     device_1 = hass.states.get('device_tracker.client_1')
     assert device_1.state == 'home'
+
+
+async def test_restoring_client(hass, mock_controller):
+    """Test the update_items function with some clients."""
+    mock_controller.mock_client_responses.append({})
+    mock_controller.mock_device_responses.append({})
+    mock_controller.mock_client_all_responses.append([CLIENT_1])
+    mock_controller.unifi_config = {
+        unifi.CONF_BLOCK_CLIENT: True
+    }
+
+    registry = await unifi_dt.entity_registry.async_get_registry(hass)
+    registry.async_get_or_create(
+        unifi_dt.UNIFI_DOMAIN, device_tracker.DOMAIN,
+        'dt-{}-mock-site'.format(CLIENT_1['mac']),
+        config_entry_id=1)
+
+    await setup_controller(hass, mock_controller)
+    assert len(mock_controller.mock_requests) == 3
+    assert len(hass.states.async_all()) == 3
+
+    device_1 = hass.states.get('device_tracker.client_1')
+    assert device_1 is not None
