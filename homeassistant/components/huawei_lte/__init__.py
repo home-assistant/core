@@ -7,6 +7,9 @@ from typing import Any, Callable
 
 import voluptuous as vol
 import attr
+from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
+from huawei_lte_api.Client import Client
+from huawei_lte_api.exceptions import ResponseErrorNotSupportedException
 
 from homeassistant.const import (
     CONF_URL, CONF_USERNAME, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP,
@@ -81,8 +84,6 @@ class RouterData:
         self._update()
 
     def _update(self) -> None:
-        from huawei_lte_api.exceptions import \
-            ResponseErrorNotSupportedException
         debugging = _LOGGER.isEnabledFor(logging.DEBUG)
 
         def get_data(path: str, func: Callable[[None], Any]) -> None:
@@ -130,9 +131,6 @@ def setup(hass, config) -> bool:
 
 def _setup_lte(hass, lte_config) -> None:
     """Set up Huawei LTE router."""
-    from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
-    from huawei_lte_api.Client import Client
-
     url = lte_config[CONF_URL]
     username = lte_config[CONF_USERNAME]
     password = lte_config[CONF_PASSWORD]
