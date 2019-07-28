@@ -114,6 +114,7 @@ desktop.ini
 
 # mypy
 /.mypy_cache/*
+/.dmypy.json
 
 # Secrets
 .lokalise_token
