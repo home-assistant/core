@@ -109,7 +109,7 @@ def establish_device_mappings():
         RADIO: get_deconz_radio,
         RADIO_DESCRIPTION: 'Deconz'
     }
-    
+
     def get_zigate_radio():
         import zigpy_zigate.api
         from zigpy_zigate.zigbee.application import ControllerApplication
