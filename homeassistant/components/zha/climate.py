@@ -11,13 +11,13 @@ import logging
 import time
 from typing import List, Optional
 
-
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_COOL,
+    CURRENT_HVAC_FAN,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
@@ -67,6 +67,19 @@ ATTR_UNOCCP_COOL_SETPT = "unoccupied_cooling_setpoint"
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 RUNNING_MODE = {0x00: HVAC_MODE_OFF, 0x03: HVAC_MODE_COOL, 0x04: HVAC_MODE_HEAT}
+
+
+class RunningState(enum.IntFlag):
+    """ZCL Running state enum."""
+
+    HEAT = 0x0001
+    COOL = 0x0002
+    FAN = 0x0004
+    HEAT_STAGE_2 = 0x0008
+    COOL_STAGE_2 = 0x0010
+    FAN_STAGE_2 = 0x0020
+    FAN_STAGE_3 = 0x0040
+
 
 SEQ_OF_OPERATION = {
     0x00: [HVAC_MODE_OFF, HVAC_MODE_COOL],  # cooling only
@@ -228,10 +241,30 @@ class Thermostat(ZhaEntity, ClimateDevice):
     @property
     def hvac_action(self) -> Optional[str]:
         """Return the current HVAC action."""
-        if self._thrm.pi_heating_demand > 0:
-            return CURRENT_HVAC_HEAT
-        if self._thrm.pi_cooling_demand > 0:
-            return CURRENT_HVAC_COOL
+        if (
+            self._thrm.pi_heating_demand is None
+            and self._thrm.pi_cooling_demand is None
+        ):
+            self.info("Running mode: %s", self._thrm.running_mode)
+            self.info("Running state: %s", self._thrm.running_state)
+            rs = self._thrm.running_state
+            if rs is None:
+                return None
+            if rs & (RunningState.HEAT | RunningState.HEAT_STAGE_2):
+                return CURRENT_HVAC_HEAT
+            if rs & (RunningState.COOL | RunningState.COOL_STAGE_2):
+                return CURRENT_HVAC_COOL
+            if rs & (
+                RunningState.FAN | RunningState.FAN_STAGE_2 | RunningState.FAN_STAGE_3
+            ):
+                return CURRENT_HVAC_FAN
+        else:
+            heating_demand = self._thrm.pi_heating_demand
+            if heating_demand is not None and heating_demand > 0:
+                return CURRENT_HVAC_HEAT
+            cooling_demand = self._thrm.pi_cooling_demand
+            if cooling_demand is not None and cooling_demand > 0:
+                return CURRENT_HVAC_COOL
         if self.hvac_mode != HVAC_MODE_OFF:
             return CURRENT_HVAC_IDLE
         return CURRENT_HVAC_OFF

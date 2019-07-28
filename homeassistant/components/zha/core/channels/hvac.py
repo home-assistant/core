@@ -107,7 +107,10 @@ class ThermostatChannel(ZigbeeChannel):
             "occupancy": False,
             "occupied_cooling_setpoint": False,
             "occupied_heating_setpoint": False,
+            "pi_cooling_demand": False,
+            "pi_heating_demand": False,
             "running_mode": False,
+            "running_state": False,
             "system_mode": False,
             "unoccupied_heating_setpoint": False,
             "unoccupied_cooling_setpoint": False,
@@ -126,8 +129,9 @@ class ThermostatChannel(ZigbeeChannel):
         self._occupancy = None
         self._occupied_cooling_setpoint = None
         self._occupied_heating_setpoint = None
-        self._pi_cooling_demand = 0
-        self._pi_heating_demand = 0
+        self._pi_cooling_demand = None
+        self._pi_heating_demand = None
+        self._running_state = None
         self._setpoint_change_source = None
         self._setpoint_change_amount = None
         self._system_mode = None
@@ -141,6 +145,7 @@ class ThermostatChannel(ZigbeeChannel):
             {"attr": "pi_cooling_demand", "config": REPORT_CONFIG_CLIMATE_DEMAND},
             {"attr": "pi_heating_demand", "config": REPORT_CONFIG_CLIMATE_DEMAND},
             {"attr": "running_mode", "config": REPORT_CONFIG_CLIMATE},
+            {"attr": "running_state", "config": REPORT_CONFIG_CLIMATE_DEMAND},
             {"attr": "system_mode", "config": REPORT_CONFIG_CLIMATE},
             {"attr": "unoccupied_cooling_setpoint", "config": REPORT_CONFIG_CLIMATE},
             {"attr": "unoccupied_heating_setpoint", "config": REPORT_CONFIG_CLIMATE},
@@ -233,6 +238,11 @@ class ThermostatChannel(ZigbeeChannel):
     def running_mode(self) -> Optional[int]:
         """Thermostat running mode."""
         return self._running_mode
+
+    @property
+    def running_state(self) -> Optional[int]:
+        """Thermostat running state, state of heat, cool, fan relays."""
+        return self._running_state
 
     @property
     def setpoint_change_amount(self) -> Optional[int]:
