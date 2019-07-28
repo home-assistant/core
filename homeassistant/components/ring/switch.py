@@ -19,6 +19,7 @@ updates to take place.
 """
 SKIP_UPDATES_DELAY = timedelta(seconds=5)
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the switches for the Ring devices."""
     cameras = hass.data[DATA_RING_STICKUP_CAMS]
@@ -63,7 +64,7 @@ class BaseRingSwitch(SwitchDevice):
 
     @property
     def should_poll(self):
-        """Updates are controlled via the hub."""
+        """Updates controlled via the hub."""
         return False
 
 
@@ -77,7 +78,7 @@ class SirenSwitch(BaseRingSwitch):
         self._siren_on = False
 
     def __setSwitch(self, new_state):
-        """Updates the switch state, and causes HASS to correctly update"""
+        """Update switch state, and causes HASS to correctly update."""
         self._device.siren = new_state
         self._siren_on = new_state > 0
         self._no_updates_until = datetime.now() + SKIP_UPDATES_DELAY
@@ -102,7 +103,7 @@ class SirenSwitch(BaseRingSwitch):
         return SIREN_ICON
 
     def update(self):
-        """Update the current state of the siren"""
+        """Update state of the siren."""
         if self._no_updates_until > datetime.now():
             _LOGGER.debug("Skipping update...")
             return

@@ -146,7 +146,7 @@ class RingCam(Camera):
 
     @property
     def should_poll(self):
-        """Updates are controlled via the hub."""
+        """Updates controlled via the hub."""
         return False
 
     def update(self):

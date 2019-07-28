@@ -20,6 +20,7 @@ SKIP_UPDATES_DELAY = timedelta(seconds=5)
 ON_STATE = 'on'
 OFF_STATE = 'off'
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the lights for the Ring devices."""
     cameras = hass.data[DATA_RING_STICKUP_CAMS]
@@ -65,7 +66,7 @@ class RingLight(Light):
 
     @property
     def should_poll(self):
-        """Updates are controlled via the hub."""
+        """Updates controlled via the hub."""
         return False
 
     @property
@@ -74,7 +75,7 @@ class RingLight(Light):
         return self._light_on
 
     def __setLight(self, new_state):
-        """Updates the light state, and causes HASS to correctly update"""
+        """Update light state, and causes HASS to correctly update."""
         self._device.lights = new_state
         self._light_on = new_state == ON_STATE
         self._no_updates_until = datetime.now() + SKIP_UPDATES_DELAY
@@ -89,7 +90,7 @@ class RingLight(Light):
         self.__setLight(OFF_STATE)
 
     def update(self):
-        """Update the current state of the light"""
+        """Update current state of the light."""
         if self._no_updates_until > datetime.now():
             _LOGGER.debug("Skipping update...")
             return
