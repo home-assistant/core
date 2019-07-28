@@ -100,14 +100,14 @@ class DeconzSensor(DeconzDevice):
         if self._device.type in Consumption.ZHATYPE:
             attr[ATTR_POWER] = self._device.power
 
-        if self._device.type in Daylight.ZHATYPE:
+        elif self._device.type in Daylight.ZHATYPE:
             attr[ATTR_DAYLIGHT] = self._device.daylight
 
-        if self._device.type in LightLevel.ZHATYPE and \
+        elif self._device.type in LightLevel.ZHATYPE and \
                 self._device.dark is not None:
             attr[ATTR_DARK] = self._device.dark
 
-        if self._device.type in Power.ZHATYPE:
+        elif self._device.type in Power.ZHATYPE:
             attr[ATTR_CURRENT] = self._device.current
             attr[ATTR_VOLTAGE] = self._device.voltage
 
