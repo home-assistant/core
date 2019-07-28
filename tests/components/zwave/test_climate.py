@@ -20,7 +20,9 @@ def device(hass, mock_openzwave):
     values = MockEntityValues(
         primary=MockValue(data=1, node=node),
         temperature=MockValue(data=5, node=node, units=None),
-        mode=MockValue(data='test1', data_items=[0, 1, 2], node=node),
+        mode=MockValue(data='test1', data_items=[
+                       HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL],
+                       node=node),
         fan_mode=MockValue(data='test2', data_items=[3, 4, 5], node=node),
         operating_state=MockValue(data=6, node=node),
         fan_state=MockValue(data=7, node=node),
@@ -38,7 +40,9 @@ def device_zxt_120(hass, mock_openzwave):
     values = MockEntityValues(
         primary=MockValue(data=1, node=node),
         temperature=MockValue(data=5, node=node, units=None),
-        mode=MockValue(data='test1', data_items=[0, 1, 2], node=node),
+        mode=MockValue(data='test1', data_items=[
+                       HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL],
+                       node=node),
         fan_mode=MockValue(data='test2', data_items=[3, 4, 5], node=node),
         operating_state=MockValue(data=6, node=node),
         fan_state=MockValue(data=7, node=node),
@@ -131,7 +135,7 @@ def test_default_target_temperature(device):
 def test_data_lists(device):
     """Test data lists from zwave value items."""
     assert device.fan_modes == [3, 4, 5]
-    assert device.hvac_modes == [0, 1, 2]
+    assert device.hvac_modes == [HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL]
     assert device.preset_modes == []
     device.values.mode = None
     assert device.preset_modes == []
