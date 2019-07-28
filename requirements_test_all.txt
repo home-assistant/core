@@ -251,7 +251,7 @@ pyMetno==0.4.6
 pyblackbird==0.5
 
 # homeassistant.components.deconz
-pydeconz==60
+pydeconz==62
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
