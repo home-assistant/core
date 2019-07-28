@@ -109,6 +109,19 @@ def establish_device_mappings():
         RADIO: get_deconz_radio,
         RADIO_DESCRIPTION: 'Deconz'
     }
+    
+    def get_zigate_radio():
+        import zigpy_zigate.api
+        from zigpy_zigate.zigbee.application import ControllerApplication
+        return {
+            RADIO: zigpy_zigate.api.ZiGate(),
+            CONTROLLER: ControllerApplication
+        }
+
+    RADIO_TYPES[RadioType.zigate.name] = {
+        RADIO: get_zigate_radio,
+        RADIO_DESCRIPTION: 'ZiGate'
+    }
 
     EVENT_RELAY_CLUSTERS.append(zcl.clusters.general.LevelControl.cluster_id)
     EVENT_RELAY_CLUSTERS.append(zcl.clusters.general.OnOff.cluster_id)

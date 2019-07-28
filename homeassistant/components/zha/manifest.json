@@ -9,6 +9,7 @@
     "zigpy-deconz==0.2.1",
     "zigpy-homeassistant==0.7.0",
     "zigpy-xbee-homeassistant==0.4.0"
+    "zigpy-zigate==0.1.0"
   ],
   "dependencies": [],
   "codeowners": [
