@@ -77,7 +77,7 @@ class SirenSwitch(BaseRingSwitch):
         self._no_updates_until = datetime.now()
         self._siren_on = False
 
-    def __setSwitch(self, new_state):
+    def __set_switch(self, new_state):
         """Update switch state, and causes HASS to correctly update."""
         self._device.siren = new_state
         self._siren_on = new_state > 0
@@ -91,11 +91,11 @@ class SirenSwitch(BaseRingSwitch):
 
     def turn_on(self, **kwargs):
         """Turn the siren on for 30 seconds."""
-        self.__setSwitch(1)
+        self.__set_switch(1)
 
     def turn_off(self, **kwargs):
         """Turn the siren off."""
-        self.__setSwitch(0)
+        self.__set_switch(0)
 
     @property
     def icon(self):
