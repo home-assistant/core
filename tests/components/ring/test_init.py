@@ -16,6 +16,7 @@ VALID_CONFIG = {
     "ring": {
         "username": "foo",
         "password": "bar",
+        "scan_interval":10
     }
 }
 
