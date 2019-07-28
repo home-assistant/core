@@ -161,6 +161,7 @@ TEST_REQUIREMENTS = (
     'zeroconf',
     'zigpy-homeassistant',
     'bellows-homeassistant',
+    'py17track',
 )
 
 IGNORE_PIN = ('colorlog>2.1,<3', 'keyring>=9.3,<10.0', 'urllib3')
