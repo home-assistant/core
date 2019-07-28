@@ -30,10 +30,10 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a SimpliSafe alarm control panel based on a config entry."""
-    systems = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    simplisafe = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
     async_add_entities([
         SimpliSafeAlarm(system, entry.data.get(CONF_CODE))
-        for system in systems.values()
+        for system in simplisafe.systems.values()
     ], True)
 
 
@@ -52,7 +52,6 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
         for prop in (
                 ATTR_BATTERY_BACKUP_POWER_LEVEL, ATTR_GSM_STRENGTH,
                 ATTR_RF_JAMMING, ATTR_WALL_POWER_LEVEL, ATTR_WIFI_STRENGTH):
-            # value = getattr(system, prop, None)
             if hasattr(system, prop):
                 self._attrs[prop] = getattr(system, prop)
 
