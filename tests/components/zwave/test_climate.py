@@ -2,7 +2,7 @@
 import pytest
 
 from homeassistant.components.climate.const import (
-    HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF)
+    HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF, PRESET_BOOST, PRESET_ECO)
 from homeassistant.components.zwave import climate
 from homeassistant.const import (
     ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT)
@@ -55,7 +55,8 @@ def device_mapping(hass, mock_openzwave):
     values = MockEntityValues(
         primary=MockValue(data=1, node=node),
         temperature=MockValue(data=5, node=node, units=None),
-        mode=MockValue(data='Off', data_items=['Off', 'Cool', 'Heat'],
+        mode=MockValue(data='Off', data_items=[
+                       'Off', 'Cool', 'Heat', 'Heat Eco', 'Full Power'],
                        node=node),
         fan_mode=MockValue(data='test2', data_items=[3, 4, 5], node=node),
         operating_state=MockValue(data=6, node=node),
@@ -111,6 +112,13 @@ def test_data_lists(device):
     assert device.hvac_modes == [0, 1, 2]
 
 
+def test_data_lists_mapping(device_mapping):
+    """Test data lists from zwave value items."""
+    device = device_mapping
+    assert device.hvac_modes == ['off', 'cool', 'heat']
+    assert device.preset_modes == ['eco', 'boost']
+
+
 def test_target_value_set(device):
     """Test values changed for climate device."""
     assert device.values.primary.data == 1
@@ -127,6 +135,8 @@ def test_operation_value_set(device):
     assert device.values.mode.data == 'test1'
     device.set_hvac_mode('test_set')
     assert device.values.mode.data == 'test_set'
+    device.set_preset_mode('another_test')
+    assert device.values.mode.data == 'another_test'
 
 
 def test_operation_value_set_mapping(device_mapping):
@@ -139,6 +149,10 @@ def test_operation_value_set_mapping(device_mapping):
     assert device.values.mode.data == 'Cool'
     device.set_hvac_mode(HVAC_MODE_OFF)
     assert device.values.mode.data == 'Off'
+    device.set_preset_mode(PRESET_BOOST)
+    assert device.values.mode.data == 'Full Power'
+    device.set_preset_mode(PRESET_ECO)
+    assert device.values.mode.data == 'Heat Eco'
 
 
 def test_fan_mode_value_set(device):

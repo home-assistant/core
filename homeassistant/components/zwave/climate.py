@@ -147,17 +147,17 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             if hvac_list:
                 for mode in hvac_list:
                     ha_mode = HVAC_STATE_MAPPINGS.get(mode)
+                    ha_preset = PRESET_MAPPING.get(mode)
                     if ha_mode and ha_mode not in self._hvac_mapping:
                         self._hvac_mapping[ha_mode] = mode
                         self._hvac_list.append(ha_mode)
-                        continue
-                    ha_preset = PRESET_MAPPING.get(mode)
-                    if ha_preset and ha_preset not in self._preset_mapping:
+                    elif ha_preset and ha_preset not in self._preset_mapping:
                         self._preset_mapping[ha_preset] = mode
                         self._preset_list.append(ha_preset)
-                        continue
-                    # If nothing matches
-                    self._hvac_list.append(mode)
+                    else:
+                        # If nothing matches
+                        _LOGGER.debug("%s is nothing", mode)
+                        self._hvac_list.append(mode)
 
             current_mode = self.values.mode.data
             self._hvac_mode = next(
@@ -167,7 +167,10 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                 (key for key, value in self._preset_mapping.items()
                  if value == current_mode), PRESET_NONE)
         _LOGGER.debug("self._hvac_list=%s", self._hvac_list)
+        _LOGGER.debug("self._hvac_mapping=%s", self._hvac_mapping)
         _LOGGER.debug("self._hvac_action=%s", self._hvac_action)
+        _LOGGER.debug("self._preset_list=%s", self._preset_list)
+        _LOGGER.debug("self._preset_mapping=%s", self._preset_mapping)
 
         # Current Temp
         if self.values.temperature:
@@ -305,24 +308,29 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
+        _LOGGER.debug("Set temperature to %s", kwargs.get(ATTR_TEMPERATURE))
         if kwargs.get(ATTR_TEMPERATURE) is None:
             return
         self.values.primary.data = kwargs.get(ATTR_TEMPERATURE)
 
     def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
+        _LOGGER.debug("Set fan mode to %s", fan_mode)
         if not self.values.fan_mode:
             return
         self.values.fan_mode.data = fan_mode
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
+        _LOGGER.debug("Set hvac_mode to %s", hvac_mode)
         if not self.values.mode:
             return
-        self.values.mode.data = self._hvac_mapping.get(hvac_mode, hvac_mode)
+        self.values.mode.data = self._hvac_mapping.get(
+            hvac_mode, hvac_mode)
 
     def set_preset_mode(self, preset_mode):
         """Set new target preset mode."""
+        _LOGGER.debug("Set preset_mode to %s", preset_mode)
         if not self.values.mode:
             return
         self.values.mode.data = self._preset_mapping.get(
@@ -330,6 +338,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
 
     def set_swing_mode(self, swing_mode):
         """Set new target swing mode."""
+        _LOGGER.debug("Set swing_mode to %s", swing_mode)
         if self._zxt_120 == 1:
             if self.values.zxt_120_swing_mode:
                 self.values.zxt_120_swing_mode.data = swing_mode
