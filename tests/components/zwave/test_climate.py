@@ -3,7 +3,7 @@ import pytest
 
 from homeassistant.components.climate.const import (
     HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF, PRESET_BOOST, PRESET_ECO,
-    SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE, SUPPORT_SWING_MODE,
+    PRESET_NONE, SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE, SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.components.zwave import climate
 from homeassistant.const import (
@@ -133,6 +133,8 @@ def test_data_lists(device):
     assert device.fan_modes == [3, 4, 5]
     assert device.hvac_modes == [0, 1, 2]
     assert device.preset_modes == []
+    device.values.mode = None
+    assert device.preset_modes == []
 
 
 def test_data_lists_mapping(device_mapping):
@@ -140,6 +142,8 @@ def test_data_lists_mapping(device_mapping):
     device = device_mapping
     assert device.hvac_modes == ['off', 'cool', 'heat']
     assert device.preset_modes == ['eco', 'boost']
+    device.values.mode = None
+    assert device.preset_modes == []
 
 
 def test_target_value_set(device):
@@ -226,6 +230,8 @@ def test_operation_value_changed_preset(device_mapping):
     device.values.mode.data = 'Heat Eco'
     value_changed(device.values.mode)
     assert device.preset_mode == 'eco'
+    device.values.mode = None
+    assert device.preset_mode == 'none'
 
 
 def test_operation_value_changed_mapping(device_mapping):
@@ -253,6 +259,8 @@ def test_operation_value_changed_mapping_preset(device_mapping):
     device.values.mode.data = 'boost'
     value_changed(device.values.mode)
     assert device.hvac_mode == PRESET_BOOST
+    device.values.mode = None
+    assert device.preset_mode == PRESET_NONE
 
 
 def test_fan_mode_value_changed(device):
