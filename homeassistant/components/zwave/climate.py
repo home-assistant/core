@@ -169,10 +169,8 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                  if value == current_mode), PRESET_NONE)
 
         _LOGGER.debug("self._hvac_list=%s", self._hvac_list)
-        _LOGGER.debug("self._hvac_mapping=%s", self._hvac_mapping)
         _LOGGER.debug("self._hvac_action=%s", self._hvac_action)
         _LOGGER.debug("self._preset_list=%s", self._preset_list)
-        _LOGGER.debug("self._preset_mapping=%s", self._preset_mapping)
 
         # Current Temp
         if self.values.temperature:
