@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components.vacuum import (
     PLATFORM_SCHEMA, SUPPORT_BATTERY, SUPPORT_FAN_SPEED, SUPPORT_PAUSE,
     SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STATUS, SUPPORT_STOP,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, VacuumDevice)
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_LOCATE, VacuumDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.exceptions import PlatformNotReady
@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # Commonly supported features
 SUPPORT_ROOMBA = SUPPORT_BATTERY | SUPPORT_PAUSE | SUPPORT_RETURN_HOME | \
                  SUPPORT_SEND_COMMAND | SUPPORT_STATUS | SUPPORT_STOP | \
-                 SUPPORT_TURN_OFF | SUPPORT_TURN_ON
+                 SUPPORT_TURN_OFF | SUPPORT_TURN_ON | SUPPORT_LOCATE
 
 # Only Roombas with CarpetBost can set their fanspeed
 SUPPORT_ROOMBA_CARPET_BOOST = SUPPORT_ROOMBA | SUPPORT_FAN_SPEED
@@ -193,6 +193,10 @@ class RoombaVacuum(VacuumDevice):
         """Set the vacuum cleaner to return to the dock."""
         await self.hass.async_add_job(self.vacuum.send_command, 'dock')
         self._is_on = False
+
+    async def async_locate(self, **kwargs):
+        """Located vacuum."""
+        await self.hass.async_add_job(self.vacuum.send_command, 'find')
 
     async def async_set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""
