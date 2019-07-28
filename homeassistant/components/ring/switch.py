@@ -1,29 +1,32 @@
 """This component provides HA switch support for Ring Door Bell/Chimes."""
-from datetime import timedelta
 import logging
-
+from datetime import datetime, timedelta
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.core import callback
 
-from . import DATA_RING
+from . import DATA_RING_STICKUP_CAMS, SIGNAL_UPDATE_RING
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=10)
-
 SIREN_ICON = 'mdi:alarm-bell'
-LIGHT_ICON = 'mdi:track-light'
 
+"""
+It takes a few seconds for the API to correctly return an update indicating
+that the changes have been made. Once we request a change (i.e. a light
+being turned on) we simply wait for this time delta before we allow
+updates to take place.
+"""
+SKIP_UPDATES_DELAY = timedelta(seconds=5)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the switches for the Ring devices."""
-    ring = hass.data[DATA_RING]
+    cameras = hass.data[DATA_RING_STICKUP_CAMS]
     switches = []
 
-    for device in ring.stickup_cams:  # ring.stickup_cams is doing I/O
+    for device in cameras:
         if device.has_capability('siren'):
             switches.append(SirenSwitch(device))
-        if device.has_capability('light'):
-            switches.append(LightSwitch(device))
 
     add_entities(switches, True)
 
@@ -37,6 +40,17 @@ class BaseRingSwitch(SwitchDevice):
         self._device_type = device_type
         self._unique_id = '{}-{}'.format(self._device.id, self._device_type)
 
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_RING, self._update_callback)
+
+    @callback
+    def _update_callback(self):
+        """Call update method."""
+        self.async_schedule_update_ha_state(True)
+        _LOGGER.debug("Updating Ring sensor %s (callback)", self.name)
+
     @property
     def name(self):
         """Name of the device."""
@@ -47,9 +61,10 @@ class BaseRingSwitch(SwitchDevice):
         """Return a unique ID."""
         return self._unique_id
 
-    def update(self):
-        """Get the siren status from ring."""
-        self._device.update()
+    @property
+    def should_poll(self):
+        """Updates are controlled via the hub."""
+        return False
 
 
 class SirenSwitch(BaseRingSwitch):
@@ -58,51 +73,38 @@ class SirenSwitch(BaseRingSwitch):
     def __init__(self, device):
         """Initialize the switch for a device with a siren."""
         super().__init__(device, 'siren')
+        self._no_updates_until = datetime.now()
+        self._siren_on = False
+
+    def __setSwitch(self, new_state):
+        """Updates the switch state, and causes HASS to correctly update"""
+        self._device.siren = new_state
+        self._siren_on = new_state > 0
+        self._no_updates_until = datetime.now() + SKIP_UPDATES_DELAY
+        self.async_schedule_update_ha_state(True)
 
     @property
     def is_on(self):
         """If the switch is currently on or off."""
-        if self._device is None:
-            return False
-        return self._device.siren > 0
+        return self._siren_on
 
     def turn_on(self, **kwargs):
         """Turn the siren on for 30 seconds."""
-        self._device.siren = 1
+        self.__setSwitch(1)
 
     def turn_off(self, **kwargs):
         """Turn the siren off."""
-        self._device.siren = 0
+        self.__setSwitch(0)
 
     @property
     def icon(self):
         """Return the icon."""
         return SIREN_ICON
 
+    def update(self):
+        """Update the current state of the siren"""
+        if self._no_updates_until > datetime.now():
+            _LOGGER.debug("Skipping update...")
+            return
 
-class LightSwitch(BaseRingSwitch):
-    """Creates a switch to turn the ring cameras light on and off."""
-
-    def __init__(self, device):
-        """Initialize the switch for a device with a light."""
-        super().__init__(device, 'light')
-
-    @property
-    def is_on(self):
-        """If the switch is currently on or off."""
-        if self._device is None:
-            return False
-        return self._device.lights == 'on'
-
-    def turn_on(self, **kwargs):
-        """Turn the light on for 30 seconds."""
-        self._device.lights = 'on'
-
-    def turn_off(self, **kwargs):
-        """Turn the light off."""
-        self._device.lights = 'off'
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return LIGHT_ICON
+        self._siren_on = self._device.siren > 0
