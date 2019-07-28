@@ -73,6 +73,25 @@ def device_mapping(hass, mock_openzwave):
     yield device
 
 
+@pytest.fixture
+def device_unknown(hass, mock_openzwave):
+    """Fixture to provide a precreated climate device. Test state unknown."""
+    node = MockNode()
+    values = MockEntityValues(
+        primary=MockValue(data=1, node=node),
+        temperature=MockValue(data=5, node=node, units=None),
+        mode=MockValue(data='Heat', data_items=[
+                       'Off', 'Cool', 'Heat', 'Heat Eco', 'Abcdefg'],
+                       node=node),
+        fan_mode=MockValue(data='test2', data_items=[3, 4, 5], node=node),
+        operating_state=MockValue(data=6, node=node),
+        fan_state=MockValue(data=7, node=node),
+    )
+    device = climate.get_device(hass, node=node, values=values, node_config={})
+
+    yield device
+
+
 def test_supported_features(device):
     """Test supported features flags"""
     assert device.supported_features == SUPPORT_FAN_MODE + \
@@ -189,6 +208,16 @@ def test_operation_value_set_mapping(device_mapping):
     assert device.values.mode.data == 'Heat Eco'
 
 
+def test_operation_value_set_unknown(device_unknown):
+    """Test values changed for climate device. Unknown."""
+    device = device_unknown
+    assert device.values.mode.data == 'Heat'
+    device.set_preset_mode(PRESET_ECO)
+    assert device.values.mode.data == 'Heat Eco'
+    device.set_preset_mode('Abcdefg')
+    assert device.values.mode.data == 'Abcdefg'
+
+
 def test_fan_mode_value_set(device):
     """Test values changed for climate device."""
     assert device.values.fan_mode.data == 'test2'
@@ -272,6 +301,16 @@ def test_operation_value_changed_mapping_preset(device_mapping):
     assert device.preset_mode == PRESET_BOOST
     device.values.mode = None
     assert device.preset_mode == PRESET_NONE
+
+def test_operation_value_changed_unknown(device_unknown):
+    """Test preset changed for climate device. Unknown"""
+    device = device_unknown
+    assert device.hvac_mode == HVAC_MODE_HEAT
+    assert device.preset_mode == PRESET_NONE
+    device.values.mode.data = 'Abcdefg'
+    value_changed(device.values.mode)
+    assert device.hvac_mode == None
+    assert device.preset_mode == 'Abcdefg'
 
 
 def test_fan_mode_value_changed(device):
