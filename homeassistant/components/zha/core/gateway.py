@@ -27,7 +27,7 @@ from .const import (
     DEVICE_INFO, DEVICE_JOINED, DEVICE_REMOVED, DOMAIN, IEEE, LOG_ENTRY,
     LOG_OUTPUT, MODEL, NWK, ORIGINAL, RADIO, RADIO_DESCRIPTION, RAW_INIT,
     SIGNAL_REMOVE, SIGNATURE, TYPE, UNKNOWN_MANUFACTURER, UNKNOWN_MODEL, ZHA,
-    ZHA_GW_MSG, ZIGPY, ZIGPY_DECONZ, ZIGPY_XBEE)
+    ZHA_GW_MSG, ZIGPY, ZIGPY_DECONZ, ZIGPY_XBEE, ZIGPY_ZIGATE)
 from .device import DeviceStatus, ZHADevice
 from .discovery import (
     async_dispatch_discovery_info, async_process_endpoint
@@ -368,6 +368,7 @@ def async_capture_log_levels():
         ZIGPY: logging.getLogger(ZIGPY).getEffectiveLevel(),
         ZIGPY_XBEE: logging.getLogger(ZIGPY_XBEE).getEffectiveLevel(),
         ZIGPY_DECONZ: logging.getLogger(ZIGPY_DECONZ).getEffectiveLevel(),
+        ZIGPY_ZIGATE: logging.getLogger(ZIGPY_ZIGATE).getEffectiveLevel(),
     }
 
 
@@ -379,6 +380,7 @@ def async_set_logger_levels(levels):
     logging.getLogger(ZIGPY).setLevel(levels[ZIGPY])
     logging.getLogger(ZIGPY_XBEE).setLevel(levels[ZIGPY_XBEE])
     logging.getLogger(ZIGPY_DECONZ).setLevel(levels[ZIGPY_DECONZ])
+    logging.getLogger(ZIGPY_ZIGATE).setLevel(levels[ZIGPY_ZIGATE])
 
 
 class LogRelayHandler(logging.Handler):
