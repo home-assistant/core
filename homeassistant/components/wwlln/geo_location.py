@@ -15,7 +15,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.dt import utc_from_timestamp
 
-from .const import CONF_WINDOW, DATA_CLIENT, DEFAULT_WINDOW, DOMAIN
+from .const import CONF_WINDOW, DATA_CLIENT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +25,7 @@ ATTR_PUBLICATION_DATE = 'publication_date'
 DEFAULT_ATTRIBUTION = 'Data provided by the WWLLN'
 DEFAULT_EVENT_NAME = 'Lightning Strike: {0}'
 DEFAULT_ICON = 'mdi:flash'
+DEFAULT_UPDATE_INTERVAL = timedelta(minutes=10)
 
 SIGNAL_DELETE_ENTITY = 'delete_entity_{0}'
 
@@ -105,7 +106,7 @@ class WWLLNEventManager:
             await self.async_update()
 
         await self.async_update()
-        async_track_time_interval(self._hass, update, DEFAULT_WINDOW)
+        async_track_time_interval(self._hass, update, DEFAULT_UPDATE_INTERVAL)
 
     async def async_update(self):
         """Refresh data."""
