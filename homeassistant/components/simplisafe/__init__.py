@@ -117,7 +117,7 @@ async def async_setup_entry(hass, config_entry):
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
-        simplisafe = await API.login_via_token(
+        api = await API.login_via_token(
             config_entry.data[CONF_TOKEN], websession)
     except InvalidCredentialsError:
         _LOGGER.error('Invalid credentials provided')
@@ -126,9 +126,9 @@ async def async_setup_entry(hass, config_entry):
         _LOGGER.error('Config entry failed: %s', err)
         raise ConfigEntryNotReady
 
-    _async_save_refresh_token(hass, config_entry, simplisafe.refresh_token)
+    _async_save_refresh_token(hass, config_entry, api.refresh_token)
 
-    systems = await simplisafe.get_systems()
+    systems = await api.get_systems()
     simplisafe = SimpliSafe(hass, config_entry, systems)
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = simplisafe
 
