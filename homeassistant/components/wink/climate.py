@@ -409,7 +409,7 @@ class WinkAC(WinkDevice, ClimateDevice):
         if not self.wink.is_on():
             return HVAC_MODE_OFF
 
-        wink_mode = self.wink.current_hvac_mode()
+        wink_mode = self.wink.current_mode()
         if wink_mode == "auto_eco":
             return HVAC_MODE_AUTO
         return WINK_HVAC_TO_HA.get(wink_mode)
@@ -422,7 +422,7 @@ class WinkAC(WinkDevice, ClimateDevice):
         """
         hvac_list = [HVAC_MODE_OFF]
 
-        modes = self.wink.hvac_modes()
+        modes = self.wink.modes()
         for mode in modes:
             if mode == "auto_eco":
                 continue
