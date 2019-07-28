@@ -2,7 +2,9 @@
 import pytest
 
 from homeassistant.components.climate.const import (
-    HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF, PRESET_BOOST, PRESET_ECO)
+    HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF, PRESET_BOOST, PRESET_ECO,
+    SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE, SUPPORT_SWING_MODE,
+    SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.components.zwave import climate
 from homeassistant.const import (
     ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT)
@@ -67,6 +69,26 @@ def device_mapping(hass, mock_openzwave):
     yield device
 
 
+def test_supported_features(device):
+    """Test supported features flags"""
+    assert device.supported_features == SUPPORT_FAN_MODE + \
+        SUPPORT_TARGET_TEMPERATURE
+
+
+def test_supported_features_preset_mode(device_mapping):
+    """Test supported features flags with swing mode"""
+    device = device_mapping
+    assert device.supported_features == SUPPORT_FAN_MODE + \
+        SUPPORT_TARGET_TEMPERATURE + SUPPORT_PRESET_MODE
+
+
+def test_supported_features_swing_mode(device_zxt_120):
+    """Test supported features flags with swing mode"""
+    device = device_zxt_120
+    assert device.supported_features == SUPPORT_FAN_MODE + \
+        SUPPORT_TARGET_TEMPERATURE + SUPPORT_SWING_MODE
+
+
 def test_zxt_120_swing_mode(device_zxt_120):
     """Test operation of the zxt 120 swing mode."""
     device = device_zxt_120
@@ -110,6 +132,7 @@ def test_data_lists(device):
     """Test data lists from zwave value items."""
     assert device.fan_modes == [3, 4, 5]
     assert device.hvac_modes == [0, 1, 2]
+    assert device.preset_modes == []
 
 
 def test_data_lists_mapping(device_mapping):
@@ -137,6 +160,11 @@ def test_operation_value_set(device):
     assert device.values.mode.data == 'test_set'
     device.set_preset_mode('another_test')
     assert device.values.mode.data == 'another_test'
+    device.values.mode = None
+    device.set_hvac_mode('test_set_failes')
+    assert device.values.mode == None
+    device.set_preset_mode('test_set_failes')
+    assert device.values.mode == None
 
 
 def test_operation_value_set_mapping(device_mapping):
@@ -160,6 +188,9 @@ def test_fan_mode_value_set(device):
     assert device.values.fan_mode.data == 'test2'
     device.set_fan_mode('test_fan_set')
     assert device.values.fan_mode.data == 'test_fan_set'
+    device.values.fan_mode = None
+    device.set_fan_mode('test_fan_set_failes')
+    assert device.values.fan_mode == None
 
 
 def test_target_value_changed(device):
@@ -181,9 +212,20 @@ def test_temperature_value_changed(device):
 def test_operation_value_changed(device):
     """Test values changed for climate device."""
     assert device.hvac_mode == 'test1'
+    assert device.preset_mode == 'none'
     device.values.mode.data = 'test_updated'
     value_changed(device.values.mode)
     assert device.hvac_mode == 'test_updated'
+    assert device.preset_mode == 'none'
+
+
+def test_operation_value_changed_preset(device_mapping):
+    """Test preset changed for climate device."""
+    device = device_mapping
+    assert device.preset_mode == 'none'
+    device.values.mode.data = 'Heat Eco'
+    value_changed(device.values.mode)
+    assert device.preset_mode == 'eco'
 
 
 def test_operation_value_changed_mapping(device_mapping):
@@ -199,6 +241,18 @@ def test_operation_value_changed_mapping(device_mapping):
     device.values.mode.data = 'Off'
     value_changed(device.values.mode)
     assert device.hvac_mode == HVAC_MODE_OFF
+
+
+def test_operation_value_changed_mapping_preset(device_mapping):
+    """Test values changed for climate device. Mapping with presets."""
+    device = device_mapping
+    assert device.hvac_mode == 'off'
+    device.values.mode.data = 'eco'
+    value_changed(device.values.mode)
+    assert device.hvac_mode == PRESET_ECO
+    device.values.mode.data = 'boost'
+    value_changed(device.values.mode)
+    assert device.hvac_mode == PRESET_BOOST
 
 
 def test_fan_mode_value_changed(device):
