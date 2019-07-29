@@ -286,6 +286,35 @@ async def async_unload_entry(hass, config_entry):
     return True
 
 
+async def async_migrate_entry(hass, config_entry):
+    """Migrate old entry."""
+    version = config_entry.version
+
+    _LOGGER.debug('Migrating from version %s', version)
+
+    reasons_to_re_add = {
+        1: "The format for unique IDs (in the entity registry) has changed."
+    }
+
+    # 1 -> 2: Unique ID format changed:
+    if version == 1:
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(
+            config_entry, data=config_entry.data)
+        _LOGGER.info('Migration to version %s successful', version)
+
+    msg = """{0}
+            Please remove the Ambient PWS Integration and re-configure
+            [here](/config/integrations).""".format(reasons_to_re_add[version])
+
+    hass.components.persistent_notification.async_create(
+        title="Ambient PWS Requires Update",
+        message=msg,
+        notification_id='config_entry_migration'
+    )
+    return False
+
+
 class AmbientStation:
     """Define a class to handle the Ambient websocket."""
 
