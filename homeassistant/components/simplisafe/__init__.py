@@ -197,10 +197,11 @@ class SimpliSafe:
 
     async def async_update(self):
         """Get updated data from SimpliSafe."""
-        tasks = [system.update() for system in self.systems.values()]
+        systems = self.systems.values()
+        tasks = [system.update() for system in systems]
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        for system, result in zip(self.systems.values(), results):
+        for system, result in zip(systems, results):
             if isinstance(result, Exception):
                 _LOGGER.error(
                     'There was error updating "%s": %s', system.address,
