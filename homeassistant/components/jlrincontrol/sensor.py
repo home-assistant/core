@@ -19,7 +19,8 @@ class JLRSensor(JLREntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        val = JLREntity.get_vehicle_status(self.vehicle.info.get('vehicleStatus'))
+        _LOGGER.info("Updating==========================================")
+        val = self.get_updated_info()
         if val is None:
             return val
         if val:
@@ -34,6 +35,9 @@ class JLRSensor(JLREntity):
             return float(int(val) / 1000)
 
         return int(float(val))
+
+    def update(self):
+        _LOGGER.info("Updating here xxxxxxxxxxxxx")
 
     @property
     def unit_of_measurement(self):
