@@ -6,24 +6,28 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
-from . import DOMAIN as VELBUS_DOMAIN, VelbusEntity
+from .const import DOMAIN
+from . import VelbusEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
-    """Set up the Velbus thermostat platform."""
-    if discovery_info is None:
-        return
+    """Set up Velbus binary sensors."""
+    pass
 
-    sensors = []
-    for sensor in discovery_info:
-        module = hass.data[VELBUS_DOMAIN].get_module(sensor[0])
-        channel = sensor[1]
-        sensors.append(VelbusClimate(module, channel))
 
-    async_add_entities(sensors)
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Velbus binary sensor based on config_entry."""
+    cntrl = hass.data[DOMAIN][entry.entry_id]['cntrl']
+    modules_data = hass.data[DOMAIN][entry.entry_id]['climate']
+    entities = []
+    for address, channel in modules_data:
+        module = cntrl.get_module(address)
+        entities.append(
+            VelbusClimate(module, channel))
+    async_add_entities(entities)
 
 
 class VelbusClimate(VelbusEntity, ClimateDevice):
