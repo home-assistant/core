@@ -166,6 +166,7 @@ class PS4Device(MediaPlayerDevice):
                         if self._use_saved():
                             _LOGGER.debug(
                                 "Using saved data for media: %s", title_id)
+                            self.schedule_update()
                             return
 
                         self._media_title = name
@@ -348,6 +349,7 @@ class PS4Device(MediaPlayerDevice):
         # Close TCP Transport.
         if self._ps4.connected:
             await self._ps4.close()
+        self.unsubscribe_to_protocol()
         self.hass.data[PS4_DATA].devices.remove(self)
 
     @property
