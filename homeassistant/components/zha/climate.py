@@ -22,6 +22,8 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
     DOMAIN,
+    FAN_OFF,
+    FAN_ON,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
@@ -197,8 +199,7 @@ class Thermostat(ZhaEntity, ClimateDevice):
         self._preset = PRESET_NONE
         self._presets = None
         self._supported_flags = SUPPORT_TARGET_TEMPERATURE
-        if CHANNEL_FAN in self.cluster_channels:
-            self._supported_flags |= SUPPORT_FAN_MODE
+        self._fan = self.cluster_channels.get(CHANNEL_FAN)
         self._target_temp = None
         self._target_range = (None, None)
 
@@ -237,6 +238,21 @@ class Thermostat(ZhaEntity, ClimateDevice):
         if unoccupied_heating_setpoint:
             data[ATTR_UNOCCP_COOL_SETPT] = unoccupied_heating_setpoint
         return data
+
+    @property
+    def fan(self):
+        """Fan channel."""
+        return self._fan
+
+    @property
+    def fan_mode(self) -> Optional[str]:
+        """Return current FAN mode."""
+        return None
+
+    @property
+    def fan_modes(self) -> Optional[List[str]]:
+        """Return supported FAN modes."""
+        return [FAN_OFF, FAN_ON]
 
     @property
     def hvac_action(self) -> Optional[str]:
@@ -283,7 +299,10 @@ class Thermostat(ZhaEntity, ClimateDevice):
     @property
     def hvac_modes(self) -> List[str]:
         """Return the list of available HVAC operation modes."""
-        return SEQ_OF_OPERATION.get(self._thrm.ctrl_seqe_of_oper, [HVAC_MODE_OFF])
+        modes = SEQ_OF_OPERATION.get(self._thrm.ctrl_seqe_of_oper, [HVAC_MODE_OFF])
+        if self.fan is not None:
+            modes.append(HVAC_MODE_FAN_ONLY)
+        return modes
 
     @property
     def is_aux_heat(self) -> Optional[bool]:
@@ -311,6 +330,8 @@ class Thermostat(ZhaEntity, ClimateDevice):
         features = self._supported_flags
         if HVAC_MODE_HEAT_COOL in self.hvac_modes:
             features |= SUPPORT_TARGET_TEMPERATURE_RANGE
+        if self._fan is not None:
+            self._supported_flags |= SUPPORT_FAN_MODE
         return features
 
     @property
