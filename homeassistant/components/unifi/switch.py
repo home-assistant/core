@@ -64,10 +64,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_dispatcher_connect(hass, controller.event_update, update_controller)
 
     update_controller()
+    switches_off.clear()
 
 
 @callback
-def update_items(controller, async_add_entities, switches, switches_off=[]):
+def update_items(controller, async_add_entities, switches, switches_off):
     """Update POE port state from the controller."""
     new_switches = []
     devices = controller.api.devices
@@ -135,9 +136,6 @@ def update_items(controller, async_add_entities, switches, switches_off=[]):
         new_switches.append(switches[poe_client_id])
         LOGGER.debug(
             "New UniFi POE switch %s (%s)", client.hostname, client.mac)
-
-    if switches_off:
-        switches_off = []
 
     if new_switches:
         async_add_entities(new_switches)
