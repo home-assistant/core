@@ -51,6 +51,7 @@ RESPONSE_SCHEMA = vol.Schema({
     vol.Required('release-notes'): cv.string,
     vol.Optional('reinstall-android'): cv.boolean,
     vol.Optional('apt'): cv.string,
+    vol.Optional('beta'): cv.boolean,
 })
 
 
@@ -93,6 +94,9 @@ async def async_setup(hass, config):
             return
 
         newest, releasenotes, android, apt = result
+        beta = False
+        if 'BETA' in releasenotes:
+            beta = True
 
         # Load data from supervisor on hass.io
         if hass.components.hassio.is_hassio():
@@ -108,7 +112,8 @@ async def async_setup(hass, config):
                     "icon": "mdi:update",
                     "reinstall_dom_app": True,
                     "reinstall_android_app": android,
-                    "apt": apt
+                    "apt": apt,
+                    "beta": beta
                 }
             )
 
@@ -140,7 +145,8 @@ async def async_setup(hass, config):
                     "icon": "mdi:update",
                     "reinstall_dom_app": False,
                     "reinstall_android_app": False,
-                    "apt": apt
+                    "apt": apt,
+                    "beta": beta
                 }
             )
             hass.states.async_set(

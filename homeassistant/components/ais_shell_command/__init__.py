@@ -285,6 +285,7 @@ def _execute_upgrade(hass, call):
     reinstall_android_app = state.attributes.get('reinstall_android_app')
     reinstall_dom_app = state.attributes.get('reinstall_dom_app')
     apt = state.attributes.get('apt')
+    beta = state.attributes.get('beta', False)
 
     if reinstall_dom_app is None or reinstall_dom_app is False:
         yield from hass.services.async_call('ais_ai_service', 'say_it', {
@@ -326,7 +327,10 @@ def _execute_upgrade(hass, call):
         else:
             # full update
             script = str(os.path.dirname(__file__))
-            script += '/scripts/upgrade_ais_full.sh'
+            if beta:
+                script += '/scripts/upgrade_ais_full_beta.sh'
+            else:
+                script += '/scripts/upgrade_ais_full.sh'
             process = subprocess.Popen(script, shell=True, stdout=subprocess.PIPE)
             process.wait()
             _LOGGER.info("_execute_upgrade, return: " + str(process.returncode))
