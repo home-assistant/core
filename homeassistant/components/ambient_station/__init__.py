@@ -293,25 +293,26 @@ async def async_migrate_entry(hass, config_entry):
     _LOGGER.debug('Migrating from version %s', version)
 
     reasons_to_re_add = {
-        1: "The format for unique IDs (in the entity registry) has changed."
+        1: "The integration's unique ID format has changed"
     }
 
-    # 1 -> 2: Unique ID format changed:
+    # 1 -> 2: Unique ID format changed, so delete and re-import:
     if version == 1:
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(
-            config_entry)
-        _LOGGER.info('Migration to version %s successful', version)
+        data = config_entry.data
+        hass.async_create_task(
+            hass.config_entries.async_remove(config_entry.entry_id))
+        flows = hass.config_entries.flow.async_progress()
+        if not any((f for f in flows if f['handler'] == DOMAIN)):
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={'source': SOURCE_IMPORT},
+                    data=data))
 
-    msg = """{0}
-            Please remove the Ambient PWS Integration and re-configure
-            [here](/config/integrations).""".format(reasons_to_re_add[version])
+    _LOGGER.info(
+        'The config entry was automatically recreated: %s',
+        reasons_to_re_add[version])
 
-    hass.components.persistent_notification.async_create(
-        title="Ambient PWS Requires Update",
-        message=msg,
-        notification_id='config_entry_migration'
-    )
     return False
 
 
