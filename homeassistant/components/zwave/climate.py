@@ -217,7 +217,8 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         # Operating state
         if self.values.operating_state:
             mode = self.values.operating_state.data
-            self._hvac_action = HVAC_CURRENT_MAPPINGS.get(str(mode).lower())
+            self._hvac_action = HVAC_CURRENT_MAPPINGS.get(
+                str(mode).lower(), mode)
 
         # Fan operating state
         if self.values.fan_state:

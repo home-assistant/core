@@ -4,7 +4,7 @@ import pytest
 from homeassistant.components.climate.const import (
     HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF, PRESET_BOOST, PRESET_ECO,
     PRESET_NONE, SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE, SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE)
+    SUPPORT_TARGET_TEMPERATURE, CURRENT_HVAC_HEAT, CURRENT_HVAC_COOL)
 from homeassistant.components.zwave import climate
 from homeassistant.const import (
     ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT)
@@ -24,7 +24,7 @@ def device(hass, mock_openzwave):
                        HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL],
                        node=node),
         fan_mode=MockValue(data='test2', data_items=[3, 4, 5], node=node),
-        operating_state=MockValue(data=6, node=node),
+        operating_state=MockValue(data=CURRENT_HVAC_HEAT, node=node),
         fan_state=MockValue(data=7, node=node),
     )
     device = climate.get_device(hass, node=node, values=values, node_config={})
@@ -44,7 +44,7 @@ def device_zxt_120(hass, mock_openzwave):
                        HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL],
                        node=node),
         fan_mode=MockValue(data='test2', data_items=[3, 4, 5], node=node),
-        operating_state=MockValue(data=6, node=node),
+        operating_state=MockValue(data=CURRENT_HVAC_HEAT, node=node),
         fan_state=MockValue(data=7, node=node),
         zxt_120_swing_mode=MockValue(
             data='test3', data_items=[6, 7, 8], node=node),
@@ -65,7 +65,7 @@ def device_mapping(hass, mock_openzwave):
                        'Off', 'Cool', 'Heat', 'Heat Eco', 'Full Power'],
                        node=node),
         fan_mode=MockValue(data='test2', data_items=[3, 4, 5], node=node),
-        operating_state=MockValue(data=6, node=node),
+        operating_state=MockValue(data='heating', node=node),
         fan_state=MockValue(data=7, node=node),
     )
     device = climate.get_device(hass, node=node, values=values, node_config={})
@@ -84,7 +84,7 @@ def device_unknown(hass, mock_openzwave):
                        'Off', 'Cool', 'Heat', 'Heat Eco', 'Abcdefg'],
                        node=node),
         fan_mode=MockValue(data='test2', data_items=[3, 4, 5], node=node),
-        operating_state=MockValue(data=6, node=node),
+        operating_state=MockValue(data='test4', node=node),
         fan_state=MockValue(data=7, node=node),
     )
     device = climate.get_device(hass, node=node, values=values, node_config={})
@@ -320,3 +320,29 @@ def test_fan_mode_value_changed(device):
     device.values.fan_mode.data = 'test_updated_fan'
     value_changed(device.values.fan_mode)
     assert device.fan_mode == 'test_updated_fan'
+
+
+def test_hvac_action_value_changed(device):
+    """Test values changed for climate device."""
+    assert device.hvac_action == CURRENT_HVAC_HEAT
+    device.values.operating_state.data = CURRENT_HVAC_COOL
+    value_changed(device.values.operating_state)
+    assert device.hvac_action == CURRENT_HVAC_COOL
+
+
+def test_hvac_action_value_changed_mapping(device_mapping):
+    """Test values changed for climate device."""
+    device = device_mapping
+    assert device.hvac_action == CURRENT_HVAC_HEAT
+    device.values.operating_state.data = 'cooling'
+    value_changed(device.values.operating_state)
+    assert device.hvac_action == CURRENT_HVAC_COOL
+
+
+def test_hvac_action_value_changed_unknown(device_unknown):
+    """Test values changed for climate device."""
+    device = device_unknown
+    assert device.hvac_action == 'test4'
+    device.values.operating_state.data = 'another_hvac_action'
+    value_changed(device.values.operating_state)
+    assert device.hvac_action == 'another_hvac_action'
