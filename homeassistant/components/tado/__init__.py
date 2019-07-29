@@ -69,13 +69,13 @@ class TadoDataStore:
 
             try:
                 if 'zone' in sensor:
-                    _LOGGER.info("Querying mytado.com for zone %s %s",
-                                 sensor['id'], sensor['name'])
+                    _LOGGER.debug("Querying mytado.com for zone %s %s",
+                                  sensor['id'], sensor['name'])
                     data = self.tado.getState(sensor['id'])
 
                 if 'device' in sensor:
-                    _LOGGER.info("Querying mytado.com for device %s %s",
-                                 sensor['id'], sensor['name'])
+                    _LOGGER.debug("Querying mytado.com for device %s %s",
+                                  sensor['id'], sensor['name'])
                     data = self.tado.getDevices()[0]
 
             except RuntimeError:
