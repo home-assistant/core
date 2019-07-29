@@ -151,10 +151,8 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             mode_list = self.values.mode.data_items
             if mode_list:
                 for mode in mode_list:
-                    ha_mode = HVAC_STATE_MAPPINGS.get(
-                        mode.lower() if isinstance(mode, str) else mode)
-                    ha_preset = PRESET_MAPPINGS.get(
-                        mode.lower() if isinstance(mode, str) else mode)
+                    ha_mode = HVAC_STATE_MAPPINGS.get(str(mode).lower())
+                    ha_preset = PRESET_MAPPINGS.get(str(mode).lower())
                     if ha_mode and ha_mode not in self._hvac_mapping:
                         self._hvac_mapping[ha_mode] = mode
                         self._hvac_list.append(ha_mode)
@@ -219,8 +217,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         # Operating state
         if self.values.operating_state:
             mode = self.values.operating_state.data
-            self._hvac_action = HVAC_CURRENT_MAPPINGS.get(
-                mode.lower() if isinstance(mode, str) else mode)
+            self._hvac_action = HVAC_CURRENT_MAPPINGS.get(str(mode).lower())
 
         # Fan operating state
         if self.values.fan_state:
