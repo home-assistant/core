@@ -8,8 +8,7 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_OFF, DOMAIN, HVAC_MODE_COOL, HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY, HVAC_MODE_OFF,
     SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_PRESET_MODE, PRESET_BOOST, PRESET_ECO, PRESET_NONE,
-    PRESET_MANUFACTURER_SPECIFIC)
+    SUPPORT_PRESET_MODE, PRESET_BOOST, PRESET_ECO, PRESET_NONE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -26,6 +25,10 @@ REMOTEC_ZXT_120 = 0x8377
 REMOTEC_ZXT_120_THERMOSTAT = (REMOTEC, REMOTEC_ZXT_120)
 ATTR_OPERATING_STATE = 'operating_state'
 ATTR_FAN_STATE = 'fan_state'
+
+
+# Device is in manufacturer specific mode (e.g. setting the valve manually)
+PRESET_MANUFACTURER_SPECIFIC = 'Manufacturer Specific'
 
 WORKAROUND_ZXT_120 = 'zxt_120'
 
