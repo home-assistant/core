@@ -6,12 +6,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import unifi
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
 from homeassistant.core import callback
 from homeassistant.const import (
     CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_VERIFY_SSL)
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -79,6 +80,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
     controller = hass.data[unifi.DOMAIN][controller_id]
     tracked = {}
+
+    registry = await entity_registry.async_get_registry(hass)
+
+    # Restore clients that is not a part of active clients list.
+    for entity in registry.entities.values():
+
+        if entity.config_entry_id == config_entry.entry_id and \
+                entity.domain == DOMAIN:
+
+            mac, _ = entity.unique_id.split('-', 1)
+
+            if mac in controller.api.clients or \
+                    mac not in controller.api.clients_all:
+                continue
+
+            client = controller.api.clients_all[mac]
+            controller.api.clients.process_raw([client.raw])
 
     @callback
     def update_controller():
