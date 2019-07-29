@@ -4,10 +4,11 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.helpers import config_validation as cv
 from homeassistant.const import (
-    CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, CONF_SCAN_INTERVAL)
+    CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, CONF_SCAN_INTERVAL,
+    CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_METRIC)
 from homeassistant.core import callback
 
-from .const import DEFAULT_RADIUS_IN_KM, DOMAIN, CONF_MMI, DEFAULT_MMI, \
+from .const import DEFAULT_RADIUS, DOMAIN, CONF_MMI, DEFAULT_MMI, \
     CONF_MINIMUM_MAGNITUDE, DEFAULT_MINIMUM_MAGNITUDE, DEFAULT_SCAN_INTERVAL
 
 
@@ -34,7 +35,7 @@ class GeonetnzQuakesFlowHandler(config_entries.ConfigFlow):
                 cv.latitude,
             vol.Optional(CONF_LONGITUDE, default=self.hass.config.longitude):
                 cv.longitude,
-            vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM):
+            vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS):
                 cv.positive_int,
             vol.Optional(CONF_MMI, default=DEFAULT_MMI):
                 vol.All(vol.Coerce(int), vol.Range(min=-1, max=8)),
@@ -59,6 +60,11 @@ class GeonetnzQuakesFlowHandler(config_entries.ConfigFlow):
             user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE])
         if identifier in configured_instances(self.hass):
             return await self._show_form({'base': 'identifier_exists'})
+
+        if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
+            user_input[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_IMPERIAL
+        else:
+            user_input[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_METRIC
 
         user_input[CONF_SCAN_INTERVAL] = DEFAULT_SCAN_INTERVAL.total_seconds()
 

@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from .const import CONF_MINIMUM_MAGNITUDE, CONF_MMI, DEFAULT_MMI, \
-    DEFAULT_MINIMUM_MAGNITUDE, DEFAULT_RADIUS_IN_KM
+    DEFAULT_MINIMUM_MAGNITUDE, DEFAULT_RADIUS
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS,
@@ -13,7 +13,7 @@ from homeassistant.helpers import config_validation as cv
 
 from .config_flow import configured_instances
 from .const import (
-    DEFAULT_RADIUS_IN_KM, DOMAIN, FEED,
+    DEFAULT_RADIUS, DOMAIN, FEED,
     DEFAULT_SCAN_INTERVAL)
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_LONGITUDE): cv.longitude,
         vol.Optional(CONF_MMI, default=DEFAULT_MMI):
             vol.All(vol.Coerce(int), vol.Range(min=-1, max=8)),
-        vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM):
+        vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS):
             vol.Coerce(float),
         vol.Optional(CONF_MINIMUM_MAGNITUDE,
                      default=DEFAULT_MINIMUM_MAGNITUDE):

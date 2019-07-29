@@ -8,12 +8,13 @@ from aio_geojson_geonetnz_quakes import GeonetnzQuakesFeedManager
 from homeassistant.components.geo_location import (GeolocationEvent)
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 from .const import \
-    CONF_MINIMUM_MAGNITUDE, \
-    DEFAULT_UNIT_OF_MEASUREMENT, CONF_MMI
+    CONF_MINIMUM_MAGNITUDE, CONF_MMI
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE,
-    CONF_RADIUS, CONF_SCAN_INTERVAL)
+    CONF_RADIUS, CONF_SCAN_INTERVAL, CONF_UNIT_SYSTEM,
+    LENGTH_KILOMETERS, LENGTH_MILES, CONF_UNIT_SYSTEM_IMPERIAL)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
@@ -47,6 +48,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entry.data[CONF_LONGITUDE],
         entry.data[CONF_MMI],
         entry.data[CONF_RADIUS],
+        entry.data[CONF_UNIT_SYSTEM],
         entry.data[CONF_MINIMUM_MAGNITUDE])
     await manager.async_init()
 
@@ -55,7 +57,7 @@ class GeonetnzQuakesFeedEntityManager:
     """Feed Entity Manager for GeoNet NZ Quakes feed."""
 
     def __init__(self, hass, async_add_entities, scan_interval, latitude,
-                 longitude, mmi, radius_in_km, minimum_magnitude):
+                 longitude, mmi, radius_in_km, unit_system, minimum_magnitude):
         """Initialize the Feed Entity Manager."""
         self._hass = hass
         coordinates = (latitude, longitude)
@@ -67,6 +69,7 @@ class GeonetnzQuakesFeedEntityManager:
             filter_minimum_magnitude=minimum_magnitude)
         self._async_add_entities = async_add_entities
         self._scan_interval = timedelta(seconds=scan_interval)
+        self._unit_system = unit_system
 
     async def async_init(self):
         """Schedule regular updates based on configured time interval."""
@@ -87,7 +90,7 @@ class GeonetnzQuakesFeedEntityManager:
 
     async def _generate_entity(self, external_id):
         """Generate new entity."""
-        new_entity = GeonetnzQuakesEvent(self, external_id)
+        new_entity = GeonetnzQuakesEvent(self, external_id, self._unit_system)
         # Add new entities to HA.
         self._async_add_entities([new_entity], True)
 
@@ -105,10 +108,11 @@ class GeonetnzQuakesFeedEntityManager:
 class GeonetnzQuakesEvent(GeolocationEvent):
     """This represents an external event with GeoNet NZ Quakes feed data."""
 
-    def __init__(self, feed_manager, external_id):
+    def __init__(self, feed_manager, external_id, unit_system):
         """Initialize entity with data from feed entry."""
         self._feed_manager = feed_manager
         self._external_id = external_id
+        self._unit_system = unit_system
         self._title = None
         self._distance = None
         self._latitude = None
@@ -159,7 +163,12 @@ class GeonetnzQuakesEvent(GeolocationEvent):
     def _update_from_feed(self, feed_entry):
         """Update the internal state from the provided feed entry."""
         self._title = feed_entry.title
-        self._distance = feed_entry.distance_to_home
+        # Convert distance if not metric system.
+        if self._unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+            self._distance = IMPERIAL_SYSTEM.length(
+                feed_entry.distance_to_home, LENGTH_KILOMETERS)
+        else:
+            self._distance = feed_entry.distance_to_home
         self._latitude = feed_entry.coordinates[0]
         self._longitude = feed_entry.coordinates[1]
         self._attribution = feed_entry.attribution
@@ -203,7 +212,10 @@ class GeonetnzQuakesEvent(GeolocationEvent):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return DEFAULT_UNIT_OF_MEASUREMENT
+        if self._unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+            return LENGTH_MILES
+        else:
+            return LENGTH_KILOMETERS
 
     @property
     def device_state_attributes(self):
