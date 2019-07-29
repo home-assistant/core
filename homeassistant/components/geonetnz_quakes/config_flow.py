@@ -2,14 +2,15 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.helpers import config_validation as cv
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, CONF_SCAN_INTERVAL,
-    CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_METRIC)
+    CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
 from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv
 
-from .const import DEFAULT_RADIUS, DOMAIN, CONF_MMI, DEFAULT_MMI, \
-    CONF_MINIMUM_MAGNITUDE, DEFAULT_MINIMUM_MAGNITUDE, DEFAULT_SCAN_INTERVAL
+from .const import (
+    CONF_MINIMUM_MAGNITUDE, CONF_MMI, DEFAULT_MINIMUM_MAGNITUDE, DEFAULT_MMI,
+    DEFAULT_RADIUS, DEFAULT_SCAN_INTERVAL, DOMAIN)
 
 
 @callback

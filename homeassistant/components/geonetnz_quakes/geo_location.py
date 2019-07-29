@@ -1,23 +1,23 @@
 """Geolocation support for GeoNet NZ Quakes Feeds."""
-import logging
 from datetime import timedelta
+import logging
 from typing import Optional
 
 from aio_geojson_geonetnz_quakes import GeonetnzQuakesFeedManager
 
-from homeassistant.components.geo_location import (GeolocationEvent)
-from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
-from .const import \
-    CONF_MINIMUM_MAGNITUDE, CONF_MMI, DOMAIN, FEED
+from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE,
-    CONF_RADIUS, CONF_SCAN_INTERVAL, CONF_UNIT_SYSTEM,
-    LENGTH_KILOMETERS, LENGTH_MILES, CONF_UNIT_SYSTEM_IMPERIAL)
+    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS,
+    CONF_SCAN_INTERVAL, CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL,
+    LENGTH_KILOMETERS, LENGTH_MILES)
 from homeassistant.core import callback
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+
+from .const import CONF_MINIMUM_MAGNITUDE, CONF_MMI, DOMAIN, FEED
 
 _LOGGER = logging.getLogger(__name__)
 
