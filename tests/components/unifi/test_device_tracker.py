@@ -49,6 +49,22 @@ CLIENT_3 = {
     'mac': '00:00:00:00:00:03',
 }
 
+DEVICE_1 = {
+    'board_rev': 3,
+    'device_id': 'mock-id',
+    'has_fan': True,
+    'fan_level': 0,
+    'ip': '10.0.1.1',
+    'last_seen': 1562600145,
+    'mac': '00:00:00:00:01:01',
+    'model': 'US16P150',
+    'name': 'device_1',
+    'overheating': False,
+    'type': 'usw',
+    'upgradable': False,
+    'version': '4.0.42.10433',
+}
+
 CONTROLLER_DATA = {
     CONF_HOST: 'mock-host',
     CONF_USERNAME: 'mock-user',
@@ -137,32 +153,41 @@ async def test_tracked_devices(hass, mock_controller):
     """Test the update_items function with some clients."""
     mock_controller.mock_client_responses.append(
         [CLIENT_1, CLIENT_2, CLIENT_3])
-    mock_controller.mock_device_responses.append({})
+    mock_controller.mock_device_responses.append([DEVICE_1])
     mock_controller.unifi_config = {unifi_dt.CONF_SSID_FILTER: ['ssid']}
 
     await setup_controller(hass, mock_controller)
     assert len(mock_controller.mock_requests) == 2
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 5
 
-    device_1 = hass.states.get('device_tracker.client_1')
+    client_1 = hass.states.get('device_tracker.client_1')
+    assert client_1 is not None
+    assert client_1.state == 'not_home'
+
+    client_2 = hass.states.get('device_tracker.wired_client')
+    assert client_2 is not None
+    assert client_2.state == 'not_home'
+
+    client_3 = hass.states.get('device_tracker.client_3')
+    assert client_3 is None
+
+    device_1 = hass.states.get('device_tracker.device_1')
     assert device_1 is not None
     assert device_1.state == 'not_home'
 
-    device_2 = hass.states.get('device_tracker.wired_client')
-    assert device_2 is not None
-    assert device_2.state == 'not_home'
-
-    device_3 = hass.states.get('device_tracker.client_3')
-    assert device_3 is None
-
-    client_1 = copy(CLIENT_1)
-    client_1['last_seen'] = dt_util.as_timestamp(dt_util.utcnow())
-    mock_controller.mock_client_responses.append([client_1])
-    mock_controller.mock_device_responses.append({})
+    client_1_copy = copy(CLIENT_1)
+    client_1_copy['last_seen'] = dt_util.as_timestamp(dt_util.utcnow())
+    device_1_copy = copy(DEVICE_1)
+    device_1_copy['last_seen'] = dt_util.as_timestamp(dt_util.utcnow())
+    mock_controller.mock_client_responses.append([client_1_copy])
+    mock_controller.mock_device_responses.append([device_1_copy])
     await mock_controller.async_update()
     await hass.async_block_till_done()
 
-    device_1 = hass.states.get('device_tracker.client_1')
+    client_1 = hass.states.get('device_tracker.client_1')
+    assert client_1.state == 'home'
+
+    device_1 = hass.states.get('device_tracker.device_1')
     assert device_1.state == 'home'
 
 

@@ -7,8 +7,9 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
-    CONF_BLOCK_CLIENT, CONF_CONTROLLER, CONF_DETECTION_TIME, CONF_SITE_ID,
-    CONF_SSID_FILTER, CONTROLLER_ID, DOMAIN, UNIFI_CONFIG)
+    ATTR_MANUFACTURER, CONF_BLOCK_CLIENT, CONF_CONTROLLER,
+    CONF_DETECTION_TIME, CONF_SITE_ID, CONF_SSID_FILTER, CONTROLLER_ID,
+    DOMAIN, UNIFI_CONFIG)
 from .controller import UniFiController
 
 CONF_CONTROLLERS = 'controllers'
@@ -66,7 +67,7 @@ async def async_setup_entry(hass, config_entry):
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, controller.mac)},
-        manufacturer='Ubiquiti',
+        manufacturer=ATTR_MANUFACTURER,
         model="UniFi Controller",
         name="UniFi Controller",
         # sw_version=config.raw['swversion'],
