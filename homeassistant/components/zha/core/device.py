@@ -447,4 +447,3 @@ class ZHADevice(LogMixin):
         msg = '[%s](%s): ' + msg
         args = (self.nwk, self.model, ) + args
         _LOGGER.log(level, msg, *args)
-
