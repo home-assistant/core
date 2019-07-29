@@ -2,6 +2,8 @@
 import logging
 import re
 
+from simplipy.system import SystemStates
+
 from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER, FORMAT_TEXT, AlarmControlPanel)
 from homeassistant.const import (
@@ -32,7 +34,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a SimpliSafe alarm control panel based on a config entry."""
     simplisafe = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
     async_add_entities([
-        SimpliSafeAlarm(system, entry.data.get(CONF_CODE))
+        SimpliSafeAlarm(simplisafe, system, entry.data.get(CONF_CODE))
         for system in simplisafe.systems.values()
     ], True)
 
@@ -40,9 +42,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
     """Representation of a SimpliSafe alarm."""
 
-    def __init__(self, system, code):
+    def __init__(self, simplisafe, system, code):
         """Initialize the SimpliSafe alarm."""
-        super().__init__(system)
+        super().__init__(simplisafe, system)
+        self._changed_by = None
         self._code = code
         self._entity_type = 'alarm_control_panel'
         self._name = 'Alarm Control Panel'
@@ -53,6 +56,11 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
                 ATTR_RF_JAMMING, ATTR_WALL_POWER_LEVEL, ATTR_WIFI_STRENGTH):
             if hasattr(system, prop):
                 self._attrs[prop] = getattr(system, prop)
+
+    @property
+    def changed_by(self):
+        """Return info about who changed the alarm last."""
+        return self._changed_by
 
     @property
     def code_format(self):
@@ -98,9 +106,8 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
 
     async def async_update(self):
         """Update alarm status."""
-        from simplipy.system import SystemStates
-
-        self._attrs[ATTR_ALARM_ACTIVE] = self._system.alarm_going_off
+        event_data = self._simplisafe.last_event_data[self._system.system_id]
+        self._changed_by = event_data['pinName']
 
         if self._system.state == SystemStates.error:
             return
@@ -115,3 +122,5 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
             self._state = STATE_ALARM_ARMED_AWAY
         else:
             self._state = None
+
+        self._attrs[ATTR_ALARM_ACTIVE] = self._system.alarm_going_off

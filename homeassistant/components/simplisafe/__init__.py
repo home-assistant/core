@@ -140,6 +140,7 @@ async def async_setup_entry(hass, config_entry):
 
     systems = await api.get_systems()
     simplisafe = SimpliSafe(hass, config_entry, systems)
+    await simplisafe.async_update()
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = simplisafe
 
     for component in ('alarm_control_panel', 'sensor'):
@@ -150,6 +151,8 @@ async def async_setup_entry(hass, config_entry):
     async def refresh(event_time):
         """Refresh data from the SimpliSafe account."""
         await simplisafe.async_update()
+        _LOGGER.debug('Updated data for all SimpliSafe systems')
+        async_dispatcher_send(hass, TOPIC_UPDATE)
 
     hass.data[DOMAIN][DATA_LISTENER][
         config_entry.entry_id] = async_track_time_interval(
@@ -213,7 +216,7 @@ class SimpliSafe:
         try:
             await system.update()
             latest_event = await system.get_latest_event()
-        except SimplipyError as err:
+        except Exception as err:  # pylint: disable=broad-except
             _LOGGER.error('Error while updating "%s": %s', system.address, err)
             return
 
@@ -222,10 +225,6 @@ class SimpliSafe:
         if system.api.refresh_token_dirty:
             _async_save_refresh_token(
                 self._hass, self._config_entry, system.api.refresh_token)
-
-        _LOGGER.debug('Updated status of "%s"', system.address)
-        async_dispatcher_send(
-            self._hass, TOPIC_UPDATE.format(system.system_id))
 
     async def async_update(self):
         """Get updated data from SimpliSafe."""
@@ -239,12 +238,13 @@ class SimpliSafe:
 class SimpliSafeEntity(Entity):
     """Define a base SimpliSafe entity."""
 
-    def __init__(self, system):
+    def __init__(self, simplisafe, system):
         """Initialize."""
         self._async_unsub_dispatcher_connect = None
         self._attrs = {ATTR_SYSTEM_ID: system.system_id}
         self._entity_type = None
         self._name = None
+        self._simplisafe = simplisafe
         self._state = None
         self._system = system
 
