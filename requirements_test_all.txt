@@ -346,7 +346,7 @@ ring_doorbell==0.2.3
 rxv==0.6.0
 
 # homeassistant.components.simplisafe
-simplisafe-python==4.0.1
+simplisafe-python==4.2.0
 
 # homeassistant.components.sleepiq
 sleepyq==0.7
