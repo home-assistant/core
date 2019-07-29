@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import unifi
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
 from homeassistant.core import callback
@@ -87,8 +87,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for entity in registry.entities.values():
 
         if entity.config_entry_id == config_entry.entry_id and \
-                entity.unique_id.startswith('dt-'):
-            _, mac, _ = entity.unique_id.split('-', 2)
+                entity.domain == DOMAIN:
+
+            mac, _ = entity.unique_id.split('-', 1)
 
             if mac in controller.api.clients or \
                     mac not in controller.api.clients_all:
@@ -172,7 +173,7 @@ class UniFiClientTracker(ScannerEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this client."""
-        return 'dt-{}-{}'.format(self.client.mac, self.controller.site)
+        return '{}-{}'.format(self.client.mac, self.controller.site)
 
     @property
     def available(self) -> bool:

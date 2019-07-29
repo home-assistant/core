@@ -176,9 +176,9 @@ async def test_restoring_client(hass, mock_controller):
 
     registry = await unifi_dt.entity_registry.async_get_registry(hass)
     registry.async_get_or_create(
-        unifi_dt.UNIFI_DOMAIN, device_tracker.DOMAIN,
-        'dt-{}-mock-site'.format(CLIENT_1['mac']),
-        config_entry_id=1)
+        device_tracker.DOMAIN, unifi_dt.UNIFI_DOMAIN,
+        '{}-mock-site'.format(CLIENT_1['mac']),
+        suggested_object_id=CLIENT_1['hostname'], config_entry_id=1)
 
     await setup_controller(hass, mock_controller)
     assert len(mock_controller.mock_requests) == 3
