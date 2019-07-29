@@ -55,12 +55,21 @@ class VelbusCover(VelbusEntity, CoverDevice):
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        self._module.open(self._channel)
+        try:
+            self._module.open(self._channel)
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.error('An error occurred: %s', err)
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        self._module.close(self._channel)
+        try:
+            self._module.close(self._channel)
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.error('An error occurred: %s', err)
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        self._module.stop(self._channel)
+        try:
+            self._module.stop(self._channel)
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.error('An error occurred: %s', err)

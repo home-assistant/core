@@ -37,8 +37,14 @@ class VelbusSwitch(VelbusEntity, SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Instruct the switch to turn on."""
-        self._module.turn_on(self._channel)
+        try:
+            self._module.turn_on(self._channel)
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.error('An error occurred: %s', err)
 
     def turn_off(self, **kwargs):
         """Instruct the switch to turn off."""
-        self._module.turn_off(self._channel)
+        try:
+            self._module.turn_off(self._channel)
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.error('An error occurred: %s', err)

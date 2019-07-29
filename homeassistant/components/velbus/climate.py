@@ -73,11 +73,14 @@ class VelbusClimate(VelbusEntity, ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperatures."""
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        if temp is None:
-            return
-        self._module.set_temp(temp)
-        self.schedule_update_ha_state()
+        try:
+            temp = kwargs.get(ATTR_TEMPERATURE)
+            if temp is None:
+                return
+            self._module.set_temp(temp)
+            self.schedule_update_ha_state()
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.error('An error occurred: %s', err)
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
