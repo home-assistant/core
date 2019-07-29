@@ -47,8 +47,6 @@ def setup(hass, config):
     password = conf[CONF_PASSWORD]
     scan_interval = conf[CONF_SCAN_INTERVAL]
 
-    ring_devices = []
-
     try:
         from ring_doorbell import Ring
 
@@ -72,7 +70,6 @@ def setup(hass, config):
             notification_id=NOTIFICATION_ID)
         return False
 
-    @callback
     def service_hub_refresh(service):
         hub_refresh()
 
