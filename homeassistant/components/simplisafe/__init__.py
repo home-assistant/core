@@ -201,16 +201,16 @@ class SimpliSafe:
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
         for system, result in zip(self.systems.values(), results):
-            if isinstance(result, SimplipyError):
+            if isinstance(result, Exception):
                 _LOGGER.error(
                     'There was error updating "%s": %s', system.address,
                     result)
                 continue
 
-            _LOGGER.debug('Updated status of "%s"', system.address)
-            async_dispatcher_send(
-                self._hass, TOPIC_UPDATE.format(system.system_id))
-
             if system.api.refresh_token_dirty:
                 _async_save_refresh_token(
                     self._hass, self._config_entry, system.api.refresh_token)
+
+            _LOGGER.debug('Updated status of "%s"', system.address)
+            async_dispatcher_send(
+                self._hass, TOPIC_UPDATE.format(system.system_id))
