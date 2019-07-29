@@ -14,9 +14,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client, config_validation as cv, device_registry as dr)
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, async_dispatcher_send)
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import verify_domain_control
 
@@ -33,11 +31,6 @@ ATTR_SYSTEM_ID = 'system_id'
 CONF_ACCOUNTS = 'accounts'
 
 DATA_LISTENER = 'listener'
-
-SENSOR_TYPE_LAST_EVENT = 'last_event'
-SENSOR_TYPES = {
-    SENSOR_TYPE_LAST_EVENT: ('Last Event', 'calendar:alert')
-}
 
 TASK_TYPE_LAST_EVENT = 'last_event'
 TASK_TYPE_UPDATE = 'update'
@@ -143,10 +136,9 @@ async def async_setup_entry(hass, config_entry):
     await simplisafe.async_update()
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = simplisafe
 
-    for component in ('alarm_control_panel', 'sensor'):
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(
-                config_entry, component))
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(
+            config_entry, 'alarm_control_panel'))
 
     async def refresh(event_time):
         """Refresh data from the SimpliSafe account."""
@@ -190,9 +182,8 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a SimpliSafe config entry."""
-    for component in ('alarm_control_panel', 'sensor'):
-        await hass.config_entries.async_forward_entry_unload(
-            entry, component)
+    await hass.config_entries.async_forward_entry_unload(
+        entry, 'alarm_control_panel')
 
     hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
     remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id)
@@ -233,62 +224,3 @@ class SimpliSafe:
         ]
 
         await asyncio.gather(*tasks)
-
-
-class SimpliSafeEntity(Entity):
-    """Define a base SimpliSafe entity."""
-
-    def __init__(self, simplisafe, system):
-        """Initialize."""
-        self._async_unsub_dispatcher_connect = None
-        self._attrs = {ATTR_SYSTEM_ID: system.system_id}
-        self._entity_type = None
-        self._name = None
-        self._simplisafe = simplisafe
-        self._state = None
-        self._system = system
-
-    @property
-    def device_info(self):
-        """Return device registry information for this entity."""
-        return {
-            'identifiers': {
-                (DOMAIN, self._system.system_id)
-            },
-            'manufacturer': 'SimpliSafe',
-            'model': self._system.version,
-            # The name should become more dynamic once we deduce a way to
-            # get various other sensors from SimpliSafe in a reliable manner:
-            'name': 'Keypad',
-            'via_device': (DOMAIN, self._system.serial)
-        }
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return self._attrs
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return '{0}: {1}'.format(self._name, self._system.address)
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return '{0}_{1}'.format(self._system.system_id, self._entity_type)
-
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-        @callback
-        def update():
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE.format(self._system.system_id), update)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
