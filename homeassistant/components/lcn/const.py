@@ -36,6 +36,7 @@ CONF_SCENES = 'scenes'
 CONF_REGISTER = 'register'
 CONF_SCENE = 'scene'
 CONF_OUTPUTS = 'outputs'
+CONF_REVERSE_TIME = 'reverse_time'
 
 DIM_MODES = ['STEPS50', 'STEPS200']
 
@@ -46,7 +47,7 @@ RELAY_PORTS = ['RELAY1', 'RELAY2', 'RELAY3', 'RELAY4',
                'MOTORONOFF1', 'MOTORUPDOWN1', 'MOTORONOFF2', 'MOTORUPDOWN2',
                'MOTORONOFF3', 'MOTORUPDOWN3', 'MOTORONOFF4', 'MOTORUPDOWN4']
 
-MOTOR_PORTS = ['MOTOR1', 'MOTOR2', 'MOTOR3', 'MOTOR4']
+MOTOR_PORTS = ['MOTOR1', 'MOTOR2', 'MOTOR3', 'MOTOR4', 'OUTPUTS']
 
 LED_PORTS = ['LED1', 'LED2', 'LED3', 'LED4', 'LED5', 'LED6',
              'LED7', 'LED8', 'LED9', 'LED10', 'LED11', 'LED12']
@@ -96,3 +97,5 @@ TIME_UNITS = ['SECONDS', 'SECOND', 'SEC', 'S',
               'MINUTES', 'MINUTE', 'MIN', 'M',
               'HOURS', 'HOUR', 'H',
               'DAYS', 'DAY', 'D']
+
+MOTOR_REVERSE_TIME = ['RT70', 'RT600', 'RT1200']
