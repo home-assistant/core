@@ -18,7 +18,7 @@ def mock_controller_assert():
     """Mock the velbus controller with an assert."""
     controller = Mock()
     with patch('velbus.Controller', side_effect=Exception()):
-        yield controller
+        yield
 
 
 @pytest.fixture(name='controller')
