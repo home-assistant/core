@@ -10,7 +10,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, \
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.dispatcher import dispatcher_send
 import homeassistant.helpers.config_validation as cv
-from homeassistant.core import callback
 
 _LOGGER = logging.getLogger(__name__)
 
