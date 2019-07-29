@@ -77,12 +77,8 @@ PARSER_HTML = 'html'
 PARSER_MD = 'markdown'
 
 DEFAULT_TRUSTED_NETWORKS = [
-    ip_network('149.154.167.197/32'),
-    ip_network('149.154.167.198/31'),
-    ip_network('149.154.167.200/29'),
-    ip_network('149.154.167.208/28'),
-    ip_network('149.154.167.224/29'),
-    ip_network('149.154.167.232/31')
+    ip_network('149.154.160.0/20'),
+    ip_network('91.108.4.0/22')
 ]
 
 CONFIG_SCHEMA = vol.Schema({
