@@ -210,7 +210,7 @@ def states_to_json(
     each list of states, otherwise our graphs won't start on the Y
     axis correctly.
     """
-    result = defaultdict(list)
+    result = {ent_id: [] for ent_id in entity_ids}
 
     # Get the states at the start time
     timer_start = time.perf_counter()
