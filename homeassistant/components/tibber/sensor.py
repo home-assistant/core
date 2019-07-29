@@ -52,7 +52,6 @@ class TibberSensorElPrice(Entity):
         """Initialize the sensor."""
         self._tibber_home = tibber_home
         self._last_updated = None
-        self._last_data_timestamp = None
         self._state = None
         self._is_available = False
         self._device_state_attributes = {}
@@ -64,16 +63,24 @@ class TibberSensorElPrice(Entity):
         """Get the latest data and updates the states."""
         now = dt_util.now()
         if self._tibber_home.current_price_total and self._last_updated and \
-           self._last_updated.hour == now.hour and self._last_data_timestamp:
+           self._last_updated.hour == now.hour and\
+                self._tibber_home.last_data_timestamp:
             return
 
-        if (not self._last_data_timestamp or
-                (self._last_data_timestamp - now).total_seconds() / 3600 < 12
+        if (not self._tibber_home.last_data_timestamp or
+                (self._tibber_home.last_data_timestamp
+                 - now).total_seconds() / 3600 < 12
                 or not self._is_available):
             _LOGGER.debug("Asking for new data.")
             await self._fetch_data()
 
-        self._is_available = self._update_current_price()
+        res = self._tibber_home.current_price_data()
+        self._state, price_level, self._last_updated = res
+        self._device_state_attributes['price_level'] = price_level
+
+        attrs = self._tibber_home.current_attributes()
+        self._device_state_attributes.update(attrs)
+        self._is_available = self._state is not None
 
     @property
     def device_state_attributes(self):
@@ -124,36 +131,6 @@ class TibberSensorElPrice(Entity):
             data['meteringPointData']['gridCompany']
         self._device_state_attributes['estimated_annual_consumption'] = \
             data['meteringPointData']['estimatedAnnualConsumption']
-
-    def _update_current_price(self):
-        state = None
-        max_price = 0
-        min_price = 10000
-        sum_price = 0
-        num = 0
-        now = dt_util.now()
-        for key, price_total in self._tibber_home.price_total.items():
-            price_time = dt_util.as_local(dt_util.parse_datetime(key))
-            price_total = round(price_total, 3)
-            time_diff = (now - price_time).total_seconds() / 60
-            if (not self._last_data_timestamp or
-                    price_time > self._last_data_timestamp):
-                self._last_data_timestamp = price_time
-            if 0 <= time_diff < 60:
-                state = price_total
-                level = self._tibber_home.price_level[key]
-                self._last_updated = price_time
-            if now.date() == price_time.date():
-                max_price = max(max_price, price_total)
-                min_price = min(min_price, price_total)
-                num += 1
-                sum_price += price_total
-        self._state = state
-        self._device_state_attributes['max_price'] = max_price
-        self._device_state_attributes['avg_price'] = round(sum_price / num, 3)
-        self._device_state_attributes['min_price'] = min_price
-        self._device_state_attributes['price_level'] = level
-        return state is not None
 
 
 class TibberSensorRT(Entity):
