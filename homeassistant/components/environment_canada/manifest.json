@@ -3,7 +3,7 @@
   "name": "Environment Canada",
   "documentation": "https://www.home-assistant.io/components/environment_canada",
   "requirements": [
-    "env_canada==0.0.18"
+    "env_canada==0.0.19"
   ],
   "dependencies": [],
   "codeowners": [
