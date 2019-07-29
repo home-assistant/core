@@ -1330,7 +1330,7 @@ pyowm==2.10.0
 pypca==0.0.4
 
 # homeassistant.components.lcn
-pypck==0.6.2
+pypck==0.6.3
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.0
