@@ -177,6 +177,9 @@ homematicip==0.10.9
 # homeassistant.components.remember_the_milk
 httplib2==0.10.3
 
+# homeassistant.components.huawei_lte
+huawei-lte-api==1.2.0
+
 # homeassistant.components.influxdb
 influxdb==5.2.0
 
