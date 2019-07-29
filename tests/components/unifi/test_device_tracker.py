@@ -15,6 +15,7 @@ from homeassistant.components.unifi.const import (
     CONF_CONTROLLER, CONF_SITE_ID, UNIFI_CONFIG)
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL)
+from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 
 import homeassistant.components.device_tracker as device_tracker
@@ -167,22 +168,26 @@ async def test_tracked_devices(hass, mock_controller):
 
 async def test_restoring_client(hass, mock_controller):
     """Test the update_items function with some clients."""
-    mock_controller.mock_client_responses.append({})
+    mock_controller.mock_client_responses.append([CLIENT_2])
     mock_controller.mock_device_responses.append({})
     mock_controller.mock_client_all_responses.append([CLIENT_1])
     mock_controller.unifi_config = {
         unifi.CONF_BLOCK_CLIENT: True
     }
 
-    registry = await unifi_dt.entity_registry.async_get_registry(hass)
+    registry = await entity_registry.async_get_registry(hass)
     registry.async_get_or_create(
         device_tracker.DOMAIN, unifi_dt.UNIFI_DOMAIN,
         '{}-mock-site'.format(CLIENT_1['mac']),
         suggested_object_id=CLIENT_1['hostname'], config_entry_id=1)
+    registry.async_get_or_create(
+        device_tracker.DOMAIN, unifi_dt.UNIFI_DOMAIN,
+        '{}-mock-site'.format(CLIENT_2['mac']),
+        suggested_object_id=CLIENT_2['hostname'], config_entry_id=1)
 
     await setup_controller(hass, mock_controller)
     assert len(mock_controller.mock_requests) == 3
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 4
 
     device_1 = hass.states.get('device_tracker.client_1')
     assert device_1 is not None
