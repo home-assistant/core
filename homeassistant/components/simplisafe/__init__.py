@@ -32,9 +32,6 @@ CONF_ACCOUNTS = 'accounts'
 
 DATA_LISTENER = 'listener'
 
-TASK_TYPE_LAST_EVENT = 'last_event'
-TASK_TYPE_UPDATE = 'update'
-
 SERVICE_REMOVE_PIN_SCHEMA = vol.Schema({
     vol.Required(ATTR_SYSTEM_ID): cv.string,
     vol.Required(ATTR_PIN_LABEL_OR_VALUE): cv.string,
