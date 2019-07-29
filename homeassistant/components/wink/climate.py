@@ -241,9 +241,9 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         """
         if not self.wink.is_on():
             return CURRENT_HVAC_OFF
-        if self.wink.cool_on:
+        if self.wink.cool_on():
             return CURRENT_HVAC_COOL
-        if self.wink.heat_on:
+        if self.wink.heat_on():
             return CURRENT_HVAC_HEAT
         return CURRENT_HVAC_IDLE
 
