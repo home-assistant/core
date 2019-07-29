@@ -10,6 +10,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, \
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.dispatcher import dispatcher_send
 import homeassistant.helpers.config_validation as cv
+from homeassistant.core import callback
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +45,9 @@ def setup(hass, config):
     conf = config[DOMAIN]
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
-    scan_interval = conf.get(CONF_SCAN_INTERVAL)
+    scan_interval = conf[CONF_SCAN_INTERVAL]
+
+    ring_devices = []
 
     try:
         from ring_doorbell import Ring
@@ -53,9 +56,11 @@ def setup(hass, config):
         ring = Ring(username=username, password=password, cache_file=cache)
         if not ring.is_connected:
             return False
-        hass.data[DATA_RING_CHIMES] = ring.chimes
-        hass.data[DATA_RING_DOORBELLS] = ring.doorbells
-        hass.data[DATA_RING_STICKUP_CAMS] = ring.stickup_cams
+        hass.data[DATA_RING_CHIMES] = chimes = ring.chimes
+        hass.data[DATA_RING_DOORBELLS] = doorbells = ring.doorbells
+        hass.data[DATA_RING_STICKUP_CAMS] = stickup_cams = ring.stickup_cams
+
+        ring_devices = chimes + doorbells + stickup_cams
 
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Ring service: %s", str(ex))
@@ -67,11 +72,16 @@ def setup(hass, config):
             notification_id=NOTIFICATION_ID)
         return False
 
-    def hub_refresh(event_time):
+    @callback
+    def service_hub_refresh(service):
+        hub_refresh()
+
+    def timer_hub_refresh(event_time):
+        hub_refresh()
+
+    def hub_refresh():
         """Call ring to refresh information."""
         _LOGGER.debug("Updating Ring Hub component")
-        ring_devices = hass.data[DATA_RING_DOORBELLS] \
-            + hass.data[DATA_RING_STICKUP_CAMS] + hass.data[DATA_RING_CHIMES]
 
         for camera in ring_devices:
             _LOGGER.debug("Updating camera %s", camera.name)
@@ -80,9 +90,9 @@ def setup(hass, config):
         dispatcher_send(hass, SIGNAL_UPDATE_RING)
 
     # register service
-    hass.services.register(DOMAIN, 'update', hub_refresh)
+    hass.services.register(DOMAIN, 'update', service_hub_refresh)
 
     # register scan interval for ring
-    track_time_interval(hass, hub_refresh, scan_interval)
+    track_time_interval(hass, timer_hub_refresh, scan_interval)
 
     return True
