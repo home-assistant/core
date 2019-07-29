@@ -3,6 +3,8 @@ import asyncio
 import logging
 from datetime import timedelta
 
+from simplipy import API
+from simplipy.errors import InvalidCredentialsError, SimplipyError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -10,12 +12,11 @@ from homeassistant.const import (
     CONF_CODE, CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_USERNAME)
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, device_registry as dr
+from homeassistant.helpers import (
+    aiohttp_client, config_validation as cv, device_registry as dr)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import verify_domain_control
-
-from homeassistant.helpers import config_validation as cv
 
 from .config_flow import configured_instances
 from .const import DATA_CLIENT, DEFAULT_SCAN_INTERVAL, DOMAIN, TOPIC_UPDATE
@@ -111,15 +112,12 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up SimpliSafe as config entry."""
-    from simplipy import API
-    from simplipy.errors import InvalidCredentialsError, SimplipyError
-
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
-        simplisafe = await API.login_via_token(
+        api = await API.login_via_token(
             config_entry.data[CONF_TOKEN], websession)
     except InvalidCredentialsError:
         _LOGGER.error('Invalid credentials provided')
@@ -128,10 +126,11 @@ async def async_setup_entry(hass, config_entry):
         _LOGGER.error('Config entry failed: %s', err)
         raise ConfigEntryNotReady
 
-    _async_save_refresh_token(hass, config_entry, simplisafe.refresh_token)
+    _async_save_refresh_token(hass, config_entry, api.refresh_token)
 
-    systems = await simplisafe.get_systems()
-    hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = systems
+    systems = await api.get_systems()
+    simplisafe = SimpliSafe(hass, config_entry, systems)
+    hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = simplisafe
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(
@@ -139,22 +138,7 @@ async def async_setup_entry(hass, config_entry):
 
     async def refresh(event_time):
         """Refresh data from the SimpliSafe account."""
-        tasks = [system.update() for system in systems.values()]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        for system, result in zip(systems.values(), results):
-            if isinstance(result, SimplipyError):
-                _LOGGER.error(
-                    'There was error updating "%s": %s', system.address,
-                    result)
-                continue
-
-            _LOGGER.debug('Updated status of "%s"', system.address)
-            async_dispatcher_send(
-                hass, TOPIC_UPDATE.format(system.system_id))
-
-            if system.api.refresh_token_dirty:
-                _async_save_refresh_token(
-                    hass, config_entry, system.api.refresh_token)
+        await simplisafe.async_update()
 
     hass.data[DOMAIN][DATA_LISTENER][
         config_entry.entry_id] = async_track_time_interval(
@@ -200,3 +184,34 @@ async def async_unload_entry(hass, entry):
     remove_listener()
 
     return True
+
+
+class SimpliSafe:
+    """Define a SimpliSafe API object."""
+
+    def __init__(self, hass, config_entry, systems):
+        """Initialize."""
+        self._config_entry = config_entry
+        self._hass = hass
+        self.systems = systems
+
+    async def async_update(self):
+        """Get updated data from SimpliSafe."""
+        systems = self.systems.values()
+        tasks = [system.update() for system in systems]
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for system, result in zip(systems, results):
+            if isinstance(result, Exception):
+                _LOGGER.error(
+                    'There was error updating "%s": %s', system.address,
+                    result)
+                continue
+
+            if system.api.refresh_token_dirty:
+                _async_save_refresh_token(
+                    self._hass, self._config_entry, system.api.refresh_token)
+
+            _LOGGER.debug('Updated status of "%s"', system.address)
+            async_dispatcher_send(
+                self._hass, TOPIC_UPDATE.format(system.system_id))
