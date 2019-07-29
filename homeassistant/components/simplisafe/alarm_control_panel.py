@@ -2,14 +2,14 @@
 import logging
 import re
 
-import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.components.alarm_control_panel import (
+    FORMAT_NUMBER, FORMAT_TEXT, AlarmControlPanel)
 from homeassistant.const import (
     CONF_CODE, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED)
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DATA_CLIENT, DOMAIN, TOPIC_UPDATE
+from . import SimpliSafeEntity
+from .const import DATA_CLIENT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,16 +37,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
     ], True)
 
 
-class SimpliSafeAlarm(alarm.AlarmControlPanel):
+class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
     """Representation of a SimpliSafe alarm."""
 
     def __init__(self, system, code):
         """Initialize the SimpliSafe alarm."""
-        self._async_unsub_dispatcher_connect = None
-        self._attrs = {ATTR_SYSTEM_ID: system.system_id}
+        super().__init__(system)
         self._code = code
-        self._system = system
-        self._state = None
+        self._entity_type = 'alarm_control_panel'
+        self._name = 'Alarm Control Panel'
 
         # Some properties only exist for V2 or V3 systems:
         for prop in (
@@ -61,43 +60,13 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
         if not self._code:
             return None
         if isinstance(self._code, str) and re.search('^\\d+$', self._code):
-            return alarm.FORMAT_NUMBER
-        return alarm.FORMAT_TEXT
-
-    @property
-    def device_info(self):
-        """Return device registry information for this entity."""
-        return {
-            'identifiers': {
-                (DOMAIN, self._system.system_id)
-            },
-            'manufacturer': 'SimpliSafe',
-            'model': self._system.version,
-            # The name should become more dynamic once we deduce a way to
-            # get various other sensors from SimpliSafe in a reliable manner:
-            'name': 'Keypad',
-            'via_device': (DOMAIN, self._system.serial)
-        }
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return self._attrs
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._system.address
+            return FORMAT_NUMBER
+        return FORMAT_TEXT
 
     @property
     def state(self):
         """Return the state of the device."""
         return self._state
-
-    @property
-    def unique_id(self):
-        """Return the unique ID."""
-        return self._system.system_id
 
     def _validate_code(self, code, state):
         """Validate given code."""
@@ -105,21 +74,6 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
         if not check:
             _LOGGER.warning("Wrong code entered for %s", state)
         return check
-
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-        @callback
-        def update():
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE, update)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
