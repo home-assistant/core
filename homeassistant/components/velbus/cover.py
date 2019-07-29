@@ -4,22 +4,28 @@ import logging
 from homeassistant.components.cover import (
     CoverDevice, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_STOP)
 
-from . import DOMAIN as VELBUS_DOMAIN, VelbusEntity
+from .const import DOMAIN
+from . import VelbusEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
-    """Set up the Velbus xover platform."""
-    if discovery_info is None:
-        return
-    covers = []
-    for cover in discovery_info:
-        module = hass.data[VELBUS_DOMAIN].get_module(cover[0])
-        channel = cover[1]
-        covers.append(VelbusCover(module, channel))
-    async_add_entities(covers)
+    """Set up Velbus covers."""
+    pass
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Velbus cover based on config_entry."""
+    cntrl = hass.data[DOMAIN][entry.entry_id]['cntrl']
+    modules_data = hass.data[DOMAIN][entry.entry_id]['cover']
+    entities = []
+    for address, channel in modules_data:
+        module = cntrl.get_module(address)
+        entities.append(
+            VelbusCover(module, channel))
+    async_add_entities(entities)
 
 
 class VelbusCover(VelbusEntity, CoverDevice):

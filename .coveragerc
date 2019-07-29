@@ -672,7 +672,13 @@ omit =
     homeassistant/components/usps/*
     homeassistant/components/vallox/*
     homeassistant/components/vasttrafik/sensor.py
-    homeassistant/components/velbus/*
+    homeassistant/components/velbus/__init__.py
+    homeassistant/components/velbus/binary_sensor.py
+    homeassistant/components/velbus/climate.py
+    homeassistant/components/velbus/const.py
+    homeassistant/components/velbus/cover.py
+    homeassistant/components/velbus/sensor.py
+    homeassistant/components/velbus/switch.py
     homeassistant/components/velux/*
     homeassistant/components/venstar/climate.py
     homeassistant/components/vera/*
