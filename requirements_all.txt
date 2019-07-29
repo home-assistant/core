@@ -320,7 +320,7 @@ buienradar==1.0.1
 caldav==0.6.1
 
 # homeassistant.components.cisco_mobility_express
-ciscomobilityexpress==0.1.5
+ciscomobilityexpress==0.3.1
 
 # homeassistant.components.ciscospark
 ciscosparkapi==0.4.2
