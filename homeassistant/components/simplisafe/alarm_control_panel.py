@@ -1,3 +1,4 @@
+
 """Support for SimpliSafe alarm control panels."""
 import logging
 import re
