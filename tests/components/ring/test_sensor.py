@@ -73,8 +73,7 @@ class TestRingSensorSetup(unittest.TestCase):
             device.update()
             if device.name == 'Front Battery':
                 expected_icon = icon_for_battery_level(
-                    battery_level=int(device.state),
-                                          charging=False)
+                    battery_level=int(device.state), charging=False)
                 assert device.icon == expected_icon
                 assert 80 == device.state
                 assert 'hp_cam_v1' == \
