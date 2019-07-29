@@ -1,4 +1,4 @@
-"""Support for GeoNet NZ Quakes Feeds."""
+"""Geolocation support for GeoNet NZ Quakes Feeds."""
 import logging
 from datetime import timedelta
 from typing import Optional
@@ -10,7 +10,7 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 from .const import \
-    CONF_MINIMUM_MAGNITUDE, CONF_MMI
+    CONF_MINIMUM_MAGNITUDE, CONF_MMI, DOMAIN, FEED
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE,
     CONF_RADIUS, CONF_SCAN_INTERVAL, CONF_UNIT_SYSTEM,
@@ -50,6 +50,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entry.data[CONF_RADIUS],
         entry.data[CONF_UNIT_SYSTEM],
         entry.data[CONF_MINIMUM_MAGNITUDE])
+    hass.data[DOMAIN][FEED][entry.entry_id] = manager
     await manager.async_init()
 
 
@@ -70,6 +71,7 @@ class GeonetnzQuakesFeedEntityManager:
         self._async_add_entities = async_add_entities
         self._scan_interval = timedelta(seconds=scan_interval)
         self._unit_system = unit_system
+        self._track_time_remove_callback = None
 
     async def async_init(self):
         """Schedule regular updates based on configured time interval."""
@@ -78,11 +80,20 @@ class GeonetnzQuakesFeedEntityManager:
             await self.async_update()
 
         await self.async_update()
-        async_track_time_interval(self._hass, update, self._scan_interval)
+        self._track_time_remove_callback = async_track_time_interval(
+            self._hass, update, self._scan_interval)
+        _LOGGER.debug("Feed entity manager initialized")
 
     async def async_update(self):
         """Refresh data."""
         await self._feed_manager.update()
+        _LOGGER.debug("Feed entity manager updated")
+
+    async def async_stop(self):
+        """Stop this feed entity manager from refreshing."""
+        if self._track_time_remove_callback:
+            self._track_time_remove_callback()
+        _LOGGER.debug("Feed entity manager stopped")
 
     def get_entry(self, external_id):
         """Get feed entry by external id."""

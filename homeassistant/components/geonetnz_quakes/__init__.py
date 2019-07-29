@@ -1,4 +1,4 @@
-"""The geonetnz_quakes component."""
+"""The GeoNet NZ Quakes integration."""
 import logging
 
 import voluptuous as vol
@@ -68,7 +68,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set up the GeoNet NZ Quakes component as config entry."""
     hass.data[DOMAIN] = {}
-    # hass.data[DOMAIN][FEED] = {}
+    hass.data[DOMAIN][FEED] = {}
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(
@@ -79,7 +79,8 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload an GeoNet NZ Quakes component config entry."""
-    # hass.data[DOMAIN][FEED].pop(config_entry.entry_id)
+    manager = hass.data[DOMAIN][FEED].pop(config_entry.entry_id)
+    await manager.async_stop()
 
     await hass.config_entries.async_forward_entry_unload(
         config_entry, 'geo_location')
