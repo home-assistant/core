@@ -62,7 +62,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         update_items(controller, async_add_entities, switches, switches_off)
 
     async_dispatcher_connect(hass, controller.event_update, update_controller)
-    print(switches_off)
+
     update_controller()
     switches_off.clear()
 
