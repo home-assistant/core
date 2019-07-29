@@ -59,6 +59,18 @@ async def test_import_flow(hass):
         'usb_path': '/dev/ttyUSB1',
         'radio_type': 'xbee'
     }
+    
+    result = await flow.async_step_import({
+        'usb_path': '/dev/ttyUSB0',
+        'radio_type': 'zigate',
+    })
+
+    assert result['type'] == 'create_entry'
+    assert result['title'] == '/dev/ttyUSB0'
+    assert result['data'] == {
+        'usb_path': '/dev/ttyUSB0',
+        'radio_type': 'zigate'
+    }
 
 
 async def test_import_flow_existing_config_entry(hass):
