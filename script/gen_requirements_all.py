@@ -87,6 +87,7 @@ TEST_REQUIREMENTS = (
     'homekit[IP]',
     'homematicip',
     'httplib2',
+    'huawei-lte-api',
     'influxdb',
     'jsonpath',
     'libpurecool',
