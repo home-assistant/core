@@ -1,5 +1,6 @@
 """Provide pre-made queries on top of the recorder component."""
 from collections import defaultdict
+from collections.abc import Iterable
 from datetime import timedelta
 from itertools import groupby
 import logging
@@ -210,7 +211,10 @@ def states_to_json(
     each list of states, otherwise our graphs won't start on the Y
     axis correctly.
     """
-    result = {ent_id: [] for ent_id in entity_ids}
+    result = defaultdict(list)
+    if isinstance(entity_ids, Iterable):
+        for ent_id in entity_ids:
+            result[ent_id] = []
 
     # Get the states at the start time
     timer_start = time.perf_counter()
