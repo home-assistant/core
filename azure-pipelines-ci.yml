@@ -38,7 +38,7 @@ stages:
         python -m venv venv
 
         . venv/bin/activate
-        pip install -r requirements_test.txt
+        pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
       displayName: 'Setup Env'
     - script: |
         . venv/bin/activate
@@ -63,6 +63,21 @@ stages:
         . venv/bin/activate
         ./script/gen_requirements_all.py validate
       displayName: 'requirements_all validate'
+  - job: 'CheckFormat'
+    pool:
+      vmImage: 'ubuntu-latest'
+    container: $[ variables['PythonMain'] ]
+    steps:
+    - script: |
+        python -m venv venv
+
+        . venv/bin/activate
+        pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
+      displayName: 'Setup Env'
+    - script: |
+        . venv/bin/activate
+        ./script/check_format
+      displayName: 'Check Black formatting'
 
 - stage: 'Tests'
   dependsOn:
