@@ -204,8 +204,14 @@ class SimpliSafe:
         try:
             await system.update()
             latest_event = await system.get_latest_event()
+        except SimplipyError as err:
+            _LOGGER.error(
+                'SimpliSafe error while updating "%s": %s',
+                system.address, err)
+            return
         except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.error('Error while updating "%s": %s', system.address, err)
+            _LOGGER.error(
+                'Unknown error while updating "%s": %s', system.address, err)
             return
 
         self.last_event_data[system.system_id] = latest_event
