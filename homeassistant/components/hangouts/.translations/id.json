@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Google Hangouts sudah dikonfigurasikan",
+            "unknown": "Kesalahan tidak dikenal terjadi."
+        },
+        "error": {
+            "invalid_2fa": "Autentikasi 2 Faktor Tidak Valid, silakan coba lagi.",
+            "invalid_2fa_method": "Metode 2FA Tidak Sah (Verifikasi di Ponsel).",
+            "invalid_login": "Login tidak valid, silahkan coba lagi."
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "Pin 2FA"
+                },
+                "description": "Kosong",
+                "title": "2-Faktor-Otentikasi"
+            },
+            "user": {
+                "data": {
+                    "email": "Alamat email",
+                    "password": "Kata sandi"
+                },
+                "description": "Kosong",
+                "title": "Google Hangouts Login"
+            }
+        },
+        "title": "Google Hangouts"
+    }
+}

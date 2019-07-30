@@ -1,0 +1,12 @@
+{
+  "domain": "ring",
+  "name": "Ring",
+  "documentation": "https://www.home-assistant.io/components/ring",
+  "requirements": [
+    "ring_doorbell==0.2.3"
+  ],
+  "dependencies": [
+    "ffmpeg"
+  ],
+  "codeowners": []
+}

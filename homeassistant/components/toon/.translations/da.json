@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Adgangskode",
+                    "username": "Brugernavn"
+                }
+            }
+        },
+        "title": "Toon"
+    }
+}

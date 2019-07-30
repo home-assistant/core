@@ -1,0 +1,18 @@
+{
+  "domain": "deconz",
+  "name": "Deconz",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/components/deconz",
+  "requirements": [
+    "pydeconz==62"
+  ],
+  "ssdp": {
+    "manufacturer": [
+      "Royal Philips Electronics"
+    ]
+  },
+  "dependencies": [],
+  "codeowners": [
+    "@kane610"
+  ]
+}

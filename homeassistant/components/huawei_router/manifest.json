@@ -1,0 +1,10 @@
+{
+  "domain": "huawei_router",
+  "name": "Huawei router",
+  "documentation": "https://www.home-assistant.io/components/huawei_router",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@abmantis"
+  ]
+}

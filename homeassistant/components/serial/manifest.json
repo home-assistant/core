@@ -1,0 +1,12 @@
+{
+  "domain": "serial",
+  "name": "Serial",
+  "documentation": "https://www.home-assistant.io/components/serial",
+  "requirements": [
+    "pyserial-asyncio==0.4"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

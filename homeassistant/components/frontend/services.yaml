@@ -1,0 +1,11 @@
+# Describes the format for available frontend services
+
+set_theme:
+  description: Set a theme unless the client selected per-device theme.
+  fields:
+    name:
+      description: Name of a predefined theme or 'default'.
+      example: 'light'
+
+reload_themes:
+  description: Reload themes from yaml configuration.

@@ -1,0 +1,43 @@
+{
+	"accounts": [],
+	"blocks": [],
+	"channels": [],
+	"chats": [],
+	"clients": [],
+	"contacts": [],
+	"devices": [{
+		"active": true,
+		"iden": "identity1",
+		"created": 1.514520333770855e+09,
+		"modified": 1.5151951594363022e+09,
+		"type": "windows",
+		"kind": "windows",
+		"nickname": "DESKTOP",
+		"manufacturer": "Microsoft",
+		"model": "Windows 10 Home",
+		"app_version": 396,
+		"fingerprint": "{\"cpu\":\"AMD\",\"computer_name\":\"DESKTOP\"}",
+		"pushable": true,
+		"icon": "desktop",
+		"remote_files": "disabled"
+	}, {
+		"active": true,
+		"iden": "identity2",
+		"created": 1.5144974875448499e+09,
+		"modified": 1.514574792288634e+09,
+		"type": "ios",
+		"kind": "ios",
+		"nickname": "My iPhone",
+		"manufacturer": "Apple",
+		"model": "iPhone",
+		"app_version": 8646,
+		"push_token": "production:mytoken",
+		"pushable": true,
+		"icon": "phone"
+	}],
+	"grants": [],
+	"pushes": [],
+	"profiles": [],
+	"subscriptions": [],
+	"texts": []
+}

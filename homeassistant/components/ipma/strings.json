@@ -1,0 +1,19 @@
+{
+    "config": {
+        "title": "Portuguese weather service (IPMA)",
+        "step": {
+            "user": {
+                "title": "Location",
+                "description": "Instituto Português do Mar e Atmosfera",
+                "data": {
+                    "name": "Name",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                }
+            }
+        },
+        "error": {
+            "name_exists": "Name already exists"
+        }
+    }
+}

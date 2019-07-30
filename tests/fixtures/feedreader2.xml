@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+    <channel>
+        <title>RSS Sample</title>
+        <description>This is an example of an RSS feed</description>
+        <link>http://www.example.com/main.html</link>
+        <lastBuildDate>Mon, 30 Apr 2018 12:00:00 +1000 </lastBuildDate>
+        <pubDate>Mon, 30 Apr 2018 15:00:00 +1000</pubDate>
+        <ttl>1800</ttl>
+
+        <item>
+            <title>Title 1</title>
+            <pubDate>Mon, 30 Apr 2018 15:00:00 +1000</pubDate>
+        </item>
+        <item>
+            <title>Title 2</title>
+            <pubDate>Mon, 30 Apr 2018 15:01:00 +1000</pubDate>
+        </item>
+        <item>
+            <title>Title 3</title>
+            <pubDate>Mon, 30 Apr 2018 15:02:00 +1000</pubDate>
+        </item>
+        <item>
+            <title>Title 4</title>
+            <pubDate>Mon, 30 Apr 2018 15:03:00 +1000</pubDate>
+        </item>
+        <item>
+            <title>Title 5</title>
+            <pubDate>Mon, 30 Apr 2018 15:04:00 +1000</pubDate>
+        </item>
+        <item>
+            <title>Title 6</title>
+            <pubDate>Mon, 30 Apr 2018 15:05:00 +1000</pubDate>
+        </item>
+        <item>
+            <title>Title 7</title>
+            <pubDate>Mon, 30 Apr 2018 15:06:00 +1000</pubDate>
+        </item>
+        <item>
+            <title>Title 8</title>
+            <pubDate>Mon, 30 Apr 2018 15:07:00 +1000</pubDate>
+        </item>
+        <item>
+            <title>Title 9</title>
+            <pubDate>Mon, 30 Apr 2018 15:08:00 +1000</pubDate>
+        </item>
+        <item>
+            <title>Title 10</title>
+            <pubDate>Mon, 30 Apr 2018 15:09:00 +1000</pubDate>
+        </item>
+        <item>
+            <title>Title 11</title>
+            <pubDate>Mon, 30 Apr 2018 15:10:00 +1000</pubDate>
+        </item>
+        <item>
+            <title>Title 12</title>
+            <pubDate>Mon, 30 Apr 2018 15:11:00 +1000</pubDate>
+        </item>
+        <item>
+            <title>Title 13</title>
+            <pubDate>Mon, 30 Apr 2018 15:12:00 +1000</pubDate>
+        </item>
+        <item>
+            <title>Title 14</title>
+            <pubDate>Mon, 30 Apr 2018 15:13:00 +1000</pubDate>
+        </item>
+        <item>
+            <title>Title 15</title>
+            <pubDate>Mon, 30 Apr 2018 15:14:00 +1000</pubDate>
+        </item>
+        <item>
+            <title>Title 16</title>
+            <pubDate>Mon, 30 Apr 2018 15:15:00 +1000</pubDate>
+        </item>
+        <item>
+            <title>Title 17</title>
+            <pubDate>Mon, 30 Apr 2018 15:16:00 +1000</pubDate>
+        </item>
+        <item>
+            <title>Title 18</title>
+            <pubDate>Mon, 30 Apr 2018 15:17:00 +1000</pubDate>
+        </item>
+        <item>
+            <title>Title 19</title>
+            <pubDate>Mon, 30 Apr 2018 15:18:00 +1000</pubDate>
+        </item>
+        <item>
+            <title>Title 20</title>
+            <pubDate>Mon, 30 Apr 2018 15:19:00 +1000</pubDate>
+        </item>
+        <item>
+            <title>Title 21</title>
+            <pubDate>Mon, 30 Apr 2018 15:20:00 +1000</pubDate>
+        </item>
+
+    </channel>
+</rss>

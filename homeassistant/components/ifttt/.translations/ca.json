@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "La inst\u00e0ncia de Home Assistant ha de ser accessible des d'Internet per rebre missatges de IFTTT.",
+            "one_instance_allowed": "Nom\u00e9s cal una sola inst\u00e0ncia."
+        },
+        "create_entry": {
+            "default": "Per enviar esdeveniments a Home Assistant, necessitar\u00e0s utilitzar l'acci\u00f3 \"Make a web resquest\" de [IFTTT Webhook applet]({applet_url}). \n\nCompleta la seg\u00fcent informaci\u00f3: \n\n- URL: `{webhook_url}` \n- Method: POST \n- Content Type: application/json \n\nConsulta la [documentaci\u00f3]({docs_url}) sobre com configurar els automatismes per gestionar dades entrants."
+        },
+        "step": {
+            "user": {
+                "description": "Est\u00e0s segur que vols configurar IFTTT?",
+                "title": "Configuraci\u00f3 de la miniaplicaci\u00f3 Webhook de IFTTT"
+            }
+        },
+        "title": "IFTTT"
+    }
+}

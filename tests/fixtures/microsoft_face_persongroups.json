@@ -1,0 +1,12 @@
+[
+    {
+        "personGroupId":"test_group1",
+        "name":"test group1",
+        "userData":"test"
+    },
+    {
+        "personGroupId":"test_group2",
+        "name":"test group2",
+        "userData":"test"
+    }
+]

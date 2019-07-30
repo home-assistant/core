@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "name_exists": "Navnet findes allerede"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "advertise_ip": "Adviserings IP",
+                    "advertise_port": "Adviserings port",
+                    "host_ip": "V\u00e6rt IP",
+                    "listen_port": "Lytte port",
+                    "name": "Navn",
+                    "upnp_bind_multicast": "Bind multicast (sand/falsk)"
+                },
+                "title": "Angiv server konfiguration"
+            }
+        },
+        "title": "EmulatedRoku"
+    }
+}

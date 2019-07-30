@@ -1,0 +1,8 @@
+addwebhook:
+  description: Add webhook during runtime (e.g. if it has been banned).
+  fields:
+    url:
+      description: URL for which to add the webhook.
+      example: https://yourdomain.com:443/api/webhook/webhook_id
+dropwebhook:
+  description: Drop active webhooks.

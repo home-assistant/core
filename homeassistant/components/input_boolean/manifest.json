@@ -1,0 +1,10 @@
+{
+  "domain": "input_boolean",
+  "name": "Input boolean",
+  "documentation": "https://www.home-assistant.io/components/input_boolean",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

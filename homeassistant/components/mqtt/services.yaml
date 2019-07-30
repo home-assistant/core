@@ -1,0 +1,26 @@
+# Describes the format for available MQTT services
+
+publish:
+  description: Publish a message to an MQTT topic.
+  fields:
+    topic:
+      description: Topic to publish payload.
+      example: /homeassistant/hello
+    payload:
+      description: Payload to publish.
+      example: This is great
+    payload_template:
+      description: Template to render as payload value. Ignored if payload given.
+      example: "{{ states('sensor.temperature') }}"
+    qos:
+      description: Quality of Service to use.
+      example: 2
+      values:
+        - 0
+        - 1
+        - 2
+      default: 0
+    retain:
+      description: If message should have the retain flag set.
+      example: true
+      default: false

@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il sito del Controller \u00e8 gi\u00e0 configurato",
+            "user_privilege": "L'utente deve essere amministratore"
+        },
+        "error": {
+            "faulty_credentials": "Credenziali utente non valide",
+            "service_unavailable": "Servizio non disponibile"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Porta",
+                    "site": "ID del sito",
+                    "username": "Nome utente",
+                    "verify_ssl": "Il Controller sta utilizzando il certificato corretto"
+                },
+                "title": "Configura l'UniFi Controller"
+            }
+        },
+        "title": "UniFi Controller"
+    }
+}

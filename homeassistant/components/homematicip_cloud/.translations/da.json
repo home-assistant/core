@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Access point er allerede konfigureret",
+            "connection_aborted": "Kunne ikke oprette forbindelse til HMIP-serveren",
+            "unknown": "Ukendt fejl opstod"
+        },
+        "error": {
+            "invalid_pin": "Ugyldig PIN, pr\u00f8v igen.",
+            "press_the_button": "Tryk venligst p\u00e5 den bl\u00e5 knap.",
+            "register_failed": "Fejl ved registrering, pr\u00f8v venligst igen.",
+            "timeout_button": "Tryk p\u00e5 bl\u00e5 knap timeout, pr\u00f8v venligst igen."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "hapid": "Access point ID (SGTIN)",
+                    "name": "Navn (valgfrit, bruges som pr\u00e6fiks til navnet for alle enheder)",
+                    "pin": "Pin kode (valgfri)"
+                },
+                "title": "V\u00e6lg HomematicIP Access point"
+            },
+            "link": {
+                "description": "Tryk p\u00e5 den bl\u00e5 knap p\u00e5 adgangspunktet og send knappen for at registrere HomematicIP med Home Assistant.\n\n ![Placering af knap p\u00e5 bridge](/static/images/config_flows/config_homematicip_cloud.png)",
+                "title": "Link adgangspunkt"
+            }
+        },
+        "title": "HomematicIP Cloud"
+    }
+}

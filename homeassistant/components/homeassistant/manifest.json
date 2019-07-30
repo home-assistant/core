@@ -1,0 +1,10 @@
+{
+  "domain": "homeassistant",
+  "name": "Home Assistant Core Integration",
+  "documentation": "https://www.home-assistant.io/components/homeassistant",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

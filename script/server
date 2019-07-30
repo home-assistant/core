@@ -1,0 +1,8 @@
+#!/bin/sh
+# Launch the application and any extra required processes locally.
+
+# Stop on errors
+set -e
+
+cd "$(dirname "$0")/.."
+python3 -m homeassistant -c config

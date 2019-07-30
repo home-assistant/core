@@ -1,0 +1,10 @@
+#!/bin/sh
+# Setups the repository.
+
+# Stop on errors
+set -e
+
+cd "$(dirname "$0")/.."
+script/bootstrap
+
+pip3 install -e .

@@ -1,0 +1,10 @@
+{
+  "domain": "zengge",
+  "name": "Zengge",
+  "documentation": "https://www.home-assistant.io/components/zengge",
+  "requirements": [
+    "zengge==0.2"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}
