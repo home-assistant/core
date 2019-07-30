@@ -18,7 +18,6 @@ from ..const import (
     CHANNEL_ATTRIBUTE,
     CHANNEL_EVENT_RELAY,
     CHANNEL_ZDO,
-    REPORT_CONFIG_DEFAULT,
     SIGNAL_ATTR_UPDATED,
 )
 from ..helpers import (
@@ -84,6 +83,7 @@ class ZigbeeChannel(LogMixin):
     """Base channel for a Zigbee cluster."""
 
     CHANNEL_NAME = None
+    REPORT_CONFIG = ()
 
     def __init__(self, cluster, device):
         """Initialize ZigbeeChannel."""
@@ -95,7 +95,7 @@ class ZigbeeChannel(LogMixin):
         self._zha_device = device
         self._unique_id = construct_unique_id(cluster)
         self._report_config = CLUSTER_REPORT_CONFIGS.get(
-            self._cluster.cluster_id, [{"attr": 0, "config": REPORT_CONFIG_DEFAULT}]
+            self._cluster.cluster_id, self.REPORT_CONFIG
         )
         self._status = ChannelStatus.CREATED
         self._cluster.add_listener(self)
