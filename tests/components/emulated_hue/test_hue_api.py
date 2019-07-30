@@ -121,7 +121,7 @@ def hass_hue(loop, hass):
         kitchen_light_entity.entity_id, kitchen_light_entity.state,
         attributes=attrs)
 
-    # Remove brightness support for WC light 
+    # Remove brightness support for WC light
     wc_light_entity = hass.states.get('light.wc_lights')
     attrs = dict(wc_light_entity.attributes)
     attrs[emulated_hue.ATTR_EMULATED_HUE] = False
