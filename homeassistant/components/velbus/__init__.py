@@ -82,14 +82,14 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     try:
         controller = velbus.Controller(entry.data[CONF_PORT])
         controller.scan(callback)
-    except Exception as err:   # pylint: disable=broad-except
+    except velbus.util.VelbusException as err:
         _LOGGER.error('An error occurred: %s', err)
         raise ConfigEntryNotReady
 
     def syn_clock(self, service=None):
         try:
             controller.sync_clock()
-        except Exception as err:  # pylint: disable=broad-except
+        except velbus.util.VelbusException as err:
             _LOGGER.error('An error occurred: %s', err)
 
     hass.services.async_register(

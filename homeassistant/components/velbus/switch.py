@@ -1,6 +1,8 @@
 """Support for Velbus switches."""
 import logging
 
+from velbus.util import VelbusException
+
 from homeassistant.components.switch import SwitchDevice
 
 from . import VelbusEntity
@@ -39,12 +41,12 @@ class VelbusSwitch(VelbusEntity, SwitchDevice):
         """Instruct the switch to turn on."""
         try:
             self._module.turn_on(self._channel)
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.error('An error occurred: %s', err)
+        except VelbusException as err:
+            _LOGGER.error('A Velbus error occurred: %s', err)
 
     def turn_off(self, **kwargs):
         """Instruct the switch to turn off."""
         try:
             self._module.turn_off(self._channel)
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.error('An error occurred: %s', err)
+        except VelbusException as err:
+            _LOGGER.error('A Velbus error occurred: %s', err)
