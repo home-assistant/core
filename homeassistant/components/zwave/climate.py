@@ -168,20 +168,16 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             self._hvac_mode = next(
                 (key for key, value in self._hvac_mapping.items()
                  if value == current_mode), None)
-            self._preset_mode = next(
-                (key for key, value in self._preset_mapping.items()
-                 if value == current_mode), None)
 
-            if self._hvac_mode is not None and self._preset_mode is None:
+            if self._hvac_mode is None:
+                # The current mode is not a hvac mode
+                self._hvac_mode = HVAC_MODE_HEAT_COOL
+                self._preset_mode = next(
+                    (key for key, value in self._preset_mapping.items()
+                     if value == current_mode), current_mode)
+            else:
                 # The current mode is a hvac mode
                 self._preset_mode = PRESET_NONE
-            elif self._hvac_mode is None and self._preset_mode is not None:
-                # The current mode is a preset mode
-                self._hvac_mode = HVAC_MODE_HEAT_COOL
-            elif self._hvac_mode is None and self._preset_mode is None:
-                # The current mode couldn't be found in any mapping
-                self._hvac_mode = HVAC_MODE_HEAT_COOL
-                self._preset_mode = current_mode
 
         _LOGGER.debug("self._hvac_list=%s", self._hvac_list)
         _LOGGER.debug("self._hvac_action=%s", self._hvac_action)
