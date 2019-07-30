@@ -225,8 +225,7 @@ class GeonetnzQuakesEvent(GeolocationEvent):
         """Return the unit of measurement."""
         if self._unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
             return LENGTH_MILES
-        else:
-            return LENGTH_KILOMETERS
+        return LENGTH_KILOMETERS
 
     @property
     def device_state_attributes(self):
