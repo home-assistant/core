@@ -20,8 +20,8 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
 from .const import (
-    CONF_CONTROLLER, CONF_DETECTION_TIME, CONF_SITE_ID, CONF_SSID_FILTER,
-    CONTROLLER_ID, DOMAIN as UNIFI_DOMAIN)
+    ATTR_MANUFACTURER, CONF_CONTROLLER, CONF_DETECTION_TIME, CONF_SITE_ID,
+    CONF_SSID_FILTER, CONTROLLER_ID, DOMAIN as UNIFI_DOMAIN)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -87,7 +87,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for entity in registry.entities.values():
 
         if entity.config_entry_id == config_entry.entry_id and \
-                entity.domain == DOMAIN:
+                entity.domain == DOMAIN and '-' in entity.unique_id:
 
             mac, _ = entity.unique_id.split('-', 1)
 
@@ -116,7 +116,7 @@ def update_items(controller, async_add_entities, tracked):
     for client_id in controller.api.clients:
 
         if client_id in tracked:
-            LOGGER.debug("Updating UniFi tracked device %s (%s)",
+            LOGGER.debug("Updating UniFi tracked client %s (%s)",
                          tracked[client_id].entity_id,
                          tracked[client_id].client.mac)
             tracked[client_id].async_schedule_update_ha_state()
@@ -131,17 +131,34 @@ def update_items(controller, async_add_entities, tracked):
 
         tracked[client_id] = UniFiClientTracker(client, controller)
         new_tracked.append(tracked[client_id])
-        LOGGER.debug("New UniFi switch %s (%s)", client.hostname, client.mac)
+        LOGGER.debug("New UniFi client tracker %s (%s)",
+                     client.hostname, client.mac)
+
+    for device_id in controller.api.devices:
+
+        if device_id in tracked:
+            LOGGER.debug("Updating UniFi tracked device %s (%s)",
+                         tracked[device_id].entity_id,
+                         tracked[device_id].device.mac)
+            tracked[device_id].async_schedule_update_ha_state()
+            continue
+
+        device = controller.api.devices[device_id]
+
+        tracked[device_id] = UniFiDeviceTracker(device, controller)
+        new_tracked.append(tracked[device_id])
+        LOGGER.debug("New UniFi device tracker %s (%s)",
+                     device.name, device.mac)
 
     if new_tracked:
         async_add_entities(new_tracked)
 
 
 class UniFiClientTracker(ScannerEntity):
-    """Representation of a network device."""
+    """Representation of a network client."""
 
     def __init__(self, client, controller):
-        """Set up tracked device."""
+        """Set up tracked client."""
         self.client = client
         self.controller = controller
 
@@ -151,7 +168,7 @@ class UniFiClientTracker(ScannerEntity):
 
     @property
     def is_connected(self):
-        """Return true if the device is connected to the network."""
+        """Return true if the client is connected to the network."""
         detection_time = self.controller.unifi_config.get(
             CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME)
 
@@ -162,12 +179,12 @@ class UniFiClientTracker(ScannerEntity):
 
     @property
     def source_type(self):
-        """Return the source type of the device."""
+        """Return the source type of the client."""
         return SOURCE_TYPE_ROUTER
 
     @property
     def name(self) -> str:
-        """Return the name of the device."""
+        """Return the name of the client."""
         return self.client.name or self.client.hostname
 
     @property
@@ -182,9 +199,75 @@ class UniFiClientTracker(ScannerEntity):
 
     @property
     def device_info(self):
-        """Return a device description for device registry."""
+        """Return a client description for device registry."""
         return {
             'connections': {(CONNECTION_NETWORK_MAC, self.client.mac)}
+        }
+
+    @property
+    def device_state_attributes(self):
+        """Return the client state attributes."""
+        attributes = {}
+
+        for variable in DEVICE_ATTRIBUTES:
+            if variable in self.client.raw:
+                attributes[variable] = self.client.raw[variable]
+
+        return attributes
+
+
+class UniFiDeviceTracker(ScannerEntity):
+    """Representation of a network infrastructure device."""
+
+    def __init__(self, device, controller):
+        """Set up tracked device."""
+        self.device = device
+        self.controller = controller
+
+    async def async_update(self):
+        """Synchronize state with controller."""
+        await self.controller.request_update()
+
+    @property
+    def is_connected(self):
+        """Return true if the device is connected to the network."""
+        detection_time = self.controller.unifi_config.get(
+            CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME)
+
+        if (dt_util.utcnow() - dt_util.utc_from_timestamp(float(
+                self.device.last_seen))) < detection_time:
+            return True
+        return False
+
+    @property
+    def source_type(self):
+        """Return the source type of the device."""
+        return SOURCE_TYPE_ROUTER
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device."""
+        return self.device.name
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique identifier for this device."""
+        return self.device.mac
+
+    @property
+    def available(self) -> bool:
+        """Return if controller is available."""
+        return self.controller.available
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        return {
+            'connections': {(CONNECTION_NETWORK_MAC, self.device.mac)},
+            'manufacturer': ATTR_MANUFACTURER,
+            'model': self.device.model,
+            'name': self.device.name,
+            'sw_version': self.device.version
         }
 
     @property
@@ -192,8 +275,10 @@ class UniFiClientTracker(ScannerEntity):
         """Return the device state attributes."""
         attributes = {}
 
-        for variable in DEVICE_ATTRIBUTES:
-            if variable in self.client.raw:
-                attributes[variable] = self.client.raw[variable]
+        attributes['upgradable'] = self.device.upgradable
+        attributes['overheating'] = self.device.overheating
+
+        if self.device.has_fan:
+            attributes['fan_level'] = self.device.fan_level
 
         return attributes
