@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 # List of all countries currently supported by holidays
 # There seems to be no way to get the list out at runtime
 ALL_COUNTRIES = [
-    'Argentina', 'AR', 'Australia', 'AU', 'Austria', 'AT',
+    'Argentina', 'AR', 'Aruba', 'AW', 'Australia', 'AU', 'Austria', 'AT',
     'Brazil', 'BR', 'Belarus', 'BY', 'Belgium', 'BE', 'Bulgaria', 'BG',
     'Canada', 'CA', 'Colombia', 'CO', 'Croatia', 'HR', 'Czech', 'CZ',
     'Denmark', 'DK',
