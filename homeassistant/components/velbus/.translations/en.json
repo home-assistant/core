@@ -1,21 +1,21 @@
 {
     "config": {
-        "title": "Velbus",
-        "step": {
-          "user": {
-            "title": "Define the velbus connection",
-            "data": {
-                "name": "The name for this velbus connection",
-                "port": "Connection string"
-            }
-          }
+        "abort": {
+            "port_exists": "This port is already configured"
         },
         "error": {
-          "port_exists": "This port is already configured",
-          "connection_failed": "The velbus connection failed"
+            "connection_failed": "The velbus connection failed",
+            "port_exists": "This port is already configured"
         },
-        "abort": {
-          "port_exists": "This port is already configured"
-        }
+        "step": {
+            "user": {
+                "data": {
+                    "name": "The name for this velbus connection",
+                    "port": "Connection string"
+                },
+                "title": "Define the velbus connection type"
+            }
+        },
+        "title": "Velbus interface"
     }
 }
