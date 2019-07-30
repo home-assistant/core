@@ -1,12 +1,15 @@
 """Support for Linky."""
-from datetime import timedelta
 import json
 import logging
+from datetime import timedelta
 
-from pylinky.client import DAILY, MONTHLY, YEARLY, LinkyClient, PyLinkyError
 import voluptuous as vol
+from pylinky.client import DAILY, MONTHLY, YEARLY, LinkyClient, PyLinkyError
 
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_PASSWORD,
@@ -14,10 +17,11 @@ from homeassistant.const import (
     CONF_USERNAME,
     ENERGY_KILO_WATT_HOUR,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.typing import HomeAssistantType
+
+from .const import DEFAULT_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +33,6 @@ INDEX_CURRENT = -1
 INDEX_LAST = -2
 ATTRIBUTION = "Data provided by Enedis"
 
-DEFAULT_TIMEOUT = 10
 SENSORS = {
     "yesterday": ("Linky yesterday", DAILY, INDEX_LAST),
     "current_month": ("Linky current month", MONTHLY, INDEX_CURRENT),
@@ -49,22 +52,40 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+_LOGGER.error("LINKY_SENSOR")
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Configure the platform and add the Linky sensor."""
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
-    timeout = config[CONF_TIMEOUT]
+    """Set up Linky sensor from legacy config file."""
+    _LOGGER.error("LINKY_SENSOR:setup_platform")
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
-    account = LinkyAccount(hass, add_entities, username, password, timeout)
-    add_entities(account.sensors, True)
+
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
+    """Add Linky entries."""
+    _LOGGER.error("LINKY_SENSOR:async_setup_entry")
+    account = LinkyAccount(
+        hass,
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
+        entry.data[CONF_TIMEOUT],
+    )
+    async_add_entities(account.sensors, True)
 
 
 class LinkyAccount:
     """Representation of a Linky account."""
 
-    def __init__(self, hass, add_entities, username, password, timeout):
+    def __init__(self, hass, username, password, timeout):
         """Initialise the Linky account."""
+
+        _LOGGER.error("LINKY_SENSOR:account init")
         self._username = username
         self.__password = password
         self._timeout = timeout
@@ -98,6 +119,8 @@ class LinkyAccount:
         finally:
             client.close_session()
 
+        _LOGGER.error("LINKY_SENSOR:update finished")
+
     @property
     def username(self):
         """Return the username."""
@@ -114,6 +137,7 @@ class LinkySensor(Entity):
 
     def __init__(self, name, account: LinkyAccount, scale, when):
         """Initialize the sensor."""
+        _LOGGER.error("LINKY_SENSOR:sensor init : %s", name)
         self._name = name
         self.__account = account
         self._scale = scale
@@ -153,6 +177,7 @@ class LinkySensor(Entity):
 
     def update(self):
         """Retrieve the new data for the sensor."""
+        _LOGGER.error("LINKY_SENSOR:sensor update : %s", self.name)
         data = self.__account.data[self._scale][self.__when]
         self.__consumption = data[CONSUMPTION]
         self.__time = data[TIME]

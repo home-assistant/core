@@ -1,0 +1,22 @@
+{
+    "config": {
+        "title": "Linky",
+        "step": {
+            "user": {
+                "title": "Linky parameters",
+                "description": "Enter your credentials and preferences",
+                "data": {
+                    "username": "Email",
+                    "password": "Password",
+                    "timeout": "Timeout"
+                }
+            }
+        },
+        "error":{
+            "username_exists": "Account already configured"
+        },
+        "abort":{
+            "username_exists": "Account already configured"
+        }
+    }
+}

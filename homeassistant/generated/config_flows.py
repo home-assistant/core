@@ -30,6 +30,7 @@ FLOWS = [
     "iqvia",
     "life360",
     "lifx",
+    "linky",
     "locative",
     "logi_circle",
     "luftdaten",
