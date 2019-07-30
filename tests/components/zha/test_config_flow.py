@@ -61,24 +61,6 @@ async def test_import_flow(hass):
     }
 
 
-async def test_import_flow_zigate(hass):
-    """Test import from configuration.yaml ."""
-    flow = config_flow.ZhaFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_import({
-        'usb_path': '/dev/ttyUSB0',
-        'radio_type': 'zigate',
-    })
-
-    assert result['type'] == 'create_entry'
-    assert result['title'] == '/dev/ttyUSB0'
-    assert result['data'] == {
-        'usb_path': '/dev/ttyUSB0',
-        'radio_type': 'zigate'
-    }
-
-
 async def test_import_flow_existing_config_entry(hass):
     """Test import from configuration.yaml ."""
     MockConfigEntry(domain=DOMAIN, data={
