@@ -32,6 +32,8 @@ ATTR_REGION = 'region'
 ATTR_TIME = 'time'
 ATTR_TITLE = 'title'
 
+DEFAULT_FILTER_TIME_INTERVAL = timedelta(days=7)
+
 SIGNAL_DELETE_ENTITY = 'geonetnz_quakes_delete_{}'
 SIGNAL_UPDATE_ENTITY = 'geonetnz_quakes_update_{}'
 
@@ -67,7 +69,8 @@ class GeonetnzQuakesFeedEntityManager:
             websession, self._generate_entity, self._update_entity,
             self._remove_entity, coordinates, mmi=mmi,
             filter_radius=radius_in_km,
-            filter_minimum_magnitude=minimum_magnitude)
+            filter_minimum_magnitude=minimum_magnitude,
+            filter_time=DEFAULT_FILTER_TIME_INTERVAL)
         self._async_add_entities = async_add_entities
         self._scan_interval = timedelta(seconds=scan_interval)
         self._unit_system = unit_system
