@@ -24,6 +24,7 @@ from .const import (
     POWER_SOURCE, QUIRK_APPLIED, QUIRK_CLASS, SERVER, SERVER_COMMANDS,
     SIGNAL_AVAILABLE, UNKNOWN_MANUFACTURER, UNKNOWN_MODEL, ZDO_CHANNEL,
     LQI, RSSI, LAST_SEEN, ATTR_AVAILABLE)
+from .helpers import LogMixin
 
 _LOGGER = logging.getLogger(__name__)
 _KEEP_ALIVE_INTERVAL = 7200
@@ -37,7 +38,7 @@ class DeviceStatus(Enum):
     INITIALIZED = 2
 
 
-class ZHADevice:
+class ZHADevice(LogMixin):
     """ZHA Zigbee device object."""
 
     def __init__(self, hass, zigpy_device, zha_gateway):
@@ -272,25 +273,21 @@ class ZHADevice:
 
     async def async_configure(self):
         """Configure the device."""
-        _LOGGER.debug('%s: started configuration', self.name)
+        self.debug('started configuration')
         await self._execute_channel_tasks(
             self.get_channels_to_configure(), 'async_configure')
-        _LOGGER.debug('%s: completed configuration', self.name)
+        self.debug('completed configuration')
         entry = self.gateway.zha_storage.async_create_or_update(self)
-        _LOGGER.debug('%s: stored in registry: %s', self.name, entry)
+        self.debug('stored in registry: %s', entry)
 
     async def async_initialize(self, from_cache=False):
         """Initialize channels."""
-        _LOGGER.debug('%s: started initialization', self.name)
+        self.debug('started initialization')
         await self._execute_channel_tasks(
             self.all_channels, 'async_initialize', from_cache)
-        _LOGGER.debug(
-            '%s: power source: %s',
-            self.name,
-            self.power_source
-        )
+        self.debug('power source: %s', self.power_source)
         self.status = DeviceStatus.INITIALIZED
-        _LOGGER.debug('%s: completed initialization', self.name)
+        self.debug('completed initialization')
 
     async def _execute_channel_tasks(self, channels, task_name, *args):
         """Gather and execute a set of CHANNEL tasks."""
@@ -316,19 +313,9 @@ class ZHADevice:
         try:
             async with semaphore:
                 await getattr(channel, func_name)(*args)
-                _LOGGER.debug('%s: channel: %s %s stage succeeded',
-                              self.name,
-                              "{}-{}".format(
-                                  channel.name, channel.unique_id),
-                              func_name)
+                channel.debug("channel: '%s' stage succeeded", func_name)
         except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.warning(
-                '%s channel: %s %s stage failed ex: %s',
-                self.name,
-                "{}-{}".format(channel.name, channel.unique_id),
-                func_name,
-                ex
-            )
+            channel.warning("channel: '%s' stage failed ex: %s", func_name, ex)
 
     @callback
     def async_unsub_dispatcher(self):
@@ -409,7 +396,7 @@ class ZHADevice:
                 {attribute: value},
                 manufacturer=manufacturer
             )
-            _LOGGER.debug(
+            self.debug(
                 'set: %s for attr: %s to cluster: %s for ept: %s - res: %s',
                 value,
                 attribute,
@@ -419,7 +406,7 @@ class ZHADevice:
             )
             return response
         except DeliveryError as exc:
-            _LOGGER.debug(
+            self.debug(
                 'failed to set attribute: %s %s %s %s %s',
                 '{}: {}'.format(ATTR_VALUE, value),
                 '{}: {}'.format(ATTR_ATTRIBUTE, attribute),
@@ -444,7 +431,7 @@ class ZHADevice:
         else:
             response = await cluster.client_command(command, *args)
 
-        _LOGGER.debug(
+        self.debug(
             'Issued cluster command: %s %s %s %s %s %s %s',
             '{}: {}'.format(ATTR_CLUSTER_ID, cluster_id),
             '{}: {}'.format(ATTR_COMMAND, command),
@@ -455,3 +442,8 @@ class ZHADevice:
             '{}: {}'.format(ATTR_ENDPOINT_ID, endpoint_id)
         )
         return response
+
+    def log(self, level, msg, *args):
+        msg = '[%s](%s): ' + msg
+        args = (self.nwk, self.model, ) + args
+        _LOGGER.log(level, msg, *args)

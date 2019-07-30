@@ -15,7 +15,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from ..helpers import (
     configure_reporting, construct_unique_id,
-    safe_read, get_attr_id_by_name, bind_cluster)
+    safe_read, get_attr_id_by_name, bind_cluster, LogMixin)
 from ..const import (
     REPORT_CONFIG_DEFAULT, SIGNAL_ATTR_UPDATED, ATTRIBUTE_CHANNEL,
     EVENT_RELAY_CHANNEL, ZDO_CHANNEL
@@ -25,15 +25,14 @@ from ..registries import CLUSTER_REPORT_CONFIGS
 _LOGGER = logging.getLogger(__name__)
 
 
-def parse_and_log_command(unique_id, cluster, tsn, command_id, args):
+def parse_and_log_command(channel, tsn, command_id, args):
     """Parse and log a zigbee cluster command."""
-    cmd = cluster.server_commands.get(command_id, [command_id])[0]
-    _LOGGER.debug(
-        "%s: received '%s' command with %s args on cluster_id '%s' tsn '%s'",
-        unique_id,
+    cmd = channel.cluster.server_commands.get(command_id, [command_id])[0]
+    channel.debug(
+        "received '%s' command with %s args on cluster_id '%s' tsn '%s'",
         cmd,
         args,
-        cluster.cluster_id,
+        channel.cluster.cluster_id,
         tsn
     )
     return cmd
@@ -46,8 +45,7 @@ def decorate_command(channel, command):
         from zigpy.exceptions import DeliveryError
         try:
             result = await command(*args, **kwds)
-            _LOGGER.debug("%s: executed command: %s %s %s %s",
-                          channel.unique_id,
+            channel.debug("executed command: %s %s %s %s",
                           command.__name__,
                           "{}: {}".format("with args", args),
                           "{}: {}".format("with kwargs", kwds),
@@ -55,9 +53,8 @@ def decorate_command(channel, command):
             return result
 
         except (DeliveryError, Timeout) as ex:
-            _LOGGER.debug(
-                "%s: command failed: %s exception: %s",
-                channel.unique_id,
+            channel.debug(
+                "command failed: %s exception: %s",
                 command.__name__,
                 str(ex)
             )
@@ -73,7 +70,7 @@ class ChannelStatus(Enum):
     INITIALIZED = 3
 
 
-class ZigbeeChannel:
+class ZigbeeChannel(LogMixin):
     """Base channel for a Zigbee cluster."""
 
     CHANNEL_NAME = None
@@ -151,19 +148,12 @@ class ZigbeeChannel:
                     )
                     await asyncio.sleep(uniform(0.1, 0.5))
 
-        _LOGGER.debug(
-            "%s: finished channel configuration",
-            self._unique_id
-        )
+        self.debug("finished channel configuration")
         self._status = ChannelStatus.CONFIGURED
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
-        _LOGGER.debug(
-            'initializing channel: %s from_cache: %s',
-            self._channel_name,
-            from_cache
-        )
+        self.debug('initializing channel: from_cache: %s', from_cache)
         self._status = ChannelStatus.INITIALIZED
 
     @callback
@@ -213,6 +203,11 @@ class ZigbeeChannel:
         )
         return result.get(attribute)
 
+    def log(self, level, msg, *args):
+        msg = '[%s]: ' + msg
+        args = (self.unique_id, ) + args
+        _LOGGER.log(level, msg, *args)
+
     def __getattr__(self, name):
         """Get attribute or a decorated cluster command."""
         if hasattr(self._cluster, name) and callable(
@@ -257,7 +252,7 @@ class AttributeListeningChannel(ZigbeeChannel):
         await super().async_initialize(from_cache)
 
 
-class ZDOChannel:
+class ZDOChannel(LogMixin):
     """Channel for ZDO events."""
 
     def __init__(self, cluster, device):
@@ -298,12 +293,17 @@ class ZDOChannel:
         """Initialize channel."""
         entry = self._zha_device.gateway.zha_storage.async_get_or_create(
             self._zha_device)
-        _LOGGER.debug("entry loaded from storage: %s", entry)
+        self.debug("entry loaded from storage: %s", entry)
         self._status = ChannelStatus.INITIALIZED
 
     async def async_configure(self):
         """Configure channel."""
         self._status = ChannelStatus.CONFIGURED
+
+    def log(self, level, msg, *args):
+        msg = '[%s:ZDO](%s): ' + msg
+        args = (self._zha_device.nwk, self._zha_device.model, ) + args
+        _LOGGER.log(level, msg, *args)
 
 
 class EventRelayChannel(ZigbeeChannel):

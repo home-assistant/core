@@ -31,13 +31,7 @@ class OnOffChannel(ZigbeeChannel):
     @callback
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
-        cmd = parse_and_log_command(
-            self.unique_id,
-            self._cluster,
-            tsn,
-            command_id,
-            args
-        )
+        cmd = parse_and_log_command(self, tsn, command_id, args)
 
         if cmd in ('off', 'off_with_effect'):
             self.attribute_updated(self.ON_OFF, False)
@@ -87,11 +81,8 @@ class OnOffChannel(ZigbeeChannel):
     async def async_update(self):
         """Initialize channel."""
         from_cache = not self.device.is_mains_powered
-        _LOGGER.debug(
-            "%s is attempting to update onoff state - from cache: %s",
-            self._unique_id,
-            from_cache
-        )
+        self.debug("attempting to update onoff state - from cache: %s",
+                   from_cache)
         self._state = bool(
             await self.get_attribute_value(self.ON_OFF, from_cache=from_cache))
         await super().async_update()
@@ -105,13 +96,7 @@ class LevelControlChannel(ZigbeeChannel):
     @callback
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
-        cmd = parse_and_log_command(
-            self.unique_id,
-            self._cluster,
-            tsn,
-            command_id,
-            args
-        )
+        cmd = parse_and_log_command(self, tsn, command_id, args)
 
         if cmd in ('move_to_level', 'move_to_level_with_on_off'):
             self.dispatch_level_change(SIGNAL_SET_LEVEL, args[0])
@@ -130,8 +115,8 @@ class LevelControlChannel(ZigbeeChannel):
     @callback
     def attribute_updated(self, attrid, value):
         """Handle attribute updates on this cluster."""
-        _LOGGER.debug("%s: received attribute: %s update with value: %i",
-                      self.unique_id, attrid, value)
+        self.debug("received attribute: %s update with value: %s",
+                   attrid, value)
         if attrid == self.CURRENT_LEVEL:
             self.dispatch_level_change(SIGNAL_SET_LEVEL, value)
 

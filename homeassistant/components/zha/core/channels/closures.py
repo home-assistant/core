@@ -32,8 +32,8 @@ class DoorLockChannel(ZigbeeChannel):
     def attribute_updated(self, attrid, value):
         """Handle attribute update from lock cluster."""
         attr_name = self.cluster.attributes.get(attrid, [attrid])[0]
-        _LOGGER.debug("%s: Attribute report '%s'[%s] = %s",
-                      self.unique_id, self.cluster.name, attr_name, value)
+        self.debug("Attribute report '%s'[%s] = %s",
+                   self.cluster.name, attr_name, value)
         if attrid == self._value_attribute:
             async_dispatcher_send(
                 self._zha_device.hass,
