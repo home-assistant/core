@@ -275,7 +275,6 @@ class UniFiDeviceTracker(ScannerEntity):
         """Return the device state attributes."""
         attributes = {}
 
-        attributes['board_rev'] = self.device.board_rev
         attributes['upgradable'] = self.device.upgradable
         attributes['overheating'] = self.device.overheating
 
