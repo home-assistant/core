@@ -74,7 +74,6 @@ ATTRIB_DOWNLOAD = [ 'name', 'tx-bytes' ]
 ATTRIB_UPLOAD = [ 'name', 'rx-bytes' ]
 
 PARAM_SPEED = { 'interface': MTK_DEFAULT_WAN_PORT, 'duration': '1s' }
-#PARAM_DOWN_UP = { 'name': MTK_DEFAULT_WAN_PORT }
 MEGA = 1048576
 
 # Sensor types are defined like: Name, units, icon, state item, api cmd(s), attributes
