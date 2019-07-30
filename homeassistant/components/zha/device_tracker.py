@@ -91,7 +91,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
     @callback
     def async_battery_percentage_remaining_updated(self, value):
         """Handle tracking."""
-        _LOGGER.debug('battery_percentage_remaining updated: %s', value)
+        self.debug('battery_percentage_remaining updated: %s', value)
         self._connected = True
         self._battery_level = battery_percentage_remaining_formatter(value)
         self.async_schedule_update_ha_state()
