@@ -63,6 +63,9 @@ async def test_import_flow(hass):
 
 async def test_import_flow_zigate(hass):
     """Test import from configuration.yaml ."""
+    flow = config_flow.ZhaFlowHandler()
+    flow.hass = hass
+
     result = await flow.async_step_import({
         'usb_path': '/dev/ttyUSB0',
         'radio_type': 'zigate',
