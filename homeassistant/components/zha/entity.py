@@ -12,13 +12,19 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import slugify
 
 from .core.const import (
-    ATTR_MANUFACTURER, DATA_ZHA, DATA_ZHA_BRIDGE_ID, DOMAIN, MODEL, NAME,
-    SIGNAL_REMOVE)
+    ATTR_MANUFACTURER,
+    DATA_ZHA,
+    DATA_ZHA_BRIDGE_ID,
+    DOMAIN,
+    MODEL,
+    NAME,
+    SIGNAL_REMOVE,
+)
 from .core.helpers import LogMixin
 
 _LOGGER = logging.getLogger(__name__)
 
-ENTITY_SUFFIX = 'entity_suffix'
+ENTITY_SUFFIX = "entity_suffix"
 RESTART_GRACE_PERIOD = 7200  # 2 hours
 
 
@@ -27,29 +33,28 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
 
     _domain = None  # Must be overridden by subclasses
 
-    def __init__(self, unique_id, zha_device, channels,
-                 skip_entity_id=False, **kwargs):
+    def __init__(self, unique_id, zha_device, channels, skip_entity_id=False, **kwargs):
         """Init ZHA entity."""
         self._force_update = False
         self._should_poll = False
         self._unique_id = unique_id
         if not skip_entity_id:
             ieee = zha_device.ieee
-            ieeetail = ''.join(['%02x' % (o, ) for o in ieee[-4:]])
+            ieeetail = "".join(["%02x" % (o,) for o in ieee[-4:]])
             self.entity_id = "{}.{}_{}_{}_{}{}".format(
                 self._domain,
                 slugify(zha_device.manufacturer),
                 slugify(zha_device.model),
                 ieeetail,
                 channels[0].cluster.endpoint.endpoint_id,
-                kwargs.get(ENTITY_SUFFIX, ''),
+                kwargs.get(ENTITY_SUFFIX, ""),
             )
         self._state = None
         self._device_state_attributes = {}
         self._zha_device = zha_device
         self.cluster_channels = {}
         self._available = False
-        self._component = kwargs['component']
+        self._component = kwargs["component"]
         self._unsubs = []
         self.remove_future = None
         for channel in channels:
@@ -89,15 +94,14 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
     def device_info(self):
         """Return a device description for device registry."""
         zha_device_info = self._zha_device.device_info
-        ieee = zha_device_info['ieee']
+        ieee = zha_device_info["ieee"]
         return {
-            'connections': {(CONNECTION_ZIGBEE, ieee)},
-            'identifiers': {(DOMAIN, ieee)},
+            "connections": {(CONNECTION_ZIGBEE, ieee)},
+            "identifiers": {(DOMAIN, ieee)},
             ATTR_MANUFACTURER: zha_device_info[ATTR_MANUFACTURER],
             MODEL: zha_device_info[MODEL],
             NAME: zha_device_info[NAME],
-            'via_device': (
-                DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
+            "via_device": (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
         }
 
     @property
@@ -112,9 +116,7 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
 
     def async_update_state_attribute(self, key, value):
         """Update a single device state attribute."""
-        self._device_state_attributes.update({
-            key: value
-        })
+        self._device_state_attributes.update({key: value})
         self.async_schedule_update_ha_state()
 
     def async_set_state(self, state):
@@ -127,24 +129,34 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
         self.remove_future = asyncio.Future()
         await self.async_check_recently_seen()
         await self.async_accept_signal(
-            None, "{}_{}".format(self.zha_device.available_signal, 'entity'),
+            None,
+            "{}_{}".format(self.zha_device.available_signal, "entity"),
             self.async_set_available,
-            signal_override=True)
+            signal_override=True,
+        )
         await self.async_accept_signal(
-            None, "{}_{}".format(SIGNAL_REMOVE, str(self.zha_device.ieee)),
+            None,
+            "{}_{}".format(SIGNAL_REMOVE, str(self.zha_device.ieee)),
             self.async_remove,
-            signal_override=True
+            signal_override=True,
         )
         self._zha_device.gateway.register_entity_reference(
-            self._zha_device.ieee, self.entity_id, self._zha_device,
-            self.cluster_channels, self.device_info, self.remove_future)
+            self._zha_device.ieee,
+            self.entity_id,
+            self._zha_device,
+            self.cluster_channels,
+            self.device_info,
+            self.remove_future,
+        )
 
     async def async_check_recently_seen(self):
         """Check if the device was seen within the last 2 hours."""
         last_state = await self.async_get_last_state()
-        if last_state and self._zha_device.last_seen and (
-                time.time() - self._zha_device.last_seen <
-                RESTART_GRACE_PERIOD):
+        if (
+            last_state
+            and self._zha_device.last_seen
+            and (time.time() - self._zha_device.last_seen < RESTART_GRACE_PERIOD)
+        ):
             self.async_set_available(True)
             if not self.zha_device.is_mains_powered:
                 # mains powered devices will get real time state
@@ -167,24 +179,17 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
     async def async_update(self):
         """Retrieve latest state."""
         for channel in self.cluster_channels.values():
-            if hasattr(channel, 'async_update'):
+            if hasattr(channel, "async_update"):
                 await channel.async_update()
 
-    async def async_accept_signal(self, channel, signal, func,
-                                  signal_override=False):
+    async def async_accept_signal(self, channel, signal, func, signal_override=False):
         """Accept a signal from a channel."""
         unsub = None
         if signal_override:
-            unsub = async_dispatcher_connect(
-                self.hass,
-                signal,
-                func
-            )
+            unsub = async_dispatcher_connect(self.hass, signal, func)
         else:
             unsub = async_dispatcher_connect(
-                self.hass,
-                "{}_{}".format(channel.unique_id, signal),
-                func
+                self.hass, "{}_{}".format(channel.unique_id, signal), func
             )
         self._unsubs.append(unsub)
 

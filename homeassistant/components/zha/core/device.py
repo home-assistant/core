@@ -12,18 +12,46 @@ import time
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, async_dispatcher_send)
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.event import async_track_time_interval
 
 from .channels import EventRelayChannel
 from .const import (
-    ATTR_ARGS, ATTR_ATTRIBUTE, ATTR_CLUSTER_ID, ATTR_COMMAND,
-    ATTR_COMMAND_TYPE, ATTR_ENDPOINT_ID, ATTR_MANUFACTURER, ATTR_VALUE,
-    BATTERY_OR_UNKNOWN, CLIENT_COMMANDS, IEEE, IN, MAINS_POWERED,
-    MANUFACTURER_CODE, MODEL, NAME, NWK, OUT, POWER_CONFIGURATION_CHANNEL,
-    POWER_SOURCE, QUIRK_APPLIED, QUIRK_CLASS, SERVER, SERVER_COMMANDS,
-    SIGNAL_AVAILABLE, UNKNOWN_MANUFACTURER, UNKNOWN_MODEL, ZDO_CHANNEL,
-    LQI, RSSI, LAST_SEEN, ATTR_AVAILABLE)
+    ATTR_ARGS,
+    ATTR_ATTRIBUTE,
+    ATTR_CLUSTER_ID,
+    ATTR_COMMAND,
+    ATTR_COMMAND_TYPE,
+    ATTR_ENDPOINT_ID,
+    ATTR_MANUFACTURER,
+    ATTR_VALUE,
+    BATTERY_OR_UNKNOWN,
+    CLIENT_COMMANDS,
+    IEEE,
+    IN,
+    MAINS_POWERED,
+    MANUFACTURER_CODE,
+    MODEL,
+    NAME,
+    NWK,
+    OUT,
+    POWER_CONFIGURATION_CHANNEL,
+    POWER_SOURCE,
+    QUIRK_APPLIED,
+    QUIRK_CLASS,
+    SERVER,
+    SERVER_COMMANDS,
+    SIGNAL_AVAILABLE,
+    UNKNOWN_MANUFACTURER,
+    UNKNOWN_MODEL,
+    ZDO_CHANNEL,
+    LQI,
+    RSSI,
+    LAST_SEEN,
+    ATTR_AVAILABLE,
+)
 from .helpers import LogMixin
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,22 +79,20 @@ class ZHADevice(LogMixin):
         self._all_channels = []
         self._available = False
         self._available_signal = "{}_{}_{}".format(
-            self.name, self.ieee, SIGNAL_AVAILABLE)
+            self.name, self.ieee, SIGNAL_AVAILABLE
+        )
         self._unsub = async_dispatcher_connect(
-            self.hass,
-            self._available_signal,
-            self.async_initialize
+            self.hass, self._available_signal, self.async_initialize
         )
         from zigpy.quirks import CustomDevice
+
         self.quirk_applied = isinstance(self._zigpy_device, CustomDevice)
         self.quirk_class = "{}.{}".format(
             self._zigpy_device.__class__.__module__,
-            self._zigpy_device.__class__.__name__
+            self._zigpy_device.__class__.__name__,
         )
         self._available_check = async_track_time_interval(
-            self.hass,
-            self._check_available,
-            _UPDATE_ALIVE_INTERVAL
+            self.hass, self._check_available, _UPDATE_ALIVE_INTERVAL
         )
         self.status = DeviceStatus.CREATED
 
@@ -184,15 +210,9 @@ class ZHADevice(LogMixin):
         """Set sensor availability."""
         if self._available != available and available:
             # Update the state the first time the device comes online
-            async_dispatcher_send(
-                self.hass,
-                self._available_signal,
-                False
-            )
+            async_dispatcher_send(self.hass, self._available_signal, False)
         async_dispatcher_send(
-            self.hass,
-            "{}_{}".format(self._available_signal, 'entity'),
-            available
+            self.hass, "{}_{}".format(self._available_signal, "entity"), available
         )
         self._available = available
 
@@ -215,14 +235,16 @@ class ZHADevice(LogMixin):
             LQI: self.lqi,
             RSSI: self.rssi,
             LAST_SEEN: update_time,
-            ATTR_AVAILABLE: self.available
+            ATTR_AVAILABLE: self.available,
         }
 
     def add_cluster_channel(self, cluster_channel):
         """Add cluster channel to device."""
         # only keep 1 power configuration channel
-        if cluster_channel.name is POWER_CONFIGURATION_CHANNEL and \
-                POWER_CONFIGURATION_CHANNEL in self.cluster_channels:
+        if (
+            cluster_channel.name is POWER_CONFIGURATION_CHANNEL
+            and POWER_CONFIGURATION_CHANNEL in self.cluster_channels
+        ):
             return
 
         if isinstance(cluster_channel, EventRelayChannel):
@@ -249,10 +271,9 @@ class ZHADevice(LogMixin):
 
         def get_key(channel):
             channel_key = "ZDO"
-            if hasattr(channel.cluster, 'cluster_id'):
+            if hasattr(channel.cluster, "cluster_id"):
                 channel_key = "{}_{}".format(
-                    channel.cluster.endpoint.endpoint_id,
-                    channel.cluster.cluster_id
+                    channel.cluster.endpoint.endpoint_id, channel.cluster.cluster_id
                 )
             return channel_key
 
@@ -273,21 +294,23 @@ class ZHADevice(LogMixin):
 
     async def async_configure(self):
         """Configure the device."""
-        self.debug('started configuration')
+        self.debug("started configuration")
         await self._execute_channel_tasks(
-            self.get_channels_to_configure(), 'async_configure')
-        self.debug('completed configuration')
+            self.get_channels_to_configure(), "async_configure"
+        )
+        self.debug("completed configuration")
         entry = self.gateway.zha_storage.async_create_or_update(self)
-        self.debug('stored in registry: %s', entry)
+        self.debug("stored in registry: %s", entry)
 
     async def async_initialize(self, from_cache=False):
         """Initialize channels."""
-        self.debug('started initialization')
+        self.debug("started initialization")
         await self._execute_channel_tasks(
-            self.all_channels, 'async_initialize', from_cache)
-        self.debug('power source: %s', self.power_source)
+            self.all_channels, "async_initialize", from_cache
+        )
+        self.debug("power source: %s", self.power_source)
         self.status = DeviceStatus.INITIALIZED
-        self.debug('completed initialization')
+        self.debug("completed initialization")
 
     async def _execute_channel_tasks(self, channels, task_name, *args):
         """Gather and execute a set of CHANNEL tasks."""
@@ -299,11 +322,12 @@ class ZHADevice(LogMixin):
                 # pylint: disable=E1111
                 if zdo_task is None:  # We only want to do this once
                     zdo_task = self._async_create_task(
-                        semaphore, channel, task_name, *args)
+                        semaphore, channel, task_name, *args
+                    )
             else:
                 channel_tasks.append(
-                    self._async_create_task(
-                        semaphore, channel, task_name, *args))
+                    self._async_create_task(semaphore, channel, task_name, *args)
+                )
         if zdo_task is not None:
             await zdo_task
         await asyncio.gather(*channel_tasks)
@@ -332,10 +356,8 @@ class ZHADevice(LogMixin):
     def async_get_clusters(self):
         """Get all clusters for this device."""
         return {
-            ep_id: {
-                IN: endpoint.in_clusters,
-                OUT: endpoint.out_clusters
-            } for (ep_id, endpoint) in self._zigpy_device.endpoints.items()
+            ep_id: {IN: endpoint.in_clusters, OUT: endpoint.out_clusters}
+            for (ep_id, endpoint) in self._zigpy_device.endpoints.items()
             if ep_id != 0
         }
 
@@ -343,15 +365,11 @@ class ZHADevice(LogMixin):
     def async_get_std_clusters(self):
         """Get ZHA and ZLL clusters for this device."""
         from zigpy.profiles import zha, zll
+
         return {
-            ep_id: {
-                IN: endpoint.in_clusters,
-                OUT: endpoint.out_clusters
-            } for (ep_id, endpoint) in self._zigpy_device.endpoints.items()
-            if ep_id != 0 and endpoint.profile_id in (
-                zha.PROFILE_ID,
-                zll.PROFILE_ID
-            )
+            ep_id: {IN: endpoint.in_clusters, OUT: endpoint.out_clusters}
+            for (ep_id, endpoint) in self._zigpy_device.endpoints.items()
+            if ep_id != 0 and endpoint.profile_id in (zha.PROFILE_ID, zll.PROFILE_ID)
         }
 
     @callback
@@ -361,18 +379,15 @@ class ZHADevice(LogMixin):
         return clusters[endpoint_id][cluster_type][cluster_id]
 
     @callback
-    def async_get_cluster_attributes(self, endpoint_id, cluster_id,
-                                     cluster_type=IN):
+    def async_get_cluster_attributes(self, endpoint_id, cluster_id, cluster_type=IN):
         """Get zigbee attributes for specified cluster."""
-        cluster = self.async_get_cluster(endpoint_id, cluster_id,
-                                         cluster_type)
+        cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
             return None
         return cluster.attributes
 
     @callback
-    def async_get_cluster_commands(self, endpoint_id, cluster_id,
-                                   cluster_type=IN):
+    def async_get_cluster_commands(self, endpoint_id, cluster_id, cluster_type=IN):
         """Get zigbee commands for specified cluster."""
         cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
@@ -382,64 +397,77 @@ class ZHADevice(LogMixin):
             SERVER_COMMANDS: cluster.server_commands,
         }
 
-    async def write_zigbee_attribute(self, endpoint_id, cluster_id,
-                                     attribute, value, cluster_type=IN,
-                                     manufacturer=None):
+    async def write_zigbee_attribute(
+        self,
+        endpoint_id,
+        cluster_id,
+        attribute,
+        value,
+        cluster_type=IN,
+        manufacturer=None,
+    ):
         """Write a value to a zigbee attribute for a cluster in this entity."""
         cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
             return None
 
         from zigpy.exceptions import DeliveryError
+
         try:
             response = await cluster.write_attributes(
-                {attribute: value},
-                manufacturer=manufacturer
+                {attribute: value}, manufacturer=manufacturer
             )
             self.debug(
-                'set: %s for attr: %s to cluster: %s for ept: %s - res: %s',
+                "set: %s for attr: %s to cluster: %s for ept: %s - res: %s",
                 value,
                 attribute,
                 cluster_id,
                 endpoint_id,
-                response
+                response,
             )
             return response
         except DeliveryError as exc:
             self.debug(
-                'failed to set attribute: %s %s %s %s %s',
-                '{}: {}'.format(ATTR_VALUE, value),
-                '{}: {}'.format(ATTR_ATTRIBUTE, attribute),
-                '{}: {}'.format(ATTR_CLUSTER_ID, cluster_id),
-                '{}: {}'.format(ATTR_ENDPOINT_ID, endpoint_id),
-                exc
+                "failed to set attribute: %s %s %s %s %s",
+                "{}: {}".format(ATTR_VALUE, value),
+                "{}: {}".format(ATTR_ATTRIBUTE, attribute),
+                "{}: {}".format(ATTR_CLUSTER_ID, cluster_id),
+                "{}: {}".format(ATTR_ENDPOINT_ID, endpoint_id),
+                exc,
             )
             return None
 
-    async def issue_cluster_command(self, endpoint_id, cluster_id, command,
-                                    command_type, args, cluster_type=IN,
-                                    manufacturer=None):
+    async def issue_cluster_command(
+        self,
+        endpoint_id,
+        cluster_id,
+        command,
+        command_type,
+        args,
+        cluster_type=IN,
+        manufacturer=None,
+    ):
         """Issue a command against specified zigbee cluster on this entity."""
         cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
             return None
         response = None
         if command_type == SERVER:
-            response = await cluster.command(command, *args,
-                                             manufacturer=manufacturer,
-                                             expect_reply=True)
+            response = await cluster.command(
+                command, *args, manufacturer=manufacturer, expect_reply=True
+            )
         else:
             response = await cluster.client_command(command, *args)
 
         self.debug(
-            'Issued cluster command: %s %s %s %s %s %s %s',
-            '{}: {}'.format(ATTR_CLUSTER_ID, cluster_id),
-            '{}: {}'.format(ATTR_COMMAND, command),
-            '{}: {}'.format(ATTR_COMMAND_TYPE, command_type),
-            '{}: {}'.format(ATTR_ARGS, args),
-            '{}: {}'.format(ATTR_CLUSTER_ID, cluster_type),
-            '{}: {}'.format(ATTR_MANUFACTURER, manufacturer),
-            '{}: {}'.format(ATTR_ENDPOINT_ID, endpoint_id)
+            "Issued cluster command: %s %s %s %s %s %s %s",
+            "{}: {}".format(ATTR_CLUSTER_ID, cluster_id),
+            "{}: {}".format(ATTR_COMMAND, command),
+            "{}: {}".format(ATTR_COMMAND_TYPE, command_type),
+            "{}: {}".format(ATTR_ARGS, args),
+            "{}: {}".format(ATTR_CLUSTER_ID, cluster_type),
+            "{}: {}".format(ATTR_MANUFACTURER, manufacturer),
+            "{}: {}".format(ATTR_ENDPOINT_ID, endpoint_id),
         )
         return response
 
