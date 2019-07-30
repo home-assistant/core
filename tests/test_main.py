@@ -36,6 +36,6 @@ def test_validate_python(mock_exit):
     mock_exit.reset_mock()
 
     with patch('sys.version_info',
-               new_callable=PropertyMock(return_value=(3, 5, 3))):
+               new_callable=PropertyMock(return_value=(3, 6, 0))):
         main.validate_python()
         assert mock_exit.called is False
