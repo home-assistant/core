@@ -10,6 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
+
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up the mikrotik sensors."""
@@ -25,6 +26,7 @@ async def async_setup_platform(
     async_add_entities(
         [MikrotikSensor(hass, client, host, sensor_type, host_name)
          for sensor_type in discovery_info['sensors']])
+
 
 class MikrotikSensor(Entity):
     """Representation of a mikrotik sensor."""
@@ -78,7 +80,7 @@ class MikrotikSensor(Entity):
 
     async def async_update(self, now=None):
         """Get the latest data and updates the state."""
-        await self._client.update_sensors(self._host,self._sensor_type)
+        await self._client.update_sensors(self._host, self._sensor_type)
         data = self.hass.data[MIKROTIK][self._host][SENSOR][self._sensor_type]
         if data is None:
             self._available = False
