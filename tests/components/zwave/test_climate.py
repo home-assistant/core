@@ -2,9 +2,10 @@
 import pytest
 
 from homeassistant.components.climate.const import (
-    HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF, PRESET_BOOST, PRESET_ECO,
-    PRESET_NONE, SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE, SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE, CURRENT_HVAC_HEAT, CURRENT_HVAC_COOL)
+    HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_HEAT_COOL, HVAC_MODE_OFF,
+    PRESET_BOOST, PRESET_ECO, PRESET_NONE, SUPPORT_FAN_MODE,
+    SUPPORT_PRESET_MODE, SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE,
+    CURRENT_HVAC_HEAT, CURRENT_HVAC_COOL)
 from homeassistant.components.zwave import climate
 from homeassistant.const import (
     ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT)
@@ -80,8 +81,8 @@ def device_unknown(hass, mock_openzwave):
     values = MockEntityValues(
         primary=MockValue(data=1, node=node),
         temperature=MockValue(data=5, node=node, units=None),
-        mode=MockValue(data='Heat', data_items=[
-                       'Off', 'Cool', 'Heat', 'Heat Eco', 'Abcdefg'],
+        mode=MockValue(data='Heat', data_items=['Off', 'Cool', 'Heat',
+                                                'Heat Eco', 'Abcdefg'],
                        node=node),
         fan_mode=MockValue(data='test2', data_items=[3, 4, 5], node=node),
         operating_state=MockValue(data='test4', node=node),
@@ -265,9 +266,10 @@ def test_operation_value_changed_preset(device_mapping):
     assert device.preset_mode == PRESET_NONE
     device.values.mode.data = PRESET_ECO
     value_changed(device.values.mode)
-    assert device.hvac_mode is None
+    assert device.hvac_mode == HVAC_MODE_HEAT_COOL
     assert device.preset_mode == PRESET_ECO
     device.values.mode = None
+    assert device.hvac_mode == HVAC_MODE_HEAT
     assert device.preset_mode == PRESET_NONE
 
 
@@ -293,13 +295,14 @@ def test_operation_value_changed_mapping_preset(device_mapping):
     assert device.preset_mode == PRESET_NONE
     device.values.mode.data = 'Heat Eco'
     value_changed(device.values.mode)
-    assert device.hvac_mode is None
+    assert device.hvac_mode == HVAC_MODE_HEAT_COOL
     assert device.preset_mode == PRESET_ECO
     device.values.mode.data = 'Full Power'
     value_changed(device.values.mode)
-    assert device.hvac_mode is None
+    assert device.hvac_mode == HVAC_MODE_HEAT_COOL
     assert device.preset_mode == PRESET_BOOST
     device.values.mode = None
+    assert device.hvac_mode == HVAC_MODE_HEAT
     assert device.preset_mode == PRESET_NONE
 
 
@@ -310,7 +313,7 @@ def test_operation_value_changed_unknown(device_unknown):
     assert device.preset_mode == PRESET_NONE
     device.values.mode.data = 'Abcdefg'
     value_changed(device.values.mode)
-    assert device.hvac_mode is None
+    assert device.hvac_mode == HVAC_MODE_HEAT_COOL
     assert device.preset_mode == 'Abcdefg'
 
 

@@ -47,7 +47,7 @@ HVAC_STATE_MAPPINGS = {
     'dry air': HVAC_MODE_DRY,
     'moist air': HVAC_MODE_DRY,
     'cool': HVAC_MODE_COOL,
-    'auto': HVAC_MODE_HEAT_COOL
+    'auto': HVAC_MODE_HEAT_COOL,
 }
 
 HVAC_CURRENT_MAPPINGS = {
@@ -66,7 +66,8 @@ HVAC_CURRENT_MAPPINGS = {
 PRESET_MAPPINGS = {
     'full power': PRESET_BOOST,
     'heat eco': PRESET_ECO,
-    'manufacturer specific': PRESET_MANUFACTURER_SPECIFIC}
+    'manufacturer specific': PRESET_MANUFACTURER_SPECIFIC,
+}
 
 
 async def async_setup_platform(
@@ -169,8 +170,18 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                  if value == current_mode), None)
             self._preset_mode = next(
                 (key for key, value in self._preset_mapping.items()
-                 if value == current_mode),
-                current_mode if self._hvac_mode is None else PRESET_NONE)
+                 if value == current_mode), None)
+
+            if self._hvac_mode is not None and self._preset_mode is None:
+                # The current mode is a hvac mode
+                self._preset_mode = PRESET_NONE
+            elif self._hvac_mode is None and self._preset_mode is not None:
+                # The current mode is a preset mode
+                self._hvac_mode = HVAC_MODE_HEAT_COOL
+            elif self._hvac_mode is None and self._preset_mode is None:
+                # The current mode couldn't be found in any mapping
+                self._hvac_mode = HVAC_MODE_HEAT_COOL
+                self._preset_mode = current_mode
 
         _LOGGER.debug("self._hvac_list=%s", self._hvac_list)
         _LOGGER.debug("self._hvac_action=%s", self._hvac_action)
@@ -190,8 +201,8 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             if fan_modes:
                 self._fan_modes = list(fan_modes)
         _LOGGER.debug("self._fan_modes=%s", self._fan_modes)
-        _LOGGER.debug("self._current_fan_mode=%s",
-                      self._current_fan_mode)
+        _LOGGER.debug("self._current_fan_mode=%s", self._current_fan_mode)
+
         # Swing mode
         if self._zxt_120 == 1:
             if self.values.zxt_120_swing_mode:
