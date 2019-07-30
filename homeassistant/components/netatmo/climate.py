@@ -373,6 +373,8 @@ class HomeData:
             _LOGGER.error("No default_home in HomeData")
         except pyatmo.NoDevice:
             _LOGGER.debug("No thermostat devices available")
+        except pyatmo.InvalidHome:
+            _LOGGER.debug("Invalid home %s", self.home)
 
 
 class ThermostatData:
