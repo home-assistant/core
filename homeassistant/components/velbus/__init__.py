@@ -7,6 +7,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PORT, CONF_NAME
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -54,8 +55,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Establish connection with velbus."""
     hass.data.setdefault(DOMAIN, {})
 
-    controller = velbus.Controller(entry.data[CONF_PORT])
-
     def callback():
         modules = controller.get_modules()
         discovery_info = {
@@ -80,10 +79,18 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
                 hass.config_entries.async_forward_entry_setup(
                     entry, category))
 
-    controller.scan(callback)
+    try:
+        controller = velbus.Controller(entry.data[CONF_PORT])
+        controller.scan(callback)
+    except velbus.util.VelbusException as err:
+        _LOGGER.error('An error occurred: %s', err)
+        raise ConfigEntryNotReady
 
     def syn_clock(self, service=None):
-        controller.sync_clock()
+        try:
+            controller.sync_clock()
+        except velbus.util.VelbusException as err:
+            _LOGGER.error('An error occurred: %s', err)
 
     hass.services.async_register(
         DOMAIN, 'sync_clock', syn_clock,

@@ -1,6 +1,8 @@
 """Support for Velbus covers."""
 import logging
 
+from velbus.util import VelbusException
+
 from homeassistant.components.cover import (
     CoverDevice, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_STOP)
 
@@ -55,12 +57,21 @@ class VelbusCover(VelbusEntity, CoverDevice):
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        self._module.open(self._channel)
+        try:
+            self._module.open(self._channel)
+        except VelbusException as err:
+            _LOGGER.error('A Velbus error occurred: %s', err)
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        self._module.close(self._channel)
+        try:
+            self._module.close(self._channel)
+        except VelbusException as err:
+            _LOGGER.error('A Velbus error occurred: %s', err)
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        self._module.stop(self._channel)
+        try:
+            self._module.stop(self._channel)
+        except VelbusException as err:
+            _LOGGER.error('A Velbus error occurred: %s', err)

@@ -1,6 +1,8 @@
 """Support for Velbus thermostat."""
 import logging
 
+from velbus.util import VelbusException
+
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT, SUPPORT_TARGET_TEMPERATURE)
@@ -76,7 +78,11 @@ class VelbusClimate(VelbusEntity, ClimateDevice):
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is None:
             return
-        self._module.set_temp(temp)
+        try:
+            self._module.set_temp(temp)
+        except VelbusException as err:
+            _LOGGER.error('A Velbus error occurred: %s', err)
+            return
         self.schedule_update_ha_state()
 
     def set_hvac_mode(self, hvac_mode):
