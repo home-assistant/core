@@ -21,7 +21,7 @@ MIKROTIK = DOMAIN
 CLIENT = 'mikrotik_client'
 
 CONF_ARP_PING = 'arp_ping'
-CONF_WAN_PORT = 'interface'
+CONF_WAN_PORT = 'wan_port'
 CONF_TRACK_DEVICES = 'track_devices'
 CONF_LOGIN_METHOD = 'login_method'
 CONF_ENCODING = 'encoding'
@@ -74,7 +74,7 @@ ATTRIB_DOWNLOAD = [ 'name', 'tx-bytes' ]
 ATTRIB_UPLOAD = [ 'name', 'rx-bytes' ]
 
 PARAM_SPEED = { 'interface': MTK_DEFAULT_WAN_PORT, 'duration': '1s' }
-PARAM_DOWN_UP = { 'name': MTK_DEFAULT_WAN_PORT }
+#PARAM_DOWN_UP = { 'name': MTK_DEFAULT_WAN_PORT }
 MEGA = 1048576
 
 # Sensor types are defined like: Name, units, icon, state item, api cmd(s), attributes
@@ -188,6 +188,7 @@ class MikrotikAPI:
             self._hosts[host][CONNECTED] = False
             self._hosts[host][CONNECTING] = False
             self._hosts[host]['kwargs'] = None
+            self._hosts[host][CONF_WAN_PORT] = config.get(CONF_WAN_PORT)
             self._hosts[host][DEVICE_TRACKER] = None
             self._hosts[host][CONF_ARP_PING] = config.get(CONF_ARP_PING)
 
@@ -283,14 +284,14 @@ class MikrotikAPI:
                 librouteros.exceptions.MultiTrapError,
                 librouteros.exceptions.ConnectionError) as api_error:
             _LOGGER.error(
-                 "Mikrotik unable to setup device %s. Connection error: %s" % (host,api_error))
+                 "Mikrotik error for device %s. Connection error: %s" % (host,api_error))
             self._hosts[host][CONNECTING] = False
             self._hosts[host][CONNECTED] = False
             self._client[host] = None
             return False
 
         host_name = (self._client[host](cmd=MIKROTIK_SERVICES[IDENTITY]))[0]['name']
-        if host_name is None:
+        if not host_name:
             _LOGGER.error("Mikrotik failed to connect to %s." % (host))
             return False
         self.hass.data[MIKROTIK][host]['name'] = host_name
@@ -369,14 +370,15 @@ class MikrotikAPI:
                 attributes['host_name'] = self.hass.data[MIKROTIK][DHCP][mac]['host-name']
             self.hass.data[MIKROTIK][host][DEVICE_TRACKER][mac] = attributes
 
-    async def update_sensors(self, host, sensor_type, param=None):
+    async def update_sensors(self, host, sensor_type):
         """Update sensors from Mikrotik API."""
         _LOGGER.debug("[%s] Updating Mikrotik sensor %s." % (host, sensor_type))
         results = {}
         self.hass.data[MIKROTIK][host][SENSOR][sensor_type] = None
         params = SENSORS[sensor_type][6]
-        if not param is None:
-            params.update(param)
+        if params and 'interface' in params:
+            params['interface'] = self._hosts[host][CONF_WAN_PORT]
+
         for cmd in SENSORS[sensor_type][4]:
             data = self.get_api(host,cmd,params)
             if data is None:
@@ -386,6 +388,7 @@ class MikrotikAPI:
         sensor = {}
         sensor['state'] = None
         sensor['attrib'] = {}
+
         for key in results:
             if key == SENSORS[sensor_type][3]:
                 sensor['state'] = results[key]
@@ -393,7 +396,7 @@ class MikrotikAPI:
                 sensor['attrib'][slugify(key)] = results[key]
 
         sensor_unit = SENSORS[sensor_type][1]
-        if not sensor_unit is None and not sensor['state'] is None:
+        if sensor_unit and sensor['state']:
             if any(unit in sensor_unit for unit in [ 'bit', 'byte', 'bps' ]):
                 sensor['state'] = format((float(sensor['state']) / MEGA), '.2f')
 
@@ -428,13 +431,14 @@ class MikrotikAPI:
     def get_api(self, host, api_cmd, params=None):
         """Retrieve data from Mikrotik API."""
         import librouteros
-        if self._client[host] is None or not self._hosts[host][CONNECTED]:
-            self.connect_to_device(host)
+        if not self._client[host] or not self._hosts[host][CONNECTED]:
+            if not self.connect_to_device(host):
+                return None
         try:
-            if params is None:
-                response = self._client[host](cmd=api_cmd)
-            else:
+            if params:
                 response = self._client[host](cmd=api_cmd, **params)
+            else:
+                response = self._client[host](cmd=api_cmd)
         except (librouteros.exceptions.TrapError,
             librouteros.exceptions.MultiTrapError,
             librouteros.exceptions.ConnectionError) as api_error:
