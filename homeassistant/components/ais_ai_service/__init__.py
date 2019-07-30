@@ -77,6 +77,7 @@ INTENT_CLIMATE_UNSET_AWAY = 'AisClimateUnSetAway'
 INTENT_CLIMATE_SET_ALL_ON = 'AisClimateSetAllOn'
 INTENT_CLIMATE_SET_ALL_OFF = 'AisClimateSetAllOff'
 INTENT_SPELL_STATUS = 'AisSpellStatusInfo'
+INTENT_RUN_AUTOMATION = 'AisRunAutomation'
 
 REGEX_TYPE = type(re.compile(''))
 
@@ -1817,6 +1818,7 @@ async def async_setup(hass, config):
     hass.helpers.intent.async_register(AisNext())
     hass.helpers.intent.async_register(AisPrev())
     hass.helpers.intent.async_register(AisSceneActive())
+    hass.helpers.intent.async_register(AisRunAutomation())
     hass.helpers.intent.async_register(AisSayIt())
     hass.helpers.intent.async_register(SpellStatusIntent())
 
@@ -1927,6 +1929,7 @@ async def async_setup(hass, config):
     async_register(hass, INTENT_STOP, ['Stop', 'Zatrzymaj', 'Koniec', 'Pauza', 'Zaniechaj', 'Stój'])
     async_register(hass, INTENT_PLAY, ['Start', 'Graj', 'Odtwarzaj'])
     async_register(hass, INTENT_SCENE, ['Scena {item}', 'Aktywuj [scenę] {item}'])
+    async_register(hass, INTENT_RUN_AUTOMATION, ['Uruchom {item}', 'Automatyzacja {item}'])
     async_register(hass, INTENT_NEXT, ['[włącz] następny', '[włącz] kolejny', '[graj] następny', '[graj] kolejny'])
     async_register(hass, INTENT_PREV, ['[włącz] poprzedni', '[włącz] wcześniejszy', '[graj] poprzedni',
                                        '[graj] wcześniejszy'])
@@ -2606,6 +2609,19 @@ def _process(hass, text, callback):
         if found_intent is None:
             suffix = get_context_suffix(hass)
             if suffix is not None:
+                if suffix == 'youtube' and text != '':
+                    # in case of youtube we need to ask cloud first
+                    m = 'Nie rozumiem ' + text
+                    ws_resp = aisCloudWS.ask(text, m)
+                    _LOGGER.debug('ws_resp: ' + ws_resp.text)
+                    m = ws_resp.text.split('---')[0]
+                    if m != 'Nie rozumiem ' + text:
+                        s = True
+                        found_intent = 'YT'
+
+        if found_intent is None:
+            suffix = get_context_suffix(hass)
+            if suffix is not None:
                 for intent_type, matchers in intents.items():
                     if found_intent is not None:
                         break
@@ -2640,22 +2656,32 @@ def _process(hass, text, callback):
                     elif source == ais_global.G_AN_PODCAST:
                         suffix = 'podcast'
                     if suffix != "":
-                        for intent_type, matchers in intents.items():
-                            if found_intent is not None:
-                                break
-                            for matcher in matchers:
-                                match = matcher.match(suffix + " " + text)
-                                if match:
-                                    # we have a match
-                                    found_intent = intent_type
-                                    m, s = yield from hass.helpers.intent.async_handle(
-                                        DOMAIN, intent_type,
-                                        {key: {'value': value} for key, value
-                                         in match.groupdict().items()},
-                                        suffix + " " + text)
-                                    # reset the curr button code
-                                    CURR_BUTTON_CODE = 0
+                        if suffix == 'youtube' and text != '':
+                            # in case of youtube we need to ask cloud first
+                            m = 'Nie rozumiem ' + text
+                            ws_resp = aisCloudWS.ask(text, m)
+                            _LOGGER.debug('ws_resp: ' + ws_resp.text)
+                            m = ws_resp.text.split('---')[0]
+                            if not m.startswith('Nie rozumiem '):
+                                s = True
+                                found_intent = 'YT'
+                        if s is not True:
+                            for intent_type, matchers in intents.items():
+                                if found_intent is not None:
                                     break
+                                for matcher in matchers:
+                                    match = matcher.match(suffix + " " + text)
+                                    if match:
+                                        # we have a match
+                                        found_intent = intent_type
+                                        m, s = yield from hass.helpers.intent.async_handle(
+                                            DOMAIN, intent_type,
+                                            {key: {'value': value} for key, value
+                                             in match.groupdict().items()},
+                                            suffix + " " + text)
+                                        # reset the curr button code
+                                        CURR_BUTTON_CODE = 0
+                                        break
         if s is False or found_intent is None:
             # no success - try to ask the cloud
             if m is None:
@@ -3349,6 +3375,36 @@ class AisSceneActive(intent.IntentHandler):
                 success = True
             else:
                 message = name + ' nie można aktywować'
+        return message, success
+
+
+class AisRunAutomation(intent.IntentHandler):
+    """Handle AisRunAutomation intents."""
+    intent_type = INTENT_RUN_AUTOMATION
+    slot_schema = {
+        'item': cv.string,
+    }
+
+    @asyncio.coroutine
+    def async_handle(self, intent_obj):
+        """Handle the intent."""
+        hass = intent_obj.hass
+        slots = self.async_validate_slots(intent_obj.slots)
+        name = slots['item']['value']
+        entity = _match_entity(hass, name)
+        success = False
+
+        if not entity:
+            message = 'Nie znajduję automatyzacji, o nazwie: ' + name
+        else:
+            # check if we can open on this device
+            if entity.entity_id.startswith('automation.'):
+                yield from hass.services.async_call(
+                    'automation', 'trigger', {ATTR_ENTITY_ID: entity.entity_id})
+                message = 'OK, uruchamiam {}'.format(entity.name)
+                success = True
+            else:
+                message = name + ' nie można uruchomić'
         return message, success
 
 
