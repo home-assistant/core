@@ -130,6 +130,7 @@ async def async_setup_entry(hass, config_entry):
 
     systems = await api.get_systems()
     simplisafe = SimpliSafe(hass, config_entry, systems)
+    await simplisafe.async_update()
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = simplisafe
 
     hass.async_create_task(
@@ -139,6 +140,8 @@ async def async_setup_entry(hass, config_entry):
     async def refresh(event_time):
         """Refresh data from the SimpliSafe account."""
         await simplisafe.async_update()
+        _LOGGER.debug('Updated data for all SimpliSafe systems')
+        async_dispatcher_send(hass, TOPIC_UPDATE)
 
     hass.data[DOMAIN][DATA_LISTENER][
         config_entry.entry_id] = async_track_time_interval(
@@ -193,25 +196,34 @@ class SimpliSafe:
         """Initialize."""
         self._config_entry = config_entry
         self._hass = hass
+        self.last_event_data = {}
         self.systems = systems
+
+    async def _update_system(self, system):
+        """Update a system."""
+        try:
+            await system.update()
+            latest_event = await system.get_latest_event()
+        except SimplipyError as err:
+            _LOGGER.error(
+                'SimpliSafe error while updating "%s": %s',
+                system.address, err)
+            return
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.error(
+                'Unknown error while updating "%s": %s', system.address, err)
+            return
+
+        self.last_event_data[system.system_id] = latest_event
+
+        if system.api.refresh_token_dirty:
+            _async_save_refresh_token(
+                self._hass, self._config_entry, system.api.refresh_token)
 
     async def async_update(self):
         """Get updated data from SimpliSafe."""
-        systems = self.systems.values()
-        tasks = [system.update() for system in systems]
+        tasks = [
+            self._update_system(system) for system in self.systems.values()
+        ]
 
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        for system, result in zip(systems, results):
-            if isinstance(result, Exception):
-                _LOGGER.error(
-                    'There was error updating "%s": %s', system.address,
-                    result)
-                continue
-
-            if system.api.refresh_token_dirty:
-                _async_save_refresh_token(
-                    self._hass, self._config_entry, system.api.refresh_token)
-
-            _LOGGER.debug('Updated status of "%s"', system.address)
-            async_dispatcher_send(
-                self._hass, TOPIC_UPDATE.format(system.system_id))
+        await asyncio.gather(*tasks)
