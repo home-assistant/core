@@ -121,6 +121,15 @@ def hass_hue(loop, hass):
         kitchen_light_entity.entity_id, kitchen_light_entity.state,
         attributes=attrs)
 
+    # Remove brightness support for WC light 
+    wc_light_entity = hass.states.get('light.wc_lights')
+    attrs = dict(wc_light_entity.attributes)
+    attrs[emulated_hue.ATTR_EMULATED_HUE] = False
+    hass.states.async_set(
+        'light.no_brightness', 'on',
+        wc_light_entity.entity_id, wc_light_entity.state,
+        attributes=attrs)
+
     # Ceiling Fan is explicitly excluded from being exposed
     ceiling_fan_entity = hass.states.get('fan.ceiling_fan')
     attrs = dict(ceiling_fan_entity.attributes)
@@ -204,6 +213,7 @@ def test_discover_lights(hue_client):
 
     # Make sure the lights we added to the config are there
     assert 'light.ceiling_lights' in devices
+    assert 'light.wc_lights' in devices
     assert 'light.bed_light' not in devices
     assert 'script.set_kitchen_light' in devices
     assert 'light.kitchen_lights' not in devices
@@ -240,6 +250,20 @@ def test_get_light_state(hass_hue, hue_client):
     assert office_json['state'][HUE_API_STATE_HUE] == 41869
     assert office_json['state'][HUE_API_STATE_SAT] == 217
 
+    # Turn WC light on
+    yield from hass_hue.services.async_call(
+        light.DOMAIN, const.SERVICE_TURN_ON,
+        {
+            const.ATTR_ENTITY_ID: 'light.wc_lights'
+        },
+        blocking=True)
+
+    WC_json = yield from perform_get_light_state(
+        hue_client, 'light.wc_lights', 200)
+
+    assert WC_json['state'][HUE_API_STATE_ON] is True
+    assert WC_json['type'] == 'On/off light'
+
     # Check all lights view
     result = yield from hue_client.get('/api/username/lights')
 
@@ -249,6 +273,7 @@ def test_get_light_state(hass_hue, hue_client):
     result_json = yield from result.json()
 
     assert 'light.ceiling_lights' in result_json
+    assert 'light.wc_lights' in result_json
     assert result_json['light.ceiling_lights']['state'][HUE_API_STATE_BRI] == \
         127
 
@@ -267,6 +292,19 @@ def test_get_light_state(hass_hue, hue_client):
     assert office_json['state'][HUE_API_STATE_BRI] == 0
     assert office_json['state'][HUE_API_STATE_HUE] == 0
     assert office_json['state'][HUE_API_STATE_SAT] == 0
+
+    # Turn WC light off
+    yield from hass_hue.services.async_call(
+        light.DOMAIN, const.SERVICE_TURN_OFF,
+        {
+            const.ATTR_ENTITY_ID: 'light.wc_lights'
+        },
+        blocking=True)
+
+    wc_json = yield from perform_get_light_state(
+        hue_client, 'light.wc_lights', 200)
+
+    assert wc_json['state'][HUE_API_STATE_ON] is False
 
     # Make sure bedroom light isn't accessible
     yield from perform_get_light_state(
