@@ -350,7 +350,7 @@ class MikrotikAPI:
 
         arp = self.get_api(host, MIKROTIK_SERVICES[ARP])
         for result in arp:
-            if 'mac-address' in result and not result['invalid']:
+            if 'mac-address' in result and result['invalid'] == False:
                 self.hass.data[MIKROTIK][ARP][result['mac-address']] = result
 
         for device in data:
