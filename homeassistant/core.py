@@ -139,7 +139,8 @@ class HomeAssistant:
             self,
             loop: Optional[asyncio.events.AbstractEventLoop] = None) -> None:
         """Initialize new Home Assistant object."""
-        self.loop = loop or asyncio.get_event_loop()
+        self.loop: asyncio.events.AbstractEventLoop = (
+            loop or asyncio.get_event_loop())
 
         executor_opts = {'max_workers': None}  # type: Dict[str, Any]
         if sys.version_info[:2] >= (3, 6):
@@ -148,21 +149,21 @@ class HomeAssistant:
         self.executor = ThreadPoolExecutor(**executor_opts)
         self.loop.set_default_executor(self.executor)
         self.loop.set_exception_handler(async_loop_exception_handler)
-        self._pending_tasks = []  # type: list
+        self._pending_tasks: list = []
         self._track_task = True
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
-        self.config = Config(self)  # type: Config
+        self.config = Config(self)
         self.components = loader.Components(self)
         self.helpers = loader.Helpers(self)
         # This is a dictionary that any component can store any data on.
-        self.data = {}  # type: dict
+        self.data: dict = {}
         self.state = CoreState.not_running
-        self.exit_code = 0  # type: int
-        self.config_entries = None  # type: Optional[ConfigEntries]
+        self.exit_code = 0
+        self.config_entries: Optional[ConfigEntries] = None
         # If not None, use to signal end-of-loop
-        self._stopped = None  # type: Optional[asyncio.Event]
+        self._stopped: Optional[asyncio.Event] = None
 
     @property
     def is_running(self) -> bool:
@@ -297,7 +298,7 @@ class HomeAssistant:
 
         target: target to call.
         """
-        task = self.loop.create_task(target)  # type: asyncio.tasks.Task
+        task: asyncio.tasks.Task = self.loop.create_task(target)
 
         if self._track_task:
             self._pending_tasks.append(task)
@@ -461,7 +462,7 @@ class Event:
         self.data = data or {}
         self.origin = origin
         self.time_fired = time_fired or dt_util.utcnow()
-        self.context = context or Context()
+        self.context: Context = context or Context()
 
     def as_dict(self) -> Dict:
         """Create a dict representation of this Event.
@@ -502,7 +503,7 @@ class EventBus:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
-        self._listeners = {}  # type: Dict[str, List[Callable]]
+        self._listeners: Dict[str, List[Callable]] = {}
         self._hass = hass
 
     @callback
