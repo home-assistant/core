@@ -257,6 +257,11 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         return self._hvac_action
 
     @property
+    def fan_state(self):
+        """Return the current fan state if supported."""
+        return self._fan_state
+
+    @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._target_temperature
