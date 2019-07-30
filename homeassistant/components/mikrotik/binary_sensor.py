@@ -12,6 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
+
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up a binary sensor for a Mikrotik device."""
@@ -33,11 +34,14 @@ async def async_setup_platform(hass, config, async_add_entities,
                     sensor_name = binary_sensor['comment']
                 else:
                     sensor_name = binary_sensor['host']
-                entities.append(MikrotikBinarySensor(hass, client, host, sensor_name, sensor_type, index))
+                entities.append(MikrotikBinarySensor(
+                    hass, client, host, sensor_name, sensor_type, index))
         else:
-            entities.append(MikrotikBinarySensor(hass, client, host, sensor_name, sensor_type))
+            entities.append(MikrotikBinarySensor(
+                hass, client, host, sensor_name, sensor_type))
 
     async_add_entities(entities, True)
+
 
 class MikrotikBinarySensor(BinarySensorDevice):
     """Binary sensor for Mikrotik device."""
@@ -53,7 +57,8 @@ class MikrotikBinarySensor(BinarySensorDevice):
         self._sensor_type = sensor_type
         self._device_class = BINARY_SENSORS[sensor_type][1]
         self._host_name = hass.data[MIKROTIK][host].get('name')
-        self._name = '{} {} {}'.format(self._host_name, BINARY_SENSORS[sensor_type][0], sensor_name)
+        self._name = '{} {} {}'.format(
+            self._host_name, BINARY_SENSORS[sensor_type][0], sensor_name)
         _LOGGER.debug('[%s] init entity (%d) %s' % (host, index, self._name))
 
     @property
