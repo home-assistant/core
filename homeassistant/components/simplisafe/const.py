@@ -7,4 +7,4 @@ DATA_CLIENT = 'client'
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
-TOPIC_UPDATE = 'update_{0}'
+TOPIC_UPDATE = 'update'
