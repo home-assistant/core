@@ -139,6 +139,7 @@ class ThermostatDevice(ClimateDevice):
         self._min_temp = min_temp
         self._max_temp = max_temp
         self._hvac_modes = ATTR_HVAC_MODES
+        self._hvac_mode = None
 
         _LOGGER.debug("Initializing API")
         import haanna
@@ -266,8 +267,8 @@ class ThermostatDevice(ClimateDevice):
         """Set new target temperature."""
         _LOGGER.debug("Adjusting temperature")
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        if (temperature is not None and temperature > self._min_temp and
-                temperature < self._max_temp):
+        if (temperature is not None and self._min_temp < temperature
+                < self._max_temp):
             self._temperature = temperature
             domain_objects = self._api.get_domain_objects()
             self._api.set_temperature(domain_objects, temperature)
