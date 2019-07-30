@@ -23,6 +23,8 @@ class TestEcobee(unittest.TestCase):
                             'desiredCool': 200,
                             'desiredFanMode': 'on'},
                 'settings': {'hvacMode': 'auto',
+                             'heatStages': 1,
+                             'coolStages': 1,
                              'fanMinOnTime': 10,
                              'heatCoolMinDelta': 50,
                              'holdAction': 'nextTransition'},
