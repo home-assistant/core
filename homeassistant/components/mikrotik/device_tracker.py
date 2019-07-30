@@ -14,6 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
 
+
 async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Validate the configuration and return Mikrotik scanner."""
     if discovery_info is None:
@@ -21,7 +22,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
             "To use this you need to configure the 'mikrotik' component")
         return False
     scanner = MikrotikScanner(hass, hass.data[CLIENT],
-                                      discovery_info, async_see)
+                              discovery_info, async_see)
     return await scanner.async_init()
 
 
