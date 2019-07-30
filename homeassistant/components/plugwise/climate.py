@@ -22,9 +22,9 @@ as a development/custom-component
 
 import logging
 
-import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.climate import (PLATFORM_SCHEMA, ClimateDevice)
 from homeassistant.components.climate.const import (CURRENT_HVAC_HEAT,
                                                     CURRENT_HVAC_IDLE,
                                                     HVAC_MODE_AUTO,
@@ -76,6 +76,7 @@ def _hvac_mode(self):
         self._state = HVAC_MODE_AUTO
     else:
         self._state = HVAC_MODE_OFF
+    return self._state
 
 
 def _available_schemas(self):
@@ -195,7 +196,7 @@ class ThermostatDevice(ClimateDevice):
         self._temperature = self._api.get_target_temperature(domain_objects)
         self._preset_mode = self._api.get_current_preset(domain_objects)
         self._outdoor_temperature = self._api.get_outdoor_temperature(
-             domain_objects)
+            domain_objects)
         self._heating_action = _heating_action(self)
         self._available_schemas = _available_schemas(self)
         if self._active_schema != _active_schema(self):
