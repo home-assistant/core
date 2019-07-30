@@ -216,6 +216,11 @@ def async_setup(hass, config):
                 ais_global.GLOBAL_TTS_VOICE = 'pl-pl-x-oda#male_3-local'
             else:
                 ais_global.GLOBAL_TTS_VOICE = 'pl-pl-x-oda-local'
+            # publish to frame
+            hass.services.call(
+                'ais_ai_service', 'publish_command_to_frame',
+                {"key": 'setTtsVoice', "val": ais_global.GLOBAL_TTS_VOICE})
+
         elif entity_id == 'input_number.assistant_rate':
             try:
                 ais_global.GLOBAL_TTS_RATE = float(hass.states.get(entity_id).state)

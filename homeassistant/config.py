@@ -271,11 +271,12 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
                 "Config file not found in: {}".format(hass.config.config_dir))
         config = load_yaml_config_file(path)
         return config
+
     # ais config load
     def _load_ais_yaml_config() -> Dict:
         ais_config_path = str(os.path.dirname(__file__))
         ais_config_path += '/ais-dom-config/configuration.yaml'
-        if path is None:
+        if ais_config_path is None:
             raise HomeAssistantError(
                 "Config file not found in: {}".format(hass.config.config_dir))
         config = load_yaml_config_file(ais_config_path)
