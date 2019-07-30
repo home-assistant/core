@@ -60,6 +60,9 @@ async def test_import_flow(hass):
         'radio_type': 'xbee'
     }
 
+
+async def test_import_flow_zigate(hass):
+    """Test import from configuration.yaml ."""
     result = await flow.async_step_import({
         'usb_path': '/dev/ttyUSB0',
         'radio_type': 'zigate',
