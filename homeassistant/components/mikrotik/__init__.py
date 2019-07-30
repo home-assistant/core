@@ -57,57 +57,58 @@ SENSOR_DISK = 'disk'
 SENSOR_DOWNLOAD_SPEED = 'download_speed'
 SENSOR_UPLOAD_SPEED = 'upload_speed'
 
-ATTRIB_SYSINFO = [ 'board-name', 'serial-number', 'version', 'factory-firmware',
-                 'firmware-type', 'current-firmware', 'upgrade-frimware', 'routerboard',
-                 'cpu', 'total-memory',
-                 'architecture-name' ]
-ATTRIB_CPU = [ 'cpu', 'cpu-frequency', 'cpu-count' ]
-ATTRIB_MEMORY = [ 'free-memory', 'total-memory' ]
-ATTRIB_DISK = [ 'free-hdd-space', 'total-hdd-space' ]
-ATTRIB_DOWNLOAD_SPEED = [ 'name', 'rx-packets-per-second', 'rx-bits-per-second',
-                          'fp-rx-packets-per-second', 'fp-rx-bits-per-second',
-                          'rx-drops-per-second', 'rx-errors-per-second' ]
-ATTRIB_UPLOAD_SPEED = [ 'name', 'tx-packets-per-second', 'tx-bits-per-second',
-                          'fp-tx-packets-per-second', 'fp-tx-bits-per-second',
-                          'tx-drops-per-second', 'tx-queue-drops-per-second', 'tx-errors-per-second' ]
-ATTRIB_DOWNLOAD = [ 'name', 'tx-bytes' ]
-ATTRIB_UPLOAD = [ 'name', 'rx-bytes' ]
+ATTRIB_SYSINFO = ['board-name', 'serial-number', 'version', 'factory-firmware',
+                  'firmware-type', 'current-firmware', 'upgrade-frimware', 'routerboard',
+                  'cpu', 'total-memory',
+                  'architecture-name']
+ATTRIB_CPU = ['cpu', 'cpu-frequency', 'cpu-count']
+ATTRIB_MEMORY = ['free-memory', 'total-memory']
+ATTRIB_DISK = ['free-hdd-space', 'total-hdd-space']
+ATTRIB_DOWNLOAD_SPEED = ['name', 'rx-packets-per-second', 'rx-bits-per-second',
+                         'fp-rx-packets-per-second', 'fp-rx-bits-per-second',
+                         'rx-drops-per-second', 'rx-errors-per-second']
+ATTRIB_UPLOAD_SPEED = ['name', 'tx-packets-per-second', 'tx-bits-per-second',
+                       'fp-tx-packets-per-second', 'fp-tx-bits-per-second',
+                       'tx-drops-per-second', 'tx-queue-drops-per-second', 'tx-errors-per-second']
+ATTRIB_DOWNLOAD = ['name', 'tx-bytes']
+ATTRIB_UPLOAD = ['name', 'rx-bytes']
 
-PARAM_SPEED = { 'interface': MTK_DEFAULT_WAN_PORT, 'duration': '1s' }
+PARAM_SPEED = {'interface': MTK_DEFAULT_WAN_PORT, 'duration': '1s'}
 MEGA = 1048576
 
 # Sensor types are defined like: Name, units, icon, state item, api cmd(s), attributes
 SENSORS = {
-    SENSOR_SYSINFO: [ 'System Info', None, 'mdi:switch', 'board-name',
-                      ['/system/routerboard/getall', '/system/resource/getall'],
-                      ATTRIB_SYSINFO, None, None ],
-    SENSOR_CPU: [ 'CPU Load', '%', 'mdi:chip', 'cpu-load', ['/system/resource/getall'], ATTRIB_CPU, None ],
-    SENSOR_MEMORY: [ 'Memory Free', 'Mbytes', 'mdi:memory', 'free-memory', ['/system/resource/getall'], ATTRIB_MEMORY, None ],
-    SENSOR_DISK: [ 'Disk Free', 'Mbytes', 'mdi:harddisk', 'free-hdd-space', ['/system/resource/getall'], ATTRIB_DISK, None ],
-    SENSOR_DOWNLOAD_SPEED: [ 'Download Speed', 'Mbps', 'mdi:download-network', 'rx-bits-per-second',
-                             ['/interface/monitor-traffic'], ATTRIB_DOWNLOAD_SPEED, PARAM_SPEED ],
-    SENSOR_UPLOAD_SPEED: [ 'Upload Speed', 'Mbps', 'mdi:upload-network', 'tx-bits-per-second',
-                           ['/interface/monitor-traffic'], ATTRIB_UPLOAD_SPEED, PARAM_SPEED ],
+    SENSOR_SYSINFO: ['System Info', None, 'mdi:switch', 'board-name',
+                     ['/system/routerboard/getall', '/system/resource/getall'],
+                     ATTRIB_SYSINFO, None, None],
+    SENSOR_CPU: ['CPU Load', '%', 'mdi:chip', 'cpu-load', ['/system/resource/getall'], ATTRIB_CPU, None],
+    SENSOR_MEMORY: ['Memory Free', 'Mbytes', 'mdi:memory', 'free-memory', ['/system/resource/getall'], ATTRIB_MEMORY, None],
+    SENSOR_DISK: ['Disk Free', 'Mbytes', 'mdi:harddisk', 'free-hdd-space', ['/system/resource/getall'], ATTRIB_DISK, None],
+    SENSOR_DOWNLOAD_SPEED: ['Download Speed', 'Mbps', 'mdi:download-network', 'rx-bits-per-second',
+                            ['/interface/monitor-traffic'], ATTRIB_DOWNLOAD_SPEED, PARAM_SPEED],
+    SENSOR_UPLOAD_SPEED: ['Upload Speed', 'Mbps', 'mdi:upload-network', 'tx-bits-per-second',
+                          ['/interface/monitor-traffic'], ATTRIB_UPLOAD_SPEED, PARAM_SPEED],
 }
 
 BINARY_SENSOR_NETWATCH = 'netwatch'
 BINARY_SENSOR_INTERNET = 'internet'
-ATTRIB_NETWATCH = [ 'host', 'interval', 'timeout', 'since' , 'disabled', 'comment' ]
-ATTRIB_INTERNET = [ 'name', 'cloud-rtt', 'state-change-time' ]
+ATTRIB_NETWATCH = ['host', 'interval',
+                   'timeout', 'since', 'disabled', 'comment']
+ATTRIB_INTERNET = ['name', 'cloud-rtt', 'state-change-time']
 
 # Binary Sensors: Name, Class, icon, state, api cmd, attributes, state hash
 BINARY_SENSORS = {
-    BINARY_SENSOR_NETWATCH: [ 'Netwatch', DEVICE_CLASS_CONNECTIVITY, 'mdi:lan-connect',
-                              '/tool/netwatch/getall', 'status', ATTRIB_NETWATCH,
-                              {'up': True, 'down': False}, 'host' ],
-    BINARY_SENSOR_INTERNET: [ 'Internet', DEVICE_CLASS_CONNECTIVITY, 'mdi:wan',
-                              '/interface/detect-internet/state/getall', 'state',
-                              ATTRIB_INTERNET, {'internet': True, 'unknown': False}, 'name' ],
+    BINARY_SENSOR_NETWATCH: ['Netwatch', DEVICE_CLASS_CONNECTIVITY, 'mdi:lan-connect',
+                             '/tool/netwatch/getall', 'status', ATTRIB_NETWATCH,
+                             {'up': True, 'down': False}, 'host'],
+    BINARY_SENSOR_INTERNET: ['Internet', DEVICE_CLASS_CONNECTIVITY, 'mdi:wan',
+                             '/interface/detect-internet/state/getall', 'state',
+                             ATTRIB_INTERNET, {'internet': True, 'unknown': False}, 'name'],
 }
 
-ATTRIB_DEVICE_TRACKER = [ 'mac-address', 'rx-signal', 'ssid', 'interface',
-               'comment', 'host-name', 'address',
-               'uptime', 'rx-rate', 'tx-rate', 'last-seen' ]
+ATTRIB_DEVICE_TRACKER = ['mac-address', 'rx-signal', 'ssid', 'interface',
+                         'comment', 'host-name', 'address',
+                         'uptime', 'rx-rate', 'tx-rate', 'last-seen']
 
 MIKROTIK_SCHEMA = vol.All(
     vol.Schema({
@@ -134,6 +135,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [MIKROTIK_SCHEMA])
 }, extra=vol.ALLOW_EXTRA)
 
+
 async def async_setup(hass, config):
     """Set up the Mikrotik component."""
     import librouteros
@@ -158,9 +160,9 @@ async def async_setup(hass, config):
             hass.async_create_task(
                 async_load_platform(
                     hass, BINARY_SENSOR, DOMAIN, {
-                    CONF_BINARY_SENSORS: binary_sensors,
-                    CONF_HOST: host
-                     }, config))
+                        CONF_BINARY_SENSORS: binary_sensors,
+                        CONF_HOST: host
+                    }, config))
 
         if device[CONF_TRACK_DEVICES]:
             hass.data[MIKROTIK][ARP] = {}
@@ -170,6 +172,7 @@ async def async_setup(hass, config):
                     hass, DEVICE_TRACKER, DOMAIN, device, config))
 
     return True
+
 
 class MikrotikAPI:
     """Handle all communication with the Mikrotik API."""
@@ -231,25 +234,26 @@ class MikrotikAPI:
                 librouteros.exceptions.MultiTrapError,
                 librouteros.exceptions.ConnectionError):
             _LOGGER.info("Mikrotik %s: Not a CAPsMAN controller. Trying "
-                        "local wireless interfaces.", (host))
+                         "local wireless interfaces.", (host))
             capsman_exist = False
         try:
-            wireless_exist = self._client[host](cmd=MIKROTIK_SERVICES[WIRELESS])
+            wireless_exist = self._client[host](
+                cmd=MIKROTIK_SERVICES[WIRELESS])
         except (librouteros.exceptions.TrapError,
                 librouteros.exceptions.MultiTrapError,
                 librouteros.exceptions.ConnectionError):
             wireless_exist = False
 
         if not wireless_exist and not capsman_exist \
-            or polling_method == 'ip':
-                    _LOGGER.info(
-                        "Mikrotik %s: Wireless adapters not found. Try to "
-                        "use DHCP lease table as presence tracker source. "
-                        "Please decrease lease time as much as possible",
-                        host)
+                or polling_method == 'ip':
+            _LOGGER.info(
+                "Mikrotik %s: Wireless adapters not found. Try to "
+                "use DHCP lease table as presence tracker source. "
+                "Please decrease lease time as much as possible",
+                host)
         if polling_method:
             _LOGGER.info("Mikrotik %s: Manually selected polling method %s",
-            host, polling_method)
+                         host, polling_method)
             device_tracker = polling_method
         else:
             if capsman_exist:
@@ -258,7 +262,8 @@ class MikrotikAPI:
                 device_tracker = WIRELESS
             else:
                 device_tracker = DHCP
-            _LOGGER.info("Mikrotik %s: Using device_tracker method %s" % (host,device_tracker))
+            _LOGGER.info("Mikrotik %s: Using device_tracker method %s" %
+                         (host, device_tracker))
         self._hosts[host][DEVICE_TRACKER] = device_tracker
 
     def connect_to_device(self, host):
@@ -270,7 +275,7 @@ class MikrotikAPI:
             time.sleep(1)
             t += 1
         if self._hosts[host][CONNECTED]:
-           return
+            return
         self._hosts[host][CONNECTING] = True
         self._hosts[host][CONNECTED] = False
         _LOGGER.debug("[%s] Connecting to Mikrotik device.", host)
@@ -278,31 +283,32 @@ class MikrotikAPI:
         self._hosts[host]['kwargs'] = self.config_kwargs(config)
         try:
             self._client[host] = librouteros.connect(config[CONF_HOST], config[CONF_USERNAME],
-                        config.get(CONF_PASSWORD, ''), **self._hosts[host]['kwargs'])
+                                                     config.get(CONF_PASSWORD, ''), **self._hosts[host]['kwargs'])
         except (librouteros.exceptions.TrapError,
                 librouteros.exceptions.MultiTrapError,
                 librouteros.exceptions.ConnectionError) as api_error:
             _LOGGER.error(
-                 "Mikrotik error for device %s. Connection error: %s" % (host,api_error))
+                "Mikrotik error for device %s. Connection error: %s" % (host, api_error))
             self._hosts[host][CONNECTING] = False
             self._hosts[host][CONNECTED] = False
             self._client[host] = None
             return False
 
-        host_name = (self._client[host](cmd=MIKROTIK_SERVICES[IDENTITY]))[0]['name']
+        host_name = (self._client[host](
+            cmd=MIKROTIK_SERVICES[IDENTITY]))[0]['name']
         if not host_name:
             _LOGGER.error("Mikrotik failed to connect to %s." % (host))
             return False
         self.hass.data[MIKROTIK][host]['name'] = host_name
-        _LOGGER.info("Mikrotik Connected to %s (%s)." % (host_name,host))
+        _LOGGER.info("Mikrotik Connected to %s (%s)." % (host_name, host))
         self._hosts[host][CONNECTING] = False
         self._hosts[host][CONNECTED] = True
         return True
 
-    def arp_ping(self,host,mac,interface):
+    def arp_ping(self, host, mac, interface):
         """Attempt to arp ping MAC address via interface."""
-        params = { 'arp-ping': 'yes', 'interval': '100ms', 'count': 3,
-                   'interface': interface, 'address': mac }
+        params = {'arp-ping': 'yes', 'interval': '100ms', 'count': 3,
+                  'interface': interface, 'address': mac}
         cmd = '/ping'
         data = self_client[host](cmd, params)
         status = 0
@@ -318,9 +324,10 @@ class MikrotikAPI:
         _LOGGER.debug("[%s] Updating Mikrotik info.", host)
         if not self._hosts[host][CONNECTED]:
             self.connect_to_device(host)
-        data = self.get_api(host,'/system/routerboard/getall')
+        data = self.get_api(host, '/system/routerboard/getall')
         if data is None:
-            _LOGGER.error("Mikrotik update_info. Device %s is not connected." % host)
+            _LOGGER.error(
+                "Mikrotik update_info. Device %s is not connected." % host)
             self._hosts[host][CONNECTED] = False
             return
         self.hass.data[MIKROTIK][host]['info'] = data[0]
@@ -334,13 +341,14 @@ class MikrotikAPI:
         if self._hosts[host][DEVICE_TRACKER] is None:
             self.get_polling_method(host)
         method = self._hosts[host][DEVICE_TRACKER]
-        _LOGGER.debug("[%s] Updating Mikrotik device_tracker using %s." % (host,method))
-        data = self.get_api(host,MIKROTIK_SERVICES[method])
+        _LOGGER.debug(
+            "[%s] Updating Mikrotik device_tracker using %s." % (host, method))
+        data = self.get_api(host, MIKROTIK_SERVICES[method])
         if data is None:
             self.update_info(host)
             return
 
-        arp = self.get_api(host,MIKROTIK_SERVICES[ARP])
+        arp = self.get_api(host, MIKROTIK_SERVICES[ARP])
         for result in arp:
             if not result['invalid']:
                 self.hass.data[MIKROTIK][ARP][result['mac-address']] = result
@@ -352,9 +360,9 @@ class MikrotikAPI:
                     continue
                 self.hass.data[MIKROTIK][DHCP][mac] = data
                 if self._hosts[host][CONF_ARP_PING] and mac in self.hass.data[MIKROTIK][ARP]:
-                  interface = self.hass.data[MIKROTIK][ARP][mac]['interface']
-                  if not self.arp_ping(host,mac,interface):
-                      continue
+                    interface = self.hass.data[MIKROTIK][ARP][mac]['interface']
+                    if not self.arp_ping(host, mac, interface):
+                        continue
             attributes = {}
             for attrib in ATTRIB_DEVICE_TRACKER:
                 if attrib in device:
@@ -371,7 +379,8 @@ class MikrotikAPI:
 
     async def update_sensors(self, host, sensor_type):
         """Update sensors from Mikrotik API."""
-        _LOGGER.debug("[%s] Updating Mikrotik sensor %s." % (host, sensor_type))
+        _LOGGER.debug("[%s] Updating Mikrotik sensor %s." %
+                      (host, sensor_type))
         results = {}
         self.hass.data[MIKROTIK][host][SENSOR][sensor_type] = None
         params = SENSORS[sensor_type][6]
@@ -379,7 +388,7 @@ class MikrotikAPI:
             params['interface'] = self._hosts[host][CONF_WAN_PORT]
 
         for cmd in SENSORS[sensor_type][4]:
-            data = self.get_api(host,cmd,params)
+            data = self.get_api(host, cmd, params)
             if data is None:
                 self.update_info(host)
                 return
@@ -396,16 +405,18 @@ class MikrotikAPI:
 
         sensor_unit = SENSORS[sensor_type][1]
         if sensor_unit and sensor['state']:
-            if any(unit in sensor_unit for unit in [ 'bit', 'byte', 'bps' ]):
-                sensor['state'] = format((float(sensor['state']) / MEGA), '.2f')
+            if any(unit in sensor_unit for unit in ['bit', 'byte', 'bps']):
+                sensor['state'] = format(
+                    (float(sensor['state']) / MEGA), '.2f')
 
         self.hass.data[MIKROTIK][host][SENSOR][sensor_type] = sensor
 
     async def update_binary_sensor(self, host, sensor_type, index=None):
         """Update binary sensors from Mikrotik API"""
-        _LOGGER.debug("[%s] Updating Mikrotik binary_sensor %s." % (host, sensor_type))
+        _LOGGER.debug("[%s] Updating Mikrotik binary_sensor %s." %
+                      (host, sensor_type))
         cmd = BINARY_SENSORS[sensor_type][3]
-        data = self.get_api(host,cmd)
+        data = self.get_api(host, cmd)
         if data is None:
             self.update_info(host)
             return
@@ -439,10 +450,10 @@ class MikrotikAPI:
             else:
                 response = self._client[host](cmd=api_cmd)
         except (librouteros.exceptions.TrapError,
-            librouteros.exceptions.MultiTrapError,
-            librouteros.exceptions.ConnectionError) as api_error:
+                librouteros.exceptions.MultiTrapError,
+                librouteros.exceptions.ConnectionError) as api_error:
             _LOGGER.error(
-                 "[%s] Failed to retrieve data from mikrotik device. cmd=[%s] Error: %s" % (host, api_cmd, api_error))
+                "[%s] Failed to retrieve data from mikrotik device. cmd=[%s] Error: %s" % (host, api_cmd, api_error))
             self._hosts[host][CONNECTED] = False
             return None
         return response
