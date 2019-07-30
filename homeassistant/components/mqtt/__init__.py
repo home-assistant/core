@@ -416,7 +416,7 @@ async def async_subscribe(
     topic: str,
     msg_callback: MessageCallbackType,
     qos: int = DEFAULT_QOS,
-    encoding: str = "utf-8",
+    encoding: Optional[str] = "utf-8",
 ):
     """Subscribe to an MQTT topic.
 
@@ -829,7 +829,11 @@ class MQTT:
         return self.hass.async_add_job(stop)
 
     async def async_subscribe(
-        self, topic: str, msg_callback: MessageCallbackType, qos: int, encoding: str
+        self,
+        topic: str,
+        msg_callback: MessageCallbackType,
+        qos: int,
+        encoding: Optional[str] = None,
     ) -> Callable[[], None]:
         """Set up a subscription to a topic with the provided qos.
 

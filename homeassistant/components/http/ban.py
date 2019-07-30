@@ -3,6 +3,7 @@ from collections import defaultdict
 from datetime import datetime
 from ipaddress import ip_address
 import logging
+from typing import Optional
 
 from aiohttp.web import middleware
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
@@ -158,7 +159,8 @@ async def process_success_login(request):
 class IpBan:
     """Represents banned IP address."""
 
-    def __init__(self, ip_ban: str, banned_at: datetime = None) -> None:
+    def __init__(self, ip_ban: str,
+                 banned_at: Optional[datetime] = None) -> None:
         """Initialize IP Ban object."""
         self.ip_address = ip_address(ip_ban)
         self.banned_at = banned_at or datetime.utcnow()
