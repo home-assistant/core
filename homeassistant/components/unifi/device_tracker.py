@@ -275,12 +275,9 @@ class UniFiDeviceTracker(ScannerEntity):
         """Return the device state attributes."""
         attributes = {}
 
-        attributes['mac'] = self.device.mac
-        attributes['model'] = self.device.model
         attributes['board_rev'] = self.device.board_rev
         attributes['upgradable'] = self.device.upgradable
         attributes['overheating'] = self.device.overheating
-        attributes['version'] = self.device.version
 
         if self.device.has_fan:
             attributes['fan_level'] = self.device.fan_level
