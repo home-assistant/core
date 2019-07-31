@@ -506,10 +506,9 @@ class Event:
 
     def __eq__(self, other: Any) -> bool:
         """Return the comparison."""
-        return (
+        return (  # type: ignore
             self.__class__ == other.__class__
-            and self.event_type  # type: ignore
-            == other.event_type
+            and self.event_type == other.event_type
             and self.data == other.data
             and self.origin == other.origin
             and self.time_fired == other.time_fired
@@ -810,10 +809,9 @@ class State:
 
     def __eq__(self, other: Any) -> bool:
         """Return the comparison of the state."""
-        return (
+        return (  # type: ignore
             self.__class__ == other.__class__
-            and self.entity_id  # type: ignore
-            == other.entity_id
+            and self.entity_id == other.entity_id
             and self.state == other.state
             and self.attributes == other.attributes
             and self.context == other.context
