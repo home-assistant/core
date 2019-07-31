@@ -97,11 +97,16 @@ stages:
     steps:
     - script: |
         python --version > .cache
+        # Typing will break if a version is installed that does not match our Python version.
+        # Preferably we don't have it installed as it is part of the stdlib.
+        # This is a TEMP. Eventually we should make sure our 4 dependencies drop typing.
+        # Find offending deps with `pipdeptree -r -p typing`
+        echo "typing==`python3 -V | awk '{print $2}'`" >> homeassistant/package_constraints.txt
       displayName: 'Set python $(python.container) for requirement cache'
     - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreCacheV1.RestoreCache@1
       displayName: 'Restore artifacts based on Requirements'
       inputs:
-        keyfile: 'requirements_test_all.txt, .cache'
+        keyfile: 'requirements_test_all.txt, .cache, homeassistant/package_constraints.txt'
         targetfolder: './venv'
         vstsFeed: '$(ArtifactFeed)'
     - script: |
@@ -118,7 +123,7 @@ stages:
     - task: 1ESLighthouseEng.PipelineArtifactCaching.SaveCacheV1.SaveCache@1
       displayName: 'Save artifacts based on Requirements'
       inputs:
-        keyfile: 'requirements_test_all.txt, .cache'
+        keyfile: 'requirements_test_all.txt, .cache, homeassistant/package_constraints.txt'
         targetfolder: './venv'
         vstsFeed: '$(ArtifactFeed)'
     - script: |
