@@ -103,7 +103,6 @@ class MikrotikBinarySensor(BinarySensorDevice):
             await self._client.update_binary_sensor(
                 self._host, self._sensor_type, self._index)
         binary_sensor = self.hass.data[MIKROTIK][
-            self._host][CONF_BINARY_SENSORS][
-            self._sensor_type][self._index]
+            self._host][CONF_BINARY_SENSORS][ self._sensor_type][self._index]
         self._state = bool(binary_sensor.get('state'))
         self._attrs = binary_sensor.get('attrib')
