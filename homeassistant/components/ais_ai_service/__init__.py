@@ -2002,7 +2002,7 @@ def _publish_command_to_frame(hass, key, val, ip):
         if len(name) > 32:
             _say_it(hass, "nazwa urządzenie może mieć maksymalnie 32 znaki")
             return
-        _say_it(hass, "dodajemy: " + name)
+        _say_it(hass, "OK, dodajemy: " + name)
         password = hass.states.get('input_text.ais_iot_device_wifi_password').state
 
         requests.post(
@@ -2170,9 +2170,10 @@ def _process_command_from_frame(hass, service):
         if len(iot_names) > 1 and CURR_ENTITIE in (
                 'sensor.ais_connect_iot_device_info', 'script.ais_scan_iot_devices_in_network') \
                 and CURR_BUTTON_CODE == 23:
-            info = info + ". Sprawdz parametry a następnie uruchom - Dołącz nowe urządzenie."
+            info = info + ". Sprawdz parametry, naciśnij strzałkę w prawo by przejść dalej." \
+                          " Na koniec uruchom: Dołącz nowe urządzenie."
             # prepare form data
-            set_curr_entity(hass, 'sensor.ais_connect_iot_device_info')
+            set_curr_entity(hass, 'script.ais_scan_iot_devices_in_network')
             hass.async_run_job(
                 hass.services.async_call(
                     'input_select',

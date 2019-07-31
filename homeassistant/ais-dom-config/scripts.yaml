@@ -9,6 +9,7 @@ ais_restart_system:
     - service: ais_ai_service.say_it
       data:
         text: "Restartuję. Do usłyszenia."
+    - delay: '2'
     - service: ais_shell_command.execute_restart
 
 ais_cloud_sync:
@@ -29,6 +30,7 @@ ais_stop_system:
     - service: ais_ai_service.say_it
       data:
         text: "OK wyłączam. Do usłyszenia."
+    - delay: '2'
     - service: ais_shell_command.execute_stop
 
 ais_button_click:
@@ -87,7 +89,7 @@ ais_connect_iot_device_to_network:
   sequence:
     - service: ais_ai_service.publish_command_to_frame
       data_template:
-        key: "s"
+        key: "WifiConnectTheDevice"
         val: "{{ states('input_select.ais_iot_devices_in_network') }}"
 
 ais_add_item_to_bookmarks:
