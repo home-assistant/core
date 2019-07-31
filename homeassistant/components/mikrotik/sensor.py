@@ -13,6 +13,8 @@ CLIENT = 'mikrotik_client'
 MIKROTIK = 'mikrotik'
 SENSOR = 'sensor'
 
+MTK_DEFAULT_WAN = 'ether1'
+
 SENSOR_SYSINFO = 'sysinfo'
 SENSOR_CPU = 'cpu'
 SENSOR_MEMORY = 'memory'
@@ -84,6 +86,7 @@ SENSORS = {
                           ['/interface/monitor-traffic'],
                           ATTRIB_UPLOAD_SPEED, PARAM_SPEED],
 }
+
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
