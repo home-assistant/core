@@ -7,7 +7,7 @@ from pyfronius import Fronius
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_RESOURCE, CONF_SENSOR_TYPE, CONF_DEVICE,
-                                 CONF_MONITORED_CONDITIONS)
+                                 CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -55,7 +55,9 @@ PLATFORM_SCHEMA = vol.Schema(vol.All(PLATFORM_SCHEMA.extend({
                 vol.Optional(CONF_SCOPE, default=DEFAULT_SCOPE):
                     vol.In(SCOPE_TYPES),
                 vol.Optional(CONF_DEVICE):
-                    vol.All(vol.Coerce(int), vol.Range(min=0))
+                    vol.All(vol.Coerce(int), vol.Range(min=0)),
+                vol.Optional(CONF_SCAN_INTERVAL):
+                    vol.All(vol.Coerce(int), vol.Range(min=0)),
             }]
         )
 }), _device_id_validator))
@@ -97,38 +99,24 @@ async def async_setup_platform(hass,
 
         sensors.append(sensor_cls(fronius, name, device, async_add_entities))
 
-    async_add_entities(sensors, True)
 
-
-class FroniusSensor(Entity):
-    """The Fronius sensor implementation."""
+class FroniusAdapter:
+    """The Fronius sensor fetching component."""
 
     def __init__(self, data, name, device, add_entities):
         """Initialize the sensor."""
         self.data = data
         self._name = name
         self._device = device
-        self._state = None
-        self._hidden = True
         self._attributes = {}
 
         self.sensors = set()
         self._add_entities = add_entities
 
     @property
-    def hidden(self):
-        """Return that this entity should be hidden."""
-        return self._hidden
-
-    @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def state(self):
-        """Return the current state."""
-        return self._state
 
     @property
     def device_state_attributes(self):
@@ -150,14 +138,21 @@ class FroniusSensor(Entity):
             # Copy data of current fronius device
             self._state = values['status']['Code']
             attributes = {}
-            for key in values:
-                if 'value' in values[key]:
-                    attributes[key] = values[key]
+            for key, entry in values:
+                # If the data is directly a sensor
+                if 'value' in entry:
+                    attributes[key] = entry
+                # Handle system overview with multiple sensors
+                if '1' in values:
+                    for index in values:
+                        attributes['{}_{}'.format(
+                            key, index
+                        )] = values[index]
             self._attributes = attributes
 
             # Add discovered value fields as sensors
             # because some fields are only sent temporarily
-            for key in values:
+            for key in attributes:
                 new_sensors = []
                 if key not in self.sensors:
                     self.sensors.add(key)
@@ -173,7 +168,7 @@ class FroniusSensor(Entity):
         pass
 
 
-class FroniusInverterSystem(FroniusSensor):
+class FroniusInverterSystem(FroniusAdapter):
     """Sensor for the fronius inverter with system scope."""
 
     async def _update(self):
@@ -181,7 +176,7 @@ class FroniusInverterSystem(FroniusSensor):
         return await self.data.current_system_inverter_data()
 
 
-class FroniusInverterDevice(FroniusSensor):
+class FroniusInverterDevice(FroniusAdapter):
     """Sensor for the fronius inverter with device scope."""
 
     async def _update(self):
@@ -189,7 +184,7 @@ class FroniusInverterDevice(FroniusSensor):
         return await self.data.current_inverter_data(self._device)
 
 
-class FroniusStorage(FroniusSensor):
+class FroniusStorage(FroniusAdapter):
     """Sensor for the fronius battery storage."""
 
     async def _update(self):
@@ -197,7 +192,7 @@ class FroniusStorage(FroniusSensor):
         return await self.data.current_storage_data(self._device)
 
 
-class FroniusMeterSystem(FroniusSensor):
+class FroniusMeterSystem(FroniusAdapter):
     """Sensor for the fronius meter with system scope."""
 
     async def _update(self):
@@ -205,7 +200,7 @@ class FroniusMeterSystem(FroniusSensor):
         return await self.data.current_system_meter_data()
 
 
-class FroniusMeterDevice(FroniusSensor):
+class FroniusMeterDevice(FroniusAdapter):
     """Sensor for the fronius meter with device scope."""
 
     async def _update(self):
@@ -213,7 +208,7 @@ class FroniusMeterDevice(FroniusSensor):
         return await self.data.current_meter_data(self._device)
 
 
-class FroniusPowerFlow(FroniusSensor):
+class FroniusPowerFlow(FroniusAdapter):
     """Sensor for the fronius power flow."""
 
     async def _update(self):
@@ -224,7 +219,7 @@ class FroniusPowerFlow(FroniusSensor):
 class FroniusTemplateSensor(Entity):
     """Sensor for the single values (e.g. pv power, ac power)."""
 
-    def __init__(self, parent: FroniusSensor, name):
+    def __init__(self, parent: FroniusAdapter, name):
         """Initialize a singular value sensor."""
         self._name = name
         self.parent = parent
