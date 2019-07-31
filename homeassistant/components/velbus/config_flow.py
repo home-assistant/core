@@ -13,8 +13,9 @@ from .const import DOMAIN
 @callback
 def velbus_entries(hass: HomeAssistant):
     """Return connections for Velbus domain."""
-    return set((entry.data[CONF_PORT]) for
-               entry in hass.config_entries.async_entries(DOMAIN))
+    return set(
+        (entry.data[CONF_PORT]) for entry in hass.config_entries.async_entries(DOMAIN)
+    )
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -30,19 +31,14 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
 
     def _create_device(self, name: str, prt: str):
         """Create an antry async."""
-        return self.async_create_entry(
-            title=name,
-            data={
-                CONF_PORT: prt
-            }
-        )
+        return self.async_create_entry(title=name, data={CONF_PORT: prt})
 
     def _test_connection(self, prt):
         """Try to connect to the velbus with the port specified."""
         try:
             controller = velbus.Controller(prt)
         except Exception:  # pylint: disable=broad-except
-            self._errors[CONF_PORT] = 'connection_failed'
+            self._errors[CONF_PORT] = "connection_failed"
             return False
         controller.stop()
         return True
@@ -63,31 +59,29 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
                 if self._test_connection(prt):
                     return self._create_device(name, prt)
             else:
-                self._errors[CONF_PORT] = 'port_exists'
+                self._errors[CONF_PORT] = "port_exists"
         else:
             user_input = {}
-            user_input[CONF_NAME] = ''
-            user_input[CONF_PORT] = ''
+            user_input[CONF_NAME] = ""
+            user_input[CONF_PORT] = ""
 
         return self.async_show_form(
-            step_id='user',
-            data_schema=vol.Schema({
-                vol.Required(CONF_NAME,
-                             default=user_input[CONF_NAME]): str,
-                vol.Required(CONF_PORT,
-                             default=user_input[CONF_PORT]): str
-            }),
-            errors=self._errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_NAME, default=user_input[CONF_NAME]): str,
+                    vol.Required(CONF_PORT, default=user_input[CONF_PORT]): str,
+                }
+            ),
+            errors=self._errors,
         )
 
     async def async_step_import(self, user_input=None):
         """Import a config entry."""
-        user_input[CONF_NAME] = 'Velbus Import'
+        user_input[CONF_NAME] = "Velbus Import"
         prt = user_input[CONF_PORT]
         if self._prt_in_configuration_exists(prt):
             # if the velbus import is already in the config
             # we should not proceed the import
-            return self.async_abort(
-                reason='port_exists'
-                )
+            return self.async_abort(reason="port_exists")
         return await self.async_step_user(user_input)

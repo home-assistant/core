@@ -23,4 +23,4 @@ async def test_async_setup_entry_discover(hass, config_entry, discover):
     await setup_platform(hass, config_entry, {})
 
     entity = hass.data[media_player.DATA_SONOS].entities[0]
-    assert entity.unique_id == 'RINCON_test'
+    assert entity.unique_id == "RINCON_test"

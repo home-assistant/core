@@ -39,8 +39,8 @@ class LeafPluggedInSensor(LeafEntity, BinarySensorDevice):
     def icon(self):
         """Icon handling."""
         if self.car.data[DATA_PLUGGED_IN]:
-            return 'mdi:power-plug'
-        return 'mdi:power-plug-off'
+            return "mdi:power-plug"
+        return "mdi:power-plug-off"
 
 
 class LeafChargingSensor(LeafEntity, BinarySensorDevice):
@@ -60,5 +60,5 @@ class LeafChargingSensor(LeafEntity, BinarySensorDevice):
     def icon(self):
         """Icon handling."""
         if self.car.data[DATA_CHARGING]:
-            return 'mdi:flash'
-        return 'mdi:flash-off'
+            return "mdi:flash"
+        return "mdi:flash-off"

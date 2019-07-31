@@ -14,20 +14,25 @@ from homeassistant.util import dt as dt_util
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.core import callback
 
-from . import ATTRIBUTION, DATA_RING_DOORBELLS, DATA_RING_STICKUP_CAMS, \
-    NOTIFICATION_ID, SIGNAL_UPDATE_RING
+from . import (
+    ATTRIBUTION,
+    DATA_RING_DOORBELLS,
+    DATA_RING_STICKUP_CAMS,
+    NOTIFICATION_ID,
+    SIGNAL_UPDATE_RING,
+)
 
-CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
+CONF_FFMPEG_ARGUMENTS = "ffmpeg_arguments"
 
 FORCE_REFRESH_INTERVAL = timedelta(minutes=45)
 
 _LOGGER = logging.getLogger(__name__)
 
-NOTIFICATION_TITLE = 'Ring Camera Setup'
+NOTIFICATION_TITLE = "Ring Camera Setup"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -45,18 +50,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # show notification for all cameras without an active subscription
     if cams_no_plan:
-        cameras = str(', '.join([camera.name for camera in cams_no_plan]))
+        cameras = str(", ".join([camera.name for camera in cams_no_plan]))
 
-        err_msg = '''A Ring Protect Plan is required for the''' \
-                  ''' following cameras: {}.'''.format(cameras)
+        err_msg = (
+            """A Ring Protect Plan is required for the"""
+            """ following cameras: {}.""".format(cameras)
+        )
 
         _LOGGER.error(err_msg)
         hass.components.persistent_notification.create(
-            'Error: {}<br />'
-            'You will need to restart hass after fixing.'
-            ''.format(err_msg),
+            "Error: {}<br />"
+            "You will need to restart hass after fixing."
+            "".format(err_msg),
             title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID)
+            notification_id=NOTIFICATION_ID,
+        )
 
     add_entities(cams, True)
     return True
@@ -80,8 +88,7 @@ class RingCam(Camera):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_RING, self._update_callback)
+        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_RING, self._update_callback)
 
     @callback
     def _update_callback(self):
@@ -104,26 +111,31 @@ class RingCam(Camera):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            'device_id': self._camera.id,
-            'firmware': self._camera.firmware,
-            'kind': self._camera.kind,
-            'timezone': self._camera.timezone,
-            'type': self._camera.family,
-            'video_url': self._video_url,
-            'last_video_id': self._last_video_id,
+            "device_id": self._camera.id,
+            "firmware": self._camera.firmware,
+            "kind": self._camera.kind,
+            "timezone": self._camera.timezone,
+            "type": self._camera.family,
+            "video_url": self._video_url,
+            "last_video_id": self._last_video_id,
         }
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
         from haffmpeg.tools import ImageFrame, IMAGE_JPEG
+
         ffmpeg = ImageFrame(self._ffmpeg.binary, loop=self.hass.loop)
 
         if self._video_url is None:
             return
 
-        image = await asyncio.shield(ffmpeg.get_image(
-            self._video_url, output_format=IMAGE_JPEG,
-            extra_cmd=self._ffmpeg_arguments))
+        image = await asyncio.shield(
+            ffmpeg.get_image(
+                self._video_url,
+                output_format=IMAGE_JPEG,
+                extra_cmd=self._ffmpeg_arguments,
+            )
+        )
         return image
 
     async def handle_async_mjpeg_stream(self, request):
@@ -134,14 +146,16 @@ class RingCam(Camera):
             return
 
         stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
-        await stream.open_camera(
-            self._video_url, extra_cmd=self._ffmpeg_arguments)
+        await stream.open_camera(self._video_url, extra_cmd=self._ffmpeg_arguments)
 
         try:
             stream_reader = await stream.get_reader()
             return await async_aiohttp_proxy_stream(
-                self.hass, request, stream_reader,
-                self._ffmpeg.ffmpeg_stream_content_type)
+                self.hass,
+                request,
+                stream_reader,
+                self._ffmpeg.ffmpeg_stream_content_type,
+            )
         finally:
             await stream.close()
 
@@ -161,12 +175,12 @@ class RingCam(Camera):
         except (IndexError, TypeError):
             return
 
-        last_recording_id = last_event['id']
-        video_status = last_event['recording']['status']
+        last_recording_id = last_event["id"]
+        video_status = last_event["recording"]["status"]
 
-        if video_status == 'ready' and \
-            (self._last_video_id != last_recording_id or
-             self._utcnow >= self._expires_at):
+        if video_status == "ready" and (
+            self._last_video_id != last_recording_id or self._utcnow >= self._expires_at
+        ):
 
             video_url = self._camera.recording_url(last_recording_id)
             if video_url:

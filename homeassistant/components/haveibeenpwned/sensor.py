@@ -25,11 +25,11 @@ HA_USER_AGENT = "Home Assistant HaveIBeenPwned Sensor Component"
 MIN_TIME_BETWEEN_FORCED_UPDATES = timedelta(seconds=5)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
-URL = 'https://haveibeenpwned.com/api/v2/breachedaccount/'
+URL = "https://haveibeenpwned.com/api/v2/breachedaccount/"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_EMAIL): vol.All(cv.ensure_list, [cv.string]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_EMAIL): vol.All(cv.ensure_list, [cv.string])}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -77,11 +77,13 @@ class HaveIBeenPwnedSensor(Entity):
             return val
 
         for idx, value in enumerate(self._data.data[self._email]):
-            tmpname = "breach {}".format(idx+1)
+            tmpname = "breach {}".format(idx + 1)
             tmpvalue = "{} {}".format(
                 value["Title"],
-                dt_util.as_local(dt_util.parse_datetime(
-                    value["AddedDate"])).strftime(DATE_STR_FORMAT))
+                dt_util.as_local(dt_util.parse_datetime(value["AddedDate"])).strftime(
+                    DATE_STR_FORMAT
+                ),
+            )
             val[tmpname] = tmpvalue
 
         return val
@@ -103,8 +105,10 @@ class HaveIBeenPwnedSensor(Entity):
         # normal using update
         if self._email not in self._data.data:
             track_point_in_time(
-                self.hass, self.update_nothrottle,
-                dt_util.now() + MIN_TIME_BETWEEN_FORCED_UPDATES)
+                self.hass,
+                self.update_nothrottle,
+                dt_util.now() + MIN_TIME_BETWEEN_FORCED_UPDATES,
+            )
             return
 
         self._state = len(self._data.data[self._email])
@@ -147,17 +151,20 @@ class HaveIBeenPwnedData:
             _LOGGER.debug("Checking for breaches for email: %s", self._email)
 
             req = requests.get(
-                url, headers={USER_AGENT: HA_USER_AGENT}, allow_redirects=True,
-                timeout=5)
+                url,
+                headers={USER_AGENT: HA_USER_AGENT},
+                allow_redirects=True,
+                timeout=5,
+            )
 
         except requests.exceptions.RequestException:
             _LOGGER.error("Failed fetching data for %s", self._email)
             return
 
         if req.status_code == 200:
-            self.data[self._email] = sorted(req.json(),
-                                            key=lambda k: k["AddedDate"],
-                                            reverse=True)
+            self.data[self._email] = sorted(
+                req.json(), key=lambda k: k["AddedDate"], reverse=True
+            )
 
             # Only goto next email if we had data so that
             # the forced updates try this current email again
@@ -171,6 +178,8 @@ class HaveIBeenPwnedData:
             self.set_next_email()
 
         else:
-            _LOGGER.error("Failed fetching data for %s"
-                          "(HTTP Status_code = %d)", self._email,
-                          req.status_code)
+            _LOGGER.error(
+                "Failed fetching data for %s" "(HTTP Status_code = %d)",
+                self._email,
+                req.status_code,
+            )

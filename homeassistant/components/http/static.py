@@ -16,7 +16,7 @@ class CachingStaticResource(StaticResource):
     """Static Resource handler that will add cache headers."""
 
     async def _handle(self, request):
-        rel_url = request.match_info['filename']
+        rel_url = request.match_info["filename"]
         try:
             filename = Path(rel_url)
             if filename.anchor:
@@ -40,5 +40,6 @@ class CachingStaticResource(StaticResource):
             return await super()._handle(request)
         if filepath.is_file():
             return FileResponse(
-                filepath, chunk_size=self._chunk_size, headers=CACHE_HEADERS)
+                filepath, chunk_size=self._chunk_size, headers=CACHE_HEADERS
+            )
         raise HTTPNotFound
