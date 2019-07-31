@@ -3,7 +3,7 @@ from copy import deepcopy
 import os
 import unittest
 import requests_mock
-
+from datetime import timedelta
 from homeassistant import setup
 import homeassistant.components.ring as ring
 
@@ -16,6 +16,7 @@ VALID_CONFIG = {
     "ring": {
         "username": "foo",
         "password": "bar",
+        "scan_interval": timedelta(10)
     }
 }
 
@@ -46,6 +47,12 @@ class TestRing(unittest.TestCase):
                   text=load_fixture('ring_oauth.json'))
         mock.post('https://api.ring.com/clients_api/session',
                   text=load_fixture('ring_session.json'))
+        mock.get('https://api.ring.com/clients_api/ring_devices',
+                 text=load_fixture('ring_devices.json'))
+        mock.get('https://api.ring.com/clients_api/chimes/999999/health',
+                 text=load_fixture('ring_chime_health_attrs.json'))
+        mock.get('https://api.ring.com/clients_api/doorbots/987652/health',
+                 text=load_fixture('ring_doorboot_health_attrs.json'))
         response = ring.setup(self.hass, self.config)
         assert response
 

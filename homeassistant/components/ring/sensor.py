@@ -1,5 +1,4 @@
 """This component provides HA sensor support for Ring Door Bell/Chimes."""
-from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -10,12 +9,14 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.core import callback
 
-from . import ATTRIBUTION, DATA_RING, DEFAULT_ENTITY_NAMESPACE
+from . import ATTRIBUTION, DATA_RING_CHIMES, DATA_RING_DOORBELLS, \
+                DATA_RING_STICKUP_CAMS, DEFAULT_ENTITY_NAMESPACE, \
+                SIGNAL_UPDATE_RING
 
 _LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(seconds=30)
 
 # Sensor types: Name, category, units, icon, kind
 SENSOR_TYPES = {
@@ -55,20 +56,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a sensor for a Ring device."""
-    ring = hass.data[DATA_RING]
+    ring_chimes = hass.data[DATA_RING_CHIMES]
+    ring_doorbells = hass.data[DATA_RING_DOORBELLS]
+    ring_stickup_cams = hass.data[DATA_RING_STICKUP_CAMS]
 
     sensors = []
-    for device in ring.chimes:  # ring.chimes is doing I/O
+    for device in ring_chimes:
         for sensor_type in config[CONF_MONITORED_CONDITIONS]:
             if 'chime' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingSensor(hass, device, sensor_type))
 
-    for device in ring.doorbells:  # ring.doorbells is doing I/O
+    for device in ring_doorbells:
         for sensor_type in config[CONF_MONITORED_CONDITIONS]:
             if 'doorbell' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingSensor(hass, device, sensor_type))
 
-    for device in ring.stickup_cams:  # ring.stickup_cams is doing I/O
+    for device in ring_stickup_cams:
         for sensor_type in config[CONF_MONITORED_CONDITIONS]:
             if 'stickup_cams' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingSensor(hass, device, sensor_type))
@@ -93,6 +96,21 @@ class RingSensor(Entity):
         self._state = None
         self._tz = str(hass.config.time_zone)
         self._unique_id = '{}-{}'.format(self._data.id, self._sensor_type)
+
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_RING, self._update_callback)
+
+    @callback
+    def _update_callback(self):
+        """Call update method."""
+        self.async_schedule_update_ha_state(True)
+
+    @property
+    def should_poll(self):
+        """Updates controlled via the hub."""
+        return False
 
     @property
     def name(self):
@@ -145,9 +163,7 @@ class RingSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the state."""
-        _LOGGER.debug("Pulling data from %s sensor", self._name)
-
-        self._data.update()
+        _LOGGER.debug("Updating data from %s sensor", self._name)
 
         if self._sensor_type == 'volume':
             self._state = self._data.volume
