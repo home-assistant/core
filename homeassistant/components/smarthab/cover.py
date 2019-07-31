@@ -9,8 +9,11 @@ from datetime import timedelta
 from requests.exceptions import Timeout
 
 from homeassistant.components.cover import (
-    CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_SET_POSITION,
-    ATTR_POSITION
+    CoverDevice,
+    SUPPORT_OPEN,
+    SUPPORT_CLOSE,
+    SUPPORT_SET_POSITION,
+    ATTR_POSITION,
 )
 from . import DOMAIN, DATA_HUB
 
@@ -28,8 +31,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     _LOGGER.debug("Found a total of %s devices", str(len(devices)))
 
-    entities = (SmartHabCover(cover)
-                for cover in devices if isinstance(cover, pysmarthab.Shutter))
+    entities = (
+        SmartHabCover(cover)
+        for cover in devices
+        if isinstance(cover, pysmarthab.Shutter)
+    )
 
     add_entities(entities, True)
 
@@ -77,7 +83,7 @@ class SmartHabCover(CoverDevice):
     @property
     def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return 'window'
+        return "window"
 
     def open_cover(self, **kwargs):
         """Open the cover."""
@@ -96,5 +102,6 @@ class SmartHabCover(CoverDevice):
         try:
             self._cover.update()
         except Timeout:
-            _LOGGER.error("Reached timeout while updating cover %s from API",
-                          self.entity_id)
+            _LOGGER.error(
+                "Reached timeout while updating cover %s from API", self.entity_id
+            )

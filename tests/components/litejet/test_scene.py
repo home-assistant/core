@@ -11,23 +11,23 @@ from tests.components.scene import common
 
 _LOGGER = logging.getLogger(__name__)
 
-ENTITY_SCENE = 'scene.mock_scene_1'
+ENTITY_SCENE = "scene.mock_scene_1"
 ENTITY_SCENE_NUMBER = 1
-ENTITY_OTHER_SCENE = 'scene.mock_scene_2'
+ENTITY_OTHER_SCENE = "scene.mock_scene_2"
 ENTITY_OTHER_SCENE_NUMBER = 2
 
 
 class TestLiteJetScene(unittest.TestCase):
     """Test the litejet component."""
 
-    @mock.patch('pylitejet.LiteJet')
+    @mock.patch("pylitejet.LiteJet")
     def setup_method(self, method, mock_pylitejet):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.start()
 
         def get_scene_name(number):
-            return "Mock Scene #"+str(number)
+            return "Mock Scene #" + str(number)
 
         self.mock_lj = mock_pylitejet.return_value
         self.mock_lj.loads.return_value = range(0)
@@ -37,13 +37,8 @@ class TestLiteJetScene(unittest.TestCase):
         self.mock_lj.get_scene_name.side_effect = get_scene_name
 
         assert setup.setup_component(
-            self.hass,
-            litejet.DOMAIN,
-            {
-                'litejet': {
-                    'port': '/tmp/this_will_be_mocked'
-                }
-            })
+            self.hass, litejet.DOMAIN, {"litejet": {"port": "/tmp/this_will_be_mocked"}}
+        )
         self.hass.block_till_done()
 
     def teardown_method(self, method):
@@ -62,5 +57,4 @@ class TestLiteJetScene(unittest.TestCase):
         """Test activating the scene."""
         common.activate(self.hass, ENTITY_SCENE)
         self.hass.block_till_done()
-        self.mock_lj.activate_scene.assert_called_once_with(
-            ENTITY_SCENE_NUMBER)
+        self.mock_lj.activate_scene.assert_called_once_with(ENTITY_SCENE_NUMBER)

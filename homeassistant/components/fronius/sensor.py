@@ -6,22 +6,26 @@ import voluptuous as vol
 from pyfronius import Fronius
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_RESOURCE, CONF_SENSOR_TYPE, CONF_DEVICE,
-                                 CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (
+    CONF_RESOURCE,
+    CONF_SENSOR_TYPE,
+    CONF_DEVICE,
+    CONF_MONITORED_CONDITIONS,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SCOPE = 'scope'
+CONF_SCOPE = "scope"
 
-TYPE_INVERTER = 'inverter'
-TYPE_STORAGE = 'storage'
-TYPE_METER = 'meter'
-TYPE_POWER_FLOW = 'power_flow'
-SCOPE_DEVICE = 'device'
-SCOPE_SYSTEM = 'system'
+TYPE_INVERTER = "inverter"
+TYPE_STORAGE = "storage"
+TYPE_METER = "meter"
+TYPE_POWER_FLOW = "power_flow"
+SCOPE_DEVICE = "device"
+SCOPE_SYSTEM = "system"
 
 DEFAULT_SCOPE = SCOPE_DEVICE
 DEFAULT_DEVICE = 0
@@ -43,27 +47,33 @@ def _device_id_validator(config):
     return config
 
 
-PLATFORM_SCHEMA = vol.Schema(vol.All(PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE):
-        cv.url,
-    vol.Required(CONF_MONITORED_CONDITIONS):
-        vol.All(
-            cv.ensure_list,
-            [{
-                vol.Required(CONF_SENSOR_TYPE): vol.In(SENSOR_TYPES),
-                vol.Optional(CONF_SCOPE, default=DEFAULT_SCOPE):
-                    vol.In(SCOPE_TYPES),
-                vol.Optional(CONF_DEVICE):
-                    vol.All(vol.Coerce(int), vol.Range(min=0))
-            }]
-        )
-}), _device_id_validator))
+PLATFORM_SCHEMA = vol.Schema(
+    vol.All(
+        PLATFORM_SCHEMA.extend(
+            {
+                vol.Required(CONF_RESOURCE): cv.url,
+                vol.Required(CONF_MONITORED_CONDITIONS): vol.All(
+                    cv.ensure_list,
+                    [
+                        {
+                            vol.Required(CONF_SENSOR_TYPE): vol.In(SENSOR_TYPES),
+                            vol.Optional(CONF_SCOPE, default=DEFAULT_SCOPE): vol.In(
+                                SCOPE_TYPES
+                            ),
+                            vol.Optional(CONF_DEVICE): vol.All(
+                                vol.Coerce(int), vol.Range(min=0)
+                            ),
+                        }
+                    ],
+                ),
+            }
+        ),
+        _device_id_validator,
+    )
+)
 
 
-async def async_setup_platform(hass,
-                               config,
-                               async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up of Fronius platform."""
     session = async_get_clientsession(hass)
     fronius = Fronius(session, config[CONF_RESOURCE])
@@ -73,7 +83,7 @@ async def async_setup_platform(hass,
 
         device = condition[CONF_DEVICE]
         name = "Fronius {} {} {}".format(
-            condition[CONF_SENSOR_TYPE].replace('_', ' ').capitalize(),
+            condition[CONF_SENSOR_TYPE].replace("_", " ").capitalize(),
             device,
             config[CONF_RESOURCE],
         )
@@ -133,15 +143,17 @@ class FroniusSensor(Entity):
         except ConnectionError:
             _LOGGER.error("Failed to update: connection error")
         except ValueError:
-            _LOGGER.error("Failed to update: invalid response returned."
-                          "Maybe the configured device is not supported")
+            _LOGGER.error(
+                "Failed to update: invalid response returned."
+                "Maybe the configured device is not supported"
+            )
 
         if values:
-            self._state = values['status']['Code']
+            self._state = values["status"]["Code"]
             attributes = {}
             for key in values:
-                if 'value' in values[key]:
-                    attributes[key] = values[key].get('value', 0)
+                if "value" in values[key]:
+                    attributes[key] = values[key].get("value", 0)
             self._attributes = attributes
 
     async def _update(self):

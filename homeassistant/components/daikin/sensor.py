@@ -7,14 +7,16 @@ from homeassistant.util.unit_system import UnitSystem
 
 from . import DOMAIN as DAIKIN_DOMAIN
 from .const import (
-    ATTR_INSIDE_TEMPERATURE, ATTR_OUTSIDE_TEMPERATURE, SENSOR_TYPE_TEMPERATURE,
-    SENSOR_TYPES)
+    ATTR_INSIDE_TEMPERATURE,
+    ATTR_OUTSIDE_TEMPERATURE,
+    SENSOR_TYPE_TEMPERATURE,
+    SENSOR_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up the Daikin sensors.
 
     Can only be called when a user accidentally mentions the platform in their
@@ -29,17 +31,18 @@ async def async_setup_entry(hass, entry, async_add_entities):
     sensors = [ATTR_INSIDE_TEMPERATURE]
     if daikin_api.device.support_outside_temperature:
         sensors.append(ATTR_OUTSIDE_TEMPERATURE)
-    async_add_entities([
-        DaikinClimateSensor(daikin_api, sensor, hass.config.units)
-        for sensor in sensors
-    ])
+    async_add_entities(
+        [
+            DaikinClimateSensor(daikin_api, sensor, hass.config.units)
+            for sensor in sensors
+        ]
+    )
 
 
 class DaikinClimateSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, api, monitored_state, units: UnitSystem,
-                 name=None) -> None:
+    def __init__(self, api, monitored_state, units: UnitSystem, name=None) -> None:
         """Initialize the sensor."""
         self._api = api
         self._sensor = SENSOR_TYPES.get(monitored_state)

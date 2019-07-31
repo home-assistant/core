@@ -14,11 +14,19 @@ from random import uniform
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from ..helpers import (
-    configure_reporting, construct_unique_id,
-    safe_read, get_attr_id_by_name, bind_cluster, LogMixin)
+    configure_reporting,
+    construct_unique_id,
+    safe_read,
+    get_attr_id_by_name,
+    bind_cluster,
+    LogMixin,
+)
 from ..const import (
-    REPORT_CONFIG_DEFAULT, SIGNAL_ATTR_UPDATED, ATTRIBUTE_CHANNEL,
-    EVENT_RELAY_CHANNEL, ZDO_CHANNEL
+    REPORT_CONFIG_DEFAULT,
+    SIGNAL_ATTR_UPDATED,
+    ATTRIBUTE_CHANNEL,
+    EVENT_RELAY_CHANNEL,
+    ZDO_CHANNEL,
 )
 from ..registries import CLUSTER_REPORT_CONFIGS
 
@@ -33,32 +41,33 @@ def parse_and_log_command(channel, tsn, command_id, args):
         cmd,
         args,
         channel.cluster.cluster_id,
-        tsn
+        tsn,
     )
     return cmd
 
 
 def decorate_command(channel, command):
     """Wrap a cluster command to make it safe."""
+
     @wraps(command)
     async def wrapper(*args, **kwds):
         from zigpy.exceptions import DeliveryError
+
         try:
             result = await command(*args, **kwds)
-            channel.debug("executed command: %s %s %s %s",
-                          command.__name__,
-                          "{}: {}".format("with args", args),
-                          "{}: {}".format("with kwargs", kwds),
-                          "{}: {}".format("and result", result))
+            channel.debug(
+                "executed command: %s %s %s %s",
+                command.__name__,
+                "{}: {}".format("with args", args),
+                "{}: {}".format("with kwargs", kwds),
+                "{}: {}".format("and result", result),
+            )
             return result
 
         except (DeliveryError, Timeout) as ex:
-            channel.debug(
-                "command failed: %s exception: %s",
-                command.__name__,
-                str(ex)
-            )
+            channel.debug("command failed: %s exception: %s", command.__name__, str(ex))
             return ex
+
     return wrapper
 
 
@@ -80,13 +89,12 @@ class ZigbeeChannel(LogMixin):
         self._channel_name = cluster.ep_attribute
         if self.CHANNEL_NAME:
             self._channel_name = self.CHANNEL_NAME
-        self._generic_id = 'channel_0x{:04x}'.format(cluster.cluster_id)
+        self._generic_id = "channel_0x{:04x}".format(cluster.cluster_id)
         self._cluster = cluster
         self._zha_device = device
         self._unique_id = construct_unique_id(cluster)
         self._report_config = CLUSTER_REPORT_CONFIGS.get(
-            self._cluster.cluster_id,
-            [{'attr': 0, 'config': REPORT_CONFIG_DEFAULT}]
+            self._cluster.cluster_id, [{"attr": 0, "config": REPORT_CONFIG_DEFAULT}]
         )
         self._status = ChannelStatus.CREATED
         self._cluster.add_listener(self)
@@ -130,21 +138,24 @@ class ZigbeeChannel(LogMixin):
         manufacturer = None
         manufacturer_code = self._zha_device.manufacturer_code
         # Xiaomi devices don't need this and it disrupts pairing
-        if self._zha_device.manufacturer != 'LUMI':
-            if self.cluster.cluster_id >= 0xfc00 and manufacturer_code:
+        if self._zha_device.manufacturer != "LUMI":
+            if self.cluster.cluster_id >= 0xFC00 and manufacturer_code:
                 manufacturer = manufacturer_code
             await bind_cluster(self._unique_id, self.cluster)
             if not self.cluster.bind_only:
                 for report_config in self._report_config:
-                    attr = report_config.get('attr')
-                    min_report_interval, max_report_interval, change = \
-                        report_config.get('config')
+                    attr = report_config.get("attr")
+                    min_report_interval, max_report_interval, change = report_config.get(
+                        "config"
+                    )
                     await configure_reporting(
-                        self._unique_id, self.cluster, attr,
+                        self._unique_id,
+                        self.cluster,
+                        attr,
                         min_report=min_report_interval,
                         max_report=max_report_interval,
                         reportable_change=change,
-                        manufacturer=manufacturer
+                        manufacturer=manufacturer,
                     )
                     await asyncio.sleep(uniform(0.1, 0.5))
 
@@ -153,7 +164,7 @@ class ZigbeeChannel(LogMixin):
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
-        self.debug('initializing channel: from_cache: %s', from_cache)
+        self.debug("initializing channel: from_cache: %s", from_cache)
         self._status = ChannelStatus.INITIALIZED
 
     @callback
@@ -175,13 +186,13 @@ class ZigbeeChannel(LogMixin):
     def zha_send_event(self, cluster, command, args):
         """Relay events to hass."""
         self._zha_device.hass.bus.async_fire(
-            'zha_event',
+            "zha_event",
             {
-                'unique_id': self._unique_id,
-                'device_ieee': str(self._zha_device.ieee),
-                'command': command,
-                'args': args
-            }
+                "unique_id": self._unique_id,
+                "device_ieee": str(self._zha_device.ieee),
+                "command": command,
+                "args": args,
+            },
         )
 
     async def async_update(self):
@@ -192,33 +203,29 @@ class ZigbeeChannel(LogMixin):
         """Get the value for an attribute."""
         manufacturer = None
         manufacturer_code = self._zha_device.manufacturer_code
-        if self.cluster.cluster_id >= 0xfc00 and manufacturer_code:
+        if self.cluster.cluster_id >= 0xFC00 and manufacturer_code:
             manufacturer = manufacturer_code
         result = await safe_read(
             self._cluster,
             [attribute],
             allow_cache=from_cache,
             only_cache=from_cache,
-            manufacturer=manufacturer
+            manufacturer=manufacturer,
         )
         return result.get(attribute)
 
     def log(self, level, msg, *args):
         """Log a message."""
-        msg = '[%s]: ' + msg
-        args = (self.unique_id, ) + args
+        msg = "[%s]: " + msg
+        args = (self.unique_id,) + args
         _LOGGER.log(level, msg, *args)
 
     def __getattr__(self, name):
         """Get attribute or a decorated cluster command."""
-        if hasattr(self._cluster, name) and callable(
-                getattr(self._cluster, name)):
+        if hasattr(self._cluster, name) and callable(getattr(self._cluster, name)):
             command = getattr(self._cluster, name)
             command.__name__ = name
-            return decorate_command(
-                self,
-                command
-            )
+            return decorate_command(self, command)
         return self.__getattribute__(name)
 
 
@@ -230,7 +237,7 @@ class AttributeListeningChannel(ZigbeeChannel):
     def __init__(self, cluster, device):
         """Initialize AttributeListeningChannel."""
         super().__init__(cluster, device)
-        attr = self._report_config[0].get('attr')
+        attr = self._report_config[0].get("attr")
         if isinstance(attr, str):
             self.value_attribute = get_attr_id_by_name(self.cluster, attr)
         else:
@@ -243,13 +250,14 @@ class AttributeListeningChannel(ZigbeeChannel):
             async_dispatcher_send(
                 self._zha_device.hass,
                 "{}_{}".format(self.unique_id, SIGNAL_ATTR_UPDATED),
-                value
+                value,
             )
 
     async def async_initialize(self, from_cache):
         """Initialize listener."""
         await self.get_attribute_value(
-            self._report_config[0].get('attr'), from_cache=from_cache)
+            self._report_config[0].get("attr"), from_cache=from_cache
+        )
         await super().async_initialize(from_cache)
 
 
@@ -293,7 +301,8 @@ class ZDOChannel(LogMixin):
     async def async_initialize(self, from_cache):
         """Initialize channel."""
         entry = self._zha_device.gateway.zha_storage.async_get_or_create(
-            self._zha_device)
+            self._zha_device
+        )
         self.debug("entry loaded from storage: %s", entry)
         self._status = ChannelStatus.INITIALIZED
 
@@ -303,8 +312,8 @@ class ZDOChannel(LogMixin):
 
     def log(self, level, msg, *args):
         """Log a message."""
-        msg = '[%s:ZDO](%s): ' + msg
-        args = (self._zha_device.nwk, self._zha_device.model, ) + args
+        msg = "[%s:ZDO](%s): " + msg
+        args = (self._zha_device.nwk, self._zha_device.model) + args
         _LOGGER.log(level, msg, *args)
 
 
@@ -320,21 +329,19 @@ class EventRelayChannel(ZigbeeChannel):
             self._cluster,
             SIGNAL_ATTR_UPDATED,
             {
-                'attribute_id': attrid,
-                'attribute_name': self._cluster.attributes.get(
-                    attrid,
-                    ['Unknown'])[0],
-                'value': value
-            }
+                "attribute_id": attrid,
+                "attribute_name": self._cluster.attributes.get(attrid, ["Unknown"])[0],
+                "value": value,
+            },
         )
 
     @callback
     def cluster_command(self, tsn, command_id, args):
         """Handle a cluster command received on this cluster."""
-        if self._cluster.server_commands is not None and \
-                self._cluster.server_commands.get(command_id) is not None:
+        if (
+            self._cluster.server_commands is not None
+            and self._cluster.server_commands.get(command_id) is not None
+        ):
             self.zha_send_event(
-                self._cluster,
-                self._cluster.server_commands.get(command_id)[0],
-                args
+                self._cluster, self._cluster.server_commands.get(command_id)[0], args
             )

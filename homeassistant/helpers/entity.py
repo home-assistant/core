@@ -6,12 +6,26 @@ from timeit import default_timer as timer
 from typing import Optional, List, Iterable
 
 from homeassistant.const import (
-    ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON,
-    ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
-    STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES, ATTR_DEVICE_CLASS)
+    ATTR_ASSUMED_STATE,
+    ATTR_FRIENDLY_NAME,
+    ATTR_HIDDEN,
+    ATTR_ICON,
+    ATTR_UNIT_OF_MEASUREMENT,
+    DEVICE_DEFAULT_NAME,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    ATTR_ENTITY_PICTURE,
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_DEVICE_CLASS,
+)
 from homeassistant.helpers.entity_registry import (
-    EVENT_ENTITY_REGISTRY_UPDATED, RegistryEntry)
+    EVENT_ENTITY_REGISTRY_UPDATED,
+    RegistryEntry,
+)
 from homeassistant.core import HomeAssistant, callback, CALLBACK_TYPE
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.exceptions import NoEntitySpecifiedError
@@ -27,28 +41,37 @@ _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
 
 
-def generate_entity_id(entity_id_format: str, name: Optional[str],
-                       current_ids: Optional[List[str]] = None,
-                       hass: Optional[HomeAssistant] = None) -> str:
+def generate_entity_id(
+    entity_id_format: str,
+    name: Optional[str],
+    current_ids: Optional[List[str]] = None,
+    hass: Optional[HomeAssistant] = None,
+) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
     if current_ids is None:
         if hass is None:
             raise ValueError("Missing required parameter currentids or hass")
         return run_callback_threadsafe(
-            hass.loop, async_generate_entity_id, entity_id_format, name,
-            current_ids, hass
+            hass.loop,
+            async_generate_entity_id,
+            entity_id_format,
+            name,
+            current_ids,
+            hass,
         ).result()
 
     name = (slugify(name or "") or slugify(DEVICE_DEFAULT_NAME)).lower()
 
-    return ensure_unique_string(
-        entity_id_format.format(name), current_ids)
+    return ensure_unique_string(entity_id_format.format(name), current_ids)
 
 
 @callback
-def async_generate_entity_id(entity_id_format: str, name: Optional[str],
-                             current_ids: Optional[Iterable[str]] = None,
-                             hass: Optional[HomeAssistant] = None) -> str:
+def async_generate_entity_id(
+    entity_id_format: str,
+    name: Optional[str],
+    current_ids: Optional[Iterable[str]] = None,
+    hass: Optional[HomeAssistant] = None,
+) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
     if current_ids is None:
         if hass is None:
@@ -57,8 +80,7 @@ def async_generate_entity_id(entity_id_format: str, name: Optional[str],
         current_ids = hass.states.async_entity_ids()
     name = (name or DEVICE_DEFAULT_NAME).lower()
 
-    return ensure_unique_string(
-        entity_id_format.format(slugify(name)), current_ids)
+    return ensure_unique_string(entity_id_format.format(slugify(name)), current_ids)
 
 
 class Entity:
@@ -218,7 +240,8 @@ class Entity:
 
         if self.entity_id is None:
             raise NoEntitySpecifiedError(
-                "No entity id specified for entity {}".format(self.name))
+                "No entity id specified for entity {}".format(self.name)
+            )
 
         # update entity data
         if force_refresh:
@@ -238,7 +261,8 @@ class Entity:
 
         if self.entity_id is None:
             raise NoEntitySpecifiedError(
-                "No entity id specified for entity {}".format(self.name))
+                "No entity id specified for entity {}".format(self.name)
+            )
 
         self._async_write_ha_state()
 
@@ -299,10 +323,14 @@ class Entity:
 
         if end - start > 0.4 and not self._slow_reported:
             self._slow_reported = True
-            _LOGGER.warning("Updating state for %s (%s) took %.3f seconds. "
-                            "Please report platform to the developers at "
-                            "https://goo.gl/Nvioub", self.entity_id,
-                            type(self), end - start)
+            _LOGGER.warning(
+                "Updating state for %s (%s) took %.3f seconds. "
+                "Please report platform to the developers at "
+                "https://goo.gl/Nvioub",
+                self.entity_id,
+                type(self),
+                end - start,
+            )
 
         # Overwrite properties that have been set in the config file.
         if DATA_CUSTOMIZE in self.hass.data:
@@ -312,9 +340,11 @@ class Entity:
         try:
             unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
             units = self.hass.config.units
-            if (unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
-                    unit_of_measure != units.temperature_unit):
-                prec = len(state) - state.index('.') - 1 if '.' in state else 0
+            if (
+                unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
+                and unit_of_measure != units.temperature_unit
+            ):
+                prec = len(state) - state.index(".") - 1 if "." in state else 0
                 temp = units.temperature(float(state), unit_of_measure)
                 state = str(round(temp) if prec == 0 else round(temp, prec))
                 attr[ATTR_UNIT_OF_MEASUREMENT] = units.temperature_unit
@@ -322,14 +352,16 @@ class Entity:
             # Could not convert state to float
             pass
 
-        if (self._context is not None and
-                dt_util.utcnow() - self._context_set >
-                self.context_recent_time):
+        if (
+            self._context is not None
+            and dt_util.utcnow() - self._context_set > self.context_recent_time
+        ):
             self._context = None
             self._context_set = None
 
         self.hass.states.async_set(
-            self.entity_id, state, attr, self.force_update, self._context)
+            self.entity_id, state, attr, self.force_update, self._context
+        )
 
     def schedule_update_ha_state(self, force_refresh=False):
         """Schedule an update ha state change task.
@@ -372,16 +404,18 @@ class Entity:
 
         if warning:
             update_warn = self.hass.loop.call_later(
-                SLOW_UPDATE_WARNING, _LOGGER.warning,
-                "Update of %s is taking over %s seconds", self.entity_id,
-                SLOW_UPDATE_WARNING
+                SLOW_UPDATE_WARNING,
+                _LOGGER.warning,
+                "Update of %s is taking over %s seconds",
+                self.entity_id,
+                SLOW_UPDATE_WARNING,
             )
 
         try:
             # pylint: disable=no-member
-            if hasattr(self, 'async_update'):
+            if hasattr(self, "async_update"):
                 await self.async_update()
-            elif hasattr(self, 'update'):
+            elif hasattr(self, "update"):
                 await self.hass.async_add_executor_job(self.update)
         finally:
             self._update_staged = False
@@ -427,8 +461,11 @@ class Entity:
         """
         if self.registry_entry is not None:
             assert self.hass is not None
-            self.async_on_remove(self.hass.bus.async_listen(
-                EVENT_ENTITY_REGISTRY_UPDATED, self._async_registry_updated))
+            self.async_on_remove(
+                self.hass.bus.async_listen(
+                    EVENT_ENTITY_REGISTRY_UPDATED, self._async_registry_updated
+                )
+            )
 
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
@@ -439,13 +476,15 @@ class Entity:
     async def _async_registry_updated(self, event):
         """Handle entity registry update."""
         data = event.data
-        if data['action'] != 'update' or data.get(
-                'old_entity_id', data['entity_id']) != self.entity_id:
+        if (
+            data["action"] != "update"
+            or data.get("old_entity_id", data["entity_id"]) != self.entity_id
+        ):
             return
 
         ent_reg = await self.hass.helpers.entity_registry.async_get_registry()
         old = self.registry_entry
-        self.registry_entry = ent_reg.async_get(data['entity_id'])
+        self.registry_entry = ent_reg.async_get(data["entity_id"])
 
         if self.registry_entry.entity_id == old.entity_id:
             self.async_write_ha_state()
@@ -502,8 +541,7 @@ class ToggleEntity(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(
-            ft.partial(self.turn_on, **kwargs))
+        return self.hass.async_add_job(ft.partial(self.turn_on, **kwargs))
 
     def turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
@@ -514,8 +552,7 @@ class ToggleEntity(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(
-            ft.partial(self.turn_off, **kwargs))
+        return self.hass.async_add_job(ft.partial(self.turn_off, **kwargs))
 
     def toggle(self, **kwargs) -> None:
         """Toggle the entity."""
