@@ -266,7 +266,6 @@ class MikrotikAPI:
             kwargs['ssl_wrapper'] = ssl_context.wrap_socket
         host = config.get(CONF_HOST)
         self._hosts[host]['kwargs'] = kwargs
-        return
 
     def get_polling_method(self, host):
         """Get Mikrotik device_tracker polling method."""
@@ -335,7 +334,7 @@ class MikrotikAPI:
                 librouteros.exceptions.MultiTrapError,
                 librouteros.exceptions.ConnectionError) as api_error:
             _LOGGER.error(
-                "Mikrotik error for device %s. ",
+                "Mikrotik error for device %s. "
                 "Connection error: %s", host, api_error)
             self._hosts[host][CONNECTING] = False
             self._hosts[host][CONNECTED] = False
@@ -479,15 +478,15 @@ class MikrotikAPI:
         binary_sensors = {}
         self.hass.data[MIKROTIK][host][sensor_type]['count'] = len(data)
         states = BINARY_SENSORS[sensor_type][6]
-        for index, result in enumerate(data):
-            binary_sensors[index] = {}
-            binary_sensors[index]['attrib'] = {}
-            binary_sensors[index]['state'] = None
+        for i, result in enumerate(data):
+            binary_sensors[i] = {}
+            binary_sensors[i]['attrib'] = {}
+            binary_sensors[i]['state'] = None
             for key in result:
                 if key == BINARY_SENSORS[sensor_type][4]:
-                    binary_sensors[index]['state'] = states[result[key]]
+                    binary_sensors[i]['state'] = states[result[key]]
                 if key in BINARY_SENSORS[sensor_type][5]:
-                    binary_sensors[index]['attrib'][
+                    binary_sensors[i]['attrib'][
                         slugify(key)] = result[key]
 
         self.hass.data[MIKROTIK][host][
