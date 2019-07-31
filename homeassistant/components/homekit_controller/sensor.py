@@ -20,7 +20,7 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up Homekit covers."""
+    """Set up Homekit lighting."""
     hkid = config_entry.data['AccessoryPairingID']
     conn = hass.data[KNOWN_DEVICES][hkid]
 
@@ -29,23 +29,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if not entity_class:
             return False
         info = {'aid': aid, 'iid': service['iid']}
-        if entity_class == 'humidity':
-            async_add_entities([HomeKitHumiditySensor(conn, info)], True)
-            return True
-
-        if entity_class == 'temperature':
-            async_add_entities([HomeKitTemperatureSensor(conn, info)], True)
-            return True
-
-        if entity_class == 'light':
-            async_add_entities([HomeKitLightSensor(conn, info)], True)
-            return True
-        
-        if entity_class == 'carbon-dioxide':
-            async_add_entities([HomeKitCarbonDioxideSensor(conn, info)], True)
-            return True
-
-        return False
+        async_add_entities([entity_class(conn, info)], True)
+        return True
 
     conn.add_listener(async_add_service)
 
