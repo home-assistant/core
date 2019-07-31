@@ -6,9 +6,9 @@ from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE, SUPPORT_NEXT_TRACK, SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_TURN_ON, SUPPORT_TURN_OFF)
 from homeassistant.const import (CONF_HOST, STATE_HOME, STATE_IDLE,
-                                 STATE_PLAYING)
+                                 STATE_PLAYING, STATE_OFF)
 
 DEFAULT_PORT = 8060
 
@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_ROKU = SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK |\
     SUPPORT_PLAY_MEDIA | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
-    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
+    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 
 async def async_setup_platform(
@@ -41,11 +41,13 @@ class RokuDevice(MediaPlayerDevice):
         self.channels = []
         self.current_app = None
         self._device_info = {}
+        self._power_state = "Unknown"
 
     def update(self):
         """Retrieve latest state."""
         try:
             self._device_info = self.roku.device_info
+            self._power_state = self.roku.power_state
             self.ip_address = self.roku.host
             self.channels = self.get_source_list()
 
@@ -69,13 +71,16 @@ class RokuDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        if self._device_info.userdevicename:
-            return self._device_info.userdevicename
-        return "Roku {}".format(self._device_info.sernum)
+        if self._device_info.user_device_name:
+            return self._device_info.user_device_name
+        return "Roku {}".format(self._device_info.serial_num)
 
     @property
     def state(self):
         """Return the state of the device."""
+        if self._power_state == "Off":
+            return STATE_OFF
+
         if self.current_app is None:
             return None
 
@@ -97,7 +102,7 @@ class RokuDevice(MediaPlayerDevice):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return self._device_info.sernum
+        return self._device_info.serial_num
 
     @property
     def media_content_type(self):
@@ -147,6 +152,14 @@ class RokuDevice(MediaPlayerDevice):
     def source_list(self):
         """List of available input sources."""
         return self.channels
+
+    def turn_on(self):
+        """Turn on the Roku."""
+        self.roku.power()
+
+    def turn_off(self):
+        """Turn off the Roku."""
+        self.roku.poweroff()
 
     def media_play_pause(self):
         """Send play/pause command."""
