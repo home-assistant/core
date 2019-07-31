@@ -11,12 +11,12 @@ _LOGGER = logging.getLogger(__name__)
 
 SIREN_ICON = 'mdi:alarm-bell'
 
-"""
-It takes a few seconds for the API to correctly return an update indicating
-that the changes have been made. Once we request a change (i.e. a light
-being turned on) we simply wait for this time delta before we allow
-updates to take place.
-"""
+
+# It takes a few seconds for the API to correctly return an update indicating
+# that the changes have been made. Once we request a change (i.e. a light
+# being turned on) we simply wait for this time delta before we allow
+# updates to take place.
+
 SKIP_UPDATES_DELAY = timedelta(seconds=5)
 
 
@@ -49,8 +49,8 @@ class BaseRingSwitch(SwitchDevice):
     @callback
     def _update_callback(self):
         """Call update method."""
-        self.async_schedule_update_ha_state(True)
         _LOGGER.debug("Updating Ring sensor %s (callback)", self.name)
+        self.async_schedule_update_ha_state(True)
 
     @property
     def name(self):
@@ -77,12 +77,12 @@ class SirenSwitch(BaseRingSwitch):
         self._no_updates_until = datetime.now()
         self._siren_on = False
 
-    def __set_switch(self, new_state):
+    def _set_switch(self, new_state):
         """Update switch state, and causes HASS to correctly update."""
         self._device.siren = new_state
         self._siren_on = new_state > 0
         self._no_updates_until = datetime.now() + SKIP_UPDATES_DELAY
-        self.async_schedule_update_ha_state(True)
+        self.schedule_update_ha_state(True)
 
     @property
     def is_on(self):
@@ -91,11 +91,11 @@ class SirenSwitch(BaseRingSwitch):
 
     def turn_on(self, **kwargs):
         """Turn the siren on for 30 seconds."""
-        self.__set_switch(1)
+        self._set_switch(1)
 
     def turn_off(self, **kwargs):
         """Turn the siren off."""
-        self.__set_switch(0)
+        self._set_switch(0)
 
     @property
     def icon(self):
