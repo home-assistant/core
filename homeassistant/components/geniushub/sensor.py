@@ -1,5 +1,5 @@
 """Support for Genius Hub sensor devices."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from homeassistant.const import DEVICE_CLASS_BATTERY
@@ -62,7 +62,7 @@ class GeniusDevice(Entity):
     @property
     def icon(self):
         """Return the icon of the sensor."""
-        values = self._device._info_raw['childValues']  # noqa; pylint: disable=protected-access
+        values = self._device._raw_json['childValues']  # noqa; pylint: disable=protected-access
 
         last_comms = utc_from_timestamp(values['lastComms']['val'])
         if 'WakeUp_Interval' in values:
@@ -112,8 +112,9 @@ class GeniusDevice(Entity):
         attrs = {}
         attrs['assigned_zone'] = self._device.assignedZones[0]['name']
 
-        last_comms = self._device._info_raw['childValues']['lastComms']['val']  # noqa; pylint: disable=protected-access
-        attrs['last_comms'] = utc_from_timestamp(last_comms).isoformat()
+        last_comms = self._device._raw_json['childValues']['lastComms']['val']  # noqa; pylint: disable=protected-access
+        if last_comms != 0:
+            attrs['last_comms'] = utc_from_timestamp(last_comms).isoformat()
 
         return {**attrs}
 
