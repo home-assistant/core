@@ -1,5 +1,5 @@
 """Support for deCONZ sensors."""
-from pydeconz.sensor import LightLevel, Switch
+from pydeconz.sensor import Consumption, Daylight, LightLevel, Power, Switch
 
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY)
@@ -12,6 +12,7 @@ from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
 ATTR_CURRENT = 'current'
+ATTR_POWER = 'power'
 ATTR_DAYLIGHT = 'daylight'
 ATTR_EVENT_ID = 'event_id'
 
@@ -96,16 +97,19 @@ class DeconzSensor(DeconzDevice):
         if self._device.secondary_temperature is not None:
             attr[ATTR_TEMPERATURE] = self._device.secondary_temperature
 
-        if self._device.type in LightLevel.ZHATYPE and \
+        if self._device.type in Consumption.ZHATYPE:
+            attr[ATTR_POWER] = self._device.power
+
+        elif self._device.type in Daylight.ZHATYPE:
+            attr[ATTR_DAYLIGHT] = self._device.daylight
+
+        elif self._device.type in LightLevel.ZHATYPE and \
                 self._device.dark is not None:
             attr[ATTR_DARK] = self._device.dark
 
-        if self.unit_of_measurement == 'W':
+        elif self._device.type in Power.ZHATYPE:
             attr[ATTR_CURRENT] = self._device.current
             attr[ATTR_VOLTAGE] = self._device.voltage
-
-        if self._device.SENSOR_CLASS == 'daylight':
-            attr[ATTR_DAYLIGHT] = self._device.daylight
 
         return attr
 

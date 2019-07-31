@@ -19,7 +19,7 @@ class ElectricalMeasurementChannel(AttributeListeningChannel):
 
     async def async_update(self):
         """Retrieve latest state."""
-        _LOGGER.debug("%s async_update", self.unique_id)
+        self.debug("async_update")
 
         # This is a polling channel. Don't allow cache.
         result = await self.get_attribute_value('active_power',

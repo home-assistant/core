@@ -24,7 +24,7 @@ class FanChannel(ZigbeeChannel):
         try:
             await self.cluster.write_attributes({'fan_mode': value})
         except DeliveryError as ex:
-            _LOGGER.error("%s: Could not set speed: %s", self.unique_id, ex)
+            self.error("Could not set speed: %s", ex)
             return
 
     async def async_update(self):
@@ -41,8 +41,8 @@ class FanChannel(ZigbeeChannel):
     def attribute_updated(self, attrid, value):
         """Handle attribute update from fan cluster."""
         attr_name = self.cluster.attributes.get(attrid, [attrid])[0]
-        _LOGGER.debug("%s: Attribute report '%s'[%s] = %s",
-                      self.unique_id, self.cluster.name, attr_name, value)
+        self.debug("Attribute report '%s'[%s] = %s",
+                   self.cluster.name, attr_name, value)
         if attrid == self._value_attribute:
             async_dispatcher_send(
                 self._zha_device.hass,

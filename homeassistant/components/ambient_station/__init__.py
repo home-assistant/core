@@ -1,6 +1,8 @@
 """Support for Ambient Weather Station Service."""
 import logging
 
+from aioambient import Client
+from aioambient.errors import WebsocketError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -251,9 +253,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up the Ambient PWS as config entry."""
-    from aioambient import Client
-    from aioambient.errors import WebsocketError
-
     session = aiohttp_client.async_get_clientsession(hass)
 
     try:
@@ -286,6 +285,28 @@ async def async_unload_entry(hass, config_entry):
     return True
 
 
+async def async_migrate_entry(hass, config_entry):
+    """Migrate old entry."""
+    version = config_entry.version
+
+    _LOGGER.debug('Migrating from version %s', version)
+
+    # 1 -> 2: Unique ID format changed, so delete and re-import:
+    if version == 1:
+        dev_reg = await hass.helpers.device_registry.async_get_registry()
+        dev_reg.async_clear_config_entry(config_entry)
+
+        en_reg = await hass.helpers.entity_registry.async_get_registry()
+        en_reg.async_clear_config_entry(config_entry)
+
+        version = config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry)
+
+    _LOGGER.info('Migration to version %s successful', version)
+
+    return True
+
+
 class AmbientStation:
     """Define a class to handle the Ambient websocket."""
 
@@ -302,8 +323,6 @@ class AmbientStation:
 
     async def _attempt_connect(self):
         """Attempt to connect to the socket (retrying later on fail)."""
-        from aioambient.errors import WebsocketError
-
         try:
             await self.client.websocket.connect()
         except WebsocketError as err:

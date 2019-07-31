@@ -77,7 +77,7 @@ async def test_successful_config_entry(hass):
         'connections': {
             ('mac', '00:11:22:33:44:55')
         },
-        'manufacturer': 'Ubiquiti',
+        'manufacturer': unifi.ATTR_MANUFACTURER,
         'model': "UniFi Controller",
         'name': "UniFi Controller",
     }

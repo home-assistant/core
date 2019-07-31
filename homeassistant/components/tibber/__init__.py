@@ -10,6 +10,7 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, CONF_ACCESS_TOKEN,
                                  CONF_NAME)
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util import dt as dt_util
 
 DOMAIN = 'tibber'
 
@@ -28,7 +29,8 @@ async def async_setup(hass, config):
 
     import tibber
     tibber_connection = tibber.Tibber(conf[CONF_ACCESS_TOKEN],
-                                      websession=async_get_clientsession(hass))
+                                      websession=async_get_clientsession(hass),
+                                      time_zone=dt_util.DEFAULT_TIME_ZONE)
     hass.data[DOMAIN] = tibber_connection
 
     async def _close(event):

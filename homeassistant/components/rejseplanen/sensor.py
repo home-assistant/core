@@ -21,14 +21,14 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_STOP_ID = 'Stop ID'
-ATTR_STOP_NAME = 'Stop'
-ATTR_ROUTE = 'Route'
-ATTR_TYPE = 'Type'
-ATTR_DIRECTION = "Direction"
-ATTR_DUE_IN = 'Due in'
-ATTR_DUE_AT = 'Due at'
-ATTR_NEXT_UP = 'Later departure'
+ATTR_STOP_ID = 'stop_id'
+ATTR_STOP_NAME = 'stop'
+ATTR_ROUTE = 'route'
+ATTR_TYPE = 'type'
+ATTR_DIRECTION = "direction"
+ATTR_DUE_IN = 'due_in'
+ATTR_DUE_AT = 'due_at'
+ATTR_NEXT_UP = 'next_departures'
 
 ATTRIBUTION = "Data provided by rejseplanen.dk"
 
@@ -42,6 +42,10 @@ ICON = 'mdi:bus'
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
+BUS_TYPES = ['BUS', 'EXB', 'TB']
+TRAIN_TYPES = ['LET', 'S', 'REG', 'IC', 'LYN', 'TOG']
+METRO_TYPES = ['M']
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STOP_ID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -51,7 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_DEPARTURE_TYPE, default=[]):
         vol.All(cv.ensure_list,
-                [vol.In(list(['BUS', 'EXB', 'M', 'S', 'REG']))])
+                [vol.In([*BUS_TYPES, *TRAIN_TYPES, *METRO_TYPES])])
 })
 
 
@@ -104,26 +108,25 @@ class RejseplanenTransportSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self._times is not None:
-            next_up = None
-            if len(self._times) > 1:
-                next_up = ('{} towards {} in {} from {}'.format(
-                    self._times[1][ATTR_ROUTE],
-                    self._times[1][ATTR_DIRECTION],
-                    str(self._times[1][ATTR_DUE_IN]),
-                    self._times[1][ATTR_STOP_NAME]))
-            params = {
-                ATTR_DUE_IN: str(self._times[0][ATTR_DUE_IN]),
-                ATTR_DUE_AT: self._times[0][ATTR_DUE_AT],
-                ATTR_TYPE: self._times[0][ATTR_TYPE],
-                ATTR_ROUTE: self._times[0][ATTR_ROUTE],
-                ATTR_DIRECTION: self._times[0][ATTR_DIRECTION],
-                ATTR_STOP_NAME: self._times[0][ATTR_STOP_NAME],
-                ATTR_STOP_ID: self._stop_id,
-                ATTR_ATTRIBUTION: ATTRIBUTION,
-                ATTR_NEXT_UP: next_up
-            }
-            return {k: v for k, v in params.items() if v}
+        if not self._times:
+            return None
+
+        next_up = []
+        if len(self._times) > 1:
+            next_up = self._times[1:]
+
+        params = {
+            ATTR_DUE_IN: str(self._times[0][ATTR_DUE_IN]),
+            ATTR_DUE_AT: self._times[0][ATTR_DUE_AT],
+            ATTR_TYPE: self._times[0][ATTR_TYPE],
+            ATTR_ROUTE: self._times[0][ATTR_ROUTE],
+            ATTR_DIRECTION: self._times[0][ATTR_DIRECTION],
+            ATTR_STOP_NAME: self._times[0][ATTR_STOP_NAME],
+            ATTR_STOP_ID: self._stop_id,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_NEXT_UP: next_up
+        }
+        return {k: v for k, v in params.items() if v}
 
     @property
     def unit_of_measurement(self):
@@ -170,8 +173,27 @@ class PublicTransportData():
         import rjpl
         self.info = []
 
+        def intersection(lst1, lst2):
+            """Return items contained in both lists"""
+            return list(set(lst1) & set(lst2))
+
+        # Limit search to selected types, to get more results
+        all_types = not bool(self.departure_type)
+        use_train = all_types or bool(
+            intersection(TRAIN_TYPES, self.departure_type))
+        use_bus = all_types or bool(
+            intersection(BUS_TYPES, self.departure_type))
+        use_metro = all_types or bool(
+            intersection(METRO_TYPES, self.departure_type))
+
         try:
-            results = rjpl.departureBoard(int(self.stop_id), timeout=5)
+            results = rjpl.departureBoard(
+                int(self.stop_id),
+                timeout=5,
+                useTrain=use_train,
+                useBus=use_bus,
+                useMetro=use_metro
+            )
         except rjpl.rjplAPIError as error:
             _LOGGER.debug("API returned error: %s", error)
             self.info = self.empty_result()

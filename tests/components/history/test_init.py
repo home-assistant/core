@@ -428,6 +428,22 @@ class TestComponentHistory(unittest.TestCase):
                     history.CONF_ENTITIES: ['media_player.test']}}})
         self.check_significant_states(zero, four, states, config)
 
+    def test_get_significant_states_are_ordered(self):
+        """Test order of results from get_significant_states
+
+        When entity ids are given, the results should be returned with the data
+        in the same order.
+        """
+        zero, four, states = self.record_states()
+        entity_ids = ['media_player.test', 'media_player.test2']
+        hist = history.get_significant_states(
+            self.hass, zero, four, entity_ids, filters=history.Filters())
+        assert list(hist.keys()) == entity_ids
+        entity_ids = ['media_player.test2', 'media_player.test']
+        hist = history.get_significant_states(
+            self.hass, zero, four, entity_ids, filters=history.Filters())
+        assert list(hist.keys()) == entity_ids
+
     def check_significant_states(self, zero, four, states, config):
         """Check if significant states are retrieved."""
         filters = history.Filters()

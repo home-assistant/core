@@ -14,6 +14,7 @@ from homeassistant import config_entries
 from homeassistant.components import unifi
 from homeassistant.components.unifi.const import (
     CONF_CONTROLLER, CONF_SITE_ID, UNIFI_CONFIG)
+from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL)
@@ -249,7 +250,7 @@ async def setup_controller(hass, mock_controller):
     hass.data[unifi.DOMAIN] = {CONTROLLER_ID: mock_controller}
     config_entry = config_entries.ConfigEntry(
         1, unifi.DOMAIN, 'Mock Title', ENTRY_CONFIG, 'test',
-        config_entries.CONN_CLASS_LOCAL_POLL)
+        config_entries.CONN_CLASS_LOCAL_POLL, entry_id=1)
     mock_controller.config_entry = config_entry
 
     await mock_controller.async_update()
@@ -312,7 +313,7 @@ async def test_switches(hass, mock_controller):
 
     await setup_controller(hass, mock_controller)
     assert len(mock_controller.mock_requests) == 3
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 5
 
     switch_1 = hass.states.get('switch.poe_client_1')
     assert switch_1 is not None
@@ -450,3 +451,30 @@ async def test_ignore_multiple_poe_clients_on_same_port(hass, mock_controller):
     switch_2 = hass.states.get('switch.poe_client_2')
     assert switch_1 is None
     assert switch_2 is None
+
+
+async def test_restoring_client(hass, mock_controller):
+    """Test the update_items function with some clients."""
+    mock_controller.mock_client_responses.append([CLIENT_2])
+    mock_controller.mock_device_responses.append([DEVICE_1])
+    mock_controller.mock_client_all_responses.append([CLIENT_1])
+    mock_controller.unifi_config = {
+        unifi.CONF_BLOCK_CLIENT: ['random mac']
+    }
+
+    registry = await entity_registry.async_get_registry(hass)
+    registry.async_get_or_create(
+        switch.DOMAIN, unifi.DOMAIN,
+        'poe-{}'.format(CLIENT_1['mac']),
+        suggested_object_id=CLIENT_1['hostname'], config_entry_id=1)
+    registry.async_get_or_create(
+        switch.DOMAIN, unifi.DOMAIN,
+        'poe-{}'.format(CLIENT_2['mac']),
+        suggested_object_id=CLIENT_2['hostname'], config_entry_id=1)
+
+    await setup_controller(hass, mock_controller)
+    assert len(mock_controller.mock_requests) == 3
+    assert len(hass.states.async_all()) == 3
+
+    device_1 = hass.states.get('switch.client_1')
+    assert device_1 is not None

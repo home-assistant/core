@@ -36,14 +36,14 @@ class RokuRemote(remote.RemoteDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        if self._device_info.userdevicename:
-            return self._device_info.userdevicename
-        return "Roku {}".format(self._device_info.sernum)
+        if self._device_info.user_device_name:
+            return self._device_info.user_device_name
+        return "Roku {}".format(self._device_info.serial_num)
 
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._device_info.sernum
+        return self._device_info.serial_num
 
     @property
     def is_on(self):

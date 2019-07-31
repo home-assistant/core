@@ -87,6 +87,7 @@ TEST_REQUIREMENTS = (
     'homekit[IP]',
     'homematicip',
     'httplib2',
+    'huawei-lte-api',
     'influxdb',
     'jsonpath',
     'libpurecool',
@@ -129,6 +130,7 @@ TEST_REQUIREMENTS = (
     'python-forecastio',
     'python-nest',
     'python_awair',
+    'python-velbus',
     'pytradfri[async]',
     'pyunifi',
     'pyupnp-async',
@@ -161,6 +163,7 @@ TEST_REQUIREMENTS = (
     'zeroconf',
     'zigpy-homeassistant',
     'bellows-homeassistant',
+    'py17track',
 )
 
 IGNORE_PIN = ('colorlog>2.1,<3', 'keyring>=9.3,<10.0', 'urllib3')

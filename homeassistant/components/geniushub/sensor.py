@@ -62,10 +62,13 @@ class GeniusDevice(Entity):
     @property
     def icon(self):
         """Return the icon of the sensor."""
-        values = self._device._info_raw['childValues']  # noqa; pylint: disable=protected-access
+        values = self._device._raw_json['childValues']  # noqa; pylint: disable=protected-access
 
         last_comms = utc_from_timestamp(values['lastComms']['val'])
-        interval = timedelta(seconds=values['WakeUp_Interval']['val'])
+        if 'WakeUp_Interval' in values:
+            interval = timedelta(seconds=values['WakeUp_Interval']['val'])
+        else:
+            interval = timedelta(minutes=20)
 
         if last_comms < utcnow() - interval * 3:
             return 'mdi:battery-unknown'
@@ -100,7 +103,7 @@ class GeniusDevice(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        level = self._device.state['batteryLevel']
+        level = self._device.state.get('batteryLevel', 255)
         return level if level != 255 else 0
 
     @property
@@ -109,7 +112,7 @@ class GeniusDevice(Entity):
         attrs = {}
         attrs['assigned_zone'] = self._device.assignedZones[0]['name']
 
-        last_comms = self._device._info_raw['childValues']['lastComms']['val']  # noqa; pylint: disable=protected-access
+        last_comms = self._device._raw_json['childValues']['lastComms']['val']  # noqa; pylint: disable=protected-access
         attrs['last_comms'] = utc_from_timestamp(last_comms).isoformat()
 
         return {**attrs}

@@ -10,8 +10,9 @@ import voluptuous as vol
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_EFFECT, ATTR_WHITE_VALUE,
-    EFFECT_COLORLOOP, EFFECT_RANDOM, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
-    SUPPORT_COLOR, SUPPORT_WHITE_VALUE, Light, PLATFORM_SCHEMA)
+    ATTR_COLOR_TEMP, EFFECT_COLORLOOP, EFFECT_RANDOM, SUPPORT_BRIGHTNESS,
+    SUPPORT_EFFECT, SUPPORT_COLOR, SUPPORT_WHITE_VALUE, SUPPORT_COLOR_TEMP,
+    Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
@@ -27,7 +28,7 @@ ATTR_MODE = 'mode'
 DOMAIN = 'flux_led'
 
 SUPPORT_FLUX_LED = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
-                    SUPPORT_COLOR)
+                    SUPPORT_COLOR | SUPPORT_COLOR_TEMP)
 
 MODE_RGB = 'rgb'
 MODE_RGBW = 'rgbw'
@@ -35,6 +36,11 @@ MODE_RGBW = 'rgbw'
 # This mode enables white value to be controlled by brightness.
 # RGB value is ignored when this mode is specified.
 MODE_WHITE = 'w'
+
+# Constant color temp values for 2 flux_led special modes
+# Warm-white and Cool-white. Details on #23704
+COLOR_TEMP_WARM_WHITE = 333
+COLOR_TEMP_COOL_WHITE = 250
 
 # List of supported effects which aren't already declared in LIGHT
 EFFECT_RED_FADE = 'red_fade'
@@ -269,8 +275,10 @@ class FluxLight(Light):
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         effect = kwargs.get(ATTR_EFFECT)
         white = kwargs.get(ATTR_WHITE_VALUE)
+        color_temp = kwargs.get(ATTR_COLOR_TEMP)
 
-        if all(item is None for item in [hs_color, brightness, effect, white]):
+        if all(item is None for item in
+               [hs_color, brightness, effect, white, color_temp]):
             return
 
         # handle W only mode (use brightness instead of white value)
@@ -278,6 +286,8 @@ class FluxLight(Light):
             if brightness is not None:
                 self._bulb.setWarmWhite255(brightness)
             return
+
+        # handle effects
         if effect is not None:
             # Random color effect
             if effect == EFFECT_RANDOM:
@@ -294,6 +304,20 @@ class FluxLight(Light):
             elif effect in EFFECT_MAP:
                 self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
             return
+
+        # handle special modes
+        if color_temp is not None:
+            if brightness is None:
+                brightness = self.brightness
+            if color_temp == COLOR_TEMP_WARM_WHITE:
+                self._bulb.setRgbw(w=brightness)
+            elif color_temp == COLOR_TEMP_COOL_WHITE:
+                self._bulb.setRgbw(w2=brightness)
+            else:
+                self._bulb.setRgbw(
+                    *color_util.color_temperature_to_rgb(color_temp))
+            return
+
         # Preserve current brightness on color/white level change
         if hs_color is not None:
             if brightness is None:

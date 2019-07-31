@@ -1,11 +1,14 @@
 """Common test objects."""
 import time
-from unittest.mock import patch, Mock
-from homeassistant.components.zha.core.helpers import convert_ieee
+from unittest.mock import Mock, patch
+
+from asynctest import CoroutineMock
+
 from homeassistant.components.zha.core.const import (
-    DATA_ZHA, DATA_ZHA_CONFIG, DATA_ZHA_DISPATCHERS, DATA_ZHA_BRIDGE_ID
-)
+    DATA_ZHA, DATA_ZHA_BRIDGE_ID, DATA_ZHA_CONFIG, DATA_ZHA_DISPATCHERS)
+from homeassistant.components.zha.core.helpers import convert_ieee
 from homeassistant.util import slugify
+
 from tests.common import mock_coro
 
 
@@ -57,6 +60,7 @@ class FakeEndpoint:
 
 def patch_cluster(cluster):
     """Patch a cluster for testing."""
+    cluster.bind = CoroutineMock(return_value=[0])
     cluster.deserialize = Mock()
     cluster.handle_cluster_request = Mock()
     cluster.handle_cluster_general_request = Mock()
