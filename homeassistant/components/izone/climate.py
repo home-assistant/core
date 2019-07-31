@@ -1,22 +1,33 @@
 """Support for the iZone HVAC."""
 import logging
+from typing import Optional, List
 
 from pizone import Zone, Controller, Listener
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_COOL, STATE_DRY, STATE_FAN_ONLY, STATE_HEAT,
-    STATE_ECO, SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_HEAT_COOL, HVAC_MODE_COOL, HVAC_MODE_DRY,
+    HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, HVAC_MODE_OFF,
+    HVAC_MODE_AUTO,
+    FAN_LOW, FAN_MEDIUM, FAN_HIGH, FAN_AUTO,
+    PRESET_ECO, PRESET_NONE,
+    SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, PRECISION_HALVES, TEMP_CELSIUS,
-    STATE_OFF, STATE_ON)
+    ATTR_TEMPERATURE, PRECISION_HALVES, TEMP_CELSIUS)
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import DATA_ADD_ENTRIES, DATA_DISCOVERY_SERVICE, IZONE
 
 _LOGGER = logging.getLogger(__name__)
+
+_IZONE_FAN_TO_HA = {
+    Controller.Fan.LOW: FAN_LOW,
+    Controller.Fan.MED: FAN_MEDIUM,
+    Controller.Fan.HIGH: FAN_HIGH,
+    Controller.Fan.AUTO: FAN_AUTO,
+}
 
 
 async def async_setup_entry(hass: HomeAssistantType, config: ConfigType,
@@ -50,26 +61,25 @@ class ControllerDevice(ClimateDevice):
         """Initialise ControllerDevice."""
         self._controller = controller
 
-        self._supported_features = (SUPPORT_OPERATION_MODE |
-                                    SUPPORT_FAN_MODE | SUPPORT_ON_OFF)
+        self._supported_features = (SUPPORT_FAN_MODE)
 
         if ((controller.ras_mode == 'master' and controller.zone_ctrl == 13) or
                 controller.ras_mode == 'RAS'):
             self._supported_features |= SUPPORT_TARGET_TEMPERATURE
 
         self._state_to_pizone = {
-            STATE_COOL: Controller.Mode.COOL,
-            STATE_HEAT: Controller.Mode.HEAT,
-            STATE_AUTO: Controller.Mode.AUTO,
-            STATE_FAN_ONLY: Controller.Mode.VENT,
-            STATE_DRY: Controller.Mode.DRY,
+            HVAC_MODE_COOL: Controller.Mode.COOL,
+            HVAC_MODE_HEAT: Controller.Mode.HEAT,
+            HVAC_MODE_HEAT_COOL: Controller.Mode.AUTO,
+            HVAC_MODE_FAN_ONLY: Controller.Mode.VENT,
+            HVAC_MODE_DRY: Controller.Mode.DRY,
         }
         if controller.free_air_enabled:
-            self._state_to_pizone[STATE_ECO] = Controller.Mode.FREE_AIR
+            self._supported_features |= SUPPORT_PRESET_MODE
 
         self._fan_to_pizone = {}
         for fan in controller.fan_modes:
-            self._fan_to_pizone[fan.name.title()] = fan
+            self._fan_to_pizone[_IZONE_FAN_TO_HA[fan]] = fan
         self._available = True
 
         self._device_info = {
@@ -86,8 +96,11 @@ class ControllerDevice(ClimateDevice):
         for zone in controller.zones:
             self.zones[zone] = ZoneDevice(self, zone)
 
+    async def async_added_to_hass(self):
+        """Call on adding to hass."""
         # Register for connect/disconnect/update events
         device = self
+        controller = self._controller
 
         class ControllerListener(Listener):
             """Listener for controller related events."""
@@ -172,17 +185,17 @@ class ControllerDevice(ClimateDevice):
         return False
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Return the list of supported features."""
         return self._supported_features
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement which this thermostat uses."""
         return TEMP_CELSIUS
 
     @property
-    def precision(self):
+    def precision(self) -> float:
         """Return the precision of the system."""
         return PRECISION_HALVES
 
@@ -199,10 +212,10 @@ class ControllerDevice(ClimateDevice):
         }
 
     @property
-    def current_operation(self):
+    def hvac_mode(self) -> str:
         """Return current operation ie. heat, cool, idle."""
         if not self._controller.is_on:
-            return STATE_OFF
+            return HVAC_MODE_OFF
         mode = self._controller.mode
         for (key, value) in self._state_to_pizone.items():
             if value == mode:
@@ -210,60 +223,68 @@ class ControllerDevice(ClimateDevice):
         assert False, "Should be unreachable"
 
     @property
-    def operation_list(self):
+    def hvac_modes(self) -> List[str]:
         """Return the list of available operation modes."""
-        return [STATE_OFF, *self._state_to_pizone]
+        return [HVAC_MODE_OFF, *self._state_to_pizone]
 
     @property
-    def current_temperature(self):
+    def preset_mode(self):
+        """Eco mode is external air."""
+        return PRESET_ECO if self._controller.free_air else PRESET_NONE
+
+    @property
+    def preset_modes(self):
+        """Available preset modes, normal or eco."""
+        if self._controller.free_air_enabled:
+            return [PRESET_NONE, PRESET_ECO]
+        return [PRESET_NONE]
+
+    @property
+    def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
         if self._controller.mode == Controller.Mode.FREE_AIR:
             return self._controller.temp_supply
         return self._controller.temp_return
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> Optional[float]:
         """Return the temperature we try to reach."""
         if not self._supported_features & SUPPORT_TARGET_TEMPERATURE:
             return None
         return self._controller.temp_setpoint
 
     @property
-    def supply_temperature(self):
+    def supply_temperature(self) -> float:
         """Return the current supply, or in duct, temperature."""
         return self._controller.temp_supply
 
     @property
-    def target_temperature_step(self):
+    def target_temperature_step(self) -> Optional[float]:
         """Return the supported step of target temperature."""
         return 0.5
 
     @property
-    def is_on(self):
-        """Return true if on."""
-        return self._controller.is_on
-
-    @property
-    def current_fan_mode(self):
+    def fan_mode(self) -> Optional[str]:
         """Return the fan setting."""
-        return self._controller.fan.name.title()
+        return _IZONE_FAN_TO_HA[self._controller.fan]
 
     @property
-    def fan_list(self):
+    def fan_modes(self) -> Optional[List[str]]:
         """Return the list of available fan modes."""
         return list(self._fan_to_pizone)
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._controller.temp_min
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._controller.temp_max
 
     async def wrap_and_catch(self, coro):
+        """Catch any connection errors and set unavailable."""
         try:
             await coro
         except ConnectionError as ex:
@@ -271,11 +292,8 @@ class ControllerDevice(ClimateDevice):
         else:
             self.set_available(True)
 
-    async def async_set_temperature(self, **kwargs):
-        """Set new target temperature.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_set_temperature(self, **kwargs) -> None:
+        """Set new target temperature."""
         if not self.supported_features & SUPPORT_TARGET_TEMPERATURE:
             self.async_schedule_update_ha_state(True)
             return
@@ -284,41 +302,29 @@ class ControllerDevice(ClimateDevice):
             await self.wrap_and_catch(
                 self._controller.set_temp_setpoint(temp))
 
-    async def async_set_fan_mode(self, fan_mode):
-        """Set new target fan mode.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set new target fan mode."""
         fan = self._fan_to_pizone[fan_mode]
         await self.wrap_and_catch(self._controller.set_fan(fan))
 
-    async def async_set_operation_mode(self, operation_mode):
-        """Set new target operation mode.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        if operation_mode == STATE_OFF:
-            await self.async_turn_off()
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+        """Set new target operation mode."""
+        if hvac_mode == HVAC_MODE_OFF:
+            await self.wrap_and_catch(self._controller.set_on(False))
             return
         if not self._controller.is_on:
-            await self.async_turn_on()
-        if operation_mode != STATE_ON:
-            mode = self._state_to_pizone[operation_mode]
-            await self.wrap_and_catch(self._controller.set_mode(mode))
+            await self.wrap_and_catch(self._controller.set_on(True))
+        mode = self._state_to_pizone[hvac_mode]
+        await self.wrap_and_catch(self._controller.set_mode(mode))
 
-    async def async_turn_on(self):
-        """Turn device on.
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset mode."""
+        await self.wrap_and_catch(
+            self._controller.set_free_air(preset_mode == PRESET_ECO))
 
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_turn_on(self) -> None:
+        """Turn the entity on."""
         await self.wrap_and_catch(self._controller.set_on(True))
-
-    async def async_turn_off(self):
-        """Turn device off.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        await self.wrap_and_catch(self._controller.set_on(False))
 
 
 class ZoneDevice(ClimateDevice):
@@ -330,18 +336,17 @@ class ZoneDevice(ClimateDevice):
         self._zone = zone
         self._name = zone.name.title()
 
-        self._supported_features = (SUPPORT_ON_OFF |
-                                    SUPPORT_OPERATION_MODE)
+        self._supported_features = 0
         if zone.type != Zone.Type.AUTO:
             self._state_to_pizone = {
-                STATE_OFF: Zone.Mode.CLOSE,
-                STATE_FAN_ONLY: Zone.Mode.OPEN,
+                HVAC_MODE_OFF: Zone.Mode.CLOSE,
+                HVAC_MODE_AUTO: Zone.Mode.OPEN,
             }
         else:
             self._state_to_pizone = {
-                STATE_OFF: Zone.Mode.CLOSE,
-                STATE_FAN_ONLY: Zone.Mode.OPEN,
-                STATE_AUTO: Zone.Mode.AUTO,
+                HVAC_MODE_OFF: Zone.Mode.CLOSE,
+                HVAC_MODE_FAN_ONLY: Zone.Mode.OPEN,
+                HVAC_MODE_HEAT_COOL: Zone.Mode.AUTO,
             }
             self._supported_features |= SUPPORT_TARGET_TEMPERATURE
 
@@ -355,7 +360,10 @@ class ZoneDevice(ClimateDevice):
             'model': zone.type.name.title(),
         }
 
+    async def async_added_to_hass(self):
+        """Call on adding to hass."""
         device = self
+        controller = self._controller
 
         # pylint: disable=protected-access
         class ZoneListener(Listener):
@@ -430,7 +438,7 @@ class ZoneDevice(ClimateDevice):
         return PRECISION_HALVES
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         mode = self._zone.mode
         for (key, value) in self._state_to_pizone.items():
@@ -439,7 +447,7 @@ class ZoneDevice(ClimateDevice):
         return ''
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return list(self._state_to_pizone.keys())
 
@@ -479,9 +487,9 @@ class ZoneDevice(ClimateDevice):
             await self._controller.wrap_and_catch(
                 self._zone.set_temp_setpoint(temp))
 
-    async def async_set_operation_mode(self, operation_mode):
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target operation mode."""
-        mode = self._state_to_pizone[operation_mode]
+        mode = self._state_to_pizone[hvac_mode]
         await self._controller.wrap_and_catch(
             self._zone.set_mode(mode))
         self.async_schedule_update_ha_state()
