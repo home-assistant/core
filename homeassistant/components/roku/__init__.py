@@ -74,7 +74,7 @@ def scan_for_rokus(hass):
             continue
         devices.append('Name: {0}<br />Host: {1}<br />'.format(
             r_info.userdevicename if r_info.userdevicename
-            else "{} {}".format(r_info.modelname, r_info.sernum),
+            else "{} {}".format(r_info.modelname, r_info.serial_num),
             roku.host))
     if not devices:
         devices = ['No device(s) found']
@@ -98,7 +98,7 @@ def _setup_roku(hass, hass_config, roku_config):
     r_info = roku.device_info
 
     hass.data[DATA_ROKU][host] = {
-        ATTR_ROKU: r_info.sernum
+        ATTR_ROKU: r_info.serial_num
     }
 
     discovery.load_platform(
