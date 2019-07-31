@@ -6,9 +6,11 @@ from . import KNOWN_DEVICES, HomeKitEntity
 HUMIDITY_ICON = 'mdi:water-percent'
 TEMP_C_ICON = "mdi:thermometer"
 BRIGHTNESS_ICON = "mdi:brightness-6"
+CO2_ICON = "mdi:periodic-table-co2"
 
 UNIT_PERCENT = "%"
 UNIT_LUX = "lux"
+UNIT_CO2 = "ppm"
 
 
 async def async_setup_platform(
@@ -35,6 +37,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         if devtype == 'light':
             async_add_entities([HomeKitLightSensor(conn, info)], True)
+            return True
+        
+        if devtype == 'co2':
+            async_add_entities([HomeKitHumiditySensor(conn, info)], True)
             return True
 
         return False
