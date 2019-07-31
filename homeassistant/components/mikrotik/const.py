@@ -80,7 +80,7 @@ PARAM_SPEED = {'interface': MTK_DEFAULT_WAN,
                'duration': '1s'}
 
 # Sensor types are defined like:
-# Name, units, icon, state item, api cmd(s), attributes
+# Name, units, icon, state item, api cmd(s), attributes, API parameters
 SENSORS = {
     SENSOR_SYSINFO: ['System Info', None, 'mdi:switch',
                      'board-name',
