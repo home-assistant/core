@@ -21,6 +21,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class LutronSwitch(LutronDevice, SwitchDevice):
     """Representation of a Lutron Switch."""
 
+    def __init__(self, area_name, lutron_device, controller):
+        """Initialize the switch."""
+        self._is_on = False
+        super().__init__(area_name, lutron_device, controller)
+
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         self._lutron_device.level = 100
@@ -40,3 +45,7 @@ class LutronSwitch(LutronDevice, SwitchDevice):
     def is_on(self):
         """Return true if device is on."""
         return self._lutron_device.last_level() > 0
+
+    def update(self):
+        """Call when forcing a refresh of the device."""
+        self._is_on = self._lutron_device.level > 0
