@@ -8,7 +8,7 @@ from librouteros.login import login_plain, login_token
 
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT,
-    CONF_SSL, CONF_METHOD, CONF_SENSORS, CONF_BINARY_SENSORS)
+    CONF_SSL, CONF_METHOD)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.util import slugify
@@ -44,10 +44,6 @@ MIKROTIK_SCHEMA = vol.All(
         vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
         vol.Optional(CONF_TRACK_DEVICES, default=True): cv.boolean,
         vol.Optional(CONF_ARP_PING, default=False): cv.boolean,
-        vol.Optional(CONF_SENSORS): vol.All(
-            cv.ensure_list, [vol.In(SENSORS)]),
-        vol.Optional(CONF_BINARY_SENSORS):
-            vol.All(cv.ensure_list, [vol.In(BINARY_SENSORS)]),
         vol.Optional(CONF_WAN_PORT, default=MTK_DEFAULT_WAN): cv.string,
     })
 )
@@ -55,7 +51,6 @@ MIKROTIK_SCHEMA = vol.All(
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [MIKROTIK_SCHEMA])
 }, extra=vol.ALLOW_EXTRA)
-
 
 async def async_setup(hass, config):
     """Set up the Mikrotik component."""
