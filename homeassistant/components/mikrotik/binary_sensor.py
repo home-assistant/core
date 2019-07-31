@@ -3,31 +3,45 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice)
+    DEVICE_CLASS_CONNECTIVITY, BinarySensorDevice)
 from homeassistant.const import CONF_HOST, CONF_BINARY_SENSORS
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
-MIKROITK = 'mikrotik'
+MIKROTIK = 'mikrotik'
 CLIENT = 'mikrotik_client'
 
 BINARY_SENSOR_NETWATCH = 'netwatch'
 BINARY_SENSOR_INTERNET = 'internet'
-ATTRIB_NETWATCH = ['host', 'interval',
-                   'timeout', 'since', 'disabled', 'comment']
-ATTRIB_INTERNET = ['name', 'cloud-rtt', 'state-change-time']
 
- # Binary Sensors: Name, Class, icon, state, api cmd, attributes, state hash
+ATTRIB_NETWATCH = ['host', 'interval',
+                   'timeout', 'since',
+                   'disabled', 'comment']
+
+ATTRIB_INTERNET = ['name', 'cloud-rtt',
+                   'state-change-time']
+
+# Binary Sensors: Name, Class, icon, state, api cmd, attributes, state hash
 BINARY_SENSORS = {
-    BINARY_SENSOR_NETWATCH: ['Netwatch', DEVICE_CLASS_CONNECTIVITY, 
-        'mdi:lan-connect', '/tool/netwatch/getall', 'status', 
-        ATTRIB_NETWATCH, {'up': True, 'down': False}, 'host'],
-    BINARY_SENSOR_INTERNET: ['Internet', DEVICE_CLASS_CONNECTIVITY, 
-        'mdi:wan', '/interface/detect-internet/state/getall', 'state',
-        ATTRIB_INTERNET, {'internet': True, 'unknown': False}, 'name'],
+    BINARY_SENSOR_NETWATCH: ['Netwatch',
+                             DEVICE_CLASS_CONNECTIVITY,
+                             'mdi:lan-connect',
+                             '/tool/netwatch/getall',
+                             'status',
+                             ATTRIB_NETWATCH,
+                             {'up': True, 'down': False},
+                             'host'],
+    BINARY_SENSOR_INTERNET: ['Internet',
+                             DEVICE_CLASS_CONNECTIVITY,
+                             'mdi:wan',
+                             '/interface/detect-internet/state/getall',
+                             'state', ATTRIB_INTERNET,
+                             {'internet': True, 'unknown': False},
+                             'name'],
 }
+
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
@@ -103,6 +117,6 @@ class MikrotikBinarySensor(BinarySensorDevice):
             await self._client.update_binary_sensor(
                 self._host, self._sensor_type, self._index)
         binary_sensor = self.hass.data[MIKROTIK][
-            self._host][CONF_BINARY_SENSORS][ self._sensor_type][self._index]
+            self._host][CONF_BINARY_SENSORS][self._sensor_type][self._index]
         self._state = bool(binary_sensor.get('state'))
         self._attrs = binary_sensor.get('attrib')
