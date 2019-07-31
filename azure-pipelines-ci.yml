@@ -168,7 +168,7 @@ stages:
     - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreCacheV1.RestoreCache@1
       displayName: 'Restore artifacts based on Requirements'
       inputs:
-        keyfile: 'requirements_all.txt, requirements_test.txt, .cache'
+        keyfile: 'requirements_all.txt, requirements_test.txt, .cache, homeassistant/package_constraints.txt'
         targetfolder: './venv'
         vstsFeed: '$(ArtifactFeed)'
     - script: |
@@ -184,7 +184,7 @@ stages:
     - task: 1ESLighthouseEng.PipelineArtifactCaching.SaveCacheV1.SaveCache@1
       displayName: 'Save artifacts based on Requirements'
       inputs:
-        keyfile: 'requirements_all.txt, requirements_test.txt, .cache'
+        keyfile: 'requirements_all.txt, requirements_test.txt, .cache, homeassistant/package_constraints.txt'
         targetfolder: './venv'
         vstsFeed: '$(ArtifactFeed)'
     - script: |
