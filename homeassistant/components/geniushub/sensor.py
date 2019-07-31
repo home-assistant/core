@@ -1,5 +1,5 @@
 """Support for Genius Hub sensor devices."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
 from homeassistant.const import DEVICE_CLASS_BATTERY
