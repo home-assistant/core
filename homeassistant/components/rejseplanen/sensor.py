@@ -174,7 +174,7 @@ class PublicTransportData():
         self.info = []
 
         def intersection(lst1, lst2):
-            """Return items contained in both lists"""
+            """Return items contained in both lists."""
             return list(set(lst1) & set(lst2))
 
         # Limit search to selected types, to get more results

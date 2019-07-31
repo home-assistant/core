@@ -38,7 +38,7 @@ stages:
         python -m venv venv
 
         . venv/bin/activate
-        pip install flake8
+        pip install -r requirements_test.txt
       displayName: 'Setup Env'
     - script: |
         . venv/bin/activate
