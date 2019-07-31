@@ -51,8 +51,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         token = auth.get_token(email, password)
     except requests.exceptions.HTTPError as http_error:
         if (
-            http_error.response.status_code == requests.codes.unauthorized
-        ):  # pylint: disable=no-member
+            http_error.response.status_code
+            == requests.codes.unauthorized  # pylint: disable=no-member
+        ):
             _LOGGER.error("Invalid credentials")
             return
 
@@ -115,8 +116,9 @@ class TankUtilitySensor(Entity):
             data = device.get_device_data(self._token, self.device)
         except requests.exceptions.HTTPError as http_error:
             if (
-                http_error.response.status_code == requests.codes.unauthorized
-            ):  # pylint: disable=no-member
+                http_error.response.status_code
+                == requests.codes.unauthorized  # pylint: disable=no-member
+            ):
                 _LOGGER.info("Getting new token")
                 self._token = auth.get_token(self._email, self._password, force=True)
                 data = device.get_device_data(self._token, self.device)
