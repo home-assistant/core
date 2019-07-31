@@ -11,6 +11,9 @@ from homeassistant.const import (CONF_RESOURCE, CONF_SENSOR_TYPE, CONF_DEVICE,
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_time_interval
+
+from datetime import timedelta
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +30,7 @@ SCOPE_SYSTEM = 'system'
 DEFAULT_SCOPE = SCOPE_DEVICE
 DEFAULT_DEVICE = 0
 DEFAULT_INVERTER = 1
+DEFAULT_SCAN_INTERVAL = 60
 
 SENSOR_TYPES = [TYPE_INVERTER, TYPE_STORAGE, TYPE_METER, TYPE_POWER_FLOW]
 SCOPE_TYPES = [SCOPE_DEVICE, SCOPE_SYSTEM]
@@ -56,10 +60,10 @@ PLATFORM_SCHEMA = vol.Schema(vol.All(PLATFORM_SCHEMA.extend({
                     vol.In(SCOPE_TYPES),
                 vol.Optional(CONF_DEVICE):
                     vol.All(vol.Coerce(int), vol.Range(min=0)),
-                vol.Optional(CONF_SCAN_INTERVAL):
-                    vol.All(vol.Coerce(int), vol.Range(min=0)),
             }]
-        )
+        ),
+    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
+        vol.All(vol.Coerce(int), vol.Range(min=0)),
 }), _device_id_validator))
 
 
@@ -71,7 +75,7 @@ async def async_setup_platform(hass,
     session = async_get_clientsession(hass)
     fronius = Fronius(session, config[CONF_RESOURCE])
 
-    sensors = []
+    scan_interval = config[CONF_SCAN_INTERVAL]
     for condition in config[CONF_MONITORED_CONDITIONS]:
 
         device = condition[CONF_DEVICE]
@@ -97,7 +101,18 @@ async def async_setup_platform(hass,
         else:
             sensor_cls = FroniusStorage
 
-        sensors.append(sensor_cls(fronius, name, device, async_add_entities))
+        adapter = sensor_cls(fronius, name, device, async_add_entities)
+
+        async def fetch_data(*_):
+            return await adapter.async_update()
+
+        await fetch_data()
+
+        async_track_time_interval(
+            hass,
+            fetch_data,
+            timedelta(seconds=scan_interval)
+        )
 
 
 class FroniusAdapter:
@@ -111,6 +126,7 @@ class FroniusAdapter:
         self._attributes = {}
 
         self.sensors = set()
+        self._registered_sensors = set()
         self._add_entities = add_entities
 
     @property
@@ -134,38 +150,46 @@ class FroniusAdapter:
             _LOGGER.error("Failed to update: invalid response returned."
                           "Maybe the configured device is not supported")
 
-        if values:
-            # Copy data of current fronius device
-            self._state = values['status']['Code']
-            attributes = {}
-            for key, entry in values:
-                # If the data is directly a sensor
-                if 'value' in entry:
-                    attributes[key] = entry
-                # Handle system overview with multiple sensors
-                if '1' in values:
-                    for index in values:
-                        attributes['{}_{}'.format(
-                            key, index
-                        )] = values[index]
-            self._attributes = attributes
+        if not values:
+            return
+        attributes = self._attributes
+        # Copy data of current fronius device
+        for key, entry in values.items():
+            # If the data is directly a sensor
+            if 'value' in entry:
+                attributes[key] = entry
+            # Handle system overview with multiple sensors
+            elif '1' in entry or '0' in entry:
+                for index in values:
+                    attributes['{}_{}'.format(
+                        key, index
+                    )] = values[index]
+        self._attributes = attributes
 
-            # Add discovered value fields as sensors
-            # because some fields are only sent temporarily
-            for key in attributes:
-                new_sensors = []
-                if key not in self.sensors:
-                    self.sensors.add(key)
-                    _LOGGER.info(
-                        "Discovered %s, adding as sensor.",
-                        key
-                    )
-                    new_sensors.append(FroniusTemplateSensor(self, key))
-                self._add_entities(new_sensors, True)
+        # Add discovered value fields as sensors
+        # because some fields are only sent temporarily
+        new_sensors = []
+        for key in attributes:
+            if key not in self.sensors:
+                self.sensors.add(key)
+                _LOGGER.info(
+                    "Discovered %s, adding as sensor.",
+                    key
+                )
+                new_sensors.append(FroniusTemplateSensor(self, key))
+        self._add_entities(new_sensors, True)
+
+        # Schedule an update for all included sensors
+        for sensor in self._registered_sensors:
+            sensor.async_schedule_update_ha_state(True)
 
     async def _update(self):
         """Return values of interest."""
         pass
+
+    async def register(self, sensor):
+        """Register child sensor for update subscriptions."""
+        self._registered_sensors.add(sensor)
 
 
 class FroniusInverterSystem(FroniusAdapter):
@@ -244,9 +268,21 @@ class FroniusTemplateSensor(Entity):
         """Return the unit of measurement."""
         return self._unit
 
+    @property
+    def should_poll(self):
+        return False
+
     async def async_update(self):
-        """Update by fetching data from parent sensor."""
+        """Update the internal state."""
         state = self.parent.device_state_attributes.get(self._name)
-        if state:
-            self._state = state['value']
-            self._unit = state.get('unit')
+        self._state = state.get('value')
+        self._unit = state.get('unit')
+
+    async def async_added_to_hass(self):
+        """Register at parent component for updates."""
+        await self.parent.register(self)
+
+    def __hash__(self):
+        """Hash sensor by hashing its name."""
+        return hash(self.name)
+
