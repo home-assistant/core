@@ -9,9 +9,10 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_EFFECT, ATTR_WHITE_VALUE, ATTR_COLOR_TEMP,
-    EFFECT_COLORLOOP, EFFECT_RANDOM, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
-    SUPPORT_COLOR, SUPPORT_WHITE_VALUE, SUPPORT_COLOR_TEMP, Light, PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_EFFECT, ATTR_WHITE_VALUE,
+    ATTR_COLOR_TEMP, EFFECT_COLORLOOP, EFFECT_RANDOM, SUPPORT_BRIGHTNESS,
+    SUPPORT_EFFECT, SUPPORT_COLOR, SUPPORT_WHITE_VALUE, SUPPORT_COLOR_TEMP,
+    Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
@@ -269,14 +270,15 @@ class FluxLight(Light):
     def _turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
         self._bulb.turnOn()
-        
+
         hs_color = kwargs.get(ATTR_HS_COLOR)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         effect = kwargs.get(ATTR_EFFECT)
         white = kwargs.get(ATTR_WHITE_VALUE)
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
 
-        if all(item is None for item in [hs_color, brightness, effect, white, color_temp]):
+        if all(item is None for item in
+                [hs_color, brightness, effect, white, color_temp]):
             return
 
         # handle W only mode (use brightness instead of white value)
@@ -302,7 +304,7 @@ class FluxLight(Light):
             elif effect in EFFECT_MAP:
                 self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
             return
-        
+
         # handle special modes
         if color_temp is not None:
             if brightness is None:
@@ -312,7 +314,8 @@ class FluxLight(Light):
             elif color_temp == COLOR_TEMP_COOL_WHITE:
                 self._bulb.setRgbw(w2=brightness)
             else:
-                self._bulb.setRgbw(*color_util.color_temperature_to_rgb(color_temp))
+                self._bulb.setRgbw(
+                    *color_util.color_temperature_to_rgb(color_temp))
             return
 
         # Preserve current brightness on color/white level change
