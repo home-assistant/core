@@ -1,7 +1,10 @@
 """The mikrotik component."""
+
 import logging
 import ssl
 import voluptuous as vol
+import librouteros
+from librouteros.login import login_plain, login_token
 
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT,
@@ -65,30 +68,12 @@ async def async_setup(hass, config):
         hass.data[MIKROTIK][host] = {}
         hass.data[CLIENT].connect_to_device(host)
 
-        _LOGGER.debug("[%s] Loading Mikrotik device intrgrations.", host)
-
-        sensors = device.get(CONF_SENSORS)
-        if sensors:
-            hass.async_create_task(
-                async_load_platform(
-                    hass, SENSOR, DOMAIN, device, config))
-
-        binary_sensors = device.get(CONF_BINARY_SENSORS)
-        if binary_sensors:
-            hass.async_create_task(
-                async_load_platform(
-                    hass, BINARY_SENSOR, DOMAIN, {
-                        CONF_BINARY_SENSORS: binary_sensors,
-                        CONF_HOST: host
-                    }, config))
-
         if device[CONF_TRACK_DEVICES]:
             hass.data[MIKROTIK][ARP] = {}
             hass.data[MIKROTIK][DHCP] = {}
             hass.async_create_task(
                 async_load_platform(
                     hass, DEVICE_TRACKER, DOMAIN, device, config))
-
     return True
 
 
@@ -145,7 +130,6 @@ class MikrotikAPI:
 
     def get_polling_method(self, host):
         """Get Mikrotik device_tracker polling method."""
-        import librouteros
         polling_method = self._hosts[host]['config'].get(CONF_METHOD)
         try:
             capsman_exist = self._client[host](
@@ -188,13 +172,7 @@ class MikrotikAPI:
 
     def connect_to_device(self, host):
         """Connect to Mikrotik method."""
-        import librouteros
-        import time
-        tick = 0
-        while self._hosts[host][CONNECTING] and tick < 60:
-            time.sleep(1)
-            tick += 1
-        if self._hosts[host][CONNECTED]:
+        if self._hosts[host][CONNECTING]:
             return
         self._hosts[host][CONNECTING] = True
         self._hosts[host][CONNECTED] = False
@@ -216,9 +194,9 @@ class MikrotikAPI:
             self._hosts[host][CONNECTED] = False
             self._client[host] = None
             return False
-
-        host_name = (self._client[host](
-            cmd=MIKROTIK_SERVICES[IDENTITY]))[0]['name']
+        client = self._client[host]
+        cmd = MIKROTIK_SERVICES[IDENTITY]
+        host_name = (client(cmd=cmd))[0]['name']
         if not host_name:
             _LOGGER.error("Mikrotik failed to connect to %s.", host)
             return False
@@ -239,7 +217,7 @@ class MikrotikAPI:
             if 'status' in result:
                 status += 1
         if status == len(data):
-            return False
+            return None
         return data
 
     async def update_info(self, host):
@@ -250,7 +228,7 @@ class MikrotikAPI:
         data = self.get_api(host, '/system/routerboard/getall')
         if data is None:
             _LOGGER.error(
-                "Mikrotik update_info. Device %s is not connected.",
+                "Mikrotik device %s is not connected.",
                 host)
             self._hosts[host][CONNECTED] = False
             return
@@ -308,69 +286,8 @@ class MikrotikAPI:
             self.hass.data[MIKROTIK][host][
                 DEVICE_TRACKER][mac] = attributes
 
-    async def update_sensors(self, host, sensor_type):
-        """Update sensors from Mikrotik API."""
-        _LOGGER.debug("[%s] Updating Mikrotik sensor %s.",
-                      host, sensor_type)
-        results = {}
-        self.hass.data[MIKROTIK][host][SENSOR][sensor_type] = None
-        params = SENSORS[sensor_type][6]
-        if params and 'interface' in params:
-            params['interface'] = self._hosts[host][CONF_WAN_PORT]
-
-        for cmd in SENSORS[sensor_type][4]:
-            data = self.get_api(host, cmd, params)
-            if data is None:
-                self.update_info(host)
-                return
-            results.update(data[0])
-        sensor = {}
-        sensor['state'] = None
-        sensor['attrib'] = {}
-
-        for key in results:
-            if key == SENSORS[sensor_type][3]:
-                sensor['state'] = results[key]
-            if key in SENSORS[sensor_type][5]:
-                sensor['attrib'][slugify(key)] = results[key]
-
-        sensor_unit = SENSORS[sensor_type][1]
-        if sensor_unit and sensor['state']:
-            if any(unit in sensor_unit for unit in ['bit', 'byte', 'bps']):
-                sensor['state'] = format(
-                    (float(sensor['state']) / MEGA), '.2f')
-
-        self.hass.data[MIKROTIK][host][SENSOR][sensor_type] = sensor
-
-    async def update_binary_sensor(self, host, sensor_type, index=None):
-        """Update binary sensors from Mikrotik API"""
-        _LOGGER.debug("[%s] Updating Mikrotik binary_sensor %s.",
-                      host, sensor_type)
-        cmd = BINARY_SENSORS[sensor_type][3]
-        data = self.get_api(host, cmd)
-        if data is None:
-            self.update_info(host)
-            return
-        binary_sensors = {}
-        self.hass.data[MIKROTIK][host][sensor_type]['count'] = len(data)
-        states = BINARY_SENSORS[sensor_type][6]
-        for i, result in enumerate(data):
-            binary_sensors[i] = {}
-            binary_sensors[i]['attrib'] = {}
-            binary_sensors[i]['state'] = None
-            for key in result:
-                if key == BINARY_SENSORS[sensor_type][4]:
-                    binary_sensors[i]['state'] = states[result[key]]
-                if key in BINARY_SENSORS[sensor_type][5]:
-                    binary_sensors[i]['attrib'][
-                        slugify(key)] = result[key]
-
-        self.hass.data[MIKROTIK][host][
-            CONF_BINARY_SENSORS][sensor_type] = binary_sensors
-
     def get_api(self, host, api_cmd, params=None):
         """Retrieve data from Mikrotik API."""
-        import librouteros
         if not self._client[host] or not self._hosts[host][CONNECTED]:
             if not self.connect_to_device(host):
                 return None
