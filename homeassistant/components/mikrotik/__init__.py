@@ -4,14 +4,16 @@ import ssl
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME, CONF_PORT,
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT,
     CONF_SSL, CONF_METHOD, CONF_SENSORS, CONF_BINARY_SENSORS)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.util import slugify
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
+from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER)
 from homeassistant.components.sensor import DOMAIN as SENSOR
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +32,7 @@ DEFAULT_ENCODING = 'utf-8'
 CONNECTING = 'connected'
 CONNECTED = 'connected'
 
-MTK_DEFAULT_WAN_PORT = 'ether1'
+MTK_DEFAULT_WAN = 'ether1'
 MTK_DEFAULT_API_PORT = '8728'
 MTK_DEFAULT_API_SSL_PORT = '8729'
 MTK_LOGIN_PLAIN = 'plain'
@@ -57,37 +59,45 @@ SENSOR_DISK = 'disk'
 SENSOR_DOWNLOAD_SPEED = 'download_speed'
 SENSOR_UPLOAD_SPEED = 'upload_speed'
 
-ATTRIB_SYSINFO = ['board-name', 'serial-number', 'version', 'factory-firmware',
-                  'firmware-type', 'current-firmware', 'upgrade-frimware', 'routerboard',
-                  'cpu', 'total-memory',
-                  'architecture-name']
+ATTRIB_SYSINFO = ['board-name', 'serial-number', 'version', 
+    'factory-firmware', 'firmware-type', 'current-firmware', 
+    'upgrade-frimware', 'routerboard', 'cpu', 'total-memory',
+    'architecture-name']
 ATTRIB_CPU = ['cpu', 'cpu-frequency', 'cpu-count']
 ATTRIB_MEMORY = ['free-memory', 'total-memory']
 ATTRIB_DISK = ['free-hdd-space', 'total-hdd-space']
-ATTRIB_DOWNLOAD_SPEED = ['name', 'rx-packets-per-second', 'rx-bits-per-second',
-                         'fp-rx-packets-per-second', 'fp-rx-bits-per-second',
-                         'rx-drops-per-second', 'rx-errors-per-second']
-ATTRIB_UPLOAD_SPEED = ['name', 'tx-packets-per-second', 'tx-bits-per-second',
-                       'fp-tx-packets-per-second', 'fp-tx-bits-per-second',
-                       'tx-drops-per-second', 'tx-queue-drops-per-second', 'tx-errors-per-second']
+ATTRIB_DOWNLOAD_SPEED = ['name', 'rx-packets-per-second', 
+    'rx-bits-per-second', 'fp-rx-packets-per-second', 
+    'fp-rx-bits-per-second', 'rx-drops-per-second', 
+    'rx-errors-per-second']
+ATTRIB_UPLOAD_SPEED = ['name', 'tx-packets-per-second', 
+    'tx-bits-per-second', 'fp-tx-packets-per-second', 
+    'fp-tx-bits-per-second', 'tx-drops-per-second', 
+    'tx-queue-drops-per-second', 'tx-errors-per-second']
 ATTRIB_DOWNLOAD = ['name', 'tx-bytes']
 ATTRIB_UPLOAD = ['name', 'rx-bytes']
 
-PARAM_SPEED = {'interface': MTK_DEFAULT_WAN_PORT, 'duration': '1s'}
+PARAM_SPEED = {'interface': MTK_DEFAULT_WAN, 'duration': '1s'}
 MEGA = 1048576
 
-# Sensor types are defined like: Name, units, icon, state item, api cmd(s), attributes
+# Sensor types are defined like: 
+# Name, units, icon, state item, api cmd(s), attributes
 SENSORS = {
     SENSOR_SYSINFO: ['System Info', None, 'mdi:switch', 'board-name',
-                     ['/system/routerboard/getall', '/system/resource/getall'],
+        ['/system/routerboard/getall', '/system/resource/getall'],
                      ATTRIB_SYSINFO, None, None],
-    SENSOR_CPU: ['CPU Load', '%', 'mdi:chip', 'cpu-load', ['/system/resource/getall'], ATTRIB_CPU, None],
-    SENSOR_MEMORY: ['Memory Free', 'Mbytes', 'mdi:memory', 'free-memory', ['/system/resource/getall'], ATTRIB_MEMORY, None],
-    SENSOR_DISK: ['Disk Free', 'Mbytes', 'mdi:harddisk', 'free-hdd-space', ['/system/resource/getall'], ATTRIB_DISK, None],
-    SENSOR_DOWNLOAD_SPEED: ['Download Speed', 'Mbps', 'mdi:download-network', 'rx-bits-per-second',
-                            ['/interface/monitor-traffic'], ATTRIB_DOWNLOAD_SPEED, PARAM_SPEED],
-    SENSOR_UPLOAD_SPEED: ['Upload Speed', 'Mbps', 'mdi:upload-network', 'tx-bits-per-second',
-                          ['/interface/monitor-traffic'], ATTRIB_UPLOAD_SPEED, PARAM_SPEED],
+    SENSOR_CPU: ['CPU Load', '%', 'mdi:chip', 'cpu-load', 
+        ['/system/resource/getall'], ATTRIB_CPU, None],
+    SENSOR_MEMORY: ['Memory Free', 'Mbytes', 'mdi:memory', 'free-memory', 
+        ['/system/resource/getall'], ATTRIB_MEMORY, None],
+    SENSOR_DISK: ['Disk Free', 'Mbytes', 'mdi:harddisk', 'free-hdd-space', 
+        ['/system/resource/getall'], ATTRIB_DISK, None],
+    SENSOR_DOWNLOAD_SPEED: ['Download Speed', 'Mbps', 'mdi:download-network',
+        'rx-bits-per-second', ['/interface/monitor-traffic'], 
+        ATTRIB_DOWNLOAD_SPEED, PARAM_SPEED],
+    SENSOR_UPLOAD_SPEED: ['Upload Speed', 'Mbps', 'mdi:upload-network', 
+        'tx-bits-per-second', ['/interface/monitor-traffic'], 
+        ATTRIB_UPLOAD_SPEED, PARAM_SPEED],
 }
 
 BINARY_SENSOR_NETWATCH = 'netwatch'
@@ -98,17 +108,17 @@ ATTRIB_INTERNET = ['name', 'cloud-rtt', 'state-change-time']
 
 # Binary Sensors: Name, Class, icon, state, api cmd, attributes, state hash
 BINARY_SENSORS = {
-    BINARY_SENSOR_NETWATCH: ['Netwatch', DEVICE_CLASS_CONNECTIVITY, 'mdi:lan-connect',
-                             '/tool/netwatch/getall', 'status', ATTRIB_NETWATCH,
-                             {'up': True, 'down': False}, 'host'],
-    BINARY_SENSOR_INTERNET: ['Internet', DEVICE_CLASS_CONNECTIVITY, 'mdi:wan',
-                             '/interface/detect-internet/state/getall', 'state',
-                             ATTRIB_INTERNET, {'internet': True, 'unknown': False}, 'name'],
+    BINARY_SENSOR_NETWATCH: ['Netwatch', DEVICE_CLASS_CONNECTIVITY, 
+        'mdi:lan-connect', '/tool/netwatch/getall', 'status', 
+        ATTRIB_NETWATCH, {'up': True, 'down': False}, 'host'],
+    BINARY_SENSOR_INTERNET: ['Internet', DEVICE_CLASS_CONNECTIVITY, 
+        'mdi:wan', '/interface/detect-internet/state/getall', 'state',
+        ATTRIB_INTERNET, {'internet': True, 'unknown': False}, 'name'],
 }
 
 ATTRIB_DEVICE_TRACKER = ['mac-address', 'rx-signal', 'ssid', 'interface',
-                         'comment', 'host-name', 'address',
-                         'uptime', 'rx-rate', 'tx-rate', 'last-seen']
+    'comment', 'host-name', 'address', 'uptime', 
+    'rx-rate', 'tx-rate', 'last-seen']
 
 MIKROTIK_SCHEMA = vol.All(
     vol.Schema({
@@ -127,7 +137,7 @@ MIKROTIK_SCHEMA = vol.All(
             cv.ensure_list, [vol.In(SENSORS)]),
         vol.Optional(CONF_BINARY_SENSORS):
             vol.All(cv.ensure_list, [vol.In(BINARY_SENSORS)]),
-        vol.Optional(CONF_WAN_PORT, default=MTK_DEFAULT_WAN_PORT): cv.string,
+        vol.Optional(CONF_WAN_PORT, default=MTK_DEFAULT_WAN): cv.string,
     })
 )
 
@@ -138,7 +148,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up the Mikrotik component."""
-    import librouteros
     hass.data[MIKROTIK] = {}
     hass.data[CLIENT] = MikrotikAPI(hass, config[DOMAIN])
 
@@ -216,7 +225,7 @@ class MikrotikAPI:
             kwargs['port'] = MTK_DEFAULT_API_PORT
 
         if config[CONF_SSL]:
-            if not CONF_PORT in config:
+            if CONF_PORT not in config:
                 kwargs['port'] = MTK_DEFAULT_API_SSL_PORT
             ssl_context = ssl.create_default_context()
             ssl_context.check_hostname = False
@@ -229,7 +238,8 @@ class MikrotikAPI:
         import librouteros
         polling_method = self._hosts[host]['config'].get(CONF_METHOD)
         try:
-            capsman_exist = self._client[host](cmd=MIKROTIK_SERVICES[CAPSMAN])
+            capsman_exist = self._client[host](
+                cmd=MIKROTIK_SERVICES[CAPSMAN])
         except (librouteros.exceptions.TrapError,
                 librouteros.exceptions.MultiTrapError,
                 librouteros.exceptions.ConnectionError):
@@ -282,13 +292,16 @@ class MikrotikAPI:
         config = self._hosts[host]['config']
         self._hosts[host]['kwargs'] = self.config_kwargs(config)
         try:
-            self._client[host] = librouteros.connect(config[CONF_HOST], config[CONF_USERNAME],
-                                                     config.get(CONF_PASSWORD, ''), **self._hosts[host]['kwargs'])
+            self._client[host] = librouteros.connect(
+                config[CONF_HOST], config[CONF_USERNAME],
+                config.get(CONF_PASSWORD, ''), 
+                **self._hosts[host]['kwargs'])
         except (librouteros.exceptions.TrapError,
                 librouteros.exceptions.MultiTrapError,
                 librouteros.exceptions.ConnectionError) as api_error:
             _LOGGER.error(
-                "Mikrotik error for device %s. Connection error: %s" % (host, api_error))
+                "Mikrotik error for device %s. " % host \
+                "Connection error: %s" % api_error)
             self._hosts[host][CONNECTING] = False
             self._hosts[host][CONNECTED] = False
             self._client[host] = None
@@ -327,7 +340,8 @@ class MikrotikAPI:
         data = self.get_api(host, '/system/routerboard/getall')
         if data is None:
             _LOGGER.error(
-                "Mikrotik update_info. Device %s is not connected." % host)
+                "Mikrotik update_info. Device %s is not connected." \
+                % host)
             self._hosts[host][CONNECTED] = False
             return
         self.hass.data[MIKROTIK][host]['info'] = data[0]
@@ -342,7 +356,8 @@ class MikrotikAPI:
             self.get_polling_method(host)
         method = self._hosts[host][DEVICE_TRACKER]
         _LOGGER.debug(
-            "[%s] Updating Mikrotik device_tracker using %s." % (host, method))
+            "[%s] Updating Mikrotik device_tracker using %s." \
+            % (host, method))
         data = self.get_api(host, MIKROTIK_SERVICES[method])
         if data is None:
             self.update_info(host)
@@ -350,17 +365,20 @@ class MikrotikAPI:
 
         arp = self.get_api(host, MIKROTIK_SERVICES[ARP])
         for result in arp:
-            if 'mac-address' in result and result['invalid'] == False:
-                self.hass.data[MIKROTIK][ARP][result['mac-address']] = result
+            if 'mac-address' in result and result['invalid'] is False:
+                self.hass.data[MIKROTIK][ARP][
+                    result['mac-address']] = result
 
         for device in data:
             mac = device['mac-address']
             if method == DHCP:
-                if not 'active-address' in device:
+                if 'active-address' not in device:
                     continue
                 self.hass.data[MIKROTIK][DHCP][mac] = data
-                if self._hosts[host][CONF_ARP_PING] and mac in self.hass.data[MIKROTIK][ARP]:
-                    interface = self.hass.data[MIKROTIK][ARP][mac]['interface']
+                if self._hosts[host][CONF_ARP_PING] and 
+                    mac in self.hass.data[MIKROTIK][ARP]:
+                    interface = self.hass.data[MIKROTIK][
+                        ARP][mac]['interface']
                     if not self.arp_ping(host, mac, interface):
                         continue
             attributes = {}
@@ -372,10 +390,13 @@ class MikrotikAPI:
             attributes['scanner_host'] = host
             attributes['scanner_host_name'] = host_name
             if mac in self.hass.data[MIKROTIK][ARP]:
-                attributes['ip_address'] = self.hass.data[MIKROTIK][ARP][mac]['address']
+                attributes['ip_address'] = self.hass.data[MIKROTIK][
+                    ARP][mac]['address']
             if mac in self.hass.data[MIKROTIK][DHCP]:
-                attributes['host_name'] = self.hass.data[MIKROTIK][DHCP][mac]['host-name']
-            self.hass.data[MIKROTIK][host][DEVICE_TRACKER][mac] = attributes
+                attributes['host_name'] = self.hass.data[MIKROTIK][
+                    DHCP][mac]['host-name']
+            self.hass.data[MIKROTIK][host][
+                DEVICE_TRACKER][mac] = attributes
 
     async def update_sensors(self, host, sensor_type):
         """Update sensors from Mikrotik API."""
@@ -429,14 +450,15 @@ class MikrotikAPI:
             binary_sensors[index]['attrib'] = {}
             binary_sensors[index]['state'] = None
             result = data[index]
-            name = result[name_key]
             for key in result:
                 if key == BINARY_SENSORS[sensor_type][4]:
                     binary_sensors[index]['state'] = states[result[key]]
                 if key in BINARY_SENSORS[sensor_type][5]:
-                    binary_sensors[index]['attrib'][slugify(key)] = result[key]
+                    binary_sensors[index]['attrib'][
+                        slugify(key)] = result[key]
 
-        self.hass.data[MIKROTIK][host][CONF_BINARY_SENSORS][sensor_type] = binary_sensors
+        self.hass.data[MIKROTIK][host][
+            CONF_BINARY_SENSORS][sensor_type] = binary_sensors
 
     def get_api(self, host, api_cmd, params=None):
         """Retrieve data from Mikrotik API."""
@@ -453,7 +475,8 @@ class MikrotikAPI:
                 librouteros.exceptions.MultiTrapError,
                 librouteros.exceptions.ConnectionError) as api_error:
             _LOGGER.error(
-                "[%s] Failed to retrieve data from mikrotik device. cmd=[%s] Error: %s" % (host, api_cmd, api_error))
+                "[%s] Failed to retrieve data from mikrotik device. " \
+                "cmd=[%s] Error: %s" % (host, api_cmd, api_error))
             self._hosts[host][CONNECTED] = False
             return None
         return response
