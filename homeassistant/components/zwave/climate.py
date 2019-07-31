@@ -65,7 +65,6 @@ HVAC_CURRENT_MAPPINGS = {
 
 PRESET_MAPPINGS = {
     'full power': PRESET_BOOST,
-    'heat eco': PRESET_ECO,
     'manufacturer specific': PRESET_MANUFACTURER_SPECIFIC,
 }
 
@@ -164,12 +163,15 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                         # If nothing matches
                         self._preset_list.append(mode)
 
+            if self._preset_list:
+                self._preset_list.append(PRESET_NONE)
+
             current_mode = self.values.mode.data
-            self._hvac_mode = next(
+            _hvac_temp = next(
                 (key for key, value in self._hvac_mapping.items()
                  if value == current_mode), None)
 
-            if self._hvac_mode is None:
+            if _hvac_temp is None:
                 # The current mode is not a hvac mode
                 self._hvac_mode = HVAC_MODE_HEAT_COOL
                 self._preset_mode = next(
@@ -177,6 +179,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                      if value == current_mode), current_mode)
             else:
                 # The current mode is a hvac mode
+                self._hvac_mode = _hvac_temp
                 self._preset_mode = PRESET_NONE
 
         _LOGGER.debug("self._hvac_list=%s", self._hvac_list)
@@ -337,16 +340,19 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         _LOGGER.debug("Set hvac_mode to %s", hvac_mode)
         if not self.values.mode:
             return
-        self.values.mode.data = self._hvac_mapping.get(
-            hvac_mode, hvac_mode)
+        self.values.mode.data = self._hvac_mapping.get(hvac_mode, hvac_mode)
 
     def set_preset_mode(self, preset_mode):
         """Set new target preset mode."""
         _LOGGER.debug("Set preset_mode to %s", preset_mode)
         if not self.values.mode:
             return
-        self.values.mode.data = self._preset_mapping.get(
-            preset_mode, preset_mode)
+        if preset_mode == PRESET_NONE:
+            # Activate the currently active hvac mode (HVAC_MODE_HEAT_COOL)
+            self.values.mode.data = HVAC_MODE_HEAT_COOL
+        else:
+            self.values.mode.data = self._preset_mapping.get(
+                preset_mode, preset_mode)
 
     def set_swing_mode(self, swing_mode):
         """Set new target swing mode."""
