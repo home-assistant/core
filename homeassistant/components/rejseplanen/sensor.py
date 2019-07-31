@@ -108,22 +108,25 @@ class RejseplanenTransportSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if isinstance(self._times, list) and bool(self._times):
-            next_up = []
-            if len(self._times) > 1:
-                next_up = self._times[1:]
-            params = {
-                ATTR_DUE_IN: str(self._times[0][ATTR_DUE_IN]),
-                ATTR_DUE_AT: self._times[0][ATTR_DUE_AT],
-                ATTR_TYPE: self._times[0][ATTR_TYPE],
-                ATTR_ROUTE: self._times[0][ATTR_ROUTE],
-                ATTR_DIRECTION: self._times[0][ATTR_DIRECTION],
-                ATTR_STOP_NAME: self._times[0][ATTR_STOP_NAME],
-                ATTR_STOP_ID: self._stop_id,
-                ATTR_ATTRIBUTION: ATTRIBUTION,
-                ATTR_NEXT_UP: next_up
-            }
-            return {k: v for k, v in params.items() if v}
+        if not self._times:
+            return None
+
+        next_up = []
+        if len(self._times) > 1:
+            next_up = self._times[1:]
+
+        params = {
+            ATTR_DUE_IN: str(self._times[0][ATTR_DUE_IN]),
+            ATTR_DUE_AT: self._times[0][ATTR_DUE_AT],
+            ATTR_TYPE: self._times[0][ATTR_TYPE],
+            ATTR_ROUTE: self._times[0][ATTR_ROUTE],
+            ATTR_DIRECTION: self._times[0][ATTR_DIRECTION],
+            ATTR_STOP_NAME: self._times[0][ATTR_STOP_NAME],
+            ATTR_STOP_ID: self._stop_id,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_NEXT_UP: next_up
+        }
+        return {k: v for k, v in params.items() if v}
 
     @property
     def unit_of_measurement(self):
