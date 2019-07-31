@@ -1,6 +1,6 @@
 """The mikrotik component."""
-
 import logging
+
 import ssl
 import voluptuous as vol
 import librouteros
