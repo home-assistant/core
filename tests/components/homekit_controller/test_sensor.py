@@ -5,7 +5,7 @@ from tests.components.homekit_controller.common import (
 TEMPERATURE = ('temperature', 'temperature.current')
 HUMIDITY = ('humidity', 'relative-humidity.current')
 LIGHT_LEVEL = ('light', 'light-level.current')
-CARBON_DIOXIDE = ('carbon-dioxide', 'carbon-dioxide.level')
+CARBON_DIOXIDE_LEVEL = ('carbon-dioxide', 'carbon-dioxide.level')
 
 
 def create_temperature_sensor_service():
@@ -88,6 +88,7 @@ async def test_light_level_sensor_read_state(hass, utcnow):
     helper.characteristics[LIGHT_LEVEL].value = 20
     state = await helper.poll_and_get_state()
     assert state.state == '20'
+
 
 async def test_carbon_dioxide_level_sensor_read_state(hass, utcnow):
     """Test reading the state of a HomeKit carbon dioxide sensor accessory."""
