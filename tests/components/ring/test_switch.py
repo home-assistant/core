@@ -3,9 +3,11 @@ import os
 import unittest
 import requests_mock
 import asynctest
+import asyncio
 from datetime import datetime
 
-
+from homeassistant.components.ring import (DOMAIN,
+    DATA_RING_STICKUP_CAMS )
 import homeassistant.components.ring.switch as ring
 from homeassistant.components import ring as base_ring
 
@@ -13,104 +15,30 @@ from tests.components.ring.test_init import VALID_CONFIG
 from tests.common import (
     get_test_config_dir, get_test_home_assistant, load_fixture)
 
+from homeassistant.setup import async_setup_component
 
-class TestRingSensorSetup(unittest.TestCase):
-    """Test the Ring platform."""
 
-    DEVICES = []
+async def test_setup_platform(hass, config_entry, config):
+    """Set up the media player platform for testing."""
+    config_entry.add_to_hass(hass)
+    # hass.data = {
+    #     DATA_RING_STICKUP_CAMS: []
+    # }
 
-    def add_entities(self, devices, action):
-        """Mock add devices."""
-        for device in devices:
-            self.DEVICES.append(device)
 
-    def cleanup(self):
-        """Cleanup any data created from the tests."""
-        if os.path.isfile(self.cache):
-            os.remove(self.cache)
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
-    def setUp(self):
-        """Initialize values for this testcase class."""
-        self.hass = get_test_home_assistant()
-        self.cache = get_test_config_dir(base_ring.DEFAULT_CACHEDB)
-        self.config = {
-            'username': 'foo',
-            'password': 'bar',
-        }
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
-        self.cleanup()
+# async def test_setup_platform(hass, config_entry, config):
+#     """Test setup platform does nothing (it uses config entries)."""
+#     hass.data = {
+#         DATA_RING_STICKUP_CAMS: []
+#     }
 
-    @requests_mock.Mocker()
-    def test_switches_correctly_setup(self, mock):
-        """Test the Ring sensor class and methods."""
-        mock.post('https://oauth.ring.com/oauth/token',
-                  text=load_fixture('ring_oauth.json'))
-        mock.post('https://api.ring.com/clients_api/session',
-                  text=load_fixture('ring_session.json'))
-        mock.get('https://api.ring.com/clients_api/ring_devices',
-                 text=load_fixture('ring_devices.json'))
-        mock.get('https://api.ring.com/clients_api/doorbots/987652/history',
-                 text=load_fixture('ring_doorbots.json'))
-        mock.get('https://api.ring.com/clients_api/doorbots/987652/health',
-                 text=load_fixture('ring_doorboot_health_attrs.json'))
-        mock.get('https://api.ring.com/clients_api/chimes/999999/health',
-                 text=load_fixture('ring_chime_health_attrs.json'))
+#     ring.setup_platform(hass, config_entry, config)
 
-        base_ring.setup(self.hass, VALID_CONFIG)
-        ring.setup_platform(self.hass,
-                            self.config,
-                            self.add_entities,
-                            None)
-
-        for device in self.DEVICES:
-            device.update()
-            if device.name == 'Front siren':
-                assert not device.is_on
-            elif device.name == 'Internal siren':
-                assert device.is_on
-            assert device.unique_id == 'aacdef123-siren'
-            assert not device.should_poll
-
-    @requests_mock.Mocker()
-    @asynctest.mock.patch('homeassistant.components.ring.switch.SirenSwitch'
-                          + '.async_schedule_update_ha_state')
-    def test_switches_correctly_turn_on(self, mock, mock_schedule_update):
-        """Test the Ring sensor class and methods."""
-        mock.post('https://oauth.ring.com/oauth/token',
-                  text=load_fixture('ring_oauth.json'))
-        mock.post('https://api.ring.com/clients_api/session',
-                  text=load_fixture('ring_session.json'))
-        mock.get('https://api.ring.com/clients_api/ring_devices',
-                 text=load_fixture('ring_devices.json'))
-        mock.get('https://api.ring.com/clients_api/doorbots/987652/history',
-                 text=load_fixture('ring_doorbots.json'))
-        mock.get('https://api.ring.com/clients_api/doorbots/987652/health',
-                 text=load_fixture('ring_doorboot_health_attrs.json'))
-        mock.get('https://api.ring.com/clients_api/chimes/999999/health',
-                 text=load_fixture('ring_chime_health_attrs.json'))
-        mock.put('https://api.ring.com/clients_api/doorbots/987652/siren_on',
-                 text=load_fixture('ring_doorbot_siren_on_response.json'))
-
-        base_ring.setup(self.hass, VALID_CONFIG)
-        ring.setup_platform(self.hass,
-                            self.config,
-                            self.add_entities,
-                            None)
-
-        first_device = self.DEVICES[0]
-        assert not first_device.is_on
-        first_device.turn_on()
-        assert first_device.is_on
-        # Even though the api mock returns that the siren isn't on,
-        # calling update shouldn't update the state as we have a timer in place
-        # to prevent it.
-        first_device.update()
-        assert first_device.is_on
-        mock_schedule_update.assert_called()
-        # Set the timer to force the update to take place
-        first_device._no_updates_until = datetime.now()
-        first_device.update()
-        assert not first_device.is_on
+# async def test_state_attributes(hass, config_entry, config, controller):
+#     """Tests the state attributes."""
+#     setup_platform(hass, config_entry, config)
+#     state = hass.states.get('switch.front_siren')
