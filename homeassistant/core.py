@@ -12,7 +12,6 @@ import functools
 import logging
 import os
 import pathlib
-import sys
 import threading
 from time import monotonic
 import uuid
@@ -142,9 +141,10 @@ class HomeAssistant:
         self.loop: asyncio.events.AbstractEventLoop = (
             loop or asyncio.get_event_loop())
 
-        executor_opts = {'max_workers': None}  # type: Dict[str, Any]
-        if sys.version_info[:2] >= (3, 6):
-            executor_opts['thread_name_prefix'] = 'SyncWorker'
+        executor_opts = {
+            'max_workers': None,
+            'thread_name_prefix': 'SyncWorker',
+        }  # type: Dict[str, Any]
 
         self.executor = ThreadPoolExecutor(**executor_opts)
         self.loop.set_default_executor(self.executor)
