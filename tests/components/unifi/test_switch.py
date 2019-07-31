@@ -13,201 +13,207 @@ from aiounifi.devices import Devices
 from homeassistant import config_entries
 from homeassistant.components import unifi
 from homeassistant.components.unifi.const import (
-    CONF_CONTROLLER, CONF_SITE_ID, UNIFI_CONFIG)
+    CONF_CONTROLLER,
+    CONF_SITE_ID,
+    UNIFI_CONFIG,
+)
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL)
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 
 import homeassistant.components.switch as switch
 
 CLIENT_1 = {
-    'hostname': 'client_1',
-    'ip': '10.0.0.1',
-    'is_wired': True,
-    'mac': '00:00:00:00:00:01',
-    'name': 'POE Client 1',
-    'oui': 'Producer',
-    'sw_mac': '00:00:00:00:01:01',
-    'sw_port': 1,
-    'wired-rx_bytes': 1234000000,
-    'wired-tx_bytes': 5678000000
+    "hostname": "client_1",
+    "ip": "10.0.0.1",
+    "is_wired": True,
+    "mac": "00:00:00:00:00:01",
+    "name": "POE Client 1",
+    "oui": "Producer",
+    "sw_mac": "00:00:00:00:01:01",
+    "sw_port": 1,
+    "wired-rx_bytes": 1234000000,
+    "wired-tx_bytes": 5678000000,
 }
 CLIENT_2 = {
-    'hostname': 'client_2',
-    'ip': '10.0.0.2',
-    'is_wired': True,
-    'mac': '00:00:00:00:00:02',
-    'name': 'POE Client 2',
-    'oui': 'Producer',
-    'sw_mac': '00:00:00:00:01:01',
-    'sw_port': 2,
-    'wired-rx_bytes': 1234000000,
-    'wired-tx_bytes': 5678000000
+    "hostname": "client_2",
+    "ip": "10.0.0.2",
+    "is_wired": True,
+    "mac": "00:00:00:00:00:02",
+    "name": "POE Client 2",
+    "oui": "Producer",
+    "sw_mac": "00:00:00:00:01:01",
+    "sw_port": 2,
+    "wired-rx_bytes": 1234000000,
+    "wired-tx_bytes": 5678000000,
 }
 CLIENT_3 = {
-    'hostname': 'client_3',
-    'ip': '10.0.0.3',
-    'is_wired': True,
-    'mac': '00:00:00:00:00:03',
-    'name': 'Non-POE Client 3',
-    'oui': 'Producer',
-    'sw_mac': '00:00:00:00:01:01',
-    'sw_port': 3,
-    'wired-rx_bytes': 1234000000,
-    'wired-tx_bytes': 5678000000
+    "hostname": "client_3",
+    "ip": "10.0.0.3",
+    "is_wired": True,
+    "mac": "00:00:00:00:00:03",
+    "name": "Non-POE Client 3",
+    "oui": "Producer",
+    "sw_mac": "00:00:00:00:01:01",
+    "sw_port": 3,
+    "wired-rx_bytes": 1234000000,
+    "wired-tx_bytes": 5678000000,
 }
 CLIENT_4 = {
-    'hostname': 'client_4',
-    'ip': '10.0.0.4',
-    'is_wired': True,
-    'mac': '00:00:00:00:00:04',
-    'name': 'Non-POE Client 4',
-    'oui': 'Producer',
-    'sw_mac': '00:00:00:00:01:01',
-    'sw_port': 4,
-    'wired-rx_bytes': 1234000000,
-    'wired-tx_bytes': 5678000000
+    "hostname": "client_4",
+    "ip": "10.0.0.4",
+    "is_wired": True,
+    "mac": "00:00:00:00:00:04",
+    "name": "Non-POE Client 4",
+    "oui": "Producer",
+    "sw_mac": "00:00:00:00:01:01",
+    "sw_port": 4,
+    "wired-rx_bytes": 1234000000,
+    "wired-tx_bytes": 5678000000,
 }
 CLOUDKEY = {
-    'hostname': 'client_1',
-    'ip': 'mock-host',
-    'is_wired': True,
-    'mac': '10:00:00:00:00:01',
-    'name': 'Cloud key',
-    'oui': 'Producer',
-    'sw_mac': '00:00:00:00:01:01',
-    'sw_port': 1,
-    'wired-rx_bytes': 1234000000,
-    'wired-tx_bytes': 5678000000
+    "hostname": "client_1",
+    "ip": "mock-host",
+    "is_wired": True,
+    "mac": "10:00:00:00:00:01",
+    "name": "Cloud key",
+    "oui": "Producer",
+    "sw_mac": "00:00:00:00:01:01",
+    "sw_port": 1,
+    "wired-rx_bytes": 1234000000,
+    "wired-tx_bytes": 5678000000,
 }
 POE_SWITCH_CLIENTS = [
     {
-        'hostname': 'client_1',
-        'ip': '10.0.0.1',
-        'is_wired': True,
-        'mac': '00:00:00:00:00:01',
-        'name': 'POE Client 1',
-        'oui': 'Producer',
-        'sw_mac': '00:00:00:00:01:01',
-        'sw_port': 1,
-        'wired-rx_bytes': 1234000000,
-        'wired-tx_bytes': 5678000000
+        "hostname": "client_1",
+        "ip": "10.0.0.1",
+        "is_wired": True,
+        "mac": "00:00:00:00:00:01",
+        "name": "POE Client 1",
+        "oui": "Producer",
+        "sw_mac": "00:00:00:00:01:01",
+        "sw_port": 1,
+        "wired-rx_bytes": 1234000000,
+        "wired-tx_bytes": 5678000000,
     },
     {
-        'hostname': 'client_2',
-        'ip': '10.0.0.2',
-        'is_wired': True,
-        'mac': '00:00:00:00:00:02',
-        'name': 'POE Client 2',
-        'oui': 'Producer',
-        'sw_mac': '00:00:00:00:01:01',
-        'sw_port': 1,
-        'wired-rx_bytes': 1234000000,
-        'wired-tx_bytes': 5678000000
-    }
+        "hostname": "client_2",
+        "ip": "10.0.0.2",
+        "is_wired": True,
+        "mac": "00:00:00:00:00:02",
+        "name": "POE Client 2",
+        "oui": "Producer",
+        "sw_mac": "00:00:00:00:01:01",
+        "sw_port": 1,
+        "wired-rx_bytes": 1234000000,
+        "wired-tx_bytes": 5678000000,
+    },
 ]
 
 DEVICE_1 = {
-    'device_id': 'mock-id',
-    'ip': '10.0.1.1',
-    'mac': '00:00:00:00:01:01',
-    'type': 'usw',
-    'name': 'mock-name',
-    'port_overrides': [],
-    'port_table': [
+    "device_id": "mock-id",
+    "ip": "10.0.1.1",
+    "mac": "00:00:00:00:01:01",
+    "type": "usw",
+    "name": "mock-name",
+    "port_overrides": [],
+    "port_table": [
         {
-            'media': 'GE',
-            'name': 'Port 1',
-            'port_idx': 1,
-            'poe_class': 'Class 4',
-            'poe_enable': True,
-            'poe_mode': 'auto',
-            'poe_power': '2.56',
-            'poe_voltage': '53.40',
-            'portconf_id': '1a1',
-            'port_poe': True,
-            'up': True
+            "media": "GE",
+            "name": "Port 1",
+            "port_idx": 1,
+            "poe_class": "Class 4",
+            "poe_enable": True,
+            "poe_mode": "auto",
+            "poe_power": "2.56",
+            "poe_voltage": "53.40",
+            "portconf_id": "1a1",
+            "port_poe": True,
+            "up": True,
         },
         {
-            'media': 'GE',
-            'name': 'Port 2',
-            'port_idx': 2,
-            'poe_class': 'Class 4',
-            'poe_enable': True,
-            'poe_mode': 'auto',
-            'poe_power': '2.56',
-            'poe_voltage': '53.40',
-            'portconf_id': '1a2',
-            'port_poe': True,
-            'up': True
+            "media": "GE",
+            "name": "Port 2",
+            "port_idx": 2,
+            "poe_class": "Class 4",
+            "poe_enable": True,
+            "poe_mode": "auto",
+            "poe_power": "2.56",
+            "poe_voltage": "53.40",
+            "portconf_id": "1a2",
+            "port_poe": True,
+            "up": True,
         },
         {
-            'media': 'GE',
-            'name': 'Port 3',
-            'port_idx': 3,
-            'poe_class': 'Unknown',
-            'poe_enable': False,
-            'poe_mode': 'off',
-            'poe_power': '0.00',
-            'poe_voltage': '0.00',
-            'portconf_id': '1a3',
-            'port_poe': False,
-            'up': True
+            "media": "GE",
+            "name": "Port 3",
+            "port_idx": 3,
+            "poe_class": "Unknown",
+            "poe_enable": False,
+            "poe_mode": "off",
+            "poe_power": "0.00",
+            "poe_voltage": "0.00",
+            "portconf_id": "1a3",
+            "port_poe": False,
+            "up": True,
         },
         {
-            'media': 'GE',
-            'name': 'Port 4',
-            'port_idx': 4,
-            'poe_class': 'Unknown',
-            'poe_enable': False,
-            'poe_mode': 'auto',
-            'poe_power': '0.00',
-            'poe_voltage': '0.00',
-            'portconf_id': '1a4',
-            'port_poe': True,
-            'up': True
-        }
-    ]
+            "media": "GE",
+            "name": "Port 4",
+            "port_idx": 4,
+            "poe_class": "Unknown",
+            "poe_enable": False,
+            "poe_mode": "auto",
+            "poe_power": "0.00",
+            "poe_voltage": "0.00",
+            "portconf_id": "1a4",
+            "port_poe": True,
+            "up": True,
+        },
+    ],
 }
 
 BLOCKED = {
-    'blocked': True,
-    'hostname': 'block_client_1',
-    'ip': '10.0.0.1',
-    'is_guest': False,
-    'is_wired': False,
-    'mac': '00:00:00:00:01:01',
-    'name': 'Block Client 1',
-    'noted': True,
-    'oui': 'Producer',
+    "blocked": True,
+    "hostname": "block_client_1",
+    "ip": "10.0.0.1",
+    "is_guest": False,
+    "is_wired": False,
+    "mac": "00:00:00:00:01:01",
+    "name": "Block Client 1",
+    "noted": True,
+    "oui": "Producer",
 }
 UNBLOCKED = {
-    'blocked': False,
-    'hostname': 'block_client_2',
-    'ip': '10.0.0.2',
-    'is_guest': False,
-    'is_wired': True,
-    'mac': '00:00:00:00:01:02',
-    'name': 'Block Client 2',
-    'noted': True,
-    'oui': 'Producer',
+    "blocked": False,
+    "hostname": "block_client_2",
+    "ip": "10.0.0.2",
+    "is_guest": False,
+    "is_wired": True,
+    "mac": "00:00:00:00:01:02",
+    "name": "Block Client 2",
+    "noted": True,
+    "oui": "Producer",
 }
 
 CONTROLLER_DATA = {
-    CONF_HOST: 'mock-host',
-    CONF_USERNAME: 'mock-user',
-    CONF_PASSWORD: 'mock-pswd',
+    CONF_HOST: "mock-host",
+    CONF_USERNAME: "mock-user",
+    CONF_PASSWORD: "mock-pswd",
     CONF_PORT: 1234,
-    CONF_SITE_ID: 'mock-site',
-    CONF_VERIFY_SSL: True
+    CONF_SITE_ID: "mock-site",
+    CONF_VERIFY_SSL: True,
 }
 
-ENTRY_CONFIG = {
-    CONF_CONTROLLER: CONTROLLER_DATA
-}
+ENTRY_CONFIG = {CONF_CONTROLLER: CONTROLLER_DATA}
 
-CONTROLLER_ID = unifi.CONTROLLER_ID.format(host='mock-host', site='mock-site')
+CONTROLLER_ID = unifi.CONTROLLER_ID.format(host="mock-host", site="mock-site")
 
 
 @pytest.fixture
@@ -216,7 +222,7 @@ def mock_controller(hass):
     hass.data[UNIFI_CONFIG] = {}
     controller = unifi.UniFiController(hass, None)
 
-    controller._site_role = 'admin'
+    controller._site_role = "admin"
 
     controller.api = Mock()
     controller.mock_requests = []
@@ -226,14 +232,14 @@ def mock_controller(hass):
     controller.mock_client_all_responses = deque()
 
     async def mock_request(method, path, **kwargs):
-        kwargs['method'] = method
-        kwargs['path'] = path
+        kwargs["method"] = method
+        kwargs["path"] = path
         controller.mock_requests.append(kwargs)
-        if path == 's/{site}/stat/sta':
+        if path == "s/{site}/stat/sta":
             return controller.mock_client_responses.popleft()
-        if path == 's/{site}/stat/device':
+        if path == "s/{site}/stat/device":
             return controller.mock_device_responses.popleft()
-        if path == 's/{site}/rest/user':
+        if path == "s/{site}/rest/user":
             return controller.mock_client_all_responses.popleft()
         return None
 
@@ -249,23 +255,30 @@ async def setup_controller(hass, mock_controller):
     hass.config.components.add(unifi.DOMAIN)
     hass.data[unifi.DOMAIN] = {CONTROLLER_ID: mock_controller}
     config_entry = config_entries.ConfigEntry(
-        1, unifi.DOMAIN, 'Mock Title', ENTRY_CONFIG, 'test',
-        config_entries.CONN_CLASS_LOCAL_POLL, entry_id=1)
+        1,
+        unifi.DOMAIN,
+        "Mock Title",
+        ENTRY_CONFIG,
+        "test",
+        config_entries.CONN_CLASS_LOCAL_POLL,
+        entry_id=1,
+    )
     mock_controller.config_entry = config_entry
 
     await mock_controller.async_update()
-    await hass.config_entries.async_forward_entry_setup(config_entry, 'switch')
+    await hass.config_entries.async_forward_entry_setup(config_entry, "switch")
     # To flush out the service call to update the group
     await hass.async_block_till_done()
 
 
 async def test_platform_manually_configured(hass):
     """Test that we do not discover anything or try to set up a bridge."""
-    assert await async_setup_component(hass, switch.DOMAIN, {
-        'switch': {
-            'platform': 'unifi'
-        }
-    }) is True
+    assert (
+        await async_setup_component(
+            hass, switch.DOMAIN, {"switch": {"platform": "unifi"}}
+        )
+        is True
+    )
     assert unifi.DOMAIN not in hass.data
 
 
@@ -285,7 +298,7 @@ async def test_controller_not_client(hass, mock_controller):
     await setup_controller(hass, mock_controller)
     assert len(mock_controller.mock_requests) == 2
     assert not hass.states.async_all()
-    cloudkey = hass.states.get('switch.cloud_key')
+    cloudkey = hass.states.get("switch.cloud_key")
     assert cloudkey is None
 
 
@@ -294,7 +307,7 @@ async def test_not_admin(hass, mock_controller):
     mock_controller.mock_client_responses.append([CLIENT_1])
     mock_controller.mock_device_responses.append([])
 
-    mock_controller._site_role = 'viewer'
+    mock_controller._site_role = "viewer"
 
     await setup_controller(hass, mock_controller)
     assert len(mock_controller.mock_requests) == 2
@@ -305,36 +318,35 @@ async def test_switches(hass, mock_controller):
     """Test the update_items function with some clients."""
     mock_controller.mock_client_responses.append([CLIENT_1, CLIENT_4])
     mock_controller.mock_device_responses.append([DEVICE_1])
-    mock_controller.mock_client_all_responses.append(
-        [BLOCKED, UNBLOCKED, CLIENT_1])
+    mock_controller.mock_client_all_responses.append([BLOCKED, UNBLOCKED, CLIENT_1])
     mock_controller.unifi_config = {
-        unifi.CONF_BLOCK_CLIENT: [BLOCKED['mac'], UNBLOCKED['mac']]
+        unifi.CONF_BLOCK_CLIENT: [BLOCKED["mac"], UNBLOCKED["mac"]]
     }
 
     await setup_controller(hass, mock_controller)
     assert len(mock_controller.mock_requests) == 3
     assert len(hass.states.async_all()) == 5
 
-    switch_1 = hass.states.get('switch.poe_client_1')
+    switch_1 = hass.states.get("switch.poe_client_1")
     assert switch_1 is not None
-    assert switch_1.state == 'on'
-    assert switch_1.attributes['power'] == '2.56'
-    assert switch_1.attributes['received'] == 1234
-    assert switch_1.attributes['sent'] == 5678
-    assert switch_1.attributes['switch'] == '00:00:00:00:01:01'
-    assert switch_1.attributes['port'] == 1
-    assert switch_1.attributes['poe_mode'] == 'auto'
+    assert switch_1.state == "on"
+    assert switch_1.attributes["power"] == "2.56"
+    assert switch_1.attributes["received"] == 1234
+    assert switch_1.attributes["sent"] == 5678
+    assert switch_1.attributes["switch"] == "00:00:00:00:01:01"
+    assert switch_1.attributes["port"] == 1
+    assert switch_1.attributes["poe_mode"] == "auto"
 
-    switch_4 = hass.states.get('switch.poe_client_4')
+    switch_4 = hass.states.get("switch.poe_client_4")
     assert switch_4 is None
 
-    blocked = hass.states.get('switch.block_client_1')
+    blocked = hass.states.get("switch.block_client_1")
     assert blocked is not None
-    assert blocked.state == 'on'
+    assert blocked.state == "on"
 
-    unblocked = hass.states.get('switch.block_client_2')
+    unblocked = hass.states.get("switch.block_client_2")
     assert unblocked is not None
-    assert unblocked.state == 'off'
+    assert unblocked.state == "off"
 
 
 async def test_new_client_discovered(hass, mock_controller):
@@ -350,40 +362,36 @@ async def test_new_client_discovered(hass, mock_controller):
     mock_controller.mock_device_responses.append([DEVICE_1])
 
     # Calling a service will trigger the updates to run
-    await hass.services.async_call('switch', 'turn_off', {
-        'entity_id': 'switch.poe_client_1'
-    }, blocking=True)
+    await hass.services.async_call(
+        "switch", "turn_off", {"entity_id": "switch.poe_client_1"}, blocking=True
+    )
     assert len(mock_controller.mock_requests) == 5
     assert len(hass.states.async_all()) == 3
     assert mock_controller.mock_requests[2] == {
-        'json': {
-            'port_overrides': [{
-                'port_idx': 1,
-                'portconf_id': '1a1',
-                'poe_mode': 'off'}]
+        "json": {
+            "port_overrides": [{"port_idx": 1, "portconf_id": "1a1", "poe_mode": "off"}]
         },
-        'method': 'put',
-        'path': 's/{site}/rest/device/mock-id'
+        "method": "put",
+        "path": "s/{site}/rest/device/mock-id",
     }
 
-    await hass.services.async_call('switch', 'turn_on', {
-        'entity_id': 'switch.poe_client_1'
-    }, blocking=True)
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": "switch.poe_client_1"}, blocking=True
+    )
     assert len(mock_controller.mock_requests) == 7
     assert mock_controller.mock_requests[5] == {
-        'json': {
-            'port_overrides': [{
-                'port_idx': 1,
-                'portconf_id': '1a1',
-                'poe_mode': 'auto'}]
+        "json": {
+            "port_overrides": [
+                {"port_idx": 1, "portconf_id": "1a1", "poe_mode": "auto"}
+            ]
         },
-        'method': 'put',
-        'path': 's/{site}/rest/device/mock-id'
+        "method": "put",
+        "path": "s/{site}/rest/device/mock-id",
     }
 
-    switch_2 = hass.states.get('switch.poe_client_2')
+    switch_2 = hass.states.get("switch.poe_client_2")
     assert switch_2 is not None
-    assert switch_2.state == 'on'
+    assert switch_2.state == "on"
 
 
 async def test_failed_update_successful_login(hass, mock_controller):
@@ -424,9 +432,9 @@ async def test_failed_update_unreachable_controller(hass, mock_controller):
     mock_controller.api.clients.update.side_effect = aiounifi.AiounifiException
 
     # Calling a service will trigger the updates to run
-    await hass.services.async_call('switch', 'turn_off', {
-        'entity_id': 'switch.poe_client_1'
-    }, blocking=True)
+    await hass.services.async_call(
+        "switch", "turn_off", {"entity_id": "switch.poe_client_1"}, blocking=True
+    )
 
     assert len(mock_controller.mock_requests) == 3
     assert len(hass.states.async_all()) == 3
@@ -447,8 +455,8 @@ async def test_ignore_multiple_poe_clients_on_same_port(hass, mock_controller):
     # 1 All Lights group, 2 lights
     assert len(hass.states.async_all()) == 0
 
-    switch_1 = hass.states.get('switch.poe_client_1')
-    switch_2 = hass.states.get('switch.poe_client_2')
+    switch_1 = hass.states.get("switch.poe_client_1")
+    switch_2 = hass.states.get("switch.poe_client_2")
     assert switch_1 is None
     assert switch_2 is None
 
@@ -458,23 +466,27 @@ async def test_restoring_client(hass, mock_controller):
     mock_controller.mock_client_responses.append([CLIENT_2])
     mock_controller.mock_device_responses.append([DEVICE_1])
     mock_controller.mock_client_all_responses.append([CLIENT_1])
-    mock_controller.unifi_config = {
-        unifi.CONF_BLOCK_CLIENT: ['random mac']
-    }
+    mock_controller.unifi_config = {unifi.CONF_BLOCK_CLIENT: ["random mac"]}
 
     registry = await entity_registry.async_get_registry(hass)
     registry.async_get_or_create(
-        switch.DOMAIN, unifi.DOMAIN,
-        'poe-{}'.format(CLIENT_1['mac']),
-        suggested_object_id=CLIENT_1['hostname'], config_entry_id=1)
+        switch.DOMAIN,
+        unifi.DOMAIN,
+        "poe-{}".format(CLIENT_1["mac"]),
+        suggested_object_id=CLIENT_1["hostname"],
+        config_entry_id=1,
+    )
     registry.async_get_or_create(
-        switch.DOMAIN, unifi.DOMAIN,
-        'poe-{}'.format(CLIENT_2['mac']),
-        suggested_object_id=CLIENT_2['hostname'], config_entry_id=1)
+        switch.DOMAIN,
+        unifi.DOMAIN,
+        "poe-{}".format(CLIENT_2["mac"]),
+        suggested_object_id=CLIENT_2["hostname"],
+        config_entry_id=1,
+    )
 
     await setup_controller(hass, mock_controller)
     assert len(mock_controller.mock_requests) == 3
     assert len(hass.states.async_all()) == 3
 
-    device_1 = hass.states.get('switch.client_1')
+    device_1 = hass.states.get("switch.client_1")
     assert device_1 is not None

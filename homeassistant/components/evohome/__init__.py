@@ -12,16 +12,26 @@ import voluptuous as vol
 import evohomeclient2
 
 from homeassistant.const import (
-    CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME,
-    HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS, TEMP_CELSIUS)
+    CONF_ACCESS_TOKEN,
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+    HTTP_SERVICE_UNAVAILABLE,
+    HTTP_TOO_MANY_REQUESTS,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, async_dispatcher_send)
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
-    async_track_point_in_utc_time, track_time_interval)
+    async_track_point_in_utc_time,
+    track_time_interval,
+)
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.dt import parse_datetime, utcnow
 
@@ -29,22 +39,28 @@ from .const import DOMAIN, STORAGE_VERSION, STORAGE_KEY, GWS, TCS
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ACCESS_TOKEN_EXPIRES = 'access_token_expires'
-CONF_REFRESH_TOKEN = 'refresh_token'
+CONF_ACCESS_TOKEN_EXPIRES = "access_token_expires"
+CONF_REFRESH_TOKEN = "refresh_token"
 
-CONF_LOCATION_IDX = 'location_idx'
+CONF_LOCATION_IDX = "location_idx"
 SCAN_INTERVAL_DEFAULT = timedelta(seconds=300)
 SCAN_INTERVAL_MINIMUM = timedelta(seconds=60)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_LOCATION_IDX, default=0): cv.positive_int,
-        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL_DEFAULT):
-            vol.All(cv.time_period, vol.Range(min=SCAN_INTERVAL_MINIMUM)),
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_LOCATION_IDX, default=0): cv.positive_int,
+                vol.Optional(
+                    CONF_SCAN_INTERVAL, default=SCAN_INTERVAL_DEFAULT
+                ): vol.All(cv.time_period, vol.Range(min=SCAN_INTERVAL_MINIMUM)),
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def _local_dt_to_utc(dt_naive: datetime) -> datetime:
@@ -70,7 +86,7 @@ def _handle_exception(err) -> bool:
             "Failed to (re)authenticate with the vendor's server. "
             "Check that your username and password are correct. "
             "Message is: %s",
-            err
+            err,
         )
         return False
 
@@ -80,7 +96,7 @@ def _handle_exception(err) -> bool:
             "Unable to connect with the vendor's server. "
             "Check your network and the vendor's status page."
             "Message is: %s",
-            err
+            err,
         )
         return False
 
@@ -95,7 +111,8 @@ def _handle_exception(err) -> bool:
         if err.response.status_code == HTTP_TOO_MANY_REQUESTS:
             _LOGGER.warning(
                 "The vendor's API rate limit has been exceeded. "
-                "Consider increasing the %s.", CONF_SCAN_INTERVAL
+                "Consider increasing the %s.",
+                CONF_SCAN_INTERVAL,
             )
             return False
 
@@ -108,13 +125,11 @@ def setup(hass: HomeAssistantType, hass_config: ConfigType) -> bool:
     if not broker.init_client():
         return False
 
-    load_platform(hass, 'climate', DOMAIN, {}, hass_config)
+    load_platform(hass, "climate", DOMAIN, {}, hass_config)
     if broker.tcs.hotwater:
-        load_platform(hass, 'water_heater', DOMAIN, {}, hass_config)
+        load_platform(hass, "water_heater", DOMAIN, {}, hass_config)
 
-    track_time_interval(
-        hass, broker.update, hass_config[DOMAIN][CONF_SCAN_INTERVAL]
-    )
+    track_time_interval(hass, broker.update, hass_config[DOMAIN][CONF_SCAN_INTERVAL])
 
     return True
 
@@ -133,16 +148,16 @@ class EvoBroker:
         self._app_storage = {}
 
         hass.data[DOMAIN] = {}
-        hass.data[DOMAIN]['broker'] = self
+        hass.data[DOMAIN]["broker"] = self
 
     def init_client(self) -> bool:
         """Initialse the evohome data broker.
 
         Return True if this is successful, otherwise return False.
         """
-        refresh_token, access_token, access_token_expires = \
-            asyncio.run_coroutine_threadsafe(
-                self._load_auth_tokens(), self.hass.loop).result()
+        refresh_token, access_token, access_token_expires = asyncio.run_coroutine_threadsafe(
+            self._load_auth_tokens(), self.hass.loop
+        ).result()
 
         # evohomeclient2 uses naive/local datetimes
         if access_token_expires is not None:
@@ -154,16 +169,18 @@ class EvoBroker:
                 self.params[CONF_PASSWORD],
                 refresh_token=refresh_token,
                 access_token=access_token,
-                access_token_expires=access_token_expires
+                access_token_expires=access_token_expires,
             )
 
-        except (requests.exceptions.RequestException,
-                evohomeclient2.AuthenticationError) as err:
+        except (
+            requests.exceptions.RequestException,
+            evohomeclient2.AuthenticationError,
+        ) as err:
             if not _handle_exception(err):
                 return False
 
         finally:
-            self.params[CONF_PASSWORD] = 'REDACTED'
+            self.params[CONF_PASSWORD] = "REDACTED"
 
         self.hass.add_job(self._save_auth_tokens())
 
@@ -176,23 +193,28 @@ class EvoBroker:
                 "Config error: '%s' = %s, but its valid range is 0-%s. "
                 "Unable to continue. "
                 "Fix any configuration errors and restart HA.",
-                CONF_LOCATION_IDX, loc_idx, len(client.installation_info) - 1
+                CONF_LOCATION_IDX,
+                loc_idx,
+                len(client.installation_info) - 1,
             )
             return False
 
-        self.tcs = client.locations[loc_idx]._gateways[0]._control_systems[0]  # noqa: E501; pylint: disable=protected-access
+        self.tcs = (
+            client.locations[loc_idx]._gateways[0]._control_systems[0]
+        )  # noqa: E501; pylint: disable=protected-access
 
         _LOGGER.debug("Config = %s", self.config)
         if _LOGGER.isEnabledFor(logging.DEBUG):
             # don't do an I/O unless required
             _LOGGER.debug(
-                "Status = %s",
-                client.locations[loc_idx].status()[GWS][0][TCS][0])
+                "Status = %s", client.locations[loc_idx].status()[GWS][0][TCS][0]
+            )
 
         return True
 
-    async def _load_auth_tokens(self) -> Tuple[
-            Optional[str], Optional[str], Optional[datetime]]:
+    async def _load_auth_tokens(
+        self
+    ) -> Tuple[Optional[str], Optional[str], Optional[datetime]]:
         store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         app_storage = self._app_storage = await store.async_load()
 
@@ -214,14 +236,12 @@ class EvoBroker:
 
     async def _save_auth_tokens(self, *args) -> None:
         # evohomeclient2 uses naive/local datetimes
-        access_token_expires = _local_dt_to_utc(
-            self.client.access_token_expires)
+        access_token_expires = _local_dt_to_utc(self.client.access_token_expires)
 
         self._app_storage[CONF_USERNAME] = self.params[CONF_USERNAME]
         self._app_storage[CONF_REFRESH_TOKEN] = self.client.refresh_token
         self._app_storage[CONF_ACCESS_TOKEN] = self.client.access_token
-        self._app_storage[CONF_ACCESS_TOKEN_EXPIRES] = \
-            access_token_expires.isoformat()
+        self._app_storage[CONF_ACCESS_TOKEN_EXPIRES] = access_token_expires.isoformat()
 
         store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         await store.async_save(self._app_storage)
@@ -229,7 +249,7 @@ class EvoBroker:
         async_track_point_in_utc_time(
             self.hass,
             self._save_auth_tokens,
-            access_token_expires + self.params[CONF_SCAN_INTERVAL]
+            access_token_expires + self.params[CONF_SCAN_INTERVAL],
         )
 
     def update(self, *args, **kwargs) -> None:
@@ -243,16 +263,18 @@ class EvoBroker:
 
         try:
             status = self.client.locations[loc_idx].status()[GWS][0][TCS][0]
-        except (requests.exceptions.RequestException,
-                evohomeclient2.AuthenticationError) as err:
+        except (
+            requests.exceptions.RequestException,
+            evohomeclient2.AuthenticationError,
+        ) as err:
             _handle_exception(err)
         else:
-            self.timers['statusUpdated'] = utcnow()
+            self.timers["statusUpdated"] = utcnow()
 
         _LOGGER.debug("Status = %s", status)
 
         # inform the evohome devices that state data has been updated
-        async_dispatcher_send(self.hass, DOMAIN, {'signal': 'refresh'})
+        async_dispatcher_send(self.hass, DOMAIN, {"signal": "refresh"})
 
 
 class EvoDevice(Entity):
@@ -275,7 +297,7 @@ class EvoDevice(Entity):
 
     @callback
     def _refresh(self, packet):
-        if packet['signal'] == 'refresh':
+        if packet["signal"] == "refresh":
             self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
@@ -284,46 +306,47 @@ class EvoDevice(Entity):
 
         Only Zones & DHW controllers (but not the TCS) can have schedules.
         """
-        if not self._schedule['DailySchedules']:
+        if not self._schedule["DailySchedules"]:
             return {}
 
         switchpoints = {}
 
         day_time = datetime.now()
-        day_of_week = int(day_time.strftime('%w'))  # 0 is Sunday
+        day_of_week = int(day_time.strftime("%w"))  # 0 is Sunday
 
         # Iterate today's switchpoints until past the current time of day...
-        day = self._schedule['DailySchedules'][day_of_week]
+        day = self._schedule["DailySchedules"][day_of_week]
         sp_idx = -1  # last switchpoint of the day before
-        for i, tmp in enumerate(day['Switchpoints']):
-            if day_time.strftime('%H:%M:%S') > tmp['TimeOfDay']:
+        for i, tmp in enumerate(day["Switchpoints"]):
+            if day_time.strftime("%H:%M:%S") > tmp["TimeOfDay"]:
                 sp_idx = i  # current setpoint
             else:
                 break
 
         # Did the current SP start yesterday? Does the next start SP tomorrow?
         current_sp_day = -1 if sp_idx == -1 else 0
-        next_sp_day = 1 if sp_idx + 1 == len(day['Switchpoints']) else 0
+        next_sp_day = 1 if sp_idx + 1 == len(day["Switchpoints"]) else 0
 
         for key, offset, idx in [
-                ('current', current_sp_day, sp_idx),
-                ('next', next_sp_day, (sp_idx + 1) * (1 - next_sp_day))]:
+            ("current", current_sp_day, sp_idx),
+            ("next", next_sp_day, (sp_idx + 1) * (1 - next_sp_day)),
+        ]:
 
             spt = switchpoints[key] = {}
 
-            sp_date = (day_time + timedelta(days=offset)).strftime('%Y-%m-%d')
-            day = self._schedule['DailySchedules'][(day_of_week + offset) % 7]
-            switchpoint = day['Switchpoints'][idx]
+            sp_date = (day_time + timedelta(days=offset)).strftime("%Y-%m-%d")
+            day = self._schedule["DailySchedules"][(day_of_week + offset) % 7]
+            switchpoint = day["Switchpoints"][idx]
 
             dt_naive = datetime.strptime(
-                '{}T{}'.format(sp_date, switchpoint['TimeOfDay']),
-                '%Y-%m-%dT%H:%M:%S')
+                "{}T{}".format(sp_date, switchpoint["TimeOfDay"]), "%Y-%m-%dT%H:%M:%S"
+            )
 
-            spt['from'] = _local_dt_to_utc(dt_naive).isoformat()
+            spt["from"] = _local_dt_to_utc(dt_naive).isoformat()
             try:
-                spt['temperature'] = switchpoint['heatSetpoint']
+                spt["temperature"] = switchpoint["heatSetpoint"]
             except KeyError:
-                spt['state'] = switchpoint['DhwState']
+                spt["state"] = switchpoint["DhwState"]
 
         return switchpoints
 
@@ -342,13 +365,13 @@ class EvoDevice(Entity):
         """Return the Evohome-specific state attributes."""
         status = {}
         for attr in self._state_attributes:
-            if attr != 'setpoints':
+            if attr != "setpoints":
                 status[attr] = getattr(self._evo_device, attr)
 
-        if 'setpoints' in self._state_attributes:
-            status['setpoints'] = self.setpoints
+        if "setpoints" in self._state_attributes:
+            status["setpoints"] = self.setpoints
 
-        return {'status': status}
+        return {"status": status}
 
     @property
     def icon(self) -> str:
@@ -376,8 +399,10 @@ class EvoDevice(Entity):
 
     def _update_schedule(self) -> None:
         """Get the latest state data."""
-        if not self._schedule.get('DailySchedules') or \
-                parse_datetime(self.setpoints['next']['from']) < utcnow():
+        if (
+            not self._schedule.get("DailySchedules")
+            or parse_datetime(self.setpoints["next"]["from"]) < utcnow()
+        ):
             self._schedule = self._evo_device.schedule()
 
     def update(self) -> None:

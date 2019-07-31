@@ -10,14 +10,8 @@ from .const import SENSOR_HEART_RATE, SENSOR_OXYGEN_LEVEL
 SCAN_INTERVAL = timedelta(seconds=120)
 
 SENSOR_CONDITIONS = {
-    SENSOR_OXYGEN_LEVEL: {
-        'name': 'Oxygen Level',
-        'device_class': None
-    },
-    SENSOR_HEART_RATE: {
-        'name': 'Heart Rate',
-        'device_class': None
-    }
+    SENSOR_OXYGEN_LEVEL: {"name": "Oxygen Level", "device_class": None},
+    SENSOR_HEART_RATE: {"name": "Heart Rate", "device_class": None},
 }
 
 
@@ -54,8 +48,9 @@ class OwletSensor(Entity):
     @property
     def name(self):
         """Return sensor name."""
-        return '{} {}'.format(self._device.name,
-                              SENSOR_CONDITIONS[self._condition]['name'])
+        return "{} {}".format(
+            self._device.name, SENSOR_CONDITIONS[self._condition]["name"]
+        )
 
     @property
     def state(self):
@@ -65,16 +60,16 @@ class OwletSensor(Entity):
     @property
     def device_class(self):
         """Return the device class."""
-        return SENSOR_CONDITIONS[self._condition]['device_class']
+        return SENSOR_CONDITIONS[self._condition]["device_class"]
 
     @property
     def device_state_attributes(self):
         """Return state attributes."""
         attributes = {
-            'battery_charging': self.is_charging,
-            'battery_level': self.battery_level,
-            'sock_off': self.sock_off,
-            'sock_connection': self.sock_connection
+            "battery_charging": self.is_charging,
+            "battery_level": self.battery_level,
+            "sock_off": self.sock_off,
+            "sock_connection": self.sock_connection,
         }
 
         return attributes
@@ -90,14 +85,16 @@ class OwletSensor(Entity):
 
         value = getattr(self._device.device, self._condition)
 
-        if self._condition == 'batt_level':
+        if self._condition == "batt_level":
             self._state = min(100, value)
             return
 
-        if not self._device.device.base_station_on \
-                or self._device.device.charge_status > 0 \
-                or self._prop_expiration < dt_util.now().timestamp() \
-                or self._movement:
+        if (
+            not self._device.device.base_station_on
+            or self._device.device.charge_status > 0
+            or self._prop_expiration < dt_util.now().timestamp()
+            or self._movement
+        ):
             value = None
 
         self._state = value

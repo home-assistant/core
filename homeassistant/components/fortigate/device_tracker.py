@@ -18,14 +18,12 @@ async def async_get_scanner(hass, config):
     return scanner if scanner.success_init else None
 
 
-Device = namedtuple('Device', ['hostname', 'mac'])
+Device = namedtuple("Device", ["hostname", "mac"])
 
 
 def _build_device(device_dict):
     """Return a Device from data."""
-    return Device(
-        device_dict['hostname'],
-        device_dict['mac'])
+    return Device(device_dict["hostname"], device_dict["mac"])
 
 
 class FortigateDeviceScanner(DeviceScanner):
@@ -35,17 +33,16 @@ class FortigateDeviceScanner(DeviceScanner):
         """Initialize the scanner."""
         self.last_results = {}
         self.success_init = False
-        self.connection = hass_data['fgt']
-        self.devices = hass_data['devices']
+        self.connection = hass_data["fgt"]
+        self.devices = hass_data["devices"]
 
     def get_results(self):
         """Get the results from the Fortigate."""
-        results = self.connection.get(
-            DETECTED_DEVICES, "vdom=root")[1]['results']
+        results = self.connection.get(DETECTED_DEVICES, "vdom=root")[1]["results"]
 
         ret = []
         for result in results:
-            if 'hostname' not in result:
+            if "hostname" not in result:
                 continue
 
             ret.append(result)
@@ -65,9 +62,10 @@ class FortigateDeviceScanner(DeviceScanner):
 
     async def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        name = next((
-            result.hostname for result in self.last_results
-            if result.mac == device), None)
+        name = next(
+            (result.hostname for result in self.last_results if result.mac == device),
+            None,
+        )
         return name
 
     async def async_update_info(self):
@@ -76,14 +74,12 @@ class FortigateDeviceScanner(DeviceScanner):
 
         hosts = self.get_results()
 
-        all_results = [_build_device(device) for device in hosts
-                       if device['is_online']]
+        all_results = [_build_device(device) for device in hosts if device["is_online"]]
 
         # If the 'devices' configuration field is filled
         if self.devices is not None:
             last_results = [
-                device for device in all_results
-                if device.hostname in self.devices
+                device for device in all_results if device.hostname in self.devices
             ]
             _LOGGER.debug(last_results)
         # If the 'devices' configuration field is not filled

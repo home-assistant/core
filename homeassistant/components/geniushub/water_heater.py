@@ -3,56 +3,55 @@ import logging
 
 from homeassistant.components.water_heater import (
     WaterHeaterDevice,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
-from homeassistant.const import (
-    ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS)
+    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_OPERATION_MODE,
+)
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DOMAIN
 
-STATE_AUTO = 'auto'
-STATE_MANUAL = 'manual'
+STATE_AUTO = "auto"
+STATE_MANUAL = "manual"
 
 _LOGGER = logging.getLogger(__name__)
 
-GH_HEATERS = ['hot water temperature']
+GH_HEATERS = ["hot water temperature"]
 
-GH_SUPPORT_FLAGS = \
-    SUPPORT_TARGET_TEMPERATURE | \
-    SUPPORT_OPERATION_MODE
+GH_SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 # HA does not have SUPPORT_ON_OFF for water_heater
 
 GH_MAX_TEMP = 80.0
 GH_MIN_TEMP = 30.0
 
 # Genius Hub HW supports only Off, Override/Boost & Timer modes
-HA_OPMODE_TO_GH = {
-    STATE_OFF: 'off',
-    STATE_AUTO: 'timer',
-    STATE_MANUAL: 'override',
-}
+HA_OPMODE_TO_GH = {STATE_OFF: "off", STATE_AUTO: "timer", STATE_MANUAL: "override"}
 GH_STATE_TO_HA = {
-    'off': STATE_OFF,
-    'timer': STATE_AUTO,
-    'footprint': None,
-    'away': None,
-    'override': STATE_MANUAL,
-    'early': None,
-    'test': None,
-    'linked': None,
-    'other': None,
+    "off": STATE_OFF,
+    "timer": STATE_AUTO,
+    "footprint": None,
+    "away": None,
+    "override": STATE_MANUAL,
+    "early": None,
+    "test": None,
+    "linked": None,
+    "other": None,
 }
-GH_STATE_ATTRS = ['type', 'override']
+GH_STATE_ATTRS = ["type", "override"]
 
 
-async def async_setup_platform(hass, hass_config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+    hass, hass_config, async_add_entities, discovery_info=None
+):
     """Set up the Genius Hub water_heater entities."""
-    client = hass.data[DOMAIN]['client']
+    client = hass.data[DOMAIN]["client"]
 
-    entities = [GeniusWaterHeater(client, z)
-                for z in client.hub.zone_objs if z.type in GH_HEATERS]
+    entities = [
+        GeniusWaterHeater(client, z)
+        for z in client.hub.zone_objs
+        if z.type in GH_HEATERS
+    ]
 
     async_add_entities(entities)
 
@@ -84,7 +83,7 @@ class GeniusWaterHeater(WaterHeaterDevice):
     def device_state_attributes(self):
         """Return the device state attributes."""
         tmp = self._boiler.__dict__.items()
-        return {'status': {k: v for k, v in tmp if k in GH_STATE_ATTRS}}
+        return {"status": {k: v for k, v in tmp if k in GH_STATE_ATTRS}}
 
     @property
     def should_poll(self) -> bool:

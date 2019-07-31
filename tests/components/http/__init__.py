@@ -24,7 +24,7 @@ def mock_real_ip(app):
 
         request[KEY_REAL_IP] = ip_address(ip_to_mock)
 
-        return (await handler(request))
+        return await handler(request)
 
     async def real_ip_startup(app):
         """Startup of real ip."""

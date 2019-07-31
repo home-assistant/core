@@ -20,8 +20,8 @@ class BloomSkyCamera(Camera):
     def __init__(self, bs, device):
         """Initialize access to the BloomSky camera images."""
         super(BloomSkyCamera, self).__init__()
-        self._name = device['DeviceName']
-        self._id = device['DeviceID']
+        self._name = device["DeviceName"]
+        self._id = device["DeviceID"]
         self._bloomsky = bs
         self._url = ""
         self._last_url = ""
@@ -34,7 +34,7 @@ class BloomSkyCamera(Camera):
     def camera_image(self):
         """Update the camera's image if it has changed."""
         try:
-            self._url = self._bloomsky.devices[self._id]['Data']['ImageURL']
+            self._url = self._bloomsky.devices[self._id]["Data"]["ImageURL"]
             self._bloomsky.refresh_devices()
             # If the URL hasn't changed then the image hasn't changed.
             if self._url != self._last_url:
