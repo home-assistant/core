@@ -4,7 +4,11 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY)
 
 MIKROTIK = 'mikrotik'
+MIKROTIK_DOMAIN = MIKROTIK
 CLIENT = 'mikrotik_client'
+
+SENSOR = 'sensor'
+BINARY_SENSOR = 'binary_sensor'
 
 MTK_DEFAULT_WAN = 'ether1'
 
