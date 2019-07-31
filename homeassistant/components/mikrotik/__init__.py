@@ -356,7 +356,7 @@ class MikrotikAPI:
         params = {'arp-ping': 'yes', 'interval': '100ms', 'count': 3,
                   'interface': interface, 'address': mac}
         cmd = '/ping'
-        data = self_client[host](cmd, params)
+        data = self._client[host](cmd, params)
         status = 0
         for result in data:
             if 'status' in result:
@@ -476,7 +476,6 @@ class MikrotikAPI:
             return
         binary_sensors = {}
         self.hass.data[MIKROTIK][host][sensor_type]['count'] = len(data)
-        name_key = BINARY_SENSORS[sensor_type][7]
         states = BINARY_SENSORS[sensor_type][6]
         for index in range(len(data)):
             binary_sensors[index] = {}
