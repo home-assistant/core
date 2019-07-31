@@ -11,13 +11,13 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.util import slugify
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER)
-from homeassistant.components.sensor import DOMAIN as SENSOR
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from .const import (CLIENT, CONNECTING, CONNECTED, IDENTITY, MEGA,
                     CONF_ARP_PING, CONF_WAN_PORT, CONF_TRACK_DEVICES,
                     CONF_LOGIN_METHOD, CONF_ENCODING, DEFAULT_ENCODING,
-                    ARP, DHCP, WIRELESS, CAPSMAN, MIKROTIK_SERVICES,
-                    SENSORS, BINARY_SENSORS, ATTRIB_DEVICE_TRACKER)
+                    MTK_DEFAULT_WAN, ARP, DHCP, WIRELESS, CAPSMAN,
+                    SENSOR, BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY,
+                    MIKROTIK_SERVICES, SENSORS, BINARY_SENSORS,
+                    ATTRIB_DEVICE_TRACKER)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +25,6 @@ NAME = 'Mikrotik'
 DOMAIN = 'mikrotik'
 MIKROTIK = DOMAIN
 
-MTK_DEFAULT_WAN = 'ether1'
 MTK_DEFAULT_API_PORT = '8728'
 MTK_DEFAULT_API_SSL_PORT = '8729'
 MTK_LOGIN_PLAIN = 'plain'
