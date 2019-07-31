@@ -170,6 +170,7 @@ class HomeKitLightSensor(HomeKitEntity):
         """Return the current light level in lux."""
         return self._state
 
+
 class HomeKitCarbonDioxideSensor(HomeKitEntity):
     """Representation of a Homekit Carbon Dioxide sensor."""
 
