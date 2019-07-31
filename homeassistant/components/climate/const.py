@@ -67,6 +67,7 @@ FAN_HIGH = "high"
 FAN_MIDDLE = "middle"
 FAN_FOCUS = "focus"
 FAN_DIFFUSE = "diffuse"
+FAN_WIND = "wind"
 
 
 # Possible swing state
