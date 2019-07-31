@@ -1,8 +1,7 @@
 """Constants used in the Mikrotik components."""
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY)
-from homeassistant.components.sensor import DOMAIN as SENSOR
+    DEVICE_CLASS_CONNECTIVITY)
 
 MIKROTIK = 'mikrotik'
 CLIENT = 'mikrotik_client'
