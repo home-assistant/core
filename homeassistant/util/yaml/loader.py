@@ -95,10 +95,8 @@ def _add_reference(
 # pylint: enable=pointless-statement
 
 
-def _add_reference(
-    obj,
-    loader: SafeLineLoader,  # type: ignore # noqa: F811
-    node: yaml.nodes.Node,
+def _add_reference(  # type: ignore # noqa: F811
+    obj, loader: SafeLineLoader, node: yaml.nodes.Node
 ):
     """Add file reference information to an object."""
     if isinstance(obj, list):

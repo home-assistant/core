@@ -114,10 +114,8 @@ def start_of_local_day(
         date = now().date()  # type: dt.date
     elif isinstance(dt_or_d, dt.datetime):
         date = dt_or_d.date()
-    return DEFAULT_TIME_ZONE.localize(
-        dt.datetime.combine(  # type: ignore
-            date, dt.time()
-        )
+    return DEFAULT_TIME_ZONE.localize(  # type: ignore
+        dt.datetime.combine(date, dt.time())
     )
 
 

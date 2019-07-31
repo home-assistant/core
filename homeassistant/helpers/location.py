@@ -14,10 +14,8 @@ def has_location(state: State) -> bool:
     """
     # type ignore: https://github.com/python/mypy/issues/7207
     return (
-        isinstance(state, State)
-        and isinstance(  # type: ignore
-            state.attributes.get(ATTR_LATITUDE), float
-        )
+        isinstance(state, State)  # type: ignore
+        and isinstance(state.attributes.get(ATTR_LATITUDE), float)
         and isinstance(state.attributes.get(ATTR_LONGITUDE), float)
     )
 
