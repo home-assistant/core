@@ -20,6 +20,7 @@ TYPE_INVERTER = 'inverter'
 TYPE_STORAGE = 'storage'
 TYPE_METER = 'meter'
 TYPE_POWER_FLOW = 'power_flow'
+# Note that calling the system URL just returns all values of all devices
 SCOPE_DEVICE = 'device'
 SCOPE_SYSTEM = 'system'
 
@@ -94,7 +95,7 @@ async def async_setup_platform(hass,
         else:
             sensor_cls = FroniusStorage
 
-        sensors.append(sensor_cls(fronius, name, device))
+        sensors.append(sensor_cls(fronius, name, device, async_add_entities))
 
     async_add_entities(sensors, True)
 
@@ -102,13 +103,22 @@ async def async_setup_platform(hass,
 class FroniusSensor(Entity):
     """The Fronius sensor implementation."""
 
-    def __init__(self, data, name, device):
+    def __init__(self, data, name, device, add_entities):
         """Initialize the sensor."""
         self.data = data
         self._name = name
         self._device = device
         self._state = None
+        self._hidden = True
         self._attributes = {}
+
+        self.sensors = set()
+        self._add_entities = add_entities
+
+    @property
+    def hidden(self):
+        """Return that this entity should be hidden."""
+        return self._hidden
 
     @property
     def name(self):
@@ -137,12 +147,26 @@ class FroniusSensor(Entity):
                           "Maybe the configured device is not supported")
 
         if values:
+            # Copy data of current fronius device
             self._state = values['status']['Code']
             attributes = {}
             for key in values:
                 if 'value' in values[key]:
-                    attributes[key] = values[key].get('value', 0)
+                    attributes[key] = values[key]
             self._attributes = attributes
+
+            # Add discovered value fields as sensors
+            # because some fields are only sent temporarily
+            for key in values:
+                new_sensors = []
+                if key not in self.sensors:
+                    self.sensors.add(key)
+                    _LOGGER.info(
+                        "Discovered %s, adding as sensor.",
+                        key
+                    )
+                    new_sensors.append(FroniusTemplateSensor(self, key))
+                self._add_entities(new_sensors, True)
 
     async def _update(self):
         """Return values of interest."""
@@ -195,3 +219,39 @@ class FroniusPowerFlow(FroniusSensor):
     async def _update(self):
         """Get the values for the current state."""
         return await self.data.current_power_flow()
+
+
+class FroniusTemplateSensor(Entity):
+    """Sensor for the single values (e.g. pv power, ac power)."""
+
+    def __init__(self, parent: FroniusSensor, name):
+        """Initialize a singular value sensor."""
+        self._name = name
+        self.parent = parent
+        self._state = None
+        self._unit = None
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return "{} {}".format(
+            self._name.replace('_', ' ').capitalize(),
+            self.parent.name
+        )
+
+    @property
+    def state(self):
+        """Return the current state."""
+        return self._state
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return self._unit
+
+    async def async_update(self):
+        """Update by fetching data from parent sensor."""
+        state = self.parent.device_state_attributes.get(self._name)
+        if state:
+            self._state = state['value']
+            self._unit = state.get('unit')
