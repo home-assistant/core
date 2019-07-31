@@ -65,7 +65,10 @@ class GeniusDevice(Entity):
         values = self._device._info_raw['childValues']  # noqa; pylint: disable=protected-access
 
         last_comms = utc_from_timestamp(values['lastComms']['val'])
-        interval = timedelta(seconds=values['WakeUp_Interval']['val'])
+        if 'WakeUp_Interval' in values:
+            interval = timedelta(seconds=values['WakeUp_Interval']['val'])
+        else:
+            interval = timedelta(minutes=20)
 
         if last_comms < utcnow() - interval * 3:
             return 'mdi:battery-unknown'
@@ -100,7 +103,7 @@ class GeniusDevice(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        level = self._device.state['batteryLevel']
+        level = self._device.state.get('batteryLevel', 255)
         return level if level != 255 else 0
 
     @property
