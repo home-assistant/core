@@ -1,6 +1,8 @@
 """Support for Ambient Weather Station Service."""
 import logging
 
+from aioambient import Client
+from aioambient.errors import WebsocketError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -251,9 +253,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up the Ambient PWS as config entry."""
-    from aioambient import Client
-    from aioambient.errors import WebsocketError
-
     session = aiohttp_client.async_get_clientsession(hass)
 
     try:
@@ -324,8 +323,6 @@ class AmbientStation:
 
     async def _attempt_connect(self):
         """Attempt to connect to the socket (retrying later on fail)."""
-        from aioambient.errors import WebsocketError
-
         try:
             await self.client.websocket.connect()
         except WebsocketError as err:
