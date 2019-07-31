@@ -29,19 +29,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if not entity_class:
             return False
         info = {'aid': aid, 'iid': service['iid']}
-        if devtype == 'humidity':
+        if entity_class == 'humidity':
             async_add_entities([HomeKitHumiditySensor(conn, info)], True)
             return True
 
-        if devtype == 'temperature':
+        if entity_class == 'temperature':
             async_add_entities([HomeKitTemperatureSensor(conn, info)], True)
             return True
 
-        if devtype == 'light':
+        if entity_class == 'light':
             async_add_entities([HomeKitLightSensor(conn, info)], True)
             return True
         
-        if devtype == 'carbon-dioxide':
+        if entity_class == 'carbon-dioxide':
             async_add_entities([HomeKitCarbonDioxideSensor(conn, info)], True)
             return True
 
