@@ -129,13 +129,15 @@ async def async_setup_platform(
     # *_d.e.v.i.c.e._.s.i.g.n.a.l...s.i.n.r
     entreg = await entity_registry.async_get_registry(hass)
     for entid, ent in entreg.entities.items():
-        if ent.platform == "huawei_lte":
-            for sensor in sensors:
-                if ent.unique_id.endswith("_%s" % ".".join(sensor.path)):
-                    entreg.async_update_entity(
-                        entid, new_unique_id=sensor.unique_id)
-                    _LOGGER.debug("Updated entity %s unique id to %s",
-                                  entid, sensor.unique_id)
+        if ent.platform != "huawei_lte":
+            continue
+        for sensor in sensors:
+            oldsuf = ".".join(sensor.path)
+            if ent.unique_id.endswith(f"_{oldsuf}"):
+                entreg.async_update_entity(
+                    entid, new_unique_id=sensor.unique_id)
+                _LOGGER.debug("Updated entity %s unique id to %s",
+                              entid, sensor.unique_id)
 
     async_add_entities(sensors, True)
 
