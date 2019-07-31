@@ -211,6 +211,9 @@ def states_to_json(
     axis correctly.
     """
     result = defaultdict(list)
+    if entity_ids is not None:
+        for ent_id in entity_ids:
+            result[ent_id] = []
 
     # Get the states at the start time
     timer_start = time.perf_counter()
