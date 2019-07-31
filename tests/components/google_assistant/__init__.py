@@ -271,18 +271,6 @@ DEMO_DEVICES = [{
     'type': 'action.devices.types.THERMOSTAT',
     'willReportState': False
 }, {
-    'id': 'light.wc_lights',
-    'name': {
-        'name': 'WC Lights'
-    },
-    'traits': [
-        'action.devices.traits.OnOff', 'action.devices.traits.Brightness',
-        'action.devices.traits.ColorSetting',
-    ],
-    'type':
-    'action.devices.types.LIGHT',
-    'willReportState': False
-}, {
     'id': 'lock.front_door',
     'name': {
         'name': 'Front Door'

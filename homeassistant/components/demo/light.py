@@ -27,8 +27,7 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
         DemoLight(2, "Ceiling Lights", True, True,
                   LIGHT_COLORS[0], LIGHT_TEMPS[1]),
         DemoLight(3, "Kitchen Lights", True, True,
-                  LIGHT_COLORS[1], LIGHT_TEMPS[0]),
-        DemoLight(4, "WC Lights", True, True)
+                  LIGHT_COLORS[1], LIGHT_TEMPS[0])
     ])
 
 
