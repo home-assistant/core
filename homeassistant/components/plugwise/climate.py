@@ -1,24 +1,4 @@
-"""
-Plugwise Climate component for HomeAssistant.
-
-Currently supports Anna (not Adam or Lisa yet)
-
-configurations.yaml
-
-climate:
-  - platform: plugwise
-    password: your_short_id   # required, the ID on the smile (some string
-                              # of 6 characters)
-    host: local_ip_address    # required, the IP-address of your smile
-    name: Anna Thermostat     # optional, only if you want to use a
-                              # different name
-    username: smile           # optional, default username is smile
-    port: 80                  # optional, default port is 80
-    scan_interval: 10         # optional, default scan interval is 10 seconds
-
-Originally by https://github.com/laetificat/anna-ha which is also available
-as a development/custom-component
-"""
+""" Plugwise Climate component for HomeAssistant.  """
 
 import logging
 
@@ -68,39 +48,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def _hvac_mode(self):
-    """Return current active hvac state."""
-    domain_objects = self._api.get_domain_objects()
-    hvac_mode = self._api.get_schema_state(domain_objects)
-    if hvac_mode is True:
-        self._state = HVAC_MODE_AUTO
-    else:
-        self._state = HVAC_MODE_OFF
-    return self._state
-
-
-def _available_schemas(self):
-    """Return schemas."""
-    domain_objects = self._api.get_domain_objects()
-    return self._api.get_schema_names(domain_objects)
-
-
-def _active_schema(self):
-    """Return active schema if present."""
-    domain_objects = self._api.get_domain_objects()
-    return self._api.get_active_schema_name(domain_objects)
-
-
-def _heating_action(self):
-    """Return current active heating state."""
-    domain_objects = self._api.get_domain_objects()
-    if self._api.get_heating_status(domain_objects) is True:
-        self._state = CURRENT_HVAC_HEAT
-    else:
-        self._state = CURRENT_HVAC_IDLE
-    return self._state
-
-
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Add the Plugwise (Anna) Thermostate."""
     add_devices([
@@ -140,6 +87,7 @@ class ThermostatDevice(ClimateDevice):
         self._max_temp = max_temp
         self._hvac_modes = ATTR_HVAC_MODES
         self._hvac_mode = None
+        self._available_schemas = []
 
         _LOGGER.debug("Initializing API")
         import haanna
@@ -150,7 +98,7 @@ class ThermostatDevice(ClimateDevice):
         except Exception:
             _LOGGER.error("Unable to ping, platform not ready")
             raise PlatformNotReady
-        _LOGGER.debug("platform ready")
+        _LOGGER.debug("Platform ready")
         self.update()
 
     @property
@@ -159,9 +107,11 @@ class ThermostatDevice(ClimateDevice):
         return True
 
     @property
-    def state(self):
-        """Return the current state."""
-        return self._state
+    def hvac_action(self):
+        """Return the current action."""
+        if self._api.get_heating_status(self._domain_objects) is True:
+            return CURRENT_HVAC_HEAT
+        return CURRENT_HVAC_IDLE
 
     @property
     def name(self):
@@ -181,52 +131,43 @@ class ThermostatDevice(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
-        _attributes = {}
-        _attributes['outdoor_temperature'] = self._outdoor_temperature
-        _attributes['heating_action'] = self._heating_action
-        _attributes['available_schemas'] = self._available_schemas
-        _attributes['active_schema'] = self._active_schema
-        _attributes['previous_schema'] = self._previous_schema
-        return _attributes
+        attributes = {}
+        attributes['outdoor_temperature'] = self._outdoor_temperature
+        attributes['available_schemas'] = self._api.get_schema_names(
+            self._domain_objects)
+        attributes['active_schema'] = self._active_schema
+        attributes['previous_schema'] = self._previous_schema
+        return attributes
 
     def update(self):
         """Update the data from the thermostat."""
         _LOGGER.debug("Update called")
-        domain_objects = self._api.get_domain_objects()
-        self._current_temperature = self._api.get_temperature(domain_objects)
-        self._temperature = self._api.get_target_temperature(domain_objects)
-        self._preset_mode = self._api.get_current_preset(domain_objects)
+        self._domain_objects = self._api.get_domain_objects()
         self._outdoor_temperature = self._api.get_outdoor_temperature(
-            domain_objects)
-        self._heating_action = _heating_action(self)
-        self._available_schemas = _available_schemas(self)
-        if self._active_schema != _active_schema(self):
+            self._domain_objects)
+        api_active_schema = self._api.get_active_schema_name(
+            self._domain_objects)
+        if self._active_schema != api_active_schema:
             self._previous_schema = self._active_schema
-            self._active_schema = _active_schema(self)
-        self._hvac_mode = _hvac_mode(self)
-        self._preset_modes = []
-        for preset in [*self._api.get_presets(domain_objects)]:
-            self._preset_modes.append(preset)
+            self._active_schema = api_active_schema
 
     @property
     def hvac_mode(self):
         """Return current active hvac state."""
-        return _hvac_mode(self)
-
-    @property
-    def heating_action(self):
-        """Return current active heating state."""
-        return _heating_action(self)
+        if self._api.get_schema_state(self._domain_objects) is True:
+            return HVAC_MODE_AUTO
+        return HVAC_MODE_OFF
 
     @property
     def preset_mode(self):
         """Return the active preset mode."""
-        return self._preset_mode
+        return self._api.get_current_preset(self._domain_objects)
 
     @property
     def preset_modes(self):
-        """Return the available preset modes list."""
-        return self._preset_modes
+        """Return the available preset modes list without values."""
+        presets = list(self._api.get_presets(self._domain_objects).keys())
+        return presets
 
     @property
     def hvac_modes(self):
@@ -236,7 +177,7 @@ class ThermostatDevice(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self._current_temperature
+        return self._api.get_temperature(self._domain_objects)
 
     @property
     def min_temp(self):
@@ -251,12 +192,7 @@ class ThermostatDevice(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the target temperature."""
-        return self._temperature
-
-    @property
-    def outdoor_temperature(self):
-        """Return the outdoor temperature."""
-        return self._outdoor_temperature
+        return self._api.get_target_temperature(self._domain_objects)
 
     @property
     def temperature_unit(self):
@@ -270,9 +206,7 @@ class ThermostatDevice(ClimateDevice):
         if (temperature is not None and self._min_temp < temperature
                 < self._max_temp):
             self._temperature = temperature
-            domain_objects = self._api.get_domain_objects()
-            self._api.set_temperature(domain_objects, temperature)
-            self.schedule_update_ha_state()
+            self._api.set_temperature(self._domain_objects, temperature)
             _LOGGER.debug("Changing temporary temperature")
         else:
             _LOGGER.error("Invalid temperature requested")
@@ -287,24 +221,18 @@ class ThermostatDevice(ClimateDevice):
                 schema = self._active_schema
             else:
                 schema = self._previous_schema
-            if hvac_mode == 'auto':
-                self._hvac_mode = HVAC_MODE_AUTO
+            schema_mode = 'false'
+            if hvac_mode == HVAC_MODE_AUTO:
                 schema_mode = 'true'
-            else:
-                self._hvac_mode = HVAC_MODE_OFF
-                schema_mode = 'false'
-            domain_objects = self._api.get_domain_objects()
-            set_schema = self._api.set_schema_state(domain_objects,
-                                                    schema, schema_mode)
-            return set_schema
+            self._api.set_schema_state(self._domain_objects, schema,
+                                       schema_mode)
 
     def set_preset_mode(self, preset_mode):
         """Set the preset mode."""
         _LOGGER.debug("Adjusting preset_mode (i.e. preset)")
-        if preset_mode is not None and preset_mode in self._preset_modes:
-            domain_objects = self._api.get_domain_objects()
+        if preset_mode in self._preset_modes:
             self._preset_mode = preset_mode
-            self._api.set_preset(domain_objects, preset_mode)
+            self._api.set_preset(self._domain_objects, preset_mode)
             _LOGGER.debug("Changing preset mode")
         else:
             _LOGGER.error("Invalid or no preset mode given")
