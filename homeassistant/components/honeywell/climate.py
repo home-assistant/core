@@ -161,8 +161,10 @@ class HoneywellUSThermostat(ClimateDevice):
         self._password = password
 
         _LOGGER.debug(
-            "latestData = %s ", device._data
-        )  # noqa; pylint: disable=protected-access
+            # noqa; pylint: disable=protected-access
+            "latestData = %s ",
+            device._data,
+        )
 
         # not all honeywell HVACs support all modes
         mappings = [v for k, v in HVAC_MODE_TO_HW_MODE.items() if device.raw_ui_data[k]]
@@ -174,9 +176,8 @@ class HoneywellUSThermostat(ClimateDevice):
             | SUPPORT_TARGET_TEMPERATURE_RANGE
         )
 
-        if device._data[
-            "canControlHumidification"
-        ]:  # noqa; pylint: disable=protected-access
+        # noqa; pylint: disable=protected-access
+        if device._data["canControlHumidification"]:
             self._supported_features |= SUPPORT_TARGET_HUMIDITY
 
         if device.raw_ui_data["SwitchEmergencyHeatAllowed"]:
@@ -464,5 +465,7 @@ class HoneywellUSThermostat(ClimateDevice):
                 _LOGGER.error("SomeComfort update failed, Retrying - Error: %s", exp)
 
         _LOGGER.debug(
-            "latestData = %s ", self._device._data
-        )  # noqa; pylint: disable=protected-access
+            # noqa; pylint: disable=protected-access
+            "latestData = %s ",
+            self._device._data,
+        )

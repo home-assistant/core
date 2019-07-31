@@ -61,11 +61,11 @@ SCHEMA_WS_HOOK_DELETE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 _CLOUD_ERRORS = {
     InvalidTrustedNetworks: (
         500,
-        "Remote UI not compatible with 127.0.0.1/::1" " as a trusted network.",
+        "Remote UI not compatible with 127.0.0.1/::1 as a trusted network.",
     ),
     InvalidTrustedProxies: (
         500,
-        "Remote UI not compatible with 127.0.0.1/::1" " as trusted proxies.",
+        "Remote UI not compatible with 127.0.0.1/::1 as trusted proxies.",
     ),
 }
 
