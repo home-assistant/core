@@ -17,15 +17,16 @@ async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Legacy set up platform."""
     pass
-
-
+        
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Homekit covers."""
     hkid = config_entry.data['AccessoryPairingID']
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     def async_add_service(aid, service):
-        devtype = service['stype']
+        entity_class = ENTITY_TYPES.get(service['stype'])
+        if not entity_class:
+            return False
         info = {'aid': aid, 'iid': service['iid']}
         if devtype == 'humidity':
             async_add_entities([HomeKitHumiditySensor(conn, info)], True)
