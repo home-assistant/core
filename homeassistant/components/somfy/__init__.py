@@ -19,30 +19,35 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
-API = 'api'
+API = "api"
 
-DEVICES = 'devices'
+DEVICES = "devices"
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
-DOMAIN = 'somfy'
+DOMAIN = "somfy"
 
-CONF_CLIENT_ID = 'client_id'
-CONF_CLIENT_SECRET = 'client_secret'
+CONF_CLIENT_ID = "client_id"
+CONF_CLIENT_SECRET = "client_secret"
 
-SOMFY_AUTH_CALLBACK_PATH = '/auth/somfy/callback'
-SOMFY_AUTH_START = '/auth/somfy'
+SOMFY_AUTH_CALLBACK_PATH = "/auth/somfy/callback"
+SOMFY_AUTH_START = "/auth/somfy"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_CLIENT_ID): cv.string,
-        vol.Required(CONF_CLIENT_SECRET): cv.string
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_CLIENT_ID): cv.string,
+                vol.Required(CONF_CLIENT_SECRET): cv.string,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
-SOMFY_COMPONENTS = ['cover']
+SOMFY_COMPONENTS = ["cover"]
 
 
 async def async_setup(hass, config):
@@ -53,43 +58,45 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = {}
 
     config_flow.register_flow_implementation(
-        hass, config[DOMAIN][CONF_CLIENT_ID],
-        config[DOMAIN][CONF_CLIENT_SECRET])
+        hass, config[DOMAIN][CONF_CLIENT_ID], config[DOMAIN][CONF_CLIENT_SECRET]
+    )
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={'source': config_entries.SOURCE_IMPORT},
-        ))
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
+        )
+    )
 
     return True
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Somfy from a config entry."""
+
     def token_saver(token):
-        _LOGGER.debug('Saving updated token')
+        _LOGGER.debug("Saving updated token")
         entry.data[CONF_TOKEN] = token
         update_entry = partial(
-            hass.config_entries.async_update_entry,
-            data={**entry.data}
+            hass.config_entries.async_update_entry, data={**entry.data}
         )
         hass.add_job(update_entry, entry)
 
     # Force token update.
     from pymfy.api.somfy_api import SomfyApi
+
     hass.data[DOMAIN][API] = SomfyApi(
-        entry.data['refresh_args']['client_id'],
-        entry.data['refresh_args']['client_secret'],
+        entry.data["refresh_args"]["client_id"],
+        entry.data["refresh_args"]["client_secret"],
         token=entry.data[CONF_TOKEN],
-        token_updater=token_saver
+        token_updater=token_saver,
     )
 
     await update_all_devices(hass)
 
     for component in SOMFY_COMPONENTS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component))
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
 
     return True
 
@@ -125,20 +132,19 @@ class SomfyEntity(Entity):
         Implemented by platform classes.
         """
         return {
-            'identifiers': {(DOMAIN, self.unique_id)},
-            'name': self.name,
-            'model': self.device.type,
-            'via_hub': (DOMAIN, self.device.site_id),
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "model": self.device.type,
+            "via_hub": (DOMAIN, self.device.site_id),
             # For the moment, Somfy only returns their own device.
-            'manufacturer': 'Somfy'
+            "manufacturer": "Somfy",
         }
 
     async def async_update(self):
         """Update the device with the latest data."""
         await update_all_devices(self.hass)
         devices = self.hass.data[DOMAIN][DEVICES]
-        self.device = next((d for d in devices if d.id == self.device.id),
-                           self.device)
+        self.device = next((d for d in devices if d.id == self.device.id), self.device)
 
     def has_capability(self, capability):
         """Test if device has a capability."""
@@ -151,10 +157,10 @@ async def update_all_devices(hass):
     """Update all the devices."""
     from requests import HTTPError
     from oauthlib.oauth2 import TokenExpiredError
+
     try:
         data = hass.data[DOMAIN]
-        data[DEVICES] = await hass.async_add_executor_job(
-            data[API].get_devices)
+        data[DEVICES] = await hass.async_add_executor_job(data[API].get_devices)
     except TokenExpiredError:
         _LOGGER.warning("Cannot update devices due to expired token")
     except HTTPError:

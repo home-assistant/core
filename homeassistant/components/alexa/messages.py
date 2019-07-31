@@ -23,8 +23,8 @@ class AlexaDirective:
     def __init__(self, request):
         """Initialize a directive."""
         self._directive = request[API_DIRECTIVE]
-        self.namespace = self._directive[API_HEADER]['namespace']
-        self.name = self._directive[API_HEADER]['name']
+        self.namespace = self._directive[API_HEADER]["namespace"]
+        self.name = self._directive[API_HEADER]["name"]
         self.payload = self._directive[API_PAYLOAD]
         self.has_endpoint = API_ENDPOINT in self._directive
 
@@ -44,27 +44,23 @@ class AlexaDirective:
         Will raise AlexaInvalidEndpointError if the endpoint in the request is
         malformed or nonexistant.
         """
-        _endpoint_id = self._directive[API_ENDPOINT]['endpointId']
-        self.entity_id = _endpoint_id.replace('#', '.')
+        _endpoint_id = self._directive[API_ENDPOINT]["endpointId"]
+        self.entity_id = _endpoint_id.replace("#", ".")
 
         self.entity = hass.states.get(self.entity_id)
         if not self.entity or not config.should_expose(self.entity_id):
             raise AlexaInvalidEndpointError(_endpoint_id)
 
-        self.endpoint = ENTITY_ADAPTERS[self.entity.domain](
-            hass, config, self.entity)
+        self.endpoint = ENTITY_ADAPTERS[self.entity.domain](hass, config, self.entity)
 
-    def response(self,
-                 name='Response',
-                 namespace='Alexa',
-                 payload=None):
+    def response(self, name="Response", namespace="Alexa", payload=None):
         """Create an API formatted response.
 
         Async friendly.
         """
         response = AlexaResponse(name, namespace, payload)
 
-        token = self._directive[API_HEADER].get('correlationToken')
+        token = self._directive[API_HEADER].get("correlationToken")
         if token:
             response.set_correlation_token(token)
 
@@ -74,30 +70,29 @@ class AlexaDirective:
         return response
 
     def error(
-            self,
-            namespace='Alexa',
-            error_type='INTERNAL_ERROR',
-            error_message="",
-            payload=None
+        self,
+        namespace="Alexa",
+        error_type="INTERNAL_ERROR",
+        error_message="",
+        payload=None,
     ):
         """Create a API formatted error response.
 
         Async friendly.
         """
         payload = payload or {}
-        payload['type'] = error_type
-        payload['message'] = error_message
+        payload["type"] = error_type
+        payload["message"] = error_message
 
-        _LOGGER.info("Request %s/%s error %s: %s",
-                     self._directive[API_HEADER]['namespace'],
-                     self._directive[API_HEADER]['name'],
-                     error_type, error_message)
-
-        return self.response(
-            name='ErrorResponse',
-            namespace=namespace,
-            payload=payload
+        _LOGGER.info(
+            "Request %s/%s error %s: %s",
+            self._directive[API_HEADER]["namespace"],
+            self._directive[API_HEADER]["name"],
+            error_type,
+            error_message,
         )
+
+        return self.response(name="ErrorResponse", namespace=namespace, payload=payload)
 
 
 class AlexaResponse:
@@ -109,10 +104,10 @@ class AlexaResponse:
         self._response = {
             API_EVENT: {
                 API_HEADER: {
-                    'namespace': namespace,
-                    'name': name,
-                    'messageId': str(uuid4()),
-                    'payloadVersion': '3',
+                    "namespace": namespace,
+                    "name": name,
+                    "messageId": str(uuid4()),
+                    "payloadVersion": "3",
                 },
                 API_PAYLOAD: payload,
             }
@@ -121,12 +116,12 @@ class AlexaResponse:
     @property
     def name(self):
         """Return the name of this response."""
-        return self._response[API_EVENT][API_HEADER]['name']
+        return self._response[API_EVENT][API_HEADER]["name"]
 
     @property
     def namespace(self):
         """Return the namespace of this response."""
-        return self._response[API_EVENT][API_HEADER]['namespace']
+        return self._response[API_EVENT][API_HEADER]["namespace"]
 
     def set_correlation_token(self, token):
         """Set the correlationToken.
@@ -134,7 +129,7 @@ class AlexaResponse:
         This should normally mirror the value from a request, and is set by
         AlexaDirective.response() usually.
         """
-        self._response[API_EVENT][API_HEADER]['correlationToken'] = token
+        self._response[API_EVENT][API_HEADER]["correlationToken"] = token
 
     def set_endpoint_full(self, bearer_token, endpoint_id, cookie=None):
         """Set the endpoint dictionary.
@@ -142,17 +137,14 @@ class AlexaResponse:
         This is used to send proactive messages to Alexa.
         """
         self._response[API_EVENT][API_ENDPOINT] = {
-            API_SCOPE: {
-                'type': 'BearerToken',
-                'token': bearer_token
-            }
+            API_SCOPE: {"type": "BearerToken", "token": bearer_token}
         }
 
         if endpoint_id is not None:
-            self._response[API_EVENT][API_ENDPOINT]['endpointId'] = endpoint_id
+            self._response[API_EVENT][API_ENDPOINT]["endpointId"] = endpoint_id
 
         if cookie is not None:
-            self._response[API_EVENT][API_ENDPOINT]['cookie'] = cookie
+            self._response[API_EVENT][API_ENDPOINT]["cookie"] = cookie
 
     def set_endpoint(self, endpoint):
         """Set the endpoint.
@@ -164,7 +156,7 @@ class AlexaResponse:
 
     def _properties(self):
         context = self._response.setdefault(API_CONTEXT, {})
-        return context.setdefault('properties', [])
+        return context.setdefault("properties", [])
 
     def add_context_property(self, prop):
         """Add a property to the response context.
@@ -189,10 +181,10 @@ class AlexaResponse:
         Handlers should be using .add_context_property().
         """
         properties = self._properties()
-        already_set = {(p['namespace'], p['name']) for p in properties}
+        already_set = {(p["namespace"], p["name"]) for p in properties}
 
         for prop in endpoint.serialize_properties():
-            if (prop['namespace'], prop['name']) not in already_set:
+            if (prop["namespace"], prop["name"]) not in already_set:
                 self.add_context_property(prop)
 
     def serialize(self):
