@@ -21,7 +21,7 @@ def configured_instances(hass):
 class AmbientStationFlowHandler(config_entries.ConfigFlow):
     """Handle an Ambient PWS config flow."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     async def _show_form(self, errors=None):
