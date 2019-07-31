@@ -4,54 +4,69 @@ import socket
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE, SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET)
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
+)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, STATE_IDLE, STATE_OFF, STATE_ON,
-    STATE_PLAYING, STATE_UNKNOWN)
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_PORT,
+    STATE_IDLE,
+    STATE_OFF,
+    STATE_ON,
+    STATE_PLAYING,
+    STATE_UNKNOWN,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
-        DOMAIN, SERVICE_SNAPSHOT, SERVICE_RESTORE, SERVICE_JOIN,
-        SERVICE_UNJOIN, ATTR_MASTER)
+    DOMAIN,
+    SERVICE_SNAPSHOT,
+    SERVICE_RESTORE,
+    SERVICE_JOIN,
+    SERVICE_UNJOIN,
+    ATTR_MASTER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_KEY = 'snapcast'
+DATA_KEY = "snapcast"
 
-SUPPORT_SNAPCAST_CLIENT = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET |\
-        SUPPORT_SELECT_SOURCE
-SUPPORT_SNAPCAST_GROUP = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET |\
-    SUPPORT_SELECT_SOURCE
+SUPPORT_SNAPCAST_CLIENT = (
+    SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_SELECT_SOURCE
+)
+SUPPORT_SNAPCAST_GROUP = (
+    SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_SELECT_SOURCE
+)
 
-GROUP_PREFIX = 'snapcast_group_'
-GROUP_SUFFIX = 'Snapcast Group'
-CLIENT_PREFIX = 'snapcast_client_'
-CLIENT_SUFFIX = 'Snapcast Client'
+GROUP_PREFIX = "snapcast_group_"
+GROUP_SUFFIX = "Snapcast Group"
+CLIENT_PREFIX = "snapcast_client_"
+CLIENT_SUFFIX = "Snapcast Client"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT): cv.port,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_PORT): cv.port}
+)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Snapcast platform."""
     import snapcast.control
     from snapcast.control.server import CONTROL_PORT
+
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT, CONTROL_PORT)
 
     async def async_service_handle(service_event, service, data):
         """Handle dispatched services."""
         entity_ids = data.get(ATTR_ENTITY_ID)
-        devices = [device for device in hass.data[DATA_KEY]
-                   if device.entity_id in entity_ids]
+        devices = [
+            device for device in hass.data[DATA_KEY] if device.entity_id in entity_ids
+        ]
         for device in devices:
             if service == SERVICE_SNAPSHOT:
                 device.snapshot()
@@ -59,8 +74,11 @@ async def async_setup_platform(hass, config, async_add_entities,
                 await device.async_restore()
             elif service == SERVICE_JOIN:
                 if isinstance(device, SnapcastClientDevice):
-                    master = [e for e in hass.data[DATA_KEY]
-                              if e.entity_id == data[ATTR_MASTER]]
+                    master = [
+                        e
+                        for e in hass.data[DATA_KEY]
+                        if e.entity_id == data[ATTR_MASTER]
+                    ]
                     if isinstance(master[0], SnapcastClientDevice):
                         await device.async_join(master[0])
             elif service == SERVICE_UNJOIN:
@@ -73,14 +91,14 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     try:
         server = await snapcast.control.create_server(
-            hass.loop, host, port, reconnect=True)
+            hass.loop, host, port, reconnect=True
+        )
     except socket.gaierror:
-        _LOGGER.error("Could not connect to Snapcast server at %s:%d",
-                      host, port)
+        _LOGGER.error("Could not connect to Snapcast server at %s:%d", host, port)
         return
 
     # Note: Host part is needed, when using multiple snapservers
-    hpid = '{}:{}'.format(host, port)
+    hpid = "{}:{}".format(host, port)
 
     groups = [SnapcastGroupDevice(group, hpid) for group in server.groups]
     clients = [SnapcastClientDevice(client, hpid) for client in server.clients]
@@ -96,16 +114,15 @@ class SnapcastGroupDevice(MediaPlayerDevice):
         """Initialize the Snapcast group device."""
         group.set_callback(self.schedule_update_ha_state)
         self._group = group
-        self._uid = '{}{}_{}'.format(GROUP_PREFIX, uid_part,
-                                     self._group.identifier)
+        self._uid = "{}{}_{}".format(GROUP_PREFIX, uid_part, self._group.identifier)
 
     @property
     def state(self):
         """Return the state of the player."""
         return {
-            'idle': STATE_IDLE,
-            'playing': STATE_PLAYING,
-            'unknown': STATE_UNKNOWN,
+            "idle": STATE_IDLE,
+            "playing": STATE_PLAYING,
+            "unknown": STATE_UNKNOWN,
         }.get(self._group.stream_status, STATE_UNKNOWN)
 
     @property
@@ -116,7 +133,7 @@ class SnapcastGroupDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return '{}{}'.format(GROUP_PREFIX, self._group.identifier)
+        return "{}{}".format(GROUP_PREFIX, self._group.identifier)
 
     @property
     def source(self):
@@ -146,10 +163,8 @@ class SnapcastGroupDevice(MediaPlayerDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        name = '{} {}'.format(self._group.friendly_name, GROUP_SUFFIX)
-        return {
-            'friendly_name': name
-        }
+        name = "{} {}".format(self._group.friendly_name, GROUP_SUFFIX)
+        return {"friendly_name": name}
 
     @property
     def should_poll(self):
@@ -189,8 +204,7 @@ class SnapcastClientDevice(MediaPlayerDevice):
         """Initialize the Snapcast client device."""
         client.set_callback(self.schedule_update_ha_state)
         self._client = client
-        self._uid = '{}{}_{}'.format(CLIENT_PREFIX, uid_part,
-                                     self._client.identifier)
+        self._uid = "{}{}_{}".format(CLIENT_PREFIX, uid_part, self._client.identifier)
 
     @property
     def unique_id(self):
@@ -209,7 +223,7 @@ class SnapcastClientDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return '{}{}'.format(CLIENT_PREFIX, self._client.identifier)
+        return "{}{}".format(CLIENT_PREFIX, self._client.identifier)
 
     @property
     def source(self):
@@ -246,10 +260,8 @@ class SnapcastClientDevice(MediaPlayerDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        name = '{} {}'.format(self._client.friendly_name, CLIENT_SUFFIX)
-        return {
-            'friendly_name': name
-        }
+        name = "{} {}".format(self._client.friendly_name, CLIENT_SUFFIX)
+        return {"friendly_name": name}
 
     @property
     def should_poll(self):
@@ -275,8 +287,11 @@ class SnapcastClientDevice(MediaPlayerDevice):
 
     async def async_join(self, master):
         """Join the group of the master player."""
-        master_group = [group for group in self._client.groups_available()
-                        if master.identifier in group.clients]
+        master_group = [
+            group
+            for group in self._client.groups_available()
+            if master.identifier in group.clients
+        ]
         await master_group[0].add_client(self._client.identifier)
         self.async_schedule_update_ha_state()
 

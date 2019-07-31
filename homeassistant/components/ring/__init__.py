@@ -5,8 +5,7 @@ from datetime import timedelta
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, \
-    CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_SCAN_INTERVAL
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.dispatcher import dispatcher_send
 import homeassistant.helpers.config_validation as cv
@@ -15,28 +14,32 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by Ring.com"
 
-NOTIFICATION_ID = 'ring_notification'
-NOTIFICATION_TITLE = 'Ring Setup'
+NOTIFICATION_ID = "ring_notification"
+NOTIFICATION_TITLE = "Ring Setup"
 
-DATA_RING_DOORBELLS = 'ring_doorbells'
-DATA_RING_STICKUP_CAMS = 'ring_stickup_cams'
-DATA_RING_CHIMES = 'ring_chimes'
+DATA_RING_DOORBELLS = "ring_doorbells"
+DATA_RING_STICKUP_CAMS = "ring_stickup_cams"
+DATA_RING_CHIMES = "ring_chimes"
 
-DOMAIN = 'ring'
-DEFAULT_CACHEDB = '.ring_cache.pickle'
-DEFAULT_ENTITY_NAMESPACE = 'ring'
-SIGNAL_UPDATE_RING = 'ring_update'
+DOMAIN = "ring"
+DEFAULT_CACHEDB = ".ring_cache.pickle"
+DEFAULT_ENTITY_NAMESPACE = "ring"
+SIGNAL_UPDATE_RING = "ring_update"
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
-            cv.time_period,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
@@ -62,11 +65,12 @@ def setup(hass, config):
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Ring service: %s", str(ex))
         hass.components.persistent_notification.create(
-            'Error: {}<br />'
-            'You will need to restart hass after fixing.'
-            ''.format(ex),
+            "Error: {}<br />"
+            "You will need to restart hass after fixing."
+            "".format(ex),
             title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID)
+            notification_id=NOTIFICATION_ID,
+        )
         return False
 
     def service_hub_refresh(service):
@@ -86,7 +90,7 @@ def setup(hass, config):
         dispatcher_send(hass, SIGNAL_UPDATE_RING)
 
     # register service
-    hass.services.register(DOMAIN, 'update', service_hub_refresh)
+    hass.services.register(DOMAIN, "update", service_hub_refresh)
 
     # register scan interval for ring
     track_time_interval(hass, timer_hub_refresh, scan_interval)

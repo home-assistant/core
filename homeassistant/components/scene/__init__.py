@@ -11,9 +11,9 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.state import HASS_DOMAIN
 
-DOMAIN = 'scene'
-STATE = 'scening'
-STATES = 'states'
+DOMAIN = "scene"
+STATE = "scening"
+STATES = "states"
 
 
 def _hass_domain_validator(config):
@@ -27,17 +27,18 @@ def _hass_domain_validator(config):
 def _platform_validator(config):
     """Validate it is a valid  platform."""
     try:
-        platform = importlib.import_module('.{}'.format(config[CONF_PLATFORM]),
-                                           __name__)
+        platform = importlib.import_module(
+            ".{}".format(config[CONF_PLATFORM]), __name__
+        )
     except ImportError:
         try:
             platform = importlib.import_module(
-                'homeassistant.components.{}.scene'.format(
-                    config[CONF_PLATFORM]))
+                "homeassistant.components.{}.scene".format(config[CONF_PLATFORM])
+            )
         except ImportError:
-            raise vol.Invalid('Invalid platform specified') from None
+            raise vol.Invalid("Invalid platform specified") from None
 
-    if not hasattr(platform, 'PLATFORM_SCHEMA'):
+    if not hasattr(platform, "PLATFORM_SCHEMA"):
         return config
 
     return platform.PLATFORM_SCHEMA(config)
@@ -46,11 +47,11 @@ def _platform_validator(config):
 PLATFORM_SCHEMA = vol.Schema(
     vol.All(
         _hass_domain_validator,
-        vol.Schema({
-            vol.Required(CONF_PLATFORM): str
-        }, extra=vol.ALLOW_EXTRA),
-        _platform_validator
-    ), extra=vol.ALLOW_EXTRA)
+        vol.Schema({vol.Required(CONF_PLATFORM): str}, extra=vol.ALLOW_EXTRA),
+        _platform_validator,
+    ),
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):
@@ -69,8 +70,11 @@ async def async_setup(hass, config):
             await asyncio.wait(tasks)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, async_handle_scene_service,
-        schema=ENTITY_SERVICE_SCHEMA)
+        DOMAIN,
+        SERVICE_TURN_ON,
+        async_handle_scene_service,
+        schema=ENTITY_SERVICE_SCHEMA,
+    )
 
     return True
 
