@@ -13,6 +13,14 @@ UNIT_LUX = "lux"
 UNIT_CO2 = "ppm"
 
 
+ENTITY_TYPES = {
+    'humidity': HomeKitHumiditySensor,
+    'temperature': HomeKitTemperatureSensor,
+    'light': HomeKitLightSensor,
+    'carbon-dioxide': HomeKitCarbonDioxideSensor,
+}
+
+
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Legacy set up platform."""
