@@ -98,7 +98,8 @@ async def async_setup(hass, config):
         # Validate version
         update_available = False
         if StrictVersion(newest) > StrictVersion(current_version):
-            _LOGGER.info("The latest available version is %s", newest)
+            _LOGGER.info(
+                "The latest available version of Home Assistant is %s", newest)
             update_available = True
         elif StrictVersion(newest) == StrictVersion(current_version):
             _LOGGER.info(
