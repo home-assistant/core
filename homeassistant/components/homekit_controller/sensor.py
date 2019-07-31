@@ -39,7 +39,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             async_add_entities([HomeKitLightSensor(conn, info)], True)
             return True
         
-        if devtype == 'co2':
+        if devtype == 'carbon-dioxide':
             async_add_entities([HomeKitCarbonDioxideSensor(conn, info)], True)
             return True
 
@@ -171,7 +171,7 @@ class HomeKitLightSensor(HomeKitEntity):
         return self._state
 
 class HomeKitCarbonDioxideSensor(HomeKitEntity):
-    """Representation of a Homekit CO2 sensor."""
+    """Representation of a Homekit Carbon Dioxide sensor."""
 
     def __init__(self, *args):
         """Initialise the entity."""
