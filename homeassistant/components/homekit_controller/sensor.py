@@ -20,7 +20,7 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up Homekit lighting."""
+    """Set up Homekit sensors."""
     hkid = config_entry.data['AccessoryPairingID']
     conn = hass.data[KNOWN_DEVICES][hkid]
 
