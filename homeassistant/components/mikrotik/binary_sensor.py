@@ -3,10 +3,10 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, DEVICE_CLASS_CONNECTIVITY)
+    BinarySensorDevice)
 from homeassistant.const import CONF_HOST, CONF_BINARY_SENSORS
-from . import (NAME, MIKROTIK, CLIENT, BINARY_SENSOR,
-               BINARY_SENSORS, BINARY_SENSOR_NETWATCH)
+from . import (MIKROTIK, CLIENT,
+    BINARY_SENSORS, BINARY_SENSOR_NETWATCH)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,6 +21,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     host = discovery_info[CONF_HOST]
     client = hass.data[CLIENT]
     entities = []
+    binary_sensors = hass.data[MIKROTIK][host][CONF_BINARY_SENSORS]
     hass.data[MIKROTIK][host][CONF_BINARY_SENSORS] = {}
     for sensor_type in discovery_info[CONF_BINARY_SENSORS]:
         hass.data[MIKROTIK][host][sensor_type] = {}
@@ -29,7 +30,7 @@ async def async_setup_platform(hass, config, async_add_entities,
             await client.update_binary_sensor(host, sensor_type)
             count = int(hass.data[MIKROTIK][host][sensor_type]['count'])
             for index in range(count):
-                binary_sensor = hass.data[MIKROTIK][host][CONF_BINARY_SENSORS][sensor_type][index]['attrib']
+                binary_sensor = binary_sensors[sensor_type][index]['attrib']
                 if 'comment' in binary_sensor:
                     sensor_name = binary_sensor['comment']
                 else:
@@ -84,7 +85,9 @@ class MikrotikBinarySensor(BinarySensorDevice):
     async def async_update(self, now=None):
         """Update entity."""
         if self._index == 0:
-            await self._client.update_binary_sensor(self._host, self._sensor_type, self._index)
-        binary_sensor = self.hass.data[MIKROTIK][self._host][CONF_BINARY_SENSORS][self._sensor_type][self._index]
+            await self._client.update_binary_sensor(
+                self._host, self._sensor_type, self._index)
+        binary_sensors = self.hass.data[MIKROTIK][self._host][CONF_BINARY_SENSORS]
+        binary_sensor = binary_sensors[self._sensor_type][self._index]
         self._state = bool(binary_sensor.get('state'))
         self._attrs = binary_sensor.get('attrib')
