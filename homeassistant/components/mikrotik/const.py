@@ -1,4 +1,4 @@
-"""Constants used in the Mikrotik components"""
+"""Constants used in the Mikrotik components."""
 
 MIKROTIK = 'mikrotik'
 CLIENT = 'mikrotik_client'
@@ -125,6 +125,6 @@ BINARY_SENSORS = {
                              'name'],
 }
 
- ATTRIB_DEVICE_TRACKER = ['mac-address', 'rx-signal', 'ssid', 'interface',
+ATTRIB_DEVICE_TRACKER = ['mac-address', 'rx-signal', 'ssid', 'interface',
                          'comment', 'host-name', 'address', 'uptime',
                          'rx-rate', 'tx-rate', 'last-seen']
