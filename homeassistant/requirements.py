@@ -42,20 +42,20 @@ async def async_get_integration_with_requirements(
     if hass.config.skip_pip or not integration.requirements:
         return integration
 
-    if not await async_process_requirements(
+    await async_process_requirements(
         hass, integration.domain, integration.requirements
-    ):
-        raise RequirementsNotFound(integration.domain, integration.requirements)
+    )
 
     return integration
 
 
 async def async_process_requirements(
     hass: HomeAssistant, name: str, requirements: List[str]
-) -> bool:
+) -> None:
     """Install the requirements for a component or platform.
 
-    This method is a coroutine.
+    This method is a coroutine. It will raise RequirementsNotFound
+    if an requirement can't be satisfied.
     """
     pip_lock = hass.data.get(DATA_PIP_LOCK)
     if pip_lock is None:
@@ -71,14 +71,7 @@ async def async_process_requirements(
             ret = await hass.async_add_executor_job(_install, hass, req, kwargs)
 
             if not ret:
-                _LOGGER.error(
-                    "Not initializing %s because could not install " "requirement %s",
-                    name,
-                    req,
-                )
-                return False
-
-    return True
+                raise RequirementsNotFound(name, [req])
 
 
 def _install(hass: HomeAssistant, req: str, kwargs: Dict) -> bool:

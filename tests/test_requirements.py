@@ -82,7 +82,7 @@ async def test_install_existing_package(hass):
     with patch(
         "homeassistant.util.package.install_package", return_value=mock_coro(True)
     ) as mock_inst:
-        assert await async_process_requirements(
+        await async_process_requirements(
             hass, "test_component", ["hello==1.0.0"]
         )
 
@@ -91,11 +91,20 @@ async def test_install_existing_package(hass):
     with patch("homeassistant.util.package.is_installed", return_value=True), patch(
         "homeassistant.util.package.install_package"
     ) as mock_inst:
-        assert await async_process_requirements(
-            hass, "test_component", ["hello==1.0.0"]
-        )
+        await async_process_requirements(hass, "test_component", ["hello==1.0.0"])
 
     assert len(mock_inst.mock_calls) == 0
+
+
+async def test_install_missing_package(hass):
+    """Test an install attempt on an existing package."""
+    with patch(
+        "homeassistant.util.package.install_package", return_value=False
+    ) as mock_inst:
+        with raises(RequirementsNotFound):
+            await async_process_requirements(hass, "test_component", ["hello==1.0.0"])
+
+    assert len(mock_inst.mock_calls) == 1
 
 
 async def test_get_integration_with_requirements(hass):
