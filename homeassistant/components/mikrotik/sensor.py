@@ -48,7 +48,7 @@ class MikrotikSensor(Entity):
         self._unit = SENSORS[sensor_type][1]
         self._icon = SENSORS[sensor_type][2]
         self._item = SENSORS[sensor_type][3]
-        if not SENSOR in self.hass.data[MIKROTIK][host]:
+        if SENSOR not in self.hass.data[MIKROTIK][host]:
             self.hass.data[MIKROTIK][host][SENSOR] = {}
         self.hass.data[MIKROTIK][host][SENSOR][sensor_type] = {}
 
