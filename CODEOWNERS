@@ -43,7 +43,6 @@ homeassistant/components/azure_event_hub/* @eavanvalkenburg
 homeassistant/components/bitcoin/* @fabaff
 homeassistant/components/bizkaibus/* @UgaitzEtxebarria
 homeassistant/components/blink/* @fronzbot
-homeassistant/components/bmw_connected_drive/* @ChristianKuehnel
 homeassistant/components/braviatv/* @robbiet480
 homeassistant/components/broadlink/* @danielhiversen
 homeassistant/components/brunt/* @eavanvalkenburg
