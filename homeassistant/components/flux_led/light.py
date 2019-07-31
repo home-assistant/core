@@ -278,7 +278,7 @@ class FluxLight(Light):
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
 
         if all(item is None for item in
-                [hs_color, brightness, effect, white, color_temp]):
+               [hs_color, brightness, effect, white, color_temp]):
             return
 
         # handle W only mode (use brightness instead of white value)
