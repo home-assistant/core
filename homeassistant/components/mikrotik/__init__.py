@@ -264,7 +264,8 @@ class MikrotikAPI:
             ssl_context.check_hostname = False
             ssl_context.verify_mode = ssl.CERT_NONE
             kwargs['ssl_wrapper'] = ssl_context.wrap_socket
-        return kwargs
+        self._hosts[host]['kwargs'] = kwargs
+        return
 
     def get_polling_method(self, host):
         """Get Mikrotik device_tracker polling method."""
@@ -305,25 +306,25 @@ class MikrotikAPI:
                 device_tracker = WIRELESS
             else:
                 device_tracker = DHCP
-            _LOGGER.info("Mikrotik %s: Using device_tracker method %s" %
-                         (host, device_tracker))
+            _LOGGER.info("Mikrotik %s: Using device_tracker method %s",
+                         host, device_tracker)
         self._hosts[host][DEVICE_TRACKER] = device_tracker
 
     def connect_to_device(self, host):
         """Connect to Mikrotik method."""
         import librouteros
         import time
-        t = 0
-        while self._hosts[host][CONNECTING] and t < 60:
+        tick = 0
+        while self._hosts[host][CONNECTING] and tick < 60:
             time.sleep(1)
-            t += 1
+            tick += 1
         if self._hosts[host][CONNECTED]:
             return
         self._hosts[host][CONNECTING] = True
         self._hosts[host][CONNECTED] = False
         _LOGGER.debug("[%s] Connecting to Mikrotik device.", host)
         config = self._hosts[host]['config']
-        self._hosts[host]['kwargs'] = self.config_kwargs(config)
+        self.config_kwargs(config)
         try:
             self._client[host] = librouteros.connect(
                 config[CONF_HOST], config[CONF_USERNAME],
@@ -333,8 +334,8 @@ class MikrotikAPI:
                 librouteros.exceptions.MultiTrapError,
                 librouteros.exceptions.ConnectionError) as api_error:
             _LOGGER.error(
-                "Mikrotik error for device %s. "
-                "Connection error: %s" % (host, api_error))
+                "Mikrotik error for device %s. ",
+                "Connection error: %s", host, api_error)
             self._hosts[host][CONNECTING] = False
             self._hosts[host][CONNECTED] = False
             self._client[host] = None
@@ -343,10 +344,10 @@ class MikrotikAPI:
         host_name = (self._client[host](
             cmd=MIKROTIK_SERVICES[IDENTITY]))[0]['name']
         if not host_name:
-            _LOGGER.error("Mikrotik failed to connect to %s." % (host))
+            _LOGGER.error("Mikrotik failed to connect to %s.", host)
             return False
         self.hass.data[MIKROTIK][host]['name'] = host_name
-        _LOGGER.info("Mikrotik Connected to %s (%s)." % (host_name, host))
+        _LOGGER.info("Mikrotik Connected to %s (%s).", host_name, host)
         self._hosts[host][CONNECTING] = False
         self._hosts[host][CONNECTED] = True
         return True
@@ -373,8 +374,8 @@ class MikrotikAPI:
         data = self.get_api(host, '/system/routerboard/getall')
         if data is None:
             _LOGGER.error(
-                "Mikrotik update_info. Device %s is not connected."
-                % host)
+                "Mikrotik update_info. Device %s is not connected.",
+                host)
             self._hosts[host][CONNECTED] = False
             return
         self.hass.data[MIKROTIK][host]['info'] = data[0]
@@ -389,8 +390,8 @@ class MikrotikAPI:
             self.get_polling_method(host)
         method = self._hosts[host][DEVICE_TRACKER]
         _LOGGER.debug(
-            "[%s] Updating Mikrotik device_tracker using %s."
-            % (host, method))
+            "[%s] Updating Mikrotik device_tracker using %s.",
+            host, method)
         data = self.get_api(host, MIKROTIK_SERVICES[method])
         if data is None:
             self.update_info(host)
@@ -433,8 +434,8 @@ class MikrotikAPI:
 
     async def update_sensors(self, host, sensor_type):
         """Update sensors from Mikrotik API."""
-        _LOGGER.debug("[%s] Updating Mikrotik sensor %s." %
-                      (host, sensor_type))
+        _LOGGER.debug("[%s] Updating Mikrotik sensor %s.",
+                      host, sensor_type)
         results = {}
         self.hass.data[MIKROTIK][host][SENSOR][sensor_type] = None
         params = SENSORS[sensor_type][6]
@@ -467,8 +468,8 @@ class MikrotikAPI:
 
     async def update_binary_sensor(self, host, sensor_type, index=None):
         """Update binary sensors from Mikrotik API"""
-        _LOGGER.debug("[%s] Updating Mikrotik binary_sensor %s." %
-                      (host, sensor_type))
+        _LOGGER.debug("[%s] Updating Mikrotik binary_sensor %s.",
+                      host, sensor_type)
         cmd = BINARY_SENSORS[sensor_type][3]
         data = self.get_api(host, cmd)
         if data is None:
@@ -477,11 +478,10 @@ class MikrotikAPI:
         binary_sensors = {}
         self.hass.data[MIKROTIK][host][sensor_type]['count'] = len(data)
         states = BINARY_SENSORS[sensor_type][6]
-        for index in range(len(data)):
+        for index, result in enumerate(data):
             binary_sensors[index] = {}
             binary_sensors[index]['attrib'] = {}
             binary_sensors[index]['state'] = None
-            result = data[index]
             for key in result:
                 if key == BINARY_SENSORS[sensor_type][4]:
                     binary_sensors[index]['state'] = states[result[key]]
@@ -507,8 +507,8 @@ class MikrotikAPI:
                 librouteros.exceptions.MultiTrapError,
                 librouteros.exceptions.ConnectionError) as api_error:
             _LOGGER.error(
-                "[%s] Failed to retrieve data from mikrotik device. "
-                "cmd=[%s] Error: %s" % (host, api_cmd, api_error))
+                "Failed to retrieve data from mikrotik device. "
+                "%s cmd=[%s] Error: %s", host, api_cmd, api_error)
             self._hosts[host][CONNECTED] = False
             return None
         return response
