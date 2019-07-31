@@ -108,10 +108,8 @@ class UnitSystem:
             raise TypeError("{} is not a numeric value.".format(str(temperature)))
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return temperature_util.convert(
-            temperature,  # type: ignore
-            from_unit,
-            self.temperature_unit,
+        return temperature_util.convert(  # type: ignore
+            temperature, from_unit, self.temperature_unit
         )
 
     def length(self, length: Optional[float], from_unit: str) -> float:
@@ -120,10 +118,8 @@ class UnitSystem:
             raise TypeError("{} is not a numeric value.".format(str(length)))
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return distance_util.convert(
-            length,
-            from_unit,  # type: ignore
-            self.length_unit,
+        return distance_util.convert(  # type: ignore
+            length, from_unit, self.length_unit
         )
 
     def pressure(self, pressure: Optional[float], from_unit: str) -> float:
@@ -132,10 +128,8 @@ class UnitSystem:
             raise TypeError("{} is not a numeric value.".format(str(pressure)))
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return pressure_util.convert(
-            pressure,
-            from_unit,  # type: ignore
-            self.pressure_unit,
+        return pressure_util.convert(  # type: ignore
+            pressure, from_unit, self.pressure_unit
         )
 
     def volume(self, volume: Optional[float], from_unit: str) -> float:
@@ -144,10 +138,8 @@ class UnitSystem:
             raise TypeError("{} is not a numeric value.".format(str(volume)))
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return volume_util.convert(
-            volume,
-            from_unit,  # type: ignore
-            self.volume_unit,
+        return volume_util.convert(  # type: ignore
+            volume, from_unit, self.volume_unit
         )
 
     def as_dict(self) -> dict:

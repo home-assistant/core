@@ -169,8 +169,8 @@ async def _async_setup_component(
             )
         elif hasattr(component, "setup"):
             result = await hass.async_add_executor_job(
-                component.setup, hass, processed_config
-            )  # type: ignore
+                component.setup, hass, processed_config  # type: ignore
+            )
         else:
             log_error("No setup function defined.")
             return False
