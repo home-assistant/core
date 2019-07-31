@@ -5,13 +5,29 @@ import logging
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice)
 from homeassistant.const import CONF_HOST, CONF_BINARY_SENSORS
-from . import (MIKROTIK, CLIENT, BINARY_SENSORS,
-               BINARY_SENSOR_NETWATCH)
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
+MIKROITK = 'mikrotik'
+CLIENT = 'mikrotik_client'
+
+BINARY_SENSOR_NETWATCH = 'netwatch'
+BINARY_SENSOR_INTERNET = 'internet'
+ATTRIB_NETWATCH = ['host', 'interval',
+                   'timeout', 'since', 'disabled', 'comment']
+ATTRIB_INTERNET = ['name', 'cloud-rtt', 'state-change-time']
+
+ # Binary Sensors: Name, Class, icon, state, api cmd, attributes, state hash
+BINARY_SENSORS = {
+    BINARY_SENSOR_NETWATCH: ['Netwatch', DEVICE_CLASS_CONNECTIVITY, 
+        'mdi:lan-connect', '/tool/netwatch/getall', 'status', 
+        ATTRIB_NETWATCH, {'up': True, 'down': False}, 'host'],
+    BINARY_SENSOR_INTERNET: ['Internet', DEVICE_CLASS_CONNECTIVITY, 
+        'mdi:wan', '/interface/detect-internet/state/getall', 'state',
+        ATTRIB_INTERNET, {'internet': True, 'unknown': False}, 'name'],
+}
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
@@ -60,7 +76,6 @@ class MikrotikBinarySensor(BinarySensorDevice):
         self._host_name = hass.data[MIKROTIK][host].get('name')
         self._name = '{} {} {}'.format(
             self._host_name, BINARY_SENSORS[sensor_type][0], sensor_name)
-        _LOGGER.debug('[%s] init entity (%d) %s' % (host, index, self._name))
 
     @property
     def name(self):
