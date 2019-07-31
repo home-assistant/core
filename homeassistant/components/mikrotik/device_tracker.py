@@ -2,12 +2,10 @@
 from datetime import timedelta
 import logging
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+from homeassistant.components.device_tracker DeviceScanner
 from homeassistant.const import CONF_HOST
-from . import NAME, CLIENT, DOMAIN as MIKROTIK_DOMAIN, DEVICE_TRACKER
+from . import CLIENT, DOMAIN as MIKROTIK_DOMAIN, DEVICE_TRACKER
 
 
 _LOGGER = logging.getLogger(__name__)
