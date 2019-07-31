@@ -1,6 +1,5 @@
 """Provide pre-made queries on top of the recorder component."""
 from collections import defaultdict
-from collections.abc import Iterable
 from datetime import timedelta
 from itertools import groupby
 import logging
@@ -212,7 +211,7 @@ def states_to_json(
     axis correctly.
     """
     result = defaultdict(list)
-    if isinstance(entity_ids, Iterable):
+    if entity_ids is not None:
         for ent_id in entity_ids:
             result[ent_id] = []
 
