@@ -1,7 +1,13 @@
 """Constants used in the Mikrotik components."""
 
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY)
+from homeassistant.components.sensor import DOMAIN as SENSOR
+
 MIKROTIK = 'mikrotik'
 CLIENT = 'mikrotik_client'
+
+MTK_DEFAULT_WAN = 'ether1'
 
 CONF_ARP_PING = 'arp_ping'
 CONF_WAN_PORT = 'wan_port'
