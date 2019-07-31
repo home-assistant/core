@@ -5,6 +5,7 @@ from tests.components.homekit_controller.common import (
 TEMPERATURE = ('temperature', 'temperature.current')
 HUMIDITY = ('humidity', 'relative-humidity.current')
 LIGHT_LEVEL = ('light', 'light-level.current')
+CARBON_DIOXIDE = ('carbon-dioxide', 'carbon-dioxide.level')
 
 
 def create_temperature_sensor_service():
@@ -32,6 +33,16 @@ def create_light_level_sensor_service():
     service = FakeService('public.hap.service.sensor.light')
 
     cur_state = service.add_characteristic('light-level.current')
+    cur_state.value = 0
+
+    return service
+
+
+def create_carbon_dioxide_level_sensor_service():
+    """Define carbon dioxide level characteristics."""
+    service = FakeService('public.hap.service.sensor.carbon-dioxide')
+
+    cur_state = service.add_characteristic('carbon-dioxide.level')
     cur_state.value = 0
 
     return service
@@ -75,5 +86,18 @@ async def test_light_level_sensor_read_state(hass, utcnow):
     assert state.state == '10'
 
     helper.characteristics[LIGHT_LEVEL].value = 20
+    state = await helper.poll_and_get_state()
+    assert state.state == '20'
+
+async def test_carbon_dioxide_level_sensor_read_state(hass, utcnow):
+    """Test reading the state of a HomeKit carbon dioxide sensor accessory."""
+    sensor = create_carbon_dioxide_level_sensor_service()
+    helper = await setup_test_component(hass, [sensor], suffix="carbon_dioxide_level")
+
+    helper.characteristics[CARBON_DIOXIDE_LEVEL].value = 10
+    state = await helper.poll_and_get_state()
+    assert state.state == '10'
+
+    helper.characteristics[CARBON_DIOXIDE_LEVEL].value = 20
     state = await helper.poll_and_get_state()
     assert state.state == '20'
