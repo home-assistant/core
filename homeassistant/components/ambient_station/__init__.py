@@ -292,28 +292,20 @@ async def async_migrate_entry(hass, config_entry):
 
     _LOGGER.debug('Migrating from version %s', version)
 
-    reasons_to_re_add = {
-        1: "The integration's unique ID format has changed"
-    }
-
     # 1 -> 2: Unique ID format changed, so delete and re-import:
     if version == 1:
-        data = config_entry.data
-        hass.async_create_task(
-            hass.config_entries.async_remove(config_entry.entry_id))
-        flows = hass.config_entries.flow.async_progress()
-        if not any((f for f in flows if f['handler'] == DOMAIN)):
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={'source': SOURCE_IMPORT},
-                    data=data))
+        dev_reg = await hass.helpers.device_registry.async_get_registry()
+        dev_reg.async_clear_config_entry(config_entry)
 
-    _LOGGER.info(
-        'The config entry was automatically recreated: %s',
-        reasons_to_re_add[version])
+        en_reg = await hass.helpers.entity_registry.async_get_registry()
+        en_reg.async_clear_config_entry(config_entry)
 
-    return False
+        version = config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry)
+
+    _LOGGER.info('Migration to version %s successful', version)
+
+    return True
 
 
 class AmbientStation:
