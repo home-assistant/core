@@ -12,17 +12,12 @@ from homeassistant.util import slugify
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER)
 from homeassistant.components.sensor import DOMAIN as SENSOR
-from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY)
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from .const import (CLIENT, CONNECTING, CONNECTED, IDENTITY, MEGA,
                     CONF_ARP_PING, CONF_WAN_PORT, CONF_TRACK_DEVICES,
                     CONF_LOGIN_METHOD, CONF_ENCODING, DEFAULT_ENCODING,
                     ARP, DHCP, WIRELESS, CAPSMAN, MIKROTIK_SERVICES,
-                    SENSOR_SYSINFO, SENSOR_CPU, SENSOR_MEMORY, 
-                    SENSOR_DISK, SENSOR_DOWNLOAD_SPEED, 
-                    SENSOR_UPLOAD_SPEED, SENSORS, BINARY_SENSOR_NETWATCH,
-                    BINARY_SENSOR_INTERNET, BINARY_SENSORS, 
-                    ATTRIB_DEVICE_TRACKER)
+                    SENSORS, BINARY_SENSORS, ATTRIB_DEVICE_TRACKER)
 
 _LOGGER = logging.getLogger(__name__)
 
