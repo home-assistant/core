@@ -5,7 +5,7 @@ import requests_mock
 
 import homeassistant.components.ring.sensor as ring
 from homeassistant.components import ring as base_ring
-
+from homeassistant.helpers.icon import icon_for_battery_level
 from tests.components.ring.test_init import ATTRIBUTION, VALID_CONFIG
 from tests.common import (
     get_test_config_dir, get_test_home_assistant, load_fixture)
@@ -72,6 +72,9 @@ class TestRingSensorSetup(unittest.TestCase):
         for device in self.DEVICES:
             device.update()
             if device.name == 'Front Battery':
+                expected_icon = icon_for_battery_level(
+                    battery_level=int(device.state), charging=False)
+                assert device.icon == expected_icon
                 assert 80 == device.state
                 assert 'hp_cam_v1' == \
                     device.device_state_attributes['kind']
@@ -109,3 +112,4 @@ class TestRingSensorSetup(unittest.TestCase):
             assert device.entity_picture is None
             assert ATTRIBUTION == \
                 device.device_state_attributes['attribution']
+            assert not device.should_poll
