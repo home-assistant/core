@@ -509,7 +509,7 @@ class TestComponentHistory(unittest.TestCase):
         self.check_significant_states(zero, four, states, config)
 
     def test_get_significant_states_are_ordered(self):
-        """Test order of results from get_significant_states
+        """Test order of results from get_significant_states.
 
         When entity ids are given, the results should be returned with the data
         in the same order.
