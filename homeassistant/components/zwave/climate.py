@@ -8,7 +8,7 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_OFF, DOMAIN, HVAC_MODE_COOL, HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY, HVAC_MODE_OFF,
     SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_PRESET_MODE, PRESET_BOOST, PRESET_ECO, PRESET_NONE)
+    SUPPORT_PRESET_MODE, PRESET_BOOST, PRESET_NONE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -47,6 +47,7 @@ HVAC_STATE_MAPPINGS = {
     'dry air': HVAC_MODE_DRY,
     'moist air': HVAC_MODE_DRY,
     'cool': HVAC_MODE_COOL,
+    'heat_cool': HVAC_MODE_HEAT_COOL,
     'auto': HVAC_MODE_HEAT_COOL,
 }
 
@@ -67,6 +68,15 @@ PRESET_MAPPINGS = {
     'full power': PRESET_BOOST,
     'manufacturer specific': PRESET_MANUFACTURER_SPECIFIC,
 }
+
+DEFAULT_HVAC_MODES = [
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_COOL,
+    HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_DRY,
+    HVAC_MODE_OFF,
+]
 
 
 async def async_setup_platform(
@@ -103,6 +113,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         self._hvac_list = None
         self._hvac_mapping = None
         self._hvac_mode = None
+        self._default_hvac_mode = None
         self._preset_mapping = None
         self._preset_list = None
         self._preset_mode = None
@@ -163,7 +174,14 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                         # If nothing matches
                         self._preset_list.append(mode)
 
+            # Default operation mode
+            for mode in DEFAULT_HVAC_MODES:
+                if mode in self._hvac_list:
+                    self._default_hvac_mode = mode
+                    break
+
             if self._preset_list:
+                # Presets are supported
                 self._preset_list.append(PRESET_NONE)
 
             current_mode = self.values.mode.data
@@ -173,7 +191,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
 
             if _hvac_temp is None:
                 # The current mode is not a hvac mode
-                self._hvac_mode = HVAC_MODE_HEAT_COOL
+                self._hvac_mode = self._default_hvac_mode
                 self._preset_mode = next(
                     (key for key, value in self._preset_mapping.items()
                      if value == current_mode), current_mode)
@@ -276,7 +294,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         """
         if self.values.mode:
             return self._hvac_mode
-        return HVAC_MODE_HEAT
+        return self._default_hvac_mode
 
     @property
     def hvac_modes(self):
@@ -348,8 +366,8 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         if not self.values.mode:
             return
         if preset_mode == PRESET_NONE:
-            # Activate the currently active hvac mode (HVAC_MODE_HEAT_COOL)
-            self.values.mode.data = HVAC_MODE_HEAT_COOL
+            # Activate the default hvac mode
+            self.values.mode.data = self._default_hvac_mode
         else:
             self.values.mode.data = self._preset_mapping.get(
                 preset_mode, preset_mode)

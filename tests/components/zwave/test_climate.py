@@ -21,8 +21,10 @@ def device(hass, mock_openzwave):
     values = MockEntityValues(
         primary=MockValue(data=1, node=node),
         temperature=MockValue(data=5, node=node, units=None),
-        mode=MockValue(data=HVAC_MODE_HEAT, data_items=[
-                       HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL],
+        mode=MockValue(data=HVAC_MODE_HEAT, data_items=[HVAC_MODE_OFF,
+                                                        HVAC_MODE_HEAT,
+                                                        HVAC_MODE_COOL,
+                                                        HVAC_MODE_HEAT_COOL],
                        node=node),
         fan_mode=MockValue(data='test2', data_items=[3, 4, 5], node=node),
         operating_state=MockValue(data=CURRENT_HVAC_HEAT, node=node),
@@ -41,8 +43,10 @@ def device_zxt_120(hass, mock_openzwave):
     values = MockEntityValues(
         primary=MockValue(data=1, node=node),
         temperature=MockValue(data=5, node=node, units=None),
-        mode=MockValue(data=HVAC_MODE_HEAT, data_items=[
-                       HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL],
+        mode=MockValue(data=HVAC_MODE_HEAT, data_items=[HVAC_MODE_OFF,
+                                                        HVAC_MODE_HEAT,
+                                                        HVAC_MODE_COOL,
+                                                        HVAC_MODE_HEAT_COOL],
                        node=node),
         fan_mode=MockValue(data='test2', data_items=[3, 4, 5], node=node),
         operating_state=MockValue(data=CURRENT_HVAC_HEAT, node=node),
@@ -63,7 +67,7 @@ def device_mapping(hass, mock_openzwave):
         primary=MockValue(data=1, node=node),
         temperature=MockValue(data=5, node=node, units=None),
         mode=MockValue(data='Heat', data_items=[
-                       'Off', 'Cool', 'Heat', 'Full Power'],
+                       'Off', 'Cool', 'Heat', 'Full Power', 'auto'],
                        node=node),
         fan_mode=MockValue(data='test2', data_items=[3, 4, 5], node=node),
         operating_state=MockValue(data='heating', node=node),
@@ -81,8 +85,27 @@ def device_unknown(hass, mock_openzwave):
     values = MockEntityValues(
         primary=MockValue(data=1, node=node),
         temperature=MockValue(data=5, node=node, units=None),
-        mode=MockValue(data='Heat', data_items=['Off', 'Cool', 'Heat',
-                                                'Abcdefg'],
+        mode=MockValue(data='Heat', data_items=[
+                       'Off', 'Cool', 'Heat', 'heat_cool', 'Abcdefg'],
+                       node=node),
+        fan_mode=MockValue(data='test2', data_items=[3, 4, 5], node=node),
+        operating_state=MockValue(data='test4', node=node),
+        fan_state=MockValue(data=7, node=node),
+    )
+    device = climate.get_device(hass, node=node, values=values, node_config={})
+
+    yield device
+
+
+@pytest.fixture
+def device_heat(hass, mock_openzwave):
+    """Fixture to provide a precreated climate device. Test state heat only."""
+    node = MockNode()
+    values = MockEntityValues(
+        primary=MockValue(data=1, node=node),
+        temperature=MockValue(data=5, node=node, units=None),
+        mode=MockValue(data=HVAC_MODE_HEAT, data_items=[
+                       HVAC_MODE_OFF, HVAC_MODE_HEAT, 'Heat Eco'],
                        node=node),
         fan_mode=MockValue(data='test2', data_items=[3, 4, 5], node=node),
         operating_state=MockValue(data='test4', node=node),
@@ -155,7 +178,8 @@ def test_default_target_temperature(device):
 def test_data_lists(device):
     """Test data lists from zwave value items."""
     assert device.fan_modes == [3, 4, 5]
-    assert device.hvac_modes == [HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL]
+    assert device.hvac_modes == [
+        HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_HEAT_COOL]
     assert device.preset_modes == []
     device.values.mode = None
     assert device.preset_modes == []
@@ -164,7 +188,7 @@ def test_data_lists(device):
 def test_data_lists_mapping(device_mapping):
     """Test data lists from zwave value items."""
     device = device_mapping
-    assert device.hvac_modes == ['off', 'cool', 'heat']
+    assert device.hvac_modes == ['off', 'cool', 'heat', 'heat_cool']
     assert device.preset_modes == ['boost', 'none']
     device.values.mode = None
     assert device.preset_modes == []
@@ -221,6 +245,16 @@ def test_operation_value_set_unknown(device_unknown):
     assert device.values.mode.data == HVAC_MODE_HEAT_COOL
 
 
+def test_operation_value_set_heat(device_heat):
+    """Test values changed for climate device. Heat only."""
+    device = device_heat
+    assert device.values.mode.data == HVAC_MODE_HEAT
+    device.set_preset_mode('Heat Eco')
+    assert device.values.mode.data == 'Heat Eco'
+    device.set_preset_mode(PRESET_NONE)
+    assert device.values.mode.data == HVAC_MODE_HEAT
+
+
 def test_fan_mode_value_set(device):
     """Test values changed for climate device."""
     assert device.values.fan_mode.data == 'test2'
@@ -259,6 +293,9 @@ def test_operation_value_changed(device):
     value_changed(device.values.mode)
     assert device.hvac_mode == HVAC_MODE_OFF
     assert device.preset_mode == PRESET_NONE
+    device.values.mode = None
+    assert device.hvac_mode == HVAC_MODE_HEAT_COOL
+    assert device.preset_mode == PRESET_NONE
 
 
 def test_operation_value_changed_preset(device_mapping):
@@ -270,9 +307,6 @@ def test_operation_value_changed_preset(device_mapping):
     value_changed(device.values.mode)
     assert device.hvac_mode == HVAC_MODE_HEAT_COOL
     assert device.preset_mode == PRESET_ECO
-    device.values.mode = None
-    assert device.hvac_mode == HVAC_MODE_HEAT
-    assert device.preset_mode == PRESET_NONE
 
 
 def test_operation_value_changed_mapping(device_mapping):
@@ -300,7 +334,7 @@ def test_operation_value_changed_mapping_preset(device_mapping):
     assert device.hvac_mode == HVAC_MODE_HEAT_COOL
     assert device.preset_mode == PRESET_BOOST
     device.values.mode = None
-    assert device.hvac_mode == HVAC_MODE_HEAT
+    assert device.hvac_mode == HVAC_MODE_HEAT_COOL
     assert device.preset_mode == PRESET_NONE
 
 
