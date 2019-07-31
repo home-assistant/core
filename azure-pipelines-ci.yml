@@ -94,9 +94,8 @@ stages:
         python -m venv venv
 
         . venv/bin/activate
-        pip install -U pip setuptools
+        pip install -U pip setuptools pytest-azurepipelines -c homeassistant/package_constraints.txt
         pip install -r requirements_test_all.txt -c homeassistant/package_constraints.txt
-        pip install pytest-azurepipelines -c homeassistant/package_constraints.txt
       displayName: 'Create Virtual Environment & Install Requirements'
       condition: and(succeeded(), ne(variables['CacheRestored'], 'true'))
     # Explicit Cache Save (instead of using RestoreAndSaveCache)
@@ -187,7 +186,7 @@ stages:
         python -m venv venv
 
         . venv/bin/activate
-        pip install -r requirements_test.txt
+        pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
       displayName: 'Setup Env'
     - script: |
         . venv/bin/activate
