@@ -2,7 +2,7 @@
 import logging
 from typing import Optional, List
 
-from pizone import Zone, Controller, Listener
+from pizone import Zone, Controller
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -17,8 +17,12 @@ from homeassistant.const import (
     ATTR_TEMPERATURE, PRECISION_HALVES, TEMP_CELSIUS)
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DATA_ADD_ENTRIES, DATA_DISCOVERY_SERVICE, IZONE
+from .const import (
+    DATA_ADD_ENTRIES, DATA_DISCOVERY_SERVICE, IZONE,
+    DISPATCH_CONTROLLER_DISCONNECTED, DISPATCH_CONTROLLER_RECONNECTED,
+    DISPATCH_CONTROLLER_UPDATE, DISPATCH_ZONE_UPDATE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,34 +103,33 @@ class ControllerDevice(ClimateDevice):
     async def async_added_to_hass(self):
         """Call on adding to hass."""
         # Register for connect/disconnect/update events
-        device = self
-        controller = self._controller
+        def controller_disconnected(
+                ctrl: Controller, ex: Exception) -> None:
+            """Disconnected from contrller."""
+            if ctrl is not self._controller:
+                return
+            self.set_available(False, ex)
+        self.async_on_remove(async_dispatcher_connect(
+            self.hass, DISPATCH_CONTROLLER_DISCONNECTED,
+            controller_disconnected))
 
-        class ControllerListener(Listener):
-            """Listener for controller related events."""
+        def controller_reconnected(self, ctrl: Controller) -> None:
+            """Reconnected to controller."""
+            if ctrl is not self._controller:
+                return
+            self.set_available(True)
+        self.async_on_remove(async_dispatcher_connect(
+            self.hass, DISPATCH_CONTROLLER_RECONNECTED,
+            controller_reconnected))
 
-            def controller_disconnected(self, ctrl: Controller,
-                                        ex: Exception) -> None:
-                """Disconnected from contrller."""
-                if ctrl is not controller:
-                    return
-                device.set_available(False, ex)
-
-            def controller_reconnected(self, ctrl: Controller) -> None:
-                """Reconnected to controller."""
-                if ctrl is not controller:
-                    return
-                device.set_available(True)
-
-            def controller_update(self, ctrl: Controller) -> None:
-                """Handle controller data updates."""
-                if ctrl is not controller:
-                    return
-                device.async_schedule_update_ha_state()
-        listener = ControllerListener()
-        controller.discovery.add_listener(listener)
-        self.async_on_remove(
-            lambda: controller.discovery.remove_listener(listener))
+        def controller_update(self, ctrl: Controller) -> None:
+            """Handle controller data updates."""
+            if ctrl is not self._controller:
+                return
+            self.async_schedule_update_ha_state()
+        self.async_on_remove(async_dispatcher_connect(
+            self.hass, DISPATCH_CONTROLLER_UPDATE,
+            controller_update))
 
     @property
     def available(self) -> bool:
@@ -362,26 +365,15 @@ class ZoneDevice(ClimateDevice):
 
     async def async_added_to_hass(self):
         """Call on adding to hass."""
-        device = self
-        controller = self._controller
+        def zone_update(ctrl: Controller, zone: Zone) -> None:
+            """Handle zone data updates."""
+            if zone is not self._zone:
+                return
+            self._name = zone.name.title()
+            self.async_schedule_update_ha_state()
 
-        # pylint: disable=protected-access
-        class ZoneListener(Listener):
-            """Listener for controller related events."""
-
-            def zone_update(
-                    self, ctrl: Controller,
-                    zone: Zone) -> None:
-                """Handle zone data updates."""
-                if zone is not device._zone:
-                    return
-                device._name = zone.name.title()
-                device.async_schedule_update_ha_state()
-
-        listener = ZoneListener()
-        controller._controller.discovery.add_listener(listener)
-        self.async_on_remove(
-            lambda: controller._controller.discovery.remove_listener(listener))
+        self.async_on_remove(async_dispatcher_connect(
+            self.hass, DISPATCH_ZONE_UPDATE, zone_update))
 
     @property
     def available(self) -> bool:
