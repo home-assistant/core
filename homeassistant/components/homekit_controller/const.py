@@ -23,5 +23,6 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     'motion': 'binary_sensor',
     'humidity': 'sensor',
     'light': 'sensor',
-    'temperature': 'sensor'
+    'temperature': 'sensor',
+    'carbon-dioxide': 'sensor'
 }
