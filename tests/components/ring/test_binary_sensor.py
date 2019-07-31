@@ -54,6 +54,8 @@ class TestRingBinarySensorSetup(unittest.TestCase):
                  text=load_fixture('ring_ding_active.json'))
         mock.get('https://api.ring.com/clients_api/doorbots/987652/health',
                  text=load_fixture('ring_doorboot_health_attrs.json'))
+        mock.get('https://api.ring.com/clients_api/chimes/999999/health',
+                 text=load_fixture('ring_chime_health_attrs.json'))
 
         base_ring.setup(self.hass, VALID_CONFIG)
         ring.setup_platform(self.hass,

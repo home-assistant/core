@@ -10,7 +10,8 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS)
 import homeassistant.helpers.config_validation as cv
 
-from . import ATTRIBUTION, DATA_RING, DEFAULT_ENTITY_NAMESPACE
+from . import ATTRIBUTION, DATA_RING_DOORBELLS, DATA_RING_STICKUP_CAMS,\
+    DEFAULT_ENTITY_NAMESPACE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,15 +33,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a sensor for a Ring device."""
-    ring = hass.data[DATA_RING]
+    ring_doorbells = hass.data[DATA_RING_DOORBELLS]
+    ring_stickup_cams = hass.data[DATA_RING_STICKUP_CAMS]
 
     sensors = []
-    for device in ring.doorbells:  # ring.doorbells is doing I/O
+    for device in ring_doorbells:  # ring.doorbells is doing I/O
         for sensor_type in config[CONF_MONITORED_CONDITIONS]:
             if 'doorbell' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingBinarySensor(hass, device, sensor_type))
 
-    for device in ring.stickup_cams:  # ring.stickup_cams is doing I/O
+    for device in ring_stickup_cams:  # ring.stickup_cams is doing I/O
         for sensor_type in config[CONF_MONITORED_CONDITIONS]:
             if 'stickup_cams' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingBinarySensor(hass, device, sensor_type))

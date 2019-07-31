@@ -7,12 +7,15 @@ import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_SCAN_INTERVAL
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.util import dt as dt_util
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.core import callback
 
-from . import ATTRIBUTION, DATA_RING, NOTIFICATION_ID
+from . import ATTRIBUTION, DATA_RING_DOORBELLS, DATA_RING_STICKUP_CAMS, \
+    NOTIFICATION_ID, SIGNAL_UPDATE_RING
 
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 
@@ -22,27 +25,19 @@ _LOGGER = logging.getLogger(__name__)
 
 NOTIFICATION_TITLE = 'Ring Camera Setup'
 
-SCAN_INTERVAL = timedelta(seconds=90)
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
-    vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
+    vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string
 })
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Ring Door Bell and StickUp Camera."""
-    ring = hass.data[DATA_RING]
+    ring_doorbell = hass.data[DATA_RING_DOORBELLS]
+    ring_stickup_cams = hass.data[DATA_RING_STICKUP_CAMS]
 
     cams = []
     cams_no_plan = []
-    for camera in ring.doorbells:
-        if camera.has_subscription:
-            cams.append(RingCam(hass, camera, config))
-        else:
-            cams_no_plan.append(camera)
-
-    for camera in ring.stickup_cams:
+    for camera in ring_doorbell + ring_stickup_cams:
         if camera.has_subscription:
             cams.append(RingCam(hass, camera, config))
         else:
@@ -82,6 +77,17 @@ class RingCam(Camera):
         self._video_url = self._camera.recording_url(self._last_video_id)
         self._utcnow = dt_util.utcnow()
         self._expires_at = FORCE_REFRESH_INTERVAL + self._utcnow
+
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_RING, self._update_callback)
+
+    @callback
+    def _update_callback(self):
+        """Call update method."""
+        self.async_schedule_update_ha_state(True)
+        _LOGGER.debug("Updating Ring camera %s (callback)", self.name)
 
     @property
     def name(self):
@@ -141,14 +147,13 @@ class RingCam(Camera):
 
     @property
     def should_poll(self):
-        """Update the image periodically."""
-        return True
+        """Updates controlled via the hub."""
+        return False
 
     def update(self):
         """Update camera entity and refresh attributes."""
         _LOGGER.debug("Checking if Ring DoorBell needs to refresh video_url")
 
-        self._camera.update()
         self._utcnow = dt_util.utcnow()
 
         try:
