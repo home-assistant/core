@@ -82,7 +82,7 @@ class SirenSwitch(BaseRingSwitch):
         self._device.siren = new_state
         self._siren_on = new_state > 0
         self._no_updates_until = datetime.now() + SKIP_UPDATES_DELAY
-        self.schedule_update_ha_state(True)
+        self.schedule_update_ha_state()
 
     @property
     def is_on(self):
