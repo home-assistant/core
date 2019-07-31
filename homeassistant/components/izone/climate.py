@@ -8,7 +8,6 @@ from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT_COOL, HVAC_MODE_COOL, HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, HVAC_MODE_OFF,
-    HVAC_MODE_AUTO,
     FAN_LOW, FAN_MEDIUM, FAN_HIGH, FAN_AUTO,
     PRESET_ECO, PRESET_NONE,
     SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE,
@@ -113,7 +112,7 @@ class ControllerDevice(ClimateDevice):
             self.hass, DISPATCH_CONTROLLER_DISCONNECTED,
             controller_disconnected))
 
-        def controller_reconnected(self, ctrl: Controller) -> None:
+        def controller_reconnected(ctrl: Controller) -> None:
             """Reconnected to controller."""
             if ctrl is not self._controller:
                 return
@@ -122,7 +121,7 @@ class ControllerDevice(ClimateDevice):
             self.hass, DISPATCH_CONTROLLER_RECONNECTED,
             controller_reconnected))
 
-        def controller_update(self, ctrl: Controller) -> None:
+        def controller_update(ctrl: Controller) -> None:
             """Handle controller data updates."""
             if ctrl is not self._controller:
                 return
@@ -228,6 +227,8 @@ class ControllerDevice(ClimateDevice):
     @property
     def hvac_modes(self) -> List[str]:
         """Return the list of available operation modes."""
+        if self._controller.free_air:
+            return [HVAC_MODE_OFF, HVAC_MODE_FAN_ONLY]
         return [HVAC_MODE_OFF, *self._state_to_pizone]
 
     @property
@@ -317,6 +318,8 @@ class ControllerDevice(ClimateDevice):
             return
         if not self._controller.is_on:
             await self.wrap_and_catch(self._controller.set_on(True))
+        if self._controller.free_air:
+            return
         mode = self._state_to_pizone[hvac_mode]
         await self.wrap_and_catch(self._controller.set_mode(mode))
 
@@ -343,7 +346,7 @@ class ZoneDevice(ClimateDevice):
         if zone.type != Zone.Type.AUTO:
             self._state_to_pizone = {
                 HVAC_MODE_OFF: Zone.Mode.CLOSE,
-                HVAC_MODE_AUTO: Zone.Mode.OPEN,
+                HVAC_MODE_FAN_ONLY: Zone.Mode.OPEN,
             }
         else:
             self._state_to_pizone = {
@@ -417,7 +420,7 @@ class ZoneDevice(ClimateDevice):
                 return self._supported_features
             return self._supported_features & ~SUPPORT_TARGET_TEMPERATURE
         except ConnectionError:
-            return 0
+            return None
 
     @property
     def temperature_unit(self):
