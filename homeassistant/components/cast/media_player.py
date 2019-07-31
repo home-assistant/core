@@ -539,8 +539,7 @@ class CastDevice(MediaPlayerDevice):
         self.media_status = None
         self.media_status_received = None
         self._dynamic_group_cast_info = None  # type: ChromecastInfo
-        self._dynamic_group_cast = None
-        # type: Optional[pychromecast.Chromecast]
+        self._dynamic_group_cast = None  # type: Optional[pychromecast.Chromecast]
         self.dynamic_group_media_status = None
         self.dynamic_group_media_status_received = None
         self.mz_media_status = {}
@@ -549,8 +548,9 @@ class CastDevice(MediaPlayerDevice):
         self._available = False  # type: bool
         self._dynamic_group_available = False  # type: bool
         self._status_listener = None  # type: Optional[CastStatusListener]
-        self._dynamic_group_status_listener = None
-        # type: Optional[DynamicGroupCastStatusListener]
+        self._dynamic_group_status_listener = (
+            None
+        )  # type: Optional[DynamicGroupCastStatusListener]
         self._add_remove_handler = None
         self._del_remove_handler = None
 

@@ -144,8 +144,8 @@ class Data:
     # pylint: disable=no-self-use
     def hash_password(self, password: str, for_storage: bool = False) -> bytes:
         """Encode a password."""
-        hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12))
-        # type: bytes
+        hashed: bytes = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12))
+
         if for_storage:
             hashed = base64.b64encode(hashed)
         return hashed

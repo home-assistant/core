@@ -175,9 +175,8 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
     def _set_tcs_mode(self, op_mode: str) -> None:
         """Set the Controller to any of its native EVO_* operating modes."""
         try:
-            self._evo_tcs._set_status(
-                op_mode
-            )  # noqa: E501; pylint: disable=protected-access
+            # noqa: E501; pylint: disable=protected-access
+            self._evo_tcs._set_status(op_mode)
         except (
             requests.exceptions.RequestException,
             evohomeclient2.AuthenticationError,

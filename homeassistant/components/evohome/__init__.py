@@ -200,8 +200,10 @@ class EvoBroker:
             return False
 
         self.tcs = (
-            client.locations[loc_idx]._gateways[0]._control_systems[0]
-        )  # noqa: E501; pylint: disable=protected-access
+            client.locations[loc_idx]  # noqa: E501; pylint: disable=protected-access
+            ._gateways[0]
+            ._control_systems[0]
+        )
 
         _LOGGER.debug("Config = %s", self.config)
         if _LOGGER.isEnabledFor(logging.DEBUG):

@@ -49,11 +49,15 @@ async def async_setup(hass, hass_config):
         return False
 
     _LOGGER.debug(
-        "zones_raw = %s", data._client.hub._zones_raw
-    )  # noqa; pylint: disable=protected-access
+        # noqa; pylint: disable=protected-access
+        "zones_raw = %s",
+        data._client.hub._zones_raw,
+    )
     _LOGGER.debug(
-        "devices_raw = %s", data._client.hub._devices_raw
-    )  # noqa; pylint: disable=protected-access
+        # noqa; pylint: disable=protected-access
+        "devices_raw = %s",
+        data._client.hub._devices_raw,
+    )
 
     async_track_time_interval(hass, data.async_update, SCAN_INTERVAL)
 
@@ -90,10 +94,14 @@ class GeniusData:
             return
 
         _LOGGER.debug(
-            "zones_raw = %s", self._client.hub._zones_raw
-        )  # noqa; pylint: disable=protected-access
+            # noqa; pylint: disable=protected-access
+            "zones_raw = %s",
+            self._client.hub._zones_raw,
+        )
         _LOGGER.debug(
-            "devices_raw = %s", self._client.hub._devices_raw
-        )  # noqa; pylint: disable=protected-access
+            # noqa; pylint: disable=protected-access
+            "devices_raw = %s",
+            self._client.hub._devices_raw,
+        )
 
         async_dispatcher_send(self._hass, DOMAIN)

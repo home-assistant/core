@@ -67,9 +67,8 @@ class GeniusBinarySensor(BinarySensorDevice):
         attrs = {}
         attrs["assigned_zone"] = self._device.assignedZones[0]["name"]
 
-        last_comms = self._device._raw_json["childValues"]["lastComms"][
-            "val"
-        ]  # noqa; pylint: disable=protected-access
+        # noqa; pylint: disable=protected-access
+        last_comms = self._device._raw_json["childValues"]["lastComms"]["val"]
         if last_comms != 0:
             attrs["last_comms"] = utc_from_timestamp(last_comms).isoformat()
 
