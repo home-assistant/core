@@ -3,6 +3,13 @@
 MIKROTIK = 'mikrotik'
 CLIENT = 'mikrotik_client'
 
+CONF_ARP_PING = 'arp_ping'
+CONF_WAN_PORT = 'wan_port'
+CONF_TRACK_DEVICES = 'track_devices'
+CONF_LOGIN_METHOD = 'login_method'
+CONF_ENCODING = 'encoding'
+DEFAULT_ENCODING = 'utf-8'
+
 CONNECTING = 'connected'
 CONNECTED = 'connected'
 
