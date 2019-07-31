@@ -117,9 +117,10 @@ SENSORS = {
     SENSOR_DOWNLOAD_SPEED: ['Download Speed', 'Mbps',
                             'mdi:download-network',
                             'rx-bits-per-second',
-                            ['/interface/monitor-traffic'], 
-        ATTRIB_DOWNLOAD_SPEED, PARAM_SPEED],
-    SENSOR_UPLOAD_SPEED: ['Upload Speed', 'Mbps', 
+                            ['/interface/monitor-traffic'],
+                            ATTRIB_DOWNLOAD_SPEED,
+                            PARAM_SPEED],
+    SENSOR_UPLOAD_SPEED: ['Upload Speed', 'Mbps',
                           'mdi:upload-network',
                           'tx-bits-per-second',
                           ['/interface/monitor-traffic'],
@@ -136,13 +137,16 @@ ATTRIB_INTERNET = ['name', 'cloud-rtt', 'state-change-time']
 BINARY_SENSORS = {
     BINARY_SENSOR_NETWATCH: ['Netwatch', DEVICE_CLASS_CONNECTIVITY,
                              'mdi:lan-connect', '/tool/netwatch/getall',
-                             'status',
-        ATTRIB_NETWATCH, {'up': True, 'down': False}, 'host'],
+                             'status', ATTRIB_NETWATCH,
+                             {'up': True, 'down': False},
+                             'host'],
     BINARY_SENSOR_INTERNET: ['Internet', DEVICE_CLASS_CONNECTIVITY,
                              'mdi:wan',
                              '/interface/detect-internet/state/getall',
                              'state',
-        ATTRIB_INTERNET, {'internet': True, 'unknown': False}, 'name'],
+                             ATTRIB_INTERNET,
+                             {'internet': True, 'unknown': False},
+                             'name'],
 }
 
 ATTRIB_DEVICE_TRACKER = ['mac-address', 'rx-signal', 'ssid', 'interface',
@@ -404,8 +408,8 @@ class MikrotikAPI:
                 if 'active-address' not in device:
                     continue
                 self.hass.data[MIKROTIK][DHCP][mac] = data
-                if self._hosts[host][CONF_ARP_PING] and
-                mac in self.hass.data[MIKROTIK][ARP]:
+                if (self._hosts[host][CONF_ARP_PING] and
+                        mac in self.hass.data[MIKROTIK][ARP]):
                     interface = self.hass.data[MIKROTIK][
                         ARP][mac]['interface']
                     if not self.arp_ping(host, mac, interface):
@@ -504,7 +508,7 @@ class MikrotikAPI:
                 librouteros.exceptions.MultiTrapError,
                 librouteros.exceptions.ConnectionError) as api_error:
             _LOGGER.error(
-                "[%s] Failed to retrieve data from mikrotik device. " 
+                "[%s] Failed to retrieve data from mikrotik device. "
                 "cmd=[%s] Error: %s" % (host, api_cmd, api_error))
             self._hosts[host][CONNECTED] = False
             return None
