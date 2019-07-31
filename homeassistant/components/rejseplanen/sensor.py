@@ -111,14 +111,24 @@ class RejseplanenTransportSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         if not self._times:
-            return None
+            return {
+                ATTR_DUE_IN: None,
+                ATTR_DUE_AT: None,
+                ATTR_TYPE: None,
+                ATTR_ROUTE: None,
+                ATTR_DIRECTION: None,
+                ATTR_STOP_NAME: None,
+                ATTR_STOP_ID: self._stop_id,
+                ATTR_ATTRIBUTION: ATTRIBUTION,
+                ATTR_NEXT_UP: None
+            }
 
-        next_up = []
+        next_up = None
         if len(self._times) > 1:
             next_up = self._times[1:]
 
-        params = {
-            ATTR_DUE_IN: str(self._times[0][ATTR_DUE_IN]),
+        return {
+            ATTR_DUE_IN: self._times[0][ATTR_DUE_IN],
             ATTR_DUE_AT: self._times[0][ATTR_DUE_AT],
             ATTR_TYPE: self._times[0][ATTR_TYPE],
             ATTR_ROUTE: self._times[0][ATTR_ROUTE],
@@ -128,7 +138,6 @@ class RejseplanenTransportSensor(Entity):
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_NEXT_UP: next_up,
         }
-        return {k: v for k, v in params.items() if v}
 
     @property
     def unit_of_measurement(self):
@@ -144,10 +153,14 @@ class RejseplanenTransportSensor(Entity):
         """Get the latest data from rejseplanen.dk and update the states."""
         self.data.update()
         self._times = self.data.info
-        try:
-            self._state = self._times[0][ATTR_DUE_IN]
-        except TypeError:
-            pass
+
+        if not self._times:
+            self._state = None
+        else:
+            try:
+                self._state = self._times[0][ATTR_DUE_IN]
+            except TypeError:
+                pass
 
 
 class PublicTransportData:
@@ -159,20 +172,7 @@ class PublicTransportData:
         self.route = route
         self.direction = direction
         self.departure_type = departure_type
-        self.info = self.empty_result()
-
-    def empty_result(self):
-        """Object returned when no departures are found."""
-        return [
-            {
-                ATTR_DUE_IN: "n/a",
-                ATTR_DUE_AT: "n/a",
-                ATTR_TYPE: "n/a",
-                ATTR_ROUTE: self.route,
-                ATTR_DIRECTION: "n/a",
-                ATTR_STOP_NAME: "n/a",
-            }
-        ]
+        self.info = []
 
     def update(self):
         """Get the latest data from rejseplanen."""
@@ -200,11 +200,9 @@ class PublicTransportData:
             )
         except rjpl.rjplAPIError as error:
             _LOGGER.debug("API returned error: %s", error)
-            self.info = self.empty_result()
             return
         except (rjpl.rjplConnectionError, rjpl.rjplHTTPError):
             _LOGGER.debug("Error occured while connecting to the API")
-            self.info = self.empty_result()
             return
 
         # Filter result
@@ -246,7 +244,6 @@ class PublicTransportData:
 
         if not self.info:
             _LOGGER.debug("No departures with given parameters")
-            self.info = self.empty_result()
 
         # Sort the data by time
         self.info = sorted(self.info, key=itemgetter(ATTR_DUE_IN))
