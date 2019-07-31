@@ -63,7 +63,7 @@ async def async_setup(hass, hass_config):
         hass.async_create_task(async_load_platform(
             hass, platform, DOMAIN, {}, hass_config))
 
-    if not data._client._api_v1:  # pylint: disable=protected-access
+    if data._client.api_version == 3:  # pylint: disable=protected-access
         for platform in ['sensor', 'binary_sensor']:
             hass.async_create_task(async_load_platform(
                 hass, platform, DOMAIN, {}, hass_config))

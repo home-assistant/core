@@ -1,10 +1,10 @@
 """Support for Genius Hub binary_sensor devices."""
-from datetime import datetime
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util.dt import utc_from_timestamp
 
 from . import DOMAIN
 
@@ -67,9 +67,8 @@ class GeniusBinarySensor(BinarySensorDevice):
         attrs = {}
         attrs['assigned_zone'] = self._device.assignedZones[0]['name']
 
-        last_comms = self._device._info_raw['childValues']['lastComms']['val']  # noqa; pylint: disable=protected-access
+        last_comms = self._device._raw_json['childValues']['lastComms']['val']  # noqa; pylint: disable=protected-access
         if last_comms != 0:
-            attrs['last_comms'] = datetime.utcfromtimestamp(
-                last_comms).isoformat()
+            attrs['last_comms'] = utc_from_timestamp(last_comms).isoformat()
 
         return {**attrs}
