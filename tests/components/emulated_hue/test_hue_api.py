@@ -121,7 +121,7 @@ def hass_hue(loop, hass):
         kitchen_light_entity.entity_id, kitchen_light_entity.state,
         attributes=attrs)
 
-    # create a lamp witout brightness support
+    # create a lamp without brightness support
     hass.states.async_set(
         'light.no_brightness', 'on', {})
 
@@ -225,19 +225,11 @@ def test_discover_lights(hue_client):
 
 @asyncio.coroutine
 def test_light_without_brightness_supported(hass_hue, hue_client):
-    # Turn ceiling light on
-    yield from hass_hue.services.async_call(
-        light.DOMAIN, const.SERVICE_TURN_ON,
-        {
-            const.ATTR_ENTITY_ID: 'light.no_brightness'
-        },
-        blocking=True)
-
-    ceiling_json = yield from perform_get_light_state(
+    light_without_brightness_json = yield from perform_get_light_state(
         hue_client, 'light.no_brightness', 200)
 
-    assert ceiling_json['state'][HUE_API_STATE_ON] is True
-    assert ceiling_json['type'] == 'On/off light'
+    assert light_without_brightness_json['state'][HUE_API_STATE_ON] is True
+    assert light_without_brightness_json['type'] == 'On/off light'
 
 
 @asyncio.coroutine
