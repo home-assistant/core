@@ -189,11 +189,9 @@ stages:
         pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
       displayName: 'Setup Env'
     - script: |
+        TYPING_FILES=$(cat mypyrc)
+        echo -e "Run mypy on: \n$TYPING_FILES"
+
         . venv/bin/activate
-        mypy \
-          homeassistant/*.py \
-          homeassistant/auth/ \
-          homeassistant/helpers/ \
-          homeassistant/scripts/ \
-          homeassistant/util/
+        mypy $TYPING_FILES
       displayName: 'Run mypy'
