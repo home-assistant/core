@@ -112,18 +112,11 @@ class RejseplanenTransportSensor(Entity):
         """Return the state attributes."""
         if not self._times:
             return {
-                ATTR_DUE_IN: None,
-                ATTR_DUE_AT: None,
-                ATTR_TYPE: None,
-                ATTR_ROUTE: None,
-                ATTR_DIRECTION: None,
-                ATTR_STOP_NAME: None,
                 ATTR_STOP_ID: self._stop_id,
-                ATTR_ATTRIBUTION: ATTRIBUTION,
-                ATTR_NEXT_UP: None
+                ATTR_ATTRIBUTION: ATTRIBUTION
             }
 
-        next_up = None
+        next_up = []
         if len(self._times) > 1:
             next_up = self._times[1:]
 
@@ -181,7 +174,7 @@ class PublicTransportData:
         self.info = []
 
         def intersection(lst1, lst2):
-            """Return items contained in both lists."""
+            """Return items contained in both lists"""
             return list(set(lst1) & set(lst2))
 
         # Limit search to selected types, to get more results
