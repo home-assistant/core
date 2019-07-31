@@ -444,6 +444,7 @@ class ZHADevice(LogMixin):
         return response
 
     def log(self, level, msg, *args):
+        """Log a message."""
         msg = '[%s](%s): ' + msg
         args = (self.nwk, self.model, ) + args
         _LOGGER.log(level, msg, *args)

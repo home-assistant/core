@@ -225,6 +225,7 @@ def test_discover_lights(hue_client):
 
 @asyncio.coroutine
 def test_light_without_brightness_supported(hass_hue, hue_client):
+    """Test that light without brightness is supported."""
     light_without_brightness_json = yield from perform_get_light_state(
         hue_client, 'light.no_brightness', 200)
 
