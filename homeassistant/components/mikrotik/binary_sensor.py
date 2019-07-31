@@ -5,8 +5,8 @@ import logging
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice)
 from homeassistant.const import CONF_HOST, CONF_BINARY_SENSORS
-from . import (MIKROTIK, CLIENT,
-    BINARY_SENSORS, BINARY_SENSOR_NETWATCH)
+from . import (MIKROTIK, CLIENT, BINARY_SENSORS, 
+               BINARY_SENSOR_NETWATCH)
 
 _LOGGER = logging.getLogger(__name__)
 
