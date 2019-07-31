@@ -264,6 +264,7 @@ class MikrotikAPI:
             ssl_context.check_hostname = False
             ssl_context.verify_mode = ssl.CERT_NONE
             kwargs['ssl_wrapper'] = ssl_context.wrap_socket
+        host = config.get(CONF_HOST)
         self._hosts[host]['kwargs'] = kwargs
         return
 
