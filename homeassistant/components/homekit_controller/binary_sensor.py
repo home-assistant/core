@@ -20,9 +20,7 @@ class HomeKitMotionSensor(HomeKitEntity, BinarySensorDevice):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
-        return [
-            CharacteristicsTypes.MOTION_DETECTED,
-        ]
+        return [CharacteristicsTypes.MOTION_DETECTED]
 
     def _update_motion_detected(self, value):
         self._on = value
@@ -30,7 +28,7 @@ class HomeKitMotionSensor(HomeKitEntity, BinarySensorDevice):
     @property
     def device_class(self):
         """Define this binary_sensor as a motion sensor."""
-        return 'motion'
+        return "motion"
 
     @property
     def is_on(self):
@@ -48,9 +46,7 @@ class HomeKitContactSensor(HomeKitEntity, BinarySensorDevice):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
-        return [
-            CharacteristicsTypes.CONTACT_STATE,
-        ]
+        return [CharacteristicsTypes.CONTACT_STATE]
 
     def _update_contact_state(self, value):
         self._state = value
@@ -61,28 +57,24 @@ class HomeKitContactSensor(HomeKitEntity, BinarySensorDevice):
         return self._state == 1
 
 
-ENTITY_TYPES = {
-    'motion': HomeKitMotionSensor,
-    'contact': HomeKitContactSensor,
-}
+ENTITY_TYPES = {"motion": HomeKitMotionSensor, "contact": HomeKitContactSensor}
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Legacy set up platform."""
     pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Homekit lighting."""
-    hkid = config_entry.data['AccessoryPairingID']
+    hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     def async_add_service(aid, service):
-        entity_class = ENTITY_TYPES.get(service['stype'])
+        entity_class = ENTITY_TYPES.get(service["stype"])
         if not entity_class:
             return False
-        info = {'aid': aid, 'iid': service['iid']}
+        info = {"aid": aid, "iid": service["iid"]}
         async_add_entities([entity_class(conn, info)], True)
         return True
 

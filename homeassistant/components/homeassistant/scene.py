@@ -4,39 +4,48 @@ from collections import namedtuple
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_STATE, CONF_ENTITIES, CONF_NAME, CONF_PLATFORM,
-    STATE_OFF, STATE_ON)
+    ATTR_ENTITY_ID,
+    ATTR_STATE,
+    CONF_ENTITIES,
+    CONF_NAME,
+    CONF_PLATFORM,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import State
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.state import HASS_DOMAIN, async_reproduce_state
 from homeassistant.components.scene import STATES, Scene
 
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): HASS_DOMAIN,
-    vol.Required(STATES): vol.All(
-        cv.ensure_list,
-        [
-            {
-                vol.Required(CONF_NAME): cv.string,
-                vol.Required(CONF_ENTITIES): {
-                    cv.entity_id: vol.Any(str, bool, dict)
-                },
-            }
-        ]
-    ),
-}, extra=vol.ALLOW_EXTRA)
+PLATFORM_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PLATFORM): HASS_DOMAIN,
+        vol.Required(STATES): vol.All(
+            cv.ensure_list,
+            [
+                {
+                    vol.Required(CONF_NAME): cv.string,
+                    vol.Required(CONF_ENTITIES): {
+                        cv.entity_id: vol.Any(str, bool, dict)
+                    },
+                }
+            ],
+        ),
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
-SCENECONFIG = namedtuple('SceneConfig', [CONF_NAME, STATES])
+SCENECONFIG = namedtuple("SceneConfig", [CONF_NAME, STATES])
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up home assistant scene entries."""
     scene_config = config.get(STATES)
 
-    async_add_entities(HomeAssistantScene(
-        hass, _process_config(scene)) for scene in scene_config)
+    async_add_entities(
+        HomeAssistantScene(hass, _process_config(scene)) for scene in scene_config
+    )
     return True
 
 
@@ -87,11 +96,8 @@ class HomeAssistantScene(Scene):
     @property
     def device_state_attributes(self):
         """Return the scene state attributes."""
-        return {
-            ATTR_ENTITY_ID: list(self.scene_config.states.keys()),
-        }
+        return {ATTR_ENTITY_ID: list(self.scene_config.states.keys())}
 
     async def async_activate(self):
         """Activate scene. Try to get entities into requested state."""
-        await async_reproduce_state(
-            self.hass, self.scene_config.states.values(), True)
+        await async_reproduce_state(self.hass, self.scene_config.states.values(), True)

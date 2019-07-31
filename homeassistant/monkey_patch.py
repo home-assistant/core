@@ -49,10 +49,11 @@ def disable_c_asyncio() -> None:
 
     Requires Python 3.6+.
     """
+
     class AsyncioImportFinder:
         """Finder that blocks C version of asyncio being loaded."""
 
-        PATH_TRIGGER = '_asyncio'
+        PATH_TRIGGER = "_asyncio"
 
         def __init__(self, path_entry: str) -> None:
             if path_entry != self.PATH_TRIGGER:

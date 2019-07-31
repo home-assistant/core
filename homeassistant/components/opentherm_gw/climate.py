@@ -5,16 +5,24 @@ from pyotgw import vars as gw_vars
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_TARGET_TEMPERATURE,
-    PRESET_AWAY, SUPPORT_PRESET_MODE)
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    SUPPORT_TARGET_TEMPERATURE,
+    PRESET_AWAY,
+    SUPPORT_PRESET_MODE,
+)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE,
-    TEMP_CELSIUS)
+    ATTR_TEMPERATURE,
+    PRECISION_HALVES,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import (
-    CONF_FLOOR_TEMP, CONF_PRECISION, DATA_GATEWAYS, DATA_OPENTHERM_GW)
+from .const import CONF_FLOOR_TEMP, CONF_PRECISION, DATA_GATEWAYS, DATA_OPENTHERM_GW
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,8 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the opentherm_gw device."""
     gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][discovery_info]
 
@@ -52,8 +59,9 @@ class OpenThermClimate(ClimateDevice):
     async def async_added_to_hass(self):
         """Connect to the OpenTherm Gateway device."""
         _LOGGER.debug("Added device %s", self.friendly_name)
-        async_dispatcher_connect(self.hass, self._gateway.update_signal,
-                                 self.receive_report)
+        async_dispatcher_connect(
+            self.hass, self._gateway.update_signal, self.receive_report
+        )
 
     @callback
     def receive_report(self, status):
@@ -92,11 +100,13 @@ class OpenThermClimate(ClimateDevice):
         else:
             self._away_mode_b = None
         if self._away_mode_a is not None:
-            self._away_state_a = (status.get(
-                gw_vars.OTGW_GPIO_A_STATE) == self._away_mode_a)
+            self._away_state_a = (
+                status.get(gw_vars.OTGW_GPIO_A_STATE) == self._away_mode_a
+            )
         if self._away_mode_b is not None:
-            self._away_state_b = (status.get(
-                gw_vars.OTGW_GPIO_B_STATE) == self._away_mode_b)
+            self._away_state_b = (
+                status.get(gw_vars.OTGW_GPIO_B_STATE) == self._away_mode_b
+            )
         self.async_schedule_update_ha_state()
 
     @property
@@ -182,8 +192,9 @@ class OpenThermClimate(ClimateDevice):
             temp = float(kwargs[ATTR_TEMPERATURE])
             if temp == self.target_temperature:
                 return
-            self._new_target_temperature = (
-                await self._gateway.gateway.set_target_temp(temp))
+            self._new_target_temperature = await self._gateway.gateway.set_target_temp(
+                temp
+            )
             self.async_schedule_update_ha_state()
 
     @property

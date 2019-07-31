@@ -5,7 +5,7 @@ from homeassistant.util.location import distance
 
 from .const import ATTR_PASSIVE, ATTR_RADIUS
 
-STATE = 'zoning'
+STATE = "zoning"
 
 
 def in_zone(zone, latitude, longitude, radius=0) -> bool:
@@ -14,8 +14,11 @@ def in_zone(zone, latitude, longitude, radius=0) -> bool:
     Async friendly.
     """
     zone_dist = distance(
-        latitude, longitude,
-        zone.attributes[ATTR_LATITUDE], zone.attributes[ATTR_LONGITUDE])
+        latitude,
+        longitude,
+        zone.attributes[ATTR_LATITUDE],
+        zone.attributes[ATTR_LONGITUDE],
+    )
 
     return zone_dist - radius < zone.attributes[ATTR_RADIUS]
 

@@ -6,11 +6,11 @@ from typing import Optional
 import attr
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_URL, CONF_MONITORED_CONDITIONS, STATE_UNKNOWN,
-)
+from homeassistant.const import CONF_URL, CONF_MONITORED_CONDITIONS, STATE_UNKNOWN
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA, DEVICE_CLASS_SIGNAL_STRENGTH)
+    PLATFORM_SCHEMA,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
+)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -18,8 +18,8 @@ from . import DATA_KEY, RouterData
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME_TEMPLATE = 'Huawei {} {}'
-DEFAULT_DEVICE_NAME = 'LTE'
+DEFAULT_NAME_TEMPLATE = "Huawei {} {}"
+DEFAULT_DEVICE_NAME = "LTE"
 
 DEFAULT_SENSORS = [
     "device_information.WanIPAddress",
@@ -30,88 +30,78 @@ DEFAULT_SENSORS = [
 ]
 
 SENSOR_META = {
-    "device_information.SoftwareVersion": dict(
-        name="Software version",
-    ),
-    "device_information.WanIPAddress": dict(
-        name="WAN IP address",
-        icon="mdi:ip",
-    ),
-    "device_information.WanIPv6Address": dict(
-        name="WAN IPv6 address",
-        icon="mdi:ip",
-    ),
-    "device_signal.band": dict(
-        name="Band",
-    ),
-    "device_signal.cell_id": dict(
-        name="Cell ID",
-    ),
-    "device_signal.lac": dict(
-        name="LAC",
-    ),
+    "device_information.SoftwareVersion": dict(name="Software version"),
+    "device_information.WanIPAddress": dict(name="WAN IP address", icon="mdi:ip"),
+    "device_information.WanIPv6Address": dict(name="WAN IPv6 address", icon="mdi:ip"),
+    "device_signal.band": dict(name="Band"),
+    "device_signal.cell_id": dict(name="Cell ID"),
+    "device_signal.lac": dict(name="LAC"),
     "device_signal.mode": dict(
         name="Mode",
-        formatter=lambda x: ({
-            '0': '2G',
-            '2': '3G',
-            '7': '4G',
-        }.get(x, 'Unknown'), None),
+        formatter=lambda x: ({"0": "2G", "2": "3G", "7": "4G"}.get(x, "Unknown"), None),
     ),
-    "device_signal.pci": dict(
-        name="PCI",
-    ),
+    "device_signal.pci": dict(name="PCI"),
     "device_signal.rsrq": dict(
         name="RSRQ",
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         # http://www.lte-anbieter.info/technik/rsrq.php
-        icon=lambda x:
-        (x is None or x < -11) and "mdi:signal-cellular-outline"
-        or x < -8 and "mdi:signal-cellular-1"
-        or x < -5 and "mdi:signal-cellular-2"
-        or "mdi:signal-cellular-3"
+        icon=lambda x: (x is None or x < -11)
+        and "mdi:signal-cellular-outline"
+        or x < -8
+        and "mdi:signal-cellular-1"
+        or x < -5
+        and "mdi:signal-cellular-2"
+        or "mdi:signal-cellular-3",
     ),
     "device_signal.rsrp": dict(
         name="RSRP",
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         # http://www.lte-anbieter.info/technik/rsrp.php
-        icon=lambda x:
-        (x is None or x < -110) and "mdi:signal-cellular-outline"
-        or x < -95 and "mdi:signal-cellular-1"
-        or x < -80 and "mdi:signal-cellular-2"
-        or "mdi:signal-cellular-3"
+        icon=lambda x: (x is None or x < -110)
+        and "mdi:signal-cellular-outline"
+        or x < -95
+        and "mdi:signal-cellular-1"
+        or x < -80
+        and "mdi:signal-cellular-2"
+        or "mdi:signal-cellular-3",
     ),
     "device_signal.rssi": dict(
         name="RSSI",
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         # https://eyesaas.com/wi-fi-signal-strength/
-        icon=lambda x:
-        (x is None or x < -80) and "mdi:signal-cellular-outline"
-        or x < -70 and "mdi:signal-cellular-1"
-        or x < -60 and "mdi:signal-cellular-2"
-        or "mdi:signal-cellular-3"
+        icon=lambda x: (x is None or x < -80)
+        and "mdi:signal-cellular-outline"
+        or x < -70
+        and "mdi:signal-cellular-1"
+        or x < -60
+        and "mdi:signal-cellular-2"
+        or "mdi:signal-cellular-3",
     ),
     "device_signal.sinr": dict(
         name="SINR",
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         # http://www.lte-anbieter.info/technik/sinr.php
-        icon=lambda x:
-        (x is None or x < 0) and "mdi:signal-cellular-outline"
-        or x < 5 and "mdi:signal-cellular-1"
-        or x < 10 and "mdi:signal-cellular-2"
-        or "mdi:signal-cellular-3"
+        icon=lambda x: (x is None or x < 0)
+        and "mdi:signal-cellular-outline"
+        or x < 5
+        and "mdi:signal-cellular-1"
+        or x < 10
+        and "mdi:signal-cellular-2"
+        or "mdi:signal-cellular-3",
     ),
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_URL): cv.url,
-    vol.Optional(
-        CONF_MONITORED_CONDITIONS, default=DEFAULT_SENSORS): cv.ensure_list,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_URL): cv.url,
+        vol.Optional(
+            CONF_MONITORED_CONDITIONS, default=DEFAULT_SENSORS
+        ): cv.ensure_list,
+    }
+)
 
 
-def setup_platform(
-        hass, config, add_entities, discovery_info):
+def setup_platform(hass, config, add_entities, discovery_info):
     """Set up Huawei LTE sensor devices."""
     data = hass.data[DATA_KEY].get_data(config)
     sensors = []
@@ -129,8 +119,7 @@ def format_default(value):
     unit = None
     if value is not None:
         # Clean up value and infer unit, e.g. -71dBm, 15 dB
-        match = re.match(
-            r"(?P<value>.+?)\s*(?P<unit>[a-zA-Z]+)\s*$", str(value))
+        match = re.match(r"(?P<value>.+?)\s*(?P<unit>[a-zA-Z]+)\s*$", str(value))
         if match:
             try:
                 value = float(match.group("value"))
@@ -155,8 +144,7 @@ class HuaweiLteSensor(Entity):
     def unique_id(self) -> str:
         """Return unique ID for sensor."""
         return "{}_{}".format(
-            self.data["device_information.SerialNumber"],
-            ".".join(self.path),
+            self.data["device_information.SerialNumber"], ".".join(self.path)
         )
 
     @property
@@ -167,8 +155,7 @@ class HuaweiLteSensor(Entity):
         except KeyError:
             dname = None
         vname = self.meta.get("name", self.path)
-        return DEFAULT_NAME_TEMPLATE.format(
-            dname or DEFAULT_DEVICE_NAME, vname)
+        return DEFAULT_NAME_TEMPLATE.format(dname or DEFAULT_DEVICE_NAME, vname)
 
     @property
     def state(self):

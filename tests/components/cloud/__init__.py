@@ -10,12 +10,9 @@ from tests.common import mock_coro
 
 async def mock_cloud(hass, config=None):
     """Mock cloud."""
-    assert await async_setup_component(
-        hass, cloud.DOMAIN, {
-            'cloud': config or {}
-        })
-    cloud_inst = hass.data['cloud']
-    with patch('hass_nabucasa.Cloud.run_executor', return_value=mock_coro()):
+    assert await async_setup_component(hass, cloud.DOMAIN, {"cloud": config or {}})
+    cloud_inst = hass.data["cloud"]
+    with patch("hass_nabucasa.Cloud.run_executor", return_value=mock_coro()):
         await cloud_inst.start()
 
 

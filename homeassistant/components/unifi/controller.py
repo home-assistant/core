@@ -13,8 +13,13 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
-    CONF_BLOCK_CLIENT, CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID, LOGGER,
-    UNIFI_CONFIG)
+    CONF_BLOCK_CLIENT,
+    CONF_CONTROLLER,
+    CONF_SITE_ID,
+    CONTROLLER_ID,
+    LOGGER,
+    UNIFI_CONFIG,
+)
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -69,8 +74,9 @@ class UniFiController:
     @property
     def event_update(self):
         """Event specific per UniFi entry to signal new data."""
-        return 'unifi-update-{}'.format(
-            CONTROLLER_ID.format(host=self.host, site=self.site))
+        return "unifi-update-{}".format(
+            CONTROLLER_ID.format(host=self.host, site=self.site)
+        )
 
     async def request_update(self):
         """Request an update."""
@@ -101,17 +107,17 @@ class UniFiController:
             except (asyncio.TimeoutError, aiounifi.AiounifiException):
                 failed = True
                 if self.available:
-                    LOGGER.error('Unable to reach controller %s', self.host)
+                    LOGGER.error("Unable to reach controller %s", self.host)
                     self.available = False
 
         except (asyncio.TimeoutError, aiounifi.AiounifiException):
             failed = True
             if self.available:
-                LOGGER.error('Unable to reach controller %s', self.host)
+                LOGGER.error("Unable to reach controller %s", self.host)
                 self.available = False
 
         if not failed and not self.available:
-            LOGGER.info('Reconnected to controller %s', self.host)
+            LOGGER.info("Reconnected to controller %s", self.host)
             self.available = True
 
         async_dispatcher_send(self.hass, self.event_update)
@@ -122,35 +128,39 @@ class UniFiController:
 
         try:
             self.api = await get_controller(
-                self.hass, **self.config_entry.data[CONF_CONTROLLER])
+                self.hass, **self.config_entry.data[CONF_CONTROLLER]
+            )
             await self.api.initialize()
 
             sites = await self.api.sites()
 
             for site in sites.values():
-                if self.site == site['name']:
-                    self._site_name = site['desc']
-                    self._site_role = site['role']
+                if self.site == site["name"]:
+                    self._site_name = site["desc"]
+                    self._site_role = site["role"]
                     break
 
         except CannotConnect:
             raise ConfigEntryNotReady
 
         except Exception as err:  # pylint: disable=broad-except
-            LOGGER.error(
-                'Unknown error connecting with UniFi controller: %s', err)
+            LOGGER.error("Unknown error connecting with UniFi controller: %s", err)
             return False
 
         for unifi_config in hass.data[UNIFI_CONFIG]:
-            if self.host == unifi_config[CONF_HOST] and \
-                    self.site_name == unifi_config[CONF_SITE_ID]:
+            if (
+                self.host == unifi_config[CONF_HOST]
+                and self.site_name == unifi_config[CONF_SITE_ID]
+            ):
                 self.unifi_config = unifi_config
                 break
 
-        for platform in ['device_tracker', 'switch']:
+        for platform in ["device_tracker", "switch"]:
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, platform))
+                    self.config_entry, platform
+                )
+            )
 
         return True
 
@@ -164,15 +174,15 @@ class UniFiController:
         if self.api is None:
             return True
 
-        for platform in ['device_tracker', 'switch']:
+        for platform in ["device_tracker", "switch"]:
             await self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, platform)
+                self.config_entry, platform
+            )
 
         return True
 
 
-async def get_controller(
-        hass, host, username, password, port, site, verify_ssl):
+async def get_controller(hass, host, username, password, port, site, verify_ssl):
     """Create a controller object and verify authentication."""
     sslcontext = None
 
@@ -182,11 +192,17 @@ async def get_controller(
             sslcontext = ssl.create_default_context(cafile=verify_ssl)
     else:
         session = aiohttp_client.async_create_clientsession(
-            hass, verify_ssl=verify_ssl, cookie_jar=CookieJar(unsafe=True))
+            hass, verify_ssl=verify_ssl, cookie_jar=CookieJar(unsafe=True)
+        )
 
     controller = aiounifi.Controller(
-        host, username=username, password=password, port=port, site=site,
-        websession=session, sslcontext=sslcontext
+        host,
+        username=username,
+        password=password,
+        port=port,
+        site=site,
+        websession=session,
+        sslcontext=sslcontext,
     )
 
     try:
@@ -203,5 +219,5 @@ async def get_controller(
         raise CannotConnect
 
     except aiounifi.AiounifiException:
-        LOGGER.exception('Unknown UniFi communication error occurred')
+        LOGGER.exception("Unknown UniFi communication error occurred")
         raise AuthenticationRequired

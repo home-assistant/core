@@ -195,6 +195,6 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
 
     def log(self, level, msg, *args):
         """Log a message."""
-        msg = '%s: ' + msg
-        args = (self.entity_id, ) + args
+        msg = "%s: " + msg
+        args = (self.entity_id,) + args
         _LOGGER.log(level, msg, *args)

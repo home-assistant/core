@@ -6,21 +6,26 @@ from total_connect_client import TotalConnectClient
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
-from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'totalconnect'
+DOMAIN = "totalconnect"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
-TOTALCONNECT_PLATFORMS = ['alarm_control_panel']
+TOTALCONNECT_PLATFORMS = ["alarm_control_panel"]
 
 
 def setup(hass, config):

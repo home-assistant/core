@@ -216,8 +216,8 @@ class ZigbeeChannel(LogMixin):
 
     def log(self, level, msg, *args):
         """Log a message."""
-        msg = '[%s]: ' + msg
-        args = (self.unique_id, ) + args
+        msg = "[%s]: " + msg
+        args = (self.unique_id,) + args
         _LOGGER.log(level, msg, *args)
 
     def __getattr__(self, name):
@@ -312,8 +312,8 @@ class ZDOChannel(LogMixin):
 
     def log(self, level, msg, *args):
         """Log a message."""
-        msg = '[%s:ZDO](%s): ' + msg
-        args = (self._zha_device.nwk, self._zha_device.model, ) + args
+        msg = "[%s:ZDO](%s): " + msg
+        args = (self._zha_device.nwk, self._zha_device.model) + args
         _LOGGER.log(level, msg, *args)
 
 
