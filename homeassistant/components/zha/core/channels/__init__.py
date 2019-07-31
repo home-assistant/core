@@ -204,6 +204,7 @@ class ZigbeeChannel(LogMixin):
         return result.get(attribute)
 
     def log(self, level, msg, *args):
+        """Log a message."""
         msg = '[%s]: ' + msg
         args = (self.unique_id, ) + args
         _LOGGER.log(level, msg, *args)
@@ -301,6 +302,7 @@ class ZDOChannel(LogMixin):
         self._status = ChannelStatus.CONFIGURED
 
     def log(self, level, msg, *args):
+        """Log a message."""
         msg = '[%s:ZDO](%s): ' + msg
         args = (self._zha_device.nwk, self._zha_device.model, ) + args
         _LOGGER.log(level, msg, *args)

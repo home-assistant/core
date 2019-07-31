@@ -109,7 +109,7 @@ class RingSensor(Entity):
 
     @property
     def should_poll(self):
-        """Updates controlled via the hub."""
+        """Return False, updates are controlled via the hub."""
         return False
 
     @property
