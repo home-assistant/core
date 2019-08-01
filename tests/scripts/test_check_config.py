@@ -62,7 +62,9 @@ def test_component_platform_not_found(isfile_patch, loop):
         res = check_config.check(get_test_config_dir())
         assert res["components"].keys() == {"homeassistant"}
         assert res["except"] == {
-            check_config.ERROR_STR: ["Integration not found: beer"]
+            check_config.ERROR_STR: [
+                "Component error: beer - Integration beer not found."
+            ]
         }
         assert res["secret_cache"] == {}
         assert res["secrets"] == {}
@@ -75,8 +77,7 @@ def test_component_platform_not_found(isfile_patch, loop):
         assert res["components"]["light"] == []
         assert res["except"] == {
             check_config.ERROR_STR: [
-                "Integration beer not found when trying to verify its "
-                "light platform."
+                "Platform error light.beer - Integration beer not found."
             ]
         }
         assert res["secret_cache"] == {}
