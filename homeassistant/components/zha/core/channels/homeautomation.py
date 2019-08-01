@@ -9,7 +9,7 @@ import logging
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import AttributeListeningChannel
-from ..const import ELECTRICAL_MEASUREMENT_CHANNEL, SIGNAL_ATTR_UPDATED
+from ..const import CHANNEL_ELECTRICAL_MEASUREMENT, SIGNAL_ATTR_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 class ElectricalMeasurementChannel(AttributeListeningChannel):
     """Channel that polls active power level."""
 
-    CHANNEL_NAME = ELECTRICAL_MEASUREMENT_CHANNEL
+    CHANNEL_NAME = CHANNEL_ELECTRICAL_MEASUREMENT
 
     async def async_update(self):
         """Retrieve latest state."""

@@ -18,19 +18,19 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .core.const import (
-    ACCELERATION,
-    ATTRIBUTE_CHANNEL,
+    SENSOR_ACCELERATION,
+    CHANNEL_ATTRIBUTE,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
-    OCCUPANCY,
-    ON_OFF_CHANNEL,
-    OPENING,
+    SENSOR_OCCUPANCY,
+    CHANNEL_ON_OFF,
+    SENSOR_OPENING,
     SENSOR_TYPE,
     SIGNAL_ATTR_UPDATED,
     UNKNOWN,
     ZHA_DISCOVERY_NEW,
     ZONE,
-    ZONE_CHANNEL,
+    CHANNEL_ZONE,
 )
 from .entity import ZhaEntity
 
@@ -55,10 +55,10 @@ async def get_ias_device_class(channel):
 
 DEVICE_CLASS_REGISTRY = {
     UNKNOWN: None,
-    OPENING: DEVICE_CLASS_OPENING,
+    SENSOR_OPENING: DEVICE_CLASS_OPENING,
     ZONE: get_ias_device_class,
-    OCCUPANCY: DEVICE_CLASS_OCCUPANCY,
-    ACCELERATION: DEVICE_CLASS_MOVING,
+    SENSOR_OCCUPANCY: DEVICE_CLASS_OCCUPANCY,
+    SENSOR_ACCELERATION: DEVICE_CLASS_MOVING,
 }
 
 
@@ -109,9 +109,9 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
         """Initialize the ZHA binary sensor."""
         super().__init__(**kwargs)
         self._device_state_attributes = {}
-        self._zone_channel = self.cluster_channels.get(ZONE_CHANNEL)
-        self._on_off_channel = self.cluster_channels.get(ON_OFF_CHANNEL)
-        self._attr_channel = self.cluster_channels.get(ATTRIBUTE_CHANNEL)
+        self._zone_channel = self.cluster_channels.get(CHANNEL_ZONE)
+        self._on_off_channel = self.cluster_channels.get(CHANNEL_ON_OFF)
+        self._attr_channel = self.cluster_channels.get(CHANNEL_ATTRIBUTE)
         self._zha_sensor_type = kwargs[SENSOR_TYPE]
 
     async def _determine_device_class(self):

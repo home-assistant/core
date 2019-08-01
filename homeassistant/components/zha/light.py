@@ -12,11 +12,11 @@ from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.color as color_util
 
 from .core.const import (
-    COLOR_CHANNEL,
+    CHANNEL_COLOR,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
-    LEVEL_CHANNEL,
-    ON_OFF_CHANNEL,
+    CHANNEL_LEVEL,
+    CHANNEL_ON_OFF,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_SET_LEVEL,
     ZHA_DISCOVERY_NEW,
@@ -85,9 +85,9 @@ class Light(ZhaEntity, light.Light):
         self._color_temp = None
         self._hs_color = None
         self._brightness = None
-        self._on_off_channel = self.cluster_channels.get(ON_OFF_CHANNEL)
-        self._level_channel = self.cluster_channels.get(LEVEL_CHANNEL)
-        self._color_channel = self.cluster_channels.get(COLOR_CHANNEL)
+        self._on_off_channel = self.cluster_channels.get(CHANNEL_ON_OFF)
+        self._level_channel = self.cluster_channels.get(CHANNEL_LEVEL)
+        self._color_channel = self.cluster_channels.get(CHANNEL_COLOR)
 
         if self._level_channel:
             self._supported_features |= light.SUPPORT_BRIGHTNESS

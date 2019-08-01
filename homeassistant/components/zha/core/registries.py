@@ -14,25 +14,25 @@ from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
 
 from .const import (
-    ACCELERATION,
-    BATTERY,
+    SENSOR_ACCELERATION,
+    SENSOR_BATTERY,
     CONTROLLER,
-    ELECTRICAL_MEASUREMENT,
-    HUMIDITY,
-    ILLUMINANCE,
-    METERING,
-    OCCUPANCY,
-    OPENING,
-    PRESSURE,
-    RADIO,
-    RADIO_DESCRIPTION,
+    SENSOR_ELECTRICAL_MEASUREMENT,
+    SENSOR_HUMIDITY,
+    SENSOR_ILLUMINANCE,
+    SENSOR_METERING,
+    SENSOR_OCCUPANCY,
+    SENSOR_OPENING,
+    SENSOR_PRESSURE,
+    ZHA_GW_RADIO,
+    ZHA_GW_RADIO_DESCRIPTION,
     REPORT_CONFIG_ASAP,
     REPORT_CONFIG_DEFAULT,
     REPORT_CONFIG_IMMEDIATE,
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
     REPORT_CONFIG_OP,
-    TEMPERATURE,
+    SENSOR_TEMPERATURE,
     ZONE,
     RadioType,
 )
@@ -90,33 +90,36 @@ def establish_device_mappings():
         import bellows.ezsp
         from bellows.zigbee.application import ControllerApplication
 
-        return {RADIO: bellows.ezsp.EZSP(), CONTROLLER: ControllerApplication}
+        return {ZHA_GW_RADIO: bellows.ezsp.EZSP(), CONTROLLER: ControllerApplication}
 
     RADIO_TYPES[RadioType.ezsp.name] = {
-        RADIO: get_ezsp_radio,
-        RADIO_DESCRIPTION: "EZSP",
+        ZHA_GW_RADIO: get_ezsp_radio,
+        ZHA_GW_RADIO_DESCRIPTION: "EZSP",
     }
 
     def get_xbee_radio():
         import zigpy_xbee.api
         from zigpy_xbee.zigbee.application import ControllerApplication
 
-        return {RADIO: zigpy_xbee.api.XBee(), CONTROLLER: ControllerApplication}
+        return {ZHA_GW_RADIO: zigpy_xbee.api.XBee(), CONTROLLER: ControllerApplication}
 
     RADIO_TYPES[RadioType.xbee.name] = {
-        RADIO: get_xbee_radio,
-        RADIO_DESCRIPTION: "XBee",
+        ZHA_GW_RADIO: get_xbee_radio,
+        ZHA_GW_RADIO_DESCRIPTION: "XBee",
     }
 
     def get_deconz_radio():
         import zigpy_deconz.api
         from zigpy_deconz.zigbee.application import ControllerApplication
 
-        return {RADIO: zigpy_deconz.api.Deconz(), CONTROLLER: ControllerApplication}
+        return {
+            ZHA_GW_RADIO: zigpy_deconz.api.Deconz(),
+            CONTROLLER: ControllerApplication,
+        }
 
     RADIO_TYPES[RadioType.deconz.name] = {
-        RADIO: get_deconz_radio,
-        RADIO_DESCRIPTION: "Deconz",
+        ZHA_GW_RADIO: get_deconz_radio,
+        ZHA_GW_RADIO_DESCRIPTION: "Deconz",
     }
 
     BINARY_SENSOR_CLUSTERS.add(SMARTTHINGS_ACCELERATION_CLUSTER)
@@ -126,9 +129,9 @@ def establish_device_mappings():
 
     BINARY_SENSOR_TYPES.update(
         {
-            SMARTTHINGS_ACCELERATION_CLUSTER: ACCELERATION,
-            zcl.clusters.general.OnOff.cluster_id: OPENING,
-            zcl.clusters.measurement.OccupancySensing.cluster_id: OCCUPANCY,
+            SMARTTHINGS_ACCELERATION_CLUSTER: SENSOR_ACCELERATION,
+            zcl.clusters.general.OnOff.cluster_id: SENSOR_OPENING,
+            zcl.clusters.measurement.OccupancySensing.cluster_id: SENSOR_OCCUPANCY,
             zcl.clusters.security.IasZone.cluster_id: ZONE,
         }
     )
@@ -294,14 +297,14 @@ def establish_device_mappings():
 
     SENSOR_TYPES.update(
         {
-            SMARTTHINGS_HUMIDITY_CLUSTER: HUMIDITY,
-            zcl.clusters.general.PowerConfiguration.cluster_id: BATTERY,
-            zcl.clusters.homeautomation.ElectricalMeasurement.cluster_id: ELECTRICAL_MEASUREMENT,
-            zcl.clusters.measurement.IlluminanceMeasurement.cluster_id: ILLUMINANCE,
-            zcl.clusters.measurement.PressureMeasurement.cluster_id: PRESSURE,
-            zcl.clusters.measurement.RelativeHumidity.cluster_id: HUMIDITY,
-            zcl.clusters.measurement.TemperatureMeasurement.cluster_id: TEMPERATURE,
-            zcl.clusters.smartenergy.Metering.cluster_id: METERING,
+            SMARTTHINGS_HUMIDITY_CLUSTER: SENSOR_HUMIDITY,
+            zcl.clusters.general.PowerConfiguration.cluster_id: SENSOR_BATTERY,
+            zcl.clusters.homeautomation.ElectricalMeasurement.cluster_id: SENSOR_ELECTRICAL_MEASUREMENT,
+            zcl.clusters.measurement.IlluminanceMeasurement.cluster_id: SENSOR_ILLUMINANCE,
+            zcl.clusters.measurement.PressureMeasurement.cluster_id: SENSOR_PRESSURE,
+            zcl.clusters.measurement.RelativeHumidity.cluster_id: SENSOR_HUMIDITY,
+            zcl.clusters.measurement.TemperatureMeasurement.cluster_id: SENSOR_TEMPERATURE,
+            zcl.clusters.smartenergy.Metering.cluster_id: SENSOR_METERING,
         }
     )
 

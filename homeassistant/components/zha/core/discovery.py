@@ -19,7 +19,7 @@ from .const import (
     COMPONENTS,
     CONF_DEVICE_CONFIG,
     DATA_ZHA,
-    GENERIC,
+    SENSOR_GENERIC,
     SENSOR_TYPE,
     UNKNOWN,
     ZHA_DISCOVERY_NEW,
@@ -292,7 +292,7 @@ def _async_handle_single_cluster_match(
 
     if component == SENSOR:
         discovery_info.update(
-            {SENSOR_TYPE: SENSOR_TYPES.get(cluster.cluster_id, GENERIC)}
+            {SENSOR_TYPE: SENSOR_TYPES.get(cluster.cluster_id, SENSOR_GENERIC)}
         )
     if component == BINARY_SENSOR:
         discovery_info.update(

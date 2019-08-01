@@ -11,7 +11,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .core.const import (
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
-    ON_OFF_CHANNEL,
+    CHANNEL_ON_OFF,
     SIGNAL_ATTR_UPDATED,
     ZHA_DISCOVERY_NEW,
 )
@@ -65,7 +65,7 @@ class Switch(ZhaEntity, SwitchDevice):
     def __init__(self, **kwargs):
         """Initialize the ZHA switch."""
         super().__init__(**kwargs)
-        self._on_off_channel = self.cluster_channels.get(ON_OFF_CHANNEL)
+        self._on_off_channel = self.cluster_channels.get(CHANNEL_ON_OFF)
 
     @property
     def is_on(self) -> bool:

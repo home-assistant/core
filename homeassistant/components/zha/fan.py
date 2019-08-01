@@ -16,7 +16,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .core.const import (
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
-    FAN_CHANNEL,
+    CHANNEL_FAN,
     SIGNAL_ATTR_UPDATED,
     ZHA_DISCOVERY_NEW,
 )
@@ -92,7 +92,7 @@ class ZhaFan(ZhaEntity, FanEntity):
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Init this sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._fan_channel = self.cluster_channels.get(FAN_CHANNEL)
+        self._fan_channel = self.cluster_channels.get(CHANNEL_FAN)
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""

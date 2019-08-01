@@ -15,11 +15,11 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from ..const import (
-    ATTRIBUTE_CHANNEL,
-    EVENT_RELAY_CHANNEL,
+    CHANNEL_ATTRIBUTE,
+    CHANNEL_EVENT_RELAY,
     REPORT_CONFIG_DEFAULT,
     SIGNAL_ATTR_UPDATED,
-    ZDO_CHANNEL,
+    CHANNEL_ZDO,
 )
 from ..helpers import (
     LogMixin,
@@ -233,7 +233,7 @@ class ZigbeeChannel(LogMixin):
 class AttributeListeningChannel(ZigbeeChannel):
     """Channel for attribute reports from the cluster."""
 
-    CHANNEL_NAME = ATTRIBUTE_CHANNEL
+    CHANNEL_NAME = CHANNEL_ATTRIBUTE
 
     def __init__(self, cluster, device):
         """Initialize AttributeListeningChannel."""
@@ -267,7 +267,7 @@ class ZDOChannel(LogMixin):
 
     def __init__(self, cluster, device):
         """Initialize ZDOChannel."""
-        self.name = ZDO_CHANNEL
+        self.name = CHANNEL_ZDO
         self._cluster = cluster
         self._zha_device = device
         self._status = ChannelStatus.CREATED
@@ -321,7 +321,7 @@ class ZDOChannel(LogMixin):
 class EventRelayChannel(ZigbeeChannel):
     """Event relay that can be attached to zigbee clusters."""
 
-    CHANNEL_NAME = EVENT_RELAY_CHANNEL
+    CHANNEL_NAME = CHANNEL_EVENT_RELAY
 
     @callback
     def attribute_updated(self, attrid, value):

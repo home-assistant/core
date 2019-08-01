@@ -22,45 +22,45 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from ..api import async_get_device_info
 from .const import (
-    ADD_DEVICE_RELAY_LOGGERS,
+    DEBUG_RELAY_LOGGERS,
     ATTR_MANUFACTURER,
-    BELLOWS,
+    DEBUG_COMP_BELLOWS,
     CONF_BAUDRATE,
     CONF_DATABASE,
     CONF_RADIO_TYPE,
     CONF_USB_PATH,
     CONTROLLER,
-    CURRENT,
+    DEBUG_LEVEL_CURRENT,
     DATA_ZHA,
     DATA_ZHA_BRIDGE_ID,
     DATA_ZHA_GATEWAY,
     DEBUG_LEVELS,
     DEFAULT_BAUDRATE,
     DEFAULT_DATABASE_NAME,
-    DEVICE_FULL_INIT,
-    DEVICE_INFO,
-    DEVICE_JOINED,
-    DEVICE_REMOVED,
+    ZHA_GW_MSG_DEVICE_FULL_INIT,
+    ZHA_GW_MSG_DEVICE_INFO,
+    ZHA_GW_MSG_DEVICE_JOINED,
+    ZHA_GW_MSG_DEVICE_REMOVED,
     DOMAIN,
-    IEEE,
-    LOG_ENTRY,
-    LOG_OUTPUT,
-    MODEL,
-    NWK,
-    ORIGINAL,
-    RADIO,
-    RADIO_DESCRIPTION,
-    RAW_INIT,
+    ATTR_IEEE,
+    ZHA_GW_MSG_LOG_ENTRY,
+    ZHA_GW_MSG_LOG_OUTPUT,
+    ATTR_MODEL,
+    ATTR_NWK,
+    DEBUG_LEVEL_ORIGINAL,
+    ZHA_GW_RADIO,
+    ZHA_GW_RADIO_DESCRIPTION,
+    ZHA_GW_MSG_RAW_INIT,
     SIGNAL_REMOVE,
-    SIGNATURE,
-    TYPE,
+    ATTR_SIGNATURE,
+    ATTR_TYPE,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
-    ZHA,
+    DEBUG_COMP_ZHA,
     ZHA_GW_MSG,
-    ZIGPY,
-    ZIGPY_DECONZ,
-    ZIGPY_XBEE,
+    DEBUG_COMP_ZIGPY,
+    DEBUG_COMP_ZIGPY_DECONZ,
+    DEBUG_COMP_ZIGPY_XBEE,
 )
 from .device import DeviceStatus, ZHADevice
 from .discovery import async_dispatch_discovery_info, async_process_endpoint
@@ -91,8 +91,8 @@ class ZHAGateway:
         self.radio_description = None
         hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
         self._log_levels = {
-            ORIGINAL: async_capture_log_levels(),
-            CURRENT: async_capture_log_levels(),
+            DEBUG_LEVEL_ORIGINAL: async_capture_log_levels(),
+            DEBUG_LEVEL_CURRENT: async_capture_log_levels(),
         }
         self.debug_enabled = False
         self._log_relay_handler = LogRelayHandler(hass, self)
@@ -107,9 +107,9 @@ class ZHAGateway:
         baudrate = self._config.get(CONF_BAUDRATE, DEFAULT_BAUDRATE)
         radio_type = self._config_entry.data.get(CONF_RADIO_TYPE)
 
-        radio_details = RADIO_TYPES[radio_type][RADIO]()
-        radio = radio_details[RADIO]
-        self.radio_description = RADIO_TYPES[radio_type][RADIO_DESCRIPTION]
+        radio_details = RADIO_TYPES[radio_type][ZHA_GW_RADIO]()
+        radio = radio_details[ZHA_GW_RADIO]
+        self.radio_description = RADIO_TYPES[radio_type][ZHA_GW_RADIO_DESCRIPTION]
         await radio.connect(usb_path, baudrate)
 
         if CONF_DATABASE in self._config:
@@ -141,7 +141,11 @@ class ZHAGateway:
         async_dispatcher_send(
             self._hass,
             ZHA_GW_MSG,
-            {TYPE: DEVICE_JOINED, NWK: device.nwk, IEEE: str(device.ieee)},
+            {
+                ATTR_TYPE: ZHA_GW_MSG_DEVICE_JOINED,
+                ATTR_NWK: device.nwk,
+                ATTR_IEEE: str(device.ieee),
+            },
         )
 
     def raw_device_initialized(self, device):
@@ -154,12 +158,12 @@ class ZHAGateway:
             self._hass,
             ZHA_GW_MSG,
             {
-                TYPE: RAW_INIT,
-                NWK: device.nwk,
-                IEEE: str(device.ieee),
-                MODEL: device.model if device.model else UNKNOWN_MODEL,
+                ATTR_TYPE: ZHA_GW_MSG_RAW_INIT,
+                ATTR_NWK: device.nwk,
+                ATTR_IEEE: str(device.ieee),
+                ATTR_MODEL: device.model if device.model else UNKNOWN_MODEL,
                 ATTR_MANUFACTURER: manuf if manuf else UNKNOWN_MANUFACTURER,
-                SIGNATURE: device.get_signature(),
+                ATTR_SIGNATURE: device.get_signature(),
             },
         )
 
@@ -198,7 +202,10 @@ class ZHAGateway:
                 async_dispatcher_send(
                     self._hass,
                     ZHA_GW_MSG,
-                    {TYPE: DEVICE_REMOVED, DEVICE_INFO: device_info},
+                    {
+                        ATTR_TYPE: ZHA_GW_MSG_DEVICE_REMOVED,
+                        ZHA_GW_MSG_DEVICE_INFO: device_info,
+                    },
                 )
 
     def get_device(self, ieee):
@@ -254,11 +261,11 @@ class ZHAGateway:
     @callback
     def async_enable_debug_mode(self):
         """Enable debug mode for ZHA."""
-        self._log_levels[ORIGINAL] = async_capture_log_levels()
+        self._log_levels[DEBUG_LEVEL_ORIGINAL] = async_capture_log_levels()
         async_set_logger_levels(DEBUG_LEVELS)
-        self._log_levels[CURRENT] = async_capture_log_levels()
+        self._log_levels[DEBUG_LEVEL_CURRENT] = async_capture_log_levels()
 
-        for logger_name in ADD_DEVICE_RELAY_LOGGERS:
+        for logger_name in DEBUG_RELAY_LOGGERS:
             logging.getLogger(logger_name).addHandler(self._log_relay_handler)
 
         self.debug_enabled = True
@@ -266,9 +273,9 @@ class ZHAGateway:
     @callback
     def async_disable_debug_mode(self):
         """Disable debug mode for ZHA."""
-        async_set_logger_levels(self._log_levels[ORIGINAL])
-        self._log_levels[CURRENT] = async_capture_log_levels()
-        for logger_name in ADD_DEVICE_RELAY_LOGGERS:
+        async_set_logger_levels(self._log_levels[DEBUG_LEVEL_ORIGINAL])
+        self._log_levels[DEBUG_LEVEL_CURRENT] = async_capture_log_levels()
+        for logger_name in DEBUG_RELAY_LOGGERS:
             logging.getLogger(logger_name).removeHandler(self._log_relay_handler)
         self.debug_enabled = False
 
@@ -377,7 +384,10 @@ class ZHAGateway:
             async_dispatcher_send(
                 self._hass,
                 ZHA_GW_MSG,
-                {TYPE: DEVICE_FULL_INIT, DEVICE_INFO: device_info},
+                {
+                    ATTR_TYPE: ZHA_GW_MSG_DEVICE_FULL_INIT,
+                    ZHA_GW_MSG_DEVICE_INFO: device_info,
+                },
             )
 
     async def shutdown(self):
@@ -390,22 +400,26 @@ class ZHAGateway:
 def async_capture_log_levels():
     """Capture current logger levels for ZHA."""
     return {
-        BELLOWS: logging.getLogger(BELLOWS).getEffectiveLevel(),
-        ZHA: logging.getLogger(ZHA).getEffectiveLevel(),
-        ZIGPY: logging.getLogger(ZIGPY).getEffectiveLevel(),
-        ZIGPY_XBEE: logging.getLogger(ZIGPY_XBEE).getEffectiveLevel(),
-        ZIGPY_DECONZ: logging.getLogger(ZIGPY_DECONZ).getEffectiveLevel(),
+        DEBUG_COMP_BELLOWS: logging.getLogger(DEBUG_COMP_BELLOWS).getEffectiveLevel(),
+        DEBUG_COMP_ZHA: logging.getLogger(DEBUG_COMP_ZHA).getEffectiveLevel(),
+        DEBUG_COMP_ZIGPY: logging.getLogger(DEBUG_COMP_ZIGPY).getEffectiveLevel(),
+        DEBUG_COMP_ZIGPY_XBEE: logging.getLogger(
+            DEBUG_COMP_ZIGPY_XBEE
+        ).getEffectiveLevel(),
+        DEBUG_COMP_ZIGPY_DECONZ: logging.getLogger(
+            DEBUG_COMP_ZIGPY_DECONZ
+        ).getEffectiveLevel(),
     }
 
 
 @callback
 def async_set_logger_levels(levels):
     """Set logger levels for ZHA."""
-    logging.getLogger(BELLOWS).setLevel(levels[BELLOWS])
-    logging.getLogger(ZHA).setLevel(levels[ZHA])
-    logging.getLogger(ZIGPY).setLevel(levels[ZIGPY])
-    logging.getLogger(ZIGPY_XBEE).setLevel(levels[ZIGPY_XBEE])
-    logging.getLogger(ZIGPY_DECONZ).setLevel(levels[ZIGPY_DECONZ])
+    logging.getLogger(DEBUG_COMP_BELLOWS).setLevel(levels[DEBUG_COMP_BELLOWS])
+    logging.getLogger(DEBUG_COMP_ZHA).setLevel(levels[DEBUG_COMP_ZHA])
+    logging.getLogger(DEBUG_COMP_ZIGPY).setLevel(levels[DEBUG_COMP_ZIGPY])
+    logging.getLogger(DEBUG_COMP_ZIGPY_XBEE).setLevel(levels[DEBUG_COMP_ZIGPY_XBEE])
+    logging.getLogger(DEBUG_COMP_ZIGPY_DECONZ).setLevel(levels[DEBUG_COMP_ZIGPY_DECONZ])
 
 
 class LogRelayHandler(logging.Handler):
@@ -426,5 +440,7 @@ class LogRelayHandler(logging.Handler):
 
         entry = LogEntry(record, stack, _figure_out_source(record, stack, self.hass))
         async_dispatcher_send(
-            self.hass, ZHA_GW_MSG, {TYPE: LOG_OUTPUT, LOG_ENTRY: entry.to_dict()}
+            self.hass,
+            ZHA_GW_MSG,
+            {ATTR_TYPE: ZHA_GW_MSG_LOG_OUTPUT, ZHA_GW_MSG_LOG_ENTRY: entry.to_dict()},
         )
