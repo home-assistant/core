@@ -21,6 +21,7 @@ MOCK_DEV_VERSION = "10.0.dev0"
 MOCK_HUUID = "abcdefg"
 MOCK_RESPONSE = {"version": "0.15", "release-notes": "https://home-assistant.io"}
 MOCK_CONFIG = {updater.DOMAIN: {"reporting": True}}
+RELEASE_NOTES = "test release notes"
 
 
 @pytest.fixture(autouse=True)
@@ -48,7 +49,7 @@ def mock_get_uuid():
 def test_new_version_shows_entity_true(hass, mock_get_uuid, mock_get_newest_version):
     """Test if new entity is created if new version is available."""
     mock_get_uuid.return_value = MOCK_HUUID
-    mock_get_newest_version.return_value = mock_coro((NEW_VERSION, ""))
+    mock_get_newest_version.return_value = mock_coro((NEW_VERSION, RELEASE_NOTES))
 
     res = yield from async_setup_component(hass, updater.DOMAIN, {updater.DOMAIN: {}})
     assert res, "Updater failed to set up"
@@ -63,6 +64,10 @@ def test_new_version_shows_entity_true(hass, mock_get_uuid, mock_get_newest_vers
     assert (
         hass.states.get("binary_sensor.updater").attributes["newest_version"]
         == NEW_VERSION
+    )
+    assert (
+        hass.states.get("binary_sensor.updater").attributes["release_notes"]
+        == RELEASE_NOTES
     )
 
 
@@ -86,6 +91,7 @@ def test_same_version_shows_entity_false(hass, mock_get_uuid, mock_get_newest_ve
         hass.states.get("binary_sensor.updater").attributes["newest_version"]
         == MOCK_VERSION
     )
+    assert "release_notes" not in hass.states.get("binary_sensor.updater").attributes
 
 
 @asyncio.coroutine
@@ -186,7 +192,7 @@ def test_new_version_shows_entity_after_hour_hassio(
 ):
     """Test if new entity is created if new version is available / hass.io."""
     mock_get_uuid.return_value = MOCK_HUUID
-    mock_get_newest_version.return_value = mock_coro((NEW_VERSION, ""))
+    mock_get_newest_version.return_value = mock_coro((NEW_VERSION, RELEASE_NOTES))
     mock_component(hass, "hassio")
     hass.data["hassio_hass_version"] = "999.0"
 
@@ -202,4 +208,8 @@ def test_new_version_shows_entity_after_hour_hassio(
     assert hass.states.is_state("binary_sensor.updater", "on")
     assert (
         hass.states.get("binary_sensor.updater").attributes["newest_version"] == "999.0"
+    )
+    assert (
+        hass.states.get("binary_sensor.updater").attributes["release_notes"]
+        == RELEASE_NOTES
     )
