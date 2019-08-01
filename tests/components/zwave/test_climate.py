@@ -67,7 +67,7 @@ def device_mapping(hass, mock_openzwave):
         primary=MockValue(data=1, node=node),
         temperature=MockValue(data=5, node=node, units=None),
         mode=MockValue(data='Heat', data_items=[
-                       'Off', 'Cool', 'Heat', 'Full Power', 'auto'],
+                       'Off', 'Cool', 'Heat', 'Full Power', 'heat_cool'],
                        node=node),
         fan_mode=MockValue(data='test2', data_items=[3, 4, 5], node=node),
         operating_state=MockValue(data='heating', node=node),
