@@ -1,7 +1,7 @@
 """Support for Homekit sensors."""
-from homeassistant.const import TEMP_CELSIUS
-
 from homekit.model.characteristics import CharacteristicsTypes
+
+from homeassistant.const import TEMP_CELSIUS
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
