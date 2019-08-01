@@ -111,10 +111,7 @@ class RejseplanenTransportSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         if not self._times:
-            return {
-                ATTR_STOP_ID: self._stop_id,
-                ATTR_ATTRIBUTION: ATTRIBUTION
-            }
+            return {ATTR_STOP_ID: self._stop_id, ATTR_ATTRIBUTION: ATTRIBUTION}
 
         next_up = []
         if len(self._times) > 1:
