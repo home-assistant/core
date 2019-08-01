@@ -42,9 +42,7 @@ async def async_get_integration_with_requirements(
     if hass.config.skip_pip or not integration.requirements:
         return integration
 
-    await async_process_requirements(
-        hass, integration.domain, integration.requirements
-    )
+    await async_process_requirements(hass, integration.domain, integration.requirements)
 
     return integration
 

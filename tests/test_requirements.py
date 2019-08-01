@@ -82,9 +82,7 @@ async def test_install_existing_package(hass):
     with patch(
         "homeassistant.util.package.install_package", return_value=mock_coro(True)
     ) as mock_inst:
-        await async_process_requirements(
-            hass, "test_component", ["hello==1.0.0"]
-        )
+        await async_process_requirements(hass, "test_component", ["hello==1.0.0"])
 
     assert len(mock_inst.mock_calls) == 1
 
