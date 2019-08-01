@@ -6,7 +6,9 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.components.device_tracker import (
     DeviceScanner, DOMAIN as DEVICE_TRACKER)
 from homeassistant.const import CONF_HOST
-from .const import CLIENT, MIKROTIK_DOMAIN
+from .const import (DOMAIN, CLIENT, MIKROTIK_SERVICES,
+                    CAPSMAN, WIRELESS, DHCP)
+from . import CONF_METHOD
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,25 +21,29 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
         _LOGGER.warning(
             "To use this you need to configure the 'mikrotik' component")
         return False
-    scanner = MikrotikScanner(hass, hass.data[CLIENT],
-                              discovery_info, async_see)
+    host = discovery_info[CONF_HOST]
+    client = hass.data[CLIENT][host]
+    method = discovery_info[CONF_METHOD]
+    scanner = MikrotikScanner(hass, client, host, method, async_see)
     return await scanner.async_init()
 
 
 class MikrotikScanner(DeviceScanner):
     """This class queries a Mikrotik device."""
 
-    def __init__(self, hass, client, config, async_see):
+    def __init__(self, hass, client, host, method, async_see):
         """Initialize the scanner."""
-        self.async_see = async_see
         self.hass = hass
         self.client = client
-        self.host = config[CONF_HOST]
+        self.api = client.api
+        self.host = host
+        self.method = method
+        self.async_see = async_see
 
     async def async_init(self):
         """Further initialize connection to Mikrotik Device."""
-        await self.client.update_info(self.host)
-        data = self.hass.data[MIKROTIK_DOMAIN][self.host]
+        await self.api.update_info()
+        data = self.hass.data[DOMAIN][self.host]
         info = data.get('info', None)
         connected = bool(info)
         if connected:
@@ -45,12 +51,39 @@ class MikrotikScanner(DeviceScanner):
             async_track_time_interval(self.hass,
                                       self.async_update,
                                       DEFAULT_SCAN_INTERVAL)
+        self.get_method()
         return connected
 
     async def async_update(self, now=None):
         """Ensure the information from Mikrotik device is up to date."""
-        await self.client.update_device_tracker(self.host)
-        data = self.hass.data[MIKROTIK_DOMAIN][self.host]
+        await self.api.update_device_tracker(self.method)
+        data = self.hass.data[DOMAIN][self.host]
         devices = data.get(DEVICE_TRACKER)
         for mac in devices:
             await self.async_see(mac=mac, attributes=devices[mac])
+
+    def get_method(self):
+        """Determine the device tracker polling method."""
+        capsman = self.api.get_api(MIKROTIK_SERVICES[CAPSMAN])
+        if capsman is None:
+            _LOGGER.info("Mikrotik %s: Not a CAPsMAN controller. Trying "
+                         "local wireless interfaces.", (self.host))
+
+        wireless = self.api.get_api(MIKROTIK_SERVICES[WIRELESS])
+        if wireless is None or self.method == 'ip':
+            _LOGGER.info(
+                "Mikrotik %s: Wireless adapters not found. Try to "
+                "use DHCP lease table as presence tracker source. "
+                "Please decrease lease time as much as possible",
+                self.host)
+
+        if self.method:
+            _LOGGER.info("Mikrotik %s: Manually selected polling method %s",
+                         self.host, self.method)
+        else:
+            if capsman is not None:
+                self.method = CAPSMAN
+            elif wireless is not None:
+                self.method = WIRELESS
+            else:
+                self.method = DHCP
