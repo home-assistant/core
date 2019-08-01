@@ -9,15 +9,24 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF,
-    PRESET_AWAY, PRESET_BOOST,
-    CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE,
-    DEFAULT_MIN_TEMP
+    HVAC_MODE_AUTO,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    PRESET_AWAY,
+    PRESET_BOOST,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_PRESET_MODE,
+    DEFAULT_MIN_TEMP,
 )
 from homeassistant.const import (
-    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES, STATE_OFF,
-    ATTR_BATTERY_LEVEL
+    TEMP_CELSIUS,
+    ATTR_TEMPERATURE,
+    CONF_NAME,
+    PRECISION_HALVES,
+    STATE_OFF,
+    ATTR_BATTERY_LEVEL,
 )
 from homeassistant.util import Throttle
 
@@ -25,29 +34,27 @@ from .const import DATA_NETATMO_AUTH
 
 _LOGGER = logging.getLogger(__name__)
 
-PRESET_FROST_GUARD = 'Frost Guard'
-PRESET_SCHEDULE = 'Schedule'
-PRESET_MANUAL = 'Manual'
+PRESET_FROST_GUARD = "Frost Guard"
+PRESET_SCHEDULE = "Schedule"
+PRESET_MANUAL = "Manual"
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE)
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 SUPPORT_HVAC = [HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF]
-SUPPORT_PRESET = [
-    PRESET_AWAY, PRESET_BOOST, PRESET_FROST_GUARD, PRESET_SCHEDULE,
-]
+SUPPORT_PRESET = [PRESET_AWAY, PRESET_BOOST, PRESET_FROST_GUARD, PRESET_SCHEDULE]
 
-STATE_NETATMO_SCHEDULE = 'schedule'
-STATE_NETATMO_HG = 'hg'
-STATE_NETATMO_MAX = 'max'
+STATE_NETATMO_SCHEDULE = "schedule"
+STATE_NETATMO_HG = "hg"
+STATE_NETATMO_MAX = "max"
 STATE_NETATMO_AWAY = PRESET_AWAY
 STATE_NETATMO_OFF = STATE_OFF
-STATE_NETATMO_MANUAL = 'manual'
+STATE_NETATMO_MANUAL = "manual"
 
 PRESET_MAP_NETATMO = {
     PRESET_FROST_GUARD: STATE_NETATMO_HG,
     PRESET_BOOST: STATE_NETATMO_MAX,
     PRESET_SCHEDULE: STATE_NETATMO_SCHEDULE,
     PRESET_AWAY: STATE_NETATMO_AWAY,
-    STATE_NETATMO_OFF: STATE_NETATMO_OFF
+    STATE_NETATMO_OFF: STATE_NETATMO_OFF,
 }
 
 NETATMO_MAP_PRESET = {
@@ -67,37 +74,37 @@ HVAC_MAP_NETATMO = {
     STATE_NETATMO_OFF: HVAC_MODE_OFF,
     STATE_NETATMO_MANUAL: HVAC_MODE_AUTO,
     PRESET_MANUAL: HVAC_MODE_AUTO,
-    STATE_NETATMO_AWAY: HVAC_MODE_AUTO
+    STATE_NETATMO_AWAY: HVAC_MODE_AUTO,
 }
 
-CURRENT_HVAC_MAP_NETATMO = {
-    True: CURRENT_HVAC_HEAT,
-    False: CURRENT_HVAC_IDLE,
-}
+CURRENT_HVAC_MAP_NETATMO = {True: CURRENT_HVAC_HEAT, False: CURRENT_HVAC_IDLE}
 
-CONF_HOMES = 'homes'
-CONF_ROOMS = 'rooms'
+CONF_HOMES = "homes"
+CONF_ROOMS = "rooms"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
-HOME_CONFIG_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_ROOMS, default=[]): vol.All(cv.ensure_list, [cv.string])
-})
+HOME_CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_ROOMS, default=[]): vol.All(cv.ensure_list, [cv.string]),
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOMES): vol.All(cv.ensure_list, [HOME_CONFIG_SCHEMA])
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_HOMES): vol.All(cv.ensure_list, [HOME_CONFIG_SCHEMA])}
+)
 
 DEFAULT_MAX_TEMP = 30
 
-NA_THERM = 'NATherm1'
-NA_VALVE = 'NRV'
+NA_THERM = "NATherm1"
+NA_VALVE = "NRV"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NetAtmo Thermostat."""
     import pyatmo
+
     homes_conf = config.get(CONF_HOMES)
 
     auth = hass.data[DATA_NETATMO_AUTH]
@@ -127,13 +134,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         except pyatmo.NoDevice:
             continue
         for room_id in room_data.get_room_ids():
-            room_name = room_data.homedata.rooms[home_id][room_id]['name']
+            room_name = room_data.homedata.rooms[home_id][room_id]["name"]
             _LOGGER.debug("Setting up %s (%s) ...", room_name, room_id)
             if home_id in rooms and room_name not in rooms[home_id]:
                 _LOGGER.debug("Excluding %s ...", room_name)
                 continue
-            _LOGGER.debug("Adding devices for room %s (%s) ...",
-                          room_name, room_id)
+            _LOGGER.debug("Adding devices for room %s (%s) ...", room_name, room_id)
             devices.append(NetatmoThermostat(room_data, room_id))
     add_entities(devices, True)
 
@@ -146,9 +152,8 @@ class NetatmoThermostat(ClimateDevice):
         self._data = data
         self._state = None
         self._room_id = room_id
-        self._room_name = self._data.homedata.rooms[
-            self._data.home_id][room_id]['name']
-        self._name = 'netatmo_{}'.format(self._room_name)
+        self._room_name = self._data.homedata.rooms[self._data.home_id][room_id]["name"]
+        self._name = "netatmo_{}".format(self._room_name)
         self._current_temperature = None
         self._target_temperature = None
         self._preset = None
@@ -158,8 +163,7 @@ class NetatmoThermostat(ClimateDevice):
         self._hvac_mode = None
         self._battery_level = None
         self.update_without_throttle = False
-        self._module_type = \
-            self._data.room_status.get(room_id, {}).get('module_type')
+        self._module_type = self._data.room_status.get(room_id, {}).get("module_type")
 
         if self._module_type == NA_THERM:
             self._operation_list.append(HVAC_MODE_OFF)
@@ -211,8 +215,10 @@ class NetatmoThermostat(ClimateDevice):
             return CURRENT_HVAC_MAP_NETATMO[self._data.boilerstatus]
         # Maybe it is a valve
         if self._room_id in self._data.room_status:
-            if (self._data.room_status[self._room_id]
-                    .get('heating_power_request', 0) > 0):
+            if (
+                self._data.room_status[self._room_id].get("heating_power_request", 0)
+                > 0
+            ):
                 return CURRENT_HVAC_HEAT
         return CURRENT_HVAC_IDLE
 
@@ -236,31 +242,24 @@ class NetatmoThermostat(ClimateDevice):
                 self._data.home_id,
                 self._room_id,
                 STATE_NETATMO_MANUAL,
-                DEFAULT_MIN_TEMP
+                DEFAULT_MIN_TEMP,
             )
 
         if (
-                preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX] and
-                self._module_type == NA_VALVE
+            preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX]
+            and self._module_type == NA_VALVE
         ):
             self._data.homestatus.setroomThermpoint(
                 self._data.home_id,
                 self._room_id,
                 STATE_NETATMO_MANUAL,
-                DEFAULT_MAX_TEMP
+                DEFAULT_MAX_TEMP,
             )
-        elif (
-                preset_mode
-                in [PRESET_BOOST, STATE_NETATMO_MAX, STATE_NETATMO_OFF]
-        ):
+        elif preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX, STATE_NETATMO_OFF]:
             self._data.homestatus.setroomThermpoint(
-                self._data.home_id,
-                self._room_id,
-                PRESET_MAP_NETATMO[preset_mode]
+                self._data.home_id, self._room_id, PRESET_MAP_NETATMO[preset_mode]
             )
-        elif preset_mode in [
-                PRESET_SCHEDULE, PRESET_FROST_GUARD, PRESET_AWAY
-        ]:
+        elif preset_mode in [PRESET_SCHEDULE, PRESET_FROST_GUARD, PRESET_AWAY]:
             self._data.homestatus.setThermmode(
                 self._data.home_id, PRESET_MAP_NETATMO[preset_mode]
             )
@@ -285,8 +284,8 @@ class NetatmoThermostat(ClimateDevice):
         if temp is None:
             return
         self._data.homestatus.setroomThermpoint(
-            self._data.home_id,
-            self._room_id, STATE_NETATMO_MANUAL, temp)
+            self._data.home_id, self._room_id, STATE_NETATMO_MANUAL, temp
+        )
 
         self.update_without_throttle = True
         self.schedule_update_ha_state()
@@ -314,22 +313,25 @@ class NetatmoThermostat(ClimateDevice):
             return
         try:
             if self._module_type is None:
-                self._module_type = \
-                    self._data.room_status[self._room_id]['module_type']
-            self._current_temperature = \
-                self._data.room_status[self._room_id]['current_temperature']
-            self._target_temperature = \
-                self._data.room_status[self._room_id]['target_temperature']
+                self._module_type = self._data.room_status[self._room_id]["module_type"]
+            self._current_temperature = self._data.room_status[self._room_id][
+                "current_temperature"
+            ]
+            self._target_temperature = self._data.room_status[self._room_id][
+                "target_temperature"
+            ]
             self._preset = NETATMO_MAP_PRESET[
                 self._data.room_status[self._room_id]["setpoint_mode"]
             ]
             self._hvac_mode = HVAC_MAP_NETATMO[self._preset]
-            self._battery_level = \
-                self._data.room_status[self._room_id].get('battery_level')
+            self._battery_level = self._data.room_status[self._room_id].get(
+                "battery_level"
+            )
         except KeyError as err:
             _LOGGER.error(
                 "The thermostat in room %s seems to be out of reach. (%s)",
-                self._room_id, err
+                self._room_id,
+                err,
             )
         self._away = self._hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
 
@@ -355,15 +357,16 @@ class HomeData:
             return []
         for home_id in self.homedata.homes:
             if (
-                    'therm_schedules' in self.homedata.homes[home_id] and
-                    'modules' in self.homedata.homes[home_id]
+                "therm_schedules" in self.homedata.homes[home_id]
+                and "modules" in self.homedata.homes[home_id]
             ):
-                self.home_ids.append(self.homedata.homes[home_id]['id'])
+                self.home_ids.append(self.homedata.homes[home_id]["id"])
         return self.home_ids
 
     def setup(self):
         """Retrieve HomeData by NetAtmo API."""
         import pyatmo
+
         try:
             self.homedata = pyatmo.HomeData(self.auth)
             self.home_id = self.homedata.gethomeId(self.home)
@@ -406,10 +409,10 @@ class ThermostatData:
     def setup(self):
         """Retrieve HomeData and HomeStatus by NetAtmo API."""
         import pyatmo
+
         try:
             self.homedata = pyatmo.HomeData(self.auth)
-            self.homestatus = pyatmo.HomeStatus(
-                self.auth, home_id=self.home_id)
+            self.homestatus = pyatmo.HomeStatus(self.auth, home_id=self.home_id)
             self.home_name = self.homedata.getHomeName(self.home_id)
             self.update()
         except TypeError:
@@ -423,8 +426,7 @@ class ThermostatData:
         import pyatmo
 
         try:
-            self.homestatus = pyatmo.HomeStatus(
-                self.auth, home_id=self.home_id)
+            self.homestatus = pyatmo.HomeStatus(self.auth, home_id=self.home_id)
         except TypeError:
             _LOGGER.error("Error when getting homestatus")
             return
@@ -445,9 +447,7 @@ class ThermostatData:
                     roomstatus["target_temperature"] = homestatus_room[
                         "therm_setpoint_temperature"
                     ]
-                    roomstatus["setpoint_mode"] = homestatus_room[
-                        "therm_setpoint_mode"
-                    ]
+                    roomstatus["setpoint_mode"] = homestatus_room["therm_setpoint_mode"]
                     roomstatus["current_temperature"] = homestatus_room[
                         "therm_measured_temperature"
                     ]
@@ -460,20 +460,19 @@ class ThermostatData:
                     batterylevel = None
                     for module_id in homedata_room["module_ids"]:
                         if (
-                                self.homedata.modules[
-                                    self.home_id][module_id]["type"]
-                                == NA_THERM
-                                or roomstatus["module_id"] is None):
+                            self.homedata.modules[self.home_id][module_id]["type"]
+                            == NA_THERM
+                            or roomstatus["module_id"] is None
+                        ):
                             roomstatus["module_id"] = module_id
                     if roomstatus["module_type"] == NA_THERM:
                         self.boilerstatus = self.homestatus.boilerStatus(
                             rid=roomstatus["module_id"]
                         )
                         roomstatus["heating_status"] = self.boilerstatus
-                        batterylevel = (
-                            self.homestatus
-                            .thermostats[roomstatus["module_id"]]
-                            .get("battery_level"))
+                        batterylevel = self.homestatus.thermostats[
+                            roomstatus["module_id"]
+                        ].get("battery_level")
                     elif roomstatus["module_type"] == NA_VALVE:
                         roomstatus["heating_power_request"] = homestatus_room[
                             "heating_power_request"
@@ -483,16 +482,16 @@ class ThermostatData:
                         )
                         if self.boilerstatus is not None:
                             roomstatus["heating_status"] = (
-                                self.boilerstatus
-                                and roomstatus["heating_status"]
+                                self.boilerstatus and roomstatus["heating_status"]
                             )
-                        batterylevel = (
-                            self.homestatus.valves[roomstatus["module_id"]]
-                            .get("battery_level"))
+                        batterylevel = self.homestatus.valves[
+                            roomstatus["module_id"]
+                        ].get("battery_level")
 
                     if batterylevel:
                         batterypct = interpolate(
-                            batterylevel, roomstatus["module_type"])
+                            batterylevel, roomstatus["module_type"]
+                        )
                         if roomstatus.get("battery_level") is None:
                             roomstatus["battery_level"] = batterypct
                         elif batterypct < roomstatus["battery_level"]:
@@ -500,8 +499,7 @@ class ThermostatData:
                 self.room_status[room] = roomstatus
             except KeyError as err:
                 _LOGGER.error("Update of room %s failed. Error: %s", room, err)
-        self.away_temperature = self.homestatus.getAwaytemp(
-            home_id=self.home_id)
+        self.away_temperature = self.homestatus.getAwaytemp(home_id=self.home_id)
         self.hg_temperature = self.homestatus.getHgtemp(home_id=self.home_id)
         self.setpoint_duration = self.homedata.setpoint_duration[self.home_id]
 
@@ -510,37 +508,39 @@ def interpolate(batterylevel, module_type):
     """Interpolate battery level depending on device type."""
     na_battery_levels = {
         NA_THERM: {
-            'full': 4100,
-            'high': 3600,
-            'medium': 3300,
-            'low': 3000,
-            'empty': 2800},
+            "full": 4100,
+            "high": 3600,
+            "medium": 3300,
+            "low": 3000,
+            "empty": 2800,
+        },
         NA_VALVE: {
-            'full': 3200,
-            'high': 2700,
-            'medium': 2400,
-            'low': 2200,
-            'empty': 2200},
+            "full": 3200,
+            "high": 2700,
+            "medium": 2400,
+            "low": 2200,
+            "empty": 2200,
+        },
     }
 
     levels = sorted(na_battery_levels[module_type].values())
     steps = [20, 50, 80, 100]
 
     na_battery_level = na_battery_levels[module_type]
-    if batterylevel >= na_battery_level['full']:
+    if batterylevel >= na_battery_level["full"]:
         return 100
-    if batterylevel >= na_battery_level['high']:
+    if batterylevel >= na_battery_level["high"]:
         i = 3
-    elif batterylevel >= na_battery_level['medium']:
+    elif batterylevel >= na_battery_level["medium"]:
         i = 2
-    elif batterylevel >= na_battery_level['low']:
+    elif batterylevel >= na_battery_level["low"]:
         i = 1
     else:
         return 0
 
-    pct = steps[i-1] + (
-        (steps[i] - steps[i-1]) *
-        (batterylevel - levels[i]) /
-        (levels[i+1] - levels[i])
+    pct = steps[i - 1] + (
+        (steps[i] - steps[i - 1])
+        * (batterylevel - levels[i])
+        / (levels[i + 1] - levels[i])
     )
     return int(pct)

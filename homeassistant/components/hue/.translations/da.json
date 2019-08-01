@@ -3,9 +3,11 @@
         "abort": {
             "all_configured": "Alle Philips Hue brigdes er konfigureret",
             "already_configured": "Bridgen er allerede konfigureret",
+            "already_in_progress": "Bro konfiguration er allerede i gang.",
             "cannot_connect": "Kunne ikke oprette forbindelse til bridgen",
             "discover_timeout": "Ingen Philips Hue bridge fundet",
             "no_bridges": "Ingen Philips Hue bridge fundet",
+            "not_hue_bridge": "Ikke en Hue bro",
             "unknown": "Ukendt fejl opstod"
         },
         "error": {

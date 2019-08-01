@@ -5,22 +5,27 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_WHITE_VALUE, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR, SUPPORT_WHITE_VALUE, Light, PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS,
+    ATTR_HS_COLOR,
+    ATTR_WHITE_VALUE,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_WHITE_VALUE,
+    Light,
+    PLATFORM_SCHEMA,
+)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_ZENGGE_LED = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_WHITE_VALUE)
+SUPPORT_ZENGGE_LED = SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_WHITE_VALUE
 
-DEVICE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME): cv.string,
-})
+DEVICE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME): cv.string})
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -28,8 +33,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     lights = []
     for address, device_config in config[CONF_DEVICES].items():
         device = {}
-        device['name'] = device_config[CONF_NAME]
-        device['address'] = address
+        device["name"] = device_config[CONF_NAME]
+        device["address"] = address
         light = ZenggeLight(device)
         if light.is_valid:
             lights.append(light)
@@ -44,8 +49,8 @@ class ZenggeLight(Light):
         """Initialize the light."""
         import zengge
 
-        self._name = device['name']
-        self._address = device['address']
+        self._name = device["name"]
+        self._address = device["address"]
         self.is_valid = True
         self._bulb = zengge.zengge(self._address)
         self._white = 0
@@ -54,8 +59,7 @@ class ZenggeLight(Light):
         self._state = False
         if self._bulb.connect() is False:
             self.is_valid = False
-            _LOGGER.error(
-                "Failed to connect to bulb %s, %s", self._address, self._name)
+            _LOGGER.error("Failed to connect to bulb %s, %s", self._address, self._name)
             return
 
     @property
@@ -136,8 +140,8 @@ class ZenggeLight(Light):
             self.set_white(self._white)
         else:
             rgb = color_util.color_hsv_to_RGB(
-                self._hs_color[0], self._hs_color[1],
-                self._brightness / 255 * 100)
+                self._hs_color[0], self._hs_color[1], self._brightness / 255 * 100
+            )
             self.set_rgb(*rgb)
 
     def turn_off(self, **kwargs):

@@ -38,7 +38,7 @@ stages:
         python -m venv venv
 
         . venv/bin/activate
-        pip install -r requirements_test.txt
+        pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
       displayName: 'Setup Env'
     - script: |
         . venv/bin/activate
@@ -63,6 +63,21 @@ stages:
         . venv/bin/activate
         ./script/gen_requirements_all.py validate
       displayName: 'requirements_all validate'
+  - job: 'CheckFormat'
+    pool:
+      vmImage: 'ubuntu-latest'
+    container: $[ variables['PythonMain'] ]
+    steps:
+    - script: |
+        python -m venv venv
+
+        . venv/bin/activate
+        pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
+      displayName: 'Setup Env'
+    - script: |
+        . venv/bin/activate
+        ./script/check_format
+      displayName: 'Check Black formatting'
 
 - stage: 'Tests'
   dependsOn:
@@ -86,7 +101,7 @@ stages:
     - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreCacheV1.RestoreCache@1
       displayName: 'Restore artifacts based on Requirements'
       inputs:
-        keyfile: 'requirements_test_all.txt, .cache'
+        keyfile: 'requirements_test_all.txt, .cache, homeassistant/package_constraints.txt'
         targetfolder: './venv'
         vstsFeed: '$(ArtifactFeed)'
     - script: |
@@ -96,6 +111,9 @@ stages:
         . venv/bin/activate
         pip install -U pip setuptools pytest-azurepipelines -c homeassistant/package_constraints.txt
         pip install -r requirements_test_all.txt -c homeassistant/package_constraints.txt
+        # This is a TEMP. Eventually we should make sure our 4 dependencies drop typing.
+        # Find offending deps with `pipdeptree -r -p typing`
+        pip uninstall -y typing
       displayName: 'Create Virtual Environment & Install Requirements'
       condition: and(succeeded(), ne(variables['CacheRestored'], 'true'))
     # Explicit Cache Save (instead of using RestoreAndSaveCache)
@@ -103,7 +121,7 @@ stages:
     - task: 1ESLighthouseEng.PipelineArtifactCaching.SaveCacheV1.SaveCache@1
       displayName: 'Save artifacts based on Requirements'
       inputs:
-        keyfile: 'requirements_test_all.txt, .cache'
+        keyfile: 'requirements_test_all.txt, .cache, homeassistant/package_constraints.txt'
         targetfolder: './venv'
         vstsFeed: '$(ArtifactFeed)'
     - script: |
@@ -150,7 +168,7 @@ stages:
     - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreCacheV1.RestoreCache@1
       displayName: 'Restore artifacts based on Requirements'
       inputs:
-        keyfile: 'requirements_all.txt, requirements_test.txt, .cache'
+        keyfile: 'requirements_all.txt, requirements_test.txt, .cache, homeassistant/package_constraints.txt'
         targetfolder: './venv'
         vstsFeed: '$(ArtifactFeed)'
     - script: |
@@ -166,7 +184,7 @@ stages:
     - task: 1ESLighthouseEng.PipelineArtifactCaching.SaveCacheV1.SaveCache@1
       displayName: 'Save artifacts based on Requirements'
       inputs:
-        keyfile: 'requirements_all.txt, requirements_test.txt, .cache'
+        keyfile: 'requirements_all.txt, requirements_test.txt, .cache, homeassistant/package_constraints.txt'
         targetfolder: './venv'
         vstsFeed: '$(ArtifactFeed)'
     - script: |

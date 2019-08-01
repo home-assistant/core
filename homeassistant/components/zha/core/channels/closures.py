@@ -20,29 +20,29 @@ class DoorLockChannel(ZigbeeChannel):
 
     async def async_update(self):
         """Retrieve latest state."""
-        result = await self.get_attribute_value('lock_state', from_cache=True)
+        result = await self.get_attribute_value("lock_state", from_cache=True)
 
         async_dispatcher_send(
             self._zha_device.hass,
             "{}_{}".format(self.unique_id, SIGNAL_ATTR_UPDATED),
-            result
+            result,
         )
 
     @callback
     def attribute_updated(self, attrid, value):
         """Handle attribute update from lock cluster."""
         attr_name = self.cluster.attributes.get(attrid, [attrid])[0]
-        self.debug("Attribute report '%s'[%s] = %s",
-                   self.cluster.name, attr_name, value)
+        self.debug(
+            "Attribute report '%s'[%s] = %s", self.cluster.name, attr_name, value
+        )
         if attrid == self._value_attribute:
             async_dispatcher_send(
                 self._zha_device.hass,
                 "{}_{}".format(self.unique_id, SIGNAL_ATTR_UPDATED),
-                value
+                value,
             )
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
-        await self.get_attribute_value(
-            self._value_attribute, from_cache=from_cache)
+        await self.get_attribute_value(self._value_attribute, from_cache=from_cache)
         await super().async_initialize(from_cache)

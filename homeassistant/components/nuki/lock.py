@@ -6,9 +6,12 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.lock import (
-    DOMAIN, PLATFORM_SCHEMA, LockDevice, SUPPORT_OPEN)
-from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_TOKEN)
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    LockDevice,
+    SUPPORT_OPEN,
+)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import extract_entity_ids
 
@@ -17,41 +20,46 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_PORT = 8080
 DEFAULT_TIMEOUT = 20
 
-ATTR_BATTERY_CRITICAL = 'battery_critical'
-ATTR_NUKI_ID = 'nuki_id'
-ATTR_UNLATCH = 'unlatch'
+ATTR_BATTERY_CRITICAL = "battery_critical"
+ATTR_NUKI_ID = "nuki_id"
+ATTR_UNLATCH = "unlatch"
 
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=5)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
-NUKI_DATA = 'nuki'
+NUKI_DATA = "nuki"
 
-SERVICE_LOCK_N_GO = 'lock_n_go'
+SERVICE_LOCK_N_GO = "lock_n_go"
 SERVICE_CHECK_CONNECTION = "check_connection"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Required(CONF_TOKEN): cv.string
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Required(CONF_TOKEN): cv.string,
+    }
+)
 
-LOCK_N_GO_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(ATTR_UNLATCH, default=False): cv.boolean
-})
+LOCK_N_GO_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Optional(ATTR_UNLATCH, default=False): cv.boolean,
+    }
+)
 
-CHECK_CONNECTION_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
-})
+CHECK_CONNECTION_SERVICE_SCHEMA = vol.Schema(
+    {vol.Optional(ATTR_ENTITY_ID): cv.entity_ids}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nuki lock platform."""
     from pynuki import NukiBridge
-    bridge = NukiBridge(config[CONF_HOST], config[CONF_TOKEN],
-                        config[CONF_PORT], DEFAULT_TIMEOUT)
-    add_entities([NukiLock(lock)
-                  for lock in bridge.locks])
+
+    bridge = NukiBridge(
+        config[CONF_HOST], config[CONF_TOKEN], config[CONF_PORT], DEFAULT_TIMEOUT
+    )
+    add_entities([NukiLock(lock) for lock in bridge.locks])
 
     def service_handler(service):
         """Service handler for nuki services."""
@@ -72,11 +80,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 lock.check_connection()
 
     hass.services.register(
-        'nuki', SERVICE_LOCK_N_GO, service_handler,
-        schema=LOCK_N_GO_SERVICE_SCHEMA)
+        "nuki", SERVICE_LOCK_N_GO, service_handler, schema=LOCK_N_GO_SERVICE_SCHEMA
+    )
     hass.services.register(
-        'nuki', SERVICE_CHECK_CONNECTION, service_handler,
-        schema=CHECK_CONNECTION_SERVICE_SCHEMA)
+        "nuki",
+        SERVICE_CHECK_CONNECTION,
+        service_handler,
+        schema=CHECK_CONNECTION_SERVICE_SCHEMA,
+    )
 
 
 class NukiLock(LockDevice):
@@ -113,7 +124,8 @@ class NukiLock(LockDevice):
         """Return the device specific state attributes."""
         data = {
             ATTR_BATTERY_CRITICAL: self._battery_critical,
-            ATTR_NUKI_ID: self._nuki_lock.nuki_id}
+            ATTR_NUKI_ID: self._nuki_lock.nuki_id,
+        }
         return data
 
     @property

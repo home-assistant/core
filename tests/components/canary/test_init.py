@@ -4,8 +4,7 @@ from unittest.mock import patch, MagicMock, PropertyMock
 
 import homeassistant.components.canary as canary
 from homeassistant import setup
-from tests.common import (
-    get_test_home_assistant)
+from tests.common import get_test_home_assistant
 
 
 def mock_device(device_id, name, is_online=True, device_type_name=None):
@@ -14,10 +13,9 @@ def mock_device(device_id, name, is_online=True, device_type_name=None):
     type(device).device_id = PropertyMock(return_value=device_id)
     type(device).name = PropertyMock(return_value=name)
     type(device).is_online = PropertyMock(return_value=is_online)
-    type(device).device_type = PropertyMock(return_value={
-        "id": 1,
-        "name": device_type_name,
-    })
+    type(device).device_type = PropertyMock(
+        return_value={"id": 1, "name": device_type_name}
+    )
     return device
 
 
@@ -49,16 +47,11 @@ class TestCanary(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @patch('homeassistant.components.canary.CanaryData.update')
-    @patch('canary.api.Api.login')
+    @patch("homeassistant.components.canary.CanaryData.update")
+    @patch("canary.api.Api.login")
     def test_setup_with_valid_config(self, mock_login, mock_update):
         """Test setup component."""
-        config = {
-            "canary": {
-                "username": "foo@bar.org",
-                "password": "bar",
-            }
-        }
+        config = {"canary": {"username": "foo@bar.org", "password": "bar"}}
 
         assert setup.setup_component(self.hass, canary.DOMAIN, config)
 
@@ -67,20 +60,12 @@ class TestCanary(unittest.TestCase):
 
     def test_setup_with_missing_password(self):
         """Test setup component."""
-        config = {
-            "canary": {
-                "username": "foo@bar.org",
-            }
-        }
+        config = {"canary": {"username": "foo@bar.org"}}
 
         assert not setup.setup_component(self.hass, canary.DOMAIN, config)
 
     def test_setup_with_missing_username(self):
         """Test setup component."""
-        config = {
-            "canary": {
-                "password": "bar",
-            }
-        }
+        config = {"canary": {"password": "bar"}}
 
         assert not setup.setup_component(self.hass, canary.DOMAIN, config)

@@ -6,8 +6,13 @@ import voluptuous as vol
 from pyfronius import Fronius
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_RESOURCE, CONF_SENSOR_TYPE, CONF_DEVICE,
-                                 CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL)
+from homeassistant.const import (
+    CONF_RESOURCE,
+    CONF_SENSOR_TYPE,
+    CONF_DEVICE,
+    CONF_MONITORED_CONDITIONS,
+    CONF_SCAN_INTERVAL
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -17,15 +22,14 @@ from datetime import timedelta
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SCOPE = 'scope'
+CONF_SCOPE = "scope"
 
-TYPE_INVERTER = 'inverter'
-TYPE_STORAGE = 'storage'
-TYPE_METER = 'meter'
-TYPE_POWER_FLOW = 'power_flow'
-# Note that calling the system URL just returns all values of all devices
-SCOPE_DEVICE = 'device'
-SCOPE_SYSTEM = 'system'
+TYPE_INVERTER = "inverter"
+TYPE_STORAGE = "storage"
+TYPE_METER = "meter"
+TYPE_POWER_FLOW = "power_flow"
+SCOPE_DEVICE = "device"
+SCOPE_SYSTEM = "system"
 
 DEFAULT_SCOPE = SCOPE_DEVICE
 DEFAULT_DEVICE = 0
@@ -48,27 +52,33 @@ def _device_id_validator(config):
     return config
 
 
-PLATFORM_SCHEMA = vol.Schema(vol.All(PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE):
-        cv.url,
-    vol.Required(CONF_MONITORED_CONDITIONS):
-        vol.All(
-            cv.ensure_list,
-            [{
-                vol.Required(CONF_SENSOR_TYPE): vol.In(SENSOR_TYPES),
-                vol.Optional(CONF_SCOPE, default=DEFAULT_SCOPE):
-                    vol.In(SCOPE_TYPES),
-                vol.Optional(CONF_DEVICE):
-                    vol.All(vol.Coerce(int), vol.Range(min=0)),
-            }]
+PLATFORM_SCHEMA = vol.Schema(
+    vol.All(
+        PLATFORM_SCHEMA.extend(
+            {
+                vol.Required(CONF_RESOURCE): cv.url,
+                vol.Required(CONF_MONITORED_CONDITIONS): vol.All(
+                    cv.ensure_list,
+                    [
+                        {
+                            vol.Required(CONF_SENSOR_TYPE): vol.In(SENSOR_TYPES),
+                            vol.Optional(CONF_SCOPE, default=DEFAULT_SCOPE): vol.In(
+                                SCOPE_TYPES
+                            ),
+                            vol.Optional(CONF_DEVICE): vol.All(
+                                vol.Coerce(int), vol.Range(min=0)
+                            ),
+                        }
+                    ],
+                ),
+            }
         ),
-}), _device_id_validator))
+        _device_id_validator,
+    )
+)
 
 
-async def async_setup_platform(hass,
-                               config,
-                               async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up of Fronius platform."""
     session = async_get_clientsession(hass)
     fronius = Fronius(session, config[CONF_RESOURCE])
@@ -145,8 +155,10 @@ class FroniusAdapter:
         except ConnectionError:
             _LOGGER.error("Failed to update: connection error")
         except ValueError:
-            _LOGGER.error("Failed to update: invalid response returned."
-                          "Maybe the configured device is not supported")
+            _LOGGER.error(
+                "Failed to update: invalid response returned."
+                "Maybe the configured device is not supported"
+            )
 
         if not values:
             return
@@ -262,6 +274,7 @@ class FroniusTemplateSensor(Entity):
 
     @property
     def should_poll(self):
+        """Device should not be polled, returns False."""
         return False
 
     async def async_update(self):
@@ -277,4 +290,3 @@ class FroniusTemplateSensor(Entity):
     def __hash__(self):
         """Hash sensor by hashing its name."""
         return hash(self.name)
-
