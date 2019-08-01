@@ -1,5 +1,6 @@
 """Support for Home Assistant Updater binary sensors."""
 
+from homeassistant.core import callback
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -58,7 +59,8 @@ class UpdaterBinary(BinarySensorDevice):
             data[ATTR_NEWEST_VERSION] = self._newest_version
         return data
 
-    async def async_added_to_hass(self):
+    @callback
+    def async_added_to_hass(self):
         """Register update dispatcher."""
 
         async def async_state_update(updater: Updater):

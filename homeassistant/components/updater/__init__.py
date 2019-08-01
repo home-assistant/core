@@ -50,9 +50,10 @@ RESPONSE_SCHEMA = vol.Schema(
 
 
 class Updater:
-    """Updater class."""
+    """Updater class for data exchange."""
 
     def __init__(self, update_available: bool, newest_version: str, release_notes: str):
+        """Updater constructor."""
         self.update_available = update_available
         self.release_notes = release_notes
         self.newest_version = newest_version
