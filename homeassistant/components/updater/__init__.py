@@ -54,7 +54,7 @@ class Updater:
     """Updater class for data exchange."""
 
     def __init__(self, update_available: bool, newest_version: str, release_notes: str):
-        """Setup Updater and initialise attributes."""
+        """Initialize attributes."""
         self.update_available = update_available
         self.release_notes = release_notes
         self.newest_version = newest_version
