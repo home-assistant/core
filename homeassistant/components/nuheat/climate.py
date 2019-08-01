@@ -6,10 +6,19 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE, PRESET_NONE)
+    HVAC_MODE_AUTO,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    PRESET_NONE,
+)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -32,11 +41,9 @@ SCHEDULE_TEMPORARY_HOLD = 2
 
 SERVICE_RESUME_PROGRAM = "resume_program"
 
-RESUME_PROGRAM_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
-})
+RESUME_PROGRAM_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE)
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -56,8 +63,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         """Resume the program on the target thermostats."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
         if entity_id:
-            target_thermostats = [device for device in thermostats
-                                  if device.entity_id in entity_id]
+            target_thermostats = [
+                device for device in thermostats if device.entity_id in entity_id
+            ]
         else:
             target_thermostats = thermostats
 
@@ -67,8 +75,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             thermostat.schedule_update_ha_state(True)
 
     hass.services.register(
-        NUHEAT_DOMAIN, SERVICE_RESUME_PROGRAM, resume_program_set_service,
-        schema=RESUME_PROGRAM_SCHEMA)
+        NUHEAT_DOMAIN,
+        SERVICE_RESUME_PROGRAM,
+        resume_program_set_service,
+        schema=RESUME_PROGRAM_SCHEMA,
+    )
 
 
 class NuHeatThermostat(ClimateDevice):
@@ -156,11 +167,7 @@ class NuHeatThermostat(ClimateDevice):
     @property
     def preset_modes(self):
         """Return available preset modes."""
-        return [
-            PRESET_NONE,
-            MODE_HOLD_TEMPERATURE,
-            MODE_TEMPORARY_HOLD
-        ]
+        return [PRESET_NONE, MODE_HOLD_TEMPERATURE, MODE_TEMPORARY_HOLD]
 
     @property
     def hvac_modes(self):
@@ -196,7 +203,9 @@ class NuHeatThermostat(ClimateDevice):
 
         _LOGGER.debug(
             "Setting NuHeat thermostat temperature to %s %s",
-            temperature, self.temperature_unit)
+            temperature,
+            self.temperature_unit,
+        )
 
         self._force_update = True
 

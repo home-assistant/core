@@ -9,35 +9,54 @@ from tests.common import mock_coro_func
 
 async def test_config_required_fields(hass):
     """Test that configuration is successful with required fields."""
-    with patch.object(emulated_roku, 'configured_servers', return_value=[]), \
-            patch('emulated_roku.EmulatedRokuServer',
-                  return_value=Mock(start=mock_coro_func(),
-                                    close=mock_coro_func())):
-        assert await async_setup_component(hass, emulated_roku.DOMAIN, {
-            emulated_roku.DOMAIN: {
-                emulated_roku.CONF_SERVERS: [{
-                    emulated_roku.CONF_NAME: 'Emulated Roku Test',
-                    emulated_roku.CONF_LISTEN_PORT: 8060
-                }]
-            }
-        }) is True
+    with patch.object(emulated_roku, "configured_servers", return_value=[]), patch(
+        "emulated_roku.EmulatedRokuServer",
+        return_value=Mock(start=mock_coro_func(), close=mock_coro_func()),
+    ):
+        assert (
+            await async_setup_component(
+                hass,
+                emulated_roku.DOMAIN,
+                {
+                    emulated_roku.DOMAIN: {
+                        emulated_roku.CONF_SERVERS: [
+                            {
+                                emulated_roku.CONF_NAME: "Emulated Roku Test",
+                                emulated_roku.CONF_LISTEN_PORT: 8060,
+                            }
+                        ]
+                    }
+                },
+            )
+            is True
+        )
 
 
 async def test_config_already_registered_not_configured(hass):
     """Test that an already registered name causes the entry to be ignored."""
-    with patch('emulated_roku.EmulatedRokuServer',
-               return_value=Mock(start=mock_coro_func(),
-                                 close=mock_coro_func())) as instantiate, \
-            patch.object(emulated_roku, 'configured_servers',
-                         return_value=['Emulated Roku Test']):
-        assert await async_setup_component(hass, emulated_roku.DOMAIN, {
-            emulated_roku.DOMAIN: {
-                emulated_roku.CONF_SERVERS: [{
-                    emulated_roku.CONF_NAME: 'Emulated Roku Test',
-                    emulated_roku.CONF_LISTEN_PORT: 8060
-                }]
-            }
-        }) is True
+    with patch(
+        "emulated_roku.EmulatedRokuServer",
+        return_value=Mock(start=mock_coro_func(), close=mock_coro_func()),
+    ) as instantiate, patch.object(
+        emulated_roku, "configured_servers", return_value=["Emulated Roku Test"]
+    ):
+        assert (
+            await async_setup_component(
+                hass,
+                emulated_roku.DOMAIN,
+                {
+                    emulated_roku.DOMAIN: {
+                        emulated_roku.CONF_SERVERS: [
+                            {
+                                emulated_roku.CONF_NAME: "Emulated Roku Test",
+                                emulated_roku.CONF_LISTEN_PORT: 8060,
+                            }
+                        ]
+                    }
+                },
+            )
+            is True
+        )
 
     assert len(instantiate.mock_calls) == 0
 
@@ -46,28 +65,29 @@ async def test_setup_entry_successful(hass):
     """Test setup entry is successful."""
     entry = Mock()
     entry.data = {
-        emulated_roku.CONF_NAME: 'Emulated Roku Test',
+        emulated_roku.CONF_NAME: "Emulated Roku Test",
         emulated_roku.CONF_LISTEN_PORT: 8060,
-        emulated_roku.CONF_HOST_IP: '1.2.3.5',
-        emulated_roku.CONF_ADVERTISE_IP: '1.2.3.4',
+        emulated_roku.CONF_HOST_IP: "1.2.3.5",
+        emulated_roku.CONF_ADVERTISE_IP: "1.2.3.4",
         emulated_roku.CONF_ADVERTISE_PORT: 8071,
-        emulated_roku.CONF_UPNP_BIND_MULTICAST: False
+        emulated_roku.CONF_UPNP_BIND_MULTICAST: False,
     }
 
-    with patch('emulated_roku.EmulatedRokuServer',
-               return_value=Mock(start=mock_coro_func(),
-                                 close=mock_coro_func())) as instantiate:
+    with patch(
+        "emulated_roku.EmulatedRokuServer",
+        return_value=Mock(start=mock_coro_func(), close=mock_coro_func()),
+    ) as instantiate:
         assert await emulated_roku.async_setup_entry(hass, entry) is True
 
     assert len(instantiate.mock_calls) == 1
     assert hass.data[emulated_roku.DOMAIN]
 
-    roku_instance = hass.data[emulated_roku.DOMAIN]['Emulated Roku Test']
+    roku_instance = hass.data[emulated_roku.DOMAIN]["Emulated Roku Test"]
 
-    assert roku_instance.roku_usn == 'Emulated Roku Test'
-    assert roku_instance.host_ip == '1.2.3.5'
+    assert roku_instance.roku_usn == "Emulated Roku Test"
+    assert roku_instance.host_ip == "1.2.3.5"
     assert roku_instance.listen_port == 8060
-    assert roku_instance.advertise_ip == '1.2.3.4'
+    assert roku_instance.advertise_ip == "1.2.3.4"
     assert roku_instance.advertise_port == 8071
     assert roku_instance.bind_multicast is False
 
@@ -75,11 +95,12 @@ async def test_setup_entry_successful(hass):
 async def test_unload_entry(hass):
     """Test being able to unload an entry."""
     entry = Mock()
-    entry.data = {'name': 'Emulated Roku Test', 'listen_port': 8060}
+    entry.data = {"name": "Emulated Roku Test", "listen_port": 8060}
 
-    with patch('emulated_roku.EmulatedRokuServer',
-               return_value=Mock(start=mock_coro_func(),
-                                 close=mock_coro_func())):
+    with patch(
+        "emulated_roku.EmulatedRokuServer",
+        return_value=Mock(start=mock_coro_func(), close=mock_coro_func()),
+    ):
         assert await emulated_roku.async_setup_entry(hass, entry) is True
 
     assert emulated_roku.DOMAIN in hass.data
