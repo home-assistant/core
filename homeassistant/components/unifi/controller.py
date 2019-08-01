@@ -15,6 +15,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .const import (
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
+    CONF_DONT_TRACK_CLIENTS,
+    CONF_DONT_TRACK_DEVICES,
     CONF_SITE_ID,
     CONTROLLER_ID,
     LOGGER,
@@ -62,6 +64,16 @@ class UniFiController:
     def block_clients(self):
         """Return list of clients to block."""
         return self.unifi_config.get(CONF_BLOCK_CLIENT, [])
+
+    @property
+    def dont_track_clients(self):
+        """Return if clients should be tracked."""
+        return self.unifi_config.get(CONF_DONT_TRACK_CLIENTS, False)
+
+    @property
+    def dont_track_devices(self):
+        """Return if devices should be tracked."""
+        return self.unifi_config.get(CONF_DONT_TRACK_DEVICES, False)
 
     @property
     def mac(self):
