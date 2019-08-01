@@ -113,13 +113,17 @@ def setup(hass, config):
     # If weather alert monitoring is expected initiate a client to be used by
     # all weather_alert entities.
     if need_weather_alert_watcher:
+        _LOGGER.debug("Weather Alert monitoring expected. Loading vigilancemeteo")
         from vigilancemeteo import VigilanceMeteoFranceProxy, VigilanceMeteoError
 
         weather_alert_client = VigilanceMeteoFranceProxy()
         try:
             weather_alert_client.update_data()
         except VigilanceMeteoError as exp:
-            _LOGGER.error(exp)
+            _LOGGER.error(
+                "Unexpected error when creating the" "vigilance_meteoFrance proxy: %s ",
+                exp,
+            )
     else:
         weather_alert_client = None
     hass.data[DATA_METEO_FRANCE]["weather_alert_client"] = weather_alert_client
@@ -133,7 +137,9 @@ def setup(hass, config):
         try:
             client = meteofranceClient(city)
         except meteofranceError as exp:
-            _LOGGER.error(exp)
+            _LOGGER.error(
+                "Unexpected error when creating the meteofrance proxy: %s", exp
+            )
             return
 
         client.need_rain_forecast = bool(
@@ -179,4 +185,6 @@ class MeteoFranceUpdater:
         try:
             self._client.update()
         except meteofranceError as exp:
-            _LOGGER.error(exp)
+            _LOGGER.error(
+                "Unexpected error when updating the meteofrance proxy: %s", exp
+            )
