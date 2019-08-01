@@ -12,8 +12,10 @@ from .const import DOMAIN, DEFAULT_PORT, DEFAULT_NAME
 @callback
 def certexpiry_entries(hass: HomeAssistant):
     """Return the host,port tuples for the domain."""
-    return set((entry.data[CONF_HOST], entry.data[CONF_PORT]) for
-               entry in hass.config_entries.async_entries(DOMAIN))
+    return set(
+        (entry.data[CONF_HOST], entry.data[CONF_PORT])
+        for entry in hass.config_entries.async_entries(DOMAIN)
+    )
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -42,30 +44,25 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow):
             prt = user_input[CONF_PORT]
             if not self._prt_in_configuration_exists(host, prt):
                 return self.async_create_entry(
-                    title=name,
-                    data={
-                        CONF_HOST: host,
-                        CONF_PORT: prt
-                    }
+                    title=name, data={CONF_HOST: host, CONF_PORT: prt}
                 )
-            self._errors[CONF_HOST] = 'host_port_exists'
+            self._errors[CONF_HOST] = "host_port_exists"
         else:
             user_input = {}
             user_input[CONF_NAME] = DEFAULT_NAME
-            user_input[CONF_HOST] = ''
+            user_input[CONF_HOST] = ""
             user_input[CONF_PORT] = DEFAULT_PORT
 
         return self.async_show_form(
-            step_id='user',
-            data_schema=vol.Schema({
-                vol.Required(CONF_NAME,
-                             default=user_input[CONF_NAME]): str,
-                vol.Required(CONF_HOST,
-                             default=user_input[CONF_HOST]): str,
-                vol.Required(CONF_PORT,
-                             default=user_input[CONF_PORT]): int
-            }),
-            errors=self._errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_NAME, default=user_input[CONF_NAME]): str,
+                    vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
+                    vol.Required(CONF_PORT, default=user_input[CONF_PORT]): int,
+                }
+            ),
+            errors=self._errors,
         )
 
     async def async_step_import(self, user_input=None):
@@ -77,11 +74,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow):
         prt = user_input.get(CONF_PORT, DEFAULT_PORT)
         name = user_input.get(CONF_NAME, host)
         if self._prt_in_configuration_exists(host, prt):
-            return self.async_abort(
-                reason='host_port_exists'
-                )
-        return await self.async_step_user({
-            CONF_NAME: name,
-            CONF_HOST: host,
-            CONF_PORT: prt
-            })
+            return self.async_abort(reason="host_port_exists")
+        return await self.async_step_user(
+            {CONF_NAME: name, CONF_HOST: host, CONF_PORT: prt}
+        )

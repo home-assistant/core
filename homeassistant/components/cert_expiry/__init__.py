@@ -25,8 +25,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         for eid in hass.data[DOMAIN]:
             entry = hass.data[DOMAIN][eid]
             hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(
-                    entry, 'sensor'))
+                hass.config_entries.async_forward_entry_setup(entry, "sensor")
+            )
         hass.data[DOMAIN] = {}
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, async_start)

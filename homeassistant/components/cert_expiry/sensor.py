@@ -19,9 +19,6 @@ from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, DEFAULT_NAME, DEFAULT_PORT
 
-DEFAULT_NAME = "SSL Certificate Expiry"
-DEFAULT_PORT = 443
-
 SCAN_INTERVAL = timedelta(hours=12)
 
 TIMEOUT = 10.0
@@ -37,19 +34,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up certificate expiry sensor."""
-
-    def run_setup(event):
-        """Wait until Home Assistant is fully initialized before creating.
-
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
+        )
+    )
     return True
 
-        add_entities([SSLCertificate(sensor_name, server_name, server_port)], True)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Add cert-expiry entry."""
-    async_add_entities([SSLCertificate(
-        entry.title, entry.data[CONF_HOST], entry.data[CONF_PORT])],
-                       True)
+    async_add_entities(
+        [SSLCertificate(entry.title, entry.data[CONF_HOST], entry.data[CONF_PORT])],
+        True,
+    )
+    return True
 
 
 class SSLCertificate(Entity):
