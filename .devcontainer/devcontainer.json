@@ -22,7 +22,6 @@
 		"editor.formatOnSave": true,
 		"editor.formatOnType": true,
 		"files.trimTrailingWhitespace": true,
-		"editor.rulers": [80],
 		"terminal.integrated.shell.linux": "/bin/bash",
 		"yaml.customTags": [
 			"!secret scalar",
