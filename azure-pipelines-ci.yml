@@ -201,15 +201,19 @@ stages:
     container: $[ variables['PythonMain'] ]
     steps:
     - script: |
+        set -x
         python -m venv venv
 
         . venv/bin/activate
         pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
       displayName: 'Setup Env'
     - script: |
+        set -x
         TYPING_FILES=$(cat mypyrc)
         echo -e "Run mypy on: \n$TYPING_FILES"
 
         . venv/bin/activate
+        python --version
+        mypy --version
         mypy $TYPING_FILES
       displayName: 'Run mypy'
