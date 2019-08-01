@@ -11,12 +11,7 @@ from homeassistant.requirements import (
     _install,
 )
 
-from tests.common import (
-    get_test_home_assistant,
-    MockModule,
-    mock_coro,
-    mock_integration,
-)
+from tests.common import get_test_home_assistant, MockModule, mock_integration
 
 
 class TestRequirements:
@@ -77,7 +72,7 @@ class TestRequirements:
 async def test_install_existing_package(hass):
     """Test an install attempt on an existing package."""
     with patch(
-        "homeassistant.util.package.install_package", return_value=mock_coro(True)
+        "homeassistant.util.package.install_package", return_value=True
     ) as mock_inst:
         assert await async_process_requirements(
             hass, "test_component", ["hello==1.0.0"]
