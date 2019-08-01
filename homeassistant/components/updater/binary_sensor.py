@@ -1,23 +1,25 @@
 """Support for Home Assistant Updater binary sensors."""
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import ATTR_NEWEST_VERSION, ATTR_RELEASE_NOTES, DOMAIN
+from . import ATTR_NEWEST_VERSION, ATTR_RELEASE_NOTES, DISPATCHER_REMOTE_UPDATE, Updater
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the updater binary sensors."""
-    updater = hass.data[DOMAIN]
-
-    async_add_entities([UpdaterBinary(updater)])
+    async_add_entities([UpdaterBinary()])
 
 
 class UpdaterBinary(BinarySensorDevice):
     """Representation of an updater binary sensor."""
 
-    def __init__(self, updater):
+    def __init__(self):
         """Initialize the binary sensor."""
-        self._updater = updater
+        self._update_available = None
+        self._release_notes = None
+        self._newest_version = None
+        self._unsub_dispatcher = None
 
     @property
     def name(self) -> str:
@@ -32,22 +34,17 @@ class UpdaterBinary(BinarySensorDevice):
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return "on" if self._updater.update_available else "off"
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return "connectivity"
+        return self._update_available
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return True if self._updater.update_available is not None else False
+        return self._update_available is not None
 
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state."""
-        return True
+        return False
 
     @property
     def device_state_attributes(self) -> dict:
@@ -55,8 +52,28 @@ class UpdaterBinary(BinarySensorDevice):
         data = super().device_state_attributes
         if data is None:
             data = {}
-        if self._updater.release_notes:
-            data[ATTR_RELEASE_NOTES] = self._updater.release_notes
-        if self._updater.newest_version:
-            data[ATTR_NEWEST_VERSION] = self._updater.newest_version
+        if self._release_notes:
+            data[ATTR_RELEASE_NOTES] = self._release_notes
+        if self._newest_version:
+            data[ATTR_NEWEST_VERSION] = self._newest_version
         return data
+
+    async def async_added_to_hass(self):
+        """Register update dispatcher."""
+
+        async def async_state_update(updater: Updater):
+            """Update callback."""
+            self._newest_version = updater.newest_version
+            self._release_notes = updater.release_notes
+            self._update_available = updater.update_available
+            self.async_schedule_update_ha_state()
+
+        self._unsub_dispatcher = async_dispatcher_connect(
+            self.hass, DISPATCHER_REMOTE_UPDATE, async_state_update
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Register update dispatcher."""
+        if self._unsub_dispatcher is not None:
+            self._unsub_dispatcher()
+            self._unsub_dispatcher = None

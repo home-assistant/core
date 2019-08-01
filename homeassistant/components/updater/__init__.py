@@ -15,6 +15,7 @@ import voluptuous as vol
 from homeassistant.const import __version__ as current_version
 from homeassistant.helpers import event
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
@@ -27,6 +28,8 @@ CONF_REPORTING = "reporting"
 CONF_COMPONENT_REPORTING = "include_used_components"
 
 DOMAIN = "updater"
+
+DISPATCHER_REMOTE_UPDATE = "updater_remote_update"
 
 UPDATER_URL = "https://updater.home-assistant.io/"
 UPDATER_UUID_FILE = ".uuid"
@@ -49,9 +52,10 @@ RESPONSE_SCHEMA = vol.Schema(
 class Updater:
     """Updater class."""
 
-    update_available = None
-    release_notes = None
-    newest_version = None
+    def __init__(self, update_available: bool, newest_version: str, release_notes: str):
+        self.update_available = update_available
+        self.release_notes = release_notes
+        self.newest_version = newest_version
 
 
 def _create_uuid(hass, filename=UPDATER_UUID_FILE):
@@ -88,8 +92,6 @@ async def async_setup(hass, config):
 
     include_components = config.get(CONF_COMPONENT_REPORTING)
 
-    updater = hass.data[DOMAIN] = Updater()
-
     async def check_new_version(now):
         """Check if a new version is available and report if one is."""
         result = await get_newest_version(hass, huuid, include_components)
@@ -117,9 +119,8 @@ async def async_setup(hass, config):
         elif StrictVersion(newest) < StrictVersion(current_version):
             _LOGGER.debug("Local version is newer than the latest version (%s)", newest)
 
-        updater.update_available = update_available
-        updater.release_notes = release_notes
-        updater.newest_version = newest
+        updater = Updater(update_available, newest, release_notes)
+        async_dispatcher_send(hass, DISPATCHER_REMOTE_UPDATE, updater)
 
     # Update daily, start 1 hour after startup
     _dt = dt_util.utcnow() + timedelta(hours=1)
