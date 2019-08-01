@@ -5,7 +5,10 @@ from typing import Optional
 from homematicip.aio.device import AsyncFullFlushBlind, AsyncFullFlushShutter
 
 from homeassistant.components.cover import (
-    ATTR_POSITION, ATTR_TILT_POSITION, CoverDevice)
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
+    CoverDevice,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -19,14 +22,14 @@ HMIP_SLATS_OPEN = 0
 HMIP_SLATS_CLOSED = 1
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the HomematicIP Cloud cover devices."""
     pass
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
-                            async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+) -> None:
     """Set up the HomematicIP cover from a config entry."""
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []

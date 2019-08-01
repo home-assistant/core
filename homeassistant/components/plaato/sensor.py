@@ -7,15 +7,24 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 
 from . import (
-    ATTR_ABV, ATTR_BATCH_VOLUME, ATTR_BPM, ATTR_CO2_VOLUME, ATTR_TEMP,
-    ATTR_TEMP_UNIT, ATTR_VOLUME_UNIT, DOMAIN as PLAATO_DOMAIN,
-    PLAATO_DEVICE_ATTRS, PLAATO_DEVICE_SENSORS, SENSOR_DATA_KEY, SENSOR_UPDATE)
+    ATTR_ABV,
+    ATTR_BATCH_VOLUME,
+    ATTR_BPM,
+    ATTR_CO2_VOLUME,
+    ATTR_TEMP,
+    ATTR_TEMP_UNIT,
+    ATTR_VOLUME_UNIT,
+    DOMAIN as PLAATO_DOMAIN,
+    PLAATO_DEVICE_ATTRS,
+    PLAATO_DEVICE_SENSORS,
+    SENSOR_DATA_KEY,
+    SENSOR_UPDATE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Plaato sensor."""
 
 
@@ -29,8 +38,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     def get_device_sensors(device_id):
         """Get device sensors."""
-        return hass.data[PLAATO_DOMAIN].get(device_id)\
-            .get(PLAATO_DEVICE_SENSORS)
+        return hass.data[PLAATO_DOMAIN].get(device_id).get(PLAATO_DEVICE_SENSORS)
 
     async def _update_sensor(device_id):
         """Update/Create the sensors."""
@@ -46,8 +54,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             async_add_entities(entities, True)
         else:
             for entity in devices[device_id]:
-                async_dispatcher_send(hass, "{}_{}".format(PLAATO_DOMAIN,
-                                                           entity.unique_id))
+                async_dispatcher_send(
+                    hass, "{}_{}".format(PLAATO_DOMAIN, entity.unique_id)
+                )
 
     hass.data[SENSOR_DATA_KEY] = async_dispatcher_connect(
         hass, SENSOR_UPDATE, _update_sensor
@@ -81,23 +90,28 @@ class PlaatoSensor(Entity):
     def device_info(self):
         """Get device info."""
         return {
-            'identifiers': {
-                (PLAATO_DOMAIN, self._device_id)
-            },
-            'name': self._device_id,
-            'manufacturer': 'Plaato',
-            'model': 'Airlock'
+            "identifiers": {(PLAATO_DOMAIN, self._device_id)},
+            "name": self._device_id,
+            "manufacturer": "Plaato",
+            "model": "Airlock",
         }
 
     def get_sensors(self):
         """Get device sensors."""
-        return self.hass.data[PLAATO_DOMAIN].get(self._device_id)\
+        return (
+            self.hass.data[PLAATO_DOMAIN]
+            .get(self._device_id)
             .get(PLAATO_DEVICE_SENSORS, False)
+        )
 
     def get_sensors_unit_of_measurement(self, sensor_type):
         """Get unit of measurement for sensor of type."""
-        return self.hass.data[PLAATO_DOMAIN].get(self._device_id)\
-            .get(PLAATO_DEVICE_ATTRS, []).get(sensor_type, '')
+        return (
+            self.hass.data[PLAATO_DOMAIN]
+            .get(self._device_id)
+            .get(PLAATO_DEVICE_ATTRS, [])
+            .get(sensor_type, "")
+        )
 
     @property
     def state(self):
@@ -129,11 +143,11 @@ class PlaatoSensor(Entity):
         if self._type == ATTR_BATCH_VOLUME or self._type == ATTR_CO2_VOLUME:
             return self.get_sensors_unit_of_measurement(ATTR_VOLUME_UNIT)
         if self._type == ATTR_BPM:
-            return 'bpm'
+            return "bpm"
         if self._type == ATTR_ABV:
-            return '%'
+            return "%"
 
-        return ''
+        return ""
 
     @property
     def should_poll(self):
@@ -144,4 +158,5 @@ class PlaatoSensor(Entity):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
             "{}_{}".format(PLAATO_DOMAIN, self.unique_id),
-            self.async_schedule_update_ha_state)
+            self.async_schedule_update_ha_state,
+        )

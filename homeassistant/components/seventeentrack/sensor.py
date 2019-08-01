@@ -6,54 +6,60 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_LOCATION, CONF_PASSWORD, CONF_SCAN_INTERVAL,
-    CONF_USERNAME)
+    ATTR_ATTRIBUTION,
+    ATTR_LOCATION,
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle, slugify
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DESTINATION_COUNTRY = 'destination_country'
-ATTR_FRIENDLY_NAME = 'friendly_name'
-ATTR_INFO_TEXT = 'info_text'
-ATTR_ORIGIN_COUNTRY = 'origin_country'
-ATTR_PACKAGES = 'packages'
-ATTR_PACKAGE_TYPE = 'package_type'
-ATTR_STATUS = 'status'
-ATTR_TRACKING_INFO_LANGUAGE = 'tracking_info_language'
-ATTR_TRACKING_NUMBER = 'tracking_number'
+ATTR_DESTINATION_COUNTRY = "destination_country"
+ATTR_FRIENDLY_NAME = "friendly_name"
+ATTR_INFO_TEXT = "info_text"
+ATTR_ORIGIN_COUNTRY = "origin_country"
+ATTR_PACKAGES = "packages"
+ATTR_PACKAGE_TYPE = "package_type"
+ATTR_STATUS = "status"
+ATTR_TRACKING_INFO_LANGUAGE = "tracking_info_language"
+ATTR_TRACKING_NUMBER = "tracking_number"
 
-CONF_SHOW_ARCHIVED = 'show_archived'
-CONF_SHOW_DELIVERED = 'show_delivered'
+CONF_SHOW_ARCHIVED = "show_archived"
+CONF_SHOW_DELIVERED = "show_delivered"
 
-DATA_PACKAGES = 'package_data'
-DATA_SUMMARY = 'summary_data'
+DATA_PACKAGES = "package_data"
+DATA_SUMMARY = "summary_data"
 
-DEFAULT_ATTRIBUTION = 'Data provided by 17track.net'
+DEFAULT_ATTRIBUTION = "Data provided by 17track.net"
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
 
-UNIQUE_ID_TEMPLATE = 'package_{0}_{1}'
-ENTITY_ID_TEMPLATE = 'sensor.seventeentrack_package_{0}'
+UNIQUE_ID_TEMPLATE = "package_{0}_{1}"
+ENTITY_ID_TEMPLATE = "sensor.seventeentrack_package_{0}"
 
-NOTIFICATION_DELIVERED_ID = 'package_delivered_{0}'
-NOTIFICATION_DELIVERED_TITLE = 'Package {0} delivered'
-NOTIFICATION_DELIVERED_MESSAGE = 'Package Delivered: {0}<br />' + \
-                                 'Visit 17.track for more information: ' \
-                                 'https://t.17track.net/track#nums={1}'
+NOTIFICATION_DELIVERED_ID = "package_delivered_{0}"
+NOTIFICATION_DELIVERED_TITLE = "Package {0} delivered"
+NOTIFICATION_DELIVERED_MESSAGE = (
+    "Package Delivered: {0}<br />" + "Visit 17.track for more information: "
+    "https://t.17track.net/track#nums={1}"
+)
 
-VALUE_DELIVERED = 'Delivered'
+VALUE_DELIVERED = "Delivered"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_SHOW_ARCHIVED, default=False): cv.boolean,
-    vol.Optional(CONF_SHOW_DELIVERED, default=False): cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_SHOW_ARCHIVED, default=False): cv.boolean,
+        vol.Optional(CONF_SHOW_DELIVERED, default=False): cv.boolean,
+    }
+)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Configure the platform and add the sensors."""
     from py17track import Client
     from py17track.errors import SeventeenTrackError
@@ -64,20 +70,25 @@ async def async_setup_platform(
 
     try:
         login_result = await client.profile.login(
-            config[CONF_USERNAME], config[CONF_PASSWORD])
+            config[CONF_USERNAME], config[CONF_PASSWORD]
+        )
 
         if not login_result:
-            _LOGGER.error('Invalid username and password provided')
+            _LOGGER.error("Invalid username and password provided")
             return
     except SeventeenTrackError as err:
-        _LOGGER.error('There was an error while logging in: %s', err)
+        _LOGGER.error("There was an error while logging in: %s", err)
         return
 
     scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
-    data = SeventeenTrackData(client, async_add_entities, scan_interval,
-                              config[CONF_SHOW_ARCHIVED],
-                              config[CONF_SHOW_DELIVERED])
+    data = SeventeenTrackData(
+        client,
+        async_add_entities,
+        scan_interval,
+        config[CONF_SHOW_ARCHIVED],
+        config[CONF_SHOW_DELIVERED],
+    )
     await data.async_update()
 
 
@@ -104,12 +115,12 @@ class SeventeenTrackSummarySensor(Entity):
     @property
     def icon(self):
         """Return the icon."""
-        return 'mdi:package'
+        return "mdi:package"
 
     @property
     def name(self):
         """Return the name."""
-        return 'Seventeentrack Packages {0}'.format(self._status)
+        return "Seventeentrack Packages {0}".format(self._status)
 
     @property
     def state(self):
@@ -119,13 +130,12 @@ class SeventeenTrackSummarySensor(Entity):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return 'summary_{0}_{1}'.format(
-            self._data.account_id, slugify(self._status))
+        return "summary_{0}_{1}".format(self._data.account_id, slugify(self._status))
 
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return 'packages'
+        return "packages"
 
     async def async_update(self):
         """Update the sensor."""
@@ -136,12 +146,14 @@ class SeventeenTrackSummarySensor(Entity):
             if package.status != self._status:
                 continue
 
-            package_data.append({
-                ATTR_FRIENDLY_NAME: package.friendly_name,
-                ATTR_INFO_TEXT: package.info_text,
-                ATTR_STATUS: package.status,
-                ATTR_TRACKING_NUMBER: package.tracking_number,
-            })
+            package_data.append(
+                {
+                    ATTR_FRIENDLY_NAME: package.friendly_name,
+                    ATTR_INFO_TEXT: package.info_text,
+                    ATTR_STATUS: package.status,
+                    ATTR_TRACKING_NUMBER: package.tracking_number,
+                }
+            )
 
         if package_data:
             self._attrs[ATTR_PACKAGES] = package_data
@@ -183,7 +195,7 @@ class SeventeenTrackPackageSensor(Entity):
     @property
     def icon(self):
         """Return the icon."""
-        return 'mdi:package'
+        return "mdi:package"
 
     @property
     def name(self):
@@ -191,7 +203,7 @@ class SeventeenTrackPackageSensor(Entity):
         name = self._friendly_name
         if not name:
             name = self._tracking_number
-        return 'Seventeentrack Package: {0}'.format(name)
+        return "Seventeentrack Package: {0}".format(name)
 
     @property
     def state(self):
@@ -201,8 +213,7 @@ class SeventeenTrackPackageSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return UNIQUE_ID_TEMPLATE.format(
-            self._data.account_id, self._tracking_number)
+        return UNIQUE_ID_TEMPLATE.format(self._data.account_id, self._tracking_number)
 
     async def async_update(self):
         """Update the sensor."""
@@ -221,10 +232,9 @@ class SeventeenTrackPackageSensor(Entity):
             self.hass.async_create_task(self._remove())
             return
 
-        self._attrs.update({
-            ATTR_INFO_TEXT: package.info_text,
-            ATTR_LOCATION: package.location,
-        })
+        self._attrs.update(
+            {ATTR_INFO_TEXT: package.info_text, ATTR_LOCATION: package.location}
+        )
         self._state = package.status
         self._friendly_name = package.friendly_name
 
@@ -234,33 +244,37 @@ class SeventeenTrackPackageSensor(Entity):
 
         reg = await self.hass.helpers.entity_registry.async_get_registry()
         entity_id = reg.async_get_entity_id(
-            'sensor', 'seventeentrack',
-            UNIQUE_ID_TEMPLATE.format(
-                self._data.account_id, self._tracking_number))
+            "sensor",
+            "seventeentrack",
+            UNIQUE_ID_TEMPLATE.format(self._data.account_id, self._tracking_number),
+        )
         if entity_id:
             reg.async_remove(entity_id)
 
     def _notify_delivered(self):
         """Notify when package is delivered."""
-        _LOGGER.info('Package delivered: %s', self._tracking_number)
+        _LOGGER.info("Package delivered: %s", self._tracking_number)
 
-        identification = self._friendly_name if self._friendly_name else \
-            self._tracking_number
-        message = NOTIFICATION_DELIVERED_MESSAGE.format(self._tracking_number,
-                                                        identification)
+        identification = (
+            self._friendly_name if self._friendly_name else self._tracking_number
+        )
+        message = NOTIFICATION_DELIVERED_MESSAGE.format(
+            self._tracking_number, identification
+        )
         title = NOTIFICATION_DELIVERED_TITLE.format(identification)
-        notification_id = NOTIFICATION_DELIVERED_TITLE\
-            .format(self._tracking_number)
+        notification_id = NOTIFICATION_DELIVERED_TITLE.format(self._tracking_number)
 
-        self.hass.components.persistent_notification\
-            .create(message, title=title, notification_id=notification_id)
+        self.hass.components.persistent_notification.create(
+            message, title=title, notification_id=notification_id
+        )
 
 
 class SeventeenTrackData:
     """Define a data handler for 17track.net."""
 
-    def __init__(self, client, async_add_entities, scan_interval,
-                 show_archived, show_delivered):
+    def __init__(
+        self, client, async_add_entities, scan_interval, show_archived, show_delivered
+    ):
         """Initialize."""
         self._async_add_entities = async_add_entities
         self._client = client
@@ -280,39 +294,46 @@ class SeventeenTrackData:
 
         try:
             packages = await self._client.profile.packages(
-                show_archived=self._show_archived)
-            _LOGGER.debug('New package data received: %s', packages)
+                show_archived=self._show_archived
+            )
+            _LOGGER.debug("New package data received: %s", packages)
 
             new_packages = {p.tracking_number: p for p in packages}
 
             to_add = set(new_packages) - set(self.packages)
 
-            _LOGGER.debug('Will add new tracking numbers: %s', to_add)
+            _LOGGER.debug("Will add new tracking numbers: %s", to_add)
             if to_add:
-                self._async_add_entities([
-                    SeventeenTrackPackageSensor(self,
-                                                new_packages[tracking_number])
-                    for tracking_number in to_add
-                ], True)
+                self._async_add_entities(
+                    [
+                        SeventeenTrackPackageSensor(self, new_packages[tracking_number])
+                        for tracking_number in to_add
+                    ],
+                    True,
+                )
 
             self.packages = new_packages
         except SeventeenTrackError as err:
-            _LOGGER.error('There was an error retrieving packages: %s', err)
+            _LOGGER.error("There was an error retrieving packages: %s", err)
 
         try:
             self.summary = await self._client.profile.summary(
-                show_archived=self._show_archived)
-            _LOGGER.debug('New summary data received: %s', self.summary)
+                show_archived=self._show_archived
+            )
+            _LOGGER.debug("New summary data received: %s", self.summary)
 
             # creating summary sensors on first update
             if self.first_update:
                 self.first_update = False
 
-                self._async_add_entities([
-                    SeventeenTrackSummarySensor(self, status, quantity)
-                    for status, quantity in self.summary.items()
-                ], True)
+                self._async_add_entities(
+                    [
+                        SeventeenTrackSummarySensor(self, status, quantity)
+                        for status, quantity in self.summary.items()
+                    ],
+                    True,
+                )
 
         except SeventeenTrackError as err:
-            _LOGGER.error('There was an error retrieving the summary: %s', err)
+            _LOGGER.error("There was an error retrieving the summary: %s", err)
             self.summary = {}

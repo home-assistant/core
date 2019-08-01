@@ -15,7 +15,10 @@ from huawei_lte_api.Client import Client
 from huawei_lte_api.exceptions import ResponseErrorNotSupportedException
 
 from homeassistant.const import (
-    CONF_URL, CONF_USERNAME, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP,
+    CONF_URL,
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
@@ -24,20 +27,30 @@ _LOGGER = logging.getLogger(__name__)
 
 # dicttoxml (used by huawei-lte-api) has uselessly verbose INFO level.
 # https://github.com/quandyfactory/dicttoxml/issues/60
-logging.getLogger('dicttoxml').setLevel(logging.WARNING)
+logging.getLogger("dicttoxml").setLevel(logging.WARNING)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
-DOMAIN = 'huawei_lte'
-DATA_KEY = 'huawei_lte'
+DOMAIN = "huawei_lte"
+DATA_KEY = "huawei_lte"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
-        vol.Required(CONF_URL): cv.url,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-    })])
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.All(
+            cv.ensure_list,
+            [
+                vol.Schema(
+                    {
+                        vol.Required(CONF_URL): cv.url,
+                        vol.Required(CONF_USERNAME): cv.string,
+                        vol.Required(CONF_PASSWORD): cv.string,
+                    }
+                )
+            ],
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 @attr.s
@@ -89,16 +102,16 @@ class RouterData:
                 try:
                     setattr(self, path, func())
                 except ResponseErrorNotSupportedException as ex:
-                    _LOGGER.warning(
-                        "%s not supported by device", path, exc_info=ex)
+                    _LOGGER.warning("%s not supported by device", path, exc_info=ex)
                     self._subscriptions.discard(path)
                 finally:
                     _LOGGER.debug("%s=%s", path, getattr(self, path))
 
         get_data("device_information", self.client.device.information)
         get_data("device_signal", self.client.device.signal)
-        get_data("monitoring_traffic_statistics",
-                 self.client.monitoring.traffic_statistics)
+        get_data(
+            "monitoring_traffic_statistics", self.client.monitoring.traffic_statistics
+        )
         get_data("wlan_host_list", self.client.wlan.host_list)
 
 
@@ -140,18 +153,14 @@ def _setup_lte(hass, lte_config) -> None:
     host = urlparse(url).hostname
     try:
         if ipaddress.ip_address(host).version == 6:
-            mode = 'ip6'
+            mode = "ip6"
         else:
-            mode = 'ip'
+            mode = "ip"
     except ValueError:
-        mode = 'hostname'
+        mode = "hostname"
     mac = get_mac_address(**{mode: host})
 
-    connection = AuthorizedConnection(
-        url,
-        username=username,
-        password=password,
-    )
+    connection = AuthorizedConnection(url, username=username, password=password)
     client = Client(connection)
 
     data = RouterData(client, mac)

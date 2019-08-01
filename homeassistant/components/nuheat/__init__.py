@@ -9,16 +9,22 @@ from homeassistant.helpers import discovery
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'nuheat'
+DOMAIN = "nuheat"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_DEVICES, default=[]):
-            vol.All(cv.ensure_list, [cv.string]),
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Required(CONF_DEVICES, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):

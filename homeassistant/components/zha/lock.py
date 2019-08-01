@@ -4,11 +4,18 @@ import logging
 from zigpy.zcl.foundation import Status
 from homeassistant.core import callback
 from homeassistant.components.lock import (
-    DOMAIN, STATE_UNLOCKED, STATE_LOCKED, LockDevice)
+    DOMAIN,
+    STATE_UNLOCKED,
+    STATE_LOCKED,
+    LockDevice,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .core.const import (
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, DOORLOCK_CHANNEL,
-    SIGNAL_ATTR_UPDATED
+    DATA_ZHA,
+    DATA_ZHA_DISPATCHERS,
+    ZHA_DISCOVERY_NEW,
+    DOORLOCK_CHANNEL,
+    SIGNAL_ATTR_UPDATED,
 )
 from .entity import ZhaEntity
 
@@ -16,40 +23,40 @@ _LOGGER = logging.getLogger(__name__)
 
 """ The first state is Zigbee 'Not fully locked' """
 
-STATE_LIST = [
-    STATE_UNLOCKED,
-    STATE_LOCKED,
-    STATE_UNLOCKED
-]
+STATE_LIST = [STATE_UNLOCKED, STATE_LOCKED, STATE_UNLOCKED]
 
 VALUE_TO_STATE = {i: state for i, state in enumerate(STATE_LIST)}
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up Zigbee Home Automation locks."""
     pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation Door Lock from config entry."""
+
     async def async_discover(discovery_info):
-        await _async_setup_entities(hass, config_entry, async_add_entities,
-                                    [discovery_info])
+        await _async_setup_entities(
+            hass, config_entry, async_add_entities, [discovery_info]
+        )
 
     unsub = async_dispatcher_connect(
-        hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover)
+        hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover
+    )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
     locks = hass.data.get(DATA_ZHA, {}).get(DOMAIN)
     if locks is not None:
-        await _async_setup_entities(hass, config_entry, async_add_entities,
-                                    locks.values())
+        await _async_setup_entities(
+            hass, config_entry, async_add_entities, locks.values()
+        )
         del hass.data[DATA_ZHA][DOMAIN]
 
 
-async def _async_setup_entities(hass, config_entry, async_add_entities,
-                                discovery_infos):
+async def _async_setup_entities(
+    hass, config_entry, async_add_entities, discovery_infos
+):
     """Set up the ZHA locks."""
     entities = []
     for discovery_info in discovery_infos:
@@ -72,7 +79,8 @@ class ZhaDoorLock(ZhaEntity, LockDevice):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         await self.async_accept_signal(
-            self._doorlock_channel, SIGNAL_ATTR_UPDATED, self.async_set_state)
+            self._doorlock_channel, SIGNAL_ATTR_UPDATED, self.async_set_state
+        )
 
     @callback
     def async_restore_last_state(self, last_state):
@@ -121,7 +129,8 @@ class ZhaDoorLock(ZhaEntity, LockDevice):
         """Attempt to retrieve state from the lock."""
         if self._doorlock_channel:
             state = await self._doorlock_channel.get_attribute_value(
-                'lock_state', from_cache=from_cache)
+                "lock_state", from_cache=from_cache
+            )
             if state is not None:
                 self._state = VALUE_TO_STATE.get(state, self._state)
 

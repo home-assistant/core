@@ -18,34 +18,24 @@ class TestRandomSensor(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @patch('random.getrandbits', return_value=1)
+    @patch("random.getrandbits", return_value=1)
     def test_random_binary_sensor_on(self, mocked):
         """Test the Random binary sensor."""
-        config = {
-            'binary_sensor': {
-                'platform': 'random',
-                'name': 'test',
-            }
-        }
+        config = {"binary_sensor": {"platform": "random", "name": "test"}}
 
-        assert setup_component(self.hass, 'binary_sensor', config)
+        assert setup_component(self.hass, "binary_sensor", config)
 
-        state = self.hass.states.get('binary_sensor.test')
+        state = self.hass.states.get("binary_sensor.test")
 
-        assert state.state == 'on'
+        assert state.state == "on"
 
-    @patch('random.getrandbits', return_value=False)
+    @patch("random.getrandbits", return_value=False)
     def test_random_binary_sensor_off(self, mocked):
         """Test the Random binary sensor."""
-        config = {
-            'binary_sensor': {
-                'platform': 'random',
-                'name': 'test',
-            }
-        }
+        config = {"binary_sensor": {"platform": "random", "name": "test"}}
 
-        assert setup_component(self.hass, 'binary_sensor', config)
+        assert setup_component(self.hass, "binary_sensor", config)
 
-        state = self.hass.states.get('binary_sensor.test')
+        state = self.hass.states.get("binary_sensor.test")
 
-        assert state.state == 'off'
+        assert state.state == "off"

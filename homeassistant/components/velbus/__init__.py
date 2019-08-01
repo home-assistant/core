@@ -15,15 +15,13 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-VELBUS_MESSAGE = 'velbus.message'
+VELBUS_MESSAGE = "velbus.message"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_PORT): cv.string,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Schema({vol.Required(CONF_PORT): cv.string})}, extra=vol.ALLOW_EXTRA
+)
 
-COMPONENT_TYPES = ['switch', 'sensor', 'binary_sensor', 'cover', 'climate']
+COMPONENT_TYPES = ["switch", "sensor", "binary_sensor", "cover", "climate"]
 
 
 async def async_setup(hass, config):
@@ -36,17 +34,13 @@ async def async_setup(hass, config):
     data = {}
 
     if port:
-        data = {
-            CONF_PORT: port,
-            CONF_NAME: 'Velbus import'
-            }
+        data = {CONF_PORT: port, CONF_NAME: "Velbus import"}
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={'source': SOURCE_IMPORT},
-            data=data
-            ))
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+        )
+    )
 
     return True
 
@@ -57,9 +51,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     def callback():
         modules = controller.get_modules()
-        discovery_info = {
-            'cntrl': controller
-        }
+        discovery_info = {"cntrl": controller}
         for category in COMPONENT_TYPES:
             discovery_info[category] = []
 
@@ -67,45 +59,44 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             for channel in range(1, module.number_of_channels() + 1):
                 for category in COMPONENT_TYPES:
                     if category in module.get_categories(channel):
-                        discovery_info[category].append((
-                            module.get_module_address(),
-                            channel
-                        ))
+                        discovery_info[category].append(
+                            (module.get_module_address(), channel)
+                        )
 
         hass.data[DOMAIN][entry.entry_id] = discovery_info
 
         for category in COMPONENT_TYPES:
             hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(
-                    entry, category))
+                hass.config_entries.async_forward_entry_setup(entry, category)
+            )
 
     try:
         controller = velbus.Controller(entry.data[CONF_PORT])
         controller.scan(callback)
     except velbus.util.VelbusException as err:
-        _LOGGER.error('An error occurred: %s', err)
+        _LOGGER.error("An error occurred: %s", err)
         raise ConfigEntryNotReady
 
     def syn_clock(self, service=None):
         try:
             controller.sync_clock()
         except velbus.util.VelbusException as err:
-            _LOGGER.error('An error occurred: %s', err)
+            _LOGGER.error("An error occurred: %s", err)
 
-    hass.services.async_register(
-        DOMAIN, 'sync_clock', syn_clock,
-        schema=vol.Schema({}))
+    hass.services.async_register(DOMAIN, "sync_clock", syn_clock, schema=vol.Schema({}))
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Remove the velbus connection."""
-    await asyncio.wait([
-        hass.config_entries.async_forward_entry_unload(entry, component)
-        for component in COMPONENT_TYPES
-        ])
-    hass.data[DOMAIN][entry.entry_id]['cntrl'].stop()
+    await asyncio.wait(
+        [
+            hass.config_entries.async_forward_entry_unload(entry, component)
+            for component in COMPONENT_TYPES
+        ]
+    )
+    hass.data[DOMAIN][entry.entry_id]["cntrl"].stop()
     hass.data[DOMAIN].pop(entry.entry_id)
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
@@ -151,16 +142,17 @@ class VelbusEntity(Entity):
     def device_info(self):
         """Return the device info."""
         return {
-            'identifiers': {
-                (DOMAIN, self._module.get_module_address(),
-                 self._module.serial)
+            "identifiers": {
+                (DOMAIN, self._module.get_module_address(), self._module.serial)
             },
-            'name': "{} {}".format(
-                self._module.get_module_address(),
-                self._module.get_module_name()),
-            'manufacturer': 'Velleman',
-            'model': self._module.get_module_name(),
-            'sw_version': "{}.{}-{}".format(
-                self._module.memory_map_version, self._module.build_year,
-                self._module.build_week)
+            "name": "{} {}".format(
+                self._module.get_module_address(), self._module.get_module_name()
+            ),
+            "manufacturer": "Velleman",
+            "model": self._module.get_module_name(),
+            "sw_version": "{}.{}-{}".format(
+                self._module.memory_map_version,
+                self._module.build_year,
+                self._module.build_week,
+            ),
         }
