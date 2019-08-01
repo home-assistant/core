@@ -7,9 +7,6 @@ DOMAIN = 'mikrotik'
 MIKROTIK = DOMAIN
 CLIENT = 'mikrotik_client'
 
-SENSOR = 'sensor'
-BINARY_SENSOR = 'binary_sensor'
-
 MTK_DEFAULT_WAN = 'ether1'
 MTK_LOGIN_PLAIN = 'plain'
 MTK_LOGIN_TOKEN = 'token'
