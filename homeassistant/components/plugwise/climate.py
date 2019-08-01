@@ -4,32 +4,40 @@ import logging
 
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.climate import (PLATFORM_SCHEMA, ClimateDevice)
-from homeassistant.components.climate.const import (CURRENT_HVAC_HEAT,
-                                                    CURRENT_HVAC_IDLE,
-                                                    HVAC_MODE_AUTO,
-                                                    HVAC_MODE_OFF,
-                                                    SUPPORT_PRESET_MODE,
-                                                    SUPPORT_TARGET_TEMPERATURE)
-from homeassistant.const import (ATTR_TEMPERATURE, CONF_HOST, CONF_NAME,
-                                 CONF_PASSWORD, CONF_PORT, CONF_USERNAME,
-                                 TEMP_CELSIUS)
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate.const import (
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    HVAC_MODE_AUTO,
+    HVAC_MODE_OFF,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+)
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    TEMP_CELSIUS,
+)
 from homeassistant.exceptions import PlatformNotReady
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE)
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 _LOGGER = logging.getLogger(__name__)
 
 # Configuration directives
-CONF_MIN_TEMP = 'min_temp'
-CONF_MAX_TEMP = 'max_temp'
+CONF_MIN_TEMP = "min_temp"
+CONF_MAX_TEMP = "max_temp"
 
 # Default directives
-DEFAULT_NAME = 'Plugwise Thermostat'
-DEFAULT_USERNAME = 'smile'
+DEFAULT_NAME = "Plugwise Thermostat"
+DEFAULT_USERNAME = "smile"
 DEFAULT_TIMEOUT = 10
 DEFAULT_PORT = 80
-DEFAULT_ICON = 'mdi:thermometer'
+DEFAULT_ICON = "mdi:thermometer"
 DEFAULT_MIN_TEMP = 4
 DEFAULT_MAX_TEMP = 30
 
@@ -37,37 +45,40 @@ DEFAULT_MAX_TEMP = 30
 ATTR_HVAC_MODES = [HVAC_MODE_AUTO, HVAC_MODE_OFF]
 
 # Read platform configuration
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-    vol.Optional(CONF_MIN_TEMP, default=DEFAULT_MIN_TEMP): cv.positive_int,
-    vol.Optional(CONF_MAX_TEMP, default=DEFAULT_MAX_TEMP): cv.positive_int,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        vol.Optional(CONF_MIN_TEMP, default=DEFAULT_MIN_TEMP): cv.positive_int,
+        vol.Optional(CONF_MAX_TEMP, default=DEFAULT_MAX_TEMP): cv.positive_int,
+    }
+)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Add the Plugwise (Anna) Thermostate."""
-    add_devices([
-        ThermostatDevice(
-            config.get(CONF_NAME),
-            config.get(CONF_USERNAME),
-            config.get(CONF_PASSWORD),
-            config.get(CONF_HOST),
-            config.get(CONF_PORT),
-            config.get(CONF_MIN_TEMP),
-            config.get(CONF_MAX_TEMP),
-        )
-    ])
+    add_devices(
+        [
+            ThermostatDevice(
+                config.get(CONF_NAME),
+                config.get(CONF_USERNAME),
+                config.get(CONF_PASSWORD),
+                config.get(CONF_HOST),
+                config.get(CONF_PORT),
+                config.get(CONF_MIN_TEMP),
+                config.get(CONF_MAX_TEMP),
+            )
+        ]
+    )
 
 
 class ThermostatDevice(ClimateDevice):
     """Representation of an Plugwise thermostat."""
 
-    def __init__(self, name, username, password, host, port,
-                 min_temp, max_temp):
+    def __init__(self, name, username, password, host, port, min_temp, max_temp):
         """Set up the Plugwise API."""
         _LOGGER.debug("Init called")
         self._name = name
@@ -91,8 +102,10 @@ class ThermostatDevice(ClimateDevice):
 
         _LOGGER.debug("Initializing API")
         import haanna
-        self._api = haanna.Haanna(self._username, self._password,
-                                  self._host, self._port)
+
+        self._api = haanna.Haanna(
+            self._username, self._password, self._host, self._port
+        )
         try:
             self._api.ping_anna_thermostat()
         except Exception:
@@ -132,11 +145,12 @@ class ThermostatDevice(ClimateDevice):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         attributes = {}
-        attributes['outdoor_temperature'] = self._outdoor_temperature
-        attributes['available_schemas'] = self._api.get_schema_names(
-            self._domain_objects)
-        attributes['active_schema'] = self._active_schema
-        attributes['previous_schema'] = self._previous_schema
+        attributes["outdoor_temperature"] = self._outdoor_temperature
+        attributes["available_schemas"] = self._api.get_schema_names(
+            self._domain_objects
+        )
+        attributes["active_schema"] = self._active_schema
+        attributes["previous_schema"] = self._previous_schema
         return attributes
 
     def update(self):
@@ -144,9 +158,9 @@ class ThermostatDevice(ClimateDevice):
         _LOGGER.debug("Update called")
         self._domain_objects = self._api.get_domain_objects()
         self._outdoor_temperature = self._api.get_outdoor_temperature(
-            self._domain_objects)
-        api_active_schema = self._api.get_active_schema_name(
-            self._domain_objects)
+            self._domain_objects
+        )
+        api_active_schema = self._api.get_active_schema_name(self._domain_objects)
         if self._active_schema != api_active_schema:
             self._previous_schema = self._active_schema
             self._active_schema = api_active_schema
@@ -203,8 +217,7 @@ class ThermostatDevice(ClimateDevice):
         """Set new target temperature."""
         _LOGGER.debug("Adjusting temperature")
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        if (temperature is not None and self._min_temp < temperature
-                < self._max_temp):
+        if temperature is not None and self._min_temp < temperature < self._max_temp:
             self._temperature = temperature
             self._api.set_temperature(self._domain_objects, temperature)
             _LOGGER.debug("Changing temporary temperature")
@@ -221,11 +234,10 @@ class ThermostatDevice(ClimateDevice):
                 schema = self._active_schema
             else:
                 schema = self._previous_schema
-            schema_mode = 'false'
+            schema_mode = "false"
             if hvac_mode == HVAC_MODE_AUTO:
-                schema_mode = 'true'
-            self._api.set_schema_state(self._domain_objects, schema,
-                                       schema_mode)
+                schema_mode = "true"
+            self._api.set_schema_state(self._domain_objects, schema, schema_mode)
 
     def set_preset_mode(self, preset_mode):
         """Set the preset mode."""
