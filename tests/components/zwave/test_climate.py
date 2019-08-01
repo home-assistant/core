@@ -2,6 +2,9 @@
 import pytest
 
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_COOL,
+    HVAC_MODES,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
@@ -13,10 +16,9 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_COOL,
 )
 from homeassistant.components.zwave import climate
+from homeassistant.components.zwave.climate import DEFAULT_HVAC_MODES
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
@@ -137,6 +139,12 @@ def device_heat(hass, mock_openzwave):
     device = climate.get_device(hass, node=node, values=values, node_config={})
 
     yield device
+
+
+def test_default_hvac_modes():
+    """Test wether all hvac modes are included in default_hvac_modes."""
+    for hvac_mode in HVAC_MODES:
+        assert hvac_mode in DEFAULT_HVAC_MODES
 
 
 def test_supported_features(device):

@@ -10,18 +10,19 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
     DOMAIN,
+    HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_OFF,
+    PRESET_BOOST,
+    PRESET_NONE,
     SUPPORT_FAN_MODE,
     SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_PRESET_MODE,
-    PRESET_BOOST,
-    PRESET_NONE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
@@ -88,6 +89,7 @@ DEFAULT_HVAC_MODES = [
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_DRY,
     HVAC_MODE_OFF,
+    HVAC_MODE_AUTO,
 ]
 
 
