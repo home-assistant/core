@@ -11,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Lutron switches."""
     devs = []
-    for (area_name, device) in hass.data[LUTRON_DEVICES]['switch']:
+    for (area_name, device) in hass.data[LUTRON_DEVICES]["switch"]:
         dev = LutronSwitch(area_name, device, hass.data[LUTRON_CONTROLLER])
         devs.append(dev)
 
@@ -38,7 +38,7 @@ class LutronSwitch(LutronDevice, SwitchDevice):
     def device_state_attributes(self):
         """Return the state attributes."""
         attr = {}
-        attr['lutron_integration_id'] = self._lutron_device.id
+        attr["lutron_integration_id"] = self._lutron_device.id
         return attr
 
     @property

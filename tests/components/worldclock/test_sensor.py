@@ -12,16 +12,11 @@ class TestWorldClockSensor(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.time_zone = dt_util.get_time_zone('America/New_York')
+        self.time_zone = dt_util.get_time_zone("America/New_York")
 
-        config = {
-            'sensor': {
-                'platform': 'worldclock',
-                'time_zone': 'America/New_York',
-            }
-        }
+        config = {"sensor": {"platform": "worldclock", "time_zone": "America/New_York"}}
 
-        assert setup_component(self.hass, 'sensor', config)
+        assert setup_component(self.hass, "sensor", config)
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -29,8 +24,7 @@ class TestWorldClockSensor(unittest.TestCase):
 
     def test_time(self):
         """Test the time at a different location."""
-        state = self.hass.states.get('sensor.worldclock_sensor')
+        state = self.hass.states.get("sensor.worldclock_sensor")
         assert state is not None
 
-        assert state.state == dt_util.now(
-            time_zone=self.time_zone).strftime('%H:%M')
+        assert state.state == dt_util.now(time_zone=self.time_zone).strftime("%H:%M")

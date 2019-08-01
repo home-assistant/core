@@ -10,7 +10,10 @@ from fortiosapi import FortiOSAPI
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    DeviceScanner,
+)
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.const import CONF_VERIFY_SSL
 
@@ -18,11 +21,13 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_VERIFY_SSL = False
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_TOKEN): cv.string,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_TOKEN): cv.string,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    }
+)
 
 
 def get_scanner(hass, config):
@@ -56,15 +61,15 @@ class FortiOSDeviceScanner(DeviceScanner):
 
     def update(self):
         """Update clients from the device."""
-        clients_json = self._fgt.monitor('user/device/select', '')
+        clients_json = self._fgt.monitor("user/device/select", "")
         self._clients_json = clients_json
 
         self._clients = []
 
         if clients_json:
-            for client in clients_json['results']:
-                if client['last_seen'] < 180:
-                    self._clients.append(client['mac'].upper())
+            for client in clients_json["results"]:
+                if client["last_seen"] < 180:
+                    self._clients.append(client["mac"].upper())
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -80,13 +85,13 @@ class FortiOSDeviceScanner(DeviceScanner):
         data = self._clients_json
 
         if data == 0:
-            _LOGGER.error('No json results to get device names')
+            _LOGGER.error("No json results to get device names")
             return None
 
-        for client in data['results']:
-            if client['mac'] == device:
+        for client in data["results"]:
+            if client["mac"] == device:
                 try:
-                    name = client['host']['name']
+                    name = client["host"]["name"]
                     _LOGGER.debug("Getting device name=%s", name)
                     return name
                 except KeyError as kex:

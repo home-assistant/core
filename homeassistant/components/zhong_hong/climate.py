@@ -5,40 +5,54 @@ import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_HVAC_MODE, HVAC_MODE_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT, SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE)
+    ATTR_HVAC_MODE,
+    HVAC_MODE_COOL,
+    HVAC_MODE_DRY,
+    HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_HEAT,
+    SUPPORT_FAN_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP,
-    TEMP_CELSIUS)
+    ATTR_TEMPERATURE,
+    CONF_HOST,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+    TEMP_CELSIUS,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, async_dispatcher_send)
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_GATEWAY_ADDRRESS = 'gateway_address'
+CONF_GATEWAY_ADDRRESS = "gateway_address"
 
 DEFAULT_PORT = 9999
 DEFAULT_GATEWAY_ADDRRESS = 1
 
-SIGNAL_DEVICE_ADDED = 'zhong_hong_device_added'
-SIGNAL_ZHONG_HONG_HUB_START = 'zhong_hong_hub_start'
+SIGNAL_DEVICE_ADDED = "zhong_hong_device_added"
+SIGNAL_ZHONG_HONG_HUB_START = "zhong_hong_hub_start"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_GATEWAY_ADDRRESS, default=DEFAULT_GATEWAY_ADDRRESS):
-        cv.positive_int,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(
+            CONF_GATEWAY_ADDRRESS, default=DEFAULT_GATEWAY_ADDRRESS
+        ): cv.positive_int,
+    }
+)
 
-SUPPORT_HVAC = [HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_DRY,
-                HVAC_MODE_FAN_ONLY]
+SUPPORT_HVAC = [HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY]
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZhongHong HVAC platform."""
     from zhong_hong_hvac.hub import ZhongHongGateway
+
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     gw_addr = config.get(CONF_GATEWAY_ADDRRESS)
@@ -84,6 +98,7 @@ class ZhongHongClimate(ClimateDevice):
     def __init__(self, hub, addr_out, addr_in):
         """Set up the ZhongHong climate devices."""
         from zhong_hong_hvac.hvac import HVAC
+
         self._device = HVAC(hub, addr_out, addr_in)
         self._hub = hub
         self._current_operation = None
@@ -124,8 +139,9 @@ class ZhongHongClimate(ClimateDevice):
     @property
     def unique_id(self):
         """Return the unique ID of the HVAC."""
-        return "zhong_hong_hvac_{}_{}".format(self._device.addr_out,
-                                              self._device.addr_in)
+        return "zhong_hong_hvac_{}_{}".format(
+            self._device.addr_out, self._device.addr_in
+        )
 
     @property
     def supported_features(self):
