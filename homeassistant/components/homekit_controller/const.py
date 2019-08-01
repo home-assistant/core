@@ -24,5 +24,5 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     "carbon-dioxide": "sensor",
     "humidity": "sensor",
     "light": "sensor",
-    "temperature": "sensor"
+    "temperature": "sensor",
 }
