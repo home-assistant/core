@@ -28,8 +28,6 @@ CONF_COMPONENT_REPORTING = "include_used_components"
 
 DOMAIN = "updater"
 
-ENTITY_ID = "updater.updater"
-
 UPDATER_URL = "https://updater.home-assistant.io/"
 UPDATER_UUID_FILE = ".uuid"
 
@@ -46,6 +44,14 @@ CONFIG_SCHEMA = vol.Schema(
 RESPONSE_SCHEMA = vol.Schema(
     {vol.Required("version"): cv.string, vol.Required("release-notes"): cv.url}
 )
+
+
+class Updater:
+    """Updater class."""
+
+    update_available = None
+    release_notes = None
+    newest_version = None
 
 
 def _create_uuid(hass, filename=UPDATER_UUID_FILE):
@@ -82,6 +88,8 @@ async def async_setup(hass, config):
 
     include_components = config.get(CONF_COMPONENT_REPORTING)
 
+    updater = hass.data[DOMAIN] = Updater()
+
     async def check_new_version(now):
         """Check if a new version is available and report if one is."""
         result = await get_newest_version(hass, huuid, include_components)
@@ -89,7 +97,7 @@ async def async_setup(hass, config):
         if result is None:
             return
 
-        newest, releasenotes = result
+        newest, release_notes = result
 
         # Skip on dev
         if newest is None or "dev" in current_version:
@@ -109,15 +117,9 @@ async def async_setup(hass, config):
         elif StrictVersion(newest) < StrictVersion(current_version):
             _LOGGER.debug("Local version is newer than the latest version (%s)", newest)
 
-        hass.states.async_set(
-            ENTITY_ID,
-            "on" if update_available else "off",
-            {
-                ATTR_FRIENDLY_NAME: "Update Available",
-                ATTR_RELEASE_NOTES: releasenotes,
-                ATTR_NEWEST_VERSION: newest,
-            },
-        )
+        updater.update_available = update_available
+        updater.release_notes = release_notes
+        updater.newest_version = newest
 
     # Update daily, start 1 hour after startup
     _dt = dt_util.utcnow() + timedelta(hours=1)
@@ -152,13 +154,13 @@ async def get_newest_version(hass, huuid, include_components):
             req = await session.post(UPDATER_URL, json=info_object)
         _LOGGER.info(
             (
-                "Submitted analytics to Home Assistant servers. "
+                "Submitted analytics to Home Assistant servers."
                 "Information submitted includes %s"
             ),
             info_object,
         )
     except (asyncio.TimeoutError, aiohttp.ClientError):
-        _LOGGER.error("Could not contact Home Assistant Update to check " "for updates")
+        _LOGGER.error("Could not contact Home Assistant Update to check for updates")
         return None
 
     try:
