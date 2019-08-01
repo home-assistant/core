@@ -36,8 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
             except ValueError as exp:
                 _LOGGER.error(
-                    "Unexpected error when creating the weather"
-                    "alert sensor for %s in department %s: %s",
+                    "Unexpected error when creating the weather alert sensor for %s in department %s: %s",
                     city,
                     datas["dept"],
                     exp,
@@ -81,11 +80,6 @@ class MeteoFranceSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return "{} {}".format(self._data["name"], SENSOR_TYPES[self._condition][0])
-
-    @property
-    def unique_id(self):
-        """Return a unique, HASS-friendly identifier for this entity."""
-        return "{0}_{1}".format(self._data["name"], SENSOR_TYPES[self._condition][0])
 
     @property
     def state(self):
