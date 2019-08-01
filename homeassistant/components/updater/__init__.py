@@ -15,6 +15,7 @@ import voluptuous as vol
 from homeassistant.const import __version__ as current_version
 from homeassistant.helpers import event
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers import discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
@@ -53,7 +54,7 @@ class Updater:
     """Updater class for data exchange."""
 
     def __init__(self, update_available: bool, newest_version: str, release_notes: str):
-        """Setup Updater."""
+        """Setup Updater and initialise attributes."""
         self.update_available = update_available
         self.release_notes = release_notes
         self.newest_version = newest_version
@@ -92,6 +93,10 @@ async def async_setup(hass, config):
         huuid = None
 
     include_components = config.get(CONF_COMPONENT_REPORTING)
+
+    hass.async_create_task(
+        discovery.async_load_platform(hass, "binary_sensor", DOMAIN, {}, config)
+    )
 
     async def check_new_version(now):
         """Check if a new version is available and report if one is."""
@@ -156,7 +161,7 @@ async def get_newest_version(hass, huuid, include_components):
             req = await session.post(UPDATER_URL, json=info_object)
         _LOGGER.info(
             (
-                "Submitted analytics to Home Assistant servers."
+                "Submitted analytics to Home Assistant servers. "
                 "Information submitted includes %s"
             ),
             info_object,
