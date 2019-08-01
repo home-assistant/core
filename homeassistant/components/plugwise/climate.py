@@ -4,6 +4,7 @@ import logging
 
 import voluptuous as vol
 import haanna
+
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
@@ -74,14 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         raise PlatformNotReady
     devices = [
         ThermostatDevice(
-            api,
-            config[CONF_NAME],
-            config[CONF_USERNAME],
-            config[CONF_PASSWORD],
-            config[CONF_HOST],
-            config[CONF_PORT],
-            config[CONF_MIN_TEMP],
-            config[CONF_MAX_TEMP],
+            api, config[CONF_NAME], config[CONF_MIN_TEMP], config[CONF_MAX_TEMP]
         )
     ]
     add_entities(devices, True)
@@ -90,27 +84,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ThermostatDevice(ClimateDevice):
     """Representation of an Plugwise thermostat."""
 
-    def __init__(self, api, name, username, password, host, port, min_temp, max_temp):
+    def __init__(self, api, name, min_temp, max_temp):
         """Set up the Plugwise API."""
         self._api = api
-        self._host = host
         self._min_temp = min_temp
         self._max_temp = max_temp
         self._name = name
-        self._password = password
-        self._port = port
-        self._username = username
         self._domain_objects = None
-        self._temperature = None
-        self._current_temperature = None
         self._outdoor_temperature = None
-        self._state = None
         self._active_schema = None
         self._preset_mode = None
-        self._preset_modes = []
         self._hvac_modes = ATTR_HVAC_MODES
-        self._hvac_mode = None
-        self._available_schemas = []
 
     @property
     def hvac_action(self):
@@ -157,7 +141,7 @@ class ThermostatDevice(ClimateDevice):
     @property
     def hvac_mode(self):
         """Return current active hvac state."""
-        if self._api.get_schema_state(self._domain_objects) is True:
+        if self._api.get_schema_state(self._domain_objects):
             return HVAC_MODE_AUTO
         return HVAC_MODE_OFF
 
@@ -208,7 +192,6 @@ class ThermostatDevice(ClimateDevice):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is not None and self._min_temp < temperature < self._max_temp:
             _LOGGER.debug("Changing temporary temperature")
-            self._temperature = temperature
             self._api.set_temperature(self._domain_objects, temperature)
         else:
             _LOGGER.error("Invalid temperature requested")
