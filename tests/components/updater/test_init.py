@@ -53,6 +53,8 @@ def test_new_version_shows_entity_true(hass, mock_get_uuid, mock_get_newest_vers
     res = yield from async_setup_component(hass, updater.DOMAIN, {updater.DOMAIN: {}})
     assert res, "Updater failed to set up"
 
+    yield from hass.async_block_till_done()
+
     with patch("homeassistant.components.updater.current_version", MOCK_VERSION):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
         yield from hass.async_block_till_done()
@@ -72,6 +74,8 @@ def test_same_version_shows_entity_false(hass, mock_get_uuid, mock_get_newest_ve
 
     res = yield from async_setup_component(hass, updater.DOMAIN, {updater.DOMAIN: {}})
     assert res, "Updater failed to set up"
+
+    yield from hass.async_block_till_done()
 
     with patch("homeassistant.components.updater.current_version", MOCK_VERSION):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
@@ -94,6 +98,8 @@ def test_disable_reporting(hass, mock_get_uuid, mock_get_newest_version):
         hass, updater.DOMAIN, {updater.DOMAIN: {"reporting": False}}
     )
     assert res, "Updater failed to set up"
+
+    yield from hass.async_block_till_done()
 
     with patch("homeassistant.components.updater.current_version", MOCK_VERSION):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
@@ -186,6 +192,8 @@ def test_new_version_shows_entity_after_hour_hassio(
 
     res = yield from async_setup_component(hass, updater.DOMAIN, {updater.DOMAIN: {}})
     assert res, "Updater failed to set up"
+
+    yield from hass.async_block_till_done()
 
     with patch("homeassistant.components.updater.current_version", MOCK_VERSION):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
