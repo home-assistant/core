@@ -7,8 +7,8 @@
                 "data": {
                     "name": "The name of the certificate",
                     "host": "The hostname of the certificate",
-                    "port": "The port of the certificate",
-                },
+                    "port": "The port of the certificate"
+                }
             }
         },
         "error": {
@@ -16,6 +16,6 @@
         },
         "abort": {
             "host_port_exists": "This host and port combination is already configured"
-        },
+        }
     }
 }
