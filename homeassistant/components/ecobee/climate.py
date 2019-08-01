@@ -199,11 +199,10 @@ class Thermostat(ClimateDevice):
             self._operation_list.insert(0, HVAC_MODE_AUTO)
         self._operation_list.append(HVAC_MODE_OFF)
 
-        self._preset_modes = [PRESET_NONE]
-        self._preset_modes.extend(
-            [comfort["name"] for comfort in self.thermostat["program"]["climates"]]
-        )
-
+        self._preset_modes = {
+            comfort["climateRef"]: comfort["name"]
+            for comfort in self.thermostat["program"]["climates"]
+        }
         self._fan_modes = [FAN_AUTO, FAN_ON]
         self.update_without_throttle = False
 
@@ -288,17 +287,11 @@ class Thermostat(ClimateDevice):
                 continue
 
             if event["type"] == "hold":
-                if event["holdClimateRef"] == "away":
-                    if int(event["endDate"][0:4]) - int(event["startDate"][0:4]) <= 1:
-                        # A temporary hold from away climate is a hold
-                        return PRESET_AWAY
-                    # A permanent hold from away climate
-                    return PRESET_AWAY
-                if event["holdClimateRef"] != "":
-                    # Any other hold based on climate
-                    return event["holdClimateRef"]
-                # Any hold not based on a climate is a temp hold
-                return PRESET_TEMPERATURE
+                if event["holdClimateRef"] in self._preset_modes:
+                    return self._preset_modes[event["holdClimateRef"]]
+                else:
+                    # Any hold not based on a climate is a temp hold
+                    return PRESET_TEMPERATURE
             if event["type"].startswith("auto"):
                 # All auto modes are treated as holds
                 return event["type"][4:].lower()
@@ -405,7 +398,7 @@ class Thermostat(ClimateDevice):
                     climate_ref = comfort["climateRef"]
                     break
 
-            if climate_ref is None:
+            if climate_ref is not None:
                 self.data.ecobee.set_climate_hold(
                     self.thermostat_index, climate_ref, self.hold_preference()
                 )
@@ -420,7 +413,7 @@ class Thermostat(ClimateDevice):
     @property
     def preset_modes(self):
         """Return available preset modes."""
-        return self._preset_modes
+        return list(self._preset_modes.values())
 
     def set_auto_temp_hold(self, heat_temp, cool_temp):
         """Set temperature hold in auto mode."""
