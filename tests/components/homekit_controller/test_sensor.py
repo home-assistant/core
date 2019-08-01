@@ -92,7 +92,7 @@ async def test_light_level_sensor_read_state(hass, utcnow):
 async def test_carbon_dioxide_level_sensor_read_state(hass, utcnow):
     """Test reading the state of a HomeKit carbon dioxide sensor accessory."""
     sensor = create_carbon_dioxide_level_sensor_service()
-    helper = await setup_test_component(hass, [sensor], suffix="carbon_dioxide_level")
+    helper = await setup_test_component(hass, [sensor], suffix="co2")
 
     helper.characteristics[CARBON_DIOXIDE_LEVEL].value = 10
     state = await helper.poll_and_get_state()
