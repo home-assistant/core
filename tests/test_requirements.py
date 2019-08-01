@@ -108,7 +108,7 @@ async def test_install_missing_package(hass):
 
 
 async def test_get_integration_with_requirements(hass):
-    """Check getting an integration with loaded requirements"""
+    """Check getting an integration with loaded requirements."""
     hass.config.skip_pip = False
     mock_integration(hass, MockModule("test_component", requirements=["hello==1.0.0"]))
 
