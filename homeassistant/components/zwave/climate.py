@@ -4,11 +4,24 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_COOL, CURRENT_HVAC_FAN, CURRENT_HVAC_HEAT, CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF, DOMAIN, HVAC_MODE_COOL, HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY, HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_PRESET_MODE, PRESET_BOOST, PRESET_NONE)
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_FAN,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
+    DOMAIN,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_DRY,
+    HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_OFF,
+    SUPPORT_FAN_MODE,
+    SUPPORT_SWING_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_PRESET_MODE,
+    PRESET_BOOST,
+    PRESET_NONE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -183,17 +196,28 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
 
             current_mode = self.values.mode.data
             _hvac_temp = next(
-                (key for key, value in self._hvac_mapping.items()
-                 if value == current_mode), None)
+                (
+                    key
+                    for key, value in self._hvac_mapping.items()
+                    if value == current_mode),
+                None
+            )
 
             if _hvac_temp is None:
                 # The current mode is not a hvac mode
                 self._hvac_mode = next(
-                    (key for key, value in self._hvac_mapping.items()
-                     if value == self._default_hvac_mode))
+                    (
+                        key
+                        for key, value in self._hvac_mapping.items()
+                        if value == self._default_hvac_mode)
+                )
                 self._preset_mode = next(
-                    (key for key, value in self._preset_mapping.items()
-                     if value == current_mode), current_mode)
+                    (
+                        key
+                        for key, value in self._preset_mapping.items()
+                        if value == current_mode),
+                    current_mode
+                )
             else:
                 # The current mode is a hvac mode
                 self._hvac_mode = _hvac_temp
