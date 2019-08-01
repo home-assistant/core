@@ -129,7 +129,7 @@ async def _async_setup_component(
     # without requiring imports to be in functions.
     try:
         await async_process_deps_reqs(hass, config, integration)
-    except (HomeAssistantError, requirements.RequirementsNotFound) as err:
+    except HomeAssistantError as err:
         log_error(str(err))
         return False
 
@@ -233,7 +233,7 @@ async def async_prepare_setup_platform(
     # available when we import the platform.
     try:
         await async_process_deps_reqs(hass, hass_config, integration)
-    except (HomeAssistantError, requirements.RequirementsNotFound) as err:
+    except HomeAssistantError as err:
         log_error(str(err))
         return None
 

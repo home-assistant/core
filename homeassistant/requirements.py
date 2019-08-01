@@ -5,6 +5,7 @@ import logging
 import os
 from typing import Any, Dict, List, Optional
 
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.package as pkg_util
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration, Integration
@@ -16,7 +17,7 @@ PROGRESS_FILE = ".pip_progress"
 _LOGGER = logging.getLogger(__name__)
 
 
-class RequirementsNotFound(Exception):
+class RequirementsNotFound(HomeAssistantError):
     """Raised when a component is not found."""
 
     def __init__(self, domain: str, requirements: List) -> None:
