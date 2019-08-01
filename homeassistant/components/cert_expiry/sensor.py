@@ -13,11 +13,12 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_HOST,
     CONF_PORT,
-    EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, DEFAULT_NAME, DEFAULT_PORT
+
+_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(hours=12)
 
@@ -36,7 +37,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up certificate expiry sensor."""
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
         )
     )
     return True
