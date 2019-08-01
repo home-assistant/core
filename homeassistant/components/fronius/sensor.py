@@ -11,7 +11,7 @@ from homeassistant.const import (
     CONF_SENSOR_TYPE,
     CONF_DEVICE,
     CONF_MONITORED_CONDITIONS,
-    CONF_SCAN_INTERVAL
+    CONF_SCAN_INTERVAL,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -90,7 +90,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         sensor_type = condition[CONF_SENSOR_TYPE]
         scope = condition[CONF_SCOPE]
         name = "Fronius {} {} {}".format(
-            condition[CONF_SENSOR_TYPE].replace('_', ' ').capitalize(),
+            condition[CONF_SENSOR_TYPE].replace("_", " ").capitalize(),
             device if scope == SCOPE_DEVICE else SCOPE_SYSTEM,
             config[CONF_RESOURCE],
         )
@@ -116,11 +116,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         await fetch_data()
 
-        async_track_time_interval(
-            hass,
-            fetch_data,
-            scan_interval
-        )
+        async_track_time_interval(hass, fetch_data, scan_interval)
 
 
 class FroniusAdapter:
@@ -166,7 +162,7 @@ class FroniusAdapter:
         # Copy data of current fronius device
         for key, entry in values.items():
             # If the data is directly a sensor
-            if 'value' in entry:
+            if "value" in entry:
                 attributes[key] = entry
         self._fetched = attributes
 
@@ -176,10 +172,7 @@ class FroniusAdapter:
         for key in attributes:
             if key not in self.sensors:
                 self.sensors.add(key)
-                _LOGGER.info(
-                    "Discovered %s, adding as sensor",
-                    key
-                )
+                _LOGGER.info("Discovered %s, adding as sensor", key)
                 new_sensors.append(FroniusTemplateSensor(self, key))
         self._add_entities(new_sensors, True)
 
@@ -258,8 +251,7 @@ class FroniusTemplateSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return "{} {}".format(
-            self._name.replace('_', ' ').capitalize(),
-            self.parent.name
+            self._name.replace("_", " ").capitalize(), self.parent.name
         )
 
     @property
@@ -280,8 +272,8 @@ class FroniusTemplateSensor(Entity):
     async def async_update(self):
         """Update the internal state."""
         state = self.parent.data.get(self._name)
-        self._state = state.get('value')
-        self._unit = state.get('unit')
+        self._state = state.get("value")
+        self._unit = state.get("unit")
 
     async def async_added_to_hass(self):
         """Register at parent component for updates."""
