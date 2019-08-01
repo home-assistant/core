@@ -59,11 +59,11 @@ class UpdaterBinary(BinarySensorDevice):
             data[ATTR_NEWEST_VERSION] = self._newest_version
         return data
 
-    @callback
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register update dispatcher."""
 
-        async def async_state_update(updater: Updater):
+        @callback
+        def async_state_update(updater: Updater):
             """Update callback."""
             self._newest_version = updater.newest_version
             self._release_notes = updater.release_notes
