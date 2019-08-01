@@ -97,7 +97,7 @@ class EcobeeData:
     def update(self):
         """Get the latest data from pyecobee."""
         self.ecobee.update()
-        _LOGGER.info("Ecobee data updated successfully")
+        _LOGGER.debug("Ecobee data updated successfully")
 
 
 def setup(hass, config):
