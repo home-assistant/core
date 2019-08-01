@@ -12,7 +12,6 @@ def create_temperature_sensor_service():
     service = FakeService("public.hap.service.sensor.temperature")
 
     cur_state = service.add_characteristic("temperature.current")
-    
     cur_state.value = 0
 
     return service
