@@ -203,6 +203,7 @@ homeassistant/components/philips_js/* @elupus
 homeassistant/components/pi_hole/* @fabaff
 homeassistant/components/plaato/* @JohNan
 homeassistant/components/plant/* @ChristianKuehnel
+homeassistant/components/plugwise/* @laetificat @CoMPaTech
 homeassistant/components/point/* @fredrike
 homeassistant/components/ps4/* @ktnrg45
 homeassistant/components/ptvsd/* @swamp-ig
