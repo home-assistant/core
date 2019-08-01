@@ -61,7 +61,9 @@ ACTION_NEST_TO_HASS = {
     "cooling": CURRENT_HVAC_COOL,
 }
 
-PRESET_MODES = [PRESET_NONE, PRESET_AWAY, PRESET_ECO]
+PRESET_AWAY_AND_ECO = "Away and Eco"
+
+PRESET_MODES = [PRESET_NONE, PRESET_AWAY, PRESET_ECO, PRESET_AWAY_AND_ECO]
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -259,6 +261,9 @@ class NestThermostat(ClimateDevice):
     @property
     def preset_mode(self):
         """Return current preset mode."""
+        if self._away and self._mode == NEST_MODE_ECO:
+            return PRESET_AWAY_AND_ECO
+
         if self._away:
             return PRESET_AWAY
 
@@ -277,15 +282,19 @@ class NestThermostat(ClimateDevice):
         if preset_mode == self.preset_mode:
             return
 
-        if self._away:
-            self.structure.away = False
-        elif preset_mode == PRESET_AWAY:
-            self.structure.away = True
+        need_away = preset_mode in (PRESET_AWAY, PRESET_AWAY_AND_ECO)
+        need_eco = preset_mode in (PRESET_ECO, PRESET_AWAY_AND_ECO)
+        is_away = self._away
+        is_eco = self._mode == NEST_MODE_ECO
 
-        if self.preset_mode == PRESET_ECO:
-            self.device.mode = MODE_HASS_TO_NEST[self._operation_list[0]]
-        elif preset_mode == PRESET_ECO:
-            self.device.mode = NEST_MODE_ECO
+        if is_away != need_away:
+            self.structure.away = need_away
+
+        if is_eco != need_eco:
+            if need_eco:
+                self.device.mode = NEST_MODE_ECO
+            else:
+                self.device.mode = MODE_HASS_TO_NEST[self._operation_list[0]]
 
     @property
     def fan_mode(self):
