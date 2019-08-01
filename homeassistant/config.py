@@ -764,8 +764,13 @@ async def async_process_component_config(
 
         try:
             p_integration = await async_get_integration_with_requirements(hass, p_name)
+        except (RequirementsNotFound, IntegrationNotFound) as ex:
+            _LOGGER.error("Platform error: %s - %s", domain, ex)
+            continue
+
+        try:
             platform = p_integration.get_platform(domain)
-        except (RequirementsNotFound, IntegrationNotFound, ImportError):
+        except ImportError:
             _LOGGER.exception("Platform error: %s", domain)
             continue
 

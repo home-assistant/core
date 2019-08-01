@@ -106,8 +106,13 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
     for domain in components:
         try:
             integration = await async_get_integration_with_requirements(hass, domain)
+        except (RequirementsNotFound, loader.IntegrationNotFound) as ex:
+            result.add_error("Component error: {} - {}".format(domain, ex))
+            continue
+
+        try:
             component = integration.get_component()
-        except (ImportError, RequirementsNotFound, loader.IntegrationNotFound) as ex:
+        except ImportError as ex:
             result.add_error("Component error: {} - {}".format(domain, ex))
             continue
 
