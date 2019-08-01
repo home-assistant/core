@@ -70,7 +70,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
     try:
         api.ping_anna_thermostat()
-    except (ConnectionError, OSError):
+    except OSError:
         raise PlatformNotReady
     devices = [
         ThermostatDevice(
@@ -106,7 +106,6 @@ class ThermostatDevice(ClimateDevice):
         self._outdoor_temperature = None
         self._state = None
         self._active_schema = None
-        self._previous_schema = None
         self._preset_mode = None
         self._preset_modes = []
         self._hvac_modes = ATTR_HVAC_MODES
@@ -144,7 +143,6 @@ class ThermostatDevice(ClimateDevice):
             self._domain_objects
         )
         attributes["active_schema"] = self._active_schema
-        attributes["previous_schema"] = self._previous_schema
         return attributes
 
     def update(self):
@@ -154,10 +152,7 @@ class ThermostatDevice(ClimateDevice):
         self._outdoor_temperature = self._api.get_outdoor_temperature(
             self._domain_objects
         )
-        api_active_schema = self._api.get_active_schema_name(self._domain_objects)
-        if self._active_schema != api_active_schema:
-            self._previous_schema = self._active_schema
-            self._active_schema = api_active_schema
+        self._active_schema = self._api.get_active_schema_name(self._domain_objects)
 
     @property
     def hvac_mode(self):
@@ -221,17 +216,12 @@ class ThermostatDevice(ClimateDevice):
     def set_hvac_mode(self, hvac_mode):
         """Set the hvac mode."""
         _LOGGER.debug("Adjusting hvac_mode (i.e. schedule/schema)")
-        if self._previous_schema is None and self._active_schema is None:
-            _LOGGER.error("previous_schema not known, unable to apply")
-        else:
-            if self._previous_schema is None:
-                schema = self._active_schema
-            else:
-                schema = self._previous_schema
-            schema_mode = "false"
-            if hvac_mode == HVAC_MODE_AUTO:
-                schema_mode = "true"
-            self._api.set_schema_state(self._domain_objects, schema, schema_mode)
+        schema_mode = "false"
+        if hvac_mode == HVAC_MODE_AUTO:
+            schema_mode = "true"
+        self._api.set_schema_state(
+            self._domain_objects, self._active_schema, schema_mode
+        )
 
     def set_preset_mode(self, preset_mode):
         """Set the preset mode."""
