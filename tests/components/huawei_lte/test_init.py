@@ -9,7 +9,7 @@ from homeassistant.components import huawei_lte
 @pytest.fixture(autouse=True)
 def routerdata():
     """Set up a router data for testing."""
-    rd = huawei_lte.RouterData(Mock())
+    rd = huawei_lte.RouterData(Mock(), "de:ad:be:ef:00:00")
     rd.device_information = {"SoftwareVersion": "1.0", "nested": {"foo": "bar"}}
     return rd
 

@@ -3,6 +3,7 @@
   "name": "Huawei lte",
   "documentation": "https://www.home-assistant.io/components/huawei_lte",
   "requirements": [
+    "getmac==0.8.1",
     "huawei-lte-api==1.2.0"
   ],
   "dependencies": [],
