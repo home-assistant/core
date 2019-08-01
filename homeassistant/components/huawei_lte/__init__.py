@@ -1,12 +1,15 @@
 """Support for Huawei LTE routers."""
 from datetime import timedelta
 from functools import reduce
+from urllib.parse import urlparse
+import ipaddress
 import logging
 import operator
 from typing import Any, Callable
 
 import voluptuous as vol
 import attr
+from getmac import get_mac_address
 from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
 from huawei_lte_api.Client import Client
 from huawei_lte_api.exceptions import ResponseErrorNotSupportedException
@@ -55,18 +58,13 @@ class RouterData:
     """Class for router state."""
 
     client = attr.ib()
+    mac = attr.ib()
     device_information = attr.ib(init=False, factory=dict)
     device_signal = attr.ib(init=False, factory=dict)
     monitoring_traffic_statistics = attr.ib(init=False, factory=dict)
     wlan_host_list = attr.ib(init=False, factory=dict)
 
     _subscriptions = attr.ib(init=False, factory=set)
-
-    def __attrs_post_init__(self) -> None:
-        """Fetch device information once, for serial number in @unique_ids."""
-        self.subscribe("device_information")
-        self._update()
-        self.unsubscribe("device_information")
 
     def __getitem__(self, path: str):
         """
@@ -148,10 +146,24 @@ def _setup_lte(hass, lte_config) -> None:
     username = lte_config[CONF_USERNAME]
     password = lte_config[CONF_PASSWORD]
 
+    # Get MAC address for use in unique ids. Being able to use something
+    # from the API would be nice, but all of that seems to be available only
+    # through authenticated calls (e.g. device_information.SerialNumber), and
+    # we want this available and the same when unauthenticated too.
+    host = urlparse(url).hostname
+    try:
+        if ipaddress.ip_address(host).version == 6:
+            mode = "ip6"
+        else:
+            mode = "ip"
+    except ValueError:
+        mode = "hostname"
+    mac = get_mac_address(**{mode: host})
+
     connection = AuthorizedConnection(url, username=username, password=password)
     client = Client(connection)
 
-    data = RouterData(client)
+    data = RouterData(client, mac)
     hass.data[DATA_KEY].data[url] = data
 
     def cleanup(event):
