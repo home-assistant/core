@@ -18,6 +18,9 @@ ATTR_RSSI_DEVICE = "rssi_device"
 ATTR_RSSI_PEER = "rssi_peer"
 ATTR_SABOTAGE = "sabotage"
 ATTR_GROUP_MEMBER_UNREACHABLE = "group_member_unreachable"
+ATTR_DEVICE_OVERHEATED = "device_overheated"
+ATTR_DEVICE_OVERLOADED = "device_overloaded"
+ATTR_DEVICE_UNTERVOLTAGE = "device_undervoltage"
 
 
 class HomematicipGenericDevice(Entity):
@@ -85,10 +88,21 @@ class HomematicipGenericDevice(Entity):
     @property
     def icon(self) -> Optional[str]:
         """Return the icon."""
+
         if hasattr(self._device, "lowBat") and self._device.lowBat:
             return "mdi:battery-outline"
         if hasattr(self._device, "sabotage") and self._device.sabotage:
             return "mdi:alert"
+        if hasattr(self._device, "deviceOverheated") and self._device.deviceOverheated:
+            return "mdi:alert"
+        if hasattr(self._device, "deviceOverloaded") and self._device.deviceOverloaded:
+            return "mdi:alert"
+        if (
+            hasattr(self._device, "deviceUndervoltage")
+            and self._device.deviceUndervoltage
+        ):
+            return "mdi:alert"
+
         return None
 
     @property
@@ -102,4 +116,14 @@ class HomematicipGenericDevice(Entity):
             attr[ATTR_RSSI_DEVICE] = self._device.rssiDeviceValue
         if hasattr(self._device, "rssiPeerValue") and self._device.rssiPeerValue:
             attr[ATTR_RSSI_PEER] = self._device.rssiPeerValue
+        if hasattr(self._device, "deviceOverheated") and self._device.deviceOverheated:
+            attr[ATTR_DEVICE_OVERHEATED] = self._device.deviceOverheated
+        if hasattr(self._device, "deviceOverloaded") and self._device.deviceOverloaded:
+            attr[ATTR_DEVICE_OVERLOADED] = self._device.deviceOverloaded
+        if (
+            hasattr(self._device, "deviceUndervoltage")
+            and self._device.deviceUndervoltage
+        ):
+            attr[ATTR_DEVICE_UNTERVOLTAGE] = self._device.deviceUndervoltage
+
         return attr
