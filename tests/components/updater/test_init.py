@@ -57,9 +57,10 @@ def test_new_version_shows_entity_true(hass, mock_get_uuid, mock_get_newest_vers
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
         yield from hass.async_block_till_done()
 
-    assert hass.states.is_state(updater.ENTITY_ID, "on")
+    assert hass.states.is_state("binary_sensor.updater", "on")
     assert (
-        hass.states.get(updater.ENTITY_ID).attributes["newest_version"] == NEW_VERSION
+        hass.states.get("binary_sensor.updater").attributes["newest_version"]
+        == NEW_VERSION
     )
 
 
@@ -76,9 +77,10 @@ def test_same_version_shows_entity_false(hass, mock_get_uuid, mock_get_newest_ve
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
         yield from hass.async_block_till_done()
 
-    assert hass.states.is_state(updater.ENTITY_ID, "off")
+    assert hass.states.is_state("binary_sensor.updater", "off")
     assert (
-        hass.states.get(updater.ENTITY_ID).attributes["newest_version"] == MOCK_VERSION
+        hass.states.get("binary_sensor.updater").attributes["newest_version"]
+        == MOCK_VERSION
     )
 
 
@@ -97,7 +99,7 @@ def test_disable_reporting(hass, mock_get_uuid, mock_get_newest_version):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
         yield from hass.async_block_till_done()
 
-    assert hass.states.is_state(updater.ENTITY_ID, "off")
+    assert hass.states.is_state("binary_sensor.updater", "off")
     res = yield from updater.get_newest_version(hass, MOCK_HUUID, MOCK_CONFIG)
     call = mock_get_newest_version.mock_calls[0][1]
     assert call[0] is hass
@@ -189,5 +191,7 @@ def test_new_version_shows_entity_after_hour_hassio(
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
         yield from hass.async_block_till_done()
 
-    assert hass.states.is_state(updater.ENTITY_ID, "on")
-    assert hass.states.get(updater.ENTITY_ID).attributes["newest_version"] == "999.0"
+    assert hass.states.is_state("binary_sensor.updater", "on")
+    assert (
+        hass.states.get("binary_sensor.updater").attributes["newest_version"] == "999.0"
+    )
