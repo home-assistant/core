@@ -9,11 +9,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_HOST,
-    CONF_PORT,
-)
+from homeassistant.const import CONF_NAME, CONF_HOST, CONF_PORT
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, DEFAULT_NAME, DEFAULT_PORT
