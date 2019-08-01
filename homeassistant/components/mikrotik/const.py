@@ -1,10 +1,18 @@
 """Constants used in the Mikrotik components."""
 
-MIKROTIK = 'mikrotik'
-MIKROTIK_DOMAIN = MIKROTIK
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY)
+
+DOMAIN = 'mikrotik'
+MIKROTIK = DOMAIN
 CLIENT = 'mikrotik_client'
 
+SENSOR = 'sensor'
+BINARY_SENSOR = 'binary_sensor'
+
 MTK_DEFAULT_WAN = 'ether1'
+MTK_LOGIN_PLAIN = 'plain'
+MTK_LOGIN_TOKEN = 'token'
 
 CONF_ARP_PING = 'arp_ping'
 CONF_WAN_PORT = 'wan_port'
@@ -16,11 +24,11 @@ DEFAULT_ENCODING = 'utf-8'
 CONNECTING = 'connected'
 CONNECTED = 'connected'
 
+IDENTITY = 'identity'
 ARP = 'arp'
 DHCP = 'dhcp'
 WIRELESS = 'wireless'
 CAPSMAN = 'capsman'
-IDENTITY = 'identity'
 
 MIKROTIK_SERVICES = {
     IDENTITY: '/system/identity/getall',
@@ -30,6 +38,6 @@ MIKROTIK_SERVICES = {
     CAPSMAN: '/caps-man/registration-table/getall'
 }
 
-ATTRIB_DEVICE_TRACKER = ['mac-address', 'rx-signal', 'ssid', 'interface',
+ATTR_DEVICE_TRACKER = ['mac-address', 'rx-signal', 'ssid', 'interface',
                          'comment', 'host-name', 'address', 'uptime',
                          'rx-rate', 'tx-rate', 'last-seen']
