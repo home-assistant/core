@@ -71,7 +71,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         api.ping_anna_thermostat()
     except OSError:
-        _LOGGER.debug("Ping failed, retrying later.", exc_info=True)
+        _LOGGER.debug("Ping failed, retrying later", exc_info=True)
         raise PlatformNotReady
     devices = [
         ThermostatDevice(
