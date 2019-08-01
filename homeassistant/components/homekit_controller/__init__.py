@@ -124,7 +124,7 @@ class HomeKitEntity(Entity):
             if "value" not in result:
                 continue
 
-            # Unknown iid - this is probably for a sibling service thats part
+            # Unknown iid - this is probably for a sibling service that is part
             # of the same physical accessory. Ignore it.
             if iid not in self._char_names:
                 continue
