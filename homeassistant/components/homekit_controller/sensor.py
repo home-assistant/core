@@ -1,6 +1,8 @@
 """Support for Homekit sensors."""
 from homeassistant.const import TEMP_CELSIUS
 
+from homekit.model.characteristics import CharacteristicsTypes
+
 from . import KNOWN_DEVICES, HomeKitEntity
 
 HUMIDITY_ICON = 'mdi:water-percent'
@@ -23,9 +25,6 @@ class HomeKitHumiditySensor(HomeKitEntity):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
-
         return [
             CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT
         ]
@@ -64,9 +63,6 @@ class HomeKitTemperatureSensor(HomeKitEntity):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
-
         return [
             CharacteristicsTypes.TEMPERATURE_CURRENT
         ]
@@ -105,9 +101,6 @@ class HomeKitLightSensor(HomeKitEntity):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
-
         return [
             CharacteristicsTypes.LIGHT_LEVEL_CURRENT
         ]
@@ -146,9 +139,6 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
-
         return [
             CharacteristicsTypes.CARBON_DIOXIDE_LEVEL
         ]
