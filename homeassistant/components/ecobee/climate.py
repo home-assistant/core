@@ -217,6 +217,11 @@ class Thermostat(ClimateDevice):
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
 
     @property
+    def available(self):
+        """Return if device is available."""
+        return self.thermostat["runtime"]["connected"]
+
+    @property
     def supported_features(self):
         """Return the list of supported features."""
         return SUPPORT_FLAGS
