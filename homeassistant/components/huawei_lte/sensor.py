@@ -102,7 +102,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up Huawei LTE sensor devices."""
     data = hass.data[DATA_KEY].get_data(config)
     sensors = []
