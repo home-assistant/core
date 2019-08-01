@@ -1,7 +1,9 @@
 """Support for Homekit sensors."""
 from homeassistant.const import TEMP_CELSIUS
 
-from homekit.model.characteristics import CharacteristicsTypes
+from homekit.model.characteristics import (
+    CharacteristicsTypes,
+)
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -25,7 +27,9 @@ class HomeKitHumiditySensor(HomeKitEntity):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
-        return [CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT]
+        return [
+            CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT
+        ]
 
     @property
     def name(self):
@@ -167,12 +171,16 @@ ENTITY_TYPES = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass, config, async_add_entities, discovery_info=None
+):
     """Legacy set up platform."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass, config_entry, async_add_entities
+):
     """Set up Homekit sensors."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
