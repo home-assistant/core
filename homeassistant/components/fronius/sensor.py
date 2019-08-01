@@ -62,8 +62,6 @@ PLATFORM_SCHEMA = vol.Schema(vol.All(PLATFORM_SCHEMA.extend({
                     vol.All(vol.Coerce(int), vol.Range(min=0)),
             }]
         ),
-    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-        vol.All(vol.Coerce(int), vol.Range(min=0)),
 }), _device_id_validator))
 
 
@@ -75,33 +73,33 @@ async def async_setup_platform(hass,
     session = async_get_clientsession(hass)
     fronius = Fronius(session, config[CONF_RESOURCE])
 
-    scan_interval = config[CONF_SCAN_INTERVAL]
+    scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     for condition in config[CONF_MONITORED_CONDITIONS]:
 
         device = condition[CONF_DEVICE]
-        name = "Fronius {} {} {}".format(
-            condition[CONF_SENSOR_TYPE].replace('_', ' ').capitalize(),
-            device,
-            config[CONF_RESOURCE],
-        )
         sensor_type = condition[CONF_SENSOR_TYPE]
         scope = condition[CONF_SCOPE]
+        name = "Fronius {} {} {}".format(
+            condition[CONF_SENSOR_TYPE].replace('_', ' ').capitalize(),
+            device if scope == SCOPE_DEVICE else SCOPE_SYSTEM,
+            config[CONF_RESOURCE],
+        )
         if sensor_type == TYPE_INVERTER:
             if scope == SCOPE_SYSTEM:
-                sensor_cls = FroniusInverterSystem
+                adapter_cls = FroniusInverterSystem
             else:
-                sensor_cls = FroniusInverterDevice
+                adapter_cls = FroniusInverterDevice
         elif sensor_type == TYPE_METER:
             if scope == SCOPE_SYSTEM:
-                sensor_cls = FroniusMeterSystem
+                adapter_cls = FroniusMeterSystem
             else:
-                sensor_cls = FroniusMeterDevice
+                adapter_cls = FroniusMeterDevice
         elif sensor_type == TYPE_POWER_FLOW:
-            sensor_cls = FroniusPowerFlow
+            adapter_cls = FroniusPowerFlow
         else:
-            sensor_cls = FroniusStorage
+            adapter_cls = FroniusStorage
 
-        adapter = sensor_cls(fronius, name, device, async_add_entities)
+        adapter = adapter_cls(fronius, name, device, async_add_entities)
 
         async def fetch_data(*_):
             return await adapter.async_update()
@@ -118,12 +116,12 @@ async def async_setup_platform(hass,
 class FroniusAdapter:
     """The Fronius sensor fetching component."""
 
-    def __init__(self, data, name, device, add_entities):
+    def __init__(self, bridge, name, device, add_entities):
         """Initialize the sensor."""
-        self.data = data
+        self.bridge = bridge
         self._name = name
         self._device = device
-        self._attributes = {}
+        self._fetched = {}
 
         self.sensors = set()
         self._registered_sensors = set()
@@ -135,9 +133,9 @@ class FroniusAdapter:
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def data(self):
         """Return the state attributes."""
-        return self._attributes
+        return self._fetched
 
     async def async_update(self):
         """Retrieve and update latest state."""
@@ -152,19 +150,13 @@ class FroniusAdapter:
 
         if not values:
             return
-        attributes = self._attributes
+        attributes = self._fetched
         # Copy data of current fronius device
         for key, entry in values.items():
             # If the data is directly a sensor
             if 'value' in entry:
                 attributes[key] = entry
-            # Handle system overview with multiple sensors
-            elif '1' in entry or '0' in entry:
-                for index in values:
-                    attributes['{}_{}'.format(
-                        key, index
-                    )] = values[index]
-        self._attributes = attributes
+        self._fetched = attributes
 
         # Add discovered value fields as sensors
         # because some fields are only sent temporarily
@@ -173,7 +165,7 @@ class FroniusAdapter:
             if key not in self.sensors:
                 self.sensors.add(key)
                 _LOGGER.info(
-                    "Discovered %s, adding as sensor.",
+                    "Discovered %s, adding as sensor",
                     key
                 )
                 new_sensors.append(FroniusTemplateSensor(self, key))
@@ -193,51 +185,51 @@ class FroniusAdapter:
 
 
 class FroniusInverterSystem(FroniusAdapter):
-    """Sensor for the fronius inverter with system scope."""
+    """Adapter for the fronius inverter with system scope."""
 
     async def _update(self):
         """Get the values for the current state."""
-        return await self.data.current_system_inverter_data()
+        return await self.bridge.current_system_inverter_data()
 
 
 class FroniusInverterDevice(FroniusAdapter):
-    """Sensor for the fronius inverter with device scope."""
+    """Adapter for the fronius inverter with device scope."""
 
     async def _update(self):
         """Get the values for the current state."""
-        return await self.data.current_inverter_data(self._device)
+        return await self.bridge.current_inverter_data(self._device)
 
 
 class FroniusStorage(FroniusAdapter):
-    """Sensor for the fronius battery storage."""
+    """Adapter for the fronius battery storage."""
 
     async def _update(self):
         """Get the values for the current state."""
-        return await self.data.current_storage_data(self._device)
+        return await self.bridge.current_storage_data(self._device)
 
 
 class FroniusMeterSystem(FroniusAdapter):
-    """Sensor for the fronius meter with system scope."""
+    """Adapter for the fronius meter with system scope."""
 
     async def _update(self):
         """Get the values for the current state."""
-        return await self.data.current_system_meter_data()
+        return await self.bridge.current_system_meter_data()
 
 
 class FroniusMeterDevice(FroniusAdapter):
-    """Sensor for the fronius meter with device scope."""
+    """Adapter for the fronius meter with device scope."""
 
     async def _update(self):
         """Get the values for the current state."""
-        return await self.data.current_meter_data(self._device)
+        return await self.bridge.current_meter_data(self._device)
 
 
 class FroniusPowerFlow(FroniusAdapter):
-    """Sensor for the fronius power flow."""
+    """Adapter for the fronius power flow."""
 
     async def _update(self):
         """Get the values for the current state."""
-        return await self.data.current_power_flow()
+        return await self.bridge.current_power_flow()
 
 
 class FroniusTemplateSensor(Entity):
@@ -274,7 +266,7 @@ class FroniusTemplateSensor(Entity):
 
     async def async_update(self):
         """Update the internal state."""
-        state = self.parent.device_state_attributes.get(self._name)
+        state = self.parent.data.get(self._name)
         self._state = state.get('value')
         self._unit = state.get('unit')
 
