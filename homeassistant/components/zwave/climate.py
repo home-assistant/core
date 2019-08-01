@@ -21,7 +21,8 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_PRESET_MODE,
     PRESET_BOOST,
-    PRESET_NONE)
+    PRESET_NONE,
+)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -199,7 +200,8 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                 (
                     key
                     for key, value in self._hvac_mapping.items()
-                    if value == current_mode),
+                    if value == current_mode
+                ),
                 None
             )
 
@@ -209,13 +211,15 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                     (
                         key
                         for key, value in self._hvac_mapping.items()
-                        if value == self._default_hvac_mode)
+                        if value == self._default_hvac_mode
+                    )
                 )
                 self._preset_mode = next(
                     (
                         key
                         for key, value in self._preset_mapping.items()
-                        if value == current_mode),
+                        if value == current_mode
+                    ),
                     current_mode
                 )
             else:

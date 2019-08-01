@@ -14,7 +14,8 @@ from homeassistant.components.climate.const import (
     SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_COOL)
+    CURRENT_HVAC_COOL,
+)
 from homeassistant.components.zwave import climate
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
