@@ -287,9 +287,9 @@ def check_abbreviations_file(path, regex, missing):
     with open(path) as file:
         matches = re.findall(regex, file.read())
         for match in matches:
-            if (match[1] not in ABBREVIATIONS.values() and
-                    match[1] not in DEVICE_ABBREVIATIONS.values() and
-                    match[0] not in ABBREVIATIONS_WHITE_LIST):
+            if (match[1] not in ABBREVIATIONS.values()
+                    and match[1] not in DEVICE_ABBREVIATIONS.values()
+                    and match[0] not in ABBREVIATIONS_WHITE_LIST):
                 missing.append("{}: no abbreviation for {} ({})".format(
                     path, match[1], match[0]))
     return missing
