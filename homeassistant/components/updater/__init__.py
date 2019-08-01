@@ -12,7 +12,7 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.const import ATTR_FRIENDLY_NAME, __version__ as current_version
+from homeassistant.const import __version__ as current_version
 from homeassistant.helpers import event
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
