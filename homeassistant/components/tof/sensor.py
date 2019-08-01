@@ -14,28 +14,26 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-LENGTH_MILLIMETERS = 'mm'
+LENGTH_MILLIMETERS = "mm"
 
-CONF_I2C_ADDRESS = 'i2c_address'
-CONF_I2C_BUS = 'i2c_bus'
-CONF_XSHUT = 'xshut'
+CONF_I2C_ADDRESS = "i2c_address"
+CONF_I2C_BUS = "i2c_bus"
+CONF_XSHUT = "xshut"
 
-DEFAULT_NAME = 'VL53L1X'
+DEFAULT_NAME = "VL53L1X"
 DEFAULT_I2C_ADDRESS = 0x29
 DEFAULT_I2C_BUS = 1
 DEFAULT_XSHUT = 16
 DEFAULT_RANGE = 2
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME,
-                 default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_I2C_ADDRESS,
-                 default=DEFAULT_I2C_ADDRESS): vol.Coerce(int),
-    vol.Optional(CONF_I2C_BUS,
-                 default=DEFAULT_I2C_BUS): vol.Coerce(int),
-    vol.Optional(CONF_XSHUT,
-                 default=DEFAULT_XSHUT): cv.positive_int,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS): vol.Coerce(int),
+        vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS): vol.Coerce(int),
+        vol.Optional(CONF_XSHUT, default=DEFAULT_XSHUT): cv.positive_int,
+    }
+)
 
 
 def init_tof_0(xshut, sensor):
@@ -51,10 +49,7 @@ def init_tof_1(xshut):
     rpi_gpio.write_output(xshut, 1)
 
 
-async def async_setup_platform(hass,
-                               config,
-                               async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Reset and initialize the VL53L1X ToF Sensor from STMicroelectronics."""
     from VL53L1X2 import VL53L1X  # pylint: disable=import-error
 
@@ -64,16 +59,10 @@ async def async_setup_platform(hass,
     unit = LENGTH_MILLIMETERS
     xshut = config.get(CONF_XSHUT)
 
-    sensor = await hass.async_add_executor_job(
-        partial(VL53L1X, bus_number)
-    )
-    await hass.async_add_executor_job(
-        init_tof_0, xshut, sensor
-    )
+    sensor = await hass.async_add_executor_job(partial(VL53L1X, bus_number))
+    await hass.async_add_executor_job(init_tof_0, xshut, sensor)
     await asyncio.sleep(0.01)
-    await hass.async_add_executor_job(
-        init_tof_1, xshut
-    )
+    await hass.async_add_executor_job(init_tof_1, xshut)
     await asyncio.sleep(0.01)
 
     dev = [VL53L1XSensor(sensor, name, unit, i2c_address)]
@@ -111,11 +100,9 @@ class VL53L1XSensor(Entity):
     def update(self):
         """Get the latest measurement and update state."""
         if self.init:
-            self.vl53l1x_sensor.add_sensor(
-                self.i2c_address, self.i2c_address)
+            self.vl53l1x_sensor.add_sensor(self.i2c_address, self.i2c_address)
             self.init = False
-        self.vl53l1x_sensor.start_ranging(
-            self.i2c_address, DEFAULT_RANGE)
+        self.vl53l1x_sensor.start_ranging(self.i2c_address, DEFAULT_RANGE)
         self.vl53l1x_sensor.update(self.i2c_address)
         self.vl53l1x_sensor.stop_ranging(self.i2c_address)
         self._state = self.vl53l1x_sensor.distance

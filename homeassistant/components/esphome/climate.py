@@ -6,18 +6,32 @@ from aioesphomeapi import ClimateInfo, ClimateMode, ClimateState
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_HVAC_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    HVAC_MODE_HEAT_COOL, HVAC_MODE_COOL, HVAC_MODE_HEAT,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE, PRESET_AWAY,
-    HVAC_MODE_OFF)
+    ATTR_HVAC_MODE,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
+    PRESET_AWAY,
+    HVAC_MODE_OFF,
+)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE,
-    TEMP_CELSIUS)
+    ATTR_TEMPERATURE,
+    PRECISION_HALVES,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
+    TEMP_CELSIUS,
+)
 
 from . import (
-    EsphomeEntity, esphome_map_enum, esphome_state_property,
-    platform_async_setup_entry)
+    EsphomeEntity,
+    esphome_map_enum,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,10 +39,13 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up ESPHome climate devices based on a config entry."""
     await platform_async_setup_entry(
-        hass, entry, async_add_entities,
-        component_key='climate',
-        info_type=ClimateInfo, entity_type=EsphomeClimateDevice,
-        state_type=ClimateState
+        hass,
+        entry,
+        async_add_entities,
+        component_key="climate",
+        info_type=ClimateInfo,
+        entity_type=EsphomeClimateDevice,
+        state_type=ClimateState,
     )
 
 
@@ -141,27 +158,24 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature (and operation mode if set)."""
-        data = {'key': self._static_info.key}
+        data = {"key": self._static_info.key}
         if ATTR_HVAC_MODE in kwargs:
-            data['mode'] = _climate_modes.from_hass(
-                kwargs[ATTR_HVAC_MODE])
+            data["mode"] = _climate_modes.from_hass(kwargs[ATTR_HVAC_MODE])
         if ATTR_TEMPERATURE in kwargs:
-            data['target_temperature'] = kwargs[ATTR_TEMPERATURE]
+            data["target_temperature"] = kwargs[ATTR_TEMPERATURE]
         if ATTR_TARGET_TEMP_LOW in kwargs:
-            data['target_temperature_low'] = kwargs[ATTR_TARGET_TEMP_LOW]
+            data["target_temperature_low"] = kwargs[ATTR_TARGET_TEMP_LOW]
         if ATTR_TARGET_TEMP_HIGH in kwargs:
-            data['target_temperature_high'] = kwargs[ATTR_TARGET_TEMP_HIGH]
+            data["target_temperature_high"] = kwargs[ATTR_TARGET_TEMP_HIGH]
         await self._client.climate_command(**data)
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target operation mode."""
         await self._client.climate_command(
-            key=self._static_info.key,
-            mode=_climate_modes.from_hass(hvac_mode),
+            key=self._static_info.key, mode=_climate_modes.from_hass(hvac_mode)
         )
 
     async def async_set_preset_mode(self, preset_mode):
         """Set preset mode."""
         away = preset_mode == PRESET_AWAY
-        await self._client.climate_command(key=self._static_info.key,
-                                           away=away)
+        await self._client.climate_command(key=self._static_info.key, away=away)

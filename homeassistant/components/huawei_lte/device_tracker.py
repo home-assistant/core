@@ -5,15 +5,11 @@ import attr
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA, DeviceScanner,
-)
+from homeassistant.components.device_tracker import PLATFORM_SCHEMA, DeviceScanner
 from homeassistant.const import CONF_URL
 from . import DATA_KEY, RouterData
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_URL): cv.url,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Optional(CONF_URL): cv.url})
 
 HOSTS_PATH = "wlan_host_list.Hosts"
 

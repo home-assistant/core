@@ -2,13 +2,24 @@
     "config": {
         "abort": {
             "already_configured": "Bridge er allerede konfigureret",
+            "already_in_progress": "Bro konfiguration er allerede i gang.",
             "no_bridges": "Ingen deConz bridge fundet",
-            "one_instance_only": "Komponenten underst\u00f8tter kun \u00e9n deCONZ forekomst"
+            "not_deconz_bridge": "Ikke en deCONZ bro",
+            "one_instance_only": "Komponenten underst\u00f8tter kun \u00e9n deCONZ forekomst",
+            "updated_instance": "Opdaterede deCONZ instans med ny v\u00e6rtsadresse"
         },
         "error": {
             "no_key": "Kunne ikke f\u00e5 en API-n\u00f8gle"
         },
         "step": {
+            "hassio_confirm": {
+                "data": {
+                    "allow_clip_sensor": "Tillad import af virtuelle sensorer",
+                    "allow_deconz_groups": "Tillad import af deCONZ grupper"
+                },
+                "description": "Vil du konfigurere Home Assistant til at oprette forbindelse til deCONZ gateway leveret af Hass.io add-on {addon}?",
+                "title": "deCONZ Zigbee-gateway via Hass.io add-on"
+            },
             "init": {
                 "data": {
                     "host": "V\u00e6rt",
