@@ -102,7 +102,7 @@ def write_version(version):
         "MINOR_VERSION = .*\n", "MINOR_VERSION = {}\n".format(minor), content
     )
     content = re.sub(
-        "PATCH_VERSION = .*\n", "PATCH_VERSION = '{}'\n".format(patch), content
+        "PATCH_VERSION = .*\n", 'PATCH_VERSION = "{}"\n'.format(patch), content
     )
 
     with open("homeassistant/const.py", "wt") as fil:
