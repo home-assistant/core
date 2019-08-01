@@ -7,7 +7,14 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import callback
 
-from .const import CONF_USB_STICK_PATH, DATA_NETWORK, DATA_ZWAVE_CONFIG
+from .const import (
+    CONF_AUTOHEAL,
+    CONF_DEBUG,
+    CONF_POLLING_INTERVAL,
+    CONF_USB_STICK_PATH,
+    DATA_NETWORK,
+    DATA_ZWAVE_CONFIG,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +35,15 @@ def websocket_network_status(hass, connection, msg):
 def websocket_get_config(hass, connection, msg):
     """Get Z-Wave configuration."""
     config = hass.data[DATA_ZWAVE_CONFIG]
-    connection.send_result(msg[ID], {CONF_USB_STICK_PATH: config[CONF_USB_STICK_PATH]})
+    connection.send_result(
+        msg[ID],
+        {
+            CONF_AUTOHEAL: config[CONF_AUTOHEAL],
+            CONF_DEBUG: config[CONF_DEBUG],
+            CONF_POLLING_INTERVAL: config[CONF_POLLING_INTERVAL],
+            CONF_USB_STICK_PATH: config[CONF_USB_STICK_PATH],
+        },
+    )
 
 
 @callback
