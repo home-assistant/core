@@ -10,19 +10,19 @@ PAIRING_FILE = "pairing.json"
 
 # Mapping from Homekit type to component.
 HOMEKIT_ACCESSORY_DISPATCH = {
-    'lightbulb': 'light',
-    'outlet': 'switch',
-    'switch': 'switch',
-    'thermostat': 'climate',
-    'security-system': 'alarm_control_panel',
-    'garage-door-opener': 'cover',
-    'window': 'cover',
-    'window-covering': 'cover',
-    'lock-mechanism': 'lock',
-    'contact': 'binary_sensor',
-    'motion': 'binary_sensor',
-    'carbon-dioxide': 'sensor',
-    'humidity': 'sensor',
-    'light': 'sensor',
-    'temperature': 'sensor'
+    "lightbulb": "light",
+    "outlet": "switch",
+    "switch": "switch",
+    "thermostat": "climate",
+    "security-system": "alarm_control_panel",
+    "garage-door-opener": "cover",
+    "window": "cover",
+    "window-covering": "cover",
+    "lock-mechanism": "lock",
+    "contact": "binary_sensor",
+    "motion": "binary_sensor",
+    "carbon-dioxide": "sensor",
+    "humidity": "sensor",
+    "light": "sensor",
+    "temperature": "sensor"
 }
