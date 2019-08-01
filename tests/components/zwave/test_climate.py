@@ -121,7 +121,7 @@ def device_unknown(hass, mock_openzwave):
 
 
 @pytest.fixture
-def device_heat(hass, mock_openzwave):
+def device_heat_cool(hass, mock_openzwave):
     """Fixture to provide a precreated climate device. Test state heat only."""
     node = MockNode()
     values = MockEntityValues(
@@ -129,7 +129,13 @@ def device_heat(hass, mock_openzwave):
         temperature=MockValue(data=5, node=node, units=None),
         mode=MockValue(
             data=HVAC_MODE_HEAT,
-            data_items=[HVAC_MODE_OFF, HVAC_MODE_HEAT, "Heat Eco"],
+            data_items=[
+                HVAC_MODE_OFF,
+                HVAC_MODE_HEAT,
+                HVAC_MODE_COOL,
+                "Heat Eco",
+                "Cool Eco",
+            ],
             node=node,
         ),
         fan_mode=MockValue(data="test2", data_items=[3, 4, 5], node=node),
@@ -281,14 +287,18 @@ def test_operation_value_set_unknown(device_unknown):
     assert device.values.mode.data == HVAC_MODE_HEAT_COOL
 
 
-def test_operation_value_set_heat(device_heat):
-    """Test values changed for climate device. Heat only."""
-    device = device_heat
+def test_operation_value_set_heat_cool(device_heat_cool):
+    """Test values changed for climate device. Heat/Cool only."""
+    device = device_heat_cool
     assert device.values.mode.data == HVAC_MODE_HEAT
     device.set_preset_mode("Heat Eco")
     assert device.values.mode.data == "Heat Eco"
     device.set_preset_mode(PRESET_NONE)
     assert device.values.mode.data == HVAC_MODE_HEAT
+    device.set_preset_mode("Cool Eco")
+    assert device.values.mode.data == "Cool Eco"
+    device.set_preset_mode(PRESET_NONE)
+    assert device.values.mode.data == HVAC_MODE_COOL
 
 
 def test_fan_mode_value_set(device):
@@ -383,6 +393,21 @@ def test_operation_value_changed_unknown(device_unknown):
     value_changed(device.values.mode)
     assert device.hvac_mode == HVAC_MODE_HEAT_COOL
     assert device.preset_mode == "Abcdefg"
+
+
+def test_operation_value_changed_heat_cool(device_heat_cool):
+    """Test preset changed for climate device. Heat/Cool only."""
+    device = device_heat_cool
+    assert device.hvac_mode == HVAC_MODE_HEAT
+    assert device.preset_mode == PRESET_NONE
+    device.values.mode.data = "Cool Eco"
+    value_changed(device.values.mode)
+    assert device.hvac_mode == HVAC_MODE_COOL
+    assert device.preset_mode == "Cool Eco"
+    device.values.mode.data = "Heat Eco"
+    value_changed(device.values.mode)
+    assert device.hvac_mode == HVAC_MODE_HEAT
+    assert device.preset_mode == "Heat Eco"
 
 
 def test_fan_mode_value_changed(device):

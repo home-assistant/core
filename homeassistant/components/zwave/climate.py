@@ -209,13 +209,39 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
 
             if _hvac_temp is None:
                 # The current mode is not a hvac mode
-                self._hvac_mode = next(
-                    (
-                        key
-                        for key, value in self._hvac_mapping.items()
-                        if value == self._default_hvac_mode
+                if (
+                    "heat" in current_mode.lower()
+                    and HVAC_MODE_HEAT in self._hvac_mapping.values()
+                ):
+                    # The current preset modes maps to HVAC_MODE_HEAT
+                    self._hvac_mode = next(
+                        (
+                            key
+                            for key, value in self._hvac_mapping.items()
+                            if value == HVAC_MODE_HEAT
+                        )
                     )
-                )
+                elif (
+                    "cool" in current_mode.lower()
+                    and HVAC_MODE_COOL in self._hvac_mapping.values()
+                ):
+                    # The current preset modes maps to HVAC_MODE_COOL
+                    self._hvac_mode = next(
+                        (
+                            key
+                            for key, value in self._hvac_mapping.items()
+                            if value == HVAC_MODE_COOL
+                        )
+                    )
+                else:
+                    # The current preset modes maps to self._default_hvac_mode
+                    self._hvac_mode = next(
+                        (
+                            key
+                            for key, value in self._hvac_mapping.items()
+                            if value == self._default_hvac_mode
+                        )
+                    )
                 self._preset_mode = next(
                     (
                         key
@@ -394,8 +420,9 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         if not self.values.mode:
             return
         if preset_mode == PRESET_NONE:
-            # Activate the default hvac mode
-            self.values.mode.data = self._default_hvac_mode
+            # Activate the current hvac mode
+            self.update_properties()
+            self.values.mode.data = self._hvac_mapping.get(self.hvac_mode)
         else:
             self.values.mode.data = self._preset_mapping.get(preset_mode, preset_mode)
 
