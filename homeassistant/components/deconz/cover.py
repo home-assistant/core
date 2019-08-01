@@ -1,7 +1,12 @@
 """Support for deCONZ covers."""
 from homeassistant.components.cover import (
-    ATTR_POSITION, CoverDevice, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_STOP,
-    SUPPORT_SET_POSITION)
+    ATTR_POSITION,
+    CoverDevice,
+    SUPPORT_CLOSE,
+    SUPPORT_OPEN,
+    SUPPORT_STOP,
+    SUPPORT_SET_POSITION,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -9,11 +14,10 @@ from .const import COVER_TYPES, DAMPERS, NEW_LIGHT, WINDOW_COVERS
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
-ZIGBEE_SPEC = ['lumi.curtain']
+ZIGBEE_SPEC = ["lumi.curtain"]
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up deCONZ platforms."""
     pass
 
@@ -41,8 +45,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         async_add_entities(entities, True)
 
-    gateway.listeners.append(async_dispatcher_connect(
-        hass, gateway.async_event_new_device(NEW_LIGHT), async_add_cover))
+    gateway.listeners.append(
+        async_dispatcher_connect(
+            hass, gateway.async_event_new_device(NEW_LIGHT), async_add_cover
+        )
+    )
 
     async_add_cover(gateway.api.lights.values())
 
@@ -75,9 +82,9 @@ class DeconzCover(DeconzDevice, CoverDevice):
     def device_class(self):
         """Return the class of the cover."""
         if self._device.type in DAMPERS:
-            return 'damper'
+            return "damper"
         if self._device.type in WINDOW_COVERS:
-            return 'window'
+            return "window"
 
     @property
     def supported_features(self):
@@ -87,11 +94,11 @@ class DeconzCover(DeconzDevice, CoverDevice):
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
-        data = {'on': False}
+        data = {"on": False}
 
         if position > 0:
-            data['on'] = True
-            data['bri'] = int(position / 100 * 255)
+            data["on"] = True
+            data["bri"] = int(position / 100 * 255)
 
         await self._device.async_set_state(data)
 
@@ -107,7 +114,7 @@ class DeconzCover(DeconzDevice, CoverDevice):
 
     async def async_stop_cover(self, **kwargs):
         """Stop cover."""
-        data = {'bri_inc': 0}
+        data = {"bri_inc": 0}
         await self._device.async_set_state(data)
 
 
@@ -127,10 +134,10 @@ class DeconzCoverZigbeeSpec(DeconzCover):
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
-        data = {'on': False}
+        data = {"on": False}
 
         if position < 100:
-            data['on'] = True
-            data['bri'] = 255 - int(position / 100 * 255)
+            data["on"] = True
+            data["bri"] = 255 - int(position / 100 * 255)
 
         await self._device.async_set_state(data)

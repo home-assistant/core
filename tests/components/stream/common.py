@@ -2,8 +2,7 @@
 import io
 
 from homeassistant.components.stream import Stream
-from homeassistant.components.stream.const import (
-    DOMAIN, ATTR_STREAMS)
+from homeassistant.components.stream.const import DOMAIN, ATTR_STREAMS
 
 
 def generate_h264_video():
@@ -20,28 +19,25 @@ def generate_h264_video():
     total_frames = duration * fps
 
     output = io.BytesIO()
-    output.name = 'test.ts'
-    container = av.open(output, mode='w')
+    output.name = "test.ts"
+    container = av.open(output, mode="w")
 
-    stream = container.add_stream('libx264', rate=fps)
+    stream = container.add_stream("libx264", rate=fps)
     stream.width = 480
     stream.height = 320
-    stream.pix_fmt = 'yuv420p'
+    stream.pix_fmt = "yuv420p"
 
     for frame_i in range(total_frames):
 
         img = np.empty((480, 320, 3))
-        img[:, :, 0] = 0.5 + 0.5 * np.sin(
-            2 * np.pi * (0 / 3 + frame_i / total_frames))
-        img[:, :, 1] = 0.5 + 0.5 * np.sin(
-            2 * np.pi * (1 / 3 + frame_i / total_frames))
-        img[:, :, 2] = 0.5 + 0.5 * np.sin(
-            2 * np.pi * (2 / 3 + frame_i / total_frames))
+        img[:, :, 0] = 0.5 + 0.5 * np.sin(2 * np.pi * (0 / 3 + frame_i / total_frames))
+        img[:, :, 1] = 0.5 + 0.5 * np.sin(2 * np.pi * (1 / 3 + frame_i / total_frames))
+        img[:, :, 2] = 0.5 + 0.5 * np.sin(2 * np.pi * (2 / 3 + frame_i / total_frames))
 
         img = np.round(255 * img).astype(np.uint8)
         img = np.clip(img, 0, 255)
 
-        frame = av.VideoFrame.from_ndarray(img, format='rgb24')
+        frame = av.VideoFrame.from_ndarray(img, format="rgb24")
         for packet in stream.encode(frame):
             container.mux(packet)
 

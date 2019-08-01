@@ -26,29 +26,27 @@ class HeosFlowHandler(config_entries.ConfigFlow):
         """Handle a discovered Heos device."""
         # Store discovered host
         friendly_name = "{} ({})".format(
-            discovery_info[CONF_NAME], discovery_info[CONF_HOST])
+            discovery_info[CONF_NAME], discovery_info[CONF_HOST]
+        )
         self.hass.data.setdefault(DATA_DISCOVERED_HOSTS, {})
-        self.hass.data[DATA_DISCOVERED_HOSTS][friendly_name] \
-            = discovery_info[CONF_HOST]
+        self.hass.data[DATA_DISCOVERED_HOSTS][friendly_name] = discovery_info[CONF_HOST]
         # Abort if other flows in progress or an entry already exists
         if self._async_in_progress() or self._async_current_entries():
-            return self.async_abort(reason='already_setup')
+            return self.async_abort(reason="already_setup")
         # Show selection form
-        return self.async_show_form(step_id='user')
+        return self.async_show_form(step_id="user")
 
     async def async_step_import(self, user_input=None):
         """Occurs when an entry is setup through config."""
         host = user_input[CONF_HOST]
-        return self.async_create_entry(
-            title=format_title(host),
-            data={CONF_HOST: host})
+        return self.async_create_entry(title=format_title(host), data={CONF_HOST: host})
 
     async def async_step_user(self, user_input=None):
         """Obtain host and validate connection."""
         self.hass.data.setdefault(DATA_DISCOVERED_HOSTS, {})
         # Only a single entry is needed for all devices
         if self._async_current_entries():
-            return self.async_abort(reason='already_setup')
+            return self.async_abort(reason="already_setup")
         # Try connecting to host if provided
         errors = {}
         host = None
@@ -62,16 +60,18 @@ class HeosFlowHandler(config_entries.ConfigFlow):
                 self.hass.data.pop(DATA_DISCOVERED_HOSTS)
                 return await self.async_step_import({CONF_HOST: host})
             except (asyncio.TimeoutError, ConnectionError):
-                errors[CONF_HOST] = 'connection_failure'
+                errors[CONF_HOST] = "connection_failure"
             finally:
                 await heos.disconnect()
 
         # Return form
-        host_type = str if not self.hass.data[DATA_DISCOVERED_HOSTS] \
+        host_type = (
+            str
+            if not self.hass.data[DATA_DISCOVERED_HOSTS]
             else vol.In(list(self.hass.data[DATA_DISCOVERED_HOSTS]))
+        )
         return self.async_show_form(
-            step_id='user',
-            data_schema=vol.Schema({
-                vol.Required(CONF_HOST, default=host): host_type
-            }),
-            errors=errors)
+            step_id="user",
+            data_schema=vol.Schema({vol.Required(CONF_HOST, default=host): host_type}),
+            errors=errors,
+        )

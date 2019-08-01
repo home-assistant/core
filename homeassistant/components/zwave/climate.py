@@ -17,38 +17,36 @@ from . import ZWaveDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_NAME = 'name'
-DEFAULT_NAME = 'Z-Wave Climate'
+CONF_NAME = "name"
+DEFAULT_NAME = "Z-Wave Climate"
 
 REMOTEC = 0x5254
 REMOTEC_ZXT_120 = 0x8377
 REMOTEC_ZXT_120_THERMOSTAT = (REMOTEC, REMOTEC_ZXT_120)
-ATTR_OPERATING_STATE = 'operating_state'
-ATTR_FAN_STATE = 'fan_state'
+ATTR_OPERATING_STATE = "operating_state"
+ATTR_FAN_STATE = "fan_state"
 
 
 # Device is in manufacturer specific mode (e.g. setting the valve manually)
-PRESET_MANUFACTURER_SPECIFIC = 'Manufacturer Specific'
+PRESET_MANUFACTURER_SPECIFIC = "Manufacturer Specific"
 
-WORKAROUND_ZXT_120 = 'zxt_120'
+WORKAROUND_ZXT_120 = "zxt_120"
 
-DEVICE_MAPPINGS = {
-    REMOTEC_ZXT_120_THERMOSTAT: WORKAROUND_ZXT_120
-}
+DEVICE_MAPPINGS = {REMOTEC_ZXT_120_THERMOSTAT: WORKAROUND_ZXT_120}
 
 HVAC_STATE_MAPPINGS = {
-    'off': HVAC_MODE_OFF,
-    'heat': HVAC_MODE_HEAT,
-    'heat mode': HVAC_MODE_HEAT,
-    'heat (default)': HVAC_MODE_HEAT,
-    'aux heat': HVAC_MODE_HEAT,
-    'furnace': HVAC_MODE_HEAT,
-    'fan only': HVAC_MODE_FAN_ONLY,
-    'dry air': HVAC_MODE_DRY,
-    'moist air': HVAC_MODE_DRY,
-    'cool': HVAC_MODE_COOL,
-    'heat_cool': HVAC_MODE_HEAT_COOL,
-    'auto': HVAC_MODE_HEAT_COOL,
+    "off": HVAC_MODE_OFF,
+    "heat": HVAC_MODE_HEAT,
+    "heat mode": HVAC_MODE_HEAT,
+    "heat (default)": HVAC_MODE_HEAT,
+    "aux heat": HVAC_MODE_HEAT,
+    "furnace": HVAC_MODE_HEAT,
+    "fan only": HVAC_MODE_FAN_ONLY,
+    "dry air": HVAC_MODE_DRY,
+    "moist air": HVAC_MODE_DRY,
+    "cool": HVAC_MODE_COOL,
+    "heat_cool": HVAC_MODE_HEAT_COOL,
+    "auto": HVAC_MODE_HEAT_COOL,
 }
 
 HVAC_CURRENT_MAPPINGS = {
@@ -60,13 +58,13 @@ HVAC_CURRENT_MAPPINGS = {
     "pending cool": CURRENT_HVAC_IDLE,
     "cooling": CURRENT_HVAC_COOL,
     "fan only": CURRENT_HVAC_FAN,
-    "vent / economiser":  CURRENT_HVAC_FAN,
+    "vent / economiser": CURRENT_HVAC_FAN,
     "off": CURRENT_HVAC_OFF,
 }
 
 PRESET_MAPPINGS = {
-    'full power': PRESET_BOOST,
-    'manufacturer specific': PRESET_MANUFACTURER_SPECIFIC,
+    "full power": PRESET_BOOST,
+    "manufacturer specific": PRESET_MANUFACTURER_SPECIFIC,
 }
 
 DEFAULT_HVAC_MODES = [
@@ -79,20 +77,20 @@ DEFAULT_HVAC_MODES = [
 ]
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old method of setting up Z-Wave climate devices."""
     pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Z-Wave Climate device from Config Entry."""
+
     @callback
     def async_add_climate(climate):
         """Add Z-Wave Climate Device."""
         async_add_entities([climate])
 
-    async_dispatcher_connect(hass, 'zwave_new_climate', async_add_climate)
+    async_dispatcher_connect(hass, "zwave_new_climate", async_add_climate)
 
 
 def get_device(hass, values, **kwargs):
@@ -126,15 +124,14 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         _LOGGER.debug("temp_unit is %s", self._unit)
         self._zxt_120 = None
         # Make sure that we have values for the key before converting to int
-        if (self.node.manufacturer_id.strip() and
-                self.node.product_id.strip()):
+        if self.node.manufacturer_id.strip() and self.node.product_id.strip():
             specific_sensor_key = (
                 int(self.node.manufacturer_id, 16),
-                int(self.node.product_id, 16))
+                int(self.node.product_id, 16),
+            )
             if specific_sensor_key in DEVICE_MAPPINGS:
                 if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_ZXT_120:
-                    _LOGGER.debug(
-                        "Remotec ZXT-120 Zwave Thermostat workaround")
+                    _LOGGER.debug("Remotec ZXT-120 Zwave Thermostat workaround")
                     self._zxt_120 = 1
         self.update_properties()
 
@@ -224,7 +221,6 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                 self._fan_modes = list(fan_modes)
         _LOGGER.debug("self._fan_modes=%s", self._fan_modes)
         _LOGGER.debug("self._current_fan_mode=%s", self._current_fan_mode)
-
         # Swing mode
         if self._zxt_120 == 1:
             if self.values.zxt_120_swing_mode:
@@ -233,19 +229,17 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                 if swing_modes:
                     self._swing_modes = list(swing_modes)
             _LOGGER.debug("self._swing_modes=%s", self._swing_modes)
-            _LOGGER.debug("self._current_swing_mode=%s",
-                          self._current_swing_mode)
+            _LOGGER.debug("self._current_swing_mode=%s", self._current_swing_mode)
         # Set point
         if self.values.primary.data == 0:
-            _LOGGER.debug("Setpoint is 0, setting default to "
-                          "current_temperature=%s",
-                          self._current_temperature)
+            _LOGGER.debug(
+                "Setpoint is 0, setting default to " "current_temperature=%s",
+                self._current_temperature,
+            )
             if self._current_temperature is not None:
-                self._target_temperature = (
-                    round((float(self._current_temperature)), 1))
+                self._target_temperature = round((float(self._current_temperature)), 1)
         else:
-            self._target_temperature = round(
-                (float(self.values.primary.data)), 1)
+            self._target_temperature = round((float(self.values.primary.data)), 1)
 
         # Operating state
         if self.values.operating_state:
@@ -280,9 +274,9 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        if self._unit == 'C':
+        if self._unit == "C":
             return TEMP_CELSIUS
-        if self._unit == 'F':
+        if self._unit == "F":
             return TEMP_FAHRENHEIT
         return self._unit
 

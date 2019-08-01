@@ -43,12 +43,11 @@ homeassistant/components/azure_event_hub/* @eavanvalkenburg
 homeassistant/components/bitcoin/* @fabaff
 homeassistant/components/bizkaibus/* @UgaitzEtxebarria
 homeassistant/components/blink/* @fronzbot
-homeassistant/components/bmw_connected_drive/* @ChristianKuehnel
 homeassistant/components/braviatv/* @robbiet480
 homeassistant/components/broadlink/* @danielhiversen
 homeassistant/components/brunt/* @eavanvalkenburg
 homeassistant/components/bt_smarthub/* @jxwolstenholme
-homeassistant/components/buienradar/* @ties
+homeassistant/components/buienradar/* @mjj4791 @ties
 homeassistant/components/cisco_ios/* @fbradyirl
 homeassistant/components/cisco_mobility_express/* @fbradyirl
 homeassistant/components/cisco_webex_teams/* @fbradyirl
@@ -287,6 +286,7 @@ homeassistant/components/updater/* @home-assistant/core
 homeassistant/components/upnp/* @robbiet480
 homeassistant/components/uptimerobot/* @ludeeus
 homeassistant/components/utility_meter/* @dgomes
+homeassistant/components/velbus/* @ceral2nd
 homeassistant/components/velux/* @Julius2342
 homeassistant/components/version/* @fabaff
 homeassistant/components/vesync/* @markperdue @webdjoe

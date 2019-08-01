@@ -8,17 +8,27 @@ from homeassistant.const import ATTR_ATTRIBUTION
 import homeassistant.helpers.config_validation as cv
 
 from . import (
-    ATTR_CREATED_AT, ATTR_DROPLET_ID, ATTR_DROPLET_NAME, ATTR_FEATURES,
-    ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS, ATTR_MEMORY, ATTR_REGION, ATTR_VCPUS,
-    ATTRIBUTION, CONF_DROPLETS, DATA_DIGITAL_OCEAN)
+    ATTR_CREATED_AT,
+    ATTR_DROPLET_ID,
+    ATTR_DROPLET_NAME,
+    ATTR_FEATURES,
+    ATTR_IPV4_ADDRESS,
+    ATTR_IPV6_ADDRESS,
+    ATTR_MEMORY,
+    ATTR_REGION,
+    ATTR_VCPUS,
+    ATTRIBUTION,
+    CONF_DROPLETS,
+    DATA_DIGITAL_OCEAN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Droplet'
+DEFAULT_NAME = "Droplet"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DROPLETS): vol.All(cv.ensure_list, [cv.string]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_DROPLETS): vol.All(cv.ensure_list, [cv.string])}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -58,7 +68,7 @@ class DigitalOceanSwitch(SwitchDevice):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self.data.status == 'active'
+        return self.data.status == "active"
 
     @property
     def device_state_attributes(self):
@@ -72,18 +82,18 @@ class DigitalOceanSwitch(SwitchDevice):
             ATTR_IPV4_ADDRESS: self.data.ip_address,
             ATTR_IPV6_ADDRESS: self.data.ip_v6_address,
             ATTR_MEMORY: self.data.memory,
-            ATTR_REGION: self.data.region['name'],
+            ATTR_REGION: self.data.region["name"],
             ATTR_VCPUS: self.data.vcpus,
         }
 
     def turn_on(self, **kwargs):
         """Boot-up the droplet."""
-        if self.data.status != 'active':
+        if self.data.status != "active":
             self.data.power_on()
 
     def turn_off(self, **kwargs):
         """Shutdown the droplet."""
-        if self.data.status == 'active':
+        if self.data.status == "active":
             self.data.power_off()
 
     def update(self):
