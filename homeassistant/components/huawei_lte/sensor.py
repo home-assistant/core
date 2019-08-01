@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     DEVICE_CLASS_SIGNAL_STRENGTH,
 )
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -101,7 +102,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up Huawei LTE sensor devices."""
     data = hass.data[DATA_KEY].get_data(config)
     sensors = []
@@ -111,7 +112,24 @@ def setup_platform(hass, config, add_entities, discovery_info):
         data.subscribe(path)
         sensors.append(HuaweiLteSensor(data, path, SENSOR_META.get(path, {})))
 
-    add_entities(sensors, True)
+    # Pre-0.97 unique id migration. Old ones used the device serial number
+    # (see comments in HuaweiLteData._setup_lte for more info), as well as
+    # had a bug that joined the path str with periods, not the path components,
+    # resulting e.g. *_device_signal.sinr to end up as
+    # *_d.e.v.i.c.e._.s.i.g.n.a.l...s.i.n.r
+    entreg = await entity_registry.async_get_registry(hass)
+    for entid, ent in entreg.entities.items():
+        if ent.platform != "huawei_lte":
+            continue
+        for sensor in sensors:
+            oldsuf = ".".join(sensor.path)
+            if ent.unique_id.endswith(f"_{oldsuf}"):
+                entreg.async_update_entity(entid, new_unique_id=sensor.unique_id)
+                _LOGGER.debug(
+                    "Updated entity %s unique id to %s", entid, sensor.unique_id
+                )
+
+    async_add_entities(sensors, True)
 
 
 def format_default(value):
@@ -134,7 +152,7 @@ class HuaweiLteSensor(Entity):
     """Huawei LTE sensor entity."""
 
     data = attr.ib(type=RouterData)
-    path = attr.ib(type=list)
+    path = attr.ib(type=str)
     meta = attr.ib(type=dict)
 
     _state = attr.ib(init=False, default=STATE_UNKNOWN)
@@ -143,9 +161,7 @@ class HuaweiLteSensor(Entity):
     @property
     def unique_id(self) -> str:
         """Return unique ID for sensor."""
-        return "{}_{}".format(
-            self.data["device_information.SerialNumber"], ".".join(self.path)
-        )
+        return "{}-{}".format(self.data.mac, self.path)
 
     @property
     def name(self) -> str:
