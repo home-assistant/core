@@ -123,7 +123,7 @@ class HomeKitLightSensor(HomeKitEntity):
         return self._state
 
 
-class HomeKitCarbonDioxideSensor(HomeKitEntity):
+class HomeKitLightSensor(HomeKitEntity):
     """Representation of a Homekit Carbon Dioxide sensor."""
 
     def __init__(self, *args):
@@ -138,7 +138,7 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity):
     @property
     def name(self):
         """Return the name of the device."""
-        return "{} {}".format(super().name, "CO2")
+        return "{} {}".format(super().name, "CO2)
 
     @property
     def icon(self):
@@ -150,12 +150,12 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity):
         """Return units for the sensor."""
         return UNIT_CO2
 
-    def _update_carbon_dioxide_level(self, value):
+    def _update_light_level_current(self, value):
         self._state = value
 
     @property
     def state(self):
-        """Return the current co2."""
+        """Return the current CO2 level in ppm."""
         return self._state
 
 
@@ -173,7 +173,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up Homekit sensors."""
+    """Set up Homekit lighting."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
 
