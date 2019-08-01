@@ -1,5 +1,6 @@
 """Support for Fronius devices."""
 import copy
+from datetime import timedelta
 import logging
 import voluptuous as vol
 
@@ -18,7 +19,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
-from datetime import timedelta
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,6 +84,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     fronius = Fronius(session, config[CONF_RESOURCE])
 
     scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    adapters = []
+    # Creates all adapters for monitored conditions
     for condition in config[CONF_MONITORED_CONDITIONS]:
 
         device = condition[CONF_DEVICE]
@@ -109,14 +111,21 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         else:
             adapter_cls = FroniusStorage
 
-        adapter = adapter_cls(fronius, name, device, async_add_entities)
+        adapters.append(adapter_cls(fronius, name, device, async_add_entities))
 
+    # Creates a lamdba that fetches an update when called
+    def adapter_data_fetcher(data_adapter):
         async def fetch_data(*_):
-            await adapter.async_update()
+            await data_adapter.async_update()
 
-        await fetch_data()
+        return fetch_data
 
-        async_track_time_interval(hass, fetch_data, scan_interval)
+    # Set up the fetching in a fixed interval for each adapter
+    for adapter in adapters:
+        fetch = adapter_data_fetcher(adapter)
+        # fetch data once at set-up
+        await fetch()
+        async_track_time_interval(hass, fetch, scan_interval)
 
 
 class FroniusAdapter:
