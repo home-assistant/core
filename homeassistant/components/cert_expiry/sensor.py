@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME,
@@ -16,7 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity import Entity
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, DEFAULT_NAME, DEFAULT_PORT
 
 DEFAULT_NAME = "SSL Certificate Expiry"
 DEFAULT_PORT = 443
@@ -40,16 +41,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     def run_setup(event):
         """Wait until Home Assistant is fully initialized before creating.
 
-        Delay the setup until Home Assistant is fully initialized.
-        """
-        server_name = config.get(CONF_HOST)
-        server_port = config.get(CONF_PORT)
-        sensor_name = config.get(CONF_NAME)
+    return True
 
         add_entities([SSLCertificate(sensor_name, server_name, server_port)], True)
 
-    # To allow checking of the HA certificate we must first be running.
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Add cert-expiry entry."""
+    async_add_entities([SSLCertificate(
+        entry.title, entry.data[CONF_HOST], entry.data[CONF_PORT])],
+                       True)
 
 
 class SSLCertificate(Entity):

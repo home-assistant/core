@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "host_port_exists": "This host and port combination is already configured"
+        },
+        "error": {
+            "host_port_exists": "This host and port combination is already configured"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "The hostname of the certificate",
+                    "name": "The name of the certificate",
+                    "port": "The port of the certificate"
+                },
+                "title": "Define the certificate to test"
+            }
+        },
+        "title": "Certificate Expiry"
+    }
+}
