@@ -70,7 +70,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
     try:
         api.ping_anna_thermostat()
-    except Exception:
+    except (ConnectionError, OSError):
         raise PlatformNotReady
     devices = [
         ThermostatDevice(
