@@ -30,7 +30,7 @@ SCOPE_SYSTEM = 'system'
 DEFAULT_SCOPE = SCOPE_DEVICE
 DEFAULT_DEVICE = 0
 DEFAULT_INVERTER = 1
-DEFAULT_SCAN_INTERVAL = 60
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 
 SENSOR_TYPES = [TYPE_INVERTER, TYPE_STORAGE, TYPE_METER, TYPE_POWER_FLOW]
 SCOPE_TYPES = [SCOPE_DEVICE, SCOPE_SYSTEM]
@@ -102,14 +102,14 @@ async def async_setup_platform(hass,
         adapter = adapter_cls(fronius, name, device, async_add_entities)
 
         async def fetch_data(*_):
-            return await adapter.async_update()
+            await adapter.async_update()
 
         await fetch_data()
 
         async_track_time_interval(
             hass,
             fetch_data,
-            timedelta(seconds=scan_interval)
+            scan_interval
         )
 
 
