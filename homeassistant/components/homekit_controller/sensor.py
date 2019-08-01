@@ -150,7 +150,7 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity):
         """Return units for the sensor."""
         return UNIT_CO2
 
-    def _update_light_level_current(self, value):
+    def _update_carbon_dioxide_level(self, value):
         self._state = value
 
     @property
