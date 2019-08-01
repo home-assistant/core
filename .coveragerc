@@ -249,6 +249,7 @@ omit =
     homeassistant/components/greeneye_monitor/sensor.py
     homeassistant/components/greenwave/light.py
     homeassistant/components/group/notify.py
+    homeassistant/components/growatt_server/sensor.py
     homeassistant/components/gstreamer/media_player.py
     homeassistant/components/gtfs/sensor.py
     homeassistant/components/gtt/sensor.py
