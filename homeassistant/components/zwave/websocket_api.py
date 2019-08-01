@@ -20,16 +20,19 @@ ID = "id"
 def websocket_network_status(hass, connection, msg):
     """Get Z-Wave network status."""
     network = hass.data[DATA_NETWORK]
-    connection.send_result(
-        msg[ID],
-        {
-            "state": network.state,
-            CONF_USB_STICK_PATH: hass.data[DATA_ZWAVE_CONFIG][CONF_USB_STICK_PATH],
-        },
-    )
+    connection.send_result(msg[ID], {"state": network.state})
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required(TYPE): "zwave/get_config"})
+def websocket_get_config(hass, connection, msg):
+    """Get Z-Wave configuration."""
+    config = hass.data[DATA_ZWAVE_CONFIG]
+    connection.send_result(msg[ID], {CONF_USB_STICK_PATH: config[CONF_USB_STICK_PATH]})
 
 
 @callback
 def async_load_websocket_api(hass):
     """Set up the web socket API."""
     websocket_api.async_register_command(hass, websocket_network_status)
+    websocket_api.async_register_command(hass, websocket_get_config)
