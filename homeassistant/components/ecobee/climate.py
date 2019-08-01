@@ -294,9 +294,9 @@ class Thermostat(ClimateDevice):
             if event["type"] == "hold":
                 if event["holdClimateRef"] in self._preset_modes:
                     return self._preset_modes[event["holdClimateRef"]]
-                else:
-                    # Any hold not based on a climate is a temp hold
-                    return PRESET_TEMPERATURE
+
+                # Any hold not based on a climate is a temp hold
+                return PRESET_TEMPERATURE
             if event["type"].startswith("auto"):
                 # All auto modes are treated as holds
                 return event["type"][4:].lower()
