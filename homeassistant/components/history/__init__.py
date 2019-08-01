@@ -234,6 +234,7 @@ def states_to_json(
     axis correctly.
     """
     result = defaultdict(list)
+    # Set all entity IDs to empty lists in result set to maintain the order
     if entity_ids is not None:
         for ent_id in entity_ids:
             result[ent_id] = []
@@ -253,7 +254,9 @@ def states_to_json(
     # Append all changes to it
     for ent_id, group in groupby(states, lambda state: state.entity_id):
         result[ent_id].extend(group)
-    return result
+
+    # Filter out the empty lists if some states had 0 results.
+    return {key: val for key, val in result.items() if val}
 
 
 def get_state(hass, utc_point_in_time, entity_id, run=None):
@@ -348,7 +351,6 @@ class HistoryPeriodView(HomeAssistantView):
 
         # Optionally reorder the result to respect the ordering given
         # by any entities explicitly included in the configuration.
-
         if self.use_include_order:
             sorted_result = []
             for order_entity in self.filters.included_entities:
