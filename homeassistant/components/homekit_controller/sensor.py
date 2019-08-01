@@ -138,7 +138,7 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity):
     @property
     def name(self):
         """Return the name of the device."""
-        return "{} {}".format(super().name, "CO2)
+        return "{} {}".format(super().name, "CO2")
 
     @property
     def icon(self):
