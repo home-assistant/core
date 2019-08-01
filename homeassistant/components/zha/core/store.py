@@ -1,16 +1,15 @@
 """Data storage helper for ZHA."""
-import logging
-from collections import OrderedDict
-
 # pylint: disable=W0611
+from collections import OrderedDict
+import logging
 from typing import MutableMapping  # noqa: F401
 from typing import cast
 
 import attr
 
 from homeassistant.core import callback
-from homeassistant.loader import bind_hass
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 

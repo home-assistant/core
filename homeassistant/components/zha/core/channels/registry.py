@@ -5,13 +5,12 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
 from . import ZigbeeChannel
-
 from .closures import DoorLockChannel
 from .general import (
-    OnOffChannel,
-    LevelControlChannel,
-    PowerConfigurationChannel,
     BasicChannel,
+    LevelControlChannel,
+    OnOffChannel,
+    PowerConfigurationChannel,
 )
 from .homeautomation import ElectricalMeasurementChannel
 from .hvac import FanChannel

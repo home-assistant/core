@@ -1,7 +1,6 @@
 """Fans on Zigbee Home Automation networks."""
 import logging
 
-from homeassistant.core import callback
 from homeassistant.components.fan import (
     DOMAIN,
     SPEED_HIGH,
@@ -11,13 +10,15 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
 from .core.const import (
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
-    ZHA_DISCOVERY_NEW,
     FAN_CHANNEL,
     SIGNAL_ATTR_UPDATED,
+    ZHA_DISCOVERY_NEW,
 )
 from .entity import ZhaEntity
 

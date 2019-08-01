@@ -6,17 +6,19 @@ https://home-assistant.io/components/zha/
 """
 import asyncio
 import collections
-import logging
 from concurrent.futures import TimeoutError as Timeout
+import logging
+
 from homeassistant.core import callback
+
 from .const import (
     DEFAULT_BAUDRATE,
+    IN,
+    OUT,
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
     REPORT_CONFIG_RPT_CHANGE,
     RadioType,
-    IN,
-    OUT,
 )
 from .registries import BINDABLE_CLUSTERS
 

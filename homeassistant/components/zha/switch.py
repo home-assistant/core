@@ -2,16 +2,18 @@
 import logging
 
 from zigpy.zcl.foundation import Status
+
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
 from .core.const import (
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
-    ZHA_DISCOVERY_NEW,
     ON_OFF_CHANNEL,
     SIGNAL_ATTR_UPDATED,
+    ZHA_DISCOVERY_NEW,
 )
 from .entity import ZhaEntity
 

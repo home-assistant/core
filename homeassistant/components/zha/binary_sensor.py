@@ -2,34 +2,35 @@
 import logging
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_GAS,
+    DEVICE_CLASS_MOISTURE,
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_MOVING,
+    DEVICE_CLASS_OCCUPANCY,
+    DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_SMOKE,
+    DEVICE_CLASS_VIBRATION,
     DOMAIN,
     BinarySensorDevice,
-    DEVICE_CLASS_MOVING,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_SMOKE,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_VIBRATION,
-    DEVICE_CLASS_OCCUPANCY,
 )
 from homeassistant.const import STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
 from .core.const import (
+    ACCELERATION,
+    ATTRIBUTE_CHANNEL,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
-    ZHA_DISCOVERY_NEW,
-    ON_OFF_CHANNEL,
-    ZONE_CHANNEL,
-    SIGNAL_ATTR_UPDATED,
-    ATTRIBUTE_CHANNEL,
-    UNKNOWN,
-    OPENING,
-    ZONE,
     OCCUPANCY,
+    ON_OFF_CHANNEL,
+    OPENING,
     SENSOR_TYPE,
-    ACCELERATION,
+    SIGNAL_ATTR_UPDATED,
+    UNKNOWN,
+    ZHA_DISCOVERY_NEW,
+    ZONE,
+    ZONE_CHANNEL,
 )
 from .entity import ZhaEntity
 

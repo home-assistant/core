@@ -3,21 +3,23 @@ from datetime import timedelta
 import logging
 
 from zigpy.zcl.foundation import Status
+
 from homeassistant.components import light
 from homeassistant.const import STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.color as color_util
+
 from .core.const import (
+    COLOR_CHANNEL,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
-    ZHA_DISCOVERY_NEW,
-    COLOR_CHANNEL,
-    ON_OFF_CHANNEL,
     LEVEL_CHANNEL,
+    ON_OFF_CHANNEL,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_SET_LEVEL,
+    ZHA_DISCOVERY_NEW,
 )
 from .entity import ZhaEntity
 

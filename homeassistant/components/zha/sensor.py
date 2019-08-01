@@ -2,37 +2,38 @@
 import logging
 import numbers
 
-from homeassistant.core import callback
 from homeassistant.components.sensor import (
-    DOMAIN,
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_POWER,
-    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
+    DOMAIN,
 )
-from homeassistant.const import TEMP_CELSIUS, POWER_WATT, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, POWER_WATT, TEMP_CELSIUS
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
 from .core.const import (
+    ATTRIBUTE_CHANNEL,
+    BATTERY,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
-    ZHA_DISCOVERY_NEW,
-    HUMIDITY,
-    TEMPERATURE,
-    ILLUMINANCE,
-    PRESSURE,
-    METERING,
     ELECTRICAL_MEASUREMENT,
-    GENERIC,
-    SENSOR_TYPE,
-    ATTRIBUTE_CHANNEL,
     ELECTRICAL_MEASUREMENT_CHANNEL,
+    GENERIC,
+    HUMIDITY,
+    ILLUMINANCE,
+    METERING,
+    POWER_CONFIGURATION_CHANNEL,
+    PRESSURE,
+    SENSOR_TYPE,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_STATE_ATTR,
+    TEMPERATURE,
     UNKNOWN,
-    BATTERY,
-    POWER_CONFIGURATION_CHANNEL,
+    ZHA_DISCOVERY_NEW,
 )
 from .entity import ZhaEntity
 

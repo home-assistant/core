@@ -2,20 +2,22 @@
 import logging
 
 from zigpy.zcl.foundation import Status
-from homeassistant.core import callback
+
 from homeassistant.components.lock import (
     DOMAIN,
-    STATE_UNLOCKED,
     STATE_LOCKED,
+    STATE_UNLOCKED,
     LockDevice,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
 from .core.const import (
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
-    ZHA_DISCOVERY_NEW,
     DOORLOCK_CHANNEL,
     SIGNAL_ATTR_UPDATED,
+    ZHA_DISCOVERY_NEW,
 )
 from .entity import ZhaEntity
 
