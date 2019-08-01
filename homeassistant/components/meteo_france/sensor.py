@@ -35,18 +35,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     datas["dept"], weather_alert_client
                 )
             except ValueError as exp:
-                _LOGGER.error(exp)
+                _LOGGER.error(
+                    "Unexpected error when creating the weather alert sensor for %s in department %s: %s",
+                    city,
+                    datas["dept"],
+                    exp,
+                )
                 alert_watcher = None
             else:
                 _LOGGER.info(
-                    "weather alert watcher added for %s" "in department %s",
+                    "Weather alert watcher added for %s" "in department %s",
                     city,
                     datas["dept"],
                 )
         else:
             _LOGGER.warning(
-                "No dept key found for '%s'. So weather alert "
-                "information won't be available",
+                "No 'dept' key found for '%s'. So weather alert information won't be available",
                 city,
             )
             # Exit and don't create the sensor if no department code available.
