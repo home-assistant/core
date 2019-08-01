@@ -3,7 +3,9 @@
 import logging
 
 import voluptuous as vol
+import haanna
 import homeassistant.helpers.config_validation as cv
+
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
@@ -58,34 +60,47 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Add the Plugwise (Anna) Thermostate."""
-    add_devices(
-        [
-            ThermostatDevice(
-                config.get(CONF_NAME),
-                config.get(CONF_USERNAME),
-                config.get(CONF_PASSWORD),
-                config.get(CONF_HOST),
-                config.get(CONF_PORT),
-                config.get(CONF_MIN_TEMP),
-                config.get(CONF_MAX_TEMP),
-            )
-        ]
+    api = haanna.Haanna(
+        config[CONF_USERNAME],
+        config[CONF_PASSWORD],
+        config[CONF_HOST],
+        config[CONF_PORT],
     )
+    try:
+        api.ping_anna_thermostat()
+    except Exception:
+        raise PlatformNotReady
+    devices = [
+        ThermostatDevice(
+            api,
+            config[CONF_NAME],
+            config[CONF_USERNAME],
+            config[CONF_PASSWORD],
+            config[CONF_HOST],
+            config[CONF_PORT],
+            config[CONF_MIN_TEMP],
+            config[CONF_MAX_TEMP],
+        )
+    ]
+    add_entities(devices, True)
 
 
 class ThermostatDevice(ClimateDevice):
     """Representation of an Plugwise thermostat."""
 
-    def __init__(self, name, username, password, host, port, min_temp, max_temp):
+    def __init__(self, api, name, username, password, host, port, min_temp, max_temp):
         """Set up the Plugwise API."""
-        _LOGGER.debug("Init called")
-        self._name = name
-        self._username = username
-        self._password = password
+        self._api = api
         self._host = host
+        self._min_temp = min_temp
+        self._max_temp = max_temp
+        self._name = name
+        self._password = password
         self._port = port
+        self._username = username
+        self._domain_objects = None
         self._temperature = None
         self._current_temperature = None
         self._outdoor_temperature = None
@@ -94,35 +109,14 @@ class ThermostatDevice(ClimateDevice):
         self._previous_schema = None
         self._preset_mode = None
         self._preset_modes = []
-        self._min_temp = min_temp
-        self._max_temp = max_temp
         self._hvac_modes = ATTR_HVAC_MODES
         self._hvac_mode = None
         self._available_schemas = []
 
-        _LOGGER.debug("Initializing API")
-        import haanna
-
-        self._api = haanna.Haanna(
-            self._username, self._password, self._host, self._port
-        )
-        try:
-            self._api.ping_anna_thermostat()
-        except Exception:
-            _LOGGER.error("Unable to ping, platform not ready")
-            raise PlatformNotReady
-        _LOGGER.debug("Platform ready")
-        self.update()
-
-    @property
-    def should_poll(self):
-        """Return that we will require polling."""
-        return True
-
     @property
     def hvac_action(self):
         """Return the current action."""
-        if self._api.get_heating_status(self._domain_objects) is True:
+        if self._api.get_heating_status(self._domain_objects):
             return CURRENT_HVAC_HEAT
         return CURRENT_HVAC_IDLE
 
@@ -180,7 +174,7 @@ class ThermostatDevice(ClimateDevice):
     @property
     def preset_modes(self):
         """Return the available preset modes list without values."""
-        presets = list(self._api.get_presets(self._domain_objects).keys())
+        presets = list(self._api.get_presets(self._domain_objects))
         return presets
 
     @property
@@ -218,9 +212,9 @@ class ThermostatDevice(ClimateDevice):
         _LOGGER.debug("Adjusting temperature")
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is not None and self._min_temp < temperature < self._max_temp:
+            _LOGGER.debug("Changing temporary temperature")
             self._temperature = temperature
             self._api.set_temperature(self._domain_objects, temperature)
-            _LOGGER.debug("Changing temporary temperature")
         else:
             _LOGGER.error("Invalid temperature requested")
 
@@ -241,10 +235,6 @@ class ThermostatDevice(ClimateDevice):
 
     def set_preset_mode(self, preset_mode):
         """Set the preset mode."""
-        _LOGGER.debug("Adjusting preset_mode (i.e. preset)")
-        if preset_mode in self._preset_modes:
-            self._preset_mode = preset_mode
-            self._api.set_preset(self._domain_objects, preset_mode)
-            _LOGGER.debug("Changing preset mode")
-        else:
-            _LOGGER.error("Invalid or no preset mode given")
+        _LOGGER.debug("Changing preset mode")
+        self._preset_mode = preset_mode
+        self._api.set_preset(self._domain_objects, preset_mode)
