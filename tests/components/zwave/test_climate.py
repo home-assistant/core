@@ -123,20 +123,20 @@ def device_heat(hass, mock_openzwave):
 
 
 def test_supported_features(device):
-    """Test supported features flags"""
+    """Test supported features flags."""
     assert device.supported_features == SUPPORT_FAN_MODE + \
         SUPPORT_TARGET_TEMPERATURE
 
 
 def test_supported_features_preset_mode(device_mapping):
-    """Test supported features flags with swing mode"""
+    """Test supported features flags with swing mode."""
     device = device_mapping
     assert device.supported_features == SUPPORT_FAN_MODE + \
         SUPPORT_TARGET_TEMPERATURE + SUPPORT_PRESET_MODE
 
 
 def test_supported_features_swing_mode(device_zxt_120):
-    """Test supported features flags with swing mode"""
+    """Test supported features flags with swing mode."""
     device = device_zxt_120
     assert device.supported_features == SUPPORT_FAN_MODE + \
         SUPPORT_TARGET_TEMPERATURE + SUPPORT_SWING_MODE
@@ -343,7 +343,7 @@ def test_operation_value_changed_mapping_preset(device_mapping):
 
 
 def test_operation_value_changed_unknown(device_unknown):
-    """Test preset changed for climate device. Unknown"""
+    """Test preset changed for climate device. Unknown."""
     device = device_unknown
     assert device.hvac_mode == HVAC_MODE_HEAT
     assert device.preset_mode == PRESET_NONE
