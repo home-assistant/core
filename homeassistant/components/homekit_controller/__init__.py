@@ -120,13 +120,21 @@ class HomeKitEntity(Entity):
         """Collect new data from bridge and update the entity state in hass."""
         accessory_state = self._accessory.current_state.get(self._aid, {})
         for iid, result in accessory_state.items():
+            # No value so dont process this result
             if "value" not in result:
                 continue
+
+            # Unknown iid - this is probably for a sibling service that is part
+            # of the same physical accessory. Ignore it.
+            if iid not in self._char_names:
+                continue
+
             # Callback to update the entity with this characteristic value
             char_name = escape_characteristic_name(self._char_names[iid])
             update_fn = getattr(self, "_update_{}".format(char_name), None)
             if not update_fn:
                 continue
+
             # pylint: disable=not-callable
             update_fn(result["value"])
 
