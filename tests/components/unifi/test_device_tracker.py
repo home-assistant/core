@@ -203,6 +203,16 @@ async def test_tracked_devices(hass, mock_controller):
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1.state == "home"
 
+    device_1_copy = copy(DEVICE_1)
+    device_1_copy["disabled"] = True
+    mock_controller.mock_client_responses.append({})
+    mock_controller.mock_device_responses.append([device_1_copy])
+    await mock_controller.async_update()
+    await hass.async_block_till_done()
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1.state == "unavailable"
+
 
 async def test_restoring_client(hass, mock_controller):
     """Test the update_items function with some clients."""
