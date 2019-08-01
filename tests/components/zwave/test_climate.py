@@ -29,11 +29,16 @@ def device(hass, mock_openzwave):
     values = MockEntityValues(
         primary=MockValue(data=1, node=node),
         temperature=MockValue(data=5, node=node, units=None),
-        mode=MockValue(data=HVAC_MODE_HEAT, data_items=[HVAC_MODE_OFF,
-                                                        HVAC_MODE_HEAT,
-                                                        HVAC_MODE_COOL,
-                                                        HVAC_MODE_HEAT_COOL],
-                       node=node),
+        mode=MockValue(
+            data=HVAC_MODE_HEAT,
+            data_items=[
+                HVAC_MODE_OFF,
+                HVAC_MODE_HEAT,
+                HVAC_MODE_COOL,
+                HVAC_MODE_HEAT_COOL,
+            ],
+            node=node,
+        ),
         fan_mode=MockValue(data="test2", data_items=[3, 4, 5], node=node),
         operating_state=MockValue(data=CURRENT_HVAC_HEAT, node=node),
         fan_state=MockValue(data=7, node=node),
@@ -51,11 +56,16 @@ def device_zxt_120(hass, mock_openzwave):
     values = MockEntityValues(
         primary=MockValue(data=1, node=node),
         temperature=MockValue(data=5, node=node, units=None),
-        mode=MockValue(data=HVAC_MODE_HEAT, data_items=[HVAC_MODE_OFF,
-                                                        HVAC_MODE_HEAT,
-                                                        HVAC_MODE_COOL,
-                                                        HVAC_MODE_HEAT_COOL],
-                       node=node),
+        mode=MockValue(
+            data=HVAC_MODE_HEAT,
+            data_items=[
+                HVAC_MODE_OFF,
+                HVAC_MODE_HEAT,
+                HVAC_MODE_COOL,
+                HVAC_MODE_HEAT_COOL,
+            ],
+            node=node,
+        ),
         fan_mode=MockValue(data="test2", data_items=[3, 4, 5], node=node),
         operating_state=MockValue(data=CURRENT_HVAC_HEAT, node=node),
         fan_state=MockValue(data=7, node=node),
@@ -73,9 +83,11 @@ def device_mapping(hass, mock_openzwave):
     values = MockEntityValues(
         primary=MockValue(data=1, node=node),
         temperature=MockValue(data=5, node=node, units=None),
-        mode=MockValue(data="Heat", data_items=[
-                       "Off", "Cool", "Heat", "Full Power", "heat_cool"],
-                       node=node),
+        mode=MockValue(
+            data="Heat",
+            data_items=["Off", "Cool", "Heat", "Full Power", "heat_cool"],
+            node=node,
+        ),
         fan_mode=MockValue(data="test2", data_items=[3, 4, 5], node=node),
         operating_state=MockValue(data="heating", node=node),
         fan_state=MockValue(data=7, node=node),
@@ -92,9 +104,11 @@ def device_unknown(hass, mock_openzwave):
     values = MockEntityValues(
         primary=MockValue(data=1, node=node),
         temperature=MockValue(data=5, node=node, units=None),
-        mode=MockValue(data="Heat", data_items=[
-                       "Off", "Cool", "Heat", "heat_cool", "Abcdefg"],
-                       node=node),
+        mode=MockValue(
+            data="Heat",
+            data_items=["Off", "Cool", "Heat", "heat_cool", "Abcdefg"],
+            node=node,
+        ),
         fan_mode=MockValue(data="test2", data_items=[3, 4, 5], node=node),
         operating_state=MockValue(data="test4", node=node),
         fan_state=MockValue(data=7, node=node),
@@ -111,9 +125,11 @@ def device_heat(hass, mock_openzwave):
     values = MockEntityValues(
         primary=MockValue(data=1, node=node),
         temperature=MockValue(data=5, node=node, units=None),
-        mode=MockValue(data=HVAC_MODE_HEAT, data_items=[
-                       HVAC_MODE_OFF, HVAC_MODE_HEAT, "Heat Eco"],
-                       node=node),
+        mode=MockValue(
+            data=HVAC_MODE_HEAT,
+            data_items=[HVAC_MODE_OFF, HVAC_MODE_HEAT, "Heat Eco"],
+            node=node,
+        ),
         fan_mode=MockValue(data="test2", data_items=[3, 4, 5], node=node),
         operating_state=MockValue(data="test4", node=node),
         fan_state=MockValue(data=7, node=node),
@@ -125,22 +141,25 @@ def device_heat(hass, mock_openzwave):
 
 def test_supported_features(device):
     """Test supported features flags."""
-    assert device.supported_features == SUPPORT_FAN_MODE + \
-        SUPPORT_TARGET_TEMPERATURE
+    assert device.supported_features == SUPPORT_FAN_MODE + SUPPORT_TARGET_TEMPERATURE
 
 
 def test_supported_features_preset_mode(device_mapping):
     """Test supported features flags with swing mode."""
     device = device_mapping
-    assert device.supported_features == SUPPORT_FAN_MODE + \
-        SUPPORT_TARGET_TEMPERATURE + SUPPORT_PRESET_MODE
+    assert (
+        device.supported_features
+        == SUPPORT_FAN_MODE + SUPPORT_TARGET_TEMPERATURE + SUPPORT_PRESET_MODE
+    )
 
 
 def test_supported_features_swing_mode(device_zxt_120):
     """Test supported features flags with swing mode."""
     device = device_zxt_120
-    assert device.supported_features == SUPPORT_FAN_MODE + \
-        SUPPORT_TARGET_TEMPERATURE + SUPPORT_SWING_MODE
+    assert (
+        device.supported_features
+        == SUPPORT_FAN_MODE + SUPPORT_TARGET_TEMPERATURE + SUPPORT_SWING_MODE
+    )
 
 
 def test_zxt_120_swing_mode(device_zxt_120):
@@ -186,7 +205,11 @@ def test_data_lists(device):
     """Test data lists from zwave value items."""
     assert device.fan_modes == [3, 4, 5]
     assert device.hvac_modes == [
-        HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_HEAT_COOL]
+        HVAC_MODE_OFF,
+        HVAC_MODE_HEAT,
+        HVAC_MODE_COOL,
+        HVAC_MODE_HEAT_COOL,
+    ]
     assert device.preset_modes == []
     device.values.mode = None
     assert device.preset_modes == []

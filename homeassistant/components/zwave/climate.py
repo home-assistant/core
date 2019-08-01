@@ -202,7 +202,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                     for key, value in self._hvac_mapping.items()
                     if value == current_mode
                 ),
-                None
+                None,
             )
 
             if _hvac_temp is None:
@@ -220,7 +220,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                         for key, value in self._preset_mapping.items()
                         if value == current_mode
                     ),
-                    current_mode
+                    current_mode,
                 )
             else:
                 # The current mode is a hvac mode
@@ -272,8 +272,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         # Operating state
         if self.values.operating_state:
             mode = self.values.operating_state.data
-            self._hvac_action = HVAC_CURRENT_MAPPINGS.get(
-                str(mode).lower(), mode)
+            self._hvac_action = HVAC_CURRENT_MAPPINGS.get(str(mode).lower(), mode)
 
         # Fan operating state
         if self.values.fan_state:
@@ -396,8 +395,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             # Activate the default hvac mode
             self.values.mode.data = self._default_hvac_mode
         else:
-            self.values.mode.data = self._preset_mapping.get(
-                preset_mode, preset_mode)
+            self.values.mode.data = self._preset_mapping.get(preset_mode, preset_mode)
 
     def set_swing_mode(self, swing_mode):
         """Set new target swing mode."""
