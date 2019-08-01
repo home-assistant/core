@@ -123,7 +123,7 @@ class HomeKitLightSensor(HomeKitEntity):
         return self._state
 
 
-class HomeKitLightSensor(HomeKitEntity):
+class HomeKitCarbonDioxideSensor(HomeKitEntity):
     """Representation of a Homekit Carbon Dioxide sensor."""
 
     def __init__(self, *args):
