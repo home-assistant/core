@@ -88,16 +88,6 @@ PRESET_TO_ECOBEE_HOLD = {
     PRESET_HOLD_INDEFINITE: "indefinite",
 }
 
-PRESET_MODES = [
-    PRESET_NONE,
-    PRESET_AWAY,
-    PRESET_TEMPERATURE,
-    PRESET_HOME,
-    PRESET_SLEEP,
-    PRESET_HOLD_NEXT_TRANSITION,
-    PRESET_HOLD_INDEFINITE,
-]
-
 SERVICE_SET_FAN_MIN_ON_TIME = "ecobee_set_fan_min_on_time"
 SERVICE_RESUME_PROGRAM = "ecobee_resume_program"
 
@@ -199,7 +189,6 @@ class Thermostat(ClimateDevice):
         self._name = self.thermostat["name"]
         self.hold_temp = hold_temp
         self.vacation = None
-        self._climate_list = self.climate_list
 
         self._operation_list = []
         if self.thermostat["settings"]["heatStages"]:
@@ -210,6 +199,10 @@ class Thermostat(ClimateDevice):
             self._operation_list.insert(0, HVAC_MODE_AUTO)
         self._operation_list.append(HVAC_MODE_OFF)
 
+        self._preset_modes = {
+            comfort["climateRef"]: comfort["name"]
+            for comfort in self.thermostat["program"]["climates"]
+        }
         self._fan_modes = [FAN_AUTO, FAN_ON]
         self.update_without_throttle = False
 
@@ -222,6 +215,11 @@ class Thermostat(ClimateDevice):
             self.data.update()
 
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
+
+    @property
+    def available(self):
+        """Return if device is available."""
+        return self.thermostat["runtime"]["connected"]
 
     @property
     def supported_features(self):
@@ -294,15 +292,9 @@ class Thermostat(ClimateDevice):
                 continue
 
             if event["type"] == "hold":
-                if event["holdClimateRef"] == "away":
-                    if int(event["endDate"][0:4]) - int(event["startDate"][0:4]) <= 1:
-                        # A temporary hold from away climate is a hold
-                        return PRESET_AWAY
-                    # A permanent hold from away climate
-                    return PRESET_AWAY
-                if event["holdClimateRef"] != "":
-                    # Any other hold based on climate
-                    return event["holdClimateRef"]
+                if event["holdClimateRef"] in self._preset_modes:
+                    return self._preset_modes[event["holdClimateRef"]]
+
                 # Any hold not based on a climate is a temp hold
                 return PRESET_TEMPERATURE
             if event["type"].startswith("auto"):
@@ -323,14 +315,6 @@ class Thermostat(ClimateDevice):
     def hvac_modes(self):
         """Return the operation modes list."""
         return self._operation_list
-
-    @property
-    def climate_mode(self):
-        """Return current mode, as the user-visible name."""
-        cur = self.thermostat["program"]["currentClimateRef"]
-        climates = self.thermostat["program"]["climates"]
-        current = list(filter(lambda x: x["climateRef"] == cur, climates))
-        return current[0]["name"]
 
     @property
     def current_humidity(self) -> Optional[int]:
@@ -373,9 +357,7 @@ class Thermostat(ClimateDevice):
         status = self.thermostat["equipmentStatus"]
         return {
             "fan": self.fan,
-            "climate_mode": self.climate_mode,
             "equipment_running": status,
-            "climate_list": self.climate_list,
             "fan_min_on_time": self.thermostat["settings"]["fanMinOnTime"],
         }
 
@@ -413,6 +395,21 @@ class Thermostat(ClimateDevice):
         elif preset_mode == PRESET_NONE:
             self.data.ecobee.resume_program(self.thermostat_index)
 
+        elif preset_mode in self.preset_modes:
+            climate_ref = None
+
+            for comfort in self.thermostat["program"]["climates"]:
+                if comfort["name"] == preset_mode:
+                    climate_ref = comfort["climateRef"]
+                    break
+
+            if climate_ref is not None:
+                self.data.ecobee.set_climate_hold(
+                    self.thermostat_index, climate_ref, self.hold_preference()
+                )
+            else:
+                _LOGGER.warning("Received unknown preset mode: %s", preset_mode)
+
         else:
             self.data.ecobee.set_climate_hold(
                 self.thermostat_index, preset_mode, self.hold_preference()
@@ -421,7 +418,7 @@ class Thermostat(ClimateDevice):
     @property
     def preset_modes(self):
         """Return available preset modes."""
-        return PRESET_MODES
+        return list(self._preset_modes.values())
 
     def set_auto_temp_hold(self, heat_temp, cool_temp):
         """Set temperature hold in auto mode."""
@@ -543,9 +540,3 @@ class Thermostat(ClimateDevice):
         # supported; note that this should not include 'indefinite'
         # as an indefinite away hold is interpreted as away_mode
         return "nextTransition"
-
-    @property
-    def climate_list(self):
-        """Return the list of climates currently available."""
-        climates = self.thermostat["program"]["climates"]
-        return list(map((lambda x: x["name"]), climates))
