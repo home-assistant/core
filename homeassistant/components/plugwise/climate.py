@@ -6,7 +6,6 @@ import voluptuous as vol
 import haanna
 
 import homeassistant.helpers.config_validation as cv
-
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
