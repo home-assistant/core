@@ -172,7 +172,7 @@ holidays==0.9.11
 home-assistant-frontend==20190731.0
 
 # homeassistant.components.homekit_controller
-homekit[IP]==0.14.0
+homekit[IP]==0.15.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.10.9
