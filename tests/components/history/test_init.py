@@ -628,3 +628,25 @@ async def test_fetch_period_api(hass, hass_client):
         "/api/history/period/{}".format(dt_util.utcnow().isoformat())
     )
     assert response.status == 200
+
+
+async def test_fetch_period_api_with_include_order(hass, hass_client):
+    """Test the fetch period view for history."""
+    await hass.async_add_job(init_recorder_component, hass)
+    await async_setup_component(
+        hass,
+        "history",
+        {
+            "history": {
+                "use_include_order": True,
+                "include": {"entities": ["light.kitchen"]},
+            }
+        },
+    )
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    client = await hass_client()
+    response = await client.get(
+        "/api/history/period/{}".format(dt_util.utcnow().isoformat()),
+        params={"filter_entity_id": "non.existing,something.else"},
+    )
+    assert response.status == 200
