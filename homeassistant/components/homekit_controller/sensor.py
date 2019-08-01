@@ -5,7 +5,7 @@ from homekit.model.characteristics import CharacteristicsTypes
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
-HUMIDITY_ICON = 'mdi:water-percent'
+HUMIDITY_ICON = "mdi:water-percent"
 TEMP_C_ICON = "mdi:thermometer"
 BRIGHTNESS_ICON = "mdi:brightness-6"
 CO2_ICON = "mdi:periodic-table-co2"
@@ -25,9 +25,7 @@ class HomeKitHumiditySensor(HomeKitEntity):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
-        return [
-            CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT
-        ]
+        return [CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT]
 
     @property
     def name(self):
@@ -63,9 +61,7 @@ class HomeKitTemperatureSensor(HomeKitEntity):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
-        return [
-            CharacteristicsTypes.TEMPERATURE_CURRENT
-        ]
+        return [CharacteristicsTypes.TEMPERATURE_CURRENT]
 
     @property
     def name(self):
@@ -101,9 +97,7 @@ class HomeKitLightSensor(HomeKitEntity):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
-        return [
-            CharacteristicsTypes.LIGHT_LEVEL_CURRENT
-        ]
+        return [CharacteristicsTypes.LIGHT_LEVEL_CURRENT]
 
     @property
     def name(self):
@@ -139,9 +133,7 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
-        return [
-            CharacteristicsTypes.CARBON_DIOXIDE_LEVEL
-        ]
+        return [CharacteristicsTypes.CARBON_DIOXIDE_LEVEL]
 
     @property
     def name(self):
@@ -168,10 +160,10 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity):
 
 
 ENTITY_TYPES = {
-    'humidity': HomeKitHumiditySensor,
-    'temperature': HomeKitTemperatureSensor,
-    'light': HomeKitLightSensor,
-    'carbon-dioxide': HomeKitCarbonDioxideSensor,
+    "humidity": HomeKitHumiditySensor,
+    "temperature": HomeKitTemperatureSensor,
+    "light": HomeKitLightSensor,
+    "carbon-dioxide": HomeKitCarbonDioxideSensor,
 }
 
 
@@ -181,16 +173,16 @@ async def async_setup_platform(
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up Homekit sensors."""
-    hkid = config_entry.data['AccessoryPairingID']
+    hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     def async_add_service(aid, service):
-        entity_class = ENTITY_TYPES.get(service['stype'])
+        entity_class = ENTITY_TYPES.get(service["stype"])
         if not entity_class:
             return False
-        info = {'aid': aid, 'iid': service['iid']}
+        info = {"aid": aid, "iid": service["iid"]}
         async_add_entities([entity_class(conn, info)], True)
         return True
 
