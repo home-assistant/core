@@ -304,7 +304,7 @@ class UniFiDeviceTracker(ScannerEntity):
     @property
     def available(self) -> bool:
         """Return if controller is available."""
-        return self.controller.available
+        return not self.device.disabled and self.controller.available
 
     @property
     def device_info(self):
