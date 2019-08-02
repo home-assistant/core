@@ -3,15 +3,12 @@ from datetime import timedelta
 import logging
 
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import DOMAIN, CLIENT, CONF_HOST, SENSORS
+from homeassistant.const import CONF_HOST
+from .const import DOMAIN, CLIENT, SENSOR, SENSORS
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
-
-SENSOR = 'sensor'
-MTK_DEFAULT_WAN = 'ether1'
-
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
@@ -19,21 +16,18 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    host = discovery_info[CONF_HOST]
-    client = hass.data[CLIENT]
-    await client.update_info(host)
-    data = hass.data[DOMAIN][host]
-    host_name = data.get('name', '')
-
+    host = discovery_info['host']
+    client = hass.data[CLIENT][host]
+    await client.api.update_info()
     async_add_entities(
-        [MikrotikSensor(hass, client, host, sensor_type, host_name)
+        [MikrotikSensor(hass, client, host, sensor_type)
          for sensor_type in discovery_info['sensors']])
 
 
 class MikrotikSensor(Entity):
     """Representation of a mikrotik sensor."""
 
-    def __init__(self, hass, client, host, sensor_type, host_name):
+    def __init__(self, hass, client, host, sensor_type):
         """Initialize the sensor."""
         self.hass = hass
         self._host = host
@@ -42,11 +36,11 @@ class MikrotikSensor(Entity):
         self._available = True
         self._state = None
         self._attrs = {}
-        self._name = '{} {}'.format(host_name, SENSORS[sensor_type][0])
+        self._name = '{} {}'.format(client.host_name, SENSORS[sensor_type][0])
         self._unit = SENSORS[sensor_type][1]
         self._icon = SENSORS[sensor_type][2]
         self._item = SENSORS[sensor_type][3]
-        if SENSOR not in self.hass.data[DOMAIN][host]:
+        if not SENSOR in self.hass.data[DOMAIN][host]:
             self.hass.data[DOMAIN][host][SENSOR] = {}
         self.hass.data[DOMAIN][host][SENSOR][sensor_type] = {}
 
@@ -82,10 +76,14 @@ class MikrotikSensor(Entity):
 
     async def async_update(self, now=None):
         """Get the latest data and updates the state."""
-        await self._client.update_sensors(self._host, self._sensor_type)
-        data = self.hass.data[DOMAIN][
-            self._host][SENSOR][self._sensor_type]
+        sensor_type = self._sensor_type
+        await self._client.api.update_sensors(sensor_type)
+        if not self._client.api.connected():
+            return
+        host = self._host
+        data = self.hass.data[DOMAIN][host][SENSOR][sensor_type]
         if data is None:
+            _LOGGER.error("Mikrotik no sensor data %s", self._name)
             self._available = False
             return
         self._available = True
