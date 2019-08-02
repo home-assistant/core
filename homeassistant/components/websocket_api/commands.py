@@ -212,6 +212,7 @@ def handle_ping(hass, connection, msg):
         vol.Required("type"): "render_template",
         vol.Required("template"): cv.template,
         vol.Optional("entity_ids"): cv.entity_ids,
+        vol.Optional("variables"): dict,
     }
 )
 def handle_render_template(hass, connection, msg):
@@ -220,24 +221,25 @@ def handle_render_template(hass, connection, msg):
     Async friendly.
     """
     template = msg["template"]
-    if template is not None:
-        template.hass = hass
+    template.hass = hass
 
-        entity_ids = msg.get("entity_ids")
-        if entity_ids is None:
-            entity_ids = list(set(template.extract_entities()))
+    variables = msg.get("variables")
 
-        @callback
-        def state_listener(entity, old_state, new_state):
-            connection.send_message(
-                messages.event_message(msg["id"], {"result": template.async_render()})
+    entity_ids = msg.get("entity_ids")
+    if entity_ids is None:
+        entity_ids = list(set(template.extract_entities(variables)))
+
+    @callback
+    def state_listener(*_):
+        connection.send_message(
+            messages.event_message(
+                msg["id"], {"result": template.async_render(variables)}
             )
-
-        connection.subscriptions[msg["id"]] = async_track_state_change(
-            hass, entity_ids, state_listener
         )
 
-        connection.send_message(messages.result_message(msg["id"]))
-        state_listener(None, None, None)
-    else:
-        connection.send_message(messages.result_message(msg["id"]))
+    connection.subscriptions[msg["id"]] = async_track_state_change(
+        hass, entity_ids, state_listener
+    )
+
+    connection.send_message(messages.result_message(msg["id"]))
+    state_listener()
