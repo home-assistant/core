@@ -164,7 +164,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if ipaddr in light_ips:
             continue
         device["name"] = "{} {}".format(device["id"], ipaddr)
-        device[ATTR_MODE] = MODE_RGBW
+        device[ATTR_MODE] = None
         device[CONF_PROTOCOL] = None
         device[CONF_CUSTOM_EFFECT] = None
         light = FluxLight(device)
