@@ -15,9 +15,9 @@ from homeassistant.components.climate.const import (
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_ECO,
+    PRESET_NONE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    PRESET_NONE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -122,10 +122,14 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
             absence_type = self._home.get_functionalHome(IndoorClimateHome).absenceType
             if absence_type == AbsenceType.VACATION:
                 return PRESET_AWAY
-            if absence_type in [AbsenceType.PERIOD, AbsenceType.PERMANENT]:
+            if absence_type in [
+                AbsenceType.PERIOD,
+                AbsenceType.PERMANENT,
+                AbsenceType.PARTY,
+            ]:
                 return PRESET_ECO
 
-        return None
+        return PRESET_NONE
 
     @property
     def preset_modes(self):
