@@ -8,7 +8,7 @@ from librouteros.login import login_plain, login_token
 
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT,
-    CONF_SSL, CONF_METHOD, CONF_SENSORS, CONF_BINARY_SENSORS)
+    CONF_SSL, CONF_METHOD, CONF_SENSORS)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.util import slugify
@@ -49,6 +49,7 @@ MIKROTIK_SCHEMA = vol.All(
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [MIKROTIK_SCHEMA])
 }, extra=vol.ALLOW_EXTRA)
+
 
 async def async_setup(hass, config):
     """Set up the Mikrotik component."""
@@ -94,14 +95,14 @@ async def async_setup(hass, config):
         arp_ping = device.get(CONF_ARP_PING)
         track_devices = device.get(CONF_TRACK_DEVICES)
         hass.data[CLIENT][host] = MikrotikClient(api, host_name, wan_port, arp_ping,
-                                      track_devices)
+                                                 track_devices)
 
         sensors = device.get(CONF_SENSORS)
         if sensors:
             hass.async_create_task(
                 async_load_platform(
-                  hass, SENSOR, DOMAIN,
-                  {CONF_HOST: host, CONF_SENSORS: sensors}, config))
+                    hass, SENSOR, DOMAIN,
+                    {CONF_HOST: host, CONF_SENSORS: sensors}, config))
 
         if track_devices:
             hass.data[DOMAIN][ARP] = {}
@@ -121,7 +122,7 @@ class MikrotikAPI:
     """Handle all communication with the Mikrotik API."""
 
     def __init__(self, hass, host, ssl, port,
-        user, password, login_method, encoding):
+                 user, password, login_method, encoding):
         """Initialize the Mikrotik Client."""
         self.hass = hass
         self._host = host
@@ -180,15 +181,14 @@ class MikrotikAPI:
         return True
 
     def get_hostname(self):
-        """Return device host name"""
+        """Return device host name."""
         if not self._connected:
             self.connect_to_device()
         return self._host_name
 
     def connected(self):
-        """Return connected boolean"""
+        """Return connected boolean."""
         return self._connected
-
 
     async def update_info(self):
         """Update info from Mikrotik API."""
