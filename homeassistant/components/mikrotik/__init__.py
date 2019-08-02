@@ -178,6 +178,20 @@ class MikrotikAPI:
         """Return connected boolean"""
         return self._connected
 
+    def arp_ping(self, mac, interface):
+        """Attempt to arp ping MAC address via interface."""
+        host = self._host
+        params = {'arp-ping': 'yes', 'interval': '100ms', 'count': 3,
+                  'interface': interface, 'address': mac}
+        cmd = '/ping'
+        data = self._client[host](cmd, params)
+        status = 0
+        for result in data:
+            if 'status' in result:
+                status += 1
+        if status == len(data):
+            return None
+        return data
 
     async def update_info(self):
         """Update info from Mikrotik API."""
