@@ -280,3 +280,21 @@ async def test_dont_track_devices(hass, mock_controller):
 
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1 is None
+
+
+async def test_dont_track_wired_clients(hass, mock_controller):
+    """Test dont track wired clients config works."""
+    mock_controller.mock_client_responses.append([CLIENT_1, CLIENT_2])
+    mock_controller.mock_device_responses.append({})
+    mock_controller.unifi_config = {unifi.CONF_DONT_TRACK_WIRED_CLIENTS: True}
+
+    await setup_controller(hass, mock_controller)
+    assert len(mock_controller.mock_requests) == 2
+    assert len(hass.states.async_all()) == 3
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1 is not None
+    assert client_1.state == "not_home"
+
+    client_2 = hass.states.get("device_tracker.client_2")
+    assert client_2 is None
