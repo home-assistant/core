@@ -45,6 +45,13 @@ def mock_get_uuid():
         yield mock
 
 
+@pytest.fixture
+def mock_utcnow():
+    """Fixture to mock utcnow."""
+    with patch("homeassistant.components.updater.dt_util.utcnow") as mock:
+        yield mock
+
+
 @asyncio.coroutine
 def test_new_version_shows_entity_startup(hass, mock_get_uuid, mock_get_newest_version):
     """Test if binary sensor is unavailable at first."""
@@ -67,13 +74,17 @@ def test_new_version_shows_entity_true(hass, mock_get_uuid, mock_get_newest_vers
     mock_get_uuid.return_value = MOCK_HUUID
     mock_get_newest_version.return_value = mock_coro((NEW_VERSION, RELEASE_NOTES))
 
+    now = dt_util.utcnow()
+    later = now + timedelta(hours=1)
+    mock_utcnow.return_value = now
+
     res = yield from async_setup_component(hass, updater.DOMAIN, {updater.DOMAIN: {}})
     assert res, "Updater failed to set up"
 
     yield from hass.async_block_till_done()
 
     with patch("homeassistant.components.updater.current_version", MOCK_VERSION):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
+        async_fire_time_changed(hass, later)
         yield from hass.async_block_till_done()
 
     assert hass.states.is_state("binary_sensor.updater", "on")
@@ -93,13 +104,17 @@ def test_same_version_shows_entity_false(hass, mock_get_uuid, mock_get_newest_ve
     mock_get_uuid.return_value = MOCK_HUUID
     mock_get_newest_version.return_value = mock_coro((MOCK_VERSION, ""))
 
+    now = dt_util.utcnow()
+    later = now + timedelta(hours=1)
+    mock_utcnow.return_value = now
+
     res = yield from async_setup_component(hass, updater.DOMAIN, {updater.DOMAIN: {}})
     assert res, "Updater failed to set up"
 
     yield from hass.async_block_till_done()
 
     with patch("homeassistant.components.updater.current_version", MOCK_VERSION):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
+        async_fire_time_changed(hass, later)
         yield from hass.async_block_till_done()
 
     assert hass.states.is_state("binary_sensor.updater", "off")
@@ -116,6 +131,10 @@ def test_disable_reporting(hass, mock_get_uuid, mock_get_newest_version):
     mock_get_uuid.return_value = MOCK_HUUID
     mock_get_newest_version.return_value = mock_coro((MOCK_VERSION, ""))
 
+    now = dt_util.utcnow()
+    later = now + timedelta(hours=1)
+    mock_utcnow.return_value = now
+
     res = yield from async_setup_component(
         hass, updater.DOMAIN, {updater.DOMAIN: {"reporting": False}}
     )
@@ -124,7 +143,7 @@ def test_disable_reporting(hass, mock_get_uuid, mock_get_newest_version):
     yield from hass.async_block_till_done()
 
     with patch("homeassistant.components.updater.current_version", MOCK_VERSION):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
+        async_fire_time_changed(hass, later)
         yield from hass.async_block_till_done()
 
     assert hass.states.is_state("binary_sensor.updater", "off")
@@ -212,13 +231,17 @@ def test_new_version_shows_entity_after_hour_hassio(
     mock_component(hass, "hassio")
     hass.data["hassio_hass_version"] = "999.0"
 
+    now = dt_util.utcnow()
+    later = now + timedelta(hours=1)
+    mock_utcnow.return_value = now
+
     res = yield from async_setup_component(hass, updater.DOMAIN, {updater.DOMAIN: {}})
     assert res, "Updater failed to set up"
 
     yield from hass.async_block_till_done()
 
     with patch("homeassistant.components.updater.current_version", MOCK_VERSION):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1))
+        async_fire_time_changed(hass, later)
         yield from hass.async_block_till_done()
 
     assert hass.states.is_state("binary_sensor.updater", "on")
