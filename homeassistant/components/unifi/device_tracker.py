@@ -28,6 +28,8 @@ from .const import (
     ATTR_MANUFACTURER,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_DONT_TRACK_CLIENTS,
+    CONF_DONT_TRACK_DEVICES,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONTROLLER_ID,
@@ -154,46 +156,52 @@ def update_items(controller, async_add_entities, tracked):
     """Update tracked device state from the controller."""
     new_tracked = []
 
-    for client_id in controller.api.clients:
+    if not controller.unifi_config.get(CONF_DONT_TRACK_CLIENTS, False):
 
-        if client_id in tracked:
+        for client_id in controller.api.clients:
+
+            if client_id in tracked:
+                LOGGER.debug(
+                    "Updating UniFi tracked client %s (%s)",
+                    tracked[client_id].entity_id,
+                    tracked[client_id].client.mac,
+                )
+                tracked[client_id].async_schedule_update_ha_state()
+                continue
+
+            client = controller.api.clients[client_id]
+
+            if (
+                not client.is_wired
+                and CONF_SSID_FILTER in controller.unifi_config
+                and client.essid not in controller.unifi_config[CONF_SSID_FILTER]
+            ):
+                continue
+
+            tracked[client_id] = UniFiClientTracker(client, controller)
+            new_tracked.append(tracked[client_id])
             LOGGER.debug(
-                "Updating UniFi tracked client %s (%s)",
-                tracked[client_id].entity_id,
-                tracked[client_id].client.mac,
+                "New UniFi client tracker %s (%s)", client.hostname, client.mac
             )
-            tracked[client_id].async_schedule_update_ha_state()
-            continue
 
-        client = controller.api.clients[client_id]
+    if not controller.unifi_config.get(CONF_DONT_TRACK_DEVICES, False):
 
-        if (
-            not client.is_wired
-            and CONF_SSID_FILTER in controller.unifi_config
-            and client.essid not in controller.unifi_config[CONF_SSID_FILTER]
-        ):
-            continue
+        for device_id in controller.api.devices:
 
-        tracked[client_id] = UniFiClientTracker(client, controller)
-        new_tracked.append(tracked[client_id])
-        LOGGER.debug("New UniFi client tracker %s (%s)", client.hostname, client.mac)
+            if device_id in tracked:
+                LOGGER.debug(
+                    "Updating UniFi tracked device %s (%s)",
+                    tracked[device_id].entity_id,
+                    tracked[device_id].device.mac,
+                )
+                tracked[device_id].async_schedule_update_ha_state()
+                continue
 
-    for device_id in controller.api.devices:
+            device = controller.api.devices[device_id]
 
-        if device_id in tracked:
-            LOGGER.debug(
-                "Updating UniFi tracked device %s (%s)",
-                tracked[device_id].entity_id,
-                tracked[device_id].device.mac,
-            )
-            tracked[device_id].async_schedule_update_ha_state()
-            continue
-
-        device = controller.api.devices[device_id]
-
-        tracked[device_id] = UniFiDeviceTracker(device, controller)
-        new_tracked.append(tracked[device_id])
-        LOGGER.debug("New UniFi device tracker %s (%s)", device.name, device.mac)
+            tracked[device_id] = UniFiDeviceTracker(device, controller)
+            new_tracked.append(tracked[device_id])
+            LOGGER.debug("New UniFi device tracker %s (%s)", device.name, device.mac)
 
     if new_tracked:
         async_add_entities(new_tracked)
