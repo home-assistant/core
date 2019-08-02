@@ -30,6 +30,7 @@ from .const import (
     CONF_DETECTION_TIME,
     CONF_DONT_TRACK_CLIENTS,
     CONF_DONT_TRACK_DEVICES,
+    CONF_DONT_TRACK_WIRED_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONTROLLER_ID,
@@ -175,6 +176,12 @@ def update_items(controller, async_add_entities, tracked):
                 not client.is_wired
                 and CONF_SSID_FILTER in controller.unifi_config
                 and client.essid not in controller.unifi_config[CONF_SSID_FILTER]
+            ):
+                continue
+
+            if (
+                controller.unifi_config.get(CONF_DONT_TRACK_WIRED_CLIENTS, False)
+                and client.is_wired
             ):
                 continue
 
