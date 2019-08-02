@@ -16,7 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.util import slugify
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from .const import (
     DOMAIN,
@@ -29,10 +28,7 @@ from .const import (
     CONF_ARP_PING,
     CONF_LOGIN_METHOD,
     INFO,
-    ARP,
-    DHCP,
     MIKROTIK_SERVICES,
-    ATTR_DEVICE_TRACKER,
 )
 
 _LOGGER = logging.getLogger(__name__)

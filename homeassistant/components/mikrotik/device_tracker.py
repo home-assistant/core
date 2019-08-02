@@ -4,8 +4,18 @@ import logging
 
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.components.device_tracker import DeviceScanner
+from homeassistant.util import slugify
 from homeassistant.const import CONF_HOST
-from .const import DOMAIN, CONF_ARP_PING, MIKROTIK_SERVICES, CAPSMAN, WIRELESS, DHCP
+from .const import (
+    DOMAIN,
+    CONF_ARP_PING,
+    MIKROTIK_SERVICES,
+    CAPSMAN,
+    WIRELESS,
+    DHCP,
+    ARP,
+    ATTR_DEVICE_TRACKER,
+)
 from . import CONF_METHOD
 
 _LOGGER = logging.getLogger(__name__)
