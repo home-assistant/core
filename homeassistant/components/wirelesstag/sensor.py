@@ -72,7 +72,7 @@ class WirelessTagSensor(WirelessTagBaseSensor):
 
     @property
     def entity_id(self):
-        """Overriden version."""
+        """Overridden version."""
         return self._entity_id
 
     @property

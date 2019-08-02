@@ -114,7 +114,7 @@ class StreamOutput:
     @callback
     def put(self, segment: Segment) -> None:
         """Store output."""
-        # Start idle timeout when we start recieving data
+        # Start idle timeout when we start receiving data
         if self._unsub is None:
             self._unsub = async_call_later(
                 self._stream.hass, self.timeout, self._timeout

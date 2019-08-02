@@ -261,7 +261,7 @@ def icon(value):
     if ":" in value:
         return value
 
-    raise vol.Invalid('Icons should be specifed on the form "prefix:name"')
+    raise vol.Invalid('Icons should be specified in the form "prefix:name"')
 
 
 time_period_dict = vol.All(

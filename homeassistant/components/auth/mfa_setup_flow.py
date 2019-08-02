@@ -31,7 +31,7 @@ async def async_setup(hass):
     """Init mfa setup flow manager."""
 
     async def _async_create_setup_flow(handler, context, data):
-        """Create a setup flow. hanlder is a mfa module."""
+        """Create a setup flow. handler is a mfa module."""
         mfa_module = hass.auth.get_auth_mfa_module(handler)
         if mfa_module is None:
             raise ValueError("Mfa module {} is not found".format(handler))
