@@ -93,7 +93,7 @@ async def async_setup(hass, config):
             login_method = (login_plain, login_token)
 
         try:
-            api = MikrotikAPI(
+            api = MikrotikClient(
                 host,
                 ssl,
                 port,
@@ -130,7 +130,7 @@ async def async_setup(hass, config):
     return True
 
 
-class MikrotikAPI:
+class MikrotikClient:
     """Handle all communication with the Mikrotik API."""
 
     def __init__(
@@ -165,7 +165,7 @@ class MikrotikAPI:
         self._connected = False
 
     def connect_to_device(self):
-        """Connect to Mikrotik method."""
+        """Connect to Mikrotik device."""
         if self._connecting:
             return
         self._connecting = True
