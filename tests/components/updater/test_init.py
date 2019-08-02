@@ -47,7 +47,7 @@ def mock_get_uuid():
 
 @asyncio.coroutine
 def test_new_version_shows_entity_startup(hass, mock_get_uuid, mock_get_newest_version):
-    """Test if new entity is created if it is unavailable at first."""
+    """Test if binary sensor is unavailable at first."""
     mock_get_uuid.return_value = MOCK_HUUID
     mock_get_newest_version.return_value = mock_coro((NEW_VERSION, RELEASE_NOTES))
 
@@ -63,7 +63,7 @@ def test_new_version_shows_entity_startup(hass, mock_get_uuid, mock_get_newest_v
 
 @asyncio.coroutine
 def test_new_version_shows_entity_true(hass, mock_get_uuid, mock_get_newest_version):
-    """Test if new entity is created if new version is available."""
+    """Test if sensor is true if new version is available."""
     mock_get_uuid.return_value = MOCK_HUUID
     mock_get_newest_version.return_value = mock_coro((NEW_VERSION, RELEASE_NOTES))
 
@@ -89,7 +89,7 @@ def test_new_version_shows_entity_true(hass, mock_get_uuid, mock_get_newest_vers
 
 @asyncio.coroutine
 def test_same_version_shows_entity_false(hass, mock_get_uuid, mock_get_newest_version):
-    """Test if new entity is created if new version is available."""
+    """Test if sensor is false if no new version is available."""
     mock_get_uuid.return_value = MOCK_HUUID
     mock_get_newest_version.return_value = mock_coro((MOCK_VERSION, ""))
 
@@ -112,7 +112,7 @@ def test_same_version_shows_entity_false(hass, mock_get_uuid, mock_get_newest_ve
 
 @asyncio.coroutine
 def test_disable_reporting(hass, mock_get_uuid, mock_get_newest_version):
-    """Test if new entity is created if new version is available."""
+    """Test we do not gather analytics when disable reporting is active."""
     mock_get_uuid.return_value = MOCK_HUUID
     mock_get_newest_version.return_value = mock_coro((MOCK_VERSION, ""))
 
@@ -148,7 +148,7 @@ def test_get_newest_version_no_analytics_when_no_huuid(hass, aioclient_mock):
 
 @asyncio.coroutine
 def test_get_newest_version_analytics_when_huuid(hass, aioclient_mock):
-    """Test we do not gather analytics when no huuid is passed in."""
+    """Test we gather analytics when huuid is passed in."""
     aioclient_mock.post(updater.UPDATER_URL, json=MOCK_RESPONSE)
 
     with patch(
@@ -161,7 +161,7 @@ def test_get_newest_version_analytics_when_huuid(hass, aioclient_mock):
 
 @asyncio.coroutine
 def test_error_fetching_new_version_timeout(hass):
-    """Test we do not gather analytics when no huuid is passed in."""
+    """Test we handle timeout error while fetching new version."""
     with patch(
         "homeassistant.helpers.system_info.async_get_system_info",
         Mock(return_value=mock_coro({"fake": "bla"})),
@@ -172,7 +172,7 @@ def test_error_fetching_new_version_timeout(hass):
 
 @asyncio.coroutine
 def test_error_fetching_new_version_bad_json(hass, aioclient_mock):
-    """Test we do not gather analytics when no huuid is passed in."""
+    """Test we handle json error while fetching new version."""
     aioclient_mock.post(updater.UPDATER_URL, text="not json")
 
     with patch(
@@ -185,7 +185,7 @@ def test_error_fetching_new_version_bad_json(hass, aioclient_mock):
 
 @asyncio.coroutine
 def test_error_fetching_new_version_invalid_response(hass, aioclient_mock):
-    """Test we do not gather analytics when no huuid is passed in."""
+    """Test we handle response error while fetching new version."""
     aioclient_mock.post(
         updater.UPDATER_URL,
         json={
@@ -206,7 +206,7 @@ def test_error_fetching_new_version_invalid_response(hass, aioclient_mock):
 def test_new_version_shows_entity_after_hour_hassio(
     hass, mock_get_uuid, mock_get_newest_version
 ):
-    """Test if new entity is created if new version is available / hass.io."""
+    """Test if binary sensor gets updated if new version is available / hass.io."""
     mock_get_uuid.return_value = MOCK_HUUID
     mock_get_newest_version.return_value = mock_coro((NEW_VERSION, RELEASE_NOTES))
     mock_component(hass, "hassio")
