@@ -120,7 +120,7 @@ async def async_setup(hass, config):
                     hass,
                     DEVICE_TRACKER,
                     DOMAIN,
-                    {CONF_HOST: host, CONF_METHOD: method},
+                    {CONF_HOST: host, CONF_METHOD: method, CONF_ARP_PING: arp_ping},
                     config,
                 )
             )
@@ -156,9 +156,6 @@ class MikrotikClient:
         self._host_name = ""
         self._arp_ping = arp_ping
         self._track_devices = track_devices
-        self._arp = {}
-        self._dhcp = {}
-        self._device_tracker = None
         self._info = None
         self._client = None
         self._connecting = False
@@ -237,77 +234,6 @@ class MikrotikClient:
     def get_info(self):
         """Return device info."""
         return self._info
-
-    def arp_ping(self, mac, interface):
-        """Attempt to arp ping MAC address via interface."""
-        params = {
-            "arp-ping": "yes",
-            "interval": "100ms",
-            "count": 3,
-            "interface": interface,
-            "address": mac,
-        }
-        cmd = "/ping"
-        data = self._client(cmd, params)
-        status = 0
-        for result in data:
-            if "status" in result:
-                status += 1
-        if status == len(data):
-            return None
-        return data
-
-    async def update_device_tracker(self, method=None):
-        """Update device_tracker from Mikrotik API."""
-        self._device_tracker = {}
-        if method is None:
-            return
-        _LOGGER.debug(
-            "[%s] Updating Mikrotik device_tracker using %s.", self._host, method
-        )
-
-        data = self.get_api(MIKROTIK_SERVICES[method])
-        if data is None:
-            self.update_info()
-            return
-
-        arp = self.get_api(MIKROTIK_SERVICES[ARP])
-        for device in arp:
-            if "mac-address" in device and device["invalid"] is False:
-                mac = device["mac-address"]
-                self._arp[mac] = device
-
-        for device in data:
-            mac = device["mac-address"]
-            if method == DHCP:
-                if "active-address" not in device:
-                    continue
-                self._dhcp[mac] = data
-                if self._arp_ping and mac in arp:
-                    interface = arp[mac]["interface"]
-                    if not self.arp_ping(mac, interface):
-                        continue
-
-            attributes = {}
-            for attrib in ATTR_DEVICE_TRACKER:
-                if attrib in device:
-                    attributes[slugify(attrib)] = device[attrib]
-            attributes["source_type"] = "router"
-            attributes["scanner_type"] = method
-            attributes["scanner_host"] = self._host
-            attributes["scanner_host_name"] = self._host_name
-
-            if mac in self._arp:
-                attributes["ip_address"] = self._arp[mac]["address"]
-
-            if mac in self._arp:
-                attributes["host_name"] = self._dhcp[mac]["host-name"]
-
-            self._device_tracker[mac] = attributes
-
-    def get_device_tracker(self):
-        """Return device tracker data."""
-        return self._device_tracker
 
     def get_api(self, cmd, params=None):
         """Retrieve data from Mikrotik API."""

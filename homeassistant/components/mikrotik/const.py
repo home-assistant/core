@@ -2,14 +2,11 @@
 
 DOMAIN = "mikrotik"
 MIKROTIK = DOMAIN
-CLIENT = "mikrotik_client"
 
-MTK_DEFAULT_WAN = "ether1"
 MTK_LOGIN_PLAIN = "plain"
 MTK_LOGIN_TOKEN = "token"
 
 CONF_ARP_PING = "arp_ping"
-CONF_WAN_PORT = "wan_port"
 CONF_TRACK_DEVICES = "track_devices"
 CONF_LOGIN_METHOD = "login_method"
 CONF_ENCODING = "encoding"
