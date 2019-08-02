@@ -78,7 +78,7 @@ class MikrotikScanner(DeviceScanner):
         else:
             self.method = WIRELESS
         
-        if (not capsman and not wireless) or self.method == 'ip':
+        if (not capsman and not wireless) or self.method == DHCP:
             _LOGGER.info(
                 "Mikrotik %s: Wireless adapters not found. Try to "
                 "use DHCP lease table as presence tracker source. "
