@@ -30,5 +30,5 @@ MIKROTIK_SERVICES = {
 }
 
 ATTR_DEVICE_TRACKER = ['mac-address', 'rx-signal', 'ssid', 'interface',
-                         'comment', 'host-name', 'address', 'uptime',
-                         'rx-rate', 'tx-rate', 'last-seen']
+                       'comment', 'host-name', 'address', 'uptime',
+                       'rx-rate', 'tx-rate', 'last-seen']
