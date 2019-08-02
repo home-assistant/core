@@ -75,19 +75,21 @@ async def async_setup(hass, config):
         else:
             login_method = (login_plain, login_token)
 
+        hass.data[DOMAIN][host] = {}
         try:
             api = MikrotikAPI(hass, host, ssl, port, user, password,
                               login_method, encoding)
-        except APIError as e:
+            host_name = api.get_hostname()
+        except (librouteros.exceptions.TrapError,
+                librouteros.exceptions.MultiTrapError,
+                librouteros.exceptions.ConnectionError) as e:
             _LOGGER.error("Mikrotik API login failed %s", str(e))
             continue
 
-        hass.data[DOMAIN][host] = {}
         wan_port = device.get(CONF_WAN_PORT)
         arp_ping = device.get(CONF_ARP_PING)
         track_devices = device.get(CONF_TRACK_DEVICES)
-
-        hass.data[CLIENT][host] = MikrotikClient(api, wan_port, arp_ping,
+        hass.data[CLIENT][host] = MikrotikClient(api, host_name, wan_port, arp_ping,
                                       track_devices)
 
         if track_devices:
@@ -118,6 +120,7 @@ class MikrotikAPI:
         self._password = password
         self._login_method = login_method
         self._encoding = encoding
+        self._host_name = ''
         self._client = None
         self._connecting = False
         self._connected = False
@@ -160,11 +163,21 @@ class MikrotikAPI:
         if not self._host_name:
             _LOGGER.error("Mikrotik failed to connect to %s.", self._host)
             return False
-
         _LOGGER.info("Mikrotik Connected to %s (%s).", self._host_name, self._host)
         self._connecting = False
         self._connected = True
         return True
+
+    def get_hostname(self):
+        """Return device host name"""
+        if not self._connected:
+            self.connect_to_device()
+        return self._host_name
+
+    def connected(self):
+        """Return connected boolean"""
+        return self._connected
+
 
     async def update_info(self):
         """Update info from Mikrotik API."""
@@ -251,12 +264,14 @@ class MikrotikAPI:
             return None
         return response
 
+
 class MikrotikClient:
     """Mikrotik device instance."""
 
-    def __init__(self, api, wan_port, arp_ping, track_devices):
+    def __init__(self, api, host_name, wan_port, arp_ping, track_devices):
         """Initialize the entity."""
         self.api = api
+        self.host_name = host_name
         self.wan_port = wan_port
         self.arp_ping = arp_ping
         self.track_devices = track_devices
