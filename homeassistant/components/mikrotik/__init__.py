@@ -8,7 +8,7 @@ from librouteros.login import login_plain, login_token
 
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT,
-    CONF_SSL, CONF_METHOD)
+    CONF_SSL, CONF_METHOD, CONF_SENSORS, CONF_BINARY_SENSORS)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.util import slugify
@@ -16,7 +16,7 @@ from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER)
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from .const import (DOMAIN, CLIENT, MTK_LOGIN_PLAIN, MTK_LOGIN_TOKEN,
-                    CONNECTING, CONNECTED, IDENTITY, CONF_TRACK_DEVICES,
+                    IDENTITY, CONF_TRACK_DEVICES, MEGA,
                     CONF_ARP_PING, CONF_WAN_PORT, DEFAULT_ENCODING,
                     CONF_LOGIN_METHOD, CONF_ENCODING, MTK_DEFAULT_WAN,
                     ARP, DHCP, MIKROTIK_SERVICES, ATTR_DEVICE_TRACKER,
@@ -41,6 +41,8 @@ MIKROTIK_SCHEMA = vol.All(
         vol.Optional(CONF_TRACK_DEVICES, default=True): cv.boolean,
         vol.Optional(CONF_ARP_PING, default=False): cv.boolean,
         vol.Optional(CONF_WAN_PORT, default=MTK_DEFAULT_WAN): cv.string,
+        vol.Optional(CONF_SENSORS): vol.All(
+            cv.ensure_list, [vol.In(SENSORS)]),
     })
 )
 
@@ -77,29 +79,30 @@ async def async_setup(hass, config):
         else:
             login_method = (login_plain, login_token)
 
+        hass.data[DOMAIN][host] = {}
         try:
             api = MikrotikAPI(hass, host, ssl, port, user, password,
                               login_method, encoding)
-        except APIError as e:
+            host_name = api.get_hostname()
+        except (librouteros.exceptions.TrapError,
+                librouteros.exceptions.MultiTrapError,
+                librouteros.exceptions.ConnectionError) as e:
             _LOGGER.error("Mikrotik API login failed %s", str(e))
             continue
 
-        hass.data[DOMAIN][host] = {}
         wan_port = device.get(CONF_WAN_PORT)
         arp_ping = device.get(CONF_ARP_PING)
         track_devices = device.get(CONF_TRACK_DEVICES)
-
-        hass.data[CLIENT][host] = MikrotikClient(api, wan_port, arp_ping,
+        hass.data[CLIENT][host] = MikrotikClient(api, host_name, wan_port, arp_ping,
                                       track_devices)
 
         sensors = device.get(CONF_SENSORS)
         if sensors:
-            self.hass.data[MIKROTIK][host][CONF_WAN_PORT] = wan_port
             hass.async_create_task(
                 async_load_platform(
-                  hass, SENSOR, DOMAIN, 
+                  hass, SENSOR, DOMAIN,
                   {CONF_HOST: host, CONF_SENSORS: sensors}, config))
-            
+
         if track_devices:
             hass.data[DOMAIN][ARP] = {}
             hass.data[DOMAIN][DHCP] = {}
@@ -128,6 +131,7 @@ class MikrotikAPI:
         self._password = password
         self._login_method = login_method
         self._encoding = encoding
+        self._host_name = ''
         self._client = None
         self._connecting = False
         self._connected = False
@@ -170,11 +174,21 @@ class MikrotikAPI:
         if not self._host_name:
             _LOGGER.error("Mikrotik failed to connect to %s.", self._host)
             return False
-
         _LOGGER.info("Mikrotik Connected to %s (%s).", self._host_name, self._host)
         self._connecting = False
         self._connected = True
         return True
+
+    def get_hostname(self):
+        """Return device host name"""
+        if not self._connected:
+            self.connect_to_device()
+        return self._host_name
+
+    def connected(self):
+        """Return connected boolean"""
+        return self._connected
+
 
     async def update_info(self):
         """Update info from Mikrotik API."""
@@ -249,27 +263,32 @@ class MikrotikAPI:
         host = self._host
         self.hass.data[DOMAIN][host][SENSOR][sensor_type] = None
         params = SENSORS[sensor_type][6]
-        if params and 'interface' in params:
-            wan_port = self.hass.data[DOMAIN][host][CONF_WAN_PORT]
-            params['interface'] = wan_port
 
         for cmd in SENSORS[sensor_type][4]:
             data = self.get_api(cmd, params)
             if data is None:
+                _LOGGER.error("Mikrotik update_sensor() no data for %s", sensor_type)
                 self.update_info()
                 return
             results.update(data[0])
         sensor = {}
         sensor['state'] = None
         sensor['attrib'] = {}
-        
+
         for key in results:
             if key == SENSORS[sensor_type][3]:
                 sensor['state'] = results[key]
             if key in SENSORS[sensor_type][5]:
                 sensor['attrib'][slugify(key)] = results[key]
+
+        sensor_unit = SENSORS[sensor_type][1]
+        if sensor_unit and sensor['state']:
+            if any(unit in sensor_unit for unit in ['bit', 'byte', 'bps']):
+                sensor['state'] = format(
+                    (float(sensor['state']) / MEGA), '.2f')
+
         self.hass.data[DOMAIN][host][SENSOR][sensor_type] = sensor
-        
+
     def get_api(self, cmd, params=None):
         """Retrieve data from Mikrotik API."""
         if not self._client or not self._connected:
@@ -290,12 +309,14 @@ class MikrotikAPI:
             return None
         return response
 
+
 class MikrotikClient:
     """Mikrotik device instance."""
 
-    def __init__(self, api, wan_port, arp_ping, track_devices):
+    def __init__(self, api, host_name, wan_port, arp_ping, track_devices):
         """Initialize the entity."""
         self.api = api
+        self.host_name = host_name
         self.wan_port = wan_port
         self.arp_ping = arp_ping
         self.track_devices = track_devices
