@@ -16,9 +16,8 @@ from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER)
 from .const import (DOMAIN, CLIENT, MTK_LOGIN_PLAIN, MTK_LOGIN_TOKEN,
                     DEFAULT_ENCODING, IDENTITY, CONF_TRACK_DEVICES,
-                    CONF_ENCODING, MTK_DEFAULT_WAN, CONF_ARP_PING,
-                    CONF_LOGIN_METHOD, ARP, DHCP, MIKROTIK_SERVICES,
-                    ATTR_DEVICE_TRACKER)
+                    CONF_ENCODING, CONF_ARP_PING, CONF_LOGIN_METHOD,
+                    ARP, DHCP, MIKROTIK_SERVICES, ATTR_DEVICE_TRACKER)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,6 +43,7 @@ MIKROTIK_SCHEMA = vol.All(
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [MIKROTIK_SCHEMA])
 }, extra=vol.ALLOW_EXTRA)
+
 
 async def async_setup(hass, config):
     """Set up the Mikrotik component."""
@@ -85,11 +85,10 @@ async def async_setup(hass, config):
             _LOGGER.error("Mikrotik API login failed %s", str(e))
             continue
 
-        wan_port = device.get(CONF_WAN_PORT)
         arp_ping = device.get(CONF_ARP_PING)
         track_devices = device.get(CONF_TRACK_DEVICES)
         hass.data[CLIENT][host] = MikrotikClient(api, host_name,
-                                                 wan_port, arp_ping, track_devices)
+                                                 arp_ping, track_devices)
         if track_devices:
             hass.data[DOMAIN][ARP] = {}
             hass.data[DOMAIN][DHCP] = {}
@@ -108,7 +107,7 @@ class MikrotikAPI:
     """Handle all communication with the Mikrotik API."""
 
     def __init__(self, hass, host, ssl, port,
-        user, password, login_method, encoding):
+                 user, password, login_method, encoding):
         """Initialize the Mikrotik Client."""
         self.hass = hass
         self._host = host
@@ -169,15 +168,14 @@ class MikrotikAPI:
         return True
 
     def get_hostname(self):
-        """Return device host name"""
+        """Return device host name."""
         if not self._connected:
             self.connect_to_device()
         return self._host_name
 
     def connected(self):
-        """Return connected boolean"""
+        """Return connected boolean."""
         return self._connected
-
 
     async def update_info(self):
         """Update info from Mikrotik API."""
@@ -268,10 +266,9 @@ class MikrotikAPI:
 class MikrotikClient:
     """Mikrotik device instance."""
 
-    def __init__(self, api, host_name, wan_port, arp_ping, track_devices):
+    def __init__(self, api, host_name, arp_ping, track_devices):
         """Initialize the entity."""
         self.api = api
         self.host_name = host_name
-        self.wan_port = wan_port
         self.arp_ping = arp_ping
         self.track_devices = track_devices
