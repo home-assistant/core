@@ -13,10 +13,10 @@ import homeassistant.util.color as color_util
 
 from .core.const import (
     CHANNEL_COLOR,
-    DATA_ZHA,
-    DATA_ZHA_DISPATCHERS,
     CHANNEL_LEVEL,
     CHANNEL_ON_OFF,
+    DATA_ZHA,
+    DATA_ZHA_DISPATCHERS,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_SET_LEVEL,
     ZHA_DISCOVERY_NEW,

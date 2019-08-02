@@ -9,9 +9,9 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .core.const import (
+    CHANNEL_ON_OFF,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
-    CHANNEL_ON_OFF,
     SIGNAL_ATTR_UPDATED,
     ZHA_DISCOVERY_NEW,
 )

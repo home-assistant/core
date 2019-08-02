@@ -12,9 +12,9 @@ import logging
 from homeassistant.core import callback
 
 from .const import (
-    DEFAULT_BAUDRATE,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
+    DEFAULT_BAUDRATE,
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
     REPORT_CONFIG_RPT_CHANGE,

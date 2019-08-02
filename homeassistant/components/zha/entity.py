@@ -13,11 +13,11 @@ from homeassistant.util import slugify
 
 from .core.const import (
     ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
     DATA_ZHA,
     DATA_ZHA_BRIDGE_ID,
     DOMAIN,
-    ATTR_MODEL,
-    ATTR_NAME,
     SIGNAL_REMOVE,
 )
 from .core.helpers import LogMixin
