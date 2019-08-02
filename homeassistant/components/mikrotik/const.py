@@ -15,6 +15,7 @@ CONF_LOGIN_METHOD = "login_method"
 CONF_ENCODING = "encoding"
 DEFAULT_ENCODING = "utf-8"
 
+INFO = "info"
 IDENTITY = "identity"
 ARP = "arp"
 DHCP = "dhcp"
@@ -22,6 +23,7 @@ WIRELESS = "wireless"
 CAPSMAN = "capsman"
 
 MIKROTIK_SERVICES = {
+    INFO: "/system/routerboard/getall",
     IDENTITY: "/system/identity/getall",
     ARP: "/ip/arp/getall",
     DHCP: "/ip/dhcp-server/lease/getall",

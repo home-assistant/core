@@ -28,6 +28,7 @@ from .const import (
     CONF_ENCODING,
     CONF_ARP_PING,
     CONF_LOGIN_METHOD,
+    INFO,
     ARP,
     DHCP,
     MIKROTIK_SERVICES,
@@ -109,8 +110,8 @@ async def async_setup(hass, config):
             librouteros.exceptions.TrapError,
             librouteros.exceptions.MultiTrapError,
             librouteros.exceptions.ConnectionError,
-        ) as e:
-            _LOGGER.error("Mikrotik API login failed %s", e)
+        ) as api_error:
+            _LOGGER.error("Mikrotik API login failed %s", api_error)
             continue
 
         if track_devices:
@@ -226,7 +227,7 @@ class MikrotikAPI:
         _LOGGER.debug("[%s] Updating Mikrotik info.", self._host)
         if not self._connected:
             self.connect_to_device()
-        data = self.get_api("/system/routerboard/getall")
+        data = self.get_api(MIKROTIK_SERVICES[INFO])
         if data is None:
             _LOGGER.error("Mikrotik device %s is not connected.", self._host)
             self._connected = False
@@ -237,7 +238,7 @@ class MikrotikAPI:
         """Return device info."""
         return self._info
 
-    def arp_ping(self, host, mac, interface):
+    def arp_ping(self, mac, interface):
         """Attempt to arp ping MAC address via interface."""
         params = {
             "arp-ping": "yes",
@@ -322,9 +323,12 @@ class MikrotikAPI:
             librouteros.exceptions.TrapError,
             librouteros.exceptions.MultiTrapError,
             librouteros.exceptions.ConnectionError,
-        ) as e:
+        ) as api_error:
             _LOGGER.error(
-                "Failed to retrieve data. " "%s cmd=[%s] Error: %s", self._host, cmd, e
+                "Failed to retrieve data. " "%s cmd=[%s] Error: %s",
+                self._host,
+                cmd,
+                api_error,
             )
             self._connected = False
             return None
