@@ -9,7 +9,7 @@ from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS,
     CONF_SCAN_INTERVAL, CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL,
-    LENGTH_KILOMETERS, LENGTH_MILES)
+    LENGTH_KILOMETERS, LENGTH_MILES, ATTR_TIME)
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import (
@@ -28,9 +28,6 @@ ATTR_MAGNITUDE = 'magnitude'
 ATTR_MMI = 'mmi'
 ATTR_PUBLICATION_DATE = 'publication_date'
 ATTR_QUALITY = 'quality'
-ATTR_REGION = 'region'
-ATTR_TIME = 'time'
-ATTR_TITLE = 'title'
 
 DEFAULT_FILTER_TIME_INTERVAL = timedelta(days=7)
 
