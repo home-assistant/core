@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
@@ -211,7 +212,7 @@ async def test_tracked_devices(hass, mock_controller):
     await hass.async_block_till_done()
 
     device_1 = hass.states.get("device_tracker.device_1")
-    assert device_1.state == "unavailable"
+    assert device_1.state == STATE_UNAVAILABLE
 
 
 async def test_restoring_client(hass, mock_controller):
@@ -243,3 +244,39 @@ async def test_restoring_client(hass, mock_controller):
 
     device_1 = hass.states.get("device_tracker.client_1")
     assert device_1 is not None
+
+
+async def test_dont_track_clients(hass, mock_controller):
+    """Test dont track clients config works."""
+    mock_controller.mock_client_responses.append([CLIENT_1])
+    mock_controller.mock_device_responses.append([DEVICE_1])
+    mock_controller.unifi_config = {unifi.CONF_DONT_TRACK_CLIENTS: True}
+
+    await setup_controller(hass, mock_controller)
+    assert len(mock_controller.mock_requests) == 2
+    assert len(hass.states.async_all()) == 3
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1 is None
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1 is not None
+    assert device_1.state == "not_home"
+
+
+async def test_dont_track_devices(hass, mock_controller):
+    """Test dont track devices config works."""
+    mock_controller.mock_client_responses.append([CLIENT_1])
+    mock_controller.mock_device_responses.append([DEVICE_1])
+    mock_controller.unifi_config = {unifi.CONF_DONT_TRACK_DEVICES: True}
+
+    await setup_controller(hass, mock_controller)
+    assert len(mock_controller.mock_requests) == 2
+    assert len(hass.states.async_all()) == 3
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1 is not None
+    assert client_1.state == "not_home"
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1 is None
