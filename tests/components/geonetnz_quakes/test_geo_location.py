@@ -2,7 +2,7 @@
 import datetime
 from unittest.mock import MagicMock
 
-from asynctest import mock, patch, CoroutineMock
+from asynctest import patch, CoroutineMock
 
 from homeassistant.components import geonetnz_quakes
 from homeassistant.components.geo_location import ATTR_SOURCE
