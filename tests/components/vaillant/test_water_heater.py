@@ -58,7 +58,7 @@ async def test_valid_config_all_disabled(hass):
 
 
 async def test_empty_system(hass):
-    """Test setup with invalid config."""
+    """Test setup with empty system."""
     assert await _setup(hass, system=System(None, None, None, None,
                                             None, None, None, None,
                                             None))
@@ -70,11 +70,11 @@ async def test_state_update(hass):
     assert await _setup(hass)
     _assert_state(hass, HeatingMode.AUTO, HotWater.MIN_TEMP, 45, 'off')
 
-    system = SystemManagerMock.current_system
+    system = SystemManagerMock.system
     system.hot_water.current_temperature = 65
     system.hot_water.operation_mode = HeatingMode.ON
     system.hot_water.target_temperature = 45
-    SystemManagerMock.current_system = system
+    SystemManagerMock.system = system
     await _goto_future(hass)
 
     _assert_state(hass, HeatingMode.ON, 45, 65, 'off')
@@ -82,7 +82,7 @@ async def test_state_update(hass):
 
 async def test_holiday_mode(hass):
     """Test holiday mode."""
-    system = SystemManagerMock.get_default()
+    system = SystemManagerMock.get_default_system()
     system.quick_mode = QuickMode.QM_HOLIDAY
     system.holiday_mode = HolidayMode(True, datetime.date.today(),
                                       datetime.date.today(), 15)
@@ -93,7 +93,7 @@ async def test_holiday_mode(hass):
 
 async def test_away_mode(hass):
     """Test away mode."""
-    system = SystemManagerMock.get_default()
+    system = SystemManagerMock.get_default_system()
     system.hot_water.operation_mode = HeatingMode.OFF
 
     assert await _setup(hass, system=system)
@@ -102,7 +102,7 @@ async def test_away_mode(hass):
 
 async def test_water_boost(hass):
     """Test hot water boost mode."""
-    system = SystemManagerMock.get_default()
+    system = SystemManagerMock.get_default_system()
     system.quick_mode = QuickMode.QM_HOTWATER_BOOST
 
     assert await _setup(hass, system=system)
@@ -112,7 +112,7 @@ async def test_water_boost(hass):
 
 async def test_system_off(hass):
     """Test system off mode."""
-    system = SystemManagerMock.get_default()
+    system = SystemManagerMock.get_default_system()
     system.quick_mode = QuickMode.QM_SYSTEM_OFF
 
     assert await _setup(hass, system=system)
@@ -121,7 +121,7 @@ async def test_system_off(hass):
 
 async def test_one_day_away(hass):
     """Test one day away mode."""
-    system = SystemManagerMock.get_default()
+    system = SystemManagerMock.get_default_system()
     system.quick_mode = QuickMode.QM_ONE_DAY_AWAY
 
     assert await _setup(hass, system=system)
@@ -132,7 +132,7 @@ async def test_turn_away_mode_on(hass):
     """Test turn away mode on."""
     assert await _setup(hass)
 
-    hot_water = SystemManagerMock.current_system.hot_water
+    hot_water = SystemManagerMock.system.hot_water
     hot_water.operation_mode = HeatingMode.OFF
     SystemManagerMock.instance.get_hot_water.return_value = hot_water
 
@@ -154,7 +154,7 @@ async def test_turn_away_mode_off(hass):
     """Test turn away mode off."""
     assert await _setup(hass)
 
-    hot_water = SystemManagerMock.current_system.hot_water
+    hot_water = SystemManagerMock.system.hot_water
     hot_water.operation_mode = HeatingMode.AUTO
     SystemManagerMock.instance.get_hot_water.return_value = hot_water
 
@@ -177,7 +177,7 @@ async def test_set_operation_mode(hass):
     """Test set operation mode."""
     assert await _setup(hass)
 
-    hot_water = SystemManagerMock.current_system.hot_water
+    hot_water = SystemManagerMock.system.hot_water
     hot_water.operation_mode = HeatingMode.ON
     SystemManagerMock.instance.get_hot_water.return_value = hot_water
 
@@ -215,13 +215,13 @@ async def test_set_operation_mode_wrong(hass):
 
 async def test_set_temperature(hass):
     """Test set target temperature."""
-    system = SystemManagerMock.get_default()
+    system = SystemManagerMock.get_default_system()
     system.hot_water.operation_mode = HeatingMode.ON
     assert await _setup(hass, system=system)
 
-    SystemManagerMock.current_system.hot_water.target_temperature = 50
+    SystemManagerMock.system.hot_water.target_temperature = 50
     SystemManagerMock.instance.get_hot_water.return_value = \
-        SystemManagerMock.current_system.hot_water
+        SystemManagerMock.system.hot_water
 
     await hass.services.async_call('water_heater',
                                    'set_temperature',

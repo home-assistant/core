@@ -49,14 +49,8 @@ async def test_valid_config_all_disabled(hass):
     assert not hass.states.async_entity_ids()
 
 
-async def test_invalid_config(hass):
-    """Test setup with invalid config."""
-    assert not await _setup(hass, {DOMAIN: {'boom': 'boom'}})
-    assert not hass.states.async_entity_ids()
-
-
 async def test_empty_system(hass):
-    """Test setup with invalid config."""
+    """Test setup with empty system."""
     assert await _setup(hass, system=System(None, None, None, None,
                                             None, None, None, None,
                                             None))
@@ -82,7 +76,7 @@ async def test_state_update(hass):
     assert hass.states.is_state(
         'binary_sensor.vaillant_boiler_connectivity', 'on')
 
-    system = SystemManagerMock.current_system
+    system = SystemManagerMock.system
     system.circulation = Circulation(
         'circulation', 'Circulation',
         SystemManagerMock.time_program(HeatingMode.ON), HeatingMode.AUTO)
@@ -95,7 +89,7 @@ async def test_state_update(hass):
     system.boiler_status.code = 'F11'
     system.boiler_status.online_status = 'OFFLINE'
     system.boiler_status.update_status = 'UPDATE_PENDING'
-    SystemManagerMock.current_system = system
+    SystemManagerMock.system = system
 
     await _goto_future(hass)
 

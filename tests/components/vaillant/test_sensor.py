@@ -47,7 +47,7 @@ async def test_valid_config_all_disabled(hass):
 
 
 async def test_empty_system(hass):
-    """Test setup with invalid config."""
+    """Test setup with empty system."""
     assert await _setup(hass, system=System(None, None, None, None,
                                             None, None, None, None,
                                             None))
@@ -66,14 +66,14 @@ async def test_state_update(hass):
     assert hass.states.is_state('sensor.vaillant_outdoor_temperature', '18')
     assert hass.states.is_state('sensor.vaillant_zone_1_temperature', '25')
 
-    system = SystemManagerMock.current_system
+    system = SystemManagerMock.system
     system.outdoor_temperature = 21
     system.get_room(1).current_temperature = 30
     system.get_zone('zone_1').current_temperature = 31
     system.boiler_status.water_pressure = 1.6
     system.boiler_status.current_temperature = 32
     system.hot_water.current_temperature = 66
-    SystemManagerMock.current_system = system
+    SystemManagerMock.system = system
 
     await _goto_future(hass)
 

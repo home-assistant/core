@@ -140,7 +140,7 @@ class VaillantHub:
         try:
             self._manager.request_hvac_update()
         except ApiError:
-            _LOGGER.debug("Error while requesting hvac update", exec_info=True)
+            _LOGGER.debug("Error while requesting hvac update", exc_info=True)
             # Sometimes the API returns HTTP 409 and the connector throws an
             # error, it will prevent update_system to work correctly.
 
@@ -149,11 +149,10 @@ class VaillantHub:
             _LOGGER.debug("update_system successfully fetched")
         # pylint: disable=broad-except
         except Exception:
-            _LOGGER.exception("Enable to fetch data from vaillant API",
-                              exec_info=True)
+            _LOGGER.exception("Enable to fetch data from vaillant API")
             # update_system can is called by all entities, if it fails for
             # one entity, it will certainly fail for others.
-            # catching exception so the throttling is occuring
+            # catching exception so the throttling is occurring
 
     def find_component(self, comp):
         """Find a component in the system with the given id, no IO is done."""

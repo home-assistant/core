@@ -23,14 +23,14 @@ VALID_MINIMAL_CONFIG = {
 class SystemManagerMock:
     """Mock the vaillant system manager."""
 
-    current_system = None
+    system = None
     instance = None
 
     @classmethod
     def reset(cls):
-        """Reset system to default."""
-        cls.current_system = cls.get_default()
-        cls._init()
+        """Reset system the mock."""
+        cls.system = None
+        cls.instance = None
 
     @classmethod
     def time_program(cls, heating_mode=HeatingMode.OFF, temp=20):
@@ -50,7 +50,7 @@ class SystemManagerMock:
         return TimeProgram(timeprogram_days)
 
     @classmethod
-    def get_default(cls):
+    def get_default_system(cls):
         """Return default system."""
         holiday_mode = None
         boiler_status = BoilerStatus('boiler', 'Long description',
@@ -79,28 +79,34 @@ class SystemManagerMock:
                       circulation, outdoor_temp, quick_mode, [])
 
     @classmethod
-    def _init(cls):
+    def _init_mocks_function(cls):
         """Init the instance."""
+        if not cls.system:
+            cls.system = cls.get_default_system()
+
         cls.instance.set_hot_water_setpoint_temperature = \
             mock.MagicMock(return_value=True)
         cls.instance.set_hot_water_operation_mode = \
             mock.MagicMock(return_value=True)
         cls.instance.set_hot_water_operation_mode = mock.MagicMock()
         cls.instance.get_hot_water = mock.MagicMock()
+        cls.instance.request_hvac_update = mock.MagicMock(return_value=True)
+        cls.instance.get_system = \
+            mock.MagicMock(return_value=cls.system)
 
     def __init__(self, user: str, password: str, smart_phone_id: str,
                  file_path: str = None):
         """Mock the constructor."""
         SystemManagerMock.instance = self
-        self._init()
+        self._init_mocks_function()
 
-    def get_system(self):
-        """Return mock system."""
-        return self.current_system
-
-    def request_hvac_update(self):
-        """Mock request_hvac_update."""
-        return True
+    # def get_system(self):
+    #     """Return mock system."""
+    #     return self.system
+    #
+    # def request_hvac_update(self):
+    #     """Mock request_hvac_update."""
+    #     return True
 
 
 async def _goto_future(hass, future=None):
@@ -117,8 +123,8 @@ async def _setup(hass, config=None, system=None):
     if not config:
         config = VALID_MINIMAL_CONFIG
     if not system:
-        system = SystemManagerMock.get_default()
-    SystemManagerMock.current_system = system
+        system = SystemManagerMock.get_default_system()
+    SystemManagerMock.system = system
     setup = await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
     return setup
