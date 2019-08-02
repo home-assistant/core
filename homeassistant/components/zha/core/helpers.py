@@ -6,17 +6,19 @@ https://home-assistant.io/components/zha/
 """
 import asyncio
 import collections
-import logging
 from concurrent.futures import TimeoutError as Timeout
+import logging
+
 from homeassistant.core import callback
+
 from .const import (
     DEFAULT_BAUDRATE,
+    CLUSTER_TYPE_IN,
+    CLUSTER_TYPE_OUT,
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
     REPORT_CONFIG_RPT_CHANGE,
     RadioType,
-    IN,
-    OUT,
 )
 from .registries import BINDABLE_CLUSTERS
 
@@ -206,14 +208,18 @@ async def get_matched_clusters(source_zha_device, target_zha_device):
     clusters_to_bind = []
 
     for endpoint_id in source_clusters:
-        for cluster_id in source_clusters[endpoint_id][OUT]:
+        for cluster_id in source_clusters[endpoint_id][CLUSTER_TYPE_OUT]:
             if cluster_id not in BINDABLE_CLUSTERS:
                 continue
             for t_endpoint_id in target_clusters:
-                if cluster_id in target_clusters[t_endpoint_id][IN]:
+                if cluster_id in target_clusters[t_endpoint_id][CLUSTER_TYPE_IN]:
                     cluster_pair = ClusterPair(
-                        source_cluster=source_clusters[endpoint_id][OUT][cluster_id],
-                        target_cluster=target_clusters[t_endpoint_id][IN][cluster_id],
+                        source_cluster=source_clusters[endpoint_id][CLUSTER_TYPE_OUT][
+                            cluster_id
+                        ],
+                        target_cluster=target_clusters[t_endpoint_id][CLUSTER_TYPE_IN][
+                            cluster_id
+                        ],
                     )
                     clusters_to_bind.append(cluster_pair)
     return clusters_to_bind
@@ -228,9 +234,9 @@ def async_is_bindable_target(source_zha_device, target_zha_device):
     bindables = set(BINDABLE_CLUSTERS)
     for endpoint_id in source_clusters:
         for t_endpoint_id in target_clusters:
-            matches = set(source_clusters[endpoint_id][OUT].keys()).intersection(
-                target_clusters[t_endpoint_id][IN].keys()
-            )
+            matches = set(
+                source_clusters[endpoint_id][CLUSTER_TYPE_OUT].keys()
+            ).intersection(target_clusters[t_endpoint_id][CLUSTER_TYPE_IN].keys())
             if any(bindable in bindables for bindable in matches):
                 return True
     return False

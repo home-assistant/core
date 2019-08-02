@@ -5,8 +5,10 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
 import logging
+
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+
 from . import ZigbeeChannel
 from ..const import SIGNAL_ATTR_UPDATED
 

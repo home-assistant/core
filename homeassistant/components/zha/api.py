@@ -21,16 +21,16 @@ from .core.const import (
     ATTR_ENDPOINT_ID,
     ATTR_MANUFACTURER,
     ATTR_VALUE,
-    CLIENT_COMMANDS,
+    CLUSTER_COMMANDS_CLIENT,
     DATA_ZHA,
     DATA_ZHA_GATEWAY,
     DOMAIN,
-    IN,
+    CLUSTER_TYPE_IN,
     MFG_CLUSTER_ID_START,
-    NAME,
-    OUT,
-    SERVER,
-    SERVER_COMMANDS,
+    ATTR_NAME,
+    CLUSTER_TYPE_OUT,
+    CLUSTER_COMMAND_SERVER,
+    CLUSTER_COMMANDS_SERVER,
 )
 from .core.helpers import async_is_bindable_target, convert_ieee, get_matched_clusters
 
@@ -74,7 +74,7 @@ SERVICE_SCHEMAS = {
             vol.Required(ATTR_IEEE): convert_ieee,
             vol.Required(ATTR_ENDPOINT_ID): cv.positive_int,
             vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
-            vol.Optional(ATTR_CLUSTER_TYPE, default=IN): cv.string,
+            vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
             vol.Required(ATTR_ATTRIBUTE): cv.positive_int,
             vol.Required(ATTR_VALUE): cv.string,
             vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
@@ -85,7 +85,7 @@ SERVICE_SCHEMAS = {
             vol.Required(ATTR_IEEE): convert_ieee,
             vol.Required(ATTR_ENDPOINT_ID): cv.positive_int,
             vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
-            vol.Optional(ATTR_CLUSTER_TYPE, default=IN): cv.string,
+            vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
             vol.Required(ATTR_COMMAND): cv.positive_int,
             vol.Required(ATTR_COMMAND_TYPE): cv.string,
             vol.Optional(ATTR_ARGS, default=""): cv.string,
@@ -155,7 +155,10 @@ def async_get_device_info(hass, device, ha_device_registry=None):
     ret_device = {}
     ret_device.update(device.device_info)
     ret_device["entities"] = [
-        {"entity_id": entity_ref.reference_id, NAME: entity_ref.device_info[NAME]}
+        {
+            "entity_id": entity_ref.reference_id,
+            ATTR_NAME: entity_ref.device_info[ATTR_NAME],
+        }
         for entity_ref in zha_gateway.device_registry[device.ieee]
     ]
 
@@ -201,21 +204,21 @@ async def websocket_device_clusters(hass, connection, msg):
     if zha_device is not None:
         clusters_by_endpoint = zha_device.async_get_clusters()
         for ep_id, clusters in clusters_by_endpoint.items():
-            for c_id, cluster in clusters[IN].items():
+            for c_id, cluster in clusters[CLUSTER_TYPE_IN].items():
                 response_clusters.append(
                     {
-                        TYPE: IN,
+                        TYPE: CLUSTER_TYPE_IN,
                         ID: c_id,
-                        NAME: cluster.__class__.__name__,
+                        ATTR_NAME: cluster.__class__.__name__,
                         "endpoint_id": ep_id,
                     }
                 )
-            for c_id, cluster in clusters[OUT].items():
+            for c_id, cluster in clusters[CLUSTER_TYPE_OUT].items():
                 response_clusters.append(
                     {
-                        TYPE: OUT,
+                        TYPE: CLUSTER_TYPE_OUT,
                         ID: c_id,
-                        NAME: cluster.__class__.__name__,
+                        ATTR_NAME: cluster.__class__.__name__,
                         "endpoint_id": ep_id,
                     }
                 )
@@ -250,7 +253,9 @@ async def websocket_device_cluster_attributes(hass, connection, msg):
         )
         if attributes is not None:
             for attr_id in attributes:
-                cluster_attributes.append({ID: attr_id, NAME: attributes[attr_id][0]})
+                cluster_attributes.append(
+                    {ID: attr_id, ATTR_NAME: attributes[attr_id][0]}
+                )
     _LOGGER.debug(
         "Requested attributes for: %s %s %s %s",
         "{}: [{}]".format(ATTR_CLUSTER_ID, cluster_id),
@@ -289,20 +294,20 @@ async def websocket_device_cluster_commands(hass, connection, msg):
         )
 
         if commands is not None:
-            for cmd_id in commands[CLIENT_COMMANDS]:
+            for cmd_id in commands[CLUSTER_COMMANDS_CLIENT]:
                 cluster_commands.append(
                     {
                         TYPE: CLIENT,
                         ID: cmd_id,
-                        NAME: commands[CLIENT_COMMANDS][cmd_id][0],
+                        ATTR_NAME: commands[CLUSTER_COMMANDS_CLIENT][cmd_id][0],
                     }
                 )
-            for cmd_id in commands[SERVER_COMMANDS]:
+            for cmd_id in commands[CLUSTER_COMMANDS_SERVER]:
                 cluster_commands.append(
                     {
-                        TYPE: SERVER,
+                        TYPE: CLUSTER_COMMAND_SERVER,
                         ID: cmd_id,
-                        NAME: commands[SERVER_COMMANDS][cmd_id][0],
+                        ATTR_NAME: commands[CLUSTER_COMMANDS_SERVER][cmd_id][0],
                     }
                 )
     _LOGGER.debug(

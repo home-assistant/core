@@ -2,20 +2,22 @@
 import logging
 
 from zigpy.zcl.foundation import Status
-from homeassistant.core import callback
+
 from homeassistant.components.lock import (
     DOMAIN,
-    STATE_UNLOCKED,
     STATE_LOCKED,
+    STATE_UNLOCKED,
     LockDevice,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
 from .core.const import (
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
-    ZHA_DISCOVERY_NEW,
-    DOORLOCK_CHANNEL,
+    CHANNEL_DOORLOCK,
     SIGNAL_ATTR_UPDATED,
+    ZHA_DISCOVERY_NEW,
 )
 from .entity import ZhaEntity
 
@@ -73,7 +75,7 @@ class ZhaDoorLock(ZhaEntity, LockDevice):
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Init this sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._doorlock_channel = self.cluster_channels.get(DOORLOCK_CHANNEL)
+        self._doorlock_channel = self.cluster_channels.get(CHANNEL_DOORLOCK)
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
