@@ -3,10 +3,7 @@ from datetime import timedelta
 import logging
 
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.components.device_tracker import (
-    DeviceScanner,
-    DOMAIN as DEVICE_TRACKER,
-)
+from homeassistant.components.device_tracker import DeviceScanner
 from homeassistant.const import CONF_HOST
 from .const import DOMAIN, MIKROTIK_SERVICES, CAPSMAN, WIRELESS, DHCP
 from . import CONF_METHOD

@@ -92,7 +92,17 @@ async def async_setup(hass, config):
             login_method = (login_plain, login_token)
 
         try:
-            api = MikrotikAPI(host, ssl, port, user, password, login_method, encoding)
+            api = MikrotikAPI(
+                host,
+                ssl,
+                port,
+                user,
+                password,
+                login_method,
+                encoding,
+                arp_ping,
+                track_devices,
+            )
             host_name = api.get_hostname()
             hass.data[DOMAIN][host] = api
         except (
