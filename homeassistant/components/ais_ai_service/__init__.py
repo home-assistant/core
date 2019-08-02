@@ -2297,6 +2297,7 @@ def _process_command_from_frame(hass, service):
                             "media_content_id": service.data["payload"]})
 
     elif service.data["topic"] == 'ais/tts_voice':
+        # this is done only once on start to set the voice on hass from android
         voice = service.data["payload"]
         set_voice = 'Jola lokalnie'
         if voice == 'pl-pl-x-oda-network':
@@ -2313,12 +2314,22 @@ def _process_command_from_frame(hass, service):
             set_voice = 'Bartek'
         elif voice == 'pl-pl-x-oda#male_3-local':
             set_voice = 'Andrzej'
-        hass.async_run_job(
-            hass.services.async_call(
-                'input_select',
-                'select_option', {
-                    "entity_id": "input_select.assistant_voice", "option": set_voice})
-        )
+
+        state = hass.states.get('input_select.assistant_voice').state
+        if state != set_voice:
+            # set the voice, on change we will inform Android frame
+            hass.async_run_job(
+                hass.services.async_call(
+                    'input_select',
+                    'select_option', {
+                        "entity_id": "input_select.assistant_voice", "option": set_voice})
+            )
+        else:
+            # publish back to frame
+            hass.services.call(
+                'ais_ai_service', 'publish_command_to_frame',
+                {"key": 'setTtsVoice', "val": voice})
+
     else:
         # TODO process this without mqtt
         # player_status and speech_status

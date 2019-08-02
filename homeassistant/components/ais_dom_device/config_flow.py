@@ -28,11 +28,12 @@ def scan_for_new_device(hass, loop) -> []:
     return G_IOT_DEV_TO_ADD
 
 
-def add_new_device(device, name, network, password, secure_android_id, set_option_30, ais_req_id) -> str:
+async def add_new_device(device, name, network, password, secure_android_id, set_option_30, ais_req_id) -> str:
     import requests
     from homeassistant.components import ais_ai_service as ais_ai_service
     # send add request to frame
     url = ais_ai_service.G_HTTP_REST_SERVICE_BASE_URL.format("127.0.0.1")
+    time.sleep(2)
     try:
         requests.post(
             url + '/command',
@@ -178,14 +179,13 @@ class AisDomDeviceFlowHandler(config_entries.ConfigFlow):
                 ais_global.set_ais_gate_req(str(ais_req_id), None)
                 # send a request to frame to add the new device
                 network = user_input['networks'].replace('(Twoje aktualne połączenie WiFi)', "").strip()
-                await self.hass.async_add_executor_job(
+                self.hass.async_run_job(
                     add_new_device, G_IOT_DEV_TO_ADD[1].split(';')[0], user_input[CONF_NAME], network.split(';')[0],
                     user_input[CONF_PASSWORD], ais_global.G_AIS_SECURE_ANDROID_ID_DOM, set_option_30, ais_req_id)
                 # request was correctly send, now check and wait for the answer
+                _LOGGER.error("3. self.hass.async_add_executor_job ")
                 return self.async_abort(reason='add_executed')
 
-
-            #
         return self.async_show_form(
             step_id='add_device',
             errors=errors if errors else {},
