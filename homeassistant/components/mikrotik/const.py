@@ -1,8 +1,5 @@
 """Constants used in the Mikrotik components."""
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY)
-
 DOMAIN = 'mikrotik'
 MIKROTIK = DOMAIN
 CLIENT = 'mikrotik_client'
@@ -19,9 +16,6 @@ CONF_TRACK_DEVICES = 'track_devices'
 CONF_LOGIN_METHOD = 'login_method'
 CONF_ENCODING = 'encoding'
 DEFAULT_ENCODING = 'utf-8'
-
-CONNECTING = 'connected'
-CONNECTED = 'connected'
 
 IDENTITY = 'identity'
 ARP = 'arp'
