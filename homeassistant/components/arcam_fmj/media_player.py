@@ -124,7 +124,7 @@ class ArcamFmj(MediaPlayerDevice):
         return support
 
     async def async_added_to_hass(self):
-        """Once registed add listener for events."""
+        """Once registered, add listener for events."""
         await self._state.start()
 
         @callback

@@ -192,7 +192,7 @@ class PublicTransportData:
             _LOGGER.debug("API returned error: %s", error)
             return
         except (rjpl.rjplConnectionError, rjpl.rjplHTTPError):
-            _LOGGER.debug("Error occured while connecting to the API")
+            _LOGGER.debug("Error occurred while connecting to the API")
             return
 
         # Filter result

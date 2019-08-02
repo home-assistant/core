@@ -262,7 +262,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
                 # PairVerify M4 - Ed25519 signature verification failed
                 errors["pairing_code"] = "authentication_error"
             except homekit.UnknownError:
-                # An error occured on the device whilst performing this
+                # An error occurred on the device whilst performing this
                 # operation.
                 errors["pairing_code"] = "unknown_error"
             except homekit.MaxPeersError:
