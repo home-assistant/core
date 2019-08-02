@@ -65,7 +65,7 @@ class MinutPointAlarmControl(AlarmControlPanel):
         _device_id = data.get("event", {}).get("device_id")
         if _device_id not in self._home["devices"] or _type not in EVENT_MAP:
             return
-        _LOGGER.debug("Recieved webhook: %s", _type)
+        _LOGGER.debug("Received webhook: %s", _type)
         self._home["alarm_status"] = EVENT_MAP[_type]
         self._changed_by = _device_id
         self.async_schedule_update_ha_state()

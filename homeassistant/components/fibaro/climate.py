@@ -50,7 +50,7 @@ HA_FANMODES = {v: k for k, v in FANMODES.items()}
 
 # SDS13781-10 Z-Wave Application Command Class Specification 2019-01-04
 # Table 130, Thermostat Mode Set version 3::Mode encoding.
-# 4 AUXILARY
+# 4 AUXILIARY
 OPMODES_PRESET = {
     5: PRESET_RESUME,
     7: PRESET_FURNACE,
