@@ -26,7 +26,7 @@ from .core.const import (
     DEFAULT_BAUDRATE,
     DEFAULT_RADIO_TYPE,
     DOMAIN,
-    ENABLE_QUIRKS,
+    CONF_ENABLE_QUIRKS,
     RadioType,
 )
 from .core.registries import establish_device_mappings
@@ -46,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_DEVICE_CONFIG, default={}): vol.Schema(
                     {cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}
                 ),
-                vol.Optional(ENABLE_QUIRKS, default=True): cv.boolean,
+                vol.Optional(CONF_ENABLE_QUIRKS, default=True): cv.boolean,
             }
         )
     },
@@ -99,7 +99,7 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS] = []
     config = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {})
 
-    if config.get(ENABLE_QUIRKS, True):
+    if config.get(CONF_ENABLE_QUIRKS, True):
         # needs to be done here so that the ZHA module is finished loading
         # before zhaquirks is imported
         # pylint: disable=W0611, W0612

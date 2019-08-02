@@ -21,36 +21,36 @@ from .channels import EventRelayChannel
 from .const import (
     ATTR_ARGS,
     ATTR_ATTRIBUTE,
+    ATTR_AVAILABLE,
     ATTR_CLUSTER_ID,
     ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
     ATTR_ENDPOINT_ID,
     ATTR_MANUFACTURER,
     ATTR_VALUE,
-    BATTERY_OR_UNKNOWN,
-    CLIENT_COMMANDS,
-    IEEE,
-    IN,
-    MAINS_POWERED,
-    MANUFACTURER_CODE,
-    MODEL,
-    NAME,
-    NWK,
-    OUT,
-    POWER_CONFIGURATION_CHANNEL,
-    POWER_SOURCE,
-    QUIRK_APPLIED,
-    QUIRK_CLASS,
-    SERVER,
-    SERVER_COMMANDS,
+    POWER_BATTERY_OR_UNKNOWN,
+    CLUSTER_COMMANDS_CLIENT,
+    ATTR_IEEE,
+    CLUSTER_TYPE_IN,
+    ATTR_LAST_SEEN,
+    ATTR_LQI,
+    POWER_MAINS_POWERED,
+    ATTR_MANUFACTURER_CODE,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_NWK,
+    CLUSTER_TYPE_OUT,
+    CHANNEL_POWER_CONFIGURATION,
+    ATTR_POWER_SOURCE,
+    ATTR_QUIRK_APPLIED,
+    ATTR_QUIRK_CLASS,
+    ATTR_RSSI,
+    CLUSTER_COMMAND_SERVER,
+    CLUSTER_COMMANDS_SERVER,
     SIGNAL_AVAILABLE,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
-    ZDO_CHANNEL,
-    LQI,
-    RSSI,
-    LAST_SEEN,
-    ATTR_AVAILABLE,
+    CHANNEL_ZDO,
 )
 from .helpers import LogMixin
 
@@ -155,7 +155,9 @@ class ZHADevice(LogMixin):
     @property
     def power_source(self):
         """Return the power source for the device."""
-        return MAINS_POWERED if self.is_mains_powered else BATTERY_OR_UNKNOWN
+        return (
+            POWER_MAINS_POWERED if self.is_mains_powered else POWER_BATTERY_OR_UNKNOWN
+        )
 
     @property
     def is_router(self):
@@ -223,18 +225,18 @@ class ZHADevice(LogMixin):
         time_struct = time.localtime(self.last_seen)
         update_time = time.strftime("%Y-%m-%dT%H:%M:%S", time_struct)
         return {
-            IEEE: ieee,
-            NWK: self.nwk,
+            ATTR_IEEE: ieee,
+            ATTR_NWK: self.nwk,
             ATTR_MANUFACTURER: self.manufacturer,
-            MODEL: self.model,
-            NAME: self.name or ieee,
-            QUIRK_APPLIED: self.quirk_applied,
-            QUIRK_CLASS: self.quirk_class,
-            MANUFACTURER_CODE: self.manufacturer_code,
-            POWER_SOURCE: self.power_source,
-            LQI: self.lqi,
-            RSSI: self.rssi,
-            LAST_SEEN: update_time,
+            ATTR_MODEL: self.model,
+            ATTR_NAME: self.name or ieee,
+            ATTR_QUIRK_APPLIED: self.quirk_applied,
+            ATTR_QUIRK_CLASS: self.quirk_class,
+            ATTR_MANUFACTURER_CODE: self.manufacturer_code,
+            ATTR_POWER_SOURCE: self.power_source,
+            ATTR_LQI: self.lqi,
+            ATTR_RSSI: self.rssi,
+            ATTR_LAST_SEEN: update_time,
             ATTR_AVAILABLE: self.available,
         }
 
@@ -242,8 +244,8 @@ class ZHADevice(LogMixin):
         """Add cluster channel to device."""
         # only keep 1 power configuration channel
         if (
-            cluster_channel.name is POWER_CONFIGURATION_CHANNEL
-            and POWER_CONFIGURATION_CHANNEL in self.cluster_channels
+            cluster_channel.name is CHANNEL_POWER_CONFIGURATION
+            and CHANNEL_POWER_CONFIGURATION in self.cluster_channels
         ):
             return
 
@@ -318,7 +320,7 @@ class ZHADevice(LogMixin):
         semaphore = asyncio.Semaphore(3)
         zdo_task = None
         for channel in channels:
-            if channel.name == ZDO_CHANNEL:
+            if channel.name == CHANNEL_ZDO:
                 # pylint: disable=E1111
                 if zdo_task is None:  # We only want to do this once
                     zdo_task = self._async_create_task(
@@ -356,7 +358,10 @@ class ZHADevice(LogMixin):
     def async_get_clusters(self):
         """Get all clusters for this device."""
         return {
-            ep_id: {IN: endpoint.in_clusters, OUT: endpoint.out_clusters}
+            ep_id: {
+                CLUSTER_TYPE_IN: endpoint.in_clusters,
+                CLUSTER_TYPE_OUT: endpoint.out_clusters,
+            }
             for (ep_id, endpoint) in self._zigpy_device.endpoints.items()
             if ep_id != 0
         }
@@ -367,19 +372,24 @@ class ZHADevice(LogMixin):
         from zigpy.profiles import zha, zll
 
         return {
-            ep_id: {IN: endpoint.in_clusters, OUT: endpoint.out_clusters}
+            ep_id: {
+                CLUSTER_TYPE_IN: endpoint.in_clusters,
+                CLUSTER_TYPE_OUT: endpoint.out_clusters,
+            }
             for (ep_id, endpoint) in self._zigpy_device.endpoints.items()
             if ep_id != 0 and endpoint.profile_id in (zha.PROFILE_ID, zll.PROFILE_ID)
         }
 
     @callback
-    def async_get_cluster(self, endpoint_id, cluster_id, cluster_type=IN):
+    def async_get_cluster(self, endpoint_id, cluster_id, cluster_type=CLUSTER_TYPE_IN):
         """Get zigbee cluster from this entity."""
         clusters = self.async_get_clusters()
         return clusters[endpoint_id][cluster_type][cluster_id]
 
     @callback
-    def async_get_cluster_attributes(self, endpoint_id, cluster_id, cluster_type=IN):
+    def async_get_cluster_attributes(
+        self, endpoint_id, cluster_id, cluster_type=CLUSTER_TYPE_IN
+    ):
         """Get zigbee attributes for specified cluster."""
         cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
@@ -387,14 +397,16 @@ class ZHADevice(LogMixin):
         return cluster.attributes
 
     @callback
-    def async_get_cluster_commands(self, endpoint_id, cluster_id, cluster_type=IN):
+    def async_get_cluster_commands(
+        self, endpoint_id, cluster_id, cluster_type=CLUSTER_TYPE_IN
+    ):
         """Get zigbee commands for specified cluster."""
         cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
             return None
         return {
-            CLIENT_COMMANDS: cluster.client_commands,
-            SERVER_COMMANDS: cluster.server_commands,
+            CLUSTER_COMMANDS_CLIENT: cluster.client_commands,
+            CLUSTER_COMMANDS_SERVER: cluster.server_commands,
         }
 
     async def write_zigbee_attribute(
@@ -403,7 +415,7 @@ class ZHADevice(LogMixin):
         cluster_id,
         attribute,
         value,
-        cluster_type=IN,
+        cluster_type=CLUSTER_TYPE_IN,
         manufacturer=None,
     ):
         """Write a value to a zigbee attribute for a cluster in this entity."""
@@ -444,7 +456,7 @@ class ZHADevice(LogMixin):
         command,
         command_type,
         args,
-        cluster_type=IN,
+        cluster_type=CLUSTER_TYPE_IN,
         manufacturer=None,
     ):
         """Issue a command against specified zigbee cluster on this entity."""
@@ -452,7 +464,7 @@ class ZHADevice(LogMixin):
         if cluster is None:
             return None
         response = None
-        if command_type == SERVER:
+        if command_type == CLUSTER_COMMAND_SERVER:
             response = await cluster.command(
                 command, *args, manufacturer=manufacturer, expect_reply=True
             )

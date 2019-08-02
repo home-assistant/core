@@ -5,12 +5,14 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
 import logging
+
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+
 from . import ZigbeeChannel, parse_and_log_command
-from ..helpers import get_attr_id_by_name
 from ..const import SIGNAL_ATTR_UPDATED, SIGNAL_MOVE_LEVEL, SIGNAL_SET_LEVEL
+from ..helpers import get_attr_id_by_name
 
 _LOGGER = logging.getLogger(__name__)
 

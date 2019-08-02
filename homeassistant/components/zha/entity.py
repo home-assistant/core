@@ -16,8 +16,8 @@ from .core.const import (
     DATA_ZHA,
     DATA_ZHA_BRIDGE_ID,
     DOMAIN,
-    MODEL,
-    NAME,
+    ATTR_MODEL,
+    ATTR_NAME,
     SIGNAL_REMOVE,
 )
 from .core.helpers import LogMixin
@@ -99,8 +99,8 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
             "connections": {(CONNECTION_ZIGBEE, ieee)},
             "identifiers": {(DOMAIN, ieee)},
             ATTR_MANUFACTURER: zha_device_info[ATTR_MANUFACTURER],
-            MODEL: zha_device_info[MODEL],
-            NAME: zha_device_info[NAME],
+            ATTR_MODEL: zha_device_info[ATTR_MODEL],
+            ATTR_NAME: zha_device_info[ATTR_NAME],
             "via_device": (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
         }
 
