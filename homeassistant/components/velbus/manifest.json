@@ -7,5 +7,5 @@
   ],
   "config_flow": true,
   "dependencies": [],
-  "codeowners": ["@ceral2nd"]
+  "codeowners": ["@cereal2nd"]
 }
