@@ -18,19 +18,19 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .core.const import (
-    SENSOR_ACCELERATION,
     CHANNEL_ATTRIBUTE,
+    CHANNEL_ON_OFF,
+    CHANNEL_ZONE,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
+    SENSOR_ACCELERATION,
     SENSOR_OCCUPANCY,
-    CHANNEL_ON_OFF,
     SENSOR_OPENING,
     SENSOR_TYPE,
     SIGNAL_ATTR_UPDATED,
     UNKNOWN,
     ZHA_DISCOVERY_NEW,
     ZONE,
-    CHANNEL_ZONE,
 )
 from .entity import ZhaEntity
 
