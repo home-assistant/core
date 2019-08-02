@@ -43,20 +43,20 @@ class MikrotikScanner(DeviceScanner):
     async def async_init(self):
         """Further initialize connection to Mikrotik Device."""
         await self.api.update_info()
-        data = self.hass.data[DOMAIN][self.host]
-        info = data.get('info', None)
-        connected = bool(info)
+        connected = self.api.connected()
         if connected:
+            self.get_method()
             await self.async_update()
             async_track_time_interval(self.hass,
                                       self.async_update,
                                       DEFAULT_SCAN_INTERVAL)
-        self.get_method()
         return connected
 
     async def async_update(self, now=None):
         """Ensure the information from Mikrotik device is up to date."""
         await self.api.update_device_tracker(self.method)
+        if not self.api.connected():
+            return
         data = self.hass.data[DOMAIN][self.host]
         devices = data.get(DEVICE_TRACKER)
         for mac in devices:
