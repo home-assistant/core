@@ -46,6 +46,22 @@ def mock_get_uuid():
 
 
 @asyncio.coroutine
+def test_new_version_shows_entity_startup(hass, mock_get_uuid, mock_get_newest_version):
+    """Test if new entity is created if it is unavailable at first."""
+    mock_get_uuid.return_value = MOCK_HUUID
+    mock_get_newest_version.return_value = mock_coro((NEW_VERSION, RELEASE_NOTES))
+
+    res = yield from async_setup_component(hass, updater.DOMAIN, {updater.DOMAIN: {}})
+    assert res, "Updater failed to set up"
+
+    yield from hass.async_block_till_done()
+
+    assert hass.states.is_state("binary_sensor.updater", "unavailable")
+    assert "newest_version" not in hass.states.get("binary_sensor.updater").attributes
+    assert "release_notes" not in hass.states.get("binary_sensor.updater").attributes
+
+
+@asyncio.coroutine
 def test_new_version_shows_entity_true(hass, mock_get_uuid, mock_get_newest_version):
     """Test if new entity is created if new version is available."""
     mock_get_uuid.return_value = MOCK_HUUID
