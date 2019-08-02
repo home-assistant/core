@@ -41,33 +41,33 @@ SENSOR_DOWNLOAD_SPEED = 'download_speed'
 SENSOR_UPLOAD_SPEED = 'upload_speed'
 
 ATTR_SYSINFO = ['board-name', 'serial-number',
-                  'version', 'factory-firmware',
-                  'firmware-type', 'current-firmware',
-                  'upgrade-frimware', 'routerboard',
-                  'cpu', 'total-memory',
-                  'architecture-name']
+                'version', 'factory-firmware',
+                'firmware-type', 'current-firmware',
+                'upgrade-frimware', 'routerboard',
+                'cpu', 'total-memory',
+                'architecture-name']
 ATTR_CPU = ['cpu',
-              'cpu-frequency',
-              'cpu-count']
+            'cpu-frequency',
+            'cpu-count']
 ATTR_MEMORY = ['free-memory',
-                 'total-memory']
+               'total-memory']
 ATTR_DISK = ['free-hdd-space',
-               'total-hdd-space']
+             'total-hdd-space']
 ATTR_DOWNLOAD_SPEED = ['name',
-                         'rx-packets-per-second',
-                         'rx-bits-per-second',
-                         'fp-rx-packets-per-second',
-                         'fp-rx-bits-per-second',
-                         'rx-drops-per-second',
-                         'rx-errors-per-second']
+                       'rx-packets-per-second',
+                       'rx-bits-per-second',
+                       'fp-rx-packets-per-second',
+                       'fp-rx-bits-per-second',
+                       'rx-drops-per-second',
+                       'rx-errors-per-second']
 ATTR_UPLOAD_SPEED = ['name',
-                       'tx-packets-per-second',
-                       'tx-bits-per-second',
-                       'fp-tx-packets-per-second',
-                       'fp-tx-bits-per-second',
-                       'tx-drops-per-second',
-                       'tx-queue-drops-per-second',
-                       'tx-errors-per-second']
+                     'tx-packets-per-second',
+                     'tx-bits-per-second',
+                     'fp-tx-packets-per-second',
+                     'fp-tx-bits-per-second',
+                     'tx-drops-per-second',
+                     'tx-queue-drops-per-second',
+                     'tx-errors-per-second']
 ATTR_DOWNLOAD = ['name', 'tx-bytes']
 ATTR_UPLOAD = ['name', 'rx-bytes']
 
@@ -108,5 +108,5 @@ SENSORS = {
 }
 
 ATTR_DEVICE_TRACKER = ['mac-address', 'rx-signal', 'ssid', 'interface',
-                         'comment', 'host-name', 'address', 'uptime',
-                         'rx-rate', 'tx-rate', 'last-seen']
+                       'comment', 'host-name', 'address', 'uptime',
+                       'rx-rate', 'tx-rate', 'last-seen']
