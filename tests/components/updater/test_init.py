@@ -45,6 +45,12 @@ def mock_get_uuid():
         yield mock
 
 
+@pytest.fixture
+def mock_dispatcher_connect():
+    with patch("homeassistant.helpers.dispatcher.async_dispatcher_connect") as mock:
+        yield mock
+
+
 @asyncio.coroutine
 def test_new_version_shows_entity_startup(hass, mock_get_uuid, mock_get_newest_version):
     """Test if new entity is created if it is unavailable at first."""
@@ -229,3 +235,18 @@ def test_new_version_shows_entity_after_hour_hassio(
         hass.states.get("binary_sensor.updater").attributes["release_notes"]
         == RELEASE_NOTES
     )
+
+
+@asyncio.coroutine
+def test_setup_dispatcher(hass, mock_dispatcher_connect):
+    """Test if we cleanly setup and close the dispatcher."""
+    mock_get_uuid.return_value = MOCK_HUUID
+    mock_get_newest_version.return_value = mock_coro((NEW_VERSION, RELEASE_NOTES))
+
+    res = yield from async_setup_component(hass, updater.DOMAIN, {updater.DOMAIN: {}})
+    assert res, "Updater failed to set up"
+
+    yield from hass.async_block_till_done()
+    assert mock_dispatcher_connect.called
+
+    # TODO: unsub dispatcher missing
