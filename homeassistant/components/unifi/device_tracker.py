@@ -28,6 +28,8 @@ from .const import (
     ATTR_MANUFACTURER,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_DONT_TRACK_CLIENTS,
+    CONF_DONT_TRACK_DEVICES,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONTROLLER_ID,
@@ -154,7 +156,7 @@ def update_items(controller, async_add_entities, tracked):
     """Update tracked device state from the controller."""
     new_tracked = []
 
-    if not controller.dont_track_clients:
+    if not controller.unifi_config.get(CONF_DONT_TRACK_CLIENTS, False):
 
         for client_id in controller.api.clients:
 
@@ -182,7 +184,7 @@ def update_items(controller, async_add_entities, tracked):
                 "New UniFi client tracker %s (%s)", client.hostname, client.mac
             )
 
-    if not controller.dont_track_devices:
+    if not controller.unifi_config.get(CONF_DONT_TRACK_DEVICES, False):
 
         for device_id in controller.api.devices:
 

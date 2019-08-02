@@ -247,7 +247,7 @@ async def test_restoring_client(hass, mock_controller):
 
 
 async def test_dont_track_clients(hass, mock_controller):
-    """Test the update_items function with some clients."""
+    """Test dont track clients config works."""
     mock_controller.mock_client_responses.append([CLIENT_1])
     mock_controller.mock_device_responses.append([DEVICE_1])
     mock_controller.unifi_config = {unifi.CONF_DONT_TRACK_CLIENTS: True}
@@ -265,7 +265,7 @@ async def test_dont_track_clients(hass, mock_controller):
 
 
 async def test_dont_track_devices(hass, mock_controller):
-    """Test the update_items function with some clients."""
+    """Test dont track devices config works."""
     mock_controller.mock_client_responses.append([CLIENT_1])
     mock_controller.mock_device_responses.append([DEVICE_1])
     mock_controller.unifi_config = {unifi.CONF_DONT_TRACK_DEVICES: True}

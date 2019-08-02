@@ -66,16 +66,6 @@ class UniFiController:
         return self.unifi_config.get(CONF_BLOCK_CLIENT, [])
 
     @property
-    def dont_track_clients(self):
-        """Return if clients should be tracked."""
-        return self.unifi_config.get(CONF_DONT_TRACK_CLIENTS, False)
-
-    @property
-    def dont_track_devices(self):
-        """Return if devices should be tracked."""
-        return self.unifi_config.get(CONF_DONT_TRACK_DEVICES, False)
-
-    @property
     def mac(self):
         """Return the mac address of this controller."""
         for client in self.api.clients.values():
