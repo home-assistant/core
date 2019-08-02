@@ -181,7 +181,7 @@ class ConversationProcessView(http.HomeAssistantView):
         if intent_result is None:
             # ais-dom ask
             from homeassistant.components import ais_ai_service as ais_ai
-            intent_result = await ais_ai._process(hass, data['text'], None)
+            intent_result = await ais_ai._process(hass, data['text'])
             if intent_result is None:
                 intent_result = intent.IntentResponse()
                 intent_result.async_set_speech("Przepraszam, jeszcze tego nie potrafie zrozumieć")
