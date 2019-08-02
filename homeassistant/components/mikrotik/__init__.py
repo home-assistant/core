@@ -103,14 +103,14 @@ async def async_setup(hass, config):
                 arp_ping,
                 track_devices,
             )
-            host_name = api.get_hostname()
+            api.connect_to_device()
             hass.data[DOMAIN][host] = api
         except (
             librouteros.exceptions.TrapError,
             librouteros.exceptions.MultiTrapError,
             librouteros.exceptions.ConnectionError,
         ) as e:
-            _LOGGER.error("Mikrotik API login failed %s", str(e))
+            _LOGGER.error("Mikrotik API login failed %s", e)
             continue
 
         if track_devices:
@@ -124,9 +124,8 @@ async def async_setup(hass, config):
                 )
             )
 
-        if not hass.data[DOMAIN]:
-            return False
-
+    if not hass.data[DOMAIN]:
+        return False
     return True
 
 
