@@ -17,9 +17,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from ..const import (
     CHANNEL_ATTRIBUTE,
     CHANNEL_EVENT_RELAY,
+    CHANNEL_ZDO,
     REPORT_CONFIG_DEFAULT,
     SIGNAL_ATTR_UPDATED,
-    CHANNEL_ZDO,
 )
 from ..helpers import (
     LogMixin,

@@ -17,6 +17,7 @@ from .core.const import (
     CONF_BAUDRATE,
     CONF_DATABASE,
     CONF_DEVICE_CONFIG,
+    CONF_ENABLE_QUIRKS,
     CONF_RADIO_TYPE,
     CONF_USB_PATH,
     DATA_ZHA,
@@ -26,7 +27,6 @@ from .core.const import (
     DEFAULT_BAUDRATE,
     DEFAULT_RADIO_TYPE,
     DOMAIN,
-    CONF_ENABLE_QUIRKS,
     RadioType,
 )
 from .core.registries import establish_device_mappings
