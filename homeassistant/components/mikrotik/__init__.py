@@ -68,7 +68,7 @@ async def async_setup(hass, config):
 
     for device in config[DOMAIN]:
         host = device[CONF_HOST]
-        ssl = device.get(CONF_SSL)
+        use_ssl = device.get(CONF_SSL)
         user = device.get(CONF_USERNAME)
         password = device.get(CONF_PASSWORD, "")
         login = device.get(CONF_LOGIN_METHOD)
@@ -80,7 +80,7 @@ async def async_setup(hass, config):
         if CONF_PORT in device:
             port = device.get(CONF_PORT)
         else:
-            if ssl:
+            if use_ssl:
                 port = MTK_DEFAULT_API_SSL_PORT
             else:
                 port = MTK_DEFAULT_API_PORT
@@ -95,7 +95,7 @@ async def async_setup(hass, config):
         try:
             api = MikrotikClient(
                 host,
-                ssl,
+                use_ssl,
                 port,
                 user,
                 password,
@@ -136,7 +136,7 @@ class MikrotikClient:
     def __init__(
         self,
         host,
-        ssl,
+        use_ssl,
         port,
         user,
         password,
@@ -147,7 +147,7 @@ class MikrotikClient:
     ):
         """Initialize the Mikrotik Client."""
         self._host = host
-        self._ssl = ssl
+        self._use_ssl = use_ssl
         self._port = port
         self._user = user
         self._password = password
@@ -177,7 +177,7 @@ class MikrotikClient:
             "port": self._port,
         }
 
-        if self._ssl:
+        if self._use_ssl:
             ssl_context = ssl.create_default_context()
             ssl_context.check_hostname = False
             ssl_context.verify_mode = ssl.CERT_NONE
