@@ -17,7 +17,6 @@ def fixture_mock_vaillant():
 @pytest.fixture(name="mock_system_manager")
 def fixture_mock_system_manager(mock_vaillant):
     """Mock the vaillant system manager."""
-    SystemManagerMock.reset()
     with mock.patch('vr900connector.systemmanager.SystemManager',
                     new=SystemManagerMock):
         yield

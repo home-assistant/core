@@ -151,10 +151,10 @@ class VaillantRoomClimate(VaillantClimate):
         HeatingMode.QUICK_VETO: PRESET_BOOST,
         HeatingMode.AUTO: PRESET_COMFORT,
         HeatingMode.ON: PRESET_HOME,
-        HeatingMode.OFF: PRESET_SLEEP,
+        HeatingMode.OFF: PRESET_AWAY,
         HeatingMode.MANUAL: PRESET_COMFORT,
         QuickMode.QM_HOLIDAY: PRESET_AWAY,
-        QuickMode.QM_SYSTEM_OFF: PRESET_SLEEP
+        QuickMode.QM_SYSTEM_OFF: PRESET_AWAY
     }
 
     _MODE_TO_HVAC: Dict[Mode, str] = {
@@ -307,7 +307,6 @@ class VaillantZoneClimate(VaillantClimate):
         super().__init__(system, zone.id, zone.name, zone)
         self._active_mode = system.get_active_mode_zone(zone)
         self._supported_features = SUPPORT_TARGET_TEMPERATURE_RANGE \
-            | SUPPORT_TARGET_TEMPERATURE \
             | SUPPORT_PRESET_MODE
 
     @property

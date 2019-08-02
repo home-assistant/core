@@ -106,8 +106,6 @@ async def async_setup(hass, config):
     hub.update_system = Throttle(
         config[DOMAIN][CONF_SCAN_INTERVAL])(hub.update_system)
 
-    hub.update_system()
-
     hass.data[HUB] = hub
 
     for platform in PLATFORMS:
@@ -130,8 +128,9 @@ class VaillantHub:
         self._manager = SystemManager(config[CONF_USERNAME],
                                       config[CONF_PASSWORD],
                                       config[CONF_SMARTPHONE_ID])
+
         self._listeners = []
-        self.system: System = None
+        self.system: System = self._manager.get_system()
         self._quick_veto_duration = config[CONF_QUICK_VETO_DURATION]
         self.config = config
 
@@ -152,7 +151,7 @@ class VaillantHub:
             _LOGGER.exception("Enable to fetch data from vaillant API")
             # update_system can is called by all entities, if it fails for
             # one entity, it will certainly fail for others.
-            # catching exception so the throttling is occurring
+            # catching exception so the throttling is occuring
 
     def find_component(self, comp):
         """Find a component in the system with the given id, no IO is done."""
