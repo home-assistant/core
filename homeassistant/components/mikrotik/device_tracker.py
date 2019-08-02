@@ -46,6 +46,7 @@ class MikrotikScanner(DeviceScanner):
         self.host = host
         self.method = method
         self.arp_ping = arp_ping
+        self.host_name = api.get_hostname()
         self.capsman = None
         self.wireless = None
         self.arp = {}
