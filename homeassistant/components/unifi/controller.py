@@ -15,8 +15,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .const import (
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
-    CONF_DONT_TRACK_CLIENTS,
-    CONF_DONT_TRACK_DEVICES,
     CONF_SITE_ID,
     CONTROLLER_ID,
     LOGGER,
