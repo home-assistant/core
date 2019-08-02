@@ -204,6 +204,7 @@ stages:
         python -m venv venv
 
         . venv/bin/activate
+        pip install -e .
         pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
       displayName: 'Setup Env'
     - script: |
