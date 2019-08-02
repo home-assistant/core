@@ -65,25 +65,29 @@ class MikrotikScanner(DeviceScanner):
     def get_method(self):
         """Determine the device tracker polling method."""
         capsman = self.api.get_api(MIKROTIK_SERVICES[CAPSMAN])
-        if capsman is None:
+        if not capsman:
             _LOGGER.info("Mikrotik %s: Not a CAPsMAN controller. Trying "
                          "local wireless interfaces.", (self.host))
+        else:
+            self.method = CAPSMAN
 
         wireless = self.api.get_api(MIKROTIK_SERVICES[WIRELESS])
-        if wireless is None or self.method == 'ip':
+        if not wireless:
+            _LOGGER.info("Mikrotik %s: No wireless interfaces. Trying "
+                         "DHCP leases.", (self.host))
+        else:
+            self.method = WIRELESS
+        
+        if (not capsman and not wireless) or self.method == 'ip':
             _LOGGER.info(
                 "Mikrotik %s: Wireless adapters not found. Try to "
                 "use DHCP lease table as presence tracker source. "
                 "Please decrease lease time as much as possible",
                 self.host)
 
-        if self.method:
-            _LOGGER.info("Mikrotik %s: Manually selected polling method %s",
-                         self.host, self.method)
-        else:
-            if capsman is not None:
-                self.method = CAPSMAN
-            elif wireless is not None:
-                self.method = WIRELESS
-            else:
-                self.method = DHCP
+        if not self.method:
+            self.method = DHCP
+                
+        _LOGGER.info(
+            "Mikrotik %s: Using %s for device tracker.", 
+            self.host, self.method)
