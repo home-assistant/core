@@ -10,13 +10,14 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
+
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up the mikrotik sensors."""
     if discovery_info is None:
         return
 
-    host = discovery_info['host']
+    host = discovery_info[CONF_HOST]
     client = hass.data[CLIENT][host]
     await client.api.update_info()
     async_add_entities(
@@ -40,7 +41,7 @@ class MikrotikSensor(Entity):
         self._unit = SENSORS[sensor_type][1]
         self._icon = SENSORS[sensor_type][2]
         self._item = SENSORS[sensor_type][3]
-        if not SENSOR in self.hass.data[DOMAIN][host]:
+        if SENSOR not in self.hass.data[DOMAIN][host]:
             self.hass.data[DOMAIN][host][SENSOR] = {}
         self.hass.data[DOMAIN][host][SENSOR][sensor_type] = {}
 
