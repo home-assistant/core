@@ -47,6 +47,7 @@ def mock_get_uuid():
 
 @pytest.fixture
 def mock_dispatcher_connect():
+    """Fixture to mock dispatcher_connect."""
     with patch("homeassistant.helpers.dispatcher.async_dispatcher_connect") as mock:
         yield mock
 
@@ -248,5 +249,3 @@ def test_setup_dispatcher(hass, mock_dispatcher_connect):
 
     yield from hass.async_block_till_done()
     assert mock_dispatcher_connect.called
-
-    # TODO: unsub dispatcher missing
