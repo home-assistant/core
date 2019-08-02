@@ -13,6 +13,7 @@ from .const import (
     CONF_DETECTION_TIME,
     CONF_DONT_TRACK_CLIENTS,
     CONF_DONT_TRACK_DEVICES,
+    CONF_DONT_TRACK_WIRED_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONTROLLER_ID,
@@ -32,6 +33,7 @@ CONTROLLER_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_DONT_TRACK_CLIENTS): cv.boolean,
         vol.Optional(CONF_DONT_TRACK_DEVICES): cv.boolean,
+        vol.Optional(CONF_DONT_TRACK_WIRED_CLIENTS): cv.boolean,
         vol.Optional(CONF_DETECTION_TIME): vol.All(
             cv.time_period, cv.positive_timedelta
         ),
