@@ -2,37 +2,38 @@
 import logging
 import numbers
 
-from homeassistant.core import callback
 from homeassistant.components.sensor import (
-    DOMAIN,
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_POWER,
-    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
+    DOMAIN,
 )
-from homeassistant.const import TEMP_CELSIUS, POWER_WATT, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, POWER_WATT, TEMP_CELSIUS
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
 from .core.const import (
+    CHANNEL_ATTRIBUTE,
+    SENSOR_BATTERY,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
-    ZHA_DISCOVERY_NEW,
-    HUMIDITY,
-    TEMPERATURE,
-    ILLUMINANCE,
-    PRESSURE,
-    METERING,
-    ELECTRICAL_MEASUREMENT,
-    GENERIC,
+    SENSOR_ELECTRICAL_MEASUREMENT,
+    CHANNEL_ELECTRICAL_MEASUREMENT,
+    SENSOR_GENERIC,
+    SENSOR_HUMIDITY,
+    SENSOR_ILLUMINANCE,
+    SENSOR_METERING,
+    CHANNEL_POWER_CONFIGURATION,
+    SENSOR_PRESSURE,
     SENSOR_TYPE,
-    ATTRIBUTE_CHANNEL,
-    ELECTRICAL_MEASUREMENT_CHANNEL,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_STATE_ATTR,
+    SENSOR_TEMPERATURE,
     UNKNOWN,
-    BATTERY,
-    POWER_CONFIGURATION_CHANNEL,
+    ZHA_DISCOVERY_NEW,
 )
 from .entity import ZhaEntity
 
@@ -121,49 +122,49 @@ async def async_battery_device_state_attr_provider(channel):
 
 
 FORMATTER_FUNC_REGISTRY = {
-    HUMIDITY: humidity_formatter,
-    TEMPERATURE: temperature_formatter,
-    PRESSURE: pressure_formatter,
-    ELECTRICAL_MEASUREMENT: active_power_formatter,
-    ILLUMINANCE: illuminance_formatter,
-    GENERIC: pass_through_formatter,
-    BATTERY: battery_percentage_remaining_formatter,
+    SENSOR_HUMIDITY: humidity_formatter,
+    SENSOR_TEMPERATURE: temperature_formatter,
+    SENSOR_PRESSURE: pressure_formatter,
+    SENSOR_ELECTRICAL_MEASUREMENT: active_power_formatter,
+    SENSOR_ILLUMINANCE: illuminance_formatter,
+    SENSOR_GENERIC: pass_through_formatter,
+    SENSOR_BATTERY: battery_percentage_remaining_formatter,
 }
 
 UNIT_REGISTRY = {
-    HUMIDITY: "%",
-    TEMPERATURE: TEMP_CELSIUS,
-    PRESSURE: "hPa",
-    ILLUMINANCE: "lx",
-    METERING: POWER_WATT,
-    ELECTRICAL_MEASUREMENT: POWER_WATT,
-    GENERIC: None,
-    BATTERY: "%",
+    SENSOR_HUMIDITY: "%",
+    SENSOR_TEMPERATURE: TEMP_CELSIUS,
+    SENSOR_PRESSURE: "hPa",
+    SENSOR_ILLUMINANCE: "lx",
+    SENSOR_METERING: POWER_WATT,
+    SENSOR_ELECTRICAL_MEASUREMENT: POWER_WATT,
+    SENSOR_GENERIC: None,
+    SENSOR_BATTERY: "%",
 }
 
 CHANNEL_REGISTRY = {
-    ELECTRICAL_MEASUREMENT: ELECTRICAL_MEASUREMENT_CHANNEL,
-    BATTERY: POWER_CONFIGURATION_CHANNEL,
+    SENSOR_ELECTRICAL_MEASUREMENT: CHANNEL_ELECTRICAL_MEASUREMENT,
+    SENSOR_BATTERY: CHANNEL_POWER_CONFIGURATION,
 }
 
-POLLING_REGISTRY = {ELECTRICAL_MEASUREMENT: True}
+POLLING_REGISTRY = {SENSOR_ELECTRICAL_MEASUREMENT: True}
 
-FORCE_UPDATE_REGISTRY = {ELECTRICAL_MEASUREMENT: False}
+FORCE_UPDATE_REGISTRY = {SENSOR_ELECTRICAL_MEASUREMENT: False}
 
 DEVICE_CLASS_REGISTRY = {
     UNKNOWN: None,
-    HUMIDITY: DEVICE_CLASS_HUMIDITY,
-    TEMPERATURE: DEVICE_CLASS_TEMPERATURE,
-    PRESSURE: DEVICE_CLASS_PRESSURE,
-    ILLUMINANCE: DEVICE_CLASS_ILLUMINANCE,
-    METERING: DEVICE_CLASS_POWER,
-    ELECTRICAL_MEASUREMENT: DEVICE_CLASS_POWER,
-    BATTERY: DEVICE_CLASS_BATTERY,
+    SENSOR_HUMIDITY: DEVICE_CLASS_HUMIDITY,
+    SENSOR_TEMPERATURE: DEVICE_CLASS_TEMPERATURE,
+    SENSOR_PRESSURE: DEVICE_CLASS_PRESSURE,
+    SENSOR_ILLUMINANCE: DEVICE_CLASS_ILLUMINANCE,
+    SENSOR_METERING: DEVICE_CLASS_POWER,
+    SENSOR_ELECTRICAL_MEASUREMENT: DEVICE_CLASS_POWER,
+    SENSOR_BATTERY: DEVICE_CLASS_BATTERY,
 }
 
 
 DEVICE_STATE_ATTR_PROVIDER_REGISTRY = {
-    BATTERY: async_battery_device_state_attr_provider
+    SENSOR_BATTERY: async_battery_device_state_attr_provider
 }
 
 
@@ -217,7 +218,7 @@ class Sensor(ZhaEntity):
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Init this sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._sensor_type = kwargs.get(SENSOR_TYPE, GENERIC)
+        self._sensor_type = kwargs.get(SENSOR_TYPE, SENSOR_GENERIC)
         self._unit = UNIT_REGISTRY.get(self._sensor_type)
         self._formatter_function = FORMATTER_FUNC_REGISTRY.get(
             self._sensor_type, pass_through_formatter
@@ -225,7 +226,7 @@ class Sensor(ZhaEntity):
         self._force_update = FORCE_UPDATE_REGISTRY.get(self._sensor_type, False)
         self._should_poll = POLLING_REGISTRY.get(self._sensor_type, False)
         self._channel = self.cluster_channels.get(
-            CHANNEL_REGISTRY.get(self._sensor_type, ATTRIBUTE_CHANNEL)
+            CHANNEL_REGISTRY.get(self._sensor_type, CHANNEL_ATTRIBUTE)
         )
         self._device_class = DEVICE_CLASS_REGISTRY.get(self._sensor_type, None)
         self.state_attr_provider = DEVICE_STATE_ATTR_PROVIDER_REGISTRY.get(

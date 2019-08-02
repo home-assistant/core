@@ -1,16 +1,18 @@
 """Support for the ZHA platform."""
 import logging
 import time
-from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER, DOMAIN
+
+from homeassistant.components.device_tracker import DOMAIN, SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
 from .core.const import (
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
-    ZHA_DISCOVERY_NEW,
-    POWER_CONFIGURATION_CHANNEL,
+    CHANNEL_POWER_CONFIGURATION,
     SIGNAL_ATTR_UPDATED,
+    ZHA_DISCOVERY_NEW,
 )
 from .entity import ZhaEntity
 from .sensor import battery_percentage_remaining_formatter
@@ -56,7 +58,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
     def __init__(self, **kwargs):
         """Initialize the ZHA device tracker."""
         super().__init__(**kwargs)
-        self._battery_channel = self.cluster_channels.get(POWER_CONFIGURATION_CHANNEL)
+        self._battery_channel = self.cluster_channels.get(CHANNEL_POWER_CONFIGURATION)
         self._connected = False
         self._keepalive_interval = 60
         self._should_poll = True
