@@ -62,7 +62,7 @@ class RuterSensor(Entity):
         """Get the latest data from the Ruter API."""
         await self.ruter.get_departures()
         if self.ruter.departures is None:
-            _LOGGER.error("No data recieved from Ruter.")
+            _LOGGER.error("No data received from Ruter.")
             return
         try:
             data = self.ruter.departures[self._offset]

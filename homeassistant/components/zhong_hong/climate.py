@@ -82,7 +82,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     async_dispatcher_connect(hass, SIGNAL_DEVICE_ADDED, startup)
 
-    # add devices after SIGNAL_DEVICE_SETTED_UP event is listend
+    # add devices after SIGNAL_DEVICE_SETTED_UP event is listened
     add_entities(devices)
 
     def stop_listen(event):
