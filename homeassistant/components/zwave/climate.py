@@ -10,15 +10,19 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
     DOMAIN,
+    HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_OFF,
+    PRESET_BOOST,
+    PRESET_NONE,
     SUPPORT_FAN_MODE,
     SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_PRESET_MODE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
@@ -37,37 +41,56 @@ REMOTEC_ZXT_120_THERMOSTAT = (REMOTEC, REMOTEC_ZXT_120)
 ATTR_OPERATING_STATE = "operating_state"
 ATTR_FAN_STATE = "fan_state"
 
+
+# Device is in manufacturer specific mode (e.g. setting the valve manually)
+PRESET_MANUFACTURER_SPECIFIC = "Manufacturer Specific"
+
 WORKAROUND_ZXT_120 = "zxt_120"
 
 DEVICE_MAPPINGS = {REMOTEC_ZXT_120_THERMOSTAT: WORKAROUND_ZXT_120}
 
 HVAC_STATE_MAPPINGS = {
-    "Off": HVAC_MODE_OFF,
-    "Heat": HVAC_MODE_HEAT,
-    "Heat Mode": HVAC_MODE_HEAT,
-    "Heat (Default)": HVAC_MODE_HEAT,
-    "Aux Heat": HVAC_MODE_HEAT,
-    "Furnace": HVAC_MODE_HEAT,
-    "Fan Only": HVAC_MODE_FAN_ONLY,
-    "Dry Air": HVAC_MODE_DRY,
-    "Moist Air": HVAC_MODE_DRY,
-    "Cool": HVAC_MODE_COOL,
-    "Auto": HVAC_MODE_HEAT_COOL,
+    "off": HVAC_MODE_OFF,
+    "heat": HVAC_MODE_HEAT,
+    "heat mode": HVAC_MODE_HEAT,
+    "heat (default)": HVAC_MODE_HEAT,
+    "aux heat": HVAC_MODE_HEAT,
+    "furnace": HVAC_MODE_HEAT,
+    "fan only": HVAC_MODE_FAN_ONLY,
+    "dry air": HVAC_MODE_DRY,
+    "moist air": HVAC_MODE_DRY,
+    "cool": HVAC_MODE_COOL,
+    "heat_cool": HVAC_MODE_HEAT_COOL,
+    "auto": HVAC_MODE_HEAT_COOL,
 }
-
 
 HVAC_CURRENT_MAPPINGS = {
-    "Idle": CURRENT_HVAC_IDLE,
-    "Heat": CURRENT_HVAC_HEAT,
-    "Pending Heat": CURRENT_HVAC_IDLE,
-    "Heating": CURRENT_HVAC_HEAT,
-    "Cool": CURRENT_HVAC_COOL,
-    "Pending Cool": CURRENT_HVAC_IDLE,
-    "Cooling": CURRENT_HVAC_COOL,
-    "Fan Only": CURRENT_HVAC_FAN,
-    "Vent / Economiser": CURRENT_HVAC_FAN,
-    "Off": CURRENT_HVAC_OFF,
+    "idle": CURRENT_HVAC_IDLE,
+    "heat": CURRENT_HVAC_HEAT,
+    "pending heat": CURRENT_HVAC_IDLE,
+    "heating": CURRENT_HVAC_HEAT,
+    "cool": CURRENT_HVAC_COOL,
+    "pending cool": CURRENT_HVAC_IDLE,
+    "cooling": CURRENT_HVAC_COOL,
+    "fan only": CURRENT_HVAC_FAN,
+    "vent / economiser": CURRENT_HVAC_FAN,
+    "off": CURRENT_HVAC_OFF,
 }
+
+PRESET_MAPPINGS = {
+    "full power": PRESET_BOOST,
+    "manufacturer specific": PRESET_MANUFACTURER_SPECIFIC,
+}
+
+DEFAULT_HVAC_MODES = [
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_COOL,
+    HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_DRY,
+    HVAC_MODE_OFF,
+    HVAC_MODE_AUTO,
+]
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -101,9 +124,13 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         self._target_temperature = None
         self._current_temperature = None
         self._hvac_action = None
-        self._hvac_list = None
-        self._hvac_mapping = None
-        self._hvac_mode = None
+        self._hvac_list = None  # [zwave_mode]
+        self._hvac_mapping = None  # {ha_mode:zwave_mode}
+        self._hvac_mode = None  # ha_mode
+        self._default_hvac_mode = None  # ha_mode
+        self._preset_mapping = None  # {ha_mode:zwave_mode}
+        self._preset_list = None  # [zwave_mode]
+        self._preset_mode = None  # ha_mode if exists, else zwave_mode
         self._current_fan_mode = None
         self._fan_modes = None
         self._fan_state = None
@@ -132,6 +159,8 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             support |= SUPPORT_FAN_MODE
         if self._zxt_120 == 1 and self.values.zxt_120_swing_mode:
             support |= SUPPORT_SWING_MODE
+        if self._preset_list:
+            support |= SUPPORT_PRESET_MODE
         return support
 
     def update_properties(self):
@@ -140,26 +169,86 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         if self.values.mode:
             self._hvac_list = []
             self._hvac_mapping = {}
-            hvac_list = self.values.mode.data_items
-            if hvac_list:
-                for mode in hvac_list:
-                    ha_mode = HVAC_STATE_MAPPINGS.get(mode)
+            self._preset_list = []
+            self._preset_mapping = {}
+
+            mode_list = self.values.mode.data_items
+            if mode_list:
+                for mode in mode_list:
+                    ha_mode = HVAC_STATE_MAPPINGS.get(str(mode).lower())
+                    ha_preset = PRESET_MAPPINGS.get(str(mode).lower())
                     if ha_mode and ha_mode not in self._hvac_mapping:
                         self._hvac_mapping[ha_mode] = mode
                         self._hvac_list.append(ha_mode)
-                        continue
-                    self._hvac_list.append(mode)
+                    elif ha_preset and ha_preset not in self._preset_mapping:
+                        self._preset_mapping[ha_preset] = mode
+                        self._preset_list.append(ha_preset)
+                    else:
+                        # If nothing matches
+                        self._preset_list.append(mode)
+
+            # Default operation mode
+            for mode in DEFAULT_HVAC_MODES:
+                if mode in self._hvac_mapping.keys():
+                    self._default_hvac_mode = mode
+                    break
+
+            if self._preset_list:
+                # Presets are supported
+                self._preset_list.append(PRESET_NONE)
+
             current_mode = self.values.mode.data
-            self._hvac_mode = next(
+            _LOGGER.debug("current_mode=%s", current_mode)
+            _hvac_temp = next(
                 (
                     key
                     for key, value in self._hvac_mapping.items()
                     if value == current_mode
                 ),
-                current_mode,
+                None,
             )
+
+            if _hvac_temp is None:
+                # The current mode is not a hvac mode
+                if (
+                    "heat" in current_mode.lower()
+                    and HVAC_MODE_HEAT in self._hvac_mapping.keys()
+                ):
+                    # The current preset modes maps to HVAC_MODE_HEAT
+                    _LOGGER.debug("Mapped to HEAT")
+                    self._hvac_mode = HVAC_MODE_HEAT
+                elif (
+                    "cool" in current_mode.lower()
+                    and HVAC_MODE_COOL in self._hvac_mapping.keys()
+                ):
+                    # The current preset modes maps to HVAC_MODE_COOL
+                    _LOGGER.debug("Mapped to COOL")
+                    self._hvac_mode = HVAC_MODE_COOL
+                else:
+                    # The current preset modes maps to self._default_hvac_mode
+                    _LOGGER.debug("Mapped to DEFAULT")
+                    self._hvac_mode = self._default_hvac_mode
+                self._preset_mode = next(
+                    (
+                        key
+                        for key, value in self._preset_mapping.items()
+                        if value == current_mode
+                    ),
+                    current_mode,
+                )
+            else:
+                # The current mode is a hvac mode
+                self._hvac_mode = _hvac_temp
+                self._preset_mode = PRESET_NONE
+
+        _LOGGER.debug("self._hvac_mapping=%s", self._hvac_mapping)
         _LOGGER.debug("self._hvac_list=%s", self._hvac_list)
+        _LOGGER.debug("self._hvac_mode=%s", self._hvac_mode)
+        _LOGGER.debug("self._default_hvac_mode=%s", self._default_hvac_mode)
         _LOGGER.debug("self._hvac_action=%s", self._hvac_action)
+        _LOGGER.debug("self._preset_mapping=%s", self._preset_mapping)
+        _LOGGER.debug("self._preset_list=%s", self._preset_list)
+        _LOGGER.debug("self._preset_mode=%s", self._preset_mode)
 
         # Current Temp
         if self.values.temperature:
@@ -199,7 +288,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         # Operating state
         if self.values.operating_state:
             mode = self.values.operating_state.data
-            self._hvac_action = HVAC_CURRENT_MAPPINGS.get(mode)
+            self._hvac_action = HVAC_CURRENT_MAPPINGS.get(str(mode).lower(), mode)
 
         # Fan operating state
         if self.values.fan_state:
@@ -247,7 +336,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         """
         if self.values.mode:
             return self._hvac_mode
-        return HVAC_MODE_HEAT
+        return self._default_hvac_mode
 
     @property
     def hvac_modes(self):
@@ -268,30 +357,72 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         return self._hvac_action
 
     @property
+    def preset_mode(self):
+        """Return preset operation ie. eco, away.
+
+        Need to be one of PRESET_*.
+        """
+        if self.values.mode:
+            return self._preset_mode
+        return PRESET_NONE
+
+    @property
+    def preset_modes(self):
+        """Return the list of available preset operation modes.
+
+        Need to be a subset of PRESET_MODES.
+        """
+        if self.values.mode:
+            return self._preset_list
+        return []
+
+    @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._target_temperature
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
+        _LOGGER.debug("Set temperature to %s", kwargs.get(ATTR_TEMPERATURE))
         if kwargs.get(ATTR_TEMPERATURE) is None:
             return
         self.values.primary.data = kwargs.get(ATTR_TEMPERATURE)
 
     def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
+        _LOGGER.debug("Set fan mode to %s", fan_mode)
         if not self.values.fan_mode:
             return
         self.values.fan_mode.data = fan_mode
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
+        _LOGGER.debug("Set hvac_mode to %s", hvac_mode)
         if not self.values.mode:
             return
-        self.values.mode.data = self._hvac_mapping.get(hvac_mode, hvac_mode)
+        operation_mode = self._hvac_mapping.get(hvac_mode)
+        _LOGGER.debug("Set operation_mode to %s", operation_mode)
+        self.values.mode.data = operation_mode
+
+    def set_preset_mode(self, preset_mode):
+        """Set new target preset mode."""
+        _LOGGER.debug("Set preset_mode to %s", preset_mode)
+        if not self.values.mode:
+            return
+        if preset_mode == PRESET_NONE:
+            # Activate the current hvac mode
+            self.update_properties()
+            operation_mode = self._hvac_mapping.get(self.hvac_mode)
+            _LOGGER.debug("Set operation_mode to %s", operation_mode)
+            self.values.mode.data = operation_mode
+        else:
+            operation_mode = self._preset_mapping.get(preset_mode, preset_mode)
+            _LOGGER.debug("Set operation_mode to %s", operation_mode)
+            self.values.mode.data = operation_mode
 
     def set_swing_mode(self, swing_mode):
         """Set new target swing mode."""
+        _LOGGER.debug("Set swing_mode to %s", swing_mode)
         if self._zxt_120 == 1:
             if self.values.zxt_120_swing_mode:
                 self.values.zxt_120_swing_mode.data = swing_mode
