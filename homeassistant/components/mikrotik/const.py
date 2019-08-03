@@ -40,4 +40,10 @@ ATTR_DEVICE_TRACKER = [
     "rx-rate",
     "tx-rate",
     "last-seen",
+    "tx-ccq",
+    "signal-to-noise",
+    "wmm-enabled",
+    "authentication-type",
+    "encryption",
+    "tx-rate-set",
 ]
