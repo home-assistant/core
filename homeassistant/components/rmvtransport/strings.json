@@ -21,8 +21,8 @@
           "lines": "Lines",
           "direction": "Direction",
           "destinations": "Destinations",
-          "max_journeys": "max_journeys",
-          "scan_interval": "scan_interval"
+          "max_journeys": "Max. journeys",
+          "scan_interval": "Scan interval"
         }
       }
     },

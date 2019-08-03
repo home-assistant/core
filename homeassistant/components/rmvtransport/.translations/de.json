@@ -21,7 +21,8 @@
           "lines": "Linien",
           "direction": "Richtung",
           "destinations": "Ziele",
-          "max_journeys": "max_journeys"
+          "max_journeys": "Max. Verbindungen",
+          "scan_interval": "Scan interval"
         }
       }
     },
