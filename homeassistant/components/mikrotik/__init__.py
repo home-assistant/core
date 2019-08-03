@@ -184,9 +184,11 @@ class MikrotikClient:
             librouteros.exceptions.TrapError,
             librouteros.exceptions.MultiTrapError,
             librouteros.exceptions.ConnectionError,
-        ) as e:
+        ) as api_error:
             _LOGGER.error(
-                "Mikrotik error for device %s. " "Connection error: %s", self._host, e
+                "Mikrotik error for device %s. " "Connection error: %s",
+                self._host,
+                api_error,
             )
             self._connecting = False
             self._connected = False

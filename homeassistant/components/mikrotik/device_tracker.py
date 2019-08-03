@@ -124,7 +124,7 @@ class MikrotikScanner(DeviceScanner):
 
         data = self.api.get_api(MIKROTIK_SERVICES[method])
         if data is None:
-            self.update_info()
+            self.api.update_info()
             return
 
         arp = self.api.get_api(MIKROTIK_SERVICES[ARP])
@@ -141,7 +141,7 @@ class MikrotikScanner(DeviceScanner):
                 self.dhcp[mac] = data
                 if self.arp_ping and mac in arp:
                     interface = arp[mac]["interface"]
-                    if not self.arp_ping(mac, interface):
+                    if not self.do_arp_ping(mac, interface):
                         continue
 
             attributes = {}
@@ -161,7 +161,7 @@ class MikrotikScanner(DeviceScanner):
 
             self.device_tracker[mac] = attributes
 
-    def arp_ping(self, mac, interface):
+    def do_arp_ping(self, mac, interface):
         """Attempt to arp ping MAC address via interface."""
         params = {
             "arp-ping": "yes",
