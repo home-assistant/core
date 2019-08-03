@@ -1,27 +1,33 @@
 """Support for the Hive climate devices."""
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF, PRESET_BOOST,
-    SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_AUTO,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    PRESET_BOOST,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    PRESET_NONE,
+)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import DATA_HIVE, DOMAIN
 
 HIVE_TO_HASS_STATE = {
-    'SCHEDULE': HVAC_MODE_AUTO,
-    'MANUAL': HVAC_MODE_HEAT,
-    'OFF': HVAC_MODE_OFF,
+    "SCHEDULE": HVAC_MODE_AUTO,
+    "MANUAL": HVAC_MODE_HEAT,
+    "OFF": HVAC_MODE_OFF,
 }
 
 HASS_TO_HIVE_STATE = {
-    HVAC_MODE_AUTO: 'SCHEDULE',
-    HVAC_MODE_HEAT: 'MANUAL',
-    HVAC_MODE_OFF: 'OFF',
+    HVAC_MODE_AUTO: "SCHEDULE",
+    HVAC_MODE_HEAT: "MANUAL",
+    HVAC_MODE_OFF: "OFF",
 }
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 SUPPORT_HVAC = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
-SUPPORT_PRESET = [PRESET_BOOST]
+SUPPORT_PRESET = [PRESET_NONE, PRESET_BOOST]
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -35,7 +41,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     climate = HiveClimateEntity(session, discovery_info)
 
     add_entities([climate])
-    session.entities.append(climate)
 
 
 class HiveClimateEntity(ClimateDevice):
@@ -49,10 +54,8 @@ class HiveClimateEntity(ClimateDevice):
         self.thermostat_node_id = hivedevice["Thermostat_NodeID"]
         self.session = hivesession
         self.attributes = {}
-        self.data_updatesource = '{}.{}'.format(
-            self.device_type, self.node_id)
-        self._unique_id = '{}-{}'.format(self.node_id, self.device_type)
-        self.session.entities.append(self)
+        self.data_updatesource = "{}.{}".format(self.device_type, self.node_id)
+        self._unique_id = "{}-{}".format(self.node_id, self.device_type)
 
     @property
     def unique_id(self):
@@ -62,12 +65,7 @@ class HiveClimateEntity(ClimateDevice):
     @property
     def device_info(self):
         """Return device information."""
-        return {
-            'identifiers': {
-                (DOMAIN, self.unique_id)
-            },
-            'name': self.name
-        }
+        return {"identifiers": {(DOMAIN, self.unique_id)}, "name": self.name}
 
     @property
     def supported_features(self):
@@ -76,7 +74,7 @@ class HiveClimateEntity(ClimateDevice):
 
     def handle_update(self, updatesource):
         """Handle the new update request."""
-        if '{}.{}'.format(self.device_type, self.node_id) not in updatesource:
+        if "{}.{}".format(self.device_type, self.node_id) not in updatesource:
             self.schedule_update_ha_state()
 
     @property
@@ -84,7 +82,7 @@ class HiveClimateEntity(ClimateDevice):
         """Return the name of the Climate device."""
         friendly_name = "Heating"
         if self.node_name is not None:
-            friendly_name = '{} {}'.format(self.node_name, friendly_name)
+            friendly_name = "{} {}".format(self.node_name, friendly_name)
         return friendly_name
 
     @property
@@ -145,6 +143,11 @@ class HiveClimateEntity(ClimateDevice):
         """Return a list of available preset modes."""
         return SUPPORT_PRESET
 
+    async def async_added_to_hass(self):
+        """When entity is added to Home Assistant."""
+        await super().async_added_to_hass()
+        self.session.entities.append(self)
+
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         new_mode = HASS_TO_HIVE_STATE[hvac_mode]
@@ -157,15 +160,14 @@ class HiveClimateEntity(ClimateDevice):
         """Set new target temperature."""
         new_temperature = kwargs.get(ATTR_TEMPERATURE)
         if new_temperature is not None:
-            self.session.heating.set_target_temperature(
-                self.node_id, new_temperature)
+            self.session.heating.set_target_temperature(self.node_id, new_temperature)
 
             for entity in self.session.entities:
                 entity.handle_update(self.data_updatesource)
 
     def set_preset_mode(self, preset_mode) -> None:
         """Set new preset mode."""
-        if preset_mode is None and self.preset_mode == PRESET_BOOST:
+        if preset_mode == PRESET_NONE and self.preset_mode == PRESET_BOOST:
             self.session.heating.turn_boost_off(self.node_id)
 
         elif preset_mode == PRESET_BOOST:
@@ -182,4 +184,5 @@ class HiveClimateEntity(ClimateDevice):
         """Update all Node data from Hive."""
         self.session.core.update_data(self.node_id)
         self.attributes = self.session.attributes.state_attributes(
-            self.thermostat_node_id)
+            self.thermostat_node_id
+        )

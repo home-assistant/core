@@ -23,22 +23,22 @@ class TestCommandLine(unittest.TestCase):
     def test_setup(self):
         """Test setup."""
         with assert_setup_component(1) as handle_config:
-            assert setup_component(self.hass, 'notify', {
-                'notify': {
-                    'name': 'test',
-                    'platform': 'command_line',
-                    'command': 'echo $(cat); exit 1', }
-            })
+            assert setup_component(
+                self.hass,
+                "notify",
+                {
+                    "notify": {
+                        "name": "test",
+                        "platform": "command_line",
+                        "command": "echo $(cat); exit 1",
+                    }
+                },
+            )
         assert handle_config[notify.DOMAIN]
 
     def test_bad_config(self):
         """Test set up the platform with bad/missing configuration."""
-        config = {
-            notify.DOMAIN: {
-                'name': 'test',
-                'platform': 'command_line',
-            }
-        }
+        config = {notify.DOMAIN: {"name": "test", "platform": "command_line"}}
         with assert_setup_component(0) as handle_config:
             assert setup_component(self.hass, notify.DOMAIN, config)
         assert not handle_config[notify.DOMAIN]
@@ -46,38 +46,48 @@ class TestCommandLine(unittest.TestCase):
     def test_command_line_output(self):
         """Test the command line output."""
         with tempfile.TemporaryDirectory() as tempdirname:
-            filename = os.path.join(tempdirname, 'message.txt')
-            message = 'one, two, testing, testing'
+            filename = os.path.join(tempdirname, "message.txt")
+            message = "one, two, testing, testing"
             with assert_setup_component(1) as handle_config:
-                assert setup_component(self.hass, notify.DOMAIN, {
-                    'notify': {
-                        'name': 'test',
-                        'platform': 'command_line',
-                        'command': 'echo $(cat) > {}'.format(filename)
-                    }
-                })
+                assert setup_component(
+                    self.hass,
+                    notify.DOMAIN,
+                    {
+                        "notify": {
+                            "name": "test",
+                            "platform": "command_line",
+                            "command": "echo $(cat) > {}".format(filename),
+                        }
+                    },
+                )
             assert handle_config[notify.DOMAIN]
 
             assert self.hass.services.call(
-                'notify', 'test', {'message': message}, blocking=True)
+                "notify", "test", {"message": message}, blocking=True
+            )
 
             with open(filename) as fil:
                 # the echo command adds a line break
                 assert fil.read() == "{}\n".format(message)
 
-    @patch('homeassistant.components.command_line.notify._LOGGER.error')
+    @patch("homeassistant.components.command_line.notify._LOGGER.error")
     def test_error_for_none_zero_exit_code(self, mock_error):
         """Test if an error is logged for non zero exit codes."""
         with assert_setup_component(1) as handle_config:
-            assert setup_component(self.hass, notify.DOMAIN, {
-                'notify': {
-                    'name': 'test',
-                    'platform': 'command_line',
-                    'command': 'echo $(cat); exit 1'
-                }
-            })
+            assert setup_component(
+                self.hass,
+                notify.DOMAIN,
+                {
+                    "notify": {
+                        "name": "test",
+                        "platform": "command_line",
+                        "command": "echo $(cat); exit 1",
+                    }
+                },
+            )
         assert handle_config[notify.DOMAIN]
 
-        assert self.hass.services.call('notify', 'test', {'message': 'error'},
-                                       blocking=True)
+        assert self.hass.services.call(
+            "notify", "test", {"message": "error"}, blocking=True
+        )
         assert 1 == mock_error.call_count

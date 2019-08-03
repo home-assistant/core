@@ -7,45 +7,50 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP)
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SERVER = 'server'
-CONF_FOLDER = 'folder'
-CONF_SEARCH = 'search'
+CONF_SERVER = "server"
+CONF_FOLDER = "folder"
+CONF_SEARCH = "search"
 
 DEFAULT_PORT = 993
 
-ICON = 'mdi:email-outline'
+ICON = "mdi:email-outline"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_SERVER): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_FOLDER, default='INBOX'): cv.string,
-    vol.Optional(CONF_SEARCH, default='UnSeen UnDeleted'): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_SERVER): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_FOLDER, default="INBOX"): cv.string,
+        vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): cv.string,
+    }
+)
 
 
-async def async_setup_platform(hass,
-                               config,
-                               async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the IMAP platform."""
-    sensor = ImapSensor(config.get(CONF_NAME),
-                        config.get(CONF_USERNAME),
-                        config.get(CONF_PASSWORD),
-                        config.get(CONF_SERVER),
-                        config.get(CONF_PORT),
-                        config.get(CONF_FOLDER),
-                        config.get(CONF_SEARCH))
+    sensor = ImapSensor(
+        config.get(CONF_NAME),
+        config.get(CONF_USERNAME),
+        config.get(CONF_PASSWORD),
+        config.get(CONF_SERVER),
+        config.get(CONF_PORT),
+        config.get(CONF_FOLDER),
+        config.get(CONF_SEARCH),
+    )
     if not await sensor.connection():
         raise PlatformNotReady
 
@@ -106,12 +111,11 @@ class ImapSensor(Entity):
 
         if self._connection is None:
             try:
-                self._connection = aioimaplib.IMAP4_SSL(
-                    self._server, self._port)
+                self._connection = aioimaplib.IMAP4_SSL(self._server, self._port)
                 await self._connection.wait_hello_from_server()
                 await self._connection.login(self._user, self._password)
                 await self._connection.select(self._folder)
-                self._does_push = self._connection.has_capability('IDLE')
+                self._does_push = self._connection.has_capability("IDLE")
             except (aioimaplib.AioImapException, asyncio.TimeoutError):
                 self._connection = None
 
@@ -153,12 +157,15 @@ class ImapSensor(Entity):
             await self._connection.noop()
             result, lines = await self._connection.search(self._search)
 
-            if result == 'OK':
+            if result == "OK":
                 self._email_count = len(lines[0].split())
             else:
-                _LOGGER.error("Can't parse IMAP server response to search "
-                              "'%s':  %s / %s",
-                              self._search, result, lines[0])
+                _LOGGER.error(
+                    "Can't parse IMAP server response to search " "'%s':  %s / %s",
+                    self._search,
+                    result,
+                    lines[0],
+                )
 
     def disconnected(self):
         """Forget the connection after it was lost."""

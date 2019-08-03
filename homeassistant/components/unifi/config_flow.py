@@ -3,14 +3,19 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL)
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 
 from .const import CONF_CONTROLLER, CONF_SITE_ID, DOMAIN, LOGGER
 from .controller import get_controller
 from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
 
 DEFAULT_PORT = 8443
-DEFAULT_SITE_ID = 'default'
+DEFAULT_SITE_ID = "default"
 DEFAULT_VERIFY_SSL = False
 
 
@@ -50,27 +55,29 @@ class UnifiFlowHandler(config_entries.ConfigFlow):
                 return await self.async_step_site()
 
             except AuthenticationRequired:
-                errors['base'] = 'faulty_credentials'
+                errors["base"] = "faulty_credentials"
 
             except CannotConnect:
-                errors['base'] = 'service_unavailable'
+                errors["base"] = "service_unavailable"
 
             except Exception:  # pylint: disable=broad-except
                 LOGGER.error(
-                    'Unknown error connecting with UniFi Controller at %s',
-                    user_input[CONF_HOST])
-                return self.async_abort(reason='unknown')
+                    "Unknown error connecting with UniFi Controller at %s",
+                    user_input[CONF_HOST],
+                )
+                return self.async_abort(reason="unknown")
 
         return self.async_show_form(
-            step_id='user',
-            data_schema=vol.Schema({
-                vol.Required(CONF_HOST): str,
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-                vol.Optional(
-                    CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
-            }),
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST): str,
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_PASSWORD): str,
+                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
+                }
+            ),
             errors=errors,
         )
 
@@ -83,47 +90,42 @@ class UnifiFlowHandler(config_entries.ConfigFlow):
                 desc = user_input.get(CONF_SITE_ID, self.desc)
 
                 for site in self.sites.values():
-                    if desc == site['desc']:
-                        self.config[CONF_SITE_ID] = site['name']
+                    if desc == site["desc"]:
+                        self.config[CONF_SITE_ID] = site["name"]
                         break
 
                 for entry in self._async_current_entries():
                     controller = entry.data[CONF_CONTROLLER]
-                    if controller[CONF_HOST] == self.config[CONF_HOST] and \
-                       controller[CONF_SITE_ID] == self.config[CONF_SITE_ID]:
+                    if (
+                        controller[CONF_HOST] == self.config[CONF_HOST]
+                        and controller[CONF_SITE_ID] == self.config[CONF_SITE_ID]
+                    ):
                         raise AlreadyConfigured
 
-                data = {
-                    CONF_CONTROLLER: self.config
-                }
+                data = {CONF_CONTROLLER: self.config}
 
-                return self.async_create_entry(
-                    title=desc,
-                    data=data
-                )
+                return self.async_create_entry(title=desc, data=data)
 
             except AlreadyConfigured:
-                return self.async_abort(reason='already_configured')
+                return self.async_abort(reason="already_configured")
 
         if len(self.sites) == 1:
-            self.desc = next(iter(self.sites.values()))['desc']
+            self.desc = next(iter(self.sites.values()))["desc"]
             return await self.async_step_site(user_input={})
 
         if self.desc is not None:
             for site in self.sites.values():
-                if self.desc == site['name']:
-                    self.desc = site['desc']
+                if self.desc == site["name"]:
+                    self.desc = site["desc"]
                     return await self.async_step_site(user_input={})
 
         sites = []
         for site in self.sites.values():
-            sites.append(site['desc'])
+            sites.append(site["desc"])
 
         return self.async_show_form(
-            step_id='site',
-            data_schema=vol.Schema({
-                vol.Required(CONF_SITE_ID): vol.In(sites)
-            }),
+            step_id="site",
+            data_schema=vol.Schema({vol.Required(CONF_SITE_ID): vol.In(sites)}),
             errors=errors,
         )
 

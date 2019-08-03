@@ -26,7 +26,7 @@ PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-        hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up Twente Milieu sensor based on a config entry."""
     twentemilieu = hass.data[DOMAIN][entry.data[CONF_ID]]
@@ -74,12 +74,12 @@ class TwenteMilieuSensor(Entity):
     """Defines a Twente Milieu sensor."""
 
     def __init__(
-            self,
-            twentemilieu: TwenteMilieu,
-            unique_id: str,
-            name: str,
-            waste_type: str,
-            icon: str,
+        self,
+        twentemilieu: TwenteMilieu,
+        unique_id: str,
+        name: str,
+        waste_type: str,
+        icon: str,
     ) -> None:
         """Initialize the Twente Milieu entity."""
         self._available = True

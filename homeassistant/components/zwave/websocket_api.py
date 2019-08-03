@@ -11,20 +11,16 @@ from .const import DATA_NETWORK
 
 _LOGGER = logging.getLogger(__name__)
 
-TYPE = 'type'
-ID = 'id'
+TYPE = "type"
+ID = "id"
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({
-    vol.Required(TYPE): 'zwave/network_status'
-})
+@websocket_api.websocket_command({vol.Required(TYPE): "zwave/network_status"})
 def websocket_network_status(hass, connection, msg):
     """Get Z-Wave network status."""
     network = hass.data[DATA_NETWORK]
-    connection.send_result(msg[ID], {
-        'state': network.state,
-    })
+    connection.send_result(msg[ID], {"state": network.state})
 
 
 @callback
