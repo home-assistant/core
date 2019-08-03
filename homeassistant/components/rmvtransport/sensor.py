@@ -11,7 +11,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle, slugify
+from homeassistant.util import slugify
 
 from . import (
     DATA_RMVTRANSPORT_CLIENT,

@@ -5,13 +5,7 @@ import hashlib
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_MONITORED_CONDITIONS,
-    CONF_SCAN_INTERVAL,
-    CONF_SENSORS,
-    CONF_SHOW_ON_MAP,
-)
+from homeassistant.const import CONF_NAME, CONF_SCAN_INTERVAL, CONF_SHOW_ON_MAP
 from homeassistant.helpers import aiohttp_client
 
 from .const import (
