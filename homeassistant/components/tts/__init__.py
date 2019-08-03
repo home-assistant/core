@@ -27,6 +27,9 @@ from homeassistant.helpers import config_per_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_prepare_setup_platform
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CACHE = "cache"

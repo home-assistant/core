@@ -37,6 +37,9 @@ from .const import (
 )
 
 
+# mypy: allow-incomplete-defs, allow-untyped-defs
+
+
 async def _async_reproduce_states(
     hass: HomeAssistantType, state: State, context: Optional[Context] = None
 ) -> None:

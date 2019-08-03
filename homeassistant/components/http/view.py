@@ -22,6 +22,9 @@ from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_REAL_IP
 _LOGGER = logging.getLogger(__name__)
 
 
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
+
 class HomeAssistantView:
     """Base view for all views."""
 

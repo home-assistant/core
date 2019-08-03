@@ -12,6 +12,9 @@ from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.util import slugify
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 # Platform specific data

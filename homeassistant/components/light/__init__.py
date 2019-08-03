@@ -29,6 +29,9 @@ from homeassistant.helpers import intent
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 DOMAIN = "light"
 SCAN_INTERVAL = timedelta(seconds=30)
 

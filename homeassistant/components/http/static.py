@@ -6,6 +6,9 @@ from aiohttp.web import FileResponse
 from aiohttp.web_exceptions import HTTPNotFound, HTTPForbidden
 from aiohttp.web_urldispatcher import StaticResource
 
+
+# mypy: allow-untyped-defs
+
 CACHE_TIME = 31 * 86400  # = 1 month
 CACHE_HEADERS = {hdrs.CACHE_CONTROL: "public, max-age={}".format(CACHE_TIME)}
 

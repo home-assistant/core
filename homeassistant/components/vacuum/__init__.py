@@ -27,6 +27,9 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity, Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "vacuum"

@@ -18,6 +18,9 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from homeassistant.components.light import PLATFORM_SCHEMA, Light
 
+
+# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Light Switch"

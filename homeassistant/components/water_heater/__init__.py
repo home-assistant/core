@@ -27,6 +27,9 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 DEFAULT_MIN_TEMP = 110
 DEFAULT_MAX_TEMP = 140
 

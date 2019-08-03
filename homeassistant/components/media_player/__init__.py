@@ -98,6 +98,9 @@ from .const import (
 )
 from .reproduce_state import async_reproduce_states  # noqa
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 _RND = SystemRandom()
 

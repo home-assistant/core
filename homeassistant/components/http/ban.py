@@ -16,6 +16,9 @@ from homeassistant.util.yaml import dump
 
 from .const import KEY_REAL_IP
 
+
+# mypy: allow-incomplete-defs, allow-untyped-defs, no-check-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 KEY_BANNED_IPS = "ha_banned_ips"
