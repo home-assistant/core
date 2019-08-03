@@ -49,16 +49,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for zone in zones:
         if zone["type"] == "HEATING":
             for variable in CLIMATE_HEAT_SENSOR_TYPES:
-                sensor_items.append(create_zone_sensor(
-                    tado, zone, zone["name"], zone["id"], variable))
+                sensor_items.append(
+                    create_zone_sensor(tado, zone, zone["name"], zone["id"], variable)
+                )
         elif zone["type"] == "HOT_WATER":
             for variable in HOT_WATER_SENSOR_TYPES:
-                sensor_items.append(create_zone_sensor(
-                    tado, zone, zone["name"], zone["id"], variable))
+                sensor_items.append(
+                    create_zone_sensor(tado, zone, zone["name"], zone["id"], variable)
+                )
         elif zone["type"] == "AIR_CONDITIONING":
             for variable in CLIMATE_COOL_SENSOR_TYPES:
-                sensor_items.append(createzone_sensor(
-                    tado, zone, zone["name"], zone["id"], variable))
+                sensor_items.append(
+                    create_zone_sensor(tado, zone, zone["name"], zone["id"], variable)
+                )
 
     me_data = tado.get_me()
     sensor_items.append(
@@ -214,10 +217,9 @@ class TadoSensor(Entity):
                 activity_data = data["activityDataPoints"]
                 
                 if "heatingPower" in activity_data and activity_data["heatingPower"] is not None:
-                    self._state = float(
-                        activity_data["heatingPower"]["percentage"])
+                    self._state = float(activity_data["heatingPower"]["percentage"])
                     self._state_attributes = {
-                        "time": activity_data["heatingPower"]["timestamp"],
+                        "time": activity_data["heatingPower"]["timestamp"]
                     }
 
         elif self.zone_variable == "ac":
@@ -227,7 +229,7 @@ class TadoSensor(Entity):
                 if "acPower" in activity_data and activity_data["acPower"] is not None:
                     self._state = activity_data["acPower"]["value"]
                     self._state_attributes = {
-                        "time": activity_data["acPower"]["timestamp"],
+                        "time": activity_data["acPower"]["timestamp"]
                     }
 
         elif self.zone_variable == "tado bridge status":

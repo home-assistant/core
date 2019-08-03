@@ -406,12 +406,12 @@ class TadoClimate(ClimateDevice):
             self.zone_name,
         )
         if self.ac_mode:
-            self._store.set_zone_overlay(self.zone_id, 
-              self._current_operation, 
-              self._target_temp, None, "AIR_CONDITIONING", "COOL")
+            self._store.set_zone_overlay(
+              self.zone_id, self._current_operation, self._target_temp, 
+              None, "AIR_CONDITIONING", "COOL")
         else:
-            self._store.set_zone_overlay(self.zone_id, 
-              self._current_operation, 
-              self._target_temp, None, "HEATING")
+            self._store.set_zone_overlay(
+              self.zone_id, self._current_operation, self._target_temp, 
+              None, "HEATING")
 
         self._overlay_mode = self._current_operation
