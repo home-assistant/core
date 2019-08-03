@@ -37,6 +37,7 @@ ATTR_DEVICE_TRACKER = [
     "address",
     "last-seen",
     "rx-signal",
+    "signal-strength",
     "tx-ccq",
     "signal-to-noise",
     "wmm-enabled",
