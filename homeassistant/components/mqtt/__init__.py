@@ -431,7 +431,7 @@ async def async_subscribe(
         )
 
     wrapped_msg_callback = msg_callback
-    # If we have 3 paramaters with no default value, wrap the callback
+    # If we have 3 parameters with no default value, wrap the callback
     if non_default == 3:
         _LOGGER.warning(
             "Signature of MQTT msg_callback '%s.%s' is deprecated",
