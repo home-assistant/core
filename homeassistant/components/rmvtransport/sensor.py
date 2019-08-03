@@ -132,7 +132,7 @@ class RMVDepartureSensor(Entity):
         self._show_on_map = show_on_map
         self._icon = ICONS[None]
         self._uniqueid = slugify(
-            f"s{station}-d{direction}-l{''.join(lines)}-"
+            f"s{station}-d{direction}-l{''.join([str(l) for l in lines])}-"
             f"p{''.join(products)}-t{time_offset}-mj{max_journeys}-{name}"
         )
 
