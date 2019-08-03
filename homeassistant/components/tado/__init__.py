@@ -43,7 +43,9 @@ def setup(hass, config):
         tado = Tado(username, password)
         tado.setDebugging(True)
     except (RuntimeError, urllib.error.HTTPError):
-        _LOGGER.error("Unable to connect to mytado with username and password")
+        _LOGGER.error(
+            "Unable to connect to mytado with username and password"
+        )
         return False
 
     hass.data[DATA_TADO] = TadoDataStore(tado)
@@ -89,7 +91,9 @@ class TadoDataStore:
 
             except RuntimeError:
                 _LOGGER.error(
-                    "Unable to connect to myTado. %s %s", sensor["id"], sensor["id"]
+                    "Unable to connect to myTado. %s %s",
+                    sensor["id"],
+                    sensor["id"],
                 )
 
             self.data[data_id] = data
@@ -123,17 +127,45 @@ class TadoDataStore:
     def reset_zone_overlay(self, zone_id):
         """Wrap for resetZoneOverlay(..)."""
         self.tado.resetZoneOverlay(zone_id)
-        self.update(no_throttle=True)  # pylint: disable=unexpected-keyword-arg
+        self.update(
+            no_throttle=True
+        )  # pylint: disable=unexpected-keyword-arg
 
-    def set_zone_overlay(self, zone_id, overlayMode, temperature=None,
-                         duration=None, deviceType='HEATING', mode=None):
+    def set_zone_overlay(
+        self,
+        zone_id,
+        overlayMode,
+        temperature=None,
+        duration=None,
+        deviceType="HEATING",
+        mode=None,
+    ):
         """Wrap for setZoneOverlay(..)."""
-        self.tado.setZoneOverlay(zone_id, overlayMode, temperature,
-                                 duration, deviceType, 'ON', mode)
-        self.update(no_throttle=True)  # pylint: disable=unexpected-keyword-arg
+        self.tado.setZoneOverlay(
+            zone_id,
+            overlayMode,
+            temperature,
+            duration,
+            deviceType,
+            "ON",
+            mode,
+        )
+        self.update(
+            no_throttle=True
+        )  # pylint: disable=unexpected-keyword-arg
 
-    def set_zone_off(self, zone_id, overlayMode, deviceType='HEATING'):
+    def set_zone_off(
+        self, zone_id, overlayMode, deviceType="HEATING"
+    ):
         """Set a zone to off."""
-        self.tado.setZoneOverlay(zone_id, overlayMode, None, None,
-                                 deviceType, 'OFF')
-        self.update(no_throttle=True)  # pylint: disable=unexpected-keyword-arg
+        self.tado.setZoneOverlay(
+            zone_id,
+            overlayMode,
+            None,
+            None,
+            deviceType,
+            "OFF",
+        )
+        self.update(
+            no_throttle=True
+        )  # pylint: disable=unexpected-keyword-arg
