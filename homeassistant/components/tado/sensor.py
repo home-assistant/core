@@ -215,7 +215,7 @@ class TadoSensor(Entity):
         elif self.zone_variable == "heating":
             if "activityDataPoints" in data:
                 activity_data = data["activityDataPoints"]
-                
+
                 if "heatingPower" in activity_data and activity_data["heatingPower"] is not None:
                     self._state = float(activity_data["heatingPower"]["percentage"])
                     self._state_attributes = {
@@ -225,7 +225,7 @@ class TadoSensor(Entity):
         elif self.zone_variable == "ac":
             if "activityDataPoints" in data:
                 activity_data = data["activityDataPoints"]
-                
+
                 if "acPower" in activity_data and activity_data["acPower"] is not None:
                     self._state = activity_data["acPower"]["value"]
                     self._state_attributes = {
