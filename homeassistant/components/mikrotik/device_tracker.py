@@ -145,10 +145,6 @@ class MikrotikScanner(DeviceScanner):
 
             mac = device["mac-address"]
             attributes = {}
-            attributes["source_type"] = "router"
-            attributes["scanner_type"] = method
-            attributes["scanner_host"] = self.host
-            attributes["scanner_host_name"] = self.host_name
 
             if mac in self.dhcp:
                 attributes["host_name"] = self.dhcp[mac]["host-name"]
@@ -159,7 +155,11 @@ class MikrotikScanner(DeviceScanner):
             for attrib in ATTR_DEVICE_TRACKER:
                 if attrib in device:
                     attributes[slugify(attrib)] = device[attrib]
-
+                    
+            attributes["source_type"] = "router"
+            attributes["scanner_type"] = method
+            attributes["scanner_host"] = self.host
+            attributes["scanner_host_name"] = self.host_name
             self.device_tracker[mac] = attributes
 
     def do_arp_ping(self, mac, interface):
