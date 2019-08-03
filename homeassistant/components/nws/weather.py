@@ -56,6 +56,19 @@ ATTR_FORECAST_DAYTIME = "daytime"
 # https://api.weather.gov/icons
 CONDITION_CLASSES = OrderedDict(
     [
+        (
+            "exceptional",
+            [
+                "Tornado",
+                "Hurricane conditions",
+                "Tropical storm conditions",
+                "Dust",
+                "Smoke",
+                "Haze",
+                "Hot",
+                "Cold",
+            ],
+        ),
         ("snowy", ["Snow", "Sleet", "Blizzard"]),
         (
             "snowy-rainy",
