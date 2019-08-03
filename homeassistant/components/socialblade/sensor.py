@@ -12,26 +12,27 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-CHANNEL_ID = 'channel_id'
+CHANNEL_ID = "channel_id"
 
 DEFAULT_NAME = "Social Blade"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(hours=2)
 
-SUBSCRIBERS = 'subscribers'
+SUBSCRIBERS = "subscribers"
 
-TOTAL_VIEWS = 'total_views'
+TOTAL_VIEWS = "total_views"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CHANNEL_ID): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CHANNEL_ID): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Social Blade sensor."""
-    social_blade = SocialBladeSensor(
-        config[CHANNEL_ID], config[CONF_NAME])
+    social_blade = SocialBladeSensor(config[CHANNEL_ID], config[CONF_NAME])
 
     social_blade.update()
     if social_blade.valid_channel_id is False:
@@ -71,6 +72,7 @@ class SocialBladeSensor(Entity):
     def update(self):
         """Get the latest data from Social Blade."""
         import socialbladeclient
+
         try:
             data = socialbladeclient.get_data(self.channel_id)
             self._attributes = {TOTAL_VIEWS: data[TOTAL_VIEWS]}

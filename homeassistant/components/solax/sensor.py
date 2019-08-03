@@ -6,10 +6,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-        TEMP_CELSIUS,
-        CONF_IP_ADDRESS
-)
+from homeassistant.const import TEMP_CELSIUS, CONF_IP_ADDRESS
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -18,15 +15,12 @@ from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_IP_ADDRESS): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_IP_ADDRESS): cv.string})
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Platform setup."""
     import solax
 
@@ -39,9 +33,9 @@ async def async_setup_platform(hass, config, async_add_entities,
     devices = []
     for sensor in solax.INVERTER_SENSORS:
         idx, unit = solax.INVERTER_SENSORS[sensor]
-        if unit == 'C':
+        if unit == "C":
             unit = TEMP_CELSIUS
-        uid = '{}-{}'.format(serial, idx)
+        uid = "{}-{}".format(serial, idx)
         devices.append(Inverter(uid, serial, sensor, unit))
     endpoint.sensors = devices
     async_add_entities(devices)
@@ -103,7 +97,7 @@ class Inverter(Entity):
     @property
     def name(self):
         """Name of this inverter attribute."""
-        return 'Solax {} {}'.format(self.serial, self.key)
+        return "Solax {} {}".format(self.serial, self.key)
 
     @property
     def unit_of_measurement(self):

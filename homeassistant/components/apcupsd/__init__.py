@@ -4,31 +4,36 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_HOST, CONF_PORT)
+from homeassistant.const import CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_TYPE = 'type'
+CONF_TYPE = "type"
 
 DATA = None
-DEFAULT_HOST = 'localhost'
+DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 3551
-DOMAIN = 'apcupsd'
+DOMAIN = "apcupsd"
 
-KEY_STATUS = 'STATUS'
+KEY_STATUS = "STATUS"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-VALUE_ONLINE = 'ONLINE'
+VALUE_ONLINE = "ONLINE"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
@@ -60,6 +65,7 @@ class APCUPSdData:
     def __init__(self, host, port):
         """Initialize the data object."""
         from apcaccess import status
+
         self._host = host
         self._port = port
         self._status = None

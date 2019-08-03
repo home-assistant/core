@@ -9,16 +9,15 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'wake_on_lan'
+DOMAIN = "wake_on_lan"
 
-CONF_BROADCAST_ADDRESS = 'broadcast_address'
+CONF_BROADCAST_ADDRESS = "broadcast_address"
 
-SERVICE_SEND_MAGIC_PACKET = 'send_magic_packet'
+SERVICE_SEND_MAGIC_PACKET = "send_magic_packet"
 
-WAKE_ON_LAN_SEND_MAGIC_PACKET_SCHEMA = vol.Schema({
-    vol.Required(CONF_MAC): cv.string,
-    vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,
-})
+WAKE_ON_LAN_SEND_MAGIC_PACKET_SCHEMA = vol.Schema(
+    {vol.Required(CONF_MAC): cv.string, vol.Optional(CONF_BROADCAST_ADDRESS): cv.string}
+)
 
 
 async def async_setup(hass, config):
@@ -29,18 +28,27 @@ async def async_setup(hass, config):
         """Send magic packet to wake up a device."""
         mac_address = call.data.get(CONF_MAC)
         broadcast_address = call.data.get(CONF_BROADCAST_ADDRESS)
-        _LOGGER.info("Send magic packet to mac %s (broadcast: %s)",
-                     mac_address, broadcast_address)
+        _LOGGER.info(
+            "Send magic packet to mac %s (broadcast: %s)",
+            mac_address,
+            broadcast_address,
+        )
         if broadcast_address is not None:
             await hass.async_add_job(
-                partial(wakeonlan.send_magic_packet, mac_address,
-                        ip_address=broadcast_address))
+                partial(
+                    wakeonlan.send_magic_packet,
+                    mac_address,
+                    ip_address=broadcast_address,
+                )
+            )
         else:
-            await hass.async_add_job(
-                partial(wakeonlan.send_magic_packet, mac_address))
+            await hass.async_add_job(partial(wakeonlan.send_magic_packet, mac_address))
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SEND_MAGIC_PACKET, send_magic_packet,
-        schema=WAKE_ON_LAN_SEND_MAGIC_PACKET_SCHEMA)
+        DOMAIN,
+        SERVICE_SEND_MAGIC_PACKET,
+        send_magic_packet,
+        schema=WAKE_ON_LAN_SEND_MAGIC_PACKET_SCHEMA,
+    )
 
     return True

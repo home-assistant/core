@@ -31,11 +31,10 @@ def is_on(hass, entity_id=None):
             component = getattr(hass.components, domain)
 
         except ImportError:
-            _LOGGER.error('Failed to call %s.is_on: component not found',
-                          domain)
+            _LOGGER.error("Failed to call %s.is_on: component not found", domain)
             continue
 
-        if not hasattr(component, 'is_on'):
+        if not hasattr(component, "is_on"):
             _LOGGER.warning("Integration %s has no is_on method.", domain)
             continue
 

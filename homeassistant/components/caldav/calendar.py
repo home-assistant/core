@@ -7,40 +7,55 @@ import re
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
-    ENTITY_ID_FORMAT, PLATFORM_SCHEMA, CalendarEventDevice, calculate_offset,
-    get_date, is_offset_reached)
+    ENTITY_ID_FORMAT,
+    PLATFORM_SCHEMA,
+    CalendarEventDevice,
+    calculate_offset,
+    get_date,
+    is_offset_reached,
+)
 from homeassistant.const import (
-    CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL)
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_URL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.util import Throttle, dt
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CALENDARS = 'calendars'
-CONF_CUSTOM_CALENDARS = 'custom_calendars'
-CONF_CALENDAR = 'calendar'
-CONF_SEARCH = 'search'
+CONF_CALENDARS = "calendars"
+CONF_CUSTOM_CALENDARS = "custom_calendars"
+CONF_CALENDAR = "calendar"
+CONF_SEARCH = "search"
 
-OFFSET = '!!'
+OFFSET = "!!"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    # pylint: disable=no-value-for-parameter
-    vol.Required(CONF_URL): vol.Url(),
-    vol.Optional(CONF_CALENDARS, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
-    vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
-    vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
-    vol.Optional(CONF_CUSTOM_CALENDARS, default=[]):
-        vol.All(cv.ensure_list, [
-            vol.Schema({
-                vol.Required(CONF_CALENDAR): cv.string,
-                vol.Required(CONF_NAME): cv.string,
-                vol.Required(CONF_SEARCH): cv.string,
-            })
-        ]),
-    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        # pylint: disable=no-value-for-parameter
+        vol.Required(CONF_URL): vol.Url(),
+        vol.Optional(CONF_CALENDARS, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
+        vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
+        vol.Optional(CONF_CUSTOM_CALENDARS, default=[]): vol.All(
+            cv.ensure_list,
+            [
+                vol.Schema(
+                    {
+                        vol.Required(CONF_CALENDAR): cv.string,
+                        vol.Required(CONF_NAME): cv.string,
+                        vol.Required(CONF_SEARCH): cv.string,
+                    }
+                )
+            ],
+        ),
+        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+    }
+)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
@@ -54,7 +69,8 @@ def setup_platform(hass, config, add_entities, disc_info=None):
     password = config.get(CONF_PASSWORD)
 
     client = caldav.DAVClient(
-        url, None, username, password, ssl_verify_cert=config[CONF_VERIFY_SSL])
+        url, None, username, password, ssl_verify_cert=config[CONF_VERIFY_SSL]
+    )
 
     calendars = client.principal().calendars()
 
@@ -62,8 +78,7 @@ def setup_platform(hass, config, add_entities, disc_info=None):
     for calendar in list(calendars):
         # If a calendar name was given in the configuration,
         # ignore all the others
-        if (config[CONF_CALENDARS]
-                and calendar.name not in config[CONF_CALENDARS]):
+        if config[CONF_CALENDARS] and calendar.name not in config[CONF_CALENDARS]:
             _LOGGER.debug("Ignoring calendar '%s'", calendar.name)
             continue
 
@@ -75,20 +90,20 @@ def setup_platform(hass, config, add_entities, disc_info=None):
 
             name = cust_calendar[CONF_NAME]
             device_id = "{} {}".format(
-                cust_calendar[CONF_CALENDAR], cust_calendar[CONF_NAME])
-            entity_id = generate_entity_id(
-                ENTITY_ID_FORMAT, device_id, hass=hass)
+                cust_calendar[CONF_CALENDAR], cust_calendar[CONF_NAME]
+            )
+            entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
             calendar_devices.append(
                 WebDavCalendarEventDevice(
-                    name, calendar, entity_id, True,
-                    cust_calendar[CONF_SEARCH]))
+                    name, calendar, entity_id, True, cust_calendar[CONF_SEARCH]
+                )
+            )
 
         # Create a default calendar if there was no custom one
         if not config[CONF_CUSTOM_CALENDARS]:
             name = calendar.name
             device_id = calendar.name
-            entity_id = generate_entity_id(
-                ENTITY_ID_FORMAT, device_id, hass=hass)
+            entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
             calendar_devices.append(
                 WebDavCalendarEventDevice(name, calendar, entity_id)
             )
@@ -110,9 +125,7 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        return {
-            'offset_reached': self._offset_reached,
-        }
+        return {"offset_reached": self._offset_reached}
 
     @property
     def event(self):
@@ -153,13 +166,14 @@ class WebDavCalendarData:
     async def async_get_events(self, hass, start_date, end_date):
         """Get all events in a specific time frame."""
         # Get event list from the current calendar
-        vevent_list = await hass.async_add_job(self.calendar.date_search,
-                                               start_date, end_date)
+        vevent_list = await hass.async_add_job(
+            self.calendar.date_search, start_date, end_date
+        )
         event_list = []
         for event in vevent_list:
             vevent = event.instance.vevent
             uid = None
-            if hasattr(vevent, 'uid'):
+            if hasattr(vevent, "uid"):
                 uid = vevent.uid.value
             data = {
                 "uid": uid,
@@ -170,8 +184,8 @@ class WebDavCalendarData:
                 "description": self.get_attr_value(vevent, "description"),
             }
 
-            data['start'] = get_date(data['start']).isoformat()
-            data['end'] = get_date(data['end']).isoformat()
+            data["start"] = get_date(data["start"]).isoformat()
+            data["end"] = get_date(data["end"]).isoformat()
 
             event_list.append(data)
 
@@ -183,30 +197,36 @@ class WebDavCalendarData:
         # We have to retrieve the results for the whole day as the server
         # won't return events that have already started
         results = self.calendar.date_search(
-            dt.start_of_local_day(),
-            dt.start_of_local_day() + timedelta(days=1)
+            dt.start_of_local_day(), dt.start_of_local_day() + timedelta(days=1)
         )
 
         # dtstart can be a date or datetime depending if the event lasts a
         # whole day. Convert everything to datetime to be able to sort it
-        results.sort(key=lambda x: self.to_datetime(
-            x.instance.vevent.dtstart.value
-        ))
+        results.sort(key=lambda x: self.to_datetime(x.instance.vevent.dtstart.value))
 
-        vevent = next((
-            event.instance.vevent
-            for event in results
-            if (self.is_matching(event.instance.vevent, self.search)
-                and (
-                    not self.is_all_day(event.instance.vevent)
-                    or self.include_all_day)
-                and not self.is_over(event.instance.vevent))), None)
+        vevent = next(
+            (
+                event.instance.vevent
+                for event in results
+                if (
+                    self.is_matching(event.instance.vevent, self.search)
+                    and (
+                        not self.is_all_day(event.instance.vevent)
+                        or self.include_all_day
+                    )
+                    and not self.is_over(event.instance.vevent)
+                )
+            ),
+            None,
+        )
 
         # If no matching event could be found
         if vevent is None:
             _LOGGER.debug(
                 "No matching event found in the %d results for %s",
-                len(results), self.calendar.name)
+                len(results),
+                self.calendar.name,
+            )
             self.event = None
             return
 
@@ -216,7 +236,7 @@ class WebDavCalendarData:
             "start": self.get_hass_date(vevent.dtstart.value),
             "end": self.get_hass_date(self.get_end_date(vevent)),
             "location": self.get_attr_value(vevent, "location"),
-            "description": self.get_attr_value(vevent, "description")
+            "description": self.get_attr_value(vevent, "description"),
         }
 
     @staticmethod
@@ -232,7 +252,8 @@ class WebDavCalendarData:
             or hasattr(vevent, "location")
             and pattern.match(vevent.location.value)
             or hasattr(vevent, "description")
-            and pattern.match(vevent.description.value))
+            and pattern.match(vevent.description.value)
+        )
 
     @staticmethod
     def is_all_day(vevent):
