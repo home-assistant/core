@@ -1,21 +1,7 @@
-"""Configuration for HEOS tests."""
+"""Configuration for Ring tests."""
 import requests_mock
 import pytest
-from homeassistant.components.ring import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_SCAN_INTERVAL
-from tests.common import MockConfigEntry
-from homeassistant.setup import async_setup_component
 from tests.common import load_fixture
-
-
-@pytest.fixture(name="config_entry")
-def config_entry_fixture():
-    """Create a mock ring config entry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_USERNAME: "foo", CONF_PASSWORD: "bar", CONF_SCAN_INTERVAL: 1000},
-        title="Ring",
-    )
 
 
 @pytest.fixture(name="requests_mock")
@@ -57,13 +43,3 @@ def requests_mock_fixture():
         )
 
         yield mock
-
-
-async def setup_platform(hass, platform):
-    """Set up the ring platform and prerequisites."""
-    config = {
-        DOMAIN: {CONF_USERNAME: "foo", CONF_PASSWORD: "bar", CONF_SCAN_INTERVAL: 1000},
-        platform: {"platform": DOMAIN},
-    }
-    assert await async_setup_component(hass, platform, config)
-    await hass.async_block_till_done()

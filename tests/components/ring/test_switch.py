@@ -1,7 +1,7 @@
 """The tests for the Ring switch platform."""
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from tests.common import load_fixture
-from .conftest import setup_platform
+from .common import setup_platform
 
 
 async def test_entity_registry(hass, requests_mock):
