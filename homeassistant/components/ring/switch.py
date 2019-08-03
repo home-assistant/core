@@ -9,7 +9,7 @@ from . import DATA_RING_STICKUP_CAMS, SIGNAL_UPDATE_RING
 
 _LOGGER = logging.getLogger(__name__)
 
-SIREN_ICON = 'mdi:alarm-bell'
+SIREN_ICON = "mdi:alarm-bell"
 
 
 # It takes a few seconds for the API to correctly return an update indicating
@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     cameras = hass.data[DATA_RING_STICKUP_CAMS]
     switches = []
     for device in cameras:
-        if device.has_capability('siren'):
+        if device.has_capability("siren"):
             _LOGGER.warning(device)
             switches.append(SirenSwitch(device))
 
@@ -39,12 +39,11 @@ class BaseRingSwitch(SwitchDevice):
         """Initialize the switch."""
         self._device = device
         self._device_type = device_type
-        self._unique_id = '{}-{}'.format(self._device.id, self._device_type)
+        self._unique_id = "{}-{}".format(self._device.id, self._device_type)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_RING, self._update_callback)
+        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_RING, self._update_callback)
 
     @callback
     def _update_callback(self):
@@ -55,7 +54,7 @@ class BaseRingSwitch(SwitchDevice):
     @property
     def name(self):
         """Name of the device."""
-        return '{} {}'.format(self._device.name, self._device_type)
+        return "{} {}".format(self._device.name, self._device_type)
 
     @property
     def unique_id(self):
@@ -73,7 +72,7 @@ class SirenSwitch(BaseRingSwitch):
 
     def __init__(self, device):
         """Initialize the switch for a device with a siren."""
-        super().__init__(device, 'siren')
+        super().__init__(device, "siren")
         self._no_updates_until = datetime.now()
         self._siren_on = False
 
@@ -108,5 +107,3 @@ class SirenSwitch(BaseRingSwitch):
             _LOGGER.debug("Skipping update...")
             return
         self._siren_on = self._device.siren > 0
-        _LOGGER.error(self._device.name)
-        _LOGGER.error(self._siren_on)
