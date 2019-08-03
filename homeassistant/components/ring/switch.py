@@ -63,7 +63,7 @@ class BaseRingSwitch(SwitchDevice):
 
     @property
     def should_poll(self):
-        """Updates controlled via the hub."""
+        """Update controlled via the hub."""
         return False
 
 
