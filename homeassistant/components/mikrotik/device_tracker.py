@@ -81,13 +81,13 @@ class MikrotikScanner(DeviceScanner):
         self.capsman = self.api.get_api(MIKROTIK_SERVICES[CAPSMAN])
         if not self.capsman:
             _LOGGER.info(
-                "Mikrotik %s: Not a CAPsMAN controller. Trying "
-                "local wireless interfaces.",
+                "Mikrotik %s: Not a CAPsMAN controller. "
+                "Trying local wireless interfaces.",
                 (self.host),
             )
         self.wireless = self.api.get_api(MIKROTIK_SERVICES[WIRELESS])
 
-        if (not self.capsman and not self.wireless) or self.method == "ip":
+        if (not self.capsman and not self.wireless) or self.method == DHCP:
             _LOGGER.info(
                 "Mikrotik %s: Wireless adapters not found. Try to "
                 "use DHCP lease table as presence tracker source. "
@@ -155,7 +155,7 @@ class MikrotikScanner(DeviceScanner):
             for attrib in ATTR_DEVICE_TRACKER:
                 if attrib in device:
                     attributes[slugify(attrib)] = device[attrib]
-                    
+
             attributes["source_type"] = "router"
             attributes["scanner_type"] = method
             attributes["scanner_host"] = self.host
