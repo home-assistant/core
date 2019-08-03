@@ -24,9 +24,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the switches for the Ring devices."""
     cameras = hass.data[DATA_RING_STICKUP_CAMS]
     switches = []
-
     for device in cameras:
         if device.has_capability('siren'):
+            _LOGGER.warning(device)
             switches.append(SirenSwitch(device))
 
     add_entities(switches, True)
@@ -107,5 +107,6 @@ class SirenSwitch(BaseRingSwitch):
         if self._no_updates_until > datetime.now():
             _LOGGER.debug("Skipping update...")
             return
-
         self._siren_on = self._device.siren > 0
+        _LOGGER.error(self._device.name)
+        _LOGGER.error(self._siren_on)
