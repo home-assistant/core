@@ -6,5 +6,5 @@
     "androidtv==0.0.18"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@JeffLIrion"]
 }
