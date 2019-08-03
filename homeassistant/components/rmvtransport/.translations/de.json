@@ -1,0 +1,34 @@
+{
+  "config": {
+    "title": "RMV Transport",
+    "step": {
+      "user": {
+        "title": "RMV Transport einrichten",
+        "data": {
+          "station": "Stations ID",
+          "show_on_map": "Zeige auf Karte",
+          "ICE": "ICE",
+          "U-Bahn": "U-Bahn",
+          "Tram": "Tram",
+          "Bus": "Bus",
+          "S": "S",
+          "RB": "RB",
+          "RE": "RE",
+          "EC": "EC",
+          "IC": "IC",
+          "name": "Name",
+          "time_offset": "Time offset",
+          "lines": "Linien",
+          "direction": "Richtung",
+          "destinations": "Ziele",
+          "max_journeys": "max_journeys"
+        }
+      }
+    },
+    "error": {
+      "sensor_exists": "Sensor bereits registriert",
+      "invalid_sensor": "Sensor nicht verfügbar oder ungültig",
+      "communication_error": "Fehler bei der Kommunikation mit der RMV Transport API"
+    }
+  }
+}
