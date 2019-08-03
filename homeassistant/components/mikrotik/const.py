@@ -29,21 +29,21 @@ MIKROTIK_SERVICES = {
 }
 
 ATTR_DEVICE_TRACKER = [
+    "comment",
     "mac-address",
-    "rx-signal",
     "ssid",
     "interface",
-    "comment",
     "host-name",
     "address",
-    "uptime",
-    "rx-rate",
-    "tx-rate",
     "last-seen",
+    "rx-signal",
     "tx-ccq",
     "signal-to-noise",
     "wmm-enabled",
     "authentication-type",
     "encryption",
     "tx-rate-set",
+    "rx-rate",
+    "tx-rate",
+    "uptime",
 ]
