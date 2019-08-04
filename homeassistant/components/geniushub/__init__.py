@@ -33,11 +33,11 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def make_debug_log_entries(data):
+def make_debug_log_entries(client):
     """Make any debug log entries as required."""
     # pylint: disable=protected-access
-    _LOGGER.debug("zones_raw = %s", data._client.hub._raw_zones)
-    _LOGGER.debug("devices_raw = %s", data._client.hub._raw_devices)
+    _LOGGER.debug("zones_raw = %s", client.hub._raw_zones)
+    _LOGGER.debug("devices_raw = %s", client.hub._raw_devices)
 
 
 async def async_setup(hass, hass_config):
@@ -56,7 +56,7 @@ async def async_setup(hass, hass_config):
         _LOGGER.error("Setup failed, check your configuration, %s", err)
         return False
 
-    make_debug_log_entries(data)
+    make_debug_log_entries(data._client)  # pylint: disable=protected-access
 
     async_track_time_interval(hass, data.async_update, SCAN_INTERVAL)
 
@@ -92,6 +92,6 @@ class GeniusData:
             _LOGGER.warning("Update failed, %s", err)
             return
 
-        make_debug_log_entries(self)
+        make_debug_log_entries(self._client)
 
         async_dispatcher_send(self._hass, DOMAIN)
