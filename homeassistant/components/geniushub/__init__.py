@@ -42,23 +42,23 @@ async def async_setup(hass, hass_config):
         args = (kwargs.pop(CONF_TOKEN),)
 
     hass.data[DOMAIN] = {}
-    data = hass.data[DOMAIN]["data"] = GeniusData(hass, args, kwargs)
+    broker = GeniusBroker(hass, args, kwargs)
 
     try:
-        await data._client.hub.update()  # pylint: disable=protected-access
+        await broker._client.hub.update()  # pylint: disable=protected-access
     except aiohttp.ClientResponseError as err:
         _LOGGER.error("Setup failed, check your configuration, %s", err)
         return False
-    data.make_debug_log_entries()
+    broker.make_debug_log_entries()
 
-    async_track_time_interval(hass, data.async_update, SCAN_INTERVAL)
+    async_track_time_interval(hass, broker.async_update, SCAN_INTERVAL)
 
     for platform in ["climate", "water_heater"]:
         hass.async_create_task(
             async_load_platform(hass, platform, DOMAIN, {}, hass_config)
         )
 
-    if data._client.api_version == 3:  # pylint: disable=protected-access
+    if broker._client.api_version == 3:  # pylint: disable=protected-access
         for platform in ["sensor", "binary_sensor"]:
             hass.async_create_task(
                 async_load_platform(hass, platform, DOMAIN, {}, hass_config)
@@ -67,7 +67,7 @@ async def async_setup(hass, hass_config):
     return True
 
 
-class GeniusData:
+class GeniusBroker:
     """Container for geniushub client and data."""
 
     def __init__(self, hass, args, kwargs):
