@@ -88,6 +88,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                     CONF_MAX_JOURNEYS, default=DEFAULT_MAX_JOURNEYS
                 ): cv.positive_int,
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
             }
         ],
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
@@ -250,6 +251,9 @@ class RMVDepartureData:
 
         if self.station_info is None:
             stations = await self.rmv.search_station(self._station_id)
+            _LOGGER.debug(
+                "Search station %s", stations.get(str(self._station_id).zfill(9))
+            )
             self.station_info = stations.get(str(self._station_id).zfill(9))
 
         try:

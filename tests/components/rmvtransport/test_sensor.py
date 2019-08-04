@@ -50,8 +50,14 @@ VALID_CONFIG_DEST = {
 
 def search_station_mock():
     """Mock rmvtransport station search."""
-    data = {}
-    return data
+    return {
+        "003000010": {
+            "id": "003000010",
+            "name": "Frankfurt (Main) Hauptbahnhof",
+            "lat": 50.106808,
+            "long": 8.662653,
+        }
+    }
 
 
 def get_departures_mock():
@@ -195,6 +201,8 @@ async def test_rmvtransport_min_config(hass):
     assert state.attributes["line"] == 12
     assert state.attributes["icon"] == "mdi:tram"
     # assert state.attributes["friendly_name"] == "Frankfurt (Main) Hauptbahnhof"
+    assert state.attributes["lat"] == 50.106808
+    assert state.attributes["long"] == 8.662653
 
 
 async def test_rmvtransport_name_config(hass):
