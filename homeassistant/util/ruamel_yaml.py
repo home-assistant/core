@@ -40,6 +40,7 @@ def _include_yaml(
 
     Example:
         device_tracker: !include device_tracker.yaml
+
     """
     if constructor.name is None:
         raise HomeAssistantError(
