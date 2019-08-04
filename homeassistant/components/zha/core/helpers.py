@@ -6,20 +6,11 @@ https://home-assistant.io/components/zha/
 """
 import asyncio
 import collections
-from concurrent.futures import TimeoutError as Timeout
 import logging
 
 from homeassistant.core import callback
 
-from .const import (
-    CLUSTER_TYPE_IN,
-    CLUSTER_TYPE_OUT,
-    DEFAULT_BAUDRATE,
-    REPORT_CONFIG_MAX_INT,
-    REPORT_CONFIG_MIN_INT,
-    REPORT_CONFIG_RPT_CHANGE,
-    RadioType,
-)
+from .const import CLUSTER_TYPE_IN, CLUSTER_TYPE_OUT, DEFAULT_BAUDRATE, RadioType
 from .registries import BINDABLE_CLUSTERS
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,104 +37,6 @@ async def safe_read(
         return result
     except Exception:  # pylint: disable=broad-except
         return {}
-
-
-async def bind_cluster(entity_id, cluster):
-    """Bind a zigbee cluster.
-
-    This also swallows DeliveryError exceptions that are thrown when devices
-    are unreachable.
-    """
-    from zigpy.exceptions import DeliveryError
-
-    cluster_name = cluster.ep_attribute
-    try:
-        res = await cluster.bind()
-        _LOGGER.debug("%s: bound  '%s' cluster: %s", entity_id, cluster_name, res[0])
-    except (DeliveryError, Timeout) as ex:
-        _LOGGER.debug(
-            "%s: Failed to bind '%s' cluster: %s", entity_id, cluster_name, str(ex)
-        )
-
-
-async def configure_reporting(
-    entity_id,
-    cluster,
-    attr,
-    min_report=REPORT_CONFIG_MIN_INT,
-    max_report=REPORT_CONFIG_MAX_INT,
-    reportable_change=REPORT_CONFIG_RPT_CHANGE,
-    manufacturer=None,
-):
-    """Configure attribute reporting for a cluster.
-
-    This also swallows DeliveryError exceptions that are thrown when devices
-    are unreachable.
-    """
-    from zigpy.exceptions import DeliveryError
-
-    attr_name = cluster.attributes.get(attr, [attr])[0]
-
-    if isinstance(attr, str):
-        attr_id = get_attr_id_by_name(cluster, attr_name)
-    else:
-        attr_id = attr
-
-    cluster_name = cluster.ep_attribute
-    kwargs = {}
-    if manufacturer:
-        kwargs["manufacturer"] = manufacturer
-    try:
-        res = await cluster.configure_reporting(
-            attr_id, min_report, max_report, reportable_change, **kwargs
-        )
-        _LOGGER.debug(
-            "%s: reporting '%s' attr on '%s' cluster: %d/%d/%d: Result: '%s'",
-            entity_id,
-            attr_name,
-            cluster_name,
-            min_report,
-            max_report,
-            reportable_change,
-            res,
-        )
-    except (DeliveryError, Timeout) as ex:
-        _LOGGER.debug(
-            "%s: failed to set reporting for '%s' attr on '%s' cluster: %s",
-            entity_id,
-            attr_name,
-            cluster_name,
-            str(ex),
-        )
-
-
-async def bind_configure_reporting(
-    entity_id,
-    cluster,
-    attr,
-    skip_bind=False,
-    min_report=REPORT_CONFIG_MIN_INT,
-    max_report=REPORT_CONFIG_MAX_INT,
-    reportable_change=REPORT_CONFIG_RPT_CHANGE,
-    manufacturer=None,
-):
-    """Bind and configure zigbee attribute reporting for a cluster.
-
-    This also swallows DeliveryError exceptions that are thrown when devices
-    are unreachable.
-    """
-    if not skip_bind:
-        await bind_cluster(entity_id, cluster)
-
-    await configure_reporting(
-        entity_id,
-        cluster,
-        attr,
-        min_report=min_report,
-        max_report=max_report,
-        reportable_change=reportable_change,
-        manufacturer=manufacturer,
-    )
 
 
 async def check_zigpy_connection(usb_path, radio_type, database_path):
