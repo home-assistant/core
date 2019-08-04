@@ -11,7 +11,14 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
 from . import ZigbeeChannel, parse_and_log_command
-from ..const import SIGNAL_ATTR_UPDATED, SIGNAL_MOVE_LEVEL, SIGNAL_SET_LEVEL
+from ..const import (
+    SIGNAL_ATTR_UPDATED,
+    SIGNAL_MOVE_LEVEL,
+    SIGNAL_SET_LEVEL,
+    REPORT_CONFIG_ASAP,
+    REPORT_CONFIG_BATTERY_SAVE,
+    REPORT_CONFIG_IMMEDIATE,
+)
 from ..helpers import get_attr_id_by_name
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,6 +28,7 @@ class OnOffChannel(ZigbeeChannel):
     """Channel for the OnOff Zigbee cluster."""
 
     ON_OFF = 0
+    REPORT_CONFIG = ({"attr": "on_off", "config": REPORT_CONFIG_IMMEDIATE},)
 
     def __init__(self, cluster, device):
         """Initialize OnOffChannel."""
@@ -93,6 +101,7 @@ class LevelControlChannel(ZigbeeChannel):
     """Channel for the LevelControl Zigbee cluster."""
 
     CURRENT_LEVEL = 0
+    REPORT_CONFIG = ({"attr": "current_level", "config": REPORT_CONFIG_ASAP},)
 
     @callback
     def cluster_command(self, tsn, command_id, args):
@@ -172,6 +181,11 @@ class BasicChannel(ZigbeeChannel):
 
 class PowerConfigurationChannel(ZigbeeChannel):
     """Channel for the zigbee power configuration cluster."""
+
+    REPORT_CONFIG = (
+        {"attr": "battery_voltage", "config": REPORT_CONFIG_BATTERY_SAVE},
+        {"attr": "battery_percentage_remaining", "config": REPORT_CONFIG_BATTERY_SAVE},
+    )
 
     @callback
     def attribute_updated(self, attrid, value):

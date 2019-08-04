@@ -65,7 +65,7 @@ from .const import (
 from .device import DeviceStatus, ZHADevice
 from .discovery import async_dispatch_discovery_info, async_process_endpoint
 from .patches import apply_application_controller_patch
-from .registries import INPUT_BIND_ONLY_CLUSTERS, RADIO_TYPES
+from .registries import RADIO_TYPES
 from .store import async_get_registry
 
 _LOGGER = logging.getLogger(__name__)
@@ -342,14 +342,6 @@ class ZHAGateway:
                     zha_device,
                     is_new_join,
                 )
-                if endpoint_id != 0:
-                    for cluster in endpoint.in_clusters.values():
-                        cluster.bind_only = (
-                            cluster.cluster_id in INPUT_BIND_ONLY_CLUSTERS
-                        )
-                    for cluster in endpoint.out_clusters.values():
-                        # output clusters are always bind only
-                        cluster.bind_only = True
         else:
             is_rejoin = is_new_join is True
             _LOGGER.debug(

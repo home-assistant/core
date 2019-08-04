@@ -11,7 +11,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import ZigbeeChannel
 from ..const import SIGNAL_ATTR_UPDATED
-from ..helpers import bind_cluster
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,13 +38,14 @@ class IASZoneChannel(ZigbeeChannel):
         """Configure IAS device."""
         # Xiaomi devices don't need this and it disrupts pairing
         if self._zha_device.manufacturer == "LUMI":
+            self.debug("%s: finished IASZoneChannel configuration")
             return
         from zigpy.exceptions import DeliveryError
 
         self.debug("started IASZoneChannel configuration")
 
-        await bind_cluster(self.unique_id, self._cluster)
-        ieee = self._cluster.endpoint.device.application.ieee
+        await self.bind()
+        ieee = self.cluster.endpoint.device.application.ieee
 
         try:
             res = await self._cluster.write_attributes({"cie_addr": ieee})
