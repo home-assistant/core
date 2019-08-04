@@ -296,7 +296,9 @@ class UniFiDeviceTracker(ScannerEntity):
         )
 
         if (
-            dt_util.utcnow() - dt_util.utc_from_timestamp(float(self.device.last_seen))
+            self.device.last_seen
+            and dt_util.utcnow()
+            - dt_util.utc_from_timestamp(float(self.device.last_seen))
         ) < detection_time:
             return True
         return False
