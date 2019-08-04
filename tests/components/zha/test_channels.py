@@ -19,7 +19,6 @@ def nwk():
     return t.NWK(0xBEEF)
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "cluster_id, bind_count, attrs",
     [
@@ -64,7 +63,6 @@ async def test_in_channel_config(cluster_id, bind_count, attrs, zha_gateway, has
     zha_dev = zha_device.ZHADevice(hass, zigpy_dev, zha_gateway)
 
     cluster = zigpy_dev.endpoints[1].in_clusters[cluster_id]
-    cluster.bind_only = cluster_id in zha_registries.INPUT_BIND_ONLY_CLUSTERS
     channel_class = channel_reg.ZIGBEE_CHANNEL_REGISTRY.get(
         cluster_id, channels.AttributeListeningChannel
     )
@@ -78,7 +76,6 @@ async def test_in_channel_config(cluster_id, bind_count, attrs, zha_gateway, has
     assert set(attrs) == reported_attrs
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "cluster_id, bind_count",
     [

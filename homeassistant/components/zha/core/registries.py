@@ -45,7 +45,6 @@ CUSTOM_CLUSTER_MAPPINGS = {}
 DEVICE_CLASS = {}
 DEVICE_TRACKER_CLUSTERS = set()
 EVENT_RELAY_CLUSTERS = []
-INPUT_BIND_ONLY_CLUSTERS = []
 LIGHT_CLUSTERS = set()
 OUTPUT_CHANNEL_ONLY_CLUSTERS = []
 RADIO_TYPES = {}
@@ -217,8 +216,6 @@ def establish_device_mappings():
 
     EVENT_RELAY_CLUSTERS.append(zcl.clusters.general.LevelControl.cluster_id)
     EVENT_RELAY_CLUSTERS.append(zcl.clusters.general.OnOff.cluster_id)
-
-    INPUT_BIND_ONLY_CLUSTERS.append(zcl.clusters.lightlink.LightLink.cluster_id)
 
     OUTPUT_CHANNEL_ONLY_CLUSTERS.append(zcl.clusters.general.Scenes.cluster_id)
 
