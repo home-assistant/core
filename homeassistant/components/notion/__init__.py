@@ -235,7 +235,7 @@ class NotionEntity(Entity):
     @property
     def device_info(self):
         """Return device registry information for this entity."""
-        bridge = self._notion.bridges[self._bridge_id]
+        bridge = self._notion.bridges.get(self._bridge_id, {})
         sensor = self._notion.sensors[self._sensor_id]
 
         return {
@@ -244,7 +244,7 @@ class NotionEntity(Entity):
             "model": sensor["hardware_revision"],
             "name": sensor["name"],
             "sw_version": sensor["firmware_version"],
-            "via_device": (DOMAIN, bridge["hardware_id"]),
+            "via_device": (DOMAIN, bridge.get("hardware_id")),
         }
 
     @property
@@ -271,7 +271,14 @@ class NotionEntity(Entity):
         Sensors can move to other bridges based on signal strength, etc.
         """
         sensor = self._notion.sensors[self._sensor_id]
-        if self._bridge_id == sensor["bridge"]["id"]:
+
+        # If the sensor's bridge ID is the same as what we had before or if it points
+        # to a bridge that doesn't exist (which can happen due to a Notion API bug),
+        # return immediately:
+        if (
+            self._bridge_id == sensor["bridge"]["id"]
+            or sensor["bridge"]["id"] not in self._notion.bridges
+        ):
             return
 
         self._bridge_id = sensor["bridge"]["id"]
