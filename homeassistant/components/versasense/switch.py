@@ -9,7 +9,9 @@ from .const import PERIPHERAL_STATE_ON, PERIPHERAL_STATE_OFF
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass, config, async_add_entities, discovery_info=None
+):
     """Set up actuator platform."""
     consumer = hass.data[DOMAIN]["consumer"]
     peripheral = hass.data[DOMAIN][discovery_info["identifier"]]
@@ -38,7 +40,11 @@ class VActuator(SwitchDevice):
     @property
     def unique_id(self):
         """Return the unique id of the actuator."""
-        return "{}/{}/{}".format(self._parent_mac, self._identifier, self._measurement)
+        return "{}/{}/{}".format(
+            self._parent_mac,
+            self._identifier,
+            self._measurement
+        )
 
     @property
     def name(self):

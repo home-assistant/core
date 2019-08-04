@@ -8,7 +8,9 @@ from . import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass, config, async_add_entities, discovery_info=None
+):
     """Set up the sensor platform."""
     consumer = hass.data[DOMAIN]["consumer"]
     peripheral = hass.data[DOMAIN][discovery_info["identifier"]]
@@ -16,7 +18,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     unit = discovery_info["unit"]
     measurement = discovery_info["measurement"]
 
-    async_add_entities([VSensor(peripheral, parent_name, unit, measurement, consumer)])
+    async_add_entities(
+        [VSensor(peripheral, parent_name, unit, measurement, consumer)]
+    )
 
 
 class VSensor(Entity):
@@ -35,7 +39,11 @@ class VSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return "{}/{}/{}".format(self._parent_mac, self._identifier, self._measurement)
+        return "{}/{}/{}".format(
+            self._parent_mac,
+            self._identifier,
+            self._measurement
+        )
 
     @property
     def name(self):
