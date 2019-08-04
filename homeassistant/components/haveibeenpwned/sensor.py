@@ -29,18 +29,18 @@ URL = 'https://haveibeenpwned.com/api/v3/breachedaccount/'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_EMAIL): vol.All(cv.ensure_list, [cv.string]),
-    vol.Required(CONF_API_KEY): vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_API_KEY): vol.All(cv.string),
 })
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the HaveIBeenPwned sensor."""
     emails = config.get(CONF_EMAIL)
-    api_key = config.get(CONF_API_KEY)[0]
+    api_key = config[CONF_API_KEY]
     data = HaveIBeenPwnedData(emails, api_key)
 
     devices = []
     for email in emails:
-        devices.append(HaveIBeenPwnedSensor(data, email, api_key))
+        devices.append(HaveIBeenPwnedSensor(data, email))
 
     add_entities(devices)
 
@@ -48,9 +48,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class HaveIBeenPwnedSensor(Entity):
     """Implementation of a HaveIBeenPwned sensor."""
 
-    def __init__(self, data, email, api_key):
+    def __init__(self, data, email):
         """Initialize the HaveIBeenPwned sensor."""
-        self._api_key = api_key
         self._state = None
         self._data = data
         self._email = email
