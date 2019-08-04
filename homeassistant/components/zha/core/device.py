@@ -39,6 +39,7 @@ from .const import (
     ATTR_QUIRK_CLASS,
     ATTR_RSSI,
     ATTR_VALUE,
+    CHANNEL_BASIC,
     CHANNEL_POWER_CONFIGURATION,
     CHANNEL_ZDO,
     CLUSTER_COMMAND_SERVER,
@@ -57,6 +58,7 @@ from .helpers import LogMixin
 _LOGGER = logging.getLogger(__name__)
 _KEEP_ALIVE_INTERVAL = 7200
 _UPDATE_ALIVE_INTERVAL = timedelta(seconds=60)
+_CHECKIN_GRACE_PERIODS = 2
 
 
 class DeviceStatus(Enum):
@@ -81,6 +83,7 @@ class ZHADevice(LogMixin):
         self._available_signal = "{}_{}_{}".format(
             self.name, self.ieee, SIGNAL_AVAILABLE
         )
+        self._checkins_missed_count = 2
         self._unsub = async_dispatcher_connect(
             self.hass, self._available_signal, self.async_initialize
         )
@@ -204,9 +207,26 @@ class ZHADevice(LogMixin):
         else:
             difference = time.time() - self.last_seen
             if difference > _KEEP_ALIVE_INTERVAL:
-                self.update_available(False)
+                if self._checkins_missed_count < _CHECKIN_GRACE_PERIODS:
+                    self._checkins_missed_count += 1
+                    if (
+                        CHANNEL_BASIC in self.cluster_channels
+                        and self.manufacturer != "LUMI"
+                    ):
+                        self.debug(
+                            "Attempting to checkin with device - missed checkins: %s",
+                            self._checkins_missed_count,
+                        )
+                        self.hass.async_create_task(
+                            self.cluster_channels[CHANNEL_BASIC].get_attribute_value(
+                                ATTR_MANUFACTURER, from_cache=False
+                            )
+                        )
+                else:
+                    self.update_available(False)
             else:
                 self.update_available(True)
+                self._checkins_missed_count = 0
 
     def update_available(self, available):
         """Set sensor availability."""
