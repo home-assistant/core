@@ -31,9 +31,14 @@ def _assert_state(hass, mode, temp, current_temp, away_mode):
     assert state.attributes['current_temperature'] == current_temp
     assert state.attributes['operation_mode'] == mode.name
     assert state.attributes['away_mode'] == away_mode
-    assert state.attributes['operation_list'] == \
-        ['ON', 'OFF', 'AUTO', 'QM_HOTWATER_BOOST', 'QM_ONE_DAY_AWAY',
-         'QM_SYSTEM_OFF']
+    if mode == QuickMode.QM_HOLIDAY:
+        assert set(state.attributes['operation_list']) == \
+               {'ON', 'OFF', 'AUTO', 'QM_HOTWATER_BOOST', 'QM_ONE_DAY_AWAY',
+                'QM_SYSTEM_OFF', 'QM_HOLIDAY'}
+    else:
+        assert set(state.attributes['operation_list']) == \
+               {'ON', 'OFF', 'AUTO', 'QM_HOTWATER_BOOST', 'QM_ONE_DAY_AWAY',
+                'QM_SYSTEM_OFF'}
 
 
 @pytest.fixture(autouse=True)
@@ -145,7 +150,7 @@ async def test_turn_away_mode_on(hass):
                                    })
     await hass.async_block_till_done()
 
-    SystemManagerMock.instance.set_hot_water_operation_mode.\
+    SystemManagerMock.instance.set_hot_water_operation_mode. \
         assert_called_once_with(ANY, HeatingMode.OFF)
     _assert_state(hass, HeatingMode.OFF, HotWater.MIN_TEMP, 45, 'on')
 
@@ -167,7 +172,7 @@ async def test_turn_away_mode_off(hass):
                                    })
     await hass.async_block_till_done()
 
-    SystemManagerMock.instance.set_hot_water_operation_mode.\
+    SystemManagerMock.instance.set_hot_water_operation_mode. \
         assert_called_once_with(ANY, HeatingMode.AUTO)
 
     _assert_state(hass, HeatingMode.AUTO, HotWater.MIN_TEMP, 45, 'off')
@@ -190,7 +195,7 @@ async def test_set_operation_mode(hass):
                                    })
     await hass.async_block_till_done()
 
-    SystemManagerMock.instance.set_hot_water_operation_mode\
+    SystemManagerMock.instance.set_hot_water_operation_mode \
         .assert_called_once_with(ANY, HeatingMode.ON)
     _assert_state(hass, HeatingMode.ON, 40, 45, 'off')
 
@@ -208,9 +213,28 @@ async def test_set_operation_mode_wrong(hass):
                                    })
     await hass.async_block_till_done()
 
-    SystemManagerMock.instance.set_hot_water_operation_mode\
+    SystemManagerMock.instance.set_hot_water_operation_mode \
         .assert_not_called()
     _assert_state(hass, HeatingMode.AUTO, HotWater.MIN_TEMP, 45, 'off')
+
+
+async def test_set_operation_mode_quick_mode(hass):
+    """Test set operation mode with wrong mode."""
+    assert await _setup(hass)
+
+    await hass.services.async_call('water_heater',
+                                   'set_operation_mode',
+                                   {
+                                       'entity_id':
+                                           'water_heater.vaillant_hot_water',
+                                       'operation_mode': 'QM_SYSTEM_OFF'
+                                   })
+    SystemManagerMock.system.quick_mode = QuickMode.QM_SYSTEM_OFF
+    await hass.async_block_till_done()
+
+    SystemManagerMock.instance.set_quick_mode \
+        .assert_called_once_with(ANY, QuickMode.QM_SYSTEM_OFF)
+    _assert_state(hass, QuickMode.QM_SYSTEM_OFF, HotWater.MIN_TEMP, 45, 'on')
 
 
 async def test_set_temperature(hass):

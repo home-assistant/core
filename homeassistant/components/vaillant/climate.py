@@ -151,10 +151,10 @@ class VaillantRoomClimate(VaillantClimate):
         HeatingMode.QUICK_VETO: PRESET_BOOST,
         HeatingMode.AUTO: PRESET_COMFORT,
         HeatingMode.ON: PRESET_HOME,
-        HeatingMode.OFF: PRESET_AWAY,
+        HeatingMode.OFF: PRESET_SLEEP,
         HeatingMode.MANUAL: PRESET_COMFORT,
         QuickMode.QM_HOLIDAY: PRESET_AWAY,
-        QuickMode.QM_SYSTEM_OFF: PRESET_AWAY
+        QuickMode.QM_SYSTEM_OFF: PRESET_SLEEP
     }
 
     _MODE_TO_HVAC: Dict[Mode, str] = {
@@ -171,7 +171,7 @@ class VaillantRoomClimate(VaillantClimate):
 
     _HVAC_TO_MODE: Dict[str, Mode] = {
         HVAC_MODE_AUTO: HeatingMode.AUTO,
-        HVAC_MODE_OFF: HeatingMode.OFF,
+        PRESET_SLEEP: HeatingMode.OFF,
         HVAC_MODE_HEAT: HeatingMode.MANUAL
     }
 
@@ -234,15 +234,15 @@ class VaillantRoomClimate(VaillantClimate):
         """Set new preset mode."""
         if PRESET_AWAY == preset_mode:
             self.hub.set_room_operation_mode(self, self._component,
-                                             HeatingMode.OFF.name)
+                                             HeatingMode.OFF)
         else:
             self.hub.set_room_operation_mode(self, self._component,
-                                             HeatingMode.AUTO.name)
+                                             HeatingMode.AUTO)
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
         mode = self._HVAC_TO_MODE[hvac_mode]
-        self.hub.set_zone_operation_mode(self, self._component, mode)
+        self.hub.set_room_operation_mode(self, self._component, mode)
 
     @property
     def target_temperature_high(self) -> Optional[float]:
@@ -266,10 +266,10 @@ class VaillantZoneClimate(VaillantClimate):
         HeatingMode.OFF: PRESET_SLEEP,
         QuickMode.QM_ONE_DAY_AWAY: PRESET_AWAY,
         QuickMode.QM_HOLIDAY: PRESET_AWAY,
-        QuickMode.QM_ONE_DAY_AT_HOME: PRESET_COMFORT,
+        QuickMode.QM_ONE_DAY_AT_HOME: PRESET_HOME,
         QuickMode.QM_PARTY: PRESET_COMFORT,
         QuickMode.QM_SYSTEM_OFF: PRESET_SLEEP,
-        QuickMode.QM_VENTILATION_BOOST: PRESET_BOOST
+        QuickMode.QM_VENTILATION_BOOST: PRESET_SLEEP
     }
 
     _MODE_TO_HVAC: Dict[Mode, str] = {
@@ -333,10 +333,10 @@ class VaillantZoneClimate(VaillantClimate):
         """Set new preset mode."""
         if PRESET_AWAY == preset_mode:
             self.hub.set_zone_operation_mode(self, self._component,
-                                             HeatingMode.OFF.name)
+                                             HeatingMode.OFF)
         else:
             self.hub.set_zone_operation_mode(self, self._component,
-                                             HeatingMode.AUTO.name)
+                                             HeatingMode.AUTO)
 
     @property
     def supported_features(self):

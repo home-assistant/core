@@ -7,7 +7,6 @@ from datetime import timedelta
 from typing import Optional
 
 import voluptuous as vol
-from vr900connector.api import ApiError
 
 from homeassistant.const import (CONF_PASSWORD, CONF_SCAN_INTERVAL,
                                  CONF_USERNAME)
@@ -136,6 +135,8 @@ class VaillantHub:
 
     def update_system(self):
         """Fetch vaillant system."""
+        from vr900connector.api import ApiError
+
         try:
             self._manager.request_hvac_update()
         except ApiError:
@@ -241,41 +242,31 @@ class VaillantHub:
         if updated:
             entity.async_schedule_update_ha_state(True)
 
-    def set_hot_water_operation_mode(self, entity, hot_water, operation_mode):
+    def set_hot_water_operation_mode(self, entity, hot_water, mode):
         """Set hot water operation mode."""
-        from vr900connector.model import HeatingMode
-
-        was_quick_mode = self._set_quick_mode(operation_mode)
+        was_quick_mode = self._set_quick_mode(mode)
 
         if not was_quick_mode:
-            mode = HeatingMode[operation_mode]
             updated = self._manager.set_hot_water_operation_mode(hot_water,
                                                                  mode)
             if updated:
                 self.system.hot_water = self._manager.get_hot_water(hot_water)
                 entity.async_schedule_update_ha_state(True)
 
-    def set_room_operation_mode(self, entity, room, operation_mode):
+    def set_room_operation_mode(self, entity, room, mode):
         """Set room operation mode."""
-        from vr900connector.model import HeatingMode
-
-        was_quick_mode = self._set_quick_mode(operation_mode)
+        was_quick_mode = self._set_quick_mode(mode)
 
         if not was_quick_mode:
-            mode = HeatingMode[operation_mode]
             updated = self._manager.set_room_operation_mode(room, mode)
             if updated:
                 self.system.set_room(room.id, self._manager.get_room(room))
                 entity.async_schedule_update_ha_state(True)
 
-    def set_zone_operation_mode(self, entity, zone, operation_mode):
+    def set_zone_operation_mode(self, entity, zone, mode):
         """Set zone operation mode."""
-        from vr900connector.model import HeatingMode
-
-        was_quick_mode = self._set_quick_mode(operation_mode)
-
+        was_quick_mode = self._set_quick_mode(mode)
         if not was_quick_mode:
-            mode = HeatingMode[operation_mode]
             updated = self._manager.set_zone_operation_mode(zone, mode)
             if updated:
                 self.system.set_zone(zone.id, self._manager.get_zone(zone))
@@ -285,11 +276,10 @@ class VaillantHub:
         """Set quick mode, it may impact the whole system."""
         from vr900connector.model import QuickMode
 
-        if quick_mode in QuickMode.__members__:
+        if isinstance(quick_mode, QuickMode):
             _LOGGER.debug('Mode %s is a quick mode', quick_mode)
-            mode = QuickMode[quick_mode]
             updated = self._manager.set_quick_mode(self.system.quick_mode,
-                                                   mode)
+                                                   quick_mode)
             if updated:
                 _LOGGER.debug("Set quick mode successfully")
                 self._refresh_listening_entities()

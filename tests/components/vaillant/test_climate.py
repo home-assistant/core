@@ -2,11 +2,12 @@
 import datetime
 
 import pytest
-from vr900connector.model import System, HeatingMode, QuickMode, HolidayMode, \
-    HotWater, Room, Zone
+from vr900connector.model import System, HeatingMode, QuickMode, HolidayMode,\
+    Room, Zone
 
 from homeassistant.components.climate.const import PRESET_COMFORT, \
-    HVAC_MODE_AUTO, HVAC_MODE_OFF, PRESET_AWAY, HVAC_MODE_HEAT
+    HVAC_MODE_AUTO, HVAC_MODE_OFF, PRESET_AWAY, HVAC_MODE_HEAT, PRESET_SLEEP, \
+    PRESET_BOOST, PRESET_HOME, HVAC_MODE_COOL, HVAC_MODE_FAN_ONLY
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.components.vaillant as vaillant
 from homeassistant.components.vaillant import DOMAIN, CONF_ROOM_CLIMATE, \
@@ -26,6 +27,7 @@ VALID_ALL_DISABLED_CONFIG = {
 def _assert_room_state(hass, hvac, preset, temp, current_temp):
     """Assert room climate state."""
     state = hass.states.get('climate.vaillant_room_1')
+    print(state)
 
     assert hass.states.is_state('climate.vaillant_room_1', hvac)
     assert state.attributes['current_temperature'] == current_temp
@@ -33,9 +35,10 @@ def _assert_room_state(hass, hvac, preset, temp, current_temp):
     assert state.attributes['max_temp'] == Room.MAX_TEMP
     assert state.attributes['min_temp'] == Room.MIN_TEMP
     assert state.attributes['temperature'] == temp
-    assert set(state.attributes['hvac_modes']) == {'off', 'heat', 'auto'}
+    assert set(state.attributes['hvac_modes']) == \
+        {HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF}
     assert set(state.attributes['preset_modes']) == \
-        {'home', 'away', 'boost', 'comfort'}
+        {PRESET_HOME, PRESET_AWAY, PRESET_BOOST, PRESET_COMFORT, PRESET_SLEEP}
 
 
 def _assert_zone_state(hass, hvac, preset, target_high, target_low, current_temp):
@@ -50,9 +53,10 @@ def _assert_zone_state(hass, hvac, preset, target_high, target_low, current_temp
     assert state.attributes['target_temp_high'] == target_high
     assert state.attributes['target_temp_low'] == target_low
     assert set(state.attributes['hvac_modes']) == \
-        {'off', 'auto', 'heat', 'cool', 'fan_only'}
+        {HVAC_MODE_OFF, HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_COOL,
+         HVAC_MODE_FAN_ONLY}
     assert set(state.attributes['preset_modes']) == \
-        {'boost', 'comfort', 'away', 'sleep', 'home'}
+        {PRESET_BOOST, PRESET_COMFORT, PRESET_AWAY, PRESET_SLEEP, PRESET_HOME}
 
 
 @pytest.fixture(autouse=True)
@@ -107,7 +111,7 @@ async def test_room_heating_off(hass):
     system.get_room(1).operation_mode = HeatingMode.OFF
 
     assert await _setup(hass, system=system)
-    _assert_room_state(hass, HVAC_MODE_OFF, PRESET_AWAY, Room.MIN_TEMP, 22)
+    _assert_room_state(hass, HVAC_MODE_OFF, PRESET_SLEEP, Room.MIN_TEMP, 22)
 
 
 async def test_room_heating_manual(hass):

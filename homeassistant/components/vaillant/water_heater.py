@@ -55,11 +55,12 @@ class VaillantWaterHeater(BaseVaillantEntity, WaterHeaterDevice):
                          system.hot_water.name)
         self._system = None
         self._active_mode = None
-        self._refresh(system)
-
         mode_list = HotWater.MODES + QuickMode.for_hot_water()
         mode_list.remove(QuickMode.QM_HOLIDAY)
         self._operation_list = [mode.name for mode in mode_list]
+        self._operation_list_to_mode = \
+            {mode.name: mode for mode in mode_list}
+        self._refresh(system)
 
     @property
     def supported_features(self):
@@ -177,21 +178,22 @@ class VaillantWaterHeater(BaseVaillantEntity, WaterHeaterDevice):
         """Set new target operation mode."""
         _LOGGER.debug("Will set new operation_mode %s", operation_mode)
         # HUB will call sync update
-        if operation_mode in [mode.value for mode in HeatingMode]:
+        if operation_mode in self._operation_list:
+            mode = self._operation_list_to_mode[operation_mode]
             self.hub.set_hot_water_operation_mode(self, self._system.hot_water,
-                                                  operation_mode)
+                                                  mode)
         else:
             _LOGGER.debug("Operation mode is unknown")
 
     def turn_away_mode_on(self):
         """Turn away mode on."""
         self.hub.set_hot_water_operation_mode(self, self._system.hot_water,
-                                              HeatingMode.OFF.name)
+                                              HeatingMode.OFF)
 
     def turn_away_mode_off(self):
         """Turn away mode off."""
         self.hub.set_hot_water_operation_mode(self, self._system.hot_water,
-                                              HeatingMode.AUTO.name)
+                                              HeatingMode.AUTO)
 
     async def vaillant_update(self):
         """Update specific for vaillant."""
@@ -201,3 +203,8 @@ class VaillantWaterHeater(BaseVaillantEntity, WaterHeaterDevice):
         """Refresh the entity."""
         self._system = system
         self._active_mode = self._system.get_active_mode_hot_water()
+
+        if self._system.holiday_mode and self._system.holiday_mode.active:
+            self._operation_list.append(QuickMode.QM_HOLIDAY.name)
+        elif QuickMode.QM_HOLIDAY.name in self._operation_list:
+            self._operation_list.remove(QuickMode.QM_HOLIDAY.name)

@@ -31,4 +31,4 @@ vaillant:
 
 ##Todo's
 - handling error messages
-- move to 0.96
+- remove quick_mode if there is any when setting a new mode ? (creating a new set of service ?)

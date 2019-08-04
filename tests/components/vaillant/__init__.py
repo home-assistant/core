@@ -89,6 +89,7 @@ class SystemManagerMock:
         cls.instance.set_hot_water_operation_mode = \
             mock.MagicMock(return_value=True)
         cls.instance.set_hot_water_operation_mode = mock.MagicMock()
+        cls.instance.set_quick_mode = mock.MagicMock()
         cls.instance.get_hot_water = mock.MagicMock()
         cls.instance.request_hvac_update = mock.MagicMock(return_value=True)
         cls.instance.get_system = \
@@ -99,14 +100,6 @@ class SystemManagerMock:
         """Mock the constructor."""
         SystemManagerMock.instance = self
         self._init_mocks_function()
-
-    # def get_system(self):
-    #     """Return mock system."""
-    #     return self.system
-    #
-    # def request_hvac_update(self):
-    #     """Mock request_hvac_update."""
-    #     return True
 
 
 async def _goto_future(hass, future=None):
