@@ -89,7 +89,7 @@ class GeniusData:
         try:
             await self._client.hub.update()
         except aiohttp.ClientResponseError as err:
-            _LOGGER.error("Update failed, %s", err)
+            _LOGGER.warning("Update failed, %s", err)
             return
 
         make_debug_log_entries(self)
