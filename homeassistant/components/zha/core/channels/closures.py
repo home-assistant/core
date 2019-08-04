@@ -10,7 +10,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import ZigbeeChannel
-from ..const import SIGNAL_ATTR_UPDATED
+from ..const import REPORT_CONFIG_IMMEDIATE, SIGNAL_ATTR_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,6 +19,7 @@ class DoorLockChannel(ZigbeeChannel):
     """Door lock channel."""
 
     _value_attribute = 0
+    REPORT_CONFIG = ({"attr": "lock_state", "config": REPORT_CONFIG_IMMEDIATE},)
 
     async def async_update(self):
         """Retrieve latest state."""

@@ -18,17 +18,12 @@ from ..const import (
     CHANNEL_ATTRIBUTE,
     CHANNEL_EVENT_RELAY,
     CHANNEL_ZDO,
-    REPORT_CONFIG_DEFAULT,
+    REPORT_CONFIG_MAX_INT,
+    REPORT_CONFIG_MIN_INT,
+    REPORT_CONFIG_RPT_CHANGE,
     SIGNAL_ATTR_UPDATED,
 )
-from ..helpers import (
-    LogMixin,
-    bind_cluster,
-    configure_reporting,
-    construct_unique_id,
-    get_attr_id_by_name,
-    safe_read,
-)
+from ..helpers import LogMixin, construct_unique_id, get_attr_id_by_name, safe_read
 from ..registries import CLUSTER_REPORT_CONFIGS
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,6 +79,7 @@ class ZigbeeChannel(LogMixin):
     """Base channel for a Zigbee cluster."""
 
     CHANNEL_NAME = None
+    REPORT_CONFIG = ()
 
     def __init__(self, cluster, device):
         """Initialize ZigbeeChannel."""
@@ -95,7 +91,7 @@ class ZigbeeChannel(LogMixin):
         self._zha_device = device
         self._unique_id = construct_unique_id(cluster)
         self._report_config = CLUSTER_REPORT_CONFIGS.get(
-            self._cluster.cluster_id, [{"attr": 0, "config": REPORT_CONFIG_DEFAULT}]
+            self._cluster.cluster_id, self.REPORT_CONFIG
         )
         self._status = ChannelStatus.CREATED
         self._cluster.add_listener(self)
@@ -134,29 +130,75 @@ class ZigbeeChannel(LogMixin):
         """Set the reporting configuration."""
         self._report_config = report_config
 
+    async def bind(self):
+        """Bind a zigbee cluster.
+
+        This also swallows DeliveryError exceptions that are thrown when
+        devices are unreachable.
+        """
+        from zigpy.exceptions import DeliveryError
+
+        try:
+            res = await self.cluster.bind()
+            self.debug("bound '%s' cluster: %s", self.cluster.ep_attribute, res[0])
+        except (DeliveryError, Timeout) as ex:
+            self.debug(
+                "Failed to bind '%s' cluster: %s", self.cluster.ep_attribute, str(ex)
+            )
+
+    async def configure_reporting(
+        self,
+        attr,
+        report_config=(
+            REPORT_CONFIG_MIN_INT,
+            REPORT_CONFIG_MAX_INT,
+            REPORT_CONFIG_RPT_CHANGE,
+        ),
+    ):
+        """Configure attribute reporting for a cluster.
+
+        This also swallows DeliveryError exceptions that are thrown when
+        devices are unreachable.
+        """
+        from zigpy.exceptions import DeliveryError
+
+        attr_name = self.cluster.attributes.get(attr, [attr])[0]
+
+        kwargs = {}
+        if self.cluster.cluster_id >= 0xFC00 and self.device.manufacturer_code:
+            kwargs["manufacturer"] = self.device.manufacturer_code
+
+        min_report_int, max_report_int, reportable_change = report_config
+        try:
+            res = await self.cluster.configure_reporting(
+                attr, min_report_int, max_report_int, reportable_change, **kwargs
+            )
+            self.debug(
+                "reporting '%s' attr on '%s' cluster: %d/%d/%d: Result: '%s'",
+                attr_name,
+                self.cluster.ep_attribute,
+                min_report_int,
+                max_report_int,
+                reportable_change,
+                res,
+            )
+        except (DeliveryError, Timeout) as ex:
+            self.debug(
+                "failed to set reporting for '%s' attr on '%s' cluster: %s",
+                attr_name,
+                self.cluster.ep_attribute,
+                str(ex),
+            )
+
     async def async_configure(self):
         """Set cluster binding and attribute reporting."""
-        manufacturer = None
-        manufacturer_code = self._zha_device.manufacturer_code
         # Xiaomi devices don't need this and it disrupts pairing
         if self._zha_device.manufacturer != "LUMI":
-            if self.cluster.cluster_id >= 0xFC00 and manufacturer_code:
-                manufacturer = manufacturer_code
-            await bind_cluster(self._unique_id, self.cluster)
-            if not self.cluster.bind_only:
+            await self.bind()
+            if self.cluster.cluster_id not in self.cluster.endpoint.out_clusters:
                 for report_config in self._report_config:
-                    attr = report_config.get("attr")
-                    min_report_interval, max_report_interval, change = report_config.get(
-                        "config"
-                    )
-                    await configure_reporting(
-                        self._unique_id,
-                        self.cluster,
-                        attr,
-                        min_report=min_report_interval,
-                        max_report=max_report_interval,
-                        reportable_change=change,
-                        manufacturer=manufacturer,
+                    await self.configure_reporting(
+                        report_config["attr"], report_config["config"]
                     )
                     await asyncio.sleep(uniform(0.1, 0.5))
 
