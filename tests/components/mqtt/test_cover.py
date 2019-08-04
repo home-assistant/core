@@ -17,7 +17,10 @@ from homeassistant.const import (
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
     STATE_CLOSED,
+    STATE_CLOSING,
     STATE_OPEN,
+    STATE_OPENING,
+    STATE_STOPPED,
     STATE_UNAVAILABLE,
     SERVICE_TOGGLE,
     SERVICE_TOGGLE_COVER_TILT,
@@ -57,14 +60,24 @@ async def test_state_via_state_topic(hass, mqtt_mock):
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "state-topic", STATE_CLOSED)
-
     state = hass.states.get("cover.test")
     assert state.state == STATE_CLOSED
 
     async_fire_mqtt_message(hass, "state-topic", STATE_OPEN)
-
     state = hass.states.get("cover.test")
     assert state.state == STATE_OPEN
+
+    async_fire_mqtt_message(hass, "state-topic", STATE_CLOSING)
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSING
+
+    async_fire_mqtt_message(hass, "state-topic", STATE_STOPPED)
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_STOPPED
+
+    async_fire_mqtt_message(hass, "state-topic", STATE_OPENING)
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPENING
 
 
 async def test_position_via_position_topic(hass, mqtt_mock):
@@ -93,12 +106,10 @@ async def test_position_via_position_topic(hass, mqtt_mock):
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "get-position-topic", "0")
-
     state = hass.states.get("cover.test")
     assert state.state == STATE_CLOSED
 
     async_fire_mqtt_message(hass, "get-position-topic", "100")
-
     state = hass.states.get("cover.test")
     assert state.state == STATE_OPEN
 

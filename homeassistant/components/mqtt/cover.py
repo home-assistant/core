@@ -25,7 +25,10 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_VALUE_TEMPLATE,
     STATE_CLOSED,
+    STATE_CLOSING,
     STATE_OPEN,
+    STATE_OPENING,
+    STATE_STOPPED,
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
@@ -64,7 +67,10 @@ CONF_PAYLOAD_STOP = "payload_stop"
 CONF_POSITION_CLOSED = "position_closed"
 CONF_POSITION_OPEN = "position_open"
 CONF_STATE_CLOSED = "state_closed"
+CONF_STATE_CLOSING = "state_closing"
 CONF_STATE_OPEN = "state_open"
+CONF_STATE_OPENING = "state_opening"
+CONF_STATE_STOPPED = "state_stopped"
 CONF_TILT_CLOSED_POSITION = "tilt_closed_value"
 CONF_TILT_INVERT_STATE = "tilt_invert_state"
 CONF_TILT_MAX = "tilt_max"
@@ -129,7 +135,10 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_SET_POSITION_TEMPLATE): cv.template,
             vol.Optional(CONF_SET_POSITION_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_STATE_CLOSED, default=STATE_CLOSED): cv.string,
+            vol.Optional(CONF_STATE_CLOSING, default=STATE_CLOSING): cv.string,
             vol.Optional(CONF_STATE_OPEN, default=STATE_OPEN): cv.string,
+            vol.Optional(CONF_STATE_OPENING, default=STATE_OPENING): cv.string,
+            vol.Optional(CONF_STATE_STOPPED, default=STATE_STOPPED): cv.string,
             vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(
                 CONF_TILT_CLOSED_POSITION, default=DEFAULT_TILT_CLOSED_POSITION
@@ -287,9 +296,15 @@ class MqttCover(
                 payload = template.async_render_with_possible_json_value(payload)
 
             if payload == self._config[CONF_STATE_OPEN]:
-                self._state = False
+                self._state = STATE_OPEN
+            elif payload == self._config[CONF_STATE_OPENING]:
+                self._state = STATE_OPENING
             elif payload == self._config[CONF_STATE_CLOSED]:
-                self._state = True
+                self._state = STATE_CLOSED
+            elif payload == self._config[CONF_STATE_CLOSING]:
+                self._state = STATE_CLOSING
+            elif payload == self._config[CONF_STATE_STOPPED]:
+                self._state = STATE_STOPPED
             else:
                 _LOGGER.warning("Payload is not True or False: %s", payload)
                 return
@@ -307,7 +322,7 @@ class MqttCover(
                     float(payload), COVER_PAYLOAD
                 )
                 self._position = percentage_payload
-                self._state = percentage_payload == DEFAULT_POSITION_CLOSED
+                self._state = STATE_CLOSED if percentage_payload == DEFAULT_POSITION_CLOSED else STATE_OPEN
             else:
                 _LOGGER.warning("Payload is not integer within range: %s", payload)
                 return
@@ -367,9 +382,24 @@ class MqttCover(
         return self._config[CONF_NAME]
 
     @property
+    def is_opening(self):
+        """Return if the cover is opening."""
+        return self._state == STATE_OPENING
+
+    @property
+    def is_closing(self):
+        """Return if the cover is closing."""
+        return self._state == STATE_CLOSING
+
+    @property
+    def is_stopped(self):
+        """Return if the cover is closing."""
+        return self._state == STATE_STOPPED
+
+    @property
     def is_closed(self):
         """Return if the cover is closed."""
-        return self._state
+        return None if self._state is None else self._state == STATE_CLOSED
 
     @property
     def current_cover_position(self):
@@ -418,7 +448,7 @@ class MqttCover(
         )
         if self._optimistic:
             # Optimistically assume that cover has changed state.
-            self._state = False
+            self._state = STATE_OPEN
             if self._config.get(CONF_GET_POSITION_TOPIC):
                 self._position = self.find_percentage_in_range(
                     self._config[CONF_POSITION_OPEN], COVER_PAYLOAD
@@ -439,7 +469,7 @@ class MqttCover(
         )
         if self._optimistic:
             # Optimistically assume that cover has changed state.
-            self._state = True
+            self._state = STATE_CLOSED
             if self._config.get(CONF_GET_POSITION_TOPIC):
                 self._position = self.find_percentage_in_range(
                     self._config[CONF_POSITION_CLOSED], COVER_PAYLOAD
@@ -533,7 +563,7 @@ class MqttCover(
                 self._config[CONF_RETAIN],
             )
             if self._optimistic:
-                self._state = percentage_position == self._config[CONF_POSITION_CLOSED]
+                self._state = STATE_CLOSED if percentage_position == self._config[CONF_POSITION_CLOSED] else STATE_OPEN
                 self._position = percentage_position
                 self.async_write_ha_state()
 

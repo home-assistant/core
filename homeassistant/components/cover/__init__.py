@@ -30,6 +30,7 @@ from homeassistant.const import (
     STATE_CLOSED,
     STATE_OPENING,
     STATE_CLOSING,
+    STATE_STOPPED
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -204,6 +205,8 @@ class CoverDevice(Entity):
             return STATE_OPENING
         if self.is_closing:
             return STATE_CLOSING
+        if self.is_stopped:
+            return STATE_STOPPED
 
         closed = self.is_closed
 
@@ -253,6 +256,11 @@ class CoverDevice(Entity):
     @property
     def is_closing(self):
         """Return if the cover is closing or not."""
+        pass
+
+    @property
+    def is_stopped(self):
+        """Return if the cover is stopped during opening or closing."""
         pass
 
     @property
