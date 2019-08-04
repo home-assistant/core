@@ -2,67 +2,95 @@
 import datetime
 
 import pytest
-from vr900connector.model import System, HeatingMode, QuickMode, HolidayMode,\
-    Room, Zone
+from vr900connector.model import System, HeatingMode, QuickMode, HolidayMode, Room, Zone
 
-from homeassistant.components.climate.const import PRESET_COMFORT, \
-    HVAC_MODE_AUTO, HVAC_MODE_OFF, PRESET_AWAY, HVAC_MODE_HEAT, PRESET_SLEEP, \
-    PRESET_BOOST, PRESET_HOME, HVAC_MODE_COOL, HVAC_MODE_FAN_ONLY
+from homeassistant.components.climate.const import (
+    PRESET_COMFORT,
+    HVAC_MODE_AUTO,
+    HVAC_MODE_OFF,
+    PRESET_AWAY,
+    HVAC_MODE_HEAT,
+    PRESET_SLEEP,
+    PRESET_BOOST,
+    PRESET_HOME,
+    HVAC_MODE_COOL,
+    HVAC_MODE_FAN_ONLY,
+)
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.components.vaillant as vaillant
-from homeassistant.components.vaillant import DOMAIN, CONF_ROOM_CLIMATE, \
-    CONF_ZONE_CLIMATE
+from homeassistant.components.vaillant import (
+    DOMAIN,
+    CONF_ROOM_CLIMATE,
+    CONF_ZONE_CLIMATE,
+)
 from tests.components.vaillant import SystemManagerMock, _goto_future, _setup
 
 VALID_ALL_DISABLED_CONFIG = {
     DOMAIN: {
-        CONF_USERNAME: 'test',
-        CONF_PASSWORD: 'test',
+        CONF_USERNAME: "test",
+        CONF_PASSWORD: "test",
         CONF_ROOM_CLIMATE: False,
-        CONF_ZONE_CLIMATE: False
+        CONF_ZONE_CLIMATE: False,
     }
 }
 
 
 def _assert_room_state(hass, hvac, preset, temp, current_temp):
     """Assert room climate state."""
-    state = hass.states.get('climate.vaillant_room_1')
+    state = hass.states.get("climate.vaillant_room_1")
 
-    assert hass.states.is_state('climate.vaillant_room_1', hvac)
-    assert state.attributes['current_temperature'] == current_temp
-    assert state.attributes['preset_mode'] == preset
-    assert state.attributes['max_temp'] == Room.MAX_TEMP
-    assert state.attributes['min_temp'] == Room.MIN_TEMP
-    assert state.attributes['temperature'] == temp
-    assert set(state.attributes['hvac_modes']) == \
-        {HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF}
-    assert set(state.attributes['preset_modes']) == \
-        {PRESET_HOME, PRESET_AWAY, PRESET_BOOST, PRESET_COMFORT, PRESET_SLEEP}
+    assert hass.states.is_state("climate.vaillant_room_1", hvac)
+    assert state.attributes["current_temperature"] == current_temp
+    assert state.attributes["preset_mode"] == preset
+    assert state.attributes["max_temp"] == Room.MAX_TEMP
+    assert state.attributes["min_temp"] == Room.MIN_TEMP
+    assert state.attributes["temperature"] == temp
+    assert set(state.attributes["hvac_modes"]) == {
+        HVAC_MODE_HEAT,
+        HVAC_MODE_AUTO,
+        HVAC_MODE_OFF,
+    }
+    assert set(state.attributes["preset_modes"]) == {
+        PRESET_HOME,
+        PRESET_AWAY,
+        PRESET_BOOST,
+        PRESET_COMFORT,
+        PRESET_SLEEP,
+    }
 
 
 def _assert_zone_state(hass, hvac, preset, target_high, target_low, current_temp):
     """Assert zone climate state."""
-    state = hass.states.get('climate.vaillant_zone_1')
+    state = hass.states.get("climate.vaillant_zone_1")
 
-    assert hass.states.is_state('climate.vaillant_zone_1', hvac)
-    assert state.attributes['current_temperature'] == current_temp
-    assert state.attributes['preset_mode'] == preset
-    assert state.attributes['max_temp'] == Zone.MAX_TEMP
-    assert state.attributes['min_temp'] == Zone.MIN_TEMP
-    assert state.attributes['target_temp_high'] == target_high
-    assert state.attributes['target_temp_low'] == target_low
-    assert set(state.attributes['hvac_modes']) == \
-        {HVAC_MODE_OFF, HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_COOL,
-         HVAC_MODE_FAN_ONLY}
-    assert set(state.attributes['preset_modes']) == \
-        {PRESET_BOOST, PRESET_COMFORT, PRESET_AWAY, PRESET_SLEEP, PRESET_HOME}
+    assert hass.states.is_state("climate.vaillant_zone_1", hvac)
+    assert state.attributes["current_temperature"] == current_temp
+    assert state.attributes["preset_mode"] == preset
+    assert state.attributes["max_temp"] == Zone.MAX_TEMP
+    assert state.attributes["min_temp"] == Zone.MIN_TEMP
+    assert state.attributes["target_temp_high"] == target_high
+    assert state.attributes["target_temp_low"] == target_low
+    assert set(state.attributes["hvac_modes"]) == {
+        HVAC_MODE_OFF,
+        HVAC_MODE_AUTO,
+        HVAC_MODE_HEAT,
+        HVAC_MODE_COOL,
+        HVAC_MODE_FAN_ONLY,
+    }
+    assert set(state.attributes["preset_modes"]) == {
+        PRESET_BOOST,
+        PRESET_COMFORT,
+        PRESET_AWAY,
+        PRESET_SLEEP,
+        PRESET_HOME,
+    }
 
 
 @pytest.fixture(autouse=True)
 def fixture_only_climate(mock_system_manager):
     """Mock vaillant to only handle sensor."""
     orig_platforms = vaillant.PLATFORMS
-    vaillant.PLATFORMS = ['climate']
+    vaillant.PLATFORMS = ["climate"]
     yield
     vaillant.PLATFORMS = orig_platforms
 
@@ -72,7 +100,7 @@ async def test_valid_config(hass):
     assert await _setup(hass)
     assert len(hass.states.async_entity_ids()) == 2
     _assert_room_state(hass, HVAC_MODE_AUTO, PRESET_COMFORT, 20, 22)
-    _assert_zone_state(hass, HVAC_MODE_AUTO, PRESET_COMFORT, 30, 22, 25)
+    _assert_zone_state(hass, HVAC_MODE_AUTO, PRESET_COMFORT, 27, 22, 25)
 
 
 async def test_valid_config_all_disabled(hass):
@@ -83,9 +111,9 @@ async def test_valid_config_all_disabled(hass):
 
 async def test_empty_system(hass):
     """Test setup with empty system."""
-    assert await _setup(hass, system=System(None, None, None, None,
-                                            None, None, None, None,
-                                            None))
+    assert await _setup(
+        hass, system=System(None, None, None, None, None, None, None, None, None)
+    )
     assert not hass.states.async_entity_ids()
 
 
@@ -97,8 +125,7 @@ async def test_state_update_room(hass):
     system = SystemManagerMock.system
     system.get_room(1).current_temperature = 25
     system.get_room(1).target_temperature = 30
-    system.get_room(1).time_program = \
-        SystemManagerMock.time_program(HeatingMode.ON, 30)
+    system.get_room(1).time_program = SystemManagerMock.time_program(HeatingMode.ON, 30)
     await _goto_future(hass)
 
     _assert_room_state(hass, HVAC_MODE_AUTO, PRESET_COMFORT, 30, 25)
@@ -126,8 +153,9 @@ async def test_holiday_mode(hass):
     """Test holiday mode."""
     system = SystemManagerMock.get_default_system()
     system.quick_mode = QuickMode.QM_HOLIDAY
-    system.holiday_mode = HolidayMode(True, datetime.date.today(),
-                                      datetime.date.today(), 15)
+    system.holiday_mode = HolidayMode(
+        True, datetime.date.today(), datetime.date.today(), 15
+    )
 
     assert await _setup(hass, system=system)
     _assert_room_state(hass, HVAC_MODE_OFF, PRESET_AWAY, 15, 22)

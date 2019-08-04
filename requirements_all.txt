@@ -1886,7 +1886,7 @@ volkszaehler==0.1.2
 volvooncall==0.8.7
 
 # homeassistant.components.vaillant
-vr900-connector==0.3.2
+vr900-connector==0.3.4
 
 # homeassistant.components.verisure
 vsure==1.5.2

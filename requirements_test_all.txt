@@ -386,7 +386,7 @@ twentemilieu==0.1.0
 uvcclient==0.11.0
 
 # homeassistant.components.vaillant
-vr900-connector==0.3.2
+vr900-connector==0.3.4
 
 # homeassistant.components.verisure
 vsure==1.5.2
