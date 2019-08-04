@@ -68,12 +68,13 @@ class FakeEndpoint:
 def patch_cluster(cluster):
     """Patch a cluster for testing."""
     cluster.bind = CoroutineMock(return_value=[0])
+    cluster.configure_reporting = CoroutineMock(return_value=[0])
     cluster.deserialize = Mock()
     cluster.handle_cluster_request = Mock()
     cluster.handle_cluster_general_request = Mock()
+    cluster.read_attributes = CoroutineMock()
     cluster.read_attributes_raw = Mock()
-    cluster.read_attributes = Mock()
-    cluster.unbind = Mock()
+    cluster.unbind = CoroutineMock(return_value=[0])
 
 
 class FakeDevice:
