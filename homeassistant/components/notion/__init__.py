@@ -271,7 +271,14 @@ class NotionEntity(Entity):
         Sensors can move to other bridges based on signal strength, etc.
         """
         sensor = self._notion.sensors[self._sensor_id]
-        if self._bridge_id == sensor["bridge"]["id"]:
+
+        # If the sensor's bridge ID is the same as what we had before or if it points
+        # to a bridge that doesn't exist (which can happen due to a Notion API bug),
+        # return immediately:
+        if (
+            self._bridge_id == sensor["bridge"]["id"]
+            or sensor["bridge"]["id"] not in self._notion.bridges
+        ):
             return
 
         self._bridge_id = sensor["bridge"]["id"]
