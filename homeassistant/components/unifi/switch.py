@@ -266,8 +266,8 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchDevice):
 
     @property
     def is_on(self):
-        """Return true if client is blocked."""
-        return self.client.blocked
+        """Return true if client is allowed to connect."""
+        return not self.client.blocked
 
     @property
     def available(self):
@@ -275,9 +275,9 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchDevice):
         return self.controller.available
 
     async def async_turn_on(self, **kwargs):
-        """Block client."""
-        await self.controller.api.clients.async_block(self.client.mac)
+        """Turn on connectivity for client."""
+        await self.controller.api.clients.async_unblock(self.client.mac)
 
     async def async_turn_off(self, **kwargs):
-        """Unblock client."""
-        await self.controller.api.clients.async_unblock(self.client.mac)
+        """Turn off connectivity for client."""
+        await self.controller.api.clients.async_block(self.client.mac)
