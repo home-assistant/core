@@ -1,21 +1,23 @@
+"""Test ZHA Core channels."""
 import pytest
 import zigpy.types as t
 
 import homeassistant.components.zha.core.channels as channels
 import homeassistant.components.zha.core.channels.registry as channel_reg
 import homeassistant.components.zha.core.device as zha_device
-import homeassistant.components.zha.core.registries as zha_registries
 
 from .common import make_device
 
 
 @pytest.fixture
 def ieee():
+    """IEEE fixture."""
     return t.EUI64.deserialize(b"ieeeaddr")[0]
 
 
 @pytest.fixture
 def nwk():
+    """NWK fixture."""
     return t.NWK(0xBEEF)
 
 
@@ -52,6 +54,7 @@ def nwk():
     ],
 )
 async def test_in_channel_config(cluster_id, bind_count, attrs, zha_gateway, hass):
+    """Test ZHA core channel configuration for input clusters."""
     zigpy_dev = make_device(
         [cluster_id],
         [],
@@ -109,6 +112,7 @@ async def test_in_channel_config(cluster_id, bind_count, attrs, zha_gateway, has
     ],
 )
 async def test_out_channel_config(cluster_id, bind_count, zha_gateway, hass):
+    """Test ZHA core channel configuration for output clusters."""
     zigpy_dev = make_device(
         [],
         [cluster_id],
