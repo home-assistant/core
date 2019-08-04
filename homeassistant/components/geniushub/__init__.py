@@ -33,13 +33,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def make_debug_log_entries(client):
-    """Make any debug log entries as required."""
-    # pylint: disable=protected-access
-    _LOGGER.debug("zones_raw = %s", client.hub._raw_zones)
-    _LOGGER.debug("devices_raw = %s", client.hub._raw_devices)
-
-
 async def async_setup(hass, hass_config):
     """Create a Genius Hub system."""
     kwargs = dict(hass_config[DOMAIN])
@@ -50,13 +43,13 @@ async def async_setup(hass, hass_config):
 
     hass.data[DOMAIN] = {}
     data = hass.data[DOMAIN]["data"] = GeniusData(hass, args, kwargs)
+
     try:
         await data._client.hub.update()  # pylint: disable=protected-access
     except aiohttp.ClientResponseError as err:
         _LOGGER.error("Setup failed, check your configuration, %s", err)
         return False
-
-    make_debug_log_entries(data._client)  # pylint: disable=protected-access
+    data.make_debug_log_entries()
 
     async_track_time_interval(hass, data.async_update, SCAN_INTERVAL)
 
@@ -91,7 +84,15 @@ class GeniusData:
         except aiohttp.ClientResponseError as err:
             _LOGGER.warning("Update failed, %s", err)
             return
-
-        make_debug_log_entries(self._client)
+        self.make_debug_log_entries()
 
         async_dispatcher_send(self._hass, DOMAIN)
+
+    def make_debug_log_entries(self):
+        """Make any useful debug log entries."""
+        # pylint: disable=protected-access
+        _LOGGER.debug(
+            "Raw JSON: \n\nhub._raw_zones = %s \n\nhub._raw_devices = %s",
+            self._client.hub._raw_zones,
+            self._client.hub._raw_devices,
+        )
