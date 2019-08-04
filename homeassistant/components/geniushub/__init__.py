@@ -52,8 +52,8 @@ async def async_setup(hass, hass_config):
     data = hass.data[DOMAIN]["data"] = GeniusData(hass, args, kwargs)
     try:
         await data._client.hub.update()  # pylint: disable=protected-access
-    except AssertionError:  # assert response.status == HTTP_OK
-        _LOGGER.warning("Setup failed, check your configuration.", exc_info=True)
+    except aiohttp.ClientResponseError as err:
+        _LOGGER.error("Setup failed, check your configuration, %s", err)
         return False
 
     make_debug_log_entries(data)
@@ -88,8 +88,8 @@ class GeniusData:
         """Update the geniushub client's data."""
         try:
             await self._client.hub.update()
-        except aiohttp.client_exceptions.ClientResponseError:
-            _LOGGER.warning("Update failed.", exc_info=True)
+        except aiohttp.ClientResponseError as err:
+            _LOGGER.error("Update failed, %s", err)
             return
 
         make_debug_log_entries(self)
