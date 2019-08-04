@@ -342,11 +342,11 @@ async def test_switches(hass, mock_controller):
 
     blocked = hass.states.get("switch.block_client_1")
     assert blocked is not None
-    assert blocked.state == "on"
+    assert blocked.state == "off"
 
     unblocked = hass.states.get("switch.block_client_2")
     assert unblocked is not None
-    assert unblocked.state == "off"
+    assert unblocked.state == "on"
 
 
 async def test_new_client_discovered(hass, mock_controller):
