@@ -112,7 +112,7 @@ class RMVTransportFlowHandler(config_entries.ConfigFlow):
             and self.rmv_config.get(CONF_PRODUCTS) is None
         ):
             return await self._show_form_products()
-        elif self.rmv_config.get(CONF_PRODUCTS) is None:
+        if self.rmv_config.get(CONF_PRODUCTS) is None:
             self.rmv_config[CONF_PRODUCTS] = []
             for product in VALID_PRODUCTS:
                 if user_input[product] is True:
@@ -121,13 +121,10 @@ class RMVTransportFlowHandler(config_entries.ConfigFlow):
 
         if self.rmv_config.get(CONF_SHOW_ON_MAP) is None:
             return await self._show_form_details()
-        else:
-            pass
-            # search for station and extract lat/long
 
         if self.rmv_config.get(CONF_LINES) is None:
             return await self._show_form_lines()
-        elif isinstance(self.rmv_config.get(CONF_LINES), str):
+        if isinstance(self.rmv_config.get(CONF_LINES), str):
             if self.rmv_config[CONF_LINES] == "":
                 self.rmv_config[CONF_LINES] = []
             else:
