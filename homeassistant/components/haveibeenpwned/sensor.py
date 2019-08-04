@@ -29,7 +29,7 @@ URL = 'https://haveibeenpwned.com/api/v3/breachedaccount/'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_EMAIL): vol.All(cv.ensure_list, [cv.string]),
-    vol.Required(CONF_API_KEY): vol.All(cv.string),
+    vol.Required(CONF_API_KEY): cv.string,
 })
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
