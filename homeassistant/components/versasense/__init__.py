@@ -16,21 +16,17 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "versasense"
 
 # Validation of the user's configuration
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Schema({vol.Required(CONF_HOST): cv.string})}, extra=vol.ALLOW_EXTRA
+)
 
 
 async def async_setup(hass, config):
     """Set up the versasense component."""
     session = aiohttp_client.async_get_clientsession(hass)
-    consumer = pyv.Consumer(config[DOMAIN]['host'], session)
+    consumer = pyv.Consumer(config[DOMAIN]["host"], session)
 
-    hass.data[DOMAIN] = {
-        'consumer': consumer
-    }
+    hass.data[DOMAIN] = {"consumer": consumer}
 
     await _configure_entities(hass, config, consumer)
 
@@ -53,9 +49,9 @@ async def _create_entity(hass, config, peripheral, parent_name):
     """Create an entity based on a peripheral."""
     for measurement in peripheral.measurements:
         if peripheral.classification == PERIPHERAL_CLASS_SENSOR:
-            entity_type = 'sensor'
+            entity_type = "sensor"
         elif peripheral.classification == PERIPHERAL_CLASS_SENSOR_ACTUATOR:
-            entity_type = 'switch'
+            entity_type = "switch"
         else:
             entity_type = None
 
@@ -66,11 +62,11 @@ async def _create_entity(hass, config, peripheral, parent_name):
                     entity_type,
                     DOMAIN,
                     {
-                        'identifier': peripheral.identifier,
-                        'unit': measurement.unit,
-                        'measurement': measurement.name,
-                        'parent_name': parent_name
+                        "identifier": peripheral.identifier,
+                        "unit": measurement.unit,
+                        "measurement": measurement.name,
+                        "parent_name": parent_name,
                     },
-                    config
+                    config,
                 )
             )
