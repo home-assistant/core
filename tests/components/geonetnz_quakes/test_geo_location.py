@@ -29,6 +29,7 @@ from homeassistant.const import (
     ATTR_ICON,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 from tests.common import async_fire_time_changed
 import homeassistant.util.dt as dt_util
 
@@ -112,7 +113,6 @@ async def test_setup(hass):
         state = hass.states.get("geo_location.title_1")
         assert state is not None
         assert state.name == "Title 1"
-        # print(state.attributes)
         assert state.attributes == {
             ATTR_EXTERNAL_ID: "1234",
             ATTR_LATITUDE: 38.0,
@@ -188,3 +188,39 @@ async def test_setup(hass):
 
         all_states = hass.states.async_all()
         assert len(all_states) == 0
+
+
+async def test_setup_imperial(hass):
+    """Test the setup of the integration using imperial unit system."""
+    hass.config.units = IMPERIAL_SYSTEM
+    # Set up some mock feed entries for this test.
+    mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 15.5, (38.0, -3.0))
+
+    # Patching 'utcnow' to gain more control over the timed update.
+    utcnow = dt_util.utcnow()
+    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
+        "aio_geojson_client.feed.GeoJsonFeed.update", new_callable=CoroutineMock
+    ) as mock_feed_update:
+        mock_feed_update.return_value = "OK", [mock_entry_1]
+        assert await async_setup_component(hass, geonetnz_quakes.DOMAIN, CONFIG)
+        # Artificially trigger update.
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        # Collect events.
+        await hass.async_block_till_done()
+
+        all_states = hass.states.async_all()
+        assert len(all_states) == 1
+
+        state = hass.states.get("geo_location.title_1")
+        assert state is not None
+        assert state.name == "Title 1"
+        assert state.attributes == {
+            ATTR_EXTERNAL_ID: "1234",
+            ATTR_LATITUDE: 38.0,
+            ATTR_LONGITUDE: -3.0,
+            ATTR_FRIENDLY_NAME: "Title 1",
+            ATTR_UNIT_OF_MEASUREMENT: "mi",
+            ATTR_SOURCE: "geonetnz_quakes",
+            ATTR_ICON: "mdi:pulse",
+        }
+        assert float(state.state) == 9.6
