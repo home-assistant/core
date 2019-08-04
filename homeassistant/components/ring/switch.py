@@ -26,7 +26,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     switches = []
     for device in cameras:
         if device.has_capability("siren"):
-            _LOGGER.warning(device)
             switches.append(SirenSwitch(device))
 
     add_entities(switches, True)

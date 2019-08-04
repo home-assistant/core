@@ -121,6 +121,3 @@ desktop.ini
 
 # monkeytype
 monkeytype.sqlite3
-
-# Ring Cache (generated during tests)
-.ring_cache.pickle
