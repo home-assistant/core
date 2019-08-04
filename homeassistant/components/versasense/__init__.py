@@ -34,14 +34,14 @@ async def async_setup(hass, config):
 
     await _configure_entities(hass, config, consumer)
 
-    # Return boolean to indicate that initialization was successfully.
+    # Return boolean to indicate that initialization was successful.
     return True
 
 
 async def _configure_entities(hass, config, consumer):
     """Fetch all devices with their peripherals for representation."""
     devices = await consumer.fetchDevices()
-    _LOGGER.info(devices)
+    _LOGGER.debug(devices)
     for mac, device in devices.items():
         _LOGGER.info("Device connected: %s %s", device.name, mac)
         for peripheral_id, peripheral in device.peripherals.items():
@@ -58,7 +58,6 @@ async def _create_entity(hass, config, peripheral, parent_name):
             entity_type = 'switch'
         else:
             entity_type = None
-            pass
 
         if entity_type is not None:
             hass.async_create_task(
@@ -70,7 +69,7 @@ async def _create_entity(hass, config, peripheral, parent_name):
                         'identifier': peripheral.identifier,
                         'unit': measurement.unit,
                         'measurement': measurement.name,
-                        'parentName': parent_name
+                        'parent_name': parent_name
                     },
                     config
                 )
