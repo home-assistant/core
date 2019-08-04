@@ -25,18 +25,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the Genius Hub sensor entities."""
     client = hass.data[DOMAIN]["client"]
 
-    sensors = [
-        GeniusDevice(client, d)
-        for d in client.hub.device_objs
-        if d.type in GH_HAS_BATTERY
-    ]
+    sensors = []
+    for device in client.hub.device_objs:
+        try:
+            if device.type in GH_HAS_BATTERY:
+                sensors.append(GeniusBattery(client, device))
+        except (AttributeError, TypeError):
+            pass
 
     issues = [GeniusIssue(client, i) for i in list(GH_LEVEL_MAPPING)]
 
     async_add_entities(sensors + issues, update_before_add=True)
 
 
-class GeniusDevice(Entity):
+class GeniusBattery(Entity):
     """Representation of a Genius Hub sensor."""
 
     def __init__(self, client, device):

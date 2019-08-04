@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+import aiohttp
 import voluptuous as vol
 
 from geniushubclient import GeniusHubClient
@@ -32,6 +33,13 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+def make_debug_log_entries(data):
+    """Make any debug log entries as required."""
+    # pylint: disable=protected-access
+    _LOGGER.debug("zones_raw = %s", data._client.hub._raw_zones)
+    _LOGGER.debug("devices_raw = %s", data._client.hub._raw_devices)
+
+
 async def async_setup(hass, hass_config):
     """Create a Genius Hub system."""
     kwargs = dict(hass_config[DOMAIN])
@@ -48,16 +56,7 @@ async def async_setup(hass, hass_config):
         _LOGGER.warning("Setup failed, check your configuration.", exc_info=True)
         return False
 
-    _LOGGER.debug(
-        # noqa; pylint: disable=protected-access
-        "zones_raw = %s",
-        data._client.hub._zones_raw,
-    )
-    _LOGGER.debug(
-        # noqa; pylint: disable=protected-access
-        "devices_raw = %s",
-        data._client.hub._devices_raw,
-    )
+    make_debug_log_entries(data)
 
     async_track_time_interval(hass, data.async_update, SCAN_INTERVAL)
 
@@ -89,19 +88,10 @@ class GeniusData:
         """Update the geniushub client's data."""
         try:
             await self._client.hub.update()
-        except AssertionError:  # assert response.status == HTTP_OK
+        except aiohttp.client_exceptions.ClientResponseError:
             _LOGGER.warning("Update failed.", exc_info=True)
             return
 
-        _LOGGER.debug(
-            # noqa; pylint: disable=protected-access
-            "zones_raw = %s",
-            self._client.hub._zones_raw,
-        )
-        _LOGGER.debug(
-            # noqa; pylint: disable=protected-access
-            "devices_raw = %s",
-            self._client.hub._devices_raw,
-        )
+        make_debug_log_entries(self)
 
         async_dispatcher_send(self._hass, DOMAIN)
