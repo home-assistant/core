@@ -27,7 +27,7 @@ class VSensor(Entity):
     def __init__(self, peripheral, parent_name, unit, measurement, consumer):
         """Initialize the sensor."""
         self._state = None
-        self._name = "{} {}".format(parent_name ,measurement)
+        self._name = "{} {}".format(parent_name, measurement)
         self._parent_mac = peripheral.parentMac
         self._identifier = peripheral.identifier
         self._unit = unit
