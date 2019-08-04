@@ -75,10 +75,7 @@ async def test_in_channel_config(cluster_id, bind_count, attrs, zha_gateway, has
     assert cluster.bind.call_count == bind_count
     assert cluster.configure_reporting.call_count == len(attrs)
     reported_attrs = {attr[0][0] for attr in cluster.configure_reporting.call_args_list}
-    attr_ids = {
-        attr if isinstance(attr, int) else cluster._attridx[attr] for attr in attrs
-    }
-    assert attr_ids == reported_attrs
+    assert set(attrs) == reported_attrs
 
 
 @pytest.mark.asyncio
