@@ -68,6 +68,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         device_list.append(PS4Device(config, name, host, region, ps4, creds))
     async_add_entities(device_list, update_before_add=True)
 
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Not Implemented."""
     pass
