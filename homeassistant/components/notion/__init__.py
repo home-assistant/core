@@ -236,14 +236,14 @@ class NotionEntity(Entity):
     def device_info(self):
         """Return device registry information for this entity."""
         bridge = self._notion.bridges.get(self._bridge_id, {})
-        sensor = self._notion.sensors.get(self._sensor_id, {})
+        sensor = self._notion.sensors[self._sensor_id]
 
         return {
-            "identifiers": {(DOMAIN, sensor.get("hardware_id"))},
+            "identifiers": {(DOMAIN, sensor["hardware_id"])},
             "manufacturer": "Silicon Labs",
-            "model": sensor.get("hardware_revision"),
-            "name": sensor.get("name"),
-            "sw_version": sensor.get("firmware_version"),
+            "model": sensor["hardware_revision"],
+            "name": sensor["name"],
+            "sw_version": sensor["firmware_version"],
             "via_device": (DOMAIN, bridge.get("hardware_id")),
         }
 
