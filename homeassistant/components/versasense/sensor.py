@@ -10,15 +10,13 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the sensor platform."""
-    consumer = hass.data[DOMAIN]['consumer']
-    peripheral = hass.data[DOMAIN][discovery_info['identifier']]
-    parent_name = discovery_info['parent_name']
-    unit = discovery_info['unit']
-    measurement = discovery_info['measurement']
+    consumer = hass.data[DOMAIN]["consumer"]
+    peripheral = hass.data[DOMAIN][discovery_info["identifier"]]
+    parent_name = discovery_info["parent_name"]
+    unit = discovery_info["unit"]
+    measurement = discovery_info["measurement"]
 
-    async_add_entities(
-        [VSensor(peripheral, parent_name, unit, measurement, consumer)]
-    )
+    async_add_entities([VSensor(peripheral, parent_name, unit, measurement, consumer)])
 
 
 class VSensor(Entity):
