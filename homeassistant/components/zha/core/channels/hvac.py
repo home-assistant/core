@@ -19,10 +19,7 @@ class FanChannel(ZigbeeChannel):
     """Fan channel."""
 
     _value_attribute = 0
-    REPORT_CONFIG = ({
-        'attr': 'fan_mode',
-        'config': REPORT_CONFIG_OP
-    }, )
+    REPORT_CONFIG = ({"attr": "fan_mode", "config": REPORT_CONFIG_OP},)
 
     async def async_set_speed(self, value) -> None:
         """Set the speed of the fan."""

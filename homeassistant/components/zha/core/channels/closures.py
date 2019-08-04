@@ -19,10 +19,7 @@ class DoorLockChannel(ZigbeeChannel):
     """Door lock channel."""
 
     _value_attribute = 0
-    REPORT_CONFIG = ({
-        'attr': 'lock_state',
-        'config': REPORT_CONFIG_IMMEDIATE
-    }, )
+    REPORT_CONFIG = ({"attr": "lock_state", "config": REPORT_CONFIG_IMMEDIATE},)
 
     async def async_update(self):
         """Retrieve latest state."""
