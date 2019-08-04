@@ -587,7 +587,7 @@ ha-ffmpeg==2.0
 ha-philipsjs==0.0.8
 
 # homeassistant.components.plugwise
-haanna==0.10.0
+haanna==0.10.1
 
 # homeassistant.components.habitica
 habitipy==0.2.0
