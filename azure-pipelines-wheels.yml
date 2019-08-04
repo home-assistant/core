@@ -9,6 +9,13 @@ trigger:
     include:
     - requirements_all.txt
 pr: none
+schedules:
+- cron: "0 */8 * * *"
+  displayName: daily builds
+  branches:
+    include:
+    - dev
+  always: true
 variables:
   - name: versionWheels
     value: '1.0-3.7-alpine3.10'
