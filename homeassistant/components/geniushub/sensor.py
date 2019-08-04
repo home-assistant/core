@@ -1,6 +1,5 @@
 """Support for Genius Hub sensor devices."""
 from datetime import timedelta
-import logging
 
 from homeassistant.const import DEVICE_CLASS_BATTERY
 from homeassistant.core import callback
@@ -9,8 +8,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 
 from . import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 GH_HAS_BATTERY = ["Room Thermostat", "Genius Valve", "Room Sensor", "Radiator Valve"]
 
@@ -25,14 +22,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the Genius Hub sensor entities."""
     client = hass.data[DOMAIN]["client"]
 
-    sensors = []
-    for device in client.hub.device_objs:
-        try:
-            if device.type in GH_HAS_BATTERY:
-                sensors.append(GeniusBattery(client, device))
-        except (AttributeError, TypeError):
-            pass
-
+    sensors = [
+        GeniusBattery(client, d)
+        for d in client.hub.device_objs
+        if d.type in GH_HAS_BATTERY
+    ]
     issues = [GeniusIssue(client, i) for i in list(GH_LEVEL_MAPPING)]
 
     async_add_entities(sensors + issues, update_before_add=True)
@@ -65,7 +59,7 @@ class GeniusBattery(Entity):
     def icon(self):
         """Return the icon of the sensor."""
         # noqa; pylint: disable=protected-access
-        values = self._device._raw_json["childValues"]
+        values = self._device._raw_data["childValues"]
 
         last_comms = utc_from_timestamp(values["lastComms"]["val"])
         if "WakeUp_Interval" in values:
@@ -76,7 +70,7 @@ class GeniusBattery(Entity):
         if last_comms < utcnow() - interval * 3:
             return "mdi:battery-unknown"
 
-        battery_level = self._device.state["batteryLevel"]
+        battery_level = self._device.data["state"]["batteryLevel"]
         if battery_level == 255:
             return "mdi:battery-unknown"
         if battery_level < 40:
@@ -106,17 +100,17 @@ class GeniusBattery(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        level = self._device.state.get("batteryLevel", 255)
+        level = self._device.data["state"].get("batteryLevel", 255)
         return level if level != 255 else 0
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         attrs = {}
-        attrs["assigned_zone"] = self._device.assignedZones[0]["name"]
+        attrs["assigned_zone"] = self._device.data["assignedZones"][0]["name"]
 
         # noqa; pylint: disable=protected-access
-        last_comms = self._device._raw_json["childValues"]["lastComms"]["val"]
+        last_comms = self._device._raw_data["childValues"]["lastComms"]["val"]
         attrs["last_comms"] = utc_from_timestamp(last_comms).isoformat()
 
         return {**attrs}
