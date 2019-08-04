@@ -27,7 +27,6 @@ VALID_ALL_DISABLED_CONFIG = {
 def _assert_room_state(hass, hvac, preset, temp, current_temp):
     """Assert room climate state."""
     state = hass.states.get('climate.vaillant_room_1')
-    print(state)
 
     assert hass.states.is_state('climate.vaillant_room_1', hvac)
     assert state.attributes['current_temperature'] == current_temp
