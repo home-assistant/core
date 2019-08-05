@@ -1,6 +1,7 @@
 """Class to manage the entities for a single platform."""
 import asyncio
 from contextvars import ContextVar
+from typing import Optional
 
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import callback, valid_entity_id, split_entity_id
@@ -461,6 +462,6 @@ class EntityPlatform:
                 await asyncio.wait(tasks)
 
 
-current_platform: ContextVar[EntityPlatform] = ContextVar(
+current_platform: ContextVar[Optional[EntityPlatform]] = ContextVar(
     "current_platform", default=None
 )
