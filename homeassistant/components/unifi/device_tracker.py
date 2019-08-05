@@ -188,7 +188,9 @@ def update_items(controller, async_add_entities, tracked):
             tracked[client_id] = UniFiClientTracker(client, controller)
             new_tracked.append(tracked[client_id])
             LOGGER.debug(
-                "New UniFi client tracker %s (%s)", client.hostname, client.mac
+                "New UniFi client tracker %s (%s)",
+                client.name or client.hostname,
+                client.mac,
             )
 
     if not controller.unifi_config.get(CONF_DONT_TRACK_DEVICES, False):
@@ -330,13 +332,17 @@ class UniFiDeviceTracker(ScannerEntity):
     @property
     def device_info(self):
         """Return a device description for device registry."""
-        return {
+        info = {
             "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
             "manufacturer": ATTR_MANUFACTURER,
             "model": self.device.model,
-            "name": self.device.name,
             "sw_version": self.device.version,
         }
+
+        if self.device.name:
+            info["name"] = self.device.name
+
+        return info
 
     @property
     def device_state_attributes(self):
