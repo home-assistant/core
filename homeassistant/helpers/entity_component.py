@@ -114,7 +114,7 @@ class EntityComponent:
         # Look in config for Domain, Domain 2, Domain 3 etc and load them
         tasks = []
         for p_type, p_config in config_per_platform(config, self.domain):
-            tasks.append(self._async_setup_platform(p_type, p_config))
+            tasks.append(self.async_setup_platform(p_type, p_config))
 
         if tasks:
             await asyncio.wait(tasks)
@@ -123,7 +123,7 @@ class EntityComponent:
         # Refer to: homeassistant.components.discovery.load_platform()
         async def component_platform_discovered(platform, info):
             """Handle the loading of a platform."""
-            await self._async_setup_platform(platform, {}, info)
+            await self.async_setup_platform(platform, {}, info)
 
         discovery.async_listen_platform(
             self.hass, self.domain, component_platform_discovered
@@ -212,10 +212,13 @@ class EntityComponent:
 
         self.hass.services.async_register(self.domain, name, handle_service, schema)
 
-    async def _async_setup_platform(
+    async def async_setup_platform(
         self, platform_type, platform_config, discovery_info=None
     ):
         """Set up a platform for this component."""
+        if self.config is None:
+            raise RuntimeError("async_setup needs to be called first")
+
         platform = await async_prepare_setup_platform(
             self.hass, self.config, self.domain, platform_type
         )

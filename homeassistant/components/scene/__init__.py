@@ -5,6 +5,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.const import CONF_PLATFORM, SERVICE_TURN_ON
 from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.entity import Entity
@@ -60,6 +61,10 @@ async def async_setup(hass, config):
     component = hass.data[DOMAIN] = EntityComponent(logger, DOMAIN, hass)
 
     await component.async_setup(config)
+    # Ensure Home Assistant platform always loaded.
+    await component.async_setup_platform(
+        HA_DOMAIN, {"platform": "homeasistant", STATES: []}
+    )
 
     async def async_handle_scene_service(service):
         """Handle calls to the switch services."""
