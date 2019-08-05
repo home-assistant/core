@@ -9,11 +9,12 @@ from homeassistant.components.here_travel_time.sensor import (
     ATTR_ATTRIBUTION, ATTR_DESTINATION, ATTR_DESTINATION_NAME, ATTR_DISTANCE,
     ATTR_DURATION, ATTR_DURATION_WITHOUT_TRAFFIC, ATTR_ORIGIN,
     ATTR_ORIGIN_NAME, ATTR_ROUTE, CONF_MODE, CONF_TRAFFIC_MODE,
-    CONF_UNIT_SYSTEM, ICON_CAR, ICON_PEDESTRIAN, ICON_PUBLIC, ICON_TRUCK,
-    NO_ROUTE_ERROR_MESSAGE, ROUTE_MODE_FASTEST, ROUTE_MODE_SHORTEST,
-    SCAN_INTERVAL, TRAFFIC_MODE_DISABLED, TRAFFIC_MODE_ENABLED,
-    TRAVEL_MODE_CAR, TRAVEL_MODE_PEDESTRIAN, TRAVEL_MODE_PUBLIC,
-    TRAVEL_MODE_TRUCK, UNIT_OF_MEASUREMENT)
+    CONF_UNIT_SYSTEM, ICON_BICYCLE, ICON_CAR, ICON_PEDESTRIAN, ICON_PUBLIC,
+    ICON_TRUCK, NO_ROUTE_ERROR_MESSAGE, ROUTE_MODE_FASTEST,
+    ROUTE_MODE_SHORTEST, SCAN_INTERVAL, TRAFFIC_MODE_DISABLED,
+    TRAFFIC_MODE_ENABLED, TRAVEL_MODE_BICYCLE, TRAVEL_MODE_CAR,
+    TRAVEL_MODE_PEDESTRIAN, TRAVEL_MODE_PUBLIC, TRAVEL_MODE_TRUCK,
+    UNIT_OF_MEASUREMENT)
 from homeassistant.const import ATTR_ICON
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -30,8 +31,11 @@ APP_CODE = 'test'
 TRUCK_ORIGIN = "41.9798,-87.8801"
 TRUCK_DESTINATION = "41.9043,-87.9216"
 
-CAR_DISABLED_ORIGIN = "38.90,-77.04833"
-CAR_DISABLED_DESTINATION = "39.0,-77.1"
+BIKE_ORIGIN = "41.9798,-87.8801"
+BIKE_DESTINATION = "41.9043,-87.9216"
+
+CAR_ORIGIN = "38.90,-77.04833"
+CAR_DESTINATION = "39.0,-77.1"
 
 
 def _build_mock_url(origin, destination, modes, app_id, app_code, departure):
@@ -109,8 +113,8 @@ def requests_mock_car_disabled_response(requests_mock):
         [TRAVEL_MODE_CAR, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED]
         )
     response_url = _build_mock_url(
-        CAR_DISABLED_ORIGIN,
-        CAR_DISABLED_DESTINATION,
+        CAR_ORIGIN,
+        CAR_DESTINATION,
         modes,
         APP_ID,
         APP_CODE,
@@ -129,8 +133,8 @@ async def test_car(hass, requests_mock_car_disabled_response):
     config = {DOMAIN: {
         'platform': PLATFORM,
         'name': 'test',
-        'origin': CAR_DISABLED_ORIGIN,
-        'destination': CAR_DISABLED_DESTINATION,
+        'origin': CAR_ORIGIN,
+        'destination': CAR_DESTINATION,
         'app_id': APP_ID,
         'app_code': APP_CODE
     }}
@@ -151,8 +155,8 @@ async def test_car(hass, requests_mock_car_disabled_response):
         "I-495 N - Capital Beltway; MD-187 S - Old Georgetown Rd")
     assert sensor.attributes.get(CONF_UNIT_SYSTEM) == 'metric'
     assert sensor.attributes.get(ATTR_DURATION_WITHOUT_TRAFFIC) == 30.05
-    assert sensor.attributes.get(ATTR_ORIGIN) == CAR_DISABLED_ORIGIN
-    assert sensor.attributes.get(ATTR_DESTINATION) == CAR_DISABLED_DESTINATION
+    assert sensor.attributes.get(ATTR_ORIGIN) == CAR_ORIGIN
+    assert sensor.attributes.get(ATTR_DESTINATION) == CAR_DESTINATION
     assert sensor.attributes.get(ATTR_ORIGIN_NAME) == '22nd St NW'
     assert sensor.attributes.get(ATTR_DESTINATION_NAME) == 'Service Rd S'
     assert sensor.attributes.get(CONF_MODE) == TRAVEL_MODE_CAR
@@ -169,14 +173,12 @@ async def test_car(hass, requests_mock_car_disabled_response):
 
 async def test_traffic_mode_enabled(hass, requests_mock):
     """Test that traffic mode enabled works."""
-    origin = "38.90,-77.04833"
-    destination = "39.0,-77.1"
     modes = ";".join(
         [TRAVEL_MODE_CAR, ROUTE_MODE_FASTEST, TRAFFIC_MODE_ENABLED]
         )
     response_url = _build_mock_url(
-        origin,
-        destination,
+        CAR_ORIGIN,
+        CAR_DESTINATION,
         modes,
         APP_ID,
         APP_CODE,
@@ -192,8 +194,8 @@ async def test_traffic_mode_enabled(hass, requests_mock):
     config = {DOMAIN: {
         'platform': PLATFORM,
         'name': 'test',
-        'origin': origin,
-        'destination': destination,
+        'origin': CAR_ORIGIN,
+        'destination': CAR_DESTINATION,
         'app_id': APP_ID,
         'app_code': APP_CODE,
         'traffic_mode': True
@@ -214,8 +216,8 @@ async def test_imperial(hass, requests_mock_car_disabled_response):
     config = {DOMAIN: {
         'platform': PLATFORM,
         'name': 'test',
-        'origin': CAR_DISABLED_ORIGIN,
-        'destination': CAR_DISABLED_DESTINATION,
+        'origin': CAR_ORIGIN,
+        'destination': CAR_DESTINATION,
         'app_id': APP_ID,
         'app_code': APP_CODE,
         'unit_system': 'imperial'
@@ -434,6 +436,66 @@ async def test_pedestrian(hass, requests_mock):
     assert sensor.attributes.get(CONF_TRAFFIC_MODE) is False
 
     assert sensor.attributes.get(ATTR_ICON) == ICON_PEDESTRIAN
+
+
+async def test_bicycle(hass, requests_mock):
+    """Test that bicycle works."""
+    origin = "41.9798,-87.8801"
+    destination = "41.9043,-87.9216"
+    modes = ";".join(
+        [TRAVEL_MODE_BICYCLE, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED]
+        )
+    response_url = _build_mock_url(
+                    origin,
+                    destination,
+                    modes,
+                    APP_ID,
+                    APP_CODE,
+                    "now"
+        )
+    requests_mock.get(
+        response_url,
+        text=load_fixture(
+            'here_travel_time/bike_response.json'
+        )
+    )
+
+    config = {DOMAIN: {
+        'platform': PLATFORM,
+        'name': 'test',
+        'origin': origin,
+        'destination': destination,
+        'app_id': APP_ID,
+        'app_code': APP_CODE,
+        'mode': TRAVEL_MODE_BICYCLE
+    }}
+    assert await async_setup_component(hass, DOMAIN, config)
+
+    sensor = hass.states.get('sensor.test')
+    assert sensor.state == '55'
+    assert sensor.attributes.get(
+        'unit_of_measurement'
+        ) == UNIT_OF_MEASUREMENT
+
+    assert sensor.attributes.get(ATTR_ATTRIBUTION) is None
+    assert sensor.attributes.get(ATTR_DURATION) == 54.86666666666667
+    assert sensor.attributes.get(ATTR_DISTANCE) == 12.613
+    assert sensor.attributes.get(ATTR_ROUTE) == (
+        "Mannheim Rd; W Belmont Ave; Cullerton St; N Landen Dr; "
+        "E Fullerton Ave; N Wolf Rd; W North Ave; N Clinton Ave; "
+        "E Third St; N Caroline Ave")
+    assert sensor.attributes.get(CONF_UNIT_SYSTEM) == 'metric'
+    assert sensor.attributes.get(
+        ATTR_DURATION_WITHOUT_TRAFFIC
+        ) == 54.86666666666667
+    assert sensor.attributes.get(ATTR_ORIGIN) == origin
+    assert sensor.attributes.get(ATTR_DESTINATION) == destination
+    assert sensor.attributes.get(ATTR_ORIGIN_NAME) == "Mannheim Rd"
+    assert sensor.attributes.get(ATTR_DESTINATION_NAME) == ''
+    assert sensor.attributes.get(CONF_MODE) == TRAVEL_MODE_BICYCLE
+    assert sensor.attributes.get(CONF_TRAFFIC_MODE) is False
+
+    assert sensor.attributes.get(ATTR_ICON) == ICON_BICYCLE
 
 
 async def test_location_zone(hass, requests_mock_truck_response):
@@ -781,7 +843,7 @@ async def test_pattern_origin(hass, caplog):
         'platform': PLATFORM,
         'name': 'test',
         'origin': "138.90,-77.04833",
-        'destination': CAR_DISABLED_DESTINATION,
+        'destination': CAR_DESTINATION,
         'app_id': APP_ID,
         'app_code': APP_CODE
     }}
@@ -796,7 +858,7 @@ async def test_pattern_destination(hass, caplog):
     config = {DOMAIN: {
         'platform': PLATFORM,
         'name': 'test',
-        'origin': CAR_DISABLED_ORIGIN,
+        'origin': CAR_ORIGIN,
         'destination': "139.0,-77.1",
         'app_id': APP_ID,
         'app_code': APP_CODE

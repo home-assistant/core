@@ -27,16 +27,22 @@ CONF_ROUTE_MODE = 'route_mode'
 
 DEFAULT_NAME = "HERE Travel Time"
 
+TRAVEL_MODE_BICYCLE = 'bicycle'
 TRAVEL_MODE_CAR = 'car'
 TRAVEL_MODE_PEDESTRIAN = 'pedestrian'
 TRAVEL_MODE_PUBLIC = 'publicTransport'
 TRAVEL_MODE_TRUCK = 'truck'
 TRAVEL_MODE = [
+    TRAVEL_MODE_BICYCLE,
     TRAVEL_MODE_CAR,
     TRAVEL_MODE_PEDESTRIAN,
     TRAVEL_MODE_PUBLIC,
     TRAVEL_MODE_TRUCK,
 ]
+
+TRAVEL_MODES_VEHICLE = [TRAVEL_MODE_CAR, TRAVEL_MODE_TRUCK]
+TRAVEL_MODES_NON_VEHICLE = [TRAVEL_MODE_BICYCLE, TRAVEL_MODE_PEDESTRIAN]
+
 TRAFFIC_MODE_ENABLED = "traffic:enabled"
 TRAFFIC_MODE_DISABLED = "traffic:disabled"
 
@@ -44,6 +50,7 @@ ROUTE_MODE_FASTEST = 'fastest'
 ROUTE_MODE_SHORTEST = 'shortest'
 ROUTE_MODE = [ROUTE_MODE_FASTEST, ROUTE_MODE_SHORTEST]
 
+ICON_BICYCLE = 'mdi:bike'
 ICON_CAR = 'mdi:car'
 ICON_PEDESTRIAN = 'mdi:walk'
 ICON_PUBLIC = 'mdi:bus'
@@ -202,6 +209,8 @@ class HERETravelTimeSensor(Entity):
     @property
     def icon(self) -> str:
         """Icon to use in the frontend depending on travel_mode."""
+        if self._here_data.travel_mode == TRAVEL_MODE_BICYCLE:
+            return ICON_BICYCLE
         if self._here_data.travel_mode == TRAVEL_MODE_PEDESTRIAN:
             return ICON_PEDESTRIAN
         if self._here_data.travel_mode == TRAVEL_MODE_PUBLIC:
@@ -355,7 +364,7 @@ class HERETravelTimeData():
             else:
                 # Convert to kilometers
                 self.distance = distance / 1000
-            if self.travel_mode in [TRAVEL_MODE_CAR, TRAVEL_MODE_TRUCK]:
+            if self.travel_mode in TRAVEL_MODES_VEHICLE:
                 # Get Route for Car and Truck
                 self.route = self._get_route_from_vehicle_maneuver(maneuver)
             elif self.travel_mode == TRAVEL_MODE_PUBLIC:
@@ -363,15 +372,15 @@ class HERETravelTimeData():
                 public_transport_line = route[0]['publicTransportLine']
                 self.route = self._get_route_from_public_transport_line(
                     public_transport_line)
-            elif self.travel_mode == TRAVEL_MODE_PEDESTRIAN:
-                # Get Route for Pedestrian
-                self.route = self._get_route_from_pedestrian_maneuver(
+            elif self.travel_mode in TRAVEL_MODES_NON_VEHICLE:
+                # Get Route for Pedestrian and Biyclce
+                self.route = self._get_route_from_non_vehicle_maneuver(
                     maneuver)
             self.origin_name = waypoint[0]['mappedRoadName']
             self.destination_name = waypoint[1]['mappedRoadName']
 
     @staticmethod
-    def _get_route_from_pedestrian_maneuver(maneuver):
+    def _get_route_from_non_vehicle_maneuver(maneuver):
         """Extract a Waze-like route from the maneuver instructions."""
         road_names = []
 
