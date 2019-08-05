@@ -22,7 +22,7 @@ from tests.common import MockConfigEntry
 
 @pytest.fixture
 def config_entry():
-    """Create a mock WWLLN config entry."""
+    """Create a mock GeoNet NZ Quakes config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         data={
