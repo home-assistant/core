@@ -13,11 +13,13 @@ from random import uniform
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.util.decorator import Registry
 
 from ..const import (
     CHANNEL_ATTRIBUTE,
     CHANNEL_EVENT_RELAY,
     CHANNEL_ZDO,
+    REPORT_CONFIG_DEFAULT,
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
     REPORT_CONFIG_RPT_CHANGE,
@@ -27,6 +29,8 @@ from ..helpers import LogMixin, get_attr_id_by_name, safe_read
 from ..registries import CLUSTER_REPORT_CONFIGS
 
 _LOGGER = logging.getLogger(__name__)
+
+ZIGBEE_CHANNEL_REGISTRY = Registry()
 
 
 def parse_and_log_command(channel, tsn, command_id, args):
@@ -282,6 +286,7 @@ class AttributeListeningChannel(ZigbeeChannel):
     """Channel for attribute reports from the cluster."""
 
     CHANNEL_NAME = CHANNEL_ATTRIBUTE
+    REPORT_CONFIG = [{"attr": 0, "config": REPORT_CONFIG_DEFAULT}]
 
     def __init__(self, cluster, device):
         """Initialize AttributeListeningChannel."""
@@ -394,3 +399,17 @@ class EventRelayChannel(ZigbeeChannel):
             self.zha_send_event(
                 self._cluster, self._cluster.server_commands.get(command_id)[0], args
             )
+
+
+# pylint: disable=wrong-import-position
+from . import closures  # noqa
+from . import general  # noqa
+from . import homeautomation  # noqa
+from . import hvac  # noqa
+from . import lighting  # noqa
+from . import lightlink  # noqa
+from . import manufacturerspecific  # noqa
+from . import measurement  # noqa
+from . import protocol  # noqa
+from . import security  # noqa
+from . import smartenergy  # noqa
