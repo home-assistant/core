@@ -79,7 +79,7 @@ DEBUG_COMP_ZHA = "homeassistant.components.zha"
 DEBUG_COMP_ZIGPY = "zigpy"
 DEBUG_COMP_ZIGPY_DECONZ = "zigpy_deconz"
 DEBUG_COMP_ZIGPY_XBEE = "zigpy_xbee"
-DEBUG_COMP_ZIGPY_ZIGATE = 'zigpy_zigate'
+DEBUG_COMP_ZIGPY_ZIGATE = "zigpy_zigate"
 DEBUG_LEVEL_CURRENT = "current"
 DEBUG_LEVEL_ORIGINAL = "original"
 DEBUG_LEVELS = {
@@ -108,10 +108,10 @@ POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 class RadioType(enum.Enum):
     """Possible options for radio type."""
 
-    ezsp = 'ezsp'
-    xbee = 'xbee'
-    deconz = 'deconz'
-    zigate = 'zigate'
+    ezsp = "ezsp"
+    xbee = "xbee"
+    deconz = "deconz"
+    zigate = "zigate"
 
     @classmethod
     def list(cls):
