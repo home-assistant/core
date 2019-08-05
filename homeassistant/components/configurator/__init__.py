@@ -10,50 +10,61 @@ import functools as ft
 import logging
 
 from homeassistant.core import callback as async_callback
-from homeassistant.const import EVENT_TIME_CHANGED, ATTR_FRIENDLY_NAME, \
-    ATTR_ENTITY_PICTURE
+from homeassistant.const import (
+    EVENT_TIME_CHANGED,
+    ATTR_FRIENDLY_NAME,
+    ATTR_ENTITY_PICTURE,
+)
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
-_KEY_INSTANCE = 'configurator'
+_KEY_INSTANCE = "configurator"
 
-DATA_REQUESTS = 'configurator_requests'
+DATA_REQUESTS = "configurator_requests"
 
-ATTR_CONFIGURE_ID = 'configure_id'
-ATTR_DESCRIPTION = 'description'
-ATTR_DESCRIPTION_IMAGE = 'description_image'
-ATTR_ERRORS = 'errors'
-ATTR_FIELDS = 'fields'
-ATTR_LINK_NAME = 'link_name'
-ATTR_LINK_URL = 'link_url'
-ATTR_SUBMIT_CAPTION = 'submit_caption'
+ATTR_CONFIGURE_ID = "configure_id"
+ATTR_DESCRIPTION = "description"
+ATTR_DESCRIPTION_IMAGE = "description_image"
+ATTR_ERRORS = "errors"
+ATTR_FIELDS = "fields"
+ATTR_LINK_NAME = "link_name"
+ATTR_LINK_URL = "link_url"
+ATTR_SUBMIT_CAPTION = "submit_caption"
 
-DOMAIN = 'configurator'
+DOMAIN = "configurator"
 
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-SERVICE_CONFIGURE = 'configure'
-STATE_CONFIGURE = 'configure'
-STATE_CONFIGURED = 'configured'
+SERVICE_CONFIGURE = "configure"
+STATE_CONFIGURE = "configure"
+STATE_CONFIGURED = "configured"
 
 
 @bind_hass
 @async_callback
 def async_request_config(
-        hass, name, callback=None, description=None, description_image=None,
-        submit_caption=None, fields=None, link_name=None, link_url=None,
-        entity_picture=None):
+    hass,
+    name,
+    callback=None,
+    description=None,
+    description_image=None,
+    submit_caption=None,
+    fields=None,
+    link_name=None,
+    link_url=None,
+    entity_picture=None,
+):
     """Create a new request for configuration.
 
     Will return an ID to be used for sequent calls.
     """
     if link_name is not None and link_url is not None:
-        description += '\n\n[{}]({})'.format(link_name, link_url)
+        description += "\n\n[{}]({})".format(link_name, link_url)
 
     if description_image is not None:
-        description += '\n\n![Description image]({})'.format(description_image)
+        description += "\n\n![Description image]({})".format(description_image)
 
     instance = hass.data.get(_KEY_INSTANCE)
 
@@ -61,7 +72,8 @@ def async_request_config(
         instance = hass.data[_KEY_INSTANCE] = Configurator(hass)
 
     request_id = instance.async_request_config(
-        name, callback, description, submit_caption, fields, entity_picture)
+        name, callback, description, submit_caption, fields, entity_picture
+    )
 
     if DATA_REQUESTS not in hass.data:
         hass.data[DATA_REQUESTS] = {}
@@ -87,8 +99,7 @@ def request_config(hass, *args, **kwargs):
 def async_notify_errors(hass, request_id, error):
     """Add errors to a config request."""
     try:
-        hass.data[DATA_REQUESTS][request_id].async_notify_errors(
-            request_id, error)
+        hass.data[DATA_REQUESTS][request_id].async_notify_errors(request_id, error)
     except KeyError:
         # If request_id does not exist
         pass
@@ -135,15 +146,15 @@ class Configurator:
         self._cur_id = 0
         self._requests = {}
         hass.services.async_register(
-            DOMAIN, SERVICE_CONFIGURE, self.async_handle_service_call)
+            DOMAIN, SERVICE_CONFIGURE, self.async_handle_service_call
+        )
 
     @async_callback
     def async_request_config(
-            self, name, callback, description, submit_caption, fields,
-            entity_picture):
+        self, name, callback, description, submit_caption, fields, entity_picture
+    ):
         """Set up a request for configuration."""
-        entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, name, hass=self.hass)
+        entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, name, hass=self.hass)
 
         if fields is None:
             fields = []
@@ -159,12 +170,16 @@ class Configurator:
             ATTR_ENTITY_PICTURE: entity_picture,
         }
 
-        data.update({
-            key: value for key, value in [
-                (ATTR_DESCRIPTION, description),
-                (ATTR_SUBMIT_CAPTION, submit_caption),
-            ] if value is not None
-        })
+        data.update(
+            {
+                key: value
+                for key, value in [
+                    (ATTR_DESCRIPTION, description),
+                    (ATTR_SUBMIT_CAPTION, submit_caption),
+                ]
+                if value is not None
+            }
+        )
 
         self.hass.states.async_set(entity_id, STATE_CONFIGURE, data)
 
@@ -217,8 +232,7 @@ class Configurator:
 
         # field validation goes here?
         if callback:
-            await self.hass.async_add_job(callback,
-                                          call.data.get(ATTR_FIELDS, {}))
+            await self.hass.async_add_job(callback, call.data.get(ATTR_FIELDS, {}))
 
     def _generate_unique_id(self):
         """Generate a unique configurator ID."""

@@ -4,48 +4,59 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PIN, CONF_TOKEN, EVENT_HOMEASSISTANT_STOP)
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PIN,
+    CONF_TOKEN,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'comfoconnect'
+DOMAIN = "comfoconnect"
 
-SIGNAL_COMFOCONNECT_UPDATE_RECEIVED = 'comfoconnect_update_received'
+SIGNAL_COMFOCONNECT_UPDATE_RECEIVED = "comfoconnect_update_received"
 
-ATTR_CURRENT_TEMPERATURE = 'current_temperature'
-ATTR_CURRENT_HUMIDITY = 'current_humidity'
-ATTR_OUTSIDE_TEMPERATURE = 'outside_temperature'
-ATTR_OUTSIDE_HUMIDITY = 'outside_humidity'
-ATTR_AIR_FLOW_SUPPLY = 'air_flow_supply'
-ATTR_AIR_FLOW_EXHAUST = 'air_flow_exhaust'
+ATTR_CURRENT_TEMPERATURE = "current_temperature"
+ATTR_CURRENT_HUMIDITY = "current_humidity"
+ATTR_OUTSIDE_TEMPERATURE = "outside_temperature"
+ATTR_OUTSIDE_HUMIDITY = "outside_humidity"
+ATTR_AIR_FLOW_SUPPLY = "air_flow_supply"
+ATTR_AIR_FLOW_EXHAUST = "air_flow_exhaust"
 
-CONF_USER_AGENT = 'user_agent'
+CONF_USER_AGENT = "user_agent"
 
-DEFAULT_NAME = 'ComfoAirQ'
+DEFAULT_NAME = "ComfoAirQ"
 DEFAULT_PIN = 0
-DEFAULT_TOKEN = '00000000000000000000000000000001'
-DEFAULT_USER_AGENT = 'Home Assistant'
+DEFAULT_TOKEN = "00000000000000000000000000000001"
+DEFAULT_USER_AGENT = "Home Assistant"
 
 DEVICE = None
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_TOKEN, default=DEFAULT_TOKEN):
-            vol.Length(min=32, max=32, msg='invalid token'),
-        vol.Optional(CONF_USER_AGENT, default=DEFAULT_USER_AGENT): cv.string,
-        vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.positive_int,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_HOST): cv.string,
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_TOKEN, default=DEFAULT_TOKEN): vol.Length(
+                    min=32, max=32, msg="invalid token"
+                ),
+                vol.Optional(CONF_USER_AGENT, default=DEFAULT_USER_AGENT): cv.string,
+                vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.positive_int,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
     """Set up the ComfoConnect bridge."""
-    from pycomfoconnect import (Bridge)
+    from pycomfoconnect import Bridge
 
     conf = config[DOMAIN]
     host = conf.get(CONF_HOST)
@@ -76,7 +87,7 @@ def setup(hass, config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
     # Load platforms
-    discovery.load_platform(hass, 'fan', DOMAIN, {}, config)
+    discovery.load_platform(hass, "fan", DOMAIN, {}, config)
 
     return True
 
@@ -86,15 +97,18 @@ class ComfoConnectBridge:
 
     def __init__(self, hass, bridge, name, token, friendly_name, pin):
         """Initialize the ComfoConnect bridge."""
-        from pycomfoconnect import (ComfoConnect)
+        from pycomfoconnect import ComfoConnect
 
         self.data = {}
         self.name = name
         self.hass = hass
 
         self.comfoconnect = ComfoConnect(
-            bridge=bridge, local_uuid=bytes.fromhex(token),
-            local_devicename=friendly_name, pin=pin)
+            bridge=bridge,
+            local_uuid=bytes.fromhex(token),
+            local_devicename=friendly_name,
+            pin=pin,
+        )
         self.comfoconnect.callback_sensor = self.sensor_callback
 
     def connect(self):
@@ -112,7 +126,9 @@ class ComfoConnectBridge:
         _LOGGER.debug("Got value from bridge: %d = %d", var, value)
 
         from pycomfoconnect import (
-            SENSOR_TEMPERATURE_EXTRACT, SENSOR_TEMPERATURE_OUTDOOR)
+            SENSOR_TEMPERATURE_EXTRACT,
+            SENSOR_TEMPERATURE_OUTDOOR,
+        )
 
         if var in [SENSOR_TEMPERATURE_EXTRACT, SENSOR_TEMPERATURE_OUTDOOR]:
             self.data[var] = value / 10

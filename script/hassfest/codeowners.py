@@ -41,44 +41,43 @@ def generate_and_validate(integrations: Dict[str, Integration]):
         if not integration.manifest:
             continue
 
-        codeowners = integration.manifest['codeowners']
+        codeowners = integration.manifest["codeowners"]
 
         if not codeowners:
             continue
 
         for owner in codeowners:
-            if not owner.startswith('@'):
+            if not owner.startswith("@"):
                 integration.add_error(
-                    'codeowners',
-                    'Code owners need to be valid GitHub handles.',
+                    "codeowners", "Code owners need to be valid GitHub handles."
                 )
 
-        parts.append("homeassistant/components/{}/* {}".format(
-            domain, ' '.join(codeowners)))
+        parts.append(
+            "homeassistant/components/{}/* {}".format(domain, " ".join(codeowners))
+        )
 
-    parts.append('\n' + INDIVIDUAL_FILES.strip())
+    parts.append("\n" + INDIVIDUAL_FILES.strip())
 
-    return '\n'.join(parts)
+    return "\n".join(parts)
 
 
 def validate(integrations: Dict[str, Integration], config: Config):
     """Validate CODEOWNERS."""
-    codeowners_path = config.root / 'CODEOWNERS'
-    config.cache['codeowners'] = content = generate_and_validate(integrations)
+    codeowners_path = config.root / "CODEOWNERS"
+    config.cache["codeowners"] = content = generate_and_validate(integrations)
 
-    with open(str(codeowners_path), 'r') as fp:
+    with open(str(codeowners_path), "r") as fp:
         if fp.read().strip() != content:
             config.add_error(
                 "codeowners",
-                "File CODEOWNERS is not up to date. "
-                "Run python3 -m script.hassfest",
-                fixable=True
+                "File CODEOWNERS is not up to date. " "Run python3 -m script.hassfest",
+                fixable=True,
             )
         return
 
 
 def generate(integrations: Dict[str, Integration], config: Config):
     """Generate CODEOWNERS."""
-    codeowners_path = config.root / 'CODEOWNERS'
-    with open(str(codeowners_path), 'w') as fp:
-        fp.write(config.cache['codeowners'] + '\n')
+    codeowners_path = config.root / "CODEOWNERS"
+    with open(str(codeowners_path), "w") as fp:
+        fp.write(config.cache["codeowners"] + "\n")
