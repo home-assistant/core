@@ -23,8 +23,6 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     ATTR_ATTRIBUTION,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
     ATTR_TIME,
     ATTR_ICON,
 )
@@ -34,12 +32,6 @@ from tests.common import async_fire_time_changed
 import homeassistant.util.dt as dt_util
 
 CONFIG = {geonetnz_quakes.DOMAIN: {CONF_RADIUS: 200}}
-
-CONFIG_WITH_CUSTOM_LOCATION = {
-    geonetnz_quakes.DOMAIN: [
-        {CONF_RADIUS: 200, CONF_LATITUDE: 40.4, CONF_LONGITUDE: -3.7}
-    ]
-}
 
 
 def _generate_mock_feed_entry(
