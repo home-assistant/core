@@ -311,7 +311,7 @@ class UniFiDeviceTracker(ScannerEntity):
     @property
     def name(self) -> str:
         """Return the name of the device."""
-        return self.device.name
+        return self.device.name or self.device.model
 
     @property
     def unique_id(self) -> str:
