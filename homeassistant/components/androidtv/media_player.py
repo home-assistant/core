@@ -89,7 +89,6 @@ SERVICE_ADB_COMMAND_SCHEMA = vol.Schema(
 
 # To be used for config validation
 VALID_PROPERTIES = ("audio_state", "media_session_state")
-VALID_STRINGS = VALID_PROPERTIES + VALID_STATES
 VALID_CONDITIONS = VALID_PROPERTIES + ("wake_lock_size",)
 
 
@@ -104,7 +103,7 @@ def valid_state_detection_rules(rules):
 
         # If a rule is a string, check that it is valid
         if isinstance(rule, str):
-            if rule not in VALID_STATES + VALID_PROPERTIES:
+            if rule not in VALID_PROPERTIES + VALID_STATES:
                 raise vol.Invalid(
                     "Invalid rule '{0}' is not in {1}".format(
                         rule, VALID_STATES + VALID_PROPERTIES
