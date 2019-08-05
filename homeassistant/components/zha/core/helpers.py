@@ -56,6 +56,11 @@ async def check_zigpy_connection(usb_path, radio_type, database_path):
         from zigpy_deconz.zigbee.application import ControllerApplication
 
         radio = zigpy_deconz.api.Deconz()
+    elif radio_type == RadioType.zigate.name:
+        import zigpy_zigate.api
+        from zigpy_zigate.zigbee.application import ControllerApplication
+
+        radio = zigpy_zigate.api.ZiGate()
     try:
         await radio.connect(usb_path, DEFAULT_BAUDRATE)
         controller = ControllerApplication(radio, database_path)

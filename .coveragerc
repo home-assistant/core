@@ -741,6 +741,7 @@ omit =
     homeassistant/components/zha/core/device.py
     homeassistant/components/zha/core/gateway.py
     homeassistant/components/zha/core/helpers.py
+    homeassistant/components/zha/core/registries.py
     homeassistant/components/zha/device_entity.py
     homeassistant/components/zha/entity.py
     homeassistant/components/zha/light.py
