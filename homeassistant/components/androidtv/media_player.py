@@ -103,7 +103,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_APPS, default=dict()): vol.Schema({cv.string: cv.string}),
         vol.Optional(CONF_TURN_ON_COMMAND): cv.string,
         vol.Optional(CONF_TURN_OFF_COMMAND): cv.string,
-        vol.Optional(CONF_STATE_DETECTION_RULES, default=dict()): vol.Schema(
+        vol.Optional(CONF_STATE_DETECTION_RULES, default={}): vol.Schema(
             {cv.string: ha_state_detection_rules_validator(vol.Invalid)}
         ),
     }
