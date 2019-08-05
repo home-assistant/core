@@ -8,6 +8,7 @@ import logging
 import mimetypes
 import os
 import re
+from typing import Optional
 
 from aiohttp import web
 import voluptuous as vol
@@ -25,6 +26,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_prepare_setup_platform
 
 
@@ -464,8 +466,8 @@ class SpeechManager:
 class Provider:
     """Represent a single TTS provider."""
 
-    hass = None
-    name = None
+    hass: Optional[HomeAssistantType] = None
+    name: Optional[str] = None
 
     @property
     def default_language(self):

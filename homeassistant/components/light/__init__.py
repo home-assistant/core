@@ -4,6 +4,7 @@ import csv
 from datetime import timedelta
 import logging
 import os
+from typing import Dict, Optional, Tuple
 
 import voluptuous as vol
 
@@ -347,7 +348,7 @@ async def async_unload_entry(hass, entry):
 class Profiles:
     """Representation of available color profiles."""
 
-    _all = None
+    _all: Optional[Dict[str, Tuple[float, float, int]]] = None
 
     @classmethod
     async def load_profiles(cls, hass):
