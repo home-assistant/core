@@ -123,7 +123,7 @@ def establish_device_mappings():
     def get_zigate_radio():
         import zigpy_zigate.api
         from zigpy_zigate.zigbee.application import ControllerApplication
-        
+
         return {
             ZHA_GW_RADIO: zigpy_zigate.api.ZiGate(),
             CONTROLLER: ControllerApplication,
@@ -131,7 +131,7 @@ def establish_device_mappings():
 
     RADIO_TYPES[RadioType.zigate.name] = {
         ZHA_GW_RADIO: get_zigate_radio,
-        ZHA_GW_RADIO_DESCRIPTION: "ZiGate".
+        ZHA_GW_RADIO_DESCRIPTION: "ZiGate",
     }
 
     BINARY_SENSOR_CLUSTERS.add(SMARTTHINGS_ACCELERATION_CLUSTER)
