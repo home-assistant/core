@@ -443,7 +443,7 @@ env_canada==0.0.20
 # envirophat==0.0.6
 
 # homeassistant.components.enphase_envoy
-envoy_reader==0.8
+envoy_reader==0.8.6
 
 # homeassistant.components.season
 ephem==3.7.6.0
