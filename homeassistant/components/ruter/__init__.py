@@ -1,0 +1,1 @@
+"""The ruter component."""

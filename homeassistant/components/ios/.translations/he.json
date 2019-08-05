@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "\u05e8\u05e7 \u05d4\u05d2\u05d3\u05e8\u05d4 \u05d0\u05d7\u05ea \u05e9\u05dc Home Assistant iOS \u05e0\u05d7\u05d5\u05e6\u05d4."
+        },
+        "step": {
+            "confirm": {
+                "description": "\u05d4\u05d0\u05dd \u05d1\u05e8\u05e6\u05d5\u05e0\u05da \u05dc\u05d4\u05d2\u05d3\u05d9\u05e8 \u05d0\u05ea Home Assistant iOS?",
+                "title": "Home Assistant iOS"
+            }
+        },
+        "title": "Home Assistant iOS"
+    }
+}

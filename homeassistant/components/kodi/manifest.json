@@ -1,0 +1,13 @@
+{
+  "domain": "kodi",
+  "name": "Kodi",
+  "documentation": "https://www.home-assistant.io/components/kodi",
+  "requirements": [
+    "jsonrpc-async==0.6",
+    "jsonrpc-websocket==0.6"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@armills"
+  ]
+}

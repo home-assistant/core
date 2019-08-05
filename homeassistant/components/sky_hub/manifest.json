@@ -1,0 +1,8 @@
+{
+  "domain": "sky_hub",
+  "name": "Sky hub",
+  "documentation": "https://www.home-assistant.io/components/sky_hub",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

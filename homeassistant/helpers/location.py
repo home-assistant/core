@@ -1,6 +1,6 @@
 """Location helpers for Home Assistant."""
 
-from typing import Sequence
+from typing import Optional, Sequence
 
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import State
@@ -18,7 +18,7 @@ def has_location(state: State) -> bool:
 
 
 def closest(latitude: float, longitude: float,
-            states: Sequence[State]) -> State:
+            states: Sequence[State]) -> Optional[State]:
     """Return closest state to point.
 
     Async friendly.
@@ -31,6 +31,7 @@ def closest(latitude: float, longitude: float,
     return min(
         with_location,
         key=lambda state: loc_util.distance(
-            latitude, longitude, state.attributes.get(ATTR_LATITUDE),
-            state.attributes.get(ATTR_LONGITUDE))
+            state.attributes.get(ATTR_LATITUDE),
+            state.attributes.get(ATTR_LONGITUDE),
+            latitude, longitude)
     )

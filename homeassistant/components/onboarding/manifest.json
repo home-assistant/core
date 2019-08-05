@@ -1,0 +1,13 @@
+{
+  "domain": "onboarding",
+  "name": "Onboarding",
+  "documentation": "https://www.home-assistant.io/components/onboarding",
+  "requirements": [],
+  "dependencies": [
+    "auth",
+    "http"
+  ],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

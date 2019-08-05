@@ -1,0 +1,10 @@
+{
+  "domain": "worldclock",
+  "name": "Worldclock",
+  "documentation": "https://www.home-assistant.io/components/worldclock",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

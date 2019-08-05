@@ -1,0 +1,488 @@
+[
+    {
+        "services": [
+            {
+                "iid": 1,
+                "characteristics": [
+                    {
+                        "value": "Aqara",
+                        "description": "Manufacturer",
+                        "type": "20",
+                        "iid": 3,
+                        "perms": [
+                            "pr"
+                        ],
+                        "format": "string"
+                    },
+                    {
+                        "value": "ZHWA11LM",
+                        "description": "Model",
+                        "type": "21",
+                        "iid": 4,
+                        "perms": [
+                            "pr"
+                        ],
+                        "format": "string"
+                    },
+                    {
+                        "value": "Aqara Hub-1563",
+                        "description": "Name",
+                        "type": "23",
+                        "iid": 5,
+                        "perms": [
+                            "pr"
+                        ],
+                        "format": "string"
+                    },
+                    {
+                        "value": "0000000123456789",
+                        "description": "Serial Number",
+                        "type": "30",
+                        "iid": 6,
+                        "perms": [
+                            "pr"
+                        ],
+                        "format": "string"
+                    },
+                    {
+                        "description": "Identify",
+                        "iid": 7,
+                        "perms": [
+                            "pw"
+                        ],
+                        "type": "14",
+                        "format": "bool"
+                    },
+                    {
+                        "value": "1.4.7",
+                        "description": "Firmware Revision",
+                        "type": "52",
+                        "iid": 8,
+                        "perms": [
+                            "pr"
+                        ],
+                        "format": "string"
+                    }
+                ],
+                "type": "3e"
+            },
+            {
+                "iid": 60,
+                "characteristics": [
+                    {
+                        "value": "1.1.0",
+                        "description": "Protocol Version",
+                        "type": "37",
+                        "iid": 62,
+                        "perms": [
+                            "pr"
+                        ],
+                        "format": "string"
+                    }
+                ],
+                "type": "a2"
+            },
+            {
+                "hidden": true,
+                "iid": 65536,
+                "characteristics": [
+                    {
+                        "value": false,
+                        "description": "New Accessory Permission",
+                        "type": "b1c09e4c-e202-4827-b343-b0f32f727cff",
+                        "iid": 65538,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev",
+                            "hd"
+                        ],
+                        "format": "bool"
+                    },
+                    {
+                        "value": "()",
+                        "description": "Accessory Joined",
+                        "type": "2cb22739-1e4c-4798-a712-bc2faf51afc3",
+                        "maxLen": 256,
+                        "iid": 65539,
+                        "perms": [
+                            "pr",
+                            "ev",
+                            "hd"
+                        ],
+                        "format": "string"
+                    },
+                    {
+                        "value": " ",
+                        "description": "Remove Accessory",
+                        "type": "75d19fa9-218b-4943-427e-341e5d1c60cc",
+                        "iid": 65540,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev",
+                            "hd"
+                        ],
+                        "format": "string"
+                    },
+                    {
+                        "maxValue": 100,
+                        "value": 40,
+                        "minValue": 0,
+                        "description": "Gateway Volume",
+                        "type": "ee56b186-b0d3-528e-8c79-c21fc9bcf437",
+                        "unit": "percentage",
+                        "iid": 65541,
+                        "minStep": 1,
+                        "perms": [
+                            "pr",
+                            "pw"
+                        ],
+                        "format": "int"
+                    },
+                    {
+                        "value": "Chinese",
+                        "description": "Language",
+                        "type": "4cf1436a-755c-1277-bdb8-30be29eb8620",
+                        "iid": 65542,
+                        "perms": [
+                            "pr",
+                            "pw"
+                        ],
+                        "format": "string"
+                    },
+                    {
+                        "value": "2019-02-12 06:45:07+10",
+                        "description": "Date and Time",
+                        "type": "4cb28907-66df-4d9c-924c-9971abf30edc",
+                        "iid": 65543,
+                        "perms": [
+                            "pr",
+                            "pw"
+                        ],
+                        "format": "string"
+                    },
+                    {
+                        "value": " ",
+                        "description": "Identify Accessory",
+                        "type": "e1c20b22-e3a7-4b12-8ba3-c16e778648a7",
+                        "iid": 65544,
+                        "perms": [
+                            "pr",
+                            "ev",
+                            "hd"
+                        ],
+                        "format": "string"
+                    },
+                    {
+                        "value": "aiot-coap.aqara.cn",
+                        "description": "Country Domain",
+                        "type": "25d889cb-7135-4a21-b5b4-c1ffd6d2dd5c",
+                        "iid": 65545,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "hd"
+                        ],
+                        "format": "string"
+                    },
+                    {
+                        "value": -1,
+                        "description": "Firmware Update Status",
+                        "type": "7d943f6a-e052-4e96-a124-d17bf00e32cb",
+                        "iid": 65546,
+                        "perms": [
+                            "pr",
+                            "ev",
+                            "hd"
+                        ],
+                        "format": "int"
+                    },
+                    {
+                        "description": "Firmware Update Data",
+                        "iid": 65547,
+                        "perms": [
+                            "pw",
+                            "hd"
+                        ],
+                        "type": "7f51dc43-dc68-4237-bae8-d705e61139f5",
+                        "format": "data"
+                    },
+                    {
+                        "description": "Firmware Update URL",
+                        "type": "a45efd52-0db5-4c1a-1227-513fbcd8185f",
+                        "maxLen": 256,
+                        "iid": 65548,
+                        "perms": [
+                            "pw",
+                            "hd"
+                        ],
+                        "format": "string"
+                    },
+                    {
+                        "description": "Firmware Update Checksum",
+                        "iid": 65549,
+                        "perms": [
+                            "pw",
+                            "hd"
+                        ],
+                        "type": "40f0124a-579d-40e4-245e-0ef6740ea64b",
+                        "format": "string"
+                    }
+                ],
+                "type": "9715bf53-ab63-4449-8dc7-2485d617390a"
+            },
+            {
+                "iid": 65792,
+                "characteristics": [
+                    {
+                        "value": "Lightbulb-1563",
+                        "description": "Name",
+                        "type": "23",
+                        "iid": 65794,
+                        "perms": [
+                            "pr"
+                        ],
+                        "format": "string"
+                    },
+                    {
+                        "value": false,
+                        "description": "On",
+                        "type": "25",
+                        "iid": 65795,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "format": "bool"
+                    },
+                    {
+                        "maxValue": 360,
+                        "value": 0,
+                        "minValue": 0,
+                        "description": "Hue",
+                        "type": "13",
+                        "unit": "arcdegrees",
+                        "iid": 65796,
+                        "minStep": 1,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "format": "float"
+                    },
+                    {
+                        "maxValue": 100,
+                        "value": 100,
+                        "minValue": 0,
+                        "description": "Saturation",
+                        "type": "2f",
+                        "unit": "percentage",
+                        "iid": 65797,
+                        "minStep": 1,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "format": "float"
+                    },
+                    {
+                        "maxValue": 100,
+                        "value": 0,
+                        "minValue": 0,
+                        "description": "Brightness",
+                        "type": "8",
+                        "unit": "percentage",
+                        "iid": 65798,
+                        "minStep": 1,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "format": "int"
+                    },
+                    {
+                        "value": "",
+                        "description": "Timers",
+                        "type": "232aa6bd-6ce2-4d7f-b7cf-52305f0d2bcf",
+                        "iid": 65799,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "hd"
+                        ],
+                        "format": "tlv8"
+                    }
+                ],
+                "type": "43"
+            },
+            {
+                "iid": 66048,
+                "characteristics": [
+                    {
+                        "value": "MIIO Service",
+                        "description": "Name",
+                        "type": "23",
+                        "iid": 66050,
+                        "perms": [
+                            "pr"
+                        ],
+                        "format": "string"
+                    },
+                    {
+                        "value": false,
+                        "description": "miio provisioned",
+                        "type": "6ef066c1-08f8-46de-9121-b89b77e459e7",
+                        "iid": 66051,
+                        "perms": [
+                            "pr",
+                            "hd"
+                        ],
+                        "format": "bool"
+                    },
+                    {
+                        "description": "miio bindkey",
+                        "iid": 66052,
+                        "perms": [
+                            "pw",
+                            "hd"
+                        ],
+                        "type": "6ef066c2-08f8-46de-9121-b89b77e459e7",
+                        "format": "string"
+                    },
+                    {
+                        "value": "152601563",
+                        "description": "miio did",
+                        "type": "6ef066c5-08f8-46de-9121-b89b77e459e7",
+                        "iid": 66053,
+                        "perms": [
+                            "pr",
+                            "hd"
+                        ],
+                        "format": "string"
+                    },
+                    {
+                        "value": "lumi.gateway.aqhm01",
+                        "description": "miio model",
+                        "type": "6ef066c4-08f8-46de-9121-b89b77e459e7",
+                        "iid": 66054,
+                        "perms": [
+                            "pr",
+                            "hd"
+                        ],
+                        "format": "string"
+                    },
+                    {
+                        "value": "ch",
+                        "description": "miio country domain",
+                        "type": "6ef066c3-08f8-46de-9121-b89b77e459e7",
+                        "iid": 66055,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "hd"
+                        ],
+                        "format": "string"
+                    },
+                    {
+                        "value": "country code",
+                        "description": "miio country code",
+                        "type": "6ef066d1-08f8-46de-9121-b89b77e459e7",
+                        "iid": 66056,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "hd"
+                        ],
+                        "format": "string"
+                    },
+                    {
+                        "value": "app",
+                        "description": "miio config type",
+                        "type": "6ef066d3-08f8-46de-9121-b89b77e459e7",
+                        "iid": 66057,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "hd"
+                        ],
+                        "format": "string"
+                    },
+                    {
+                        "value": 28800,
+                        "description": "miio gmt offset",
+                        "type": "6ef066d2-08f8-46de-9121-b89b77e459e7",
+                        "unit": "seconds",
+                        "iid": 66058,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "hd"
+                        ],
+                        "format": "int"
+                    }
+                ],
+                "type": "6ef066c0-08f8-46de-9121-b89b77e459e7"
+            },
+            {
+                "iid": 66304,
+                "characteristics": [
+                    {
+                        "value": "Security System",
+                        "description": "Name",
+                        "type": "23",
+                        "iid": 66306,
+                        "perms": [
+                            "pr"
+                        ],
+                        "format": "string"
+                    },
+                    {
+                        "maxValue": 4,
+                        "value": 3,
+                        "minValue": 0,
+                        "description": "Security System Current State",
+                        "type": "66",
+                        "valid-values": [
+                            1,
+                            3,
+                            4
+                        ],
+                        "iid": 66307,
+                        "minStep": 1,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "format": "uint8"
+                    },
+                    {
+                        "maxValue": 3,
+                        "value": 3,
+                        "minValue": 0,
+                        "description": "Security System Target State",
+                        "type": "67",
+                        "valid-values": [
+                            1,
+                            3
+                        ],
+                        "iid": 66308,
+                        "minStep": 1,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "format": "uint8"
+                    }
+                ],
+                "type": "7e"
+            }
+        ],
+        "aid": 1
+    }
+]

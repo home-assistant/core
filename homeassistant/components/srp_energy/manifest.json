@@ -1,0 +1,10 @@
+{
+  "domain": "srp_energy",
+  "name": "Srp energy",
+  "documentation": "https://www.home-assistant.io/components/srp_energy",
+  "requirements": [
+    "srpenergy==1.0.6"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

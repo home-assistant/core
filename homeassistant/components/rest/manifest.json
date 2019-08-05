@@ -1,0 +1,8 @@
+{
+  "domain": "rest",
+  "name": "Rest",
+  "documentation": "https://www.home-assistant.io/components/rest",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

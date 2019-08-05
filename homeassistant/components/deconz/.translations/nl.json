@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Bridge is al geconfigureerd",
+            "already_in_progress": "Configuratiestroom voor bridge wordt al ingesteld.",
+            "no_bridges": "Geen deCONZ bruggen ontdekt",
+            "not_deconz_bridge": "Dit is geen deCONZ bridge",
+            "one_instance_only": "Component ondersteunt slechts \u00e9\u00e9n deCONZ instance",
+            "updated_instance": "DeCONZ-instantie bijgewerkt met nieuw host-adres"
+        },
+        "error": {
+            "no_key": "Kon geen API-sleutel ophalen"
+        },
+        "step": {
+            "hassio_confirm": {
+                "data": {
+                    "allow_clip_sensor": "Sta het importeren van virtuele sensoren toe",
+                    "allow_deconz_groups": "Sta de import van deCONZ-groepen toe"
+                },
+                "description": "Wilt u de Home Assistant configureren om verbinding te maken met de deCONZ gateway van de hass.io add-on {addon}?",
+                "title": "deCONZ Zigbee Gateway via Hass.io add-on"
+            },
+            "init": {
+                "data": {
+                    "host": "Host",
+                    "port": "Poort"
+                },
+                "title": "Definieer deCONZ gateway"
+            },
+            "link": {
+                "description": "Ontgrendel je deCONZ gateway om te registreren met Home Assistant.\n\n1. Ga naar deCONZ systeeminstellingen (Instellingen -> Gateway -> Geavanceerd)\n2. Druk op de knop \"Gateway ontgrendelen\"",
+                "title": "Koppel met deCONZ"
+            },
+            "options": {
+                "data": {
+                    "allow_clip_sensor": "Sta het importeren van virtuele sensoren toe",
+                    "allow_deconz_groups": "Sta de import van deCONZ-groepen toe"
+                },
+                "title": "Extra configuratieopties voor deCONZ"
+            }
+        },
+        "title": "deCONZ Zigbee gateway"
+    }
+}

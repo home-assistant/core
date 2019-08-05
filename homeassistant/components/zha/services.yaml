@@ -1,0 +1,84 @@
+# Describes the format for available zha services
+
+permit:
+  description: Allow nodes to join the ZigBee network.
+  fields:
+    duration:
+      description: Time to permit joins, in seconds
+      example: 60
+    ieee_address:
+      description: IEEE address of the node permitting new joins
+      example: "00:0d:6f:00:05:7d:2d:34"
+
+remove:
+  description: Remove a node from the ZigBee network.
+  fields:
+    ieee_address:
+      description: IEEE address of the node to remove
+      example: "00:0d:6f:00:05:7d:2d:34"
+
+reconfigure_device:
+  description: >- 
+    Reconfigure ZHA device (heal device). Use this if you are having issues 
+    with the device. If the device in question is a battery powered device
+    please ensure it is awake and accepting commands when you use this
+    service. 
+  fields:
+    ieee_address:
+      description: IEEE address of the device to reconfigure
+      example: "00:0d:6f:00:05:7d:2d:34"
+
+set_zigbee_cluster_attribute:
+  description: >- 
+    Set attribute value for the specified cluster on the specified entity. 
+  fields:
+    ieee:
+      description: IEEE address for the device
+      example: "00:0d:6f:00:05:7d:2d:34"
+    endpoint_id:
+      description: Endpoint id for the cluster
+      example: 1
+    cluster_id:
+      description: ZCL cluster to retrieve attributes for
+      example: 6
+    cluster_type:
+      description: type of the cluster (in or out)
+      example: "out"
+    attribute:
+      description: id of the attribute to set
+      example: 0
+    value:
+      description: value to write to the attribute
+      example: 0x0001
+    manufacturer:
+      description: manufacturer code
+      example: 0x00FC
+
+issue_zigbee_cluster_command:
+  description: >- 
+    Issue command on the specified cluster on the specified entity. 
+  fields:
+    ieee:
+      description: IEEE address for the device
+      example: "00:0d:6f:00:05:7d:2d:34"
+    endpoint_id:
+      description: Endpoint id for the cluster
+      example: 1
+    cluster_id:
+      description: ZCL cluster to retrieve attributes for
+      example: 6
+    cluster_type:
+      description: type of the cluster (in or out)
+      example: "out"
+    command:
+      description: id of the command to execute
+      example: 0
+    command_type:
+      description: type of the command to execute (client or server)
+      example: "server"
+    args:
+      description: args to pass to the command
+      example: {}
+    manufacturer:
+      description: manufacturer code
+      example: 0x00FC

@@ -1,0 +1,11 @@
+{
+  "domain": "bluetooth_tracker",
+  "name": "Bluetooth tracker",
+  "documentation": "https://www.home-assistant.io/components/bluetooth_tracker",
+  "requirements": [
+    "bt_proximity==0.1.2",
+    "pybluez==0.22"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

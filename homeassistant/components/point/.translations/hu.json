@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_fail": "Ismeretlen hiba t\u00f6rt\u00e9nt a hiteles\u00edt\u00e9si link gener\u00e1l\u00e1sa sor\u00e1n.",
+            "authorize_url_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s az \u00e9rv\u00e9nyes\u00edt\u00e9si url gener\u00e1l\u00e1sa sor\u00e1n."
+        },
+        "error": {
+            "follow_link": "K\u00e9rlek, k\u00f6vesd a hivatkoz\u00e1st \u00e9s hiteles\u00edtsd magad miel\u0151tt megnyomod a K\u00fcld\u00e9s gombot",
+            "no_token": "A Minut nincs hiteles\u00edtve"
+        },
+        "step": {
+            "auth": {
+                "description": "K\u00e9rlek k\u00f6vesd az al\u00e1bbi linket \u00e9s a <b> Fogadd el </b> a hozz\u00e1f\u00e9r\u00e9st a Minut fi\u00f3kj\u00e1hoz, majd t\u00e9rj vissza \u00e9s nyomd meg a <b> K\u00fcld\u00e9s </b> gombot. \n\n [Link] ( {authorization_url} )",
+                "title": "Point hiteles\u00edt\u00e9se"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Szolg\u00e1ltat\u00f3"
+                },
+                "description": "V\u00e1laszd ki, hogy melyik hiteles\u00edt\u00e9si szolg\u00e1ltat\u00f3n\u00e1l szeretn\u00e9d hiteles\u00edteni a Pointot.",
+                "title": "Hiteles\u00edt\u00e9si Szolg\u00e1ltat\u00f3"
+            }
+        },
+        "title": "Minut Point"
+    }
+}

@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Palavra-passe",
+                    "username": "Nome de Utilizador"
+                }
+            }
+        }
+    }
+}

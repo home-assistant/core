@@ -1,19 +1,19 @@
 """The tests for the MQTT component embedded server."""
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
-from homeassistant.bootstrap import setup_component
 import homeassistant.components.mqtt as mqtt
+from homeassistant.const import CONF_PASSWORD
+from homeassistant.setup import setup_component
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_coro
 
 
 class TestMQTT:
     """Test the MQTT component."""
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.components.append('http')
 
     def teardown_method(self, method):
         """Stop everything that was started."""
@@ -21,32 +21,52 @@ class TestMQTT:
 
     @patch('passlib.apps.custom_app_context', Mock(return_value=''))
     @patch('tempfile.NamedTemporaryFile', Mock(return_value=MagicMock()))
-    @patch('homeassistant.components.mqtt.server.run_coroutine_threadsafe',
-           Mock(return_value=MagicMock()))
     @patch('hbmqtt.broker.Broker', Mock(return_value=MagicMock()))
+    @patch('hbmqtt.broker.Broker.start', Mock(return_value=mock_coro()))
     @patch('homeassistant.components.mqtt.MQTT')
-    def test_creating_config_with_http_pass(self, mock_mqtt):
-        """Test if the MQTT server gets started and subscribe/publish msg."""
+    def test_creating_config_with_pass_and_no_http_pass(self, mock_mqtt):
+        """Test if the MQTT server gets started with password.
+
+        Since 0.77, MQTT server has to set up its own password.
+        """
+        mock_mqtt().async_connect.return_value = mock_coro(True)
         self.hass.bus.listen_once = MagicMock()
-        password = 'super_secret'
+        password = 'mqtt_secret'
 
-        self.hass.config.api = MagicMock(api_password=password)
-        assert setup_component(self.hass, mqtt.DOMAIN, {})
+        assert setup_component(self.hass, mqtt.DOMAIN, {
+            mqtt.DOMAIN: {CONF_PASSWORD: password},
+        })
+        self.hass.block_till_done()
         assert mock_mqtt.called
-        assert mock_mqtt.mock_calls[0][1][5] == 'homeassistant'
-        assert mock_mqtt.mock_calls[0][1][6] == password
+        assert mock_mqtt.mock_calls[1][2]['username'] == 'homeassistant'
+        assert mock_mqtt.mock_calls[1][2]['password'] == password
 
-        mock_mqtt.reset_mock()
+    @patch('passlib.apps.custom_app_context', Mock(return_value=''))
+    @patch('tempfile.NamedTemporaryFile', Mock(return_value=MagicMock()))
+    @patch('hbmqtt.broker.Broker', Mock(return_value=MagicMock()))
+    @patch('hbmqtt.broker.Broker.start', Mock(return_value=mock_coro()))
+    @patch('homeassistant.components.mqtt.MQTT')
+    def test_creating_config_with_pass_and_http_pass(self, mock_mqtt):
+        """Test if the MQTT server gets started with password.
 
-        self.hass.config.components = ['http']
-        self.hass.config.api = MagicMock(api_password=None)
-        assert setup_component(self.hass, mqtt.DOMAIN, {})
+        Since 0.77, MQTT server has to set up its own password.
+        """
+        mock_mqtt().async_connect.return_value = mock_coro(True)
+        self.hass.bus.listen_once = MagicMock()
+        password = 'mqtt_secret'
+
+        self.hass.config.api = MagicMock(api_password='api_password')
+        assert setup_component(self.hass, mqtt.DOMAIN, {
+            'http': {'api_password': 'http_secret'},
+            mqtt.DOMAIN: {CONF_PASSWORD: password},
+        })
+        self.hass.block_till_done()
         assert mock_mqtt.called
-        assert mock_mqtt.mock_calls[0][1][5] is None
-        assert mock_mqtt.mock_calls[0][1][6] is None
+        assert mock_mqtt.mock_calls[1][2]['username'] == 'homeassistant'
+        assert mock_mqtt.mock_calls[1][2]['password'] == password
 
     @patch('tempfile.NamedTemporaryFile', Mock(return_value=MagicMock()))
-    @patch('homeassistant.components.mqtt.server.run_coroutine_threadsafe')
+    @patch('hbmqtt.broker.Broker.start', return_value=mock_coro())
     def test_broker_config_fails(self, mock_run):
         """Test if the MQTT component fails if server fails."""
         from hbmqtt.broker import BrokerException

@@ -1,0 +1,12 @@
+{
+  "domain": "nuki",
+  "name": "Nuki",
+  "documentation": "https://www.home-assistant.io/components/nuki",
+  "requirements": [
+    "pynuki==1.3.2"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@pschmitt"
+  ]
+}

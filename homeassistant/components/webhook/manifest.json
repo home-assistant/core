@@ -1,0 +1,10 @@
+{
+  "domain": "webhook",
+  "name": "Webhook",
+  "documentation": "https://www.home-assistant.io/components/webhook",
+  "requirements": [],
+  "dependencies": [
+    "http"
+  ],
+  "codeowners": []
+}

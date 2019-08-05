@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "TelldusLive \uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "already_setup": "TelldusLive \uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "authorize_url_fail": "\uc778\uc99d url \uc0dd\uc131\uc5d0 \uc54c \uc218 \uc5c6\ub294 \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4.",
+            "authorize_url_timeout": "\uc778\uc99d url \uc0dd\uc131 \uc2dc\uac04\uc774 \ucd08\uacfc\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+            "unknown": "\uc54c \uc218\uc5c6\ub294 \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "auth_error": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694."
+        },
+        "step": {
+            "auth": {
+                "description": "TelldusLive \uacc4\uc815\uc744 \uc5f0\uacb0\ud558\ub824\uba74:\n 1. \ud558\ub2e8\uc758 \ub9c1\ud06c\ub97c \ud074\ub9ad\ud574\uc8fc\uc138\uc694\n 2. Telldus Live \uc5d0 \ub85c\uadf8\uc778 \ud558\uc138\uc694\n 3. Authorize **{app_name}** (**Yes** \ub97c \ud074\ub9ad\ud558\uc138\uc694).\n 4. \ub2e4\uc2dc \uc5ec\uae30\ub85c \ub3cc\uc544\uc640\uc11c **SUBMIT** \uc744 \ud074\ub9ad\ud558\uc138\uc694.\n\n [TelldusLive \uacc4\uc815 \uc5f0\uacb0\ud558\uae30]({auth_url})",
+                "title": "TelldusLive \uc778\uc99d"
+            },
+            "user": {
+                "data": {
+                    "host": "\ud638\uc2a4\ud2b8"
+                },
+                "description": "\uc8c4\uc1a1\ud569\ub2c8\ub2e4. \uad00\ub828 \ub0b4\uc6a9\uc774 \uc544\uc9c1 \uc5c5\ub370\uc774\ud2b8 \ub418\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4. \ucd94\ud6c4\uc5d0 \ubc18\uc601\ub420 \uc608\uc815\uc774\ub2c8 \uc870\uae08\ub9cc \uae30\ub2e4\ub824\uc8fc\uc138\uc694.",
+                "title": "\uc5d4\ub4dc\ud3ec\uc778\ud2b8 \uc120\ud0dd"
+            }
+        },
+        "title": "Telldus Live"
+    }
+}

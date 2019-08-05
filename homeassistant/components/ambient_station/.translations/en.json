@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Application Key and/or API Key already registered",
+            "invalid_key": "Invalid API Key and/or Application Key",
+            "no_devices": "No devices found in account"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "app_key": "Application Key"
+                },
+                "title": "Fill in your information"
+            }
+        },
+        "title": "Ambient PWS"
+    }
+}

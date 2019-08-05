@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "\u8a72\u5ea7\u6a19\u5df2\u8a3b\u518a",
+            "invalid_api_key": "API \u5bc6\u78bc\u7121\u6548"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "OpenUV API \u5bc6\u9470",
+                    "elevation": "\u6d77\u62d4",
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d93\u5ea6"
+                },
+                "title": "\u586b\u5beb\u8cc7\u8a0a"
+            }
+        },
+        "title": "OpenUV"
+    }
+}

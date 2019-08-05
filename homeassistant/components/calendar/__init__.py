@@ -1,36 +1,45 @@
-"""
-Support for Google Calendar event device sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/calendar/
-
-"""
+"""Support for Google Calendar event device sensors."""
 import logging
+from datetime import timedelta
 import re
 
-from homeassistant.components.google import (CONF_OFFSET,
-                                             CONF_DEVICE_ID,
-                                             CONF_NAME)
+from aiohttp import web
+
+from homeassistant.components.google import (
+    CONF_OFFSET, CONF_DEVICE_ID, CONF_NAME)
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers.config_validation import time_period_str
 from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import dt
+from homeassistant.components import http
+
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'calendar'
+
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+SCAN_INTERVAL = timedelta(seconds=60)
 
-def setup(hass, config):
+
+async def async_setup(hass, config):
     """Track states and offer events for calendars."""
     component = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, 60, DOMAIN)
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DOMAIN)
 
-    component.setup(config)
+    hass.http.register_view(CalendarListView(component))
+    hass.http.register_view(CalendarEventView(component))
 
+    # Doesn't work in prod builds of the frontend: home-assistant-polymer#1289
+    # hass.components.frontend.async_register_built_in_panel(
+    #     'calendar', 'calendar', 'hass:calendar')
+
+    await component.async_setup(config)
     return True
 
 
@@ -38,7 +47,14 @@ DEFAULT_CONF_TRACK_NEW = True
 DEFAULT_CONF_OFFSET = '!!'
 
 
-# pylint: disable=too-many-instance-attributes
+def get_date(date):
+    """Get the dateTime from date or dateTime as a local."""
+    if 'date' in date:
+        return dt.start_of_local_day(dt.dt.datetime.combine(
+            dt.parse_date(date['date']), dt.dt.time.min))
+    return dt.as_local(dt.parse_datetime(date['dateTime']))
+
+
 class CalendarEventDevice(Entity):
     """A calendar event device."""
 
@@ -46,15 +62,13 @@ class CalendarEventDevice(Entity):
     # with an update() method
     data = None
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, data):
         """Create the Calendar Event Device."""
         self._name = data.get(CONF_NAME)
         self.dev_id = data.get(CONF_DEVICE_ID)
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
-        self.entity_id = generate_entity_id(ENTITY_ID_FORMAT,
-                                            self.dev_id,
-                                            hass=hass)
+        self.entity_id = generate_entity_id(
+            ENTITY_ID_FORMAT, self.dev_id, hass=hass)
 
         self._cal_data = {
             'all_day': False,
@@ -84,7 +98,7 @@ class CalendarEventDevice(Entity):
 
     @property
     def device_state_attributes(self):
-        """State Attributes for HA."""
+        """Return the device state attributes."""
         start = self._cal_data.get('start', None)
         end = self._cal_data.get('end', None)
         start = start.strftime(DATE_STR_FORMAT) if start is not None else None
@@ -110,7 +124,7 @@ class CalendarEventDevice(Entity):
 
         now = dt.now()
 
-        if start <= now and end > now:
+        if start <= now < end:
             return STATE_ON
 
         if now >= end:
@@ -141,18 +155,10 @@ class CalendarEventDevice(Entity):
             self.cleanup()
             return
 
-        def _get_date(date):
-            """Get the dateTime from date or dateTime as a local."""
-            if 'date' in date:
-                return dt.as_utc(dt.dt.datetime.combine(
-                    dt.parse_date(date['date']), dt.dt.time()))
-            else:
-                return dt.parse_datetime(date['dateTime'])
+        start = get_date(self.data.event['start'])
+        end = get_date(self.data.event['end'])
 
-        start = _get_date(self.data.event['start'])
-        end = _get_date(self.data.event['end'])
-
-        summary = self.data.event['summary']
+        summary = self.data.event.get('summary', '')
 
         # check if we have an offset tag in the message
         # time is HH:MM or MM
@@ -174,10 +180,61 @@ class CalendarEventDevice(Entity):
 
         # cleanup the string so we don't have a bunch of double+ spaces
         self._cal_data['message'] = re.sub('  +', '', summary).strip()
-
         self._cal_data['offset_time'] = offset_time
         self._cal_data['location'] = self.data.event.get('location', '')
         self._cal_data['description'] = self.data.event.get('description', '')
         self._cal_data['start'] = start
         self._cal_data['end'] = end
         self._cal_data['all_day'] = 'date' in self.data.event['start']
+
+
+class CalendarEventView(http.HomeAssistantView):
+    """View to retrieve calendar content."""
+
+    url = '/api/calendars/{entity_id}'
+    name = 'api:calendars:calendar'
+
+    def __init__(self, component):
+        """Initialize calendar view."""
+        self.component = component
+
+    async def get(self, request, entity_id):
+        """Return calendar events."""
+        entity = self.component.get_entity(entity_id)
+        start = request.query.get('start')
+        end = request.query.get('end')
+        if None in (start, end, entity):
+            return web.Response(status=400)
+        try:
+            start_date = dt.parse_datetime(start)
+            end_date = dt.parse_datetime(end)
+        except (ValueError, AttributeError):
+            return web.Response(status=400)
+        event_list = await entity.async_get_events(
+            request.app['hass'], start_date, end_date)
+        return self.json(event_list)
+
+
+class CalendarListView(http.HomeAssistantView):
+    """View to retrieve calendar list."""
+
+    url = '/api/calendars'
+    name = "api:calendars"
+
+    def __init__(self, component):
+        """Initialize calendar view."""
+        self.component = component
+
+    async def get(self, request):
+        """Retrieve calendar list."""
+        get_state = request.app['hass'].states.get
+        calendar_list = []
+
+        for entity in self.component.entities:
+            state = get_state(entity.entity_id)
+            calendar_list.append({
+                "name": state.name,
+                "entity_id": entity.entity_id,
+            })
+
+        return self.json(sorted(calendar_list, key=lambda x: x['name']))

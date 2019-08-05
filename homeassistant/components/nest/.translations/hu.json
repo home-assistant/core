@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Csak egy Nest-fi\u00f3kot konfigur\u00e1lhat.",
+            "authorize_url_fail": "Ismeretlen hiba t\u00f6rt\u00e9nt a hiteles\u00edt\u00e9si link gener\u00e1l\u00e1sa sor\u00e1n.",
+            "authorize_url_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s az \u00e9rv\u00e9nyes\u00edt\u00e9si url gener\u00e1l\u00e1sa sor\u00e1n."
+        },
+        "error": {
+            "internal_error": "Bels\u0151 hiba t\u00f6rt\u00e9nt a k\u00f3d valid\u00e1l\u00e1s\u00e1n\u00e1l",
+            "invalid_code": "\u00c9rv\u00e9nytelen k\u00f3d",
+            "timeout": "Id\u0151t\u00fall\u00e9p\u00e9s a k\u00f3d \u00e9rv\u00e9nyes\u00edt\u00e9se sor\u00e1n.",
+            "unknown": "Ismeretlen hiba t\u00f6rt\u00e9nt a k\u00f3d \u00e9rv\u00e9nyes\u00edt\u00e9se sor\u00e1n"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Szolg\u00e1ltat\u00f3"
+                },
+                "description": "V\u00e1laszd ki, hogy melyik hiteles\u00edt\u00e9si szolg\u00e1ltat\u00f3n\u00e1l szeretn\u00e9d hiteles\u00edteni a Nestet.",
+                "title": "Hiteles\u00edt\u00e9si Szolg\u00e1ltat\u00f3"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN-k\u00f3d"
+                },
+                "description": "A Nest-fi\u00f3k \u00f6sszekapcsol\u00e1s\u00e1hoz [enged\u00e9lyezze fi\u00f3kj\u00e1t] ( {url} ). \n\n Az enged\u00e9lyez\u00e9s ut\u00e1n m\u00e1solja be az al\u00e1bbi PIN k\u00f3dot.",
+                "title": "Nest fi\u00f3k \u00f6sszekapcsol\u00e1sa"
+            }
+        },
+        "title": "Nest"
+    }
+}

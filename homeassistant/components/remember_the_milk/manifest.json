@@ -1,0 +1,11 @@
+{
+  "domain": "remember_the_milk",
+  "name": "Remember the milk",
+  "documentation": "https://www.home-assistant.io/components/remember_the_milk",
+  "requirements": [
+    "RtmAPI==0.7.0",
+    "httplib2==0.10.3"
+  ],
+  "dependencies": ["configurator"],
+  "codeowners": []
+}

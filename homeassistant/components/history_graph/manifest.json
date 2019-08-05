@@ -1,0 +1,12 @@
+{
+  "domain": "history_graph",
+  "name": "History graph",
+  "documentation": "https://www.home-assistant.io/components/history_graph",
+  "requirements": [],
+  "dependencies": [
+    "history"
+  ],
+  "codeowners": [
+    "@andrey-git"
+  ]
+}

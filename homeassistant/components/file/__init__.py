@@ -1,0 +1,1 @@
+"""The file component."""
