@@ -126,10 +126,21 @@ class ZHAGateway:
         )
 
         init_tasks = []
+        semaphore = asyncio.Semaphore(2)
+
+        async def init_with_semaphore(coro, semaphore):
+            """Don't flood the zigbee network during initialization."""
+            async with semaphore:
+                await coro
+
         for device in self.application_controller.devices.values():
             if device.nwk == 0x0000:
                 continue
-            init_tasks.append(self.async_device_initialized(device, False))
+            init_tasks.append(
+                init_with_semaphore(
+                    self.async_device_initialized(device, False), semaphore
+                )
+            )
         await asyncio.gather(*init_tasks)
 
     def device_joined(self, device):
