@@ -90,8 +90,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 def _process_scenes_config(hass, async_add_entities, config):
     """Process multiple scenes and add them."""
-    scene_config = config.get(STATES)
+    scene_config = config[STATES]
 
+    # Check empty list
     if not scene_config:
         return
 
