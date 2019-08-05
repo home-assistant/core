@@ -156,13 +156,15 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None)
         if entity_ids and len(entity_ids) == 1:
             # Use an entirely different (and extremely fast) query if we only
             # have a single entity id
-            query = query.filter(
-                States.last_updated >= run.start,
-                States.last_updated < utc_point_in_time,
-                States.entity_id.in_(entity_ids)
-            ).order_by(
-                States.last_updated.desc()
-            ).limit(1)
+            query = (
+                query.filter(
+                    States.last_updated >= run.start,
+                    States.last_updated < utc_point_in_time,
+                    States.entity_id.in_(entity_ids),
+                )
+                .order_by(States.last_updated.desc())
+                .limit(1)
+            )
 
         else:
             # We have more than one entity to look at (most commonly we want
@@ -203,7 +205,7 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None)
 
             query = query.join(
                 most_recent_state_ids,
-                States.state_id == most_recent_state_ids.c.max_state_id
+                States.state_id == most_recent_state_ids.c.max_state_id,
             ).filter(~States.domain.in_(IGNORE_DOMAINS))
 
             if filters:
