@@ -190,10 +190,7 @@ async def test_rmvtransport_min_config(hass):
                 is True
             )
 
-    state = hass.states.get(
-        "sensor.rmvtransport_s3000010_dnone_l_pu_bahntrambussrbreecicice_t0_mj5_none"
-    )
-    # state = hass.states.get("sensor.frankfurt_main_hauptbahnhof")
+    state = hass.states.get("sensor.frankfurt_main_hauptbahnhof")
     assert state.state == "7"
     assert state.attributes["departure_time"] == datetime.datetime(2018, 8, 6, 14, 21)
     assert (
@@ -202,7 +199,7 @@ async def test_rmvtransport_min_config(hass):
     assert state.attributes["product"] == "Tram"
     assert state.attributes["line"] == 12
     assert state.attributes["icon"] == "mdi:tram"
-    # assert state.attributes["friendly_name"] == "Frankfurt (Main) Hauptbahnhof"
+    assert state.attributes["friendly_name"] == "Frankfurt (Main) Hauptbahnhof"
     assert state.attributes["lat"] == 50.106808
     assert state.attributes["long"] == 8.662653
 
@@ -231,11 +228,8 @@ async def test_rmvtransport_misc_config(hass):
         ):
             assert await async_setup_component(hass, "sensor", VALID_CONFIG_MISC)
 
-    state = hass.states.get(
-        "sensor.rmvtransport_s3000010_dnone_l21s8_pu_bahntrambussrbreecicice_t10_mj2_none"
-    )
-    # state = hass.states.get("sensor.frankfurt_main_hauptbahnhof")
-    # assert state.attributes["friendly_name"] == "Frankfurt (Main) Hauptbahnhof"
+    state = hass.states.get("sensor.frankfurt_main_hauptbahnhof")
+    assert state.attributes["friendly_name"] == "Frankfurt (Main) Hauptbahnhof"
     assert state.attributes["line"] == 21
     assert state.attributes[ATTR_LATITUDE] == 50.106808
     assert state.attributes[ATTR_LONGITUDE] == 8.662653
@@ -253,10 +247,7 @@ async def test_rmvtransport_dest_config(hass):
         ):
             assert await async_setup_component(hass, "sensor", VALID_CONFIG_DEST)
 
-    state = hass.states.get(
-        "sensor.rmvtransport_s3000010_dnone_l_pu_bahntrambussrbreecicice_t0_mj5_none"
-    )
-    # state = hass.states.get("sensor.frankfurt_main_hauptbahnhof")
+    state = hass.states.get("sensor.frankfurt_main_hauptbahnhof")
     assert state.state == "11"
     assert (
         state.attributes["direction"] == "Frankfurt (Main) Hugo-Junkers-Straße/Schleife"

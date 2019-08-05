@@ -57,7 +57,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 next_departure.get(CONF_PRODUCTS, VALID_PRODUCTS),
                 next_departure.get(CONF_TIME_OFFSET, DEFAULT_TIME_OFFSET),
                 next_departure.get(CONF_MAX_JOURNEYS, DEFAULT_MAX_JOURNEYS),
-                next_departure.get(CONF_NAME),
+                next_departure.get(CONF_NAME, DEFAULT_NAME),
                 timeout,
                 next_departure.get(CONF_SHOW_ON_MAP, False),
             )
