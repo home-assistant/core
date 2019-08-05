@@ -45,6 +45,9 @@ def setup_cors(app, origins):
 
         path = path.canonical
 
+        if path.startswith("/api/hassio_ingress/"):
+            return
+
         if path in cors_added:
             return
 
