@@ -75,13 +75,6 @@ def convert_ieee(ieee_str):
     return EUI64([uint8_t(p, base=16) for p in ieee_str.split(":")])
 
 
-def construct_unique_id(cluster):
-    """Construct a unique id from a cluster."""
-    return "0x{:04x}:{}:0x{:04x}".format(
-        cluster.endpoint.device.nwk, cluster.endpoint.endpoint_id, cluster.cluster_id
-    )
-
-
 def get_attr_id_by_name(cluster, attr_name):
     """Get the attribute id for a cluster attribute by its name."""
     return next(
