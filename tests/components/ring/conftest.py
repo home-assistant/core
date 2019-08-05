@@ -7,7 +7,7 @@ from asynctest import patch
 
 @pytest.fixture(name="ring_mock")
 def ring_save_mock():
-    """Fixture to mock a ring"""
+    """Fixture to mock a ring."""
     with patch("ring_doorbell._exists_cache", return_value=False):
         with patch("ring_doorbell._save_cache", return_value=True) as save_mock:
             yield save_mock
