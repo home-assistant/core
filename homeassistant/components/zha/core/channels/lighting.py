@@ -6,12 +6,22 @@ https://home-assistant.io/components/zha/
 """
 import logging
 
-from . import ZigbeeChannel
+import zigpy.zcl.clusters.lighting as lighting
+
+from . import ZIGBEE_CHANNEL_REGISTRY, ZigbeeChannel
 from ..const import REPORT_CONFIG_DEFAULT
 
 _LOGGER = logging.getLogger(__name__)
 
 
+@ZIGBEE_CHANNEL_REGISTRY.register(lighting.Ballast.cluster_id)
+class Ballast(ZigbeeChannel):
+    """Ballast channel."""
+
+    pass
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(lighting.Color.cluster_id)
 class ColorChannel(ZigbeeChannel):
     """Color channel."""
 

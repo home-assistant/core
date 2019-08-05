@@ -16,8 +16,6 @@ from homeassistant.components.switch import DOMAIN as SWITCH
 from .const import (
     CONTROLLER,
     REPORT_CONFIG_ASAP,
-    REPORT_CONFIG_DEFAULT,
-    REPORT_CONFIG_IMMEDIATE,
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
     SENSOR_ACCELERATION,
@@ -143,18 +141,6 @@ def establish_device_mappings():
 
     CLUSTER_REPORT_CONFIGS.update(
         {
-            zcl.clusters.measurement.RelativeHumidity.cluster_id: [
-                {
-                    "attr": "measured_value",
-                    "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
-                }
-            ],
-            zcl.clusters.measurement.TemperatureMeasurement.cluster_id: [
-                {
-                    "attr": "measured_value",
-                    "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
-                }
-            ],
             SMARTTHINGS_ACCELERATION_CLUSTER: [
                 {"attr": "acceleration", "config": REPORT_CONFIG_ASAP},
                 {"attr": "x_axis", "config": REPORT_CONFIG_ASAP},
@@ -166,18 +152,6 @@ def establish_device_mappings():
                     "attr": "measured_value",
                     "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
                 }
-            ],
-            zcl.clusters.measurement.PressureMeasurement.cluster_id: [
-                {"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT}
-            ],
-            zcl.clusters.measurement.IlluminanceMeasurement.cluster_id: [
-                {"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT}
-            ],
-            zcl.clusters.smartenergy.Metering.cluster_id: [
-                {"attr": "instantaneous_demand", "config": REPORT_CONFIG_DEFAULT}
-            ],
-            zcl.clusters.measurement.OccupancySensing.cluster_id: [
-                {"attr": "occupancy", "config": REPORT_CONFIG_IMMEDIATE}
             ],
         }
     )
