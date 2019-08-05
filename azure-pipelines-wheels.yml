@@ -10,8 +10,8 @@ trigger:
     - requirements_all.txt
 pr: none
 schedules:
-- cron: "0 */8 * * *"
-  displayName: daily builds
+- cron: '0 */8 * * *'
+  displayName: 'daily builds'
   branches:
     include:
     - dev
