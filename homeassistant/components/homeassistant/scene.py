@@ -52,7 +52,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up home assistant scene entries."""
     _process_scenes_config(hass, async_add_entities, config)
 
-    # This platform can be loaded multiple times. Only first time register serivce.
+    # This platform can be loaded multiple times. Only first time register the serivce.
     if hass.services.has_service(SCENE_DOMAIN, SERVICE_RELOAD):
         return
 
@@ -65,26 +65,23 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             conf = await conf_util.async_hass_config_yaml(hass)
         except HomeAssistantError as err:
             _LOGGER.error(err)
-            return None
+            return
 
         integration = await async_get_integration(hass, SCENE_DOMAIN)
 
         conf = await conf_util.async_process_component_config(hass, conf, integration)
 
-        if conf is None:
-            return None
-
-        if platform is None:
+        if not conf or not platform:
             return
 
         await platform.async_reset()
 
         # Extract only the config for the Home Assistant platform, ignore the rest.
-        for p_type, p_platform in config_per_platform(conf, SCENE_DOMAIN):
+        for p_type, p_config in config_per_platform(conf, SCENE_DOMAIN):
             if p_type != DOMAIN:
                 continue
 
-            _process_scenes_config(hass, async_add_entities, p_platform)
+            _process_scenes_config(hass, async_add_entities, p_config)
 
     hass.helpers.service.async_register_admin_service(
         SCENE_DOMAIN, SERVICE_RELOAD, reload_config
