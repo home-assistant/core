@@ -7,8 +7,11 @@ import attr
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_RECIPIENT,
-    EVENT_HOMEASSISTANT_STOP
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_RECIPIENT,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, discovery
@@ -16,23 +19,37 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'tplink_lte'
-DATA_KEY = 'tplink_lte'
+DOMAIN = "tplink_lte"
+DATA_KEY = "tplink_lte"
 
-CONF_NOTIFY = 'notify'
+CONF_NOTIFY = "notify"
 
-_NOTIFY_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_RECIPIENT): vol.All(cv.ensure_list, [cv.string])
-})
+_NOTIFY_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_RECIPIENT): vol.All(cv.ensure_list, [cv.string]),
+    }
+)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NOTIFY): vol.All(cv.ensure_list, [_NOTIFY_SCHEMA]),
-    })])
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.All(
+            cv.ensure_list,
+            [
+                vol.Schema(
+                    {
+                        vol.Required(CONF_HOST): cv.string,
+                        vol.Required(CONF_PASSWORD): cv.string,
+                        vol.Optional(CONF_NOTIFY): vol.All(
+                            cv.ensure_list, [_NOTIFY_SCHEMA]
+                        ),
+                    }
+                )
+            ],
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 @attr.s
@@ -66,7 +83,8 @@ async def async_setup(hass, config):
     """Set up TP-Link LTE component."""
     if DATA_KEY not in hass.data:
         websession = async_create_clientsession(
-            hass, cookie_jar=aiohttp.CookieJar(unsafe=True))
+            hass, cookie_jar=aiohttp.CookieJar(unsafe=True)
+        )
         hass.data[DATA_KEY] = LTEData(websession)
 
     domain_config = config.get(DOMAIN, [])
@@ -77,8 +95,11 @@ async def async_setup(hass, config):
 
     for conf in domain_config:
         for notify_conf in conf.get(CONF_NOTIFY, []):
-            hass.async_create_task(discovery.async_load_platform(
-                hass, 'notify', DOMAIN, notify_conf, config))
+            hass.async_create_task(
+                discovery.async_load_platform(
+                    hass, "notify", DOMAIN, notify_conf, config
+                )
+            )
 
     return True
 
@@ -98,8 +119,7 @@ async def _setup_lte(hass, lte_config, delay=0):
     try:
         await _login(hass, modem_data, password)
     except tp_connected.Error:
-        retry_task = hass.loop.create_task(
-            _retry_login(hass, modem_data, password))
+        retry_task = hass.loop.create_task(_retry_login(hass, modem_data, password))
 
         @callback
         def cleanup_retry(event):
@@ -127,8 +147,7 @@ async def _retry_login(hass, modem_data, password):
     """Sleep and retry setup."""
     import tp_connected
 
-    _LOGGER.warning(
-        "Could not connect to %s. Will keep trying.", modem_data.host)
+    _LOGGER.warning("Could not connect to %s. Will keep trying.", modem_data.host)
 
     modem_data.connected = False
     delay = 15
@@ -140,4 +159,4 @@ async def _retry_login(hass, modem_data, password):
             await _login(hass, modem_data, password)
             _LOGGER.warning("Connected to %s", modem_data.host)
         except tp_connected.Error:
-            delay = min(2*delay, 300)
+            delay = min(2 * delay, 300)

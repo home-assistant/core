@@ -5,8 +5,7 @@ import async_timeout
 import voluptuous as vol
 
 from pydeconz.errors import ResponseError, RequestError
-from pydeconz.utils import (
-    async_discovery, async_get_api_key, async_get_bridgeid)
+from pydeconz.utils import async_discovery, async_get_api_key, async_get_bridgeid
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
@@ -15,16 +14,18 @@ from homeassistant.helpers import aiohttp_client
 
 from .const import CONF_BRIDGEID, DEFAULT_PORT, DOMAIN
 
-DECONZ_MANUFACTURERURL = 'http://www.dresden-elektronik.de'
-CONF_SERIAL = 'serial'
-ATTR_UUID = 'udn'
+DECONZ_MANUFACTURERURL = "http://www.dresden-elektronik.de"
+CONF_SERIAL = "serial"
+ATTR_UUID = "udn"
 
 
 @callback
 def configured_gateways(hass):
     """Return a set of all configured gateways."""
-    return {entry.data[CONF_BRIDGEID]: entry for entry
-            in hass.config_entries.async_entries(DOMAIN)}
+    return {
+        entry.data[CONF_BRIDGEID]: entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+    }
 
 
 @callback
@@ -89,18 +90,18 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
                 hosts.append(bridge[CONF_HOST])
 
             return self.async_show_form(
-                step_id='init',
-                data_schema=vol.Schema({
-                    vol.Required(CONF_HOST): vol.In(hosts)
-                })
+                step_id="init",
+                data_schema=vol.Schema({vol.Required(CONF_HOST): vol.In(hosts)}),
             )
 
         return self.async_show_form(
-            step_id='init',
-            data_schema=vol.Schema({
-                vol.Required(CONF_HOST): str,
-                vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-            }),
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST): str,
+                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                }
+            ),
         )
 
     async def async_step_link(self, user_input=None):
@@ -112,20 +113,16 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
 
             try:
                 with async_timeout.timeout(10):
-                    api_key = await async_get_api_key(
-                        session, **self.deconz_config)
+                    api_key = await async_get_api_key(session, **self.deconz_config)
 
             except (ResponseError, RequestError, asyncio.TimeoutError):
-                errors['base'] = 'no_key'
+                errors["base"] = "no_key"
 
             else:
                 self.deconz_config[CONF_API_KEY] = api_key
                 return await self._create_entry()
 
-        return self.async_show_form(
-            step_id='link',
-            errors=errors,
-        )
+        return self.async_show_form(step_id="link", errors=errors)
 
     async def _create_entry(self):
         """Create entry for gateway."""
@@ -134,16 +131,15 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
 
             try:
                 with async_timeout.timeout(10):
-                    self.deconz_config[CONF_BRIDGEID] = \
-                        await async_get_bridgeid(
-                            session, **self.deconz_config)
+                    self.deconz_config[CONF_BRIDGEID] = await async_get_bridgeid(
+                        session, **self.deconz_config
+                    )
 
             except asyncio.TimeoutError:
-                return self.async_abort(reason='no_bridges')
+                return self.async_abort(reason="no_bridges")
 
         return self.async_create_entry(
-            title='deCONZ-' + self.deconz_config[CONF_BRIDGEID],
-            data=self.deconz_config
+            title="deCONZ-" + self.deconz_config[CONF_BRIDGEID], data=self.deconz_config
         )
 
     async def _update_entry(self, entry, host):
@@ -153,13 +149,12 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered deCONZ bridge."""
-        from homeassistant.components.ssdp import (
-            ATTR_MANUFACTURERURL, ATTR_SERIAL)
+        from homeassistant.components.ssdp import ATTR_MANUFACTURERURL, ATTR_SERIAL
 
         if discovery_info[ATTR_MANUFACTURERURL] != DECONZ_MANUFACTURERURL:
-            return self.async_abort(reason='not_deconz_bridge')
+            return self.async_abort(reason="not_deconz_bridge")
 
-        uuid = discovery_info[ATTR_UUID].replace('uuid:', '')
+        uuid = discovery_info[ATTR_UUID].replace("uuid:", "")
         gateways = {
             gateway.api.config.uuid: gateway
             for gateway in self.hass.data.get(DOMAIN, {}).values()
@@ -168,12 +163,14 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
         if uuid in gateways:
             entry = gateways[uuid].config_entry
             await self._update_entry(entry, discovery_info[CONF_HOST])
-            return self.async_abort(reason='updated_instance')
+            return self.async_abort(reason="updated_instance")
 
         bridgeid = discovery_info[ATTR_SERIAL]
-        if any(bridgeid == flow['context'][CONF_BRIDGEID]
-               for flow in self._async_in_progress()):
-            return self.async_abort(reason='already_in_progress')
+        if any(
+            bridgeid == flow["context"][CONF_BRIDGEID]
+            for flow in self._async_in_progress()
+        ):
+            return self.async_abort(reason="already_in_progress")
 
         # pylint: disable=unsupported-assignment-operation
         self.context[CONF_BRIDGEID] = bridgeid
@@ -215,7 +212,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
         if bridgeid in gateway_entries:
             entry = gateway_entries[bridgeid]
             await self._update_entry(entry, user_input[CONF_HOST])
-            return self.async_abort(reason='updated_instance')
+            return self.async_abort(reason="updated_instance")
 
         self._hassio_discovery = user_input
 
@@ -228,14 +225,12 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
                 CONF_HOST: self._hassio_discovery[CONF_HOST],
                 CONF_PORT: self._hassio_discovery[CONF_PORT],
                 CONF_BRIDGEID: self._hassio_discovery[CONF_SERIAL],
-                CONF_API_KEY: self._hassio_discovery[CONF_API_KEY]
+                CONF_API_KEY: self._hassio_discovery[CONF_API_KEY],
             }
 
             return await self._create_entry()
 
         return self.async_show_form(
-            step_id='hassio_confirm',
-            description_placeholders={
-                'addon': self._hassio_discovery['addon']
-            }
+            step_id="hassio_confirm",
+            description_placeholders={"addon": self._hassio_discovery["addon"]},
         )

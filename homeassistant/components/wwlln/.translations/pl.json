@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Lokalizacja ju\u017c zarejestrowana"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Szeroko\u015b\u0107 geograficzna",
+                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna",
+                    "radius": "Promie\u0144"
+                },
+                "title": "Wprowad\u017a dane o swojej lokalizacji."
+            }
+        },
+        "title": "World Wide Lightning Location Network (WWLLN)"
+    }
+}
