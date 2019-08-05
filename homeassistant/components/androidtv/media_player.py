@@ -3,6 +3,9 @@ import functools
 import logging
 import voluptuous as vol
 
+from androidtv import setup
+from androidtv.constants import APPS, KEYS, VALID_STATES
+
 from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
@@ -31,9 +34,6 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-
-from androidtv import setup
-from androidtv.constants import APPS, KEYS, VALID_STATES
 
 ANDROIDTV_DOMAIN = "androidtv"
 
@@ -148,7 +148,7 @@ def valid_state_detection_rules(rules):
                         )
 
                     # The value for the `media_session_state` and `wake_lock_size` properties must be an int
-                    elif not isinstance(value, int):
+                    if condition != "audio_state" and not isinstance(value, int):
                         raise vol.Invalid(
                             "Conditional value for property '{0}' must be an int, not {1}".format(
                                 condition, type(value).__name__
