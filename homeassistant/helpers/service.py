@@ -245,9 +245,7 @@ async def entity_service_call(hass, platforms, func, call, service_name='',
         # Remove the service_name parameter along with this warning
         _LOGGER.warning(
             'Not passing an entity ID to a service to target all '
-            'entities is deprecated. Update your call to %s to be '
-            'instead: entity_id: %s', service_name, ENTITY_MATCH_ALL)
-        target_all_entities = True
+            'entities is not supported.', service_name, ENTITY_MATCH_ALL)
 
     if not target_all_entities:
         # A set of entities we're trying to target.
