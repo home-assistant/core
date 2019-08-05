@@ -41,6 +41,7 @@ from .const import (
     DEBUG_COMP_ZIGPY,
     DEBUG_COMP_ZIGPY_DECONZ,
     DEBUG_COMP_ZIGPY_XBEE,
+    DEBUG_COMP_ZIGPY_ZIGATE,
     DEBUG_LEVEL_CURRENT,
     DEBUG_LEVEL_ORIGINAL,
     DEBUG_LEVELS,
@@ -412,6 +413,9 @@ def async_capture_log_levels():
         DEBUG_COMP_ZIGPY_DECONZ: logging.getLogger(
             DEBUG_COMP_ZIGPY_DECONZ
         ).getEffectiveLevel(),
+        DEBUG_COMP_ZIGPY_ZIGATE: logging.getLogger(
+            DEBUG_COMP_ZIGPY_ZIGATE
+        ).getEffectiveLevel(),
     }
 
 
@@ -423,6 +427,7 @@ def async_set_logger_levels(levels):
     logging.getLogger(DEBUG_COMP_ZIGPY).setLevel(levels[DEBUG_COMP_ZIGPY])
     logging.getLogger(DEBUG_COMP_ZIGPY_XBEE).setLevel(levels[DEBUG_COMP_ZIGPY_XBEE])
     logging.getLogger(DEBUG_COMP_ZIGPY_DECONZ).setLevel(levels[DEBUG_COMP_ZIGPY_DECONZ])
+    logging.getLogger(DEBUG_COMP_ZIGPY_ZIGATE).setLevel(levels[DEBUG_COMP_ZIGPY_ZIGATE])
 
 
 class LogRelayHandler(logging.Handler):
