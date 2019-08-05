@@ -2,8 +2,8 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.components.device_tracker import DeviceScanner
+from homeassistant.components.device_tracker import DeviceScanner, SOURCE_TYPE_ROUTER
+from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util import slugify
 from homeassistant.const import CONF_HOST
 from .const import (
@@ -20,10 +20,8 @@ from . import CONF_METHOD
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
 
-
-async def async_setup_scanner(hass, config, async_see, discovery_info=None):
+def setup_scanner(hass, config, see, discovery_info=None):
     """Validate the configuration and return Mikrotik scanner."""
     if discovery_info is None:
         _LOGGER.warning("To use this you need to configure the 'mikrotik' component")
@@ -32,14 +30,13 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     api = hass.data[DOMAIN][host]
     method = discovery_info[CONF_METHOD]
     arp_ping = discovery_info[CONF_ARP_PING]
-    scanner = MikrotikScanner(hass, api, host, method, arp_ping, async_see)
-    return await scanner.async_init()
+    MikrotikScanner(hass, api, host, method, arp_ping, see)
 
 
 class MikrotikScanner(DeviceScanner):
     """This class queries a Mikrotik device."""
 
-    def __init__(self, hass, api, host, method, arp_ping, async_see):
+    def __init__(self, hass, api, host, method, arp_ping, see):
         """Initialize the scanner."""
         self.hass = hass
         self.api = api
@@ -52,40 +49,36 @@ class MikrotikScanner(DeviceScanner):
         self.arp = {}
         self.dhcp = {}
         self.device_tracker = None
-        self.async_see = async_see
+        self.see = see
+        self.get_method()
+        self._update()
 
-    async def async_init(self):
-        """Further initialize connection to Mikrotik Device."""
-        await self.api.update_info()
-        connected = self.api.connected()
-        if connected:
-            self.get_method()
-            await self.async_update()
-            async_track_time_interval(
-                self.hass, self.async_update, DEFAULT_SCAN_INTERVAL
-            )
-        return connected
+        track_utc_time_change(self.hass, self._update, second=range(0, 60, 30))
 
-    async def async_update(self, now=None):
+    def _update(self, now=None):
         """Ensure the information from Mikrotik device is up to date."""
-        await self.update_device_tracker(self.method)
+        self.update_device_tracker(self.method)
         if not self.api.connected():
             return
 
         devices = self.device_tracker
         for mac in devices:
-            await self.async_see(mac=mac, attributes=devices[mac])
+            if "host_name" in devices[mac]:
+                dev_id = slugify(devices[mac]["host_name"])
+            else:
+                dev_id = mac
+            self.see(dev_id=dev_id, mac=mac, attributes=devices[mac])
 
     def get_method(self):
         """Determine the device tracker polling method."""
-        self.capsman = self.api.get_api(MIKROTIK_SERVICES[CAPSMAN])
+        self.capsman = self.api.command(MIKROTIK_SERVICES[CAPSMAN])
         if not self.capsman:
             _LOGGER.info(
                 "Mikrotik %s: Not a CAPsMAN controller. "
                 "Trying local wireless interfaces.",
                 (self.host),
             )
-        self.wireless = self.api.get_api(MIKROTIK_SERVICES[WIRELESS])
+        self.wireless = self.api.command(MIKROTIK_SERVICES[WIRELESS])
 
         if (not self.capsman and not self.wireless) or self.method == DHCP:
             _LOGGER.info(
@@ -113,21 +106,17 @@ class MikrotikScanner(DeviceScanner):
             "Mikrotik %s: Using %s for device tracker.", self.host, self.method
         )
 
-    async def update_device_tracker(self, method=None):
+    def update_device_tracker(self, method=None):
         """Update device_tracker from Mikrotik API."""
-        self.device_tracker = {}
-        if method is None:
-            return
         _LOGGER.debug(
             "[%s] Updating Mikrotik device_tracker using %s.", self.host, method
         )
-
-        data = self.api.get_api(MIKROTIK_SERVICES[method])
+        self.device_tracker = {}
+        data = self.api.command(MIKROTIK_SERVICES[method])
         if data is None:
-            self.api.update_info()
             return
 
-        arp = self.api.get_api(MIKROTIK_SERVICES[ARP])
+        arp = self.api.command(MIKROTIK_SERVICES[ARP])
         for device in arp:
             if "mac-address" in device and device["invalid"] is False:
                 mac = device["mac-address"]
@@ -137,30 +126,32 @@ class MikrotikScanner(DeviceScanner):
             if method == DHCP:
                 if "active-address" not in device:
                     continue
-                self.dhcp[mac] = data
-                if self.arp_ping and mac in arp:
-                    interface = arp[mac]["interface"]
+                self.dhcp[mac] = device
+                if self.arp_ping:
+                    if mac not in self.arp:
+                        continue
+                    interface = self.arp[mac]["interface"]
                     if not self.do_arp_ping(mac, interface):
                         continue
 
             mac = device["mac-address"]
-            attributes = {}
+            attrs = {}
 
-            if mac in self.dhcp:
-                attributes["host_name"] = self.dhcp[mac]["host-name"]
+            if mac in self.dhcp and "host-name" in self.dhcp[mac]:
+                attrs["host_name"] = self.dhcp[mac]["host-name"]
 
             if mac in self.arp:
-                attributes["ip_address"] = self.arp[mac]["address"]
+                attrs["ip_address"] = self.arp[mac]["address"]
 
-            for attrib in ATTR_DEVICE_TRACKER:
-                if attrib in device:
-                    attributes[slugify(attrib)] = device[attrib]
+            for attr in ATTR_DEVICE_TRACKER:
+                if attr in device:
+                    attrs[slugify(attr)] = device[attr]
 
-            attributes["source_type"] = "router"
-            attributes["scanner_type"] = method
-            attributes["scanner_host"] = self.host
-            attributes["scanner_host_name"] = self.host_name
-            self.device_tracker[mac] = attributes
+            attrs["source_type"] = SOURCE_TYPE_ROUTER
+            attrs["scanner_type"] = method
+            attrs["scanner_host"] = self.host
+            attrs["scanner_host_name"] = self.host_name
+            self.device_tracker[mac] = attrs
 
     def do_arp_ping(self, mac, interface):
         """Attempt to arp ping MAC address via interface."""
@@ -172,10 +163,13 @@ class MikrotikScanner(DeviceScanner):
             "address": mac,
         }
         cmd = "/ping"
-        data = self.api.api_get(cmd, params)
+        data = self.api.command(cmd, params)
         status = 0
         for result in data:
             if "status" in result:
+                _LOGGER.debug(
+                    "Mikrotik %s arp_ping error: %s", self.host, result["status"]
+                )
                 status += 1
         if status == len(data):
             return None

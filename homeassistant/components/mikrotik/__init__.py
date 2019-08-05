@@ -15,7 +15,8 @@ from homeassistant.const import (
     CONF_METHOD,
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.discovery import load_platform
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from .const import (
     DOMAIN,
@@ -58,7 +59,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+def setup(hass, config):
     """Set up the Mikrotik component."""
     hass.data[DOMAIN] = {}
 
@@ -102,23 +103,23 @@ async def async_setup(hass, config):
             )
             api.connect_to_device()
             hass.data[DOMAIN][host] = api
+        except librouteros.exceptions.ConnectionError as api_error:
+            _LOGGER.error("Mikrotik %s connection failed %s", host, api_error)
+            raise ConfigEntryNotReady
         except (
             librouteros.exceptions.TrapError,
             librouteros.exceptions.MultiTrapError,
-            librouteros.exceptions.ConnectionError,
         ) as api_error:
-            _LOGGER.error("Mikrotik API login failed %s", api_error)
+            _LOGGER.error("Mikrotik %s error %s", host, api_error)
             continue
 
         if track_devices:
-            hass.async_create_task(
-                async_load_platform(
-                    hass,
-                    DEVICE_TRACKER,
-                    DOMAIN,
-                    {CONF_HOST: host, CONF_METHOD: method, CONF_ARP_PING: arp_ping},
-                    config,
-                )
+            load_platform(
+                hass,
+                DEVICE_TRACKER,
+                DOMAIN,
+                {CONF_HOST: host, CONF_METHOD: method, CONF_ARP_PING: arp_ping},
+                config,
             )
 
     if not hass.data[DOMAIN]:
@@ -217,15 +218,13 @@ class MikrotikClient:
         """Return connected boolean."""
         return self._connected
 
-    async def update_info(self):
-        """Update info from Mikrotik API."""
-        _LOGGER.debug("[%s] Updating Mikrotik info.", self._host)
-        if not self._connected:
-            self.connect_to_device()
-        data = self.get_api(MIKROTIK_SERVICES[INFO])
+    def update_info(self):
+        """Update device info from Mikrotik API."""
+        data = self.command(MIKROTIK_SERVICES[INFO])
         if data is None:
             _LOGGER.error("Mikrotik device %s is not connected.", self._host)
             self._connected = False
+            self.connect_to_device()
             return
         self._info = data[0]
 
@@ -233,9 +232,9 @@ class MikrotikClient:
         """Return device info."""
         return self._info
 
-    def get_api(self, cmd, params=None):
+    def command(self, cmd, params=None):
         """Retrieve data from Mikrotik API."""
-        if not self._client or not self._connected:
+        if not self._connected:
             if not self.connect_to_device():
                 return None
         try:
@@ -249,11 +248,10 @@ class MikrotikClient:
             librouteros.exceptions.ConnectionError,
         ) as api_error:
             _LOGGER.error(
-                "Failed to retrieve data. " "%s cmd=[%s] Error: %s",
+                "Failed to retrieve data. Mikrotik %s: cmd=[%s] Error: %s",
                 self._host,
                 cmd,
                 api_error,
             )
-            self._connected = False
             return None
         return response
