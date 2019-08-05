@@ -3,8 +3,8 @@ import functools
 import logging
 import voluptuous as vol
 
-from androidtv import setup
-from androidtv.constants import APPS, KEYS, VALID_STATES
+from androidtv import setup, ha_state_detection_rules_validator
+from androidtv.constants import APPS, KEYS
 
 from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
@@ -87,73 +87,6 @@ SERVICE_ADB_COMMAND_SCHEMA = vol.Schema(
     {vol.Required(ATTR_ENTITY_ID): cv.entity_ids, vol.Required(ATTR_COMMAND): cv.string}
 )
 
-# To be used for config validation
-VALID_PROPERTIES = ("audio_state", "media_session_state")
-VALID_CONDITIONS = VALID_PROPERTIES + ("wake_lock_size",)
-
-
-def valid_state_detection_rules(rules):
-    """Make sure the values in the 'state_detection_rules' config entry are valid."""
-    for rule in rules:
-        # A rule must be either a string or a map
-        if not isinstance(rule, (str, dict)):
-            raise vol.Invalid(
-                "Expected a string or a map, got {}".format(type(rule).__name__)
-            )
-
-        # If a rule is a string, check that it is valid
-        if isinstance(rule, str):
-            if rule not in VALID_PROPERTIES + VALID_STATES:
-                raise vol.Invalid(
-                    "Invalid rule '{0}' is not in {1}".format(
-                        rule, VALID_STATES + VALID_PROPERTIES
-                    )
-                )
-
-        # If a rule is a map, check that it is valid
-        else:
-            for state, conditions in rule.items():
-                # The keys of the map must be valid states
-                if state not in VALID_STATES:
-                    raise vol.Invalid(
-                        "'{0}' is not a valid state in the '{1}' config entry".format(
-                            state, CONF_STATE_DETECTION_RULES
-                        )
-                    )
-
-                # The values of the map must be dictionaries
-                if not isinstance(conditions, dict):
-                    raise vol.Invalid(
-                        "Expected a map for entry '{0}' in '{1}', got {2}".format(
-                            state, CONF_STATE_DETECTION_RULES, type(conditions).__name__
-                        )
-                    )
-
-                for condition, value in conditions.items():
-                    # The keys of the map must be valid conditions that can be checked
-                    if condition not in VALID_CONDITIONS:
-                        raise vol.Invalid(
-                            "Invalid property '{0}' is not in {1}".format(
-                                condition, VALID_CONDITIONS
-                            )
-                        )
-
-                    # The value for the `audio_state` property must be a string
-                    if condition == "audio_state" and not isinstance(value, str):
-                        raise vol.Invalid(
-                            "Conditional value for property 'audio_state' must be a string, not {}".format(
-                                type(value).__name__
-                            )
-                        )
-
-                    # The value for the `media_session_state` and `wake_lock_size` properties must be an int
-                    if condition != "audio_state" and not isinstance(value, int):
-                        raise vol.Invalid(
-                            "Conditional value for property '{0}' must be an int, not {1}".format(
-                                condition, type(value).__name__
-                            )
-                        )
-
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -171,7 +104,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_TURN_ON_COMMAND): cv.string,
         vol.Optional(CONF_TURN_OFF_COMMAND): cv.string,
         vol.Optional(CONF_STATE_DETECTION_RULES, default=dict()): vol.Schema(
-            {cv.string: valid_state_detection_rules}
+            {cv.string: ha_state_detection_rules_validator(vol.Invalid)}
         ),
     }
 )
