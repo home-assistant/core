@@ -79,6 +79,7 @@ DEBUG_COMP_ZHA = "homeassistant.components.zha"
 DEBUG_COMP_ZIGPY = "zigpy"
 DEBUG_COMP_ZIGPY_DECONZ = "zigpy_deconz"
 DEBUG_COMP_ZIGPY_XBEE = "zigpy_xbee"
+DEBUG_COMP_ZIGPY_ZIGATE = "zigpy_zigate"
 DEBUG_LEVEL_CURRENT = "current"
 DEBUG_LEVEL_ORIGINAL = "original"
 DEBUG_LEVELS = {
@@ -87,6 +88,7 @@ DEBUG_LEVELS = {
     DEBUG_COMP_ZIGPY: logging.DEBUG,
     DEBUG_COMP_ZIGPY_XBEE: logging.DEBUG,
     DEBUG_COMP_ZIGPY_DECONZ: logging.DEBUG,
+    DEBUG_COMP_ZIGPY_ZIGATE: logging.DEBUG,
 }
 DEBUG_RELAY_LOGGERS = [DEBUG_COMP_ZHA, DEBUG_COMP_ZIGPY]
 
@@ -109,6 +111,7 @@ class RadioType(enum.Enum):
     ezsp = "ezsp"
     xbee = "xbee"
     deconz = "deconz"
+    zigate = "zigate"
 
     @classmethod
     def list(cls):

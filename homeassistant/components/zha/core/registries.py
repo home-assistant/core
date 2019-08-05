@@ -93,17 +93,6 @@ def establish_device_mappings():
         ZHA_GW_RADIO_DESCRIPTION: "EZSP",
     }
 
-    def get_xbee_radio():
-        import zigpy_xbee.api
-        from zigpy_xbee.zigbee.application import ControllerApplication
-
-        return {ZHA_GW_RADIO: zigpy_xbee.api.XBee(), CONTROLLER: ControllerApplication}
-
-    RADIO_TYPES[RadioType.xbee.name] = {
-        ZHA_GW_RADIO: get_xbee_radio,
-        ZHA_GW_RADIO_DESCRIPTION: "XBee",
-    }
-
     def get_deconz_radio():
         import zigpy_deconz.api
         from zigpy_deconz.zigbee.application import ControllerApplication
@@ -116,6 +105,31 @@ def establish_device_mappings():
     RADIO_TYPES[RadioType.deconz.name] = {
         ZHA_GW_RADIO: get_deconz_radio,
         ZHA_GW_RADIO_DESCRIPTION: "Deconz",
+    }
+
+    def get_xbee_radio():
+        import zigpy_xbee.api
+        from zigpy_xbee.zigbee.application import ControllerApplication
+
+        return {ZHA_GW_RADIO: zigpy_xbee.api.XBee(), CONTROLLER: ControllerApplication}
+
+    RADIO_TYPES[RadioType.xbee.name] = {
+        ZHA_GW_RADIO: get_xbee_radio,
+        ZHA_GW_RADIO_DESCRIPTION: "XBee",
+    }
+
+    def get_zigate_radio():
+        import zigpy_zigate.api
+        from zigpy_zigate.zigbee.application import ControllerApplication
+
+        return {
+            ZHA_GW_RADIO: zigpy_zigate.api.ZiGate(),
+            CONTROLLER: ControllerApplication,
+        }
+
+    RADIO_TYPES[RadioType.zigate.name] = {
+        ZHA_GW_RADIO: get_zigate_radio,
+        ZHA_GW_RADIO_DESCRIPTION: "ZiGate",
     }
 
     BINARY_SENSOR_CLUSTERS.add(SMARTTHINGS_ACCELERATION_CLUSTER)
