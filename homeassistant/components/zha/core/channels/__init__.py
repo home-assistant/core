@@ -23,7 +23,7 @@ from ..const import (
     REPORT_CONFIG_RPT_CHANGE,
     SIGNAL_ATTR_UPDATED,
 )
-from ..helpers import LogMixin, construct_unique_id, get_attr_id_by_name, safe_read
+from ..helpers import LogMixin, get_attr_id_by_name, safe_read
 from ..registries import CLUSTER_REPORT_CONFIGS
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,7 +89,13 @@ class ZigbeeChannel(LogMixin):
         self._generic_id = "channel_0x{:04x}".format(cluster.cluster_id)
         self._cluster = cluster
         self._zha_device = device
-        self._unique_id = construct_unique_id(cluster)
+        self._unique_id = "{}:{}:0x{:04x}".format(
+            str(device.ieee), cluster.endpoint.endpoint_id, cluster.cluster_id
+        )
+        # this keeps logs consistent with zigpy logging
+        self._log_id = "0x{:04x}:{}:0x{:04x}".format(
+            device.nwk, cluster.endpoint.endpoint_id, cluster.cluster_id
+        )
         self._report_config = CLUSTER_REPORT_CONFIGS.get(
             self._cluster.cluster_id, self.REPORT_CONFIG
         )
@@ -260,7 +266,7 @@ class ZigbeeChannel(LogMixin):
     def log(self, level, msg, *args):
         """Log a message."""
         msg = "[%s]: " + msg
-        args = (self.unique_id,) + args
+        args = (self._log_id,) + args
         _LOGGER.log(level, msg, *args)
 
     def __getattr__(self, name):
@@ -313,7 +319,7 @@ class ZDOChannel(LogMixin):
         self._cluster = cluster
         self._zha_device = device
         self._status = ChannelStatus.CREATED
-        self._unique_id = "{}_ZDO".format(device.name)
+        self._unique_id = "{}:{}_ZDO".format(str(device.ieee), device.name)
         self._cluster.add_listener(self)
 
     @property
