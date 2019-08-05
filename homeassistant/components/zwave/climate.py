@@ -39,7 +39,7 @@ REMOTEC = 0x5254
 REMOTEC_ZXT_120 = 0x8377
 REMOTEC_ZXT_120_THERMOSTAT = (REMOTEC, REMOTEC_ZXT_120)
 ATTR_OPERATING_STATE = "operating_state"
-ATTR_FAN_STATE = "fan_state"
+ATTR_FAN_ACTION = "fan_action"
 
 
 # Device is in manufacturer specific mode (e.g. setting the valve manually)
@@ -133,7 +133,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         self._preset_mode = None  # ha_mode if exists, else zwave_mode
         self._current_fan_mode = None
         self._fan_modes = None
-        self._fan_state = None
+        self._fan_action = None
         self._current_swing_mode = None
         self._swing_modes = None
         self._unit = temp_unit
@@ -291,8 +291,8 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             self._hvac_action = HVAC_CURRENT_MAPPINGS.get(str(mode).lower(), mode)
 
         # Fan operating state
-        if self.values.fan_state:
-            self._fan_state = self.values.fan_state.data
+        if self.values.fan_action:
+            self._fan_action = self.values.fan_action.data
 
     @property
     def fan_mode(self):
@@ -426,3 +426,11 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         if self._zxt_120 == 1:
             if self.values.zxt_120_swing_mode:
                 self.values.zxt_120_swing_mode.data = swing_mode
+
+    @property
+    def device_state_attributes(self):
+        """Return the optional state attributes."""
+        data = super().device_state_attributes
+        if self._fan_action:
+            data[ATTR_FAN_ACTION] = self._fan_action
+        return data
