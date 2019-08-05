@@ -401,6 +401,7 @@ class EventRelayChannel(ZigbeeChannel):
             )
 
 
+# pylint: disable=wrong-import-position
 from . import closures  # noqa
 from . import general  # noqa
 from . import homeautomation  # noqa
