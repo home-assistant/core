@@ -13,8 +13,12 @@ from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .channels import AttributeListeningChannel, EventRelayChannel, ZDOChannel
-from .channels.registry import ZIGBEE_CHANNEL_REGISTRY
+from .channels import (
+    ZIGBEE_CHANNEL_REGISTRY,
+    AttributeListeningChannel,
+    EventRelayChannel,
+    ZDOChannel,
+)
 from .const import (
     COMPONENTS,
     CONF_DEVICE_CONFIG,

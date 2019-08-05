@@ -6,24 +6,229 @@ https://home-assistant.io/components/zha/
 """
 import logging
 
+import zigpy.zcl.clusters.general as general
+
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
-from . import ZigbeeChannel, parse_and_log_command
+from . import (
+    ZIGBEE_CHANNEL_REGISTRY,
+    AttributeListeningChannel,
+    ZigbeeChannel,
+    parse_and_log_command,
+)
 from ..const import (
+    REPORT_CONFIG_ASAP,
+    REPORT_CONFIG_BATTERY_SAVE,
+    REPORT_CONFIG_DEFAULT,
+    REPORT_CONFIG_IMMEDIATE,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_MOVE_LEVEL,
     SIGNAL_SET_LEVEL,
-    REPORT_CONFIG_ASAP,
-    REPORT_CONFIG_BATTERY_SAVE,
-    REPORT_CONFIG_IMMEDIATE,
 )
 from ..helpers import get_attr_id_by_name
 
 _LOGGER = logging.getLogger(__name__)
 
 
+@ZIGBEE_CHANNEL_REGISTRY.register(general.Alarms.cluster_id)
+class Alarms(ZigbeeChannel):
+    """Alarms channel."""
+
+    pass
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.AnalogInput.cluster_id)
+class AnalogInput(AttributeListeningChannel):
+    """Analog Input channel."""
+
+    REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.AnalogOutput.cluster_id)
+class AnalogOutput(AttributeListeningChannel):
+    """Analog Output channel."""
+
+    REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.AnalogValue.cluster_id)
+class AnalogValue(AttributeListeningChannel):
+    """Analog Value channel."""
+
+    REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.ApplianceControl.cluster_id)
+class ApplianceContorl(ZigbeeChannel):
+    """Appliance Control channel."""
+
+    pass
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.Basic.cluster_id)
+class BasicChannel(ZigbeeChannel):
+    """Channel to interact with the basic cluster."""
+
+    UNKNOWN = 0
+    BATTERY = 3
+
+    POWER_SOURCES = {
+        UNKNOWN: "Unknown",
+        1: "Mains (single phase)",
+        2: "Mains (3 phase)",
+        BATTERY: "Battery",
+        4: "DC source",
+        5: "Emergency mains constantly powered",
+        6: "Emergency mains and transfer switch",
+    }
+
+    def __init__(self, cluster, device):
+        """Initialize BasicChannel."""
+        super().__init__(cluster, device)
+        self._power_source = None
+
+    async def async_configure(self):
+        """Configure this channel."""
+        await super().async_configure()
+        await self.async_initialize(False)
+
+    async def async_initialize(self, from_cache):
+        """Initialize channel."""
+        self._power_source = await self.get_attribute_value(
+            "power_source", from_cache=from_cache
+        )
+        await super().async_initialize(from_cache)
+
+    def get_power_source(self):
+        """Get the power source."""
+        return self._power_source
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.BinaryInput.cluster_id)
+class BinaryInput(AttributeListeningChannel):
+    """Binary Input channel."""
+
+    REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.BinaryOutput.cluster_id)
+class BinaryOutput(AttributeListeningChannel):
+    """Binary Output channel."""
+
+    REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.BinaryValue.cluster_id)
+class BinaryValue(AttributeListeningChannel):
+    """Binary Value channel."""
+
+    REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.Commissioning.cluster_id)
+class Commissioning(ZigbeeChannel):
+    """Commissioning channel."""
+
+    pass
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.DeviceTemperature.cluster_id)
+class DeviceTemperature(ZigbeeChannel):
+    """Device Temperatur channel."""
+
+    pass
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.GreenPowerProxy.cluster_id)
+class GreenPowerProxy(ZigbeeChannel):
+    """Green Power Proxy channel."""
+
+    pass
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.Groups.cluster_id)
+class Groups(ZigbeeChannel):
+    """Groups channel."""
+
+    pass
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.Identify.cluster_id)
+class Identify(ZigbeeChannel):
+    """Identify channel."""
+
+    pass
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.LevelControl.cluster_id)
+class LevelControlChannel(ZigbeeChannel):
+    """Channel for the LevelControl Zigbee cluster."""
+
+    CURRENT_LEVEL = 0
+    REPORT_CONFIG = ({"attr": "current_level", "config": REPORT_CONFIG_ASAP},)
+
+    @callback
+    def cluster_command(self, tsn, command_id, args):
+        """Handle commands received to this cluster."""
+        cmd = parse_and_log_command(self, tsn, command_id, args)
+
+        if cmd in ("move_to_level", "move_to_level_with_on_off"):
+            self.dispatch_level_change(SIGNAL_SET_LEVEL, args[0])
+        elif cmd in ("move", "move_with_on_off"):
+            # We should dim slowly -- for now, just step once
+            rate = args[1]
+            if args[0] == 0xFF:
+                rate = 10  # Should read default move rate
+            self.dispatch_level_change(SIGNAL_MOVE_LEVEL, -rate if args[0] else rate)
+        elif cmd in ("step", "step_with_on_off"):
+            # Step (technically may change on/off)
+            self.dispatch_level_change(
+                SIGNAL_MOVE_LEVEL, -args[1] if args[0] else args[1]
+            )
+
+    @callback
+    def attribute_updated(self, attrid, value):
+        """Handle attribute updates on this cluster."""
+        self.debug("received attribute: %s update with value: %s", attrid, value)
+        if attrid == self.CURRENT_LEVEL:
+            self.dispatch_level_change(SIGNAL_SET_LEVEL, value)
+
+    def dispatch_level_change(self, command, level):
+        """Dispatch level change."""
+        async_dispatcher_send(
+            self._zha_device.hass, "{}_{}".format(self.unique_id, command), level
+        )
+
+    async def async_initialize(self, from_cache):
+        """Initialize channel."""
+        await self.get_attribute_value(self.CURRENT_LEVEL, from_cache=from_cache)
+        await super().async_initialize(from_cache)
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.MultistateInput.cluster_id)
+class MultistateInput(AttributeListeningChannel):
+    """Multistate Input channel."""
+
+    REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.MultistateOutput.cluster_id)
+class MultistateOutput(AttributeListeningChannel):
+    """Multistate Output channel."""
+
+    REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.MultistateValue.cluster_id)
+class MultistateValue(AttributeListeningChannel):
+    """Multistate Value channel."""
+
+    REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.OnOff.cluster_id)
 class OnOffChannel(ZigbeeChannel):
     """Channel for the OnOff Zigbee cluster."""
 
@@ -97,88 +302,35 @@ class OnOffChannel(ZigbeeChannel):
         await super().async_update()
 
 
-class LevelControlChannel(ZigbeeChannel):
-    """Channel for the LevelControl Zigbee cluster."""
+@ZIGBEE_CHANNEL_REGISTRY.register(general.OnOffConfiguration.cluster_id)
+class OnOffConfiguration(ZigbeeChannel):
+    """OnOff Configuration channel."""
 
-    CURRENT_LEVEL = 0
-    REPORT_CONFIG = ({"attr": "current_level", "config": REPORT_CONFIG_ASAP},)
-
-    @callback
-    def cluster_command(self, tsn, command_id, args):
-        """Handle commands received to this cluster."""
-        cmd = parse_and_log_command(self, tsn, command_id, args)
-
-        if cmd in ("move_to_level", "move_to_level_with_on_off"):
-            self.dispatch_level_change(SIGNAL_SET_LEVEL, args[0])
-        elif cmd in ("move", "move_with_on_off"):
-            # We should dim slowly -- for now, just step once
-            rate = args[1]
-            if args[0] == 0xFF:
-                rate = 10  # Should read default move rate
-            self.dispatch_level_change(SIGNAL_MOVE_LEVEL, -rate if args[0] else rate)
-        elif cmd in ("step", "step_with_on_off"):
-            # Step (technically may change on/off)
-            self.dispatch_level_change(
-                SIGNAL_MOVE_LEVEL, -args[1] if args[0] else args[1]
-            )
-
-    @callback
-    def attribute_updated(self, attrid, value):
-        """Handle attribute updates on this cluster."""
-        self.debug("received attribute: %s update with value: %s", attrid, value)
-        if attrid == self.CURRENT_LEVEL:
-            self.dispatch_level_change(SIGNAL_SET_LEVEL, value)
-
-    def dispatch_level_change(self, command, level):
-        """Dispatch level change."""
-        async_dispatcher_send(
-            self._zha_device.hass, "{}_{}".format(self.unique_id, command), level
-        )
-
-    async def async_initialize(self, from_cache):
-        """Initialize channel."""
-        await self.get_attribute_value(self.CURRENT_LEVEL, from_cache=from_cache)
-        await super().async_initialize(from_cache)
+    pass
 
 
-class BasicChannel(ZigbeeChannel):
-    """Channel to interact with the basic cluster."""
+@ZIGBEE_CHANNEL_REGISTRY.register(general.Ota.cluster_id)
+class Ota(ZigbeeChannel):
+    """OTA Channel."""
 
-    UNKNOWN = 0
-    BATTERY = 3
-
-    POWER_SOURCES = {
-        UNKNOWN: "Unknown",
-        1: "Mains (single phase)",
-        2: "Mains (3 phase)",
-        BATTERY: "Battery",
-        4: "DC source",
-        5: "Emergency mains constantly powered",
-        6: "Emergency mains and transfer switch",
-    }
-
-    def __init__(self, cluster, device):
-        """Initialize BasicChannel."""
-        super().__init__(cluster, device)
-        self._power_source = None
-
-    async def async_configure(self):
-        """Configure this channel."""
-        await super().async_configure()
-        await self.async_initialize(False)
-
-    async def async_initialize(self, from_cache):
-        """Initialize channel."""
-        self._power_source = await self.get_attribute_value(
-            "power_source", from_cache=from_cache
-        )
-        await super().async_initialize(from_cache)
-
-    def get_power_source(self):
-        """Get the power source."""
-        return self._power_source
+    pass
 
 
+@ZIGBEE_CHANNEL_REGISTRY.register(general.Partition.cluster_id)
+class Partition(ZigbeeChannel):
+    """Partition channel."""
+
+    pass
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.PollControl.cluster_id)
+class PollControl(ZigbeeChannel):
+    """Poll Control channel."""
+
+    pass
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.PowerConfiguration.cluster_id)
 class PowerConfigurationChannel(ZigbeeChannel):
     """Channel for the zigbee power configuration cluster."""
 
@@ -219,3 +371,31 @@ class PowerConfigurationChannel(ZigbeeChannel):
         )
         await self.get_attribute_value("battery_voltage", from_cache=from_cache)
         await self.get_attribute_value("battery_quantity", from_cache=from_cache)
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.PowerProfile.cluster_id)
+class PowerProfile(ZigbeeChannel):
+    """Power Profile channel."""
+
+    pass
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.RSSILocation.cluster_id)
+class RSSILocation(ZigbeeChannel):
+    """RSSI Location channel."""
+
+    pass
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.Scenes.cluster_id)
+class Scenes(ZigbeeChannel):
+    """Scenes channel."""
+
+    pass
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(general.Time.cluster_id)
+class Time(ZigbeeChannel):
+    """Time channel."""
+
+    pass
