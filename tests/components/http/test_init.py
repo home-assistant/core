@@ -232,3 +232,12 @@ async def test_ssl_profile_change_modern(hass):
         await hass.async_block_till_done()
 
     assert len(mock_context.mock_calls) == 1
+
+
+async def test_cors_defaults(hass):
+    """Test the CORS default settings."""
+    with patch("homeassistant.components.http.setup_cors") as mock_setup:
+        assert await async_setup_component(hass, "http", {})
+
+    assert len(mock_setup.mock_calls) == 1
+    assert mock_setup.mock_calls[0][1][1] == ["https://cast.home-assistant.io"]
