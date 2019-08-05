@@ -2,10 +2,19 @@
 import requests_mock
 import pytest
 from tests.common import load_fixture
+from asynctest import patch
+
+
+@pytest.fixture(name="ring_mock")
+def ring_save_mock():
+    """Fixture to mock a ring"""
+    with patch("ring_doorbell._exists_cache", return_value=False):
+        with patch("ring_doorbell._save_cache", return_value=True) as save_mock:
+            yield save_mock
 
 
 @pytest.fixture(name="requests_mock")
-def requests_mock_fixture():
+def requests_mock_fixture(ring_mock):
     """Fixture to provide a requests mocker."""
     with requests_mock.mock() as mock:
         # Note all devices have an id of 987652, but a different device_id.
