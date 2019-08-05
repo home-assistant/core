@@ -116,7 +116,7 @@ async def test_setup_recovers_when_setup_raises(hass):
 
 
 @asynctest.patch(
-    "homeassistant.helpers.entity_component.EntityComponent" "._async_setup_platform",
+    "homeassistant.helpers.entity_component.EntityComponent" ".async_setup_platform",
     return_value=mock_coro(),
 )
 @asynctest.patch(
