@@ -2,6 +2,7 @@
 import datetime
 from unittest.mock import patch
 
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro
@@ -27,6 +28,7 @@ VALID_CONFIG_MISC = {
                 "lines": [21, "S8"],
                 "max_journeys": 2,
                 "time_offset": 10,
+                "show_on_map": True,
             }
         ],
     }
@@ -235,6 +237,8 @@ async def test_rmvtransport_misc_config(hass):
     # state = hass.states.get("sensor.frankfurt_main_hauptbahnhof")
     # assert state.attributes["friendly_name"] == "Frankfurt (Main) Hauptbahnhof"
     assert state.attributes["line"] == 21
+    assert state.attributes[ATTR_LATITUDE] == 50.106808
+    assert state.attributes[ATTR_LONGITUDE] == 8.662653
 
 
 async def test_rmvtransport_dest_config(hass):

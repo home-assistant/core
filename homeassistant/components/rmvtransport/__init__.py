@@ -173,6 +173,7 @@ async def async_setup_entry(hass, config_entry):
             config_entry.data.get(CONF_TIME_OFFSET, DEFAULT_TIME_OFFSET),
             config_entry.data.get(CONF_MAX_JOURNEYS, DEFAULT_MAX_JOURNEYS),
             DEFAULT_TIMEOUT,
+            config_entry.data.get(CONF_SHOW_ON_MAP, False),
         )
         await rmv_rata.async_update()
         hass.data[DOMAIN][DATA_RMVTRANSPORT_CLIENT][config_entry.entry_id] = rmv_rata
@@ -251,9 +252,6 @@ class RMVDepartureData:
 
         if self.station_info is None:
             stations = await self.rmv.search_station(self._station_id)
-            _LOGGER.debug(
-                "Search station %s", stations.get(str(self._station_id).zfill(9))
-            )
             self.station_info = stations.get(str(self._station_id).zfill(9))
 
         try:
