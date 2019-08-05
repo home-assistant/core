@@ -9,7 +9,6 @@ from homeassistant.const import CONF_NAME, CONF_SCAN_INTERVAL, CONF_SHOW_ON_MAP
 from homeassistant.helpers import aiohttp_client
 
 from .const import (
-    # CONF_STATION_ID,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     CONF_HASH,
@@ -75,7 +74,7 @@ class RMVTransportFlowHandler(config_entries.ConfigFlow):
     async def _show_form_station(self, errors=None):
         """Show the form to the user."""
         data_schema = OrderedDict()
-        data_schema[vol.Required(CONF_STATION, default="3006904")] = str
+        data_schema[vol.Required(CONF_STATION)] = str
 
         return self.async_show_form(
             step_id="user", data_schema=vol.Schema(data_schema), errors=errors or {}
@@ -132,7 +131,6 @@ class RMVTransportFlowHandler(config_entries.ConfigFlow):
                     x.strip() for x in self.rmv_config[CONF_LINES].split(",")
                 ]
 
-        # if self.rmv_config.get(CONF_HASH) is None:
         user_input_hash = hashlib.sha224(f"{self.rmv_config}".encode()).hexdigest()
         self.rmv_config[CONF_HASH] = user_input_hash
 
