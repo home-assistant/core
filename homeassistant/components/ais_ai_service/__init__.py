@@ -873,12 +873,6 @@ def commit_current_position(hass):
             'input_select',
             'select_option', {
                 "entity_id": CURR_ENTITIE,
-                "option": ais_global.G_EMPTY_OPTION})
-        hass.block_till_done()
-        hass.services.call(
-            'input_select',
-            'select_option', {
-                "entity_id": CURR_ENTITIE,
                 "option": position})
     elif CURR_ENTITIE.startswith('input_number.'):
         hass.services.call(
