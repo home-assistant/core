@@ -1,5 +1,4 @@
 """Support for Mikrotik routers as device tracker."""
-from datetime import timedelta
 import logging
 
 from homeassistant.components.device_tracker import DeviceScanner, SOURCE_TYPE_ROUTER
