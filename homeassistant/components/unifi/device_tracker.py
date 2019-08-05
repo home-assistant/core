@@ -208,7 +208,11 @@ def update_items(controller, async_add_entities, tracked):
 
             tracked[device_id] = UniFiDeviceTracker(device, controller)
             new_tracked.append(tracked[device_id])
-            LOGGER.debug("New UniFi device tracker %s (%s)", device.name, device.mac)
+            LOGGER.debug(
+                "New UniFi device tracker %s (%s)",
+                device.name or device.model,
+                device.mac,
+            )
 
     if new_tracked:
         async_add_entities(new_tracked)
