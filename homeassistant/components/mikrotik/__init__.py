@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from .const import (
@@ -130,7 +130,7 @@ def setup(hass, config):
 class MikrotikClient:
     """Handle all communication with the Mikrotik API."""
 
-    def __init__(self, host, use_ssl, port, user, password, login_method):
+    def __init__(self, host, use_ssl, port, user, password, login_method, encoding):
         """Initialize the Mikrotik Client."""
         self._host = host
         self._use_ssl = use_ssl
@@ -218,6 +218,7 @@ class MikrotikClient:
         if not self._connected:
             if not self.connect_to_device():
                 return None
+
         try:
             if params:
                 response = self._client(cmd=cmd, **params)
@@ -235,4 +236,8 @@ class MikrotikClient:
                 api_error,
             )
             return None
-        return response
+
+        if len(response) > 0:
+            return response
+        else:
+            return None

@@ -46,8 +46,9 @@ class MikrotikScanner(DeviceScanner):
         self.host_name = api.get_hostname()
         self.capsman = None
         self.wireless = None
-        self.arp = {}
-        self.dhcp = {}
+        self.dhcp = None
+        self.devices_arp = {}
+        self.devices_dhcp = {}
         self.device_tracker = None
         self.see = see
         self.get_method()
@@ -58,6 +59,7 @@ class MikrotikScanner(DeviceScanner):
 
     def _update(self, now=None):
         """Ensure the information from Mikrotik device is up to date."""
+        self.api.update_info()
         self.update_device_tracker(self.method)
         if not self.api.connected():
             return
@@ -89,6 +91,8 @@ class MikrotikScanner(DeviceScanner):
                 self.host,
             )
 
+        self.dhcp = self.api.command(MIKROTIK_SERVICES[DHCP])
+
         if self.method:
             _LOGGER.info(
                 "Mikrotik %s: Manually selected polling method %s",
@@ -117,32 +121,32 @@ class MikrotikScanner(DeviceScanner):
         if data is None:
             return
 
+        if method != DHCP and self.dhcp:
+            dhcp = self.api.command(MIKROTIK_SERVICES[DHCP])
+            self.devices_dhcp = self.load_mac(dhcp)
+
         arp = self.api.command(MIKROTIK_SERVICES[ARP])
-        for device in arp:
-            if "mac-address" in device and device["invalid"] is False:
-                mac = device["mac-address"]
-                self.arp[mac] = device
+        self.devices_arp = self.load_mac(arp)
 
         for device in data:
+            mac = device["mac-address"]
+            attrs = {}
             if method == DHCP:
                 if "active-address" not in device:
                     continue
-                self.dhcp[mac] = device
+
                 if self.arp_ping:
-                    if mac not in self.arp:
+                    if mac not in self.devices_arp:
                         continue
-                    interface = self.arp[mac]["interface"]
+                    interface = self.devices_arp[mac]["interface"]
                     if not self.do_arp_ping(mac, interface):
                         continue
 
-            mac = device["mac-address"]
-            attrs = {}
+            if mac in self.devices_dhcp and "host-name" in self.devices_dhcp[mac]:
+                attrs["host_name"] = self.devices_dhcp[mac]["host-name"]
 
-            if mac in self.dhcp and "host-name" in self.dhcp[mac]:
-                attrs["host_name"] = self.dhcp[mac]["host-name"]
-
-            if mac in self.arp:
-                attrs["ip_address"] = self.arp[mac]["address"]
+            if mac in self.devices_arp:
+                attrs["ip_address"] = self.devices_arp[mac]["address"]
 
             for attr in ATTR_DEVICE_TRACKER:
                 if attr in device:
@@ -153,6 +157,16 @@ class MikrotikScanner(DeviceScanner):
             attrs["scanner_host"] = self.host
             attrs["scanner_host_name"] = self.host_name
             self.device_tracker[mac] = attrs
+
+    def load_mac(self, devices):
+        """Load dictionary using MAC address as key"""
+        mac_devices = {}
+        for device in devices:
+            if "mac-address" in device:
+                mac = device["mac-address"]
+                device.pop("mac-address", None)
+                mac_devices[mac] = device
+        return mac_devices
 
     def do_arp_ping(self, mac, interface):
         """Attempt to arp ping MAC address via interface."""
@@ -165,13 +179,14 @@ class MikrotikScanner(DeviceScanner):
         }
         cmd = "/ping"
         data = self.api.command(cmd, params)
-        status = 0
-        for result in data:
-            if "status" in result:
-                _LOGGER.debug(
-                    "Mikrotik %s arp_ping error: %s", self.host, result["status"]
-                )
-                status += 1
-        if status == len(data):
-            return None
+        if data is not None:
+            status = 0
+            for result in data:
+                if "status" in result:
+                    _LOGGER.debug(
+                        "Mikrotik %s arp_ping error: %s", self.host, result["status"]
+                    )
+                    status += 1
+            if status == len(data):
+                return None
         return data

@@ -35,7 +35,6 @@ ATTR_DEVICE_TRACKER = [
     "ssid",
     "interface",
     "host-name",
-    "address",
     "last-seen",
     "rx-signal",
     "signal-strength",
