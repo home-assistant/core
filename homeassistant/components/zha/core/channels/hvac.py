@@ -17,18 +17,20 @@ from ..const import REPORT_CONFIG_OP, SIGNAL_ATTR_UPDATED
 _LOGGER = logging.getLogger(__name__)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(hvac.Dehumidification.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class Dehumidification(ZigbeeChannel):
     """Dehumidification channel."""
 
+    CLUSTER_ID = hvac.Dehumidification.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(hvac.Fan.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class FanChannel(ZigbeeChannel):
     """Fan channel."""
 
     _value_attribute = 0
+    CLUSTER_ID = hvac.Fan.cluster_id
     REPORT_CONFIG = ({"attr": "fan_mode", "config": REPORT_CONFIG_OP},)
 
     async def async_set_speed(self, value) -> None:
@@ -71,22 +73,25 @@ class FanChannel(ZigbeeChannel):
         await super().async_initialize(from_cache)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(hvac.Pump.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class Pump(ZigbeeChannel):
     """Pump channel."""
 
+    CLUSTER_ID = hvac.Pump.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(hvac.Thermostat.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class Thermostat(ZigbeeChannel):
     """Thermostat channel."""
 
+    CLUSTER_ID = hvac.Thermostat.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(hvac.UserInterface.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class UserInterface(ZigbeeChannel):
     """User interface (thermostat) channel."""
 
+    CLUSTER_ID = hvac.UserInterface.cluster_id
     pass

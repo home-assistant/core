@@ -14,19 +14,21 @@ from ..const import REPORT_CONFIG_DEFAULT
 _LOGGER = logging.getLogger(__name__)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(lighting.Ballast.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class Ballast(ZigbeeChannel):
     """Ballast channel."""
 
+    CLUSTER_ID = lighting.Ballast.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(lighting.Color.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class ColorChannel(ZigbeeChannel):
     """Color channel."""
 
     CAPABILITIES_COLOR_XY = 0x08
     CAPABILITIES_COLOR_TEMP = 0x10
+    CLUSTER_ID = lighting.Color.cluster_id
     UNSUPPORTED_ATTRIBUTE = 0x86
     REPORT_CONFIG = (
         {"attr": "current_x", "config": REPORT_CONFIG_DEFAULT},

@@ -32,45 +32,51 @@ from ..helpers import get_attr_id_by_name
 _LOGGER = logging.getLogger(__name__)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.Alarms.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class Alarms(ZigbeeChannel):
     """Alarms channel."""
 
+    CLUSTER_ID = general.Alarms.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.AnalogInput.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class AnalogInput(AttributeListeningChannel):
     """Analog Input channel."""
 
+    CLUSTER_ID = general.AnalogInput.cluster_id
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.AnalogOutput.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class AnalogOutput(AttributeListeningChannel):
     """Analog Output channel."""
 
+    CLUSTER_ID = general.AnalogOutput.cluster_id
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.AnalogValue.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class AnalogValue(AttributeListeningChannel):
     """Analog Value channel."""
 
+    CLUSTER_ID = general.AnalogValue.cluster_id
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.ApplianceControl.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class ApplianceContorl(ZigbeeChannel):
     """Appliance Control channel."""
 
+    CLUSTER_ID = general.ApplianceControl.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.Basic.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class BasicChannel(ZigbeeChannel):
     """Channel to interact with the basic cluster."""
 
+    CLUSTER_ID = general.Basic.cluster_id
     UNKNOWN = 0
     BATTERY = 3
 
@@ -106,66 +112,75 @@ class BasicChannel(ZigbeeChannel):
         return self._power_source
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.BinaryInput.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class BinaryInput(AttributeListeningChannel):
     """Binary Input channel."""
 
+    CLUSTER_ID = general.BinaryInput.cluster_id
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.BinaryOutput.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class BinaryOutput(AttributeListeningChannel):
     """Binary Output channel."""
 
+    CLUSTER_ID = general.BinaryOutput.cluster_id
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.BinaryValue.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class BinaryValue(AttributeListeningChannel):
     """Binary Value channel."""
 
+    CLUSTER_ID = general.BinaryValue.cluster_id
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.Commissioning.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class Commissioning(ZigbeeChannel):
     """Commissioning channel."""
 
+    CLUSTER_ID = general.Commissioning.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.DeviceTemperature.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class DeviceTemperature(ZigbeeChannel):
     """Device Temperatur channel."""
 
+    CLUSTER_ID = general.DeviceTemperature.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.GreenPowerProxy.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class GreenPowerProxy(ZigbeeChannel):
     """Green Power Proxy channel."""
 
+    CLUSTER_ID = general.GreenPowerProxy.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.Groups.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class Groups(ZigbeeChannel):
     """Groups channel."""
 
+    CLUSTER_ID = general.Groups.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.Identify.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class Identify(ZigbeeChannel):
     """Identify channel."""
 
+    CLUSTER_ID = general.Identify.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.LevelControl.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class LevelControlChannel(ZigbeeChannel):
     """Channel for the LevelControl Zigbee cluster."""
 
+    CLUSTER_ID = general.LevelControl.cluster_id
     CURRENT_LEVEL = 0
     REPORT_CONFIG = ({"attr": "current_level", "config": REPORT_CONFIG_ASAP},)
 
@@ -207,31 +222,35 @@ class LevelControlChannel(ZigbeeChannel):
         await super().async_initialize(from_cache)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.MultistateInput.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class MultistateInput(AttributeListeningChannel):
     """Multistate Input channel."""
 
+    CLUSTER_ID = general.MultistateInput.cluster_id
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.MultistateOutput.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class MultistateOutput(AttributeListeningChannel):
     """Multistate Output channel."""
 
+    CLUSTER_ID = general.MultistateOutput.cluster_id
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.MultistateValue.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class MultistateValue(AttributeListeningChannel):
     """Multistate Value channel."""
 
+    CLUSTER_ID = general.MultistateValue.cluster_id
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.OnOff.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class OnOffChannel(ZigbeeChannel):
     """Channel for the OnOff Zigbee cluster."""
 
+    CLUSTER_ID = general.OnOff.cluster_id
     ON_OFF = 0
     REPORT_CONFIG = ({"attr": "on_off", "config": REPORT_CONFIG_IMMEDIATE},)
 
@@ -302,38 +321,43 @@ class OnOffChannel(ZigbeeChannel):
         await super().async_update()
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.OnOffConfiguration.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class OnOffConfiguration(ZigbeeChannel):
     """OnOff Configuration channel."""
 
+    CLUSTER_ID = general.OnOffConfiguration.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.Ota.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class Ota(ZigbeeChannel):
     """OTA Channel."""
 
+    CLUSTER_ID = general.Ota.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.Partition.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class Partition(ZigbeeChannel):
     """Partition channel."""
 
+    CLUSTER_ID = general.Partition.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.PollControl.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class PollControl(ZigbeeChannel):
     """Poll Control channel."""
 
+    CLUSTER_ID = general.PollControl.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.PowerConfiguration.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class PowerConfigurationChannel(ZigbeeChannel):
     """Channel for the zigbee power configuration cluster."""
 
+    CLUSTER_ID = general.PowerConfiguration.cluster_id
     REPORT_CONFIG = (
         {"attr": "battery_voltage", "config": REPORT_CONFIG_BATTERY_SAVE},
         {"attr": "battery_percentage_remaining", "config": REPORT_CONFIG_BATTERY_SAVE},
@@ -373,29 +397,33 @@ class PowerConfigurationChannel(ZigbeeChannel):
         await self.get_attribute_value("battery_quantity", from_cache=from_cache)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.PowerProfile.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class PowerProfile(ZigbeeChannel):
     """Power Profile channel."""
 
+    CLUSTER_ID = general.PowerProfile.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.RSSILocation.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class RSSILocation(ZigbeeChannel):
     """RSSI Location channel."""
 
+    CLUSTER_ID = general.RSSILocation.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.Scenes.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class Scenes(ZigbeeChannel):
     """Scenes channel."""
 
+    CLUSTER_ID = general.Scenes.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(general.Time.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class Time(ZigbeeChannel):
     """Time channel."""
 
+    CLUSTER_ID = general.Time.cluster_id
     pass

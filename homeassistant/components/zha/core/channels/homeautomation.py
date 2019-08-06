@@ -20,39 +20,44 @@ from ..const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(homeautomation.ApplianceEventAlerts.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class ApplianceEventAlerts(ZigbeeChannel):
     """Appliance Event Alerts channel."""
 
+    CLUSTER_ID = homeautomation.ApplianceEventAlerts.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(homeautomation.ApplianceIdentification.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class ApplianceIdentification(ZigbeeChannel):
     """Appliance Identification channel."""
 
+    CLUSTER_ID = homeautomation.ApplianceIdentification.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(homeautomation.ApplianceStatistics.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class ApplianceStatistics(ZigbeeChannel):
     """Appliance Statistics channel."""
 
+    CLUSTER_ID = homeautomation.ApplianceStatistics.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(homeautomation.Diagnostic.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class Diagnostic(ZigbeeChannel):
     """Diagnostic channel."""
 
+    CLUSTER_ID = homeautomation.Diagnostic.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(homeautomation.ElectricalMeasurement.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class ElectricalMeasurementChannel(AttributeListeningChannel):
     """Channel that polls active power level."""
 
     CHANNEL_NAME = CHANNEL_ELECTRICAL_MEASUREMENT
+    CLUSTER_ID = homeautomation.ElectricalMeasurement.cluster_id
     REPORT_CONFIG = ({"attr": "active_power", "config": REPORT_CONFIG_DEFAULT},)
 
     async def async_update(self):
@@ -73,8 +78,9 @@ class ElectricalMeasurementChannel(AttributeListeningChannel):
         await super().async_initialize(from_cache)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(homeautomation.MeterIdentification.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class MeterIdentification(ZigbeeChannel):
     """Metering Identification channel."""
 
+    CLUSTER_ID = homeautomation.MeterIdentification.cluster_id
     pass

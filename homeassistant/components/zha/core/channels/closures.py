@@ -17,11 +17,12 @@ from ..const import REPORT_CONFIG_IMMEDIATE, SIGNAL_ATTR_UPDATED
 _LOGGER = logging.getLogger(__name__)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(closures.DoorLock.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class DoorLockChannel(ZigbeeChannel):
     """Door lock channel."""
 
     _value_attribute = 0
+    CLUSTER_ID = closures.DoorLock.cluster_id
     REPORT_CONFIG = ({"attr": "lock_state", "config": REPORT_CONFIG_IMMEDIATE},)
 
     async def async_update(self):
@@ -54,15 +55,17 @@ class DoorLockChannel(ZigbeeChannel):
         await super().async_initialize(from_cache)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(closures.Shade.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class Shade(ZigbeeChannel):
     """Shade channel."""
 
+    CLUSTER_ID = closures.Shade.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(closures.WindowCovering.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class WindowCovering(ZigbeeChannel):
     """Window channel."""
 
+    CLUSTER_ID = closures.WindowCovering.cluster_id
     pass

@@ -17,23 +17,27 @@ from ..const import SIGNAL_ATTR_UPDATED
 _LOGGER = logging.getLogger(__name__)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(security.IasAce.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class IasAce(ZigbeeChannel):
     """IAS Ancillary Control Equipment channel."""
 
+    CLUSTER_ID = security.IasAce.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(security.IasWd.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class IasWd(ZigbeeChannel):
     """IAS Warning Device channel."""
 
+    CLUSTER_ID = security.IasWd.cluster_id
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(security.IasZone.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class IASZoneChannel(ZigbeeChannel):
     """Channel for the IASZone Zigbee cluster."""
+
+    CLUSTER_ID = security.IasZone.cluster_id
 
     @callback
     def cluster_command(self, tsn, command_id, args):

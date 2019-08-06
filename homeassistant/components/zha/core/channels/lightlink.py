@@ -13,8 +13,9 @@ from . import ZIGBEE_CHANNEL_REGISTRY, ZigbeeChannel
 _LOGGER = logging.getLogger(__name__)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(lightlink.LightLink.cluster_id)
+@ZIGBEE_CHANNEL_REGISTRY.register
 class LightLink(ZigbeeChannel):
     """Lightlink channel."""
 
+    CLUSTER_ID = lightlink.LightLink.cluster_id
     pass
