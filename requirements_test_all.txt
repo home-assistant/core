@@ -168,7 +168,7 @@ hass-nabucasa==0.16
 hbmqtt==0.9.4
 
 # homeassistant.components.jewish_calendar
-hdate==0.8.8
+hdate==0.9.0
 
 # homeassistant.components.workday
 holidays==0.9.11
