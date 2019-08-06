@@ -103,7 +103,7 @@ def test_secrets(isfile_patch, loop):
         assert res["components"].keys() == {"homeassistant", "http"}
         assert res["components"]["http"] == {
             "api_password": "abc123",
-            "cors_allowed_origins": [],
+            "cors_allowed_origins": ["https://cast.home-assistant.io"],
             "ip_ban_enabled": True,
             "login_attempts_threshold": -1,
             "server_host": "0.0.0.0",

@@ -6,16 +6,32 @@ https://home-assistant.io/components/zha/
 """
 import logging
 
+import zigpy.zcl.clusters.security as security
+
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import ZigbeeChannel
+from . import ZIGBEE_CHANNEL_REGISTRY, ZigbeeChannel
 from ..const import SIGNAL_ATTR_UPDATED
-from ..helpers import bind_cluster
 
 _LOGGER = logging.getLogger(__name__)
 
 
+@ZIGBEE_CHANNEL_REGISTRY.register(security.IasAce.cluster_id)
+class IasAce(ZigbeeChannel):
+    """IAS Ancillary Control Equipment channel."""
+
+    pass
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(security.IasWd.cluster_id)
+class IasWd(ZigbeeChannel):
+    """IAS Warning Device channel."""
+
+    pass
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(security.IasZone.cluster_id)
 class IASZoneChannel(ZigbeeChannel):
     """Channel for the IASZone Zigbee cluster."""
 
@@ -39,13 +55,14 @@ class IASZoneChannel(ZigbeeChannel):
         """Configure IAS device."""
         # Xiaomi devices don't need this and it disrupts pairing
         if self._zha_device.manufacturer == "LUMI":
+            self.debug("%s: finished IASZoneChannel configuration")
             return
         from zigpy.exceptions import DeliveryError
 
         self.debug("started IASZoneChannel configuration")
 
-        await bind_cluster(self.unique_id, self._cluster)
-        ieee = self._cluster.endpoint.device.application.ieee
+        await self.bind()
+        ieee = self.cluster.endpoint.device.application.ieee
 
         try:
             res = await self._cluster.write_attributes({"cie_addr": ieee})

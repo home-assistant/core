@@ -51,6 +51,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SERVER_HOST = "0.0.0.0"
 DEFAULT_DEVELOPMENT = "0"
+# To be able to load custom cards.
+DEFAULT_CORS = "https://cast.home-assistant.io"
 NO_LOGIN_ATTEMPT_THRESHOLD = -1
 
 
@@ -91,7 +93,7 @@ HTTP_SCHEMA = vol.Schema(
         vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
         vol.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
         vol.Optional(CONF_SSL_KEY): cv.isfile,
-        vol.Optional(CONF_CORS_ORIGINS, default=[]): vol.All(
+        vol.Optional(CONF_CORS_ORIGINS, default=[DEFAULT_CORS]): vol.All(
             cv.ensure_list, [cv.string]
         ),
         vol.Inclusive(CONF_USE_X_FORWARDED_FOR, "proxy"): cv.boolean,

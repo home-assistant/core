@@ -6,17 +6,33 @@ https://home-assistant.io/components/zha/
 """
 import logging
 
-from . import ZigbeeChannel
+import zigpy.zcl.clusters.lighting as lighting
+
+from . import ZIGBEE_CHANNEL_REGISTRY, ZigbeeChannel
+from ..const import REPORT_CONFIG_DEFAULT
 
 _LOGGER = logging.getLogger(__name__)
 
 
+@ZIGBEE_CHANNEL_REGISTRY.register(lighting.Ballast.cluster_id)
+class Ballast(ZigbeeChannel):
+    """Ballast channel."""
+
+    pass
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(lighting.Color.cluster_id)
 class ColorChannel(ZigbeeChannel):
     """Color channel."""
 
     CAPABILITIES_COLOR_XY = 0x08
     CAPABILITIES_COLOR_TEMP = 0x10
     UNSUPPORTED_ATTRIBUTE = 0x86
+    REPORT_CONFIG = (
+        {"attr": "current_x", "config": REPORT_CONFIG_DEFAULT},
+        {"attr": "current_y", "config": REPORT_CONFIG_DEFAULT},
+        {"attr": "color_temperature", "config": REPORT_CONFIG_DEFAULT},
+    )
 
     def __init__(self, cluster, device):
         """Initialize ColorChannel."""

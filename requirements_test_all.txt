@@ -68,7 +68,7 @@ aionotion==1.1.0
 aioswitcher==2019.4.26
 
 # homeassistant.components.unifi
-aiounifi==9
+aiounifi==10
 
 # homeassistant.components.wwlln
 aiowwlln==1.0.0
@@ -168,13 +168,13 @@ hass-nabucasa==0.16
 hbmqtt==0.9.4
 
 # homeassistant.components.jewish_calendar
-hdate==0.8.8
+hdate==0.9.0
 
 # homeassistant.components.workday
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190801.0
+home-assistant-frontend==20190805.0
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.15.0

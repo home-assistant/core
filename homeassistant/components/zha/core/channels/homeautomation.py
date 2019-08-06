@@ -6,18 +6,54 @@ https://home-assistant.io/components/zha/
 """
 import logging
 
+import zigpy.zcl.clusters.homeautomation as homeautomation
+
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import AttributeListeningChannel
-from ..const import CHANNEL_ELECTRICAL_MEASUREMENT, SIGNAL_ATTR_UPDATED
+from . import ZIGBEE_CHANNEL_REGISTRY, AttributeListeningChannel, ZigbeeChannel
+from ..const import (
+    CHANNEL_ELECTRICAL_MEASUREMENT,
+    REPORT_CONFIG_DEFAULT,
+    SIGNAL_ATTR_UPDATED,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
+@ZIGBEE_CHANNEL_REGISTRY.register(homeautomation.ApplianceEventAlerts.cluster_id)
+class ApplianceEventAlerts(ZigbeeChannel):
+    """Appliance Event Alerts channel."""
+
+    pass
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(homeautomation.ApplianceIdentification.cluster_id)
+class ApplianceIdentification(ZigbeeChannel):
+    """Appliance Identification channel."""
+
+    pass
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(homeautomation.ApplianceStatistics.cluster_id)
+class ApplianceStatistics(ZigbeeChannel):
+    """Appliance Statistics channel."""
+
+    pass
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(homeautomation.Diagnostic.cluster_id)
+class Diagnostic(ZigbeeChannel):
+    """Diagnostic channel."""
+
+    pass
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(homeautomation.ElectricalMeasurement.cluster_id)
 class ElectricalMeasurementChannel(AttributeListeningChannel):
     """Channel that polls active power level."""
 
     CHANNEL_NAME = CHANNEL_ELECTRICAL_MEASUREMENT
+    REPORT_CONFIG = ({"attr": "active_power", "config": REPORT_CONFIG_DEFAULT},)
 
     async def async_update(self):
         """Retrieve latest state."""
@@ -35,3 +71,10 @@ class ElectricalMeasurementChannel(AttributeListeningChannel):
         """Initialize channel."""
         await self.get_attribute_value("active_power", from_cache=from_cache)
         await super().async_initialize(from_cache)
+
+
+@ZIGBEE_CHANNEL_REGISTRY.register(homeautomation.MeterIdentification.cluster_id)
+class MeterIdentification(ZigbeeChannel):
+    """Metering Identification channel."""
+
+    pass

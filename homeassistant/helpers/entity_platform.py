@@ -1,5 +1,7 @@
 """Class to manage the entities for a single platform."""
 import asyncio
+from contextvars import ContextVar
+from typing import Optional
 
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import callback, valid_entity_id, split_entity_id
@@ -127,6 +129,7 @@ class EntityPlatform:
 
         async_create_setup_task creates a coroutine that sets up platform.
         """
+        current_platform.set(self)
         logger = self.logger
         hass = self.hass
         full_name = "{}.{}".format(self.domain, self.platform_name)
@@ -457,3 +460,8 @@ class EntityPlatform:
 
             if tasks:
                 await asyncio.wait(tasks)
+
+
+current_platform: ContextVar[Optional[EntityPlatform]] = ContextVar(
+    "current_platform", default=None
+)

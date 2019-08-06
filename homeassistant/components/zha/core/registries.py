@@ -16,11 +16,8 @@ from homeassistant.components.switch import DOMAIN as SWITCH
 from .const import (
     CONTROLLER,
     REPORT_CONFIG_ASAP,
-    REPORT_CONFIG_DEFAULT,
-    REPORT_CONFIG_IMMEDIATE,
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
-    REPORT_CONFIG_OP,
     SENSOR_ACCELERATION,
     SENSOR_BATTERY,
     SENSOR_ELECTRICAL_MEASUREMENT,
@@ -46,7 +43,6 @@ CUSTOM_CLUSTER_MAPPINGS = {}
 DEVICE_CLASS = {}
 DEVICE_TRACKER_CLUSTERS = set()
 EVENT_RELAY_CLUSTERS = []
-INPUT_BIND_ONLY_CLUSTERS = []
 LIGHT_CLUSTERS = set()
 OUTPUT_CHANNEL_ONLY_CLUSTERS = []
 RADIO_TYPES = {}
@@ -97,17 +93,6 @@ def establish_device_mappings():
         ZHA_GW_RADIO_DESCRIPTION: "EZSP",
     }
 
-    def get_xbee_radio():
-        import zigpy_xbee.api
-        from zigpy_xbee.zigbee.application import ControllerApplication
-
-        return {ZHA_GW_RADIO: zigpy_xbee.api.XBee(), CONTROLLER: ControllerApplication}
-
-    RADIO_TYPES[RadioType.xbee.name] = {
-        ZHA_GW_RADIO: get_xbee_radio,
-        ZHA_GW_RADIO_DESCRIPTION: "XBee",
-    }
-
     def get_deconz_radio():
         import zigpy_deconz.api
         from zigpy_deconz.zigbee.application import ControllerApplication
@@ -120,6 +105,31 @@ def establish_device_mappings():
     RADIO_TYPES[RadioType.deconz.name] = {
         ZHA_GW_RADIO: get_deconz_radio,
         ZHA_GW_RADIO_DESCRIPTION: "Deconz",
+    }
+
+    def get_xbee_radio():
+        import zigpy_xbee.api
+        from zigpy_xbee.zigbee.application import ControllerApplication
+
+        return {ZHA_GW_RADIO: zigpy_xbee.api.XBee(), CONTROLLER: ControllerApplication}
+
+    RADIO_TYPES[RadioType.xbee.name] = {
+        ZHA_GW_RADIO: get_xbee_radio,
+        ZHA_GW_RADIO_DESCRIPTION: "XBee",
+    }
+
+    def get_zigate_radio():
+        import zigpy_zigate.api
+        from zigpy_zigate.zigbee.application import ControllerApplication
+
+        return {
+            ZHA_GW_RADIO: zigpy_zigate.api.ZiGate(),
+            CONTROLLER: ControllerApplication,
+        }
+
+    RADIO_TYPES[RadioType.zigate.name] = {
+        ZHA_GW_RADIO: get_zigate_radio,
+        ZHA_GW_RADIO_DESCRIPTION: "ZiGate",
     }
 
     BINARY_SENSOR_CLUSTERS.add(SMARTTHINGS_ACCELERATION_CLUSTER)
@@ -145,43 +155,6 @@ def establish_device_mappings():
 
     CLUSTER_REPORT_CONFIGS.update(
         {
-            zcl.clusters.general.Alarms.cluster_id: [],
-            zcl.clusters.general.Basic.cluster_id: [],
-            zcl.clusters.general.Commissioning.cluster_id: [],
-            zcl.clusters.general.Identify.cluster_id: [],
-            zcl.clusters.general.Groups.cluster_id: [],
-            zcl.clusters.general.Scenes.cluster_id: [],
-            zcl.clusters.general.Partition.cluster_id: [],
-            zcl.clusters.general.Ota.cluster_id: [],
-            zcl.clusters.general.PowerProfile.cluster_id: [],
-            zcl.clusters.general.ApplianceControl.cluster_id: [],
-            zcl.clusters.general.PollControl.cluster_id: [],
-            zcl.clusters.general.GreenPowerProxy.cluster_id: [],
-            zcl.clusters.general.OnOffConfiguration.cluster_id: [],
-            zcl.clusters.lightlink.LightLink.cluster_id: [],
-            zcl.clusters.general.OnOff.cluster_id: [
-                {"attr": "on_off", "config": REPORT_CONFIG_IMMEDIATE}
-            ],
-            zcl.clusters.general.LevelControl.cluster_id: [
-                {"attr": "current_level", "config": REPORT_CONFIG_ASAP}
-            ],
-            zcl.clusters.lighting.Color.cluster_id: [
-                {"attr": "current_x", "config": REPORT_CONFIG_DEFAULT},
-                {"attr": "current_y", "config": REPORT_CONFIG_DEFAULT},
-                {"attr": "color_temperature", "config": REPORT_CONFIG_DEFAULT},
-            ],
-            zcl.clusters.measurement.RelativeHumidity.cluster_id: [
-                {
-                    "attr": "measured_value",
-                    "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
-                }
-            ],
-            zcl.clusters.measurement.TemperatureMeasurement.cluster_id: [
-                {
-                    "attr": "measured_value",
-                    "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
-                }
-            ],
             SMARTTHINGS_ACCELERATION_CLUSTER: [
                 {"attr": "acceleration", "config": REPORT_CONFIG_ASAP},
                 {"attr": "x_axis", "config": REPORT_CONFIG_ASAP},
@@ -193,34 +166,6 @@ def establish_device_mappings():
                     "attr": "measured_value",
                     "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
                 }
-            ],
-            zcl.clusters.measurement.PressureMeasurement.cluster_id: [
-                {"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT}
-            ],
-            zcl.clusters.measurement.IlluminanceMeasurement.cluster_id: [
-                {"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT}
-            ],
-            zcl.clusters.smartenergy.Metering.cluster_id: [
-                {"attr": "instantaneous_demand", "config": REPORT_CONFIG_DEFAULT}
-            ],
-            zcl.clusters.homeautomation.ElectricalMeasurement.cluster_id: [
-                {"attr": "active_power", "config": REPORT_CONFIG_DEFAULT}
-            ],
-            zcl.clusters.general.PowerConfiguration.cluster_id: [
-                {"attr": "battery_voltage", "config": REPORT_CONFIG_DEFAULT},
-                {
-                    "attr": "battery_percentage_remaining",
-                    "config": REPORT_CONFIG_DEFAULT,
-                },
-            ],
-            zcl.clusters.measurement.OccupancySensing.cluster_id: [
-                {"attr": "occupancy", "config": REPORT_CONFIG_IMMEDIATE}
-            ],
-            zcl.clusters.hvac.Fan.cluster_id: [
-                {"attr": "fan_mode", "config": REPORT_CONFIG_OP}
-            ],
-            zcl.clusters.closures.DoorLock.cluster_id: [
-                {"attr": "lock_state", "config": REPORT_CONFIG_IMMEDIATE}
             ],
         }
     )
@@ -259,8 +204,6 @@ def establish_device_mappings():
 
     EVENT_RELAY_CLUSTERS.append(zcl.clusters.general.LevelControl.cluster_id)
     EVENT_RELAY_CLUSTERS.append(zcl.clusters.general.OnOff.cluster_id)
-
-    INPUT_BIND_ONLY_CLUSTERS.append(zcl.clusters.lightlink.LightLink.cluster_id)
 
     OUTPUT_CHANNEL_ONLY_CLUSTERS.append(zcl.clusters.general.Scenes.cluster_id)
 
