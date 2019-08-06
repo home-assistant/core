@@ -1,6 +1,6 @@
 """Define tests for the GeoNet NZ Quakes config flow."""
 import pytest
-from asynctest import patch
+from asynctest import patch, CoroutineMock
 
 from homeassistant import data_entry_flow
 from homeassistant.components.geonetnz_quakes import (
@@ -9,6 +9,8 @@ from homeassistant.components.geonetnz_quakes import (
     CONF_MMI,
     CONF_MINIMUM_MAGNITUDE,
     DOMAIN,
+    async_unload_entry,
+    FEED,
 )
 from homeassistant.const import (
     CONF_LATITUDE,
@@ -31,6 +33,8 @@ def config_entry():
             CONF_RADIUS: 25,
             CONF_UNIT_SYSTEM: "metric",
             CONF_SCAN_INTERVAL: 300.0,
+            CONF_MMI: 4,
+            CONF_MINIMUM_MAGNITUDE: 0.0,
         },
         title="-41.2, 174.7",
     )
@@ -132,11 +136,19 @@ async def test_custom_minimum_magnitude(hass):
     }
 
 
-async def test_component_load_config_entry(hass, config_entry):
-    """Test that loading an existing config entry yields a client."""
+async def test_component_unload_config_entry(hass, config_entry):
+    """Test that loading and unloading of a config entry works."""
     config_entry.add_to_hass(hass)
-    with patch.object(hass.config_entries, "async_forward_entry_setup") as forward_mock:
+    with patch(
+        "aio_geojson_geonetnz_quakes.GeonetnzQuakesFeedManager.update",
+        new_callable=CoroutineMock,
+    ) as mock_feed_manager_update:
+        # Load config entry.
         assert await async_setup_entry(hass, config_entry)
-
         await hass.async_block_till_done()
-        assert forward_mock.call_count == 1
+        assert mock_feed_manager_update.call_count == 1
+        assert hass.data[DOMAIN][FEED][config_entry.entry_id] is not None
+        # Unload config entry.
+        assert await async_unload_entry(hass, config_entry)
+        await hass.async_block_till_done()
+        assert hass.data[DOMAIN][FEED].get(config_entry.entry_id) is None
