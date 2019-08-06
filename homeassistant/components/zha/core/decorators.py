@@ -10,7 +10,7 @@ class DictRegistry(dict):
     def register(
         self, name: Union[int, str], item: Union[str, CALLABLE_T] = None
     ) -> Callable[[CALLABLE_T], CALLABLE_T]:
-        """Return decorator to register item with a specific name"""
+        """Return decorator to register item with a specific name."""
 
         def decorator(channel: CALLABLE_T) -> CALLABLE_T:
             """Register decorated channel or item."""
@@ -27,7 +27,7 @@ class SetRegistry(set):
     """Set Registry of items."""
 
     def register(self, name: Union[int, str]) -> Callable[[CALLABLE_T], CALLABLE_T]:
-        """Return decorator to register item with a specific name"""
+        """Return decorator to register item with a specific name."""
 
         def decorator(channel: CALLABLE_T) -> CALLABLE_T:
             """Register decorated channel or item."""
