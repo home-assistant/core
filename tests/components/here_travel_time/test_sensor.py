@@ -6,27 +6,48 @@ import urllib
 import pytest
 
 from homeassistant.components.here_travel_time.sensor import (
-    ATTR_ATTRIBUTION, ATTR_DESTINATION, ATTR_DESTINATION_NAME, ATTR_DISTANCE,
-    ATTR_DURATION, ATTR_DURATION_WITHOUT_TRAFFIC, ATTR_ORIGIN,
-    ATTR_ORIGIN_NAME, ATTR_ROUTE, CONF_MODE, CONF_TRAFFIC_MODE,
-    CONF_UNIT_SYSTEM, ICON_BICYCLE, ICON_CAR, ICON_PEDESTRIAN, ICON_PUBLIC,
-    ICON_TRUCK, NO_ROUTE_ERROR_MESSAGE, ROUTE_MODE_FASTEST,
-    ROUTE_MODE_SHORTEST, SCAN_INTERVAL, TRAFFIC_MODE_DISABLED,
-    TRAFFIC_MODE_ENABLED, TRAVEL_MODE_BICYCLE, TRAVEL_MODE_CAR,
-    TRAVEL_MODE_PEDESTRIAN, TRAVEL_MODE_PUBLIC, TRAVEL_MODE_TRUCK,
-    UNIT_OF_MEASUREMENT)
+    ATTR_ATTRIBUTION,
+    ATTR_DESTINATION,
+    ATTR_DESTINATION_NAME,
+    ATTR_DISTANCE,
+    ATTR_DURATION,
+    ATTR_DURATION_WITHOUT_TRAFFIC,
+    ATTR_ORIGIN,
+    ATTR_ORIGIN_NAME,
+    ATTR_ROUTE,
+    CONF_MODE,
+    CONF_TRAFFIC_MODE,
+    CONF_UNIT_SYSTEM,
+    ICON_BICYCLE,
+    ICON_CAR,
+    ICON_PEDESTRIAN,
+    ICON_PUBLIC,
+    ICON_TRUCK,
+    NO_ROUTE_ERROR_MESSAGE,
+    ROUTE_MODE_FASTEST,
+    ROUTE_MODE_SHORTEST,
+    SCAN_INTERVAL,
+    TRAFFIC_MODE_DISABLED,
+    TRAFFIC_MODE_ENABLED,
+    TRAVEL_MODE_BICYCLE,
+    TRAVEL_MODE_CAR,
+    TRAVEL_MODE_PEDESTRIAN,
+    TRAVEL_MODE_PUBLIC,
+    TRAVEL_MODE_TRUCK,
+    UNIT_OF_MEASUREMENT,
+)
 from homeassistant.const import ATTR_ICON
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, load_fixture
 
-DOMAIN = 'sensor'
+DOMAIN = "sensor"
 
-PLATFORM = 'here_travel_time'
+PLATFORM = "here_travel_time"
 
-APP_ID = 'test'
-APP_CODE = 'test'
+APP_ID = "test"
+APP_CODE = "test"
 
 TRUCK_ORIGIN = "41.9798,-87.8801"
 TRUCK_DESTINATION = "41.9043,-87.9216"
@@ -40,15 +61,14 @@ CAR_DESTINATION = "39.0,-77.1"
 
 def _build_mock_url(origin, destination, modes, app_id, app_code, departure):
     """Construct a url for HERE."""
-    base_url = (
-        "https://route.cit.api.here.com/routing/7.2/calculateroute.json?")
+    base_url = "https://route.cit.api.here.com/routing/7.2/calculateroute.json?"
     parameters = {
-        'waypoint0': origin,
-        'waypoint1': destination,
-        'mode': modes,
-        'app_id': app_id,
-        'app_code': app_code,
-        'departure': departure
+        "waypoint0": origin,
+        "waypoint1": destination,
+        "mode": modes,
+        "app_id": app_id,
+        "app_code": app_code,
+        "departure": departure,
     }
     url = base_url + urllib.parse.urlencode(parameters)
     return url
@@ -56,10 +76,8 @@ def _build_mock_url(origin, destination, modes, app_id, app_code, departure):
 
 def _assert_truck_sensor(sensor):
     """Assert that states and attributes are correct for truck_response."""
-    assert sensor.state == '14'
-    assert sensor.attributes.get(
-        'unit_of_measurement'
-        ) == UNIT_OF_MEASUREMENT
+    assert sensor.state == "14"
+    assert sensor.attributes.get("unit_of_measurement") == UNIT_OF_MEASUREMENT
 
     assert sensor.attributes.get(ATTR_ATTRIBUTION) is None
     assert sensor.attributes.get(ATTR_DURATION) == 13.533333333333333
@@ -67,17 +85,13 @@ def _assert_truck_sensor(sensor):
     assert sensor.attributes.get(ATTR_ROUTE) == (
         "I-190; I-294 S - Tri-State Tollway; I-290 W - Eisenhower Expy W; "
         "IL-64 W - E North Ave; I-290 E - Eisenhower Expy E; I-290"
-        )
-    assert sensor.attributes.get(CONF_UNIT_SYSTEM) == 'metric'
-    assert sensor.attributes.get(
-        ATTR_DURATION_WITHOUT_TRAFFIC
-        ) == 13.533333333333333
+    )
+    assert sensor.attributes.get(CONF_UNIT_SYSTEM) == "metric"
+    assert sensor.attributes.get(ATTR_DURATION_WITHOUT_TRAFFIC) == 13.533333333333333
     assert sensor.attributes.get(ATTR_ORIGIN) == TRUCK_ORIGIN
     assert sensor.attributes.get(ATTR_DESTINATION) == TRUCK_DESTINATION
-    assert sensor.attributes.get(ATTR_ORIGIN_NAME) == ''
-    assert sensor.attributes.get(
-        ATTR_DESTINATION_NAME
-        ) == 'Eisenhower Expy E'
+    assert sensor.attributes.get(ATTR_ORIGIN_NAME) == ""
+    assert sensor.attributes.get(ATTR_DESTINATION_NAME) == "Eisenhower Expy E"
     assert sensor.attributes.get(CONF_MODE) == TRAVEL_MODE_TRUCK
     assert sensor.attributes.get(CONF_TRAFFIC_MODE) is False
 
@@ -87,144 +101,117 @@ def _assert_truck_sensor(sensor):
 @pytest.fixture
 def requests_mock_truck_response(requests_mock):
     """Return a requests_mock for truck respones."""
-    modes = ";".join(
-        [TRAVEL_MODE_TRUCK, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED]
-        )
+    modes = ";".join([TRAVEL_MODE_TRUCK, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED])
     response_url = _build_mock_url(
-        TRUCK_ORIGIN,
-        TRUCK_DESTINATION,
-        modes,
-        APP_ID,
-        APP_CODE,
-        "now"
-        )
+        TRUCK_ORIGIN, TRUCK_DESTINATION, modes, APP_ID, APP_CODE, "now"
+    )
     requests_mock.get(
-        response_url,
-        text=load_fixture(
-            'here_travel_time/truck_response.json'
-        )
+        response_url, text=load_fixture("here_travel_time/truck_response.json")
     )
 
 
 @pytest.fixture
 def requests_mock_car_disabled_response(requests_mock):
     """Return a requests_mock for truck respones."""
-    modes = ";".join(
-        [TRAVEL_MODE_CAR, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED]
-        )
+    modes = ";".join([TRAVEL_MODE_CAR, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED])
     response_url = _build_mock_url(
-        CAR_ORIGIN,
-        CAR_DESTINATION,
-        modes,
-        APP_ID,
-        APP_CODE,
-        "now"
-        )
+        CAR_ORIGIN, CAR_DESTINATION, modes, APP_ID, APP_CODE, "now"
+    )
     requests_mock.get(
-        response_url,
-        text=load_fixture(
-            'here_travel_time/car_response.json'
-        )
+        response_url, text=load_fixture("here_travel_time/car_response.json")
     )
 
 
 async def test_car(hass, requests_mock_car_disabled_response):
     """Test that car works."""
-    config = {DOMAIN: {
-        'platform': PLATFORM,
-        'name': 'test',
-        'origin': CAR_ORIGIN,
-        'destination': CAR_DESTINATION,
-        'app_id': APP_ID,
-        'app_code': APP_CODE
-    }}
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin": CAR_ORIGIN,
+            "destination": CAR_DESTINATION,
+            "app_id": APP_ID,
+            "app_code": APP_CODE,
+        }
+    }
 
     assert await async_setup_component(hass, DOMAIN, config)
 
-    sensor = hass.states.get('sensor.test')
-    assert sensor.state == '31'
-    assert sensor.attributes.get(
-        'unit_of_measurement'
-        ) == UNIT_OF_MEASUREMENT
+    sensor = hass.states.get("sensor.test")
+    assert sensor.state == "31"
+    assert sensor.attributes.get("unit_of_measurement") == UNIT_OF_MEASUREMENT
 
     assert sensor.attributes.get(ATTR_ATTRIBUTION) is None
     assert sensor.attributes.get(ATTR_DURATION) == 31.016666666666666
     assert sensor.attributes.get(ATTR_DISTANCE) == 23.903
     assert sensor.attributes.get(ATTR_ROUTE) == (
         "US-29 - K St NW; US-29 - Whitehurst Fwy; "
-        "I-495 N - Capital Beltway; MD-187 S - Old Georgetown Rd")
-    assert sensor.attributes.get(CONF_UNIT_SYSTEM) == 'metric'
+        "I-495 N - Capital Beltway; MD-187 S - Old Georgetown Rd"
+    )
+    assert sensor.attributes.get(CONF_UNIT_SYSTEM) == "metric"
     assert sensor.attributes.get(ATTR_DURATION_WITHOUT_TRAFFIC) == 30.05
     assert sensor.attributes.get(ATTR_ORIGIN) == CAR_ORIGIN
     assert sensor.attributes.get(ATTR_DESTINATION) == CAR_DESTINATION
-    assert sensor.attributes.get(ATTR_ORIGIN_NAME) == '22nd St NW'
-    assert sensor.attributes.get(ATTR_DESTINATION_NAME) == 'Service Rd S'
+    assert sensor.attributes.get(ATTR_ORIGIN_NAME) == "22nd St NW"
+    assert sensor.attributes.get(ATTR_DESTINATION_NAME) == "Service Rd S"
     assert sensor.attributes.get(CONF_MODE) == TRAVEL_MODE_CAR
     assert sensor.attributes.get(CONF_TRAFFIC_MODE) is False
 
     assert sensor.attributes.get(ATTR_ICON) == ICON_CAR
 
     # Test traffic mode disabled
-    assert (
-        sensor.attributes.get(ATTR_DURATION) !=
-        sensor.attributes.get(ATTR_DURATION_WITHOUT_TRAFFIC)
+    assert sensor.attributes.get(ATTR_DURATION) != sensor.attributes.get(
+        ATTR_DURATION_WITHOUT_TRAFFIC
     )
 
 
 async def test_traffic_mode_enabled(hass, requests_mock):
     """Test that traffic mode enabled works."""
-    modes = ";".join(
-        [TRAVEL_MODE_CAR, ROUTE_MODE_FASTEST, TRAFFIC_MODE_ENABLED]
-        )
+    modes = ";".join([TRAVEL_MODE_CAR, ROUTE_MODE_FASTEST, TRAFFIC_MODE_ENABLED])
     response_url = _build_mock_url(
-        CAR_ORIGIN,
-        CAR_DESTINATION,
-        modes,
-        APP_ID,
-        APP_CODE,
-        "now"
-        )
+        CAR_ORIGIN, CAR_DESTINATION, modes, APP_ID, APP_CODE, "now"
+    )
     requests_mock.get(
-        response_url,
-        text=load_fixture(
-            'here_travel_time/car_enabled_response.json'
-        )
+        response_url, text=load_fixture("here_travel_time/car_enabled_response.json")
     )
 
-    config = {DOMAIN: {
-        'platform': PLATFORM,
-        'name': 'test',
-        'origin': CAR_ORIGIN,
-        'destination': CAR_DESTINATION,
-        'app_id': APP_ID,
-        'app_code': APP_CODE,
-        'traffic_mode': True
-    }}
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin": CAR_ORIGIN,
+            "destination": CAR_DESTINATION,
+            "app_id": APP_ID,
+            "app_code": APP_CODE,
+            "traffic_mode": True,
+        }
+    }
     assert await async_setup_component(hass, DOMAIN, config)
 
-    sensor = hass.states.get('sensor.test')
+    sensor = hass.states.get("sensor.test")
 
     # Test traffic mode enabled
-    assert (
-        sensor.attributes.get(ATTR_DURATION) !=
-        sensor.attributes.get(ATTR_DURATION_WITHOUT_TRAFFIC)
+    assert sensor.attributes.get(ATTR_DURATION) != sensor.attributes.get(
+        ATTR_DURATION_WITHOUT_TRAFFIC
     )
 
 
 async def test_imperial(hass, requests_mock_car_disabled_response):
     """Test that imperial units work."""
-    config = {DOMAIN: {
-        'platform': PLATFORM,
-        'name': 'test',
-        'origin': CAR_ORIGIN,
-        'destination': CAR_DESTINATION,
-        'app_id': APP_ID,
-        'app_code': APP_CODE,
-        'unit_system': 'imperial'
-    }}
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin": CAR_ORIGIN,
+            "destination": CAR_DESTINATION,
+            "app_id": APP_ID,
+            "app_code": APP_CODE,
+            "unit_system": "imperial",
+        }
+    }
     assert await async_setup_component(hass, DOMAIN, config)
 
-    sensor = hass.states.get('sensor.test')
+    sensor = hass.states.get("sensor.test")
     assert sensor.attributes.get(ATTR_DISTANCE) == 14.852635608048994
 
 
@@ -232,36 +219,26 @@ async def test_route_mode_shortest(hass, requests_mock):
     """Test that route mode shortest works."""
     origin = "38.902981,-77.048338"
     destination = "39.042158,-77.119116"
-    modes = ";".join(
-        [TRAVEL_MODE_CAR, ROUTE_MODE_SHORTEST, TRAFFIC_MODE_DISABLED]
-        )
-    response_url = _build_mock_url(
-        origin,
-        destination,
-        modes,
-        APP_ID,
-        APP_CODE,
-        "now"
-        )
+    modes = ";".join([TRAVEL_MODE_CAR, ROUTE_MODE_SHORTEST, TRAFFIC_MODE_DISABLED])
+    response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
     requests_mock.get(
-        response_url,
-        text=load_fixture(
-            'here_travel_time/car_shortest_response.json'
-        )
+        response_url, text=load_fixture("here_travel_time/car_shortest_response.json")
     )
 
-    config = {DOMAIN: {
-        'platform': PLATFORM,
-        'name': 'test',
-        'origin': origin,
-        'destination': destination,
-        'app_id': APP_ID,
-        'app_code': APP_CODE,
-        'route_mode': ROUTE_MODE_SHORTEST
-    }}
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin": origin,
+            "destination": destination,
+            "app_id": APP_ID,
+            "app_code": APP_CODE,
+            "route_mode": ROUTE_MODE_SHORTEST,
+        }
+    }
     assert await async_setup_component(hass, DOMAIN, config)
 
-    sensor = hass.states.get('sensor.test')
+    sensor = hass.states.get("sensor.test")
     assert sensor.attributes.get(ATTR_DISTANCE) == 18.388
 
 
@@ -269,52 +246,44 @@ async def test_route_mode_fastest(hass, requests_mock):
     """Test that route mode fastest works."""
     origin = "38.902981,-77.048338"
     destination = "39.042158,-77.119116"
-    modes = ";".join(
-        [TRAVEL_MODE_CAR, ROUTE_MODE_FASTEST, TRAFFIC_MODE_ENABLED]
-        )
-    response_url = _build_mock_url(
-        origin,
-        destination,
-        modes,
-        APP_ID,
-        APP_CODE,
-        "now"
-        )
+    modes = ";".join([TRAVEL_MODE_CAR, ROUTE_MODE_FASTEST, TRAFFIC_MODE_ENABLED])
+    response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
     requests_mock.get(
-        response_url,
-        text=load_fixture(
-            'here_travel_time/car_enabled_response.json'
-        )
+        response_url, text=load_fixture("here_travel_time/car_enabled_response.json")
     )
 
-    config = {DOMAIN: {
-        'platform': PLATFORM,
-        'name': 'test',
-        'origin': origin,
-        'destination': destination,
-        'app_id': APP_ID,
-        'app_code': APP_CODE,
-        'traffic_mode': True
-    }}
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin": origin,
+            "destination": destination,
+            "app_id": APP_ID,
+            "app_code": APP_CODE,
+            "traffic_mode": True,
+        }
+    }
     assert await async_setup_component(hass, DOMAIN, config)
 
-    sensor = hass.states.get('sensor.test')
+    sensor = hass.states.get("sensor.test")
     assert sensor.attributes.get(ATTR_DISTANCE) == 23.381
 
 
 async def test_truck(hass, requests_mock_truck_response):
     """Test that truck works."""
-    config = {DOMAIN: {
-        'platform': PLATFORM,
-        'name': 'test',
-        'origin': TRUCK_ORIGIN,
-        'destination': TRUCK_DESTINATION,
-        'app_id': APP_ID,
-        'app_code': APP_CODE,
-        'mode': TRAVEL_MODE_TRUCK
-    }}
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin": TRUCK_ORIGIN,
+            "destination": TRUCK_DESTINATION,
+            "app_id": APP_ID,
+            "app_code": APP_CODE,
+            "mode": TRAVEL_MODE_TRUCK,
+        }
+    }
     assert await async_setup_component(hass, DOMAIN, config)
-    sensor = hass.states.get('sensor.test')
+    sensor = hass.states.get("sensor.test")
     _assert_truck_sensor(sensor)
 
 
@@ -322,56 +291,41 @@ async def test_public_transport(hass, requests_mock):
     """Test that publicTransport works."""
     origin = "41.9798,-87.8801"
     destination = "41.9043,-87.9216"
-    modes = ";".join(
-        [TRAVEL_MODE_PUBLIC, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED]
-        )
-    response_url = _build_mock_url(
-        origin,
-        destination,
-        modes,
-        APP_ID,
-        APP_CODE,
-        "now"
-        )
+    modes = ";".join([TRAVEL_MODE_PUBLIC, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED])
+    response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
     requests_mock.get(
-        response_url,
-        text=load_fixture(
-            'here_travel_time/public_response.json'
-        )
+        response_url, text=load_fixture("here_travel_time/public_response.json")
     )
 
-    config = {DOMAIN: {
-        'platform': PLATFORM,
-        'name': 'test',
-        'origin': origin,
-        'destination': destination,
-        'app_id': APP_ID,
-        'app_code': APP_CODE,
-        'mode': TRAVEL_MODE_PUBLIC
-    }}
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin": origin,
+            "destination": destination,
+            "app_id": APP_ID,
+            "app_code": APP_CODE,
+            "mode": TRAVEL_MODE_PUBLIC,
+        }
+    }
     assert await async_setup_component(hass, DOMAIN, config)
 
-    sensor = hass.states.get('sensor.test')
-    assert sensor.state == '89'
-    assert sensor.attributes.get(
-        'unit_of_measurement'
-        ) == UNIT_OF_MEASUREMENT
+    sensor = hass.states.get("sensor.test")
+    assert sensor.state == "89"
+    assert sensor.attributes.get("unit_of_measurement") == UNIT_OF_MEASUREMENT
 
     assert sensor.attributes.get(ATTR_ATTRIBUTION) is None
     assert sensor.attributes.get(ATTR_DURATION) == 89.16666666666667
     assert sensor.attributes.get(ATTR_DISTANCE) == 22.325
     assert sensor.attributes.get(ATTR_ROUTE) == (
-        "332 - Palmer/Schiller; 332 - Cargo Rd./Delta Cargo; "
-        "332 - Palmer/Schiller"
-        )
-    assert sensor.attributes.get(CONF_UNIT_SYSTEM) == 'metric'
-    assert sensor.attributes.get(
-        ATTR_DURATION_WITHOUT_TRAFFIC
-        ) == 89.16666666666667
+        "332 - Palmer/Schiller; 332 - Cargo Rd./Delta Cargo; " "332 - Palmer/Schiller"
+    )
+    assert sensor.attributes.get(CONF_UNIT_SYSTEM) == "metric"
+    assert sensor.attributes.get(ATTR_DURATION_WITHOUT_TRAFFIC) == 89.16666666666667
     assert sensor.attributes.get(ATTR_ORIGIN) == origin
     assert sensor.attributes.get(ATTR_DESTINATION) == destination
     assert sensor.attributes.get(ATTR_ORIGIN_NAME) == "Mannheim Rd"
-    assert sensor.attributes.get(ATTR_DESTINATION_NAME) == ''
+    assert sensor.attributes.get(ATTR_DESTINATION_NAME) == ""
     assert sensor.attributes.get(CONF_MODE) == TRAVEL_MODE_PUBLIC
     assert sensor.attributes.get(CONF_TRAFFIC_MODE) is False
 
@@ -384,38 +338,28 @@ async def test_pedestrian(hass, requests_mock):
     destination = "41.9043,-87.9216"
     modes = ";".join(
         [TRAVEL_MODE_PEDESTRIAN, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED]
-        )
-    response_url = _build_mock_url(
-                    origin,
-                    destination,
-                    modes,
-                    APP_ID,
-                    APP_CODE,
-                    "now"
-        )
+    )
+    response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
     requests_mock.get(
-        response_url,
-        text=load_fixture(
-            'here_travel_time/pedestrian_response.json'
-        )
+        response_url, text=load_fixture("here_travel_time/pedestrian_response.json")
     )
 
-    config = {DOMAIN: {
-        'platform': PLATFORM,
-        'name': 'test',
-        'origin': origin,
-        'destination': destination,
-        'app_id': APP_ID,
-        'app_code': APP_CODE,
-        'mode': TRAVEL_MODE_PEDESTRIAN
-    }}
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin": origin,
+            "destination": destination,
+            "app_id": APP_ID,
+            "app_code": APP_CODE,
+            "mode": TRAVEL_MODE_PEDESTRIAN,
+        }
+    }
     assert await async_setup_component(hass, DOMAIN, config)
 
-    sensor = hass.states.get('sensor.test')
-    assert sensor.state == '211'
-    assert sensor.attributes.get(
-        'unit_of_measurement'
-        ) == UNIT_OF_MEASUREMENT
+    sensor = hass.states.get("sensor.test")
+    assert sensor.state == "211"
+    assert sensor.attributes.get("unit_of_measurement") == UNIT_OF_MEASUREMENT
 
     assert sensor.attributes.get(ATTR_ATTRIBUTION) is None
     assert sensor.attributes.get(ATTR_DURATION) == 210.51666666666668
@@ -423,15 +367,14 @@ async def test_pedestrian(hass, requests_mock):
     assert sensor.attributes.get(ATTR_ROUTE) == (
         "Mannheim Rd; W Belmont Ave; Cullerton St; E Fullerton Ave; "
         "La Porte Ave; E Palmer Ave; N Railroad Ave; W North Ave; "
-        "E North Ave; E Third St")
-    assert sensor.attributes.get(CONF_UNIT_SYSTEM) == 'metric'
-    assert sensor.attributes.get(
-        ATTR_DURATION_WITHOUT_TRAFFIC
-        ) == 210.51666666666668
+        "E North Ave; E Third St"
+    )
+    assert sensor.attributes.get(CONF_UNIT_SYSTEM) == "metric"
+    assert sensor.attributes.get(ATTR_DURATION_WITHOUT_TRAFFIC) == 210.51666666666668
     assert sensor.attributes.get(ATTR_ORIGIN) == origin
     assert sensor.attributes.get(ATTR_DESTINATION) == destination
     assert sensor.attributes.get(ATTR_ORIGIN_NAME) == "Mannheim Rd"
-    assert sensor.attributes.get(ATTR_DESTINATION_NAME) == ''
+    assert sensor.attributes.get(ATTR_DESTINATION_NAME) == ""
     assert sensor.attributes.get(CONF_MODE) == TRAVEL_MODE_PEDESTRIAN
     assert sensor.attributes.get(CONF_TRAFFIC_MODE) is False
 
@@ -442,40 +385,28 @@ async def test_bicycle(hass, requests_mock):
     """Test that bicycle works."""
     origin = "41.9798,-87.8801"
     destination = "41.9043,-87.9216"
-    modes = ";".join(
-        [TRAVEL_MODE_BICYCLE, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED]
-        )
-    response_url = _build_mock_url(
-                    origin,
-                    destination,
-                    modes,
-                    APP_ID,
-                    APP_CODE,
-                    "now"
-        )
+    modes = ";".join([TRAVEL_MODE_BICYCLE, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED])
+    response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
     requests_mock.get(
-        response_url,
-        text=load_fixture(
-            'here_travel_time/bike_response.json'
-        )
+        response_url, text=load_fixture("here_travel_time/bike_response.json")
     )
 
-    config = {DOMAIN: {
-        'platform': PLATFORM,
-        'name': 'test',
-        'origin': origin,
-        'destination': destination,
-        'app_id': APP_ID,
-        'app_code': APP_CODE,
-        'mode': TRAVEL_MODE_BICYCLE
-    }}
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin": origin,
+            "destination": destination,
+            "app_id": APP_ID,
+            "app_code": APP_CODE,
+            "mode": TRAVEL_MODE_BICYCLE,
+        }
+    }
     assert await async_setup_component(hass, DOMAIN, config)
 
-    sensor = hass.states.get('sensor.test')
-    assert sensor.state == '55'
-    assert sensor.attributes.get(
-        'unit_of_measurement'
-        ) == UNIT_OF_MEASUREMENT
+    sensor = hass.states.get("sensor.test")
+    assert sensor.state == "55"
+    assert sensor.attributes.get("unit_of_measurement") == UNIT_OF_MEASUREMENT
 
     assert sensor.attributes.get(ATTR_ATTRIBUTION) is None
     assert sensor.attributes.get(ATTR_DURATION) == 54.86666666666667
@@ -483,15 +414,14 @@ async def test_bicycle(hass, requests_mock):
     assert sensor.attributes.get(ATTR_ROUTE) == (
         "Mannheim Rd; W Belmont Ave; Cullerton St; N Landen Dr; "
         "E Fullerton Ave; N Wolf Rd; W North Ave; N Clinton Ave; "
-        "E Third St; N Caroline Ave")
-    assert sensor.attributes.get(CONF_UNIT_SYSTEM) == 'metric'
-    assert sensor.attributes.get(
-        ATTR_DURATION_WITHOUT_TRAFFIC
-        ) == 54.86666666666667
+        "E Third St; N Caroline Ave"
+    )
+    assert sensor.attributes.get(CONF_UNIT_SYSTEM) == "metric"
+    assert sensor.attributes.get(ATTR_DURATION_WITHOUT_TRAFFIC) == 54.86666666666667
     assert sensor.attributes.get(ATTR_ORIGIN) == origin
     assert sensor.attributes.get(ATTR_DESTINATION) == destination
     assert sensor.attributes.get(ATTR_ORIGIN_NAME) == "Mannheim Rd"
-    assert sensor.attributes.get(ATTR_DESTINATION_NAME) == ''
+    assert sensor.attributes.get(ATTR_DESTINATION_NAME) == ""
     assert sensor.attributes.get(CONF_MODE) == TRAVEL_MODE_BICYCLE
     assert sensor.attributes.get(CONF_TRAFFIC_MODE) is False
 
@@ -502,46 +432,48 @@ async def test_location_zone(hass, requests_mock_truck_response):
     """Test that origin/destination supplied by a zone works."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
-    with patch('homeassistant.util.dt.utcnow', return_value=utcnow):
+    with patch("homeassistant.util.dt.utcnow", return_value=utcnow):
         zone_config = {
             "zone": [
                 {
-                    'name': 'Destination',
-                    'latitude': TRUCK_DESTINATION.split(",")[0],
-                    'longitude': TRUCK_DESTINATION.split(",")[1],
-                    'radius': 250,
-                    'passive': False
+                    "name": "Destination",
+                    "latitude": TRUCK_DESTINATION.split(",")[0],
+                    "longitude": TRUCK_DESTINATION.split(",")[1],
+                    "radius": 250,
+                    "passive": False,
                 },
                 {
-                    'name': 'Origin',
-                    'latitude': TRUCK_ORIGIN.split(",")[0],
-                    'longitude': TRUCK_ORIGIN.split(",")[1],
-                    'radius': 250,
-                    'passive': False
-                }
+                    "name": "Origin",
+                    "latitude": TRUCK_ORIGIN.split(",")[0],
+                    "longitude": TRUCK_ORIGIN.split(",")[1],
+                    "radius": 250,
+                    "passive": False,
+                },
             ]
         }
         assert await async_setup_component(hass, "zone", zone_config)
 
-        config = {DOMAIN: {
-            'platform': PLATFORM,
-            'name': 'test',
-            'origin': "zone.origin",
-            'destination': "zone.destination",
-            'app_id': APP_ID,
-            'app_code': APP_CODE,
-            'mode': TRAVEL_MODE_TRUCK
-        }}
+        config = {
+            DOMAIN: {
+                "platform": PLATFORM,
+                "name": "test",
+                "origin": "zone.origin",
+                "destination": "zone.destination",
+                "app_id": APP_ID,
+                "app_code": APP_CODE,
+                "mode": TRAVEL_MODE_TRUCK,
+            }
+        }
         assert await async_setup_component(hass, DOMAIN, config)
 
-        sensor = hass.states.get('sensor.test')
+        sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
 
         # Test that update works more than once
         async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        sensor = hass.states.get('sensor.test')
+        sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
 
 
@@ -549,46 +481,48 @@ async def test_location_zone_friendly_name(hass, requests_mock_truck_response):
     """Test that origin/destination supplied by a zone friendly_name works."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
-    with patch('homeassistant.util.dt.utcnow', return_value=utcnow):
+    with patch("homeassistant.util.dt.utcnow", return_value=utcnow):
         zone_config = {
             "zone": [
                 {
-                    'name': 'Destination Friendly Name',
-                    'latitude': TRUCK_DESTINATION.split(",")[0],
-                    'longitude': TRUCK_DESTINATION.split(",")[1],
-                    'radius': 250,
-                    'passive': False
+                    "name": "Destination Friendly Name",
+                    "latitude": TRUCK_DESTINATION.split(",")[0],
+                    "longitude": TRUCK_DESTINATION.split(",")[1],
+                    "radius": 250,
+                    "passive": False,
                 },
                 {
-                    'name': 'Origin',
-                    'latitude': TRUCK_ORIGIN.split(",")[0],
-                    'longitude': TRUCK_ORIGIN.split(",")[1],
-                    'radius': 250,
-                    'passive': False
-                }
+                    "name": "Origin",
+                    "latitude": TRUCK_ORIGIN.split(",")[0],
+                    "longitude": TRUCK_ORIGIN.split(",")[1],
+                    "radius": 250,
+                    "passive": False,
+                },
             ]
         }
         assert await async_setup_component(hass, "zone", zone_config)
 
-        config = {DOMAIN: {
-            'platform': PLATFORM,
-            'name': 'test',
-            'origin': "zone.origin",
-            'destination': "Destination Friendly Name",
-            'app_id': APP_ID,
-            'app_code': APP_CODE,
-            'mode': TRAVEL_MODE_TRUCK
-        }}
+        config = {
+            DOMAIN: {
+                "platform": PLATFORM,
+                "name": "test",
+                "origin": "zone.origin",
+                "destination": "Destination Friendly Name",
+                "app_id": APP_ID,
+                "app_code": APP_CODE,
+                "mode": TRAVEL_MODE_TRUCK,
+            }
+        }
         assert await async_setup_component(hass, DOMAIN, config)
 
-        sensor = hass.states.get('sensor.test')
+        sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
 
         # Test that update works more than once
         async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        sensor = hass.states.get('sensor.test')
+        sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
 
 
@@ -596,29 +530,31 @@ async def test_location_sensor(hass, requests_mock_truck_response):
     """Test that origin/destination supplied by a sensor works."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
-    with patch('homeassistant.util.dt.utcnow', return_value=utcnow):
-        hass.states.async_set('sensor.origin', TRUCK_ORIGIN)
-        hass.states.async_set('sensor.destination', TRUCK_DESTINATION)
+    with patch("homeassistant.util.dt.utcnow", return_value=utcnow):
+        hass.states.async_set("sensor.origin", TRUCK_ORIGIN)
+        hass.states.async_set("sensor.destination", TRUCK_DESTINATION)
 
-        config = {DOMAIN: {
-            'platform': PLATFORM,
-            'name': 'test',
-            'origin': "sensor.origin",
-            'destination': "sensor.destination",
-            'app_id': APP_ID,
-            'app_code': APP_CODE,
-            'mode': TRAVEL_MODE_TRUCK
-        }}
+        config = {
+            DOMAIN: {
+                "platform": PLATFORM,
+                "name": "test",
+                "origin": "sensor.origin",
+                "destination": "sensor.destination",
+                "app_id": APP_ID,
+                "app_code": APP_CODE,
+                "mode": TRAVEL_MODE_TRUCK,
+            }
+        }
         assert await async_setup_component(hass, DOMAIN, config)
 
-        sensor = hass.states.get('sensor.test')
+        sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
 
         # Test that update works more than once
         async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        sensor = hass.states.get('sensor.test')
+        sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
 
 
@@ -626,43 +562,45 @@ async def test_location_person(hass, requests_mock_truck_response):
     """Test that origin/destination supplied by a person works."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
-    with patch('homeassistant.util.dt.utcnow', return_value=utcnow):
+    with patch("homeassistant.util.dt.utcnow", return_value=utcnow):
         hass.states.async_set(
-            'person.origin',
+            "person.origin",
             "unknown",
             {
                 "latitude": float(TRUCK_ORIGIN.split(",")[0]),
-                "longitude": float(TRUCK_ORIGIN.split(",")[1])
-            }
+                "longitude": float(TRUCK_ORIGIN.split(",")[1]),
+            },
         )
         hass.states.async_set(
-            'person.destination',
+            "person.destination",
             "unknown",
             {
                 "latitude": float(TRUCK_DESTINATION.split(",")[0]),
-                "longitude": float(TRUCK_DESTINATION.split(",")[1])
-            }
+                "longitude": float(TRUCK_DESTINATION.split(",")[1]),
+            },
         )
 
-        config = {DOMAIN: {
-            'platform': PLATFORM,
-            'name': 'test',
-            'origin': "person.origin",
-            'destination': "person.destination",
-            'app_id': APP_ID,
-            'app_code': APP_CODE,
-            'mode': TRAVEL_MODE_TRUCK
-        }}
+        config = {
+            DOMAIN: {
+                "platform": PLATFORM,
+                "name": "test",
+                "origin": "person.origin",
+                "destination": "person.destination",
+                "app_id": APP_ID,
+                "app_code": APP_CODE,
+                "mode": TRAVEL_MODE_TRUCK,
+            }
+        }
         assert await async_setup_component(hass, DOMAIN, config)
 
-        sensor = hass.states.get('sensor.test')
+        sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
 
         # Test that update works more than once
         async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        sensor = hass.states.get('sensor.test')
+        sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
 
 
@@ -670,132 +608,135 @@ async def test_location_device_tracker(hass, requests_mock_truck_response):
     """Test that origin/destination supplied by a device_tracker works."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
-    with patch('homeassistant.util.dt.utcnow', return_value=utcnow):
+    with patch("homeassistant.util.dt.utcnow", return_value=utcnow):
         hass.states.async_set(
-            'device_tracker.origin',
+            "device_tracker.origin",
             "unknown",
             {
                 "latitude": float(TRUCK_ORIGIN.split(",")[0]),
-                "longitude": float(TRUCK_ORIGIN.split(",")[1])
-            }
+                "longitude": float(TRUCK_ORIGIN.split(",")[1]),
+            },
         )
         hass.states.async_set(
-            'device_tracker.destination',
+            "device_tracker.destination",
             "unknown",
             {
                 "latitude": float(TRUCK_DESTINATION.split(",")[0]),
-                "longitude": float(TRUCK_DESTINATION.split(",")[1])
-            }
+                "longitude": float(TRUCK_DESTINATION.split(",")[1]),
+            },
         )
 
-        config = {DOMAIN: {
-            'platform': PLATFORM,
-            'name': 'test',
-            'origin': "device_tracker.origin",
-            'destination': "device_tracker.destination",
-            'app_id': APP_ID,
-            'app_code': APP_CODE,
-            'mode': TRAVEL_MODE_TRUCK
-        }}
+        config = {
+            DOMAIN: {
+                "platform": PLATFORM,
+                "name": "test",
+                "origin": "device_tracker.origin",
+                "destination": "device_tracker.destination",
+                "app_id": APP_ID,
+                "app_code": APP_CODE,
+                "mode": TRAVEL_MODE_TRUCK,
+            }
+        }
         assert await async_setup_component(hass, DOMAIN, config)
 
-        sensor = hass.states.get('sensor.test')
+        sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
 
         # Test that update works more than once
         async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        sensor = hass.states.get('sensor.test')
+        sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
 
 
 async def test_location_device_tracker_added_after_update(
-        hass, requests_mock_truck_response, caplog):
+    hass, requests_mock_truck_response, caplog
+):
     """Test that device_tracker added after first update works."""
     caplog.set_level(logging.ERROR)
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
-    with patch('homeassistant.util.dt.utcnow', return_value=utcnow):
-        config = {DOMAIN: {
-            'platform': PLATFORM,
-            'name': 'test',
-            'origin': "device_tracker.origin",
-            'destination': "device_tracker.destination",
-            'app_id': APP_ID,
-            'app_code': APP_CODE,
-            'mode': TRAVEL_MODE_TRUCK
-        }}
+    with patch("homeassistant.util.dt.utcnow", return_value=utcnow):
+        config = {
+            DOMAIN: {
+                "platform": PLATFORM,
+                "name": "test",
+                "origin": "device_tracker.origin",
+                "destination": "device_tracker.destination",
+                "app_id": APP_ID,
+                "app_code": APP_CODE,
+                "mode": TRAVEL_MODE_TRUCK,
+            }
+        }
         assert await async_setup_component(hass, DOMAIN, config)
 
-        sensor = hass.states.get('sensor.test')
+        sensor = hass.states.get("sensor.test")
         assert len(caplog.records) == 2
         assert "Unable to find entity" in caplog.text
         caplog.clear()
 
         # Device tracker appear after first update
         hass.states.async_set(
-            'device_tracker.origin',
+            "device_tracker.origin",
             "unknown",
             {
                 "latitude": float(TRUCK_ORIGIN.split(",")[0]),
-                "longitude": float(TRUCK_ORIGIN.split(",")[1])
-            }
+                "longitude": float(TRUCK_ORIGIN.split(",")[1]),
+            },
         )
         hass.states.async_set(
-            'device_tracker.destination',
+            "device_tracker.destination",
             "unknown",
             {
                 "latitude": float(TRUCK_DESTINATION.split(",")[0]),
-                "longitude": float(TRUCK_DESTINATION.split(",")[1])
-            }
+                "longitude": float(TRUCK_DESTINATION.split(",")[1]),
+            },
         )
 
         # Test that update works more than once
         async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        sensor = hass.states.get('sensor.test')
+        sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
         assert len(caplog.records) == 0
 
 
 async def test_location_device_tracker_in_zone(
-        hass, requests_mock_truck_response, caplog):
+    hass, requests_mock_truck_response, caplog
+):
     """Test that device_tracker in zone uses device_tracker state works."""
     caplog.set_level(logging.DEBUG)
     zone_config = {
         "zone": [
             {
-                'name': 'Origin',
-                'latitude': TRUCK_ORIGIN.split(",")[0],
-                'longitude': TRUCK_ORIGIN.split(",")[1],
-                'radius': 250,
-                'passive': False
+                "name": "Origin",
+                "latitude": TRUCK_ORIGIN.split(",")[0],
+                "longitude": TRUCK_ORIGIN.split(",")[1],
+                "radius": 250,
+                "passive": False,
             }
         ]
     }
     assert await async_setup_component(hass, "zone", zone_config)
     hass.states.async_set(
-        'device_tracker.origin',
-        "origin",
-        {
-            "latitude": None,
-            "longitude": None
-        }
+        "device_tracker.origin", "origin", {"latitude": None, "longitude": None}
     )
-    config = {DOMAIN: {
-        'platform': PLATFORM,
-        'name': 'test',
-        'origin': "device_tracker.origin",
-        'destination': TRUCK_DESTINATION,
-        'app_id': APP_ID,
-        'app_code': APP_CODE,
-        'mode': TRAVEL_MODE_TRUCK
-    }}
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin": "device_tracker.origin",
+            "destination": TRUCK_DESTINATION,
+            "app_id": APP_ID,
+            "app_code": APP_CODE,
+            "mode": TRAVEL_MODE_TRUCK,
+        }
+    }
     assert await async_setup_component(hass, DOMAIN, config)
 
-    sensor = hass.states.get('sensor.test')
+    sensor = hass.states.get("sensor.test")
     _assert_truck_sensor(sensor)
     assert ", getting zone location" in caplog.text
 
@@ -805,32 +746,23 @@ async def test_route_not_found(hass, requests_mock, caplog):
     caplog.set_level(logging.ERROR)
     origin = "52.5160,13.3779"
     destination = "47.013399,-10.171986"
-    modes = ";".join(
-        [TRAVEL_MODE_CAR, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED]
-        )
-    response_url = _build_mock_url(
-        origin,
-        destination,
-        modes,
-        APP_ID,
-        APP_CODE,
-        "now"
-        )
+    modes = ";".join([TRAVEL_MODE_CAR, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED])
+    response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
     requests_mock.get(
         response_url,
-        text=load_fixture(
-            'here_travel_time/routing_error_no_route_found.json'
-        )
+        text=load_fixture("here_travel_time/routing_error_no_route_found.json"),
     )
 
-    config = {DOMAIN: {
-        'platform': PLATFORM,
-        'name': 'test',
-        'origin': origin,
-        'destination': destination,
-        'app_id': APP_ID,
-        'app_code': APP_CODE
-    }}
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin": origin,
+            "destination": destination,
+            "app_id": APP_ID,
+            "app_code": APP_CODE,
+        }
+    }
     assert await async_setup_component(hass, DOMAIN, config)
     assert len(caplog.records) == 1
     assert NO_ROUTE_ERROR_MESSAGE in caplog.text
@@ -839,14 +771,16 @@ async def test_route_not_found(hass, requests_mock, caplog):
 async def test_pattern_origin(hass, caplog):
     """Test that pattern matching the origin works."""
     caplog.set_level(logging.ERROR)
-    config = {DOMAIN: {
-        'platform': PLATFORM,
-        'name': 'test',
-        'origin': "138.90,-77.04833",
-        'destination': CAR_DESTINATION,
-        'app_id': APP_ID,
-        'app_code': APP_CODE
-    }}
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin": "138.90,-77.04833",
+            "destination": CAR_DESTINATION,
+            "app_id": APP_ID,
+            "app_code": APP_CODE,
+        }
+    }
     assert await async_setup_component(hass, DOMAIN, config)
     assert len(caplog.records) == 1
     assert "Origin has the wrong format:" in caplog.text
@@ -855,14 +789,16 @@ async def test_pattern_origin(hass, caplog):
 async def test_pattern_destination(hass, caplog):
     """Test that pattern matching the destination works."""
     caplog.set_level(logging.ERROR)
-    config = {DOMAIN: {
-        'platform': PLATFORM,
-        'name': 'test',
-        'origin': CAR_ORIGIN,
-        'destination': "139.0,-77.1",
-        'app_id': APP_ID,
-        'app_code': APP_CODE
-    }}
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin": CAR_ORIGIN,
+            "destination": "139.0,-77.1",
+            "app_id": APP_ID,
+            "app_code": APP_CODE,
+        }
+    }
     assert await async_setup_component(hass, DOMAIN, config)
     assert len(caplog.records) == 1
     assert "Destination has the wrong format:" in caplog.text
@@ -873,32 +809,25 @@ async def test_invalid_credentials(hass, requests_mock, caplog):
     caplog.set_level(logging.ERROR)
     origin = "52.5160,13.3779"
     destination = "47.013399,-10.171986"
-    modes = ";".join(
-        [TRAVEL_MODE_CAR, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED]
-        )
+    modes = ";".join([TRAVEL_MODE_CAR, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED])
     response_url = _build_mock_url(
-        origin,
-        destination,
-        modes,
-        'invalid',
-        'invalid',
-        "now"
-        )
+        origin, destination, modes, "invalid", "invalid", "now"
+    )
     requests_mock.get(
         response_url,
-        text=load_fixture(
-            'here_travel_time/routing_error_invalid_credentials.json'
-        )
+        text=load_fixture("here_travel_time/routing_error_invalid_credentials.json"),
     )
 
-    config = {DOMAIN: {
-        'platform': PLATFORM,
-        'name': 'test',
-        'origin': origin,
-        'destination': destination,
-        'app_id': 'invalid',
-        'app_code': 'invalid'
-    }}
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin": origin,
+            "destination": destination,
+            "app_id": "invalid",
+            "app_code": "invalid",
+        }
+    }
     assert await async_setup_component(hass, DOMAIN, config)
     assert len(caplog.records) == 1
     assert "API returned error" in caplog.text

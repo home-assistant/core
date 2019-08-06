@@ -9,8 +9,15 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_MODE, CONF_NAME,
-    CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
+    ATTR_ATTRIBUTION,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    CONF_MODE,
+    CONF_NAME,
+    CONF_UNIT_SYSTEM,
+    CONF_UNIT_SYSTEM_IMPERIAL,
+    CONF_UNIT_SYSTEM_METRIC,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import location
 import homeassistant.helpers.config_validation as cv
@@ -18,20 +25,20 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DESTINATION = 'destination'
-CONF_ORIGIN = 'origin'
-CONF_APP_ID = 'app_id'
-CONF_APP_CODE = 'app_code'
-CONF_TRAFFIC_MODE = 'traffic_mode'
-CONF_ROUTE_MODE = 'route_mode'
+CONF_DESTINATION = "destination"
+CONF_ORIGIN = "origin"
+CONF_APP_ID = "app_id"
+CONF_APP_CODE = "app_code"
+CONF_TRAFFIC_MODE = "traffic_mode"
+CONF_ROUTE_MODE = "route_mode"
 
 DEFAULT_NAME = "HERE Travel Time"
 
-TRAVEL_MODE_BICYCLE = 'bicycle'
-TRAVEL_MODE_CAR = 'car'
-TRAVEL_MODE_PEDESTRIAN = 'pedestrian'
-TRAVEL_MODE_PUBLIC = 'publicTransport'
-TRAVEL_MODE_TRUCK = 'truck'
+TRAVEL_MODE_BICYCLE = "bicycle"
+TRAVEL_MODE_CAR = "car"
+TRAVEL_MODE_PEDESTRIAN = "pedestrian"
+TRAVEL_MODE_PUBLIC = "publicTransport"
+TRAVEL_MODE_TRUCK = "truck"
 TRAVEL_MODE = [
     TRAVEL_MODE_BICYCLE,
     TRAVEL_MODE_CAR,
@@ -46,39 +53,36 @@ TRAVEL_MODES_NON_VEHICLE = [TRAVEL_MODE_BICYCLE, TRAVEL_MODE_PEDESTRIAN]
 TRAFFIC_MODE_ENABLED = "traffic:enabled"
 TRAFFIC_MODE_DISABLED = "traffic:disabled"
 
-ROUTE_MODE_FASTEST = 'fastest'
-ROUTE_MODE_SHORTEST = 'shortest'
+ROUTE_MODE_FASTEST = "fastest"
+ROUTE_MODE_SHORTEST = "shortest"
 ROUTE_MODE = [ROUTE_MODE_FASTEST, ROUTE_MODE_SHORTEST]
 
-ICON_BICYCLE = 'mdi:bike'
-ICON_CAR = 'mdi:car'
-ICON_PEDESTRIAN = 'mdi:walk'
-ICON_PUBLIC = 'mdi:bus'
-ICON_TRUCK = 'mdi:truck'
+ICON_BICYCLE = "mdi:bike"
+ICON_CAR = "mdi:car"
+ICON_PEDESTRIAN = "mdi:walk"
+ICON_PUBLIC = "mdi:bus"
+ICON_TRUCK = "mdi:truck"
 
 UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
 
-ATTR_DURATION = 'duration'
-ATTR_DISTANCE = 'distance'
-ATTR_ROUTE = 'route'
-ATTR_ORIGIN = 'origin'
-ATTR_DESTINATION = 'destination'
+ATTR_DURATION = "duration"
+ATTR_DISTANCE = "distance"
+ATTR_ROUTE = "route"
+ATTR_ORIGIN = "origin"
+ATTR_DESTINATION = "destination"
 
-ATTR_DURATION_WITHOUT_TRAFFIC = 'duration_without_traffic'
-ATTR_ORIGIN_NAME = 'origin_name'
-ATTR_DESTINATION_NAME = 'destination_name'
+ATTR_DURATION_WITHOUT_TRAFFIC = "duration_without_traffic"
+ATTR_ORIGIN_NAME = "origin_name"
+ATTR_DESTINATION_NAME = "destination_name"
 
-UNIT_OF_MEASUREMENT = 'min'
+UNIT_OF_MEASUREMENT = "min"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone', 'person']
-DATA_KEY = 'here_travel_time'
+TRACKABLE_DOMAINS = ["device_tracker", "sensor", "zone", "person"]
+DATA_KEY = "here_travel_time"
 
-NO_ROUTE_ERRORS = [
-    'NGEO_ERROR_GRAPH_DISCONNECTED',
-    'NGEO_ERROR_ROUTE_NO_END_POINT'
-]
+NO_ROUTE_ERRORS = ["NGEO_ERROR_GRAPH_DISCONNECTED", "NGEO_ERROR_ROUTE_NO_END_POINT"]
 NO_ROUTE_ERROR_MESSAGE = "HERE could not find a route based on the input"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -89,9 +93,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_ORIGIN): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_MODE, default=TRAVEL_MODE_CAR): vol.In(TRAVEL_MODE),
-        vol.Optional(
-            CONF_ROUTE_MODE, default=ROUTE_MODE_FASTEST
-        ): vol.In(ROUTE_MODE),
+        vol.Optional(CONF_ROUTE_MODE, default=ROUTE_MODE_FASTEST): vol.In(ROUTE_MODE),
         vol.Optional(CONF_TRAFFIC_MODE, default=False): cv.boolean,
         vol.Optional(CONF_UNIT_SYSTEM): vol.In(UNITS),
     }
@@ -99,10 +101,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(
-        hass: HomeAssistant,
-        config: Dict[str, Union[str, bool]],
-        async_add_entities: Callable,
-        discovery_info: None = None) -> None:
+    hass: HomeAssistant,
+    config: Dict[str, Union[str, bool]],
+    async_add_entities: Callable,
+    discovery_info: None = None,
+) -> None:
     """Set up the HERE travel time platform."""
     hass.data.setdefault(DATA_KEY, [])
 
@@ -117,20 +120,11 @@ async def async_setup_platform(
     name = config.get(CONF_NAME)
     units = config.get(CONF_UNIT_SYSTEM, hass.config.units.name)
 
-    here_data = HERETravelTimeData(None,
-                                   None,
-                                   app_id,
-                                   app_code,
-                                   travel_mode,
-                                   traffic_mode,
-                                   route_mode,
-                                   units)
+    here_data = HERETravelTimeData(
+        None, None, app_id, app_code, travel_mode, traffic_mode, route_mode, units
+    )
 
-    sensor = HERETravelTimeSensor(hass,
-                                  name,
-                                  origin,
-                                  destination,
-                                  here_data)
+    sensor = HERETravelTimeSensor(hass, name, origin, destination, here_data)
 
     hass.data[DATA_KEY].append(sensor)
 
@@ -141,12 +135,13 @@ class HERETravelTimeSensor(Entity):
     """Representation of a HERE travel time sensor."""
 
     def __init__(
-            self,
-            hass: HomeAssistant,
-            name: str,
-            origin: str,
-            destination: str,
-            here_data: 'HERETravelTimeData') -> None:
+        self,
+        hass: HomeAssistant,
+        name: str,
+        origin: str,
+        destination: str,
+        here_data: "HERETravelTimeData",
+    ) -> None:
         """Initialize the sensor."""
         self._hass = hass
         self._name = name
@@ -156,12 +151,12 @@ class HERETravelTimeSensor(Entity):
         self._destination_entity_id = None
 
         # Check if location is a trackable entity
-        if origin.split('.', 1)[0] in TRACKABLE_DOMAINS:
+        if origin.split(".", 1)[0] in TRACKABLE_DOMAINS:
             self._origin_entity_id = origin
         else:
             self._here_data.origin = origin
 
-        if destination.split('.', 1)[0] in TRACKABLE_DOMAINS:
+        if destination.split(".", 1)[0] in TRACKABLE_DOMAINS:
             self._destination_entity_id = destination
         else:
             self._here_data.destination = destination
@@ -181,7 +176,8 @@ class HERETravelTimeSensor(Entity):
 
     @property
     def device_state_attributes(
-            self) -> Optional[Dict[str, Union[None, float, str, bool]]]:
+        self
+    ) -> Optional[Dict[str, Union[None, float, str, bool]]]:
         """Return the state attributes."""
         if self._here_data.duration is None:
             return None
@@ -224,16 +220,18 @@ class HERETravelTimeSensor(Entity):
         # Convert device_trackers to HERE friendly location
         if self._origin_entity_id is not None:
             self._here_data.origin = await self._get_location_from_entity(
-                self._origin_entity_id)
+                self._origin_entity_id
+            )
 
         if self._destination_entity_id is not None:
             self._here_data.destination = await self._get_location_from_entity(
-                self._destination_entity_id)
+                self._destination_entity_id
+            )
 
         self._here_data.destination = await self._resolve_zone(
-            self._here_data.destination)
-        self._here_data.origin = await self._resolve_zone(
-            self._here_data.origin)
+            self._here_data.destination
+        )
+        self._here_data.origin = await self._resolve_zone(self._here_data.origin)
 
         await self._hass.async_add_executor_job(self._here_data.update)
 
@@ -250,12 +248,10 @@ class HERETravelTimeSensor(Entity):
             return self._get_location_from_attributes(entity)
 
         # Check if device is in a zone
-        zone_entity = self._hass.states.get(
-            "zone.{}".format(entity.state))
+        zone_entity = self._hass.states.get("zone.{}".format(entity.state))
         if location.has_location(zone_entity):
             _LOGGER.debug(
-                "%s is in %s, getting zone location",
-                entity_id, zone_entity.entity_id
+                "%s is in %s, getting zone location", entity_id, zone_entity.entity_id
             )
             return self._get_location_from_attributes(zone_entity)
 
@@ -267,33 +263,32 @@ class HERETravelTimeSensor(Entity):
     def _get_location_from_attributes(entity: State) -> str:
         """Get the lat/long string from an entities attributes."""
         attr = entity.attributes
-        return "{},{}".format(
-            attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE)
-        )
+        return "{},{}".format(attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
 
     async def _resolve_zone(self, friendly_name: str) -> str:
         """Get the lat/long string of a zone given its friendly_name."""
         entities = self._hass.states.async_all()
         for entity in entities:
-            if entity.domain == 'zone' and entity.name == friendly_name:
+            if entity.domain == "zone" and entity.name == friendly_name:
                 return self._get_location_from_attributes(entity)
 
         return friendly_name
 
 
-class HERETravelTimeData():
+class HERETravelTimeData:
     """HERETravelTime data object."""
 
     def __init__(
-            self,
-            origin: None,
-            destination: None,
-            app_id: str,
-            app_code: str,
-            travel_mode: str,
-            traffic_mode: bool,
-            route_mode: str,
-            units: str) -> None:
+        self,
+        origin: None,
+        destination: None,
+        app_id: str,
+        app_code: str,
+        travel_mode: str,
+        traffic_mode: bool,
+        route_mode: str,
+        units: str,
+    ) -> None:
         """Initialize herepy."""
         self.origin = origin
         self.destination = destination
@@ -321,24 +316,18 @@ class HERETravelTimeData():
             # Check for correct pattern
             pattern = r"-?\d{1,2}\.\d+,-?\d{1,3}\.\d+"
             if not re.fullmatch(pattern, self.origin):
-                _LOGGER.error(
-                    "Origin has the wrong format: %s", self.origin
-                )
+                _LOGGER.error("Origin has the wrong format: %s", self.origin)
                 return
             if not re.fullmatch(pattern, self.destination):
-                _LOGGER.error(
-                    "Destination has the wrong format: %s", self.destination
-                )
+                _LOGGER.error("Destination has the wrong format: %s", self.destination)
                 return
 
             # Convert location to HERE friendly location
-            destination = self.destination.split(',')
-            origin = self.origin.split(',')
+            destination = self.destination.split(",")
+            origin = self.origin.split(",")
 
             response = self._client.car_route(
-                origin,
-                destination,
-                [self.travel_mode, self.route_mode, traffic_mode],
+                origin, destination, [self.travel_mode, self.route_mode, traffic_mode]
             )
             if isinstance(response, herepy.error.HEREError):
                 # Better error message for cryptic no route error codes
@@ -349,15 +338,15 @@ class HERETravelTimeData():
                 return
 
             # pylint: disable=no-member
-            route = response.response['route']
-            summary = route[0]['summary']
-            waypoint = route[0]['waypoint']
-            maneuver = route[0]['leg'][0]['maneuver']
+            route = response.response["route"]
+            summary = route[0]["summary"]
+            waypoint = route[0]["waypoint"]
+            maneuver = route[0]["leg"][0]["maneuver"]
 
             self.attribution = None
-            self.base_time = summary['baseTime']
-            self.duration = summary['travelTime']
-            distance = summary['distance']
+            self.base_time = summary["baseTime"]
+            self.duration = summary["travelTime"]
+            distance = summary["distance"]
             if self.units == CONF_UNIT_SYSTEM_IMPERIAL:
                 # Convert to miles.
                 self.distance = distance / 1609.344
@@ -369,15 +358,15 @@ class HERETravelTimeData():
                 self.route = self._get_route_from_vehicle_maneuver(maneuver)
             elif self.travel_mode == TRAVEL_MODE_PUBLIC:
                 # Get Route for Public Transport
-                public_transport_line = route[0]['publicTransportLine']
+                public_transport_line = route[0]["publicTransportLine"]
                 self.route = self._get_route_from_public_transport_line(
-                    public_transport_line)
+                    public_transport_line
+                )
             elif self.travel_mode in TRAVEL_MODES_NON_VEHICLE:
                 # Get Route for Pedestrian and Biyclce
-                self.route = self._get_route_from_non_vehicle_maneuver(
-                    maneuver)
-            self.origin_name = waypoint[0]['mappedRoadName']
-            self.destination_name = waypoint[1]['mappedRoadName']
+                self.route = self._get_route_from_non_vehicle_maneuver(maneuver)
+            self.origin_name = waypoint[0]["mappedRoadName"]
+            self.destination_name = waypoint[1]["mappedRoadName"]
 
     @staticmethod
     def _get_route_from_non_vehicle_maneuver(maneuver):
@@ -385,11 +374,11 @@ class HERETravelTimeData():
         road_names = []
 
         for step in maneuver:
-            instruction = step['instruction']
+            instruction = step["instruction"]
             try:
-                road_name = instruction.split(
-                    "<span class=\"next-street\">"
-                )[1].split("</span>")[0]
+                road_name = instruction.split('<span class="next-street">')[1].split(
+                    "</span>"
+                )[0]
                 road_name = road_name.replace("(", "").replace(")", "")
 
                 # Only add if it does not repeat
@@ -405,8 +394,7 @@ class HERETravelTimeData():
         """Extract Waze-like route info from the public transport lines."""
         lines = []
         for line_info in public_transport_line_segment:
-            lines.append(
-                line_info['lineName'] + " - " + line_info['destination'])
+            lines.append(line_info["lineName"] + " - " + line_info["destination"])
 
         route = "; ".join(list(map(str, lines)))
         return route
@@ -417,17 +405,17 @@ class HERETravelTimeData():
         road_names = []
 
         for step in maneuver:
-            instruction = step['instruction']
+            instruction = step["instruction"]
             try:
-                road_number = instruction.split(
-                    "<span class=\"number\">"
-                )[1].split("</span>")[0]
+                road_number = instruction.split('<span class="number">')[1].split(
+                    "</span>"
+                )[0]
                 road_name = road_number.replace("(", "").replace(")", "")
 
                 try:
-                    street_name = instruction.split(
-                        "<span class=\"next-street\">"
-                    )[1].split("</span>")[0]
+                    street_name = instruction.split('<span class="next-street">')[
+                        1
+                    ].split("</span>")[0]
                     street_name = street_name.replace("(", "").replace(")", "")
 
                     road_name += " - " + street_name
