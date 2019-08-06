@@ -140,23 +140,6 @@ def establish_device_mappings():
         }
     )
 
-    CLUSTER_REPORT_CONFIGS.update(
-        {
-            SMARTTHINGS_ACCELERATION_CLUSTER: [
-                {"attr": "acceleration", "config": REPORT_CONFIG_ASAP},
-                {"attr": "x_axis", "config": REPORT_CONFIG_ASAP},
-                {"attr": "y_axis", "config": REPORT_CONFIG_ASAP},
-                {"attr": "z_axis", "config": REPORT_CONFIG_ASAP},
-            ],
-            SMARTTHINGS_HUMIDITY_CLUSTER: [
-                {
-                    "attr": "measured_value",
-                    "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
-                }
-            ],
-        }
-    )
-
     DEVICE_CLASS[zha.PROFILE_ID].update(
         {
             SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE: DEVICE_TRACKER,
