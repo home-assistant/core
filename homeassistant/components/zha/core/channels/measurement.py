@@ -45,6 +45,7 @@ class IlluminanceMeasurement(AttributeListeningChannel):
     REPORT_CONFIG = [{"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
+@registries.BINARY_SENSOR_CLUSTERS.register(measurement.OccupancySensing.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.OccupancySensing.cluster_id)
 class OccupancySensing(AttributeListeningChannel):
     """Occupancy Sensing channel."""

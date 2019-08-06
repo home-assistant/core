@@ -14,6 +14,7 @@ from .. import registries
 _LOGGER = logging.getLogger(__name__)
 
 
+@registries.CHANNEL_ONLY_CLUSTERS.register(lightlink.LightLink.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(lightlink.LightLink.cluster_id)
 class LightLink(ZigbeeChannel):
     """Lightlink channel."""

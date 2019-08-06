@@ -22,6 +22,9 @@ class Ballast(ZigbeeChannel):
     pass
 
 
+@registries.BINDABLE_CLUSTERS.register(lighting.Color.cluster_id)
+@registries.EVENT_RELAY_CLUSTERS.register(lighting.Color.cluster_id)
+@registries.LIGHT_CLUSTERS.register(lighting.Color.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(lighting.Color.cluster_id)
 class ColorChannel(ZigbeeChannel):
     """Color channel."""
