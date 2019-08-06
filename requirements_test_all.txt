@@ -68,7 +68,7 @@ aionotion==1.1.0
 aioswitcher==2019.4.26
 
 # homeassistant.components.unifi
-aiounifi==9
+aiounifi==10
 
 # homeassistant.components.wwlln
 aiowwlln==1.0.0
