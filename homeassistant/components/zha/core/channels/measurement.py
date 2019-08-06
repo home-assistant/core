@@ -8,7 +8,8 @@ import logging
 
 import zigpy.zcl.clusters.measurement as measurement
 
-from . import ZIGBEE_CHANNEL_REGISTRY, AttributeListeningChannel
+from . import AttributeListeningChannel
+from .. import registries
 from ..const import (
     REPORT_CONFIG_DEFAULT,
     REPORT_CONFIG_IMMEDIATE,
@@ -19,7 +20,7 @@ from ..const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class FlowMeasurement(AttributeListeningChannel):
     """Flow Measurement channel."""
 
@@ -27,7 +28,7 @@ class FlowMeasurement(AttributeListeningChannel):
     REPORT_CONFIG = [{"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class IlluminanceLevelSensing(AttributeListeningChannel):
     """Illuminance Level Sensing channel."""
 
@@ -35,7 +36,7 @@ class IlluminanceLevelSensing(AttributeListeningChannel):
     REPORT_CONFIG = [{"attr": "level_status", "config": REPORT_CONFIG_DEFAULT}]
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class IlluminanceMeasurement(AttributeListeningChannel):
     """Illuminance Measurement channel."""
 
@@ -43,7 +44,7 @@ class IlluminanceMeasurement(AttributeListeningChannel):
     REPORT_CONFIG = [{"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class OccupancySensing(AttributeListeningChannel):
     """Occupancy Sensing channel."""
 
@@ -51,7 +52,7 @@ class OccupancySensing(AttributeListeningChannel):
     REPORT_CONFIG = [{"attr": "occupancy", "config": REPORT_CONFIG_IMMEDIATE}]
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class PressureMeasurement(AttributeListeningChannel):
     """Pressure measurement channel."""
 
@@ -59,7 +60,7 @@ class PressureMeasurement(AttributeListeningChannel):
     REPORT_CONFIG = [{"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class RelativeHumidity(AttributeListeningChannel):
     """Relative Humidity measurement channel."""
 
@@ -72,7 +73,7 @@ class RelativeHumidity(AttributeListeningChannel):
     ]
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class TemperatureMeasurement(AttributeListeningChannel):
     """Temperature measurement channel."""
 

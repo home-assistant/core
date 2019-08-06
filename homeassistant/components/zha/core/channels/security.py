@@ -11,13 +11,14 @@ import zigpy.zcl.clusters.security as security
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import ZIGBEE_CHANNEL_REGISTRY, ZigbeeChannel
+from . import ZigbeeChannel
+from .. import registries
 from ..const import SIGNAL_ATTR_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class IasAce(ZigbeeChannel):
     """IAS Ancillary Control Equipment channel."""
 
@@ -25,7 +26,7 @@ class IasAce(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class IasWd(ZigbeeChannel):
     """IAS Warning Device channel."""
 
@@ -33,7 +34,7 @@ class IasWd(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class IASZoneChannel(ZigbeeChannel):
     """Channel for the IASZone Zigbee cluster."""
 

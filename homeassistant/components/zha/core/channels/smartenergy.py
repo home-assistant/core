@@ -8,13 +8,14 @@ import logging
 
 import zigpy.zcl.clusters.smartenergy as smartenergy
 
-from ..channels import ZIGBEE_CHANNEL_REGISTRY, AttributeListeningChannel, ZigbeeChannel
+from .. import registries
+from ..channels import AttributeListeningChannel, ZigbeeChannel
 from ..const import REPORT_CONFIG_DEFAULT
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class Calendar(ZigbeeChannel):
     """Calendar channel."""
 
@@ -22,7 +23,7 @@ class Calendar(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class DeviceManagement(ZigbeeChannel):
     """Device Management channel."""
 
@@ -30,7 +31,7 @@ class DeviceManagement(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class Drlc(ZigbeeChannel):
     """Demand Response and Load Control channel."""
 
@@ -38,7 +39,7 @@ class Drlc(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class EnergyManagement(ZigbeeChannel):
     """Energy Management channel."""
 
@@ -46,7 +47,7 @@ class EnergyManagement(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class Events(ZigbeeChannel):
     """Event channel."""
 
@@ -54,7 +55,7 @@ class Events(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class KeyEstablishment(ZigbeeChannel):
     """Key Establishment channel."""
 
@@ -62,7 +63,7 @@ class KeyEstablishment(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class MduPairing(ZigbeeChannel):
     """Pairing channel."""
 
@@ -70,7 +71,7 @@ class MduPairing(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class Messaging(ZigbeeChannel):
     """Messaging channel."""
 
@@ -78,7 +79,7 @@ class Messaging(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class Metering(AttributeListeningChannel):
     """Metering channel."""
 
@@ -86,7 +87,7 @@ class Metering(AttributeListeningChannel):
     REPORT_CONFIG = [{"attr": "instantaneous_demand", "config": REPORT_CONFIG_DEFAULT}]
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class Prepayment(ZigbeeChannel):
     """Prepayment channel."""
 
@@ -94,7 +95,7 @@ class Prepayment(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class Price(ZigbeeChannel):
     """Price channel."""
 
@@ -102,7 +103,7 @@ class Price(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class Tunneling(ZigbeeChannel):
     """Tunneling channel."""
 

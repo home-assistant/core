@@ -8,12 +8,13 @@ import logging
 
 import zigpy.zcl.clusters.protocol as protocol
 
-from ..channels import ZIGBEE_CHANNEL_REGISTRY, ZigbeeChannel
+from .. import registries
+from ..channels import ZigbeeChannel
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class AnalogInputExtended(ZigbeeChannel):
     """Analog Input Extended channel."""
 
@@ -21,7 +22,7 @@ class AnalogInputExtended(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class AnalogInputRegular(ZigbeeChannel):
     """Analog Input Regular channel."""
 
@@ -29,7 +30,7 @@ class AnalogInputRegular(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class AnalogOutputExtended(ZigbeeChannel):
     """Analog Output Regular channel."""
 
@@ -37,7 +38,7 @@ class AnalogOutputExtended(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class AnalogOutputRegular(ZigbeeChannel):
     """Analog Output Regular channel."""
 
@@ -45,7 +46,7 @@ class AnalogOutputRegular(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class AnalogValueExtended(ZigbeeChannel):
     """Analog Value Extended edition channel."""
 
@@ -53,7 +54,7 @@ class AnalogValueExtended(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class AnalogValueRegular(ZigbeeChannel):
     """Analog Value Regular channel."""
 
@@ -61,7 +62,7 @@ class AnalogValueRegular(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class BacnetProtocolTunnel(ZigbeeChannel):
     """Bacnet Protocol Tunnel channel."""
 
@@ -69,7 +70,7 @@ class BacnetProtocolTunnel(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class BinaryInputExtended(ZigbeeChannel):
     """Binary Input Extended channel."""
 
@@ -77,7 +78,7 @@ class BinaryInputExtended(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class BinaryInputRegular(ZigbeeChannel):
     """Binary Input Regular channel."""
 
@@ -85,7 +86,7 @@ class BinaryInputRegular(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class BinaryOutputExtended(ZigbeeChannel):
     """Binary Output Extended channel."""
 
@@ -93,7 +94,7 @@ class BinaryOutputExtended(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class BinaryOutputRegular(ZigbeeChannel):
     """Binary Output Regular channel."""
 
@@ -101,7 +102,7 @@ class BinaryOutputRegular(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class BinaryValueExtended(ZigbeeChannel):
     """Binary Value Extended channel."""
 
@@ -109,7 +110,7 @@ class BinaryValueExtended(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class BinaryValueRegular(ZigbeeChannel):
     """Binary Value Regular channel."""
 
@@ -117,7 +118,7 @@ class BinaryValueRegular(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class GenericTunnel(ZigbeeChannel):
     """Generic Tunnel channel."""
 
@@ -125,7 +126,7 @@ class GenericTunnel(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class MultiStateInputExtended(ZigbeeChannel):
     """Multistate Input Extended channel."""
 
@@ -133,7 +134,7 @@ class MultiStateInputExtended(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class MultiStateInputRegular(ZigbeeChannel):
     """Multistate Input Regular channel."""
 
@@ -141,7 +142,7 @@ class MultiStateInputRegular(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class MultiStateOutputExtended(ZigbeeChannel):
     """Multistate Output Extended channel."""
 
@@ -149,7 +150,7 @@ class MultiStateOutputExtended(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class MultiStateOutputRegular(ZigbeeChannel):
     """Multistate Output Regular channel."""
 
@@ -157,7 +158,7 @@ class MultiStateOutputRegular(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class MultiStateValueExtended(ZigbeeChannel):
     """Multistate Value Extended channel."""
 
@@ -165,7 +166,7 @@ class MultiStateValueExtended(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class MultiStateValueRegular(ZigbeeChannel):
     """Multistate Value Regular channel."""
 

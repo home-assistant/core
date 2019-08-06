@@ -12,6 +12,7 @@ from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.lock import DOMAIN as LOCK
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
+from homeassistant.components.zha.core.decorators import DictRegistry
 
 from .const import (
     CONTROLLER,
@@ -61,6 +62,10 @@ COMPONENT_CLUSTERS = {
     LIGHT: LIGHT_CLUSTERS,
     SWITCH: SWITCH_CLUSTERS,
 }
+
+ZIGBEE_CHANNEL_REGISTRY = DictRegistry()
+# importing channels updates registries
+from . import channels  # noqa pylint: disable=wrong-import-position
 
 
 def establish_device_mappings():

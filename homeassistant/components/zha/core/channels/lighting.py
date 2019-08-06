@@ -8,13 +8,14 @@ import logging
 
 import zigpy.zcl.clusters.lighting as lighting
 
-from . import ZIGBEE_CHANNEL_REGISTRY, ZigbeeChannel
+from . import ZigbeeChannel
+from .. import registries
 from ..const import REPORT_CONFIG_DEFAULT
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class Ballast(ZigbeeChannel):
     """Ballast channel."""
 
@@ -22,7 +23,7 @@ class Ballast(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class ColorChannel(ZigbeeChannel):
     """Color channel."""
 

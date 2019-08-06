@@ -11,13 +11,14 @@ import zigpy.zcl.clusters.hvac as hvac
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import ZIGBEE_CHANNEL_REGISTRY, ZigbeeChannel
+from . import ZigbeeChannel
+from .. import registries
 from ..const import REPORT_CONFIG_OP, SIGNAL_ATTR_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class Dehumidification(ZigbeeChannel):
     """Dehumidification channel."""
 
@@ -25,7 +26,7 @@ class Dehumidification(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class FanChannel(ZigbeeChannel):
     """Fan channel."""
 
@@ -73,7 +74,7 @@ class FanChannel(ZigbeeChannel):
         await super().async_initialize(from_cache)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class Pump(ZigbeeChannel):
     """Pump channel."""
 
@@ -81,7 +82,7 @@ class Pump(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class Thermostat(ZigbeeChannel):
     """Thermostat channel."""
 
@@ -89,7 +90,7 @@ class Thermostat(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class UserInterface(ZigbeeChannel):
     """User interface (thermostat) channel."""
 

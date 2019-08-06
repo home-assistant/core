@@ -10,7 +10,8 @@ import zigpy.zcl.clusters.homeautomation as homeautomation
 
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import ZIGBEE_CHANNEL_REGISTRY, AttributeListeningChannel, ZigbeeChannel
+from . import AttributeListeningChannel, ZigbeeChannel
+from .. import registries
 from ..const import (
     CHANNEL_ELECTRICAL_MEASUREMENT,
     REPORT_CONFIG_DEFAULT,
@@ -20,7 +21,7 @@ from ..const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class ApplianceEventAlerts(ZigbeeChannel):
     """Appliance Event Alerts channel."""
 
@@ -28,7 +29,7 @@ class ApplianceEventAlerts(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class ApplianceIdentification(ZigbeeChannel):
     """Appliance Identification channel."""
 
@@ -36,7 +37,7 @@ class ApplianceIdentification(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class ApplianceStatistics(ZigbeeChannel):
     """Appliance Statistics channel."""
 
@@ -44,7 +45,7 @@ class ApplianceStatistics(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class Diagnostic(ZigbeeChannel):
     """Diagnostic channel."""
 
@@ -52,7 +53,7 @@ class Diagnostic(ZigbeeChannel):
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class ElectricalMeasurementChannel(AttributeListeningChannel):
     """Channel that polls active power level."""
 
@@ -78,7 +79,7 @@ class ElectricalMeasurementChannel(AttributeListeningChannel):
         await super().async_initialize(from_cache)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register
+@registries.ZIGBEE_CHANNEL_REGISTRY.register
 class MeterIdentification(ZigbeeChannel):
     """Metering Identification channel."""
 
