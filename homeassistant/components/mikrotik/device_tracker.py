@@ -159,7 +159,7 @@ class MikrotikScanner(DeviceScanner):
             self.device_tracker[mac] = attrs
 
     def load_mac(self, devices):
-        """Load dictionary using MAC address as key"""
+        """Load dictionary using MAC address as key."""
         mac_devices = {}
         for device in devices:
             if "mac-address" in device:
