@@ -20,23 +20,31 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_service(hass, config, discovery_info=None):
     """Get the SMSApi notification service."""
-    return SMSApiNotificationService(
-        config[CONF_ACCESS_TOKEN], config[CONF_RECIPIENT])
+
+    smsapi_client = SmsApiPlClient(access_token=config[CONF_ACCESS_TOKEN])
+
+    try:
+        smsapi_client.account.balance()
+        return SMSApiNotificationService(
+            smsapi_client, config[CONF_RECIPIENT])
+    except SmsApiException as exc:
+        _LOGGER.error(exc)
+        return None
 
 
 class SMSApiNotificationService(BaseNotificationService):
     """Implement a notification service for the SMSApi service."""
 
-    def __init__(self, access_token, recipient):
+    def __init__(self, client, recipient):
         """Initialize the service."""
 
-        self.smsapi = SmsApiPlClient(access_token=access_token)
+        self.client = client
         self._recipient = recipient
 
     def send_message(self, message="", **kwargs):
         """Send a SMS message via SMSApi."""
 
         try:
-            self.smsapi.sms.send(to=self._recipient, message=message)
+            self.client.sms.send(to=self._recipient, message=message)
         except SmsApiException as exc:
             _LOGGER.error(exc)
