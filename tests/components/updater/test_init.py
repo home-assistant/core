@@ -82,7 +82,7 @@ def test_rename_entity(hass, mock_get_uuid, mock_get_newest_version):
 
     yield from hass.async_block_till_done()
     assert hass.states.is_state("binary_sensor.updater", "unavailable")
-    assert hass.states.is_state("binary_sensor.new_entity_id", "unavailable") is False
+    assert hass.states.get("binary_sensor.new_entity_id") is None
 
     entity_registry = yield from hass.helpers.entity_registry.async_get_registry()
     entity_registry.async_update_entity(
@@ -91,14 +91,14 @@ def test_rename_entity(hass, mock_get_uuid, mock_get_newest_version):
 
     yield from hass.async_block_till_done()
     assert hass.states.is_state("binary_sensor.new_entity_id", "unavailable")
-    assert hass.states.is_state("binary_sensor.updater", "unavailable") is False
+    assert hass.states.get("binary_sensor.updater") is None
 
     with patch("homeassistant.components.updater.current_version", MOCK_VERSION):
         async_fire_time_changed(hass, later)
         yield from hass.async_block_till_done()
 
     assert hass.states.is_state("binary_sensor.new_entity_id", "on")
-    assert hass.states.is_state("binary_sensor.updater", "unavailable") is False
+    assert hass.states.get("binary_sensor.updater") is None
 
 
 @asyncio.coroutine
