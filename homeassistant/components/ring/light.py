@@ -73,7 +73,7 @@ class RingLight(Light):
         """If the switch is currently on or off."""
         return self._light_on
 
-    def _setLight(self, new_state):
+    def _set_light(self, new_state):
         """Update light state, and causes HASS to correctly update."""
         self._device.lights = new_state
         self._light_on = new_state == ON_STATE
@@ -82,11 +82,11 @@ class RingLight(Light):
 
     def turn_on(self, **kwargs):
         """Turn the light on for 30 seconds."""
-        self._setLight(ON_STATE)
+        self._set_light(ON_STATE)
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
-        self._setLight(OFF_STATE)
+        self._set_light(OFF_STATE)
 
     def update(self):
         """Update current state of the light."""
