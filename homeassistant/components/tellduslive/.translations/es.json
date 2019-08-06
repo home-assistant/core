@@ -18,8 +18,10 @@
             "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "title": "Elige el punto final."
             }
-        }
+        },
+        "title": "Telldus Live"
     }
 }

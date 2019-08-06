@@ -1,0 +1,158 @@
+# https://dev.azure.com/home-assistant
+
+trigger:
+  tags:
+    include:
+    - '*'
+pr: none
+variables:
+  - name: versionBuilder
+    value: '5.2'
+  - group: docker
+  - group: github
+  - group: twine
+
+
+stages:
+
+- stage: 'Validate'
+  jobs:
+  - job: 'VersionValidate'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: UsePythonVersion@0
+      displayName: 'Use Python 3.7'
+      inputs:
+        versionSpec: '3.7'
+    - script: |
+        setup_version="$(python setup.py -V)"
+        branch_version="$(Build.SourceBranchName)"
+
+        if [ "${setup_version}" != "${branch_version}" ]; then
+          echo "Version of tag ${branch_version} don't match with ${setup_version}!"
+          exit 1
+        fi
+      displayName: 'Check version of branch/tag'
+    - script: |
+        sudo apt-get install -y --no-install-recommends \
+          jq curl
+
+        release="$(Build.SourceBranchName)"
+        created_by="$(curl -s https://api.github.com/repos/home-assistant/home-assistant/releases/tags/${release} | jq --raw-output '.author.login')"
+
+        if [[ "${created_by}" =~ ^(balloob|pvizeli|fabaff|robbiet480)$ ]]; then
+          exit 0
+        fi
+
+        echo "${created_by} is not allowed to create an release!"
+        exit 1
+      displayName: 'Check rights'
+
+- stage: 'Build'
+  jobs:
+  - job: 'ReleasePython'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: UsePythonVersion@0
+      displayName: 'Use Python 3.7'
+      inputs:
+        versionSpec: '3.7'
+    - script: pip install twine wheel
+      displayName: 'Install tools'
+    - script: python setup.py sdist bdist_wheel
+      displayName: 'Build package'
+    - script: |
+        export TWINE_USERNAME="$(twineUser)"
+        export TWINE_PASSWORD="$(twinePassword)"
+        
+        twine upload dist/* --skip-existing
+      displayName: 'Upload pypi'
+  - job: 'ReleaseDocker'
+    timeoutInMinutes: 240
+    pool:
+      vmImage: 'ubuntu-latest'
+    strategy:
+      maxParallel: 5
+      matrix:
+        amd64:
+          buildArch: 'amd64'
+          buildMachine: 'qemux86-64,intel-nuc'
+        i386:
+          buildArch: 'i386'
+          buildMachine: 'qemux86'
+        armhf:
+          buildArch: 'armhf'
+          buildMachine: 'qemuarm,raspberrypi'
+        armv7:
+          buildArch: 'armv7'
+          buildMachine: 'raspberrypi2,raspberrypi3,raspberrypi4,odroid-xu,tinker'
+        aarch64:
+          buildArch: 'aarch64'
+          buildMachine: 'qemuarm-64,raspberrypi3-64,raspberrypi4-64,odroid-c2,orangepi-prime'
+    steps:
+    - script: sudo docker login -u $(dockerUser) -p $(dockerPassword)
+      displayName: 'Docker hub login'
+    - script: sudo docker pull homeassistant/amd64-builder:$(versionBuilder)
+      displayName: 'Install Builder'
+    - script: |
+        set -e
+
+        sudo docker run --rm --privileged \
+          -v ~/.docker:/root/.docker \
+          -v /run/docker.sock:/run/docker.sock:rw \
+          homeassistant/amd64-builder:$(versionBuilder) \
+          --homeassistant $(Build.SourceBranchName) "--$(buildArch)" \
+          -r https://github.com/home-assistant/hassio-homeassistant \
+          -t generic --docker-hub homeassistant
+
+        sudo docker run --rm --privileged \
+          -v ~/.docker:/root/.docker \
+          -v /run/docker.sock:/run/docker.sock:rw \
+          homeassistant/amd64-builder:$(versionBuilder) \
+          --homeassistant-machine "$(Build.SourceBranchName)=$(buildMachine)" \
+          -r https://github.com/home-assistant/hassio-homeassistant \
+          -t machine --docker-hub homeassistant
+      displayName: 'Build Release'
+
+- stage: 'Publish'
+  jobs:
+  - job: 'ReleaseHassio'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - script: |
+        sudo apt-get install -y --no-install-recommends \
+          git jq curl
+
+        git config --global user.name "Pascal Vizeli"
+        git config --global user.email "pvizeli@syshack.ch"
+        git config --global credential.helper store
+
+        echo "https://$(githubToken):x-oauth-basic@github.com" > $HOME/.git-credentials
+      displayName: 'Install requirements'
+    - script: |
+        set -e
+
+        version="$(Build.SourceBranchName)"
+
+        git clone https://github.com/home-assistant/hassio-version
+        cd hassio-version
+
+        dev_version="$(jq --raw-output '.homeassistant.default' dev.json)"
+        beta_version="$(jq --raw-output '.homeassistant.default' beta.json)"
+        stable_version="$(jq --raw-output '.homeassistant.default' stable.json)"
+
+        if [[ "$version" =~ b ]]; then
+          sed -i "s|$dev_version|$version|g" dev.json
+          sed -i "s|$beta_version|$version|g" beta.json
+        else
+          sed -i "s|$dev_version|$version|g" dev.json
+          sed -i "s|$beta_version|$version|g" beta.json
+          sed -i "s|$stable_version|$version|g" stable.json
+        fi
+
+        git commit -am "Bump Home Assistant $version"
+        git push
+      displayName: 'Update version files'

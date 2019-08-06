@@ -3,7 +3,10 @@ import asyncio
 import logging
 
 from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, BaseNotificationService)
+    ATTR_TITLE,
+    ATTR_TITLE_DEFAULT,
+    BaseNotificationService,
+)
 
 from . import DOMAIN as TIBBER_DOMAIN
 

@@ -3,7 +3,7 @@
   "name": "Waze travel time",
   "documentation": "https://www.home-assistant.io/components/waze_travel_time",
   "requirements": [
-    "WazeRouteCalculator==0.9"
+    "WazeRouteCalculator==0.10"
   ],
   "dependencies": [],
   "codeowners": []
