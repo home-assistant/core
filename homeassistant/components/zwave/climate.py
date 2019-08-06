@@ -370,7 +370,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         """Return true if aux heater."""
         if not self._aux_heat:
             return None
-        elif self.values.mode.data == AUX_HEAT_ZWAVE_MODE:
+        if self.values.mode.data == AUX_HEAT_ZWAVE_MODE:
             return True
         return False
 
