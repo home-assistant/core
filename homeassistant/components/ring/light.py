@@ -17,8 +17,8 @@ updates to take place.
 """
 SKIP_UPDATES_DELAY = timedelta(seconds=5)
 
-ON_STATE = 'on'
-OFF_STATE = 'off'
+ON_STATE = "on"
+OFF_STATE = "off"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -27,7 +27,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     lights = []
 
     for device in cameras:
-        if device.has_capability('light'):
+        if device.has_capability("light"):
             lights.append(RingLight(device))
 
     add_entities(lights, True)
@@ -39,14 +39,13 @@ class RingLight(Light):
     def __init__(self, device):
         """Initialize the light."""
         self._device = device
-        self._unique_id = '{}-light'.format(self._device.id)
+        self._unique_id = "{}-light".format(self._device.id)
         self._light_on = False
         self._no_updates_until = datetime.now()
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_RING, self._update_callback)
+        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_RING, self._update_callback)
 
     @callback
     def _update_callback(self):
@@ -57,7 +56,7 @@ class RingLight(Light):
     @property
     def name(self):
         """Name of the light."""
-        return '{} light'.format(self._device.name)
+        return "{} light".format(self._device.name)
 
     @property
     def unique_id(self):
