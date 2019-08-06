@@ -562,25 +562,15 @@ def get_entity_state(config, entity):
 
 def entity_to_json(config, entity, state):
     """Convert an entity to its Hue bridge JSON representation."""
-    entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-    if entity_features & SUPPORT_BRIGHTNESS:
-        return {
-            "state": {
-                HUE_API_STATE_ON: state[STATE_ON],
-                HUE_API_STATE_BRI: state[STATE_BRIGHTNESS],
-                HUE_API_STATE_HUE: state[STATE_HUE],
-                HUE_API_STATE_SAT: state[STATE_SATURATION],
-                "reachable": True,
-            },
-            "type": "Dimmable light",
-            "name": config.get_entity_name(entity),
-            "modelid": "HASS123",
-            "uniqueid": entity.entity_id,
-            "swversion": "123",
-        }
     return {
-        "state": {HUE_API_STATE_ON: state[STATE_ON], "reachable": True},
-        "type": "On/off light",
+        "state": {
+            HUE_API_STATE_ON: state[STATE_ON],
+            HUE_API_STATE_BRI: state[STATE_BRIGHTNESS],
+            HUE_API_STATE_HUE: state[STATE_HUE],
+            HUE_API_STATE_SAT: state[STATE_SATURATION],
+            "reachable": True,
+        },
+        "type": "Dimmable light",
         "name": config.get_entity_name(entity),
         "modelid": "HASS123",
         "uniqueid": entity.entity_id,
