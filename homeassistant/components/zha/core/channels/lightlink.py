@@ -8,12 +8,13 @@ import logging
 
 import zigpy.zcl.clusters.lightlink as lightlink
 
-from . import ZIGBEE_CHANNEL_REGISTRY, ZigbeeChannel
+from . import ZigbeeChannel
+from .. import registries
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(lightlink.LightLink.cluster_id)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(lightlink.LightLink.cluster_id)
 class LightLink(ZigbeeChannel):
     """Lightlink channel."""
 
