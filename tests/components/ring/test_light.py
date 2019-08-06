@@ -10,10 +10,10 @@ async def test_entity_registry(hass, requests_mock):
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
     entry = entity_registry.async_get("light.front_light")
-    assert entry.unique_id == "aacdef123-light"
+    assert entry.unique_id == "aacdef123"
 
     entry = entity_registry.async_get("light.internal_light")
-    assert entry.unique_id == "aacdef124-light"
+    assert entry.unique_id == "aacdef124"
 
 
 async def test_light_off_reports_correctly(hass, requests_mock):
@@ -50,6 +50,7 @@ async def test_light_can_be_turned_on(hass, requests_mock):
     await hass.services.async_call(
         "light", "turn_on", {"entity_id": "light.front_light"}, blocking=True
     )
+    await hass.async_block_till_done()
 
     state = hass.states.get("light.front_light")
     assert state.state == "on"

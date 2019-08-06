@@ -9,12 +9,12 @@ from . import DATA_RING_STICKUP_CAMS, SIGNAL_UPDATE_RING
 
 _LOGGER = logging.getLogger(__name__)
 
-"""
-It takes a few seconds for the API to correctly return an update indicating
-that the changes have been made. Once we request a change (i.e. a light
-being turned on) we simply wait for this time delta before we allow
-updates to take place.
-"""
+
+# It takes a few seconds for the API to correctly return an update indicating
+# that the changes have been made. Once we request a change (i.e. a light
+# being turned on) we simply wait for this time delta before we allow
+# updates to take place.
+
 SKIP_UPDATES_DELAY = timedelta(seconds=5)
 
 ON_STATE = "on"
@@ -39,7 +39,7 @@ class RingLight(Light):
     def __init__(self, device):
         """Initialize the light."""
         self._device = device
-        self._unique_id = "{}-light".format(self._device.id)
+        self._unique_id = self._device.id
         self._light_on = False
         self._no_updates_until = datetime.now()
 
@@ -50,8 +50,8 @@ class RingLight(Light):
     @callback
     def _update_callback(self):
         """Call update method."""
-        self.async_schedule_update_ha_state(True)
         _LOGGER.debug("Updating Ring light %s (callback)", self.name)
+        self.async_schedule_update_ha_state(True)
 
     @property
     def name(self):
@@ -73,7 +73,7 @@ class RingLight(Light):
         """If the switch is currently on or off."""
         return self._light_on
 
-    def __setLight(self, new_state):
+    def _setLight(self, new_state):
         """Update light state, and causes HASS to correctly update."""
         self._device.lights = new_state
         self._light_on = new_state == ON_STATE
@@ -82,11 +82,11 @@ class RingLight(Light):
 
     def turn_on(self, **kwargs):
         """Turn the light on for 30 seconds."""
-        self.__setLight(ON_STATE)
+        self._setLight(ON_STATE)
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
-        self.__setLight(OFF_STATE)
+        self._setLight(OFF_STATE)
 
     def update(self):
         """Update current state of the light."""
