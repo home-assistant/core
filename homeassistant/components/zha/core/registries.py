@@ -12,7 +12,7 @@ from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.lock import DOMAIN as LOCK
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
-from homeassistant.components.zha.core.decorators import DictRegistry
+from homeassistant.components.zha.core.decorators import DictRegistry, SetRegistry
 
 from .const import (
     CONTROLLER,
@@ -35,23 +35,23 @@ from .const import (
     RadioType,
 )
 
-BINARY_SENSOR_CLUSTERS = set()
+BINARY_SENSOR_CLUSTERS = SetRegistry()
 BINARY_SENSOR_TYPES = {}
-BINDABLE_CLUSTERS = []
-CHANNEL_ONLY_CLUSTERS = []
+BINDABLE_CLUSTERS = SetRegistry()
+CHANNEL_ONLY_CLUSTERS = SetRegistry()
 CLUSTER_REPORT_CONFIGS = {}
 CUSTOM_CLUSTER_MAPPINGS = {}
 DEVICE_CLASS = {}
-DEVICE_TRACKER_CLUSTERS = set()
-EVENT_RELAY_CLUSTERS = []
-LIGHT_CLUSTERS = set()
-OUTPUT_CHANNEL_ONLY_CLUSTERS = []
+DEVICE_TRACKER_CLUSTERS = SetRegistry()
+EVENT_RELAY_CLUSTERS = SetRegistry()
+LIGHT_CLUSTERS = SetRegistry()
+OUTPUT_CHANNEL_ONLY_CLUSTERS = SetRegistry()
 RADIO_TYPES = {}
 REMOTE_DEVICE_TYPES = {}
 SENSOR_TYPES = {}
 SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {}
 SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {}
-SWITCH_CLUSTERS = set()
+SWITCH_CLUSTERS = SetRegistry()
 SMARTTHINGS_ACCELERATION_CLUSTER = 0xFC02
 SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE = 0x8000
 SMARTTHINGS_HUMIDITY_CLUSTER = 0xFC45
@@ -138,9 +138,6 @@ def establish_device_mappings():
     }
 
     BINARY_SENSOR_CLUSTERS.add(SMARTTHINGS_ACCELERATION_CLUSTER)
-    BINARY_SENSOR_CLUSTERS.add(zcl.clusters.general.OnOff.cluster_id)
-    BINARY_SENSOR_CLUSTERS.add(zcl.clusters.measurement.OccupancySensing.cluster_id)
-    BINARY_SENSOR_CLUSTERS.add(zcl.clusters.security.IasZone.cluster_id)
 
     BINARY_SENSOR_TYPES.update(
         {
@@ -150,13 +147,6 @@ def establish_device_mappings():
             zcl.clusters.security.IasZone.cluster_id: ZONE,
         }
     )
-
-    BINDABLE_CLUSTERS.append(zcl.clusters.general.LevelControl.cluster_id)
-    BINDABLE_CLUSTERS.append(zcl.clusters.general.OnOff.cluster_id)
-    BINDABLE_CLUSTERS.append(zcl.clusters.lighting.Color.cluster_id)
-
-    CHANNEL_ONLY_CLUSTERS.append(zcl.clusters.general.Basic.cluster_id)
-    CHANNEL_ONLY_CLUSTERS.append(zcl.clusters.lightlink.LightLink.cluster_id)
 
     CLUSTER_REPORT_CONFIGS.update(
         {
@@ -205,17 +195,6 @@ def establish_device_mappings():
         }
     )
 
-    DEVICE_TRACKER_CLUSTERS.add(zcl.clusters.general.PowerConfiguration.cluster_id)
-
-    EVENT_RELAY_CLUSTERS.append(zcl.clusters.general.LevelControl.cluster_id)
-    EVENT_RELAY_CLUSTERS.append(zcl.clusters.general.OnOff.cluster_id)
-
-    OUTPUT_CHANNEL_ONLY_CLUSTERS.append(zcl.clusters.general.Scenes.cluster_id)
-
-    LIGHT_CLUSTERS.add(zcl.clusters.general.LevelControl.cluster_id)
-    LIGHT_CLUSTERS.add(zcl.clusters.general.OnOff.cluster_id)
-    LIGHT_CLUSTERS.add(zcl.clusters.lighting.Color.cluster_id)
-
     SINGLE_INPUT_CLUSTER_DEVICE_CLASS.update(
         {
             # this works for now but if we hit conflicts we can break it out to
@@ -255,8 +234,6 @@ def establish_device_mappings():
             zcl.clusters.smartenergy.Metering.cluster_id: SENSOR_METERING,
         }
     )
-
-    SWITCH_CLUSTERS.add(zcl.clusters.general.OnOff.cluster_id)
 
     zhap = zha.PROFILE_ID
     REMOTE_DEVICE_TYPES[zhap].append(zha.DeviceType.COLOR_CONTROLLER)

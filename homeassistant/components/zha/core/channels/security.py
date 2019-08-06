@@ -34,6 +34,7 @@ class IasWd(ZigbeeChannel):
     pass
 
 
+@registries.BINARY_SENSOR_CLUSTERS.register
 @registries.ZIGBEE_CHANNEL_REGISTRY.register
 class IASZoneChannel(ZigbeeChannel):
     """Channel for the IASZone Zigbee cluster."""

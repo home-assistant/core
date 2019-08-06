@@ -68,6 +68,7 @@ class ApplianceContorl(ZigbeeChannel):
     pass
 
 
+@registries.CHANNEL_ONLY_CLUSTERS.register
 @registries.ZIGBEE_CHANNEL_REGISTRY.register
 class BasicChannel(ZigbeeChannel):
     """Channel to interact with the basic cluster."""
@@ -172,6 +173,9 @@ class Identify(ZigbeeChannel):
     pass
 
 
+@registries.BINDABLE_CLUSTERS.register
+@registries.EVENT_RELAY_CLUSTERS.register
+@registries.LIGHT_CLUSTERS.register
 @registries.ZIGBEE_CHANNEL_REGISTRY.register
 class LevelControlChannel(ZigbeeChannel):
     """Channel for the LevelControl Zigbee cluster."""
@@ -242,6 +246,11 @@ class MultistateValue(AttributeListeningChannel):
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
+@registries.BINARY_SENSOR_CLUSTERS.register
+@registries.BINDABLE_CLUSTERS.register
+@registries.EVENT_RELAY_CLUSTERS.register
+@registries.LIGHT_CLUSTERS.register
+@registries.SWITCH_CLUSTERS.register
 @registries.ZIGBEE_CHANNEL_REGISTRY.register
 class OnOffChannel(ZigbeeChannel):
     """Channel for the OnOff Zigbee cluster."""
@@ -349,6 +358,7 @@ class PollControl(ZigbeeChannel):
     pass
 
 
+@registries.DEVICE_TRACKER_CLUSTERS.register
 @registries.ZIGBEE_CHANNEL_REGISTRY.register
 class PowerConfigurationChannel(ZigbeeChannel):
     """Channel for the zigbee power configuration cluster."""
@@ -409,6 +419,7 @@ class RSSILocation(ZigbeeChannel):
     pass
 
 
+@registries.OUTPUT_CHANNEL_ONLY_CLUSTERS.register
 @registries.ZIGBEE_CHANNEL_REGISTRY.register
 class Scenes(ZigbeeChannel):
     """Scenes channel."""
