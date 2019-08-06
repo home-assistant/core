@@ -67,6 +67,16 @@ def test_new_version_shows_entity_startup(hass, mock_get_uuid, mock_get_newest_v
     assert "newest_version" not in hass.states.get("binary_sensor.updater").attributes
     assert "release_notes" not in hass.states.get("binary_sensor.updater").attributes
 
+    entity_registry = yield from hass.helpers.entity_registry.async_get_registry()
+    entity_registry.async_update_entity(
+        "binary_sensor.updater", new_entity_id="binary_sensor.new_entity_id"
+    )
+
+    yield from hass.async_block_till_done()
+
+    assert hass.states.is_state("binary_sensor.new_entity_id", "unavailable")
+    assert hass.states.is_state("binary_sensor.updater", "unavailable") is False
+
 
 @asyncio.coroutine
 def test_new_version_shows_entity_true(hass, mock_get_uuid, mock_get_newest_version):
