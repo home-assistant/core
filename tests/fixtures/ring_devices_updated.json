@@ -209,7 +209,7 @@
                     "brightness": 0,
                     "contrast": 64,
                     "saturation": 80}},
-            "siren_status": {"seconds_remaining": 0},
+            "siren_status": {"seconds_remaining": 30},
             "stolen": false,
             "subscribed": true,
             "subscribed_motions": true,
