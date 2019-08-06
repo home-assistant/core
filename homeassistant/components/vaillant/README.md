@@ -31,4 +31,6 @@ vaillant:
 
 ##Todo's
 - handling error messages
-- remove quick_mode if there is any when setting a new mode ? (creating a new set of service ?)
+- remove quick_mode if there is any when setting a new mode ? (creating a new set of services ?)
+- add operation mode in state attr for climate and water_heater
+- tests

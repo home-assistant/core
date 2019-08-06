@@ -8,7 +8,8 @@ from vr900connector.model import System, HeatingMode, QuickMode, HolidayMode, \
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.components.vaillant as vaillant
-from homeassistant.components.vaillant import DOMAIN, CONF_WATER_HEATER
+from homeassistant.components.vaillant import DOMAIN, CONF_WATER_HEATER, \
+    ATTR_VAILLANT_MODE
 from tests.components.vaillant import SystemManagerMock, _goto_future, _setup
 
 VALID_ALL_DISABLED_CONFIG = {
@@ -33,12 +34,14 @@ def _assert_state(hass, mode, temp, current_temp, away_mode):
     assert state.attributes['away_mode'] == away_mode
     if mode == QuickMode.QM_HOLIDAY:
         assert set(state.attributes['operation_list']) == \
-               {'ON', 'OFF', 'AUTO', 'QM_HOTWATER_BOOST', 'QM_ONE_DAY_AWAY',
-                'QM_SYSTEM_OFF', 'QM_HOLIDAY'}
+            {'ON', 'OFF', 'AUTO', 'QM_HOTWATER_BOOST', 'QM_ONE_DAY_AWAY',
+             'QM_SYSTEM_OFF', 'QM_HOLIDAY'}
     else:
         assert set(state.attributes['operation_list']) == \
-               {'ON', 'OFF', 'AUTO', 'QM_HOTWATER_BOOST', 'QM_ONE_DAY_AWAY',
-                'QM_SYSTEM_OFF'}
+            {'ON', 'OFF', 'AUTO', 'QM_HOTWATER_BOOST', 'QM_ONE_DAY_AWAY',
+             'QM_SYSTEM_OFF'}
+
+    assert state.attributes[ATTR_VAILLANT_MODE] == mode.name
 
 
 @pytest.fixture(autouse=True)

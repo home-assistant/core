@@ -2,7 +2,7 @@
 
 import abc
 import logging
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 
 from vr900connector.model import (
     System,
@@ -35,13 +35,14 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 
-from . import HUB, BaseVaillantEntity, CONF_ROOM_CLIMATE, CONF_ZONE_CLIMATE
-
+from . import HUB, BaseVaillantEntity, CONF_ROOM_CLIMATE, CONF_ZONE_CLIMATE, \
+    ATTR_VAILLANT_MODE
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Vaillant climate platform."""
     climates = []
     hub = hass.data[HUB]
@@ -62,7 +63,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     _LOGGER.info("Adding %s climate entities", len(climates))
 
-    async_add_entities(climates)
+    async_add_entities(climates, True)
     return True
 
 
@@ -102,6 +103,14 @@ class VaillantClimate(BaseVaillantEntity, ClimateDevice, abc.ABC):
     def is_aux_heat(self) -> Optional[bool]:
         """Return true if aux heater."""
         return False
+
+    @property
+    def state_attributes(self) -> Dict[str, Any]:
+        attributes = super().state_attributes
+        attributes.update({
+            ATTR_VAILLANT_MODE: self._active_mode.current_mode.name
+        })
+        return attributes
 
     @property
     def fan_mode(self) -> Optional[str]:
@@ -184,7 +193,7 @@ class VaillantRoomClimate(VaillantClimate):
 
     _HVAC_TO_MODE: Dict[str, Mode] = {
         HVAC_MODE_AUTO: HeatingMode.AUTO,
-        PRESET_SLEEP: HeatingMode.OFF,
+        HVAC_MODE_OFF: HeatingMode.OFF,
         HVAC_MODE_HEAT: HeatingMode.MANUAL,
     }
 
@@ -246,9 +255,11 @@ class VaillantRoomClimate(VaillantClimate):
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if PRESET_AWAY == preset_mode:
-            self.hub.set_room_operation_mode(self, self._component, HeatingMode.OFF)
+            self.hub.set_room_operation_mode(self, self._component,
+                                             HeatingMode.OFF)
         else:
-            self.hub.set_room_operation_mode(self, self._component, HeatingMode.AUTO)
+            self.hub.set_room_operation_mode(self, self._component,
+                                             HeatingMode.AUTO)
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""

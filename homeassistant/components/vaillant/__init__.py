@@ -97,6 +97,8 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+ATTR_VAILLANT_MODE = 'vaillant_mode'
+
 
 async def async_setup(hass, config):
     """Set up vaillant component."""

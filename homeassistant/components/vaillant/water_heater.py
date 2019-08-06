@@ -16,7 +16,7 @@ from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE,
     DOMAIN,
 )
-from . import HUB, BaseVaillantEntity, CONF_WATER_HEATER
+from . import HUB, BaseVaillantEntity, CONF_WATER_HEATER, ATTR_VAILLANT_MODE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +34,8 @@ AWAY_MODES = [
 ]
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up water_heater platform."""
     entities = []
     hub = hass.data[HUB]
@@ -54,7 +55,8 @@ class VaillantWaterHeater(BaseVaillantEntity, WaterHeaterDevice):
 
     def __init__(self, system: System):
         """Initialize entity."""
-        super().__init__(DOMAIN, None, system.hot_water.id, system.hot_water.name)
+        super().__init__(DOMAIN, None, system.hot_water.id,
+                         system.hot_water.name)
         self._system = None
         self._active_mode = None
         mode_list = HotWater.MODES + QuickMode.for_hot_water()
@@ -106,40 +108,47 @@ class VaillantWaterHeater(BaseVaillantEntity, WaterHeaterDevice):
 
         Adding current temperature
         """
-        data = {
-            ATTR_MIN_TEMP: show_temp(
-                self.hass, self.min_temp, self.temperature_unit, self.precision
-            ),
-            ATTR_MAX_TEMP: show_temp(
-                self.hass, self.max_temp, self.temperature_unit, self.precision
-            ),
-            ATTR_TEMPERATURE: show_temp(
-                self.hass,
-                self.target_temperature,
-                self.temperature_unit,
-                self.precision,
-            ),
-            ATTR_CURRENT_TEMPERATURE: show_temp(
-                self.hass, self.temperature, self.temperature_unit, self.precision
-            ),
-            ATTR_OPERATION_MODE: self.current_operation,
-            ATTR_OPERATION_LIST: self.operation_list,
-            ATTR_AWAY_MODE: STATE_ON if self.is_away_mode_on else STATE_OFF,
-        }
-
-        return data
+        attrs = super().state_attributes
+        attrs.update({
+            ATTR_VAILLANT_MODE: self._active_mode.current_mode.name
+        })
+        return attrs
+        # return {
+        #     ATTR_MIN_TEMP: show_temp(
+        #         self.hass, self.min_temp, self.temperature_unit, self.precision
+        #     ),
+        #     ATTR_MAX_TEMP: show_temp(
+        #         self.hass, self.max_temp, self.temperature_unit, self.precision
+        #     ),
+        #     ATTR_TEMPERATURE: show_temp(
+        #         self.hass,
+        #         self.target_temperature,
+        #         self.temperature_unit,
+        #         self.precision,
+        #     ),
+        #     ATTR_CURRENT_TEMPERATURE: show_temp(
+        #         self.hass, self.temperature, self.temperature_unit,
+        #         self.precision
+        #     ),
+        #     ATTR_OPERATION_MODE: self.current_operation,
+        #     ATTR_OPERATION_LIST: self.operation_list,
+        #     ATTR_AWAY_MODE: STATE_ON if self.is_away_mode_on else STATE_OFF,
+        #     ATTR_VAILLANT_MODE: self._active_mode.current_mode.name
+        # }
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        _LOGGER.debug("target temperature is %s", self._active_mode.target_temperature)
+        _LOGGER.debug("target temperature is %s",
+                      self._active_mode.target_temperature)
         return self._active_mode.target_temperature
 
     @property
-    def temperature(self):
+    def current_temperature(self):
         """Return the current temperature."""
         _LOGGER.debug(
-            "current temperature is %s", self._system.hot_water.current_temperature
+            "current temperature is %s",
+            self._system.hot_water.current_temperature
         )
         return self._system.hot_water.current_temperature
 
@@ -156,7 +165,8 @@ class VaillantWaterHeater(BaseVaillantEntity, WaterHeaterDevice):
     @property
     def current_operation(self):
         """Return current operation ie. eco, electric, performance, ..."""
-        _LOGGER.debug("current_operation is %s", self._active_mode.current_mode)
+        _LOGGER.debug("current_operation is %s",
+                      self._active_mode.current_mode)
         return self._active_mode.current_mode.name
 
     @property
@@ -184,7 +194,8 @@ class VaillantWaterHeater(BaseVaillantEntity, WaterHeaterDevice):
         # HUB will call sync update
         if operation_mode in self._operation_list:
             mode = self._operation_list_to_mode[operation_mode]
-            self.hub.set_hot_water_operation_mode(self, self._system.hot_water, mode)
+            self.hub.set_hot_water_operation_mode(self, self._system.hot_water,
+                                                  mode)
         else:
             _LOGGER.debug("Operation mode is unknown")
 
@@ -209,7 +220,8 @@ class VaillantWaterHeater(BaseVaillantEntity, WaterHeaterDevice):
         self._system = system
         self._active_mode = self._system.get_active_mode_hot_water()
 
-        if self._system.holiday_mode and self._system.holiday_mode.is_currently_active:
+        if self._system.holiday_mode and \
+                self._system.holiday_mode.is_currently_active:
             self._operation_list.append(QuickMode.QM_HOLIDAY.name)
         elif QuickMode.QM_HOLIDAY.name in self._operation_list:
             self._operation_list.remove(QuickMode.QM_HOLIDAY.name)

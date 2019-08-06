@@ -1,3 +1,5 @@
+"""Tests for the vaillant HUB."""
+
 import mock
 import pytest
 from vr900connector.api import ApiError
@@ -18,6 +20,7 @@ def fixture_no_platform(mock_system_manager):
 
 @pytest.fixture(name="mock_init")
 def fixture_mock_init():
+    """Mock SystemManagerMock constructor."""
     orig_init = SystemManagerMock.__init__
     yield orig_init
     SystemManagerMock.__init__ = orig_init
@@ -30,7 +33,7 @@ async def test_invalid_config(hass):
 
 
 async def test_login_failed(hass, mock_init):
-    """Test when login fails"""
+    """Test when login fails."""
 
     def new_init(user: str, password: str, smart_phone_id: str,
                  file_path: str = None):
@@ -43,7 +46,7 @@ async def test_login_failed(hass, mock_init):
 
 
 async def test_hvac_update_fails(hass, mock_init):
-    """Test when hvac update request fails"""
+    """Test when hvac update request fails."""
 
     def new_init(user: str, password: str, smart_phone_id: str,
                  file_path: str = None):
