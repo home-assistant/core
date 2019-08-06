@@ -16,8 +16,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.discovery import load_platform
+from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReadyrom homeassistant.helpers.discovery import load_platform
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from .const import (
     DOMAIN,
