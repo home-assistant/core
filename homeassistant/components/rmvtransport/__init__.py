@@ -163,7 +163,7 @@ async def async_setup_entry(hass, config_entry):
     session = async_get_clientsession(hass)
 
     try:
-        rmv_rata = RMVDepartureData(
+        rmv_data = RMVDepartureData(
             session,
             config_entry.data[CONF_STATION],
             config_entry.data.get(CONF_DESTINATIONS, []),
@@ -174,8 +174,8 @@ async def async_setup_entry(hass, config_entry):
             config_entry.data.get(CONF_MAX_JOURNEYS, DEFAULT_MAX_JOURNEYS),
             DEFAULT_TIMEOUT,
         )
-        await rmv_rata.async_update()
-        hass.data[DOMAIN][DATA_RMVTRANSPORT_CLIENT][config_entry.entry_id] = rmv_rata
+        await rmv_data.async_update()
+        hass.data[DOMAIN][DATA_RMVTRANSPORT_CLIENT][config_entry.entry_id] = rmv_data
     except RMVtransportApiConnectionError:
         raise ConfigEntryNotReady
 
@@ -185,7 +185,7 @@ async def async_setup_entry(hass, config_entry):
 
     async def refresh_sensors(event_time):
         """Refresh RMV transport data."""
-        await rmv_rata.async_update()
+        await rmv_data.async_update()
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
     hass.data[DOMAIN][DATA_RMVTRANSPORT_LISTENER][

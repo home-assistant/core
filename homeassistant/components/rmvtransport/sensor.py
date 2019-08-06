@@ -78,7 +78,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     session = async_get_clientsession(hass)
 
-    rmv_rata = RMVDepartureSensor(
+    rmv_data = RMVDepartureSensor(
         session,
         entry.data[CONF_STATION],
         entry.data.get(CONF_DESTINATIONS, []),
@@ -91,10 +91,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
         timeout,
         entry.data.get(CONF_SHOW_ON_MAP),
     )
-    await rmv_rata.async_update()
-    hass.data[DOMAIN][DATA_RMVTRANSPORT_CLIENT][entry.entry_id] = rmv_rata
+    await rmv_data.async_update()
+    hass.data[DOMAIN][DATA_RMVTRANSPORT_CLIENT][entry.entry_id] = rmv_data
 
-    async_add_entities([rmv_rata])
+    async_add_entities([rmv_data])
 
 
 class RMVDepartureSensor(Entity):
