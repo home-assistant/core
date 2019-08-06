@@ -1,6 +1,4 @@
 """The GeoNet NZ Quakes integration."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -23,8 +21,6 @@ from .const import (
     DOMAIN,
     FEED,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
