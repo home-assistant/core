@@ -3,7 +3,7 @@
     "title": "GeoNet NZ Quakes",
     "step": {
       "user": {
-        "title": "Fill in your location information.",
+        "title": "Fill in your location and filter details.",
         "data": {
           "latitude": "Latitude",
           "longitude": "Longitude",
