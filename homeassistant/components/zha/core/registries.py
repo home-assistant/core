@@ -4,6 +4,7 @@ Mapping registries for Zigbee Home Automation.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
+import collections
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
@@ -41,13 +42,13 @@ BINDABLE_CLUSTERS = SetRegistry()
 CHANNEL_ONLY_CLUSTERS = SetRegistry()
 CLUSTER_REPORT_CONFIGS = {}
 CUSTOM_CLUSTER_MAPPINGS = {}
-DEVICE_CLASS = {}
+DEVICE_CLASS = collections.defaultdict(dict)
 DEVICE_TRACKER_CLUSTERS = SetRegistry()
 EVENT_RELAY_CLUSTERS = SetRegistry()
 LIGHT_CLUSTERS = SetRegistry()
 OUTPUT_CHANNEL_ONLY_CLUSTERS = SetRegistry()
 RADIO_TYPES = {}
-REMOTE_DEVICE_TYPES = {}
+REMOTE_DEVICE_TYPES = collections.defaultdict(list)
 SENSOR_TYPES = {}
 SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {}
 SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {}
@@ -77,16 +78,6 @@ def establish_device_mappings():
     """
     from zigpy import zcl
     from zigpy.profiles import zha, zll
-
-    if zha.PROFILE_ID not in DEVICE_CLASS:
-        DEVICE_CLASS[zha.PROFILE_ID] = {}
-    if zll.PROFILE_ID not in DEVICE_CLASS:
-        DEVICE_CLASS[zll.PROFILE_ID] = {}
-
-    if zha.PROFILE_ID not in REMOTE_DEVICE_TYPES:
-        REMOTE_DEVICE_TYPES[zha.PROFILE_ID] = []
-    if zll.PROFILE_ID not in REMOTE_DEVICE_TYPES:
-        REMOTE_DEVICE_TYPES[zll.PROFILE_ID] = []
 
     def get_ezsp_radio():
         import bellows.ezsp
