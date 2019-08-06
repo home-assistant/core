@@ -7,13 +7,23 @@ from aio_geojson_geonetnz_quakes import GeonetnzQuakesFeedManager
 
 from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS,
-    CONF_SCAN_INTERVAL, CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL,
-    LENGTH_KILOMETERS, LENGTH_MILES, ATTR_TIME)
+    ATTR_ATTRIBUTION,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_RADIUS,
+    CONF_SCAN_INTERVAL,
+    CONF_UNIT_SYSTEM,
+    CONF_UNIT_SYSTEM_IMPERIAL,
+    LENGTH_KILOMETERS,
+    LENGTH_MILES,
+    ATTR_TIME,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, async_dispatcher_send)
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
@@ -21,20 +31,20 @@ from .const import CONF_MINIMUM_MAGNITUDE, CONF_MMI, DOMAIN, FEED
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DEPTH = 'depth'
-ATTR_EXTERNAL_ID = 'external_id'
-ATTR_LOCALITY = 'locality'
-ATTR_MAGNITUDE = 'magnitude'
-ATTR_MMI = 'mmi'
-ATTR_PUBLICATION_DATE = 'publication_date'
-ATTR_QUALITY = 'quality'
+ATTR_DEPTH = "depth"
+ATTR_EXTERNAL_ID = "external_id"
+ATTR_LOCALITY = "locality"
+ATTR_MAGNITUDE = "magnitude"
+ATTR_MMI = "mmi"
+ATTR_PUBLICATION_DATE = "publication_date"
+ATTR_QUALITY = "quality"
 
 DEFAULT_FILTER_TIME_INTERVAL = timedelta(days=7)
 
-SIGNAL_DELETE_ENTITY = 'geonetnz_quakes_delete_{}'
-SIGNAL_UPDATE_ENTITY = 'geonetnz_quakes_update_{}'
+SIGNAL_DELETE_ENTITY = "geonetnz_quakes_delete_{}"
+SIGNAL_UPDATE_ENTITY = "geonetnz_quakes_update_{}"
 
-SOURCE = 'geonetnz_quakes'
+SOURCE = "geonetnz_quakes"
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -48,7 +58,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entry.data[CONF_MMI],
         entry.data[CONF_RADIUS],
         entry.data[CONF_UNIT_SYSTEM],
-        entry.data[CONF_MINIMUM_MAGNITUDE])
+        entry.data[CONF_MINIMUM_MAGNITUDE],
+    )
     hass.data[DOMAIN][FEED][entry.entry_id] = manager
     await manager.async_init()
 
@@ -56,18 +67,33 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class GeonetnzQuakesFeedEntityManager:
     """Feed Entity Manager for GeoNet NZ Quakes feed."""
 
-    def __init__(self, hass, async_add_entities, scan_interval, latitude,
-                 longitude, mmi, radius_in_km, unit_system, minimum_magnitude):
+    def __init__(
+        self,
+        hass,
+        async_add_entities,
+        scan_interval,
+        latitude,
+        longitude,
+        mmi,
+        radius_in_km,
+        unit_system,
+        minimum_magnitude,
+    ):
         """Initialize the Feed Entity Manager."""
         self._hass = hass
         coordinates = (latitude, longitude)
         websession = aiohttp_client.async_get_clientsession(hass)
         self._feed_manager = GeonetnzQuakesFeedManager(
-            websession, self._generate_entity, self._update_entity,
-            self._remove_entity, coordinates, mmi=mmi,
+            websession,
+            self._generate_entity,
+            self._update_entity,
+            self._remove_entity,
+            coordinates,
+            mmi=mmi,
             filter_radius=radius_in_km,
             filter_minimum_magnitude=minimum_magnitude,
-            filter_time=DEFAULT_FILTER_TIME_INTERVAL)
+            filter_time=DEFAULT_FILTER_TIME_INTERVAL,
+        )
         self._async_add_entities = async_add_entities
         self._scan_interval = timedelta(seconds=scan_interval)
         self._unit_system = unit_system
@@ -75,13 +101,15 @@ class GeonetnzQuakesFeedEntityManager:
 
     async def async_init(self):
         """Schedule regular updates based on configured time interval."""
+
         async def update(event_time):
             """Update."""
             await self.async_update()
 
         await self.async_update()
         self._track_time_remove_callback = async_track_time_interval(
-            self._hass, update, self._scan_interval)
+            self._hass, update, self._scan_interval
+        )
         _LOGGER.debug("Feed entity manager initialized")
 
     async def async_update(self):
@@ -107,13 +135,11 @@ class GeonetnzQuakesFeedEntityManager:
 
     async def _update_entity(self, external_id):
         """Update entity."""
-        async_dispatcher_send(self._hass,
-                              SIGNAL_UPDATE_ENTITY.format(external_id))
+        async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY.format(external_id))
 
     async def _remove_entity(self, external_id):
         """Remove entity."""
-        async_dispatcher_send(self._hass,
-                              SIGNAL_DELETE_ENTITY.format(external_id))
+        async_dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
 
 
 class GeonetnzQuakesEvent(GeolocationEvent):
@@ -141,11 +167,15 @@ class GeonetnzQuakesEvent(GeolocationEvent):
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self._remove_signal_delete = async_dispatcher_connect(
-            self.hass, SIGNAL_DELETE_ENTITY.format(self._external_id),
-            self._delete_callback)
+            self.hass,
+            SIGNAL_DELETE_ENTITY.format(self._external_id),
+            self._delete_callback,
+        )
         self._remove_signal_update = async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_ENTITY.format(self._external_id),
-            self._update_callback)
+            self.hass,
+            SIGNAL_UPDATE_ENTITY.format(self._external_id),
+            self._update_callback,
+        )
 
     @callback
     def _delete_callback(self):
@@ -177,7 +207,8 @@ class GeonetnzQuakesEvent(GeolocationEvent):
         # Convert distance if not metric system.
         if self._unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
             self._distance = IMPERIAL_SYSTEM.length(
-                feed_entry.distance_to_home, LENGTH_KILOMETERS)
+                feed_entry.distance_to_home, LENGTH_KILOMETERS
+            )
         else:
             self._distance = feed_entry.distance_to_home
         self._latitude = feed_entry.coordinates[0]
@@ -193,7 +224,7 @@ class GeonetnzQuakesEvent(GeolocationEvent):
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        return 'mdi:pulse'
+        return "mdi:pulse"
 
     @property
     def source(self) -> str:
@@ -232,14 +263,14 @@ class GeonetnzQuakesEvent(GeolocationEvent):
         """Return the device state attributes."""
         attributes = {}
         for key, value in (
-                (ATTR_EXTERNAL_ID, self._external_id),
-                (ATTR_ATTRIBUTION, self._attribution),
-                (ATTR_DEPTH, self._depth),
-                (ATTR_LOCALITY, self._locality),
-                (ATTR_MAGNITUDE, self._magnitude),
-                (ATTR_MMI, self._mmi),
-                (ATTR_QUALITY, self._quality),
-                (ATTR_TIME, self._time)
+            (ATTR_EXTERNAL_ID, self._external_id),
+            (ATTR_ATTRIBUTION, self._attribution),
+            (ATTR_DEPTH, self._depth),
+            (ATTR_LOCALITY, self._locality),
+            (ATTR_MAGNITUDE, self._magnitude),
+            (ATTR_MMI, self._mmi),
+            (ATTR_QUALITY, self._quality),
+            (ATTR_TIME, self._time),
         ):
             if value or isinstance(value, bool):
                 attributes[key] = value

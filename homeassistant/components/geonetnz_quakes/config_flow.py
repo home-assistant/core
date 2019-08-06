@@ -3,22 +3,33 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, CONF_SCAN_INTERVAL,
-    CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_RADIUS,
+    CONF_SCAN_INTERVAL,
+    CONF_UNIT_SYSTEM,
+    CONF_UNIT_SYSTEM_IMPERIAL,
+    CONF_UNIT_SYSTEM_METRIC,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
-    CONF_MINIMUM_MAGNITUDE, CONF_MMI, DEFAULT_MINIMUM_MAGNITUDE, DEFAULT_MMI,
-    DEFAULT_RADIUS, DEFAULT_SCAN_INTERVAL, DOMAIN)
+    CONF_MINIMUM_MAGNITUDE,
+    CONF_MMI,
+    DEFAULT_MINIMUM_MAGNITUDE,
+    DEFAULT_MMI,
+    DEFAULT_RADIUS,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 
 
 @callback
 def configured_instances(hass):
     """Return a set of configured GeoNet NZ Quakes instances."""
     return set(
-        '{0}, {1}'.format(
-            entry.data[CONF_LATITUDE], entry.data[CONF_LONGITUDE])
+        "{0}, {1}".format(entry.data[CONF_LATITUDE], entry.data[CONF_LONGITUDE])
         for entry in hass.config_entries.async_entries(DOMAIN)
     )
 
@@ -31,22 +42,27 @@ class GeonetnzQuakesFlowHandler(config_entries.ConfigFlow):
 
     async def _show_form(self, errors=None):
         """Show the form to the user."""
-        data_schema = vol.Schema({
-            vol.Optional(CONF_LATITUDE, default=self.hass.config.latitude):
-                cv.latitude,
-            vol.Optional(CONF_LONGITUDE, default=self.hass.config.longitude):
-                cv.longitude,
-            vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS):
-                cv.positive_int,
-            vol.Optional(CONF_MMI, default=DEFAULT_MMI):
-                vol.All(vol.Coerce(int), vol.Range(min=-1, max=8)),
-            vol.Optional(CONF_MINIMUM_MAGNITUDE,
-                         default=DEFAULT_MINIMUM_MAGNITUDE):
-                vol.All(vol.Coerce(float), vol.Range(min=0))
-        })
+        data_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_LATITUDE, default=self.hass.config.latitude
+                ): cv.latitude,
+                vol.Optional(
+                    CONF_LONGITUDE, default=self.hass.config.longitude
+                ): cv.longitude,
+                vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): cv.positive_int,
+                vol.Optional(CONF_MMI, default=DEFAULT_MMI): vol.All(
+                    vol.Coerce(int), vol.Range(min=-1, max=8)
+                ),
+                vol.Optional(
+                    CONF_MINIMUM_MAGNITUDE, default=DEFAULT_MINIMUM_MAGNITUDE
+                ): vol.All(vol.Coerce(float), vol.Range(min=0)),
+            }
+        )
 
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors or {})
+            step_id="user", data_schema=data_schema, errors=errors or {}
+        )
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
@@ -57,10 +73,11 @@ class GeonetnzQuakesFlowHandler(config_entries.ConfigFlow):
         if not user_input:
             return await self._show_form()
 
-        identifier = '{0}, {1}'.format(
-            user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE])
+        identifier = "{0}, {1}".format(
+            user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE]
+        )
         if identifier in configured_instances(self.hass):
-            return await self._show_form({'base': 'identifier_exists'})
+            return await self._show_form({"base": "identifier_exists"})
 
         if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
             user_input[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_IMPERIAL

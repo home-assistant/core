@@ -1,12 +1,12 @@
 """Define constants for the GeoNet NZ Quakes integration."""
 from datetime import timedelta
 
-DOMAIN = 'geonetnz_quakes'
+DOMAIN = "geonetnz_quakes"
 
-CONF_MINIMUM_MAGNITUDE = 'minimum_magnitude'
-CONF_MMI = 'mmi'
+CONF_MINIMUM_MAGNITUDE = "minimum_magnitude"
+CONF_MMI = "mmi"
 
-FEED = 'feed'
+FEED = "feed"
 
 DEFAULT_MINIMUM_MAGNITUDE = 0.0
 DEFAULT_MMI = 2
