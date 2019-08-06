@@ -52,6 +52,7 @@ async def test_siren_can_be_turned_on(hass, requests_mock):
         "switch", "turn_on", {"entity_id": "switch.front_siren"}, blocking=True
     )
 
+    await hass.async_block_till_done()
     state = hass.states.get("switch.front_siren")
     assert state.state == "on"
 

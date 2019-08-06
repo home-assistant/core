@@ -96,7 +96,7 @@
             "id": 987652,
             "kind": "hp_cam_v1",
             "latitude": 12.000000,
-            "led_status": "off",
+            "led_status": "on",
             "location_id": null,
             "longitude": -70.12345,
             "motion_snooze": {"scheduled": true},
