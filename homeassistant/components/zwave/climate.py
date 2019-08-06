@@ -372,8 +372,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             return None
         elif self.values.mode.data == AUX_HEAT_ZWAVE_MODE:
             return True
-        else:
-            return False
+        return False
 
     @property
     def preset_mode(self):
