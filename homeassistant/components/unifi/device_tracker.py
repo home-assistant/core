@@ -301,11 +301,10 @@ class UniFiDeviceTracker(ScannerEntity):
             CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
         )
 
-        if (
-            self.device.last_seen
-            and dt_util.utcnow()
-            - dt_util.utc_from_timestamp(float(self.device.last_seen))
-        ) < detection_time:
+        if self.device.last_seen and (
+            dt_util.utcnow() - dt_util.utc_from_timestamp(float(self.device.last_seen))
+            < detection_time
+        ):
             return True
         return False
 
@@ -347,6 +346,9 @@ class UniFiDeviceTracker(ScannerEntity):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
+        if not self.device.last_seen:
+            return {}
+
         attributes = {}
 
         attributes["upgradable"] = self.device.upgradable
