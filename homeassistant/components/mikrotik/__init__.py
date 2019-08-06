@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_METHOD,
+    CONF_SCAN_INTERVAL,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -23,6 +24,7 @@ from .const import (
     MTK_LOGIN_PLAIN,
     MTK_LOGIN_TOKEN,
     DEFAULT_ENCODING,
+    DEFAULT_SCAN_INTERVAL,
     IDENTITY,
     CONF_TRACK_DEVICES,
     CONF_ENCODING,
@@ -49,6 +51,9 @@ MIKROTIK_SCHEMA = vol.All(
             vol.Optional(CONF_SSL, default=False): cv.boolean,
             vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
             vol.Optional(CONF_TRACK_DEVICES, default=True): cv.boolean,
+            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
+                cv.time_period, cv.positive_timedelta
+            ),
             vol.Optional(CONF_ARP_PING, default=False): cv.boolean,
         }
     )
@@ -70,8 +75,6 @@ def setup(hass, config):
         password = device.get(CONF_PASSWORD, "")
         login = device.get(CONF_LOGIN_METHOD)
         encoding = device.get(CONF_ENCODING)
-        method = device.get(CONF_METHOD)
-        arp_ping = device.get(CONF_ARP_PING)
         track_devices = device.get(CONF_TRACK_DEVICES)
 
         if CONF_PORT in device:
@@ -91,15 +94,7 @@ def setup(hass, config):
 
         try:
             api = MikrotikClient(
-                host,
-                use_ssl,
-                port,
-                user,
-                password,
-                login_method,
-                encoding,
-                arp_ping,
-                track_devices,
+                host, use_ssl, port, user, password, login_method, encoding
             )
             api.connect_to_device()
             hass.data[DOMAIN][host] = api
@@ -118,7 +113,12 @@ def setup(hass, config):
                 hass,
                 DEVICE_TRACKER,
                 DOMAIN,
-                {CONF_HOST: host, CONF_METHOD: method, CONF_ARP_PING: arp_ping},
+                {
+                    CONF_HOST: host,
+                    CONF_METHOD: device.get(CONF_METHOD),
+                    CONF_ARP_PING: device.get(CONF_ARP_PING),
+                    CONF_SCAN_INTERVAL: device.get(CONF_SCAN_INTERVAL),
+                },
                 config,
             )
 
@@ -130,18 +130,7 @@ def setup(hass, config):
 class MikrotikClient:
     """Handle all communication with the Mikrotik API."""
 
-    def __init__(
-        self,
-        host,
-        use_ssl,
-        port,
-        user,
-        password,
-        login_method,
-        encoding,
-        arp_ping,
-        track_devices,
-    ):
+    def __init__(self, host, use_ssl, port, user, password, login_method):
         """Initialize the Mikrotik Client."""
         self._host = host
         self._use_ssl = use_ssl
@@ -151,8 +140,6 @@ class MikrotikClient:
         self._login_method = login_method
         self._encoding = encoding
         self._host_name = ""
-        self._arp_ping = arp_ping
-        self._track_devices = track_devices
         self._info = None
         self._client = None
         self._connecting = False
@@ -163,6 +150,7 @@ class MikrotikClient:
         if self._connecting:
             return
         self._connecting = True
+        self._connected = False
         _LOGGER.debug("[%s] Connecting to Mikrotik device.", self._host)
 
         kwargs = {
@@ -181,18 +169,16 @@ class MikrotikClient:
             self._client = librouteros.connect(
                 self._host, self._user, self._password, **kwargs
             )
+        except (librouteros.exceptions.ConnectionError,) as api_error:
+            _LOGGER.error("Mikrotik %s connection error: %s", self._host, api_error)
+            raise PlatformNotReady
         except (
             librouteros.exceptions.TrapError,
             librouteros.exceptions.MultiTrapError,
             librouteros.exceptions.ConnectionError,
         ) as api_error:
-            _LOGGER.error(
-                "Mikrotik error for device %s. " "Connection error: %s",
-                self._host,
-                api_error,
-            )
+            _LOGGER.error("Mikrotik %s: %s", self._host, api_error)
             self._connecting = False
-            self._connected = False
             self._client = None
             return False
 
@@ -223,14 +209,9 @@ class MikrotikClient:
         data = self.command(MIKROTIK_SERVICES[INFO])
         if data is None:
             _LOGGER.error("Mikrotik device %s is not connected.", self._host)
-            self._connected = False
             self.connect_to_device()
             return
         self._info = data[0]
-
-    def get_info(self):
-        """Return device info."""
-        return self._info
 
     def command(self, cmd, params=None):
         """Retrieve data from Mikrotik API."""
@@ -248,7 +229,7 @@ class MikrotikClient:
             librouteros.exceptions.ConnectionError,
         ) as api_error:
             _LOGGER.error(
-                "Failed to retrieve data. Mikrotik %s: cmd=[%s] Error: %s",
+                "Mikrotik %s failed to retrieve data. cmd=[%s] Error: %s",
                 self._host,
                 cmd,
                 api_error,

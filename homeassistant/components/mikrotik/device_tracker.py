@@ -1,10 +1,11 @@
 """Support for Mikrotik routers as device tracker."""
 import logging
+from datetime import timedelta
 
 from homeassistant.components.device_tracker import DeviceScanner, SOURCE_TYPE_ROUTER
-from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.helpers.event import track_time_interval
 from homeassistant.util import slugify
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
 from .const import (
     DOMAIN,
     CONF_ARP_PING,
@@ -27,21 +28,21 @@ def setup_scanner(hass, config, see, discovery_info=None):
         return False
     host = discovery_info[CONF_HOST]
     api = hass.data[DOMAIN][host]
-    method = discovery_info[CONF_METHOD]
-    arp_ping = discovery_info[CONF_ARP_PING]
-    MikrotikScanner(hass, api, host, method, arp_ping, see)
+    scanner = MikrotikScanner(hass, api, host, discovery_info, see)
+    return scanner.init_finished
 
 
 class MikrotikScanner(DeviceScanner):
     """This class queries a Mikrotik device."""
 
-    def __init__(self, hass, api, host, method, arp_ping, see):
+    def __init__(self, hass, api, host, config, see):
         """Initialize the scanner."""
         self.hass = hass
         self.api = api
         self.host = host
-        self.method = method
-        self.arp_ping = arp_ping
+        self.method = config.get(CONF_METHOD)
+        self.scan_interval = timedelta(seconds=config.get(CONF_SCAN_INTERVAL))
+        self.arp_ping = config.get(CONF_ARP_PING)
         self.host_name = api.get_hostname()
         self.capsman = None
         self.wireless = None
@@ -52,7 +53,8 @@ class MikrotikScanner(DeviceScanner):
         self.get_method()
         self._update()
 
-        track_utc_time_change(self.hass, self._update, second=range(0, 60, 30))
+        track_time_interval(hass, self._update, self.scan_interval)
+        self.init_finished = self.api.connected()
 
     def _update(self, now=None):
         """Ensure the information from Mikrotik device is up to date."""
