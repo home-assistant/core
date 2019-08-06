@@ -33,6 +33,7 @@ from homeassistant.components.here_travel_time.sensor import (
     TRAVEL_MODE_CAR,
     TRAVEL_MODE_PEDESTRIAN,
     TRAVEL_MODE_PUBLIC,
+    TRAVEL_MODE_PUBLIC_TIME_TABLE,
     TRAVEL_MODE_TRUCK,
     UNIT_OF_MEASUREMENT,
 )
@@ -327,6 +328,54 @@ async def test_public_transport(hass, requests_mock):
     assert sensor.attributes.get(ATTR_ORIGIN_NAME) == "Mannheim Rd"
     assert sensor.attributes.get(ATTR_DESTINATION_NAME) == ""
     assert sensor.attributes.get(CONF_MODE) == TRAVEL_MODE_PUBLIC
+    assert sensor.attributes.get(CONF_TRAFFIC_MODE) is False
+
+    assert sensor.attributes.get(ATTR_ICON) == ICON_PUBLIC
+
+
+async def test_public_transport_time_table(hass, requests_mock):
+    """Test that publicTransportTimeTable works."""
+    origin = "41.9798,-87.8801"
+    destination = "41.9043,-87.9216"
+    modes = ";".join(
+        [TRAVEL_MODE_PUBLIC_TIME_TABLE, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED]
+    )
+    response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
+    requests_mock.get(
+        response_url,
+        text=load_fixture("here_travel_time/public_time_table_response.json"),
+    )
+
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin": origin,
+            "destination": destination,
+            "app_id": APP_ID,
+            "app_code": APP_CODE,
+            "mode": TRAVEL_MODE_PUBLIC_TIME_TABLE,
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+
+    sensor = hass.states.get("sensor.test")
+    assert sensor.state == "80"
+    assert sensor.attributes.get("unit_of_measurement") == UNIT_OF_MEASUREMENT
+
+    assert sensor.attributes.get(ATTR_ATTRIBUTION) is None
+    assert sensor.attributes.get(ATTR_DURATION) == 79.73333333333333
+    assert sensor.attributes.get(ATTR_DISTANCE) == 14.775
+    assert sensor.attributes.get(ATTR_ROUTE) == (
+        "330 - Archer/Harlem (Terminal); 309 - Elmhurst Metra Station"
+    )
+    assert sensor.attributes.get(CONF_UNIT_SYSTEM) == "metric"
+    assert sensor.attributes.get(ATTR_DURATION_WITHOUT_TRAFFIC) == 79.73333333333333
+    assert sensor.attributes.get(ATTR_ORIGIN) == origin
+    assert sensor.attributes.get(ATTR_DESTINATION) == destination
+    assert sensor.attributes.get(ATTR_ORIGIN_NAME) == "Mannheim Rd"
+    assert sensor.attributes.get(ATTR_DESTINATION_NAME) == ""
+    assert sensor.attributes.get(CONF_MODE) == TRAVEL_MODE_PUBLIC_TIME_TABLE
     assert sensor.attributes.get(CONF_TRAFFIC_MODE) is False
 
     assert sensor.attributes.get(ATTR_ICON) == ICON_PUBLIC

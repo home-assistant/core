@@ -38,15 +38,18 @@ TRAVEL_MODE_BICYCLE = "bicycle"
 TRAVEL_MODE_CAR = "car"
 TRAVEL_MODE_PEDESTRIAN = "pedestrian"
 TRAVEL_MODE_PUBLIC = "publicTransport"
+TRAVEL_MODE_PUBLIC_TIME_TABLE = "publicTransportTimeTable"
 TRAVEL_MODE_TRUCK = "truck"
 TRAVEL_MODE = [
     TRAVEL_MODE_BICYCLE,
     TRAVEL_MODE_CAR,
     TRAVEL_MODE_PEDESTRIAN,
     TRAVEL_MODE_PUBLIC,
+    TRAVEL_MODE_PUBLIC_TIME_TABLE,
     TRAVEL_MODE_TRUCK,
 ]
 
+TRAVEL_MODES_PUBLIC = [TRAVEL_MODE_PUBLIC, TRAVEL_MODE_PUBLIC_TIME_TABLE]
 TRAVEL_MODES_VEHICLE = [TRAVEL_MODE_CAR, TRAVEL_MODE_TRUCK]
 TRAVEL_MODES_NON_VEHICLE = [TRAVEL_MODE_BICYCLE, TRAVEL_MODE_PEDESTRIAN]
 
@@ -209,7 +212,7 @@ class HERETravelTimeSensor(Entity):
             return ICON_BICYCLE
         if self._here_data.travel_mode == TRAVEL_MODE_PEDESTRIAN:
             return ICON_PEDESTRIAN
-        if self._here_data.travel_mode == TRAVEL_MODE_PUBLIC:
+        if self._here_data.travel_mode in TRAVEL_MODES_PUBLIC:
             return ICON_PUBLIC
         if self._here_data.travel_mode == TRAVEL_MODE_TRUCK:
             return ICON_TRUCK
@@ -356,7 +359,7 @@ class HERETravelTimeData:
             if self.travel_mode in TRAVEL_MODES_VEHICLE:
                 # Get Route for Car and Truck
                 self.route = self._get_route_from_vehicle_maneuver(maneuver)
-            elif self.travel_mode == TRAVEL_MODE_PUBLIC:
+            elif self.travel_mode in TRAVEL_MODES_PUBLIC:
                 # Get Route for Public Transport
                 public_transport_line = route[0]["publicTransportLine"]
                 self.route = self._get_route_from_public_transport_line(
