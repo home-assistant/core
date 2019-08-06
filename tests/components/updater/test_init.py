@@ -62,10 +62,27 @@ def test_new_version_shows_entity_startup(hass, mock_get_uuid, mock_get_newest_v
     assert res, "Updater failed to set up"
 
     yield from hass.async_block_till_done()
-
     assert hass.states.is_state("binary_sensor.updater", "unavailable")
     assert "newest_version" not in hass.states.get("binary_sensor.updater").attributes
     assert "release_notes" not in hass.states.get("binary_sensor.updater").attributes
+
+
+@asyncio.coroutine
+def test_rename_entity(hass, mock_get_uuid, mock_get_newest_version):
+    """Test if renaming the binary sensor works correctly."""
+    mock_get_uuid.return_value = MOCK_HUUID
+    mock_get_newest_version.return_value = mock_coro((NEW_VERSION, RELEASE_NOTES))
+
+    now = dt_util.utcnow()
+    later = now + timedelta(hours=1)
+    mock_utcnow.return_value = now
+
+    res = yield from async_setup_component(hass, updater.DOMAIN, {updater.DOMAIN: {}})
+    assert res, "Updater failed to set up"
+
+    yield from hass.async_block_till_done()
+    assert hass.states.is_state("binary_sensor.updater", "unavailable")
+    assert hass.states.is_state("binary_sensor.new_entity_id", "unavailable") is False
 
     entity_registry = yield from hass.helpers.entity_registry.async_get_registry()
     entity_registry.async_update_entity(
@@ -73,8 +90,14 @@ def test_new_version_shows_entity_startup(hass, mock_get_uuid, mock_get_newest_v
     )
 
     yield from hass.async_block_till_done()
-
     assert hass.states.is_state("binary_sensor.new_entity_id", "unavailable")
+    assert hass.states.is_state("binary_sensor.updater", "unavailable") is False
+
+    with patch("homeassistant.components.updater.current_version", MOCK_VERSION):
+        async_fire_time_changed(hass, later)
+        yield from hass.async_block_till_done()
+
+    assert hass.states.is_state("binary_sensor.new_entity_id", "on")
     assert hass.states.is_state("binary_sensor.updater", "unavailable") is False
 
 
@@ -92,7 +115,6 @@ def test_new_version_shows_entity_true(hass, mock_get_uuid, mock_get_newest_vers
     assert res, "Updater failed to set up"
 
     yield from hass.async_block_till_done()
-
     with patch("homeassistant.components.updater.current_version", MOCK_VERSION):
         async_fire_time_changed(hass, later)
         yield from hass.async_block_till_done()
@@ -122,7 +144,6 @@ def test_same_version_shows_entity_false(hass, mock_get_uuid, mock_get_newest_ve
     assert res, "Updater failed to set up"
 
     yield from hass.async_block_till_done()
-
     with patch("homeassistant.components.updater.current_version", MOCK_VERSION):
         async_fire_time_changed(hass, later)
         yield from hass.async_block_till_done()
@@ -151,7 +172,6 @@ def test_disable_reporting(hass, mock_get_uuid, mock_get_newest_version):
     assert res, "Updater failed to set up"
 
     yield from hass.async_block_till_done()
-
     with patch("homeassistant.components.updater.current_version", MOCK_VERSION):
         async_fire_time_changed(hass, later)
         yield from hass.async_block_till_done()
@@ -249,7 +269,6 @@ def test_new_version_shows_entity_after_hour_hassio(
     assert res, "Updater failed to set up"
 
     yield from hass.async_block_till_done()
-
     with patch("homeassistant.components.updater.current_version", MOCK_VERSION):
         async_fire_time_changed(hass, later)
         yield from hass.async_block_till_done()
