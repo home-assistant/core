@@ -10,7 +10,7 @@ certifi>=2019.6.16
 cryptography==2.7
 distro==1.4.0
 hass-nabucasa==0.16
-home-assistant-frontend==20190804.0
+home-assistant-frontend==20190805.0
 importlib-metadata==0.18
 jinja2>=2.10.1
 netdisco==2.6.0
