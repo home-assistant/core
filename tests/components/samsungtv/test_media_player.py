@@ -8,30 +8,39 @@ from asynctest import mock
 import pytest
 
 import tests.common
-from homeassistant.components.media_player.const import SUPPORT_TURN_ON, \
-    MEDIA_TYPE_CHANNEL, MEDIA_TYPE_URL
-from homeassistant.components.samsungtv.media_player import setup_platform, \
-    CONF_TIMEOUT, SamsungTVDevice, SUPPORT_SAMSUNGTV
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_ON, \
-    CONF_MAC, STATE_OFF
+from homeassistant.components.media_player.const import (
+    SUPPORT_TURN_ON,
+    MEDIA_TYPE_CHANNEL,
+    MEDIA_TYPE_URL,
+)
+from homeassistant.components.samsungtv.media_player import (
+    setup_platform,
+    CONF_TIMEOUT,
+    SamsungTVDevice,
+    SUPPORT_SAMSUNGTV,
+)
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    STATE_ON,
+    CONF_MAC,
+    STATE_OFF,
+)
 from tests.common import MockDependency
 from homeassistant.util import dt as dt_util
 from datetime import timedelta
 
 WORKING_CONFIG = {
-    CONF_HOST: 'fake',
-    CONF_NAME: 'fake',
+    CONF_HOST: "fake",
+    CONF_NAME: "fake",
     CONF_PORT: 8001,
     CONF_TIMEOUT: 10,
-    CONF_MAC: 'fake',
-    'uuid': None,
+    CONF_MAC: "fake",
+    "uuid": None,
 }
 
-DISCOVERY_INFO = {
-    'name': 'fake',
-    'model_name': 'fake',
-    'host': 'fake'
-}
+DISCOVERY_INFO = {"name": "fake", "model_name": "fake", "host": "fake"}
 
 
 class AccessDenied(Exception):
@@ -49,8 +58,8 @@ class UnhandledResponse(Exception):
 class TestSamsungTv(unittest.TestCase):
     """Testing Samsungtv component."""
 
-    @MockDependency('samsungctl')
-    @MockDependency('wakeonlan')
+    @MockDependency("samsungctl")
+    @MockDependency("wakeonlan")
     def setUp(self, samsung_mock, wol_mock):
         """Set up test environment."""
         self.hass = tests.common.get_test_home_assistant()
@@ -66,37 +75,30 @@ class TestSamsungTv(unittest.TestCase):
         """Tear down test data."""
         self.hass.stop()
 
-    @MockDependency('samsungctl')
-    @MockDependency('wakeonlan')
+    @MockDependency("samsungctl")
+    @MockDependency("wakeonlan")
     def test_setup(self, samsung_mock, wol_mock):
         """Testing setup of platform."""
-        with mock.patch(
-                'homeassistant.components.samsungtv.media_player.socket'):
+        with mock.patch("homeassistant.components.samsungtv.media_player.socket"):
             add_entities = mock.Mock()
-            setup_platform(
-                self.hass, WORKING_CONFIG, add_entities)
+            setup_platform(self.hass, WORKING_CONFIG, add_entities)
 
-    @MockDependency('samsungctl')
-    @MockDependency('wakeonlan')
+    @MockDependency("samsungctl")
+    @MockDependency("wakeonlan")
     def test_setup_discovery(self, samsung_mock, wol_mock):
         """Testing setup of platform with discovery."""
-        with mock.patch(
-                'homeassistant.components.samsungtv.media_player.socket'):
+        with mock.patch("homeassistant.components.samsungtv.media_player.socket"):
             add_entities = mock.Mock()
-            setup_platform(self.hass, {}, add_entities,
-                           discovery_info=DISCOVERY_INFO)
+            setup_platform(self.hass, {}, add_entities, discovery_info=DISCOVERY_INFO)
 
-    @MockDependency('samsungctl')
-    @MockDependency('wakeonlan')
-    @mock.patch(
-        'homeassistant.components.samsungtv.media_player._LOGGER.warning')
+    @MockDependency("samsungctl")
+    @MockDependency("wakeonlan")
+    @mock.patch("homeassistant.components.samsungtv.media_player._LOGGER.warning")
     def test_setup_none(self, samsung_mock, wol_mock, mocked_warn):
         """Testing setup of platform with no data."""
-        with mock.patch(
-                'homeassistant.components.samsungtv.media_player.socket'):
+        with mock.patch("homeassistant.components.samsungtv.media_player.socket"):
             add_entities = mock.Mock()
-            setup_platform(self.hass, {}, add_entities,
-                           discovery_info=None)
+            setup_platform(self.hass, {}, add_entities, discovery_info=None)
             mocked_warn.assert_called_once_with("Cannot determine device")
             add_entities.assert_not_called()
 
@@ -108,73 +110,71 @@ class TestSamsungTv(unittest.TestCase):
     def test_update_off(self):
         """Testing update tv off."""
         _remote = mock.Mock()
-        _remote.control = mock.Mock(
-            side_effect=OSError('Boom'))
+        _remote.control = mock.Mock(side_effect=OSError("Boom"))
         self.device.get_remote = mock.Mock(return_value=_remote)
         self.device.update()
         assert STATE_OFF == self.device._state
 
     def test_send_key(self):
         """Test for send key."""
-        self.device.send_key('KEY_POWER')
+        self.device.send_key("KEY_POWER")
         self.assertEqual(STATE_ON, self.device._state)
 
     def test_send_key_broken_pipe(self):
         """Testing broken pipe Exception."""
         _remote = mock.Mock()
-        _remote.control = mock.Mock(
-            side_effect=BrokenPipeError('Boom'))
+        _remote.control = mock.Mock(side_effect=BrokenPipeError("Boom"))
         self.device.get_remote = mock.Mock(return_value=_remote)
-        self.device.send_key('HELLO')
+        self.device.send_key("HELLO")
         self.assertIsNone(self.device._remote)
         self.assertEqual(STATE_ON, self.device._state)
 
     def test_send_key_connection_closed_retry_succeed(self):
         """Test retry on connection closed."""
         _remote = mock.Mock()
-        _remote.control = mock.Mock(side_effect=[
-            self.device._exceptions_class.ConnectionClosed('Boom'),
-            mock.DEFAULT])
+        _remote.control = mock.Mock(
+            side_effect=[
+                self.device._exceptions_class.ConnectionClosed("Boom"),
+                mock.DEFAULT,
+            ]
+        )
         self.device.get_remote = mock.Mock(return_value=_remote)
-        command = 'HELLO'
+        command = "HELLO"
         self.device.send_key(command)
         self.assertEqual(STATE_ON, self.device._state)
         # verify that _remote.control() get called twice because of retry logic
-        expected = [mock.call(command),
-                    mock.call(command)]
+        expected = [mock.call(command), mock.call(command)]
         assert expected == _remote.control.call_args_list
 
     def test_send_key_unhandled_response(self):
         """Testing unhandled response exception."""
         _remote = mock.Mock()
         _remote.control = mock.Mock(
-            side_effect=self.device._exceptions_class.UnhandledResponse('Boom')
+            side_effect=self.device._exceptions_class.UnhandledResponse("Boom")
         )
         self.device.get_remote = mock.Mock(return_value=_remote)
-        self.device.send_key('HELLO')
+        self.device.send_key("HELLO")
         self.assertIsNone(self.device._remote)
         self.assertEqual(STATE_ON, self.device._state)
 
     def test_send_key_os_error(self):
         """Testing broken pipe Exception."""
         _remote = mock.Mock()
-        _remote.control = mock.Mock(
-            side_effect=OSError('Boom'))
+        _remote.control = mock.Mock(side_effect=OSError("Boom"))
         self.device.get_remote = mock.Mock(return_value=_remote)
-        self.device.send_key('HELLO')
+        self.device.send_key("HELLO")
         assert self.device._remote is None
         assert STATE_OFF == self.device._state
 
     def test_power_off_in_progress(self):
         """Test for power_off_in_progress."""
         assert not self.device._power_off_in_progress()
-        self.device._end_of_power_off = dt_util.utcnow() + timedelta(
-            seconds=15)
+        self.device._end_of_power_off = dt_util.utcnow() + timedelta(seconds=15)
         assert self.device._power_off_in_progress()
 
     def test_name(self):
         """Test for name property."""
-        assert 'fake' == self.device.name
+        assert "fake" == self.device.name
 
     def test_state(self):
         """Test for state property."""
@@ -195,8 +195,7 @@ class TestSamsungTv(unittest.TestCase):
         self.device._mac = None
         assert SUPPORT_SAMSUNGTV == self.device.supported_features
         self.device._mac = "fake"
-        assert SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON == \
-            self.device.supported_features
+        assert SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON == self.device.supported_features
 
     def test_turn_off(self):
         """Test for turn_off."""
@@ -207,14 +206,13 @@ class TestSamsungTv(unittest.TestCase):
         self.device._end_of_power_off = None
         self.device.turn_off()
         assert self.device._end_of_power_off is not None
-        self.device.send_key.assert_called_once_with('KEY_POWER')
+        self.device.send_key.assert_called_once_with("KEY_POWER")
         self.device.send_key = mock.Mock()
-        self.device._config['method'] = 'legacy'
+        self.device._config["method"] = "legacy"
         self.device.turn_off()
-        self.device.send_key.assert_called_once_with('KEY_POWEROFF')
+        self.device.send_key.assert_called_once_with("KEY_POWEROFF")
 
-    @mock.patch(
-        'homeassistant.components.samsungtv.media_player._LOGGER.debug')
+    @mock.patch("homeassistant.components.samsungtv.media_player._LOGGER.debug")
     def test_turn_off_os_error(self, mocked_debug):
         """Test for turn_off with OSError."""
         _remote = mock.Mock()
@@ -286,7 +284,7 @@ class TestSamsungTv(unittest.TestCase):
         self.device.send_key = mock.Mock()
         self.device._mac = None
         self.device.turn_on()
-        self.device.send_key.assert_called_once_with('KEY_POWERON')
+        self.device.send_key.assert_called_once_with("KEY_POWERON")
         self.device._wol.send_magic_packet = mock.Mock()
         self.device._mac = "fake"
         self.device.turn_on()
@@ -296,9 +294,7 @@ class TestSamsungTv(unittest.TestCase):
 @pytest.fixture
 def samsung_mock():
     """Mock samsungctl."""
-    with patch.dict('sys.modules', {
-        'samsungctl': MagicMock(),
-    }):
+    with patch.dict("sys.modules", {"samsungctl": MagicMock()}):
         yield
 
 
@@ -311,14 +307,14 @@ async def test_play_media(hass, samsung_mock):
         sleeps.append(duration)
         await asyncio_sleep(0, loop=loop)
 
-    with patch('asyncio.sleep', new=sleep):
+    with patch("asyncio.sleep", new=sleep):
         device = SamsungTVDevice(**WORKING_CONFIG)
         device.hass = hass
 
         device.send_key = mock.Mock()
         await device.async_play_media(MEDIA_TYPE_CHANNEL, "576")
 
-        exp = [call("KEY_5"), call("KEY_7"), call("KEY_6")]
+        exp = [call("KEY_5"), call("KEY_7"), call("KEY_6"), call("KEY_ENTER")]
         assert device.send_key.call_args_list == exp
         assert len(sleeps) == 3
 
@@ -346,4 +342,22 @@ async def test_play_media_channel_as_non_positive(hass, samsung_mock):
     device = SamsungTVDevice(**WORKING_CONFIG)
     device.send_key = mock.Mock()
     await device.async_play_media(MEDIA_TYPE_CHANNEL, "-4")
+    assert device.send_key.call_count == 0
+
+
+async def test_select_source(hass, samsung_mock):
+    """Test for select_source."""
+    device = SamsungTVDevice(**WORKING_CONFIG)
+    device.hass = hass
+    device.send_key = mock.Mock()
+    await device.async_select_source("HDMI")
+    exp = [call("KEY_HDMI")]
+    assert device.send_key.call_args_list == exp
+
+
+async def test_select_source_invalid_source(hass, samsung_mock):
+    """Test for select_source with invalid source."""
+    device = SamsungTVDevice(**WORKING_CONFIG)
+    device.send_key = mock.Mock()
+    await device.async_select_source("INVALID")
     assert device.send_key.call_count == 0

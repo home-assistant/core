@@ -7,10 +7,21 @@ import voluptuous as vol
 
 from homeassistant.components import remote
 from homeassistant.components.remote import (
-    ATTR_ACTIVITY, ATTR_DELAY_SECS, ATTR_DEVICE, ATTR_HOLD_SECS,
-    ATTR_NUM_REPEATS, DEFAULT_DELAY_SECS, DOMAIN, PLATFORM_SCHEMA)
+    ATTR_ACTIVITY,
+    ATTR_DELAY_SECS,
+    ATTR_DEVICE,
+    ATTR_HOLD_SECS,
+    ATTR_NUM_REPEATS,
+    DEFAULT_DELAY_SECS,
+    DOMAIN,
+    PLATFORM_SCHEMA,
+)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
@@ -18,37 +29,37 @@ from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CHANNEL = 'channel'
-ATTR_CURRENT_ACTIVITY = 'current_activity'
+ATTR_CHANNEL = "channel"
+ATTR_CURRENT_ACTIVITY = "current_activity"
 
 DEFAULT_PORT = 8088
 DEVICES = []
-CONF_DEVICE_CACHE = 'harmony_device_cache'
+CONF_DEVICE_CACHE = "harmony_device_cache"
 
-SERVICE_SYNC = 'harmony_sync'
-SERVICE_CHANGE_CHANNEL = 'harmony_change_channel'
+SERVICE_SYNC = "harmony_sync"
+SERVICE_CHANGE_CHANNEL = "harmony_change_channel"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(ATTR_ACTIVITY): cv.string,
-    vol.Required(CONF_NAME): cv.string,
-    vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS):
-        vol.Coerce(float),
-    vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(ATTR_ACTIVITY): cv.string,
+        vol.Required(CONF_NAME): cv.string,
+        vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): vol.Coerce(float),
+        vol.Optional(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    }
+)
 
-HARMONY_SYNC_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-})
+HARMONY_SYNC_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 
-HARMONY_CHANGE_CHANNEL_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_CHANNEL): cv.positive_int,
-})
+HARMONY_CHANGE_CHANNEL_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(ATTR_CHANNEL): cv.positive_int,
+    }
+)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Harmony platform."""
     activity = None
 
@@ -57,9 +68,14 @@ async def async_setup_platform(
 
     if discovery_info:
         # Find the discovered device in the list of user configurations
-        override = next((c for c in hass.data[CONF_DEVICE_CACHE]
-                         if c.get(CONF_NAME) == discovery_info.get(CONF_NAME)),
-                        None)
+        override = next(
+            (
+                c
+                for c in hass.data[CONF_DEVICE_CACHE]
+                if c.get(CONF_NAME) == discovery_info.get(CONF_NAME)
+            ),
+            None,
+        )
 
         port = DEFAULT_PORT
         delay_secs = DEFAULT_DELAY_SECS
@@ -68,21 +84,14 @@ async def async_setup_platform(
             delay_secs = override.get(ATTR_DELAY_SECS)
             port = override.get(CONF_PORT, DEFAULT_PORT)
 
-        host = (
-            discovery_info.get(CONF_NAME),
-            discovery_info.get(CONF_HOST),
-            port)
+        host = (discovery_info.get(CONF_NAME), discovery_info.get(CONF_HOST), port)
 
         # Ignore hub name when checking if this hub is known - ip and port only
         if host[1:] in ((h.host, h.port) for h in DEVICES):
             _LOGGER.debug("Discovered host already known: %s", host)
             return
     elif CONF_HOST in config:
-        host = (
-            config.get(CONF_NAME),
-            config.get(CONF_HOST),
-            config.get(CONF_PORT),
-        )
+        host = (config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT))
         activity = config.get(ATTR_ACTIVITY)
         delay_secs = config.get(ATTR_DELAY_SECS)
     else:
@@ -90,14 +99,21 @@ async def async_setup_platform(
         return
 
     name, address, port = host
-    _LOGGER.info("Loading Harmony Platform: %s at %s:%s, startup activity: %s",
-                 name, address, port, activity)
+    _LOGGER.info(
+        "Loading Harmony Platform: %s at %s:%s, startup activity: %s",
+        name,
+        address,
+        port,
+        activity,
+    )
 
     harmony_conf_file = hass.config.path(
-        '{}{}{}'.format('harmony_', slugify(name), '.conf'))
+        "{}{}{}".format("harmony_", slugify(name), ".conf")
+    )
     try:
         device = HarmonyRemote(
-            name, address, port, activity, harmony_conf_file, delay_secs)
+            name, address, port, activity, harmony_conf_file, delay_secs
+        )
         if not await device.connect():
             raise PlatformNotReady
 
@@ -111,21 +127,23 @@ async def async_setup_platform(
 def register_services(hass):
     """Register all services for harmony devices."""
     hass.services.async_register(
-        DOMAIN, SERVICE_SYNC, _sync_service,
-        schema=HARMONY_SYNC_SCHEMA)
+        DOMAIN, SERVICE_SYNC, _sync_service, schema=HARMONY_SYNC_SCHEMA
+    )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_CHANGE_CHANNEL, _change_channel_service,
-        schema=HARMONY_CHANGE_CHANNEL_SCHEMA)
+        DOMAIN,
+        SERVICE_CHANGE_CHANNEL,
+        _change_channel_service,
+        schema=HARMONY_CHANGE_CHANNEL_SCHEMA,
+    )
 
 
 async def _apply_service(service, service_func, *service_func_args):
     """Handle services to apply."""
-    entity_ids = service.data.get('entity_id')
+    entity_ids = service.data.get("entity_id")
 
     if entity_ids:
-        _devices = [device for device in DEVICES
-                    if device.entity_id in entity_ids]
+        _devices = [device for device in DEVICES if device.entity_id in entity_ids]
     else:
         _devices = DEVICES
 
@@ -170,7 +188,7 @@ class HarmonyRemote(remote.RemoteDevice):
             new_activity=self.new_activity,
             config_updated=self.new_config,
             connect=self.got_connected,
-            disconnect=self.got_disconnected
+            disconnect=self.got_disconnected,
         )
 
         # Store Harmony HUB config, this will also update our current
@@ -207,7 +225,7 @@ class HarmonyRemote(remote.RemoteDevice):
     @property
     def is_on(self):
         """Return False if PowerOff is the current activity, otherwise True."""
-        return self._current_activity not in [None, 'PowerOff']
+        return self._current_activity not in [None, "PowerOff"]
 
     @property
     def available(self):
@@ -233,8 +251,7 @@ class HarmonyRemote(remote.RemoteDevice):
     def new_activity(self, activity_info: tuple) -> None:
         """Call for updating the current activity."""
         activity_id, activity_name = activity_info
-        _LOGGER.debug("%s: activity reported as: %s", self._name,
-                      activity_name)
+        _LOGGER.debug("%s: activity reported as: %s", self._name, activity_name)
         self._current_activity = activity_name
         self._state = bool(activity_id != -1)
         self._available = True
@@ -275,34 +292,30 @@ class HarmonyRemote(remote.RemoteDevice):
 
         if activity:
             activity_id = None
-            if activity.isdigit() or activity == '-1':
+            if activity.isdigit() or activity == "-1":
                 _LOGGER.debug("%s: Activity is numeric", self.name)
                 if self._client.get_activity_name(int(activity)):
                     activity_id = activity
 
             if activity_id is None:
                 _LOGGER.debug("%s: Find activity ID based on name", self.name)
-                activity_id = self._client.get_activity_id(
-                    str(activity).strip())
+                activity_id = self._client.get_activity_id(str(activity).strip())
 
             if activity_id is None:
-                _LOGGER.error("%s: Activity %s is invalid",
-                              self.name, activity)
+                _LOGGER.error("%s: Activity %s is invalid", self.name, activity)
                 return
 
             try:
                 await self._client.start_activity(activity_id)
             except aioexc.TimeOut:
-                _LOGGER.error("%s: Starting activity %s timed-out",
-                              self.name,
-                              activity)
+                _LOGGER.error("%s: Starting activity %s timed-out", self.name, activity)
         else:
-            _LOGGER.error("%s: No activity specified with turn_on service",
-                          self.name)
+            _LOGGER.error("%s: No activity specified with turn_on service", self.name)
 
     async def async_turn_off(self, **kwargs):
         """Start the PowerOff activity."""
         import aioharmony.exceptions as aioexc
+
         _LOGGER.debug("%s: Turn Off", self.name)
         try:
             await self._client.power_off()
@@ -323,14 +336,14 @@ class HarmonyRemote(remote.RemoteDevice):
 
         device_id = None
         if device.isdigit():
-            _LOGGER.debug("%s: Device %s is numeric",
-                          self.name, device)
+            _LOGGER.debug("%s: Device %s is numeric", self.name, device)
             if self._client.get_device_name(int(device)):
                 device_id = device
 
         if device_id is None:
-            _LOGGER.debug("%s: Find device ID %s based on device name",
-                          self.name, device)
+            _LOGGER.debug(
+                "%s: Find device ID %s based on device name", self.name, device
+            )
             device_id = self._client.get_device_id(str(device).strip())
 
         if device_id is None:
@@ -340,18 +353,20 @@ class HarmonyRemote(remote.RemoteDevice):
         num_repeats = kwargs[ATTR_NUM_REPEATS]
         delay_secs = kwargs.get(ATTR_DELAY_SECS, self._delay_secs)
         hold_secs = kwargs[ATTR_HOLD_SECS]
-        _LOGGER.debug("Sending commands to device %s holding for %s seconds "
-                      "with a delay of %s seconds",
-                      device, hold_secs, delay_secs)
+        _LOGGER.debug(
+            "Sending commands to device %s holding for %s seconds "
+            "with a delay of %s seconds",
+            device,
+            hold_secs,
+            delay_secs,
+        )
 
         # Creating list of commands to send.
         snd_cmnd_list = []
         for _ in range(num_repeats):
             for single_command in command:
                 send_command = SendCommandDevice(
-                    device=device_id,
-                    command=single_command,
-                    delay=hold_secs
+                    device=device_id, command=single_command, delay=hold_secs
                 )
                 snd_cmnd_list.append(send_command)
                 if delay_secs > 0:
@@ -365,26 +380,23 @@ class HarmonyRemote(remote.RemoteDevice):
             return
 
         for result in result_list:
-            _LOGGER.error("Sending command %s to device %s failed with code "
-                          "%s: %s",
-                          result.command.command,
-                          result.command.device,
-                          result.code,
-                          result.msg
-                          )
+            _LOGGER.error(
+                "Sending command %s to device %s failed with code " "%s: %s",
+                result.command.command,
+                result.command.device,
+                result.code,
+                result.msg,
+            )
 
     async def change_channel(self, channel):
         """Change the channel using Harmony remote."""
         import aioharmony.exceptions as aioexc
 
-        _LOGGER.debug("%s: Changing channel to %s",
-                      self.name, channel)
+        _LOGGER.debug("%s: Changing channel to %s", self.name, channel)
         try:
             await self._client.change_channel(channel)
         except aioexc.TimeOut:
-            _LOGGER.error("%s: Changing channel to %s timed-out",
-                          self.name,
-                          channel)
+            _LOGGER.error("%s: Changing channel to %s timed-out", self.name, channel)
 
     async def sync(self):
         """Sync the Harmony device with the web service."""
@@ -394,25 +406,26 @@ class HarmonyRemote(remote.RemoteDevice):
         try:
             await self._client.sync()
         except aioexc.TimeOut:
-            _LOGGER.error("%s: Syncing hub with Harmony cloud timed-out",
-                          self.name)
+            _LOGGER.error("%s: Syncing hub with Harmony cloud timed-out", self.name)
         else:
             await self.hass.async_add_executor_job(self.write_config_file)
 
     def write_config_file(self):
         """Write Harmony configuration file."""
-        _LOGGER.debug("%s: Writing hub config to file: %s",
-                      self.name,
-                      self._config_path)
+        _LOGGER.debug(
+            "%s: Writing hub config to file: %s", self.name, self._config_path
+        )
         if self._client.config is None:
-            _LOGGER.warning("%s: No configuration received from hub",
-                            self.name)
+            _LOGGER.warning("%s: No configuration received from hub", self.name)
             return
 
         try:
-            with open(self._config_path, 'w+', encoding='utf-8') as file_out:
-                json.dump(self._client.json_config, file_out,
-                          sort_keys=True, indent=4)
+            with open(self._config_path, "w+", encoding="utf-8") as file_out:
+                json.dump(self._client.json_config, file_out, sort_keys=True, indent=4)
         except IOError as exc:
-            _LOGGER.error("%s: Unable to write HUB configuration to %s: %s",
-                          self.name, self._config_path, exc)
+            _LOGGER.error(
+                "%s: Unable to write HUB configuration to %s: %s",
+                self.name,
+                self._config_path,
+                exc,
+            )

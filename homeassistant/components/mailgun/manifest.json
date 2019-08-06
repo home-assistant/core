@@ -1,6 +1,7 @@
 {
   "domain": "mailgun",
   "name": "Mailgun",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/mailgun",
   "requirements": [
     "pymailgunner==1.4"

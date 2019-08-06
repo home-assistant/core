@@ -7,6 +7,6 @@
     "frontend"
   ],
   "codeowners": [
-    "@home-assistant/core"
+    "@home-assistant/frontend"
   ]
 }

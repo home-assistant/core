@@ -7,8 +7,7 @@ import platform
 import subprocess
 import sys
 import threading
-from typing import List, Dict, Any  # noqa pylint: disable=unused-import
-
+from typing import List, Dict, Any, TYPE_CHECKING  # noqa pylint: disable=unused-import
 
 from homeassistant import monkey_patch
 from homeassistant.const import (
@@ -18,6 +17,9 @@ from homeassistant.const import (
     RESTART_EXIT_CODE,
 )
 
+if TYPE_CHECKING:
+    from homeassistant import core
+
 
 def set_loop() -> None:
     """Attempt to use uvloop."""
@@ -26,11 +28,12 @@ def set_loop() -> None:
 
     policy = None
 
-    if sys.platform == 'win32':
-        if hasattr(asyncio, 'WindowsProactorEventLoopPolicy'):
+    if sys.platform == "win32":
+        if hasattr(asyncio, "WindowsProactorEventLoopPolicy"):
             # pylint: disable=no-member
             policy = asyncio.WindowsProactorEventLoopPolicy()
         else:
+
             class ProactorPolicy(BaseDefaultEventLoopPolicy):
                 """Event loop policy to create proactor loops."""
 
@@ -52,28 +55,40 @@ def set_loop() -> None:
 def validate_python() -> None:
     """Validate that the right Python version is running."""
     if sys.version_info[:3] < REQUIRED_PYTHON_VER:
-        print("Home Assistant requires at least Python {}.{}.{}".format(
-            *REQUIRED_PYTHON_VER))
+        print(
+            "Home Assistant requires at least Python {}.{}.{}".format(
+                *REQUIRED_PYTHON_VER
+            )
+        )
         sys.exit(1)
 
 
 def ensure_config_path(config_dir: str) -> None:
     """Validate the configuration directory."""
     import homeassistant.config as config_util
-    lib_dir = os.path.join(config_dir, 'deps')
+
+    lib_dir = os.path.join(config_dir, "deps")
 
     # Test if configuration directory exists
     if not os.path.isdir(config_dir):
         if config_dir != config_util.get_default_config_dir():
-            print(('Fatal Error: Specified configuration directory does '
-                   'not exist {} ').format(config_dir))
+            print(
+                (
+                    "Fatal Error: Specified configuration directory does "
+                    "not exist {} "
+                ).format(config_dir)
+            )
             sys.exit(1)
 
         try:
             os.mkdir(config_dir)
         except OSError:
-            print(('Fatal Error: Unable to create default configuration '
-                   'directory {} ').format(config_dir))
+            print(
+                (
+                    "Fatal Error: Unable to create default configuration "
+                    "directory {} "
+                ).format(config_dir)
+            )
             sys.exit(1)
 
     # Test if library directory exists
@@ -81,18 +96,22 @@ def ensure_config_path(config_dir: str) -> None:
         try:
             os.mkdir(lib_dir)
         except OSError:
-            print(('Fatal Error: Unable to create library '
-                   'directory {} ').format(lib_dir))
+            print(
+                ("Fatal Error: Unable to create library " "directory {} ").format(
+                    lib_dir
+                )
+            )
             sys.exit(1)
 
 
-def ensure_config_file(config_dir: str) -> str:
+async def ensure_config_file(hass: "core.HomeAssistant", config_dir: str) -> str:
     """Ensure configuration file exists."""
     import homeassistant.config as config_util
-    config_path = config_util.ensure_config_exists(config_dir)
+
+    config_path = await config_util.async_ensure_config_exists(hass, config_dir)
 
     if config_path is None:
-        print('Error getting configuration path')
+        print("Error getting configuration path")
         sys.exit(1)
 
     return config_path
@@ -101,71 +120,72 @@ def ensure_config_file(config_dir: str) -> str:
 def get_arguments() -> argparse.Namespace:
     """Get parsed passed in arguments."""
     import homeassistant.config as config_util
+
     parser = argparse.ArgumentParser(
-        description="Home Assistant: Observe, Control, Automate.")
-    parser.add_argument('--version', action='version', version=__version__)
+        description="Home Assistant: Observe, Control, Automate."
+    )
+    parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument(
-        '-c', '--config',
-        metavar='path_to_config_dir',
+        "-c",
+        "--config",
+        metavar="path_to_config_dir",
         default=config_util.get_default_config_dir(),
-        help="Directory that contains the Home Assistant configuration")
+        help="Directory that contains the Home Assistant configuration",
+    )
     parser.add_argument(
-        '--demo-mode',
-        action='store_true',
-        help='Start Home Assistant in demo mode')
+        "--demo-mode", action="store_true", help="Start Home Assistant in demo mode"
+    )
     parser.add_argument(
-        '--debug',
-        action='store_true',
-        help='Start Home Assistant in debug mode')
+        "--debug", action="store_true", help="Start Home Assistant in debug mode"
+    )
     parser.add_argument(
-        '--open-ui',
-        action='store_true',
-        help='Open the webinterface in a browser')
+        "--open-ui", action="store_true", help="Open the webinterface in a browser"
+    )
     parser.add_argument(
-        '--skip-pip',
-        action='store_true',
-        help='Skips pip install of required packages on startup')
+        "--skip-pip",
+        action="store_true",
+        help="Skips pip install of required packages on startup",
+    )
     parser.add_argument(
-        '-v', '--verbose',
-        action='store_true',
-        help="Enable verbose logging to file.")
+        "-v", "--verbose", action="store_true", help="Enable verbose logging to file."
+    )
     parser.add_argument(
-        '--pid-file',
-        metavar='path_to_pid_file',
+        "--pid-file",
+        metavar="path_to_pid_file",
         default=None,
-        help='Path to PID file useful for running as daemon')
+        help="Path to PID file useful for running as daemon",
+    )
     parser.add_argument(
-        '--log-rotate-days',
+        "--log-rotate-days",
         type=int,
         default=None,
-        help='Enables daily log rotation and keeps up to the specified days')
+        help="Enables daily log rotation and keeps up to the specified days",
+    )
     parser.add_argument(
-        '--log-file',
+        "--log-file",
         type=str,
         default=None,
-        help='Log file to write to.  If not set, CONFIG/home-assistant.log '
-             'is used')
+        help="Log file to write to.  If not set, CONFIG/home-assistant.log " "is used",
+    )
     parser.add_argument(
-        '--log-no-color',
-        action='store_true',
-        help="Disable color logs")
+        "--log-no-color", action="store_true", help="Disable color logs"
+    )
     parser.add_argument(
-        '--runner',
-        action='store_true',
-        help='On restart exit with code {}'.format(RESTART_EXIT_CODE))
+        "--runner",
+        action="store_true",
+        help="On restart exit with code {}".format(RESTART_EXIT_CODE),
+    )
     parser.add_argument(
-        '--script',
-        nargs=argparse.REMAINDER,
-        help='Run one of the embedded scripts')
+        "--script", nargs=argparse.REMAINDER, help="Run one of the embedded scripts"
+    )
     if os.name == "posix":
         parser.add_argument(
-            '--daemon',
-            action='store_true',
-            help='Run Home Assistant as daemon')
+            "--daemon", action="store_true", help="Run Home Assistant as daemon"
+        )
 
     arguments = parser.parse_args()
     if os.name != "posix" or arguments.debug or arguments.runner:
-        setattr(arguments, 'daemon', False)
+        setattr(arguments, "daemon", False)
 
     return arguments
 
@@ -186,8 +206,8 @@ def daemonize() -> None:
         sys.exit(0)
 
     # redirect standard file descriptors to devnull
-    infd = open(os.devnull, 'r')
-    outfd = open(os.devnull, 'a+')
+    infd = open(os.devnull, "r")
+    outfd = open(os.devnull, "a+")
     sys.stdout.flush()
     sys.stderr.flush()
     os.dup2(infd.fileno(), sys.stdin.fileno())
@@ -199,7 +219,7 @@ def check_pid(pid_file: str) -> None:
     """Check that Home Assistant is not already running."""
     # Check pid file
     try:
-        with open(pid_file, 'r') as file:
+        with open(pid_file, "r") as file:
             pid = int(file.readline())
     except IOError:
         # PID File does not exist
@@ -214,7 +234,7 @@ def check_pid(pid_file: str) -> None:
     except OSError:
         # PID does not exist
         return
-    print('Fatal Error: HomeAssistant is already running.')
+    print("Fatal Error: HomeAssistant is already running.")
     sys.exit(1)
 
 
@@ -222,10 +242,10 @@ def write_pid(pid_file: str) -> None:
     """Create a PID File."""
     pid = os.getpid()
     try:
-        with open(pid_file, 'w') as file:
+        with open(pid_file, "w") as file:
             file.write(str(pid))
     except IOError:
-        print('Fatal Error: Unable to write pid file {}'.format(pid_file))
+        print("Fatal Error: Unable to write pid file {}".format(pid_file))
         sys.exit(1)
 
 
@@ -249,38 +269,45 @@ def closefds_osx(min_fd: int, max_fd: int) -> None:
 
 def cmdline() -> List[str]:
     """Collect path and arguments to re-execute the current hass instance."""
-    if os.path.basename(sys.argv[0]) == '__main__.py':
+    if os.path.basename(sys.argv[0]) == "__main__.py":
         modulepath = os.path.dirname(sys.argv[0])
-        os.environ['PYTHONPATH'] = os.path.dirname(modulepath)
-        return [sys.executable] + [arg for arg in sys.argv if
-                                   arg != '--daemon']
+        os.environ["PYTHONPATH"] = os.path.dirname(modulepath)
+        return [sys.executable] + [arg for arg in sys.argv if arg != "--daemon"]
 
-    return [arg for arg in sys.argv if arg != '--daemon']
+    return [arg for arg in sys.argv if arg != "--daemon"]
 
 
-async def setup_and_run_hass(config_dir: str,
-                             args: argparse.Namespace) -> int:
+async def setup_and_run_hass(config_dir: str, args: argparse.Namespace) -> int:
     """Set up HASS and run."""
+    # pylint: disable=redefined-outer-name
     from homeassistant import bootstrap, core
 
     hass = core.HomeAssistant()
 
     if args.demo_mode:
-        config = {
-            'frontend': {},
-            'demo': {}
-        }  # type: Dict[str, Any]
+        config = {"frontend": {}, "demo": {}}  # type: Dict[str, Any]
         bootstrap.async_from_config_dict(
-            config, hass, config_dir=config_dir, verbose=args.verbose,
-            skip_pip=args.skip_pip, log_rotate_days=args.log_rotate_days,
-            log_file=args.log_file, log_no_color=args.log_no_color)
+            config,
+            hass,
+            config_dir=config_dir,
+            verbose=args.verbose,
+            skip_pip=args.skip_pip,
+            log_rotate_days=args.log_rotate_days,
+            log_file=args.log_file,
+            log_no_color=args.log_no_color,
+        )
     else:
-        config_file = ensure_config_file(config_dir)
-        print('Config directory:', config_dir)
+        config_file = await ensure_config_file(hass, config_dir)
+        print("Config directory:", config_dir)
         await bootstrap.async_from_config_file(
-            config_file, hass, verbose=args.verbose, skip_pip=args.skip_pip,
-            log_rotate_days=args.log_rotate_days, log_file=args.log_file,
-            log_no_color=args.log_no_color)
+            config_file,
+            hass,
+            verbose=args.verbose,
+            skip_pip=args.skip_pip,
+            log_rotate_days=args.log_rotate_days,
+            log_file=args.log_file,
+            log_no_color=args.log_no_color,
+        )
 
     if args.open_ui:
         # Imported here to avoid importing asyncio before monkey patch
@@ -290,12 +317,14 @@ async def setup_and_run_hass(config_dir: str,
             """Open the web interface in a browser."""
             if hass.config.api is not None:
                 import webbrowser
+
                 webbrowser.open(hass.config.api.base_url)
 
         run_callback_threadsafe(
             hass.loop,
             hass.bus.async_listen_once,
-            EVENT_HOMEASSISTANT_START, open_browser
+            EVENT_HOMEASSISTANT_START,
+            open_browser,
         )
 
     return await hass.async_run()
@@ -305,17 +334,17 @@ def try_to_restart() -> None:
     """Attempt to clean up state and start a new Home Assistant instance."""
     # Things should be mostly shut down already at this point, now just try
     # to clean up things that may have been left behind.
-    sys.stderr.write('Home Assistant attempting to restart.\n')
+    sys.stderr.write("Home Assistant attempting to restart.\n")
 
     # Count remaining threads, ideally there should only be one non-daemonized
     # thread left (which is us). Nothing we really do with it, but it might be
     # useful when debugging shutdown/restart issues.
     try:
-        nthreads = sum(thread.is_alive() and not thread.daemon
-                       for thread in threading.enumerate())
+        nthreads = sum(
+            thread.is_alive() and not thread.daemon for thread in threading.enumerate()
+        )
         if nthreads > 1:
-            sys.stderr.write(
-                "Found {} non-daemonic threads.\n".format(nthreads))
+            sys.stderr.write("Found {} non-daemonic threads.\n".format(nthreads))
 
     # Somehow we sometimes seem to trigger an assertion in the python threading
     # module. It seems we find threads that have no associated OS level thread
@@ -329,7 +358,7 @@ def try_to_restart() -> None:
     except ValueError:
         max_fd = 256
 
-    if platform.system() == 'Darwin':
+    if platform.system() == "Darwin":
         closefds_osx(3, max_fd)
     else:
         os.closerange(3, max_fd)
@@ -348,16 +377,15 @@ def main() -> int:
     validate_python()
 
     monkey_patch_needed = sys.version_info[:3] < (3, 6, 3)
-    if monkey_patch_needed and os.environ.get('HASS_NO_MONKEY') != '1':
-        if sys.version_info[:2] >= (3, 6):
-            monkey_patch.disable_c_asyncio()
+    if monkey_patch_needed and os.environ.get("HASS_NO_MONKEY") != "1":
+        monkey_patch.disable_c_asyncio()
         monkey_patch.patch_weakref_tasks()
 
     set_loop()
 
     # Run a simple daemon runner process on Windows to handle restarts
-    if os.name == 'nt' and '--runner' not in sys.argv:
-        nt_args = cmdline() + ['--runner']
+    if os.name == "nt" and "--runner" not in sys.argv:
+        nt_args = cmdline() + ["--runner"]
         while True:
             try:
                 subprocess.check_call(nt_args)
@@ -372,6 +400,7 @@ def main() -> int:
 
     if args.script is not None:
         from homeassistant import scripts
+
         return scripts.run(args.script)
 
     config_dir = os.path.join(os.getcwd(), args.config)
@@ -386,11 +415,12 @@ def main() -> int:
         write_pid(args.pid_file)
 
     from homeassistant.util.async_ import asyncio_run
+
     exit_code = asyncio_run(setup_and_run_hass(config_dir, args))
     if exit_code == RESTART_EXIT_CODE and not args.runner:
         try_to_restart()
 
-    return exit_code  # type: ignore # mypy cannot yet infer it
+    return exit_code  # type: ignore
 
 
 if __name__ == "__main__":
