@@ -73,6 +73,17 @@ DEVICE_1 = {
     "upgradable": False,
     "version": "4.0.42.10433",
 }
+DEVICE_2 = {
+    "board_rev": 3,
+    "device_id": "mock-id",
+    "has_fan": True,
+    "ip": "10.0.1.1",
+    "mac": "00:00:00:00:01:01",
+    "model": "US16P150",
+    "name": "device_1",
+    "type": "usw",
+    "version": "4.0.42.10433",
+}
 
 CONTROLLER_DATA = {
     CONF_HOST: "mock-host",
@@ -167,7 +178,7 @@ async def test_no_clients(hass, mock_controller):
 async def test_tracked_devices(hass, mock_controller):
     """Test the update_items function with some clients."""
     mock_controller.mock_client_responses.append([CLIENT_1, CLIENT_2, CLIENT_3])
-    mock_controller.mock_device_responses.append([DEVICE_1])
+    mock_controller.mock_device_responses.append([DEVICE_1, DEVICE_2])
     mock_controller.unifi_config = {unifi_dt.CONF_SSID_FILTER: ["ssid"]}
 
     await setup_controller(hass, mock_controller)
