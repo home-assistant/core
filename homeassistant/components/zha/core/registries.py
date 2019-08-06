@@ -67,7 +67,7 @@ COMPONENT_CLUSTERS = {
 ZIGBEE_CHANNEL_REGISTRY = DictRegistry()
 
 # importing channels updates registries
-from . import channels  # noqa pylint: disable=wrong-import-position
+from . import channels  # noqa pylint: disable=wrong-import-position,unused-import
 
 
 def establish_device_mappings():
