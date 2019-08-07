@@ -4,9 +4,11 @@ from unittest.mock import MagicMock, patch
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ps4
 from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_TITLE,
     MEDIA_TYPE_GAME,
+    MEDIA_TYPE_APP,
 )
 from homeassistant.components.ps4.const import (
     ATTR_MEDIA_IMAGE_URL,
@@ -82,8 +84,10 @@ MOCK_ENTRY_VERSION_1 = MockConfigEntry(
 MOCK_UNIQUE_ID = "someuniqueid"
 
 MOCK_ID = "CUSA00123"
+MOCK_ID2 = "CUSA00124"
 MOCK_URL = "http://someurl.jpeg"
 MOCK_TITLE = "Some Title"
+MOCK_TITLE2 = "Some Other Title"
 MOCK_TYPE = MEDIA_TYPE_GAME
 
 MOCK_GAMES_DATA_OLD_STR_FORMAT = {"mock_id": "mock_title", "mock_id2": "mock_title2"}
@@ -95,15 +99,61 @@ MOCK_GAMES_DATA = {
     ATTR_MEDIA_TITLE: MOCK_TITLE,
 }
 
+MOCK_GAMES_DATA2 = {
+    ATTR_LOCKED: False,
+    ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_GAME,
+    ATTR_MEDIA_IMAGE_URL: MOCK_URL,
+    ATTR_MEDIA_TITLE: MOCK_TITLE2,
+}
+
 MOCK_GAMES_DATA_LOCKED = {
     ATTR_LOCKED: True,
     ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_GAME,
     ATTR_MEDIA_IMAGE_URL: MOCK_URL,
     ATTR_MEDIA_TITLE: MOCK_TITLE,
 }
+MOCK_GAMES_DATA_LOCKED2 = {
+    ATTR_LOCKED: True,
+    ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_GAME,
+    ATTR_MEDIA_IMAGE_URL: MOCK_URL,
+    ATTR_MEDIA_TITLE: MOCK_TITLE2,
+}
 
-MOCK_GAMES = {MOCK_ID: MOCK_GAMES_DATA}
-MOCK_GAMES_LOCKED = {MOCK_ID: MOCK_GAMES_DATA_LOCKED}
+MOCK_GAMES = {MOCK_ID: MOCK_GAMES_DATA, MOCK_ID2: MOCK_GAMES_DATA2}
+
+MOCK_GAMES_LOCKED = {
+    MOCK_ID: MOCK_GAMES_DATA_LOCKED, MOCK_ID2: MOCK_GAMES_DATA_LOCKED2
+}
+
+MOCK_HOST_NAME = "Fake PS4"
+MOCK_HOST_ID = "A0000A0AA000"
+MOCK_HOST_VERSION = "09879011"
+MOCK_HOST_TYPE = "PS4"
+MOCK_STATUS_STANDBY = "Server Standby"
+MOCK_STATUS_ON = "Ok"
+MOCK_STANDBY_CODE = 620
+MOCK_ON_CODE = 200
+MOCK_TCP_PORT = 997
+MOCK_DDP_PORT = 987
+MOCK_DDP_VERSION = "00020020"
+
+MOCK_STATUS_PLAYING = {
+    "host-type": MOCK_HOST_TYPE,
+    "host-ip": MOCK_HOST,
+    "host-request-port": MOCK_TCP_PORT,
+    "host-id": MOCK_HOST_ID,
+    "host-name": MOCK_HOST_NAME,
+    "running-app-titleid": MOCK_ID,
+    "running-app-name": MOCK_TITLE,
+    "status": MOCK_STATUS_ON,
+    "status_code": MOCK_ON_CODE,
+    "device-discovery-protocol-version": MOCK_DDP_VERSION,
+    "system-version": MOCK_HOST_VERSION
+}
+
+MOCK_LOAD_GAMES = "homeassistant.components.ps4.media_player.load_games"
+MOCK_SAVE = "homeassistant.components.ps4.save_json"
+MOCK_LOAD = "homeassistant.components.ps4.load_json"
 
 
 async def test_ps4_integration_setup(hass):
@@ -289,3 +339,171 @@ async def test_send_command(hass):
             )
             await hass.async_block_till_done()
     assert len(mock_service.mock_calls) == len(COMMANDS)
+
+
+async def mock_service_call(hass, service, data, original):
+    """Mock media service call."""
+    with patch(MOCK_LOAD,
+               return_value=original),\
+            patch(MOCK_SAVE,
+                  side_effect=MagicMock()) as mock_save,\
+            patch("os.path.isfile", return_value=True):
+        await hass.services.async_call(
+            DOMAIN, service, data)
+        await hass.async_block_till_done()
+    assert len(mock_save.mock_calls) == 1
+    args, _ = mock_save.call_args
+
+    # This arg should be the complete, updated data to save.
+    mock_games = args[1]
+    assert isinstance(mock_games, dict)
+    return mock_games
+
+
+async def test_media_edit(hass):
+    """Test that attrs are edited with media_edit service."""
+    service = "media_edit"
+    original = MOCK_GAMES
+    mock_title = "Some_New_Title"
+    mock_url = "http://somenewurl.jpeg"
+    mock_type = MEDIA_TYPE_APP
+    data = {
+        ATTR_MEDIA_CONTENT_ID: MOCK_ID,
+        ATTR_MEDIA_TITLE: mock_title,
+        ATTR_MEDIA_IMAGE_URL: mock_url,
+        ATTR_MEDIA_CONTENT_TYPE: mock_type
+    }
+
+    await ps4.async_setup(hass, {})
+    mock_games = await mock_service_call(hass, service, data, original)
+    await hass.async_block_till_done()
+
+    assert mock_games[MOCK_ID][ATTR_LOCKED] is True
+    assert mock_games[MOCK_ID][ATTR_MEDIA_CONTENT_TYPE] == mock_type
+    assert mock_games[MOCK_ID][ATTR_MEDIA_TITLE] == mock_title
+    assert mock_games[MOCK_ID][ATTR_MEDIA_IMAGE_URL] == mock_url
+    # Ensure other data entry is unaffected.
+    assert mock_games[MOCK_ID2] is MOCK_GAMES_DATA2
+
+
+async def test_media_edit_playing(hass):
+    """Test media_edit_playing service."""
+    service = "media_edit_playing"
+    original = MOCK_GAMES
+    mock_title = "Some_New_Title"
+    mock_url = "http://somenewurl.jpeg"
+    mock_type = MEDIA_TYPE_APP
+
+    with patch("pyps4_homeassistant.ps4.get_status",
+               return_value=MOCK_STATUS_PLAYING),\
+            patch(MOCK_LOAD_GAMES, return_value=original):
+        await setup_mock_component(hass)
+
+    mock_entities = hass.states.async_entity_ids()
+    mock_entity_id = mock_entities[0]
+    mock_state = dict(hass.states.get(mock_entity_id).attributes)
+    assert mock_state[ATTR_MEDIA_CONTENT_ID] == MOCK_ID
+
+    data = {
+        ATTR_ENTITY_ID: mock_entity_id,
+        ATTR_MEDIA_TITLE: mock_title,
+        ATTR_MEDIA_IMAGE_URL: mock_url,
+        ATTR_MEDIA_CONTENT_TYPE: mock_type
+    }
+
+    with patch("homeassistant.components.ps4.refresh_entity_media",
+               side_effect=MagicMock()) as mock_refresh:
+        mock_games = await mock_service_call(hass, service, data, original)
+        await hass.async_block_till_done()
+
+    assert len(mock_refresh.mock_calls) == 1
+    assert mock_state[ATTR_MEDIA_CONTENT_ID] == MOCK_ID
+    assert mock_games[MOCK_ID][ATTR_LOCKED] is True
+    assert mock_games[MOCK_ID][ATTR_MEDIA_CONTENT_TYPE] == mock_type
+    assert mock_games[MOCK_ID][ATTR_MEDIA_TITLE] == mock_title
+    assert mock_games[MOCK_ID][ATTR_MEDIA_IMAGE_URL] == mock_url
+    # Ensure other data entry is unaffected.
+    assert mock_games[MOCK_ID2] is MOCK_GAMES_DATA2
+
+
+async def test_media_unlock(hass):
+    """Test media_unlock service."""
+    service = "media_unlock"
+    original = MOCK_GAMES_LOCKED
+    data = {ATTR_MEDIA_CONTENT_ID: MOCK_ID}
+
+    await ps4.async_setup(hass, {})
+    mock_games = await mock_service_call(hass, service, data, original)
+    await hass.async_block_till_done()
+
+    assert mock_games[MOCK_ID][ATTR_LOCKED] is False
+    # Ensure other attrs are unchanged.
+    assert mock_games[MOCK_ID][ATTR_MEDIA_CONTENT_TYPE] == MOCK_TYPE
+    assert mock_games[MOCK_ID][ATTR_MEDIA_TITLE] == MOCK_TITLE
+    assert mock_games[MOCK_ID][ATTR_MEDIA_IMAGE_URL] == MOCK_URL
+    # Ensure other data entry is unaffected.
+    assert mock_games[MOCK_ID2] is MOCK_GAMES_DATA_LOCKED2
+
+
+async def test_media_unlock_playing(hass):
+    """Test media_unlock_playing service."""
+    service = "media_unlock_playing"
+    original = MOCK_GAMES_LOCKED
+
+    with patch("pyps4_homeassistant.ps4.get_status",
+               return_value=MOCK_STATUS_PLAYING),\
+            patch(MOCK_LOAD, return_value=original),\
+            patch(MOCK_SAVE, side_effect=MagicMock()):
+        await setup_mock_component(hass)
+        await hass.async_block_till_done()
+
+    mock_entities = hass.states.async_entity_ids()
+    mock_entity_id = mock_entities[0]
+    mock_state = dict(hass.states.get(mock_entity_id).attributes)
+    assert mock_state[ATTR_MEDIA_CONTENT_ID] == MOCK_ID
+
+    data = {ATTR_ENTITY_ID: mock_entity_id}
+
+    with patch("homeassistant.components.ps4.refresh_entity_media",
+               side_effect=MagicMock()) as mock_refresh:
+        mock_games = await mock_service_call(hass, service, data, original)
+        await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert len(mock_refresh.mock_calls) == 1
+    assert mock_state[ATTR_MEDIA_CONTENT_ID] == MOCK_ID
+    assert mock_games[MOCK_ID][ATTR_LOCKED] is False
+    # Ensure other attrs are unchanged.
+    assert mock_games[MOCK_ID][ATTR_MEDIA_CONTENT_TYPE] == MOCK_TYPE
+    assert mock_games[MOCK_ID][ATTR_MEDIA_TITLE] == MOCK_TITLE
+    assert mock_games[MOCK_ID][ATTR_MEDIA_IMAGE_URL] == MOCK_URL
+    # Ensure other data entry is unaffected.
+    assert mock_games[MOCK_ID2] is MOCK_GAMES_DATA_LOCKED2
+
+
+async def test_remove_media(hass):
+    """Test media entry is removed."""
+    service = "media_remove"
+    original = MOCK_GAMES
+    data = {ATTR_MEDIA_CONTENT_ID: MOCK_ID}
+
+    await ps4.async_setup(hass, {})
+    mock_games = await mock_service_call(hass, service, data, original)
+    await hass.async_block_till_done()
+
+    assert MOCK_ID not in mock_games
+    assert MOCK_ID2 in mock_games
+
+
+async def test_add_media(hass):
+    """Test media entry is added."""
+    service = "media_add"
+    original = {}
+    data = {ATTR_MEDIA_CONTENT_ID: MOCK_ID, ATTR_MEDIA_TITLE: MOCK_TITLE}
+
+    await ps4.async_setup(hass, {})
+    mock_games = await mock_service_call(hass, service, data, original)
+    await hass.async_block_till_done()
+
+    assert MOCK_ID in mock_games
+    assert mock_games[MOCK_ID][ATTR_MEDIA_TITLE] == MOCK_TITLE
