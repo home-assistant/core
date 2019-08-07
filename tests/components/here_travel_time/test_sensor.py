@@ -102,7 +102,7 @@ def _assert_truck_sensor(sensor):
 @pytest.fixture
 def requests_mock_truck_response(requests_mock):
     """Return a requests_mock for truck respones."""
-    modes = ";".join([TRAVEL_MODE_TRUCK, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED])
+    modes = ";".join([ROUTE_MODE_FASTEST, TRAVEL_MODE_TRUCK, TRAFFIC_MODE_DISABLED])
     response_url = _build_mock_url(
         TRUCK_ORIGIN, TRUCK_DESTINATION, modes, APP_ID, APP_CODE, "now"
     )
@@ -114,7 +114,7 @@ def requests_mock_truck_response(requests_mock):
 @pytest.fixture
 def requests_mock_car_disabled_response(requests_mock):
     """Return a requests_mock for truck respones."""
-    modes = ";".join([TRAVEL_MODE_CAR, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED])
+    modes = ";".join([ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_DISABLED])
     response_url = _build_mock_url(
         CAR_ORIGIN, CAR_DESTINATION, modes, APP_ID, APP_CODE, "now"
     )
@@ -168,7 +168,7 @@ async def test_car(hass, requests_mock_car_disabled_response):
 
 async def test_traffic_mode_enabled(hass, requests_mock):
     """Test that traffic mode enabled works."""
-    modes = ";".join([TRAVEL_MODE_CAR, ROUTE_MODE_FASTEST, TRAFFIC_MODE_ENABLED])
+    modes = ";".join([ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_ENABLED])
     response_url = _build_mock_url(
         CAR_ORIGIN, CAR_DESTINATION, modes, APP_ID, APP_CODE, "now"
     )
@@ -220,7 +220,7 @@ async def test_route_mode_shortest(hass, requests_mock):
     """Test that route mode shortest works."""
     origin = "38.902981,-77.048338"
     destination = "39.042158,-77.119116"
-    modes = ";".join([TRAVEL_MODE_CAR, ROUTE_MODE_SHORTEST, TRAFFIC_MODE_DISABLED])
+    modes = ";".join([ROUTE_MODE_SHORTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_DISABLED])
     response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
     requests_mock.get(
         response_url, text=load_fixture("here_travel_time/car_shortest_response.json")
@@ -247,7 +247,7 @@ async def test_route_mode_fastest(hass, requests_mock):
     """Test that route mode fastest works."""
     origin = "38.902981,-77.048338"
     destination = "39.042158,-77.119116"
-    modes = ";".join([TRAVEL_MODE_CAR, ROUTE_MODE_FASTEST, TRAFFIC_MODE_ENABLED])
+    modes = ";".join([ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_ENABLED])
     response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
     requests_mock.get(
         response_url, text=load_fixture("here_travel_time/car_enabled_response.json")
@@ -292,7 +292,7 @@ async def test_public_transport(hass, requests_mock):
     """Test that publicTransport works."""
     origin = "41.9798,-87.8801"
     destination = "41.9043,-87.9216"
-    modes = ";".join([TRAVEL_MODE_PUBLIC, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED])
+    modes = ";".join([ROUTE_MODE_FASTEST, TRAVEL_MODE_PUBLIC, TRAFFIC_MODE_DISABLED])
     response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
     requests_mock.get(
         response_url, text=load_fixture("here_travel_time/public_response.json")
@@ -338,7 +338,7 @@ async def test_public_transport_time_table(hass, requests_mock):
     origin = "41.9798,-87.8801"
     destination = "41.9043,-87.9216"
     modes = ";".join(
-        [TRAVEL_MODE_PUBLIC_TIME_TABLE, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED]
+        [ROUTE_MODE_FASTEST, TRAVEL_MODE_PUBLIC_TIME_TABLE, TRAFFIC_MODE_DISABLED]
     )
     response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
     requests_mock.get(
@@ -386,7 +386,7 @@ async def test_pedestrian(hass, requests_mock):
     origin = "41.9798,-87.8801"
     destination = "41.9043,-87.9216"
     modes = ";".join(
-        [TRAVEL_MODE_PEDESTRIAN, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED]
+        [ROUTE_MODE_FASTEST, TRAVEL_MODE_PEDESTRIAN, TRAFFIC_MODE_DISABLED]
     )
     response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
     requests_mock.get(
@@ -434,7 +434,7 @@ async def test_bicycle(hass, requests_mock):
     """Test that bicycle works."""
     origin = "41.9798,-87.8801"
     destination = "41.9043,-87.9216"
-    modes = ";".join([TRAVEL_MODE_BICYCLE, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED])
+    modes = ";".join([ROUTE_MODE_FASTEST, TRAVEL_MODE_BICYCLE, TRAFFIC_MODE_DISABLED])
     response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
     requests_mock.get(
         response_url, text=load_fixture("here_travel_time/bike_response.json")
@@ -795,7 +795,7 @@ async def test_route_not_found(hass, requests_mock, caplog):
     caplog.set_level(logging.ERROR)
     origin = "52.5160,13.3779"
     destination = "47.013399,-10.171986"
-    modes = ";".join([TRAVEL_MODE_CAR, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED])
+    modes = ";".join([ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_DISABLED])
     response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
     requests_mock.get(
         response_url,
@@ -858,7 +858,7 @@ async def test_invalid_credentials(hass, requests_mock, caplog):
     caplog.set_level(logging.ERROR)
     origin = "52.5160,13.3779"
     destination = "47.013399,-10.171986"
-    modes = ";".join([TRAVEL_MODE_CAR, ROUTE_MODE_FASTEST, TRAFFIC_MODE_DISABLED])
+    modes = ";".join([ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_DISABLED])
     response_url = _build_mock_url(
         origin, destination, modes, "invalid", "invalid", "now"
     )

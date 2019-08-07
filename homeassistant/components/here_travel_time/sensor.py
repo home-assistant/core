@@ -330,7 +330,7 @@ class HERETravelTimeData:
             origin = self.origin.split(",")
 
             response = self._client.car_route(
-                origin, destination, [self.travel_mode, self.route_mode, traffic_mode]
+                origin, destination, [self.route_mode, self.travel_mode, traffic_mode]
             )
             if isinstance(response, herepy.error.HEREError):
                 # Better error message for cryptic no route error codes
