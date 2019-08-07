@@ -32,7 +32,6 @@ class DiscoveryService(pizone.Listener):
         self.controller_ready = Event()
 
         self.pi_disco = None
-        self.stop_listener = None
 
         async def _controller_discovered(ctrl: pizone.Controller):
             assert ctrl.device_uid not in self.controllers, \
@@ -104,7 +103,7 @@ async def async_start_discovery_service(hass: HomeAssistantType):
     async def shutdown_event(event):
         await async_stop_discovery_service(hass)
 
-    disco.stop_listener = hass.bus.async_listen_once(
+    hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, shutdown_event)
 
     return disco
@@ -116,8 +115,5 @@ async def async_stop_discovery_service(hass: HomeAssistantType):
     if not disco:
         return
 
-    if disco.stop_listener:
-        disco.stop_listener()
     await disco.pi_disco.close()
-    if DATA_DISCOVERY_SERVICE in hass.data:
-        del hass.data[DATA_DISCOVERY_SERVICE]
+    del hass.data[DATA_DISCOVERY_SERVICE]
