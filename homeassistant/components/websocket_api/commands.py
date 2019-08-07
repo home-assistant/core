@@ -227,7 +227,14 @@ def handle_render_template(hass, connection, msg):
 
     entity_ids = msg.get("entity_ids")
     if entity_ids is None:
-        entity_ids = list(set(template.extract_entities(variables)))
+        entity_ids = template.extract_entities(variables)
+    if entity_ids == MATCH_ALL:
+        connection.send_error(
+            msg["id"],
+            const.ERR_UNAUTHORIZED,
+            "Updating on all state changes not allowed",
+        )
+        return
 
     @callback
     def state_listener(*_):
@@ -241,5 +248,5 @@ def handle_render_template(hass, connection, msg):
         hass, entity_ids, state_listener
     )
 
-    connection.send_message(messages.result_message(msg["id"]))
+    connection.send_result(msg["id"])
     state_listener()
