@@ -278,7 +278,7 @@ def service_handle(hass: HomeAssistantType):
                 await device.async_send_command(command)
 
     async def async_service_media_unlock(call):
-        """Service to lock media data that entity is playing."""
+        """Service to unlock media data."""
         games = load_games(hass)
         media_content_id = call.data[ATTR_MEDIA_CONTENT_ID]
         data = games.get(media_content_id)
@@ -393,7 +393,7 @@ def service_handle(hass: HomeAssistantType):
                     media_content_id))
 
     async def async_service_media_edit_playing(call):
-        """Service call for editing existing media data."""
+        """Service for editing existing media data that entity is playing."""
         games = load_games(hass)
         media_content_id = None
         entity_id = call.data[ATTR_ENTITY_ID]
