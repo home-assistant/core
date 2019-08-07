@@ -12,9 +12,8 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send, async_dispatcher_connect)
 
-from .climate import init_controller
 from .const import (
-    DATA_ADD_ENTRIES, DATA_CONFIG, DATA_DISCOVERY_SERVICE,
+    DATA_CONFIG, DATA_DISCOVERY_SERVICE,
     DISPATCH_CONTROLLER_DISCOVERED,
     DISPATCH_CONTROLLER_DISCONNECTED, DISPATCH_CONTROLLER_RECONNECTED,
     DISPATCH_CONTROLLER_UPDATE, DISPATCH_ZONE_UPDATE)
@@ -45,19 +44,13 @@ class DiscoveryService(pizone.Listener):
             # Filter out any entities excluded in the config file
             if conf and ctrl.device_uid in conf[CONF_EXCLUDE]:
                 _LOGGER.info(
-                    "Controller UID=%s ignored as excluded.",
+                    "Controller UID=%s ignored as excluded",
                     ctrl.device_uid)
                 return
 
             self.controllers[ctrl.device_uid] = ctrl
             self.controller_ready.set()
 
-            # This will be present if the component is configured.
-            # otherwise init_controller will be called when the config entry
-            # is created.
-            async_add_entries = self.hass.data.get(DATA_ADD_ENTRIES)
-            if async_add_entries:
-                init_controller(ctrl, async_add_entries)
         async_dispatcher_connect(
             hass, DISPATCH_CONTROLLER_DISCOVERED,
             _controller_discovered)
@@ -128,5 +121,3 @@ async def async_stop_discovery_service(hass: HomeAssistantType):
     await disco.pi_disco.close()
     if DATA_DISCOVERY_SERVICE in hass.data:
         del hass.data[DATA_DISCOVERY_SERVICE]
-    if DATA_ADD_ENTRIES in hass.data:
-        del hass.data[DATA_ADD_ENTRIES]

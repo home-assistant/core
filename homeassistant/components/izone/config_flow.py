@@ -28,7 +28,7 @@ async def _async_has_devices(hass):
 
     if not disco.controllers:
         await async_stop_discovery_service(hass)
-        _LOGGER.debug("No controllers found.")
+        _LOGGER.debug("No controllers found")
         return False
 
     _LOGGER.debug("Controllers %s", disco.controllers)

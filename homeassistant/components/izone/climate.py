@@ -4,6 +4,7 @@ from typing import Optional, List
 
 from pizone import Zone, Controller
 
+from homeassistant.core import callback
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT_COOL, HVAC_MODE_COOL, HVAC_MODE_DRY,
@@ -19,9 +20,10 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
-    DATA_ADD_ENTRIES, DATA_DISCOVERY_SERVICE, IZONE,
-    DISPATCH_CONTROLLER_DISCONNECTED, DISPATCH_CONTROLLER_RECONNECTED,
-    DISPATCH_CONTROLLER_UPDATE, DISPATCH_ZONE_UPDATE)
+    DATA_DISCOVERY_SERVICE, IZONE,
+    DISPATCH_CONTROLLER_DISCOVERED, DISPATCH_CONTROLLER_DISCONNECTED,
+    DISPATCH_CONTROLLER_RECONNECTED, DISPATCH_CONTROLLER_UPDATE,
+    DISPATCH_ZONE_UPDATE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,23 +40,24 @@ async def async_setup_entry(hass: HomeAssistantType, config: ConfigType,
     """Initialize an IZone Controller."""
     disco = hass.data[DATA_DISCOVERY_SERVICE]
 
+    @callback
+    def init_controller(controller: Controller):
+        """Register the controller device and the containing zones."""
+        device = ControllerDevice(controller)
+        async_add_entities([device])
+        async_add_entities(device.zones.values())
+        _LOGGER.info("Controller UID=%s added", controller.device_uid)
+
     # create any components not yet created
     for controller in disco.controllers.values():
-        init_controller(controller, async_add_entities)
+        init_controller(controller)
 
-    # disco will use the register function to register any further components
-    hass.data[DATA_ADD_ENTRIES] = async_add_entities
+    # connect to register any further components
+    async_dispatcher_connect(
+        hass, DISPATCH_CONTROLLER_DISCOVERED,
+        init_controller)
 
     return True
-
-
-def init_controller(controller: Controller,
-                    async_add_entries):
-    """Register the controller device and the containing zones."""
-    device = ControllerDevice(controller)
-    async_add_entries([device])
-    async_add_entries(device.zones.values())
-    _LOGGER.info("Controller UID=%s added", controller.device_uid)
 
 
 class ControllerDevice(ClimateDevice):
@@ -102,6 +105,7 @@ class ControllerDevice(ClimateDevice):
     async def async_added_to_hass(self):
         """Call on adding to hass."""
         # Register for connect/disconnect/update events
+        @callback
         def controller_disconnected(
                 ctrl: Controller, ex: Exception) -> None:
             """Disconnected from contrller."""
@@ -112,6 +116,7 @@ class ControllerDevice(ClimateDevice):
             self.hass, DISPATCH_CONTROLLER_DISCONNECTED,
             controller_disconnected))
 
+        @callback
         def controller_reconnected(ctrl: Controller) -> None:
             """Reconnected to controller."""
             if ctrl is not self._controller:
@@ -121,6 +126,7 @@ class ControllerDevice(ClimateDevice):
             self.hass, DISPATCH_CONTROLLER_RECONNECTED,
             controller_reconnected))
 
+        @callback
         def controller_update(ctrl: Controller) -> None:
             """Handle controller data updates."""
             if ctrl is not self._controller:
@@ -140,6 +146,7 @@ class ControllerDevice(ClimateDevice):
         """Return True if unable to access real state of the entity."""
         return False
 
+    @callback
     def set_available(self, available: bool, ex: Exception = None) -> None:
         """
         Set availability for the controller.
