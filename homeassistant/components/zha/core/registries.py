@@ -16,9 +16,6 @@ from homeassistant.components.switch import DOMAIN as SWITCH
 
 from .const import (
     CONTROLLER,
-    REPORT_CONFIG_ASAP,
-    REPORT_CONFIG_MAX_INT,
-    REPORT_CONFIG_MIN_INT,
     SENSOR_ACCELERATION,
     SENSOR_BATTERY,
     SENSOR_ELECTRICAL_MEASUREMENT,

@@ -30,6 +30,8 @@ class SmartThingsHumidity(AttributeListeningChannel):
     registries.SMARTTHINGS_ACCELERATION_CLUSTER
 )
 class SmartThingsAcceleration(AttributeListeningChannel):
+    """Smart Things Acceleration channel."""
+
     REPORT_CONFIG = [
         {"attr": "acceleration", "config": REPORT_CONFIG_ASAP},
         {"attr": "x_axis", "config": REPORT_CONFIG_ASAP},
