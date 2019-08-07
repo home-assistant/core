@@ -10,8 +10,7 @@ from . import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config,
-                               async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the KEBA charging station platform."""
     if discovery_info is None:
         return
@@ -19,16 +18,15 @@ async def async_setup_platform(hass, config,
     keba = hass.data[DOMAIN]
 
     sensors = [
-        KebaSensor(keba, 'Curr user', 'Max current', 'mdi:flash',
-                   'A'),
-        KebaSensor(keba, 'Setenergy', 'Energy target', 'mdi:gauge',
-                   ENERGY_KILO_WATT_HOUR),
-        KebaSensor(keba, 'P', 'Charging power', 'mdi:flash',
-                   'kW', DEVICE_CLASS_POWER),
-        KebaSensor(keba, 'E pres', 'Session energy', 'mdi:gauge',
-                   ENERGY_KILO_WATT_HOUR),
-        KebaSensor(keba, 'E total', 'Total Energy', 'mdi:gauge',
-                   ENERGY_KILO_WATT_HOUR)
+        KebaSensor(keba, "Curr user", "Max current", "mdi:flash", "A"),
+        KebaSensor(
+            keba, "Setenergy", "Energy target", "mdi:gauge", ENERGY_KILO_WATT_HOUR
+        ),
+        KebaSensor(keba, "P", "Charging power", "mdi:flash", "kW", DEVICE_CLASS_POWER),
+        KebaSensor(
+            keba, "E pres", "Session energy", "mdi:gauge", ENERGY_KILO_WATT_HOUR
+        ),
+        KebaSensor(keba, "E total", "Total Energy", "mdi:gauge", ENERGY_KILO_WATT_HOUR),
     ]
     async_add_entities(sensors)
 
@@ -91,24 +89,16 @@ class KebaSensor(Entity):
         """Get latest cached states from the device."""
         self._state = self._keba.get_value(self._key)
 
-        if self._key == 'P':
-            self._attributes['power_factor'] = \
-                self._keba.get_value('PF')
-            self._attributes['voltage_u1'] = \
-                str(self._keba.get_value('U1'))
-            self._attributes['voltage_u2'] = \
-                str(self._keba.get_value('U2'))
-            self._attributes['voltage_u3'] = \
-                str(self._keba.get_value('U3'))
-            self._attributes['current_i1'] = \
-                str(self._keba.get_value('I1'))
-            self._attributes['current_i2'] = \
-                str(self._keba.get_value('I2'))
-            self._attributes['current_i3'] = \
-                str(self._keba.get_value('I3'))
-        elif self._key == 'Curr user':
-            self._attributes['max_current_hardware'] = \
-                self._keba.get_value('Curr HW')
+        if self._key == "P":
+            self._attributes["power_factor"] = self._keba.get_value("PF")
+            self._attributes["voltage_u1"] = str(self._keba.get_value("U1"))
+            self._attributes["voltage_u2"] = str(self._keba.get_value("U2"))
+            self._attributes["voltage_u3"] = str(self._keba.get_value("U3"))
+            self._attributes["current_i1"] = str(self._keba.get_value("I1"))
+            self._attributes["current_i2"] = str(self._keba.get_value("I2"))
+            self._attributes["current_i3"] = str(self._keba.get_value("I3"))
+        elif self._key == "Curr user":
+            self._attributes["max_current_hardware"] = self._keba.get_value("Curr HW")
 
     def update_callback(self):
         """Schedule a state update."""

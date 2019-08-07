@@ -8,17 +8,14 @@ from . import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config,
-                               async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the KEBA charging station platform."""
     if discovery_info is None:
         return
 
     keba = hass.data[DOMAIN]
 
-    sensors = [
-        KebaLock(keba, 'Authentication')
-    ]
+    sensors = [KebaLock(keba, "Authentication")]
     async_add_entities(sensors)
 
 
@@ -61,7 +58,7 @@ class KebaLock(LockDevice):
 
     async def async_update(self):
         """Attempt to retrieve on off state from the switch."""
-        self._state = self._keba.get_value('Authreq') == 1
+        self._state = self._keba.get_value("Authreq") == 1
 
     def update_callback(self):
         """Schedule a state update."""

@@ -3,8 +3,10 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_PLUG, DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_POWER, DEVICE_CLASS_SAFETY
+    DEVICE_CLASS_PLUG,
+    DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_SAFETY,
 )
 
 from . import DOMAIN
@@ -12,8 +14,7 @@ from . import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config,
-                               async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the KEBA charging station platform."""
     if discovery_info is None:
         return
@@ -21,10 +22,10 @@ async def async_setup_platform(hass, config,
     keba = hass.data[DOMAIN]
 
     sensors = [
-        KebaBinarySensor(keba, 'Online', 'Wallbox', DEVICE_CLASS_CONNECTIVITY),
-        KebaBinarySensor(keba, 'Plug', 'Plug', DEVICE_CLASS_PLUG),
-        KebaBinarySensor(keba, 'State', 'Charging state', DEVICE_CLASS_POWER),
-        KebaBinarySensor(keba, 'Tmo FS', 'Failsafe Mode', DEVICE_CLASS_SAFETY)
+        KebaBinarySensor(keba, "Online", "Wallbox", DEVICE_CLASS_CONNECTIVITY),
+        KebaBinarySensor(keba, "Plug", "Plug", DEVICE_CLASS_PLUG),
+        KebaBinarySensor(keba, "State", "Charging state", DEVICE_CLASS_POWER),
+        KebaBinarySensor(keba, "Tmo FS", "Failsafe Mode", DEVICE_CLASS_SAFETY),
     ]
     async_add_entities(sensors)
 
@@ -73,30 +74,29 @@ class KebaBinarySensor(BinarySensorDevice):
 
     async def async_update(self):
         """Get latest cached states from the device."""
-        if self._key == 'Online':
+        if self._key == "Online":
             self._is_on = self._keba.get_value(self._key)
 
-        elif self._key == 'Plug':
-            self._is_on = self._keba.get_value('Plug_plugged')
-            self._attributes["plugged_on_wallbox"] = \
-                self._keba.get_value('Plug_wallbox')
-            self._attributes["plug_locked"] = \
-                self._keba.get_value('Plug_locked')
-            self._attributes["plugged_on_EV"] = self._keba.get_value('Plug_EV')
+        elif self._key == "Plug":
+            self._is_on = self._keba.get_value("Plug_plugged")
+            self._attributes["plugged_on_wallbox"] = self._keba.get_value(
+                "Plug_wallbox"
+            )
+            self._attributes["plug_locked"] = self._keba.get_value("Plug_locked")
+            self._attributes["plugged_on_EV"] = self._keba.get_value("Plug_EV")
 
-        elif self._key == 'State':
-            self._is_on = self._keba.get_value('State_on')
-            self._attributes['status'] = self._keba.get_value('State_details')
-            self._attributes['max_charging_rate'] = \
-                str(self._keba.get_value("Max curr"))
+        elif self._key == "State":
+            self._is_on = self._keba.get_value("State_on")
+            self._attributes["status"] = self._keba.get_value("State_details")
+            self._attributes["max_charging_rate"] = str(
+                self._keba.get_value("Max curr")
+            )
 
-        elif self._key == 'Tmo FS':
-            self._is_on = not self._keba.get_value('FS_on')
-            self._attributes['failsafe_timeout'] = \
-                str(self._keba.get_value("Tmo FS"))
-            self._attributes['fallback_current'] = \
-                str(self._keba.get_value("Curr FS"))
-        elif self._key == 'Authreq':
+        elif self._key == "Tmo FS":
+            self._is_on = not self._keba.get_value("FS_on")
+            self._attributes["failsafe_timeout"] = str(self._keba.get_value("Tmo FS"))
+            self._attributes["fallback_current"] = str(self._keba.get_value("Curr FS"))
+        elif self._key == "Authreq":
             self._is_on = self._keba.get_value(self._key) == 0
 
     def update_callback(self):
