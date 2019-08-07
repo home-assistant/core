@@ -122,17 +122,12 @@ class MikrotikClient:
         self._password = password
         self._login_method = login_method
         self._encoding = encoding
-        self._host_name = ""
-        self._info = None
+        self.hostname = None
         self._client = None
-        self._connecting = False
         self._connected = False
 
     def connect_to_device(self):
         """Connect to Mikrotik device."""
-        if self._connecting:
-            return
-        self._connecting = True
         self._connected = False
         _LOGGER.debug("[%s] Connecting to Mikrotik device", self._host)
 
@@ -152,62 +147,52 @@ class MikrotikClient:
             self._client = librouteros.connect(
                 self._host, self._user, self._password, **kwargs
             )
+            self._connected = True
         except (
             librouteros.exceptions.TrapError,
             librouteros.exceptions.MultiTrapError,
             librouteros.exceptions.ConnectionError,
         ) as api_error:
             _LOGGER.error("Mikrotik %s: %s", self._host, api_error)
-            self._connecting = False
             self._client = None
             return False
 
         self.get_hostname()
-        if not self._host_name:
+        if not self.hostname:
             _LOGGER.error("Mikrotik failed to connect to %s", self._host)
             return False
-        _LOGGER.info("Mikrotik Connected to %s (%s)", self._host_name, self._host)
-        self._connecting = False
-        self._connected = True
+        _LOGGER.info("Mikrotik Connected to %s (%s)", self.hostname, self._host)
         return True
 
     def get_hostname(self):
         """Return device host name."""
-        if not self._connected:
-            self.connect_to_device()
-        if not self._host_name:
-            cmd = MIKROTIK_SERVICES[IDENTITY]
-            self._host_name = (self._client(cmd=cmd))[0]["name"]
-        return self._host_name
+        if not self.hostname:
+            data = self.command(MIKROTIK_SERVICES[IDENTITY])
+            if data is not None:
+                self.hostname = data[0]["name"]
 
     def connected(self):
         """Return connected boolean."""
         return self._connected
 
-    def update_info(self):
-        """Update device info from Mikrotik API."""
-        data = self.command(MIKROTIK_SERVICES[INFO])
-        if data is None:
-            _LOGGER.error("Mikrotik device %s is not connected", self._host)
-            self.connect_to_device()
-            return
-        self._info = data[0]
-
     def command(self, cmd, params=None):
         """Retrieve data from Mikrotik API."""
-        if not self._connected:
+        if not self._connected or not self._client:
+            _LOGGER.error("Mikrotik device %s is not connected", self._host)
             if not self.connect_to_device():
                 return None
-
+        response = None
         try:
             if params:
                 response = self._client(cmd=cmd, **params)
             else:
                 response = self._client(cmd=cmd)
+        except (librouteros.exceptions.ConnectionError,) as api_error:
+            _LOGGER.error("Mikrotik %s connection error %s", self._host, api_error)
+            self.connect_to_device()
         except (
             librouteros.exceptions.TrapError,
             librouteros.exceptions.MultiTrapError,
-            librouteros.exceptions.ConnectionError,
         ) as api_error:
             _LOGGER.error(
                 "Mikrotik %s failed to retrieve data. cmd=[%s] Error: %s",
@@ -215,6 +200,5 @@ class MikrotikClient:
                 cmd,
                 api_error,
             )
-            return None
 
         return response if response else None

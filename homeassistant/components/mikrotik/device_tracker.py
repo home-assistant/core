@@ -30,8 +30,9 @@ def get_scanner(hass, config):
         hass.data[MIKROTIK][HOSTS][host].pop(DEVICE_TRACKER, None)
         api = hass.data[MIKROTIK][HOSTS][host]["api"]
         config = hass.data[MIKROTIK][HOSTS][host]["config"]
-        hostname = api.get_hostname()
-        scanner = MikrotikScanner(api, host, hostname, config)
+        if not api.hostname:
+            api.get_hostname()
+        scanner = MikrotikScanner(api, host, api.hostname, config)
     return scanner if scanner.success_init else None
 
 
@@ -66,11 +67,10 @@ class MikrotikScanner(DeviceScanner):
     def get_device_name(self, device):
         """Get name for a device."""
         host = self.device_tracker.get(device, {})
-        return host.get("host_name") or None if host else None
+        return host.get("host_name")
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device MACs."""
-        self.api.update_info()
         self.update_device_tracker()
         if not self.api.connected():
             return None
@@ -121,10 +121,10 @@ class MikrotikScanner(DeviceScanner):
         if self.method != DHCP:
             dhcp = self.api.command(MIKROTIK_SERVICES[DHCP])
             if dhcp is not None:
-                self.devices_dhcp = self.load_mac(dhcp)
+                self.devices_dhcp = load_mac(dhcp)
 
         arp = self.api.command(MIKROTIK_SERVICES[ARP])
-        self.devices_arp = self.load_mac(arp)
+        self.devices_arp = load_mac(arp)
 
         for device in data:
             mac = device.get("mac-address")
@@ -132,7 +132,7 @@ class MikrotikScanner(DeviceScanner):
                 if "active-address" not in device:
                     continue
 
-                if self.arp_ping:
+                if self.arp_ping and self.devices_arp:
                     if mac not in self.devices_arp:
                         continue
                     interface = self.devices_arp[mac]["interface"]
@@ -145,7 +145,7 @@ class MikrotikScanner(DeviceScanner):
                 if hostname:
                     attrs["host_name"] = hostname
 
-            if mac in self.devices_arp:
+            if self.devices_arp and mac in self.devices_arp:
                 attrs["ip_address"] = self.devices_arp[mac].get("address")
 
             for attr in ATTR_DEVICE_TRACKER:
@@ -156,17 +156,6 @@ class MikrotikScanner(DeviceScanner):
             attrs["scanner_host"] = self.host
             attrs["scanner_hostname"] = self.hostname
             self.device_tracker[mac] = attrs
-
-    def load_mac(self, devices=None):
-        """Load dictionary using MAC address as key."""
-        if not devices:
-            return None
-        mac_devices = {}
-        for device in devices:
-            if "mac-address" in device:
-                mac = device.pop("mac-address")
-                mac_devices[mac] = device
-        return mac_devices
 
     def do_arp_ping(self, mac, interface):
         """Attempt to arp ping MAC address via interface."""
@@ -190,3 +179,15 @@ class MikrotikScanner(DeviceScanner):
             if status == len(data):
                 return None
         return data
+
+
+def load_mac(devices=None):
+    """Load dictionary using MAC address as key."""
+    if not devices:
+        return None
+    mac_devices = {}
+    for device in devices:
+        if "mac-address" in device:
+            mac = device.pop("mac-address")
+            mac_devices[mac] = device
+    return mac_devices
