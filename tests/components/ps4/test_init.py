@@ -481,7 +481,7 @@ async def test_media_unlock_playing(hass):
     assert mock_games[MOCK_ID2] is MOCK_GAMES_DATA_LOCKED2
 
 
-async def test_remove_media(hass):
+async def test_media_remove(hass):
     """Test media entry is removed."""
     service = "media_remove"
     original = MOCK_GAMES
@@ -495,7 +495,7 @@ async def test_remove_media(hass):
     assert MOCK_ID2 in mock_games
 
 
-async def test_add_media(hass):
+async def test_media_add(hass):
     """Test media entry is added."""
     service = "media_add"
     original = {}
