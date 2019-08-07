@@ -235,6 +235,16 @@ def async_setup(hass, config):
                 ais_global.GLOBAL_TTS_PITCH = float(hass.states.get(entity_id).state)
             except Exception:
                 ais_global.GLOBAL_TTS_PITCH = 1
+        elif entity_id == 'input_select.ais_android_wifi_network':
+            # take the password for wifi if value changed
+            if state_event.data['old_state'] is not None:
+                _old_state = state_event.data['old_state'].state
+                _new_state = state_event.data['new_state'].state
+                if _old_state != _new_state:
+                    ssid = hass.states.get('input_select.ais_android_wifi_network').state.split(';')[0]
+                    password = ais_global.get_pass_for_ssid(ssid)
+                    hass.services.call('input_text', 'set_value',
+                                       {"value": password,  "entity_id": "input_text.ais_iot_device_wifi_password"})
 
     hass.bus.async_listen(EVENT_STATE_CHANGED, state_changed)
     return True

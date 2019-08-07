@@ -66,6 +66,7 @@ G_OFFLINE_MODE = False
 GLOBAL_MY_IP = None
 GLOBAL_MY_WIFI_SSID = None
 GLOBAL_MY_WIFI_PASS = None
+GLOBAL_SCAN_WIFI_ANSWER = {}
 _LOGGER = logging.getLogger(__name__)
 
 # devices fully supported by ais dom
@@ -86,6 +87,13 @@ G_AIS_SECURE_ANDROID_ID_DOM = None
 
 #
 G_AIS_GATE_REQ = {}
+
+
+def get_pass_for_ssid(ssid):
+    for item in GLOBAL_SCAN_WIFI_ANSWER["ScanResult"]:
+        if item["ssid"] == ssid:
+            return item["pass"]
+    return ""
 
 
 def get_sercure_android_id_dom():

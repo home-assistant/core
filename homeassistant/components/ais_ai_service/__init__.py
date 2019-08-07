@@ -869,6 +869,20 @@ def commit_current_position(hass):
     if CURR_ENTITIE.startswith('input_select.'):
         # force the change - to trigger the state change for automation
         position = get_curent_position(hass)
+        state = hass.states.get(CURR_ENTITIE).state
+        if position == state:
+            if CURR_ENTITIE == 'input_select.radio_type':
+                hass.services.call('ais_cloud', 'get_radio_names', {"radio_type": state})
+                return
+            elif CURR_ENTITIE == 'input_select.rss_news_category':
+                hass.services.call('ais_cloud', 'get_rss_news_channels', {"rss_news_category": state})
+                return
+            elif CURR_ENTITIE == 'input_select.rss_news_channel':
+                hass.services.call('ais_cloud', 'get_rss_news_items', {"rss_news_channel": state})
+                return
+            elif CURR_ENTITIE == 'input_select.podcast_type':
+                hass.services.call('ais_cloud', 'get_podcast_names', {"podcast_type": state})
+                return
         hass.services.call(
             'input_select',
             'select_option', {
@@ -909,6 +923,7 @@ def commit_current_position(hass):
 
     if CURR_ENTITIE == "input_select.ais_android_wifi_network":
         _say_it(hass, "wybrano wifi: " + get_curent_position(hass).split(';')[0])
+
     elif CURR_ENTITIE == "input_select.ais_music_service":
         _say_it(hass, "Wybrano " + position + ", napisz lub powiedz jakiej muzyki mam wyszukać")
         state = hass.states.get(CURR_ENTITIE)
@@ -2041,6 +2056,7 @@ def _wifi_frequency_info(mhz):
 
 def _publish_wifi_status(hass, service):
     wifis = json.loads(service.data["payload"])
+    ais_global.GLOBAL_SCAN_WIFI_ANSWER = wifis
     wifis_names = [ais_global.G_EMPTY_OPTION]
     for item in wifis["ScanResult"]:
         if len(item["ssid"]) > 0:

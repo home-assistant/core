@@ -250,19 +250,6 @@
       data_template:
         web_hook_json: '{{ trigger.json }}'
 
-- id: '201901210208123'
-  alias: 'AIS Select Wifi Network'
-  initial_state: True
-  hide_entity: True
-  trigger:
-    platform: state
-    entity_id: input_select.ais_android_wifi_network
-  action:
-    - service: input_text.set_value
-      data_template:
-        entity_id: input_text.ais_android_wifi_password
-        value: ""
-
 - id: '201902030742123'
   alias: 'AIS Change remote web access'
   initial_state: True

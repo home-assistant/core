@@ -114,17 +114,24 @@ def async_setup(hass, config):
             # get all items
             hass.states.async_set("sensor.aisfavoriteslist", -1, list_info)
         else:
+            # check if the change was done form remote
+            import homeassistant.components.ais_ai_service as ais_ai
             if audio_source == ais_global.G_AN_RADIO:
                 hass.states.async_set("sensor.radiolist", -1, list_info)
+                if ais_ai.CURR_ENTITIE == 'input_select.radio_type' and ais_ai.CURR_BUTTON_CODE == 23:
+                    ais_ai.set_curr_entity(hass, 'sensor.radiolist')
+                    hass.async_add_job(hass.services.async_call('ais_ai_service', 'say_it', {"text": "Wybierz stację"}))
             elif audio_source == ais_global.G_AN_PODCAST:
                 hass.states.async_set("sensor.podcastnamelist", -1, list_info)
+                if ais_ai.CURR_ENTITIE == 'input_select.podcast_type' and ais_ai.CURR_BUTTON_CODE == 23:
+                    ais_ai.set_curr_entity(hass, 'sensor.podcastnamelist')
+                    hass.async_add_job(hass.services.async_call('ais_ai_service', 'say_it', {"text": "Wybierz audycję"}))
             elif audio_source == ais_global.G_AN_MUSIC:
                 hass.states.async_set("sensor.youtubelist", -1, list_info)
             elif audio_source == ais_global.G_AN_SPOTIFY:
                 hass.states.async_set("sensor.spotifylist", -1, list_info)
             elif audio_source == ais_global.G_AN_AUDIOBOOK:
                 hass.states.async_set("sensor.audiobookschapterslist", -1, list_info)
-
 
 
     @asyncio.coroutine
