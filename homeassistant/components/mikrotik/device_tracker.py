@@ -30,9 +30,8 @@ def get_scanner(hass, config):
         hass.data[MIKROTIK][HOSTS][host].pop(DEVICE_TRACKER, None)
         api = hass.data[MIKROTIK][HOSTS][host]["api"]
         config = hass.data[MIKROTIK][HOSTS][host]["config"]
-        if not api.hostname:
-            api.get_hostname()
-        scanner = MikrotikScanner(api, host, api.hostname, config)
+        hostname = api.get_hostname()
+        scanner = MikrotikScanner(api, host, hostname, config)
     return scanner if scanner.success_init else None
 
 
@@ -71,7 +70,6 @@ class MikrotikScanner(DeviceScanner):
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device MACs."""
-        self.api.get_hostname()
         self.update_device_tracker()
         return list(self.device_tracker)
 

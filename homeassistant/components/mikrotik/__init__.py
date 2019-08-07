@@ -156,15 +156,14 @@ class MikrotikClient:
             self._client = None
             return False
 
-        self.get_hostname()
+        self.hostname = self.get_hostname()
         _LOGGER.info("Mikrotik Connected to %s (%s)", self.hostname, self._host)
         return self._connected
 
     def get_hostname(self):
         """Return device host name."""
         data = self.command(MIKROTIK_SERVICES[IDENTITY])
-        if data is not None:
-            self.hostname = data[0]["name"]
+        return data[0]["name"] if data else None
 
     def connected(self):
         """Return connected boolean."""
