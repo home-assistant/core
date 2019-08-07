@@ -16,9 +16,6 @@ from homeassistant.components.switch import DOMAIN as SWITCH
 
 from .const import (
     CONTROLLER,
-    REPORT_CONFIG_ASAP,
-    REPORT_CONFIG_MAX_INT,
-    REPORT_CONFIG_MIN_INT,
     SENSOR_ACCELERATION,
     SENSOR_BATTERY,
     SENSOR_ELECTRICAL_MEASUREMENT,
@@ -137,23 +134,6 @@ def establish_device_mappings():
             zcl.clusters.general.OnOff.cluster_id: SENSOR_OPENING,
             zcl.clusters.measurement.OccupancySensing.cluster_id: SENSOR_OCCUPANCY,
             zcl.clusters.security.IasZone.cluster_id: ZONE,
-        }
-    )
-
-    CLUSTER_REPORT_CONFIGS.update(
-        {
-            SMARTTHINGS_ACCELERATION_CLUSTER: [
-                {"attr": "acceleration", "config": REPORT_CONFIG_ASAP},
-                {"attr": "x_axis", "config": REPORT_CONFIG_ASAP},
-                {"attr": "y_axis", "config": REPORT_CONFIG_ASAP},
-                {"attr": "z_axis", "config": REPORT_CONFIG_ASAP},
-            ],
-            SMARTTHINGS_HUMIDITY_CLUSTER: [
-                {
-                    "attr": "measured_value",
-                    "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
-                }
-            ],
         }
     )
 
