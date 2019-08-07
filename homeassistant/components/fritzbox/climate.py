@@ -5,16 +5,30 @@ import requests
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_HVAC_MODE, HVAC_MODE_HEAT, PRESET_ECO, PRESET_COMFORT,
-    SUPPORT_TARGET_TEMPERATURE, HVAC_MODE_OFF, SUPPORT_PRESET_MODE)
+    ATTR_HVAC_MODE,
+    HVAC_MODE_HEAT,
+    PRESET_ECO,
+    PRESET_COMFORT,
+    SUPPORT_TARGET_TEMPERATURE,
+    HVAC_MODE_OFF,
+    SUPPORT_PRESET_MODE,
+)
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, PRECISION_HALVES,
-    TEMP_CELSIUS)
+    ATTR_BATTERY_LEVEL,
+    ATTR_TEMPERATURE,
+    PRECISION_HALVES,
+    TEMP_CELSIUS,
+)
 
 from . import (
-    ATTR_STATE_BATTERY_LOW, ATTR_STATE_DEVICE_LOCKED, ATTR_STATE_HOLIDAY_MODE,
-    ATTR_STATE_LOCKED, ATTR_STATE_SUMMER_MODE, ATTR_STATE_WINDOW_OPEN,
-    DOMAIN as FRITZBOX_DOMAIN)
+    ATTR_STATE_BATTERY_LOW,
+    ATTR_STATE_DEVICE_LOCKED,
+    ATTR_STATE_HOLIDAY_MODE,
+    ATTR_STATE_LOCKED,
+    ATTR_STATE_SUMMER_MODE,
+    ATTR_STATE_WINDOW_OPEN,
+    DOMAIN as FRITZBOX_DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +39,7 @@ OPERATION_LIST = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
 MIN_TEMPERATURE = 8
 MAX_TEMPERATURE = 28
 
-PRESET_MANUAL = 'manual'
+PRESET_MANUAL = "manual"
 
 # special temperatures for on/off in Fritz!Box API (modified by pyfritzhome)
 ON_API_TEMPERATURE = 127.0
@@ -93,9 +107,10 @@ class FritzboxThermostat(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self._target_temperature in (ON_API_TEMPERATURE,
-                                        OFF_API_TEMPERATURE):
-            return None
+        if self._target_temperature == ON_API_TEMPERATURE:
+            return ON_REPORT_SET_TEMPERATURE
+        if self._target_temperature == OFF_API_TEMPERATURE:
+            return OFF_REPORT_SET_TEMPERATURE
         return self._target_temperature
 
     def set_temperature(self, **kwargs):
@@ -110,7 +125,10 @@ class FritzboxThermostat(ClimateDevice):
     @property
     def hvac_mode(self):
         """Return the current operation mode."""
-        if self._target_temperature == OFF_REPORT_SET_TEMPERATURE:
+        if (
+            self._target_temperature == OFF_REPORT_SET_TEMPERATURE
+            or self._target_temperature == OFF_API_TEMPERATURE
+        ):
             return HVAC_MODE_OFF
 
         return HVAC_MODE_HEAT
@@ -135,6 +153,7 @@ class FritzboxThermostat(ClimateDevice):
         if self._target_temperature == self._eco_temperature:
             return PRESET_ECO
 
+    @property
     def preset_modes(self):
         """Return supported preset modes."""
         return [PRESET_ECO, PRESET_COMFORT]

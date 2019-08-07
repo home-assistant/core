@@ -2,34 +2,38 @@
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 from homeassistant.components.water_heater import (
-    SUPPORT_AWAY_MODE, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
-    WaterHeaterDevice)
+    SUPPORT_AWAY_MODE,
+    SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    WaterHeaterDevice,
+)
 
-SUPPORT_FLAGS_HEATER = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
-                        SUPPORT_AWAY_MODE)
+SUPPORT_FLAGS_HEATER = (
+    SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE | SUPPORT_AWAY_MODE
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo water_heater devices."""
-    add_entities([
-        DemoWaterHeater(
-            'Demo Water Heater', 119, TEMP_FAHRENHEIT, False, 'eco'),
-        DemoWaterHeater(
-            'Demo Water Heater Celsius', 45, TEMP_CELSIUS, True, 'eco'),
-    ])
+    add_entities(
+        [
+            DemoWaterHeater("Demo Water Heater", 119, TEMP_FAHRENHEIT, False, "eco"),
+            DemoWaterHeater("Demo Water Heater Celsius", 45, TEMP_CELSIUS, True, "eco"),
+        ]
+    )
 
 
 class DemoWaterHeater(WaterHeaterDevice):
     """Representation of a demo water_heater device."""
 
-    def __init__(self, name, target_temperature, unit_of_measurement,
-                 away, current_operation):
+    def __init__(
+        self, name, target_temperature, unit_of_measurement, away, current_operation
+    ):
         """Initialize the water_heater device."""
         self._name = name
         self._support_flags = SUPPORT_FLAGS_HEATER
         if target_temperature is not None:
-            self._support_flags = \
-                self._support_flags | SUPPORT_TARGET_TEMPERATURE
+            self._support_flags = self._support_flags | SUPPORT_TARGET_TEMPERATURE
         if away is not None:
             self._support_flags = self._support_flags | SUPPORT_AWAY_MODE
         if current_operation is not None:
@@ -38,9 +42,15 @@ class DemoWaterHeater(WaterHeaterDevice):
         self._unit_of_measurement = unit_of_measurement
         self._away = away
         self._current_operation = current_operation
-        self._operation_list = ['eco', 'electric', 'performance',
-                                'high_demand', 'heat_pump', 'gas',
-                                'off']
+        self._operation_list = [
+            "eco",
+            "electric",
+            "performance",
+            "high_demand",
+            "heat_pump",
+            "gas",
+            "off",
+        ]
 
     @property
     def supported_features(self):

@@ -6,21 +6,33 @@ import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF, PRESET_AWAY, PRESET_BOOST,
-    SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_AUTO,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    PRESET_AWAY,
+    PRESET_BOOST,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    PRESET_NONE,
+)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_DEVICES, CONF_MAC, PRECISION_HALVES, TEMP_CELSIUS)
+    ATTR_TEMPERATURE,
+    CONF_DEVICES,
+    CONF_MAC,
+    PRECISION_HALVES,
+    TEMP_CELSIUS,
+)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-STATE_BOOST = 'boost'
+STATE_BOOST = "boost"
 
-ATTR_STATE_WINDOW_OPEN = 'window_open'
-ATTR_STATE_VALVE = 'valve'
-ATTR_STATE_LOCKED = 'is_locked'
-ATTR_STATE_LOW_BAT = 'low_battery'
-ATTR_STATE_AWAY_END = 'away_end'
+ATTR_STATE_WINDOW_OPEN = "window_open"
+ATTR_STATE_VALVE = "valve"
+ATTR_STATE_LOCKED = "is_locked"
+ATTR_STATE_LOW_BAT = "low_battery"
+ATTR_STATE_AWAY_END = "away_end"
 
 EQ_TO_HA_HVAC = {
     eq3.Mode.Open: HVAC_MODE_HEAT,
@@ -34,28 +46,19 @@ EQ_TO_HA_HVAC = {
 HA_TO_EQ_HVAC = {
     HVAC_MODE_HEAT: eq3.Mode.Manual,
     HVAC_MODE_OFF: eq3.Mode.Closed,
-    HVAC_MODE_AUTO: eq3.Mode.Auto
+    HVAC_MODE_AUTO: eq3.Mode.Auto,
 }
 
-EQ_TO_HA_PRESET = {
-    eq3.Mode.Boost: PRESET_BOOST,
-    eq3.Mode.Away: PRESET_AWAY,
-}
+EQ_TO_HA_PRESET = {eq3.Mode.Boost: PRESET_BOOST, eq3.Mode.Away: PRESET_AWAY}
 
-HA_TO_EQ_PRESET = {
-    PRESET_BOOST: eq3.Mode.Boost,
-    PRESET_AWAY: eq3.Mode.Away,
-}
+HA_TO_EQ_PRESET = {PRESET_BOOST: eq3.Mode.Boost, PRESET_AWAY: eq3.Mode.Away}
 
 
-DEVICE_SCHEMA = vol.Schema({
-    vol.Required(CONF_MAC): cv.string,
-})
+DEVICE_SCHEMA = vol.Schema({vol.Required(CONF_MAC): cv.string})
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICES):
-        vol.Schema({cv.string: DEVICE_SCHEMA}),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_DEVICES): vol.Schema({cv.string: DEVICE_SCHEMA})}
+)
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
@@ -66,9 +69,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for name, device_cfg in config[CONF_DEVICES].items():
         mac = device_cfg[CONF_MAC]
-        devices.append(EQ3BTSmartThermostat(mac, name), True)
+        devices.append(EQ3BTSmartThermostat(mac, name))
 
-    add_entities(devices)
+    add_entities(devices, True)
 
 
 class EQ3BTSmartThermostat(ClimateDevice):
@@ -181,7 +184,7 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
     def set_preset_mode(self, preset_mode):
         """Set new preset mode."""
-        if not preset_mode:
+        if preset_mode == PRESET_NONE:
             self.set_hvac_mode(HVAC_MODE_HEAT)
         self._thermostat.mode = HA_TO_EQ_PRESET[preset_mode]
 
@@ -189,6 +192,7 @@ class EQ3BTSmartThermostat(ClimateDevice):
         """Update the data from the thermostat."""
         # pylint: disable=import-error,no-name-in-module
         from bluepy.btle import BTLEException
+
         try:
             self._thermostat.update()
         except BTLEException as ex:

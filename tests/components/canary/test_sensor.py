@@ -5,18 +5,18 @@ from unittest.mock import Mock
 
 from homeassistant.components.canary import DATA_CANARY
 from homeassistant.components.canary import sensor as canary
-from homeassistant.components.canary.sensor import CanarySensor, \
-    SENSOR_TYPES, ATTR_AIR_QUALITY, STATE_AIR_QUALITY_NORMAL, \
-    STATE_AIR_QUALITY_ABNORMAL, STATE_AIR_QUALITY_VERY_ABNORMAL
-from tests.common import (get_test_home_assistant)
+from homeassistant.components.canary.sensor import (
+    CanarySensor,
+    SENSOR_TYPES,
+    ATTR_AIR_QUALITY,
+    STATE_AIR_QUALITY_NORMAL,
+    STATE_AIR_QUALITY_ABNORMAL,
+    STATE_AIR_QUALITY_VERY_ABNORMAL,
+)
+from tests.common import get_test_home_assistant
 from tests.components.canary.test_init import mock_device, mock_location
 
-VALID_CONFIG = {
-    "canary": {
-        "username": "foo@bar.org",
-        "password": "bar",
-    }
-}
+VALID_CONFIG = {"canary": {"username": "foo@bar.org", "password": "bar"}}
 
 
 class TestCanarySensorSetup(unittest.TestCase):
@@ -46,8 +46,9 @@ class TestCanarySensorSetup(unittest.TestCase):
 
         self.hass.data[DATA_CANARY] = Mock()
         self.hass.data[DATA_CANARY].locations = [
-            mock_location("Home", True, devices=[online_device_at_home,
-                                                 offline_device_at_home]),
+            mock_location(
+                "Home", True, devices=[online_device_at_home, offline_device_at_home]
+            ),
             mock_location("Work", True, devices=[online_device_at_work]),
         ]
 

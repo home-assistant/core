@@ -6,13 +6,20 @@ from homeassistant.const import CONF_ADDRESS
 
 from . import LcnDevice
 from .const import (
-    CONF_CONNECTIONS, CONF_OUTPUTS, CONF_REGISTER, CONF_SCENE, CONF_TRANSITION,
-    DATA_LCN, OUTPUT_PORTS)
+    CONF_CONNECTIONS,
+    CONF_OUTPUTS,
+    CONF_REGISTER,
+    CONF_SCENE,
+    CONF_TRANSITION,
+    DATA_LCN,
+    OUTPUT_PORTS,
+)
 from .helpers import get_connection
 
 
-async def async_setup_platform(hass, hass_config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+    hass, hass_config, async_add_entities, discovery_info=None
+):
     """Set up the LCN scene platform."""
     if discovery_info is None:
         return
@@ -51,16 +58,17 @@ class LcnScene(LcnDevice, Scene):
         if config[CONF_TRANSITION] is None:
             self.transition = None
         else:
-            self.transition = pypck.lcn_defs.time_to_ramp_value(
-                config[CONF_TRANSITION])
+            self.transition = pypck.lcn_defs.time_to_ramp_value(config[CONF_TRANSITION])
 
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
 
     async def async_activate(self):
         """Activate scene."""
-        self.address_connection.activate_scene(self.register_id,
-                                               self.scene_id,
-                                               self.output_ports,
-                                               self.relay_ports,
-                                               self.transition)
+        self.address_connection.activate_scene(
+            self.register_id,
+            self.scene_id,
+            self.output_ports,
+            self.relay_ports,
+            self.transition,
+        )

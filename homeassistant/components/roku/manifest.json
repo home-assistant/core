@@ -3,7 +3,7 @@
   "name": "Roku",
   "documentation": "https://www.home-assistant.io/components/roku",
   "requirements": [
-    "python-roku==3.1.5"
+    "roku==3.1"
   ],
   "dependencies": [],
   "codeowners": []

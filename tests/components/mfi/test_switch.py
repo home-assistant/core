@@ -15,34 +15,36 @@ class TestMfiSwitchSetup(test_mfi_sensor.TestMfiSensorSetup):
 
     PLATFORM = mfi
     COMPONENT = switch
-    THING = 'switch'
+    THING = "switch"
     GOOD_CONFIG = {
-        'switch': {
-            'platform': 'mfi',
-            'host': 'foo',
-            'port': 6123,
-            'username': 'user',
-            'password': 'pass',
-            'ssl': True,
-            'verify_ssl': True,
+        "switch": {
+            "platform": "mfi",
+            "host": "foo",
+            "port": 6123,
+            "username": "user",
+            "password": "pass",
+            "ssl": True,
+            "verify_ssl": True,
         }
     }
 
-    @mock.patch('mficlient.client.MFiClient')
-    @mock.patch('homeassistant.components.mfi.switch.MfiSwitch')
+    @mock.patch("mficlient.client.MFiClient")
+    @mock.patch("homeassistant.components.mfi.switch.MfiSwitch")
     def test_setup_adds_proper_devices(self, mock_switch, mock_client):
         """Test if setup adds devices."""
-        ports = {i: mock.MagicMock(model=model)
-                 for i, model in enumerate(mfi.SWITCH_MODELS)}
-        ports['bad'] = mock.MagicMock(model='notaswitch')
-        print(ports['bad'].model)
-        mock_client.return_value.get_devices.return_value = \
-            [mock.MagicMock(ports=ports)]
+        ports = {
+            i: mock.MagicMock(model=model) for i, model in enumerate(mfi.SWITCH_MODELS)
+        }
+        ports["bad"] = mock.MagicMock(model="notaswitch")
+        print(ports["bad"].model)
+        mock_client.return_value.get_devices.return_value = [
+            mock.MagicMock(ports=ports)
+        ]
         assert setup_component(self.hass, switch.DOMAIN, self.GOOD_CONFIG)
         for ident, port in ports.items():
-            if ident != 'bad':
+            if ident != "bad":
                 mock_switch.assert_any_call(port)
-        assert mock.call(ports['bad'], self.hass) not in mock_switch.mock_calls
+        assert mock.call(ports["bad"], self.hass) not in mock_switch.mock_calls
 
 
 class TestMfiSwitch(unittest.TestCase):
@@ -72,13 +74,13 @@ class TestMfiSwitch(unittest.TestCase):
         """Test update with target state."""
         self.switch._target_state = True
         self.port.data = {}
-        self.port.data['output'] = 'stale'
+        self.port.data["output"] = "stale"
         self.switch.update()
-        assert 1.0 == self.port.data['output']
+        assert 1.0 == self.port.data["output"]
         assert self.switch._target_state is None
-        self.port.data['output'] = 'untouched'
+        self.port.data["output"] = "untouched"
         self.switch.update()
-        assert 'untouched' == self.port.data['output']
+        assert "untouched" == self.port.data["output"]
 
     def test_turn_on(self):
         """Test turn_on."""
@@ -96,17 +98,15 @@ class TestMfiSwitch(unittest.TestCase):
 
     def test_current_power_w(self):
         """Test current power."""
-        self.port.data = {'active_pwr': 10}
+        self.port.data = {"active_pwr": 10}
         assert 10 == self.switch.current_power_w
 
     def test_current_power_w_no_data(self):
         """Test current power if there is no data."""
-        self.port.data = {'notpower': 123}
+        self.port.data = {"notpower": 123}
         assert 0 == self.switch.current_power_w
 
     def test_device_state_attributes(self):
         """Test the state attributes."""
-        self.port.data = {'v_rms': 1.25,
-                          'i_rms': 2.75}
-        assert {'volts': 1.2, 'amps': 2.8} == \
-            self.switch.device_state_attributes
+        self.port.data = {"v_rms": 1.25, "i_rms": 2.75}
+        assert {"volts": 1.2, "amps": 2.8} == self.switch.device_state_attributes
