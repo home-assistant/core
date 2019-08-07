@@ -13,7 +13,6 @@ from random import uniform
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.util.decorator import Registry
 
 from ..const import (
     CHANNEL_ATTRIBUTE,
@@ -29,8 +28,6 @@ from ..helpers import LogMixin, get_attr_id_by_name, safe_read
 from ..registries import CLUSTER_REPORT_CONFIGS
 
 _LOGGER = logging.getLogger(__name__)
-
-ZIGBEE_CHANNEL_REGISTRY = Registry()
 
 
 def parse_and_log_command(channel, tsn, command_id, args):
