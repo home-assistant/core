@@ -9,8 +9,6 @@ from . import KEY_API, KEY_GATEWAY
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['tradfri']
-
 SCAN_INTERVAL = timedelta(minutes=5)
 
 
@@ -21,8 +19,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     devices_commands = await api(gateway.get_devices())
     all_devices = await api(devices_commands)
-    devices = (dev for dev in all_devices if not dev.has_light_control and
-               not dev.has_socket_control)
+    devices = (
+        dev
+        for dev in all_devices
+        if not dev.has_light_control and not dev.has_socket_control
+    )
     async_add_entities(TradfriDevice(device, api) for device in devices)
 
 
@@ -54,19 +55,19 @@ class TradfriDevice(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
-        return '%'
+        return "%"
 
     @property
     def device_state_attributes(self):
         """Return the devices' state attributes."""
         info = self._device.device_info
         attrs = {
-            'manufacturer': info.manufacturer,
-            'model_number': info.model_number,
-            'serial': info.serial,
-            'firmware_version': info.firmware_version,
-            'power_source': info.power_source_str,
-            'battery_level': info.battery_level
+            "manufacturer": info.manufacturer,
+            "model_number": info.model_number,
+            "serial": info.serial,
+            "firmware_version": info.firmware_version,
+            "power_source": info.power_source_str,
+            "battery_level": info.battery_level,
         }
         return attrs
 
@@ -80,14 +81,16 @@ class TradfriDevice(Entity):
         """Start observation of light."""
         # pylint: disable=import-error
         from pytradfri.error import PytradfriError
+
         if exc:
-            _LOGGER.warning("Observation failed for %s", self._name,
-                            exc_info=exc)
+            _LOGGER.warning("Observation failed for %s", self._name, exc_info=exc)
 
         try:
-            cmd = self._device.observe(callback=self._observe_update,
-                                       err_callback=self._async_start_observe,
-                                       duration=0)
+            cmd = self._device.observe(
+                callback=self._observe_update,
+                err_callback=self._async_start_observe,
+                duration=0,
+            )
             self.hass.async_create_task(self._api(cmd))
         except PytradfriError as err:
             _LOGGER.warning("Observation failed, trying again", exc_info=err)

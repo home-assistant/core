@@ -34,8 +34,11 @@
         },
         "abort": {
             "already_configured": "Bridge is already configured",
+            "already_in_progress": "Config flow for bridge is already in progress.",
             "no_bridges": "No deCONZ bridges discovered",
-            "one_instance_only": "Component only supports one deCONZ instance"
+            "not_deconz_bridge": "Not a deCONZ bridge",
+            "one_instance_only": "Component only supports one deCONZ instance",
+            "updated_instance": "Updated deCONZ instance with new host address"
         }
     }
 }

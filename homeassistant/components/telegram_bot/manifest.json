@@ -5,6 +5,6 @@
   "requirements": [
     "python-telegram-bot==11.1.0"
   ],
-  "dependencies": [],
+  "dependencies": ["http"],
   "codeowners": []
 }

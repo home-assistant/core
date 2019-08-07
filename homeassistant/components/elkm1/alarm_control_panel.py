@@ -3,49 +3,63 @@ import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.const import (
-    ATTR_CODE, ATTR_ENTITY_ID, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT, STATE_ALARM_ARMING, STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
+    ATTR_CODE,
+    ATTR_ENTITY_ID,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMING,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_PENDING,
+    STATE_ALARM_TRIGGERED,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, async_dispatcher_send)
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 
 from . import DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities
 
-DEPENDENCIES = [ELK_DOMAIN]
+SIGNAL_ARM_ENTITY = "elkm1_arm"
+SIGNAL_DISPLAY_MESSAGE = "elkm1_display_message"
 
-SIGNAL_ARM_ENTITY = 'elkm1_arm'
-SIGNAL_DISPLAY_MESSAGE = 'elkm1_display_message'
+ELK_ALARM_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
+        vol.Required(ATTR_CODE): vol.All(vol.Coerce(int), vol.Range(0, 999999)),
+    }
+)
 
-ELK_ALARM_SERVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
-    vol.Required(ATTR_CODE): vol.All(vol.Coerce(int), vol.Range(0, 999999)),
-})
+DISPLAY_MESSAGE_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
+        vol.Optional("clear", default=2): vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
+        vol.Optional("beep", default=False): cv.boolean,
+        vol.Optional("timeout", default=0): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=65535)
+        ),
+        vol.Optional("line1", default=""): cv.string,
+        vol.Optional("line2", default=""): cv.string,
+    }
+)
 
-DISPLAY_MESSAGE_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
-    vol.Optional('clear', default=2): vol.In([0, 1, 2]),
-    vol.Optional('beep', default=False): cv.boolean,
-    vol.Optional('timeout', default=0): vol.Range(min=0, max=65535),
-    vol.Optional('line1', default=''): cv.string,
-    vol.Optional('line2', default=''): cv.string,
-})
 
-
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the ElkM1 alarm platform."""
     if discovery_info is None:
         return
 
-    elk = hass.data[ELK_DOMAIN]['elk']
-    entities = create_elk_entities(hass, elk.areas, 'area', ElkArea, [])
+    elk_datas = hass.data[ELK_DOMAIN]
+    entities = []
+    for elk_data in elk_datas.values():
+        elk = elk_data["elk"]
+        entities = create_elk_entities(elk_data, elk.areas, "area", ElkArea, entities)
     async_add_entities(entities, True)
 
     def _dispatch(signal, entity_ids, *args):
         for entity_id in entity_ids:
-            async_dispatcher_send(
-                hass, '{}_{}'.format(signal, entity_id), *args)
+            async_dispatcher_send(hass, "{}_{}".format(signal, entity_id), *args)
 
     def _arm_service(service):
         entity_ids = service.data.get(ATTR_ENTITY_ID, [])
@@ -55,27 +69,36 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     for service in _arm_services():
         hass.services.async_register(
-            alarm.DOMAIN, service, _arm_service, ELK_ALARM_SERVICE_SCHEMA)
+            alarm.DOMAIN, service, _arm_service, ELK_ALARM_SERVICE_SCHEMA
+        )
 
     def _display_message_service(service):
         entity_ids = service.data.get(ATTR_ENTITY_ID, [])
         data = service.data
-        args = (data['clear'], data['beep'], data['timeout'],
-                data['line1'], data['line2'])
+        args = (
+            data["clear"],
+            data["beep"],
+            data["timeout"],
+            data["line1"],
+            data["line2"],
+        )
         _dispatch(SIGNAL_DISPLAY_MESSAGE, entity_ids, *args)
 
     hass.services.async_register(
-        alarm.DOMAIN, 'elkm1_alarm_display_message',
-        _display_message_service, DISPLAY_MESSAGE_SERVICE_SCHEMA)
+        alarm.DOMAIN,
+        "elkm1_alarm_display_message",
+        _display_message_service,
+        DISPLAY_MESSAGE_SERVICE_SCHEMA,
+    )
 
 
 def _arm_services():
     from elkm1_lib.const import ArmLevel
 
     return {
-        'elkm1_alarm_arm_vacation': ArmLevel.ARMED_VACATION.value,
-        'elkm1_alarm_arm_home_instant': ArmLevel.ARMED_STAY_INSTANT.value,
-        'elkm1_alarm_arm_night_instant': ArmLevel.ARMED_NIGHT_INSTANT.value,
+        "elkm1_alarm_arm_vacation": ArmLevel.ARMED_VACATION.value,
+        "elkm1_alarm_arm_home_instant": ArmLevel.ARMED_STAY_INSTANT.value,
+        "elkm1_alarm_arm_night_instant": ArmLevel.ARMED_NIGHT_INSTANT.value,
     }
 
 
@@ -85,7 +108,7 @@ class ElkArea(ElkEntity, alarm.AlarmControlPanel):
     def __init__(self, element, elk, elk_data):
         """Initialize Area as Alarm Control Panel."""
         super().__init__(element, elk, elk_data)
-        self._changed_by_entity_id = ''
+        self._changed_by_entity_id = ""
         self._state = None
 
     async def async_added_to_hass(self):
@@ -94,18 +117,23 @@ class ElkArea(ElkEntity, alarm.AlarmControlPanel):
         for keypad in self._elk.keypads:
             keypad.add_callback(self._watch_keypad)
         async_dispatcher_connect(
-            self.hass, '{}_{}'.format(SIGNAL_ARM_ENTITY, self.entity_id),
-            self._arm_service)
+            self.hass,
+            "{}_{}".format(SIGNAL_ARM_ENTITY, self.entity_id),
+            self._arm_service,
+        )
         async_dispatcher_connect(
-            self.hass, '{}_{}'.format(SIGNAL_DISPLAY_MESSAGE, self.entity_id),
-            self._display_message)
+            self.hass,
+            "{}_{}".format(SIGNAL_DISPLAY_MESSAGE, self.entity_id),
+            self._display_message,
+        )
 
     def _watch_keypad(self, keypad, changeset):
         if keypad.area != self._element.index:
             return
-        if changeset.get('last_user') is not None:
-            self._changed_by_entity_id = self.hass.data[
-                ELK_DOMAIN]['keypads'].get(keypad.index, '')
+        if changeset.get("last_user") is not None:
+            self._changed_by_entity_id = self.hass.data[ELK_DOMAIN][self._prefix][
+                "keypads"
+            ].get(keypad.index, "")
             self.async_schedule_update_ha_state(True)
 
     @property
@@ -125,17 +153,16 @@ class ElkArea(ElkEntity, alarm.AlarmControlPanel):
 
         attrs = self.initial_attrs()
         elmt = self._element
-        attrs['is_exit'] = elmt.is_exit
-        attrs['timer1'] = elmt.timer1
-        attrs['timer2'] = elmt.timer2
+        attrs["is_exit"] = elmt.is_exit
+        attrs["timer1"] = elmt.timer1
+        attrs["timer2"] = elmt.timer2
         if elmt.armed_status is not None:
-            attrs['armed_status'] = \
-                ArmedStatus(elmt.armed_status).name.lower()
+            attrs["armed_status"] = ArmedStatus(elmt.armed_status).name.lower()
         if elmt.arm_up_state is not None:
-            attrs['arm_up_state'] = ArmUpState(elmt.arm_up_state).name.lower()
+            attrs["arm_up_state"] = ArmUpState(elmt.arm_up_state).name.lower()
         if elmt.alarm_state is not None:
-            attrs['alarm_state'] = AlarmState(elmt.alarm_state).name.lower()
-        attrs['changed_by_entity_id'] = self._changed_by_entity_id
+            attrs["alarm_state"] = AlarmState(elmt.alarm_state).name.lower()
+        attrs["changed_by_entity_id"] = self._changed_by_entity_id
         return attrs
 
     def _element_changed(self, element, changeset):
@@ -156,8 +183,9 @@ class ElkArea(ElkEntity, alarm.AlarmControlPanel):
         elif self._area_is_in_alarm_state():
             self._state = STATE_ALARM_TRIGGERED
         elif self._entry_exit_timer_is_running():
-            self._state = STATE_ALARM_ARMING \
-                if self._element.is_exit else STATE_ALARM_PENDING
+            self._state = (
+                STATE_ALARM_ARMING if self._element.is_exit else STATE_ALARM_PENDING
+            )
         else:
             self._state = elk_state_to_hass_state[self._element.armed_status]
 

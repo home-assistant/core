@@ -5,6 +5,6 @@
   "requirements": [
     "pyicloud==0.9.1"
   ],
-  "dependencies": [],
+  "dependencies": ["configurator"],
   "codeowners": []
 }

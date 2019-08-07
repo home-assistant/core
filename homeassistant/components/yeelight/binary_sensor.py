@@ -6,8 +6,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import DATA_YEELIGHT, DATA_UPDATED
 
-DEPENDENCIES = ['yeelight']
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -16,7 +14,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if not discovery_info:
         return
 
-    device = hass.data[DATA_YEELIGHT][discovery_info['host']]
+    device = hass.data[DATA_YEELIGHT][discovery_info["host"]]
 
     if device.is_nightlight_supported:
         _LOGGER.debug("Adding nightlight mode sensor for %s", device.name)
@@ -39,7 +37,7 @@ class YeelightNightlightModeSensor(BinarySensorDevice):
         async_dispatcher_connect(
             self.hass,
             DATA_UPDATED.format(self._device.ipaddr),
-            self._schedule_immediate_update
+            self._schedule_immediate_update,
         )
 
     @property

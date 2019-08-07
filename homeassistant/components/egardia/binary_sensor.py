@@ -8,20 +8,16 @@ from . import ATTR_DISCOVER_DEVICES, EGARDIA_DEVICE
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['egardia']
-
 EGARDIA_TYPE_TO_DEVICE_CLASS = {
-    'IR Sensor': 'motion',
-    'Door Contact': 'opening',
-    'IR': 'motion',
+    "IR Sensor": "motion",
+    "Door Contact": "opening",
+    "IR": "motion",
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Initialize the platform."""
-    if (discovery_info is None or
-            discovery_info[ATTR_DISCOVER_DEVICES] is None):
+    if discovery_info is None or discovery_info[ATTR_DISCOVER_DEVICES] is None:
         return
 
     disc_info = discovery_info[ATTR_DISCOVER_DEVICES]
@@ -29,14 +25,17 @@ async def async_setup_platform(hass, config, async_add_entities,
     async_add_entities(
         (
             EgardiaBinarySensor(
-                sensor_id=disc_info[sensor]['id'],
-                name=disc_info[sensor]['name'],
+                sensor_id=disc_info[sensor]["id"],
+                name=disc_info[sensor]["name"],
                 egardia_system=hass.data[EGARDIA_DEVICE],
                 device_class=EGARDIA_TYPE_TO_DEVICE_CLASS.get(
-                    disc_info[sensor]['type'], None)
+                    disc_info[sensor]["type"], None
+                ),
             )
             for sensor in disc_info
-        ), True)
+        ),
+        True,
+    )
 
 
 class EgardiaBinarySensor(BinarySensorDevice):

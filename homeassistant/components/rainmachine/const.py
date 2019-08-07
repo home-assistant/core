@@ -2,14 +2,18 @@
 from datetime import timedelta
 import logging
 
-LOGGER = logging.getLogger('.')
+LOGGER = logging.getLogger(__package__)
 
-DOMAIN = 'rainmachine'
+DOMAIN = "rainmachine"
 
-DATA_CLIENT = 'client'
+DATA_CLIENT = "client"
 
 DEFAULT_PORT = 8080
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 DEFAULT_SSL = True
 
-TOPIC_UPDATE = 'update_{0}'
+PROVISION_SETTINGS = "provision.settings"
+RESTRICTIONS_CURRENT = "restrictions.current"
+RESTRICTIONS_UNIVERSAL = "restrictions.universal"
+
+TOPIC_UPDATE = "update_{0}"

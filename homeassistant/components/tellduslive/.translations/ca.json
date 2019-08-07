@@ -12,7 +12,7 @@
         },
         "step": {
             "auth": {
-                "description": "Passos per enlla\u00e7ar el teu compte de TelldusLive:\n 1. Clica l'enlla\u00e7 de sota.\n 2. Inicia sessi\u00f3 a Telldus Live.\n 3. Autoritza **{app_name}** (clica **Yes**).\n 4. Torna aqu\u00ed i clica **SUBMIT**.\n \n [Enlla\u00e7 al compte de TelldusLive]({auth_url})",
+                "description": "Per enlla\u00e7ar el teu compte de TelldusLive:\n 1. Clica l'enlla\u00e7 de sota.\n 2. Inicia sessi\u00f3 a Telldus Live.\n 3. Autoritza **{app_name}** (clica **Yes**).\n 4. Torna aqu\u00ed i clica **SUBMIT**.\n \n [Enlla\u00e7 al compte de TelldusLive]({auth_url})",
                 "title": "Autenticaci\u00f3 amb TelldusLive"
             },
             "user": {

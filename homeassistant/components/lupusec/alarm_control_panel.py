@@ -3,14 +3,15 @@ from datetime import timedelta
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED)
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_TRIGGERED,
+)
 
 from . import DOMAIN as LUPUSEC_DOMAIN, LupusecDevice
 
-DEPENDENCIES = ['lupusec']
-
-ICON = 'mdi:security'
+ICON = "mdi:security"
 
 SCAN_INTERVAL = timedelta(seconds=2)
 

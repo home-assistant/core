@@ -1,7 +1,12 @@
 config/*
+config2/*
 
 tests/testing_config/deps
 tests/testing_config/home-assistant.log
+
+# hass-release
+data/
+.token
 
 # Hide sublime text stuff
 *.sublime-project
@@ -84,7 +89,7 @@ Scripts/
 # vimmy stuff
 *.swp
 *.swo
-
+tags
 ctags.tmp
 
 # vagrant stuff
@@ -93,7 +98,10 @@ virtualization/vagrant/.vagrant
 virtualization/vagrant/config
 
 # Visual Studio Code
-.vscode
+.vscode/*
+!.vscode/cSpell.json
+!.vscode/extensions.json
+!.vscode/tasks.json
 
 # Built docs
 docs/build
@@ -106,6 +114,7 @@ desktop.ini
 
 # mypy
 /.mypy_cache/*
+/.dmypy.json
 
 # Secrets
 .lokalise_token

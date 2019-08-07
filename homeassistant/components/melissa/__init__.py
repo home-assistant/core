@@ -7,20 +7,23 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ["py-melissa-climate==2.0.0"]
-
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'melissa'
-DATA_MELISSA = 'MELISSA'
+DOMAIN = "melissa"
+DATA_MELISSA = "MELISSA"
 
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):
@@ -34,6 +37,5 @@ async def async_setup(hass, config):
     await api.async_connect()
     hass.data[DATA_MELISSA] = api
 
-    hass.async_create_task(
-        async_load_platform(hass, 'climate', DOMAIN, {}, config))
+    hass.async_create_task(async_load_platform(hass, "climate", DOMAIN, {}, config))
     return True

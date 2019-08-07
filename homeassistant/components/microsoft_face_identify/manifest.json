@@ -3,6 +3,6 @@
   "name": "Microsoft face identify",
   "documentation": "https://www.home-assistant.io/components/microsoft_face_identify",
   "requirements": [],
-  "dependencies": [],
+  "dependencies": ["microsoft_face"],
   "codeowners": []
 }

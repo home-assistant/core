@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/components/flux",
   "requirements": [],
   "dependencies": [],
+  "after_dependencies": ["light"],
   "codeowners": []
 }

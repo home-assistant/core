@@ -6,87 +6,94 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_TIMEOUT, \
-    CONF_HOST
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_TIMEOUT, CONF_HOST
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['pyenvisalink==3.8']
-
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'envisalink'
+DOMAIN = "envisalink"
 
-DATA_EVL = 'envisalink'
+DATA_EVL = "envisalink"
 
-CONF_CODE = 'code'
-CONF_EVL_KEEPALIVE = 'keepalive_interval'
-CONF_EVL_PORT = 'port'
-CONF_EVL_VERSION = 'evl_version'
-CONF_PANEL_TYPE = 'panel_type'
-CONF_PANIC = 'panic_type'
-CONF_PARTITIONNAME = 'name'
-CONF_PARTITIONS = 'partitions'
-CONF_PASS = 'password'
-CONF_USERNAME = 'user_name'
-CONF_ZONEDUMP_INTERVAL = 'zonedump_interval'
-CONF_ZONENAME = 'name'
-CONF_ZONES = 'zones'
-CONF_ZONETYPE = 'type'
+CONF_CODE = "code"
+CONF_EVL_KEEPALIVE = "keepalive_interval"
+CONF_EVL_PORT = "port"
+CONF_EVL_VERSION = "evl_version"
+CONF_PANEL_TYPE = "panel_type"
+CONF_PANIC = "panic_type"
+CONF_PARTITIONNAME = "name"
+CONF_PARTITIONS = "partitions"
+CONF_PASS = "password"
+CONF_USERNAME = "user_name"
+CONF_ZONEDUMP_INTERVAL = "zonedump_interval"
+CONF_ZONENAME = "name"
+CONF_ZONES = "zones"
+CONF_ZONETYPE = "type"
 
 DEFAULT_PORT = 4025
 DEFAULT_EVL_VERSION = 3
 DEFAULT_KEEPALIVE = 60
 DEFAULT_ZONEDUMP_INTERVAL = 30
-DEFAULT_ZONETYPE = 'opening'
-DEFAULT_PANIC = 'Police'
+DEFAULT_ZONETYPE = "opening"
+DEFAULT_PANIC = "Police"
 DEFAULT_TIMEOUT = 10
 
-SIGNAL_ZONE_UPDATE = 'envisalink.zones_updated'
-SIGNAL_PARTITION_UPDATE = 'envisalink.partition_updated'
-SIGNAL_KEYPAD_UPDATE = 'envisalink.keypad_updated'
+SIGNAL_ZONE_UPDATE = "envisalink.zones_updated"
+SIGNAL_PARTITION_UPDATE = "envisalink.partition_updated"
+SIGNAL_KEYPAD_UPDATE = "envisalink.keypad_updated"
 
-ZONE_SCHEMA = vol.Schema({
-    vol.Required(CONF_ZONENAME): cv.string,
-    vol.Optional(CONF_ZONETYPE, default=DEFAULT_ZONETYPE): cv.string})
+ZONE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ZONENAME): cv.string,
+        vol.Optional(CONF_ZONETYPE, default=DEFAULT_ZONETYPE): cv.string,
+    }
+)
 
-PARTITION_SCHEMA = vol.Schema({
-    vol.Required(CONF_PARTITIONNAME): cv.string})
+PARTITION_SCHEMA = vol.Schema({vol.Required(CONF_PARTITIONNAME): cv.string})
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PANEL_TYPE):
-            vol.All(cv.string, vol.In(['HONEYWELL', 'DSC'])),
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASS): cv.string,
-        vol.Optional(CONF_CODE): cv.string,
-        vol.Optional(CONF_PANIC, default=DEFAULT_PANIC): cv.string,
-        vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
-        vol.Optional(CONF_PARTITIONS): {vol.Coerce(int): PARTITION_SCHEMA},
-        vol.Optional(CONF_EVL_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_EVL_VERSION, default=DEFAULT_EVL_VERSION):
-            vol.All(vol.Coerce(int), vol.Range(min=3, max=4)),
-        vol.Optional(CONF_EVL_KEEPALIVE, default=DEFAULT_KEEPALIVE):
-            vol.All(vol.Coerce(int), vol.Range(min=15)),
-        vol.Optional(
-            CONF_ZONEDUMP_INTERVAL,
-            default=DEFAULT_ZONEDUMP_INTERVAL): vol.Coerce(int),
-        vol.Optional(
-            CONF_TIMEOUT,
-            default=DEFAULT_TIMEOUT): vol.Coerce(int),
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_HOST): cv.string,
+                vol.Required(CONF_PANEL_TYPE): vol.All(
+                    cv.string, vol.In(["HONEYWELL", "DSC"])
+                ),
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASS): cv.string,
+                vol.Optional(CONF_CODE): cv.string,
+                vol.Optional(CONF_PANIC, default=DEFAULT_PANIC): cv.string,
+                vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
+                vol.Optional(CONF_PARTITIONS): {vol.Coerce(int): PARTITION_SCHEMA},
+                vol.Optional(CONF_EVL_PORT, default=DEFAULT_PORT): cv.port,
+                vol.Optional(CONF_EVL_VERSION, default=DEFAULT_EVL_VERSION): vol.All(
+                    vol.Coerce(int), vol.Range(min=3, max=4)
+                ),
+                vol.Optional(CONF_EVL_KEEPALIVE, default=DEFAULT_KEEPALIVE): vol.All(
+                    vol.Coerce(int), vol.Range(min=15)
+                ),
+                vol.Optional(
+                    CONF_ZONEDUMP_INTERVAL, default=DEFAULT_ZONEDUMP_INTERVAL
+                ): vol.Coerce(int),
+                vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
-SERVICE_CUSTOM_FUNCTION = 'invoke_custom_function'
-ATTR_CUSTOM_FUNCTION = 'pgm'
-ATTR_PARTITION = 'partition'
+SERVICE_CUSTOM_FUNCTION = "invoke_custom_function"
+ATTR_CUSTOM_FUNCTION = "pgm"
+ATTR_PARTITION = "partition"
 
-SERVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_CUSTOM_FUNCTION): cv.string,
-    vol.Required(ATTR_PARTITION): cv.string,
-})
+SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CUSTOM_FUNCTION): cv.string,
+        vol.Required(ATTR_PARTITION): cv.string,
+    }
+)
 
 
 async def async_setup(hass, config):
@@ -108,11 +115,20 @@ async def async_setup(hass, config):
     zones = conf.get(CONF_ZONES)
     partitions = conf.get(CONF_PARTITIONS)
     connection_timeout = conf.get(CONF_TIMEOUT)
-    sync_connect = asyncio.Future(loop=hass.loop)
+    sync_connect = asyncio.Future()
 
     controller = EnvisalinkAlarmPanel(
-        host, port, panel_type, version, user, password, zone_dump,
-        keep_alive, hass.loop, connection_timeout)
+        host,
+        port,
+        panel_type,
+        version,
+        user,
+        password,
+        zone_dump,
+        keep_alive,
+        hass.loop,
+        connection_timeout,
+    )
     hass.data[DATA_EVL] = controller
 
     @callback
@@ -134,8 +150,7 @@ async def async_setup(hass, config):
         """Handle a successful connection."""
         _LOGGER.info("Established a connection with the Envisalink")
         if not sync_connect.done():
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
-                                       stop_envisalink)
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_envisalink)
             sync_connect.set_result(True)
 
     @callback
@@ -185,30 +200,34 @@ async def async_setup(hass, config):
 
     # Load sub-components for Envisalink
     if partitions:
-        hass.async_create_task(async_load_platform(
-            hass, 'alarm_control_panel', 'envisalink', {
-                CONF_PARTITIONS: partitions,
-                CONF_CODE: code,
-                CONF_PANIC: panic_type
-            }, config
-        ))
-        hass.async_create_task(async_load_platform(
-            hass, 'sensor', 'envisalink', {
-                CONF_PARTITIONS: partitions,
-                CONF_CODE: code
-            }, config
-        ))
+        hass.async_create_task(
+            async_load_platform(
+                hass,
+                "alarm_control_panel",
+                "envisalink",
+                {CONF_PARTITIONS: partitions, CONF_CODE: code, CONF_PANIC: panic_type},
+                config,
+            )
+        )
+        hass.async_create_task(
+            async_load_platform(
+                hass,
+                "sensor",
+                "envisalink",
+                {CONF_PARTITIONS: partitions, CONF_CODE: code},
+                config,
+            )
+        )
     if zones:
-        hass.async_create_task(async_load_platform(
-            hass, 'binary_sensor', 'envisalink', {
-                CONF_ZONES: zones
-            }, config
-        ))
+        hass.async_create_task(
+            async_load_platform(
+                hass, "binary_sensor", "envisalink", {CONF_ZONES: zones}, config
+            )
+        )
 
-    hass.services.async_register(DOMAIN,
-                                 SERVICE_CUSTOM_FUNCTION,
-                                 handle_custom_function,
-                                 schema=SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_CUSTOM_FUNCTION, handle_custom_function, schema=SERVICE_SCHEMA
+    )
 
     return True
 

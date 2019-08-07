@@ -2,194 +2,277 @@
 from collections import namedtuple
 from typing import Optional, Sequence
 
+from pysmartthings import Attribute, Capability
+
 from homeassistant.const import (
-    DEVICE_CLASS_BATTERY, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_TIMESTAMP, MASS_KILOGRAMS,
-    ENERGY_KILO_WATT_HOUR, POWER_WATT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
+    ENERGY_KILO_WATT_HOUR,
+    MASS_KILOGRAMS,
+    POWER_WATT,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
-DEPENDENCIES = ['smartthings']
-
 Map = namedtuple("map", "attribute name default_unit device_class")
 
 CAPABILITY_TO_SENSORS = {
-    'activityLightingMode': [
-        Map('lightingMode', "Activity Lighting Mode", None, None)],
-    'airConditionerMode': [
-        Map('airConditionerMode', "Air Conditioner Mode", None, None)],
-    'airQualitySensor': [
-        Map('airQuality', "Air Quality", 'CAQI', None)],
-    'alarm': [
-        Map('alarm', "Alarm", None, None)],
-    'audioVolume': [
-        Map('volume', "Volume", "%", None)],
-    'battery': [
-        Map('battery', "Battery", "%", DEVICE_CLASS_BATTERY)],
-    'bodyMassIndexMeasurement': [
-        Map('bmiMeasurement', "Body Mass Index", "kg/m^2", None)],
-    'bodyWeightMeasurement': [
-        Map('bodyWeightMeasurement', "Body Weight", MASS_KILOGRAMS, None)],
-    'carbonDioxideMeasurement': [
-        Map('carbonDioxide', "Carbon Dioxide Measurement", "ppm", None)],
-    'carbonMonoxideDetector': [
-        Map('carbonMonoxide', "Carbon Monoxide Detector", None, None)],
-    'carbonMonoxideMeasurement': [
-        Map('carbonMonoxideLevel', "Carbon Monoxide Measurement", "ppm",
-            None)],
-    'dishwasherOperatingState': [
-        Map('machineState', "Dishwasher Machine State", None, None),
-        Map('dishwasherJobState', "Dishwasher Job State", None, None),
-        Map('completionTime', "Dishwasher Completion Time", None,
-            DEVICE_CLASS_TIMESTAMP)],
-    'dryerMode': [
-        Map('dryerMode', "Dryer Mode", None, None)],
-    'dryerOperatingState': [
-        Map('machineState', "Dryer Machine State", None, None),
-        Map('dryerJobState', "Dryer Job State", None, None),
-        Map('completionTime', "Dryer Completion Time", None,
-            DEVICE_CLASS_TIMESTAMP)],
-    'dustSensor': [
-        Map('fineDustLevel', "Fine Dust Level", None, None),
-        Map('dustLevel', "Dust Level", None, None)],
-    'energyMeter': [
-        Map('energy', "Energy Meter", ENERGY_KILO_WATT_HOUR, None)],
-    'equivalentCarbonDioxideMeasurement': [
-        Map('equivalentCarbonDioxideMeasurement',
-            'Equivalent Carbon Dioxide Measurement', 'ppm', None)],
-    'formaldehydeMeasurement': [
-        Map('formaldehydeLevel', 'Formaldehyde Measurement', 'ppm', None)],
-    'illuminanceMeasurement': [
-        Map('illuminance', "Illuminance", 'lux', DEVICE_CLASS_ILLUMINANCE)],
-    'infraredLevel': [
-        Map('infraredLevel', "Infrared Level", '%', None)],
-    'lock': [
-        Map('lock', "Lock", None, None)],
-    'mediaInputSource': [
-        Map('inputSource', "Media Input Source", None, None)],
-    'mediaPlaybackRepeat': [
-        Map('playbackRepeatMode', "Media Playback Repeat", None, None)],
-    'mediaPlaybackShuffle': [
-        Map('playbackShuffle', "Media Playback Shuffle", None, None)],
-    'mediaPlayback': [
-        Map('playbackStatus', "Media Playback Status", None, None)],
-    'odorSensor': [
-        Map('odorLevel', "Odor Sensor", None, None)],
-    'ovenMode': [
-        Map('ovenMode', "Oven Mode", None, None)],
-    'ovenOperatingState': [
-        Map('machineState', "Oven Machine State", None, None),
-        Map('ovenJobState', "Oven Job State", None, None),
-        Map('completionTime', "Oven Completion Time", None, None)],
-    'ovenSetpoint': [
-        Map('ovenSetpoint', "Oven Set Point", None, None)],
-    'powerMeter': [
-        Map('power', "Power Meter", POWER_WATT, None)],
-    'powerSource': [
-        Map('powerSource', "Power Source", None, None)],
-    'refrigerationSetpoint': [
-        Map('refrigerationSetpoint', "Refrigeration Setpoint", None,
-            DEVICE_CLASS_TEMPERATURE)],
-    'relativeHumidityMeasurement': [
-        Map('humidity', "Relative Humidity Measurement", '%',
-            DEVICE_CLASS_HUMIDITY)],
-    'robotCleanerCleaningMode': [
-        Map('robotCleanerCleaningMode', "Robot Cleaner Cleaning Mode",
-            None, None)],
-    'robotCleanerMovement': [
-        Map('robotCleanerMovement', "Robot Cleaner Movement", None, None)],
-    'robotCleanerTurboMode': [
-        Map('robotCleanerTurboMode', "Robot Cleaner Turbo Mode", None, None)],
-    'signalStrength': [
-        Map('lqi', "LQI Signal Strength", None, None),
-        Map('rssi', "RSSI Signal Strength", None, None)],
-    'smokeDetector': [
-        Map('smoke', "Smoke Detector", None, None)],
-    'temperatureMeasurement': [
-        Map('temperature', "Temperature Measurement", None,
-            DEVICE_CLASS_TEMPERATURE)],
-    'thermostatCoolingSetpoint': [
-        Map('coolingSetpoint', "Thermostat Cooling Setpoint", None,
-            DEVICE_CLASS_TEMPERATURE)],
-    'thermostatFanMode': [
-        Map('thermostatFanMode', "Thermostat Fan Mode", None, None)],
-    'thermostatHeatingSetpoint': [
-        Map('heatingSetpoint', "Thermostat Heating Setpoint", None,
-            DEVICE_CLASS_TEMPERATURE)],
-    'thermostatMode': [
-        Map('thermostatMode', "Thermostat Mode", None, None)],
-    'thermostatOperatingState': [
-        Map('thermostatOperatingState', "Thermostat Operating State",
-            None, None)],
-    'thermostatSetpoint': [
-        Map('thermostatSetpoint', "Thermostat Setpoint", None,
-            DEVICE_CLASS_TEMPERATURE)],
-    'threeAxis': [
-        Map('threeAxis', "Three Axis", None, None)],
-    'tvChannel': [
-        Map('tvChannel', "Tv Channel", None, None)],
-    'tvocMeasurement': [
-        Map('tvocLevel', "Tvoc Measurement", 'ppm', None)],
-    'ultravioletIndex': [
-        Map('ultravioletIndex', "Ultraviolet Index", None, None)],
-    'voltageMeasurement': [
-        Map('voltage', "Voltage Measurement", 'V', None)],
-    'washerMode': [
-        Map('washerMode', "Washer Mode", None, None)],
-    'washerOperatingState': [
-        Map('machineState', "Washer Machine State", None, None),
-        Map('washerJobState', "Washer Job State", None, None),
-        Map('completionTime', "Washer Completion Time", None,
-            DEVICE_CLASS_TIMESTAMP)]
+    Capability.activity_lighting_mode: [
+        Map(Attribute.lighting_mode, "Activity Lighting Mode", None, None)
+    ],
+    Capability.air_conditioner_mode: [
+        Map(Attribute.air_conditioner_mode, "Air Conditioner Mode", None, None)
+    ],
+    Capability.air_quality_sensor: [
+        Map(Attribute.air_quality, "Air Quality", "CAQI", None)
+    ],
+    Capability.alarm: [Map(Attribute.alarm, "Alarm", None, None)],
+    Capability.audio_volume: [Map(Attribute.volume, "Volume", "%", None)],
+    Capability.battery: [Map(Attribute.battery, "Battery", "%", DEVICE_CLASS_BATTERY)],
+    Capability.body_mass_index_measurement: [
+        Map(Attribute.bmi_measurement, "Body Mass Index", "kg/m^2", None)
+    ],
+    Capability.body_weight_measurement: [
+        Map(Attribute.body_weight_measurement, "Body Weight", MASS_KILOGRAMS, None)
+    ],
+    Capability.carbon_dioxide_measurement: [
+        Map(Attribute.carbon_dioxide, "Carbon Dioxide Measurement", "ppm", None)
+    ],
+    Capability.carbon_monoxide_detector: [
+        Map(Attribute.carbon_monoxide, "Carbon Monoxide Detector", None, None)
+    ],
+    Capability.carbon_monoxide_measurement: [
+        Map(Attribute.carbon_monoxide_level, "Carbon Monoxide Measurement", "ppm", None)
+    ],
+    Capability.dishwasher_operating_state: [
+        Map(Attribute.machine_state, "Dishwasher Machine State", None, None),
+        Map(Attribute.dishwasher_job_state, "Dishwasher Job State", None, None),
+        Map(
+            Attribute.completion_time,
+            "Dishwasher Completion Time",
+            None,
+            DEVICE_CLASS_TIMESTAMP,
+        ),
+    ],
+    Capability.dryer_mode: [Map(Attribute.dryer_mode, "Dryer Mode", None, None)],
+    Capability.dryer_operating_state: [
+        Map(Attribute.machine_state, "Dryer Machine State", None, None),
+        Map(Attribute.dryer_job_state, "Dryer Job State", None, None),
+        Map(
+            Attribute.completion_time,
+            "Dryer Completion Time",
+            None,
+            DEVICE_CLASS_TIMESTAMP,
+        ),
+    ],
+    Capability.dust_sensor: [
+        Map(Attribute.fine_dust_level, "Fine Dust Level", None, None),
+        Map(Attribute.dust_level, "Dust Level", None, None),
+    ],
+    Capability.energy_meter: [
+        Map(Attribute.energy, "Energy Meter", ENERGY_KILO_WATT_HOUR, None)
+    ],
+    Capability.equivalent_carbon_dioxide_measurement: [
+        Map(
+            Attribute.equivalent_carbon_dioxide_measurement,
+            "Equivalent Carbon Dioxide Measurement",
+            "ppm",
+            None,
+        )
+    ],
+    Capability.formaldehyde_measurement: [
+        Map(Attribute.formaldehyde_level, "Formaldehyde Measurement", "ppm", None)
+    ],
+    Capability.illuminance_measurement: [
+        Map(Attribute.illuminance, "Illuminance", "lux", DEVICE_CLASS_ILLUMINANCE)
+    ],
+    Capability.infrared_level: [
+        Map(Attribute.infrared_level, "Infrared Level", "%", None)
+    ],
+    Capability.media_input_source: [
+        Map(Attribute.input_source, "Media Input Source", None, None)
+    ],
+    Capability.media_playback_repeat: [
+        Map(Attribute.playback_repeat_mode, "Media Playback Repeat", None, None)
+    ],
+    Capability.media_playback_shuffle: [
+        Map(Attribute.playback_shuffle, "Media Playback Shuffle", None, None)
+    ],
+    Capability.media_playback: [
+        Map(Attribute.playback_status, "Media Playback Status", None, None)
+    ],
+    Capability.odor_sensor: [Map(Attribute.odor_level, "Odor Sensor", None, None)],
+    Capability.oven_mode: [Map(Attribute.oven_mode, "Oven Mode", None, None)],
+    Capability.oven_operating_state: [
+        Map(Attribute.machine_state, "Oven Machine State", None, None),
+        Map(Attribute.oven_job_state, "Oven Job State", None, None),
+        Map(Attribute.completion_time, "Oven Completion Time", None, None),
+    ],
+    Capability.oven_setpoint: [
+        Map(Attribute.oven_setpoint, "Oven Set Point", None, None)
+    ],
+    Capability.power_meter: [Map(Attribute.power, "Power Meter", POWER_WATT, None)],
+    Capability.power_source: [Map(Attribute.power_source, "Power Source", None, None)],
+    Capability.refrigeration_setpoint: [
+        Map(
+            Attribute.refrigeration_setpoint,
+            "Refrigeration Setpoint",
+            None,
+            DEVICE_CLASS_TEMPERATURE,
+        )
+    ],
+    Capability.relative_humidity_measurement: [
+        Map(
+            Attribute.humidity,
+            "Relative Humidity Measurement",
+            "%",
+            DEVICE_CLASS_HUMIDITY,
+        )
+    ],
+    Capability.robot_cleaner_cleaning_mode: [
+        Map(
+            Attribute.robot_cleaner_cleaning_mode,
+            "Robot Cleaner Cleaning Mode",
+            None,
+            None,
+        )
+    ],
+    Capability.robot_cleaner_movement: [
+        Map(Attribute.robot_cleaner_movement, "Robot Cleaner Movement", None, None)
+    ],
+    Capability.robot_cleaner_turbo_mode: [
+        Map(Attribute.robot_cleaner_turbo_mode, "Robot Cleaner Turbo Mode", None, None)
+    ],
+    Capability.signal_strength: [
+        Map(Attribute.lqi, "LQI Signal Strength", None, None),
+        Map(Attribute.rssi, "RSSI Signal Strength", None, None),
+    ],
+    Capability.smoke_detector: [Map(Attribute.smoke, "Smoke Detector", None, None)],
+    Capability.temperature_measurement: [
+        Map(
+            Attribute.temperature,
+            "Temperature Measurement",
+            None,
+            DEVICE_CLASS_TEMPERATURE,
+        )
+    ],
+    Capability.thermostat_cooling_setpoint: [
+        Map(
+            Attribute.cooling_setpoint,
+            "Thermostat Cooling Setpoint",
+            None,
+            DEVICE_CLASS_TEMPERATURE,
+        )
+    ],
+    Capability.thermostat_fan_mode: [
+        Map(Attribute.thermostat_fan_mode, "Thermostat Fan Mode", None, None)
+    ],
+    Capability.thermostat_heating_setpoint: [
+        Map(
+            Attribute.heating_setpoint,
+            "Thermostat Heating Setpoint",
+            None,
+            DEVICE_CLASS_TEMPERATURE,
+        )
+    ],
+    Capability.thermostat_mode: [
+        Map(Attribute.thermostat_mode, "Thermostat Mode", None, None)
+    ],
+    Capability.thermostat_operating_state: [
+        Map(
+            Attribute.thermostat_operating_state,
+            "Thermostat Operating State",
+            None,
+            None,
+        )
+    ],
+    Capability.thermostat_setpoint: [
+        Map(
+            Attribute.thermostat_setpoint,
+            "Thermostat Setpoint",
+            None,
+            DEVICE_CLASS_TEMPERATURE,
+        )
+    ],
+    Capability.three_axis: [],
+    Capability.tv_channel: [Map(Attribute.tv_channel, "Tv Channel", None, None)],
+    Capability.tvoc_measurement: [
+        Map(Attribute.tvoc_level, "Tvoc Measurement", "ppm", None)
+    ],
+    Capability.ultraviolet_index: [
+        Map(Attribute.ultraviolet_index, "Ultraviolet Index", None, None)
+    ],
+    Capability.voltage_measurement: [
+        Map(Attribute.voltage, "Voltage Measurement", "V", None)
+    ],
+    Capability.washer_mode: [Map(Attribute.washer_mode, "Washer Mode", None, None)],
+    Capability.washer_operating_state: [
+        Map(Attribute.machine_state, "Washer Machine State", None, None),
+        Map(Attribute.washer_job_state, "Washer Job State", None, None),
+        Map(
+            Attribute.completion_time,
+            "Washer Completion Time",
+            None,
+            DEVICE_CLASS_TIMESTAMP,
+        ),
+    ],
 }
 
-UNITS = {
-    'C': TEMP_CELSIUS,
-    'F': TEMP_FAHRENHEIT
-}
+UNITS = {"C": TEMP_CELSIUS, "F": TEMP_FAHRENHEIT}
 
-THREE_AXIS_NAMES = ['X Coordinate', 'Y Coordinate', 'Z Coordinate']
+THREE_AXIS_NAMES = ["X Coordinate", "Y Coordinate", "Z Coordinate"]
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Platform uses config entry setup."""
     pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add binary sensors for a config entry."""
-    from pysmartthings import Capability
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     sensors = []
     for device in broker.devices.values():
-        for capability in broker.get_assigned(device.device_id, 'sensor'):
+        for capability in broker.get_assigned(device.device_id, "sensor"):
             if capability == Capability.three_axis:
                 sensors.extend(
-                    [SmartThingsThreeAxisSensor(device, index)
-                     for index in range(len(THREE_AXIS_NAMES))])
+                    [
+                        SmartThingsThreeAxisSensor(device, index)
+                        for index in range(len(THREE_AXIS_NAMES))
+                    ]
+                )
             else:
                 maps = CAPABILITY_TO_SENSORS[capability]
-                sensors.extend([
-                    SmartThingsSensor(
-                        device, m.attribute, m.name, m.default_unit,
-                        m.device_class)
-                    for m in maps])
+                sensors.extend(
+                    [
+                        SmartThingsSensor(
+                            device, m.attribute, m.name, m.default_unit, m.device_class
+                        )
+                        for m in maps
+                    ]
+                )
     async_add_entities(sensors)
 
 
 def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
     """Return all capabilities supported if minimum required are present."""
-    return [capability for capability in CAPABILITY_TO_SENSORS
-            if capability in capabilities]
+    return [
+        capability for capability in CAPABILITY_TO_SENSORS if capability in capabilities
+    ]
 
 
 class SmartThingsSensor(SmartThingsEntity):
     """Define a SmartThings Sensor."""
 
-    def __init__(self, device, attribute: str, name: str,
-                 default_unit: str, device_class: str):
+    def __init__(
+        self, device, attribute: str, name: str, default_unit: str, device_class: str
+    ):
         """Init the class."""
         super().__init__(device)
         self._attribute = attribute
@@ -200,12 +283,12 @@ class SmartThingsSensor(SmartThingsEntity):
     @property
     def name(self) -> str:
         """Return the name of the binary sensor."""
-        return '{} {}'.format(self._device.label, self._name)
+        return "{} {}".format(self._device.label, self._name)
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return '{}.{}'.format(self._device.device_id, self._attribute)
+        return "{}.{}".format(self._device.device_id, self._attribute)
 
     @property
     def state(self):
@@ -235,19 +318,16 @@ class SmartThingsThreeAxisSensor(SmartThingsEntity):
     @property
     def name(self) -> str:
         """Return the name of the binary sensor."""
-        return '{} {}'.format(
-            self._device.label, THREE_AXIS_NAMES[self._index])
+        return "{} {}".format(self._device.label, THREE_AXIS_NAMES[self._index])
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return '{}.{}'.format(
-            self._device.device_id, THREE_AXIS_NAMES[self._index])
+        return "{}.{}".format(self._device.device_id, THREE_AXIS_NAMES[self._index])
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        from pysmartthings import Attribute
         three_axis = self._device.status.attributes[Attribute.three_axis].value
         try:
             return three_axis[self._index]

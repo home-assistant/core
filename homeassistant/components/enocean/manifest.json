@@ -3,8 +3,8 @@
   "name": "Enocean",
   "documentation": "https://www.home-assistant.io/components/enocean",
   "requirements": [
-    "enocean==0.40"
+    "enocean==0.50"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@bdurrer"]
 }

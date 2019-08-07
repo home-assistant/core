@@ -5,7 +5,9 @@
   "requirements": [
     "python-mystrom==0.5.0"
   ],
-  "dependencies": [],
+  "dependencies": [
+    "http"
+  ],
   "codeowners": [
     "@fabaff"
   ]

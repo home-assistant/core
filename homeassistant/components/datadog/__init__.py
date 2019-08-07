@@ -4,31 +4,40 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, CONF_PREFIX, EVENT_LOGBOOK_ENTRY,
-    EVENT_STATE_CHANGED, STATE_UNKNOWN)
+    CONF_HOST,
+    CONF_PORT,
+    CONF_PREFIX,
+    EVENT_LOGBOOK_ENTRY,
+    EVENT_STATE_CHANGED,
+    STATE_UNKNOWN,
+)
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['datadog==0.15.0']
-
 _LOGGER = logging.getLogger(__name__)
 
-CONF_RATE = 'rate'
-DEFAULT_HOST = 'localhost'
+CONF_RATE = "rate"
+DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 8125
-DEFAULT_PREFIX = 'hass'
+DEFAULT_PREFIX = "hass"
 DEFAULT_RATE = 1
-DOMAIN = 'datadog'
+DOMAIN = "datadog"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
-        vol.Optional(CONF_RATE, default=DEFAULT_RATE):
-            vol.All(vol.Coerce(int), vol.Range(min=1)),
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
+                vol.Optional(CONF_RATE, default=DEFAULT_RATE): vol.All(
+                    vol.Coerce(int), vol.Range(min=1)
+                ),
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
@@ -45,28 +54,28 @@ def setup(hass, config):
 
     def logbook_entry_listener(event):
         """Listen for logbook entries and send them as events."""
-        name = event.data.get('name')
-        message = event.data.get('message')
+        name = event.data.get("name")
+        message = event.data.get("message")
 
         statsd.event(
             title="Home Assistant",
             text="%%% \n **{}** {} \n %%%".format(name, message),
             tags=[
-                "entity:{}".format(event.data.get('entity_id')),
-                "domain:{}".format(event.data.get('domain'))
-            ]
+                "entity:{}".format(event.data.get("entity_id")),
+                "domain:{}".format(event.data.get("domain")),
+            ],
         )
 
-        _LOGGER.debug('Sent event %s', event.data.get('entity_id'))
+        _LOGGER.debug("Sent event %s", event.data.get("entity_id"))
 
     def state_changed_listener(event):
         """Listen for new messages on the bus and sends them to Datadog."""
-        state = event.data.get('new_state')
+        state = event.data.get("new_state")
 
         if state is None or state.state == STATE_UNKNOWN:
             return
 
-        if state.attributes.get('hidden') is True:
+        if state.attributes.get("hidden") is True:
             return
 
         states = dict(state.attributes)
@@ -75,23 +84,20 @@ def setup(hass, config):
 
         for key, value in states.items():
             if isinstance(value, (float, int)):
-                attribute = "{}.{}".format(metric, key.replace(' ', '_'))
-                statsd.gauge(
-                    attribute, value, sample_rate=sample_rate, tags=tags)
+                attribute = "{}.{}".format(metric, key.replace(" ", "_"))
+                statsd.gauge(attribute, value, sample_rate=sample_rate, tags=tags)
 
-                _LOGGER.debug(
-                    "Sent metric %s: %s (tags: %s)", attribute, value, tags)
+                _LOGGER.debug("Sent metric %s: %s (tags: %s)", attribute, value, tags)
 
         try:
             value = state_helper.state_as_number(state)
         except ValueError:
-            _LOGGER.debug(
-                "Error sending %s: %s (tags: %s)", metric, state.state, tags)
+            _LOGGER.debug("Error sending %s: %s (tags: %s)", metric, state.state, tags)
             return
 
         statsd.gauge(metric, value, sample_rate=sample_rate, tags=tags)
 
-        _LOGGER.debug('Sent metric %s: %s (tags: %s)', metric, value, tags)
+        _LOGGER.debug("Sent metric %s: %s (tags: %s)", metric, value, tags)
 
     hass.bus.listen(EVENT_LOGBOOK_ENTRY, logbook_entry_listener)
     hass.bus.listen(EVENT_STATE_CHANGED, state_changed_listener)

@@ -4,21 +4,21 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (CONF_HOST, CONF_PASSWORD)
-
-REQUIREMENTS = ['pyrainbird==0.1.6']
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_RAINBIRD = 'rainbird'
-DOMAIN = 'rainbird'
+DATA_RAINBIRD = "rainbird"
+DOMAIN = "rainbird"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_PASSWORD): cv.string}
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
@@ -28,6 +28,7 @@ def setup(hass, config):
     password = conf.get(CONF_PASSWORD)
 
     from pyrainbird import RainbirdController
+
     controller = RainbirdController()
     controller.setConfig(server, password)
 

@@ -2,24 +2,22 @@
 from homeassistant.components.mopar import (
     DOMAIN as MOPAR_DOMAIN,
     DATA_UPDATED,
-    ATTR_VEHICLE_INDEX
+    ATTR_VEHICLE_INDEX,
 )
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, LENGTH_KILOMETERS)
+from homeassistant.const import ATTR_ATTRIBUTION, LENGTH_KILOMETERS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-DEPENDENCIES = ['mopar']
-ICON = 'mdi:car'
+ICON = "mdi:car"
 
 
-async def async_setup_platform(hass, config, add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Mopar platform."""
     data = hass.data[MOPAR_DOMAIN]
-    add_entities([MoparSensor(data, index)
-                  for index, _ in enumerate(data.vehicles)], True)
+    add_entities(
+        [MoparSensor(data, index) for index, _ in enumerate(data.vehicles)], True
+    )
 
 
 class MoparSensor(Entity):
@@ -50,7 +48,7 @@ class MoparSensor(Entity):
         """Return the state attributes."""
         attributes = {
             ATTR_VEHICLE_INDEX: self._index,
-            ATTR_ATTRIBUTION: self._data.attribution
+            ATTR_ATTRIBUTION: self._data.attribution,
         }
         attributes.update(self._vehicle)
         attributes.update(self._vhr)
@@ -83,10 +81,9 @@ class MoparSensor(Entity):
         self._vehicle = self._data.vehicles[self._index]
         self._vhr = self._data.vhrs.get(self._index, {})
         self._tow_guide = self._data.tow_guides.get(self._index, {})
-        if 'odometer' in self._vhr:
-            odo = float(self._vhr['odometer'])
-            self._odometer = int(self.hass.config.units.length(
-                odo, LENGTH_KILOMETERS))
+        if "odometer" in self._vhr:
+            odo = float(self._vhr["odometer"])
+            self._odometer = int(self.hass.config.units.length(odo, LENGTH_KILOMETERS))
 
     @callback
     def _schedule_immediate_update(self):

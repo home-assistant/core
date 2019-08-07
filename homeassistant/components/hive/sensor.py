@@ -4,16 +4,14 @@ from homeassistant.helpers.entity import Entity
 
 from . import DATA_HIVE, DOMAIN
 
-DEPENDENCIES = ['hive']
-
 FRIENDLY_NAMES = {
-    'Hub_OnlineStatus': 'Hive Hub Status',
-    'Hive_OutsideTemperature': 'Outside Temperature',
+    "Hub_OnlineStatus": "Hive Hub Status",
+    "Hive_OutsideTemperature": "Outside Temperature",
 }
 
 DEVICETYPE_ICONS = {
-    'Hub_OnlineStatus': 'mdi:switch',
-    'Hive_OutsideTemperature': 'mdi:thermometer',
+    "Hub_OnlineStatus": "mdi:switch",
+    "Hive_OutsideTemperature": "mdi:thermometer",
 }
 
 
@@ -23,8 +21,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
     session = hass.data.get(DATA_HIVE)
 
-    if (discovery_info["HA_DeviceType"] == "Hub_OnlineStatus" or
-            discovery_info["HA_DeviceType"] == "Hive_OutsideTemperature"):
+    if (
+        discovery_info["HA_DeviceType"] == "Hub_OnlineStatus"
+        or discovery_info["HA_DeviceType"] == "Hive_OutsideTemperature"
+    ):
         add_entities([HiveSensorEntity(session, discovery_info)])
 
 
@@ -37,9 +37,8 @@ class HiveSensorEntity(Entity):
         self.device_type = hivedevice["HA_DeviceType"]
         self.node_device_type = hivedevice["Hive_DeviceType"]
         self.session = hivesession
-        self.data_updatesource = '{}.{}'.format(
-            self.device_type, self.node_id)
-        self._unique_id = '{}-{}'.format(self.node_id, self.device_type)
+        self.data_updatesource = "{}.{}".format(self.device_type, self.node_id)
+        self._unique_id = "{}-{}".format(self.node_id, self.device_type)
         self.session.entities.append(self)
 
     @property
@@ -50,16 +49,11 @@ class HiveSensorEntity(Entity):
     @property
     def device_info(self):
         """Return device information."""
-        return {
-            'identifiers': {
-                (DOMAIN, self.unique_id)
-            },
-            'name': self.name
-        }
+        return {"identifiers": {(DOMAIN, self.unique_id)}, "name": self.name}
 
     def handle_update(self, updatesource):
         """Handle the new update request."""
-        if '{}.{}'.format(self.device_type, self.node_id) not in updatesource:
+        if "{}.{}".format(self.device_type, self.node_id) not in updatesource:
             self.schedule_update_ha_state()
 
     @property

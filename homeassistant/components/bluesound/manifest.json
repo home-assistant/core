@@ -3,7 +3,7 @@
   "name": "Bluesound",
   "documentation": "https://www.home-assistant.io/components/bluesound",
   "requirements": [
-    "xmltodict==0.11.0"
+    "xmltodict==0.12.0"
   ],
   "dependencies": [],
   "codeowners": []

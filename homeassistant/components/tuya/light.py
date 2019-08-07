@@ -1,12 +1,17 @@
 """Support for the Tuya lights."""
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ENTITY_ID_FORMAT,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, Light)
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
+    ENTITY_ID_FORMAT,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    Light,
+)
 from homeassistant.util import color as colorutil
 
 from . import DATA_TUYA, TuyaDevice
-
-DEPENDENCIES = ['tuya']
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -14,7 +19,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is None:
         return
     tuya = hass.data[DATA_TUYA]
-    dev_ids = discovery_info.get('dev_ids')
+    dev_ids = discovery_info.get("dev_ids")
     devices = []
     for dev_id in dev_ids:
         device = tuya.get_device_by_id(dev_id)
@@ -58,20 +63,20 @@ class TuyaLight(TuyaDevice, Light):
     @property
     def min_mireds(self):
         """Return color temperature min mireds."""
-        return colorutil.color_temperature_kelvin_to_mired(
-            self.tuya.min_color_temp())
+        return colorutil.color_temperature_kelvin_to_mired(self.tuya.min_color_temp())
 
     @property
     def max_mireds(self):
         """Return color temperature max mireds."""
-        return colorutil.color_temperature_kelvin_to_mired(
-            self.tuya.max_color_temp())
+        return colorutil.color_temperature_kelvin_to_mired(self.tuya.max_color_temp())
 
     def turn_on(self, **kwargs):
         """Turn on or control the light."""
-        if (ATTR_BRIGHTNESS not in kwargs
-                and ATTR_HS_COLOR not in kwargs
-                and ATTR_COLOR_TEMP not in kwargs):
+        if (
+            ATTR_BRIGHTNESS not in kwargs
+            and ATTR_HS_COLOR not in kwargs
+            and ATTR_COLOR_TEMP not in kwargs
+        ):
             self.tuya.turn_on()
         if ATTR_BRIGHTNESS in kwargs:
             self.tuya.set_brightness(kwargs[ATTR_BRIGHTNESS])
@@ -79,7 +84,8 @@ class TuyaLight(TuyaDevice, Light):
             self.tuya.set_color(kwargs[ATTR_HS_COLOR])
         if ATTR_COLOR_TEMP in kwargs:
             color_temp = colorutil.color_temperature_mired_to_kelvin(
-                kwargs[ATTR_COLOR_TEMP])
+                kwargs[ATTR_COLOR_TEMP]
+            )
             self.tuya.set_color_temp(color_temp)
 
     def turn_off(self, **kwargs):

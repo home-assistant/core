@@ -2,13 +2,24 @@
     "config": {
         "abort": {
             "already_configured": "Bridge ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf f\u00fcr die Bridge wird bereits ausgef\u00fchrt.",
             "no_bridges": "Keine deCON-Bridges entdeckt",
-            "one_instance_only": "Komponente unterst\u00fctzt nur eine deCONZ-Instanz"
+            "not_deconz_bridge": "Keine deCONZ Bridge entdeckt",
+            "one_instance_only": "Komponente unterst\u00fctzt nur eine deCONZ-Instanz",
+            "updated_instance": "deCONZ-Instanz mit neuer Host-Adresse aktualisiert"
         },
         "error": {
             "no_key": "Es konnte kein API-Schl\u00fcssel abgerufen werden"
         },
         "step": {
+            "hassio_confirm": {
+                "data": {
+                    "allow_clip_sensor": "Import virtueller Sensoren zulassen",
+                    "allow_deconz_groups": "Import von deCONZ-Gruppen zulassen"
+                },
+                "description": "M\u00f6chtest du Home Assistant so konfigurieren, dass er eine Verbindung mit dem deCONZ gateway herstellt, der vom Add-on hass.io {addon} bereitgestellt wird?",
+                "title": "deCONZ Zigbee Gateway \u00fcber das Hass.io Add-on"
+            },
             "init": {
                 "data": {
                     "host": "Host",

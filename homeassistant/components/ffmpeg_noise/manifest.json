@@ -3,6 +3,6 @@
   "name": "Ffmpeg noise",
   "documentation": "https://www.home-assistant.io/components/ffmpeg_noise",
   "requirements": [],
-  "dependencies": [],
+  "dependencies": ["ffmpeg"],
   "codeowners": []
 }

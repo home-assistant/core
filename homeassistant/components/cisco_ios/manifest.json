@@ -6,5 +6,5 @@
     "pexpect==4.6.0"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@fbradyirl"]
 }

@@ -13,34 +13,28 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DATA_ARLO, DEFAULT_BRAND, SIGNAL_UPDATE_ARLO
 
-DEPENDENCIES = ['arlo', 'ffmpeg']
-
 _LOGGER = logging.getLogger(__name__)
 
-ARLO_MODE_ARMED = 'armed'
-ARLO_MODE_DISARMED = 'disarmed'
+ARLO_MODE_ARMED = "armed"
+ARLO_MODE_DISARMED = "disarmed"
 
-ATTR_BRIGHTNESS = 'brightness'
-ATTR_FLIPPED = 'flipped'
-ATTR_MIRRORED = 'mirrored'
-ATTR_MOTION = 'motion_detection_sensitivity'
-ATTR_POWERSAVE = 'power_save_mode'
-ATTR_SIGNAL_STRENGTH = 'signal_strength'
-ATTR_UNSEEN_VIDEOS = 'unseen_videos'
-ATTR_LAST_REFRESH = 'last_refresh'
+ATTR_BRIGHTNESS = "brightness"
+ATTR_FLIPPED = "flipped"
+ATTR_MIRRORED = "mirrored"
+ATTR_MOTION = "motion_detection_sensitivity"
+ATTR_POWERSAVE = "power_save_mode"
+ATTR_SIGNAL_STRENGTH = "signal_strength"
+ATTR_UNSEEN_VIDEOS = "unseen_videos"
+ATTR_LAST_REFRESH = "last_refresh"
 
-CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
-DEFAULT_ARGUMENTS = '-pred 1'
+CONF_FFMPEG_ARGUMENTS = "ffmpeg_arguments"
+DEFAULT_ARGUMENTS = "-pred 1"
 
-POWERSAVE_MODE_MAPPING = {
-    1: 'best_battery_life',
-    2: 'optimized',
-    3: 'best_video'
-}
+POWERSAVE_MODE_MAPPING = {1: "best_battery_life", 2: "optimized", 3: "best_video"}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -74,8 +68,7 @@ class ArloCam(Camera):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_ARLO, self._update_callback)
+        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_ARLO, self._update_callback)
 
     @callback
     def _update_callback(self):
@@ -85,23 +78,26 @@ class ArloCam(Camera):
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
         from haffmpeg.camera import CameraMjpeg
+
         video = self._camera.last_video
         if not video:
-            error_msg = \
-                'Video not found for {0}. Is it older than {1} days?'.format(
-                    self.name, self._camera.min_days_vdo_cache)
+            error_msg = "Video not found for {0}. Is it older than {1} days?".format(
+                self.name, self._camera.min_days_vdo_cache
+            )
             _LOGGER.error(error_msg)
             return
 
         stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
-        await stream.open_camera(
-            video.video_url, extra_cmd=self._ffmpeg_arguments)
+        await stream.open_camera(video.video_url, extra_cmd=self._ffmpeg_arguments)
 
         try:
             stream_reader = await stream.get_reader()
             return await async_aiohttp_proxy_stream(
-                self.hass, request, stream_reader,
-                self._ffmpeg.ffmpeg_stream_content_type)
+                self.hass,
+                request,
+                stream_reader,
+                self._ffmpeg.ffmpeg_stream_content_type,
+            )
         finally:
             await stream.close()
 
@@ -114,17 +110,21 @@ class ArloCam(Camera):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            name: value for name, value in (
+            name: value
+            for name, value in (
                 (ATTR_BATTERY_LEVEL, self._camera.battery_level),
                 (ATTR_BRIGHTNESS, self._camera.brightness),
                 (ATTR_FLIPPED, self._camera.flip_state),
                 (ATTR_MIRRORED, self._camera.mirror_state),
                 (ATTR_MOTION, self._camera.motion_detection_sensitivity),
-                (ATTR_POWERSAVE, POWERSAVE_MODE_MAPPING.get(
-                    self._camera.powersave_mode)),
+                (
+                    ATTR_POWERSAVE,
+                    POWERSAVE_MODE_MAPPING.get(self._camera.powersave_mode),
+                ),
                 (ATTR_SIGNAL_STRENGTH, self._camera.signal_strength),
                 (ATTR_UNSEEN_VIDEOS, self._camera.unseen_videos),
-            ) if value is not None
+            )
+            if value is not None
         }
 
     @property

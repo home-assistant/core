@@ -2,12 +2,8 @@
 import logging
 
 from homeassistant.components.lock import LockDevice
-from homeassistant.components.mopar import (
-    DOMAIN as MOPAR_DOMAIN
-)
+from homeassistant.components.mopar import DOMAIN as MOPAR_DOMAIN
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
-
-DEPENDENCIES = ['mopar']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,8 +11,9 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Mopar lock platform."""
     data = hass.data[MOPAR_DOMAIN]
-    add_entities([MoparLock(data, index)
-                  for index, _ in enumerate(data.vehicles)], True)
+    add_entities(
+        [MoparLock(data, index) for index, _ in enumerate(data.vehicles)], True
+    )
 
 
 class MoparLock(LockDevice):
@@ -25,7 +22,7 @@ class MoparLock(LockDevice):
     def __init__(self, data, index):
         """Initialize the Mopar lock."""
         self._index = index
-        self._name = '{} Lock'.format(data.get_vehicle_name(self._index))
+        self._name = "{} Lock".format(data.get_vehicle_name(self._index))
         self._actuate = data.actuate
         self._state = None
 
@@ -46,10 +43,10 @@ class MoparLock(LockDevice):
 
     def lock(self, **kwargs):
         """Lock the vehicle."""
-        if self._actuate('lock', self._index):
+        if self._actuate("lock", self._index):
             self._state = STATE_LOCKED
 
     def unlock(self, **kwargs):
         """Unlock the vehicle."""
-        if self._actuate('unlock', self._index):
+        if self._actuate("unlock", self._index):
             self._state = STATE_UNLOCKED

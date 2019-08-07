@@ -5,70 +5,72 @@ from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.components.geo_location import (
-    PLATFORM_SCHEMA, GeolocationEvent)
+from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_LOCATION, CONF_LATITUDE, CONF_LONGITUDE,
-    CONF_RADIUS, CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START)
+    ATTR_ATTRIBUTION,
+    ATTR_LOCATION,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_RADIUS,
+    CONF_SCAN_INTERVAL,
+    EVENT_HOMEASSISTANT_START,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.event import track_time_interval
-
-REQUIREMENTS = ['geojson_client==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CATEGORY = 'category'
-ATTR_COUNCIL_AREA = 'council_area'
-ATTR_EXTERNAL_ID = 'external_id'
-ATTR_FIRE = 'fire'
-ATTR_PUBLICATION_DATE = 'publication_date'
-ATTR_RESPONSIBLE_AGENCY = 'responsible_agency'
-ATTR_SIZE = 'size'
-ATTR_STATUS = 'status'
-ATTR_TYPE = 'type'
+ATTR_CATEGORY = "category"
+ATTR_COUNCIL_AREA = "council_area"
+ATTR_EXTERNAL_ID = "external_id"
+ATTR_FIRE = "fire"
+ATTR_PUBLICATION_DATE = "publication_date"
+ATTR_RESPONSIBLE_AGENCY = "responsible_agency"
+ATTR_SIZE = "size"
+ATTR_STATUS = "status"
+ATTR_TYPE = "type"
 
-CONF_CATEGORIES = 'categories'
+CONF_CATEGORIES = "categories"
 
 DEFAULT_RADIUS_IN_KM = 20.0
-DEFAULT_UNIT_OF_MEASUREMENT = 'km'
+DEFAULT_UNIT_OF_MEASUREMENT = "km"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-SIGNAL_DELETE_ENTITY = 'nsw_rural_fire_service_feed_delete_{}'
-SIGNAL_UPDATE_ENTITY = 'nsw_rural_fire_service_feed_update_{}'
+SIGNAL_DELETE_ENTITY = "nsw_rural_fire_service_feed_delete_{}"
+SIGNAL_UPDATE_ENTITY = "nsw_rural_fire_service_feed_update_{}"
 
-SOURCE = 'nsw_rural_fire_service_feed'
+SOURCE = "nsw_rural_fire_service_feed"
 
-VALID_CATEGORIES = [
-    'Advice',
-    'Emergency Warning',
-    'Not Applicable',
-    'Watch and Act',
-]
+VALID_CATEGORIES = ["Advice", "Emergency Warning", "Not Applicable", "Watch and Act"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_CATEGORIES, default=[]):
-        vol.All(cv.ensure_list, [vol.In(VALID_CATEGORIES)]),
-    vol.Optional(CONF_LATITUDE): cv.latitude,
-    vol.Optional(CONF_LONGITUDE): cv.longitude,
-    vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_CATEGORIES, default=[]): vol.All(
+            cv.ensure_list, [vol.In(VALID_CATEGORIES)]
+        ),
+        vol.Optional(CONF_LATITUDE): cv.latitude,
+        vol.Optional(CONF_LONGITUDE): cv.longitude,
+        vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NSW Rural Fire Service Feed platform."""
     scan_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
-    coordinates = (config.get(CONF_LATITUDE, hass.config.latitude),
-                   config.get(CONF_LONGITUDE, hass.config.longitude))
+    coordinates = (
+        config.get(CONF_LATITUDE, hass.config.latitude),
+        config.get(CONF_LONGITUDE, hass.config.longitude),
+    )
     radius_in_km = config[CONF_RADIUS]
     categories = config.get(CONF_CATEGORIES)
     # Initialize the entity manager.
     feed = NswRuralFireServiceFeedEntityManager(
-        hass, add_entities, scan_interval, coordinates, radius_in_km,
-        categories)
+        hass, add_entities, scan_interval, coordinates, radius_in_km, categories
+    )
 
     def start_feed_manager(event):
         """Start feed manager."""
@@ -80,17 +82,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class NswRuralFireServiceFeedEntityManager:
     """Feed Entity Manager for NSW Rural Fire Service GeoJSON feed."""
 
-    def __init__(self, hass, add_entities, scan_interval, coordinates,
-                 radius_in_km, categories):
+    def __init__(
+        self, hass, add_entities, scan_interval, coordinates, radius_in_km, categories
+    ):
         """Initialize the Feed Entity Manager."""
-        from geojson_client.nsw_rural_fire_service_feed \
-            import NswRuralFireServiceFeedManager
+        from geojson_client.nsw_rural_fire_service_feed import (
+            NswRuralFireServiceFeedManager,
+        )
 
         self._hass = hass
         self._feed_manager = NswRuralFireServiceFeedManager(
-            self._generate_entity, self._update_entity, self._remove_entity,
-            coordinates, filter_radius=radius_in_km,
-            filter_categories=categories)
+            self._generate_entity,
+            self._update_entity,
+            self._remove_entity,
+            coordinates,
+            filter_radius=radius_in_km,
+            filter_categories=categories,
+        )
         self._add_entities = add_entities
         self._scan_interval = scan_interval
 
@@ -102,8 +110,8 @@ class NswRuralFireServiceFeedEntityManager:
     def _init_regular_updates(self):
         """Schedule regular updates at the specified interval."""
         track_time_interval(
-            self._hass, lambda now: self._feed_manager.update(),
-            self._scan_interval)
+            self._hass, lambda now: self._feed_manager.update(), self._scan_interval
+        )
 
     def get_entry(self, external_id):
         """Get feed entry by external id."""
@@ -151,11 +159,15 @@ class NswRuralFireServiceLocationEvent(GeolocationEvent):
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self._remove_signal_delete = async_dispatcher_connect(
-            self.hass, SIGNAL_DELETE_ENTITY.format(self._external_id),
-            self._delete_callback)
+            self.hass,
+            SIGNAL_DELETE_ENTITY.format(self._external_id),
+            self._delete_callback,
+        )
         self._remove_signal_update = async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_ENTITY.format(self._external_id),
-            self._update_callback)
+            self.hass,
+            SIGNAL_UPDATE_ENTITY.format(self._external_id),
+            self._update_callback,
+        )
 
     @callback
     def _delete_callback(self):
@@ -233,17 +245,17 @@ class NswRuralFireServiceLocationEvent(GeolocationEvent):
         """Return the device state attributes."""
         attributes = {}
         for key, value in (
-                (ATTR_EXTERNAL_ID, self._external_id),
-                (ATTR_CATEGORY, self._category),
-                (ATTR_LOCATION, self._location),
-                (ATTR_ATTRIBUTION, self._attribution),
-                (ATTR_PUBLICATION_DATE, self._publication_date),
-                (ATTR_COUNCIL_AREA, self._council_area),
-                (ATTR_STATUS, self._status),
-                (ATTR_TYPE, self._type),
-                (ATTR_FIRE, self._fire),
-                (ATTR_SIZE, self._size),
-                (ATTR_RESPONSIBLE_AGENCY, self._responsible_agency),
+            (ATTR_EXTERNAL_ID, self._external_id),
+            (ATTR_CATEGORY, self._category),
+            (ATTR_LOCATION, self._location),
+            (ATTR_ATTRIBUTION, self._attribution),
+            (ATTR_PUBLICATION_DATE, self._publication_date),
+            (ATTR_COUNCIL_AREA, self._council_area),
+            (ATTR_STATUS, self._status),
+            (ATTR_TYPE, self._type),
+            (ATTR_FIRE, self._fire),
+            (ATTR_SIZE, self._size),
+            (ATTR_RESPONSIBLE_AGENCY, self._responsible_agency),
         ):
             if value or isinstance(value, bool):
                 attributes[key] = value

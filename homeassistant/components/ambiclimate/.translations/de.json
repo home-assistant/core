@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "access_token": "Unbekannter Fehler beim Generieren eines Zugriffstokens.",
+            "already_setup": "Das Ambiclimate Konto ist konfiguriert.",
+            "no_config": "Ambiclimate muss konfiguriert sein, bevor die Authentifizierund durchgef\u00fchrt werden kann. [Bitte lies die Anleitung] (https://www.home-assistant.io/components/ambiclimate/)."
+        },
+        "create_entry": {
+            "default": "Erfolgreiche Authentifizierung mit Ambiclimate"
+        },
+        "error": {
+            "follow_link": "Bitte folge dem Link und authentifizieren dich, bevor du auf Senden klickst",
+            "no_token": "Nicht authentifiziert mit Ambiclimate"
+        },
+        "step": {
+            "auth": {
+                "description": "Bitte folge diesem [link] ({authorization_url}) und <b> Erlaube </b> Zugriff auf dein Ambiclimate-Konto, komme dann zur\u00fcck und dr\u00fccke <b> Senden </b> darunter.\n (Pr\u00fcfe, dass die Callback-URL {cb_url} ist.)",
+                "title": "Ambiclimate authentifizieren"
+            }
+        },
+        "title": "Ambiclimate"
+    }
+}

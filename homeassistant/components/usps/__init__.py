@@ -4,33 +4,35 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_NAME, CONF_USERNAME, CONF_PASSWORD)
-from homeassistant.helpers import (config_validation as cv, discovery)
+from homeassistant.const import CONF_NAME, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.util import Throttle
 from homeassistant.util.dt import now
 
-REQUIREMENTS = ['myusps==1.3.2']
-
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'usps'
-DATA_USPS = 'data_usps'
+DOMAIN = "usps"
+DATA_USPS = "data_usps"
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
-COOKIE = 'usps_cookies.pickle'
-CACHE = 'usps_cache'
-CONF_DRIVER = 'driver'
+COOKIE = "usps_cookies.pickle"
+CACHE = "usps_cache"
+CONF_DRIVER = "driver"
 
-USPS_TYPE = ['sensor', 'camera']
+USPS_TYPE = ["sensor", "camera"]
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME, default=DOMAIN): cv.string,
-        vol.Optional(CONF_DRIVER): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_NAME, default=DOMAIN): cv.string,
+                vol.Optional(CONF_DRIVER): cv.string,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
@@ -42,14 +44,15 @@ def setup(hass, config):
     driver = conf.get(CONF_DRIVER)
 
     import myusps
+
     try:
         cookie = hass.config.path(COOKIE)
         cache = hass.config.path(CACHE)
-        session = myusps.get_session(username, password,
-                                     cookie_path=cookie, cache_path=cache,
-                                     driver=driver)
+        session = myusps.get_session(
+            username, password, cookie_path=cookie, cache_path=cache, driver=driver
+        )
     except myusps.USPSError:
-        _LOGGER.exception('Could not connect to My USPS')
+        _LOGGER.exception("Could not connect to My USPS")
         return False
 
     hass.data[DATA_USPS] = USPSData(session, name)
@@ -79,9 +82,9 @@ class USPSData:
     def update(self, **kwargs):
         """Fetch the latest info from USPS."""
         import myusps
+
         self.packages = myusps.get_packages(self.session)
         self.mail = myusps.get_mail(self.session, now().date())
         self.attribution = myusps.ATTRIBUTION
-        _LOGGER.debug("Mail, request date: %s, list: %s",
-                      now().date(), self.mail)
+        _LOGGER.debug("Mail, request date: %s, list: %s", now().date(), self.mail)
         _LOGGER.debug("Package list: %s", self.packages)

@@ -5,6 +5,8 @@
   "requirements": [
     "pynetio==0.1.9.1"
   ],
-  "dependencies": [],
+  "dependencies": [
+    "http"
+  ],
   "codeowners": []
 }

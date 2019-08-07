@@ -4,7 +4,8 @@
   "documentation": "https://www.home-assistant.io/components/automation",
   "requirements": [],
   "dependencies": [
-    "group"
+    "group",
+    "webhook"
   ],
   "codeowners": [
     "@home-assistant/core"

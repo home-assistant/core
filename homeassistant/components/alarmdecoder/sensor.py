@@ -7,8 +7,6 @@ from . import SIGNAL_PANEL_MESSAGE
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['alarmdecoder']
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up for AlarmDecoder sensor devices."""
@@ -26,13 +24,14 @@ class AlarmDecoderSensor(Entity):
         """Initialize the alarm panel."""
         self._display = ""
         self._state = None
-        self._icon = 'mdi:alarm-check'
-        self._name = 'Alarm Panel Display'
+        self._icon = "mdi:alarm-check"
+        self._name = "Alarm Panel Display"
 
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_PANEL_MESSAGE, self._message_callback)
+            SIGNAL_PANEL_MESSAGE, self._message_callback
+        )
 
     def _message_callback(self, message):
         if self._display != message.text:

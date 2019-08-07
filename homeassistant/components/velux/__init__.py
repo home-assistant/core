@@ -5,26 +5,27 @@ import voluptuous as vol
 
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (CONF_HOST, CONF_PASSWORD)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
 DOMAIN = "velux"
 DATA_VELUX = "data_velux"
-SUPPORTED_DOMAINS = ['cover', 'scene']
+SUPPORTED_DOMAINS = ["cover", "scene"]
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyvlx==0.2.10']
-
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_PASSWORD): cv.string}
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):
     """Set up the velux component."""
     from pyvlx import PyVLXException
+
     try:
         hass.data[DATA_VELUX] = VeluxModule(hass, config)
         await hass.data[DATA_VELUX].async_start()
@@ -35,7 +36,8 @@ async def async_setup(hass, config):
 
     for component in SUPPORTED_DOMAINS:
         hass.async_create_task(
-            discovery.async_load_platform(hass, component, DOMAIN, {}, config))
+            discovery.async_load_platform(hass, component, DOMAIN, {}, config)
+        )
     return True
 
 
@@ -45,11 +47,10 @@ class VeluxModule:
     def __init__(self, hass, config):
         """Initialize for velux component."""
         from pyvlx import PyVLX
+
         host = config[DOMAIN].get(CONF_HOST)
         password = config[DOMAIN].get(CONF_PASSWORD)
-        self.pyvlx = PyVLX(
-            host=host,
-            password=password)
+        self.pyvlx = PyVLX(host=host, password=password)
 
     async def async_start(self):
         """Start velux component."""

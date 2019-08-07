@@ -10,25 +10,26 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['python-tado==0.2.9']
-
 _LOGGER = logging.getLogger(__name__)
 
-DATA_TADO = 'tado_data'
-DOMAIN = 'tado'
+DATA_TADO = "tado_data"
+DOMAIN = "tado"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
-TADO_COMPONENTS = [
-    'sensor', 'climate'
-]
+TADO_COMPONENTS = ["sensor", "climate"]
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
@@ -70,19 +71,26 @@ class TadoDataStore:
             data = None
 
             try:
-                if 'zone' in sensor:
-                    _LOGGER.info("Querying mytado.com for zone %s %s",
-                                 sensor['id'], sensor['name'])
-                    data = self.tado.getState(sensor['id'])
+                if "zone" in sensor:
+                    _LOGGER.debug(
+                        "Querying mytado.com for zone %s %s",
+                        sensor["id"],
+                        sensor["name"],
+                    )
+                    data = self.tado.getState(sensor["id"])
 
-                if 'device' in sensor:
-                    _LOGGER.info("Querying mytado.com for device %s %s",
-                                 sensor['id'], sensor['name'])
+                if "device" in sensor:
+                    _LOGGER.debug(
+                        "Querying mytado.com for device %s %s",
+                        sensor["id"],
+                        sensor["name"],
+                    )
                     data = self.tado.getDevices()[0]
 
             except RuntimeError:
-                _LOGGER.error("Unable to connect to myTado. %s %s",
-                              sensor['id'], sensor['id'])
+                _LOGGER.error(
+                    "Unable to connect to myTado. %s %s", sensor["id"], sensor["id"]
+                )
 
             self.data[data_id] = data
 
@@ -93,7 +101,7 @@ class TadoDataStore:
 
     def get_data(self, data_id):
         """Get the cached data."""
-        data = {'error': 'no data'}
+        data = {"error": "no data"}
 
         if data_id in self.data:
             data = self.data[data_id]
@@ -124,5 +132,5 @@ class TadoDataStore:
 
     def set_zone_off(self, zone_id, mode):
         """Set a zone to off."""
-        self.tado.setZoneOverlay(zone_id, mode, None, None, 'HEATING', 'OFF')
+        self.tado.setZoneOverlay(zone_id, mode, None, None, "HEATING", "OFF")
         self.update(no_throttle=True)  # pylint: disable=unexpected-keyword-arg
