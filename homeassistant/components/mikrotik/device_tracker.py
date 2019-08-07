@@ -4,7 +4,6 @@ import logging
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER,
     DeviceScanner,
-    SOURCE_TYPE_ROUTER,
 )
 from homeassistant.util import slugify
 from homeassistant.const import CONF_METHOD
@@ -29,24 +28,24 @@ def get_scanner(hass, config):
         if DEVICE_TRACKER not in hass.data[MIKROTIK][HOSTS][host]:
             continue
         hass.data[MIKROTIK][HOSTS][host].pop(DEVICE_TRACKER, None)
+        api = hass.data[MIKROTIK][HOSTS][host]["api"]
         config = hass.data[MIKROTIK][HOSTS][host]["config"]
-        scanner = MikrotikScanner(hass, host, config)
+        hostname = api.get_hostname()
+        scanner = MikrotikScanner(api, host, hostname, config)
     return scanner if scanner.success_init else None
 
 
 class MikrotikScanner(DeviceScanner):
     """This class queries a Mikrotik device."""
 
-    def __init__(self, hass, host, config):
+    def __init__(self, api, host, hostname, config):
         """Initialize the scanner."""
+        self.api = api
         self.config = config
         self.host = host
-        self.api = hass.data[MIKROTIK][HOSTS][self.host]["api"]
+        self.hostname = hostname
         self.method = config.get(CONF_METHOD)
         self.arp_ping = config.get(CONF_ARP_PING)
-        self.host_name = self.api.get_hostname()
-        self.capsman = None
-        self.wireless = None
         self.dhcp = None
         self.devices_arp = {}
         self.devices_dhcp = {}
@@ -66,7 +65,7 @@ class MikrotikScanner(DeviceScanner):
 
     def get_device_name(self, device):
         """Get name for a device."""
-        host = self.device_tracker.get(device)
+        host = self.device_tracker.get(device, {})
         return host.get("host_name") or None if host else None
 
     def scan_devices(self):
@@ -75,60 +74,54 @@ class MikrotikScanner(DeviceScanner):
         self.update_device_tracker()
         if not self.api.connected():
             return None
-        return list(self.device_tracker.keys())
+        return list(self.device_tracker)
 
     def get_method(self):
         """Determine the device tracker polling method."""
-        self.capsman = self.api.command(MIKROTIK_SERVICES[CAPSMAN])
-        if not self.capsman:
-            _LOGGER.info(
+        if self.method:
+            _LOGGER.debug(
+                "Mikrotik %s: Manually selected polling method %s",
+                self.host,
+                self.method,
+            )
+            return self.method
+
+        capsman = self.api.command(MIKROTIK_SERVICES[CAPSMAN])
+        if not capsman:
+            _LOGGER.debug(
                 "Mikrotik %s: Not a CAPsMAN controller. "
-                "Trying local wireless interfaces.",
+                "Trying local wireless interfaces",
                 (self.host),
             )
-        self.wireless = self.api.command(MIKROTIK_SERVICES[WIRELESS])
+        else:
+            return CAPSMAN
 
-        if (not self.capsman and not self.wireless) or self.method == DHCP:
+        wireless = self.api.command(MIKROTIK_SERVICES[WIRELESS])
+        if not wireless:
             _LOGGER.info(
                 "Mikrotik %s: Wireless adapters not found. Try to "
                 "use DHCP lease table as presence tracker source. "
                 "Please decrease lease time as much as possible",
                 self.host,
             )
+            return DHCP
 
-        self.dhcp = self.api.command(MIKROTIK_SERVICES[DHCP])
-
-        if self.method:
-            _LOGGER.info(
-                "Mikrotik %s: Manually selected polling method %s",
-                self.host,
-                self.method,
-            )
-        else:
-            if self.capsman:
-                self.method = CAPSMAN
-            elif self.wireless:
-                self.method = WIRELESS
-            else:
-                self.method = DHCP
-
-        _LOGGER.info(
-            "Mikrotik %s: Using %s for device tracker.", self.host, self.method
-        )
+        return WIRELESS
 
     def update_device_tracker(self):
         """Update device_tracker from Mikrotik API."""
         self.device_tracker = {}
         if not self.method:
-            self.get_method()
+            self.method = self.get_method()
 
         data = self.api.command(MIKROTIK_SERVICES[self.method])
         if data is None:
             return
 
-        if self.method != DHCP and self.dhcp:
+        if self.method != DHCP:
             dhcp = self.api.command(MIKROTIK_SERVICES[DHCP])
-            self.devices_dhcp = self.load_mac(dhcp)
+            if dhcp is not None:
+                self.devices_dhcp = self.load_mac(dhcp)
 
         arp = self.api.command(MIKROTIK_SERVICES[ARP])
         self.devices_arp = self.load_mac(arp)
@@ -148,19 +141,20 @@ class MikrotikScanner(DeviceScanner):
 
             attrs = {}
             if mac in self.devices_dhcp and "host-name" in self.devices_dhcp[mac]:
-                hostname = self.devices_dhcp[mac].get("host-name", "")
-                attrs["host_name"] = hostname
+                hostname = self.devices_dhcp[mac].get("host-name")
+                if hostname:
+                    attrs["host_name"] = hostname
 
             if mac in self.devices_arp:
                 attrs["ip_address"] = self.devices_arp[mac].get("address")
 
             for attr in ATTR_DEVICE_TRACKER:
-                if attr in device:
-                    attrs[slugify(attr)] = device.get(attr)
+                if attr in device and device[attr] is not None:
+                    attrs[slugify(attr)] = device[attr]
 
-            attrs["source_type"] = SOURCE_TYPE_ROUTER
             attrs["scanner_type"] = self.method
             attrs["scanner_host"] = self.host
+            attrs["scanner_hostname"] = self.hostname
             self.device_tracker[mac] = attrs
 
     def load_mac(self, devices=None):
@@ -170,8 +164,7 @@ class MikrotikScanner(DeviceScanner):
         mac_devices = {}
         for device in devices:
             if "mac-address" in device:
-                mac = device.get("mac-address")
-                device.pop("mac-address", None)
+                mac = device.pop("mac-address")
                 mac_devices[mac] = device
         return mac_devices
 
