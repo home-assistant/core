@@ -68,28 +68,6 @@ class HueUsernameView(HomeAssistantView):
         return self.json([{'success': {'username': '12345678901234567890'}}])
 
 
-class HueNullView(HomeAssistantView):
-    """Handle requests to identify emulated hue bridge for null view."""
-
-    url = '/api/(null)'
-    name = 'emulated_hue:api:null_view'
-    extra_urls = ['/api/(null)/']
-    requires_auth = False
-
-    async def get(self, request):
-        """Handle a GET request."""
-        if not is_local(request[KEY_REAL_IP]):
-            return self.json_message('only local IPs allowed',
-                                     HTTP_BAD_REQUEST)
-        return self.json([{
-            'error': {
-                'address': '/',
-                'description': 'unauthorized user',
-                'type': '1'
-                }
-            }])
-
-
 class HueAllGroupsStateView(HomeAssistantView):
     """Group handler."""
 
@@ -158,22 +136,33 @@ class HueFullStateView(HomeAssistantView):
             return self.json_message('only local IPs allowed',
                                      HTTP_BAD_REQUEST)
 
-        hass = request.app['hass']
-        json_response = {}
-
-        for entity in hass.states.async_all():
-            if self.config.is_entity_exposed(entity):
-                state = get_entity_state(self.config, entity)
-                number = self.config.entity_id_to_number(entity.entity_id)
-                json_response[number] = entity_to_json(self.config,
-                                                       entity, state)
-
-        return self.json({
-            'lights': json_response,
-            'config': {
-                'mac': '00:00:00:00:00:00'
+        json_response = [{
+            'error': {
+                'address': '/',
+                'description': 'unauthorized user',
+                'type': '1'
                 }
-        })
+            }]
+
+        if username == '12345678901234567890':
+            hass = request.app['hass']
+            json_response = {}
+
+            for entity in hass.states.async_all():
+                if self.config.is_entity_exposed(entity):
+                    state = get_entity_state(self.config, entity)
+                    number = self.config.entity_id_to_number(entity.entity_id)
+                    json_response[number] = entity_to_json(self.config,
+                                                           entity, state)
+
+            json_response = {
+                'lights': json_response,
+                'config': {
+                    'mac': '00:00:00:00:00:00'
+                    }
+            }
+
+        return self.json(json_response)
 
 
 class HueAllLightsStateView(HomeAssistantView):

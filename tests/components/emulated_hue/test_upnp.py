@@ -79,12 +79,12 @@ class TestEmulatedHue(unittest.TestCase):
         assert 'success' in success_json
         assert 'username' in success_json['success']
 
-    def test_null_view(self):
-        """Test null view."""
+    def test_unauthorized_view(self):
+        """Test unauthorized view."""
         request_json = {'devicetype': 'my_device'}
 
         result = requests.get(
-            BRIDGE_URL_BASE.format('/api/(null)'),
+            BRIDGE_URL_BASE.format('/api/unauthorized'),
             data=json.dumps(request_json), timeout=5)
 
         assert result.status_code == 200
