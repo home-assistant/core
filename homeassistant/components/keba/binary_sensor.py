@@ -104,8 +104,5 @@ class KebaBinarySensor(BinarySensorDevice):
         self.async_schedule_update_ha_state(True)
 
     async def async_added_to_hass(self):
-        """Add callback after being added to hass.
-
-        Show latest data after startup.
-        """
+        """Add update callback after being added to hass."""
         self._keba.add_update_listener(self.update_callback)

@@ -94,20 +94,20 @@ class KebaSensor(Entity):
         if self._key == 'P':
             self._attributes['power_factor'] = \
                 self._keba.get_value('PF')
-            self._attributes['voltage_U1'] = \
+            self._attributes['voltage_u1'] = \
                 str(self._keba.get_value('U1'))
-            self._attributes['voltage_U2'] = \
+            self._attributes['voltage_u2'] = \
                 str(self._keba.get_value('U2'))
-            self._attributes['voltage_U3'] = \
+            self._attributes['voltage_u3'] = \
                 str(self._keba.get_value('U3'))
-            self._attributes['current_I1'] = \
+            self._attributes['current_i1'] = \
                 str(self._keba.get_value('I1'))
-            self._attributes['current_I2'] = \
+            self._attributes['current_i2'] = \
                 str(self._keba.get_value('I2'))
-            self._attributes['current_I3'] = \
+            self._attributes['current_i3'] = \
                 str(self._keba.get_value('I3'))
         elif self._key == 'Curr user':
-            self._attributes['max_current_allowed'] = \
+            self._attributes['max_current_hardware'] = \
                 self._keba.get_value('Curr HW')
 
     def update_callback(self):
@@ -115,8 +115,5 @@ class KebaSensor(Entity):
         self.async_schedule_update_ha_state(True)
 
     async def async_added_to_hass(self):
-        """Add callback after being added to hass.
-
-        Show latest data after startup.
-        """
+        """Add update callback after being added to hass."""
         self._keba.add_update_listener(self.update_callback)

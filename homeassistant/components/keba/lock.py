@@ -17,7 +17,7 @@ async def async_setup_platform(hass, config,
     keba = hass.data[DOMAIN]
 
     sensors = [
-        KebaLock('Authentication', keba)
+        KebaLock(keba, 'Authentication')
     ]
     async_add_entities(sensors)
 
@@ -25,18 +25,11 @@ async def async_setup_platform(hass, config,
 class KebaLock(LockDevice):
     """The entity class for KEBA charging stations switch."""
 
-    def __init__(self, name, keba):
+    def __init__(self, keba, name):
         """Initialize the KEBA switch."""
         self._keba = keba
         self._name = name
-        self._state = None
-        self._attributes = {
-            'rfid_tag': self._keba.rfid
-        }
-
-    def open(self, **kwargs):
-        """Open the door latch."""
-        return
+        self._state = True
 
     @property
     def should_poll(self):
@@ -54,15 +47,8 @@ class KebaLock(LockDevice):
         return self._name
 
     @property
-    def device_state_attributes(self):
-        """Return state attributes."""
-        return self._attributes
-
-    @property
     def is_locked(self):
         """Return true if lock is locked."""
-        if self._state is None:
-            return True
         return self._state
 
     async def async_lock(self, **kwargs):
@@ -82,8 +68,5 @@ class KebaLock(LockDevice):
         self.async_schedule_update_ha_state(True)
 
     async def async_added_to_hass(self):
-        """Add callback after being added to hass.
-
-        Show latest data after startup.
-        """
+        """Add update callback after being added to hass."""
         self._keba.add_update_listener(self.update_callback)

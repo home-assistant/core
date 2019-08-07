@@ -15,21 +15,21 @@ DOMAIN = 'keba'
 SUPPORTED_COMPONENTS = ['binary_sensor', 'sensor', "lock"]
 
 CONF_RFID = 'rfid'
-CONF_FAILSAFE = 'failsafe'
-CONF_FAILSAFE_TIMEOUT = 'failsafe_timeout'
-CONF_FAILSAFE_FALLBACK = 'failsafe_fallback'
-CONF_FAILSAFE_PERSIST = 'failsafe_persist'
-CONF_REFRESH_INTERVAL = 'refresh_interval'
+CONF_FS = 'failsafe'
+CONF_FS_TIMEOUT = 'failsafe_timeout'
+CONF_FS_FALLBACK = 'failsafe_fallback'
+CONF_FS_PERSIST = 'failsafe_persist'
+CONF_FS_INTERVAL = 'refresh_interval'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_RFID, default='00845500'): cv.string,
-        vol.Optional(CONF_FAILSAFE, default=False): cv.boolean,
-        vol.Optional(CONF_FAILSAFE_TIMEOUT, default=30): cv.positive_int,
-        vol.Optional(CONF_FAILSAFE_FALLBACK, default=6): cv.positive_int,
-        vol.Optional(CONF_FAILSAFE_PERSIST, default=0): cv.positive_int,
-        vol.Optional(CONF_REFRESH_INTERVAL, default=5): cv.positive_int,
+        vol.Optional(CONF_FS, default=False): cv.boolean,
+        vol.Optional(CONF_FS_TIMEOUT, default=30): cv.positive_int,
+        vol.Optional(CONF_FS_FALLBACK, default=6): cv.positive_int,
+        vol.Optional(CONF_FS_PERSIST, default=0): cv.positive_int,
+        vol.Optional(CONF_FS_INTERVAL, default=5): cv.positive_int,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -49,7 +49,7 @@ async def async_setup(hass, config):
     """Check connectivity and version of KEBA charging station."""
     host = config[DOMAIN][CONF_HOST]
     rfid = config[DOMAIN][CONF_RFID]
-    refresh_interval = config[DOMAIN][CONF_REFRESH_INTERVAL]
+    refresh_interval = config[DOMAIN][CONF_FS_INTERVAL]
     keba = KebaHandler(hass, host, rfid, refresh_interval)
     hass.data[DOMAIN] = keba
 
@@ -57,10 +57,10 @@ async def async_setup(hass, config):
     await keba.setup()
 
     # Set failsafe mode at start up of home assistant
-    failsafe = config[DOMAIN][CONF_FAILSAFE]
-    timeout = config[DOMAIN][CONF_FAILSAFE_TIMEOUT] if failsafe else 0
-    fallback = config[DOMAIN][CONF_FAILSAFE_FALLBACK] if failsafe else 0
-    persist = config[DOMAIN][CONF_FAILSAFE_PERSIST] if failsafe else 0
+    failsafe = config[DOMAIN][CONF_FS]
+    timeout = config[DOMAIN][CONF_FS_TIMEOUT] if failsafe else 0
+    fallback = config[DOMAIN][CONF_FS_FALLBACK] if failsafe else 0
+    persist = config[DOMAIN][CONF_FS_PERSIST] if failsafe else 0
     try:
         hass.loop.create_task(keba.set_failsafe(timeout, fallback, persist))
     except ValueError as ex:
@@ -133,8 +133,8 @@ class KebaHandler(KebaKeContact):
             self._periodic_request()
         )
 
-    async def setup(self, loop=None, *_):
-        """Setup KebaHandler."""
+    async def setup(self, loop=None):
+        """Initialize KebaHandler object."""
         await super().setup(loop)
 
         # Request initial values and extract serial number
@@ -210,9 +210,9 @@ class KebaHandler(KebaKeContact):
     async def async_set_failsafe(self, param=None):
         """Set failsafe mode in async way."""
         try:
-            timout = param[CONF_FAILSAFE_TIMEOUT]
-            fallback = param[CONF_FAILSAFE_FALLBACK]
-            persist = param[CONF_FAILSAFE_PERSIST]
+            timout = param[CONF_FS_TIMEOUT]
+            fallback = param[CONF_FS_FALLBACK]
+            persist = param[CONF_FS_PERSIST]
             await self.set_failsafe(timout, fallback, persist)
             self._set_fast_polling()
         except (KeyError, ValueError) as ex:
