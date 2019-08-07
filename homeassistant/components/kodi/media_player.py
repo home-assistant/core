@@ -137,8 +137,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 SERVICE_ADD_MEDIA = "add_to_playlist"
 SERVICE_CALL_METHOD = "call_method"
 
-DATA_KODI = "kodi"
-
 ATTR_MEDIA_TYPE = "media_type"
 ATTR_MEDIA_NAME = "media_name"
 ATTR_MEDIA_ARTIST_NAME = "artist_name"
@@ -205,8 +203,8 @@ def _check_deprecated_turn_off(hass, turn_off_action):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Kodi platform."""
-    if DATA_KODI not in hass.data:
-        hass.data[DATA_KODI] = dict()
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = dict()
 
     unique_id = None
     # Is this a manual configuration?
@@ -231,14 +229,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # Only add a device once, so discovered devices do not override manual
     # config.
     ip_addr = socket.gethostbyname(host)
-    if ip_addr in hass.data[DATA_KODI]:
+    if ip_addr in hass.data[DOMAIN]:
         return
 
     # If we got an unique id, check that it does not exist already.
     # This is necessary as netdisco does not deterministally return the same
     # advertisement when the service is offered over multiple IP addresses.
     if unique_id is not None:
-        for device in hass.data[DATA_KODI].values():
+        for device in hass.data[DOMAIN].values():
             if device.unique_id == unique_id:
                 return
 
@@ -258,7 +256,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         unique_id=unique_id,
     )
 
-    hass.data[DATA_KODI][ip_addr] = entity
+    hass.data[DOMAIN][ip_addr] = entity
     async_add_entities([entity], update_before_add=True)
 
     async def async_service_handler(service):
@@ -274,11 +272,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         if entity_ids:
             target_players = [
                 player
-                for player in hass.data[DATA_KODI].values()
+                for player in hass.data[DOMAIN].values()
                 if player.entity_id in entity_ids
             ]
         else:
-            target_players = hass.data[DATA_KODI].values()
+            target_players = hass.data[DOMAIN].values()
 
         update_tasks = []
         for player in target_players:
