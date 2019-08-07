@@ -134,6 +134,7 @@ class KebaHandler(KebaKeContact):
         )
 
     async def setup(self, loop=None, *_):
+        """Setup KebaHandler."""
         await super().setup(loop)
 
         # Request initial values and extract serial number
