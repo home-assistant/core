@@ -11,10 +11,13 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(hass, config,
                                async_add_entities, discovery_info=None):
     """Set up the KEBA charging station platform."""
-    _LOGGER.debug("Initializing KEBA charging station lock")
+    if discovery_info is None:
+        return
+
+    keba = hass.data[DOMAIN]
 
     sensors = [
-        KebaLock('Authentication', hass)
+        KebaLock('Authentication', keba)
     ]
     async_add_entities(sensors)
 
@@ -22,19 +25,18 @@ async def async_setup_platform(hass, config,
 class KebaLock(LockDevice):
     """The entity class for KEBA charging stations switch."""
 
-    def __init__(self, key, hass):
+    def __init__(self, name, keba):
         """Initialize the KEBA switch."""
-        self._keba = hass.data[DOMAIN]
-        self._key = key
+        self._keba = keba
+        self._name = name
         self._state = None
-        self._hass = hass
         self._attributes = {
-            'RFID tag': self._keba.rfid
+            'rfid_tag': self._keba.rfid
         }
 
     def open(self, **kwargs):
         """Open the door latch."""
-        return False
+        return
 
     @property
     def should_poll(self):
@@ -44,17 +46,17 @@ class KebaLock(LockDevice):
     @property
     def unique_id(self):
         """Return the unique ID of the binary sensor."""
-        return self._keba.device_name + '_' + self._key
+        return f"{self._keba.device_name}_{self._name}"
 
     @property
     def name(self):
         """Return the name of the device."""
-        return self._key
+        return self._name
 
     @property
     def device_state_attributes(self):
         """Return state attributes."""
-        return self._attributes.items()
+        return self._attributes
 
     @property
     def is_locked(self):
@@ -63,13 +65,13 @@ class KebaLock(LockDevice):
             return True
         return self._state
 
-    def lock(self, **kwargs):
+    async def async_lock(self, **kwargs):
         """Lock wallbox."""
-        self._hass.async_create_task(self._keba.async_stop())
+        await self._keba.async_stop()
 
-    def unlock(self, **kwargs):
+    async def async_unlock(self, **kwargs):
         """Unlock wallbox."""
-        self._hass.async_create_task(self._keba.async_start())
+        await self._keba.async_start()
 
     async def async_update(self):
         """Attempt to retrieve on off state from the switch."""

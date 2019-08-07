@@ -14,15 +14,22 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'keba'
 SUPPORTED_COMPONENTS = ['binary_sensor', 'sensor', "lock"]
 
+CONF_RFID = 'rfid'
+CONF_FAILSAFE = 'failsafe'
+CONF_FAILSAFE_TIMEOUT = 'failsafe_timeout'
+CONF_FAILSAFE_FALLBACK = 'failsafe_fallback'
+CONF_FAILSAFE_PERSIST = 'failsafe_persist'
+CONF_REFRESH_INTERVAL = 'refresh_interval'
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional('rfid', default='00845500'): cv.string,
-        vol.Optional('failsafe', default=False): cv.boolean,
-        vol.Optional('failsafe_timeout', default=30): cv.positive_int,
-        vol.Optional('failsafe_fallback', default=6): cv.positive_int,
-        vol.Optional('failsafe_persist', default=0): cv.positive_int,
-        vol.Optional('refresh_interval', default=5): cv.positive_int,
+        vol.Optional(CONF_RFID, default='00845500'): cv.string,
+        vol.Optional(CONF_FAILSAFE, default=False): cv.boolean,
+        vol.Optional(CONF_FAILSAFE_TIMEOUT, default=30): cv.positive_int,
+        vol.Optional(CONF_FAILSAFE_FALLBACK, default=6): cv.positive_int,
+        vol.Optional(CONF_FAILSAFE_PERSIST, default=0): cv.positive_int,
+        vol.Optional(CONF_REFRESH_INTERVAL, default=5): cv.positive_int,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -41,8 +48,8 @@ _SERVICE_MAP = {
 async def async_setup(hass, config):
     """Check connectivity and version of KEBA charging station."""
     host = config[DOMAIN][CONF_HOST]
-    rfid = config[DOMAIN]['rfid']
-    refresh_interval = config[DOMAIN]['refresh_interval']
+    rfid = config[DOMAIN][CONF_RFID]
+    refresh_interval = config[DOMAIN][CONF_REFRESH_INTERVAL]
     keba = KebaHandler(hass, host, rfid, refresh_interval)
     hass.data[DOMAIN] = keba
 
@@ -50,28 +57,28 @@ async def async_setup(hass, config):
     await keba.setup()
 
     # Set failsafe mode at start up of home assistant
-    failsafe = config[DOMAIN]['failsafe']
-    timeout = config[DOMAIN]['failsafe_timeout'] if failsafe else 0
-    fallback = config[DOMAIN]['failsafe_fallback'] if failsafe else 0
-    persist = config[DOMAIN]['failsafe_persist'] if failsafe else 0
+    failsafe = config[DOMAIN][CONF_FAILSAFE]
+    timeout = config[DOMAIN][CONF_FAILSAFE_TIMEOUT] if failsafe else 0
+    fallback = config[DOMAIN][CONF_FAILSAFE_FALLBACK] if failsafe else 0
+    persist = config[DOMAIN][CONF_FAILSAFE_PERSIST] if failsafe else 0
     try:
         hass.loop.create_task(keba.set_failsafe(timeout, fallback, persist))
     except ValueError as ex:
         _LOGGER.warning("Could not set failsafe mode %s", ex)
 
     # Register services to hass
-    async def async_execute_service(call):
+    async def execute_service(call):
         """Execute a service to KEBA charging station.
 
-        This must be a member function as we need access to the hass
+        This must be a member function as we need access to the keba
         object here.
         """
         function_name = _SERVICE_MAP[call.service]
         function_call = getattr(keba, function_name)
-        hass.async_create_task(function_call(call.data))
+        await function_call(call.data)
 
     for service in _SERVICE_MAP:
-        hass.services.async_register(DOMAIN, service, async_execute_service)
+        hass.services.async_register(DOMAIN, service, execute_service)
 
     # Load components
     for domain in SUPPORTED_COMPONENTS:
@@ -108,8 +115,8 @@ class KebaHandler(KebaKeContact):
         )
 
     async def _periodic_request(self):
-        """Send update requests asyncio style."""
-        self._hass.async_create_task(self.request_data())
+        """Send  periodic update requests."""
+        await self.request_data()
 
         if self._fast_polling_count < 4:
             self._fast_polling_count += 1
@@ -126,13 +133,13 @@ class KebaHandler(KebaKeContact):
             self._periodic_request()
         )
 
-    async def setup(self, loop=None):
+    async def setup(self, loop=None, *_):
         await super().setup(loop)
 
         # Request initial values and extract serial number
         await self.request_data()
         if self.get_value('Serial') is not None:
-            self.device_name = "keba_wallbox_" + str(self.get_value('Serial'))
+            self.device_name = f"keba_wallbox_{self.get_value('Serial')}"
         else:
             _LOGGER.warning("Could not load the serial number of the "
                             "charging station, unique id will be wrong")
@@ -168,7 +175,7 @@ class KebaHandler(KebaKeContact):
             await self.set_energy(energy)
             self._set_fast_polling()
         except (KeyError, ValueError) as ex:
-            _LOGGER.warning("Energy value is not correct %s", ex)
+            _LOGGER.warning("Energy value is not correct. %s", ex)
 
     async def async_set_current(self, param):
         """Set current maximum in async way."""
@@ -177,7 +184,7 @@ class KebaHandler(KebaKeContact):
             await self.set_current(current)
             # No fast polling as this function might be called regularly
         except (KeyError, ValueError) as ex:
-            _LOGGER.warning("Current value is not correct %s", ex)
+            _LOGGER.warning("Current value is not correct. %s", ex)
 
     async def async_start(self, param=None):
         """Authorize EV in async way."""
@@ -202,11 +209,11 @@ class KebaHandler(KebaKeContact):
     async def async_set_failsafe(self, param=None):
         """Set failsafe mode in async way."""
         try:
-            timout = param['failsafe_timeout']
-            fallback = param['failsafe_fallback']
-            persist = param['failsafe_persist']
+            timout = param[CONF_FAILSAFE_TIMEOUT]
+            fallback = param[CONF_FAILSAFE_FALLBACK]
+            persist = param[CONF_FAILSAFE_PERSIST]
             await self.set_failsafe(timout, fallback, persist)
             self._set_fast_polling()
         except (KeyError, ValueError) as ex:
             _LOGGER.warning("failsafe_timeout, failsafe_fallback and/or "
-                            "failsafe_persist value are not correct %s", ex)
+                            "failsafe_persist value are not correct. %s", ex)
