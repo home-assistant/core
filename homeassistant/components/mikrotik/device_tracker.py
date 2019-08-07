@@ -7,7 +7,7 @@ from homeassistant.components.device_tracker import (
     SOURCE_TYPE_ROUTER,
 )
 from homeassistant.util import slugify
-from homeassistant.const import CONF_HOST, CONF_METHOD
+from homeassistant.const import CONF_METHOD
 from .const import (
     HOSTS,
     MIKROTIK,
@@ -75,7 +75,7 @@ class MikrotikScanner(DeviceScanner):
         self.update_device_tracker()
         if not self.api.connected():
             return None
-        return [device for device in self.device_tracker]
+        return list(self.device_tracker.keys())
 
     def get_method(self):
         """Determine the device tracker polling method."""
@@ -165,7 +165,7 @@ class MikrotikScanner(DeviceScanner):
             self.device_tracker[mac] = attrs
 
     def load_mac(self, devices=None):
-        """Load dictionary using MAC address as key"""
+        """Load dictionary using MAC address as key."""
         if not devices:
             return None
         mac_devices = {}

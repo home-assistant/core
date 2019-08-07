@@ -13,7 +13,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_METHOD,
-    CONF_SCAN_INTERVAL,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
