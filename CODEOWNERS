@@ -24,6 +24,7 @@ homeassistant/components/alpha_vantage/* @fabaff
 homeassistant/components/amazon_polly/* @robbiet480
 homeassistant/components/ambiclimate/* @danielhiversen
 homeassistant/components/ambient_station/* @bachya
+homeassistant/components/apache_kafka/* @bachya
 homeassistant/components/api/* @home-assistant/core
 homeassistant/components/aprs/* @PhilRW
 homeassistant/components/arcam_fmj/* @elupus
@@ -34,6 +35,7 @@ homeassistant/components/aurora_abb_powerone/* @davet2001
 homeassistant/components/auth/* @home-assistant/core
 homeassistant/components/automatic/* @armills
 homeassistant/components/automation/* @home-assistant/core
+homeassistant/components/avea/* @pattyland
 homeassistant/components/awair/* @danielsjf
 homeassistant/components/aws/* @awarecan @robbiet480
 homeassistant/components/axis/* @kane610
@@ -41,12 +43,11 @@ homeassistant/components/azure_event_hub/* @eavanvalkenburg
 homeassistant/components/bitcoin/* @fabaff
 homeassistant/components/bizkaibus/* @UgaitzEtxebarria
 homeassistant/components/blink/* @fronzbot
-homeassistant/components/bmw_connected_drive/* @ChristianKuehnel
 homeassistant/components/braviatv/* @robbiet480
 homeassistant/components/broadlink/* @danielhiversen
 homeassistant/components/brunt/* @eavanvalkenburg
 homeassistant/components/bt_smarthub/* @jxwolstenholme
-homeassistant/components/buienradar/* @ties
+homeassistant/components/buienradar/* @mjj4791 @ties
 homeassistant/components/cisco_ios/* @fbradyirl
 homeassistant/components/cisco_mobility_express/* @fbradyirl
 homeassistant/components/cisco_webex_teams/* @fbradyirl
@@ -64,6 +65,7 @@ homeassistant/components/cups/* @fabaff
 homeassistant/components/daikin/* @fredrike @rofrantz
 homeassistant/components/darksky/* @fabaff
 homeassistant/components/deconz/* @kane610
+homeassistant/components/delijn/* @bollewolle
 homeassistant/components/demo/* @home-assistant/core
 homeassistant/components/device_automation/* @home-assistant/core
 homeassistant/components/digital_ocean/* @fabaff
@@ -91,6 +93,8 @@ homeassistant/components/fitbit/* @robbiet480
 homeassistant/components/fixer/* @fabaff
 homeassistant/components/flock/* @fabaff
 homeassistant/components/flunearyou/* @bachya
+homeassistant/components/fortigate/* @kifeo
+homeassistant/components/fortios/* @kimfrellsen
 homeassistant/components/foursquare/* @robbiet480
 homeassistant/components/freebox/* @snoof85
 homeassistant/components/fronius/* @nielstron
@@ -209,6 +213,7 @@ homeassistant/components/qnap/* @colinodell
 homeassistant/components/quantum_gateway/* @cisasteelersfan
 homeassistant/components/qwikswitch/* @kellerza
 homeassistant/components/raincloud/* @vanstinator
+homeassistant/components/rainforest_eagle/* @gtdiehl
 homeassistant/components/rainmachine/* @bachya
 homeassistant/components/random/* @fabaff
 homeassistant/components/repetier/* @MTrab
@@ -235,6 +240,7 @@ homeassistant/components/smtp/* @fabaff
 homeassistant/components/solaredge_local/* @drobtravels
 homeassistant/components/solax/* @squishykid
 homeassistant/components/somfy/* @tetienne
+homeassistant/components/songpal/* @rytilahti
 homeassistant/components/sonos/* @amelchio
 homeassistant/components/spaceapi/* @fabaff
 homeassistant/components/spider/* @peternijssen
@@ -242,6 +248,7 @@ homeassistant/components/sql/* @dgomes
 homeassistant/components/statistics/* @fabaff
 homeassistant/components/stiebel_eltron/* @fucm
 homeassistant/components/stream/* @hunterjm
+homeassistant/components/suez_water/* @ooii
 homeassistant/components/sun/* @Swamp-Ig
 homeassistant/components/supla/* @mwegrzynek
 homeassistant/components/swiss_hydrological_data/* @fabaff
@@ -270,6 +277,7 @@ homeassistant/components/traccar/* @ludeeus
 homeassistant/components/tradfri/* @ggravlingen
 homeassistant/components/trafikverket_train/* @endor-force
 homeassistant/components/tts/* @robbiet480
+homeassistant/components/twentemilieu/* @frenck
 homeassistant/components/twilio_call/* @robbiet480
 homeassistant/components/twilio_sms/* @robbiet480
 homeassistant/components/unifi/* @kane610
@@ -278,8 +286,10 @@ homeassistant/components/updater/* @home-assistant/core
 homeassistant/components/upnp/* @robbiet480
 homeassistant/components/uptimerobot/* @ludeeus
 homeassistant/components/utility_meter/* @dgomes
+homeassistant/components/velbus/* @ceral2nd
 homeassistant/components/velux/* @Julius2342
 homeassistant/components/version/* @fabaff
+homeassistant/components/vesync/* @markperdue @webdjoe
 homeassistant/components/vizio/* @raman325
 homeassistant/components/vlc_telnet/* @rodripf
 homeassistant/components/waqi/* @andrey-git

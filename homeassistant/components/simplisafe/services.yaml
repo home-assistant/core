@@ -1,0 +1,24 @@
+# Describes the format for available SimpliSafe services
+
+---
+remove_pin:
+  description: Remove a PIN by its label or value.
+  fields:
+    system_id:
+      description: The SimpliSafe system ID to affect.
+      example: 123987
+    label_or_pin:
+      description: The label/value to remove.
+      example: Test PIN
+set_pin:
+  description: Set/update a PIN
+  fields:
+    system_id:
+      description: The SimpliSafe system ID to affect.
+      example: 123987
+    label:
+      description: The label of the PIN
+      example: Test PIN
+    pin:
+      description: The value of the PIN
+      example: 1256

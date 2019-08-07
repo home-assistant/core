@@ -6,13 +6,27 @@ from adguardhome import AdGuardHome, AdGuardHomeError
 import voluptuous as vol
 
 from homeassistant.components.adguard.const import (
-    CONF_FORCE, DATA_ADGUARD_CLIENT, DATA_ADGUARD_VERION, DOMAIN,
-    SERVICE_ADD_URL, SERVICE_DISABLE_URL, SERVICE_ENABLE_URL, SERVICE_REFRESH,
-    SERVICE_REMOVE_URL)
+    CONF_FORCE,
+    DATA_ADGUARD_CLIENT,
+    DATA_ADGUARD_VERION,
+    DOMAIN,
+    SERVICE_ADD_URL,
+    SERVICE_DISABLE_URL,
+    SERVICE_ENABLE_URL,
+    SERVICE_REFRESH,
+    SERVICE_REMOVE_URL,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_SSL, CONF_URL,
-    CONF_USERNAME, CONF_VERIFY_SSL)
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_URL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
@@ -34,9 +48,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(
-        hass: HomeAssistantType, entry: ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up AdGuard Home from a config entry."""
     session = async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL])
     adguard = AdGuardHome(
@@ -52,7 +64,7 @@ async def async_setup_entry(
 
     hass.data.setdefault(DOMAIN, {})[DATA_ADGUARD_CLIENT] = adguard
 
-    for component in 'sensor', 'switch':
+    for component in "sensor", "switch":
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
@@ -98,9 +110,7 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(
-        hass: HomeAssistantType, entry: ConfigType
-) -> bool:
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigType) -> bool:
     """Unload AdGuard Home config entry."""
     hass.services.async_remove(DOMAIN, SERVICE_ADD_URL)
     hass.services.async_remove(DOMAIN, SERVICE_REMOVE_URL)
@@ -108,7 +118,7 @@ async def async_unload_entry(
     hass.services.async_remove(DOMAIN, SERVICE_DISABLE_URL)
     hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
 
-    for component in 'sensor', 'switch':
+    for component in "sensor", "switch":
         await hass.config_entries.async_forward_entry_unload(entry, component)
 
     del hass.data[DOMAIN]
@@ -166,15 +176,10 @@ class AdGuardHomeDeviceEntity(AdGuardHomeEntity):
     def device_info(self) -> Dict[str, Any]:
         """Return device information about this AdGuard Home instance."""
         return {
-            'identifiers': {
-                (
-                    DOMAIN,
-                    self.adguard.host,
-                    self.adguard.port,
-                    self.adguard.base_path,
-                )
+            "identifiers": {
+                (DOMAIN, self.adguard.host, self.adguard.port, self.adguard.base_path)
             },
-            'name': 'AdGuard Home',
-            'manufacturer': 'AdGuard Team',
-            'sw_version': self.hass.data[DOMAIN].get(DATA_ADGUARD_VERION),
+            "name": "AdGuard Home",
+            "manufacturer": "AdGuard Team",
+            "sw_version": self.hass.data[DOMAIN].get(DATA_ADGUARD_VERION),
         }
