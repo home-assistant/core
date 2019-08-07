@@ -67,36 +67,35 @@ def illuminance_formatter(value):
     """Convert Illimination data."""
     if value is None:
         return None
-    return round(pow(10, ((value - 1) / 10000)), 1)
+    return '{:.1f}'.format(pow(10, ((value - 1) / 10000)))
 
 
 def temperature_formatter(value):
     """Convert temperature data."""
     if value is None:
         return None
-    return round(value / 100, 1)
+    return '{:.1f}'.format(value / 100)
 
 
 def humidity_formatter(value):
     """Return the state of the entity."""
     if value is None:
         return None
-    return round(float(value) / 100, 1)
+    return '{:.1f}'.format(value / 100)
 
 
 def active_power_formatter(value):
     """Return the state of the entity."""
     if value is None:
         return None
-    return round(float(value) / 10, 1)
+    return '{:.1f}'.format(value / 10)
 
 
 def pressure_formatter(value):
     """Return the state of the entity."""
     if value is None:
         return None
-
-    return round(float(value))
+    return '{:.0f}'.format(value)
 
 
 def battery_percentage_remaining_formatter(value):
@@ -104,9 +103,7 @@ def battery_percentage_remaining_formatter(value):
     # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
     if not isinstance(value, numbers.Number) or value == -1:
         return value
-    value = value / 2
-    value = int(round(value))
-    return value
+    return '{:.0f}'.format(value / 2)
 
 
 async def async_battery_device_state_attr_provider(channel):
