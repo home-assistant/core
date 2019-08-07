@@ -8,7 +8,8 @@ import logging
 
 import zigpy.zcl.clusters.measurement as measurement
 
-from . import ZIGBEE_CHANNEL_REGISTRY, AttributeListeningChannel
+from . import AttributeListeningChannel
+from .. import registries
 from ..const import (
     REPORT_CONFIG_DEFAULT,
     REPORT_CONFIG_IMMEDIATE,
@@ -19,42 +20,47 @@ from ..const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(measurement.FlowMeasurement.cluster_id)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.FlowMeasurement.cluster_id)
 class FlowMeasurement(AttributeListeningChannel):
     """Flow Measurement channel."""
 
     REPORT_CONFIG = [{"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(measurement.IlluminanceLevelSensing.cluster_id)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(
+    measurement.IlluminanceLevelSensing.cluster_id
+)
 class IlluminanceLevelSensing(AttributeListeningChannel):
     """Illuminance Level Sensing channel."""
 
     REPORT_CONFIG = [{"attr": "level_status", "config": REPORT_CONFIG_DEFAULT}]
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(measurement.IlluminanceMeasurement.cluster_id)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(
+    measurement.IlluminanceMeasurement.cluster_id
+)
 class IlluminanceMeasurement(AttributeListeningChannel):
     """Illuminance Measurement channel."""
 
     REPORT_CONFIG = [{"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(measurement.OccupancySensing.cluster_id)
+@registries.BINARY_SENSOR_CLUSTERS.register(measurement.OccupancySensing.cluster_id)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.OccupancySensing.cluster_id)
 class OccupancySensing(AttributeListeningChannel):
     """Occupancy Sensing channel."""
 
     REPORT_CONFIG = [{"attr": "occupancy", "config": REPORT_CONFIG_IMMEDIATE}]
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(measurement.PressureMeasurement.cluster_id)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.PressureMeasurement.cluster_id)
 class PressureMeasurement(AttributeListeningChannel):
     """Pressure measurement channel."""
 
     REPORT_CONFIG = [{"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(measurement.RelativeHumidity.cluster_id)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.RelativeHumidity.cluster_id)
 class RelativeHumidity(AttributeListeningChannel):
     """Relative Humidity measurement channel."""
 
@@ -66,7 +72,9 @@ class RelativeHumidity(AttributeListeningChannel):
     ]
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(measurement.TemperatureMeasurement.cluster_id)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(
+    measurement.TemperatureMeasurement.cluster_id
+)
 class TemperatureMeasurement(AttributeListeningChannel):
     """Temperature measurement channel."""
 
