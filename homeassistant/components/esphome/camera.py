@@ -15,14 +15,18 @@ from . import EsphomeEntity, platform_async_setup_entry
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistantType,
-                            entry: ConfigEntry, async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
     """Set up esphome cameras based on a config entry."""
     await platform_async_setup_entry(
-        hass, entry, async_add_entities,
-        component_key='camera',
-        info_type=CameraInfo, entity_type=EsphomeCamera,
-        state_type=CameraState
+        hass,
+        entry,
+        async_add_entities,
+        component_key="camera",
+        info_type=CameraInfo,
+        entity_type=EsphomeCamera,
+        state_type=CameraState,
     )
 
 
@@ -74,5 +78,5 @@ class EsphomeCamera(Camera, EsphomeEntity):
     async def handle_async_mjpeg_stream(self, request):
         """Serve an HTTP MJPEG stream from the camera."""
         return await camera.async_get_still_stream(
-            request, self._async_camera_stream_image,
-            camera.DEFAULT_CONTENT_TYPE, 0.0)
+            request, self._async_camera_stream_image, camera.DEFAULT_CONTENT_TYPE, 0.0
+        )

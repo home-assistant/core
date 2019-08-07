@@ -4,29 +4,29 @@ import logging
 
 from homeassistant.core import callback
 from homeassistant.components.fan import (
-    SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF, SUPPORT_SET_SPEED,
-    FanEntity)
+    SPEED_HIGH,
+    SPEED_LOW,
+    SPEED_MEDIUM,
+    SPEED_OFF,
+    SUPPORT_SET_SPEED,
+    FanEntity,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import (DOMAIN, SIGNAL_UPDATE_SMARTY)
+from . import DOMAIN, SIGNAL_UPDATE_SMARTY
 
 _LOGGER = logging.getLogger(__name__)
 
 SPEED_LIST = [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
-SPEED_MAPPING = {
-    1: SPEED_LOW,
-    2: SPEED_MEDIUM,
-    3: SPEED_HIGH
-}
+SPEED_MAPPING = {1: SPEED_LOW, 2: SPEED_MEDIUM, 3: SPEED_HIGH}
 SPEED_TO_MODE = {v: k for k, v in SPEED_MAPPING.items()}
 
 
-async def async_setup_platform(hass, config,
-                               async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Smarty Fan Platform."""
-    smarty = hass.data[DOMAIN]['api']
-    name = hass.data[DOMAIN]['name']
+    smarty = hass.data[DOMAIN]["api"]
+    name = hass.data[DOMAIN]["name"]
 
     async_add_entities([SmartyFan(name, smarty)], True)
 
@@ -54,7 +54,7 @@ class SmartyFan(FanEntity):
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        return 'mdi:air-conditioner'
+        return "mdi:air-conditioner"
 
     @property
     def supported_features(self):
@@ -78,7 +78,7 @@ class SmartyFan(FanEntity):
 
     def turn_on(self, speed=None, **kwargs):
         """Turn on the fan."""
-        _LOGGER.debug('Turning on fan. Speed is %s', speed)
+        _LOGGER.debug("Turning on fan. Speed is %s", speed)
         if speed is None:
             if self._smarty.turn_on(SPEED_TO_MODE.get(self._speed)):
                 self._state = True
@@ -92,7 +92,7 @@ class SmartyFan(FanEntity):
 
     def turn_off(self, **kwargs):
         """Turn off the fan."""
-        _LOGGER.debug('Turning off fan')
+        _LOGGER.debug("Turning off fan")
         if self._smarty.turn_off():
             self._state = False
 
@@ -100,9 +100,7 @@ class SmartyFan(FanEntity):
 
     async def async_added_to_hass(self):
         """Call to update fan."""
-        async_dispatcher_connect(self.hass,
-                                 SIGNAL_UPDATE_SMARTY,
-                                 self._update_callback)
+        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_SMARTY, self._update_callback)
 
     @callback
     def _update_callback(self):
@@ -111,11 +109,11 @@ class SmartyFan(FanEntity):
 
     def update(self):
         """Update state."""
-        _LOGGER.debug('Updating state')
+        _LOGGER.debug("Updating state")
         result = self._smarty.fan_speed
         if result:
             self._speed = SPEED_MAPPING[result]
-            _LOGGER.debug('Speed is %s, Mode is %s', self._speed, result)
+            _LOGGER.debug("Speed is %s, Mode is %s", self._speed, result)
             self._state = True
         else:
             self._state = False

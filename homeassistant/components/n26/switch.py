@@ -11,14 +11,17 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL
 
 
-def setup_platform(
-        hass, config, add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the N26 switch platform."""
-    api_data = hass.data[DOMAIN][DATA]
+    if discovery_info is None:
+        return
+
+    api_list = hass.data[DOMAIN][DATA]
 
     switch_entities = []
-    for card in api_data.cards:
-        switch_entities.append(N26CardSwitch(api_data, card))
+    for api_data in api_list:
+        for card in api_data.cards:
+            switch_entities.append(N26CardSwitch(api_data, card))
 
     add_entities(switch_entities)
 
