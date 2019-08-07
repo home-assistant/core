@@ -23,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_STATION = "station"
 ATTR_LOCATION = "location"
+ATTR_UPDATED = 'updated'
 
 CONF_ATTRIBUTION = "Data provided by Environment Canada"
 CONF_STATION = "station"
@@ -70,6 +71,7 @@ class ECCamera(Camera):
         self.camera_name = camera_name
         self.content_type = "image/gif"
         self.image = None
+        self.timestamp = None
 
     def camera_image(self):
         """Return bytes of camera image."""
@@ -90,6 +92,7 @@ class ECCamera(Camera):
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             ATTR_LOCATION: self.radar_object.station_name,
             ATTR_STATION: self.radar_object.station_code,
+            ATTR_UPDATED: self.timestamp
         }
 
         return attr
@@ -101,3 +104,4 @@ class ECCamera(Camera):
             self.image = self.radar_object.get_loop()
         else:
             self.image = self.radar_object.get_latest_frame()
+        self.timestamp = self.radar_object.timestamp.isoformat()
