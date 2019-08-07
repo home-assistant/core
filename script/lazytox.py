@@ -18,20 +18,20 @@ except ImportError:
 
 
 RE_ASCII = re.compile(r"\033\[[^m]*m")
-Error = namedtuple('Error', ['file', 'line', 'col', 'msg', 'skip'])
+Error = namedtuple("Error", ["file", "line", "col", "msg", "skip"])
 
-PASS = 'green'
-FAIL = 'bold_red'
+PASS = "green"
+FAIL = "bold_red"
 
 
 def printc(the_color, *args):
     """Color print helper."""
-    msg = ' '.join(args)
+    msg = " ".join(args)
     if not escape_codes:
         print(msg)
         return
     try:
-        print(escape_codes[the_color] + msg + escape_codes['reset'])
+        print(escape_codes[the_color] + msg + escape_codes["reset"])
     except KeyError:
         print(msg)
         raise ValueError("Invalid color {}".format(the_color))
@@ -40,6 +40,7 @@ def printc(the_color, *args):
 def validate_requirements_ok():
     """Validate requirements, returns True of ok."""
     from gen_requirements_all import main as req_main
+
     return req_main(True) == 0
 
 
@@ -52,7 +53,7 @@ async def read_stream(stream, display):
             break
         output.append(line)
         display(line.decode())  # assume it doesn't block
-    return b''.join(output)
+    return b"".join(output)
 
 
 async def async_exec(*args, display=False):
@@ -63,16 +64,21 @@ async def async_exec(*args, display=False):
             argsp.append("\\\n  {}".format(shlex.quote(arg)))
         else:
             argsp.append(shlex.quote(arg))
-    printc('cyan', *argsp)
+    printc("cyan", *argsp)
     try:
-        kwargs = {'loop': LOOP, 'stdout': asyncio.subprocess.PIPE,
-                  'stderr': asyncio.subprocess.STDOUT}
+        kwargs = {
+            "loop": LOOP,
+            "stdout": asyncio.subprocess.PIPE,
+            "stderr": asyncio.subprocess.STDOUT,
+        }
         if display:
-            kwargs['stderr'] = asyncio.subprocess.PIPE
+            kwargs["stderr"] = asyncio.subprocess.PIPE
         proc = await asyncio.create_subprocess_exec(*args, **kwargs)
     except FileNotFoundError as err:
-        printc(FAIL, "Could not execute {}. Did you install test requirements?"
-               .format(args[0]))
+        printc(
+            FAIL,
+            "Could not execute {}. Did you install test requirements?".format(args[0]),
+        )
         raise err
 
     if not display:
@@ -82,46 +88,45 @@ async def async_exec(*args, display=False):
         # read child's stdout/stderr concurrently (capture and display)
         stdout, _ = await asyncio.gather(
             read_stream(proc.stdout, sys.stdout.write),
-            read_stream(proc.stderr, sys.stderr.write))
+            read_stream(proc.stderr, sys.stderr.write),
+        )
     exit_code = await proc.wait()
-    stdout = stdout.decode('utf-8')
+    stdout = stdout.decode("utf-8")
     return exit_code, stdout
 
 
 async def git():
     """Exec git."""
-    if len(sys.argv) > 2 and sys.argv[1] == '--':
+    if len(sys.argv) > 2 and sys.argv[1] == "--":
         return sys.argv[2:]
-    _, log = await async_exec('git', 'merge-base', 'upstream/dev', 'HEAD')
+    _, log = await async_exec("git", "merge-base", "upstream/dev", "HEAD")
     merge_base = log.splitlines()[0]
-    _, log = await async_exec('git', 'diff', merge_base, '--name-only')
+    _, log = await async_exec("git", "diff", merge_base, "--name-only")
     return log.splitlines()
 
 
 async def pylint(files):
     """Exec pylint."""
-    _, log = await async_exec('pylint', '-f', 'parseable', '--persistent=n',
-                              *files)
+    _, log = await async_exec("pylint", "-f", "parseable", "--persistent=n", *files)
     res = []
     for line in log.splitlines():
-        line = line.split(':')
+        line = line.split(":")
         if len(line) < 3:
             continue
-        _fn = line[0].replace('\\', '/')
-        res.append(Error(
-            _fn, line[1], '', line[2].strip(), _fn.startswith('tests/')))
+        _fn = line[0].replace("\\", "/")
+        res.append(Error(_fn, line[1], "", line[2].strip(), _fn.startswith("tests/")))
     return res
 
 
 async def flake8(files):
     """Exec flake8."""
-    _, log = await async_exec('flake8', '--doctests', *files)
+    _, log = await async_exec("flake8", "--doctests", *files)
     res = []
     for line in log.splitlines():
-        line = line.split(':')
+        line = line.split(":")
         if len(line) < 4:
             continue
-        _fn = line[0].replace('\\', '/')
+        _fn = line[0].replace("\\", "/")
         res.append(Error(_fn, line[1], line[2], line[3].strip(), False))
     return res
 
@@ -159,18 +164,20 @@ async def main():
 
     files = await git()
     if not files:
-        print("No changed files found. Please ensure you have added your "
-              "changes with git add & git commit")
+        print(
+            "No changed files found. Please ensure you have added your "
+            "changes with git add & git commit"
+        )
         return
 
     pyfile = re.compile(r".+\.py$")
     pyfiles = [file for file in files if pyfile.match(file)]
 
     print("=============================")
-    printc('bold', "CHANGED FILES:\n", '\n '.join(pyfiles))
+    printc("bold", "CHANGED FILES:\n", "\n ".join(pyfiles))
     print("=============================")
 
-    skip_lint = len(sys.argv) > 1 and sys.argv[1] == '--skiplint'
+    skip_lint = len(sys.argv) > 1 and sys.argv[1] == "--skiplint"
     if skip_lint:
         printc(FAIL, "LINT DISABLED")
     elif not await lint(pyfiles):
@@ -180,23 +187,23 @@ async def main():
     test_files = set()
     gen_req = False
     for fname in pyfiles:
-        if fname.startswith('homeassistant/components/'):
+        if fname.startswith("homeassistant/components/"):
             gen_req = True  # requirements script for components
         # Find test files...
-        if fname.startswith('tests/'):
-            if '/test_' in fname and os.path.isfile(fname):
+        if fname.startswith("tests/"):
+            if "/test_" in fname and os.path.isfile(fname):
                 # All test helpers should be excluded
                 test_files.add(fname)
         else:
-            parts = fname.split('/')
-            parts[0] = 'tests'
-            if parts[-1] == '__init__.py':
-                parts[-1] = 'test_init.py'
-            elif parts[-1] == '__main__.py':
-                parts[-1] = 'test_main.py'
+            parts = fname.split("/")
+            parts[0] = "tests"
+            if parts[-1] == "__init__.py":
+                parts[-1] = "test_init.py"
+            elif parts[-1] == "__main__.py":
+                parts[-1] = "test_main.py"
             else:
-                parts[-1] = 'test_' + parts[-1]
-            fname = '/'.join(parts)
+                parts[-1] = "test_" + parts[-1]
+            fname = "/".join(parts)
             if os.path.isfile(fname):
                 test_files.add(fname)
 
@@ -214,7 +221,8 @@ async def main():
         return
 
     code, _ = await async_exec(
-        'pytest', '-vv', '--force-sugar', '--', *test_files, display=True)
+        "pytest", "-vv", "--force-sugar", "--", *test_files, display=True
+    )
     print("=============================")
 
     if code == 0:
@@ -226,9 +234,12 @@ async def main():
         printc(FAIL, "LINT DISABLED")
 
 
-if __name__ == '__main__':
-    LOOP = asyncio.ProactorEventLoop() if sys.platform == 'win32' \
+if __name__ == "__main__":
+    LOOP = (
+        asyncio.ProactorEventLoop()
+        if sys.platform == "win32"
         else asyncio.get_event_loop()
+    )
 
     try:
         LOOP.run_until_complete(main())

@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/daikin",
   "requirements": [
-    "pydaikin==1.5.1"
+    "pydaikin==1.6.1"
   ],
   "dependencies": [],
   "codeowners": [

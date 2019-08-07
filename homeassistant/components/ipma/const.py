@@ -3,12 +3,11 @@ import logging
 
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 
-DOMAIN = 'ipma'
+DOMAIN = "ipma"
 
-HOME_LOCATION_NAME = 'Home'
+HOME_LOCATION_NAME = "Home"
 
 ENTITY_ID_SENSOR_FORMAT = WEATHER_DOMAIN + ".ipma_{}"
-ENTITY_ID_SENSOR_FORMAT_HOME = ENTITY_ID_SENSOR_FORMAT.format(
-    HOME_LOCATION_NAME)
+ENTITY_ID_SENSOR_FORMAT_HOME = ENTITY_ID_SENSOR_FORMAT.format(HOME_LOCATION_NAME)
 
-_LOGGER = logging.getLogger('.')
+_LOGGER = logging.getLogger(".")

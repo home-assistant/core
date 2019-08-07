@@ -22,8 +22,8 @@ class StreamBuffer:
     """Represent a segment."""
 
     segment = attr.ib(type=io.BytesIO)
-    output = attr.ib()               # type=av.OutputContainer
-    vstream = attr.ib()              # type=av.VideoStream
+    output = attr.ib()  # type=av.OutputContainer
+    vstream = attr.ib()  # type=av.VideoStream
     astream = attr.ib(default=None)  # type=av.AudioStream
 
 
@@ -88,8 +88,7 @@ class StreamOutput:
         # Reset idle timeout
         if self._unsub is not None:
             self._unsub()
-        self._unsub = async_call_later(
-            self._stream.hass, self.timeout, self._timeout)
+        self._unsub = async_call_later(self._stream.hass, self.timeout, self._timeout)
 
         if not sequence:
             return self._segments
@@ -118,7 +117,8 @@ class StreamOutput:
         # Start idle timeout when we start recieving data
         if self._unsub is None:
             self._unsub = async_call_later(
-                self._stream.hass, self.timeout, self._timeout)
+                self._stream.hass, self.timeout, self._timeout
+            )
 
         if segment is None:
             self._event.set()
@@ -161,11 +161,16 @@ class StreamView(HomeAssistantView):
 
     async def get(self, request, token, sequence=None):
         """Start a GET request."""
-        hass = request.app['hass']
+        hass = request.app["hass"]
 
-        stream = next((
-            s for s in hass.data[DOMAIN][ATTR_STREAMS].values()
-            if s.access_token == token), None)
+        stream = next(
+            (
+                s
+                for s in hass.data[DOMAIN][ATTR_STREAMS].values()
+                if s.access_token == token
+            ),
+            None,
+        )
 
         if not stream:
             raise web.HTTPNotFound()

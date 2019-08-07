@@ -12,16 +12,16 @@ from tests.components.light import common
 
 _LOGGER = logging.getLogger(__name__)
 
-ENTITY_LIGHT = 'light.mock_load_1'
+ENTITY_LIGHT = "light.mock_load_1"
 ENTITY_LIGHT_NUMBER = 1
-ENTITY_OTHER_LIGHT = 'light.mock_load_2'
+ENTITY_OTHER_LIGHT = "light.mock_load_2"
 ENTITY_OTHER_LIGHT_NUMBER = 2
 
 
 class TestLiteJetLight(unittest.TestCase):
     """Test the litejet component."""
 
-    @mock.patch('pylitejet.LiteJet')
+    @mock.patch("pylitejet.LiteJet")
     def setup_method(self, method, mock_pylitejet):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
@@ -31,7 +31,7 @@ class TestLiteJetLight(unittest.TestCase):
         self.load_deactivated_callbacks = {}
 
         def get_load_name(number):
-            return "Mock Load #"+str(number)
+            return "Mock Load #" + str(number)
 
         def on_load_activated(number, callback):
             self.load_activated_callbacks[number] = callback
@@ -50,13 +50,8 @@ class TestLiteJetLight(unittest.TestCase):
         self.mock_lj.on_load_deactivated.side_effect = on_load_deactivated
 
         assert setup.setup_component(
-            self.hass,
-            litejet.DOMAIN,
-            {
-                'litejet': {
-                    'port': '/tmp/this_will_be_mocked'
-                }
-            })
+            self.hass, litejet.DOMAIN, {"litejet": {"port": "/tmp/this_will_be_mocked"}}
+        )
         self.hass.block_till_done()
 
         self.mock_lj.get_load_level.reset_mock()
@@ -75,20 +70,19 @@ class TestLiteJetLight(unittest.TestCase):
 
     def test_on_brightness(self):
         """Test turning the light on with brightness."""
-        assert self.light().state == 'off'
-        assert self.other_light().state == 'off'
+        assert self.light().state == "off"
+        assert self.other_light().state == "off"
 
         assert not light.is_on(self.hass, ENTITY_LIGHT)
 
         common.turn_on(self.hass, ENTITY_LIGHT, brightness=102)
         self.hass.block_till_done()
-        self.mock_lj.activate_load_at.assert_called_with(
-            ENTITY_LIGHT_NUMBER, 39, 0)
+        self.mock_lj.activate_load_at.assert_called_with(ENTITY_LIGHT_NUMBER, 39, 0)
 
     def test_on_off(self):
         """Test turning the light on and off."""
-        assert self.light().state == 'off'
-        assert self.other_light().state == 'off'
+        assert self.light().state == "off"
+        assert self.other_light().state == "off"
 
         assert not light.is_on(self.hass, ENTITY_LIGHT)
 
@@ -110,13 +104,12 @@ class TestLiteJetLight(unittest.TestCase):
         self.load_activated_callbacks[ENTITY_LIGHT_NUMBER]()
         self.hass.block_till_done()
 
-        self.mock_lj.get_load_level.assert_called_once_with(
-            ENTITY_LIGHT_NUMBER)
+        self.mock_lj.get_load_level.assert_called_once_with(ENTITY_LIGHT_NUMBER)
 
         assert light.is_on(self.hass, ENTITY_LIGHT)
         assert not light.is_on(self.hass, ENTITY_OTHER_LIGHT)
-        assert self.light().state == 'on'
-        assert self.other_light().state == 'off'
+        assert self.light().state == "on"
+        assert self.other_light().state == "off"
         assert self.light().attributes.get(light.ATTR_BRIGHTNESS) == 255
 
         # Light 2
@@ -128,13 +121,12 @@ class TestLiteJetLight(unittest.TestCase):
         self.load_activated_callbacks[ENTITY_OTHER_LIGHT_NUMBER]()
         self.hass.block_till_done()
 
-        self.mock_lj.get_load_level.assert_called_once_with(
-            ENTITY_OTHER_LIGHT_NUMBER)
+        self.mock_lj.get_load_level.assert_called_once_with(ENTITY_OTHER_LIGHT_NUMBER)
 
         assert light.is_on(self.hass, ENTITY_OTHER_LIGHT)
         assert light.is_on(self.hass, ENTITY_LIGHT)
-        assert self.light().state == 'on'
-        assert self.other_light().state == 'on'
+        assert self.light().state == "on"
+        assert self.other_light().state == "on"
         assert int(self.other_light().attributes[light.ATTR_BRIGHTNESS]) == 103
 
     def test_deactivated_event(self):
@@ -159,10 +151,9 @@ class TestLiteJetLight(unittest.TestCase):
         # (Requesting the level is not strictly needed with a deactivated
         # event but the implementation happens to do it. This could be
         # changed to an assert_not_called in the future.)
-        self.mock_lj.get_load_level.assert_called_with(
-            ENTITY_OTHER_LIGHT_NUMBER)
+        self.mock_lj.get_load_level.assert_called_with(ENTITY_OTHER_LIGHT_NUMBER)
 
         assert not light.is_on(self.hass, ENTITY_OTHER_LIGHT)
         assert not light.is_on(self.hass, ENTITY_LIGHT)
-        assert self.light().state == 'off'
-        assert self.other_light().state == 'off'
+        assert self.light().state == "off"
+        assert self.other_light().state == "off"

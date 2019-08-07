@@ -14,8 +14,6 @@ pr:
 
 resources:
   containers:
-  - container: 35
-    image: homeassistant/ci-azure:3.5
   - container: 36
     image: homeassistant/ci-azure:3.6
   - container: 37
@@ -24,7 +22,7 @@ variables:
   - name: ArtifactFeed
     value: '2df3ae11-3bf6-49bc-a809-ba0d340d6a6d'
   - name: PythonMain
-    value: '35'
+    value: '36'
   - group: codecov
 
 stages:
@@ -40,7 +38,7 @@ stages:
         python -m venv venv
 
         . venv/bin/activate
-        pip install flake8
+        pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
       displayName: 'Setup Env'
     - script: |
         . venv/bin/activate
@@ -65,6 +63,21 @@ stages:
         . venv/bin/activate
         ./script/gen_requirements_all.py validate
       displayName: 'requirements_all validate'
+  - job: 'CheckFormat'
+    pool:
+      vmImage: 'ubuntu-latest'
+    container: $[ variables['PythonMain'] ]
+    steps:
+    - script: |
+        python -m venv venv
+
+        . venv/bin/activate
+        pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
+      displayName: 'Setup Env'
+    - script: |
+        . venv/bin/activate
+        ./script/check_format
+      displayName: 'Check Black formatting'
 
 - stage: 'Tests'
   dependsOn:
@@ -76,8 +89,6 @@ stages:
     strategy:
       maxParallel: 3
       matrix:
-        Python35:
-          python.container: '35'
         Python36:
           python.container: '36'
         Python37:
@@ -90,43 +101,45 @@ stages:
     - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreCacheV1.RestoreCache@1
       displayName: 'Restore artifacts based on Requirements'
       inputs:
-        keyfile: 'requirements_test_all.txt, .cache'
+        keyfile: 'requirements_test_all.txt, .cache, homeassistant/package_constraints.txt'
         targetfolder: './venv'
-        vstsFeed: '$(ArtifactFeed)' 
+        vstsFeed: '$(ArtifactFeed)'
     - script: |
         set -e
         python -m venv venv
-        
+
         . venv/bin/activate
-        pip install -U pip setuptools
+        pip install -U pip setuptools pytest-azurepipelines -c homeassistant/package_constraints.txt
         pip install -r requirements_test_all.txt -c homeassistant/package_constraints.txt
-        pip install pytest-azurepipelines -c homeassistant/package_constraints.txt
+        # This is a TEMP. Eventually we should make sure our 4 dependencies drop typing.
+        # Find offending deps with `pipdeptree -r -p typing`
+        pip uninstall -y typing
       displayName: 'Create Virtual Environment & Install Requirements'
       condition: and(succeeded(), ne(variables['CacheRestored'], 'true'))
     # Explicit Cache Save (instead of using RestoreAndSaveCache)
-    # Dont wait with cache save for all the other task in this job to complete (±30 minutes), other parallel jobs might utilize this 
-    - task: 1ESLighthouseEng.PipelineArtifactCaching.SaveCacheV1.SaveCache@1	
-      displayName: 'Save artifacts based on Requirements'	
-      inputs:	
-        keyfile: 'requirements_test_all.txt, .cache'	
-        targetfolder: './venv'	
+    # Dont wait with cache save for all the other task in this job to complete (±30 minutes), other parallel jobs might utilize this
+    - task: 1ESLighthouseEng.PipelineArtifactCaching.SaveCacheV1.SaveCache@1
+      displayName: 'Save artifacts based on Requirements'
+      inputs:
+        keyfile: 'requirements_test_all.txt, .cache, homeassistant/package_constraints.txt'
+        targetfolder: './venv'
         vstsFeed: '$(ArtifactFeed)'
-    - script: | 
+    - script: |
         . venv/bin/activate
         pip install -e .
-      displayName: 'Install Home Assistant for python $(python.container)' 
-    - script: | 
+      displayName: 'Install Home Assistant for python $(python.container)'
+    - script: |
         . venv/bin/activate
         pytest --timeout=9 --durations=10 --junitxml=test-results.xml -qq -o console_output_style=count -p no:sugar tests
       displayName: 'Run pytest for python $(python.container)'
       condition: and(succeeded(), ne(variables['python.container'], variables['PythonMain']))
     - script: |
+        set -e
+
         . venv/bin/activate
         pytest --timeout=9 --durations=10 --junitxml=test-results.xml --cov --cov-report=xml -qq -o console_output_style=count -p no:sugar tests
-        codecov
+        codecov --token $(codecovToken)
       displayName: 'Run pytest for python $(python.container) / coverage'
-      env:
-        CODECOV_TOKEN: '$(codecovToken)'
       condition: and(succeeded(), eq(variables['python.container'], variables['PythonMain']))
     - task: PublishTestResults@2
       condition: succeededOrFailed()
@@ -155,13 +168,13 @@ stages:
     - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreCacheV1.RestoreCache@1
       displayName: 'Restore artifacts based on Requirements'
       inputs:
-        keyfile: 'requirements_all.txt, requirements_test.txt, .cache'
+        keyfile: 'requirements_all.txt, requirements_test.txt, .cache, homeassistant/package_constraints.txt'
         targetfolder: './venv'
-        vstsFeed: '$(ArtifactFeed)' 
+        vstsFeed: '$(ArtifactFeed)'
     - script: |
         set -e
         python -m venv venv
-        
+
         . venv/bin/activate
         pip install -U pip setuptools
         pip install -r requirements_all.txt -c homeassistant/package_constraints.txt
@@ -171,13 +184,13 @@ stages:
     - task: 1ESLighthouseEng.PipelineArtifactCaching.SaveCacheV1.SaveCache@1
       displayName: 'Save artifacts based on Requirements'
       inputs:
-        keyfile: 'requirements_all.txt, requirements_test.txt, .cache'
+        keyfile: 'requirements_all.txt, requirements_test.txt, .cache, homeassistant/package_constraints.txt'
         targetfolder: './venv'
         vstsFeed: '$(ArtifactFeed)'
-    - script: | 
+    - script: |
         . venv/bin/activate
         pip install -e .
-      displayName: 'Install Home Assistant for python $(PythonMain)' 
+      displayName: 'Install Home Assistant for python $(PythonMain)'
     - script: |
         . venv/bin/activate
         pylint homeassistant
@@ -191,10 +204,12 @@ stages:
         python -m venv venv
 
         . venv/bin/activate
-        pip install -r requirements_test.txt
+        pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
       displayName: 'Setup Env'
     - script: |
-        . venv/bin/activate
         TYPING_FILES=$(cat mypyrc)
+        echo -e "Run mypy on: \n$TYPING_FILES"
+
+        . venv/bin/activate
         mypy $TYPING_FILES
       displayName: 'Run mypy'
