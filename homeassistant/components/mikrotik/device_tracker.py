@@ -64,9 +64,9 @@ class MikrotikScanner(DeviceScanner):
         """
         return self.device_tracker.get(device) or {}
 
-    def get_device_name(self, mac):
+    def get_device_name(self, device):
         """Get name for a device."""
-        host = self.device_tracker.get(mac)
+        host = self.device_tracker.get(device)
         return host.get("host_name") or None if host else None
 
     def scan_devices(self):
@@ -134,7 +134,7 @@ class MikrotikScanner(DeviceScanner):
         self.devices_arp = self.load_mac(arp)
 
         for device in data:
-            mac = device["mac-address"]
+            mac = device.get("mac-address")
             if self.method == DHCP:
                 if "active-address" not in device:
                     continue
@@ -148,20 +148,19 @@ class MikrotikScanner(DeviceScanner):
 
             attrs = {}
             if mac in self.devices_dhcp and "host-name" in self.devices_dhcp[mac]:
-                hostname = self.devices_dhcp[mac]["host-name"]
+                hostname = self.devices_dhcp[mac].get("host-name", "")
                 attrs["host_name"] = hostname
 
             if mac in self.devices_arp:
-                attrs["ip_address"] = self.devices_arp[mac]["address"]
+                attrs["ip_address"] = self.devices_arp[mac].get("address")
 
             for attr in ATTR_DEVICE_TRACKER:
                 if attr in device:
-                    attrs[slugify(attr)] = device[attr]
+                    attrs[slugify(attr)] = device.get(attr)
 
             attrs["source_type"] = SOURCE_TYPE_ROUTER
             attrs["scanner_type"] = self.method
             attrs["scanner_host"] = self.host
-            attrs["scanner_host_name"] = self.host_name
             self.device_tracker[mac] = attrs
 
     def load_mac(self, devices=None):
@@ -171,7 +170,7 @@ class MikrotikScanner(DeviceScanner):
         mac_devices = {}
         for device in devices:
             if "mac-address" in device:
-                mac = device["mac-address"]
+                mac = device.get("mac-address")
                 device.pop("mac-address", None)
                 mac_devices[mac] = device
         return mac_devices

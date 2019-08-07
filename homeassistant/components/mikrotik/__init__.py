@@ -217,7 +217,4 @@ class MikrotikClient:
             )
             return None
 
-        if len(response) > 0:
-            return response
-        else:
-            return None
+        return response if response else None
