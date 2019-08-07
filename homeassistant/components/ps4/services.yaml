@@ -12,10 +12,10 @@ media_add:
   description: Manually add media data to source list. Media data will be locked and not be updated automatically.
   fields:
     media_content_id:
-      description: The ID or the PlayStation Store SKU ID of the title.
+      description: The SKU ID of the media.
       example: 'CUSA00123'
     media_title:
-      description: The name for the media title. Defaults to the current title.
+      description: The name for the media title.
       example: 'A Title: The Name'
     media_image_url:
       description: A remote or local URL directing to an image that will be displayed. You may use images in the local (/config/www/) folder.
@@ -28,14 +28,14 @@ media_remove:
   description: Remove media data from source list.
   fields:
     media_content_id:
-      description: The ID or the PlayStation Store SKU ID of the title.
+      description: The SKU ID of the media. Must be in source list.
       example: 'CUSA00123'
 
 media_edit:
   description: Edit or correct media data attributes. Media data will no longer be updated automatically.
   fields:
     media_content_id:
-      description: The ID or the PlayStation Store SKU ID of the title. Must be in source list.
+      description: The SKU ID of the media. Must be in source list.
       example: 'CUSA00123'
     media_title:
       description: The name for the media title.
@@ -67,7 +67,7 @@ media_unlock:
   description: Unlock media data attributes to allow automatic updates to media data.
   fields:
     media_content_id:
-      description: The ID or the PlayStation Store SKU ID of the title. Must be in source list.
+      description: The SKU ID of the media. Must be in source list.
       example: 'CUSA00123'
 
 media_unlock_playing:
