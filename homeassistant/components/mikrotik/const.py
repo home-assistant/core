@@ -12,7 +12,6 @@ CONF_LOGIN_METHOD = "login_method"
 CONF_ENCODING = "encoding"
 DEFAULT_ENCODING = "utf-8"
 
-INFO = "info"
 IDENTITY = "identity"
 ARP = "arp"
 DHCP = "dhcp"

@@ -28,7 +28,6 @@ from .const import (
     CONF_ENCODING,
     CONF_ARP_PING,
     CONF_LOGIN_METHOD,
-    INFO,
     MIKROTIK_SERVICES,
 )
 
@@ -158,18 +157,14 @@ class MikrotikClient:
             return False
 
         self.get_hostname()
-        if not self.hostname:
-            _LOGGER.error("Mikrotik failed to connect to %s", self._host)
-            return False
         _LOGGER.info("Mikrotik Connected to %s (%s)", self.hostname, self._host)
-        return True
+        return self._connected
 
     def get_hostname(self):
         """Return device host name."""
-        if not self.hostname:
-            data = self.command(MIKROTIK_SERVICES[IDENTITY])
-            if data is not None:
-                self.hostname = data[0]["name"]
+        data = self.command(MIKROTIK_SERVICES[IDENTITY])
+        if data is not None:
+            self.hostname = data[0]["name"]
 
     def connected(self):
         """Return connected boolean."""
@@ -178,10 +173,7 @@ class MikrotikClient:
     def command(self, cmd, params=None):
         """Retrieve data from Mikrotik API."""
         if not self._connected or not self._client:
-            _LOGGER.error("Mikrotik device %s is not connected", self._host)
-            if not self.connect_to_device():
-                return None
-        response = None
+            return None
         try:
             if params:
                 response = self._client(cmd=cmd, **params)
@@ -190,6 +182,7 @@ class MikrotikClient:
         except (librouteros.exceptions.ConnectionError,) as api_error:
             _LOGGER.error("Mikrotik %s connection error %s", self._host, api_error)
             self.connect_to_device()
+            return None
         except (
             librouteros.exceptions.TrapError,
             librouteros.exceptions.MultiTrapError,
@@ -200,5 +193,5 @@ class MikrotikClient:
                 cmd,
                 api_error,
             )
-
+            return None
         return response if response else None

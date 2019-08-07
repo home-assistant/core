@@ -71,9 +71,8 @@ class MikrotikScanner(DeviceScanner):
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device MACs."""
+        self.api.get_hostname()
         self.update_device_tracker()
-        if not self.api.connected():
-            return None
         return list(self.device_tracker)
 
     def get_method(self):
