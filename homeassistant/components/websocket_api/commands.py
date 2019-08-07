@@ -228,13 +228,6 @@ def handle_render_template(hass, connection, msg):
     entity_ids = msg.get("entity_ids")
     if entity_ids is None:
         entity_ids = template.extract_entities(variables)
-    if entity_ids == MATCH_ALL:
-        connection.send_error(
-            msg["id"],
-            const.ERR_UNAUTHORIZED,
-            "Updating on all state changes not allowed",
-        )
-        return
 
     @callback
     def state_listener(*_):
@@ -244,9 +237,10 @@ def handle_render_template(hass, connection, msg):
             )
         )
 
-    connection.subscriptions[msg["id"]] = async_track_state_change(
-        hass, entity_ids, state_listener
-    )
+    if entity_ids and entity_ids != MATCH_ALL:
+        connection.subscriptions[msg["id"]] = async_track_state_change(
+            hass, entity_ids, state_listener
+        )
 
     connection.send_result(msg["id"])
     state_listener()
