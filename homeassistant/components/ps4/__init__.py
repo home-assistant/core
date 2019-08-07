@@ -40,14 +40,12 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_COMMAND = "send_command"
-SERVICE_LOCK_MEDIA = "lock_media"
-SERVICE_LOCK_CURRENT_MEDIA = "lock_current_media"
-SERVICE_UNLOCK_MEDIA = "unlock_media"
-SERVICE_UNLOCK_CURRENT_MEDIA = "unlock_current_media"
-SERVICE_EDIT_MEDIA = "edit_media"
-SERVICE_EDIT_CURRENT_MEDIA = "edit_current_media"
-SERVICE_ADD_MEDIA = "add_media"
-SERVICE_REMOVE_MEDIA = "remove_media"
+SERVICE_MEDIA_ADD = "media_add"
+SERVICE_MEDIA_REMOVE = "media_remove"
+SERVICE_MEDIA_EDIT = "media_edit"
+SERVICE_MEDIA_EDIT_PLAYING = "media_edit_playing"
+SERVICE_MEDIA_UNLOCK = "media_unlock"
+SERVICE_MEDIA_UNLOCK_PLAYING = "media_unlock_playing"
 
 PS4_COMMAND_SCHEMA = vol.Schema(
     {
@@ -56,39 +54,7 @@ PS4_COMMAND_SCHEMA = vol.Schema(
     }
 )
 
-PS4_LOCK_CURRENT_MEDIA_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_id
-})
-
-PS4_UNLOCK_CURRENT_MEDIA_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_id
-})
-
-PS4_LOCK_MEDIA_SCHEMA = vol.Schema({
-    vol.Required(ATTR_MEDIA_CONTENT_ID): str,
-})
-
-PS4_UNLOCK_MEDIA_SCHEMA = vol.Schema({
-    vol.Required(ATTR_MEDIA_CONTENT_ID): str,
-})
-
-PS4_EDIT_MEDIA_SCHEMA = vol.Schema({
-    vol.Required(ATTR_MEDIA_CONTENT_ID): str,
-    vol.Optional(ATTR_MEDIA_TITLE, default=""): str,
-    vol.Optional(ATTR_MEDIA_IMAGE_URL, default=DEFAULT_URL): cv.url,
-    vol.Optional(ATTR_MEDIA_CONTENT_TYPE, default=MEDIA_TYPE_GAME): vol.In(
-        [MEDIA_TYPE_GAME, MEDIA_TYPE_APP])
-})
-
-PS4_EDIT_CURRENT_MEDIA_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-    vol.Optional(ATTR_MEDIA_TITLE, default=""): str,
-    vol.Optional(ATTR_MEDIA_IMAGE_URL, default=DEFAULT_URL): cv.url,
-    vol.Optional(ATTR_MEDIA_CONTENT_TYPE, default=MEDIA_TYPE_GAME): vol.In(
-        [MEDIA_TYPE_GAME, MEDIA_TYPE_APP])
-})
-
-PS4_ADD_MEDIA_SCHEMA = vol.Schema({
+PS4_MEDIA_ADD_SCHEMA = vol.Schema({
     vol.Required(ATTR_MEDIA_CONTENT_ID): str,
     vol.Required(ATTR_MEDIA_TITLE): str,
     vol.Optional(ATTR_MEDIA_IMAGE_URL, default=""): vol.Any(
@@ -97,8 +63,32 @@ PS4_ADD_MEDIA_SCHEMA = vol.Schema({
         [MEDIA_TYPE_GAME, MEDIA_TYPE_APP])
 })
 
-PS4_REMOVE_MEDIA_SCHEMA = vol.Schema({
+PS4_MEDIA_REMOVE_SCHEMA = vol.Schema({
     vol.Required(ATTR_MEDIA_CONTENT_ID): str,
+})
+
+PS4_MEDIA_EDIT_SCHEMA = vol.Schema({
+    vol.Required(ATTR_MEDIA_CONTENT_ID): str,
+    vol.Optional(ATTR_MEDIA_TITLE, default=""): str,
+    vol.Optional(ATTR_MEDIA_IMAGE_URL, default=DEFAULT_URL): cv.url,
+    vol.Optional(ATTR_MEDIA_CONTENT_TYPE, default=MEDIA_TYPE_GAME): vol.In(
+        [MEDIA_TYPE_GAME, MEDIA_TYPE_APP])
+})
+
+PS4_MEDIA_EDIT_PLAYING_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+    vol.Optional(ATTR_MEDIA_TITLE, default=""): str,
+    vol.Optional(ATTR_MEDIA_IMAGE_URL, default=DEFAULT_URL): cv.url,
+    vol.Optional(ATTR_MEDIA_CONTENT_TYPE, default=MEDIA_TYPE_GAME): vol.In(
+        [MEDIA_TYPE_GAME, MEDIA_TYPE_APP])
+})
+
+PS4_MEDIA_UNLOCK_SCHEMA = vol.Schema({
+    vol.Required(ATTR_MEDIA_CONTENT_ID): str,
+})
+
+PS4_MEDIA_UNLOCK_PLAYING_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_id
 })
 
 
@@ -287,22 +277,7 @@ def service_handle(hass: HomeAssistantType):
             if device.entity_id in entity_ids:
                 await device.async_send_command(command)
 
-    async def async_service_lock_media(call):
-        """Service to lock media data that entity is playing."""
-        games = load_games(hass)
-        media_content_id = call.data[ATTR_MEDIA_CONTENT_ID]
-        data = games.get(media_content_id)
-        if data is not None:
-            data[ATTR_LOCKED] = True
-            games[media_content_id] = data
-            save_games(hass, games)
-            _LOGGER.debug("Setting Lock to %s", data[ATTR_LOCKED])
-        else:
-            raise HomeAssistantError(
-                "Media ID: {} is not in source list".format(
-                    media_content_id))
-
-    async def async_service_unlock_media(call):
+    async def async_service_media_unlock(call):
         """Service to lock media data that entity is playing."""
         games = load_games(hass)
         media_content_id = call.data[ATTR_MEDIA_CONTENT_ID]
@@ -320,34 +295,7 @@ def service_handle(hass: HomeAssistantType):
                 "Media ID: {} is not in source list".format(
                     media_content_id))
 
-    async def async_service_lock_current_media(call):
-        """Service to lock media data that entity is playing."""
-        games = load_games(hass)
-        media_content_id = None
-        entity_id = call.data[ATTR_ENTITY_ID]
-        for device in hass.data[PS4_DATA].devices:
-            if device.entity_id == entity_id:
-                entity = device
-                media_id = entity.media_content_id
-                if media_id is not None:
-                    media_content_id = media_id
-
-        if media_content_id is not None:
-            data = games.get(media_content_id)
-            if data is not None:
-                data[ATTR_LOCKED] = True
-                games[media_content_id] = data
-                save_games(hass, games)
-                _LOGGER.debug("Setting Lock to %s", data[ATTR_LOCKED])
-            else:
-                raise HomeAssistantError(
-                    "Media ID: {} is not in source list".format(
-                        media_content_id))
-        else:
-            raise HomeAssistantError(
-                "Entity: {} has no current media data".format(entity_id))
-
-    async def async_service_unlock_current_media(call):
+    async def async_service_media_unlock_playing(call):
         """Service to unlock media data that entity is playing."""
         games = load_games(hass)
         media_content_id = None
@@ -375,7 +323,7 @@ def service_handle(hass: HomeAssistantType):
             raise HomeAssistantError(
                 "Entity: {} has no current media data".format(entity_id))
 
-    async def async_service_add_media(call):
+    async def async_service_media_add(call):
         """Add media data manually."""
         games = load_games(hass)
 
@@ -392,7 +340,7 @@ def service_handle(hass: HomeAssistantType):
         _set_media(hass, games, media_content_id, media_title,
                    media_url, media_type)
 
-    async def async_service_remove_media(call):
+    async def async_service_media_remove(call):
         """Remove media data manually."""
         games = load_games(hass)
         media_content_id = call.data[ATTR_MEDIA_CONTENT_ID]
@@ -403,7 +351,7 @@ def service_handle(hass: HomeAssistantType):
             _LOGGER.debug(
                 "Removed media from source list: %s", media_content_id)
 
-    async def async_service_edit_media(call):
+    async def async_service_media_edit(call):
         """Service call for editing existing media data."""
         games = load_games(hass)
         media_content_id = call.data[ATTR_MEDIA_CONTENT_ID]
@@ -444,7 +392,7 @@ def service_handle(hass: HomeAssistantType):
                 "Media ID: {} is not in source list".format(
                     media_content_id))
 
-    async def async_service_edit_current_media(call):
+    async def async_service_media_edit_playing(call):
         """Service call for editing existing media data."""
         games = load_games(hass)
         media_content_id = None
@@ -502,33 +450,26 @@ def service_handle(hass: HomeAssistantType):
         DOMAIN, SERVICE_COMMAND, async_service_command, schema=PS4_COMMAND_SCHEMA
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_LOCK_MEDIA, async_service_lock_media,
-        schema=PS4_LOCK_MEDIA_SCHEMA)
+        DOMAIN, SERVICE_MEDIA_ADD, async_service_media_add,
+        schema=PS4_MEDIA_ADD_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_UNLOCK_MEDIA,
-        async_service_unlock_media,
-        schema=PS4_UNLOCK_MEDIA_SCHEMA)
+        DOMAIN, SERVICE_MEDIA_REMOVE,
+        async_service_media_remove,
+        schema=PS4_MEDIA_REMOVE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_LOCK_CURRENT_MEDIA,
-        async_service_lock_current_media,
-        schema=PS4_LOCK_CURRENT_MEDIA_SCHEMA)
+        DOMAIN, SERVICE_MEDIA_EDIT, async_service_media_edit,
+        schema=PS4_MEDIA_EDIT_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_UNLOCK_CURRENT_MEDIA,
-        async_service_unlock_current_media,
-        schema=PS4_UNLOCK_CURRENT_MEDIA_SCHEMA)
+        DOMAIN, SERVICE_MEDIA_EDIT_PLAYING, async_service_media_edit_playing,
+        schema=PS4_MEDIA_EDIT_PLAYING_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_ADD_MEDIA, async_service_add_media,
-        schema=PS4_ADD_MEDIA_SCHEMA)
+        DOMAIN, SERVICE_MEDIA_UNLOCK,
+        async_service_media_unlock,
+        schema=PS4_MEDIA_UNLOCK_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_REMOVE_MEDIA,
-        async_service_remove_media,
-        schema=PS4_REMOVE_MEDIA_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_EDIT_MEDIA, async_service_edit_media,
-        schema=PS4_EDIT_MEDIA_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_EDIT_CURRENT_MEDIA, async_service_edit_current_media,
-        schema=PS4_EDIT_CURRENT_MEDIA_SCHEMA)
+        DOMAIN, SERVICE_MEDIA_UNLOCK_PLAYING,
+        async_service_media_unlock_playing,
+        schema=PS4_MEDIA_UNLOCK_PLAYING_SCHEMA)
 
 
 def _set_media(hass: HomeAssistantType, games: dict, media_content_id,
