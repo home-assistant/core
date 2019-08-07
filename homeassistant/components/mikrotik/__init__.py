@@ -62,7 +62,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the Mikrotik component."""
-    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN] = {HOSTS: {}}
 
     for device in config[DOMAIN]:
         host = device[CONF_HOST]
