@@ -2,7 +2,7 @@
 
 DOMAIN = "mikrotik"
 MIKROTIK = DOMAIN
-
+HOSTS = "hosts"
 MTK_LOGIN_PLAIN = "plain"
 MTK_LOGIN_TOKEN = "token"
 
@@ -11,7 +11,6 @@ CONF_TRACK_DEVICES = "track_devices"
 CONF_LOGIN_METHOD = "login_method"
 CONF_ENCODING = "encoding"
 DEFAULT_ENCODING = "utf-8"
-DEFAULT_SCAN_INTERVAL = 15
 
 INFO = "info"
 IDENTITY = "identity"

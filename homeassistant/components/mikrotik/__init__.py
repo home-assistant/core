@@ -16,15 +16,14 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from .const import (
     DOMAIN,
+    HOSTS,
     MTK_LOGIN_PLAIN,
     MTK_LOGIN_TOKEN,
     DEFAULT_ENCODING,
-    DEFAULT_SCAN_INTERVAL,
     IDENTITY,
     CONF_TRACK_DEVICES,
     CONF_ENCODING,
@@ -51,9 +50,6 @@ MIKROTIK_SCHEMA = vol.All(
             vol.Optional(CONF_SSL, default=False): cv.boolean,
             vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
             vol.Optional(CONF_TRACK_DEVICES, default=True): cv.boolean,
-            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
-                cv.time_period, cv.positive_timedelta
-            ),
             vol.Optional(CONF_ARP_PING, default=False): cv.boolean,
         }
     )
@@ -97,32 +93,20 @@ def setup(hass, config):
                 host, use_ssl, port, user, password, login_method, encoding
             )
             api.connect_to_device()
-            hass.data[DOMAIN][host] = api
-        except librouteros.exceptions.ConnectionError as api_error:
-            _LOGGER.error("Mikrotik %s connection failed %s", host, api_error)
-            raise ConfigEntryNotReady
+            hass.data[DOMAIN][HOSTS][host] = {"config": device, "api": api}
         except (
             librouteros.exceptions.TrapError,
             librouteros.exceptions.MultiTrapError,
+            librouteros.exceptions.ConnectionError,
         ) as api_error:
             _LOGGER.error("Mikrotik %s error %s", host, api_error)
             continue
 
         if track_devices:
-            load_platform(
-                hass,
-                DEVICE_TRACKER,
-                DOMAIN,
-                {
-                    CONF_HOST: host,
-                    CONF_METHOD: device.get(CONF_METHOD),
-                    CONF_ARP_PING: device.get(CONF_ARP_PING),
-                    CONF_SCAN_INTERVAL: device.get(CONF_SCAN_INTERVAL),
-                },
-                config,
-            )
+            hass.data[DOMAIN][HOSTS][host][DEVICE_TRACKER] = True
+            load_platform(hass, DEVICE_TRACKER, DOMAIN, None, config)
 
-    if not hass.data[DOMAIN]:
+    if not hass.data[DOMAIN][HOSTS]:
         return False
     return True
 
@@ -151,7 +135,7 @@ class MikrotikClient:
             return
         self._connecting = True
         self._connected = False
-        _LOGGER.debug("[%s] Connecting to Mikrotik device.", self._host)
+        _LOGGER.debug("[%s] Connecting to Mikrotik device", self._host)
 
         kwargs = {
             "encoding": self._encoding,
@@ -169,9 +153,6 @@ class MikrotikClient:
             self._client = librouteros.connect(
                 self._host, self._user, self._password, **kwargs
             )
-        except (librouteros.exceptions.ConnectionError,) as api_error:
-            _LOGGER.error("Mikrotik %s connection error: %s", self._host, api_error)
-            raise PlatformNotReady
         except (
             librouteros.exceptions.TrapError,
             librouteros.exceptions.MultiTrapError,
@@ -184,9 +165,9 @@ class MikrotikClient:
 
         self.get_hostname()
         if not self._host_name:
-            _LOGGER.error("Mikrotik failed to connect to %s.", self._host)
+            _LOGGER.error("Mikrotik failed to connect to %s", self._host)
             return False
-        _LOGGER.info("Mikrotik Connected to %s (%s).", self._host_name, self._host)
+        _LOGGER.info("Mikrotik Connected to %s (%s)", self._host_name, self._host)
         self._connecting = False
         self._connected = True
         return True
@@ -208,7 +189,7 @@ class MikrotikClient:
         """Update device info from Mikrotik API."""
         data = self.command(MIKROTIK_SERVICES[INFO])
         if data is None:
-            _LOGGER.error("Mikrotik device %s is not connected.", self._host)
+            _LOGGER.error("Mikrotik device %s is not connected", self._host)
             self.connect_to_device()
             return
         self._info = data[0]
