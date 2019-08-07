@@ -122,13 +122,12 @@ def async_is_bindable_target(source_zha_device, target_zha_device):
     source_clusters = source_zha_device.async_get_std_clusters()
     target_clusters = target_zha_device.async_get_std_clusters()
 
-    bindables = set(BINDABLE_CLUSTERS)
     for endpoint_id in source_clusters:
         for t_endpoint_id in target_clusters:
             matches = set(
                 source_clusters[endpoint_id][CLUSTER_TYPE_OUT].keys()
             ).intersection(target_clusters[t_endpoint_id][CLUSTER_TYPE_IN].keys())
-            if any(bindable in bindables for bindable in matches):
+            if any(bindable in BINDABLE_CLUSTERS for bindable in matches):
                 return True
     return False
 
