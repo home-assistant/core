@@ -10,9 +10,9 @@ import urllib
 import aiohttp
 import voluptuous as vol
 
+from homeassistant.components.kodi.const import DOMAIN
 from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    DOMAIN,
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
@@ -134,8 +134,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-SERVICE_ADD_MEDIA = "kodi_add_to_playlist"
-SERVICE_CALL_METHOD = "kodi_call_method"
+SERVICE_ADD_MEDIA = "add_to_playlist"
+SERVICE_CALL_METHOD = "call_method"
 
 DATA_KODI = "kodi"
 
