@@ -1,9 +1,4 @@
-"""
-Support for Enphase Envoy solar energy monitor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.enphase_envoy/
-"""
+"""Support for Enphase Envoy solar energy monitor."""
 import logging
 
 import voluptuous as vol
@@ -12,43 +7,76 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_IP_ADDRESS, CONF_MONITORED_CONDITIONS, POWER_WATT)
+    CONF_IP_ADDRESS,
+    CONF_MONITORED_CONDITIONS,
+    POWER_WATT,
+    ENERGY_WATT_HOUR,
+)
 
 
-REQUIREMENTS = ['envoy_reader==0.3']
 _LOGGER = logging.getLogger(__name__)
 
 SENSORS = {
     "production": ("Envoy Current Energy Production", POWER_WATT),
-    "daily_production": ("Envoy Today's Energy Production", "Wh"),
-    "seven_days_production": ("Envoy Last Seven Days Energy Production", "Wh"),
-    "lifetime_production": ("Envoy Lifetime Energy Production", "Wh"),
-    "consumption": ("Envoy Current Energy Consumption", "W"),
-    "daily_consumption": ("Envoy Today's Energy Consumption", "Wh"),
-    "seven_days_consumption": ("Envoy Last Seven Days Energy Consumption",
-                               "Wh"),
-    "lifetime_consumption": ("Envoy Lifetime Energy Consumption", "Wh")
-    }
+    "daily_production": ("Envoy Today's Energy Production", ENERGY_WATT_HOUR),
+    "seven_days_production": (
+        "Envoy Last Seven Days Energy Production",
+        ENERGY_WATT_HOUR,
+    ),
+    "lifetime_production": ("Envoy Lifetime Energy Production", ENERGY_WATT_HOUR),
+    "consumption": ("Envoy Current Energy Consumption", POWER_WATT),
+    "daily_consumption": ("Envoy Today's Energy Consumption", ENERGY_WATT_HOUR),
+    "seven_days_consumption": (
+        "Envoy Last Seven Days Energy Consumption",
+        ENERGY_WATT_HOUR,
+    ),
+    "lifetime_consumption": ("Envoy Lifetime Energy Consumption", ENERGY_WATT_HOUR),
+    "inverters": ("Envoy Inverter", POWER_WATT),
+}
 
 
-ICON = 'mdi:flash'
+ICON = "mdi:flash"
 CONST_DEFAULT_HOST = "envoy"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_IP_ADDRESS, default=CONST_DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)):
-        vol.All(cv.ensure_list, [vol.In(list(SENSORS))])})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_IP_ADDRESS, default=CONST_DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)): vol.All(
+            cv.ensure_list, [vol.In(list(SENSORS))]
+        ),
+    }
+)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Enphase Envoy sensor."""
+    from envoy_reader.envoy_reader import EnvoyReader
+
     ip_address = config[CONF_IP_ADDRESS]
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
 
+    entities = []
     # Iterate through the list of sensors
     for condition in monitored_conditions:
-        add_entities([Envoy(ip_address, condition, SENSORS[condition][0],
-                            SENSORS[condition][1])], True)
+        if condition == "inverters":
+            inverters = await EnvoyReader(ip_address).inverters_production()
+            if isinstance(inverters, dict):
+                for inverter in inverters:
+                    entities.append(
+                        Envoy(
+                            ip_address,
+                            condition,
+                            "{} {}".format(SENSORS[condition][0], inverter),
+                            SENSORS[condition][1],
+                        )
+                    )
+        else:
+            entities.append(
+                Envoy(
+                    ip_address, condition, SENSORS[condition][0], SENSORS[condition][1]
+                )
+            )
+    async_add_entities(entities)
 
 
 class Envoy(Entity):
@@ -82,8 +110,22 @@ class Envoy(Entity):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    def update(self):
+    async def async_update(self):
         """Get the energy production data from the Enphase Envoy."""
-        from envoy_reader import EnvoyReader
+        from envoy_reader.envoy_reader import EnvoyReader
 
-        self._state = getattr(EnvoyReader(self._ip_address), self._type)()
+        if self._type != "inverters":
+            _state = await getattr(EnvoyReader(self._ip_address), self._type)()
+            if isinstance(_state, int):
+                self._state = _state
+            else:
+                _LOGGER.error(_state)
+                self._state = None
+
+        elif self._type == "inverters":
+            inverters = await (EnvoyReader(self._ip_address).inverters_production())
+            if isinstance(inverters, dict):
+                serial_number = self._name.split(" ")[2]
+                self._state = inverters[serial_number]
+            else:
+                self._state = None

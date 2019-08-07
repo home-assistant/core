@@ -1,22 +1,14 @@
-"""
-Asuswrt status sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.asuswrt/
-"""
+"""Asuswrt status sensors."""
 import logging
 
 from homeassistant.helpers.entity import Entity
 
 from . import DATA_ASUSWRT
 
-DEPENDENCIES = ['asuswrt']
-
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-        hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the asuswrt sensors."""
     if discovery_info is None:
         return
@@ -25,13 +17,13 @@ async def async_setup_platform(
 
     devices = []
 
-    if 'download' in discovery_info:
+    if "download" in discovery_info:
         devices.append(AsuswrtTotalRXSensor(api))
-    if 'upload' in discovery_info:
+    if "upload" in discovery_info:
         devices.append(AsuswrtTotalTXSensor(api))
-    if 'download_speed' in discovery_info:
+    if "download_speed" in discovery_info:
         devices.append(AsuswrtRXSensor(api))
-    if 'upload_speed' in discovery_info:
+    if "upload_speed" in discovery_info:
         devices.append(AsuswrtTXSensor(api))
 
     add_entities(devices)
@@ -40,7 +32,7 @@ async def async_setup_platform(
 class AsuswrtSensor(Entity):
     """Representation of a asuswrt sensor."""
 
-    _name = 'generic'
+    _name = "generic"
 
     def __init__(self, api):
         """Initialize the sensor."""
@@ -68,8 +60,8 @@ class AsuswrtSensor(Entity):
 class AsuswrtRXSensor(AsuswrtSensor):
     """Representation of a asuswrt download speed sensor."""
 
-    _name = 'Asuswrt Download Speed'
-    _unit = 'Mbit/s'
+    _name = "Asuswrt Download Speed"
+    _unit = "Mbit/s"
 
     @property
     def unit_of_measurement(self):
@@ -86,8 +78,8 @@ class AsuswrtRXSensor(AsuswrtSensor):
 class AsuswrtTXSensor(AsuswrtSensor):
     """Representation of a asuswrt upload speed sensor."""
 
-    _name = 'Asuswrt Upload Speed'
-    _unit = 'Mbit/s'
+    _name = "Asuswrt Upload Speed"
+    _unit = "Mbit/s"
 
     @property
     def unit_of_measurement(self):
@@ -104,8 +96,8 @@ class AsuswrtTXSensor(AsuswrtSensor):
 class AsuswrtTotalRXSensor(AsuswrtSensor):
     """Representation of a asuswrt total download sensor."""
 
-    _name = 'Asuswrt Download'
-    _unit = 'Gigabyte'
+    _name = "Asuswrt Download"
+    _unit = "Gigabyte"
 
     @property
     def unit_of_measurement(self):
@@ -122,8 +114,8 @@ class AsuswrtTotalRXSensor(AsuswrtSensor):
 class AsuswrtTotalTXSensor(AsuswrtSensor):
     """Representation of a asuswrt total upload sensor."""
 
-    _name = 'Asuswrt Upload'
-    _unit = 'Gigabyte'
+    _name = "Asuswrt Upload"
+    _unit = "Gigabyte"
 
     @property
     def unit_of_measurement(self):

@@ -8,8 +8,6 @@ from . import AVAILABLE_PUMPS, DATA_ECOAL_BOILER
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['ecoal_boiler']
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up switches based on ecoal interface."""

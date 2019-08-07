@@ -6,36 +6,39 @@ import time
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (CONF_MAC, CONF_NAME, EVENT_HOMEASSISTANT_STOP)
-
-REQUIREMENTS = [
-    '--only-binary=all '  # avoid compilation of gattlib
-    'nuimo==0.1.0']
+from homeassistant.const import CONF_MAC, CONF_NAME, EVENT_HOMEASSISTANT_STOP
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'nuimo_controller'
-EVENT_NUIMO = 'nuimo_input'
+DOMAIN = "nuimo_controller"
+EVENT_NUIMO = "nuimo_input"
 
-DEFAULT_NAME = 'None'
+DEFAULT_NAME = "None"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_MAC): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_MAC): cv.string,
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
-SERVICE_NUIMO = 'led_matrix'
+SERVICE_NUIMO = "led_matrix"
 DEFAULT_INTERVAL = 2.0
 
-SERVICE_NUIMO_SCHEMA = vol.Schema({
-    vol.Required('matrix'): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional('interval', default=DEFAULT_INTERVAL): float
-})
+SERVICE_NUIMO_SCHEMA = vol.Schema(
+    {
+        vol.Required("matrix"): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional("interval", default=DEFAULT_INTERVAL): float,
+    }
+)
 
-DEFAULT_ADAPTER = 'hci0'
+DEFAULT_ADAPTER = "hci0"
 
 
 def setup(hass, config):
@@ -57,11 +60,15 @@ class NuimoLogger:
 
     def received_gesture_event(self, event):
         """Input Event received."""
-        _LOGGER.debug("Received event: name=%s, gesture_id=%s,value=%s",
-                      event.name, event.gesture, event.value)
-        self._hass.bus.fire(EVENT_NUIMO,
-                            {'type': event.name, 'value': event.value,
-                             'name': self._name})
+        _LOGGER.debug(
+            "Received event: name=%s, gesture_id=%s,value=%s",
+            event.name,
+            event.gesture,
+            event.value,
+        )
+        self._hass.bus.fire(
+            EVENT_NUIMO, {"type": event.name, "value": event.value, "name": self._name}
+        )
 
 
 class NuimoThread(threading.Thread):
@@ -92,7 +99,7 @@ class NuimoThread(threading.Thread):
 
     def stop(self, event):
         """Terminate Thread by unsetting flag."""
-        _LOGGER.debug('Stopping thread for Nuimo %s', self._mac)
+        _LOGGER.debug("Stopping thread for Nuimo %s", self._mac)
         self._hass_is_running = False
 
     def _attach(self):
@@ -108,7 +115,8 @@ class NuimoThread(threading.Thread):
             self._nuimo = NuimoController(self._mac)
         else:
             nuimo_manager = NuimoDiscoveryManager(
-                bluetooth_adapter=DEFAULT_ADAPTER, delegate=DiscoveryLogger())
+                bluetooth_adapter=DEFAULT_ADAPTER, delegate=DiscoveryLogger()
+            )
             nuimo_manager.start_discovery()
             # Were any Nuimos found?
             if not nuimo_manager.nuimos:
@@ -136,30 +144,31 @@ class NuimoThread(threading.Thread):
 
         def handle_write_matrix(call):
             """Handle led matrix service."""
-            matrix = call.data.get('matrix', None)
+            matrix = call.data.get("matrix", None)
             name = call.data.get(CONF_NAME, DEFAULT_NAME)
-            interval = call.data.get('interval', DEFAULT_INTERVAL)
+            interval = call.data.get("interval", DEFAULT_INTERVAL)
             if self._name == name and matrix:
                 self._nuimo.write_matrix(matrix, interval)
 
         self._hass.services.register(
-            DOMAIN, SERVICE_NUIMO, handle_write_matrix,
-            schema=SERVICE_NUIMO_SCHEMA)
+            DOMAIN, SERVICE_NUIMO, handle_write_matrix, schema=SERVICE_NUIMO_SCHEMA
+        )
 
         self._nuimo.write_matrix(HOMEASSIST_LOGO, 2.0)
 
 
 # must be 9x9 matrix
 HOMEASSIST_LOGO = (
-    "    .    " +
-    "   ...   " +
-    "  .....  " +
-    " ....... " +
-    "..... ..." +
-    " ....... " +
-    " .. .... " +
-    " .. .... " +
-    ".........")
+    "    .    "
+    + "   ...   "
+    + "  .....  "
+    + " ....... "
+    + "..... ..."
+    + " ....... "
+    + " .. .... "
+    + " .. .... "
+    + "........."
+)
 
 
 class DiscoveryLogger:

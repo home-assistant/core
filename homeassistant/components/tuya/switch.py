@@ -3,15 +3,13 @@ from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
 
 from . import DATA_TUYA, TuyaDevice
 
-DEPENDENCIES = ['tuya']
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Tuya Switch device."""
     if discovery_info is None:
         return
     tuya = hass.data[DATA_TUYA]
-    dev_ids = discovery_info.get('dev_ids')
+    dev_ids = discovery_info.get("dev_ids")
     devices = []
     for dev_id in dev_ids:
         device = tuya.get_device_by_id(dev_id)

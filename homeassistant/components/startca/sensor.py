@@ -1,9 +1,4 @@
-"""
-Support for Start.ca Bandwidth Monitor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.startca/
-"""
+"""Support for Start.ca Bandwidth Monitor."""
 from datetime import timedelta
 from xml.parsers.expat import ExpatError
 import logging
@@ -12,52 +7,51 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_API_KEY, CONF_MONITORED_VARIABLES, CONF_NAME)
+from homeassistant.const import CONF_API_KEY, CONF_MONITORED_VARIABLES, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['xmltodict==0.11.0']
-
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Start.ca'
-CONF_TOTAL_BANDWIDTH = 'total_bandwidth'
+DEFAULT_NAME = "Start.ca"
+CONF_TOTAL_BANDWIDTH = "total_bandwidth"
 
-GIGABYTES = 'GB'  # type: str
-PERCENT = '%'  # type: str
+GIGABYTES = "GB"  # type: str
+PERCENT = "%"  # type: str
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 REQUEST_TIMEOUT = 5  # seconds
 
 SENSOR_TYPES = {
-    'usage': ['Usage Ratio', PERCENT, 'mdi:percent'],
-    'usage_gb': ['Usage', GIGABYTES, 'mdi:download'],
-    'limit': ['Data limit', GIGABYTES, 'mdi:download'],
-    'used_download': ['Used Download', GIGABYTES, 'mdi:download'],
-    'used_upload': ['Used Upload', GIGABYTES, 'mdi:upload'],
-    'used_total': ['Used Total', GIGABYTES, 'mdi:download'],
-    'grace_download': ['Grace Download', GIGABYTES, 'mdi:download'],
-    'grace_upload': ['Grace Upload', GIGABYTES, 'mdi:upload'],
-    'grace_total': ['Grace Total', GIGABYTES, 'mdi:download'],
-    'total_download': ['Total Download', GIGABYTES, 'mdi:download'],
-    'total_upload': ['Total Upload', GIGABYTES, 'mdi:download'],
-    'used_remaining': ['Remaining', GIGABYTES, 'mdi:download']
+    "usage": ["Usage Ratio", PERCENT, "mdi:percent"],
+    "usage_gb": ["Usage", GIGABYTES, "mdi:download"],
+    "limit": ["Data limit", GIGABYTES, "mdi:download"],
+    "used_download": ["Used Download", GIGABYTES, "mdi:download"],
+    "used_upload": ["Used Upload", GIGABYTES, "mdi:upload"],
+    "used_total": ["Used Total", GIGABYTES, "mdi:download"],
+    "grace_download": ["Grace Download", GIGABYTES, "mdi:download"],
+    "grace_upload": ["Grace Upload", GIGABYTES, "mdi:upload"],
+    "grace_total": ["Grace Total", GIGABYTES, "mdi:download"],
+    "total_download": ["Total Download", GIGABYTES, "mdi:download"],
+    "total_upload": ["Total Upload", GIGABYTES, "mdi:download"],
+    "used_remaining": ["Remaining", GIGABYTES, "mdi:download"],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_VARIABLES):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_TOTAL_BANDWIDTH): cv.positive_int,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_MONITORED_VARIABLES): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        ),
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_TOTAL_BANDWIDTH): cv.positive_int,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the sensor platform."""
     websession = async_get_clientsession(hass)
     apikey = config.get(CONF_API_KEY)
@@ -92,7 +86,7 @@ class StartcaSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self.client_name, self._name)
+        return "{} {}".format(self.client_name, self._name)
 
     @property
     def state(self):
@@ -126,8 +120,11 @@ class StartcaData:
         self.api_key = api_key
         self.bandwidth_cap = bandwidth_cap
         # Set unlimited users to infinite, otherwise the cap.
-        self.data = {"limit": self.bandwidth_cap} if self.bandwidth_cap > 0 \
-            else {"limit": float('inf')}
+        self.data = (
+            {"limit": self.bandwidth_cap}
+            if self.bandwidth_cap > 0
+            else {"limit": float("inf")}
+        )
 
     @staticmethod
     def bytes_to_gb(value):
@@ -142,10 +139,10 @@ class StartcaData:
     async def async_update(self):
         """Get the Start.ca bandwidth data from the web service."""
         import xmltodict
+
         _LOGGER.debug("Updating Start.ca usage data")
-        url = 'https://www.start.ca/support/usage/api?key=' + \
-              self.api_key
-        with async_timeout.timeout(REQUEST_TIMEOUT, loop=self.loop):
+        url = "https://www.start.ca/support/usage/api?key=" + self.api_key
+        with async_timeout.timeout(REQUEST_TIMEOUT):
             req = await self.websession.get(url)
         if req.status != 200:
             _LOGGER.error("Request failed with status: %u", req.status)
@@ -157,27 +154,27 @@ class StartcaData:
         except ExpatError:
             return False
 
-        used_dl = self.bytes_to_gb(xml_data['usage']['used']['download'])
-        used_ul = self.bytes_to_gb(xml_data['usage']['used']['upload'])
-        grace_dl = self.bytes_to_gb(xml_data['usage']['grace']['download'])
-        grace_ul = self.bytes_to_gb(xml_data['usage']['grace']['upload'])
-        total_dl = self.bytes_to_gb(xml_data['usage']['total']['download'])
-        total_ul = self.bytes_to_gb(xml_data['usage']['total']['upload'])
+        used_dl = self.bytes_to_gb(xml_data["usage"]["used"]["download"])
+        used_ul = self.bytes_to_gb(xml_data["usage"]["used"]["upload"])
+        grace_dl = self.bytes_to_gb(xml_data["usage"]["grace"]["download"])
+        grace_ul = self.bytes_to_gb(xml_data["usage"]["grace"]["upload"])
+        total_dl = self.bytes_to_gb(xml_data["usage"]["total"]["download"])
+        total_ul = self.bytes_to_gb(xml_data["usage"]["total"]["upload"])
 
-        limit = self.data['limit']
+        limit = self.data["limit"]
         if self.bandwidth_cap > 0:
-            self.data['usage'] = 100*used_dl/self.bandwidth_cap
+            self.data["usage"] = 100 * used_dl / self.bandwidth_cap
         else:
-            self.data['usage'] = 0
-        self.data['usage_gb'] = used_dl
-        self.data['used_download'] = used_dl
-        self.data['used_upload'] = used_ul
-        self.data['used_total'] = used_dl + used_ul
-        self.data['grace_download'] = grace_dl
-        self.data['grace_upload'] = grace_ul
-        self.data['grace_total'] = grace_dl + grace_ul
-        self.data['total_download'] = total_dl
-        self.data['total_upload'] = total_ul
-        self.data['used_remaining'] = limit - used_dl
+            self.data["usage"] = 0
+        self.data["usage_gb"] = used_dl
+        self.data["used_download"] = used_dl
+        self.data["used_upload"] = used_ul
+        self.data["used_total"] = used_dl + used_ul
+        self.data["grace_download"] = grace_dl
+        self.data["grace_upload"] = grace_ul
+        self.data["grace_total"] = grace_dl + grace_ul
+        self.data["total_download"] = total_dl
+        self.data["total_upload"] = total_ul
+        self.data["used_remaining"] = limit - used_dl
 
         return True

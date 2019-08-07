@@ -1,9 +1,4 @@
-"""
-Demo lock platform that has two fake locks.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo lock platform that has two fake locks."""
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 
 from homeassistant.components.lock import SUPPORT_OPEN, LockDevice
@@ -11,11 +6,13 @@ from homeassistant.components.lock import SUPPORT_OPEN, LockDevice
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo lock platform."""
-    add_entities([
-        DemoLock('Front Door', STATE_LOCKED),
-        DemoLock('Kitchen Door', STATE_UNLOCKED),
-        DemoLock('Openable Lock', STATE_LOCKED, True)
-    ])
+    add_entities(
+        [
+            DemoLock("Front Door", STATE_LOCKED),
+            DemoLock("Kitchen Door", STATE_UNLOCKED),
+            DemoLock("Openable Lock", STATE_LOCKED, True),
+        ]
+    )
 
 
 class DemoLock(LockDevice):

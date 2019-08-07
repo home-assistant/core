@@ -1,9 +1,4 @@
-"""
-Support for Rova garbage calendar.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.rova/
-"""
+"""Support for Rova garbage calendar."""
 
 from datetime import datetime, timedelta
 import logging
@@ -11,18 +6,19 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_MONITORED_CONDITIONS, CONF_NAME,
-                                 DEVICE_CLASS_TIMESTAMP)
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    DEVICE_CLASS_TIMESTAMP,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['rova==0.1.0']
-
 # Config for rova requests.
-CONF_ZIP_CODE = 'zip_code'
-CONF_HOUSE_NUMBER = 'house_number'
-CONF_HOUSE_NUMBER_SUFFIX = 'house_number_suffix'
+CONF_ZIP_CODE = "zip_code"
+CONF_HOUSE_NUMBER = "house_number"
+CONF_HOUSE_NUMBER_SUFFIX = "house_number_suffix"
 
 UPDATE_DELAY = timedelta(hours=12)
 SCAN_INTERVAL = timedelta(hours=12)
@@ -30,19 +26,23 @@ SCAN_INTERVAL = timedelta(hours=12)
 # Supported sensor types:
 # Key: [json_key, name, icon]
 SENSOR_TYPES = {
-    'bio': ['gft', 'Biowaste', 'mdi:recycle'],
-    'paper': ['papier', 'Paper', 'mdi:recycle'],
-    'plastic': ['plasticplus', 'PET', 'mdi:recycle'],
-    'residual': ['rest', 'Residual', 'mdi:recycle']}
+    "bio": ["gft", "Biowaste", "mdi:recycle"],
+    "paper": ["papier", "Paper", "mdi:recycle"],
+    "plastic": ["plasticplus", "PET", "mdi:recycle"],
+    "residual": ["rest", "Residual", "mdi:recycle"],
+}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ZIP_CODE): cv.string,
-    vol.Required(CONF_HOUSE_NUMBER): cv.string,
-    vol.Optional(CONF_HOUSE_NUMBER_SUFFIX, default=''): cv.string,
-    vol.Optional(CONF_NAME, default='Rova'): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=['bio']):
-    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_ZIP_CODE): cv.string,
+        vol.Required(CONF_HOUSE_NUMBER): cv.string,
+        vol.Optional(CONF_HOUSE_NUMBER_SUFFIX, default=""): cv.string,
+        vol.Optional(CONF_NAME, default="Rova"): cv.string,
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=["bio"]): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        ),
+    }
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -143,8 +143,8 @@ class RovaData:
         self.data = {}
 
         for item in items:
-            date = datetime.strptime(item['Date'], '%Y-%m-%dT%H:%M:%S')
-            code = item['GarbageTypeCode'].lower()
+            date = datetime.strptime(item["Date"], "%Y-%m-%dT%H:%M:%S")
+            code = item["GarbageTypeCode"].lower()
 
             if code not in self.data and date > datetime.now():
                 self.data[code] = date

@@ -1,33 +1,27 @@
-"""
-Support for Taps Affs.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.tapsaff/
-"""
+"""Support for Taps Affs."""
 from datetime import timedelta
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA, BinarySensorDevice)
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['tapsaff==0.2.0']
-
 _LOGGER = logging.getLogger(__name__)
 
-CONF_LOCATION = 'location'
+CONF_LOCATION = "location"
 
-DEFAULT_NAME = 'Taps Aff'
+DEFAULT_NAME = "Taps Aff"
 
 SCAN_INTERVAL = timedelta(minutes=30)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_LOCATION): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_LOCATION): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -51,7 +45,7 @@ class TapsAffSensor(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{}'.format(self._name)
+        return "{}".format(self._name)
 
     @property
     def is_on(self):

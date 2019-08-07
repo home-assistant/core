@@ -1,9 +1,4 @@
-"""
-This platform allows several lights to be grouped into one light.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.group/
-"""
+"""This platform allows several lights to be grouped into one light."""
 from collections import Counter
 import itertools
 import logging
@@ -13,40 +8,66 @@ import voluptuous as vol
 
 from homeassistant.components import light
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, CONF_ENTITIES, CONF_NAME,
-    STATE_ON, STATE_UNAVAILABLE)
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    CONF_ENTITIES,
+    CONF_NAME,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_EFFECT_LIST,
-    ATTR_FLASH, ATTR_HS_COLOR, ATTR_MAX_MIREDS, ATTR_MIN_MIREDS,
-    ATTR_TRANSITION, ATTR_WHITE_VALUE, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
-    SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE)
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    ATTR_EFFECT,
+    ATTR_EFFECT_LIST,
+    ATTR_FLASH,
+    ATTR_HS_COLOR,
+    ATTR_MAX_MIREDS,
+    ATTR_MIN_MIREDS,
+    ATTR_TRANSITION,
+    ATTR_WHITE_VALUE,
+    PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    SUPPORT_EFFECT,
+    SUPPORT_FLASH,
+    SUPPORT_TRANSITION,
+    SUPPORT_WHITE_VALUE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Light Group'
+DEFAULT_NAME = "Light Group"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_ENTITIES): cv.entities_domain(light.DOMAIN)
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Required(CONF_ENTITIES): cv.entities_domain(light.DOMAIN),
+    }
+)
 
-SUPPORT_GROUP_LIGHT = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT
-                       | SUPPORT_FLASH | SUPPORT_COLOR | SUPPORT_TRANSITION
-                       | SUPPORT_WHITE_VALUE)
+SUPPORT_GROUP_LIGHT = (
+    SUPPORT_BRIGHTNESS
+    | SUPPORT_COLOR_TEMP
+    | SUPPORT_EFFECT
+    | SUPPORT_FLASH
+    | SUPPORT_COLOR
+    | SUPPORT_TRANSITION
+    | SUPPORT_WHITE_VALUE
+)
 
 
-async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                               async_add_entities,
-                               discovery_info=None) -> None:
+async def async_setup_platform(
+    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+) -> None:
     """Initialize light.group platform."""
-    async_add_entities([LightGroup(config.get(CONF_NAME),
-                                   config[CONF_ENTITIES])])
+    async_add_entities([LightGroup(config.get(CONF_NAME), config[CONF_ENTITIES])])
 
 
 class LightGroup(light.Light):
@@ -71,14 +92,17 @@ class LightGroup(light.Light):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+
         @callback
-        def async_state_changed_listener(entity_id: str, old_state: State,
-                                         new_state: State):
+        def async_state_changed_listener(
+            entity_id: str, old_state: State, new_state: State
+        ):
             """Handle child updates."""
             self.async_schedule_update_ha_state(True)
 
         self._async_unsub_state_changed = async_track_state_change(
-            self.hass, self._entity_ids, async_state_changed_listener)
+            self.hass, self._entity_ids, async_state_changed_listener
+        )
         await self.async_update()
 
     async def async_will_remove_from_hass(self):
@@ -178,7 +202,8 @@ class LightGroup(light.Light):
             data[ATTR_FLASH] = kwargs[ATTR_FLASH]
 
         await self.hass.services.async_call(
-            light.DOMAIN, light.SERVICE_TURN_ON, data, blocking=True)
+            light.DOMAIN, light.SERVICE_TURN_ON, data, blocking=True
+        )
 
     async def async_turn_off(self, **kwargs):
         """Forward the turn_off command to all lights in the light group."""
@@ -188,7 +213,8 @@ class LightGroup(light.Light):
             data[ATTR_TRANSITION] = kwargs[ATTR_TRANSITION]
 
         await self.hass.services.async_call(
-            light.DOMAIN, light.SERVICE_TURN_OFF, data, blocking=True)
+            light.DOMAIN, light.SERVICE_TURN_OFF, data, blocking=True
+        )
 
     async def async_update(self):
         """Query all members and determine the light group state."""
@@ -197,25 +223,24 @@ class LightGroup(light.Light):
         on_states = [state for state in states if state.state == STATE_ON]
 
         self._is_on = len(on_states) > 0
-        self._available = any(state.state != STATE_UNAVAILABLE
-                              for state in states)
+        self._available = any(state.state != STATE_UNAVAILABLE for state in states)
 
         self._brightness = _reduce_attribute(on_states, ATTR_BRIGHTNESS)
 
-        self._hs_color = _reduce_attribute(
-            on_states, ATTR_HS_COLOR, reduce=_mean_tuple)
+        self._hs_color = _reduce_attribute(on_states, ATTR_HS_COLOR, reduce=_mean_tuple)
 
         self._white_value = _reduce_attribute(on_states, ATTR_WHITE_VALUE)
 
         self._color_temp = _reduce_attribute(on_states, ATTR_COLOR_TEMP)
         self._min_mireds = _reduce_attribute(
-            states, ATTR_MIN_MIREDS, default=154, reduce=min)
+            states, ATTR_MIN_MIREDS, default=154, reduce=min
+        )
         self._max_mireds = _reduce_attribute(
-            states, ATTR_MAX_MIREDS, default=500, reduce=max)
+            states, ATTR_MAX_MIREDS, default=500, reduce=max
+        )
 
         self._effect_list = None
-        all_effect_lists = list(
-            _find_state_attributes(states, ATTR_EFFECT_LIST))
+        all_effect_lists = list(_find_state_attributes(states, ATTR_EFFECT_LIST))
         if all_effect_lists:
             # Merge all effects from all effect_lists with a union merge.
             self._effect_list = list(set().union(*all_effect_lists))
@@ -237,8 +262,7 @@ class LightGroup(light.Light):
         self._supported_features &= SUPPORT_GROUP_LIGHT
 
 
-def _find_state_attributes(states: List[State],
-                           key: str) -> Iterator[Any]:
+def _find_state_attributes(states: List[State], key: str) -> Iterator[Any]:
     """Find attributes with matching key from states."""
     for state in states:
         value = state.attributes.get(key)
@@ -256,10 +280,12 @@ def _mean_tuple(*args):
     return tuple(sum(l) / len(l) for l in zip(*args))
 
 
-def _reduce_attribute(states: List[State],
-                      key: str,
-                      default: Optional[Any] = None,
-                      reduce: Callable[..., Any] = _mean_int) -> Any:
+def _reduce_attribute(
+    states: List[State],
+    key: str,
+    default: Optional[Any] = None,
+    reduce: Callable[..., Any] = _mean_int,
+) -> Any:
     """Find the first attribute matching key from states.
 
     If none are found, return default.

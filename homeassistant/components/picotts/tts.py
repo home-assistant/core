@@ -1,9 +1,4 @@
-"""
-Support for the Pico TTS speech service.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts.picotts/
-"""
+"""Support for the Pico TTS speech service."""
 import logging
 import os
 import shutil
@@ -16,13 +11,13 @@ from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_LANGUAGES = ['en-US', 'en-GB', 'de-DE', 'es-ES', 'fr-FR', 'it-IT']
+SUPPORT_LANGUAGES = ["en-US", "en-GB", "de-DE", "es-ES", "fr-FR", "it-IT"]
 
-DEFAULT_LANG = 'en-US'
+DEFAULT_LANG = "en-US"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
+)
 
 
 def get_engine(hass, config):
@@ -39,7 +34,7 @@ class PicoProvider(Provider):
     def __init__(self, lang):
         """Initialize Pico TTS provider."""
         self._lang = lang
-        self.name = 'PicoTTS'
+        self.name = "PicoTTS"
 
     @property
     def default_language(self):
@@ -53,14 +48,14 @@ class PicoProvider(Provider):
 
     def get_tts_audio(self, message, language, options=None):
         """Load TTS using pico2wave."""
-        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmpf:
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmpf:
             fname = tmpf.name
 
-        cmd = ['pico2wave', '--wave', fname, '-l', language, message]
+        cmd = ["pico2wave", "--wave", fname, "-l", language, message]
         subprocess.call(cmd)
         data = None
         try:
-            with open(fname, 'rb') as voice:
+            with open(fname, "rb") as voice:
                 data = voice.read()
         except OSError:
             _LOGGER.error("Error trying to read %s", fname)

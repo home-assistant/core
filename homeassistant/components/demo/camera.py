@@ -1,9 +1,4 @@
-"""
-Demo camera platform that has a fake camera.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo camera platform that has a fake camera."""
 import logging
 import os
 
@@ -12,12 +7,9 @@ from homeassistant.components.camera import SUPPORT_ON_OFF, Camera
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Demo camera platform."""
-    async_add_entities([
-        DemoCamera('Demo camera')
-    ])
+    async_add_entities([DemoCamera("Demo camera")])
 
 
 class DemoCamera(Camera):
@@ -36,10 +28,10 @@ class DemoCamera(Camera):
         self._images_index = (self._images_index + 1) % 4
 
         image_path = os.path.join(
-            os.path.dirname(__file__),
-            'demo_{}.jpg'.format(self._images_index))
-        _LOGGER.debug('Loading camera_image: %s', image_path)
-        with open(image_path, 'rb') as file:
+            os.path.dirname(__file__), "demo_{}.jpg".format(self._images_index)
+        )
+        _LOGGER.debug("Loading camera_image: %s", image_path)
+        with open(image_path, "rb") as file:
             return file.read()
 
     @property

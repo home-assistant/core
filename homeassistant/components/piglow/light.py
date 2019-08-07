@@ -1,9 +1,4 @@
-"""
-Support for Piglow LED's.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.piglow/
-"""
+"""Support for Piglow LED's."""
 import logging
 import subprocess
 
@@ -11,29 +6,32 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_COLOR,
-    Light, PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS,
+    SUPPORT_BRIGHTNESS,
+    ATTR_HS_COLOR,
+    SUPPORT_COLOR,
+    Light,
+    PLATFORM_SCHEMA,
+)
 from homeassistant.const import CONF_NAME
 import homeassistant.util.color as color_util
 
-REQUIREMENTS = ['piglow==1.2.4']
-
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_PIGLOW = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR)
+SUPPORT_PIGLOW = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
-DEFAULT_NAME = 'Piglow'
+DEFAULT_NAME = "Piglow"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Piglow Light platform."""
     import piglow
 
-    if subprocess.getoutput("i2cdetect  -q -y 1 | grep -o 54") != '54':
+    if subprocess.getoutput("i2cdetect  -q -y 1 | grep -o 54") != "54":
         _LOGGER.error("A Piglow device was not found")
         return False
 
@@ -99,7 +97,8 @@ class PiglowLight(Light):
             self._hs_color = kwargs[ATTR_HS_COLOR]
 
         rgb = color_util.color_hsv_to_RGB(
-            self._hs_color[0], self._hs_color[1], self._brightness / 255 * 100)
+            self._hs_color[0], self._hs_color[1], self._brightness / 255 * 100
+        )
         self._piglow.red(rgb[0])
         self._piglow.green(rgb[1])
         self._piglow.blue(rgb[2])

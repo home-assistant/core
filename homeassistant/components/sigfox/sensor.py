@@ -1,9 +1,4 @@
-"""
-Sensor for SigFox devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.sigfox/
-"""
+"""Sensor for SigFox devices."""
 import logging
 import datetime
 import json
@@ -20,16 +15,18 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = datetime.timedelta(seconds=30)
-API_URL = 'https://backend.sigfox.com/api/'
-CONF_API_LOGIN = 'api_login'
-CONF_API_PASSWORD = 'api_password'
-DEFAULT_NAME = 'sigfox'
+API_URL = "https://backend.sigfox.com/api/"
+CONF_API_LOGIN = "api_login"
+CONF_API_PASSWORD = "api_password"
+DEFAULT_NAME = "sigfox"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_LOGIN): cv.string,
-    vol.Required(CONF_API_PASSWORD): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_LOGIN): cv.string,
+        vol.Required(CONF_API_PASSWORD): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -67,38 +64,38 @@ class SigfoxAPI:
 
     def check_credentials(self):
         """Check API credentials are valid."""
-        url = urljoin(API_URL, 'devicetypes')
+        url = urljoin(API_URL, "devicetypes")
         response = requests.get(url, auth=self._auth, timeout=10)
         if response.status_code != 200:
             if response.status_code == 401:
-                _LOGGER.error(
-                    "Invalid credentials for Sigfox API")
+                _LOGGER.error("Invalid credentials for Sigfox API")
             else:
                 _LOGGER.error(
-                    "Unable to login to Sigfox API, error code %s", str(
-                        response.status_code))
-            raise ValueError('Sigfox component not set up')
+                    "Unable to login to Sigfox API, error code %s",
+                    str(response.status_code),
+                )
+            raise ValueError("Sigfox integration not set up")
         return True
 
     def get_device_types(self):
         """Get a list of device types."""
-        url = urljoin(API_URL, 'devicetypes')
+        url = urljoin(API_URL, "devicetypes")
         response = requests.get(url, auth=self._auth, timeout=10)
         device_types = []
-        for device in json.loads(response.text)['data']:
-            device_types.append(device['id'])
+        for device in json.loads(response.text)["data"]:
+            device_types.append(device["id"])
         return device_types
 
     def get_devices(self, device_types):
         """Get the device_id of each device registered."""
         devices = []
         for unique_type in device_types:
-            location_url = 'devicetypes/{}/devices'.format(unique_type)
+            location_url = "devicetypes/{}/devices".format(unique_type)
             url = urljoin(API_URL, location_url)
             response = requests.get(url, auth=self._auth, timeout=10)
-            devices_data = json.loads(response.text)['data']
+            devices_data = json.loads(response.text)["data"]
             for device in devices_data:
-                devices.append(device['id'])
+                devices.append(device["id"])
         return devices
 
     @property
@@ -120,30 +117,32 @@ class SigfoxDevice(Entity):
         self._device_id = device_id
         self._auth = auth
         self._message_data = {}
-        self._name = '{}_{}'.format(name, device_id)
+        self._name = "{}_{}".format(name, device_id)
         self._state = None
 
     def get_last_message(self):
         """Return the last message from a device."""
-        device_url = 'devices/{}/messages?limit=1'.format(self._device_id)
+        device_url = "devices/{}/messages?limit=1".format(self._device_id)
         url = urljoin(API_URL, device_url)
         response = requests.get(url, auth=self._auth, timeout=10)
-        data = json.loads(response.text)['data'][0]
-        payload = bytes.fromhex(data['data']).decode('utf-8')
-        lat = data['rinfos'][0]['lat']
-        lng = data['rinfos'][0]['lng']
-        snr = data['snr']
-        epoch_time = data['time']
-        return {'lat': lat,
-                'lng': lng,
-                'payload': payload,
-                'snr': snr,
-                'time': epoch_to_datetime(epoch_time)}
+        data = json.loads(response.text)["data"][0]
+        payload = bytes.fromhex(data["data"]).decode("utf-8")
+        lat = data["rinfos"][0]["lat"]
+        lng = data["rinfos"][0]["lng"]
+        snr = data["snr"]
+        epoch_time = data["time"]
+        return {
+            "lat": lat,
+            "lng": lng,
+            "payload": payload,
+            "snr": snr,
+            "time": epoch_to_datetime(epoch_time),
+        }
 
     def update(self):
         """Fetch the latest device message."""
         self._message_data = self.get_last_message()
-        self._state = self._message_data['payload']
+        self._state = self._message_data["payload"]
 
     @property
     def name(self):

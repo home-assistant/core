@@ -9,30 +9,38 @@ from homeassistant.const import TEMP_CELSIUS, CONF_ID, CONF_NAME
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-DEPENDENCIES = ['tellstick']
-
 _LOGGER = logging.getLogger(__name__)
 
-DatatypeDescription = namedtuple('DatatypeDescription', ['name', 'unit'])
+DatatypeDescription = namedtuple("DatatypeDescription", ["name", "unit"])
 
-CONF_DATATYPE_MASK = 'datatype_mask'
-CONF_ONLY_NAMED = 'only_named'
-CONF_TEMPERATURE_SCALE = 'temperature_scale'
+CONF_DATATYPE_MASK = "datatype_mask"
+CONF_ONLY_NAMED = "only_named"
+CONF_TEMPERATURE_SCALE = "temperature_scale"
 
 DEFAULT_DATATYPE_MASK = 127
 DEFAULT_TEMPERATURE_SCALE = TEMP_CELSIUS
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_TEMPERATURE_SCALE, default=DEFAULT_TEMPERATURE_SCALE):
-        cv.string,
-    vol.Optional(CONF_DATATYPE_MASK, default=DEFAULT_DATATYPE_MASK):
-        cv.positive_int,
-    vol.Optional(CONF_ONLY_NAMED, default=[]):
-        vol.All(cv.ensure_list, [vol.Schema({
-            vol.Required(CONF_ID): cv.positive_int,
-            vol.Required(CONF_NAME): cv.string,
-            })])
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(
+            CONF_TEMPERATURE_SCALE, default=DEFAULT_TEMPERATURE_SCALE
+        ): cv.string,
+        vol.Optional(
+            CONF_DATATYPE_MASK, default=DEFAULT_DATATYPE_MASK
+        ): cv.positive_int,
+        vol.Optional(CONF_ONLY_NAMED, default=[]): vol.All(
+            cv.ensure_list,
+            [
+                vol.Schema(
+                    {
+                        vol.Required(CONF_ID): cv.positive_int,
+                        vol.Required(CONF_NAME): cv.string,
+                    }
+                )
+            ],
+        ),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -41,32 +49,25 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     import tellcore.constants as tellcore_constants
 
     sensor_value_descriptions = {
-        tellcore_constants.TELLSTICK_TEMPERATURE:
-        DatatypeDescription('temperature', config.get(CONF_TEMPERATURE_SCALE)),
-
-        tellcore_constants.TELLSTICK_HUMIDITY:
-        DatatypeDescription('humidity', '%'),
-
-        tellcore_constants.TELLSTICK_RAINRATE:
-        DatatypeDescription('rain rate', ''),
-
-        tellcore_constants.TELLSTICK_RAINTOTAL:
-        DatatypeDescription('rain total', ''),
-
-        tellcore_constants.TELLSTICK_WINDDIRECTION:
-        DatatypeDescription('wind direction', ''),
-
-        tellcore_constants.TELLSTICK_WINDAVERAGE:
-        DatatypeDescription('wind average', ''),
-
-        tellcore_constants.TELLSTICK_WINDGUST:
-        DatatypeDescription('wind gust', '')
+        tellcore_constants.TELLSTICK_TEMPERATURE: DatatypeDescription(
+            "temperature", config.get(CONF_TEMPERATURE_SCALE)
+        ),
+        tellcore_constants.TELLSTICK_HUMIDITY: DatatypeDescription("humidity", "%"),
+        tellcore_constants.TELLSTICK_RAINRATE: DatatypeDescription("rain rate", ""),
+        tellcore_constants.TELLSTICK_RAINTOTAL: DatatypeDescription("rain total", ""),
+        tellcore_constants.TELLSTICK_WINDDIRECTION: DatatypeDescription(
+            "wind direction", ""
+        ),
+        tellcore_constants.TELLSTICK_WINDAVERAGE: DatatypeDescription(
+            "wind average", ""
+        ),
+        tellcore_constants.TELLSTICK_WINDGUST: DatatypeDescription("wind gust", ""),
     }
 
     try:
         tellcore_lib = telldus.TelldusCore()
     except OSError:
-        _LOGGER.exception('Could not initialize Tellstick')
+        _LOGGER.exception("Could not initialize Tellstick")
         return
 
     sensors = []
@@ -75,7 +76,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if config[CONF_ONLY_NAMED]:
         named_sensors = {
             named_sensor[CONF_ID]: named_sensor[CONF_NAME]
-            for named_sensor in config[CONF_ONLY_NAMED]}
+            for named_sensor in config[CONF_ONLY_NAMED]
+        }
 
     for tellcore_sensor in tellcore_lib.sensors():
         if not config[CONF_ONLY_NAMED]:
@@ -86,12 +88,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             sensor_name = named_sensors[tellcore_sensor.id]
 
         for datatype in sensor_value_descriptions:
-            if datatype & datatype_mask and \
-               tellcore_sensor.has_value(datatype):
+            if datatype & datatype_mask and tellcore_sensor.has_value(datatype):
                 sensor_info = sensor_value_descriptions[datatype]
-                sensors.append(TellstickSensor(
-                    sensor_name, tellcore_sensor,
-                    datatype, sensor_info))
+                sensors.append(
+                    TellstickSensor(sensor_name, tellcore_sensor, datatype, sensor_info)
+                )
 
     add_entities(sensors)
 
@@ -106,7 +107,7 @@ class TellstickSensor(Entity):
         self._unit_of_measurement = sensor_info.unit or None
         self._value = None
 
-        self._name = '{} {}'.format(name, sensor_info.name)
+        self._name = "{} {}".format(name, sensor_info.name)
 
     @property
     def name(self):

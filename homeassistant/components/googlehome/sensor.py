@@ -8,36 +8,30 @@ import homeassistant.util.dt as dt_util
 
 from . import CLIENT, DOMAIN as GOOGLEHOME_DOMAIN, NAME
 
-DEPENDENCIES = ['googlehome']
-
 SCAN_INTERVAL = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
 
-ICON = 'mdi:alarm'
+ICON = "mdi:alarm"
 
-SENSOR_TYPES = {
-    'timer': 'Timer',
-    'alarm': 'Alarm',
-}
+SENSOR_TYPES = {"timer": "Timer", "alarm": "Alarm"}
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the googlehome sensor platform."""
     if discovery_info is None:
-        _LOGGER.warning(
-            "To use this you need to configure the 'googlehome' component")
+        _LOGGER.warning("To use this you need to configure the 'googlehome' component")
         return
 
-    await hass.data[CLIENT].update_info(discovery_info['host'])
-    data = hass.data[GOOGLEHOME_DOMAIN][discovery_info['host']]
-    info = data.get('info', {})
+    await hass.data[CLIENT].update_info(discovery_info["host"])
+    data = hass.data[GOOGLEHOME_DOMAIN][discovery_info["host"]]
+    info = data.get("info", {})
 
     devices = []
     for condition in SENSOR_TYPES:
-        device = GoogleHomeAlarm(hass.data[CLIENT], condition,
-                                 discovery_info, info.get('name', NAME))
+        device = GoogleHomeAlarm(
+            hass.data[CLIENT], condition, discovery_info, info.get("name", NAME)
+        )
         devices.append(device)
 
     async_add_entities(devices, True)
@@ -48,7 +42,7 @@ class GoogleHomeAlarm(Entity):
 
     def __init__(self, client, condition, config, name):
         """Initialize the GoogleHomeAlarm sensor."""
-        self._host = config['host']
+        self._host = config["host"]
         self._client = client
         self._condition = condition
         self._name = None
@@ -61,14 +55,14 @@ class GoogleHomeAlarm(Entity):
         await self._client.update_alarms(self._host)
         data = self.hass.data[GOOGLEHOME_DOMAIN][self._host]
 
-        alarms = data.get('alarms')[self._condition]
+        alarms = data.get("alarms")[self._condition]
         if not alarms:
             self._available = False
             return
         self._available = True
-        time_date = dt_util.utc_from_timestamp(min(element['fire_time']
-                                                   for element in alarms)
-                                               / 1000)
+        time_date = dt_util.utc_from_timestamp(
+            min(element["fire_time"] for element in alarms) / 1000
+        )
         self._state = time_date.isoformat()
 
     @property

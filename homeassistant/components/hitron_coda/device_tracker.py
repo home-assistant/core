@@ -1,9 +1,4 @@
-"""
-Support for the Hitron CODA-4582U, provided by Rogers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.hitron_coda/
-"""
+"""Support for the Hitron CODA-4582U, provided by Rogers."""
 import logging
 from collections import namedtuple
 
@@ -12,21 +7,24 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
-from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_TYPE
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    DeviceScanner,
 )
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_TYPE
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TYPE = "rogers"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_TYPE, default=DEFAULT_TYPE): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_TYPE, default=DEFAULT_TYPE): cv.string,
+    }
+)
 
 
 def get_scanner(_hass, config):
@@ -36,7 +34,7 @@ def get_scanner(_hass, config):
     return scanner if scanner.success_init else None
 
 
-Device = namedtuple('Device', ['mac', 'name'])
+Device = namedtuple("Device", ["mac", "name"])
 
 
 class HitronCODADeviceScanner(DeviceScanner):
@@ -46,16 +44,16 @@ class HitronCODADeviceScanner(DeviceScanner):
         """Initialize the scanner."""
         self.last_results = []
         host = config[CONF_HOST]
-        self._url = 'http://{}/data/getConnectInfo.asp'.format(host)
-        self._loginurl = 'http://{}/goform/login'.format(host)
+        self._url = "http://{}/data/getConnectInfo.asp".format(host)
+        self._loginurl = "http://{}/goform/login".format(host)
 
         self._username = config.get(CONF_USERNAME)
         self._password = config.get(CONF_PASSWORD)
 
         if config.get(CONF_TYPE) == "shaw":
-            self._type = 'pwd'
+            self._type = "pwd"
         else:
-            self._type = 'pws'
+            self._type = "pws"
 
         self._userid = None
 
@@ -70,9 +68,9 @@ class HitronCODADeviceScanner(DeviceScanner):
 
     def get_device_name(self, device):
         """Return the name of the device with the given MAC address."""
-        name = next((
-            result.name for result in self.last_results
-            if result.mac == device), None)
+        name = next(
+            (result.name for result in self.last_results if result.mac == device), None
+        )
         return name
 
     def _login(self):
@@ -80,21 +78,16 @@ class HitronCODADeviceScanner(DeviceScanner):
         _LOGGER.info("Logging in to CODA...")
 
         try:
-            data = [
-                ('user', self._username),
-                (self._type, self._password),
-            ]
+            data = [("user", self._username), (self._type, self._password)]
             res = requests.post(self._loginurl, data=data, timeout=10)
         except requests.exceptions.Timeout:
-            _LOGGER.error(
-                "Connection to the router timed out at URL %s", self._url)
+            _LOGGER.error("Connection to the router timed out at URL %s", self._url)
             return False
         if res.status_code != 200:
-            _LOGGER.error(
-                "Connection failed with http code %s", res.status_code)
+            _LOGGER.error("Connection failed with http code %s", res.status_code)
             return False
         try:
-            self._userid = res.cookies['userid']
+            self._userid = res.cookies["userid"]
             return True
         except KeyError:
             _LOGGER.error("Failed to log in to router")
@@ -112,16 +105,12 @@ class HitronCODADeviceScanner(DeviceScanner):
 
         # doing a request
         try:
-            res = requests.get(self._url, timeout=10, cookies={
-                'userid': self._userid
-            })
+            res = requests.get(self._url, timeout=10, cookies={"userid": self._userid})
         except requests.exceptions.Timeout:
-            _LOGGER.error(
-                "Connection to the router timed out at URL %s", self._url)
+            _LOGGER.error("Connection to the router timed out at URL %s", self._url)
             return False
         if res.status_code != 200:
-            _LOGGER.error(
-                "Connection failed with http code %s", res.status_code)
+            _LOGGER.error("Connection failed with http code %s", res.status_code)
             return False
         try:
             result = res.json()
@@ -132,8 +121,8 @@ class HitronCODADeviceScanner(DeviceScanner):
 
         # parsing response
         for info in result:
-            mac = info['macAddr']
-            name = info['hostName']
+            mac = info["macAddr"]
+            name = info["hostName"]
             # No address = no item :)
             if mac is None:
                 continue

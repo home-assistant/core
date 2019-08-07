@@ -1,46 +1,43 @@
-"""
-Pushbullet platform for sensor component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.pushbullet/
-"""
+"""Pushbullet platform for sensor component."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_API_KEY, CONF_MONITORED_CONDITIONS)
+from homeassistant.const import CONF_API_KEY, CONF_MONITORED_CONDITIONS
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pushbullet.py==0.11.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    'application_name': ['Application name'],
-    'body': ['Body'],
-    'notification_id': ['Notification ID'],
-    'notification_tag': ['Notification tag'],
-    'package_name': ['Package name'],
-    'receiver_email': ['Receiver email'],
-    'sender_email': ['Sender email'],
-    'source_device_iden': ['Sender device ID'],
-    'title': ['Title'],
-    'type': ['Type'],
+    "application_name": ["Application name"],
+    "body": ["Body"],
+    "notification_id": ["Notification ID"],
+    "notification_tag": ["Notification tag"],
+    "package_name": ["Package name"],
+    "receiver_email": ["Receiver email"],
+    "sender_email": ["Sender email"],
+    "source_device_iden": ["Sender device ID"],
+    "title": ["Title"],
+    "type": ["Type"],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=['title', 'body']):
-        vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES)]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=["title", "body"]): vol.All(
+            cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES)]
+        ),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Pushbullet Sensor platform."""
     from pushbullet import PushBullet
     from pushbullet import InvalidKeyError
+
     try:
         pushbullet = PushBullet(config.get(CONF_API_KEY))
     except InvalidKeyError:
@@ -80,7 +77,7 @@ class PushBulletNotificationSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format('Pushbullet', self._element)
+        return "{} {}".format("Pushbullet", self._element)
 
     @property
     def state(self):
@@ -93,12 +90,13 @@ class PushBulletNotificationSensor(Entity):
         return self._state_attributes
 
 
-class PushBulletNotificationProvider():
+class PushBulletNotificationProvider:
     """Provider for an account, leading to one or more sensors."""
 
     def __init__(self, pb):
         """Start to retrieve pushes from the given Pushbullet instance."""
         import threading
+
         self.pushbullet = pb
         self._data = None
         self.listener = None
@@ -112,8 +110,8 @@ class PushBulletNotificationProvider():
         Currently only monitors pushes but might be extended to monitor
         different kinds of Pushbullet events.
         """
-        if data['type'] == 'push':
-            self._data = data['push']
+        if data["type"] == "push":
+            self._data = data["push"]
 
     @property
     def data(self):
@@ -126,6 +124,7 @@ class PushBulletNotificationProvider():
         Spawn a new Listener and links it to self.on_push.
         """
         from pushbullet import Listener
+
         self.listener = Listener(account=self.pushbullet, on_push=self.on_push)
         _LOGGER.debug("Getting pushes")
         try:

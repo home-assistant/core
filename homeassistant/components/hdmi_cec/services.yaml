@@ -19,7 +19,7 @@ send_command:
         are source and destination, second byte is command and optional other bytes
         are command parameters. If raw command specified, other params are ignored.',
       example: '"10:36"'}
-    src: {desctiption: 'Source of command. Could be decimal number or string with
+    src: {description: 'Source of command. Could be decimal number or string with
         hexadeximal notation: "0x10".', example: 12 or "0xc"}
 standby: {description: Standby all devices which supports it.}
 update: {description: Update devices state from network.}

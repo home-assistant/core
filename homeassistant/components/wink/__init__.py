@@ -9,56 +9,58 @@ import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, ATTR_NAME, CONF_EMAIL, CONF_PASSWORD,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON,
-    __version__)
+    ATTR_BATTERY_LEVEL,
+    ATTR_NAME,
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_OFF,
+    STATE_ON,
+    __version__,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['python-wink==1.10.3', 'pubnubsub-handler==1.0.3']
-
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'wink'
+DOMAIN = "wink"
 
 SUBSCRIPTION_HANDLER = None
 
-CONF_CLIENT_ID = 'client_id'
-CONF_CLIENT_SECRET = 'client_secret'
-CONF_USER_AGENT = 'user_agent'
-CONF_OAUTH = 'oauth'
-CONF_LOCAL_CONTROL = 'local_control'
-CONF_MISSING_OAUTH_MSG = 'Missing oauth2 credentials.'
+CONF_CLIENT_ID = "client_id"
+CONF_CLIENT_SECRET = "client_secret"
+CONF_USER_AGENT = "user_agent"
+CONF_OAUTH = "oauth"
+CONF_LOCAL_CONTROL = "local_control"
+CONF_MISSING_OAUTH_MSG = "Missing oauth2 credentials."
 
-ATTR_ACCESS_TOKEN = 'access_token'
-ATTR_REFRESH_TOKEN = 'refresh_token'
-ATTR_CLIENT_ID = 'client_id'
-ATTR_CLIENT_SECRET = 'client_secret'
-ATTR_PAIRING_MODE = 'pairing_mode'
-ATTR_KIDDE_RADIO_CODE = 'kidde_radio_code'
-ATTR_HUB_NAME = 'hub_name'
+ATTR_ACCESS_TOKEN = "access_token"
+ATTR_REFRESH_TOKEN = "refresh_token"
+ATTR_CLIENT_ID = "client_id"
+ATTR_CLIENT_SECRET = "client_secret"
+ATTR_PAIRING_MODE = "pairing_mode"
+ATTR_KIDDE_RADIO_CODE = "kidde_radio_code"
+ATTR_HUB_NAME = "hub_name"
 
-WINK_AUTH_CALLBACK_PATH = '/auth/wink/callback'
-WINK_AUTH_START = '/auth/wink'
-WINK_CONFIG_FILE = '.wink.conf'
-USER_AGENT = "Manufacturer/Home-Assistant{} python/3 Wink/3".format(
-    __version__)
+WINK_AUTH_CALLBACK_PATH = "/auth/wink/callback"
+WINK_AUTH_START = "/auth/wink"
+WINK_CONFIG_FILE = ".wink.conf"
+USER_AGENT = "Manufacturer/Home-Assistant{} python/3 Wink/3".format(__version__)
 
-DEFAULT_CONFIG = {
-    'client_id': 'CLIENT_ID_HERE',
-    'client_secret': 'CLIENT_SECRET_HERE',
-}
+DEFAULT_CONFIG = {"client_id": "CLIENT_ID_HERE", "client_secret": "CLIENT_SECRET_HERE"}
 
-SERVICE_ADD_NEW_DEVICES = 'pull_newly_added_devices_from_wink'
-SERVICE_REFRESH_STATES = 'refresh_state_from_wink'
-SERVICE_RENAME_DEVICE = 'rename_wink_device'
-SERVICE_DELETE_DEVICE = 'delete_wink_device'
-SERVICE_SET_PAIRING_MODE = 'pair_new_device'
+SERVICE_ADD_NEW_DEVICES = "pull_newly_added_devices_from_wink"
+SERVICE_REFRESH_STATES = "refresh_state_from_wink"
+SERVICE_RENAME_DEVICE = "rename_wink_device"
+SERVICE_DELETE_DEVICE = "delete_wink_device"
+SERVICE_SET_PAIRING_MODE = "pair_new_device"
 SERVICE_SET_CHIME_VOLUME = "set_chime_volume"
 SERVICE_SET_SIREN_VOLUME = "set_siren_volume"
 SERVICE_ENABLE_CHIME = "enable_chime"
@@ -88,91 +90,114 @@ SCALES = ["linear", "log"]
 ROTATIONS = ["cw", "ccw"]
 
 VOLUMES = ["low", "medium", "high"]
-TONES = ["doorbell", "fur_elise", "doorbell_extended", "alert",
-         "william_tell", "rondo_alla_turca", "police_siren",
-         "evacuation", "beep_beep", "beep"]
+TONES = [
+    "doorbell",
+    "fur_elise",
+    "doorbell_extended",
+    "alert",
+    "william_tell",
+    "rondo_alla_turca",
+    "police_siren",
+    "evacuation",
+    "beep_beep",
+    "beep",
+]
 CHIME_TONES = TONES + ["inactive"]
 AUTO_SHUTOFF_TIMES = [None, -1, 30, 60, 120]
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Inclusive(CONF_EMAIL, CONF_OAUTH,
-                      msg=CONF_MISSING_OAUTH_MSG): cv.string,
-        vol.Inclusive(CONF_PASSWORD, CONF_OAUTH,
-                      msg=CONF_MISSING_OAUTH_MSG): cv.string,
-        vol.Inclusive(CONF_CLIENT_ID, CONF_OAUTH,
-                      msg=CONF_MISSING_OAUTH_MSG): cv.string,
-        vol.Inclusive(CONF_CLIENT_SECRET, CONF_OAUTH,
-                      msg=CONF_MISSING_OAUTH_MSG): cv.string,
-        vol.Optional(CONF_LOCAL_CONTROL, default=False): cv.boolean
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Inclusive(
+                    CONF_EMAIL, CONF_OAUTH, msg=CONF_MISSING_OAUTH_MSG
+                ): cv.string,
+                vol.Inclusive(
+                    CONF_PASSWORD, CONF_OAUTH, msg=CONF_MISSING_OAUTH_MSG
+                ): cv.string,
+                vol.Inclusive(
+                    CONF_CLIENT_ID, CONF_OAUTH, msg=CONF_MISSING_OAUTH_MSG
+                ): cv.string,
+                vol.Inclusive(
+                    CONF_CLIENT_SECRET, CONF_OAUTH, msg=CONF_MISSING_OAUTH_MSG
+                ): cv.string,
+                vol.Optional(CONF_LOCAL_CONTROL, default=False): cv.boolean,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
-RENAME_DEVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_NAME): cv.string,
-}, extra=vol.ALLOW_EXTRA)
+RENAME_DEVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+    {vol.Required(ATTR_NAME): cv.string}, extra=vol.ALLOW_EXTRA
+)
 
-DELETE_DEVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-}, extra=vol.ALLOW_EXTRA)
+DELETE_DEVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-SET_PAIRING_MODE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_HUB_NAME): cv.string,
-    vol.Required(ATTR_PAIRING_MODE): cv.string,
-    vol.Optional(ATTR_KIDDE_RADIO_CODE): cv.string,
-}, extra=vol.ALLOW_EXTRA)
+SET_PAIRING_MODE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_HUB_NAME): cv.string,
+        vol.Required(ATTR_PAIRING_MODE): cv.string,
+        vol.Optional(ATTR_KIDDE_RADIO_CODE): cv.string,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
-SET_VOLUME_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_VOLUME): vol.In(VOLUMES),
-})
+SET_VOLUME_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+    {vol.Required(ATTR_VOLUME): vol.In(VOLUMES)}
+)
 
-SET_SIREN_TONE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_TONE): vol.In(TONES),
-})
+SET_SIREN_TONE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+    {vol.Required(ATTR_TONE): vol.In(TONES)}
+)
 
-SET_CHIME_MODE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_TONE): vol.In(CHIME_TONES),
-})
+SET_CHIME_MODE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+    {vol.Required(ATTR_TONE): vol.In(CHIME_TONES)}
+)
 
-SET_AUTO_SHUTOFF_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_AUTO_SHUTOFF): vol.In(AUTO_SHUTOFF_TIMES),
-})
+SET_AUTO_SHUTOFF_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+    {vol.Required(ATTR_AUTO_SHUTOFF): vol.In(AUTO_SHUTOFF_TIMES)}
+)
 
-SET_STROBE_ENABLED_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_ENABLED): cv.boolean,
-})
+SET_STROBE_ENABLED_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+    {vol.Required(ATTR_ENABLED): cv.boolean}
+)
 
-ENABLED_SIREN_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_ENABLED): cv.boolean
-})
+ENABLED_SIREN_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+    {vol.Required(ATTR_ENABLED): cv.boolean}
+)
 
-DIAL_CONFIG_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(ATTR_MIN_VALUE): vol.Coerce(int),
-    vol.Optional(ATTR_MAX_VALUE): vol.Coerce(int),
-    vol.Optional(ATTR_MIN_POSITION): cv.positive_int,
-    vol.Optional(ATTR_MAX_POSITION): cv.positive_int,
-    vol.Optional(ATTR_ROTATION): vol.In(ROTATIONS),
-    vol.Optional(ATTR_SCALE): vol.In(SCALES),
-    vol.Optional(ATTR_TICKS): cv.positive_int,
-})
+DIAL_CONFIG_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+    {
+        vol.Optional(ATTR_MIN_VALUE): vol.Coerce(int),
+        vol.Optional(ATTR_MAX_VALUE): vol.Coerce(int),
+        vol.Optional(ATTR_MIN_POSITION): cv.positive_int,
+        vol.Optional(ATTR_MAX_POSITION): cv.positive_int,
+        vol.Optional(ATTR_ROTATION): vol.In(ROTATIONS),
+        vol.Optional(ATTR_SCALE): vol.In(SCALES),
+        vol.Optional(ATTR_TICKS): cv.positive_int,
+    }
+)
 
-DIAL_STATE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_VALUE): vol.Coerce(int),
-    vol.Optional(ATTR_LABELS): cv.ensure_list(cv.string),
-})
+DIAL_STATE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+    {
+        vol.Required(ATTR_VALUE): vol.Coerce(int),
+        vol.Optional(ATTR_LABELS): cv.ensure_list(cv.string),
+    }
+)
 
 WINK_COMPONENTS = [
-    'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'cover', 'climate',
-    'fan', 'alarm_control_panel', 'scene', 'water_heater'
+    "binary_sensor",
+    "sensor",
+    "light",
+    "switch",
+    "lock",
+    "cover",
+    "climate",
+    "fan",
+    "alarm_control_panel",
+    "scene",
+    "water_heater",
 ]
 
 WINK_HUBS = []
@@ -180,7 +205,7 @@ WINK_HUBS = []
 
 def _request_app_setup(hass, config):
     """Assist user with configuring the Wink dev application."""
-    hass.data[DOMAIN]['configurator'] = True
+    hass.data[DOMAIN]["configurator"] = True
     configurator = hass.components.configurator
 
     def wink_configuration_callback(callback_data):
@@ -190,20 +215,20 @@ def _request_app_setup(hass, config):
             setup(hass, config)
             return
 
-        client_id = callback_data.get('client_id').strip()
-        client_secret = callback_data.get('client_secret').strip()
+        client_id = callback_data.get("client_id").strip()
+        client_secret = callback_data.get("client_secret").strip()
         if None not in (client_id, client_secret):
-            save_json(_config_path,
-                      {ATTR_CLIENT_ID: client_id,
-                       ATTR_CLIENT_SECRET: client_secret})
+            save_json(
+                _config_path,
+                {ATTR_CLIENT_ID: client_id, ATTR_CLIENT_SECRET: client_secret},
+            )
             setup(hass, config)
             return
         error_msg = "Your input was invalid. Please try again."
-        _configurator = hass.data[DOMAIN]['configuring'][DOMAIN]
+        _configurator = hass.data[DOMAIN]["configuring"][DOMAIN]
         configurator.notify_errors(_configurator, error_msg)
 
-    start_url = "{}{}".format(hass.config.api.base_url,
-                              WINK_AUTH_CALLBACK_PATH)
+    start_url = "{}{}".format(hass.config.api.base_url, WINK_AUTH_CALLBACK_PATH)
 
     description = """Please create a Wink developer app at
                      https://developer.wink.com.
@@ -211,39 +236,45 @@ def _request_app_setup(hass, config):
                      They will provide you a Client ID and secret
                      after reviewing your request.
                      (This can take several days).
-                     """.format(start_url)
+                     """.format(
+        start_url
+    )
 
-    hass.data[DOMAIN]['configuring'][DOMAIN] = configurator.request_config(
-        DOMAIN, wink_configuration_callback,
-        description=description, submit_caption="submit",
+    hass.data[DOMAIN]["configuring"][DOMAIN] = configurator.request_config(
+        DOMAIN,
+        wink_configuration_callback,
+        description=description,
+        submit_caption="submit",
         description_image="/static/images/config_wink.png",
-        fields=[{'id': 'client_id', 'name': 'Client ID', 'type': 'string'},
-                {'id': 'client_secret',
-                 'name': 'Client secret',
-                 'type': 'string'}]
+        fields=[
+            {"id": "client_id", "name": "Client ID", "type": "string"},
+            {"id": "client_secret", "name": "Client secret", "type": "string"},
+        ],
     )
 
 
 def _request_oauth_completion(hass, config):
     """Request user complete Wink OAuth2 flow."""
-    hass.data[DOMAIN]['configurator'] = True
+    hass.data[DOMAIN]["configurator"] = True
     configurator = hass.components.configurator
-    if DOMAIN in hass.data[DOMAIN]['configuring']:
+    if DOMAIN in hass.data[DOMAIN]["configuring"]:
         configurator.notify_errors(
-            hass.data[DOMAIN]['configuring'][DOMAIN],
-            "Failed to register, please try again.")
+            hass.data[DOMAIN]["configuring"][DOMAIN],
+            "Failed to register, please try again.",
+        )
         return
 
     def wink_configuration_callback(callback_data):
         """Call setup again."""
         setup(hass, config)
 
-    start_url = '{}{}'.format(hass.config.api.base_url, WINK_AUTH_START)
+    start_url = "{}{}".format(hass.config.api.base_url, WINK_AUTH_START)
 
     description = "Please authorize Wink by visiting {}".format(start_url)
 
-    hass.data[DOMAIN]['configuring'][DOMAIN] = configurator.request_config(
-        DOMAIN, wink_configuration_callback, description=description)
+    hass.data[DOMAIN]["configuring"][DOMAIN] = configurator.request_config(
+        DOMAIN, wink_configuration_callback, description=description
+    )
 
 
 def setup(hass, config):
@@ -253,12 +284,12 @@ def setup(hass, config):
 
     if hass.data.get(DOMAIN) is None:
         hass.data[DOMAIN] = {
-            'unique_ids': [],
-            'entities': {},
-            'oauth': {},
-            'configuring': {},
-            'pubnub': None,
-            'configurator': False
+            "unique_ids": [],
+            "entities": {},
+            "oauth": {},
+            "configuring": {},
+            "pubnub": None,
+            "configurator": False,
         }
 
     if config.get(DOMAIN) is not None:
@@ -273,7 +304,7 @@ def setup(hass, config):
         email = None
         password = None
         local_control = None
-        hass.data[DOMAIN]['configurator'] = True
+        hass.data[DOMAIN]["configurator"] = True
     if None not in [client_id, client_secret]:
         _LOGGER.info("Using legacy OAuth authentication")
         if not local_control:
@@ -282,8 +313,7 @@ def setup(hass, config):
         hass.data[DOMAIN]["oauth"]["client_secret"] = client_secret
         hass.data[DOMAIN]["oauth"]["email"] = email
         hass.data[DOMAIN]["oauth"]["password"] = password
-        pywink.legacy_set_wink_credentials(email, password,
-                                           client_id, client_secret)
+        pywink.legacy_set_wink_credentials(email, password, client_id, client_secret)
     else:
         _LOGGER.info("Using OAuth authentication")
         if not local_control:
@@ -300,10 +330,9 @@ def setup(hass, config):
             _request_app_setup(hass, config)
             return True
 
-        if DOMAIN in hass.data[DOMAIN]['configuring']:
-            _configurator = hass.data[DOMAIN]['configuring']
-            hass.components.configurator.request_done(_configurator.pop(
-                DOMAIN))
+        if DOMAIN in hass.data[DOMAIN]["configuring"]:
+            _configurator = hass.data[DOMAIN]["configuring"]
+            hass.components.configurator.request_done(_configurator.pop(DOMAIN))
 
         # Using oauth
         access_token = config_file.get(ATTR_ACCESS_TOKEN)
@@ -311,37 +340,44 @@ def setup(hass, config):
 
         # This will be called after authorizing Home-Assistant
         if None not in (access_token, refresh_token):
-            pywink.set_wink_credentials(config_file.get(ATTR_CLIENT_ID),
-                                        config_file.get(ATTR_CLIENT_SECRET),
-                                        access_token=access_token,
-                                        refresh_token=refresh_token)
+            pywink.set_wink_credentials(
+                config_file.get(ATTR_CLIENT_ID),
+                config_file.get(ATTR_CLIENT_SECRET),
+                access_token=access_token,
+                refresh_token=refresh_token,
+            )
         # This is called to create the redirect so the user can Authorize
         # Home .
         else:
 
-            redirect_uri = '{}{}'.format(
-                hass.config.api.base_url, WINK_AUTH_CALLBACK_PATH)
+            redirect_uri = "{}{}".format(
+                hass.config.api.base_url, WINK_AUTH_CALLBACK_PATH
+            )
 
             wink_auth_start_url = pywink.get_authorization_url(
-                config_file.get(ATTR_CLIENT_ID), redirect_uri)
+                config_file.get(ATTR_CLIENT_ID), redirect_uri
+            )
             hass.http.register_redirect(WINK_AUTH_START, wink_auth_start_url)
-            hass.http.register_view(WinkAuthCallbackView(
-                config, config_file, pywink.request_token))
+            hass.http.register_view(
+                WinkAuthCallbackView(config, config_file, pywink.request_token)
+            )
             _request_oauth_completion(hass, config)
             return True
 
     pywink.set_user_agent(USER_AGENT)
-    hass.data[DOMAIN]['pubnub'] = PubNubSubscriptionHandler(
-        pywink.get_subscription_key())
+    sub_details = pywink.get_subscription_details()
+    hass.data[DOMAIN]["pubnub"] = PubNubSubscriptionHandler(
+        sub_details[0], origin=sub_details[1]
+    )
 
     def _subscribe():
-        hass.data[DOMAIN]['pubnub'].subscribe()
+        hass.data[DOMAIN]["pubnub"].subscribe()
 
     # Call subscribe after the user sets up wink via the configurator
     # All other methods will complete setup before
     # EVENT_HOMEASSISTANT_START is called meaning they
     # will call subscribe via the method below. (start_subscription)
-    if hass.data[DOMAIN]['configurator']:
+    if hass.data[DOMAIN]["configurator"]:
         _subscribe()
 
     def keep_alive_call(event_time):
@@ -368,8 +404,8 @@ def setup(hass, config):
 
     def stop_subscription(event):
         """Stop the PubNub subscription."""
-        hass.data[DOMAIN]['pubnub'].unsubscribe()
-        hass.data[DOMAIN]['pubnub'] = None
+        hass.data[DOMAIN]["pubnub"].unsubscribe()
+        hass.data[DOMAIN]["pubnub"] = None
 
     hass.bus.listen(EVENT_HOMEASSISTANT_STOP, stop_subscription)
 
@@ -389,7 +425,7 @@ def setup(hass, config):
     def force_update(call):
         """Force all devices to poll the Wink API."""
         _LOGGER.info("Refreshing Wink states from API")
-        for entity_list in hass.data[DOMAIN]['entities'].values():
+        for entity_list in hass.data[DOMAIN]["entities"].values():
             # Throttle the calls to Wink API
             for entity in entity_list:
                 time.sleep(1)
@@ -407,9 +443,9 @@ def setup(hass, config):
 
     def set_pairing_mode(call):
         """Put the hub in provided pairing mode."""
-        hub_name = call.data.get('hub_name')
-        pairing_mode = call.data.get('pairing_mode')
-        kidde_code = call.data.get('kidde_radio_code')
+        hub_name = call.data.get("hub_name")
+        pairing_mode = call.data.get("pairing_mode")
+        kidde_code = call.data.get("kidde_radio_code")
         for hub in WINK_HUBS:
             if hub.name() == hub_name:
                 hub.pair_new_device(pairing_mode, kidde_radio_code=kidde_code)
@@ -418,27 +454,28 @@ def setup(hass, config):
         """Set specified device's name."""
         # This should only be called on one device at a time.
         found_device = None
-        entity_id = call.data.get('entity_id')[0]
+        entity_id = call.data.get("entity_id")[0]
         all_devices = []
-        for list_of_devices in hass.data[DOMAIN]['entities'].values():
+        for list_of_devices in hass.data[DOMAIN]["entities"].values():
             all_devices += list_of_devices
         for device in all_devices:
             if device.entity_id == entity_id:
                 found_device = device
         if found_device is not None:
-            name = call.data.get('name')
+            name = call.data.get("name")
             found_device.wink.set_name(name)
 
-    hass.services.register(DOMAIN, SERVICE_RENAME_DEVICE, rename_device,
-                           schema=RENAME_DEVICE_SCHEMA)
+    hass.services.register(
+        DOMAIN, SERVICE_RENAME_DEVICE, rename_device, schema=RENAME_DEVICE_SCHEMA
+    )
 
     def delete_device(call):
         """Delete specified device."""
         # This should only be called on one device at a time.
         found_device = None
-        entity_id = call.data.get('entity_id')[0]
+        entity_id = call.data.get("entity_id")[0]
         all_devices = []
-        for list_of_devices in hass.data[DOMAIN]['entities'].values():
+        for list_of_devices in hass.data[DOMAIN]["entities"].values():
             all_devices += list_of_devices
         for device in all_devices:
             if device.entity_id == entity_id:
@@ -446,24 +483,28 @@ def setup(hass, config):
         if found_device is not None:
             found_device.wink.remove_device()
 
-    hass.services.register(DOMAIN, SERVICE_DELETE_DEVICE, delete_device,
-                           schema=DELETE_DEVICE_SCHEMA)
+    hass.services.register(
+        DOMAIN, SERVICE_DELETE_DEVICE, delete_device, schema=DELETE_DEVICE_SCHEMA
+    )
 
     hubs = pywink.get_hubs()
     for hub in hubs:
-        if hub.device_manufacturer() == 'wink':
+        if hub.device_manufacturer() == "wink":
             WINK_HUBS.append(hub)
 
     if WINK_HUBS:
         hass.services.register(
-            DOMAIN, SERVICE_SET_PAIRING_MODE, set_pairing_mode,
-            schema=SET_PAIRING_MODE_SCHEMA)
+            DOMAIN,
+            SERVICE_SET_PAIRING_MODE,
+            set_pairing_mode,
+            schema=SET_PAIRING_MODE_SCHEMA,
+        )
 
     def nimbus_service_handle(service):
         """Handle nimbus services."""
-        entity_id = service.data.get('entity_id')[0]
+        entity_id = service.data.get("entity_id")[0]
         _all_dials = []
-        for sensor in hass.data[DOMAIN]['entities']['sensor']:
+        for sensor in hass.data[DOMAIN]["entities"]["sensor"]:
             if isinstance(sensor, WinkNimbusDialDevice):
                 _all_dials.append(sensor)
         for _dial in _all_dials:
@@ -471,14 +512,15 @@ def setup(hass, config):
                 if service.service == SERVICE_SET_DIAL_CONFIG:
                     _dial.set_configuration(**service.data)
                 if service.service == SERVICE_SET_DIAL_STATE:
-                    _dial.wink.set_state(service.data.get("value"),
-                                         service.data.get("labels"))
+                    _dial.wink.set_state(
+                        service.data.get("value"), service.data.get("labels")
+                    )
 
     def siren_service_handle(service):
         """Handle siren services."""
-        entity_ids = service.data.get('entity_id')
+        entity_ids = service.data.get("entity_id")
         all_sirens = []
-        for switch in hass.data[DOMAIN]['entities']['switch']:
+        for switch in hass.data[DOMAIN]["entities"]["switch"]:
             if isinstance(switch, WinkSirenDevice):
                 all_sirens.append(switch)
         sirens_to_set = []
@@ -491,17 +533,18 @@ def setup(hass, config):
 
         for siren in sirens_to_set:
             _man = siren.wink.device_manufacturer()
-            if (service.service != SERVICE_SET_AUTO_SHUTOFF and
-                    service.service != SERVICE_ENABLE_SIREN and
-                    _man not in ('dome', 'wink')):
+            if (
+                service.service != SERVICE_SET_AUTO_SHUTOFF
+                and service.service != SERVICE_ENABLE_SIREN
+                and _man not in ("dome", "wink")
+            ):
                 _LOGGER.error("Service only valid for Dome or Wink sirens")
                 return
 
             if service.service == SERVICE_ENABLE_SIREN:
                 siren.wink.set_state(service.data.get(ATTR_ENABLED))
             elif service.service == SERVICE_SET_AUTO_SHUTOFF:
-                siren.wink.set_auto_shutoff(
-                    service.data.get(ATTR_AUTO_SHUTOFF))
+                siren.wink.set_auto_shutoff(service.data.get(ATTR_AUTO_SHUTOFF))
             elif service.service == SERVICE_SET_CHIME_VOLUME:
                 siren.wink.set_chime_volume(service.data.get(ATTR_VOLUME))
             elif service.service == SERVICE_SET_SIREN_VOLUME:
@@ -511,15 +554,13 @@ def setup(hass, config):
             elif service.service == SERVICE_ENABLE_CHIME:
                 siren.wink.set_chime(service.data.get(ATTR_TONE))
             elif service.service == SERVICE_SIREN_STROBE_ENABLED:
-                siren.wink.set_siren_strobe_enabled(
-                    service.data.get(ATTR_ENABLED))
+                siren.wink.set_siren_strobe_enabled(service.data.get(ATTR_ENABLED))
             elif service.service == SERVICE_CHIME_STROBE_ENABLED:
-                siren.wink.set_chime_strobe_enabled(
-                    service.data.get(ATTR_ENABLED))
+                siren.wink.set_chime_strobe_enabled(service.data.get(ATTR_ENABLED))
 
     # Load components for the devices in Wink that we support
     for wink_component in WINK_COMPONENTS:
-        hass.data[DOMAIN]['entities'][wink_component] = []
+        hass.data[DOMAIN]["entities"][wink_component] = []
         discovery.load_platform(hass, wink_component, DOMAIN, {}, config)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
@@ -531,44 +572,68 @@ def setup(hass, config):
         if _man in ("dome", "wink"):
             has_dome_or_wink_siren = True
         _id = siren.object_id() + siren.name()
-        if _id not in hass.data[DOMAIN]['unique_ids']:
+        if _id not in hass.data[DOMAIN]["unique_ids"]:
             sirens.append(WinkSirenDevice(siren, hass))
 
     if sirens:
 
-        hass.services.register(DOMAIN, SERVICE_SET_AUTO_SHUTOFF,
-                               siren_service_handle,
-                               schema=SET_AUTO_SHUTOFF_SCHEMA)
+        hass.services.register(
+            DOMAIN,
+            SERVICE_SET_AUTO_SHUTOFF,
+            siren_service_handle,
+            schema=SET_AUTO_SHUTOFF_SCHEMA,
+        )
 
-        hass.services.register(DOMAIN, SERVICE_ENABLE_SIREN,
-                               siren_service_handle,
-                               schema=ENABLED_SIREN_SCHEMA)
+        hass.services.register(
+            DOMAIN,
+            SERVICE_ENABLE_SIREN,
+            siren_service_handle,
+            schema=ENABLED_SIREN_SCHEMA,
+        )
 
     if has_dome_or_wink_siren:
 
-        hass.services.register(DOMAIN, SERVICE_SET_SIREN_TONE,
-                               siren_service_handle,
-                               schema=SET_SIREN_TONE_SCHEMA)
+        hass.services.register(
+            DOMAIN,
+            SERVICE_SET_SIREN_TONE,
+            siren_service_handle,
+            schema=SET_SIREN_TONE_SCHEMA,
+        )
 
-        hass.services.register(DOMAIN, SERVICE_ENABLE_CHIME,
-                               siren_service_handle,
-                               schema=SET_CHIME_MODE_SCHEMA)
+        hass.services.register(
+            DOMAIN,
+            SERVICE_ENABLE_CHIME,
+            siren_service_handle,
+            schema=SET_CHIME_MODE_SCHEMA,
+        )
 
-        hass.services.register(DOMAIN, SERVICE_SET_SIREN_VOLUME,
-                               siren_service_handle,
-                               schema=SET_VOLUME_SCHEMA)
+        hass.services.register(
+            DOMAIN,
+            SERVICE_SET_SIREN_VOLUME,
+            siren_service_handle,
+            schema=SET_VOLUME_SCHEMA,
+        )
 
-        hass.services.register(DOMAIN, SERVICE_SET_CHIME_VOLUME,
-                               siren_service_handle,
-                               schema=SET_VOLUME_SCHEMA)
+        hass.services.register(
+            DOMAIN,
+            SERVICE_SET_CHIME_VOLUME,
+            siren_service_handle,
+            schema=SET_VOLUME_SCHEMA,
+        )
 
-        hass.services.register(DOMAIN, SERVICE_SIREN_STROBE_ENABLED,
-                               siren_service_handle,
-                               schema=SET_STROBE_ENABLED_SCHEMA)
+        hass.services.register(
+            DOMAIN,
+            SERVICE_SIREN_STROBE_ENABLED,
+            siren_service_handle,
+            schema=SET_STROBE_ENABLED_SCHEMA,
+        )
 
-        hass.services.register(DOMAIN, SERVICE_CHIME_STROBE_ENABLED,
-                               siren_service_handle,
-                               schema=SET_STROBE_ENABLED_SCHEMA)
+        hass.services.register(
+            DOMAIN,
+            SERVICE_CHIME_STROBE_ENABLED,
+            siren_service_handle,
+            schema=SET_STROBE_ENABLED_SCHEMA,
+        )
 
     component.add_entities(sirens)
 
@@ -589,13 +654,19 @@ def setup(hass, config):
             all_dials.append(WinkNimbusDialDevice(nimbus, dial, hass))
 
     if nimbi:
-        hass.services.register(DOMAIN, SERVICE_SET_DIAL_CONFIG,
-                               nimbus_service_handle,
-                               schema=DIAL_CONFIG_SCHEMA)
+        hass.services.register(
+            DOMAIN,
+            SERVICE_SET_DIAL_CONFIG,
+            nimbus_service_handle,
+            schema=DIAL_CONFIG_SCHEMA,
+        )
 
-        hass.services.register(DOMAIN, SERVICE_SET_DIAL_STATE,
-                               nimbus_service_handle,
-                               schema=DIAL_STATE_SCHEMA)
+        hass.services.register(
+            DOMAIN,
+            SERVICE_SET_DIAL_STATE,
+            nimbus_service_handle,
+            schema=DIAL_STATE_SCHEMA,
+        )
 
     component.add_entities(all_dials)
 
@@ -605,8 +676,8 @@ def setup(hass, config):
 class WinkAuthCallbackView(HomeAssistantView):
     """Handle OAuth finish callback requests."""
 
-    url = '/auth/wink/callback'
-    name = 'auth:wink:callback'
+    url = "/auth/wink/callback"
+    name = "auth:wink:callback"
     requires_auth = False
 
     def __init__(self, config, config_file, request_token):
@@ -620,7 +691,7 @@ class WinkAuthCallbackView(HomeAssistantView):
         """Finish OAuth callback request."""
         from aiohttp import web
 
-        hass = request.app['hass']
+        hass = request.app["hass"]
         data = request.query
 
         response_message = """Wink has been successfully authorized!
@@ -629,27 +700,30 @@ class WinkAuthCallbackView(HomeAssistantView):
         html_response = """<html><head><title>Wink Auth</title></head>
                 <body><h1>{}</h1></body></html>"""
 
-        if data.get('code') is not None:
+        if data.get("code") is not None:
             response = self.request_token(
-                data.get('code'), self.config_file['client_secret'])
+                data.get("code"), self.config_file["client_secret"]
+            )
 
             config_contents = {
-                ATTR_ACCESS_TOKEN: response['access_token'],
-                ATTR_REFRESH_TOKEN: response['refresh_token'],
-                ATTR_CLIENT_ID: self.config_file['client_id'],
-                ATTR_CLIENT_SECRET: self.config_file['client_secret']
+                ATTR_ACCESS_TOKEN: response["access_token"],
+                ATTR_REFRESH_TOKEN: response["refresh_token"],
+                ATTR_CLIENT_ID: self.config_file["client_id"],
+                ATTR_CLIENT_SECRET: self.config_file["client_secret"],
             }
             save_json(hass.config.path(WINK_CONFIG_FILE), config_contents)
 
             hass.async_add_job(setup, hass, self.config)
 
-            return web.Response(text=html_response.format(response_message),
-                                content_type='text/html')
+            return web.Response(
+                text=html_response.format(response_message), content_type="text/html"
+            )
 
         error_msg = "No code returned from Wink API"
         _LOGGER.error(error_msg)
-        return web.Response(text=html_response.format(error_msg),
-                            content_type='text/html')
+        return web.Response(
+            text=html_response.format(error_msg), content_type="text/html"
+        )
 
 
 class WinkDevice(Entity):
@@ -659,24 +733,28 @@ class WinkDevice(Entity):
         """Initialize the Wink device."""
         self.hass = hass
         self.wink = wink
-        hass.data[DOMAIN]['pubnub'].add_subscription(
-            self.wink.pubnub_channel, self._pubnub_update)
-        hass.data[DOMAIN]['unique_ids'].append(self.wink.object_id() +
-                                               self.wink.name())
+        hass.data[DOMAIN]["pubnub"].add_subscription(
+            self.wink.pubnub_channel, self._pubnub_update
+        )
+        hass.data[DOMAIN]["unique_ids"].append(self.wink.object_id() + self.wink.name())
 
     def _pubnub_update(self, message):
         _LOGGER.debug(message)
         try:
             if message is None:
-                _LOGGER.error("Error on pubnub update for %s "
-                              "polling API for current state", self.name)
+                _LOGGER.error(
+                    "Error on pubnub update for %s " "polling API for current state",
+                    self.name,
+                )
                 self.schedule_update_ha_state(True)
             else:
                 self.wink.pubnub_update(message)
                 self.schedule_update_ha_state()
         except (ValueError, KeyError, AttributeError):
-            _LOGGER.error("Error in pubnub JSON for %s "
-                          "polling API for current state", self.name)
+            _LOGGER.error(
+                "Error in pubnub JSON for %s " "polling API for current state",
+                self.name,
+            )
             self.schedule_update_ha_state(True)
 
     @property
@@ -687,10 +765,8 @@ class WinkDevice(Entity):
     @property
     def unique_id(self):
         """Return the unique id of the Wink device."""
-        if hasattr(self.wink, 'capability') and \
-                self.wink.capability() is not None:
-            return "{}_{}".format(self.wink.object_id(),
-                                  self.wink.capability())
+        if hasattr(self.wink, "capability") and self.wink.capability() is not None:
+            return "{}_{}".format(self.wink.object_id(), self.wink.capability())
         return self.wink.object_id()
 
     @property
@@ -760,7 +836,7 @@ class WinkDevice(Entity):
     @property
     def _tamper(self):
         """Return the devices tamper status."""
-        if hasattr(self.wink, 'tamper_detected'):
+        if hasattr(self.wink, "tamper_detected"):
             return self.wink.tamper_detected()
         return None
 
@@ -770,7 +846,7 @@ class WinkSirenDevice(WinkDevice):
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self.hass.data[DOMAIN]['entities']['switch'].append(self)
+        self.hass.data[DOMAIN]["entities"]["switch"].append(self)
 
     @property
     def state(self):
@@ -830,7 +906,7 @@ class WinkNimbusDialDevice(WinkDevice):
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self.hass.data[DOMAIN]['entities']['sensor'].append(self)
+        self.hass.data[DOMAIN]["entities"]["sensor"].append(self)
 
     @property
     def state(self):
@@ -861,7 +937,7 @@ class WinkNimbusDialDevice(WinkDevice):
             "num_ticks": self.wink.ticks(),
             "scale_type": self.wink.scale(),
             "max_position": self.wink.max_position(),
-            "min_position": self.wink.min_position()
+            "min_position": self.wink.min_position(),
         }
 
     def set_configuration(self, **kwargs):
@@ -880,7 +956,12 @@ class WinkNimbusDialDevice(WinkDevice):
         min_position = attributes["min_position"]
         max_position = attributes["max_position"]
 
-        self.wink.set_configuration(min_value, max_value, rotation,
-                                    scale=scale, ticks=ticks,
-                                    min_position=min_position,
-                                    max_position=max_position)
+        self.wink.set_configuration(
+            min_value,
+            max_value,
+            rotation,
+            scale=scale,
+            ticks=ticks,
+            min_position=min_position,
+            max_position=max_position,
+        )

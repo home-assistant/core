@@ -1,9 +1,4 @@
-"""
-Demo notification service.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo notification service."""
 from homeassistant.components.notify import BaseNotificationService
 
 EVENT_NOTIFY = "notify"
@@ -28,5 +23,5 @@ class DemoNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        kwargs['message'] = message
+        kwargs["message"] = message
         self.hass.bus.fire(EVENT_NOTIFY, kwargs)

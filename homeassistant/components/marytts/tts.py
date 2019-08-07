@@ -1,9 +1,4 @@
-"""
-Support for the MaryTTS service.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts.marytts/
-"""
+"""Support for the MaryTTS service."""
 import asyncio
 import logging
 import re
@@ -19,30 +14,28 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_LANGUAGES = [
-    'de', 'en-GB', 'en-US', 'fr', 'it', 'lb', 'ru', 'sv', 'te', 'tr'
-]
+SUPPORT_LANGUAGES = ["de", "en-GB", "en-US", "fr", "it", "lb", "ru", "sv", "te", "tr"]
 
-SUPPORT_CODEC = [
-    'aiff', 'au', 'wav'
-]
+SUPPORT_CODEC = ["aiff", "au", "wav"]
 
-CONF_VOICE = 'voice'
-CONF_CODEC = 'codec'
+CONF_VOICE = "voice"
+CONF_CODEC = "codec"
 
-DEFAULT_HOST = 'localhost'
+DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 59125
-DEFAULT_LANG = 'en-US'
-DEFAULT_VOICE = 'cmu-slt-hsmm'
-DEFAULT_CODEC = 'wav'
+DEFAULT_LANG = "en-US"
+DEFAULT_VOICE = "cmu-slt-hsmm"
+DEFAULT_CODEC = "wav"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
-    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): cv.string,
-    vol.Optional(CONF_CODEC, default=DEFAULT_CODEC): vol.In(SUPPORT_CODEC)
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
+        vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): cv.string,
+        vol.Optional(CONF_CODEC, default=DEFAULT_CODEC): vol.In(SUPPORT_CODEC),
+    }
+)
 
 
 async def async_get_engine(hass, config):
@@ -61,7 +54,7 @@ class MaryTTSProvider(Provider):
         self._codec = conf.get(CONF_CODEC)
         self._voice = conf.get(CONF_VOICE)
         self._language = conf.get(CONF_LANG)
-        self.name = 'MaryTTS'
+        self.name = "MaryTTS"
 
     @property
     def default_language(self):
@@ -77,30 +70,31 @@ class MaryTTSProvider(Provider):
         """Load TTS from MaryTTS."""
         websession = async_get_clientsession(self.hass)
 
-        actual_language = re.sub('-', '_', language)
+        actual_language = re.sub("-", "_", language)
 
         try:
-            with async_timeout.timeout(10, loop=self.hass.loop):
-                url = 'http://{}:{}/process?'.format(self._host, self._port)
+            with async_timeout.timeout(10):
+                url = "http://{}:{}/process?".format(self._host, self._port)
 
                 audio = self._codec.upper()
-                if audio == 'WAV':
-                    audio = 'WAVE'
+                if audio == "WAV":
+                    audio = "WAVE"
 
                 url_param = {
-                    'INPUT_TEXT': message,
-                    'INPUT_TYPE': 'TEXT',
-                    'AUDIO': audio,
-                    'VOICE': self._voice,
-                    'OUTPUT_TYPE': 'AUDIO',
-                    'LOCALE': actual_language
+                    "INPUT_TEXT": message,
+                    "INPUT_TYPE": "TEXT",
+                    "AUDIO": audio,
+                    "VOICE": self._voice,
+                    "OUTPUT_TYPE": "AUDIO",
+                    "LOCALE": actual_language,
                 }
 
                 request = await websession.get(url, params=url_param)
 
                 if request.status != 200:
-                    _LOGGER.error("Error %d on load url %s",
-                                  request.status, request.url)
+                    _LOGGER.error(
+                        "Error %d on load url %s", request.status, request.url
+                    )
                     return (None, None)
                 data = await request.read()
 

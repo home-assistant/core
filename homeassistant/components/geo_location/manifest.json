@@ -1,0 +1,8 @@
+{
+  "domain": "geo_location",
+  "name": "Geo location",
+  "documentation": "https://www.home-assistant.io/components/geo_location",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

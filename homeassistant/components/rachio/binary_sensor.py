@@ -1,9 +1,4 @@
-"""
-Integration with the Rachio Iro sprinkler system controller.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.rachio/
-"""
+"""Integration with the Rachio Iro sprinkler system controller."""
 from abc import abstractmethod
 import logging
 
@@ -11,11 +6,16 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.helpers.dispatcher import dispatcher_connect
 
 from . import (
-    DOMAIN as DOMAIN_RACHIO, KEY_DEVICE_ID, KEY_STATUS, KEY_SUBTYPE,
-    SIGNAL_RACHIO_CONTROLLER_UPDATE, STATUS_OFFLINE, STATUS_ONLINE,
-    SUBTYPE_OFFLINE, SUBTYPE_ONLINE)
-
-DEPENDENCIES = ['rachio']
+    DOMAIN as DOMAIN_RACHIO,
+    KEY_DEVICE_ID,
+    KEY_STATUS,
+    KEY_SUBTYPE,
+    SIGNAL_RACHIO_CONTROLLER_UPDATE,
+    STATUS_OFFLINE,
+    STATUS_ONLINE,
+    SUBTYPE_OFFLINE,
+    SUBTYPE_ONLINE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,8 +42,9 @@ class RachioControllerBinarySensor(BinarySensorDevice):
         else:
             self._state = None
 
-        dispatcher_connect(hass, SIGNAL_RACHIO_CONTROLLER_UPDATE,
-                           self._handle_any_update)
+        dispatcher_connect(
+            hass, SIGNAL_RACHIO_CONTROLLER_UPDATE, self._handle_any_update
+        )
 
     @property
     def should_poll(self) -> bool:
@@ -96,26 +97,25 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
     @property
     def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return 'connectivity'
+        return "connectivity"
 
     @property
     def icon(self) -> str:
         """Return the name of an icon for this sensor."""
-        return 'mdi:wifi-strength-4' if self.is_on\
-            else 'mdi:wifi-strength-off-outline'
+        return "mdi:wifi-strength-4" if self.is_on else "mdi:wifi-strength-off-outline"
 
     def _poll_update(self, data=None) -> bool:
         """Request the state from the API."""
         if data is None:
-            data = self._controller.rachio.device.get(
-                self._controller.controller_id)[1]
+            data = self._controller.rachio.device.get(self._controller.controller_id)[1]
 
         if data[KEY_STATUS] == STATUS_ONLINE:
             return True
         if data[KEY_STATUS] == STATUS_OFFLINE:
             return False
-        _LOGGER.warning('"%s" reported in unknown state "%s"', self.name,
-                        data[KEY_STATUS])
+        _LOGGER.warning(
+            '"%s" reported in unknown state "%s"', self.name, data[KEY_STATUS]
+        )
 
     def _handle_update(self, *args, **kwargs) -> None:
         """Handle an update to the state of this sensor."""

@@ -1,16 +1,16 @@
-"""
-Light support for switch entities.
-
-For more information about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.switch/
-"""
+"""Light support for switch entities."""
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components import switch
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_ENTITY_ID, CONF_NAME, STATE_ON, STATE_UNAVAILABLE)
+    ATTR_ENTITY_ID,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
@@ -20,20 +20,23 @@ from homeassistant.components.light import PLATFORM_SCHEMA, Light
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Light Switch'
+DEFAULT_NAME = "Light Switch"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_ENTITY_ID): cv.entity_domain(switch.DOMAIN)
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Required(CONF_ENTITY_ID): cv.entity_domain(switch.DOMAIN),
+    }
+)
 
 
-async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                               async_add_entities,
-                               discovery_info=None) -> None:
+async def async_setup_platform(
+    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+) -> None:
     """Initialize Light Switch platform."""
-    async_add_entities([LightSwitch(config.get(CONF_NAME),
-                                    config[CONF_ENTITY_ID])], True)
+    async_add_entities(
+        [LightSwitch(config.get(CONF_NAME), config[CONF_ENTITY_ID])], True
+    )
 
 
 class LightSwitch(Light):
@@ -71,13 +74,15 @@ class LightSwitch(Light):
         """Forward the turn_on command to the switch in this light switch."""
         data = {ATTR_ENTITY_ID: self._switch_entity_id}
         await self.hass.services.async_call(
-            switch.DOMAIN, switch.SERVICE_TURN_ON, data, blocking=True)
+            switch.DOMAIN, switch.SERVICE_TURN_ON, data, blocking=True
+        )
 
     async def async_turn_off(self, **kwargs):
         """Forward the turn_off command to the switch in this light switch."""
         data = {ATTR_ENTITY_ID: self._switch_entity_id}
         await self.hass.services.async_call(
-            switch.DOMAIN, switch.SERVICE_TURN_OFF, data, blocking=True)
+            switch.DOMAIN, switch.SERVICE_TURN_OFF, data, blocking=True
+        )
 
     async def async_update(self):
         """Query the switch in this light switch and determine the state."""
@@ -92,14 +97,17 @@ class LightSwitch(Light):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+
         @callback
-        def async_state_changed_listener(entity_id: str, old_state: State,
-                                         new_state: State):
+        def async_state_changed_listener(
+            entity_id: str, old_state: State, new_state: State
+        ):
             """Handle child updates."""
             self.async_schedule_update_ha_state(True)
 
         self._async_unsub_state_changed = async_track_state_change(
-            self.hass, self._switch_entity_id, async_state_changed_listener)
+            self.hass, self._switch_entity_id, async_state_changed_listener
+        )
 
     async def async_will_remove_from_hass(self):
         """Handle removal from Home Assistant."""

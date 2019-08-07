@@ -1,40 +1,41 @@
-"""
-Support for an exposed aREST RESTful API of a device.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.arest/
-"""
+"""Support for an exposed aREST RESTful API of a device."""
 
 import logging
 
 import requests
 import voluptuous as vol
 
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_NAME, CONF_RESOURCE)
+from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.const import CONF_NAME, CONF_RESOURCE
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_FUNCTIONS = 'functions'
-CONF_PINS = 'pins'
-CONF_INVERT = 'invert'
+CONF_FUNCTIONS = "functions"
+CONF_PINS = "pins"
+CONF_INVERT = "invert"
 
-DEFAULT_NAME = 'aREST switch'
+DEFAULT_NAME = "aREST switch"
 
-PIN_FUNCTION_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_INVERT, default=False): cv.boolean,
-})
+PIN_FUNCTION_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_INVERT, default=False): cv.boolean,
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE): cv.url,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PINS, default={}):
-        vol.Schema({cv.string: PIN_FUNCTION_SCHEMA}),
-    vol.Optional(CONF_FUNCTIONS, default={}):
-        vol.Schema({cv.string: PIN_FUNCTION_SCHEMA}),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_RESOURCE): cv.url,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PINS, default={}): vol.Schema(
+            {cv.string: PIN_FUNCTION_SCHEMA}
+        ),
+        vol.Optional(CONF_FUNCTIONS, default={}): vol.Schema(
+            {cv.string: PIN_FUNCTION_SCHEMA}
+        ),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -44,8 +45,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         response = requests.get(resource, timeout=10)
     except requests.exceptions.MissingSchema:
-        _LOGGER.error("Missing resource or schema in configuration. "
-                      "Add http:// to your URL")
+        _LOGGER.error(
+            "Missing resource or schema in configuration. " "Add http:// to your URL"
+        )
         return False
     except requests.exceptions.ConnectionError:
         _LOGGER.error("No route to device at %s", resource)
@@ -54,15 +56,26 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     dev = []
     pins = config.get(CONF_PINS)
     for pinnum, pin in pins.items():
-        dev.append(ArestSwitchPin(
-            resource, config.get(CONF_NAME, response.json()[CONF_NAME]),
-            pin.get(CONF_NAME), pinnum, pin.get(CONF_INVERT)))
+        dev.append(
+            ArestSwitchPin(
+                resource,
+                config.get(CONF_NAME, response.json()[CONF_NAME]),
+                pin.get(CONF_NAME),
+                pinnum,
+                pin.get(CONF_INVERT),
+            )
+        )
 
     functions = config.get(CONF_FUNCTIONS)
     for funcname, func in functions.items():
-        dev.append(ArestSwitchFunction(
-            resource, config.get(CONF_NAME, response.json()[CONF_NAME]),
-            func.get(CONF_NAME), funcname))
+        dev.append(
+            ArestSwitchFunction(
+                resource,
+                config.get(CONF_NAME, response.json()[CONF_NAME]),
+                func.get(CONF_NAME),
+                funcname,
+            )
+        )
 
     add_entities(dev)
 
@@ -73,7 +86,7 @@ class ArestSwitchBase(SwitchDevice):
     def __init__(self, resource, location, name):
         """Initialize the switch."""
         self._resource = resource
-        self._name = '{} {}'.format(location.title(), name.title())
+        self._name = "{} {}".format(location.title(), name.title())
         self._state = None
         self._available = True
 
@@ -101,15 +114,14 @@ class ArestSwitchFunction(ArestSwitchBase):
         super().__init__(resource, location, name)
         self._func = func
 
-        request = requests.get(
-            '{}/{}'.format(self._resource, self._func), timeout=10)
+        request = requests.get("{}/{}".format(self._resource, self._func), timeout=10)
 
         if request.status_code != 200:
             _LOGGER.error("Can't find function")
             return
 
         try:
-            request.json()['return_value']
+            request.json()["return_value"]
         except KeyError:
             _LOGGER.error("No return_value received")
         except ValueError:
@@ -118,33 +130,38 @@ class ArestSwitchFunction(ArestSwitchBase):
     def turn_on(self, **kwargs):
         """Turn the device on."""
         request = requests.get(
-            '{}/{}'.format(self._resource, self._func), timeout=10,
-            params={'params': '1'})
+            "{}/{}".format(self._resource, self._func),
+            timeout=10,
+            params={"params": "1"},
+        )
 
         if request.status_code == 200:
             self._state = True
         else:
-            _LOGGER.error(
-                "Can't turn on function %s at %s", self._func, self._resource)
+            _LOGGER.error("Can't turn on function %s at %s", self._func, self._resource)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         request = requests.get(
-            '{}/{}'.format(self._resource, self._func), timeout=10,
-            params={'params': '0'})
+            "{}/{}".format(self._resource, self._func),
+            timeout=10,
+            params={"params": "0"},
+        )
 
         if request.status_code == 200:
             self._state = False
         else:
             _LOGGER.error(
-                "Can't turn off function %s at %s", self._func, self._resource)
+                "Can't turn off function %s at %s", self._func, self._resource
+            )
 
     def update(self):
         """Get the latest data from aREST API and update the state."""
         try:
             request = requests.get(
-                '{}/{}'.format(self._resource, self._func), timeout=10)
-            self._state = request.json()['return_value'] != 0
+                "{}/{}".format(self._resource, self._func), timeout=10
+            )
+            self._state = request.json()["return_value"] != 0
             self._available = True
         except requests.exceptions.ConnectionError:
             _LOGGER.warning("No route to device %s", self._resource)
@@ -161,7 +178,8 @@ class ArestSwitchPin(ArestSwitchBase):
         self.invert = invert
 
         request = requests.get(
-            '{}/mode/{}/o'.format(self._resource, self._pin), timeout=10)
+            "{}/mode/{}/o".format(self._resource, self._pin), timeout=10
+        )
         if request.status_code != 200:
             _LOGGER.error("Can't set mode")
             self._available = False
@@ -170,35 +188,34 @@ class ArestSwitchPin(ArestSwitchBase):
         """Turn the device on."""
         turn_on_payload = int(not self.invert)
         request = requests.get(
-            '{}/digital/{}/{}'.format(self._resource, self._pin,
-                                      turn_on_payload),
-            timeout=10)
+            "{}/digital/{}/{}".format(self._resource, self._pin, turn_on_payload),
+            timeout=10,
+        )
         if request.status_code == 200:
             self._state = True
         else:
-            _LOGGER.error(
-                "Can't turn on pin %s at %s", self._pin, self._resource)
+            _LOGGER.error("Can't turn on pin %s at %s", self._pin, self._resource)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         turn_off_payload = int(self.invert)
         request = requests.get(
-            '{}/digital/{}/{}'.format(self._resource, self._pin,
-                                      turn_off_payload),
-            timeout=10)
+            "{}/digital/{}/{}".format(self._resource, self._pin, turn_off_payload),
+            timeout=10,
+        )
         if request.status_code == 200:
             self._state = False
         else:
-            _LOGGER.error(
-                "Can't turn off pin %s at %s", self._pin, self._resource)
+            _LOGGER.error("Can't turn off pin %s at %s", self._pin, self._resource)
 
     def update(self):
         """Get the latest data from aREST API and update the state."""
         try:
             request = requests.get(
-                '{}/digital/{}'.format(self._resource, self._pin), timeout=10)
+                "{}/digital/{}".format(self._resource, self._pin), timeout=10
+            )
             status_value = int(self.invert)
-            self._state = request.json()['return_value'] != status_value
+            self._state = request.json()["return_value"] != status_value
             self._available = True
         except requests.exceptions.ConnectionError:
             _LOGGER.warning("No route to device %s", self._resource)

@@ -1,34 +1,30 @@
-"""
-Add support for the Xiaomi TVs.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/xiaomi_tv/
-"""
+"""Add support for the Xiaomi TVs."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_STEP)
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_STEP,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pymitv==1.4.3']
 
 DEFAULT_NAME = "Xiaomi TV"
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_XIAOMI_TV = SUPPORT_VOLUME_STEP | SUPPORT_TURN_ON | \
-                    SUPPORT_TURN_OFF
+SUPPORT_XIAOMI_TV = SUPPORT_VOLUME_STEP | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 # No host is needed for configuration, however it can be set.
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -42,8 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if host is not None:
         # Check if there's a valid TV at the IP address.
         if not Discover().check_ip(host):
-            _LOGGER.error(
-                "Could not find Xiaomi TV with specified IP: %s", host)
+            _LOGGER.error("Could not find Xiaomi TV with specified IP: %s", host)
         else:
             # Register TV with Home Assistant.
             add_entities([XiaomiTV(host, name)])

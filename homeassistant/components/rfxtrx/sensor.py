@@ -11,29 +11,40 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 from . import (
-    ATTR_DATA_TYPE, ATTR_FIRE_EVENT, CONF_AUTOMATIC_ADD, CONF_DATA_TYPE,
-    CONF_DEVICES, CONF_FIRE_EVENT, DATA_TYPES)
-
-DEPENDENCIES = ['rfxtrx']
+    ATTR_DATA_TYPE,
+    ATTR_FIRE_EVENT,
+    CONF_AUTOMATIC_ADD,
+    CONF_DATA_TYPE,
+    CONF_DEVICES,
+    CONF_FIRE_EVENT,
+    DATA_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICES, default={}): {
-        cv.string: vol.Schema({
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-            vol.Optional(CONF_DATA_TYPE, default=[]):
-            vol.All(cv.ensure_list, [vol.In(DATA_TYPES.keys())]),
-        })
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_DEVICES, default={}): {
+            cv.string: vol.Schema(
+                {
+                    vol.Optional(CONF_NAME): cv.string,
+                    vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+                    vol.Optional(CONF_DATA_TYPE, default=[]): vol.All(
+                        cv.ensure_list, [vol.In(DATA_TYPES.keys())]
+                    ),
+                }
+            )
+        },
+        vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
     },
-    vol.Optional(CONF_AUTOMATIC_ADD, default=False):  cv.boolean,
-}, extra=vol.ALLOW_EXTRA)
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RFXtrx platform."""
     from RFXtrx import SensorEvent
+
     sensors = []
     for packet_id, entity_info in config[CONF_DEVICES].items():
         event = rfxtrx.get_rfx_object(packet_id)
@@ -45,14 +56,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         sub_sensors = {}
         data_types = entity_info[ATTR_DATA_TYPE]
         if not data_types:
-            data_types = ['']
+            data_types = [""]
             for data_type in DATA_TYPES:
                 if data_type in event.values:
                     data_types = [data_type]
                     break
         for _data_type in data_types:
-            new_sensor = RfxtrxSensor(None, entity_info[ATTR_NAME],
-                                      _data_type, entity_info[ATTR_FIRE_EVENT])
+            new_sensor = RfxtrxSensor(
+                None, entity_info[ATTR_NAME], _data_type, entity_info[ATTR_FIRE_EVENT]
+            )
             sensors.append(new_sensor)
             sub_sensors[_data_type] = new_sensor
         rfxtrx.RFX_DEVICES[device_id] = sub_sensors
@@ -78,9 +90,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 # Fire event
                 if sensor.should_fire_event:
                     sensor.hass.bus.fire(
-                        "signal_received", {
-                            ATTR_ENTITY_ID: sensor.entity_id,
-                        }
+                        "signal_received", {ATTR_ENTITY_ID: sensor.entity_id}
                     )
             return
 
@@ -91,7 +101,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         pkt_id = "".join("{0:02x}".format(x) for x in event.data)
         _LOGGER.info("Automatic add rfxtrx.sensor: %s", pkt_id)
 
-        data_type = ''
+        data_type = ""
         for _data_type in DATA_TYPES:
             if _data_type in event.values:
                 data_type = _data_type
@@ -115,7 +125,7 @@ class RfxtrxSensor(Entity):
         self._name = name
         self.should_fire_event = should_fire_event
         self.data_type = data_type
-        self._unit_of_measurement = DATA_TYPES.get(data_type, '')
+        self._unit_of_measurement = DATA_TYPES.get(data_type, "")
 
     def __str__(self):
         """Return the name of the sensor."""

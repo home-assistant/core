@@ -1,29 +1,25 @@
-"""
-Support for Yeelight Sunflower color bulbs (not Yeelight Blue or WiFi).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.yeelightsunflower/
-"""
+"""Support for Yeelight Sunflower color bulbs (not Yeelight Blue or WiFi)."""
 import logging
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
-    Light, ATTR_HS_COLOR, SUPPORT_COLOR, ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA)
+    Light,
+    ATTR_HS_COLOR,
+    SUPPORT_COLOR,
+    ATTR_BRIGHTNESS,
+    SUPPORT_BRIGHTNESS,
+    PLATFORM_SCHEMA,
+)
 from homeassistant.const import CONF_HOST
 import homeassistant.util.color as color_util
 
-REQUIREMENTS = ['yeelightsunflower==0.0.10']
-
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_YEELIGHT_SUNFLOWER = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR)
+SUPPORT_YEELIGHT_SUNFLOWER = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -54,7 +50,7 @@ class SunflowerBulb(Light):
     @property
     def name(self):
         """Return the display name of this light."""
-        return 'sunflower_{}'.format(self._light.zid)
+        return "sunflower_{}".format(self._light.zid)
 
     @property
     def available(self):

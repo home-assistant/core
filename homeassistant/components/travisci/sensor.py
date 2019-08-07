@@ -1,9 +1,4 @@
-"""
-This component provides HA sensor support for Travis CI framework.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.travisci/
-"""
+"""This component provides HA sensor support for Travis CI framework."""
 import logging
 from datetime import timedelta
 
@@ -12,47 +7,48 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_API_KEY, CONF_SCAN_INTERVAL,
-    CONF_MONITORED_CONDITIONS)
+    ATTR_ATTRIBUTION,
+    CONF_API_KEY,
+    CONF_SCAN_INTERVAL,
+    CONF_MONITORED_CONDITIONS,
+)
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['TravisPy==0.3.5']
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Information provided by https://travis-ci.org/"
 
-CONF_BRANCH = 'branch'
-CONF_REPOSITORY = 'repository'
+CONF_BRANCH = "branch"
+CONF_REPOSITORY = "repository"
 
-DEFAULT_BRANCH_NAME = 'master'
+DEFAULT_BRANCH_NAME = "master"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
 # sensor_type [ description, unit, icon ]
 SENSOR_TYPES = {
-    'last_build_id': ['Last Build ID', '', 'mdi:account-card-details'],
-    'last_build_duration': ['Last Build Duration', 'sec', 'mdi:timelapse'],
-    'last_build_finished_at': ['Last Build Finished At', '', 'mdi:timetable'],
-    'last_build_started_at': ['Last Build Started At', '', 'mdi:timetable'],
-    'last_build_state': ['Last Build State', '', 'mdi:github-circle'],
-    'state': ['State', '', 'mdi:github-circle'],
-
+    "last_build_id": ["Last Build ID", "", "mdi:account-card-details"],
+    "last_build_duration": ["Last Build Duration", "sec", "mdi:timelapse"],
+    "last_build_finished_at": ["Last Build Finished At", "", "mdi:timetable"],
+    "last_build_started_at": ["Last Build Started At", "", "mdi:timetable"],
+    "last_build_state": ["Last Build State", "", "mdi:github-circle"],
+    "state": ["State", "", "mdi:github-circle"],
 }
 
-NOTIFICATION_ID = 'travisci'
-NOTIFICATION_TITLE = 'Travis CI Sensor Setup'
+NOTIFICATION_ID = "travisci"
+NOTIFICATION_TITLE = "Travis CI Sensor Setup"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Required(CONF_BRANCH, default=DEFAULT_BRANCH_NAME): cv.string,
-    vol.Optional(CONF_REPOSITORY, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
-        cv.time_period,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        ),
+        vol.Required(CONF_BRANCH, default=DEFAULT_BRANCH_NAME): cv.string,
+        vol.Optional(CONF_REPOSITORY, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -71,11 +67,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except TravisError as ex:
         _LOGGER.error("Unable to connect to Travis CI service: %s", str(ex))
         hass.components.persistent_notification.create(
-            'Error: {}<br />'
-            'You will need to restart hass after fixing.'
-            ''.format(ex),
+            "Error: {}<br />"
+            "You will need to restart hass after fixing."
+            "".format(ex),
             title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID)
+            notification_id=NOTIFICATION_ID,
+        )
         return False
 
     sensors = []
@@ -86,12 +83,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         repositories = [repo.slug for repo in all_repos]
 
     for repo in repositories:
-        if '/' not in repo:
+        if "/" not in repo:
             repo = "{0}/{1}".format(user.login, repo)
 
         for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-            sensors.append(
-                TravisCISensor(travis, repo, user, branch, sensor_type))
+            sensors.append(TravisCISensor(travis, repo, user, branch, sensor_type))
 
     add_entities(sensors, True)
     return True
@@ -109,8 +105,9 @@ class TravisCISensor(Entity):
         self._user = user
         self._branch = branch
         self._state = None
-        self._name = "{0} {1}".format(self._repo_name,
-                                      SENSOR_TYPES[self._sensor_type][0])
+        self._name = "{0} {1}".format(
+            self._repo_name, SENSOR_TYPES[self._sensor_type][0]
+        )
 
     @property
     def name(self):
@@ -134,15 +131,15 @@ class TravisCISensor(Entity):
         attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
 
         if self._build and self._state is not None:
-            if self._user and self._sensor_type == 'state':
-                attrs['Owner Name'] = self._user.name
-                attrs['Owner Email'] = self._user.email
+            if self._user and self._sensor_type == "state":
+                attrs["Owner Name"] = self._user.name
+                attrs["Owner Email"] = self._user.email
             else:
-                attrs['Committer Name'] = self._build.commit.committer_name
-                attrs['Committer Email'] = self._build.commit.committer_email
-                attrs['Commit Branch'] = self._build.commit.branch
-                attrs['Committed Date'] = self._build.commit.committed_at
-                attrs['Commit SHA'] = self._build.commit.sha
+                attrs["Committer Name"] = self._build.commit.committer_name
+                attrs["Committer Email"] = self._build.commit.committer_email
+                attrs["Commit Branch"] = self._build.commit.branch
+                attrs["Committed Date"] = self._build.commit.committed_at
+                attrs["Commit SHA"] = self._build.commit.sha
 
         return attrs
 
@@ -159,11 +156,10 @@ class TravisCISensor(Entity):
         self._build = self._data.build(repo.last_build_id)
 
         if self._build:
-            if self._sensor_type == 'state':
-                branch_stats = \
-                    self._data.branch(self._branch, self._repo_name)
+            if self._sensor_type == "state":
+                branch_stats = self._data.branch(self._branch, self._repo_name)
                 self._state = branch_stats.state
 
             else:
-                param = self._sensor_type.replace('last_build_', '')
+                param = self._sensor_type.replace("last_build_", "")
                 self._state = getattr(self._build, param)

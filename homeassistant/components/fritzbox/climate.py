@@ -5,27 +5,41 @@ import requests
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_OPERATION_MODE, STATE_ECO, STATE_HEAT, STATE_MANUAL,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
+    ATTR_HVAC_MODE,
+    HVAC_MODE_HEAT,
+    PRESET_ECO,
+    PRESET_COMFORT,
+    SUPPORT_TARGET_TEMPERATURE,
+    HVAC_MODE_OFF,
+    SUPPORT_PRESET_MODE,
+)
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, PRECISION_HALVES, STATE_OFF,
-    STATE_ON, TEMP_CELSIUS)
+    ATTR_BATTERY_LEVEL,
+    ATTR_TEMPERATURE,
+    PRECISION_HALVES,
+    TEMP_CELSIUS,
+)
 
 from . import (
-    ATTR_STATE_BATTERY_LOW, ATTR_STATE_DEVICE_LOCKED, ATTR_STATE_HOLIDAY_MODE,
-    ATTR_STATE_LOCKED, ATTR_STATE_SUMMER_MODE, ATTR_STATE_WINDOW_OPEN,
-    DOMAIN as FRITZBOX_DOMAIN)
-
-DEPENDENCIES = ['fritzbox']
+    ATTR_STATE_BATTERY_LOW,
+    ATTR_STATE_DEVICE_LOCKED,
+    ATTR_STATE_HOLIDAY_MODE,
+    ATTR_STATE_LOCKED,
+    ATTR_STATE_SUMMER_MODE,
+    ATTR_STATE_WINDOW_OPEN,
+    DOMAIN as FRITZBOX_DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE)
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
-OPERATION_LIST = [STATE_HEAT, STATE_ECO, STATE_OFF, STATE_ON]
+OPERATION_LIST = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
 MIN_TEMPERATURE = 8
 MAX_TEMPERATURE = 28
+
+PRESET_MANUAL = "manual"
 
 # special temperatures for on/off in Fritz!Box API (modified by pyfritzhome)
 ON_API_TEMPERATURE = 127.0
@@ -93,48 +107,63 @@ class FritzboxThermostat(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self._target_temperature in (ON_API_TEMPERATURE,
-                                        OFF_API_TEMPERATURE):
-            return None
+        if self._target_temperature == ON_API_TEMPERATURE:
+            return ON_REPORT_SET_TEMPERATURE
+        if self._target_temperature == OFF_API_TEMPERATURE:
+            return OFF_REPORT_SET_TEMPERATURE
         return self._target_temperature
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        if ATTR_OPERATION_MODE in kwargs:
-            operation_mode = kwargs.get(ATTR_OPERATION_MODE)
-            self.set_operation_mode(operation_mode)
+        if ATTR_HVAC_MODE in kwargs:
+            hvac_mode = kwargs.get(ATTR_HVAC_MODE)
+            self.set_hvac_mode(hvac_mode)
         elif ATTR_TEMPERATURE in kwargs:
             temperature = kwargs.get(ATTR_TEMPERATURE)
             self._device.set_target_temperature(temperature)
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return the current operation mode."""
-        if self._target_temperature == ON_API_TEMPERATURE:
-            return STATE_ON
-        if self._target_temperature == OFF_API_TEMPERATURE:
-            return STATE_OFF
-        if self._target_temperature == self._comfort_temperature:
-            return STATE_HEAT
-        if self._target_temperature == self._eco_temperature:
-            return STATE_ECO
-        return STATE_MANUAL
+        if (
+            self._target_temperature == OFF_REPORT_SET_TEMPERATURE
+            or self._target_temperature == OFF_API_TEMPERATURE
+        ):
+            return HVAC_MODE_OFF
+
+        return HVAC_MODE_HEAT
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return OPERATION_LIST
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set new operation mode."""
-        if operation_mode == STATE_HEAT:
-            self.set_temperature(temperature=self._comfort_temperature)
-        elif operation_mode == STATE_ECO:
-            self.set_temperature(temperature=self._eco_temperature)
-        elif operation_mode == STATE_OFF:
+        if hvac_mode == HVAC_MODE_OFF:
             self.set_temperature(temperature=OFF_REPORT_SET_TEMPERATURE)
-        elif operation_mode == STATE_ON:
-            self.set_temperature(temperature=ON_REPORT_SET_TEMPERATURE)
+        else:
+            self.set_temperature(temperature=self._comfort_temperature)
+
+    @property
+    def preset_mode(self):
+        """Return current preset mode."""
+        if self._target_temperature == self._comfort_temperature:
+            return PRESET_COMFORT
+        if self._target_temperature == self._eco_temperature:
+            return PRESET_ECO
+
+    @property
+    def preset_modes(self):
+        """Return supported preset modes."""
+        return [PRESET_ECO, PRESET_COMFORT]
+
+    def set_preset_mode(self, preset_mode):
+        """Set preset mode."""
+        if preset_mode == PRESET_COMFORT:
+            self.set_temperature(temperature=self._comfort_temperature)
+        elif preset_mode == PRESET_ECO:
+            self.set_temperature(temperature=self._eco_temperature)
 
     @property
     def min_temp(self):

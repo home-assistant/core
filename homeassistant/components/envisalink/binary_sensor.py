@@ -9,18 +9,20 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
 
 from . import (
-    CONF_ZONENAME, CONF_ZONETYPE, DATA_EVL, SIGNAL_ZONE_UPDATE, ZONE_SCHEMA,
-    EnvisalinkDevice)
+    CONF_ZONENAME,
+    CONF_ZONETYPE,
+    DATA_EVL,
+    SIGNAL_ZONE_UPDATE,
+    ZONE_SCHEMA,
+    EnvisalinkDevice,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['envisalink']
 
-
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Envisalink binary sensor devices."""
-    configured_zones = discovery_info['zones']
+    configured_zones = discovery_info["zones"]
 
     devices = []
     for zone_num in configured_zones:
@@ -30,8 +32,8 @@ async def async_setup_platform(hass, config, async_add_entities,
             zone_num,
             device_config_data[CONF_ZONENAME],
             device_config_data[CONF_ZONETYPE],
-            hass.data[DATA_EVL].alarm_state['zone'][zone_num],
-            hass.data[DATA_EVL]
+            hass.data[DATA_EVL].alarm_state["zone"][zone_num],
+            hass.data[DATA_EVL],
         )
         devices.append(device)
 
@@ -41,19 +43,17 @@ async def async_setup_platform(hass, config, async_add_entities,
 class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
     """Representation of an Envisalink binary sensor."""
 
-    def __init__(self, hass, zone_number, zone_name, zone_type, info,
-                 controller):
+    def __init__(self, hass, zone_number, zone_name, zone_type, info, controller):
         """Initialize the binary_sensor."""
         self._zone_type = zone_type
         self._zone_number = zone_number
 
-        _LOGGER.debug('Setting up zone: %s', zone_name)
+        _LOGGER.debug("Setting up zone: %s", zone_name)
         super().__init__(zone_name, info, controller)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_ZONE_UPDATE, self._update_callback)
+        async_dispatcher_connect(self.hass, SIGNAL_ZONE_UPDATE, self._update_callback)
 
     @property
     def device_state_attributes(self):
@@ -69,7 +69,7 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
         # interval, so we subtract it from the current second-accurate time
         # unless it is already at the maximum value, in which case we set it
         # to None since we can't determine the actual value.
-        seconds_ago = self._info['last_fault']
+        seconds_ago = self._info["last_fault"]
         if seconds_ago < 65536 * 5:
             now = dt_util.now().replace(microsecond=0)
             delta = datetime.timedelta(seconds=seconds_ago)
@@ -83,7 +83,7 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if sensor is on."""
-        return self._info['status']['open']
+        return self._info["status"]["open"]
 
     @property
     def device_class(self):

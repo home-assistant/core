@@ -1,37 +1,39 @@
-"""
-Support turning on/off motion detection on Hikvision cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.hikvision/
-"""
+"""Support turning on/off motion detection on Hikvision cameras."""
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT, STATE_OFF,
-    STATE_ON)
+    CONF_NAME,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_PORT,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['hikvision==0.4']
 # This is the last working version, please test before updating
 
 _LOGGING = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Hikvision Camera Motion Detection'
-DEFAULT_PASSWORD = '12345'
+DEFAULT_NAME = "Hikvision Camera Motion Detection"
+DEFAULT_PASSWORD = "12345"
 DEFAULT_PORT = 80
-DEFAULT_USERNAME = 'admin'
+DEFAULT_USERNAME = "admin"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT): cv.port,
-    vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+        vol.Optional(CONF_PORT): cv.port,
+        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -47,8 +49,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         hikvision_cam = hikvision.api.CreateDevice(
-            host, port=port, username=username, password=password,
-            is_https=False)
+            host, port=port, username=username, password=password, is_https=False
+        )
     except MissingParamError as param_err:
         _LOGGING.error("Missing required param: %s", param_err)
         return False

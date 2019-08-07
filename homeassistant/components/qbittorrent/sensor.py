@@ -1,9 +1,4 @@
-"""
-Support for monitoring the qBittorrent API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.qbittorrent/
-"""
+"""Support for monitoring the qBittorrent API."""
 import logging
 
 import voluptuous as vol
@@ -12,37 +7,41 @@ from requests.exceptions import RequestException
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME, STATE_IDLE)
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_URL,
+    CONF_USERNAME,
+    STATE_IDLE,
+)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
 
-REQUIREMENTS = ['python-qbittorrent==0.3.1']
-
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPE_CURRENT_STATUS = 'current_status'
-SENSOR_TYPE_DOWNLOAD_SPEED = 'download_speed'
-SENSOR_TYPE_UPLOAD_SPEED = 'upload_speed'
+SENSOR_TYPE_CURRENT_STATUS = "current_status"
+SENSOR_TYPE_DOWNLOAD_SPEED = "download_speed"
+SENSOR_TYPE_UPLOAD_SPEED = "upload_speed"
 
-DEFAULT_NAME = 'qBittorrent'
+DEFAULT_NAME = "qBittorrent"
 
 SENSOR_TYPES = {
-    SENSOR_TYPE_CURRENT_STATUS: ['Status', None],
-    SENSOR_TYPE_DOWNLOAD_SPEED: ['Down Speed', 'kB/s'],
-    SENSOR_TYPE_UPLOAD_SPEED: ['Up Speed', 'kB/s'],
+    SENSOR_TYPE_CURRENT_STATUS: ["Status", None],
+    SENSOR_TYPE_DOWNLOAD_SPEED: ["Down Speed", "kB/s"],
+    SENSOR_TYPE_UPLOAD_SPEED: ["Up Speed", "kB/s"],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_URL): cv.url,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_URL): cv.url,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the qBittorrent sensors."""
     from qbittorrent.client import Client, LoginRequired
 
@@ -75,8 +74,7 @@ def format_speed(speed):
 class QBittorrentSensor(Entity):
     """Representation of an qBittorrent sensor."""
 
-    def __init__(self, sensor_type, qbittorrent_client,
-                 client_name, exception):
+    def __init__(self, sensor_type, qbittorrent_client, client_name, exception):
         """Initialize the qBittorrent sensor."""
         self._name = SENSOR_TYPES[sensor_type][0]
         self.client = qbittorrent_client
@@ -90,7 +88,7 @@ class QBittorrentSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self.client_name, self._name)
+        return "{} {}".format(self.client_name, self._name)
 
     @property
     def state(self):
@@ -123,16 +121,16 @@ class QBittorrentSensor(Entity):
         if data is None:
             return
 
-        download = data['server_state']['dl_info_speed']
-        upload = data['server_state']['up_info_speed']
+        download = data["server_state"]["dl_info_speed"]
+        upload = data["server_state"]["up_info_speed"]
 
         if self.type == SENSOR_TYPE_CURRENT_STATUS:
             if upload > 0 and download > 0:
-                self._state = 'up_down'
+                self._state = "up_down"
             elif upload > 0 and download == 0:
-                self._state = 'seeding'
+                self._state = "seeding"
             elif upload == 0 and download > 0:
-                self._state = 'downloading'
+                self._state = "downloading"
             else:
                 self._state = STATE_IDLE
 

@@ -1,0 +1,10 @@
+{
+  "domain": "xeoma",
+  "name": "Xeoma",
+  "documentation": "https://www.home-assistant.io/components/xeoma",
+  "requirements": [
+    "pyxeoma==1.4.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

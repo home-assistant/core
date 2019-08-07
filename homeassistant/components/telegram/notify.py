@@ -1,9 +1,4 @@
-"""
-Telegram platform for notify component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.telegram/
-"""
+"""Telegram platform for notify component."""
 import logging
 
 import voluptuous as vol
@@ -11,25 +6,26 @@ import voluptuous as vol
 from homeassistant.const import ATTR_LOCATION
 
 from homeassistant.components.notify import (
-    ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE, PLATFORM_SCHEMA,
-    BaseNotificationService)
+    ATTR_DATA,
+    ATTR_MESSAGE,
+    ATTR_TARGET,
+    ATTR_TITLE,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'telegram_bot'
-DEPENDENCIES = [DOMAIN]
+DOMAIN = "telegram_bot"
+ATTR_KEYBOARD = "keyboard"
+ATTR_INLINE_KEYBOARD = "inline_keyboard"
+ATTR_PHOTO = "photo"
+ATTR_VIDEO = "video"
+ATTR_DOCUMENT = "document"
 
-ATTR_KEYBOARD = 'keyboard'
-ATTR_INLINE_KEYBOARD = 'inline_keyboard'
-ATTR_PHOTO = 'photo'
-ATTR_VIDEO = 'video'
-ATTR_DOCUMENT = 'document'
+CONF_CHAT_ID = "chat_id"
 
-CONF_CHAT_ID = 'chat_id'
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_CHAT_ID): vol.Coerce(int),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_CHAT_ID): vol.Coerce(int)})
 
 
 def get_service(hass, config, discovery_info=None):
@@ -71,28 +67,30 @@ class TelegramNotificationService(BaseNotificationService):
             photos = photos if isinstance(photos, list) else [photos]
             for photo_data in photos:
                 service_data.update(photo_data)
-                self.hass.services.call(
-                    DOMAIN, 'send_photo', service_data=service_data)
+                self.hass.services.call(DOMAIN, "send_photo", service_data=service_data)
             return
         if data is not None and ATTR_VIDEO in data:
             videos = data.get(ATTR_VIDEO, None)
             videos = videos if isinstance(videos, list) else [videos]
             for video_data in videos:
                 service_data.update(video_data)
-                self.hass.services.call(
-                    DOMAIN, 'send_video', service_data=service_data)
+                self.hass.services.call(DOMAIN, "send_video", service_data=service_data)
             return
         if data is not None and ATTR_LOCATION in data:
             service_data.update(data.get(ATTR_LOCATION))
             return self.hass.services.call(
-                DOMAIN, 'send_location', service_data=service_data)
+                DOMAIN, "send_location", service_data=service_data
+            )
         if data is not None and ATTR_DOCUMENT in data:
             service_data.update(data.get(ATTR_DOCUMENT))
             return self.hass.services.call(
-                DOMAIN, 'send_document', service_data=service_data)
+                DOMAIN, "send_document", service_data=service_data
+            )
 
         # Send message
-        _LOGGER.debug('TELEGRAM NOTIFIER calling %s.send_message with %s',
-                      DOMAIN, service_data)
+        _LOGGER.debug(
+            "TELEGRAM NOTIFIER calling %s.send_message with %s", DOMAIN, service_data
+        )
         return self.hass.services.call(
-            DOMAIN, 'send_message', service_data=service_data)
+            DOMAIN, "send_message", service_data=service_data
+        )

@@ -1,9 +1,4 @@
-"""
-Support for IP Cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.mjpeg/
-"""
+"""Support for IP Cameras."""
 import asyncio
 import logging
 from contextlib import closing
@@ -15,36 +10,46 @@ from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_AUTHENTICATION,
-    HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION, CONF_VERIFY_SSL)
-from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
+    CONF_NAME,
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    CONF_AUTHENTICATION,
+    HTTP_BASIC_AUTHENTICATION,
+    HTTP_DIGEST_AUTHENTICATION,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.helpers.aiohttp_client import (
-    async_get_clientsession, async_aiohttp_proxy_web)
+    async_get_clientsession,
+    async_aiohttp_proxy_web,
+)
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_MJPEG_URL = 'mjpeg_url'
-CONF_STILL_IMAGE_URL = 'still_image_url'
-CONTENT_TYPE_HEADER = 'Content-Type'
+CONF_MJPEG_URL = "mjpeg_url"
+CONF_STILL_IMAGE_URL = "still_image_url"
+CONTENT_TYPE_HEADER = "Content-Type"
 
-DEFAULT_NAME = 'Mjpeg Camera'
+DEFAULT_NAME = "Mjpeg Camera"
 DEFAULT_VERIFY_SSL = True
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MJPEG_URL): cv.url,
-    vol.Optional(CONF_STILL_IMAGE_URL): cv.url,
-    vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION):
-        vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_MJPEG_URL): cv.url,
+        vol.Optional(CONF_STILL_IMAGE_URL): cv.url,
+        vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.In(
+            [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
+        ),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    }
+)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up a MJPEG IP Camera."""
     filter_urllib3_logging()
 
@@ -56,30 +61,27 @@ async def async_setup_platform(hass, config, async_add_entities,
 def filter_urllib3_logging():
     """Filter header errors from urllib3 due to a urllib3 bug."""
     urllib3_logger = logging.getLogger("urllib3.connectionpool")
-    if not any(isinstance(x, NoHeaderErrorFilter)
-               for x in urllib3_logger.filters):
-        urllib3_logger.addFilter(
-            NoHeaderErrorFilter()
-        )
+    if not any(isinstance(x, NoHeaderErrorFilter) for x in urllib3_logger.filters):
+        urllib3_logger.addFilter(NoHeaderErrorFilter())
 
 
 def extract_image_from_mjpeg(stream):
     """Take in a MJPEG stream object, return the jpg from it."""
-    data = b''
+    data = b""
 
     for chunk in stream:
         data += chunk
-        jpg_end = data.find(b'\xff\xd9')
+        jpg_end = data.find(b"\xff\xd9")
 
         if jpg_end == -1:
             continue
 
-        jpg_start = data.find(b'\xff\xd8')
+        jpg_start = data.find(b"\xff\xd8")
 
         if jpg_start == -1:
             continue
 
-        return data[jpg_start:jpg_end + 2]
+        return data[jpg_start : jpg_end + 2]
 
 
 class MjpegCamera(Camera):
@@ -98,28 +100,23 @@ class MjpegCamera(Camera):
         self._auth = None
         if self._username and self._password:
             if self._authentication == HTTP_BASIC_AUTHENTICATION:
-                self._auth = aiohttp.BasicAuth(
-                    self._username, password=self._password
-                )
+                self._auth = aiohttp.BasicAuth(self._username, password=self._password)
         self._verify_ssl = device_info.get(CONF_VERIFY_SSL)
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
         # DigestAuth is not supported
-        if self._authentication == HTTP_DIGEST_AUTHENTICATION or \
-           self._still_image_url is None:
-            image = await self.hass.async_add_job(
-                self.camera_image)
+        if (
+            self._authentication == HTTP_DIGEST_AUTHENTICATION
+            or self._still_image_url is None
+        ):
+            image = await self.hass.async_add_job(self.camera_image)
             return image
 
-        websession = async_get_clientsession(
-            self.hass,
-            verify_ssl=self._verify_ssl
-        )
+        websession = async_get_clientsession(self.hass, verify_ssl=self._verify_ssl)
         try:
-            with async_timeout.timeout(10, loop=self.hass.loop):
-                response = await websession.get(
-                    self._still_image_url, auth=self._auth)
+            with async_timeout.timeout(10):
+                response = await websession.get(self._still_image_url, auth=self._auth)
 
                 image = await response.read()
                 return image
@@ -142,7 +139,7 @@ class MjpegCamera(Camera):
                 auth=auth,
                 stream=True,
                 timeout=10,
-                verify=self._verify_ssl
+                verify=self._verify_ssl,
             )
         else:
             req = requests.get(self._mjpeg_url, stream=True, timeout=10)
@@ -159,10 +156,7 @@ class MjpegCamera(Camera):
             return await super().handle_async_mjpeg_stream(request)
 
         # connect to stream
-        websession = async_get_clientsession(
-            self.hass,
-            verify_ssl=self._verify_ssl
-        )
+        websession = async_get_clientsession(self.hass, verify_ssl=self._verify_ssl)
         stream_coro = websession.get(self._mjpeg_url, auth=self._auth)
 
         return await async_aiohttp_proxy_web(self.hass, request, stream_coro)

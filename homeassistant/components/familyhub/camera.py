@@ -1,9 +1,4 @@
-"""
-Family Hub camera for Samsung Refrigerators.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/camera.familyhub/
-"""
+"""Family Hub camera for Samsung Refrigerators."""
 import logging
 
 import voluptuous as vol
@@ -15,20 +10,20 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['python-family-hub-local==0.0.2']
+DEFAULT_NAME = "FamilyHub Camera"
 
-DEFAULT_NAME = 'FamilyHub Camera'
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_IP_ADDRESS): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_IP_ADDRESS): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
 
-
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Family Hub Camera."""
     from pyfamilyhublocal import FamilyHubCam
+
     address = config.get(CONF_IP_ADDRESS)
     name = config.get(CONF_NAME)
 

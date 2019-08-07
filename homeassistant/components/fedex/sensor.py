@@ -1,54 +1,42 @@
-"""
-Sensor for Fedex packages.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.fedex/
-"""
-from collections import defaultdict
+"""Sensor for Fedex packages."""
 import logging
+from collections import defaultdict
 from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
-                                 ATTR_ATTRIBUTION, CONF_UPDATE_INTERVAL,
-                                 CONF_SCAN_INTERVAL,
-                                 CONF_UPDATE_INTERVAL_INVALIDATION_VERSION)
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import slugify
-from homeassistant.util import Throttle
-from homeassistant.util.dt import now, parse_date
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['fedexdeliverymanager==1.0.6']
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    ATTR_ATTRIBUTION,
+    CONF_SCAN_INTERVAL,
+)
+from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
+from homeassistant.util import slugify
+from homeassistant.util.dt import now, parse_date
 
 _LOGGER = logging.getLogger(__name__)
 
-COOKIE = 'fedexdeliverymanager_cookies.pickle'
+COOKIE = "fedexdeliverymanager_cookies.pickle"
 
-DOMAIN = 'fedex'
+DOMAIN = "fedex"
 
-ICON = 'mdi:package-variant-closed'
+ICON = "mdi:package-variant-closed"
 
-STATUS_DELIVERED = 'delivered'
+STATUS_DELIVERED = "delivered"
 
 SCAN_INTERVAL = timedelta(seconds=1800)
 
-PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend({
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_UPDATE_INTERVAL):
-            vol.All(cv.time_period, cv.positive_timedelta),
-    }),
-    cv.deprecated(
-        CONF_UPDATE_INTERVAL,
-        replacement_key=CONF_SCAN_INTERVAL,
-        invalidation_version=CONF_UPDATE_INTERVAL_INVALIDATION_VERSION,
-        default=SCAN_INTERVAL
-    )
+    }
 )
 
 
@@ -56,14 +44,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Fedex platform."""
     import fedexdeliverymanager
 
+    _LOGGER.warning(
+        "The fedex integration is deprecated and will be removed "
+        "in Home Assistant 0.100.0. For more information see ADR-0004:"
+        "https://github.com/home-assistant/architecture/blob/master/adr/0004-webscraping.md"
+    )
+
     name = config.get(CONF_NAME)
     update_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
 
     try:
         cookie = hass.config.path(COOKIE)
         session = fedexdeliverymanager.get_session(
-            config.get(CONF_USERNAME), config.get(CONF_PASSWORD),
-            cookie_path=cookie)
+            config.get(CONF_USERNAME), config.get(CONF_PASSWORD), cookie_path=cookie
+        )
     except fedexdeliverymanager.FedexError:
         _LOGGER.exception("Could not connect to Fedex Delivery Manager")
         return False
@@ -95,22 +89,23 @@ class FedexSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return 'packages'
+        return "packages"
 
     def _update(self):
         """Update device state."""
         import fedexdeliverymanager
+
         status_counts = defaultdict(int)
         for package in fedexdeliverymanager.get_packages(self._session):
-            status = slugify(package['primary_status'])
-            skip = status == STATUS_DELIVERED and \
-                parse_date(package['delivery_date']) < now().date()
+            status = slugify(package["primary_status"])
+            skip = (
+                status == STATUS_DELIVERED
+                and parse_date(package["delivery_date"]) < now().date()
+            )
             if skip:
                 continue
             status_counts[status] += 1
-        self._attributes = {
-            ATTR_ATTRIBUTION: fedexdeliverymanager.ATTRIBUTION
-        }
+        self._attributes = {ATTR_ATTRIBUTION: fedexdeliverymanager.ATTRIBUTION}
         self._attributes.update(status_counts)
         self._state = sum(status_counts.values())
 

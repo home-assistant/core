@@ -1,9 +1,4 @@
-"""
-Weather information for air and road temperature, provided by Trafikverket.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.trafikverket_weatherstation/
-"""
+"""Weather information for air and road temperature (by Trafikverket)."""
 
 import asyncio
 from datetime import timedelta
@@ -14,68 +9,102 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_API_KEY, CONF_MONITORED_CONDITIONS,
-    CONF_NAME, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
+    ATTR_ATTRIBUTION,
+    CONF_API_KEY,
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pytrafikverket==0.1.5.9']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by Trafikverket"
-ATTR_MEASURE_TIME = 'measure_time'
-ATTR_ACTIVE = 'active'
+ATTR_MEASURE_TIME = "measure_time"
+ATTR_ACTIVE = "active"
 
-CONF_STATION = 'station'
+CONF_STATION = "station"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
 SCAN_INTERVAL = timedelta(seconds=300)
 
 SENSOR_TYPES = {
-    'air_temp': [
-        'Air temperature', TEMP_CELSIUS,
-        'air_temp', 'mdi:thermometer', DEVICE_CLASS_TEMPERATURE],
-    'road_temp': [
-        'Road temperature', TEMP_CELSIUS,
-        'road_temp', 'mdi:thermometer', DEVICE_CLASS_TEMPERATURE],
-    'precipitation': [
-        'Precipitation type', None,
-        'precipitationtype', 'mdi:weather-snowy-rainy', None],
-    'wind_direction': [
-        'Wind direction', '°',
-        'winddirection', 'mdi:flag-triangle', None],
-    'wind_direction_text': [
-        'Wind direction text', None,
-        'winddirectiontext', 'mdi:flag-triangle', None],
-    'wind_speed': [
-        'Wind speed', 'm/s',
-        'windforce', 'mdi:weather-windy', None],
-    'humidity': [
-        'Humidity', '%',
-        'humidity', 'mdi:water-percent', DEVICE_CLASS_HUMIDITY],
-    'precipitation_amount': [
-        'Precipitation amount', 'mm',
-        'precipitation_amount', 'mdi:cup-water', None],
-    'precipitation_amountname': [
-        'Precipitation name', None,
-        'precipitation_amountname', 'mdi:weather-pouring', None],
+    "air_temp": [
+        "Air temperature",
+        TEMP_CELSIUS,
+        "air_temp",
+        "mdi:thermometer",
+        DEVICE_CLASS_TEMPERATURE,
+    ],
+    "road_temp": [
+        "Road temperature",
+        TEMP_CELSIUS,
+        "road_temp",
+        "mdi:thermometer",
+        DEVICE_CLASS_TEMPERATURE,
+    ],
+    "precipitation": [
+        "Precipitation type",
+        None,
+        "precipitationtype",
+        "mdi:weather-snowy-rainy",
+        None,
+    ],
+    "wind_direction": [
+        "Wind direction",
+        "°",
+        "winddirection",
+        "mdi:flag-triangle",
+        None,
+    ],
+    "wind_direction_text": [
+        "Wind direction text",
+        None,
+        "winddirectiontext",
+        "mdi:flag-triangle",
+        None,
+    ],
+    "wind_speed": ["Wind speed", "m/s", "windforce", "mdi:weather-windy", None],
+    "humidity": [
+        "Humidity",
+        "%",
+        "humidity",
+        "mdi:water-percent",
+        DEVICE_CLASS_HUMIDITY,
+    ],
+    "precipitation_amount": [
+        "Precipitation amount",
+        "mm",
+        "precipitation_amount",
+        "mdi:cup-water",
+        None,
+    ],
+    "precipitation_amountname": [
+        "Precipitation name",
+        None,
+        "precipitation_amountname",
+        "mdi:weather-pouring",
+        None,
+    ],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_STATION): cv.string,
-    vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
-        [vol.In(SENSOR_TYPES)],
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_STATION): cv.string,
+        vol.Required(CONF_MONITORED_CONDITIONS, default=[]): [vol.In(SENSOR_TYPES)],
+    }
+)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Trafikverket sensor platform."""
     from pytrafikverket.trafikverket_weather import TrafikverketWeather
 
@@ -89,8 +118,11 @@ async def async_setup_platform(
 
     dev = []
     for condition in config[CONF_MONITORED_CONDITIONS]:
-        dev.append(TrafikverketWeatherStation(
-            weather_api, sensor_name, condition, sensor_station))
+        dev.append(
+            TrafikverketWeatherStation(
+                weather_api, sensor_name, condition, sensor_station
+            )
+        )
 
     if dev:
         async_add_entities(dev, True)
@@ -115,7 +147,7 @@ class TrafikverketWeatherStation(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self._client, self._name)
+        return "{} {}".format(self._client, self._name)
 
     @property
     def icon(self):
@@ -150,11 +182,7 @@ class TrafikverketWeatherStation(Entity):
     async def async_update(self):
         """Get the latest data from Trafikverket and updates the states."""
         try:
-            self._weather = await self._weather_api.async_get_weather(
-                self._station)
-            self._state = getattr(
-                self._weather,
-                SENSOR_TYPES[self._type][2])
-        except (asyncio.TimeoutError,
-                aiohttp.ClientError, ValueError) as error:
+            self._weather = await self._weather_api.async_get_weather(self._station)
+            self._state = getattr(self._weather, SENSOR_TYPES[self._type][2])
+        except (asyncio.TimeoutError, aiohttp.ClientError, ValueError) as error:
             _LOGGER.error("Could not fetch weather data: %s", error)

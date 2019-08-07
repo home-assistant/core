@@ -1,0 +1,12 @@
+{
+  "domain": "melissa",
+  "name": "Melissa",
+  "documentation": "https://www.home-assistant.io/components/melissa",
+  "requirements": [
+    "py-melissa-climate==2.0.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@kennedyshead"
+  ]
+}

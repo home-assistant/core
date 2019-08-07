@@ -1,9 +1,4 @@
-"""
-Support for the PrezziBenzina.it service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.prezzibenzina/
-"""
+"""Support for the PrezziBenzina.it service."""
 import datetime as dt
 from datetime import timedelta
 import logging
@@ -15,40 +10,38 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['prezzibenzina-py==1.1.4']
-
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_FUEL = 'fuel'
-ATTR_SERVICE = 'service'
-ATTRIBUTION = 'Data provided by PrezziBenzina.it'
+ATTR_FUEL = "fuel"
+ATTR_SERVICE = "service"
+ATTRIBUTION = "Data provided by PrezziBenzina.it"
 
-CONF_STATION = 'station'
-CONF_TYPES = 'fuel_types'
+CONF_STATION = "station"
+CONF_TYPES = "fuel_types"
 
-ICON = 'mdi:fuel'
+ICON = "mdi:fuel"
 
 FUEL_TYPES = [
-    'Benzina',
+    "Benzina",
     "Benzina speciale",
-    'Diesel',
+    "Diesel",
     "Diesel speciale",
-    'GPL',
-    'Metano',
+    "GPL",
+    "Metano",
 ]
 
 SCAN_INTERVAL = timedelta(minutes=120)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STATION): cv.string,
-    vol.Optional(CONF_NAME, None): cv.string,
-    vol.Optional(CONF_TYPES, None):
-        vol.All(cv.ensure_list, [vol.In(FUEL_TYPES)]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_STATION): cv.string,
+        vol.Optional(CONF_NAME, None): cv.string,
+        vol.Optional(CONF_TYPES, None): vol.All(cv.ensure_list, [vol.In(FUEL_TYPES)]),
+    }
+)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the PrezziBenzina sensor platform."""
     from prezzibenzina import PrezziBenzinaPy
 
@@ -64,10 +57,13 @@ async def async_setup_platform(
         name = client.get_station_name(station)
 
     for index, info in enumerate(info):
-        if types is not None and info['fuel'] not in types:
+        if types is not None and info["fuel"] not in types:
             continue
-        dev.append(PrezziBenzinaSensor(
-            index, client, station, name, info['fuel'], info['service']))
+        dev.append(
+            PrezziBenzinaSensor(
+                index, client, station, name, info["fuel"], info["service"]
+            )
+        )
 
     async_add_entities(dev, True)
 
@@ -96,23 +92,24 @@ class PrezziBenzinaSensor(Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        return self._data['price'].replace(" €", "")
+        return self._data["price"].replace(" €", "")
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return self._data['price'].split(" ")[1]
+        return self._data["price"].split(" ")[1]
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes of the last update."""
         timestamp = dt.datetime.strptime(
-            self._data['date'], "%d/%m/%Y %H:%M").isoformat()
+            self._data["date"], "%d/%m/%Y %H:%M"
+        ).isoformat()
 
         attrs = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_FUEL: self._data['fuel'],
-            ATTR_SERVICE: self._data['service'],
+            ATTR_FUEL: self._data["fuel"],
+            ATTR_SERVICE: self._data["service"],
             ATTR_TIME: timestamp,
         }
         return attrs

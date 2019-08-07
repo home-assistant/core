@@ -1,0 +1,8 @@
+{
+  "domain": "opensky",
+  "name": "Opensky",
+  "documentation": "https://www.home-assistant.io/components/opensky",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

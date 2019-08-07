@@ -1,9 +1,4 @@
-"""
-Support for monitoring a Neurio energy sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.neurio_energy/
-"""
+"""Support for monitoring a Neurio energy sensor."""
 import logging
 from datetime import timedelta
 
@@ -11,36 +6,35 @@ import requests.exceptions
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_API_KEY, POWER_WATT,
-                                 ENERGY_KILO_WATT_HOUR)
+from homeassistant.const import CONF_API_KEY, POWER_WATT, ENERGY_KILO_WATT_HOUR
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['neurio==0.3.1']
-
 _LOGGER = logging.getLogger(__name__)
 
-CONF_API_SECRET = 'api_secret'
-CONF_SENSOR_ID = 'sensor_id'
+CONF_API_SECRET = "api_secret"
+CONF_SENSOR_ID = "sensor_id"
 
-ACTIVE_NAME = 'Energy Usage'
-DAILY_NAME = 'Daily Energy Usage'
+ACTIVE_NAME = "Energy Usage"
+DAILY_NAME = "Daily Energy Usage"
 
-ACTIVE_TYPE = 'active'
-DAILY_TYPE = 'daily'
+ACTIVE_TYPE = "active"
+DAILY_TYPE = "daily"
 
-ICON = 'mdi:flash'
+ICON = "mdi:flash"
 
 MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=150)
 MIN_TIME_BETWEEN_ACTIVE_UPDATES = timedelta(seconds=10)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_API_SECRET): cv.string,
-    vol.Optional(CONF_SENSOR_ID): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_API_SECRET): cv.string,
+        vol.Optional(CONF_SENSOR_ID): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -91,10 +85,11 @@ class NeurioData:
 
         if not self.sensor_id:
             user_info = self.neurio_client.get_user_information()
-            _LOGGER.warning("Sensor ID auto-detected: %s", user_info[
-                "locations"][0]["sensors"][0]["sensorId"])
-            self.sensor_id = user_info[
-                "locations"][0]["sensors"][0]["sensorId"]
+            _LOGGER.warning(
+                "Sensor ID auto-detected: %s",
+                user_info["locations"][0]["sensors"][0]["sensorId"],
+            )
+            self.sensor_id = user_info["locations"][0]["sensors"][0]["sensorId"]
 
     @property
     def daily_usage(self):
@@ -110,7 +105,7 @@ class NeurioData:
         """Return current power value."""
         try:
             sample = self.neurio_client.get_samples_live_last(self.sensor_id)
-            self._active_power = sample['consumptionPower']
+            self._active_power = sample["consumptionPower"]
         except (requests.exceptions.RequestException, ValueError, KeyError):
             _LOGGER.warning("Could not update current power usage")
             return None
@@ -118,21 +113,21 @@ class NeurioData:
     def get_daily_usage(self):
         """Return current daily power usage."""
         kwh = 0
-        start_time = dt_util.start_of_local_day() \
-            .astimezone(dt_util.UTC).isoformat()
+        start_time = dt_util.start_of_local_day().astimezone(dt_util.UTC).isoformat()
         end_time = dt_util.utcnow().isoformat()
 
-        _LOGGER.debug('Start: %s, End: %s', start_time, end_time)
+        _LOGGER.debug("Start: %s, End: %s", start_time, end_time)
 
         try:
             history = self.neurio_client.get_samples_stats(
-                self.sensor_id, start_time, 'days', end_time)
+                self.sensor_id, start_time, "days", end_time
+            )
         except (requests.exceptions.RequestException, ValueError, KeyError):
             _LOGGER.warning("Could not update daily power usage")
             return None
 
         for result in history:
-            kwh += result['consumptionEnergy'] / 3600000
+            kwh += result["consumptionEnergy"] / 3600000
 
         self._daily_usage = round(kwh, 2)
 

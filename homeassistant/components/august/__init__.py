@@ -7,7 +7,11 @@ from requests import RequestException
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_PASSWORD, CONF_USERNAME, CONF_TIMEOUT, EVENT_HOMEASSISTANT_STOP)
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_TIMEOUT,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
 
@@ -15,40 +19,41 @@ _LOGGER = logging.getLogger(__name__)
 
 _CONFIGURING = {}
 
-REQUIREMENTS = ['py-august==0.7.0']
-
 DEFAULT_TIMEOUT = 10
 ACTIVITY_FETCH_LIMIT = 10
 ACTIVITY_INITIAL_FETCH_LIMIT = 20
 
-CONF_LOGIN_METHOD = 'login_method'
-CONF_INSTALL_ID = 'install_id'
+CONF_LOGIN_METHOD = "login_method"
+CONF_INSTALL_ID = "install_id"
 
-NOTIFICATION_ID = 'august_notification'
+NOTIFICATION_ID = "august_notification"
 NOTIFICATION_TITLE = "August Setup"
 
-AUGUST_CONFIG_FILE = '.august.conf'
+AUGUST_CONFIG_FILE = ".august.conf"
 
-DATA_AUGUST = 'august'
-DOMAIN = 'august'
-DEFAULT_ENTITY_NAMESPACE = 'august'
+DATA_AUGUST = "august"
+DOMAIN = "august"
+DEFAULT_ENTITY_NAMESPACE = "august"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=5)
-LOGIN_METHODS = ['phone', 'email']
+LOGIN_METHODS = ["phone", "email"]
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_LOGIN_METHOD): vol.In(LOGIN_METHODS),
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_INSTALL_ID): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_LOGIN_METHOD): vol.In(LOGIN_METHODS),
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_INSTALL_ID): cv.string,
+                vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
-AUGUST_COMPONENTS = [
-    'camera', 'binary_sensor', 'lock'
-]
+AUGUST_COMPONENTS = ["camera", "binary_sensor", "lock"]
 
 
 def request_configuration(hass, config, api, authenticator):
@@ -59,12 +64,12 @@ def request_configuration(hass, config, api, authenticator):
         """Run when the configuration callback is called."""
         from august.authenticator import ValidationResult
 
-        result = authenticator.validate_verification_code(
-            data.get('verification_code'))
+        result = authenticator.validate_verification_code(data.get("verification_code"))
 
         if result == ValidationResult.INVALID_VERIFICATION_CODE:
-            configurator.notify_errors(_CONFIGURING[DOMAIN],
-                                       "Invalid verification code")
+            configurator.notify_errors(
+                _CONFIGURING[DOMAIN], "Invalid verification code"
+            )
         elif result == ValidationResult.VALIDATED:
             setup_august(hass, config, api, authenticator)
 
@@ -79,12 +84,11 @@ def request_configuration(hass, config, api, authenticator):
         NOTIFICATION_TITLE,
         august_configuration_callback,
         description="Please check your {} ({}) and enter the verification "
-                    "code below".format(login_method, username),
-        submit_caption='Verify',
-        fields=[{
-            'id': 'verification_code',
-            'name': "Verification code",
-            'type': 'string'}]
+        "code below".format(login_method, username),
+        submit_caption="Verify",
+        fields=[
+            {"id": "verification_code", "name": "Verification code", "type": "string"}
+        ],
     )
 
 
@@ -103,7 +107,8 @@ def setup_august(hass, config, api, authenticator):
             "You will need to restart hass after fixing."
             "".format(ex),
             title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID)
+            notification_id=NOTIFICATION_ID,
+        )
 
     state = authentication.state
 
@@ -111,8 +116,7 @@ def setup_august(hass, config, api, authenticator):
         if DOMAIN in _CONFIGURING:
             hass.components.configurator.request_done(_CONFIGURING.pop(DOMAIN))
 
-        hass.data[DATA_AUGUST] = AugustData(
-            hass, api, authentication.access_token)
+        hass.data[DATA_AUGUST] = AugustData(hass, api, authentication.access_token)
 
         for component in AUGUST_COMPONENTS:
             discovery.load_platform(hass, component, DOMAIN, {}, config)
@@ -149,7 +153,8 @@ def setup(hass, config):
         conf.get(CONF_USERNAME),
         conf.get(CONF_PASSWORD),
         install_id=conf.get(CONF_INSTALL_ID),
-        access_token_cache_file=hass.config.path(AUGUST_CONFIG_FILE))
+        access_token_cache_file=hass.config.path(AUGUST_CONFIG_FILE),
+    )
 
     def close_http_session(event):
         """Close API sessions used to connect to August."""
@@ -221,17 +226,17 @@ class AugustData:
         """Update data object with latest from August API."""
         _LOGGER.debug("Start retrieving device activities")
         for house_id in self.house_ids:
-            _LOGGER.debug("Updating device activity for house id %s",
-                          house_id)
+            _LOGGER.debug("Updating device activity for house id %s", house_id)
 
-            activities = self._api.get_house_activities(self._access_token,
-                                                        house_id,
-                                                        limit=limit)
+            activities = self._api.get_house_activities(
+                self._access_token, house_id, limit=limit
+            )
 
             device_ids = {a.device_id for a in activities}
             for device_id in device_ids:
-                self._activities_by_id[device_id] = [a for a in activities if
-                                                     a.device_id == device_id]
+                self._activities_by_id[device_id] = [
+                    a for a in activities if a.device_id == device_id
+                ]
         _LOGGER.debug("Completed retrieving device activities")
 
     def get_doorbell_detail(self, doorbell_id):
@@ -245,15 +250,17 @@ class AugustData:
 
         _LOGGER.debug("Start retrieving doorbell details")
         for doorbell in self._doorbells:
-            _LOGGER.debug("Updating doorbell status for %s",
-                          doorbell.device_name)
+            _LOGGER.debug("Updating doorbell status for %s", doorbell.device_name)
             try:
-                detail_by_id[doorbell.device_id] =\
-                    self._api.get_doorbell_detail(
-                        self._access_token, doorbell.device_id)
+                detail_by_id[doorbell.device_id] = self._api.get_doorbell_detail(
+                    self._access_token, doorbell.device_id
+                )
             except RequestException as ex:
-                _LOGGER.error("Request error trying to retrieve doorbell"
-                              " status for %s. %s", doorbell.device_name, ex)
+                _LOGGER.error(
+                    "Request error trying to retrieve doorbell" " status for %s. %s",
+                    doorbell.device_name,
+                    ex,
+                )
                 detail_by_id[doorbell.device_id] = None
             except Exception:
                 detail_by_id[doorbell.device_id] = None
@@ -289,15 +296,18 @@ class AugustData:
 
         _LOGGER.debug("Start retrieving door status")
         for lock in self._locks:
-            _LOGGER.debug("Updating door status for %s",
-                          lock.device_name)
+            _LOGGER.debug("Updating door status for %s", lock.device_name)
 
             try:
                 state_by_id[lock.device_id] = self._api.get_lock_door_status(
-                    self._access_token, lock.device_id)
+                    self._access_token, lock.device_id
+                )
             except RequestException as ex:
-                _LOGGER.error("Request error trying to retrieve door"
-                              " status for %s. %s", lock.device_name, ex)
+                _LOGGER.error(
+                    "Request error trying to retrieve door" " status for %s. %s",
+                    lock.device_name,
+                    ex,
+                )
                 state_by_id[lock.device_id] = None
             except Exception:
                 state_by_id[lock.device_id] = None
@@ -313,14 +323,17 @@ class AugustData:
 
         _LOGGER.debug("Start retrieving locks status")
         for lock in self._locks:
-            _LOGGER.debug("Updating lock status for %s",
-                          lock.device_name)
+            _LOGGER.debug("Updating lock status for %s", lock.device_name)
             try:
                 status_by_id[lock.device_id] = self._api.get_lock_status(
-                    self._access_token, lock.device_id)
+                    self._access_token, lock.device_id
+                )
             except RequestException as ex:
-                _LOGGER.error("Request error trying to retrieve door"
-                              " status for %s. %s", lock.device_name, ex)
+                _LOGGER.error(
+                    "Request error trying to retrieve door" " status for %s. %s",
+                    lock.device_name,
+                    ex,
+                )
                 status_by_id[lock.device_id] = None
             except Exception:
                 status_by_id[lock.device_id] = None
@@ -328,10 +341,14 @@ class AugustData:
 
             try:
                 detail_by_id[lock.device_id] = self._api.get_lock_detail(
-                    self._access_token, lock.device_id)
+                    self._access_token, lock.device_id
+                )
             except RequestException as ex:
-                _LOGGER.error("Request error trying to retrieve door"
-                              " details for %s. %s", lock.device_name, ex)
+                _LOGGER.error(
+                    "Request error trying to retrieve door" " details for %s. %s",
+                    lock.device_name,
+                    ex,
+                )
                 detail_by_id[lock.device_id] = None
             except Exception:
                 detail_by_id[lock.device_id] = None

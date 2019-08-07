@@ -1,9 +1,4 @@
-"""
-Support for Sky Hub.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.sky_hub/
-"""
+"""Support for Sky Hub."""
 import logging
 import re
 
@@ -12,15 +7,16 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    DeviceScanner,
+)
 from homeassistant.const import CONF_HOST
 
 _LOGGER = logging.getLogger(__name__)
-_MAC_REGEX = re.compile(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})')
+_MAC_REGEX = re.compile(r"(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})")
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST): cv.string
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Optional(CONF_HOST): cv.string})
 
 
 def get_scanner(hass, config):
@@ -36,9 +32,9 @@ class SkyHubDeviceScanner(DeviceScanner):
     def __init__(self, config):
         """Initialise the scanner."""
         _LOGGER.info("Initialising Sky Hub")
-        self.host = config.get(CONF_HOST, '192.168.1.254')
+        self.host = config.get(CONF_HOST, "192.168.1.254")
         self.last_results = {}
-        self.url = 'http://{}/'.format(self.host)
+        self.url = "http://{}/".format(self.host)
 
         # Test the router is accessible
         data = _get_skyhub_data(self.url)
@@ -74,7 +70,7 @@ class SkyHubDeviceScanner(DeviceScanner):
         data = _get_skyhub_data(self.url)
 
         if not data:
-            _LOGGER.warning('Error scanning devices')
+            _LOGGER.warning("Error scanning devices")
             return False
 
         self.last_results = data
@@ -96,20 +92,23 @@ def _get_skyhub_data(url):
 
 def _parse_skyhub_response(data_str):
     """Parse the Sky Hub data format."""
-    pattmatch = re.search('attach_dev = \'(.*)\'', data_str)
+    pattmatch = re.search("attach_dev = '(.*)'", data_str)
     if pattmatch is None:
-        raise IOError('Error: Impossible to fetch data from' +
-                      ' Sky Hub. Try to reboot the router.')
+        raise IOError(
+            "Error: Impossible to fetch data from"
+            + " Sky Hub. Try to reboot the router."
+        )
     patt = pattmatch.group(1)
 
-    dev = [patt1.split(',') for patt1 in patt.split('<lf>')]
+    dev = [patt1.split(",") for patt1 in patt.split("<lf>")]
 
     devices = {}
     for dvc in dev:
         if _MAC_REGEX.match(dvc[1]):
             devices[dvc[1]] = dvc[0]
         else:
-            raise RuntimeError('Error: MAC address ' + dvc[1] +
-                               ' not in correct format.')
+            raise RuntimeError(
+                "Error: MAC address " + dvc[1] + " not in correct format."
+            )
 
     return devices

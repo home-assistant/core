@@ -5,16 +5,14 @@ from homeassistant.components.scene import Scene
 
 from . import DOMAIN as TAHOMA_DOMAIN
 
-DEPENDENCIES = ['tahoma']
-
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tahoma scenes."""
-    controller = hass.data[TAHOMA_DOMAIN]['controller']
+    controller = hass.data[TAHOMA_DOMAIN]["controller"]
     scenes = []
-    for scene in hass.data[TAHOMA_DOMAIN]['scenes']:
+    for scene in hass.data[TAHOMA_DOMAIN]["scenes"]:
         scenes.append(TahomaScene(scene, controller))
     add_entities(scenes, True)
 
@@ -40,4 +38,4 @@ class TahomaScene(Scene):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the scene."""
-        return {'tahoma_scene_oid': self.tahoma_scene.oid}
+        return {"tahoma_scene_oid": self.tahoma_scene.oid}

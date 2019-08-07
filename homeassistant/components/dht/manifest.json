@@ -1,0 +1,10 @@
+{
+  "domain": "dht",
+  "name": "Dht",
+  "documentation": "https://www.home-assistant.io/components/dht",
+  "requirements": [
+    "Adafruit-DHT==1.4.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -8,8 +8,6 @@ from . import NEATO_LOGIN, NEATO_MAP_DATA, NEATO_ROBOTS
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['neato']
-
 SCAN_INTERVAL = timedelta(minutes=10)
 
 
@@ -17,7 +15,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Neato Camera."""
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
-        if 'maps' in robot.traits:
+        if "maps" in robot.traits:
             dev.append(NeatoCleaningMap(hass, robot))
     _LOGGER.debug("Adding robots for cleaning maps %s", dev)
     add_entities(dev, True)
@@ -30,7 +28,7 @@ class NeatoCleaningMap(Camera):
         """Initialize Neato cleaning map."""
         super().__init__()
         self.robot = robot
-        self._robot_name = '{} {}'.format(self.robot.name, 'Cleaning Map')
+        self._robot_name = "{} {}".format(self.robot.name, "Cleaning Map")
         self._robot_serial = self.robot.serial
         self.neato = hass.data[NEATO_LOGIN]
         self._image_url = None
@@ -46,7 +44,7 @@ class NeatoCleaningMap(Camera):
         self.neato.update_robots()
         image_url = None
         map_data = self.hass.data[NEATO_MAP_DATA]
-        image_url = map_data[self._robot_serial]['maps'][0]['url']
+        image_url = map_data[self._robot_serial]["maps"][0]["url"]
         if image_url == self._image_url:
             _LOGGER.debug("The map image_url is the same as old")
             return

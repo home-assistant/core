@@ -1,41 +1,35 @@
-"""
-Support for Sesame, by CANDY HOUSE.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/lock.sesame/
-"""
+"""Support for Sesame, by CANDY HOUSE."""
 from typing import Callable
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.lock import LockDevice, PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, CONF_EMAIL, CONF_PASSWORD,
-    STATE_LOCKED, STATE_UNLOCKED)
+    ATTR_BATTERY_LEVEL,
+    CONF_API_KEY,
+    STATE_LOCKED,
+    STATE_UNLOCKED,
+)
 from homeassistant.helpers.typing import ConfigType
 
-REQUIREMENTS = ['pysesame==0.1.0']
+ATTR_DEVICE_ID = "device_id"
+ATTR_SERIAL_NO = "serial"
 
-ATTR_DEVICE_ID = 'device_id'
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_EMAIL): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_API_KEY): cv.string})
 
 
 def setup_platform(
-        hass, config: ConfigType,
-        add_entities: Callable[[list], None], discovery_info=None):
+    hass, config: ConfigType, add_entities: Callable[[list], None], discovery_info=None
+):
     """Set up the Sesame platform."""
-    import pysesame
+    import pysesame2
 
-    email = config.get(CONF_EMAIL)
-    password = config.get(CONF_PASSWORD)
+    api_key = config.get(CONF_API_KEY)
 
-    add_entities([SesameDevice(sesame) for sesame in
-                  pysesame.get_sesames(email, password)],
-                 update_before_add=True)
+    add_entities(
+        [SesameDevice(sesame) for sesame in pysesame2.get_sesames(api_key)],
+        update_before_add=True,
+    )
 
 
 class SesameDevice(LockDevice):
@@ -47,9 +41,10 @@ class SesameDevice(LockDevice):
 
         # Cached properties from pysesame object.
         self._device_id = None
+        self._serial = None
         self._nickname = None
-        self._is_unlocked = False
-        self._api_enabled = False
+        self._is_locked = False
+        self._responsive = False
         self._battery = -1
 
     @property
@@ -60,19 +55,17 @@ class SesameDevice(LockDevice):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._api_enabled
+        return self._responsive
 
     @property
     def is_locked(self) -> bool:
         """Return True if the device is currently locked, else False."""
-        return not self._is_unlocked
+        return self._is_locked
 
     @property
     def state(self) -> str:
         """Get the state of the device."""
-        if self._is_unlocked:
-            return STATE_UNLOCKED
-        return STATE_LOCKED
+        return STATE_LOCKED if self._is_locked else STATE_UNLOCKED
 
     def lock(self, **kwargs) -> None:
         """Lock the device."""
@@ -84,17 +77,19 @@ class SesameDevice(LockDevice):
 
     def update(self) -> None:
         """Update the internal state of the device."""
-        self._sesame.update_state()
+        status = self._sesame.get_status()
         self._nickname = self._sesame.nickname
-        self._api_enabled = self._sesame.api_enabled
-        self._is_unlocked = self._sesame.is_unlocked
-        self._device_id = self._sesame.device_id
-        self._battery = self._sesame.battery
+        self._device_id = str(self._sesame.id)
+        self._serial = self._sesame.serial
+        self._battery = status["battery"]
+        self._is_locked = status["locked"]
+        self._responsive = status["responsive"]
 
     @property
     def device_state_attributes(self) -> dict:
         """Return the state attributes."""
         attributes = {}
         attributes[ATTR_DEVICE_ID] = self._device_id
+        attributes[ATTR_SERIAL_NO] = self._serial
         attributes[ATTR_BATTERY_LEVEL] = self._battery
         return attributes

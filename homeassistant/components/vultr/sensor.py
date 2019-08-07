@@ -1,9 +1,4 @@
-"""
-Support for monitoring the state of Vultr Subscriptions.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.vultr/
-"""
+"""Support for monitoring the state of Vultr Subscriptions."""
 import logging
 
 import voluptuous as vol
@@ -14,27 +9,33 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from . import (
-    ATTR_CURRENT_BANDWIDTH_USED, ATTR_PENDING_CHARGES, CONF_SUBSCRIPTION,
-    DATA_VULTR)
+    ATTR_CURRENT_BANDWIDTH_USED,
+    ATTR_PENDING_CHARGES,
+    CONF_SUBSCRIPTION,
+    DATA_VULTR,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Vultr {} {}'
-DEPENDENCIES = ['vultr']
-
+DEFAULT_NAME = "Vultr {} {}"
 MONITORED_CONDITIONS = {
-    ATTR_CURRENT_BANDWIDTH_USED: ['Current Bandwidth Used', 'GB',
-                                  'mdi:chart-histogram'],
-    ATTR_PENDING_CHARGES: ['Pending Charges', 'US$', 'mdi:currency-usd'],
+    ATTR_CURRENT_BANDWIDTH_USED: [
+        "Current Bandwidth Used",
+        "GB",
+        "mdi:chart-histogram",
+    ],
+    ATTR_PENDING_CHARGES: ["Pending Charges", "US$", "mdi:currency-usd"],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SUBSCRIPTION): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS,
-                 default=list(MONITORED_CONDITIONS)):
-    vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)])
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_SUBSCRIPTION): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(
+            CONF_MONITORED_CONDITIONS, default=list(MONITORED_CONDITIONS)
+        ): vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -82,8 +83,7 @@ class VultrSensor(Entity):
             return self._name.format(self._condition_name)
         except IndexError:
             try:
-                return self._name.format(
-                    self.data['label'], self._condition_name)
+                return self._name.format(self.data["label"], self._condition_name)
             except (KeyError, TypeError):
                 return self._name
 

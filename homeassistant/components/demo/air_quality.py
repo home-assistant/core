@@ -1,18 +1,12 @@
-"""
-Demo platform that offers fake air quality data.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo platform that offers fake air quality data."""
 from homeassistant.components.air_quality import AirQualityEntity
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Air Quality."""
-    add_entities([
-        DemoAirQuality('Home', 14, 23, 100),
-        DemoAirQuality('Office', 4, 16, None)
-    ])
+    add_entities(
+        [DemoAirQuality("Home", 14, 23, 100), DemoAirQuality("Office", 4, 16, None)]
+    )
 
 
 class DemoAirQuality(AirQualityEntity):
@@ -28,7 +22,7 @@ class DemoAirQuality(AirQualityEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format('Demo Air Quality', self._name)
+        return "{} {}".format("Demo Air Quality", self._name)
 
     @property
     def should_poll(self):
@@ -53,4 +47,4 @@ class DemoAirQuality(AirQualityEntity):
     @property
     def attribution(self):
         """Return the attribution."""
-        return 'Powered by Home Assistant'
+        return "Powered by Home Assistant"

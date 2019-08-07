@@ -1,9 +1,4 @@
-"""
-Support for the Twitch stream status.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.twitch/
-"""
+"""Support for the Twitch stream status."""
 import logging
 
 import voluptuous as vol
@@ -12,25 +7,24 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-twitch-client==0.6.0']
-
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_GAME = 'game'
-ATTR_TITLE = 'title'
+ATTR_GAME = "game"
+ATTR_TITLE = "title"
 
-CONF_CHANNELS = 'channels'
-CONF_CLIENT_ID = 'client_id'
-ICON = 'mdi:twitch'
+CONF_CHANNELS = "channels"
+CONF_CLIENT_ID = "client_id"
+ICON = "mdi:twitch"
 
-STATE_OFFLINE = 'offline'
-STATE_STREAMING = 'streaming'
+STATE_OFFLINE = "offline"
+STATE_STREAMING = "streaming"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_CLIENT_ID): cv.string,
-    vol.Required(CONF_CHANNELS, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_CLIENT_ID): cv.string,
+        vol.Required(CONF_CHANNELS, default=[]): vol.All(cv.ensure_list, [cv.string]),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -88,10 +82,7 @@ class TwitchSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         if self._state == STATE_STREAMING:
-            return {
-                ATTR_GAME: self._game,
-                ATTR_TITLE: self._title,
-            }
+            return {ATTR_GAME: self._game, ATTR_TITLE: self._title}
 
     @property
     def icon(self):
@@ -103,10 +94,10 @@ class TwitchSensor(Entity):
         """Update device state."""
         stream = self._client.streams.get_stream_by_user(self._id)
         if stream:
-            self._game = stream.get('channel').get('game')
-            self._title = stream.get('channel').get('status')
-            self._preview = stream.get('preview').get('medium')
+            self._game = stream.get("channel").get("game")
+            self._title = stream.get("channel").get("status")
+            self._preview = stream.get("preview").get("medium")
             self._state = STATE_STREAMING
         else:
-            self._preview = self._client.users.get_by_id(self._id).get('logo')
+            self._preview = self._client.users.get_by_id(self._id).get("logo")
             self._state = STATE_OFFLINE

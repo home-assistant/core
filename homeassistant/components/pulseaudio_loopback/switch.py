@@ -1,9 +1,4 @@
-"""
-Switch logic for loading/unloading pulseaudio loopback modules.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.pulseaudio_loopback/
-"""
+"""Switch logic for loading/unloading pulseaudio loopback modules."""
 import logging
 import re
 import socket
@@ -12,21 +7,21 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT)
+from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.const import CONF_NAME, CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 _PULSEAUDIO_SERVERS = {}
 
-CONF_BUFFER_SIZE = 'buffer_size'
-CONF_SINK_NAME = 'sink_name'
-CONF_SOURCE_NAME = 'source_name'
-CONF_TCP_TIMEOUT = 'tcp_timeout'
+CONF_BUFFER_SIZE = "buffer_size"
+CONF_SINK_NAME = "sink_name"
+CONF_SOURCE_NAME = "source_name"
+CONF_TCP_TIMEOUT = "tcp_timeout"
 
 DEFAULT_BUFFER_SIZE = 1024
-DEFAULT_HOST = 'localhost'
-DEFAULT_NAME = 'paloopback'
+DEFAULT_HOST = "localhost"
+DEFAULT_NAME = "paloopback"
 DEFAULT_PORT = 4712
 DEFAULT_TCP_TIMEOUT = 3
 
@@ -36,22 +31,24 @@ LOAD_CMD = "load-module module-loopback sink={0} source={1}"
 
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-MOD_REGEX = r"index: ([0-9]+)\s+name: <module-loopback>" \
-            r"\s+argument: (?=<.*sink={0}.*>)(?=<.*source={1}.*>)"
+MOD_REGEX = (
+    r"index: ([0-9]+)\s+name: <module-loopback>"
+    r"\s+argument: (?=<.*sink={0}.*>)(?=<.*source={1}.*>)"
+)
 
 UNLOAD_CMD = "unload-module {0}"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SINK_NAME): cv.string,
-    vol.Required(CONF_SOURCE_NAME): cv.string,
-    vol.Optional(CONF_BUFFER_SIZE, default=DEFAULT_BUFFER_SIZE):
-        cv.positive_int,
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_TCP_TIMEOUT, default=DEFAULT_TCP_TIMEOUT):
-        cv.positive_int,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_SINK_NAME): cv.string,
+        vol.Required(CONF_SOURCE_NAME): cv.string,
+        vol.Optional(CONF_BUFFER_SIZE, default=DEFAULT_BUFFER_SIZE): cv.positive_int,
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_TCP_TIMEOUT, default=DEFAULT_TCP_TIMEOUT): cv.positive_int,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -72,11 +69,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         server = PAServer(host, port, buffer_size, tcp_timeout)
         _PULSEAUDIO_SERVERS[server_id] = server
 
-    add_entities([
-        PALoopbackSwitch(hass, name, server, sink_name, source_name)])
+    add_entities([PALoopbackSwitch(hass, name, server, sink_name, source_name)])
 
 
-class PAServer():
+class PAServer:
     """Representation of a Pulseaudio server."""
 
     _current_module_state = ""
@@ -109,11 +105,11 @@ class PAServer():
         """Get the full response back from pulseaudio."""
         result = ""
         rcv_buffer = sock.recv(self._buffer_size)
-        result += rcv_buffer.decode('utf-8')
+        result += rcv_buffer.decode("utf-8")
 
         while len(rcv_buffer) == self._buffer_size:
             rcv_buffer = sock.recv(self._buffer_size)
-            result += rcv_buffer.decode('utf-8')
+            result += rcv_buffer.decode("utf-8")
 
         return result
 
@@ -132,9 +128,10 @@ class PAServer():
 
     def get_module_idx(self, sink_name, source_name):
         """For a sink/source, return its module id in our cache, if found."""
-        result = re.search(str.format(MOD_REGEX, re.escape(sink_name),
-                                      re.escape(source_name)),
-                           self._current_module_state)
+        result = re.search(
+            str.format(MOD_REGEX, re.escape(sink_name), re.escape(source_name)),
+            self._current_module_state,
+        )
         if result and result.group(1).isdigit():
             return int(result.group(1))
         return -1
@@ -168,7 +165,8 @@ class PALoopbackSwitch(SwitchDevice):
             self._pa_svr.turn_on(self._sink_name, self._source_name)
             self._pa_svr.update_module_state(no_throttle=True)
             self._module_idx = self._pa_svr.get_module_idx(
-                self._sink_name, self._source_name)
+                self._sink_name, self._source_name
+            )
             self.schedule_update_ha_state()
         else:
             _LOGGER.warning(IGNORED_SWITCH_WARN)
@@ -179,7 +177,8 @@ class PALoopbackSwitch(SwitchDevice):
             self._pa_svr.turn_off(self._module_idx)
             self._pa_svr.update_module_state(no_throttle=True)
             self._module_idx = self._pa_svr.get_module_idx(
-                self._sink_name, self._source_name)
+                self._sink_name, self._source_name
+            )
             self.schedule_update_ha_state()
         else:
             _LOGGER.warning(IGNORED_SWITCH_WARN)
@@ -188,4 +187,5 @@ class PALoopbackSwitch(SwitchDevice):
         """Refresh state in case an alternate process modified this data."""
         self._pa_svr.update_module_state()
         self._module_idx = self._pa_svr.get_module_idx(
-            self._sink_name, self._source_name)
+            self._sink_name, self._source_name
+        )

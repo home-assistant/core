@@ -1,9 +1,4 @@
-"""
-Sensor for PostNL packages.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.postnl/
-"""
+"""Sensor for PostNL packages."""
 from datetime import timedelta
 import logging
 
@@ -11,28 +6,32 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
+    ATTR_ATTRIBUTION,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['postnl_api==1.0.2']
-
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = 'Information provided by PostNL'
+ATTRIBUTION = "Information provided by PostNL"
 
-DEFAULT_NAME = 'postnl'
+DEFAULT_NAME = "postnl"
 
-ICON = 'mdi:package-variant-closed'
+ICON = "mdi:package-variant-closed"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -59,9 +58,7 @@ class PostNLSensor(Entity):
     def __init__(self, api, name):
         """Initialize the PostNL sensor."""
         self._name = name
-        self._attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
+        self._attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self._state = None
         self._api = api
 
@@ -78,7 +75,7 @@ class PostNLSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return 'packages'
+        return "packages"
 
     @property
     def device_state_attributes(self):
@@ -94,5 +91,5 @@ class PostNLSensor(Entity):
     def update(self):
         """Update device state."""
         shipments = self._api.get_relevant_shipments()
-        self._attributes['shipments'] = shipments
+        self._attributes["shipments"] = shipments
         self._state = len(shipments)

@@ -1,48 +1,62 @@
-"""
-Support for Yamaha MusicCast Receivers.
-
-For more details about this platform, please refer to the documentation at
-https://www.home-assistant.io/components/media_player.yamaha_musiccast/
-"""
+"""Support for Yamaha MusicCast Receivers."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
-    SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_STOP,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
+    MEDIA_TYPE_MUSIC,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_STOP,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
+)
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, STATE_IDLE, STATE_ON, STATE_PAUSED, STATE_PLAYING,
-    STATE_UNKNOWN)
+    CONF_HOST,
+    CONF_PORT,
+    STATE_IDLE,
+    STATE_ON,
+    STATE_PAUSED,
+    STATE_PLAYING,
+    STATE_UNKNOWN,
+)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-
-REQUIREMENTS = ['pymusiccast==0.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_FEATURES = (
-    SUPPORT_PLAY | SUPPORT_PAUSE | SUPPORT_STOP |
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK |
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF |
-    SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |
-    SUPPORT_SELECT_SOURCE
+    SUPPORT_PLAY
+    | SUPPORT_PAUSE
+    | SUPPORT_STOP
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+    | SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_SELECT_SOURCE
 )
 
-KNOWN_HOSTS_KEY = 'data_yamaha_musiccast'
-INTERVAL_SECONDS = 'interval_seconds'
+KNOWN_HOSTS_KEY = "data_yamaha_musiccast"
+INTERVAL_SECONDS = "interval_seconds"
 
 DEFAULT_PORT = 5005
 DEFAULT_INTERVAL = 480
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(INTERVAL_SECONDS, default=DEFAULT_INTERVAL): cv.positive_int,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(INTERVAL_SECONDS, default=DEFAULT_INTERVAL): cv.positive_int,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -63,8 +77,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         ipaddr = socket.gethostbyname(host)
     except (OSError) as error:
-        _LOGGER.error(
-            "Could not communicate with %s:%d: %s", host, port, error)
+        _LOGGER.error("Could not communicate with %s:%d: %s", host, port, error)
         return
 
     if [item for item in known_hosts if item[0] == ipaddr]:
@@ -79,18 +92,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     known_hosts.append(reg_host)
 
     try:
-        receiver = pymusiccast.McDevice(
-            ipaddr, udp_port=port, mc_interval=interval)
+        receiver = pymusiccast.McDevice(ipaddr, udp_port=port, mc_interval=interval)
     except pymusiccast.exceptions.YMCInitError as err:
         _LOGGER.error(err)
         receiver = None
 
     if receiver:
         for zone in receiver.zones:
-            _LOGGER.debug(
-                "Receiver: %s / Port: %d / Zone: %s", receiver, port, zone)
-            add_entities(
-                [YamahaDevice(receiver, receiver.zones[zone])], True)
+            _LOGGER.debug("Receiver: %s / Port: %d / Zone: %s", receiver, port, zone)
+            add_entities([YamahaDevice(receiver, receiver.zones[zone])], True)
     else:
         known_hosts.remove(reg_host)
 
@@ -170,14 +180,12 @@ class YamahaDevice(MediaPlayerDevice):
     @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
-        return self.media_status.media_duration \
-            if self.media_status else None
+        return self.media_status.media_duration if self.media_status else None
 
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        return self.media_status.media_image_url \
-            if self.media_status else None
+        return self.media_status.media_image_url if self.media_status else None
 
     @property
     def media_artist(self):
@@ -202,8 +210,11 @@ class YamahaDevice(MediaPlayerDevice):
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
-        if self.media_status and self.state in \
-                [STATE_PLAYING, STATE_PAUSED, STATE_IDLE]:
+        if self.media_status and self.state in [
+            STATE_PLAYING,
+            STATE_PAUSED,
+            STATE_IDLE,
+        ]:
             return self.media_status.media_position
 
     @property
@@ -269,8 +280,7 @@ class YamahaDevice(MediaPlayerDevice):
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        _LOGGER.debug("Volume level: %.2f / %d",
-                      volume, volume * self.volume_max)
+        _LOGGER.debug("Volume level: %.2f / %d", volume, volume * self.volume_max)
         self._zone.set_volume(volume * self.volume_max)
 
     def select_source(self, source):

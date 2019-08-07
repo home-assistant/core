@@ -1,9 +1,4 @@
-"""
-Lannouncer platform for notify component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.lannouncer/
-"""
+"""Lannouncer platform for notify component."""
 import logging
 import socket
 from urllib.parse import urlencode
@@ -13,19 +8,24 @@ import voluptuous as vol
 from homeassistant.const import CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.components.notify import (ATTR_DATA, PLATFORM_SCHEMA,
-                                             BaseNotificationService)
+from homeassistant.components.notify import (
+    ATTR_DATA,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 
-ATTR_METHOD = 'method'
-ATTR_METHOD_DEFAULT = 'speak'
-ATTR_METHOD_ALLOWED = ['speak', 'alarm']
+ATTR_METHOD = "method"
+ATTR_METHOD_DEFAULT = "speak"
+ATTR_METHOD_ALLOWED = ["speak", "alarm"]
 
 DEFAULT_PORT = 1035
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    }
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,9 +74,8 @@ class LannouncerNotificationService(BaseNotificationService):
 
             # Check response
             buffer = sock.recv(1024)
-            if buffer != b'LANnouncer: OK':
-                _LOGGER.error("Error sending data to Lannnouncer: %s",
-                              buffer.decode())
+            if buffer != b"LANnouncer: OK":
+                _LOGGER.error("Error sending data to Lannnouncer: %s", buffer.decode())
 
             # Close socket
             sock.close()

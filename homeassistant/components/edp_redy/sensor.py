@@ -8,14 +8,11 @@ from . import EDP_REDY, EdpRedyDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['edp_redy']
-
 # Load power in watts (W)
-ATTR_ACTIVE_POWER = 'active_power'
+ATTR_ACTIVE_POWER = "active_power"
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Perform the setup for re:dy devices."""
     from edp_redy.session import ACTIVE_POWER_ID
 
@@ -24,13 +21,14 @@ async def async_setup_platform(
 
     # Create sensors for modules
     for device_json in session.modules_dict.values():
-        if 'HA_POWER_METER' not in device_json['Capabilities']:
+        if "HA_POWER_METER" not in device_json["Capabilities"]:
             continue
         devices.append(EdpRedyModuleSensor(session, device_json))
 
     # Create a sensor for global active power
-    devices.append(EdpRedySensor(session, ACTIVE_POWER_ID, "Power Home",
-                                 'mdi:flash', POWER_WATT))
+    devices.append(
+        EdpRedySensor(session, ACTIVE_POWER_ID, "Power Home", "mdi:flash", POWER_WATT)
+    )
 
     async_add_entities(devices, True)
 
@@ -74,8 +72,9 @@ class EdpRedyModuleSensor(EdpRedyDevice, Entity):
 
     def __init__(self, session, device_json):
         """Initialize the sensor."""
-        super().__init__(session, device_json['PKID'],
-                         "Power {0}".format(device_json['Name']))
+        super().__init__(
+            session, device_json["PKID"], "Power {0}".format(device_json["Name"])
+        )
 
     @property
     def state(self):
@@ -85,7 +84,7 @@ class EdpRedyModuleSensor(EdpRedyDevice, Entity):
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        return 'mdi:flash'
+        return "mdi:flash"
 
     @property
     def unit_of_measurement(self):
@@ -106,10 +105,10 @@ class EdpRedyModuleSensor(EdpRedyDevice, Entity):
 
         _LOGGER.debug("Sensor data: %s", str(data))
 
-        for state_var in data['StateVars']:
-            if state_var['Name'] == 'ActivePower':
+        for state_var in data["StateVars"]:
+            if state_var["Name"] == "ActivePower":
                 try:
-                    self._state = float(state_var['Value']) * 1000
+                    self._state = float(state_var["Value"]) * 1000
                 except ValueError:
                     _LOGGER.error("Could not parse power for %s", self._id)
                     self._state = 0

@@ -9,7 +9,7 @@ from homeassistant.util import dt as dt_util
 def test_json_encoder(hass):
     """Test the JSON Encoder."""
     ha_json_enc = JSONEncoder()
-    state = core.State('test.test', 'hello')
+    state = core.State("test.test", "hello")
 
     assert ha_json_enc.default(state) == state.as_dict()
 

@@ -1,9 +1,4 @@
-"""
-Component to interface with various switches that can be controlled remotely.
-
-For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/switch/
-"""
+"""Component to interface with switches that can be controlled remotely."""
 from datetime import timedelta
 import logging
 
@@ -13,21 +8,25 @@ from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.config_validation import (  # noqa
-    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
-import homeassistant.helpers.config_validation as cv
+    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA_BASE,
+    ENTITY_SERVICE_SCHEMA,
+)
 from homeassistant.const import (
-    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
-    ATTR_ENTITY_ID)
+    STATE_ON,
+    SERVICE_TURN_ON,
+    SERVICE_TURN_OFF,
+    SERVICE_TOGGLE,
+)
 from homeassistant.components import group
 
-DOMAIN = 'switch'
-DEPENDENCIES = ['group']
+DOMAIN = "switch"
 SCAN_INTERVAL = timedelta(seconds=30)
 
-GROUP_NAME_ALL_SWITCHES = 'all switches'
-ENTITY_ID_ALL_SWITCHES = group.ENTITY_ID_FORMAT.format('all_switches')
+GROUP_NAME_ALL_SWITCHES = "all switches"
+ENTITY_ID_ALL_SWITCHES = group.ENTITY_ID_FORMAT.format("all_switches")
 
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 ATTR_TODAY_ENERGY_KWH = "today_energy_kwh"
 ATTR_CURRENT_POWER_W = "current_power_w"
@@ -35,13 +34,16 @@ ATTR_CURRENT_POWER_W = "current_power_w"
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 PROP_TO_ATTR = {
-    'current_power_w': ATTR_CURRENT_POWER_W,
-    'today_energy_kwh': ATTR_TODAY_ENERGY_KWH,
+    "current_power_w": ATTR_CURRENT_POWER_W,
+    "today_energy_kwh": ATTR_TODAY_ENERGY_KWH,
 }
 
-SWITCH_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-})
+DEVICE_CLASS_OUTLET = "outlet"
+DEVICE_CLASS_SWITCH = "switch"
+
+DEVICE_CLASSES = [DEVICE_CLASS_OUTLET, DEVICE_CLASS_SWITCH]
+
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,22 +61,20 @@ def is_on(hass, entity_id=None):
 async def async_setup(hass, config):
     """Track states and offer events for switches."""
     component = hass.data[DOMAIN] = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_SWITCHES)
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_SWITCHES
+    )
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, SWITCH_SERVICE_SCHEMA,
-        'async_turn_off'
+        SERVICE_TURN_OFF, ENTITY_SERVICE_SCHEMA, "async_turn_off"
     )
 
     component.async_register_entity_service(
-        SERVICE_TURN_ON, SWITCH_SERVICE_SCHEMA,
-        'async_turn_on'
+        SERVICE_TURN_ON, ENTITY_SERVICE_SCHEMA, "async_turn_on"
     )
 
     component.async_register_entity_service(
-        SERVICE_TOGGLE, SWITCH_SERVICE_SCHEMA,
-        'async_toggle'
+        SERVICE_TOGGLE, ENTITY_SERVICE_SCHEMA, "async_toggle"
     )
 
     return True
@@ -119,3 +119,8 @@ class SwitchDevice(ToggleEntity):
                 data[attr] = value
 
         return data
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return None

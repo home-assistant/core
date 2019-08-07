@@ -1,9 +1,4 @@
-"""
-Mail (SMTP) notification service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.smtp/
-"""
+"""Mail (SMTP) notification service."""
 from email.mime.application import MIMEApplication
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
@@ -16,47 +11,59 @@ import smtplib
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_PASSWORD, CONF_PORT, CONF_RECIPIENT, CONF_SENDER, CONF_TIMEOUT,
-    CONF_USERNAME)
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_RECIPIENT,
+    CONF_SENDER,
+    CONF_TIMEOUT,
+    CONF_USERNAME,
+)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
 from homeassistant.components.notify import (
-    ATTR_DATA, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
-    BaseNotificationService)
+    ATTR_DATA,
+    ATTR_TITLE,
+    ATTR_TITLE_DEFAULT,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_IMAGES = 'images'  # optional embedded image file attachments
-ATTR_HTML = 'html'
+ATTR_IMAGES = "images"  # optional embedded image file attachments
+ATTR_HTML = "html"
 
-CONF_ENCRYPTION = 'encryption'
-CONF_DEBUG = 'debug'
-CONF_SERVER = 'server'
-CONF_SENDER_NAME = 'sender_name'
+CONF_ENCRYPTION = "encryption"
+CONF_DEBUG = "debug"
+CONF_SERVER = "server"
+CONF_SENDER_NAME = "sender_name"
 
-DEFAULT_HOST = 'localhost'
+DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 587
 DEFAULT_TIMEOUT = 5
 DEFAULT_DEBUG = False
-DEFAULT_ENCRYPTION = 'starttls'
+DEFAULT_ENCRYPTION = "starttls"
 
-ENCRYPTION_OPTIONS = ['tls', 'starttls', 'none']
+ENCRYPTION_OPTIONS = ["tls", "starttls", "none"]
 
 # pylint: disable=no-value-for-parameter
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RECIPIENT): vol.All(cv.ensure_list, [vol.Email()]),
-    vol.Required(CONF_SENDER): vol.Email(),
-    vol.Optional(CONF_SERVER, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    vol.Optional(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION):
-        vol.In(ENCRYPTION_OPTIONS),
-    vol.Optional(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_SENDER_NAME): cv.string,
-    vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_RECIPIENT): vol.All(cv.ensure_list, [vol.Email()]),
+        vol.Required(CONF_SENDER): vol.Email(),
+        vol.Optional(CONF_SERVER, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        vol.Optional(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION): vol.In(
+            ENCRYPTION_OPTIONS
+        ),
+        vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_SENDER_NAME): cv.string,
+        vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
+    }
+)
 
 
 def get_service(hass, config, discovery_info=None):
@@ -71,7 +78,8 @@ def get_service(hass, config, discovery_info=None):
         config.get(CONF_PASSWORD),
         config.get(CONF_RECIPIENT),
         config.get(CONF_SENDER_NAME),
-        config.get(CONF_DEBUG))
+        config.get(CONF_DEBUG),
+    )
 
     if mail_service.connection_is_valid():
         return mail_service
@@ -82,8 +90,19 @@ def get_service(hass, config, discovery_info=None):
 class MailNotificationService(BaseNotificationService):
     """Implement the notification service for E-mail messages."""
 
-    def __init__(self, server, port, timeout, sender, encryption, username,
-                 password, recipients, sender_name, debug):
+    def __init__(
+        self,
+        server,
+        port,
+        timeout,
+        sender,
+        encryption,
+        username,
+        password,
+        recipients,
+        sender_name,
+        debug,
+    ):
         """Initialize the SMTP service."""
         self._server = server
         self._port = port
@@ -100,11 +119,9 @@ class MailNotificationService(BaseNotificationService):
     def connect(self):
         """Connect/authenticate to SMTP Server."""
         if self.encryption == "tls":
-            mail = smtplib.SMTP_SSL(
-                self._server, self._port, timeout=self._timeout)
+            mail = smtplib.SMTP_SSL(self._server, self._port, timeout=self._timeout)
         else:
-            mail = smtplib.SMTP(
-                self._server, self._port, timeout=self._timeout)
+            mail = smtplib.SMTP(self._server, self._port, timeout=self._timeout)
         mail.set_debuglevel(self.debug)
         mail.ehlo_or_helo_if_needed()
         if self.encryption == "starttls":
@@ -123,13 +140,16 @@ class MailNotificationService(BaseNotificationService):
             _LOGGER.exception(
                 "SMTP server not found (%s:%s). "
                 "Please check the IP address or hostname of your SMTP server",
-                self._server, self._port)
+                self._server,
+                self._port,
+            )
             return False
 
         except (smtplib.SMTPAuthenticationError, ConnectionRefusedError):
             _LOGGER.exception(
                 "Login not possible. "
-                "Please check your setting and/or your credentials")
+                "Please check your setting and/or your credentials"
+            )
             return False
 
         finally:
@@ -152,22 +172,22 @@ class MailNotificationService(BaseNotificationService):
         if data:
             if ATTR_HTML in data:
                 msg = _build_html_msg(
-                    message, data[ATTR_HTML], images=data.get(ATTR_IMAGES, []))
+                    message, data[ATTR_HTML], images=data.get(ATTR_IMAGES, [])
+                )
             else:
-                msg = _build_multipart_msg(
-                    message, images=data.get(ATTR_IMAGES, []))
+                msg = _build_multipart_msg(message, images=data.get(ATTR_IMAGES, []))
         else:
             msg = _build_text_msg(message)
 
-        msg['Subject'] = subject
-        msg['To'] = ','.join(self.recipients)
+        msg["Subject"] = subject
+        msg["To"] = ",".join(self.recipients)
         if self._sender_name:
-            msg['From'] = '{} <{}>'.format(self._sender_name, self._sender)
+            msg["From"] = "{} <{}>".format(self._sender_name, self._sender)
         else:
-            msg['From'] = self._sender
-        msg['X-Mailer'] = 'HomeAssistant'
-        msg['Date'] = email.utils.format_datetime(dt_util.now())
-        msg['Message-Id'] = email.utils.make_msgid()
+            msg["From"] = self._sender
+        msg["X-Mailer"] = "HomeAssistant"
+        msg["Date"] = email.utils.format_datetime(dt_util.now())
+        msg["Message-Id"] = email.utils.make_msgid()
 
         return self._send_email(msg)
 
@@ -180,12 +200,12 @@ class MailNotificationService(BaseNotificationService):
                 break
             except smtplib.SMTPServerDisconnected:
                 _LOGGER.warning(
-                    "SMTPServerDisconnected sending mail: retrying connection")
+                    "SMTPServerDisconnected sending mail: retrying connection"
+                )
                 mail.quit()
                 mail = self.connect()
             except smtplib.SMTPException:
-                _LOGGER.warning(
-                    "SMTPException sending mail: retrying connection")
+                _LOGGER.warning("SMTPException sending mail: retrying connection")
                 mail.quit()
                 mail = self.connect()
         mail.quit()
@@ -200,35 +220,38 @@ def _build_text_msg(message):
 def _build_multipart_msg(message, images):
     """Build Multipart message with in-line images."""
     _LOGGER.debug("Building multipart email with embedded attachment(s)")
-    msg = MIMEMultipart('related')
-    msg_alt = MIMEMultipart('alternative')
+    msg = MIMEMultipart("related")
+    msg_alt = MIMEMultipart("alternative")
     msg.attach(msg_alt)
     body_txt = MIMEText(message)
     msg_alt.attach(body_txt)
-    body_text = ['<p>{}</p><br>'.format(message)]
+    body_text = ["<p>{}</p><br>".format(message)]
 
     for atch_num, atch_name in enumerate(images):
-        cid = 'image{}'.format(atch_num)
+        cid = "image{}".format(atch_num)
         body_text.append('<img src="cid:{}"><br>'.format(cid))
         try:
-            with open(atch_name, 'rb') as attachment_file:
+            with open(atch_name, "rb") as attachment_file:
                 file_bytes = attachment_file.read()
                 try:
                     attachment = MIMEImage(file_bytes)
                     msg.attach(attachment)
-                    attachment.add_header('Content-ID', '<{}>'.format(cid))
+                    attachment.add_header("Content-ID", "<{}>".format(cid))
                 except TypeError:
-                    _LOGGER.warning("Attachment %s has an unknown MIME type. "
-                                    "Falling back to file", atch_name)
+                    _LOGGER.warning(
+                        "Attachment %s has an unknown MIME type. "
+                        "Falling back to file",
+                        atch_name,
+                    )
                     attachment = MIMEApplication(file_bytes, Name=atch_name)
-                    attachment['Content-Disposition'] = ('attachment; '
-                                                         'filename="%s"' %
-                                                         atch_name)
+                    attachment["Content-Disposition"] = (
+                        "attachment; " 'filename="%s"' % atch_name
+                    )
                     msg.attach(attachment)
         except FileNotFoundError:
             _LOGGER.warning("Attachment %s not found. Skipping", atch_name)
 
-    body_html = MIMEText(''.join(body_text), 'html')
+    body_html = MIMEText("".join(body_text), "html")
     msg_alt.attach(body_html)
     return msg
 
@@ -236,20 +259,21 @@ def _build_multipart_msg(message, images):
 def _build_html_msg(text, html, images):
     """Build Multipart message with in-line images and rich HTML (UTF-8)."""
     _LOGGER.debug("Building HTML rich email")
-    msg = MIMEMultipart('related')
-    alternative = MIMEMultipart('alternative')
-    alternative.attach(MIMEText(text, _charset='utf-8'))
-    alternative.attach(MIMEText(html, ATTR_HTML, _charset='utf-8'))
+    msg = MIMEMultipart("related")
+    alternative = MIMEMultipart("alternative")
+    alternative.attach(MIMEText(text, _charset="utf-8"))
+    alternative.attach(MIMEText(html, ATTR_HTML, _charset="utf-8"))
     msg.attach(alternative)
 
     for atch_num, atch_name in enumerate(images):
         name = os.path.basename(atch_name)
         try:
-            with open(atch_name, 'rb') as attachment_file:
+            with open(atch_name, "rb") as attachment_file:
                 attachment = MIMEImage(attachment_file.read(), filename=name)
             msg.attach(attachment)
-            attachment.add_header('Content-ID', '<{}>'.format(name))
+            attachment.add_header("Content-ID", "<{}>".format(name))
         except FileNotFoundError:
-            _LOGGER.warning("Attachment %s [#%s] not found. Skipping",
-                            atch_name, atch_num)
+            _LOGGER.warning(
+                "Attachment %s [#%s] not found. Skipping", atch_name, atch_num
+            )
     return msg

@@ -1,44 +1,46 @@
-"""
-Support for Digital Loggers DIN III Relays.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.digitalloggers/
-"""
+"""Support for Digital Loggers DIN III Relays."""
 import logging
 from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT)
+    CONF_HOST,
+    CONF_NAME,
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    CONF_TIMEOUT,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['dlipower==0.7.165']
-
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CYCLETIME = 'cycletime'
+CONF_CYCLETIME = "cycletime"
 
-DEFAULT_NAME = 'DINRelay'
-DEFAULT_USERNAME = 'admin'
-DEFAULT_PASSWORD = 'admin'
+DEFAULT_NAME = "DINRelay"
+DEFAULT_USERNAME = "admin"
+DEFAULT_PASSWORD = "admin"
 DEFAULT_TIMEOUT = 20
 DEFAULT_CYCLETIME = 2
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT):
-        vol.All(vol.Coerce(int), vol.Range(min=1, max=600)),
-    vol.Optional(CONF_CYCLETIME, default=DEFAULT_CYCLETIME):
-        vol.All(vol.Coerce(int), vol.Range(min=1, max=600)),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=600)
+        ),
+        vol.Optional(CONF_CYCLETIME, default=DEFAULT_CYCLETIME): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=600)
+        ),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -53,8 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     cycl = config.get(CONF_CYCLETIME)
 
     power_switch = dlipower.PowerSwitch(
-        hostname=host, userid=user, password=pswd,
-        timeout=tout, cycletime=cycl
+        hostname=host, userid=user, password=pswd, timeout=tout, cycletime=cycl
     )
 
     if not power_switch.verify():
@@ -65,8 +66,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     parent_device = DINRelayDevice(power_switch)
 
     outlets.extend(
-        DINRelay(controller_name, parent_device, outlet)
-        for outlet in power_switch[0:]
+        DINRelay(controller_name, parent_device, outlet) for outlet in power_switch[0:]
     )
 
     add_entities(outlets)
@@ -83,15 +83,12 @@ class DINRelay(SwitchDevice):
 
         self._outlet_number = self._outlet.outlet_number
         self._name = self._outlet.description
-        self._state = self._outlet.state == 'ON'
+        self._state = self._outlet.state == "ON"
 
     @property
     def name(self):
         """Return the display name of this relay."""
-        return '{}_{}'.format(
-            self._controller_name,
-            self._name
-        )
+        return "{}_{}".format(self._controller_name, self._name)
 
     @property
     def is_on(self):
@@ -115,11 +112,10 @@ class DINRelay(SwitchDevice):
         """Trigger update for all switches on the parent device."""
         self._parent_device.update()
 
-        outlet_status = self._parent_device.get_outlet_status(
-            self._outlet_number)
+        outlet_status = self._parent_device.get_outlet_status(self._outlet_number)
 
         self._name = outlet_status[1]
-        self._state = outlet_status[2] == 'ON'
+        self._state = outlet_status[2] == "ON"
 
 
 class DINRelayDevice:

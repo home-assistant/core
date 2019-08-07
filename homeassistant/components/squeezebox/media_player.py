@@ -1,9 +1,4 @@
-"""
-Support for interfacing to the Logitech SqueezeBox API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.squeezebox/
-"""
+"""Support for interfacing to the Logitech SqueezeBox API."""
 import asyncio
 import json
 import logging
@@ -13,17 +8,36 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, MEDIA_PLAYER_SCHEMA, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC,
-    SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
-    SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_SHUFFLE_SET, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
+    ATTR_MEDIA_ENQUEUE,
+    DOMAIN,
+    MEDIA_TYPE_MUSIC,
+    SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEEK,
+    SUPPORT_SHUFFLE_SET,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
+)
 from homeassistant.const import (
-    ATTR_COMMAND, CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME,
-    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
+    ATTR_COMMAND,
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    STATE_IDLE,
+    STATE_OFF,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
@@ -33,41 +47,58 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_PORT = 9000
 TIMEOUT = 10
 
-SUPPORT_SQUEEZEBOX = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
-    SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_SEEK | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | \
-    SUPPORT_PLAY | SUPPORT_SHUFFLE_SET | SUPPORT_CLEAR_PLAYLIST
+SUPPORT_SQUEEZEBOX = (
+    SUPPORT_PAUSE
+    | SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_SEEK
+    | SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_PLAY
+    | SUPPORT_SHUFFLE_SET
+    | SUPPORT_CLEAR_PLAYLIST
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_USERNAME): cv.string,
-})
+MEDIA_PLAYER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
 
-SERVICE_CALL_METHOD = 'squeezebox_call_method'
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_USERNAME): cv.string,
+    }
+)
 
-DATA_SQUEEZEBOX = 'squeezebox'
+SERVICE_CALL_METHOD = "squeezebox_call_method"
 
-KNOWN_SERVERS = 'squeezebox_known_servers'
+DATA_SQUEEZEBOX = "squeezebox"
 
-ATTR_PARAMETERS = 'parameters'
+KNOWN_SERVERS = "squeezebox_known_servers"
 
-SQUEEZEBOX_CALL_METHOD_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_COMMAND): cv.string,
-    vol.Optional(ATTR_PARAMETERS):
-        vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
-})
+ATTR_PARAMETERS = "parameters"
+
+SQUEEZEBOX_CALL_METHOD_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
+    {
+        vol.Required(ATTR_COMMAND): cv.string,
+        vol.Optional(ATTR_PARAMETERS): vol.All(
+            cv.ensure_list, vol.Length(min=1), [cv.string]
+        ),
+    }
+)
 
 SERVICE_TO_METHOD = {
     SERVICE_CALL_METHOD: {
-        'method': 'async_call_method',
-        'schema': SQUEEZEBOX_CALL_METHOD_SCHEMA},
+        "method": "async_call_method",
+        "schema": SQUEEZEBOX_CALL_METHOD_SCHEMA,
+    }
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the squeezebox platform."""
     import socket
 
@@ -96,8 +127,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     try:
         ipaddr = socket.gethostbyname(host)
     except (OSError) as error:
-        _LOGGER.error(
-            "Could not communicate with %s:%d: %s", host, port, error)
+        _LOGGER.error("Could not communicate with %s:%d: %s", host, port, error)
         return False
 
     if ipaddr in known_servers:
@@ -118,28 +148,32 @@ async def async_setup_platform(hass, config, async_add_entities,
         if not method:
             return
 
-        params = {key: value for key, value in service.data.items()
-                  if key != 'entity_id'}
-        entity_ids = service.data.get('entity_id')
+        params = {
+            key: value for key, value in service.data.items() if key != "entity_id"
+        }
+        entity_ids = service.data.get("entity_id")
         if entity_ids:
-            target_players = [player for player in hass.data[DATA_SQUEEZEBOX]
-                              if player.entity_id in entity_ids]
+            target_players = [
+                player
+                for player in hass.data[DATA_SQUEEZEBOX]
+                if player.entity_id in entity_ids
+            ]
         else:
             target_players = hass.data[DATA_SQUEEZEBOX]
 
         update_tasks = []
         for player in target_players:
-            await getattr(player, method['method'])(**params)
+            await getattr(player, method["method"])(**params)
             update_tasks.append(player.async_update_ha_state(True))
 
         if update_tasks:
-            await asyncio.wait(update_tasks, loop=hass.loop)
+            await asyncio.wait(update_tasks)
 
     for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service]['schema']
+        schema = SERVICE_TO_METHOD[service]["schema"]
         hass.services.async_register(
-            DOMAIN, service, async_service_handler,
-            schema=schema)
+            DOMAIN, service, async_service_handler, schema=schema
+        )
 
     return True
 
@@ -158,42 +192,40 @@ class LogitechMediaServer:
     async def create_players(self):
         """Create a list of devices connected to LMS."""
         result = []
-        data = await self.async_query('players', 'status')
+        data = await self.async_query("players", "status")
         if data is False:
             return result
-        for players in data.get('players_loop', []):
-            player = SqueezeBoxDevice(
-                self, players['playerid'], players['name'])
+        for players in data.get("players_loop", []):
+            player = SqueezeBoxDevice(self, players["playerid"], players["name"])
             await player.async_update()
             result.append(player)
         return result
 
     async def async_query(self, *command, player=""):
         """Abstract out the JSON-RPC connection."""
-        auth = None if self._username is None else aiohttp.BasicAuth(
-            self._username, self._password)
-        url = "http://{}:{}/jsonrpc.js".format(
-            self.host, self.port)
-        data = json.dumps({
-            "id": "1",
-            "method": "slim.request",
-            "params": [player, command]
-            })
+        auth = (
+            None
+            if self._username is None
+            else aiohttp.BasicAuth(self._username, self._password)
+        )
+        url = "http://{}:{}/jsonrpc.js".format(self.host, self.port)
+        data = json.dumps(
+            {"id": "1", "method": "slim.request", "params": [player, command]}
+        )
 
         _LOGGER.debug("URL: %s Data: %s", url, data)
 
         try:
             websession = async_get_clientsession(self.hass)
-            with async_timeout.timeout(TIMEOUT, loop=self.hass.loop):
-                response = await websession.post(
-                    url,
-                    data=data,
-                    auth=auth)
+            with async_timeout.timeout(TIMEOUT):
+                response = await websession.post(url, data=data, auth=auth)
 
                 if response.status != 200:
                     _LOGGER.error(
                         "Query failed, response code: %s Full message: %s",
-                        response.status, response)
+                        response.status,
+                        response,
+                    )
                     return False
 
                 data = await response.json()
@@ -203,7 +235,7 @@ class LogitechMediaServer:
             return False
 
         try:
-            return data['result']
+            return data["result"]
         except AttributeError:
             _LOGGER.error("Received invalid response: %s", data)
             return False
@@ -235,14 +267,14 @@ class SqueezeBoxDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        if 'power' in self._status and self._status['power'] == 0:
+        if "power" in self._status and self._status["power"] == 0:
             return STATE_OFF
-        if 'mode' in self._status:
-            if self._status['mode'] == 'pause':
+        if "mode" in self._status:
+            if self._status["mode"] == "pause":
                 return STATE_PAUSED
-            if self._status['mode'] == 'play':
+            if self._status["mode"] == "play":
                 return STATE_PLAYING
-            if self._status['mode'] == 'stop':
+            if self._status["mode"] == "stop":
                 return STATE_IDLE
         return None
 
@@ -251,15 +283,14 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self._lms.async_query(
-            *parameters, player=self._id)
+        return self._lms.async_query(*parameters, player=self._id)
 
     async def async_update(self):
         """Retrieve the current state of the player."""
-        tags = 'adKl'
+        tags = "adKl"
         response = await self.async_query(
-            "status", "-", "1", "tags:{tags}"
-            .format(tags=tags))
+            "status", "-", "1", "tags:{tags}".format(tags=tags)
+        )
 
         if response is False:
             return
@@ -280,27 +311,28 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         self._status.update(response)
 
         if self.media_position != last_media_position:
-            _LOGGER.debug('Media position updated for %s: %s',
-                          self, self.media_position)
+            _LOGGER.debug(
+                "Media position updated for %s: %s", self, self.media_position
+            )
             self._last_update = utcnow()
 
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        if 'mixer volume' in self._status:
-            return int(float(self._status['mixer volume'])) / 100.0
+        if "mixer volume" in self._status:
+            return int(float(self._status["mixer volume"])) / 100.0
 
     @property
     def is_volume_muted(self):
         """Return true if volume is muted."""
-        if 'mixer volume' in self._status:
-            return str(self._status['mixer volume']).startswith('-')
+        if "mixer volume" in self._status:
+            return str(self._status["mixer volume"]).startswith("-")
 
     @property
     def media_content_id(self):
         """Content ID of current playing media."""
-        if 'current_title' in self._status:
-            return self._status['current_title']
+        if "current_title" in self._status:
+            return self._status["current_title"]
 
     @property
     def media_content_type(self):
@@ -310,14 +342,14 @@ class SqueezeBoxDevice(MediaPlayerDevice):
     @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
-        if 'duration' in self._status:
-            return int(float(self._status['duration']))
+        if "duration" in self._status:
+            return int(float(self._status["duration"]))
 
     @property
     def media_position(self):
         """Duration of current playing media in seconds."""
-        if 'time' in self._status:
-            return int(float(self._status['time']))
+        if "time" in self._status:
+            return int(float(self._status["time"]))
 
     @property
     def media_position_updated_at(self):
@@ -327,26 +359,29 @@ class SqueezeBoxDevice(MediaPlayerDevice):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        if 'artwork_url' in self._status:
-            media_url = self._status['artwork_url']
-        elif 'id' in self._status:
-            media_url = ('/music/{track_id}/cover.jpg').format(
-                track_id=self._status['id'])
+        if "artwork_url" in self._status:
+            media_url = self._status["artwork_url"]
+        elif "id" in self._status:
+            media_url = ("/music/{track_id}/cover.jpg").format(
+                track_id=self._status["id"]
+            )
         else:
-            media_url = ('/music/current/cover.jpg?player={player}').format(
-                player=self._id)
+            media_url = ("/music/current/cover.jpg?player={player}").format(
+                player=self._id
+            )
 
         # pylint: disable=protected-access
         if self._lms._username:
-            base_url = 'http://{username}:{password}@{server}:{port}/'.format(
+            base_url = "http://{username}:{password}@{server}:{port}/".format(
                 username=self._lms._username,
                 password=self._lms._password,
                 server=self._lms.host,
-                port=self._lms.port)
+                port=self._lms.port,
+            )
         else:
-            base_url = 'http://{server}:{port}/'.format(
-                server=self._lms.host,
-                port=self._lms.port)
+            base_url = "http://{server}:{port}/".format(
+                server=self._lms.host, port=self._lms.port
+            )
 
         url = urllib.parse.urljoin(base_url, media_url)
 
@@ -355,29 +390,29 @@ class SqueezeBoxDevice(MediaPlayerDevice):
     @property
     def media_title(self):
         """Title of current playing media."""
-        if 'title' in self._status:
-            return self._status['title']
+        if "title" in self._status:
+            return self._status["title"]
 
-        if 'current_title' in self._status:
-            return self._status['current_title']
+        if "current_title" in self._status:
+            return self._status["current_title"]
 
     @property
     def media_artist(self):
         """Artist of current playing media."""
-        if 'artist' in self._status:
-            return self._status['artist']
+        if "artist" in self._status:
+            return self._status["artist"]
 
     @property
     def media_album_name(self):
         """Album of current playing media."""
-        if 'album' in self._status:
-            return self._status['album']
+        if "album" in self._status:
+            return self._status["album"]
 
     @property
     def shuffle(self):
         """Boolean if shuffle is enabled."""
-        if 'playlist_shuffle' in self._status:
-            return self._status['playlist_shuffle'] == 1
+        if "playlist_shuffle" in self._status:
+            return self._status["playlist_shuffle"] == 1
 
     @property
     def supported_features(self):
@@ -389,86 +424,86 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.async_query('power', '0')
+        return self.async_query("power", "0")
 
     def async_volume_up(self):
         """Volume up media player.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.async_query('mixer', 'volume', '+5')
+        return self.async_query("mixer", "volume", "+5")
 
     def async_volume_down(self):
         """Volume down media player.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.async_query('mixer', 'volume', '-5')
+        return self.async_query("mixer", "volume", "-5")
 
     def async_set_volume_level(self, volume):
         """Set volume level, range 0..1.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        volume_percent = str(int(volume*100))
-        return self.async_query('mixer', 'volume', volume_percent)
+        volume_percent = str(int(volume * 100))
+        return self.async_query("mixer", "volume", volume_percent)
 
     def async_mute_volume(self, mute):
         """Mute (true) or unmute (false) media player.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        mute_numeric = '1' if mute else '0'
-        return self.async_query('mixer', 'muting', mute_numeric)
+        mute_numeric = "1" if mute else "0"
+        return self.async_query("mixer", "muting", mute_numeric)
 
     def async_media_play_pause(self):
         """Send pause command to media player.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.async_query('pause')
+        return self.async_query("pause")
 
     def async_media_play(self):
         """Send play command to media player.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.async_query('play')
+        return self.async_query("play")
 
     def async_media_pause(self):
         """Send pause command to media player.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.async_query('pause', '1')
+        return self.async_query("pause", "1")
 
     def async_media_next_track(self):
         """Send next track command.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.async_query('playlist', 'index', '+1')
+        return self.async_query("playlist", "index", "+1")
 
     def async_media_previous_track(self):
         """Send next track command.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.async_query('playlist', 'index', '-1')
+        return self.async_query("playlist", "index", "-1")
 
     def async_media_seek(self, position):
         """Send seek command.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.async_query('time', position)
+        return self.async_query("time", position)
 
     def async_turn_on(self):
         """Turn the media player on.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.async_query('power', '1')
+        return self.async_query("power", "1")
 
     def async_play_media(self, media_type, media_id, **kwargs):
         """
@@ -484,19 +519,19 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
     def _play_uri(self, media_id):
         """Replace the current play list with the uri."""
-        return self.async_query('playlist', 'play', media_id)
+        return self.async_query("playlist", "play", media_id)
 
     def _add_uri_to_playlist(self, media_id):
         """Add an item to the existing playlist."""
-        return self.async_query('playlist', 'add', media_id)
+        return self.async_query("playlist", "add", media_id)
 
     def async_set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
-        return self.async_query('playlist', 'shuffle', int(shuffle))
+        return self.async_query("playlist", "shuffle", int(shuffle))
 
     def async_clear_playlist(self):
         """Send the media player the command for clear playlist."""
-        return self.async_query('playlist', 'clear')
+        return self.async_query("playlist", "clear")
 
     def async_call_method(self, command, parameters=None):
         """
@@ -508,5 +543,5 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         all_params = [command]
         if parameters:
             for parameter in parameters:
-                all_params.append(urllib.parse.quote(parameter, safe=':=/?'))
+                all_params.append(urllib.parse.quote(parameter, safe=":=/?"))
         return self.async_query(*all_params)

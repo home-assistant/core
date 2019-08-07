@@ -1,30 +1,25 @@
-"""
-Support for particulate matter sensors connected to a serial port.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.serial_pm/
-"""
+"""Support for particulate matter sensors connected to a serial port."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME
-from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-
-REQUIREMENTS = ['pmsensor==0.4']
+from homeassistant.const import CONF_NAME
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SERIAL_DEVICE = 'serial_device'
-CONF_BRAND = 'brand'
+CONF_BRAND = "brand"
+CONF_SERIAL_DEVICE = "serial_device"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_BRAND): cv.string,
-    vol.Required(CONF_SERIAL_DEVICE): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_BRAND): cv.string,
+        vol.Required(CONF_SERIAL_DEVICE): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -33,25 +28,30 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         coll = pm.PMDataCollector(
-            config.get(CONF_SERIAL_DEVICE),
-            pm.SUPPORTED_SENSORS[config.get(CONF_BRAND)]
+            config.get(CONF_SERIAL_DEVICE), pm.SUPPORTED_SENSORS[config.get(CONF_BRAND)]
         )
     except KeyError:
-        _LOGGER.error("Brand %s not supported\n supported brands: %s",
-                      config.get(CONF_BRAND), pm.SUPPORTED_SENSORS.keys())
+        _LOGGER.error(
+            "Brand %s not supported\n supported brands: %s",
+            config.get(CONF_BRAND),
+            pm.SUPPORTED_SENSORS.keys(),
+        )
         return
     except OSError as err:
-        _LOGGER.error("Could not open serial connection to %s (%s)",
-                      config.get(CONF_SERIAL_DEVICE), err)
+        _LOGGER.error(
+            "Could not open serial connection to %s (%s)",
+            config.get(CONF_SERIAL_DEVICE),
+            err,
+        )
         return
 
     dev = []
 
     for pmname in coll.supported_values():
         if config.get(CONF_NAME) is not None:
-            name = '{} PM{}'.format(config.get(CONF_NAME), pmname)
+            name = "{} PM{}".format(config.get(CONF_NAME), pmname)
         else:
-            name = 'PM{}'.format(pmname)
+            name = "PM{}".format(pmname)
         dev.append(ParticulateMatterSensor(coll, name, pmname))
 
     add_entities(dev)
@@ -89,7 +89,3 @@ class ParticulateMatterSensor(Entity):
             self._state = self._collector.read_data()[self._pmname]
         except KeyError:
             _LOGGER.error("Could not read PM%s value", self._pmname)
-
-    def should_poll(self):
-        """Sensor needs polling."""
-        return True

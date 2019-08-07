@@ -1,9 +1,4 @@
-"""
-Support for Ness D8X/D16X zone states - represented as binary sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.ness_alarm/
-"""
+"""Support for Ness D8X/D16X zone states - represented as binary sensors."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
@@ -11,15 +6,18 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
-    CONF_ZONE_ID, CONF_ZONE_NAME, CONF_ZONE_TYPE, CONF_ZONES,
-    SIGNAL_ZONE_CHANGED, ZoneChangedData)
+    CONF_ZONE_ID,
+    CONF_ZONE_NAME,
+    CONF_ZONE_TYPE,
+    CONF_ZONES,
+    SIGNAL_ZONE_CHANGED,
+    ZoneChangedData,
+)
 
-DEPENDENCIES = ['ness_alarm']
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Ness Alarm binary sensor devices."""
     if not discovery_info:
         return
@@ -32,8 +30,9 @@ async def async_setup_platform(hass, config, async_add_entities,
         zone_type = zone_config[CONF_ZONE_TYPE]
         zone_name = zone_config[CONF_ZONE_NAME]
         zone_id = zone_config[CONF_ZONE_ID]
-        device = NessZoneBinarySensor(zone_id=zone_id, name=zone_name,
-                                      zone_type=zone_type)
+        device = NessZoneBinarySensor(
+            zone_id=zone_id, name=zone_name, zone_type=zone_type
+        )
         devices.append(device)
 
     async_add_entities(devices)
@@ -52,7 +51,8 @@ class NessZoneBinarySensor(BinarySensorDevice):
     async def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(
-            self.hass, SIGNAL_ZONE_CHANGED, self._handle_zone_change)
+            self.hass, SIGNAL_ZONE_CHANGED, self._handle_zone_change
+        )
 
     @property
     def name(self):

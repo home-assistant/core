@@ -3,12 +3,7 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import DATA_HIVE, DOMAIN
 
-DEPENDENCIES = ['hive']
-
-DEVICETYPE_DEVICE_CLASS = {
-    'motionsensor': 'motion',
-    'contactsensor': 'opening',
-}
+DEVICETYPE_DEVICE_CLASS = {"motionsensor": "motion", "contactsensor": "opening"}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -31,9 +26,8 @@ class HiveBinarySensorEntity(BinarySensorDevice):
         self.node_device_type = hivedevice["Hive_DeviceType"]
         self.session = hivesession
         self.attributes = {}
-        self.data_updatesource = '{}.{}'.format(self.device_type,
-                                                self.node_id)
-        self._unique_id = '{}-{}'.format(self.node_id, self.device_type)
+        self.data_updatesource = "{}.{}".format(self.device_type, self.node_id)
+        self._unique_id = "{}-{}".format(self.node_id, self.device_type)
         self.session.entities.append(self)
 
     @property
@@ -44,16 +38,11 @@ class HiveBinarySensorEntity(BinarySensorDevice):
     @property
     def device_info(self):
         """Return device information."""
-        return {
-            'identifiers': {
-                (DOMAIN, self.unique_id)
-            },
-            'name': self.name
-        }
+        return {"identifiers": {(DOMAIN, self.unique_id)}, "name": self.name}
 
     def handle_update(self, updatesource):
         """Handle the new update request."""
-        if '{}.{}'.format(self.device_type, self.node_id) not in updatesource:
+        if "{}.{}".format(self.device_type, self.node_id) not in updatesource:
             self.schedule_update_ha_state()
 
     @property
@@ -74,11 +63,9 @@ class HiveBinarySensorEntity(BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self.session.sensor.get_state(
-            self.node_id, self.node_device_type)
+        return self.session.sensor.get_state(self.node_id, self.node_device_type)
 
     def update(self):
         """Update all Node data from Hive."""
         self.session.core.update_data(self.node_id)
-        self.attributes = self.session.attributes.state_attributes(
-            self.node_id)
+        self.attributes = self.session.attributes.state_attributes(self.node_id)

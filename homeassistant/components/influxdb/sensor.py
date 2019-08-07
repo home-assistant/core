@@ -1,9 +1,4 @@
-"""
-InfluxDB component which allows you to get data from an Influx database.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.influxdb/
-"""
+"""InfluxDB component which allows you to get data from an Influx database."""
 from datetime import timedelta
 import logging
 
@@ -11,9 +6,17 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_SSL,
-    CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME, CONF_VALUE_TEMPLATE,
-    CONF_VERIFY_SSL, STATE_UNKNOWN)
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_USERNAME,
+    CONF_VALUE_TEMPLATE,
+    CONF_VERIFY_SSL,
+    STATE_UNKNOWN,
+)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -23,56 +26,57 @@ from . import CONF_DB_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['influxdb==5.2.0']
-
-DEFAULT_HOST = 'localhost'
+DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 8086
-DEFAULT_DATABASE = 'home_assistant'
+DEFAULT_DATABASE = "home_assistant"
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = False
-DEFAULT_GROUP_FUNCTION = 'mean'
-DEFAULT_FIELD = 'value'
+DEFAULT_GROUP_FUNCTION = "mean"
+DEFAULT_FIELD = "value"
 
-CONF_QUERIES = 'queries'
-CONF_GROUP_FUNCTION = 'group_function'
-CONF_FIELD = 'field'
-CONF_MEASUREMENT_NAME = 'measurement'
-CONF_WHERE = 'where'
+CONF_QUERIES = "queries"
+CONF_GROUP_FUNCTION = "group_function"
+CONF_FIELD = "field"
+CONF_MEASUREMENT_NAME = "measurement"
+CONF_WHERE = "where"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-_QUERY_SCHEME = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_MEASUREMENT_NAME): cv.string,
-    vol.Required(CONF_WHERE): cv.template,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
-    vol.Optional(CONF_GROUP_FUNCTION, default=DEFAULT_GROUP_FUNCTION):
-        cv.string,
-    vol.Optional(CONF_FIELD, default=DEFAULT_FIELD): cv.string
-})
+_QUERY_SCHEME = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_MEASUREMENT_NAME): cv.string,
+        vol.Required(CONF_WHERE): cv.template,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
+        vol.Optional(CONF_GROUP_FUNCTION, default=DEFAULT_GROUP_FUNCTION): cv.string,
+        vol.Optional(CONF_FIELD, default=DEFAULT_FIELD): cv.string,
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_QUERIES): [_QUERY_SCHEME],
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
-    vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_QUERIES): [_QUERY_SCHEME],
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
+        vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the InfluxDB component."""
     influx_conf = {
-        'host': config[CONF_HOST],
-        'password': config.get(CONF_PASSWORD),
-        'port': config.get(CONF_PORT),
-        'ssl': config.get(CONF_SSL),
-        'username': config.get(CONF_USERNAME),
-        'verify_ssl': config.get(CONF_VERIFY_SSL),
+        "host": config[CONF_HOST],
+        "password": config.get(CONF_PASSWORD),
+        "port": config.get(CONF_PORT),
+        "ssl": config.get(CONF_SSL),
+        "username": config.get(CONF_USERNAME),
+        "verify_ssl": config.get(CONF_VERIFY_SSL),
     }
 
     dev = []
@@ -91,6 +95,7 @@ class InfluxSensor(Entity):
     def __init__(self, hass, influx_conf, query):
         """Initialize the sensor."""
         from influxdb import InfluxDBClient, exceptions
+
         self._name = query.get(CONF_NAME)
         self._unit_of_measurement = query.get(CONF_UNIT_OF_MEASUREMENT)
         value_template = query.get(CONF_VALUE_TEMPLATE)
@@ -107,20 +112,31 @@ class InfluxSensor(Entity):
         where_clause.hass = hass
 
         influx = InfluxDBClient(
-            host=influx_conf['host'], port=influx_conf['port'],
-            username=influx_conf['username'], password=influx_conf['password'],
-            database=database, ssl=influx_conf['ssl'],
-            verify_ssl=influx_conf['verify_ssl'])
+            host=influx_conf["host"],
+            port=influx_conf["port"],
+            username=influx_conf["username"],
+            password=influx_conf["password"],
+            database=database,
+            ssl=influx_conf["ssl"],
+            verify_ssl=influx_conf["verify_ssl"],
+        )
         try:
             influx.query("SHOW SERIES LIMIT 1;")
             self.connected = True
             self.data = InfluxSensorData(
-                influx, query.get(CONF_GROUP_FUNCTION), query.get(CONF_FIELD),
-                query.get(CONF_MEASUREMENT_NAME), where_clause)
+                influx,
+                query.get(CONF_GROUP_FUNCTION),
+                query.get(CONF_FIELD),
+                query.get(CONF_MEASUREMENT_NAME),
+                where_clause,
+            )
         except exceptions.InfluxDBClientError as exc:
-            _LOGGER.error("Database host is not accessible due to '%s', please"
-                          " check your entries in the configuration file and"
-                          " that the database exists and is READ/WRITE", exc)
+            _LOGGER.error(
+                "Database host is not accessible due to '%s', please"
+                " check your entries in the configuration file and"
+                " that the database exists and is READ/WRITE",
+                exc,
+            )
             self.connected = False
 
     @property
@@ -151,7 +167,8 @@ class InfluxSensor(Entity):
             value = STATE_UNKNOWN
         if self._value_template is not None:
             value = self._value_template.render_with_possible_json_value(
-                str(value), STATE_UNKNOWN)
+                str(value), STATE_UNKNOWN
+            )
 
         self._state = value
 
@@ -180,17 +197,22 @@ class InfluxSensorData:
             return
 
         self.query = "select {}({}) as value from {} where {}".format(
-            self.group, self.field, self.measurement, where_clause)
+            self.group, self.field, self.measurement, where_clause
+        )
 
         _LOGGER.info("Running query: %s", self.query)
 
         points = list(self.influx.query(self.query).get_points())
         if not points:
-            _LOGGER.warning("Query returned no points, sensor state set "
-                            "to UNKNOWN: %s", self.query)
+            _LOGGER.warning(
+                "Query returned no points, sensor state set " "to UNKNOWN: %s",
+                self.query,
+            )
             self.value = None
         else:
             if len(points) > 1:
-                _LOGGER.warning("Query returned multiple points, only first "
-                                "one shown: %s", self.query)
-            self.value = points[0].get('value')
+                _LOGGER.warning(
+                    "Query returned multiple points, only first " "one shown: %s",
+                    self.query,
+                )
+            self.value = points[0].get("value")

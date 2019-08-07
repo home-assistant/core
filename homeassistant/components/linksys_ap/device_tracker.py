@@ -1,9 +1,4 @@
-"""
-Support for Linksys Access Points.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.linksys_ap/
-"""
+"""Support for Linksys Access Points."""
 import base64
 import logging
 
@@ -12,23 +7,25 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
-from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL)
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    DeviceScanner,
+)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 
 INTERFACES = 2
 DEFAULT_TIMEOUT = 10
 
-REQUIREMENTS = ['beautifulsoup4==4.7.1']
-
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+    }
+)
 
 
 def get_scanner(hass, config):
@@ -80,9 +77,12 @@ class LinksysAPDeviceScanner(DeviceScanner):
         for interface in range(INTERFACES):
             request = self._make_request(interface)
             self.last_results.extend(
-                [x.find_all('td')[1].text
-                 for x in BS(request.content, 'html.parser')
-                 .find_all(class_='section-row')]
+                [
+                    x.find_all("td")[1].text
+                    for x in BS(request.content, "html.parser").find_all(
+                        class_="section-row"
+                    )
+                ]
             )
 
         return True
@@ -90,10 +90,12 @@ class LinksysAPDeviceScanner(DeviceScanner):
     def _make_request(self, unit=0):
         """Create a request to get the data."""
         # No, the '&&' is not a typo - this is expected by the web interface.
-        login = base64.b64encode(bytes(self.username, 'utf8')).decode('ascii')
-        pwd = base64.b64encode(bytes(self.password, 'utf8')).decode('ascii')
-        url = 'https://{}/StatusClients.htm&&unit={}&vap=0'.format(
-            self.host, unit)
+        login = base64.b64encode(bytes(self.username, "utf8")).decode("ascii")
+        pwd = base64.b64encode(bytes(self.password, "utf8")).decode("ascii")
+        url = "https://{}/StatusClients.htm&&unit={}&vap=0".format(self.host, unit)
         return requests.get(
-            url, timeout=DEFAULT_TIMEOUT, verify=self.verify_ssl,
-            cookies={'LoginName': login, 'LoginPWD': pwd})
+            url,
+            timeout=DEFAULT_TIMEOUT,
+            verify=self.verify_ssl,
+            cookies={"LoginName": login, "LoginPWD": pwd},
+        )

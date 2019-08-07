@@ -1,9 +1,4 @@
-"""
-Support for French FAI Bouygues Bbox routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.bbox/
-"""
+"""Support for French FAI Bouygues Bbox routers."""
 from collections import namedtuple
 from datetime import timedelta
 import logging
@@ -11,23 +6,24 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    DeviceScanner,
+)
 from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pybbox==0.0.5-alpha']
-
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_HOST = '192.168.1.254'
+DEFAULT_HOST = "192.168.1.254"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=60)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string}
+)
 
 
 def get_scanner(hass, config):
@@ -37,7 +33,7 @@ def get_scanner(hass, config):
     return scanner if scanner.success_init else None
 
 
-Device = namedtuple('Device', ['mac', 'name', 'ip', 'last_update'])
+Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])
 
 
 class BboxDeviceScanner(DeviceScanner):
@@ -63,8 +59,9 @@ class BboxDeviceScanner(DeviceScanner):
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        filter_named = [result.name for result in self.last_results if
-                        result.mac == device]
+        filter_named = [
+            result.name for result in self.last_results if result.mac == device
+        ]
 
         if filter_named:
             return filter_named[0]
@@ -86,11 +83,13 @@ class BboxDeviceScanner(DeviceScanner):
         now = dt_util.now()
         last_results = []
         for device in result:
-            if device['active'] != 1:
+            if device["active"] != 1:
                 continue
             last_results.append(
-                Device(device['macaddress'], device['hostname'],
-                       device['ipaddress'], now))
+                Device(
+                    device["macaddress"], device["hostname"], device["ipaddress"], now
+                )
+            )
 
         self.last_results = last_results
 

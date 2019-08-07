@@ -1,37 +1,46 @@
-"""
-Support to interface with the Emby API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.emby/
-"""
+"""Support to interface with the Emby API."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL, MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_STOP)
+    MEDIA_TYPE_CHANNEL,
+    MEDIA_TYPE_MOVIE,
+    MEDIA_TYPE_MUSIC,
+    MEDIA_TYPE_TVSHOW,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEEK,
+    SUPPORT_STOP,
+)
 from homeassistant.const import (
-    CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL, DEVICE_DEFAULT_NAME,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF,
-    STATE_PAUSED, STATE_PLAYING)
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_PORT,
+    CONF_SSL,
+    DEVICE_DEFAULT_NAME,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_IDLE,
+    STATE_OFF,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pyemby==1.6']
-
 _LOGGER = logging.getLogger(__name__)
 
-CONF_AUTO_HIDE = 'auto_hide'
+CONF_AUTO_HIDE = "auto_hide"
 
-MEDIA_TYPE_TRAILER = 'trailer'
-MEDIA_TYPE_GENERIC_VIDEO = 'video'
+MEDIA_TYPE_TRAILER = "trailer"
+MEDIA_TYPE_GENERIC_VIDEO = "video"
 
-DEFAULT_HOST = 'localhost'
+DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 8096
 DEFAULT_SSL_PORT = 8920
 DEFAULT_SSL = False
@@ -39,20 +48,27 @@ DEFAULT_AUTO_HIDE = False
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_EMBY = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_STOP | SUPPORT_SEEK | SUPPORT_PLAY
+SUPPORT_EMBY = (
+    SUPPORT_PAUSE
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_STOP
+    | SUPPORT_SEEK
+    | SUPPORT_PLAY
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_AUTO_HIDE, default=DEFAULT_AUTO_HIDE): cv.boolean,
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_PORT): cv.port,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_AUTO_HIDE, default=DEFAULT_AUTO_HIDE): cv.boolean,
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_PORT): cv.port,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+    }
+)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Emby platform."""
     from pyemby import EmbyServer
 
@@ -79,14 +95,16 @@ async def async_setup_platform(hass, config, async_add_entities,
         active_devices = []
         for dev_id in emby.devices:
             active_devices.append(dev_id)
-            if dev_id not in active_emby_devices and \
-                    dev_id not in inactive_emby_devices:
+            if (
+                dev_id not in active_emby_devices
+                and dev_id not in inactive_emby_devices
+            ):
                 new = EmbyDevice(emby, dev_id)
                 active_emby_devices[dev_id] = new
                 new_devices.append(new)
 
             elif dev_id in inactive_emby_devices:
-                if emby.devices[dev_id].state != 'Off':
+                if emby.devices[dev_id].state != "Off":
                     add = inactive_emby_devices.pop(dev_id)
                     active_emby_devices[dev_id] = add
                     _LOGGER.debug("Showing %s, item: %s", dev_id, add)
@@ -142,8 +160,7 @@ class EmbyDevice(MediaPlayerDevice):
 
     async def async_added_to_hass(self):
         """Register callback."""
-        self.emby.add_update_callback(
-            self.async_update_callback, self.device_id)
+        self.emby.add_update_callback(self.async_update_callback, self.device_id)
 
     @callback
     def async_update_callback(self, msg):
@@ -191,8 +208,10 @@ class EmbyDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return ('Emby - {} - {}'.format(self.device.client, self.device.name)
-                or DEVICE_DEFAULT_NAME)
+        return (
+            "Emby - {} - {}".format(self.device.client, self.device.name)
+            or DEVICE_DEFAULT_NAME
+        )
 
     @property
     def should_poll(self):
@@ -203,13 +222,13 @@ class EmbyDevice(MediaPlayerDevice):
     def state(self):
         """Return the state of the device."""
         state = self.device.state
-        if state == 'Paused':
+        if state == "Paused":
             return STATE_PAUSED
-        if state == 'Playing':
+        if state == "Playing":
             return STATE_PLAYING
-        if state == 'Idle':
+        if state == "Idle":
             return STATE_IDLE
-        if state == 'Off':
+        if state == "Off":
             return STATE_OFF
 
     @property
@@ -227,19 +246,19 @@ class EmbyDevice(MediaPlayerDevice):
     def media_content_type(self):
         """Content type of current playing media."""
         media_type = self.device.media_type
-        if media_type == 'Episode':
+        if media_type == "Episode":
             return MEDIA_TYPE_TVSHOW
-        if media_type == 'Movie':
+        if media_type == "Movie":
             return MEDIA_TYPE_MOVIE
-        if media_type == 'Trailer':
+        if media_type == "Trailer":
             return MEDIA_TYPE_TRAILER
-        if media_type == 'Music':
+        if media_type == "Music":
             return MEDIA_TYPE_MUSIC
-        if media_type == 'Video':
+        if media_type == "Video":
             return MEDIA_TYPE_GENERIC_VIDEO
-        if media_type == 'Audio':
+        if media_type == "Audio":
             return MEDIA_TYPE_MUSIC
-        if media_type == 'TvChannel':
+        if media_type == "TvChannel":
             return MEDIA_TYPE_CHANNEL
         return None
 

@@ -9,8 +9,6 @@ from . import DATA_AUGUST
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['august']
-
 SCAN_INTERVAL = timedelta(seconds=5)
 
 
@@ -54,9 +52,10 @@ class AugustLock(LockDevice):
         self._lock_detail = self._data.get_lock_detail(self._lock.device_id)
 
         from august.activity import ActivityType
+
         activity = self._data.get_latest_device_activity(
-            self._lock.device_id,
-            ActivityType.LOCK_OPERATION)
+            self._lock.device_id, ActivityType.LOCK_OPERATION
+        )
 
         if activity is not None:
             self._changed_by = activity.operated_by
@@ -75,6 +74,7 @@ class AugustLock(LockDevice):
     def is_locked(self):
         """Return true if device is on."""
         from august.lock import LockStatus
+
         return self._lock_status is LockStatus.LOCKED
 
     @property
@@ -88,11 +88,9 @@ class AugustLock(LockDevice):
         if self._lock_detail is None:
             return None
 
-        return {
-            ATTR_BATTERY_LEVEL: self._lock_detail.battery_level,
-        }
+        return {ATTR_BATTERY_LEVEL: self._lock_detail.battery_level}
 
     @property
     def unique_id(self) -> str:
         """Get the unique id of the lock."""
-        return '{:s}_lock'.format(self._lock.device_id)
+        return "{:s}_lock".format(self._lock.device_id)

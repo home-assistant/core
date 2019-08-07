@@ -1,35 +1,30 @@
-"""
-Support for Recollect Waste curbside collection pickup.
-
-For more details about this platform, please refer to the documentation at
-https://www.home-assistant.io/components/sensor.recollect_waste/
-"""
+"""Support for Recollect Waste curbside collection pickup."""
 import logging
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME)
+from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['recollect-waste==1.0.1']
-
 _LOGGER = logging.getLogger(__name__)
-ATTR_PICKUP_TYPES = 'pickup_types'
-ATTR_AREA_NAME = 'area_name'
-CONF_PLACE_ID = 'place_id'
-CONF_SERVICE_ID = 'service_id'
-DEFAULT_NAME = 'recollect_waste'
-ICON = 'mdi:trash-can-outline'
+ATTR_PICKUP_TYPES = "pickup_types"
+ATTR_AREA_NAME = "area_name"
+CONF_PLACE_ID = "place_id"
+CONF_SERVICE_ID = "service_id"
+DEFAULT_NAME = "recollect_waste"
+ICON = "mdi:trash-can-outline"
 SCAN_INTERVAL = 86400
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PLACE_ID): cv.string,
-    vol.Required(CONF_SERVICE_ID): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_PLACE_ID): cv.string,
+        vol.Required(CONF_SERVICE_ID): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -37,8 +32,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     import recollect_waste
 
     # pylint: disable=no-member
-    client = recollect_waste.RecollectWasteClient(config[CONF_PLACE_ID],
-                                                  config[CONF_SERVICE_ID])
+    client = recollect_waste.RecollectWasteClient(
+        config[CONF_PLACE_ID], config[CONF_SERVICE_ID]
+    )
 
     # Ensure the client can connect to the API successfully
     # with given place_id and service_id.
@@ -46,12 +42,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         client.get_next_pickup()
     # pylint: disable=no-member
     except recollect_waste.RecollectWasteException as ex:
-        _LOGGER.error('Recollect Waste platform error. %s', ex)
+        _LOGGER.error("Recollect Waste platform error. %s", ex)
         return
 
-    add_entities([RecollectWasteSensor(
-        config.get(CONF_NAME),
-        client)], True)
+    add_entities([RecollectWasteSensor(config.get(CONF_NAME), client)], True)
 
 
 class RecollectWasteSensor(Entity):
@@ -96,10 +90,12 @@ class RecollectWasteSensor(Entity):
         try:
             pickup_event = self.client.get_next_pickup()
             self._state = pickup_event.event_date
-            self._attributes.update({
-                ATTR_PICKUP_TYPES: pickup_event.pickup_types,
-                ATTR_AREA_NAME: pickup_event.area_name
-            })
+            self._attributes.update(
+                {
+                    ATTR_PICKUP_TYPES: pickup_event.pickup_types,
+                    ATTR_AREA_NAME: pickup_event.area_name,
+                }
+            )
         # pylint: disable=no-member
         except recollect_waste.RecollectWasteException as ex:
-            _LOGGER.error('Recollect Waste platform error. %s', ex)
+            _LOGGER.error("Recollect Waste platform error. %s", ex)

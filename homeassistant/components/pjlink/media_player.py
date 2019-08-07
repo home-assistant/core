@@ -1,41 +1,45 @@
-"""
-Support for controlling projector via the PJLink protocol.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.pjlink/
-"""
+"""Support for controlling projector via the PJLink protocol."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE)
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE,
+)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, STATE_OFF, STATE_ON)
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    STATE_OFF,
+    STATE_ON,
+)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pypjlink2==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ENCODING = 'encoding'
+CONF_ENCODING = "encoding"
 
 DEFAULT_PORT = 4352
-DEFAULT_ENCODING = 'utf-8'
+DEFAULT_ENCODING = "utf-8"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+    }
+)
 
-SUPPORT_PJLINK = SUPPORT_VOLUME_MUTE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+SUPPORT_PJLINK = (
+    SUPPORT_VOLUME_MUTE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -46,9 +50,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     encoding = config.get(CONF_ENCODING)
     password = config.get(CONF_PASSWORD)
 
-    if 'pjlink' not in hass.data:
-        hass.data['pjlink'] = {}
-    hass_data = hass.data['pjlink']
+    if "pjlink" not in hass.data:
+        hass.data["pjlink"] = {}
+    hass_data = hass.data["pjlink"]
 
     device_label = "{}:{}".format(host, port)
     if device_label in hass_data:
@@ -81,31 +85,30 @@ class PjLinkDevice(MediaPlayerDevice):
             if not self._name:
                 self._name = projector.get_name()
             inputs = projector.get_inputs()
-        self._source_name_mapping = \
-            {format_input_source(*x): x for x in inputs}
+        self._source_name_mapping = {format_input_source(*x): x for x in inputs}
         self._source_list = sorted(self._source_name_mapping.keys())
 
     def projector(self):
         """Create PJLink Projector instance."""
         from pypjlink import Projector
-        projector = Projector.from_address(
-            self._host, self._port, self._encoding)
+
+        projector = Projector.from_address(self._host, self._port, self._encoding)
         projector.authenticate(self._password)
         return projector
 
     def update(self):
         """Get the latest state from the device."""
         from pypjlink.projector import ProjectorError
+
         with self.projector() as projector:
             try:
                 pwstate = projector.get_power()
-                if pwstate in ('on', 'warm-up'):
+                if pwstate in ("on", "warm-up"):
                     self._pwstate = STATE_ON
                 else:
                     self._pwstate = STATE_OFF
                 self._muted = projector.get_mute()[1]
-                self._current_source = \
-                    format_input_source(*projector.get_input())
+                self._current_source = format_input_source(*projector.get_input())
             except KeyError as err:
                 if str(err) == "'OK'":
                     self._pwstate = STATE_OFF
@@ -114,7 +117,7 @@ class PjLinkDevice(MediaPlayerDevice):
                 else:
                     raise
             except ProjectorError as err:
-                if str(err) == 'unavailable time':
+                if str(err) == "unavailable time":
                     self._pwstate = STATE_OFF
                     self._muted = False
                     self._current_source = None
@@ -154,17 +157,18 @@ class PjLinkDevice(MediaPlayerDevice):
     def turn_off(self):
         """Turn projector off."""
         with self.projector() as projector:
-            projector.set_power('off')
+            projector.set_power("off")
 
     def turn_on(self):
         """Turn projector on."""
         with self.projector() as projector:
-            projector.set_power('on')
+            projector.set_power("on")
 
     def mute_volume(self, mute):
         """Mute (true) of unmute (false) media player."""
         with self.projector() as projector:
             from pypjlink import MUTE_AUDIO
+
             projector.set_mute(MUTE_AUDIO, mute)
 
     def select_source(self, source):

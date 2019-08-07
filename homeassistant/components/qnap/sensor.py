@@ -1,9 +1,4 @@
-"""
-Support for QNAP NAS Sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.qnap/
-"""
+"""Support for QNAP NAS Sensors."""
 import logging
 from datetime import timedelta
 
@@ -12,95 +7,105 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_SSL, ATTR_NAME,
-    CONF_VERIFY_SSL, CONF_TIMEOUT, CONF_MONITORED_CONDITIONS, TEMP_CELSIUS)
+    CONF_HOST,
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    ATTR_NAME,
+    CONF_VERIFY_SSL,
+    CONF_TIMEOUT,
+    CONF_MONITORED_CONDITIONS,
+    TEMP_CELSIUS,
+)
 from homeassistant.util import Throttle
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['qnapstats==0.2.7']
-
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DRIVE = 'Drive'
-ATTR_DRIVE_SIZE = 'Drive Size'
-ATTR_IP = 'IP Address'
-ATTR_MAC = 'MAC Address'
-ATTR_MASK = 'Mask'
-ATTR_MAX_SPEED = 'Max Speed'
-ATTR_MEMORY_SIZE = 'Memory Size'
-ATTR_MODEL = 'Model'
-ATTR_PACKETS_TX = 'Packets (TX)'
-ATTR_PACKETS_RX = 'Packets (RX)'
-ATTR_PACKETS_ERR = 'Packets (Err)'
-ATTR_SERIAL = 'Serial #'
-ATTR_TYPE = 'Type'
-ATTR_UPTIME = 'Uptime'
-ATTR_VOLUME_SIZE = 'Volume Size'
+ATTR_DRIVE = "Drive"
+ATTR_DRIVE_SIZE = "Drive Size"
+ATTR_IP = "IP Address"
+ATTR_MAC = "MAC Address"
+ATTR_MASK = "Mask"
+ATTR_MAX_SPEED = "Max Speed"
+ATTR_MEMORY_SIZE = "Memory Size"
+ATTR_MODEL = "Model"
+ATTR_PACKETS_TX = "Packets (TX)"
+ATTR_PACKETS_RX = "Packets (RX)"
+ATTR_PACKETS_ERR = "Packets (Err)"
+ATTR_SERIAL = "Serial #"
+ATTR_TYPE = "Type"
+ATTR_UPTIME = "Uptime"
+ATTR_VOLUME_SIZE = "Volume Size"
 
-CONF_DRIVES = 'drives'
-CONF_NICS = 'nics'
-CONF_VOLUMES = 'volumes'
-DEFAULT_NAME = 'QNAP'
+CONF_DRIVES = "drives"
+CONF_NICS = "nics"
+CONF_VOLUMES = "volumes"
+DEFAULT_NAME = "QNAP"
 DEFAULT_PORT = 8080
 DEFAULT_TIMEOUT = 5
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
-NOTIFICATION_ID = 'qnap_notification'
-NOTIFICATION_TITLE = 'QNAP Sensor Setup'
+NOTIFICATION_ID = "qnap_notification"
+NOTIFICATION_TITLE = "QNAP Sensor Setup"
 
 _SYSTEM_MON_COND = {
-    'status': ['Status', None, 'mdi:checkbox-marked-circle-outline'],
-    'system_temp': ['System Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
+    "status": ["Status", None, "mdi:checkbox-marked-circle-outline"],
+    "system_temp": ["System Temperature", TEMP_CELSIUS, "mdi:thermometer"],
 }
 _CPU_MON_COND = {
-    'cpu_temp': ['CPU Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
-    'cpu_usage': ['CPU Usage', '%', 'mdi:chip'],
+    "cpu_temp": ["CPU Temperature", TEMP_CELSIUS, "mdi:thermometer"],
+    "cpu_usage": ["CPU Usage", "%", "mdi:chip"],
 }
 _MEMORY_MON_COND = {
-    'memory_free': ['Memory Available', 'GB', 'mdi:memory'],
-    'memory_used': ['Memory Used', 'GB', 'mdi:memory'],
-    'memory_percent_used': ['Memory Usage', '%', 'mdi:memory'],
+    "memory_free": ["Memory Available", "GB", "mdi:memory"],
+    "memory_used": ["Memory Used", "GB", "mdi:memory"],
+    "memory_percent_used": ["Memory Usage", "%", "mdi:memory"],
 }
 _NETWORK_MON_COND = {
-    'network_link_status': ['Network Link', None,
-                            'mdi:checkbox-marked-circle-outline'],
-    'network_tx': ['Network Up', 'MB/s', 'mdi:upload'],
-    'network_rx': ['Network Down', 'MB/s', 'mdi:download'],
+    "network_link_status": ["Network Link", None, "mdi:checkbox-marked-circle-outline"],
+    "network_tx": ["Network Up", "MB/s", "mdi:upload"],
+    "network_rx": ["Network Down", "MB/s", "mdi:download"],
 }
 _DRIVE_MON_COND = {
-    'drive_smart_status': ['SMART Status', None,
-                           'mdi:checkbox-marked-circle-outline'],
-    'drive_temp': ['Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
+    "drive_smart_status": ["SMART Status", None, "mdi:checkbox-marked-circle-outline"],
+    "drive_temp": ["Temperature", TEMP_CELSIUS, "mdi:thermometer"],
 }
 _VOLUME_MON_COND = {
-    'volume_size_used': ['Used Space', 'GB', 'mdi:chart-pie'],
-    'volume_size_free': ['Free Space', 'GB', 'mdi:chart-pie'],
-    'volume_percentage_used': ['Volume Used', '%', 'mdi:chart-pie'],
+    "volume_size_used": ["Used Space", "GB", "mdi:chart-pie"],
+    "volume_size_free": ["Free Space", "GB", "mdi:chart-pie"],
+    "volume_percentage_used": ["Volume Used", "%", "mdi:chart-pie"],
 }
 
-_MONITORED_CONDITIONS = list(_SYSTEM_MON_COND.keys()) + \
-                        list(_CPU_MON_COND.keys()) + \
-                        list(_MEMORY_MON_COND.keys()) + \
-                        list(_NETWORK_MON_COND.keys()) + \
-                        list(_DRIVE_MON_COND.keys()) + \
-                        list(_VOLUME_MON_COND.keys())
+_MONITORED_CONDITIONS = (
+    list(_SYSTEM_MON_COND.keys())
+    + list(_CPU_MON_COND.keys())
+    + list(_MEMORY_MON_COND.keys())
+    + list(_NETWORK_MON_COND.keys())
+    + list(_DRIVE_MON_COND.keys())
+    + list(_VOLUME_MON_COND.keys())
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_SSL, default=False): cv.boolean,
-    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(_MONITORED_CONDITIONS)]),
-    vol.Optional(CONF_NICS): cv.ensure_list,
-    vol.Optional(CONF_DRIVES): cv.ensure_list,
-    vol.Optional(CONF_VOLUMES): cv.ensure_list,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_SSL, default=False): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(
+            cv.ensure_list, [vol.In(_MONITORED_CONDITIONS)]
+        ),
+        vol.Optional(CONF_NICS): cv.ensure_list,
+        vol.Optional(CONF_DRIVES): cv.ensure_list,
+        vol.Optional(CONF_VOLUMES): cv.ensure_list,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -117,35 +122,35 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # Basic sensors
     for variable in config[CONF_MONITORED_CONDITIONS]:
         if variable in _SYSTEM_MON_COND:
-            sensors.append(QNAPSystemSensor(
-                api, variable, _SYSTEM_MON_COND[variable]))
+            sensors.append(QNAPSystemSensor(api, variable, _SYSTEM_MON_COND[variable]))
         if variable in _CPU_MON_COND:
-            sensors.append(QNAPCPUSensor(
-                api, variable, _CPU_MON_COND[variable]))
+            sensors.append(QNAPCPUSensor(api, variable, _CPU_MON_COND[variable]))
         if variable in _MEMORY_MON_COND:
-            sensors.append(QNAPMemorySensor(
-                api, variable, _MEMORY_MON_COND[variable]))
+            sensors.append(QNAPMemorySensor(api, variable, _MEMORY_MON_COND[variable]))
 
     # Network sensors
     for nic in config.get(CONF_NICS, api.data["system_stats"]["nics"]):
-        sensors += [QNAPNetworkSensor(api, variable,
-                                      _NETWORK_MON_COND[variable], nic)
-                    for variable in config[CONF_MONITORED_CONDITIONS]
-                    if variable in _NETWORK_MON_COND]
+        sensors += [
+            QNAPNetworkSensor(api, variable, _NETWORK_MON_COND[variable], nic)
+            for variable in config[CONF_MONITORED_CONDITIONS]
+            if variable in _NETWORK_MON_COND
+        ]
 
     # Drive sensors
     for drive in config.get(CONF_DRIVES, api.data["smart_drive_health"]):
-        sensors += [QNAPDriveSensor(api, variable,
-                                    _DRIVE_MON_COND[variable], drive)
-                    for variable in config[CONF_MONITORED_CONDITIONS]
-                    if variable in _DRIVE_MON_COND]
+        sensors += [
+            QNAPDriveSensor(api, variable, _DRIVE_MON_COND[variable], drive)
+            for variable in config[CONF_MONITORED_CONDITIONS]
+            if variable in _DRIVE_MON_COND
+        ]
 
     # Volume sensors
     for volume in config.get(CONF_VOLUMES, api.data["volumes"]):
-        sensors += [QNAPVolumeSensor(api, variable,
-                                     _VOLUME_MON_COND[variable], volume)
-                    for variable in config[CONF_MONITORED_CONDITIONS]
-                    if variable in _VOLUME_MON_COND]
+        sensors += [
+            QNAPVolumeSensor(api, variable, _VOLUME_MON_COND[variable], volume)
+            for variable in config[CONF_MONITORED_CONDITIONS]
+            if variable in _VOLUME_MON_COND
+        ]
 
     add_entities(sensors)
 
@@ -169,7 +174,7 @@ class QNAPStatsAPI:
 
         protocol = "https" if config.get(CONF_SSL) else "http"
         self._api = QNAPStats(
-            '{}://{}'.format(protocol, config.get(CONF_HOST)),
+            "{}://{}".format(protocol, config.get(CONF_HOST)),
             config.get(CONF_PORT),
             config.get(CONF_USERNAME),
             config.get(CONF_PASSWORD),
@@ -207,11 +212,10 @@ class QNAPSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor, if any."""
-        server_name = self._api.data['system_stats']['system']['name']
+        server_name = self._api.data["system_stats"]["system"]["name"]
 
         if self.monitor_device is not None:
-            return "{} {} ({})".format(
-                server_name, self.var_name, self.monitor_device)
+            return "{} {} ({})".format(server_name, self.var_name, self.monitor_device)
         return "{} {}".format(server_name, self.var_name)
 
     @property
@@ -235,10 +239,10 @@ class QNAPCPUSensor(QNAPSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.var_id == 'cpu_temp':
-            return self._api.data['system_stats']['cpu']['temp_c']
-        if self.var_id == 'cpu_usage':
-            return self._api.data['system_stats']['cpu']['usage_percent']
+        if self.var_id == "cpu_temp":
+            return self._api.data["system_stats"]["cpu"]["temp_c"]
+        if self.var_id == "cpu_usage":
+            return self._api.data["system_stats"]["cpu"]["usage_percent"]
 
 
 class QNAPMemorySensor(QNAPSensor):
@@ -247,28 +251,26 @@ class QNAPMemorySensor(QNAPSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        free = float(self._api.data['system_stats']['memory']['free']) / 1024
-        if self.var_id == 'memory_free':
+        free = float(self._api.data["system_stats"]["memory"]["free"]) / 1024
+        if self.var_id == "memory_free":
             return round_nicely(free)
 
-        total = float(self._api.data['system_stats']['memory']['total']) / 1024
+        total = float(self._api.data["system_stats"]["memory"]["total"]) / 1024
 
         used = total - free
-        if self.var_id == 'memory_used':
+        if self.var_id == "memory_used":
             return round_nicely(used)
 
-        if self.var_id == 'memory_percent_used':
+        if self.var_id == "memory_percent_used":
             return round(used / total * 100)
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         if self._api.data:
-            data = self._api.data['system_stats']['memory']
-            size = round_nicely(float(data['total']) / 1024)
-            return {
-                ATTR_MEMORY_SIZE: '{} GB'.format(size),
-            }
+            data = self._api.data["system_stats"]["memory"]
+            size = round_nicely(float(data["total"]) / 1024)
+            return {ATTR_MEMORY_SIZE: "{} GB".format(size)}
 
 
 class QNAPNetworkSensor(QNAPSensor):
@@ -277,30 +279,30 @@ class QNAPNetworkSensor(QNAPSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.var_id == 'network_link_status':
-            nic = self._api.data['system_stats']['nics'][self.monitor_device]
-            return nic['link_status']
+        if self.var_id == "network_link_status":
+            nic = self._api.data["system_stats"]["nics"][self.monitor_device]
+            return nic["link_status"]
 
-        data = self._api.data['bandwidth'][self.monitor_device]
-        if self.var_id == 'network_tx':
-            return round_nicely(data['tx'] / 1024 / 1024)
+        data = self._api.data["bandwidth"][self.monitor_device]
+        if self.var_id == "network_tx":
+            return round_nicely(data["tx"] / 1024 / 1024)
 
-        if self.var_id == 'network_rx':
-            return round_nicely(data['rx'] / 1024 / 1024)
+        if self.var_id == "network_rx":
+            return round_nicely(data["rx"] / 1024 / 1024)
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         if self._api.data:
-            data = self._api.data['system_stats']['nics'][self.monitor_device]
+            data = self._api.data["system_stats"]["nics"][self.monitor_device]
             return {
-                ATTR_IP: data['ip'],
-                ATTR_MASK: data['mask'],
-                ATTR_MAC: data['mac'],
-                ATTR_MAX_SPEED: data['max_speed'],
-                ATTR_PACKETS_TX: data['tx_packets'],
-                ATTR_PACKETS_RX: data['rx_packets'],
-                ATTR_PACKETS_ERR: data['err_packets']
+                ATTR_IP: data["ip"],
+                ATTR_MASK: data["mask"],
+                ATTR_MAC: data["mac"],
+                ATTR_MAX_SPEED: data["max_speed"],
+                ATTR_PACKETS_TX: data["tx_packets"],
+                ATTR_PACKETS_RX: data["rx_packets"],
+                ATTR_PACKETS_ERR: data["err_packets"],
             }
 
 
@@ -310,27 +312,26 @@ class QNAPSystemSensor(QNAPSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.var_id == 'status':
-            return self._api.data['system_health']
+        if self.var_id == "status":
+            return self._api.data["system_health"]
 
-        if self.var_id == 'system_temp':
-            return int(self._api.data['system_stats']['system']['temp_c'])
+        if self.var_id == "system_temp":
+            return int(self._api.data["system_stats"]["system"]["temp_c"])
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         if self._api.data:
-            data = self._api.data['system_stats']
-            days = int(data['uptime']['days'])
-            hours = int(data['uptime']['hours'])
-            minutes = int(data['uptime']['minutes'])
+            data = self._api.data["system_stats"]
+            days = int(data["uptime"]["days"])
+            hours = int(data["uptime"]["hours"])
+            minutes = int(data["uptime"]["minutes"])
 
             return {
-                ATTR_NAME: data['system']['name'],
-                ATTR_MODEL: data['system']['model'],
-                ATTR_SERIAL: data['system']['serial_number'],
-                ATTR_UPTIME: '{:0>2d}d {:0>2d}h {:0>2d}m'.format(
-                    days, hours, minutes)
+                ATTR_NAME: data["system"]["name"],
+                ATTR_MODEL: data["system"]["model"],
+                ATTR_SERIAL: data["system"]["serial_number"],
+                ATTR_UPTIME: "{:0>2d}d {:0>2d}h {:0>2d}m".format(days, hours, minutes),
             }
 
 
@@ -340,35 +341,33 @@ class QNAPDriveSensor(QNAPSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        data = self._api.data['smart_drive_health'][self.monitor_device]
+        data = self._api.data["smart_drive_health"][self.monitor_device]
 
-        if self.var_id == 'drive_smart_status':
-            return data['health']
+        if self.var_id == "drive_smart_status":
+            return data["health"]
 
-        if self.var_id == 'drive_temp':
-            return int(data['temp_c']) if data['temp_c'] is not None else 0
+        if self.var_id == "drive_temp":
+            return int(data["temp_c"]) if data["temp_c"] is not None else 0
 
     @property
     def name(self):
         """Return the name of the sensor, if any."""
-        server_name = self._api.data['system_stats']['system']['name']
+        server_name = self._api.data["system_stats"]["system"]["name"]
 
         return "{} {} (Drive {})".format(
-            server_name,
-            self.var_name,
-            self.monitor_device
+            server_name, self.var_name, self.monitor_device
         )
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         if self._api.data:
-            data = self._api.data['smart_drive_health'][self.monitor_device]
+            data = self._api.data["smart_drive_health"][self.monitor_device]
             return {
-                ATTR_DRIVE: data['drive_number'],
-                ATTR_MODEL: data['model'],
-                ATTR_SERIAL: data['serial'],
-                ATTR_TYPE: data['type'],
+                ATTR_DRIVE: data["drive_number"],
+                ATTR_MODEL: data["model"],
+                ATTR_SERIAL: data["serial"],
+                ATTR_TYPE: data["type"],
             }
 
 
@@ -378,28 +377,26 @@ class QNAPVolumeSensor(QNAPSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        data = self._api.data['volumes'][self.monitor_device]
+        data = self._api.data["volumes"][self.monitor_device]
 
-        free_gb = int(data['free_size']) / 1024 / 1024 / 1024
-        if self.var_id == 'volume_size_free':
+        free_gb = int(data["free_size"]) / 1024 / 1024 / 1024
+        if self.var_id == "volume_size_free":
             return round_nicely(free_gb)
 
-        total_gb = int(data['total_size']) / 1024 / 1024 / 1024
+        total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
 
         used_gb = total_gb - free_gb
-        if self.var_id == 'volume_size_used':
+        if self.var_id == "volume_size_used":
             return round_nicely(used_gb)
 
-        if self.var_id == 'volume_percentage_used':
+        if self.var_id == "volume_percentage_used":
             return round(used_gb / total_gb * 100)
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         if self._api.data:
-            data = self._api.data['volumes'][self.monitor_device]
-            total_gb = int(data['total_size']) / 1024 / 1024 / 1024
+            data = self._api.data["volumes"][self.monitor_device]
+            total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
 
-            return {
-                ATTR_VOLUME_SIZE: "{} GB".format(round_nicely(total_gb)),
-            }
+            return {ATTR_VOLUME_SIZE: "{} GB".format(round_nicely(total_gb))}

@@ -8,22 +8,19 @@ from homeassistant.helpers.entity import ToggleEntity
 
 from . import DATA_TRANSMISSION, DATA_UPDATED
 
-DEPENDENCIES = ['transmission']
-
 _LOGGING = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Transmission Turtle Mode'
+DEFAULT_NAME = "Transmission Turtle Mode"
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Transmission switch."""
     if discovery_info is None:
         return
 
     component_name = DATA_TRANSMISSION
     transmission_api = hass.data[component_name]
-    name = discovery_info['client_name']
+    name = discovery_info["client_name"]
 
     async_add_entities([TransmissionSwitch(transmission_api, name)], True)
 

@@ -7,8 +7,6 @@ from . import DATA_CHARGING, DATA_LEAF, DATA_PLUGGED_IN, LeafEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['nissan_leaf']
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up of a Nissan Leaf binary sensor."""
@@ -41,8 +39,8 @@ class LeafPluggedInSensor(LeafEntity, BinarySensorDevice):
     def icon(self):
         """Icon handling."""
         if self.car.data[DATA_PLUGGED_IN]:
-            return 'mdi:power-plug'
-        return 'mdi:power-plug-off'
+            return "mdi:power-plug"
+        return "mdi:power-plug-off"
 
 
 class LeafChargingSensor(LeafEntity, BinarySensorDevice):
@@ -62,5 +60,5 @@ class LeafChargingSensor(LeafEntity, BinarySensorDevice):
     def icon(self):
         """Icon handling."""
         if self.car.data[DATA_CHARGING]:
-            return 'mdi:flash'
-        return 'mdi:flash-off'
+            return "mdi:flash"
+        return "mdi:flash-off"

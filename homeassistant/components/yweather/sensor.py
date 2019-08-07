@@ -1,9 +1,4 @@
-"""
-Support for the Yahoo! Weather service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.yweather/
-"""
+"""Support for the Yahoo! Weather service."""
 import logging
 from datetime import timedelta
 
@@ -12,44 +7,47 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    TEMP_CELSIUS, CONF_MONITORED_CONDITIONS, CONF_NAME,
-    ATTR_ATTRIBUTION)
+    TEMP_CELSIUS,
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    ATTR_ATTRIBUTION,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['yahooweather==0.10']
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Weather details provided by Yahoo! Inc."
 
-CONF_FORECAST = 'forecast'
-CONF_WOEID = 'woeid'
+CONF_FORECAST = "forecast"
+CONF_WOEID = "woeid"
 
-DEFAULT_NAME = 'Yweather'
+DEFAULT_NAME = "Yweather"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
 SENSOR_TYPES = {
-    'weather_current': ['Current', None],
-    'weather': ['Condition', None],
-    'temperature': ['Temperature', 'temperature'],
-    'temp_min': ['Temperature min', 'temperature'],
-    'temp_max': ['Temperature max', 'temperature'],
-    'wind_speed': ['Wind speed', 'speed'],
-    'humidity': ['Humidity', '%'],
-    'pressure': ['Pressure', 'pressure'],
-    'visibility': ['Visibility', 'distance'],
+    "weather_current": ["Current", None],
+    "weather": ["Condition", None],
+    "temperature": ["Temperature", "temperature"],
+    "temp_min": ["Temperature min", "temperature"],
+    "temp_max": ["Temperature max", "temperature"],
+    "wind_speed": ["Wind speed", "speed"],
+    "humidity": ["Humidity", "%"],
+    "pressure": ["Pressure", "pressure"],
+    "visibility": ["Visibility", "distance"],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_WOEID): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_FORECAST, default=0):
-        vol.All(vol.Coerce(int), vol.Range(min=0, max=5)),
-    vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
-        [vol.In(SENSOR_TYPES)],
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_WOEID): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_FORECAST, default=0): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=5)
+        ),
+        vol.Required(CONF_MONITORED_CONDITIONS, default=[]): [vol.In(SENSOR_TYPES)],
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -63,9 +61,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     yunit = UNIT_C if unit == TEMP_CELSIUS else UNIT_F
 
-    SENSOR_TYPES['temperature'][1] = unit
-    SENSOR_TYPES['temp_min'][1] = unit
-    SENSOR_TYPES['temp_max'][1] = unit
+    SENSOR_TYPES["temperature"][1] = unit
+    SENSOR_TYPES["temp_min"][1] = unit
+    SENSOR_TYPES["temp_max"][1] = unit
 
     # If not exists a customer WOEID/calculation from Home Assistant
     if woeid is None:
@@ -81,8 +79,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return False
 
     if forecast >= len(yahoo_api.yahoo.Forecast):
-        _LOGGER.error("Yahoo! only support %d days forecast!",
-                      len(yahoo_api.yahoo.Forecast))
+        _LOGGER.error(
+            "Yahoo! only support %d days forecast!", len(yahoo_api.yahoo.Forecast)
+        )
         return False
 
     dev = []
@@ -109,7 +108,7 @@ class YahooWeatherSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self._client, self._name)
+        return "{} {}".format(self._client, self._name)
 
     @property
     def state(self):
@@ -135,7 +134,7 @@ class YahooWeatherSensor(Entity):
         attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
         if self._code is not None and "weather" in self._type:
-            attrs['condition_code'] = self._code
+            attrs["condition_code"] = self._code
 
         return attrs
 
@@ -147,32 +146,34 @@ class YahooWeatherSensor(Entity):
             return
 
         # Default code for weather image
-        self._code = self._data.yahoo.Now['code']
+        self._code = self._data.yahoo.Now["code"]
 
         # Read data
-        if self._type == 'weather_current':
-            self._state = self._data.yahoo.Now['text']
-        elif self._type == 'weather':
-            self._code = self._data.yahoo.Forecast[self._forecast]['code']
-            self._state = self._data.yahoo.Forecast[self._forecast]['text']
-        elif self._type == 'temperature':
-            self._state = self._data.yahoo.Now['temp']
-        elif self._type == 'temp_min':
-            self._code = self._data.yahoo.Forecast[self._forecast]['code']
-            self._state = self._data.yahoo.Forecast[self._forecast]['low']
-        elif self._type == 'temp_max':
-            self._code = self._data.yahoo.Forecast[self._forecast]['code']
-            self._state = self._data.yahoo.Forecast[self._forecast]['high']
-        elif self._type == 'wind_speed':
-            self._state = round(float(self._data.yahoo.Wind['speed'])/1.61, 2)
-        elif self._type == 'humidity':
-            self._state = self._data.yahoo.Atmosphere['humidity']
-        elif self._type == 'pressure':
+        if self._type == "weather_current":
+            self._state = self._data.yahoo.Now["text"]
+        elif self._type == "weather":
+            self._code = self._data.yahoo.Forecast[self._forecast]["code"]
+            self._state = self._data.yahoo.Forecast[self._forecast]["text"]
+        elif self._type == "temperature":
+            self._state = self._data.yahoo.Now["temp"]
+        elif self._type == "temp_min":
+            self._code = self._data.yahoo.Forecast[self._forecast]["code"]
+            self._state = self._data.yahoo.Forecast[self._forecast]["low"]
+        elif self._type == "temp_max":
+            self._code = self._data.yahoo.Forecast[self._forecast]["code"]
+            self._state = self._data.yahoo.Forecast[self._forecast]["high"]
+        elif self._type == "wind_speed":
+            self._state = round(float(self._data.yahoo.Wind["speed"]) / 1.61, 2)
+        elif self._type == "humidity":
+            self._state = self._data.yahoo.Atmosphere["humidity"]
+        elif self._type == "pressure":
             self._state = round(
-                float(self._data.yahoo.Atmosphere['pressure'])/33.8637526, 2)
-        elif self._type == 'visibility':
+                float(self._data.yahoo.Atmosphere["pressure"]) / 33.8637526, 2
+            )
+        elif self._type == "visibility":
             self._state = round(
-                float(self._data.yahoo.Atmosphere['visibility'])/1.61, 2)
+                float(self._data.yahoo.Atmosphere["visibility"]) / 1.61, 2
+            )
 
 
 class YahooWeatherData:
@@ -181,6 +182,7 @@ class YahooWeatherData:
     def __init__(self, woeid, temp_unit):
         """Initialize the data object."""
         from yahooweather import YahooWeather
+
         self._yahoo = YahooWeather(woeid, temp_unit)
 
     @property

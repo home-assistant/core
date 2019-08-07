@@ -1,0 +1,10 @@
+{
+  "domain": "system_log",
+  "name": "System log",
+  "documentation": "https://www.home-assistant.io/components/system_log",
+  "requirements": [],
+  "dependencies": [
+    "http"
+  ],
+  "codeowners": []
+}

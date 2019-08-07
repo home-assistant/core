@@ -1,9 +1,4 @@
-"""
-CoolMasterNet platform that offers control of CoolMasteNet Climate Devices.
-
-For more details about this platform, please refer to the documentation
-https://www.home-assistant.io/components/climate.coolmaster/
-"""
+"""CoolMasterNet platform to control of CoolMasteNet Climate Devices."""
 
 import logging
 
@@ -11,42 +6,59 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_COOL, STATE_DRY, STATE_FAN_ONLY,
-    STATE_HEAT, SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_OFF,
+    HVAC_MODE_AUTO,
+    HVAC_MODE_COOL,
+    HVAC_MODE_DRY,
+    HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_HEAT,
+    SUPPORT_FAN_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_HOST, CONF_PORT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_TEMPERATURE,
+    CONF_HOST,
+    CONF_PORT,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pycoolmasternet==0.0.4']
-
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE |
-                 SUPPORT_OPERATION_MODE | SUPPORT_ON_OFF)
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
 DEFAULT_PORT = 10102
 
-AVAILABLE_MODES = [STATE_HEAT, STATE_COOL, STATE_AUTO, STATE_DRY,
-                   STATE_FAN_ONLY]
+AVAILABLE_MODES = [
+    HVAC_MODE_OFF,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_COOL,
+    HVAC_MODE_DRY,
+    HVAC_MODE_AUTO,
+    HVAC_MODE_FAN_ONLY,
+]
 
 CM_TO_HA_STATE = {
-    'heat': STATE_HEAT,
-    'cool': STATE_COOL,
-    'auto': STATE_AUTO,
-    'dry': STATE_DRY,
-    'fan': STATE_FAN_ONLY,
+    "heat": HVAC_MODE_HEAT,
+    "cool": HVAC_MODE_COOL,
+    "auto": HVAC_MODE_AUTO,
+    "dry": HVAC_MODE_DRY,
+    "fan": HVAC_MODE_FAN_ONLY,
 }
 
 HA_STATE_TO_CM = {value: key for key, value in CM_TO_HA_STATE.items()}
 
-FAN_MODES = ['low', 'med', 'high', 'auto']
+FAN_MODES = ["low", "med", "high", "auto"]
 
-CONF_SUPPORTED_MODES = 'supported_modes'
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SUPPORTED_MODES, default=AVAILABLE_MODES):
-        vol.All(cv.ensure_list, [vol.In(AVAILABLE_MODES)]),
-})
+CONF_SUPPORTED_MODES = "supported_modes"
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_SUPPORTED_MODES, default=AVAILABLE_MODES): vol.All(
+            cv.ensure_list, [vol.In(AVAILABLE_MODES)]
+        ),
+    }
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,8 +78,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     cool = CoolMasterNet(host, port=port)
     devices = cool.devices()
 
-    all_devices = [_build_entity(device, supported_modes)
-                   for device in devices]
+    all_devices = [_build_entity(device, supported_modes) for device in devices]
 
     add_entities(all_devices, True)
 
@@ -79,7 +90,8 @@ class CoolmasterClimate(ClimateDevice):
         """Initialize the climate device."""
         self._device = device
         self._uid = device.uid
-        self._operation_list = supported_modes
+        self._hvac_modes = supported_modes
+        self._hvac_mode = None
         self._target_temperature = None
         self._current_temperature = None
         self._current_fan_mode = None
@@ -90,15 +102,18 @@ class CoolmasterClimate(ClimateDevice):
     def update(self):
         """Pull state from CoolMasterNet."""
         status = self._device.status
-        self._target_temperature = status['thermostat']
-        self._current_temperature = status['temperature']
-        self._current_fan_mode = status['fan_speed']
-        self._on = status['is_on']
+        self._target_temperature = status["thermostat"]
+        self._current_temperature = status["temperature"]
+        self._current_fan_mode = status["fan_speed"]
+        self._on = status["is_on"]
 
-        device_mode = status['mode']
-        self._current_operation = CM_TO_HA_STATE[device_mode]
+        device_mode = status["mode"]
+        if self._on:
+            self._hvac_mode = CM_TO_HA_STATE[device_mode]
+        else:
+            self._hvac_mode = HVAC_MODE_OFF
 
-        if status['unit'] == 'celsius':
+        if status["unit"] == "celsius":
             self._unit = TEMP_CELSIUS
         else:
             self._unit = TEMP_FAHRENHEIT
@@ -134,27 +149,22 @@ class CoolmasterClimate(ClimateDevice):
         return self._target_temperature
 
     @property
-    def current_operation(self):
-        """Return current operation ie. heat, cool, idle."""
-        return self._current_operation
+    def hvac_mode(self):
+        """Return hvac target hvac state."""
+        return self._hvac_mode
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
-        return self._operation_list
+        return self._hvac_modes
 
     @property
-    def is_on(self):
-        """Return true if the device is on."""
-        return self._on
-
-    @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         return self._current_fan_mode
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """Return the list of available fan modes."""
         return FAN_MODES
 
@@ -162,21 +172,23 @@ class CoolmasterClimate(ClimateDevice):
         """Set new target temperatures."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
-            _LOGGER.debug("Setting temp of %s to %s", self.unique_id,
-                          str(temp))
+            _LOGGER.debug("Setting temp of %s to %s", self.unique_id, str(temp))
             self._device.set_thermostat(str(temp))
 
     def set_fan_mode(self, fan_mode):
         """Set new fan mode."""
-        _LOGGER.debug("Setting fan mode of %s to %s", self.unique_id,
-                      fan_mode)
+        _LOGGER.debug("Setting fan mode of %s to %s", self.unique_id, fan_mode)
         self._device.set_fan_speed(fan_mode)
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set new operation mode."""
-        _LOGGER.debug("Setting operation mode of %s to %s", self.unique_id,
-                      operation_mode)
-        self._device.set_mode(HA_STATE_TO_CM[operation_mode])
+        _LOGGER.debug("Setting operation mode of %s to %s", self.unique_id, hvac_mode)
+
+        if hvac_mode == HVAC_MODE_OFF:
+            self.turn_off()
+        else:
+            self._device.set_mode(HA_STATE_TO_CM[hvac_mode])
+            self.turn_on()
 
     def turn_on(self):
         """Turn on."""

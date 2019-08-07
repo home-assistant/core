@@ -1,25 +1,27 @@
-"""
-Kodi notification service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.kodi/
-"""
+"""Kodi notification service."""
 import logging
 
 import aiohttp
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ICON, CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_PROXY_SSL,
-    CONF_USERNAME)
+    ATTR_ICON,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_PROXY_SSL,
+    CONF_USERNAME,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (
-    ATTR_DATA, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
-    BaseNotificationService)
-
-REQUIREMENTS = ['jsonrpc-async==0.6']
+    ATTR_DATA,
+    ATTR_TITLE,
+    ATTR_TITLE_DEFAULT,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,20 +29,22 @@ DEFAULT_PORT = 8080
 DEFAULT_PROXY_SSL = False
 DEFAULT_TIMEOUT = 5
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_PROXY_SSL, default=DEFAULT_PROXY_SSL): cv.boolean,
-    vol.Inclusive(CONF_USERNAME, 'auth'): cv.string,
-    vol.Inclusive(CONF_PASSWORD, 'auth'): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_PROXY_SSL, default=DEFAULT_PROXY_SSL): cv.boolean,
+        vol.Inclusive(CONF_USERNAME, "auth"): cv.string,
+        vol.Inclusive(CONF_PASSWORD, "auth"): cv.string,
+    }
+)
 
-ATTR_DISPLAYTIME = 'displaytime'
+ATTR_DISPLAYTIME = "displaytime"
 
 
 async def async_get_service(hass, config, discovery_info=None):
     """Return the notify service."""
-    url = '{}:{}'.format(config.get(CONF_HOST), config.get(CONF_PORT))
+    url = "{}:{}".format(config.get(CONF_HOST), config.get(CONF_PORT))
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -49,15 +53,16 @@ async def async_get_service(hass, config, discovery_info=None):
     port = config.get(CONF_PORT)
     encryption = config.get(CONF_PROXY_SSL)
 
-    if host.startswith('http://') or host.startswith('https://'):
-        host = host[host.index('://') + 3:]
+    if host.startswith("http://") or host.startswith("https://"):
+        host = host[host.index("://") + 3 :]
         _LOGGER.warning(
             "Kodi host name should no longer contain http:// See updated "
             "definitions here: "
-            "https://home-assistant.io/components/media_player.kodi/")
+            "https://home-assistant.io/components/media_player.kodi/"
+        )
 
-    http_protocol = 'https' if encryption else 'http'
-    url = '{}://{}:{}/jsonrpc'.format(http_protocol, host, port)
+    http_protocol = "https" if encryption else "http"
+    url = "{}://{}:{}/jsonrpc".format(http_protocol, host, port)
 
     if username is not None:
         auth = aiohttp.BasicAuth(username, password)
@@ -73,29 +78,27 @@ class KodiNotificationService(BaseNotificationService):
     def __init__(self, hass, url, auth=None):
         """Initialize the service."""
         import jsonrpc_async
+
         self._url = url
 
-        kwargs = {
-            'timeout': DEFAULT_TIMEOUT,
-            'session': async_get_clientsession(hass),
-        }
+        kwargs = {"timeout": DEFAULT_TIMEOUT, "session": async_get_clientsession(hass)}
 
         if auth is not None:
-            kwargs['auth'] = auth
+            kwargs["auth"] = auth
 
         self._server = jsonrpc_async.Server(self._url, **kwargs)
 
     async def async_send_message(self, message="", **kwargs):
         """Send a message to Kodi."""
         import jsonrpc_async
+
         try:
             data = kwargs.get(ATTR_DATA) or {}
 
             displaytime = int(data.get(ATTR_DISPLAYTIME, 10000))
             icon = data.get(ATTR_ICON, "info")
             title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-            await self._server.GUI.ShowNotification(
-                title, message, icon, displaytime)
+            await self._server.GUI.ShowNotification(title, message, icon, displaytime)
 
         except jsonrpc_async.TransportError:
             _LOGGER.warning("Unable to fetch Kodi data. Is Kodi online?")

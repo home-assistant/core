@@ -1,0 +1,10 @@
+{
+  "domain": "ziggo_mediabox_xl",
+  "name": "Ziggo mediabox xl",
+  "documentation": "https://www.home-assistant.io/components/ziggo_mediabox_xl",
+  "requirements": [
+    "ziggo-mediabox-xl==1.1.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

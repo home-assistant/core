@@ -2,13 +2,14 @@
 import asyncio
 from datetime import timedelta
 import logging
-from socket import timeout
 
-import async_timeout
+from aiohttp import ClientConnectionError
+from async_timeout import timeout
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOSTS, CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_HOSTS
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.typing import HomeAssistantType
@@ -16,24 +17,23 @@ from homeassistant.util import Throttle
 
 from . import config_flow  # noqa  pylint_disable=unused-import
 
-REQUIREMENTS = ['pydaikin==1.3.1']
-
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'daikin'
+DOMAIN = "daikin"
 
 PARALLEL_UPDATES = 0
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-COMPONENT_TYPES = ['climate', 'sensor', 'switch']
+COMPONENT_TYPES = ["climate", "sensor", "switch"]
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(
-            CONF_HOSTS, default=[]
-        ): vol.All(cv.ensure_list, [cv.string]),
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {vol.Optional(CONF_HOSTS, default=[]): vol.All(cv.ensure_list, [cv.string])}
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):
@@ -45,15 +45,15 @@ async def async_setup(hass, config):
     if not hosts:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={'source': SOURCE_IMPORT}))
+                DOMAIN, context={"source": SOURCE_IMPORT}
+            )
+        )
     for host in hosts:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={'source': SOURCE_IMPORT},
-                data={
-                    CONF_HOST: host,
-                }))
+                DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_HOST: host}
+            )
+        )
     return True
 
 
@@ -64,19 +64,21 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     if not daikin_api:
         return False
     hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: daikin_api})
-    await asyncio.wait([
-        hass.config_entries.async_forward_entry_setup(entry, component)
-        for component in COMPONENT_TYPES
-    ])
+    for component in COMPONENT_TYPES:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
     return True
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    await asyncio.wait([
-        hass.config_entries.async_forward_entry_unload(config_entry, component)
-        for component in COMPONENT_TYPES
-    ])
+    await asyncio.wait(
+        [
+            hass.config_entries.async_forward_entry_unload(config_entry, component)
+            for component in COMPONENT_TYPES
+        ]
+    )
     hass.data[DOMAIN].pop(config_entry.entry_id)
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
@@ -86,16 +88,20 @@ async def async_unload_entry(hass, config_entry):
 async def daikin_api_setup(hass, host):
     """Create a Daikin instance only once."""
     from pydaikin.appliance import Appliance
+
     session = hass.helpers.aiohttp_client.async_get_clientsession()
     try:
-        with async_timeout.timeout(10):
+        with timeout(10):
             device = Appliance(host, session)
             await device.init()
     except asyncio.TimeoutError:
-        _LOGGER.error("Connection to Daikin could not be established")
-        return None
+        _LOGGER.debug("Connection to %s timed out", host)
+        raise ConfigEntryNotReady
+    except ClientConnectionError:
+        _LOGGER.debug("ClientConnectionError to %s", host)
+        raise ConfigEntryNotReady
     except Exception:  # pylint: disable=broad-except
-        _LOGGER.error("Unexpected error creating device")
+        _LOGGER.error("Unexpected error creating device %s", host)
         return None
 
     api = DaikinApi(device)
@@ -109,7 +115,7 @@ class DaikinApi:
     def __init__(self, device):
         """Initialize the Daikin Handle."""
         self.device = device
-        self.name = device.values['name']
+        self.name = device.values["name"]
         self.ip_address = device.ip
         self._available = True
 
@@ -119,10 +125,8 @@ class DaikinApi:
         try:
             await self.device.update_status()
             self._available = True
-        except timeout:
-            _LOGGER.warning(
-                "Connection failed for %s", self.ip_address
-            )
+        except ClientConnectionError:
+            _LOGGER.warning("Connection failed for %s", self.ip_address)
             self._available = False
 
     @property
@@ -140,10 +144,10 @@ class DaikinApi:
         """Return a device description for device registry."""
         info = self.device.values
         return {
-            'connections': {(CONNECTION_NETWORK_MAC, self.mac)},
-            'identifieres': self.mac,
-            'manufacturer': 'Daikin',
-            'model': info.get('model'),
-            'name': info.get('name'),
-            'sw_version': info.get('ver').replace('_', '.'),
+            "connections": {(CONNECTION_NETWORK_MAC, self.mac)},
+            "identifieres": self.mac,
+            "manufacturer": "Daikin",
+            "model": info.get("model"),
+            "name": info.get("name"),
+            "sw_version": info.get("ver").replace("_", "."),
         }

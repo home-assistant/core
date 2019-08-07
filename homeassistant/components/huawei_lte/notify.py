@@ -5,20 +5,23 @@ import voluptuous as vol
 import attr
 
 from homeassistant.components.notify import (
-    BaseNotificationService, ATTR_TARGET, PLATFORM_SCHEMA)
+    BaseNotificationService,
+    ATTR_TARGET,
+    PLATFORM_SCHEMA,
+)
 from homeassistant.const import CONF_RECIPIENT, CONF_URL
 import homeassistant.helpers.config_validation as cv
 
-from ..huawei_lte import DATA_KEY
-
-DEPENDENCIES = ['huawei_lte']
+from . import DATA_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_URL): cv.url,
-    vol.Required(CONF_RECIPIENT): vol.All(cv.ensure_list, [cv.string]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_URL): cv.url,
+        vol.Required(CONF_RECIPIENT): vol.All(cv.ensure_list, [cv.string]),
+    }
+)
 
 
 async def async_get_service(hass, config, discovery_info=None):
@@ -47,8 +50,7 @@ class HuaweiLteSmsNotificationService(BaseNotificationService):
             return
 
         try:
-            resp = data.client.sms.send_sms(
-                phone_numbers=targets, message=message)
+            resp = data.client.sms.send_sms(phone_numbers=targets, message=message)
             _LOGGER.debug("Sent to %s: %s", targets, resp)
         except ResponseErrorException as ex:
             _LOGGER.error("Could not send to %s: %s", targets, ex)

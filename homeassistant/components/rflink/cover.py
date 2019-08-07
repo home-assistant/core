@@ -1,9 +1,4 @@
-"""
-Support for Rflink Cover devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.rflink/
-"""
+"""Support for Rflink Cover devices."""
 import logging
 
 import voluptuous as vol
@@ -14,33 +9,47 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import (
-    CONF_ALIASES, CONF_DEVICE_DEFAULTS, CONF_DEVICES, CONF_FIRE_EVENT,
-    CONF_GROUP, CONF_GROUP_ALIASES, CONF_NOGROUP_ALIASES,
-    CONF_SIGNAL_REPETITIONS, DEVICE_DEFAULTS_SCHEMA, RflinkCommand)
-
-DEPENDENCIES = ['rflink']
+    CONF_ALIASES,
+    CONF_DEVICE_DEFAULTS,
+    CONF_DEVICES,
+    CONF_FIRE_EVENT,
+    CONF_GROUP,
+    CONF_GROUP_ALIASES,
+    CONF_NOGROUP_ALIASES,
+    CONF_SIGNAL_REPETITIONS,
+    DEVICE_DEFAULTS_SCHEMA,
+    RflinkCommand,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})):
-    DEVICE_DEFAULTS_SCHEMA,
-    vol.Optional(CONF_DEVICES, default={}): vol.Schema({
-        cv.string: {
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_ALIASES, default=[]):
-                vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_GROUP_ALIASES, default=[]):
-                vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_NOGROUP_ALIASES, default=[]):
-                vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-            vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
-            vol.Optional(CONF_GROUP, default=True): cv.boolean,
-        },
-    }),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(
+            CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})
+        ): DEVICE_DEFAULTS_SCHEMA,
+        vol.Optional(CONF_DEVICES, default={}): vol.Schema(
+            {
+                cv.string: {
+                    vol.Optional(CONF_NAME): cv.string,
+                    vol.Optional(CONF_ALIASES, default=[]): vol.All(
+                        cv.ensure_list, [cv.string]
+                    ),
+                    vol.Optional(CONF_GROUP_ALIASES, default=[]): vol.All(
+                        cv.ensure_list, [cv.string]
+                    ),
+                    vol.Optional(CONF_NOGROUP_ALIASES, default=[]): vol.All(
+                        cv.ensure_list, [cv.string]
+                    ),
+                    vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+                    vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
+                    vol.Optional(CONF_GROUP, default=True): cv.boolean,
+                }
+            }
+        ),
+    }
+)
 
 
 def devices_from_config(domain_config):
@@ -54,8 +63,7 @@ def devices_from_config(domain_config):
     return devices
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Rflink cover platform."""
     async_add_entities(devices_from_config(config))
 
@@ -75,10 +83,10 @@ class RflinkCover(RflinkCommand, CoverDevice, RestoreEntity):
         """Adjust state if Rflink picks up a remote command for this device."""
         self.cancel_queued_send_commands()
 
-        command = event['command']
-        if command in ['on', 'allon', 'up']:
+        command = event["command"]
+        if command in ["on", "allon", "up"]:
             self._state = True
-        elif command in ['off', 'alloff', 'down']:
+        elif command in ["off", "alloff", "down"]:
             self._state = False
 
     @property

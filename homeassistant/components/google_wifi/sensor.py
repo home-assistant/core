@@ -1,9 +1,4 @@
-"""
-Support for retrieving status info from Google Wifi/OnHub routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.google_wifi/
-"""
+"""Support for retrieving status info from Google Wifi/OnHub routers."""
 import logging
 from datetime import timedelta
 
@@ -14,66 +9,52 @@ from homeassistant.util import dt
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_MONITORED_CONDITIONS, STATE_UNKNOWN)
+    CONF_NAME,
+    CONF_HOST,
+    CONF_MONITORED_CONDITIONS,
+    STATE_UNKNOWN,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CURRENT_VERSION = 'current_version'
-ATTR_LAST_RESTART = 'last_restart'
-ATTR_LOCAL_IP = 'local_ip'
-ATTR_NEW_VERSION = 'new_version'
-ATTR_STATUS = 'status'
-ATTR_UPTIME = 'uptime'
+ATTR_CURRENT_VERSION = "current_version"
+ATTR_LAST_RESTART = "last_restart"
+ATTR_LOCAL_IP = "local_ip"
+ATTR_NEW_VERSION = "new_version"
+ATTR_STATUS = "status"
+ATTR_UPTIME = "uptime"
 
-DEFAULT_HOST = 'testwifi.here'
-DEFAULT_NAME = 'google_wifi'
+DEFAULT_HOST = "testwifi.here"
+DEFAULT_NAME = "google_wifi"
 
-ENDPOINT = '/api/v1/status'
+ENDPOINT = "/api/v1/status"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
 
 MONITORED_CONDITIONS = {
     ATTR_CURRENT_VERSION: [
-        ['software', 'softwareVersion'],
+        ["software", "softwareVersion"],
         None,
-        'mdi:checkbox-marked-circle-outline'
+        "mdi:checkbox-marked-circle-outline",
     ],
-    ATTR_NEW_VERSION: [
-        ['software', 'updateNewVersion'],
-        None,
-        'mdi:update'
-    ],
-    ATTR_UPTIME: [
-        ['system', 'uptime'],
-        'days',
-        'mdi:timelapse'
-    ],
-    ATTR_LAST_RESTART: [
-        ['system', 'uptime'],
-        None,
-        'mdi:restart'
-    ],
-    ATTR_LOCAL_IP: [
-        ['wan', 'localIpAddress'],
-        None,
-        'mdi:access-point-network'
-    ],
-    ATTR_STATUS: [
-        ['wan', 'online'],
-        None,
-        'mdi:google'
-    ]
+    ATTR_NEW_VERSION: [["software", "updateNewVersion"], None, "mdi:update"],
+    ATTR_UPTIME: [["system", "uptime"], "days", "mdi:timelapse"],
+    ATTR_LAST_RESTART: [["system", "uptime"], None, "mdi:restart"],
+    ATTR_LOCAL_IP: [["wan", "localIpAddress"], None, "mdi:access-point-network"],
+    ATTR_STATUS: [["wan", "online"], None, "mdi:google"],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS,
-                 default=list(MONITORED_CONDITIONS)):
-    vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(
+            CONF_MONITORED_CONDITIONS, default=list(MONITORED_CONDITIONS)
+        ): vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -107,7 +88,7 @@ class GoogleWifiSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{}_{}'.format(self._name, self._var_name)
+        return "{}_{}".format(self._name, self._var_name)
 
     @property
     def icon(self):
@@ -143,9 +124,9 @@ class GoogleWifiAPI:
 
     def __init__(self, host, conditions):
         """Initialize the data object."""
-        uri = 'http://'
+        uri = "http://"
         resource = "{}{}{}".format(uri, host, ENDPOINT)
-        self._request = requests.Request('GET', resource).prepare()
+        self._request = requests.Request("GET", resource).prepare()
         self.raw_data = None
         self.conditions = conditions
         self.data = {
@@ -154,7 +135,7 @@ class GoogleWifiAPI:
             ATTR_UPTIME: STATE_UNKNOWN,
             ATTR_LAST_RESTART: STATE_UNKNOWN,
             ATTR_LOCAL_IP: STATE_UNKNOWN,
-            ATTR_STATUS: STATE_UNKNOWN
+            ATTR_STATUS: STATE_UNKNOWN,
         }
         self.available = True
         self.update()
@@ -183,28 +164,28 @@ class GoogleWifiAPI:
                 if primary_key in self.raw_data:
                     sensor_value = self.raw_data[primary_key][sensor_key]
                     # Format sensor for better readability
-                    if (attr_key == ATTR_NEW_VERSION and
-                            sensor_value == '0.0.0.0'):
-                        sensor_value = 'Latest'
+                    if attr_key == ATTR_NEW_VERSION and sensor_value == "0.0.0.0":
+                        sensor_value = "Latest"
                     elif attr_key == ATTR_UPTIME:
                         sensor_value = round(sensor_value / (3600 * 24), 2)
                     elif attr_key == ATTR_LAST_RESTART:
-                        last_restart = (
-                            dt.now() - timedelta(seconds=sensor_value))
-                        sensor_value = last_restart.strftime(
-                            '%Y-%m-%d %H:%M:%S')
+                        last_restart = dt.now() - timedelta(seconds=sensor_value)
+                        sensor_value = last_restart.strftime("%Y-%m-%d %H:%M:%S")
                     elif attr_key == ATTR_STATUS:
                         if sensor_value:
-                            sensor_value = 'Online'
+                            sensor_value = "Online"
                         else:
-                            sensor_value = 'Offline'
+                            sensor_value = "Offline"
                     elif attr_key == ATTR_LOCAL_IP:
-                        if not self.raw_data['wan']['online']:
+                        if not self.raw_data["wan"]["online"]:
                             sensor_value = STATE_UNKNOWN
 
                     self.data[attr_key] = sensor_value
             except KeyError:
-                _LOGGER.error("Router does not support %s field. "
-                              "Please remove %s from monitored_conditions",
-                              sensor_key, attr_key)
+                _LOGGER.error(
+                    "Router does not support %s field. "
+                    "Please remove %s from monitored_conditions",
+                    sensor_key,
+                    attr_key,
+                )
                 self.data[attr_key] = STATE_UNKNOWN

@@ -1,49 +1,48 @@
-"""
-Support for X10 lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.x10/
-"""
+"""Support for X10 lights."""
 import logging
 from subprocess import check_output, CalledProcessError, STDOUT
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_NAME, CONF_ID, CONF_DEVICES)
+from homeassistant.const import CONF_NAME, CONF_ID, CONF_DEVICES
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS,
+    SUPPORT_BRIGHTNESS,
+    Light,
+    PLATFORM_SCHEMA,
+)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_X10 = SUPPORT_BRIGHTNESS
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [
-        {
-            vol.Required(CONF_ID): cv.string,
-            vol.Required(CONF_NAME): cv.string,
-        }
-    ]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_DEVICES): vol.All(
+            cv.ensure_list,
+            [{vol.Required(CONF_ID): cv.string, vol.Required(CONF_NAME): cv.string}],
+        )
+    }
+)
 
 
 def x10_command(command):
     """Execute X10 command and check output."""
-    return check_output(['heyu'] + command.split(' '), stderr=STDOUT)
+    return check_output(["heyu"] + command.split(" "), stderr=STDOUT)
 
 
 def get_unit_status(code):
     """Get on/off status for given unit."""
-    output = check_output('heyu onstate ' + code, shell=True)
-    return int(output.decode('utf-8')[0])
+    output = check_output("heyu onstate " + code, shell=True)
+    return int(output.decode("utf-8")[0])
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the x10 Light platform."""
     is_cm11a = True
     try:
-        x10_command('info')
+        x10_command("info")
     except CalledProcessError as err:
         _LOGGER.info("Assuming that the device is CM17A: %s", err.output)
         is_cm11a = False
@@ -56,8 +55,8 @@ class X10Light(Light):
 
     def __init__(self, light, is_cm11a):
         """Initialize an X10 Light."""
-        self._name = light['name']
-        self._id = light['id']
+        self._name = light["name"]
+        self._id = light["id"]
         self._brightness = 0
         self._state = False
         self._is_cm11a = is_cm11a
@@ -85,18 +84,18 @@ class X10Light(Light):
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
         if self._is_cm11a:
-            x10_command('on ' + self._id)
+            x10_command("on " + self._id)
         else:
-            x10_command('fon ' + self._id)
+            x10_command("fon " + self._id)
         self._brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
         self._state = True
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
         if self._is_cm11a:
-            x10_command('off ' + self._id)
+            x10_command("off " + self._id)
         else:
-            x10_command('foff ' + self._id)
+            x10_command("foff " + self._id)
         self._state = False
 
     def update(self):

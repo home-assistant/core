@@ -5,18 +5,15 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import ecobee
-from homeassistant.components.notify import (
-    BaseNotificationService, PLATFORM_SCHEMA)
+from homeassistant.components.notify import BaseNotificationService, PLATFORM_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['ecobee']
+CONF_INDEX = "index"
 
-CONF_INDEX = 'index'
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_INDEX, default=0): cv.positive_int,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_INDEX, default=0): cv.positive_int}
+)
 
 
 def get_service(hass, config, discovery_info=None):

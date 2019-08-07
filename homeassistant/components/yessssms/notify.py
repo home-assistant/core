@@ -1,9 +1,4 @@
-"""
-Support for the YesssSMS platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.yessssms/
-"""
+"""Support for the YesssSMS platform."""
 import logging
 
 import voluptuous as vol
@@ -11,24 +6,24 @@ import voluptuous as vol
 from homeassistant.const import CONF_PASSWORD, CONF_RECIPIENT, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.components.notify import (PLATFORM_SCHEMA,
-                                             BaseNotificationService)
-
-REQUIREMENTS = ['YesssSMS==0.2.3']
+from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_RECIPIENT): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_RECIPIENT): cv.string,
+    }
+)
 
 
 def get_service(hass, config, discovery_info=None):
     """Get the YesssSMS notification service."""
     return YesssSMSNotificationService(
-        config[CONF_USERNAME], config[CONF_PASSWORD], config[CONF_RECIPIENT])
+        config[CONF_USERNAME], config[CONF_PASSWORD], config[CONF_RECIPIENT]
+    )
 
 
 class YesssSMSNotificationService(BaseNotificationService):
@@ -37,10 +32,10 @@ class YesssSMSNotificationService(BaseNotificationService):
     def __init__(self, username, password, recipient):
         """Initialize the service."""
         from YesssSMS import YesssSMS
+
         self.yesss = YesssSMS(username, password)
         self._recipient = recipient
-        _LOGGER.debug(
-            "initialized; library version: %s", self.yesss.version())
+        _LOGGER.debug("initialized; library version: %s", self.yesss.version())
 
     def send_message(self, message="", **kwargs):
         """Send a SMS message via Yesss.at's website."""
@@ -49,27 +44,29 @@ class YesssSMSNotificationService(BaseNotificationService):
             # new login data.
             _LOGGER.error(
                 "Account is suspended, cannot send SMS. "
-                "Check your login data and restart Home Assistant")
+                "Check your login data and restart Home Assistant"
+            )
             return
         try:
             self.yesss.send(self._recipient, message)
         except self.yesss.NoRecipientError as ex:
             _LOGGER.error(
-                "You need to provide a recipient for SMS notification: %s",
-                ex)
+                "You need to provide a recipient for SMS notification: %s", ex
+            )
         except self.yesss.EmptyMessageError as ex:
-            _LOGGER.error(
-                "Cannot send empty SMS message: %s", ex)
+            _LOGGER.error("Cannot send empty SMS message: %s", ex)
         except self.yesss.SMSSendingError as ex:
             _LOGGER.error(str(ex), exc_info=ex)
         except ConnectionError as ex:
             _LOGGER.error(
-                "YesssSMS: unable to connect to yesss.at server.",
-                exc_info=ex)
+                "YesssSMS: unable to connect to yesss.at server.", exc_info=ex
+            )
         except self.yesss.AccountSuspendedError as ex:
             _LOGGER.error(
                 "Wrong login credentials!! Verify correct credentials and "
-                "restart Home Assistant: %s", ex)
+                "restart Home Assistant: %s",
+                ex,
+            )
         except self.yesss.LoginError as ex:
             _LOGGER.error("Wrong login credentials: %s", ex)
         else:

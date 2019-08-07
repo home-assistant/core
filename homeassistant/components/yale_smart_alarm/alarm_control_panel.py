@@ -1,36 +1,38 @@
-"""
-Yale Smart Alarm client for interacting with the Yale Smart Alarm System API.
-
-For more details about this platform, please refer to the documentation at
-https://www.home-assistant.io/components/alarm_control_panel.yale_smart_alarm
-"""
+"""Component for interacting with the Yale Smart Alarm System API."""
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    AlarmControlPanel, PLATFORM_SCHEMA)
+    AlarmControlPanel,
+    PLATFORM_SCHEMA,
+)
 from homeassistant.const import (
-    CONF_PASSWORD, CONF_USERNAME, CONF_NAME,
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_NAME,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_DISARMED,
+)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['yalesmartalarmclient==0.1.6']
+CONF_AREA_ID = "area_id"
 
-CONF_AREA_ID = 'area_id'
+DEFAULT_NAME = "Yale Smart Alarm"
 
-DEFAULT_NAME = 'Yale Smart Alarm'
-
-DEFAULT_AREA_ID = '1'
+DEFAULT_AREA_ID = "1"
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_AREA_ID, default=DEFAULT_AREA_ID): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_AREA_ID, default=DEFAULT_AREA_ID): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -40,8 +42,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     password = config[CONF_PASSWORD]
     area_id = config[CONF_AREA_ID]
 
-    from yalesmartalarmclient.client import (
-        YaleSmartAlarmClient, AuthenticationError)
+    from yalesmartalarmclient.client import YaleSmartAlarmClient, AuthenticationError
+
     try:
         client = YaleSmartAlarmClient(username, password, area_id)
     except AuthenticationError:
@@ -60,13 +62,16 @@ class YaleAlarmDevice(AlarmControlPanel):
         self._client = client
         self._state = None
 
-        from yalesmartalarmclient.client import (YALE_STATE_DISARM,
-                                                 YALE_STATE_ARM_PARTIAL,
-                                                 YALE_STATE_ARM_FULL)
+        from yalesmartalarmclient.client import (
+            YALE_STATE_DISARM,
+            YALE_STATE_ARM_PARTIAL,
+            YALE_STATE_ARM_FULL,
+        )
+
         self._state_map = {
             YALE_STATE_DISARM: STATE_ALARM_DISARMED,
             YALE_STATE_ARM_PARTIAL: STATE_ALARM_ARMED_HOME,
-            YALE_STATE_ARM_FULL: STATE_ALARM_ARMED_AWAY
+            YALE_STATE_ARM_FULL: STATE_ALARM_ARMED_AWAY,
         }
 
     @property

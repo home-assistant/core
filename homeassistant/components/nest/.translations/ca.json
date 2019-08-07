@@ -17,7 +17,7 @@
                 "data": {
                     "flow_impl": "Prove\u00efdor"
                 },
-                "description": "Tria a amb quin prove\u00efdor d'autenticaci\u00f3 vols autenticar-te amb Nest.",
+                "description": "Tria quin prove\u00efdor d'autenticaci\u00f3 vols utilitzar per autenticar-te amb Nest.",
                 "title": "Prove\u00efdor d'autenticaci\u00f3"
             },
             "link": {

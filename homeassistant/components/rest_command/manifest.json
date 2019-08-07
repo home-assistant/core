@@ -1,0 +1,8 @@
+{
+  "domain": "rest_command",
+  "name": "Rest command",
+  "documentation": "https://www.home-assistant.io/components/rest_command",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

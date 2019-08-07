@@ -1,9 +1,4 @@
-"""
-Integration with the Rachio Iro sprinkler system controller.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/rachio/
-"""
+"""Integration with the Rachio Iro sprinkler system controller."""
 import asyncio
 import logging
 from typing import Optional
@@ -16,89 +11,93 @@ from homeassistant.const import CONF_API_KEY, EVENT_HOMEASSISTANT_STOP, URL_API
 from homeassistant.helpers import discovery, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['rachiopy==0.1.3']
-
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'rachio'
+DOMAIN = "rachio"
 
-SUPPORTED_DOMAINS = ['switch', 'binary_sensor']
+SUPPORTED_DOMAINS = ["switch", "binary_sensor"]
 
 # Manual run length
-CONF_MANUAL_RUN_MINS = 'manual_run_mins'
+CONF_MANUAL_RUN_MINS = "manual_run_mins"
 DEFAULT_MANUAL_RUN_MINS = 10
-CONF_CUSTOM_URL = 'hass_url_override'
+CONF_CUSTOM_URL = "hass_url_override"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_CUSTOM_URL): cv.string,
-        vol.Optional(CONF_MANUAL_RUN_MINS, default=DEFAULT_MANUAL_RUN_MINS):
-            cv.positive_int,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_API_KEY): cv.string,
+                vol.Optional(CONF_CUSTOM_URL): cv.string,
+                vol.Optional(
+                    CONF_MANUAL_RUN_MINS, default=DEFAULT_MANUAL_RUN_MINS
+                ): cv.positive_int,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 # Keys used in the API JSON
-KEY_DEVICE_ID = 'deviceId'
-KEY_DEVICES = 'devices'
-KEY_ENABLED = 'enabled'
-KEY_EXTERNAL_ID = 'externalId'
-KEY_ID = 'id'
-KEY_NAME = 'name'
-KEY_ON = 'on'
-KEY_STATUS = 'status'
-KEY_SUBTYPE = 'subType'
-KEY_SUMMARY = 'summary'
-KEY_TYPE = 'type'
-KEY_URL = 'url'
-KEY_USERNAME = 'username'
-KEY_ZONE_ID = 'zoneId'
-KEY_ZONE_NUMBER = 'zoneNumber'
-KEY_ZONES = 'zones'
+KEY_DEVICE_ID = "deviceId"
+KEY_DEVICES = "devices"
+KEY_ENABLED = "enabled"
+KEY_EXTERNAL_ID = "externalId"
+KEY_ID = "id"
+KEY_NAME = "name"
+KEY_ON = "on"
+KEY_STATUS = "status"
+KEY_SUBTYPE = "subType"
+KEY_SUMMARY = "summary"
+KEY_TYPE = "type"
+KEY_URL = "url"
+KEY_USERNAME = "username"
+KEY_ZONE_ID = "zoneId"
+KEY_ZONE_NUMBER = "zoneNumber"
+KEY_ZONES = "zones"
 
-STATUS_ONLINE = 'ONLINE'
-STATUS_OFFLINE = 'OFFLINE'
+STATUS_ONLINE = "ONLINE"
+STATUS_OFFLINE = "OFFLINE"
 
 # Device webhook values
-TYPE_CONTROLLER_STATUS = 'DEVICE_STATUS'
-SUBTYPE_OFFLINE = 'OFFLINE'
-SUBTYPE_ONLINE = 'ONLINE'
-SUBTYPE_OFFLINE_NOTIFICATION = 'OFFLINE_NOTIFICATION'
-SUBTYPE_COLD_REBOOT = 'COLD_REBOOT'
-SUBTYPE_SLEEP_MODE_ON = 'SLEEP_MODE_ON'
-SUBTYPE_SLEEP_MODE_OFF = 'SLEEP_MODE_OFF'
-SUBTYPE_BROWNOUT_VALVE = 'BROWNOUT_VALVE'
-SUBTYPE_RAIN_SENSOR_DETECTION_ON = 'RAIN_SENSOR_DETECTION_ON'
-SUBTYPE_RAIN_SENSOR_DETECTION_OFF = 'RAIN_SENSOR_DETECTION_OFF'
-SUBTYPE_RAIN_DELAY_ON = 'RAIN_DELAY_ON'
-SUBTYPE_RAIN_DELAY_OFF = 'RAIN_DELAY_OFF'
+TYPE_CONTROLLER_STATUS = "DEVICE_STATUS"
+SUBTYPE_OFFLINE = "OFFLINE"
+SUBTYPE_ONLINE = "ONLINE"
+SUBTYPE_OFFLINE_NOTIFICATION = "OFFLINE_NOTIFICATION"
+SUBTYPE_COLD_REBOOT = "COLD_REBOOT"
+SUBTYPE_SLEEP_MODE_ON = "SLEEP_MODE_ON"
+SUBTYPE_SLEEP_MODE_OFF = "SLEEP_MODE_OFF"
+SUBTYPE_BROWNOUT_VALVE = "BROWNOUT_VALVE"
+SUBTYPE_RAIN_SENSOR_DETECTION_ON = "RAIN_SENSOR_DETECTION_ON"
+SUBTYPE_RAIN_SENSOR_DETECTION_OFF = "RAIN_SENSOR_DETECTION_OFF"
+SUBTYPE_RAIN_DELAY_ON = "RAIN_DELAY_ON"
+SUBTYPE_RAIN_DELAY_OFF = "RAIN_DELAY_OFF"
 
 # Schedule webhook values
-TYPE_SCHEDULE_STATUS = 'SCHEDULE_STATUS'
-SUBTYPE_SCHEDULE_STARTED = 'SCHEDULE_STARTED'
-SUBTYPE_SCHEDULE_STOPPED = 'SCHEDULE_STOPPED'
-SUBTYPE_SCHEDULE_COMPLETED = 'SCHEDULE_COMPLETED'
-SUBTYPE_WEATHER_NO_SKIP = 'WEATHER_INTELLIGENCE_NO_SKIP'
-SUBTYPE_WEATHER_SKIP = 'WEATHER_INTELLIGENCE_SKIP'
-SUBTYPE_WEATHER_CLIMATE_SKIP = 'WEATHER_INTELLIGENCE_CLIMATE_SKIP'
-SUBTYPE_WEATHER_FREEZE = 'WEATHER_INTELLIGENCE_FREEZE'
+TYPE_SCHEDULE_STATUS = "SCHEDULE_STATUS"
+SUBTYPE_SCHEDULE_STARTED = "SCHEDULE_STARTED"
+SUBTYPE_SCHEDULE_STOPPED = "SCHEDULE_STOPPED"
+SUBTYPE_SCHEDULE_COMPLETED = "SCHEDULE_COMPLETED"
+SUBTYPE_WEATHER_NO_SKIP = "WEATHER_INTELLIGENCE_NO_SKIP"
+SUBTYPE_WEATHER_SKIP = "WEATHER_INTELLIGENCE_SKIP"
+SUBTYPE_WEATHER_CLIMATE_SKIP = "WEATHER_INTELLIGENCE_CLIMATE_SKIP"
+SUBTYPE_WEATHER_FREEZE = "WEATHER_INTELLIGENCE_FREEZE"
 
 # Zone webhook values
-TYPE_ZONE_STATUS = 'ZONE_STATUS'
-SUBTYPE_ZONE_STARTED = 'ZONE_STARTED'
-SUBTYPE_ZONE_STOPPED = 'ZONE_STOPPED'
-SUBTYPE_ZONE_COMPLETED = 'ZONE_COMPLETED'
-SUBTYPE_ZONE_CYCLING = 'ZONE_CYCLING'
-SUBTYPE_ZONE_CYCLING_COMPLETED = 'ZONE_CYCLING_COMPLETED'
+TYPE_ZONE_STATUS = "ZONE_STATUS"
+SUBTYPE_ZONE_STARTED = "ZONE_STARTED"
+SUBTYPE_ZONE_STOPPED = "ZONE_STOPPED"
+SUBTYPE_ZONE_COMPLETED = "ZONE_COMPLETED"
+SUBTYPE_ZONE_CYCLING = "ZONE_CYCLING"
+SUBTYPE_ZONE_CYCLING_COMPLETED = "ZONE_CYCLING_COMPLETED"
 
 # Webhook callbacks
-LISTEN_EVENT_TYPES = ['DEVICE_STATUS_EVENT', 'ZONE_STATUS_EVENT']
-WEBHOOK_CONST_ID = 'homeassistant.rachio:'
+LISTEN_EVENT_TYPES = ["DEVICE_STATUS_EVENT", "ZONE_STATUS_EVENT"]
+WEBHOOK_CONST_ID = "homeassistant.rachio:"
 WEBHOOK_PATH = URL_API + DOMAIN
-SIGNAL_RACHIO_UPDATE = DOMAIN + '_update'
-SIGNAL_RACHIO_CONTROLLER_UPDATE = SIGNAL_RACHIO_UPDATE + '_controller'
-SIGNAL_RACHIO_ZONE_UPDATE = SIGNAL_RACHIO_UPDATE + '_zone'
-SIGNAL_RACHIO_SCHEDULE_UPDATE = SIGNAL_RACHIO_UPDATE + '_schedule'
+SIGNAL_RACHIO_UPDATE = DOMAIN + "_update"
+SIGNAL_RACHIO_CONTROLLER_UPDATE = SIGNAL_RACHIO_UPDATE + "_controller"
+SIGNAL_RACHIO_ZONE_UPDATE = SIGNAL_RACHIO_UPDATE + "_zone"
+SIGNAL_RACHIO_SCHEDULE_UPDATE = SIGNAL_RACHIO_UPDATE + "_schedule"
 
 
 def setup(hass, config) -> bool:
@@ -127,8 +126,7 @@ def setup(hass, config) -> bool:
 
     # Check for Rachio controller devices
     if not person.controllers:
-        _LOGGER.error("No Rachio devices found in account %s",
-                      person.username)
+        _LOGGER.error("No Rachio devices found in account %s", person.username)
         return False
     _LOGGER.info("%d Rachio device(s) found", len(person.controllers))
 
@@ -160,8 +158,10 @@ class RachioPerson:
         data = rachio.person.get(self._id)
         assert int(data[0][KEY_STATUS]) == 200, "User ID error"
         self.username = data[1][KEY_USERNAME]
-        self._controllers = [RachioIro(self._hass, self.rachio, controller)
-                             for controller in data[1][KEY_DEVICES]]
+        self._controllers = [
+            RachioIro(self._hass, self.rachio, controller)
+            for controller in data[1][KEY_DEVICES]
+        ]
         _LOGGER.info('Using Rachio API as user "%s"', self.username)
 
     @property
@@ -198,12 +198,14 @@ class RachioIro:
         # First delete any old webhooks that may have stuck around
         def _deinit_webhooks(event) -> None:
             """Stop getting updates from the Rachio API."""
-            webhooks = self.rachio.notification.getDeviceWebhook(
-                self.controller_id)[1]
+            webhooks = self.rachio.notification.getDeviceWebhook(self.controller_id)[1]
             for webhook in webhooks:
-                if webhook[KEY_EXTERNAL_ID].startswith(WEBHOOK_CONST_ID) or\
-                        webhook[KEY_ID] == current_webhook_id:
+                if (
+                    webhook[KEY_EXTERNAL_ID].startswith(WEBHOOK_CONST_ID)
+                    or webhook[KEY_ID] == current_webhook_id
+                ):
                     self.rachio.notification.deleteWebhook(webhook[KEY_ID])
+
         _deinit_webhooks(None)
 
         # Choose which events to listen for and get their IDs
@@ -215,9 +217,9 @@ class RachioIro:
         # Register to listen to these events from the device
         url = self.rachio.webhook_url
         auth = WEBHOOK_CONST_ID + self.rachio.webhook_auth
-        new_webhook = self.rachio.notification.postWebhook(self.controller_id,
-                                                           auth, url,
-                                                           event_types)
+        new_webhook = self.rachio.notification.postWebhook(
+            self.controller_id, auth, url, event_types
+        )
         # Save ID for deletion at shutdown
         current_webhook_id = new_webhook[1][KEY_ID]
         self.hass.bus.listen(EVENT_HOMEASSISTANT_STOP, _deinit_webhooks)
@@ -280,17 +282,17 @@ class RachioWebhookView(HomeAssistantView):
 
     requires_auth = False  # Handled separately
     url = WEBHOOK_PATH
-    name = url[1:].replace('/', ':')
+    name = url[1:].replace("/", ":")
 
     # pylint: disable=no-self-use
     @asyncio.coroutine
     async def post(self, request) -> web.Response:
         """Handle webhook calls from the server."""
-        hass = request.app['hass']
+        hass = request.app["hass"]
         data = await request.json()
 
         try:
-            auth = data.get(KEY_EXTERNAL_ID, str()).split(':')[1]
+            auth = data.get(KEY_EXTERNAL_ID, str()).split(":")[1]
             assert auth == hass.data[DOMAIN].rachio.webhook_auth
         except (AssertionError, IndexError):
             return web.Response(status=web.HTTPForbidden.status_code)

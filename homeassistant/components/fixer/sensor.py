@@ -1,9 +1,4 @@
-"""
-Currency exchange rate support that comes from fixer.io.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.fixer/
-"""
+"""Currency exchange rate support that comes from fixer.io."""
 from datetime import timedelta
 import logging
 
@@ -14,28 +9,28 @@ from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['fixerio==1.0.0a0']
-
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_EXCHANGE_RATE = 'Exchange rate'
-ATTR_TARGET = 'Target currency'
+ATTR_EXCHANGE_RATE = "Exchange rate"
+ATTR_TARGET = "Target currency"
 ATTRIBUTION = "Data provided by the European Central Bank (ECB)"
 
-CONF_TARGET = 'target'
+CONF_TARGET = "target"
 
-DEFAULT_BASE = 'USD'
-DEFAULT_NAME = 'Exchange rate'
+DEFAULT_BASE = "USD"
+DEFAULT_NAME = "Exchange rate"
 
-ICON = 'mdi:currency-usd'
+ICON = "mdi:currency-usd"
 
 SCAN_INTERVAL = timedelta(days=1)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_TARGET): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_TARGET): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -87,7 +82,7 @@ class ExchangeRateSensor(Entity):
         if self.data.rate is not None:
             return {
                 ATTR_ATTRIBUTION: ATTRIBUTION,
-                ATTR_EXCHANGE_RATE: self.data.rate['rates'][self._target],
+                ATTR_EXCHANGE_RATE: self.data.rate["rates"][self._target],
                 ATTR_TARGET: self._target,
             }
 
@@ -99,7 +94,7 @@ class ExchangeRateSensor(Entity):
     def update(self):
         """Get the latest data and updates the states."""
         self.data.update()
-        self._state = round(self.data.rate['rates'][self._target], 3)
+        self._state = round(self.data.rate["rates"][self._target], 3)
 
 
 class ExchangeData:
@@ -112,8 +107,7 @@ class ExchangeData:
         self.api_key = api_key
         self.rate = None
         self.target_currency = target_currency
-        self.exchange = Fixerio(
-            symbols=[self.target_currency], access_key=self.api_key)
+        self.exchange = Fixerio(symbols=[self.target_currency], access_key=self.api_key)
 
     def update(self):
         """Get the latest data from Fixer.io."""

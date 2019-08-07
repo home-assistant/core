@@ -4,7 +4,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA, BinarySensorDevice)
+    DEVICE_CLASSES_SCHEMA,
+    PLATFORM_SCHEMA,
+    BinarySensorDevice,
+)
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_DEVICES, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, event as evt
@@ -15,35 +18,45 @@ from . import W800RF32_DEVICE
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['w800rf32']
-CONF_OFF_DELAY = 'off_delay'
+CONF_OFF_DELAY = "off_delay"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICES): {
-        cv.string: vol.Schema({
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_OFF_DELAY):
-            vol.All(cv.time_period, cv.positive_timedelta),
-        })
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_DEVICES): {
+            cv.string: vol.Schema(
+                {
+                    vol.Optional(CONF_NAME): cv.string,
+                    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+                    vol.Optional(CONF_OFF_DELAY): vol.All(
+                        cv.time_period, cv.positive_timedelta
+                    ),
+                }
+            )
+        }
     },
-}, extra=vol.ALLOW_EXTRA)
+    extra=vol.ALLOW_EXTRA,
+)
 
 
-async def async_setup_platform(
-        hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Binary Sensor platform to w800rf32."""
     binary_sensors = []
     # device_id --> "c1 or a3" X10 device. entity (type dictionary)
     # --> name, device_class etc
     for device_id, entity in config[CONF_DEVICES].items():
 
-        _LOGGER.debug("Add %s w800rf32.binary_sensor (class %s)",
-                      entity[CONF_NAME], entity.get(CONF_DEVICE_CLASS))
+        _LOGGER.debug(
+            "Add %s w800rf32.binary_sensor (class %s)",
+            entity[CONF_NAME],
+            entity.get(CONF_DEVICE_CLASS),
+        )
 
         device = W800rf32BinarySensor(
-            device_id, entity.get(CONF_NAME), entity.get(CONF_DEVICE_CLASS),
-            entity.get(CONF_OFF_DELAY))
+            device_id,
+            entity.get(CONF_NAME),
+            entity.get(CONF_DEVICE_CLASS),
+            entity.get(CONF_OFF_DELAY),
+        )
 
         binary_sensors.append(device)
 
@@ -100,20 +113,19 @@ class W800rf32BinarySensor(BinarySensorDevice):
         command = event.command
 
         _LOGGER.debug(
-            "BinarySensor update (Device ID: %s Command %s ...)",
-            dev_id, command)
+            "BinarySensor update (Device ID: %s Command %s ...)", dev_id, command
+        )
 
         # Update the w800rf32 device state
-        if command in ('On', 'Off'):
-            is_on = command == 'On'
+        if command in ("On", "Off"):
+            is_on = command == "On"
             self.update_state(is_on)
 
-        if (self.is_on and self._off_delay is not None and
-                self._delay_listener is None):
+        if self.is_on and self._off_delay is not None and self._delay_listener is None:
 
             self._delay_listener = evt.async_track_point_in_time(
-                self.hass, self._off_delay_listener,
-                dt_util.utcnow() + self._off_delay)
+                self.hass, self._off_delay_listener, dt_util.utcnow() + self._off_delay
+            )
 
     def update_state(self, state):
         """Update the state of the device."""
@@ -122,5 +134,4 @@ class W800rf32BinarySensor(BinarySensorDevice):
 
     async def async_added_to_hass(self):
         """Register update callback."""
-        async_dispatcher_connect(self.hass, self._signal,
-                                 self.binary_sensor_update)
+        async_dispatcher_connect(self.hass, self._signal, self.binary_sensor_update)
