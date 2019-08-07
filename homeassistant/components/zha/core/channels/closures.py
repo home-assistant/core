@@ -11,13 +11,14 @@ import zigpy.zcl.clusters.closures as closures
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import ZIGBEE_CHANNEL_REGISTRY, ZigbeeChannel
+from . import ZigbeeChannel
+from .. import registries
 from ..const import REPORT_CONFIG_IMMEDIATE, SIGNAL_ATTR_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(closures.DoorLock.cluster_id)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(closures.DoorLock.cluster_id)
 class DoorLockChannel(ZigbeeChannel):
     """Door lock channel."""
 
@@ -54,14 +55,14 @@ class DoorLockChannel(ZigbeeChannel):
         await super().async_initialize(from_cache)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(closures.Shade.cluster_id)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(closures.Shade.cluster_id)
 class Shade(ZigbeeChannel):
     """Shade channel."""
 
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(closures.WindowCovering.cluster_id)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(closures.WindowCovering.cluster_id)
 class WindowCovering(ZigbeeChannel):
     """Window channel."""
 

@@ -603,7 +603,7 @@ hass-nabucasa==0.16
 hbmqtt==0.9.4
 
 # homeassistant.components.jewish_calendar
-hdate==0.8.8
+hdate==0.9.0
 
 # homeassistant.components.heatmiser
 heatmiserV3==0.9.1
@@ -627,7 +627,7 @@ hole==0.3.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190804.0
+home-assistant-frontend==20190805.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.4
@@ -669,7 +669,7 @@ iglo==1.2.7
 ihcsdk==2.3.0
 
 # homeassistant.components.incomfort
-incomfort-client==0.3.0
+incomfort-client==0.3.1
 
 # homeassistant.components.influxdb
 influxdb==5.2.0
