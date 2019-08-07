@@ -7,3 +7,71 @@ send_command:
     command:
       description: Button to press.
       example: 'ps'
+
+media_add:
+  description: Manually add media data to source list. Media data will be locked and not be updated automatically.
+  fields:
+    media_content_id:
+      description: The ID or the PlayStation Store SKU ID of the title.
+      example: 'CUSA00123'
+    media_title:
+      description: The name for the media title. Defaults to the current title.
+      example: 'A Title: The Name'
+    media_image_url:
+      description: A remote or local URL directing to an image that will be displayed. You may use images in the local (/config/www/) folder.
+      example: 'http://localhost:8123/local/image.jpg'
+    media_content_type:
+      description: The type of media. Must be 'game' or 'app'. Defaults to 'game'.
+      example: 'game'
+
+media_remove:
+  description: Remove media data from source list.
+  fields:
+    media_content_id:
+      description: The ID or the PlayStation Store SKU ID of the title.
+      example: 'CUSA00123'
+
+media_edit:
+  description: Edit or correct media data attributes. Media data will no longer be updated automatically.
+  fields:
+    media_content_id:
+      description: The ID or the PlayStation Store SKU ID of the title. Must be in source list.
+      example: 'CUSA00123'
+    media_title:
+      description: The name for the media title.
+      example: 'A Title: The Name'
+    media_image_url:
+      description: A remote or local URL directing to an image that will be displayed. You may use images in the local (/config/www/) folder.
+      example: 'http://localhost:8123/local/image.jpg'
+    media_content_type:
+      description: The type of media. Must be 'game' or 'app'. Defaults to 'game'.
+      example: 'game'
+
+media_edit_playing:
+  description: Edit or correct media data attributes of the media which is currently playing. Media data will be locked and not be updated automatically.
+  fields:
+    entity_id:
+      description: The entity that is playing media.
+      example: 'media_player.playstation_4'
+    media_title:
+      description: The name for the media title.
+      example: 'A Title: The Name'
+    media_image_url:
+      description: A remote or local URL directing to an image that will be displayed. You may use images in the local (/config/www/) folder.
+      example: 'http://localhost:8123/local/image.jpg'
+    media_content_type:
+      description: The type of media. Must be 'game' or 'app'. Defaults to 'game'.
+      example: 'game'
+
+media_unlock:
+  description: Unlock media data attributes to allow automatic updates to media data.
+  fields:
+    media_content_id:
+      description: The ID or the PlayStation Store SKU ID of the title. Must be in source list.
+      example: 'CUSA00123'
+
+media_unlock_playing:
+  description: Unlock the attributes of the media which is currently playing.
+    entity_id: 
+      description: The entity that is playing media.
+      example: 'media_player.playstation_4'
