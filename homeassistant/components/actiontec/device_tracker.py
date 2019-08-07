@@ -8,22 +8,28 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    DeviceScanner,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 
 _LEASES_REGEX = re.compile(
-    r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})' +
-    r'\smac:\s(?P<mac>([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))' +
-    r'\svalid\sfor:\s(?P<timevalid>(-?\d+))' +
-    r'\ssec')
+    r"(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})"
+    + r"\smac:\s(?P<mac>([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))"
+    + r"\svalid\sfor:\s(?P<timevalid>(-?\d+))"
+    + r"\ssec"
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_USERNAME): cv.string
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+    }
+)
 
 
 def get_scanner(hass, config):
@@ -32,7 +38,7 @@ def get_scanner(hass, config):
     return scanner if scanner.success_init else None
 
 
-Device = namedtuple('Device', ['mac', 'ip', 'last_update'])
+Device = namedtuple("Device", ["mac", "ip", "last_update"])
 
 
 class ActiontecDeviceScanner(DeviceScanner):
@@ -75,9 +81,11 @@ class ActiontecDeviceScanner(DeviceScanner):
         actiontec_data = self.get_actiontec_data()
         if not actiontec_data:
             return False
-        self.last_results = [Device(data['mac'], name, now)
-                             for name, data in actiontec_data.items()
-                             if data['timevalid'] > -60]
+        self.last_results = [
+            Device(data["mac"], name, now)
+            for name, data in actiontec_data.items()
+            if data["timevalid"] > -60
+        ]
         _LOGGER.info("Scan successful")
         return True
 
@@ -85,17 +93,16 @@ class ActiontecDeviceScanner(DeviceScanner):
         """Retrieve data from Actiontec MI424WR and return parsed result."""
         try:
             telnet = telnetlib.Telnet(self.host)
-            telnet.read_until(b'Username: ')
-            telnet.write((self.username + '\n').encode('ascii'))
-            telnet.read_until(b'Password: ')
-            telnet.write((self.password + '\n').encode('ascii'))
-            prompt = telnet.read_until(
-                b'Wireless Broadband Router> ').split(b'\n')[-1]
-            telnet.write('firewall mac_cache_dump\n'.encode('ascii'))
-            telnet.write('\n'.encode('ascii'))
+            telnet.read_until(b"Username: ")
+            telnet.write((self.username + "\n").encode("ascii"))
+            telnet.read_until(b"Password: ")
+            telnet.write((self.password + "\n").encode("ascii"))
+            prompt = telnet.read_until(b"Wireless Broadband Router> ").split(b"\n")[-1]
+            telnet.write("firewall mac_cache_dump\n".encode("ascii"))
+            telnet.write("\n".encode("ascii"))
             telnet.read_until(prompt)
-            leases_result = telnet.read_until(prompt).split(b'\n')[1:-1]
-            telnet.write('exit\n'.encode('ascii'))
+            leases_result = telnet.read_until(prompt).split(b"\n")[1:-1]
+            telnet.write("exit\n".encode("ascii"))
         except EOFError:
             _LOGGER.exception("Unexpected response from router")
             return
@@ -105,11 +112,11 @@ class ActiontecDeviceScanner(DeviceScanner):
 
         devices = {}
         for lease in leases_result:
-            match = _LEASES_REGEX.search(lease.decode('utf-8'))
+            match = _LEASES_REGEX.search(lease.decode("utf-8"))
             if match is not None:
-                devices[match.group('ip')] = {
-                    'ip': match.group('ip'),
-                    'mac': match.group('mac').upper(),
-                    'timevalid': int(match.group('timevalid'))
-                    }
+                devices[match.group("ip")] = {
+                    "ip": match.group("ip"),
+                    "mac": match.group("mac").upper(),
+                    "timevalid": int(match.group("timevalid")),
+                }
         return devices

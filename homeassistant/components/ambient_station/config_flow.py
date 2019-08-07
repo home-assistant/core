@@ -13,28 +13,25 @@ from .const import CONF_APP_KEY, DOMAIN
 def configured_instances(hass):
     """Return a set of configured Ambient PWS instances."""
     return set(
-        entry.data[CONF_APP_KEY]
-        for entry in hass.config_entries.async_entries(DOMAIN))
+        entry.data[CONF_APP_KEY] for entry in hass.config_entries.async_entries(DOMAIN)
+    )
 
 
 @config_entries.HANDLERS.register(DOMAIN)
 class AmbientStationFlowHandler(config_entries.ConfigFlow):
     """Handle an Ambient PWS config flow."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     async def _show_form(self, errors=None):
         """Show the form to the user."""
-        data_schema = vol.Schema({
-            vol.Required(CONF_API_KEY): str,
-            vol.Required(CONF_APP_KEY): str,
-        })
+        data_schema = vol.Schema(
+            {vol.Required(CONF_API_KEY): str, vol.Required(CONF_APP_KEY): str}
+        )
 
         return self.async_show_form(
-            step_id='user',
-            data_schema=data_schema,
-            errors=errors if errors else {},
+            step_id="user", data_schema=data_schema, errors=errors if errors else {}
         )
 
     async def async_step_import(self, import_config):
@@ -50,22 +47,22 @@ class AmbientStationFlowHandler(config_entries.ConfigFlow):
             return await self._show_form()
 
         if user_input[CONF_APP_KEY] in configured_instances(self.hass):
-            return await self._show_form({CONF_APP_KEY: 'identifier_exists'})
+            return await self._show_form({CONF_APP_KEY: "identifier_exists"})
 
         session = aiohttp_client.async_get_clientsession(self.hass)
-        client = Client(
-            user_input[CONF_API_KEY], user_input[CONF_APP_KEY], session)
+        client = Client(user_input[CONF_API_KEY], user_input[CONF_APP_KEY], session)
 
         try:
             devices = await client.api.get_devices()
         except AmbientError:
-            return await self._show_form({'base': 'invalid_key'})
+            return await self._show_form({"base": "invalid_key"})
 
         if not devices:
-            return await self._show_form({'base': 'no_devices'})
+            return await self._show_form({"base": "no_devices"})
 
         # The Application Key (which identifies each config entry) is too long
         # to show nicely in the UI, so we take the first 12 characters (similar
         # to how GitHub does it):
         return self.async_create_entry(
-            title=user_input[CONF_APP_KEY][:12], data=user_input)
+            title=user_input[CONF_APP_KEY][:12], data=user_input
+        )

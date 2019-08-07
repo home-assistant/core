@@ -3,38 +3,43 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
-from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON)
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
+)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ZONES = 'zones'
-CONF_SOURCES = 'sources'
+CONF_ZONES = "zones"
+CONF_SOURCES = "sources"
 
-SUPPORT_RUSSOUND = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
-                   SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+SUPPORT_RUSSOUND = (
+    SUPPORT_VOLUME_MUTE
+    | SUPPORT_VOLUME_SET
+    | SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+    | SUPPORT_SELECT_SOURCE
+)
 
-ZONE_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
-})
+ZONE_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 
-SOURCE_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
-})
+SOURCE_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_PORT): cv.port,
-    vol.Required(CONF_ZONES): vol.Schema({cv.positive_int: ZONE_SCHEMA}),
-    vol.Required(CONF_SOURCES): vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_PORT): cv.port,
+        vol.Required(CONF_ZONES): vol.Schema({cv.positive_int: ZONE_SCHEMA}),
+        vol.Required(CONF_SOURCES): vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -43,8 +48,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     port = config.get(CONF_PORT)
 
     if host is None or port is None:
-        _LOGGER.error("Invalid config. Expected %s and %s",
-                      CONF_HOST, CONF_PORT)
+        _LOGGER.error("Invalid config. Expected %s and %s", CONF_HOST, CONF_PORT)
         return False
 
     from russound import russound
@@ -54,14 +58,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     sources = []
     for source in config[CONF_SOURCES]:
-        sources.append(source['name'])
+        sources.append(source["name"])
 
     if russ.is_connected():
         for zone_id, extra in config[CONF_ZONES].items():
-            add_entities([RussoundRNETDevice(
-                hass, russ, sources, zone_id, extra)], True)
+            add_entities(
+                [RussoundRNETDevice(hass, russ, sources, zone_id, extra)], True
+            )
     else:
-        _LOGGER.error('Not connected to %s:%s', host, port)
+        _LOGGER.error("Not connected to %s:%s", host, port)
 
 
 class RussoundRNETDevice(MediaPlayerDevice):
@@ -69,7 +74,7 @@ class RussoundRNETDevice(MediaPlayerDevice):
 
     def __init__(self, hass, russ, sources, zone_id, extra):
         """Initialise the Russound RNET device."""
-        self._name = extra['name']
+        self._name = extra["name"]
         self._russ = russ
         self._sources = sources
         self._zone_id = zone_id
@@ -83,7 +88,7 @@ class RussoundRNETDevice(MediaPlayerDevice):
         # Updated this function to make a single call to get_zone_info, so that
         # with a single call we can get On/Off, Volume and Source, reducing the
         # amount of traffic and speeding up the update process.
-        ret = self._russ.get_zone_info('1', self._zone_id, 4)
+        ret = self._russ.get_zone_info("1", self._zone_id, 4)
         _LOGGER.debug("ret= %s", ret)
         if ret is not None:
             _LOGGER.debug("Updating status for zone %s", self._zone_id)
@@ -92,12 +97,12 @@ class RussoundRNETDevice(MediaPlayerDevice):
             else:
                 self._state = STATE_ON
             self._volume = ret[2] * 2 / 100.0
-        # Returns 0 based index for source.
+            # Returns 0 based index for source.
             index = ret[1]
-        # Possibility exists that user has defined list of all sources.
-        # If a source is set externally that is beyond the defined list then
-        # an exception will be thrown.
-        # In this case return and unknown source (None)
+            # Possibility exists that user has defined list of all sources.
+            # If a source is set externally that is beyond the defined list then
+            # an exception will be thrown.
+            # In this case return and unknown source (None)
             try:
                 self._source = self._sources[index]
             except IndexError:
@@ -140,26 +145,26 @@ class RussoundRNETDevice(MediaPlayerDevice):
         Translate this to a range of (0..100) as expected
         by _russ.set_volume()
         """
-        self._russ.set_volume('1', self._zone_id, volume * 100)
+        self._russ.set_volume("1", self._zone_id, volume * 100)
 
     def turn_on(self):
         """Turn the media player on."""
-        self._russ.set_power('1', self._zone_id, '1')
+        self._russ.set_power("1", self._zone_id, "1")
 
     def turn_off(self):
         """Turn off media player."""
-        self._russ.set_power('1', self._zone_id, '0')
+        self._russ.set_power("1", self._zone_id, "0")
 
     def mute_volume(self, mute):
         """Send mute command."""
-        self._russ.toggle_mute('1', self._zone_id)
+        self._russ.toggle_mute("1", self._zone_id)
 
     def select_source(self, source):
         """Set the input source."""
         if source in self._sources:
             index = self._sources.index(source)
             # 0 based value for source
-            self._russ.set_source('1', self._zone_id, index)
+            self._russ.set_source("1", self._zone_id, index)
 
     @property
     def source_list(self):

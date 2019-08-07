@@ -15,59 +15,68 @@ _LOGGER = logging.getLogger(__name__)
 
 YANDEX_API_URL = "https://tts.voicetech.yandex.net/generate?"
 
-SUPPORT_LANGUAGES = [
-    'ru-RU', 'en-US', 'tr-TR', 'uk-UK'
-]
+SUPPORT_LANGUAGES = ["ru-RU", "en-US", "tr-TR", "uk-UK"]
 
-SUPPORT_CODECS = [
-    'mp3', 'wav', 'opus',
-]
+SUPPORT_CODECS = ["mp3", "wav", "opus"]
 
 SUPPORT_VOICES = [
-    'jane', 'oksana', 'alyss', 'omazh',
-    'zahar', 'ermil', 'levitan', 'ermilov',
-    'silaerkan', 'kolya', 'kostya', 'nastya',
-    'sasha', 'nick', 'erkanyavas', 'zhenya',
-    'tanya', 'anton_samokhvalov', 'tatyana_abramova',
-    'voicesearch', 'ermil_with_tuning', 'robot',
-    'dude', 'zombie', 'smoky'
+    "jane",
+    "oksana",
+    "alyss",
+    "omazh",
+    "zahar",
+    "ermil",
+    "levitan",
+    "ermilov",
+    "silaerkan",
+    "kolya",
+    "kostya",
+    "nastya",
+    "sasha",
+    "nick",
+    "erkanyavas",
+    "zhenya",
+    "tanya",
+    "anton_samokhvalov",
+    "tatyana_abramova",
+    "voicesearch",
+    "ermil_with_tuning",
+    "robot",
+    "dude",
+    "zombie",
+    "smoky",
 ]
 
-SUPPORTED_EMOTION = [
-    'good', 'evil', 'neutral'
-]
+SUPPORTED_EMOTION = ["good", "evil", "neutral"]
 
 MIN_SPEED = 0.1
 MAX_SPEED = 3
 
-CONF_CODEC = 'codec'
-CONF_VOICE = 'voice'
-CONF_EMOTION = 'emotion'
-CONF_SPEED = 'speed'
+CONF_CODEC = "codec"
+CONF_VOICE = "voice"
+CONF_EMOTION = "emotion"
+CONF_SPEED = "speed"
 
-DEFAULT_LANG = 'en-US'
-DEFAULT_CODEC = 'mp3'
-DEFAULT_VOICE = 'zahar'
-DEFAULT_EMOTION = 'neutral'
+DEFAULT_LANG = "en-US"
+DEFAULT_CODEC = "mp3"
+DEFAULT_VOICE = "zahar"
+DEFAULT_EMOTION = "neutral"
 DEFAULT_SPEED = 1
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
-    vol.Optional(CONF_CODEC, default=DEFAULT_CODEC): vol.In(SUPPORT_CODECS),
-    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): vol.In(SUPPORT_VOICES),
-    vol.Optional(CONF_EMOTION, default=DEFAULT_EMOTION):
-        vol.In(SUPPORTED_EMOTION),
-    vol.Optional(CONF_SPEED, default=DEFAULT_SPEED):
-        vol.Range(min=MIN_SPEED, max=MAX_SPEED)
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
+        vol.Optional(CONF_CODEC, default=DEFAULT_CODEC): vol.In(SUPPORT_CODECS),
+        vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): vol.In(SUPPORT_VOICES),
+        vol.Optional(CONF_EMOTION, default=DEFAULT_EMOTION): vol.In(SUPPORTED_EMOTION),
+        vol.Optional(CONF_SPEED, default=DEFAULT_SPEED): vol.Range(
+            min=MIN_SPEED, max=MAX_SPEED
+        ),
+    }
+)
 
-SUPPORTED_OPTIONS = [
-    CONF_CODEC,
-    CONF_VOICE,
-    CONF_EMOTION,
-    CONF_SPEED,
-]
+SUPPORTED_OPTIONS = [CONF_CODEC, CONF_VOICE, CONF_EMOTION, CONF_SPEED]
 
 
 async def async_get_engine(hass, config):
@@ -87,7 +96,7 @@ class YandexSpeechKitProvider(Provider):
         self._language = conf.get(CONF_LANG)
         self._emotion = conf.get(CONF_EMOTION)
         self._speed = str(conf.get(CONF_SPEED))
-        self.name = 'YandexTTS'
+        self.name = "YandexTTS"
 
     @property
     def default_language(self):
@@ -111,23 +120,23 @@ class YandexSpeechKitProvider(Provider):
         options = options or {}
 
         try:
-            with async_timeout.timeout(10, loop=self.hass.loop):
+            with async_timeout.timeout(10):
                 url_param = {
-                    'text': message,
-                    'lang': actual_language,
-                    'key': self._key,
-                    'speaker': options.get(CONF_VOICE, self._speaker),
-                    'format': options.get(CONF_CODEC, self._codec),
-                    'emotion': options.get(CONF_EMOTION, self._emotion),
-                    'speed': options.get(CONF_SPEED, self._speed)
+                    "text": message,
+                    "lang": actual_language,
+                    "key": self._key,
+                    "speaker": options.get(CONF_VOICE, self._speaker),
+                    "format": options.get(CONF_CODEC, self._codec),
+                    "emotion": options.get(CONF_EMOTION, self._emotion),
+                    "speed": options.get(CONF_SPEED, self._speed),
                 }
 
-                request = await websession.get(
-                    YANDEX_API_URL, params=url_param)
+                request = await websession.get(YANDEX_API_URL, params=url_param)
 
                 if request.status != 200:
-                    _LOGGER.error("Error %d on load URL %s",
-                                  request.status, request.url)
+                    _LOGGER.error(
+                        "Error %d on load URL %s", request.status, request.url
+                    )
                     return (None, None)
                 data = await request.read()
 

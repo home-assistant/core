@@ -6,51 +6,59 @@ import voluptuous as vol
 from homeassistant.components import enocean
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_DEVICE_CLASS, CONF_ID, CONF_NAME, DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, POWER_WATT)
+    CONF_DEVICE_CLASS,
+    CONF_ID,
+    CONF_NAME,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+    POWER_WATT,
+)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_MAX_TEMP = 'max_temp'
-CONF_MIN_TEMP = 'min_temp'
-CONF_RANGE_FROM = 'range_from'
-CONF_RANGE_TO = 'range_to'
+CONF_MAX_TEMP = "max_temp"
+CONF_MIN_TEMP = "min_temp"
+CONF_RANGE_FROM = "range_from"
+CONF_RANGE_TO = "range_to"
 
-DEFAULT_NAME = 'EnOcean sensor'
+DEFAULT_NAME = "EnOcean sensor"
 
-DEVICE_CLASS_POWER = 'powersensor'
+DEVICE_CLASS_POWER = "powersensor"
 
 SENSOR_TYPES = {
     DEVICE_CLASS_HUMIDITY: {
-        'name': 'Humidity',
-        'unit': '%',
-        'icon': 'mdi:water-percent',
-        'class': DEVICE_CLASS_HUMIDITY,
+        "name": "Humidity",
+        "unit": "%",
+        "icon": "mdi:water-percent",
+        "class": DEVICE_CLASS_HUMIDITY,
     },
     DEVICE_CLASS_POWER: {
-        'name': 'Power',
-        'unit': POWER_WATT,
-        'icon': 'mdi:power-plug',
-        'class': DEVICE_CLASS_POWER,
+        "name": "Power",
+        "unit": POWER_WATT,
+        "icon": "mdi:power-plug",
+        "class": DEVICE_CLASS_POWER,
     },
     DEVICE_CLASS_TEMPERATURE: {
-        'name': 'Temperature',
-        'unit': TEMP_CELSIUS,
-        'icon': 'mdi:thermometer',
-        'class': DEVICE_CLASS_TEMPERATURE,
+        "name": "Temperature",
+        "unit": TEMP_CELSIUS,
+        "icon": "mdi:thermometer",
+        "class": DEVICE_CLASS_TEMPERATURE,
     },
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_DEVICE_CLASS, default=DEVICE_CLASS_POWER): cv.string,
-    vol.Optional(CONF_MAX_TEMP, default=40): vol.Coerce(int),
-    vol.Optional(CONF_MIN_TEMP, default=0): vol.Coerce(int),
-    vol.Optional(CONF_RANGE_FROM, default=255): cv.positive_int,
-    vol.Optional(CONF_RANGE_TO, default=0): cv.positive_int,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_DEVICE_CLASS, default=DEVICE_CLASS_POWER): cv.string,
+        vol.Optional(CONF_MAX_TEMP, default=40): vol.Coerce(int),
+        vol.Optional(CONF_MIN_TEMP, default=0): vol.Coerce(int),
+        vol.Optional(CONF_RANGE_FROM, default=255): cv.positive_int,
+        vol.Optional(CONF_RANGE_TO, default=0): cv.positive_int,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -64,8 +72,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         temp_max = config.get(CONF_MAX_TEMP)
         range_from = config.get(CONF_RANGE_FROM)
         range_to = config.get(CONF_RANGE_TO)
-        add_entities([EnOceanTemperatureSensor(
-            dev_id, dev_name, temp_min, temp_max, range_from, range_to)])
+        add_entities(
+            [
+                EnOceanTemperatureSensor(
+                    dev_id, dev_name, temp_min, temp_max, range_from, range_to
+                )
+            ]
+        )
 
     elif dev_class == DEVICE_CLASS_HUMIDITY:
         add_entities([EnOceanHumiditySensor(dev_id, dev_name)])
@@ -81,11 +94,12 @@ class EnOceanSensor(enocean.EnOceanDevice):
         """Initialize the EnOcean sensor device."""
         super().__init__(dev_id, dev_name)
         self._sensor_type = sensor_type
-        self._device_class = SENSOR_TYPES[self._sensor_type]['class']
-        self._dev_name = '{} {}'.format(
-            SENSOR_TYPES[self._sensor_type]['name'], dev_name)
-        self._unit_of_measurement = SENSOR_TYPES[self._sensor_type]['unit']
-        self._icon = SENSOR_TYPES[self._sensor_type]['icon']
+        self._device_class = SENSOR_TYPES[self._sensor_type]["class"]
+        self._dev_name = "{} {}".format(
+            SENSOR_TYPES[self._sensor_type]["name"], dev_name
+        )
+        self._unit_of_measurement = SENSOR_TYPES[self._sensor_type]["unit"]
+        self._icon = SENSOR_TYPES[self._sensor_type]["icon"]
         self._state = None
 
     @property
@@ -133,10 +147,10 @@ class EnOceanPowerSensor(EnOceanSensor):
         if packet.rorg != 0xA5:
             return
         packet.parse_eep(0x12, 0x01)
-        if packet.parsed['DT']['raw_value'] == 1:
+        if packet.parsed["DT"]["raw_value"] == 1:
             # this packet reports the current value
-            raw_val = packet.parsed['MR']['raw_value']
-            divisor = packet.parsed['DIV']['raw_value']
+            raw_val = packet.parsed["MR"]["raw_value"]
+            divisor = packet.parsed["DIV"]["raw_value"]
             self._state = raw_val / (10 ** divisor)
             self.schedule_update_ha_state()
 
@@ -159,8 +173,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
     - A5-10-10 to A5-10-14
     """
 
-    def __init__(self, dev_id, dev_name, scale_min, scale_max,
-                 range_from, range_to):
+    def __init__(self, dev_id, dev_name, scale_min, scale_max, range_from, range_to):
         """Initialize the EnOcean temperature sensor device."""
         super().__init__(dev_id, dev_name, DEVICE_CLASS_TEMPERATURE)
         self._scale_min = scale_min
@@ -170,7 +183,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
 
     def value_changed(self, packet):
         """Update the internal state of the sensor."""
-        if packet.data[0] != 0xa5:
+        if packet.data[0] != 0xA5:
             return
         temp_scale = self._scale_max - self._scale_min
         temp_range = self.range_to - self.range_from
