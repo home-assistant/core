@@ -62,7 +62,9 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = keba
 
     # Wait for KebaHandler setup complete (initial values loaded)
-    await keba.setup()
+    if not await keba.setup():
+        _LOGGER.warning("Could not find a charging station at %s", host)
+        return False
 
     # Set failsafe mode at start up of home assistant
     failsafe = config[DOMAIN][CONF_FS]
@@ -147,11 +149,9 @@ class KebaHandler(KebaKeContact):
         await self.request_data()
         if self.get_value("Serial") is not None:
             self.device_name = f"keba_wallbox_{self.get_value('Serial')}"
+            return True
         else:
-            _LOGGER.warning(
-                "Could not load the serial number of the "
-                "charging station, unique id will be wrong"
-            )
+            return False
 
     def hass_callback(self, data):
         """Handle component notification via callback."""
