@@ -3,6 +3,8 @@ import asyncio
 import logging
 from typing import Iterable, Optional, Sequence
 
+from pysmartthings import Attribute, Capability
+
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN, ClimateDevice)
 from homeassistant.components.climate.const import (
@@ -69,8 +71,6 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add climate entities for a config entry."""
-    from pysmartthings import Capability
-
     ac_capabilities = [
         Capability.air_conditioner_mode,
         Capability.air_conditioner_fan_mode,
@@ -93,8 +93,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
     """Return all capabilities supported if minimum required are present."""
-    from pysmartthings import Capability
-
     supported = [
         Capability.air_conditioner_mode,
         Capability.demand_response_load_control,
@@ -145,8 +143,6 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
         self._operations = None
 
     def _determine_features(self):
-        from pysmartthings import Capability
-
         flags = SUPPORT_OPERATION_MODE \
             | SUPPORT_TARGET_TEMPERATURE \
             | SUPPORT_TARGET_TEMPERATURE_LOW \
@@ -301,7 +297,6 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        from pysmartthings import Attribute
         return UNIT_MAP.get(
             self._device.status.attributes[Attribute.temperature].unit)
 
@@ -440,6 +435,5 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        from pysmartthings import Attribute
         return UNIT_MAP.get(
             self._device.status.attributes[Attribute.temperature].unit)

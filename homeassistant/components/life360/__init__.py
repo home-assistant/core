@@ -16,7 +16,8 @@ import homeassistant.helpers.config_validation as cv
 from .const import (
     CONF_AUTHORIZATION, CONF_CIRCLES, CONF_DRIVING_SPEED, CONF_ERROR_THRESHOLD,
     CONF_MAX_GPS_ACCURACY, CONF_MAX_UPDATE_WAIT, CONF_MEMBERS,
-    CONF_WARNING_THRESHOLD, DOMAIN)
+    CONF_SHOW_AS_STATE, CONF_WARNING_THRESHOLD, DOMAIN, SHOW_DRIVING,
+    SHOW_MOVING)
 from .helpers import get_api
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,6 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_PREFIX = DOMAIN
 
 CONF_ACCOUNTS = 'accounts'
+
+SHOW_AS_STATE_OPTS = [SHOW_DRIVING, SHOW_MOVING]
 
 
 def _excl_incl_list_to_filter_dict(value):
@@ -108,6 +111,8 @@ LIFE360_SCHEMA = vol.All(
             vol.All(vol.Any(None, cv.string), _prefix),
         vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
             cv.time_period,
+        vol.Optional(CONF_SHOW_AS_STATE, default=[]): vol.All(
+            cv.ensure_list, [vol.In(SHOW_AS_STATE_OPTS)]),
         vol.Optional(CONF_WARNING_THRESHOLD): _THRESHOLD,
     }),
     _thresholds

@@ -322,3 +322,13 @@ async def test_logging_script_error(hass, caplog):
     assert err.value.domain == 'non'
     assert err.value.service == 'existing'
     assert 'Error executing script' in caplog.text
+
+
+async def test_turning_no_scripts_off(hass):
+    """Test it is possible to turn two scripts off."""
+    assert await async_setup_component(hass, 'script', {})
+
+    # Testing it doesn't raise
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {'entity_id': []}, blocking=True
+    )

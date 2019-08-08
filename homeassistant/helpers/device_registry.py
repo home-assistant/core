@@ -136,11 +136,13 @@ class DeviceRegistry:
 
     @callback
     def async_update_device(
-            self, device_id, *, area_id=_UNDEF, name_by_user=_UNDEF,
+            self, device_id, *, area_id=_UNDEF,
+            name=_UNDEF, name_by_user=_UNDEF,
             new_identifiers=_UNDEF):
         """Update properties of a device."""
         return self._async_update_device(
-            device_id, area_id=area_id, name_by_user=name_by_user,
+            device_id, area_id=area_id,
+            name=name, name_by_user=name_by_user,
             new_identifiers=new_identifiers)
 
     @callback
@@ -219,7 +221,8 @@ class DeviceRegistry:
 
         return new
 
-    def _async_remove_device(self, device_id):
+    def async_remove_device(self, device_id):
+        """Remove a device from the device registry."""
         del self.devices[device_id]
         self.hass.bus.async_fire(EVENT_DEVICE_REGISTRY_UPDATED, {
             'action': 'remove',
@@ -297,7 +300,7 @@ class DeviceRegistry:
                 self._async_update_device(
                     dev_id, remove_config_entry_id=config_entry_id)
         for dev_id in remove:
-            self._async_remove_device(dev_id)
+            self.async_remove_device(dev_id)
 
     @callback
     def async_clear_area_id(self, area_id: str) -> None:

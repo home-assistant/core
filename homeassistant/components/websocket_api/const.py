@@ -16,6 +16,7 @@ ERR_HOME_ASSISTANT_ERROR = 'home_assistant_error'
 ERR_UNKNOWN_COMMAND = 'unknown_command'
 ERR_UNKNOWN_ERROR = 'unknown_error'
 ERR_UNAUTHORIZED = 'unauthorized'
+ERR_TIMEOUT = 'timeout'
 
 TYPE_RESULT = 'result'
 

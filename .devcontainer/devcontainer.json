@@ -4,12 +4,20 @@
 	"context": "..",
 	"dockerFile": "Dockerfile",
 	"postCreateCommand": "pip3 install -e .",
+	"appPort": 8123,
+	"runArgs": [
+		"-e", "GIT_EDTIOR='code --wait'"
+	],
 	"extensions": [
-		"ms-python.python"
+		"ms-python.python",
+		"ms-azure-devops.azure-pipelines",
+		"redhat.vscode-yaml"
 	],
 	"settings": {
 		"python.pythonPath": "/usr/local/bin/python",
 		"python.linting.pylintEnabled": true,
-		"python.linting.enabled": true
+		"python.linting.enabled": true,
+		"files.trimTrailingWhitespace": true,
+		"editor.rulers": [80]
 	}
 }

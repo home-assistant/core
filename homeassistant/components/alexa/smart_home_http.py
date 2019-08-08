@@ -52,7 +52,7 @@ class AlexaConfig(AbstractConfig):
     @property
     def entity_config(self):
         """Return entity config."""
-        return self._config.get(CONF_ENTITY_CONFIG, {})
+        return self._config.get(CONF_ENTITY_CONFIG) or {}
 
     def should_expose(self, entity_id):
         """If an entity should be exposed."""

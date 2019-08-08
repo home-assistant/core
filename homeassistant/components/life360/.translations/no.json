@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "invalid_credentials": "Ugyldig legitimasjon",
+            "user_already_configured": "Kontoen er allerede konfigurert"
+        },
+        "error": {
+            "invalid_credentials": "Ugyldig legitimasjon",
+            "invalid_username": "Ugyldig brukernavn",
+            "user_already_configured": "Kontoen er allerede konfigurert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "title": "Life360 Kontoinformasjon"
+            }
+        },
+        "title": "Life360"
+    }
+}

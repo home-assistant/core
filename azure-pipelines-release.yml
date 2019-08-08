@@ -8,7 +8,7 @@ trigger:
 pr: none
 variables:
   - name: versionBuilder
-    value: '4.2'
+    value: '4.5'
   - group: docker
   - group: github
   - group: twine

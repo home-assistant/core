@@ -5,7 +5,8 @@ from uuid import uuid4
 
 from pysmartthings import (
     CLASSIFICATION_AUTOMATION, AppEntity, AppOAuthClient, AppSettings,
-    DeviceEntity, InstalledApp, Location, SceneEntity, Subscription)
+    DeviceEntity, InstalledApp, Location, SceneEntity, SmartThings,
+    Subscription)
 from pysmartthings.api import Api
 import pytest
 
@@ -22,6 +23,8 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro
+
+COMPONENT_PREFIX = "homeassistant.components.smartthings."
 
 
 async def setup_platform(hass, platform: str, *,
@@ -163,8 +166,12 @@ def smartthings_mock_fixture(locations):
             return_value=next(location for location in locations
                               if location.location_id == location_id))
 
-    with patch("pysmartthings.SmartThings", autospec=True) as mock:
-        mock.return_value.location.side_effect = _location
+    smartthings_mock = Mock(SmartThings)
+    smartthings_mock.location.side_effect = _location
+    mock = Mock(return_value=smartthings_mock)
+    with patch(COMPONENT_PREFIX + "SmartThings", new=mock), \
+            patch(COMPONENT_PREFIX + "config_flow.SmartThings", new=mock), \
+            patch(COMPONENT_PREFIX + "smartapp.SmartThings", new=mock):
         yield mock
 
 

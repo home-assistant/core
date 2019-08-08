@@ -258,7 +258,7 @@ async def test_discovery_duplicate_aborted(hass):
 
 
 async def test_import_duplicate_aborted(hass):
-    """Test a duplicate discovery host is ignored."""
+    """Test a duplicate import host is ignored."""
     MockConfigEntry(
         domain='tradfri',
         data={'host': 'some-host'}
@@ -271,3 +271,20 @@ async def test_import_duplicate_aborted(hass):
 
     assert flow['type'] == data_entry_flow.RESULT_TYPE_ABORT
     assert flow['reason'] == 'already_configured'
+
+
+async def test_duplicate_discovery(hass, mock_auth, mock_entry_setup):
+    """Test a duplicate discovery in progress is ignored."""
+    result = await hass.config_entries.flow.async_init(
+        'tradfri', context={'source': 'zeroconf'}, data={
+            'host': '123.123.123.123'
+        })
+
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+
+    result2 = await hass.config_entries.flow.async_init(
+        'tradfri', context={'source': 'zeroconf'}, data={
+            'host': '123.123.123.123'
+        })
+
+    assert result2['type'] == data_entry_flow.RESULT_TYPE_ABORT

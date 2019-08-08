@@ -74,7 +74,7 @@ def node_name(node):
     return 'Unknown Node {}'.format(node.node_id)
 
 
-async def check_has_unique_id(entity, ready_callback, timeout_callback, loop):
+async def check_has_unique_id(entity, ready_callback, timeout_callback):
     """Wait for entity to have unique_id."""
     start_time = dt_util.utcnow()
     while True:
@@ -86,7 +86,7 @@ async def check_has_unique_id(entity, ready_callback, timeout_callback, loop):
             # Wait up to NODE_READY_WAIT_SECS seconds for unique_id to appear.
             timeout_callback(waited)
             return
-        await asyncio.sleep(1, loop=loop)
+        await asyncio.sleep(1)
 
 
 def is_node_parsed(node):

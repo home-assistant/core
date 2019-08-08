@@ -166,7 +166,7 @@ class MetWeather(WeatherEntity):
         name = self._config.get(CONF_NAME)
 
         if name is not None:
-            return CONF_NAME
+            return name
 
         if self.track_home:
             return self.hass.config.location_name

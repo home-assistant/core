@@ -277,10 +277,10 @@ class YeelightGenericLight(Light):
     @property
     def color_temp(self) -> int:
         """Return the color temperature."""
-        temp = self._get_property('ct')
-        if temp:
-            self._color_temp = temp
-        return kelvin_to_mired(int(self._color_temp))
+        temp_in_k = self._get_property('ct')
+        if temp_in_k:
+            self._color_temp = kelvin_to_mired(int(temp_in_k))
+        return self._color_temp
 
     @property
     def name(self) -> str:

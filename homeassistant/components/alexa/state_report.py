@@ -21,6 +21,9 @@ async def async_enable_proactive_mode(hass, smart_home_config):
 
     Proactive mode makes this component report state changes to Alexa.
     """
+    # Validate we can get access token.
+    await smart_home_config.async_get_access_token()
+
     async def async_entity_state_listener(changed_entity, old_state,
                                           new_state):
         if not new_state:

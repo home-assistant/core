@@ -12,10 +12,11 @@ from homeassistant.core import State
 from homeassistant.auth.providers import trusted_networks as tn_auth
 from homeassistant.components.cloud.const import (
     PREF_ENABLE_GOOGLE, PREF_ENABLE_ALEXA, PREF_GOOGLE_SECURE_DEVICES_PIN,
-    DOMAIN)
+    DOMAIN, RequireRelink)
 from homeassistant.components.google_assistant.helpers import (
     GoogleEntity)
 from homeassistant.components.alexa.entities import LightCapabilities
+from homeassistant.components.alexa import errors as alexa_errors
 
 from tests.common import mock_coro
 from tests.components.google_assistant import MockConfig
@@ -526,6 +527,44 @@ async def test_websocket_update_preferences(hass, hass_ws_client,
     assert setup_api[PREF_GOOGLE_SECURE_DEVICES_PIN] == '1234'
 
 
+async def test_websocket_update_preferences_require_relink(
+        hass, hass_ws_client, aioclient_mock, setup_api, mock_cloud_login):
+    """Test updating preference requires relink."""
+    client = await hass_ws_client(hass)
+
+    with patch('homeassistant.components.cloud.alexa_config.AlexaConfig'
+               '.async_get_access_token',
+               side_effect=RequireRelink):
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/update_prefs',
+            'alexa_report_state': True,
+        })
+        response = await client.receive_json()
+
+    assert not response['success']
+    assert response['error']['code'] == 'alexa_relink'
+
+
+async def test_websocket_update_preferences_no_token(
+        hass, hass_ws_client, aioclient_mock, setup_api, mock_cloud_login):
+    """Test updating preference no token available."""
+    client = await hass_ws_client(hass)
+
+    with patch('homeassistant.components.cloud.alexa_config.AlexaConfig'
+               '.async_get_access_token',
+               side_effect=alexa_errors.NoTokenAvailable):
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/update_prefs',
+            'alexa_report_state': True,
+        })
+        response = await client.receive_json()
+
+    assert not response['success']
+    assert response['error']['code'] == 'alexa_relink'
+
+
 async def test_enabling_webhook(hass, hass_ws_client, setup_api,
                                 mock_cloud_login):
     """Test we call right code to enable webhooks."""
@@ -847,3 +886,53 @@ async def test_update_alexa_entity(
     assert prefs.alexa_entity_configs['light.kitchen'] == {
         'should_expose': False,
     }
+
+
+async def test_sync_alexa_entities_timeout(
+        hass, hass_ws_client, setup_api, mock_cloud_login):
+    """Test that timeout syncing Alexa entities."""
+    client = await hass_ws_client(hass)
+    with patch('homeassistant.components.cloud.alexa_config.AlexaConfig'
+               '.async_sync_entities', side_effect=asyncio.TimeoutError):
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/alexa/sync',
+        })
+        response = await client.receive_json()
+
+    assert not response['success']
+    assert response['error']['code'] == 'timeout'
+
+
+async def test_sync_alexa_entities_no_token(
+        hass, hass_ws_client, setup_api, mock_cloud_login):
+    """Test sync Alexa entities when we have no token."""
+    client = await hass_ws_client(hass)
+    with patch('homeassistant.components.cloud.alexa_config.AlexaConfig'
+               '.async_sync_entities',
+               side_effect=alexa_errors.NoTokenAvailable):
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/alexa/sync',
+        })
+        response = await client.receive_json()
+
+    assert not response['success']
+    assert response['error']['code'] == 'alexa_relink'
+
+
+async def test_enable_alexa_state_report_fail(
+        hass, hass_ws_client, setup_api, mock_cloud_login):
+    """Test enable Alexa entities state reporting when no token available."""
+    client = await hass_ws_client(hass)
+    with patch('homeassistant.components.cloud.alexa_config.AlexaConfig'
+               '.async_sync_entities',
+               side_effect=alexa_errors.NoTokenAvailable):
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/alexa/sync',
+        })
+        response = await client.receive_json()
+
+    assert not response['success']
+    assert response['error']['code'] == 'alexa_relink'

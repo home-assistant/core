@@ -18,7 +18,7 @@ from .const import (
     OCCUPANCY, REPORT_CONFIG_IMMEDIATE, OPENING, ZONE, RADIO_DESCRIPTION,
     REPORT_CONFIG_ASAP, REPORT_CONFIG_DEFAULT, REPORT_CONFIG_MIN_INT,
     REPORT_CONFIG_MAX_INT, REPORT_CONFIG_OP, ACCELERATION, RadioType, RADIO,
-    CONTROLLER
+    CONTROLLER, BATTERY
 )
 
 SMARTTHINGS_HUMIDITY_CLUSTER = 64581
@@ -110,8 +110,6 @@ def establish_device_mappings():
     EVENT_RELAY_CLUSTERS.append(zcl.clusters.general.OnOff.cluster_id)
 
     CHANNEL_ONLY_CLUSTERS.append(zcl.clusters.general.Basic.cluster_id)
-    CHANNEL_ONLY_CLUSTERS.append(
-        zcl.clusters.general.PowerConfiguration.cluster_id)
     CHANNEL_ONLY_CLUSTERS.append(zcl.clusters.lightlink.LightLink.cluster_id)
 
     OUTPUT_CHANNEL_ONLY_CLUSTERS.append(zcl.clusters.general.Scenes.cluster_id)
@@ -166,7 +164,8 @@ def establish_device_mappings():
         SMARTTHINGS_ACCELERATION_CLUSTER: BINARY_SENSOR,
         zcl.clusters.general.MultistateInput.cluster_id: SENSOR,
         zcl.clusters.general.AnalogInput.cluster_id: SENSOR,
-        zcl.clusters.closures.DoorLock: LOCK
+        zcl.clusters.closures.DoorLock: LOCK,
+        zcl.clusters.general.PowerConfiguration: SENSOR
     })
 
     SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS.update({
@@ -184,6 +183,7 @@ def establish_device_mappings():
         zcl.clusters.smartenergy.Metering.cluster_id: METERING,
         zcl.clusters.homeautomation.ElectricalMeasurement.cluster_id:
         ELECTRICAL_MEASUREMENT,
+        zcl.clusters.general.PowerConfiguration.cluster_id: BATTERY
     })
 
     BINARY_SENSOR_TYPES.update({

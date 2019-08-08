@@ -4,7 +4,6 @@ import datetime
 import functools as ft
 import logging
 import socket
-import time
 import urllib
 
 import async_timeout
@@ -20,6 +19,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_SHUFFLE_SET, SUPPORT_STOP, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
 from homeassistant.const import (
     ENTITY_MATCH_ALL, STATE_IDLE, STATE_PAUSED, STATE_PLAYING)
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.dt import utcnow
 
@@ -36,10 +36,6 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = 10
 DISCOVERY_INTERVAL = 60
-
-# Quiet down pysonos logging to just actual problems.
-logging.getLogger('pysonos').setLevel(logging.WARNING)
-logging.getLogger('pysonos.data_structures_entry').setLevel(logging.ERROR)
 
 SUPPORT_SONOS = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
     SUPPORT_PLAY | SUPPORT_PAUSE | SUPPORT_STOP | SUPPORT_SELECT_SOURCE |\
@@ -92,14 +88,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         def _discovered_player(soco):
             """Handle a (re)discovered player."""
             try:
-                # Make sure that the player is available
-                _ = soco.volume
-
                 entity = _get_entity_from_soco_uid(hass, soco.uid)
+
                 if not entity:
                     hass.add_job(async_add_entities, [SonosEntity(soco)])
                 else:
-                    entity.seen()
+                    hass.add_job(entity.async_seen())
             except SoCoException:
                 pass
 
@@ -108,19 +102,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 try:
                     player = pysonos.SoCo(socket.gethostbyname(host))
                     if player.is_visible:
+                        # Make sure that the player is available
+                        _ = player.volume
+
                         _discovered_player(player)
                 except (OSError, SoCoException):
                     if now is None:
                         _LOGGER.warning("Failed to initialize '%s'", host)
+
+            hass.helpers.event.call_later(DISCOVERY_INTERVAL, _discovery)
         else:
             pysonos.discover_thread(
                 _discovered_player,
+                interval=DISCOVERY_INTERVAL,
                 interface_addr=config.get(CONF_INTERFACE_ADDR))
-
-        for entity in hass.data[DATA_SONOS].entities:
-            entity.check_unseen()
-
-        hass.helpers.event.call_later(DISCOVERY_INTERVAL, _discovery)
 
     hass.async_add_executor_job(_discovery)
 
@@ -238,17 +233,15 @@ class SonosEntity(MediaPlayerDevice):
 
     def __init__(self, player):
         """Initialize the Sonos entity."""
-        self._seen = None
         self._subscriptions = []
         self._poll_timer = None
+        self._seen_timer = None
         self._volume_increment = 2
         self._unique_id = player.uid
         self._player = player
-        self._model = None
         self._player_volume = None
         self._player_muted = None
         self._shuffle = None
-        self._name = None
         self._coordinator = None
         self._sonos_group = [self]
         self._status = None
@@ -262,18 +255,19 @@ class SonosEntity(MediaPlayerDevice):
         self._night_sound = None
         self._speech_enhance = None
         self._source_name = None
-        self._available = True
         self._favorites = None
         self._soco_snapshot = None
         self._snapshot_group = None
 
-        self._set_basic_information()
-        self.seen()
+        # Set these early since device_info() needs them
+        speaker_info = self.soco.get_speaker_info(True)
+        self._name = speaker_info['zone_name']
+        self._model = speaker_info['model_name']
 
     async def async_added_to_hass(self):
         """Subscribe sonos events."""
+        await self.async_seen()
         self.hass.data[DATA_SONOS].entities.append(self)
-        self.hass.async_add_executor_job(self._subscribe_to_player_events)
 
     @property
     def unique_id(self):
@@ -326,54 +320,42 @@ class SonosEntity(MediaPlayerDevice):
         """Return coordinator of this player."""
         return self._coordinator
 
-    def seen(self):
+    async def async_seen(self):
         """Record that this player was seen right now."""
-        self._seen = time.monotonic()
+        was_available = self.available
 
-        if self._available:
-            return
+        if self._seen_timer:
+            self._seen_timer()
 
-        self._available = True
-        self._set_basic_information()
-        self._subscribe_to_player_events()
-        self.schedule_update_ha_state()
+        self._seen_timer = self.hass.helpers.event.async_call_later(
+            2.5*DISCOVERY_INTERVAL, self.async_unseen)
 
-    def check_unseen(self):
-        """Make this player unavailable if it was not seen recently."""
-        if not self._available:
-            return
+        if not was_available:
+            await self.hass.async_add_executor_job(self._attach_player)
+            self.async_schedule_update_ha_state()
 
-        if self._seen < time.monotonic() - 2*DISCOVERY_INTERVAL:
-            self._available = False
+    @callback
+    def async_unseen(self, now):
+        """Make this player unavailable when it was not seen recently."""
+        self._seen_timer = None
 
-            if self._poll_timer:
-                self._poll_timer()
-                self._poll_timer = None
+        if self._poll_timer:
+            self._poll_timer()
+            self._poll_timer = None
 
-            def _unsub(subscriptions):
-                for subscription in subscriptions:
-                    subscription.unsubscribe()
-            self.hass.add_job(_unsub, self._subscriptions)
+        def _unsub(subscriptions):
+            for subscription in subscriptions:
+                subscription.unsubscribe()
+        self.hass.async_add_executor_job(_unsub, self._subscriptions)
 
-            self._subscriptions = []
+        self._subscriptions = []
 
-            self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._available
-
-    def _set_basic_information(self):
-        """Set initial entity information."""
-        speaker_info = self.soco.get_speaker_info(True)
-        self._name = speaker_info['zone_name']
-        self._model = speaker_info['model_name']
-        self._shuffle = self.soco.shuffle
-
-        self.update_volume()
-
-        self._set_favorites()
+        return self._seen_timer is not None
 
     def _set_favorites(self):
         """Set available favorites."""
@@ -394,8 +376,12 @@ class SonosEntity(MediaPlayerDevice):
             )
         return url
 
-    def _subscribe_to_player_events(self):
-        """Add event subscriptions."""
+    def _attach_player(self):
+        """Get basic information and add event subscriptions."""
+        self._shuffle = self.soco.shuffle
+        self.update_volume()
+        self._set_favorites()
+
         self._poll_timer = self.hass.helpers.event.track_time_interval(
             self.update, datetime.timedelta(seconds=SCAN_INTERVAL))
 

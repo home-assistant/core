@@ -3,7 +3,7 @@
   "name": "Androidtv",
   "documentation": "https://www.home-assistant.io/components/androidtv",
   "requirements": [
-    "androidtv==0.0.16"
+    "androidtv==0.0.18"
   ],
   "dependencies": [],
   "codeowners": []

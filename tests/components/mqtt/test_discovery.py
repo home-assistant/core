@@ -369,3 +369,21 @@ async def test_no_implicit_state_topic_switch(hass, mqtt_mock, caplog):
 
     state = hass.states.get('switch.Test1')
     assert state.state == 'off'
+
+
+async def test_complex_discovery_topic_prefix(hass, mqtt_mock, caplog):
+    """Tests handling of discovery topic prefix with multiple slashes."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+
+    await async_start(hass, 'my_home/homeassistant/register', {}, entry)
+
+    async_fire_mqtt_message(hass, ('my_home/homeassistant/register'
+                                   '/binary_sensor/node1/object1/config'),
+                            '{ "name": "Beer" }')
+    await hass.async_block_till_done()
+
+    state = hass.states.get('binary_sensor.beer')
+
+    assert state is not None
+    assert state.name == 'Beer'
+    assert ('binary_sensor', 'node1 object1') in hass.data[ALREADY_DISCOVERED]

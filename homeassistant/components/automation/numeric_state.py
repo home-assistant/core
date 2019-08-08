@@ -79,7 +79,7 @@ async def async_trigger(hass, config, action, automation_info):
 
             if time_delta:
                 unsub_track_same[entity] = async_track_same_state(
-                    hass, time_delta, call_action, entity_ids=entity_id,
+                    hass, time_delta, call_action, entity_ids=entity,
                     async_check_same_func=check_numeric_state)
             else:
                 call_action()

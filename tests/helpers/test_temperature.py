@@ -16,7 +16,7 @@ def test_temperature_not_a_number(hass):
         display_temp(hass, temp, TEMP_CELSIUS, PRECISION_HALVES)
 
     assert "Temperature is not a number: {}".format(temp) \
-        in str(exception)
+        in str(exception.value)
 
 
 def test_celsius_halves(hass):

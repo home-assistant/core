@@ -1,14 +1,16 @@
 """Tests for the AdGuard Home config flow."""
+from unittest.mock import patch
+
 import aiohttp
 
-from homeassistant import data_entry_flow
+from homeassistant import data_entry_flow, config_entries
 from homeassistant.components.adguard import config_flow
 from homeassistant.components.adguard.const import DOMAIN
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SSL, CONF_USERNAME,
     CONF_VERIFY_SSL)
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_coro
 
 FIXTURE_USER_INPUT = {
     CONF_HOST: '127.0.0.1',
@@ -94,15 +96,88 @@ async def test_integration_already_exists(hass):
 
 async def test_hassio_single_instance(hass):
     """Test we only allow a single config flow."""
-    MockConfigEntry(domain='adguard', data={'host': '1.2.3.4'}).add_to_hass(
-        hass
-    )
+    MockConfigEntry(domain='adguard', data={
+        'host': 'mock-adguard',
+        'port': '3000'
+    }).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        'adguard', context={'source': 'hassio'}
+        'adguard',
+        data={
+            'addon': 'AdGuard Home Addon',
+            'host': 'mock-adguard',
+            'port': '3000',
+        },
+        context={'source': 'hassio'}
     )
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
     assert result['reason'] == 'single_instance_allowed'
+
+
+async def test_hassio_update_instance_not_running(hass):
+    """Test we only allow a single config flow."""
+    entry = MockConfigEntry(domain='adguard', data={
+        'host': 'mock-adguard',
+        'port': '3000'
+    })
+    entry.add_to_hass(hass)
+    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+
+    result = await hass.config_entries.flow.async_init(
+        'adguard',
+        data={
+            'addon': 'AdGuard Home Addon',
+            'host': 'mock-adguard-updated',
+            'port': '3000',
+        },
+        context={'source': 'hassio'}
+    )
+    assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result['reason'] == 'existing_instance_updated'
+
+
+async def test_hassio_update_instance_running(hass):
+    """Test we only allow a single config flow."""
+    entry = MockConfigEntry(domain='adguard', data={
+        'host': 'mock-adguard',
+        'port': '3000',
+        'verify_ssl': False,
+        'username': None,
+        'password': None,
+        'ssl': False,
+    })
+    entry.add_to_hass(hass)
+
+    with patch.object(
+        hass.config_entries, 'async_forward_entry_setup',
+        side_effect=lambda *_: mock_coro(True)
+    ) as mock_load:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state == config_entries.ENTRY_STATE_LOADED
+        assert len(mock_load.mock_calls) == 2
+
+    with patch.object(
+        hass.config_entries, 'async_forward_entry_unload',
+        side_effect=lambda *_: mock_coro(True)
+    ) as mock_unload, patch.object(
+        hass.config_entries, 'async_forward_entry_setup',
+        side_effect=lambda *_: mock_coro(True)
+    ) as mock_load:
+        result = await hass.config_entries.flow.async_init(
+            'adguard',
+            data={
+                'addon': 'AdGuard Home Addon',
+                'host': 'mock-adguard-updated',
+                'port': '3000',
+            },
+            context={'source': 'hassio'}
+        )
+        assert len(mock_unload.mock_calls) == 2
+        assert len(mock_load.mock_calls) == 2
+
+    assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result['reason'] == 'existing_instance_updated'
+    assert entry.data['host'] == 'mock-adguard-updated'
 
 
 async def test_hassio_confirm(hass, aioclient_mock):
