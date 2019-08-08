@@ -714,7 +714,7 @@ libpurecool==0.5.0
 libpyfoscam==1.0
 
 # homeassistant.components.mikrotik
-librouteros==2.2.0
+librouteros==2.3.0
 
 # homeassistant.components.soundtouch
 libsoundtouch==0.7.2
