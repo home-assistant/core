@@ -18,6 +18,7 @@ ATTR_LONGITUDE = 'lon'
 ATTR_MOTION = 'motion'
 ATTR_SPEED = 'speed'
 ATTR_STATUS = 'status'
+ATTR_TIMESTAMP = 'timestamp'
 ATTR_TRACKER = 'tracker'
 ATTR_TRACCAR_ID = 'traccar_id'
 

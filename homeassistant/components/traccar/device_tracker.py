@@ -370,5 +370,5 @@ class TraccarEntity(DeviceTrackerEntity, RestoreEntity):
         self._location = location
         self._battery = battery
         self._accuracy = accuracy
-        self._attributes = attributes
+        self._attributes.update(attributes)
         self.async_write_ha_state()

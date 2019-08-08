@@ -12,7 +12,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from .const import (
     ATTR_ACCURACY, ATTR_ALTITUDE, ATTR_BATTERY, ATTR_BEARING, ATTR_ID,
-    ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_SPEED, DOMAIN)
+    ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_SPEED, ATTR_TIMESTAMP, DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,8 @@ WEBHOOK_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ALTITUDE): vol.Coerce(float),
     vol.Optional(ATTR_BATTERY, default=DEFAULT_BATTERY): vol.Coerce(float),
     vol.Optional(ATTR_BEARING): vol.Coerce(float),
-    vol.Optional(ATTR_SPEED): vol.Coerce(float)
+    vol.Optional(ATTR_SPEED): vol.Coerce(float),
+    vol.Optional(ATTR_TIMESTAMP): vol.Coerce(int),
 })
 
 

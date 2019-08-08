@@ -112,9 +112,15 @@ async def test_enter_and_exit(hass, traccar_client, webhook_id):
     """Test when there is a known zone."""
     url = '/api/webhook/{}'.format(webhook_id)
     data = {
+        'timestamp': 123456789,
         'lat': HOME_LATITUDE,
         'lon': HOME_LONGITUDE,
         'id': '123',
+        'accuracy': 10.5,
+        'batt': 10,
+        'speed': 100,
+        'bearing': 105.32,
+        'altitude': 102
     }
 
     # Enter the Home
@@ -158,6 +164,7 @@ async def test_enter_with_attrs(hass, traccar_client, webhook_id):
     """Test when additional attributes are present."""
     url = '/api/webhook/{}'.format(webhook_id)
     data = {
+        'timestamp': 123456789,
         'lat': 1.0,
         'lon': 1.1,
         'id': '123',
