@@ -129,16 +129,16 @@ class KebaHandler(KebaKeContact):
 
         if self._fast_polling_count < MAX_FAST_POLLING_COUNT:
             self._fast_polling_count += 1
-            _LOGGER.debug("Periodic data request executed, now wait for " "2 seconds.")
+            _LOGGER.debug("Periodic data request executed, now wait for 2 seconds")
             await asyncio.sleep(2)
         else:
             _LOGGER.debug(
-                "Periodic data request executed, now wait for " "%s seconds.",
-                str(self._refresh_interval),
+                "Periodic data request executed, now wait for %s seconds",
+                self._refresh_interval,
             )
             await asyncio.sleep(self._refresh_interval)
 
-        _LOGGER.debug("Periodic data request rescheduled.")
+        _LOGGER.debug("Periodic data request rescheduled")
         self._polling_task = self._hass.loop.create_task(self._periodic_request())
 
     async def setup(self, loop=None):
