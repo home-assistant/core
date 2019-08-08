@@ -253,10 +253,10 @@ class HERETravelTimeSensor(Entity):
             self._here_data.destination = destination
 
     @property
-    def state(self) -> Optional[int]:
+    def state(self) -> Optional[str]:
         """Return the state of the sensor."""
         if self._here_data.duration is not None:
-            return round(self._here_data.duration / 60)
+            return str(round(self._here_data.duration / 60))
 
         return None
 
@@ -461,7 +461,7 @@ class HERETravelTimeData:
     @staticmethod
     def _get_route_from_non_vehicle_maneuver(maneuver: str) -> str:
         """Extract a Waze-like route from the maneuver instructions."""
-        road_names = []
+        road_names: List[str] = []
 
         for step in maneuver:
             instruction = step["instruction"]
@@ -484,7 +484,7 @@ class HERETravelTimeData:
         public_transport_line_segment: str
     ) -> str:
         """Extract Waze-like route info from the public transport lines."""
-        lines = []
+        lines: List[str] = []
         for line_info in public_transport_line_segment:
             lines.append(line_info["lineName"] + " - " + line_info["destination"])
 
