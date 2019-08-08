@@ -1,8 +1,7 @@
 """Code to set up a device tracker platform using a config entry."""
 from typing import Optional
 
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.components import zone
 from homeassistant.const import (
     STATE_NOT_HOME,
     STATE_HOME,
@@ -11,13 +10,10 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     ATTR_BATTERY_LEVEL,
 )
-from homeassistant.components import zone
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
 
-from .const import (
-    ATTR_SOURCE_TYPE,
-    DOMAIN,
-    LOGGER,
-)
+from .const import ATTR_SOURCE_TYPE, DOMAIN, LOGGER
 
 
 async def async_setup_entry(hass, entry):
@@ -25,9 +21,7 @@ async def async_setup_entry(hass, entry):
     component = hass.data.get(DOMAIN)  # type: Optional[EntityComponent]
 
     if component is None:
-        component = hass.data[DOMAIN] = EntityComponent(
-            LOGGER, DOMAIN, hass
-        )
+        component = hass.data[DOMAIN] = EntityComponent(LOGGER, DOMAIN, hass)
 
     return await component.async_setup_entry(entry)
 
@@ -56,9 +50,7 @@ class BaseTrackerEntity(Entity):
     @property
     def state_attributes(self):
         """Return the device state attributes."""
-        attr = {
-            ATTR_SOURCE_TYPE: self.source_type
-        }
+        attr = {ATTR_SOURCE_TYPE: self.source_type}
 
         if self.battery_level:
             attr[ATTR_BATTERY_LEVEL] = self.battery_level
@@ -100,8 +92,8 @@ class TrackerEntity(BaseTrackerEntity):
 
         if self.latitude is not None:
             zone_state = zone.async_active_zone(
-                self.hass, self.latitude, self.longitude,
-                self.location_accuracy)
+                self.hass, self.latitude, self.longitude, self.location_accuracy
+            )
             if zone_state is None:
                 state = STATE_NOT_HOME
             elif zone_state.entity_id == zone.ENTITY_ID_HOME:

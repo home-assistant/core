@@ -2,23 +2,20 @@
 from homeassistant.const import TEMP_CELSIUS
 
 from homeassistant.components.water_heater import (
-    STATE_ECO, STATE_ON, STATE_OFF, SUPPORT_OPERATION_MODE, WaterHeaterDevice)
+    STATE_ECO,
+    STATE_ON,
+    STATE_OFF,
+    SUPPORT_OPERATION_MODE,
+    WaterHeaterDevice,
+)
 
 from . import DATA_HIVE, DOMAIN
 
-SUPPORT_FLAGS_HEATER = (SUPPORT_OPERATION_MODE)
+SUPPORT_FLAGS_HEATER = SUPPORT_OPERATION_MODE
 
-HIVE_TO_HASS_STATE = {
-    'SCHEDULE': STATE_ECO,
-    'ON': STATE_ON,
-    'OFF': STATE_OFF,
-}
+HIVE_TO_HASS_STATE = {"SCHEDULE": STATE_ECO, "ON": STATE_ON, "OFF": STATE_OFF}
 
-HASS_TO_HIVE_STATE = {
-    STATE_ECO: 'SCHEDULE',
-    STATE_ON: 'ON',
-    STATE_OFF: 'OFF',
-}
+HASS_TO_HIVE_STATE = {STATE_ECO: "SCHEDULE", STATE_ON: "ON", STATE_OFF: "OFF"}
 
 SUPPORT_WATER_HEATER = [STATE_ECO, STATE_ON, STATE_OFF]
 
@@ -45,9 +42,8 @@ class HiveWaterHeater(WaterHeaterDevice):
         self.node_name = hivedevice["Hive_NodeName"]
         self.device_type = hivedevice["HA_DeviceType"]
         self.session = hivesession
-        self.data_updatesource = '{}.{}'.format(
-            self.device_type, self.node_id)
-        self._unique_id = '{}-{}'.format(self.node_id, self.device_type)
+        self.data_updatesource = "{}.{}".format(self.device_type, self.node_id)
+        self._unique_id = "{}-{}".format(self.node_id, self.device_type)
         self._unit_of_measurement = TEMP_CELSIUS
 
     @property
@@ -58,12 +54,7 @@ class HiveWaterHeater(WaterHeaterDevice):
     @property
     def device_info(self):
         """Return device information."""
-        return {
-            'identifiers': {
-                (DOMAIN, self.unique_id)
-            },
-            'name': self.name
-        }
+        return {"identifiers": {(DOMAIN, self.unique_id)}, "name": self.name}
 
     @property
     def supported_features(self):
@@ -72,12 +63,12 @@ class HiveWaterHeater(WaterHeaterDevice):
 
     def handle_update(self, updatesource):
         """Handle the new update request."""
-        if '{}.{}'.format(self.device_type, self.node_id) not in updatesource:
+        if "{}.{}".format(self.device_type, self.node_id) not in updatesource:
             self.schedule_update_ha_state()
 
     @property
     def name(self):
-        """Return the name of the water heater """
+        """Return the name of the water heater."""
         if self.node_name is None:
             self.node_name = "Hot Water"
         return self.node_name
@@ -89,7 +80,7 @@ class HiveWaterHeater(WaterHeaterDevice):
 
     @property
     def current_operation(self):
-        """ Return current operation. """
+        """Return current operation."""
         return HIVE_TO_HASS_STATE[self.session.hotwater.get_mode(self.node_id)]
 
     @property

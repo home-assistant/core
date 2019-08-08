@@ -34,6 +34,7 @@ omit =
     homeassistant/components/androidtv/*
     homeassistant/components/anel_pwrctrl/switch.py
     homeassistant/components/anthemav/media_player.py
+    homeassistant/components/apache_kafka/*
     homeassistant/components/apcupsd/*
     homeassistant/components/apple_tv/*
     homeassistant/components/aqualogic/*
@@ -53,6 +54,7 @@ omit =
     homeassistant/components/august/*
     homeassistant/components/aurora_abb_powerone/sensor.py
     homeassistant/components/automatic/device_tracker.py
+    homeassistant/components/avea/light.py
     homeassistant/components/avion/light.py
     homeassistant/components/azure_event_hub/*
     homeassistant/components/baidu/tts.py
@@ -121,6 +123,7 @@ omit =
     homeassistant/components/ddwrt/device_tracker.py
     homeassistant/components/decora/light.py
     homeassistant/components/decora_wifi/light.py
+    homeassistant/components/delijn/*
     homeassistant/components/deluge/sensor.py
     homeassistant/components/deluge/switch.py
     homeassistant/components/denon/media_player.py
@@ -200,6 +203,7 @@ omit =
     homeassistant/components/fints/sensor.py
     homeassistant/components/fitbit/sensor.py
     homeassistant/components/fixer/sensor.py
+    homeassistant/components/fleetgo/device_tracker.py
     homeassistant/components/flexit/climate.py
     homeassistant/components/flic/binary_sensor.py
     homeassistant/components/flock/notify.py
@@ -208,6 +212,8 @@ omit =
     homeassistant/components/folder/sensor.py
     homeassistant/components/folder_watcher/*
     homeassistant/components/foobot/sensor.py
+    homeassistant/components/fortios/device_tracker.py
+    homeassistant/components/fortigate/*
     homeassistant/components/foscam/camera.py
     homeassistant/components/foursquare/*
     homeassistant/components/free_mobile/notify.py
@@ -470,8 +476,6 @@ omit =
     homeassistant/components/prometheus/*
     homeassistant/components/prowl/notify.py
     homeassistant/components/proxy/camera.py
-    homeassistant/components/ps4/__init__.py
-    homeassistant/components/ps4/media_player.py
     homeassistant/components/ptvsd/*
     homeassistant/components/pulseaudio_loopback/switch.py
     homeassistant/components/pushbullet/notify.py
@@ -497,6 +501,7 @@ omit =
     homeassistant/components/rainmachine/binary_sensor.py
     homeassistant/components/rainmachine/sensor.py
     homeassistant/components/rainmachine/switch.py
+    homeassistant/components/rainforest_eagle/sensor.py
     homeassistant/components/raspihats/*
     homeassistant/components/raspyrfm/*
     homeassistant/components/recollect_waste/sensor.py
@@ -513,7 +518,6 @@ omit =
     homeassistant/components/rfxtrx/*
     homeassistant/components/ring/camera.py
     homeassistant/components/ripple/sensor.py
-    homeassistant/components/ritassist/device_tracker.py
     homeassistant/components/rocketchat/notify.py
     homeassistant/components/roku/*
     homeassistant/components/roomba/vacuum.py
@@ -587,6 +591,7 @@ omit =
     homeassistant/components/stiebel_eltron/*
     homeassistant/components/streamlabswater/*
     homeassistant/components/stride/notify.py
+    homeassistant/components/suez_water/*
     homeassistant/components/supervisord/sensor.py
     homeassistant/components/swiss_hydrological_data/sensor.py
     homeassistant/components/swiss_public_transport/sensor.py
@@ -632,7 +637,7 @@ omit =
     homeassistant/components/tomato/device_tracker.py
     homeassistant/components/toon/*
     homeassistant/components/torque/sensor.py
-    homeassistant/components/totalconnect/alarm_control_panel.py
+    homeassistant/components/totalconnect/*
     homeassistant/components/touchline/climate.py
     homeassistant/components/tplink/device_tracker.py
     homeassistant/components/tplink/light.py
@@ -648,6 +653,8 @@ omit =
     homeassistant/components/transmission/*
     homeassistant/components/travisci/sensor.py
     homeassistant/components/tuya/*
+    homeassistant/components/twentemilieu/const.py
+    homeassistant/components/twentemilieu/sensor.py
     homeassistant/components/twilio_call/notify.py
     homeassistant/components/twilio_sms/notify.py
     homeassistant/components/twitch/sensor.py
@@ -664,11 +671,20 @@ omit =
     homeassistant/components/usps/*
     homeassistant/components/vallox/*
     homeassistant/components/vasttrafik/sensor.py
-    homeassistant/components/velbus/*
+    homeassistant/components/velbus/__init__.py
+    homeassistant/components/velbus/binary_sensor.py
+    homeassistant/components/velbus/climate.py
+    homeassistant/components/velbus/const.py
+    homeassistant/components/velbus/cover.py
+    homeassistant/components/velbus/sensor.py
+    homeassistant/components/velbus/switch.py
     homeassistant/components/velux/*
     homeassistant/components/venstar/climate.py
     homeassistant/components/vera/*
     homeassistant/components/verisure/*
+    homeassistant/components/vesync/__init__.py
+    homeassistant/components/vesync/common.py
+    homeassistant/components/vesync/const.py
     homeassistant/components/vesync/switch.py
     homeassistant/components/viaggiatreno/sensor.py
     homeassistant/components/vizio/media_player.py

@@ -18,21 +18,21 @@ SENSOR = {
         "type": "ZHALightLevel",
         "state": {"lightlevel": 30000, "dark": False},
         "config": {"reachable": True},
-        "uniqueid": "00:00:00:00:00:00:00:00-00"
+        "uniqueid": "00:00:00:00:00:00:00:00-00",
     },
     "2": {
         "id": "Sensor 2 id",
         "name": "Sensor 2 name",
         "type": "ZHAPresence",
         "state": {"presence": False},
-        "config": {}
+        "config": {},
     },
     "3": {
         "id": "Sensor 3 id",
         "name": "Sensor 3 name",
         "type": "ZHASwitch",
         "state": {"buttonevent": 1000},
-        "config": {}
+        "config": {},
     },
     "4": {
         "id": "Sensor 4 id",
@@ -40,7 +40,7 @@ SENSOR = {
         "type": "ZHASwitch",
         "state": {"buttonevent": 1000},
         "config": {"battery": 100},
-        "uniqueid": "00:00:00:00:00:00:00:01-00"
+        "uniqueid": "00:00:00:00:00:00:00:01-00",
     },
     "5": {
         "id": "Sensor 5 id",
@@ -48,22 +48,29 @@ SENSOR = {
         "type": "ZHASwitch",
         "state": {"buttonevent": 1000},
         "config": {"battery": 100},
-        "uniqueid": "00:00:00:00:00:00:00:02:00-00"
+        "uniqueid": "00:00:00:00:00:00:00:02:00-00",
     },
     "6": {
         "id": "Sensor 6 id",
         "name": "Sensor 6 name",
         "type": "Daylight",
         "state": {"daylight": True},
-        "config": {}
+        "config": {},
     },
     "7": {
         "id": "Sensor 7 id",
         "name": "Sensor 7 name",
         "type": "ZHAPower",
         "state": {"current": 2, "power": 6, "voltage": 3},
-        "config": {"reachable": True}
-    }
+        "config": {"reachable": True},
+    },
+    "8": {
+        "id": "Sensor 8 id",
+        "name": "Sensor 8 name",
+        "type": "ZHAConsumption",
+        "state": {"consumption": 2, "power": 6},
+        "config": {"reachable": True},
+    },
 }
 
 
@@ -73,32 +80,36 @@ ENTRY_CONFIG = {
     deconz.config_flow.CONF_API_KEY: "ABCDEF",
     deconz.config_flow.CONF_BRIDGEID: "0123456789",
     deconz.config_flow.CONF_HOST: "1.2.3.4",
-    deconz.config_flow.CONF_PORT: 80
+    deconz.config_flow.CONF_PORT: 80,
 }
 
 
 async def setup_gateway(hass, data, allow_clip_sensor=True):
     """Load the deCONZ sensor platform."""
     from pydeconz import DeconzSession
+
     loop = Mock()
     session = Mock()
 
     ENTRY_CONFIG[deconz.const.CONF_ALLOW_CLIP_SENSOR] = allow_clip_sensor
 
     config_entry = config_entries.ConfigEntry(
-        1, deconz.DOMAIN, 'Mock Title', ENTRY_CONFIG, 'test',
-        config_entries.CONN_CLASS_LOCAL_PUSH)
+        1,
+        deconz.DOMAIN,
+        "Mock Title",
+        ENTRY_CONFIG,
+        "test",
+        config_entries.CONN_CLASS_LOCAL_PUSH,
+    )
     gateway = deconz.DeconzGateway(hass, config_entry)
     gateway.api = DeconzSession(loop, session, **config_entry.data)
     gateway.api.config = Mock()
     hass.data[deconz.DOMAIN] = {gateway.bridgeid: gateway}
 
-    with patch('pydeconz.DeconzSession.async_get_state',
-               return_value=mock_coro(data)):
+    with patch("pydeconz.DeconzSession.async_get_state", return_value=mock_coro(data)):
         await gateway.api.async_load_parameters()
 
-    await hass.config_entries.async_forward_entry_setup(
-        config_entry, 'sensor')
+    await hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
     # To flush out the service call to update the group
     await hass.async_block_till_done()
     return gateway
@@ -106,11 +117,12 @@ async def setup_gateway(hass, data, allow_clip_sensor=True):
 
 async def test_platform_manually_configured(hass):
     """Test that we do not discover anything or try to set up a gateway."""
-    assert await async_setup_component(hass, sensor.DOMAIN, {
-        'sensor': {
-            'platform': deconz.DOMAIN
-        }
-    }) is True
+    assert (
+        await async_setup_component(
+            hass, sensor.DOMAIN, {"sensor": {"platform": deconz.DOMAIN}}
+        )
+        is True
+    )
     assert deconz.DOMAIN not in hass.data
 
 
@@ -130,22 +142,21 @@ async def test_sensors(hass):
     assert "sensor.sensor_3_name_battery_level" not in gateway.deconz_ids
     assert "sensor.sensor_4_name" not in gateway.deconz_ids
     assert "sensor.sensor_4_name_battery_level" in gateway.deconz_ids
-    assert len(hass.states.async_all()) == 5
+    assert len(hass.states.async_all()) == 6
 
-    gateway.api.sensors['1'].async_update({'state': {'on': False}})
-    gateway.api.sensors['4'].async_update({'config': {'battery': 75}})
+    gateway.api.sensors["1"].async_update({"state": {"on": False}})
+    gateway.api.sensors["4"].async_update({"config": {"battery": 75}})
 
 
 async def test_add_new_sensor(hass):
     """Test successful creation of sensor entities."""
     gateway = await setup_gateway(hass, {})
     sensor = Mock()
-    sensor.name = 'name'
-    sensor.type = 'ZHATemperature'
+    sensor.name = "name"
+    sensor.type = "ZHATemperature"
     sensor.BINARY = False
     sensor.register_async_callback = Mock()
-    async_dispatcher_send(
-        hass, gateway.async_event_new_device('sensor'), [sensor])
+    async_dispatcher_send(hass, gateway.async_event_new_device("sensor"), [sensor])
     await hass.async_block_till_done()
     assert "sensor.name" in gateway.deconz_ids
 
@@ -154,11 +165,10 @@ async def test_do_not_allow_clipsensor(hass):
     """Test that clip sensors can be ignored."""
     gateway = await setup_gateway(hass, {}, allow_clip_sensor=False)
     sensor = Mock()
-    sensor.name = 'name'
-    sensor.type = 'CLIPTemperature'
+    sensor.name = "name"
+    sensor.type = "CLIPTemperature"
     sensor.register_async_callback = Mock()
-    async_dispatcher_send(
-        hass, gateway.async_event_new_device('sensor'), [sensor])
+    async_dispatcher_send(hass, gateway.async_event_new_device("sensor"), [sensor])
     await hass.async_block_till_done()
     assert len(gateway.deconz_ids) == 0
 

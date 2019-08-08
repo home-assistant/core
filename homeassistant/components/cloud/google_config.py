@@ -3,8 +3,12 @@ from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.components.google_assistant.helpers import AbstractConfig
 
 from .const import (
-    PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE, CONF_ENTITY_CONFIG,
-    PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA)
+    PREF_SHOULD_EXPOSE,
+    DEFAULT_SHOULD_EXPOSE,
+    CONF_ENTITY_CONFIG,
+    PREF_DISABLE_2FA,
+    DEFAULT_DISABLE_2FA,
+)
 
 
 class CloudGoogleConfig(AbstractConfig):
@@ -36,17 +40,15 @@ class CloudGoogleConfig(AbstractConfig):
         if state.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
             return False
 
-        if not self._config['filter'].empty_filter:
-            return self._config['filter'](state.entity_id)
+        if not self._config["filter"].empty_filter:
+            return self._config["filter"](state.entity_id)
 
         entity_configs = self._prefs.google_entity_configs
         entity_config = entity_configs.get(state.entity_id, {})
-        return entity_config.get(
-            PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE)
+        return entity_config.get(PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE)
 
     def should_2fa(self, state):
         """If an entity should be checked for 2FA."""
         entity_configs = self._prefs.google_entity_configs
         entity_config = entity_configs.get(state.entity_id, {})
-        return not entity_config.get(
-            PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA)
+        return not entity_config.get(PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA)

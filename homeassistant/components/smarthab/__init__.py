@@ -12,17 +12,22 @@ from homeassistant.helpers.discovery import load_platform
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 
-DOMAIN = 'smarthab'
-DATA_HUB = 'hub'
+DOMAIN = "smarthab"
+DATA_HUB = "hub"
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_EMAIL): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_EMAIL): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config) -> bool:
@@ -51,11 +56,9 @@ def setup(hass, config) -> bool:
         return False
 
     # Pass hub object to child platforms
-    hass.data[DOMAIN] = {
-        DATA_HUB: hub
-    }
+    hass.data[DOMAIN] = {DATA_HUB: hub}
 
-    load_platform(hass, 'light', DOMAIN, None, config)
-    load_platform(hass, 'cover', DOMAIN, None, config)
+    load_platform(hass, "light", DOMAIN, None, config)
+    load_platform(hass, "cover", DOMAIN, None, config)
 
     return True
