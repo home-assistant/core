@@ -254,6 +254,16 @@ class SensorTemplate(Entity):
             else:
                 self._state = None
                 _LOGGER.error("Could not render template %s: %s", self._name, ex)
+
+        attrs = {}
+        for key, value in self._attribute_templates.items():
+            try:
+                attrs[key] = value.async_render()
+            except TemplateError as err:
+                _LOGGER.error("Error rendering attribute %s: %s", key, err)
+
+        self._attributes = attrs
+
         for property_name, template in (
             ("_icon", self._icon_template),
             ("_entity_picture", self._entity_picture_template),
