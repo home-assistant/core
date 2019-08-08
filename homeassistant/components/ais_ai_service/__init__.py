@@ -755,9 +755,11 @@ def say_curr_entity(hass):
         _say_it(hass, info_name + " " + info_data + ". Aby przeliterować naciśnij OK.")
         return
     elif entity_id == 'sensor.ais_connect_iot_device_info':
-        info = "Instrukcja. Podłącz urządzenie do prądu. Upewnij się, że urządzenie znajduje się w zasięgu routera WiFi oraz bramki AIS dom. " \
-               "Żeby uruchomić tryb parowania naciśnij szybko 4 razy przycisk na urządzeniu i poczekaj aż jego dioda zacznie mrugać. " \
-               "Następnie naciśnij OK aby rozpocząć wyszukiwanie urządzenia."
+        info = "Instrukcja. Podłącz urządzenie do prądu. Upewnij się, że urządzenie znajduje się w zasięgu routera " \
+               "WiFi oraz bramki AIS dom. " \
+               "Uruchom tryb parowania, naciskając 4 razy szybko przycisk na urządzeniu, " \
+               "następnie poczekaj aż dioda na urządzeniu, zacznie pulsować. Gdy urządzenie jest w trybie parowania, " \
+               "to naciśnij OK na pilocie, aby rozpocząć wyszukiwanie urządzenia."
         _say_it(hass, info)
         return
     elif entity_id == 'input_select.ais_bookmark_last_played':
@@ -2180,8 +2182,8 @@ def _process_command_from_frame(hass, service):
         if len(iot_names) > 1 and CURR_ENTITIE in (
                 'sensor.ais_connect_iot_device_info', 'script.ais_scan_iot_devices_in_network') \
                 and CURR_BUTTON_CODE == 23:
-            info = info + ". Sprawdz parametry, naciśnij strzałkę w prawo by przejść dalej." \
-                          " Na koniec uruchom: Dołącz nowe urządzenie."
+            info = info + ". Sprawdź wszystkie parametry, naciśnij strzałkę w prawo, by przejść dalej. " \
+                          "Na koniec uruchom: Dołącz nowe urządzenie."
             # prepare form data
             set_curr_entity(hass, 'script.ais_scan_iot_devices_in_network')
             hass.async_run_job(
