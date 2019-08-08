@@ -127,7 +127,7 @@ class KebaHandler(KebaKeContact):
 
         if self._fast_polling_count < MAX_FAST_POLLING_COUNT:
             self._fast_polling_count += 1
-            _LOGGER.debug("Periodic data request executed, now wait for " "2 seconds.")
+            _LOGGER.debug("Periodic data request executed, now wait for 2 seconds")
             await asyncio.sleep(2)
         else:
             _LOGGER.debug(
