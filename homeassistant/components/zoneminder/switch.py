@@ -11,17 +11,18 @@ from . import DOMAIN as ZONEMINDER_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['zoneminder']
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COMMAND_ON): cv.string,
-    vol.Required(CONF_COMMAND_OFF): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_COMMAND_ON): cv.string,
+        vol.Required(CONF_COMMAND_OFF): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZoneMinder switch platform."""
     from zoneminder.monitor import MonitorState
+
     on_state = MonitorState(config.get(CONF_COMMAND_ON))
     off_state = MonitorState(config.get(CONF_COMMAND_OFF))
 
@@ -40,7 +41,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ZMSwitchMonitors(SwitchDevice):
     """Representation of a ZoneMinder switch."""
 
-    icon = 'mdi:record-rec'
+    icon = "mdi:record-rec"
 
     def __init__(self, monitor, on_state, off_state):
         """Initialize the switch."""
@@ -52,7 +53,7 @@ class ZMSwitchMonitors(SwitchDevice):
     @property
     def name(self):
         """Return the name of the switch."""
-        return '{} State'.format(self._monitor.name)
+        return "{} State".format(self._monitor.name)
 
     def update(self):
         """Update the switch value."""

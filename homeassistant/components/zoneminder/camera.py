@@ -2,14 +2,16 @@
 import logging
 
 from homeassistant.components.mjpeg.camera import (
-    CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, MjpegCamera, filter_urllib3_logging)
+    CONF_MJPEG_URL,
+    CONF_STILL_IMAGE_URL,
+    MjpegCamera,
+    filter_urllib3_logging,
+)
 from homeassistant.const import CONF_NAME, CONF_VERIFY_SSL
 
 from . import DOMAIN as ZONEMINDER_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['zoneminder']
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -19,9 +21,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
         monitors = zm_client.get_monitors()
         if not monitors:
-            _LOGGER.warning(
-                "Could not fetch monitors from ZoneMinder host: %s"
-            )
+            _LOGGER.warning("Could not fetch monitors from ZoneMinder host: %s")
             return
 
         for monitor in monitors:
@@ -39,7 +39,7 @@ class ZoneMinderCamera(MjpegCamera):
             CONF_NAME: monitor.name,
             CONF_MJPEG_URL: monitor.mjpeg_image_url,
             CONF_STILL_IMAGE_URL: monitor.still_image_url,
-            CONF_VERIFY_SSL: verify_ssl
+            CONF_VERIFY_SSL: verify_ssl,
         }
         super().__init__(device_info)
         self._is_recording = None

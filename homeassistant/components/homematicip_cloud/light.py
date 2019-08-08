@@ -1,32 +1,46 @@
 """Support for HomematicIP Cloud lights."""
 import logging
 
+from homematicip.aio.device import (
+    AsyncBrandDimmer,
+    AsyncBrandSwitchMeasuring,
+    AsyncBrandSwitchNotificationLight,
+    AsyncDimmer,
+    AsyncFullFlushDimmer,
+    AsyncPluggableDimmer,
+)
+from homematicip.aio.home import AsyncHome
+from homematicip.base.enums import RGBColorState
+from homematicip.base.functionalChannels import NotificationLightChannel
+
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_NAME, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR, Light)
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_NAME,
+    ATTR_HS_COLOR,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    Light,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
-DEPENDENCIES = ['homematicip_cloud']
-
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ENERGY_COUNTER = 'energy_counter_kwh'
-ATTR_POWER_CONSUMPTION = 'power_consumption'
+ATTR_ENERGY_COUNTER = "energy_counter_kwh"
+ATTR_POWER_CONSUMPTION = "power_consumption"
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up HomematicIP Cloud lights."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+) -> None:
     """Set up the HomematicIP Cloud lights from a config entry."""
-    from homematicip.aio.device import AsyncBrandSwitchMeasuring, AsyncDimmer,\
-        AsyncPluggableDimmer, AsyncBrandDimmer, AsyncFullFlushDimmer,\
-        AsyncBrandSwitchNotificationLight
-
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for device in home.devices:
@@ -34,13 +48,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             devices.append(HomematicipLightMeasuring(home, device))
         elif isinstance(device, AsyncBrandSwitchNotificationLight):
             devices.append(HomematicipLight(home, device))
-            devices.append(HomematicipNotificationLight(
-                home, device, device.topLightChannelIndex))
-            devices.append(HomematicipNotificationLight(
-                home, device, device.bottomLightChannelIndex))
-        elif isinstance(device,
-                        (AsyncDimmer, AsyncPluggableDimmer,
-                         AsyncBrandDimmer, AsyncFullFlushDimmer)):
+            devices.append(
+                HomematicipNotificationLight(home, device, device.topLightChannelIndex)
+            )
+            devices.append(
+                HomematicipNotificationLight(
+                    home, device, device.bottomLightChannelIndex
+                )
+            )
+        elif isinstance(
+            device,
+            (AsyncDimmer, AsyncPluggableDimmer, AsyncBrandDimmer, AsyncFullFlushDimmer),
+        ):
             devices.append(HomematicipDimmer(home, device))
 
     if devices:
@@ -50,12 +69,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class HomematicipLight(HomematicipGenericDevice, Light):
     """Representation of a HomematicIP Cloud light device."""
 
-    def __init__(self, home, device):
+    def __init__(self, home: AsyncHome, device) -> None:
         """Initialize the light device."""
         super().__init__(home, device)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._device.on
 
@@ -76,8 +95,9 @@ class HomematicipLightMeasuring(HomematicipLight):
         """Return the state attributes of the generic device."""
         attr = super().device_state_attributes
         if self._device.currentPowerConsumption > 0.05:
-            attr[ATTR_POWER_CONSUMPTION] = \
-                round(self._device.currentPowerConsumption, 2)
+            attr[ATTR_POWER_CONSUMPTION] = round(
+                self._device.currentPowerConsumption, 2
+            )
         attr[ATTR_ENERGY_COUNTER] = round(self._device.energyCounter, 2)
         return attr
 
@@ -85,29 +105,31 @@ class HomematicipLightMeasuring(HomematicipLight):
 class HomematicipDimmer(HomematicipGenericDevice, Light):
     """Representation of HomematicIP Cloud dimmer light device."""
 
-    def __init__(self, home, device):
+    def __init__(self, home: AsyncHome, device) -> None:
         """Initialize the dimmer light device."""
         super().__init__(home, device)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
-        return self._device.dimLevel != 0
+        return self._device.dimLevel is not None and self._device.dimLevel > 0.0
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
-        return int(self._device.dimLevel*255)
+        if self._device.dimLevel:
+            return int(self._device.dimLevel * 255)
+        return 0
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORT_BRIGHTNESS
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
-            await self._device.set_dim_level(kwargs[ATTR_BRIGHTNESS]/255.0)
+            await self._device.set_dim_level(kwargs[ATTR_BRIGHTNESS] / 255.0)
         else:
             await self._device.set_dim_level(1)
 
@@ -119,15 +141,14 @@ class HomematicipDimmer(HomematicipGenericDevice, Light):
 class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     """Representation of HomematicIP Cloud dimmer light device."""
 
-    def __init__(self, home, device, channel_index):
+    def __init__(self, home: AsyncHome, device, channel: int) -> None:
         """Initialize the dimmer light device."""
-        self._channel_index = channel_index
-        if self._channel_index == 2:
-            super().__init__(home, device, 'Top')
+        self.channel = channel
+        if self.channel == 2:
+            super().__init__(home, device, "Top")
         else:
-            super().__init__(home, device, 'Bottom')
+            super().__init__(home, device, "Bottom")
 
-        from homematicip.base.enums import RGBColorState
         self._color_switcher = {
             RGBColorState.WHITE: [0.0, 0.0],
             RGBColorState.RED: [0.0, 100.0],
@@ -135,27 +156,32 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
             RGBColorState.GREEN: [120.0, 100.0],
             RGBColorState.TURQUOISE: [180.0, 100.0],
             RGBColorState.BLUE: [240.0, 100.0],
-            RGBColorState.PURPLE: [300.0, 100.0]
+            RGBColorState.PURPLE: [300.0, 100.0],
         }
 
     @property
-    def _channel(self):
-        return self._device.functionalChannels[self._channel_index]
+    def _func_channel(self) -> NotificationLightChannel:
+        return self._device.functionalChannels[self.channel]
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
-        return self._channel.dimLevel > 0.0
+        return (
+            self._func_channel.dimLevel is not None
+            and self._func_channel.dimLevel > 0.0
+        )
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
-        return int(self._channel.dimLevel * 255)
+        if self._func_channel.dimLevel:
+            return int(self._func_channel.dimLevel * 255)
+        return 0
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple:
         """Return the hue and saturation color value [float, float]."""
-        simple_rgb_color = self._channel.simpleRGBColorState
+        simple_rgb_color = self._func_channel.simpleRGBColorState
         return self._color_switcher.get(simple_rgb_color, [0.0, 0.0])
 
     @property
@@ -163,25 +189,23 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
         """Return the state attributes of the generic device."""
         attr = super().device_state_attributes
         if self.is_on:
-            attr[ATTR_COLOR_NAME] = self._channel.simpleRGBColorState
+            attr[ATTR_COLOR_NAME] = self._func_channel.simpleRGBColorState
         return attr
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the generic device."""
-        return "{} {}".format(super().name, 'Notification')
+        return "{} {}".format(super().name, "Notification")
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return "{}_{}_{}".format(self.__class__.__name__,
-                                 self.post,
-                                 self._device.id)
+        return "{}_{}_{}".format(self.__class__.__name__, self.post, self._device.id)
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
@@ -202,28 +226,21 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
         brightness = max(10, brightness)
         dim_level = brightness / 255.0
 
-        await self._device.set_rgb_dim_level(
-            self._channel_index,
-            simple_rgb_color,
-            dim_level)
+        await self._device.set_rgb_dim_level(self.channel, simple_rgb_color, dim_level)
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        simple_rgb_color = self._channel.simpleRGBColorState
-        await self._device.set_rgb_dim_level(
-            self._channel_index,
-            simple_rgb_color, 0.0)
+        simple_rgb_color = self._func_channel.simpleRGBColorState
+        await self._device.set_rgb_dim_level(self.channel, simple_rgb_color, 0.0)
 
 
-def _convert_color(color):
+def _convert_color(color) -> RGBColorState:
     """
     Convert the given color to the reduced RGBColorState color.
 
     RGBColorStat contains only 8 colors including white and black,
     so a conversion is required.
     """
-    from homematicip.base.enums import RGBColorState
-
     if color is None:
         return RGBColorState.WHITE
 

@@ -1,0 +1,10 @@
+{
+  "domain": "modbus",
+  "name": "Modbus",
+  "documentation": "https://www.home-assistant.io/components/modbus",
+  "requirements": [
+    "pymodbus==1.5.2"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -5,20 +5,20 @@ import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.const import (
-    ATTR_CODE, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
+    ATTR_CODE,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_TRIGGERED,
+)
 import homeassistant.helpers.config_validation as cv
 
 from . import DATA_AD, SIGNAL_PANEL_MESSAGE
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['alarmdecoder']
-
-SERVICE_ALARM_TOGGLE_CHIME = 'alarmdecoder_alarm_toggle_chime'
-ALARM_TOGGLE_CHIME_SCHEMA = vol.Schema({
-    vol.Required(ATTR_CODE): cv.string,
-})
+SERVICE_ALARM_TOGGLE_CHIME = "alarmdecoder_alarm_toggle_chime"
+ALARM_TOGGLE_CHIME_SCHEMA = vol.Schema({vol.Required(ATTR_CODE): cv.string})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -32,8 +32,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         device.alarm_toggle_chime(code)
 
     hass.services.register(
-        alarm.DOMAIN, SERVICE_ALARM_TOGGLE_CHIME, alarm_toggle_chime_handler,
-        schema=ALARM_TOGGLE_CHIME_SCHEMA)
+        alarm.DOMAIN,
+        SERVICE_ALARM_TOGGLE_CHIME,
+        alarm_toggle_chime_handler,
+        schema=ALARM_TOGGLE_CHIME_SCHEMA,
+    )
 
 
 class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
@@ -57,7 +60,8 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_PANEL_MESSAGE, self._message_callback)
+            SIGNAL_PANEL_MESSAGE, self._message_callback
+        )
 
     def _message_callback(self, message):
         """Handle received messages."""
@@ -106,15 +110,15 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            'ac_power': self._ac_power,
-            'backlight_on': self._backlight_on,
-            'battery_low': self._battery_low,
-            'check_zone': self._check_zone,
-            'chime': self._chime,
-            'entry_delay_off': self._entry_delay_off,
-            'programming_mode': self._programming_mode,
-            'ready': self._ready,
-            'zone_bypassed': self._zone_bypassed,
+            "ac_power": self._ac_power,
+            "backlight_on": self._backlight_on,
+            "battery_low": self._battery_low,
+            "check_zone": self._check_zone,
+            "chime": self._chime,
+            "entry_delay_off": self._entry_delay_off,
+            "programming_mode": self._programming_mode,
+            "ready": self._ready,
+            "zone_bypassed": self._zone_bypassed,
         }
 
     def alarm_disarm(self, code=None):

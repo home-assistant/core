@@ -1,0 +1,8 @@
+{
+  "domain": "climate",
+  "name": "Climate",
+  "documentation": "https://www.home-assistant.io/components/climate",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

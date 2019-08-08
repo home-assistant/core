@@ -1,0 +1,10 @@
+{
+  "domain": "kwb",
+  "name": "Kwb",
+  "documentation": "https://www.home-assistant.io/components/kwb",
+  "requirements": [
+    "pykwb==0.0.8"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

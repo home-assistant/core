@@ -5,89 +5,101 @@ from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.components.geo_location import (
-    PLATFORM_SCHEMA, GeolocationEvent)
+from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS,
-    CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START)
+    ATTR_ATTRIBUTION,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_RADIUS,
+    CONF_SCAN_INTERVAL,
+    EVENT_HOMEASSISTANT_START,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.event import track_time_interval
-
-REQUIREMENTS = ['geojson_client==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ALERT = 'alert'
-ATTR_EXTERNAL_ID = 'external_id'
-ATTR_MAGNITUDE = 'magnitude'
-ATTR_PLACE = 'place'
-ATTR_STATUS = 'status'
-ATTR_TIME = 'time'
-ATTR_TYPE = 'type'
-ATTR_UPDATED = 'updated'
+ATTR_ALERT = "alert"
+ATTR_EXTERNAL_ID = "external_id"
+ATTR_MAGNITUDE = "magnitude"
+ATTR_PLACE = "place"
+ATTR_STATUS = "status"
+ATTR_TIME = "time"
+ATTR_TYPE = "type"
+ATTR_UPDATED = "updated"
 
-CONF_FEED_TYPE = 'feed_type'
-CONF_MINIMUM_MAGNITUDE = 'minimum_magnitude'
+CONF_FEED_TYPE = "feed_type"
+CONF_MINIMUM_MAGNITUDE = "minimum_magnitude"
 
 DEFAULT_MINIMUM_MAGNITUDE = 0.0
 DEFAULT_RADIUS_IN_KM = 50.0
-DEFAULT_UNIT_OF_MEASUREMENT = 'km'
+DEFAULT_UNIT_OF_MEASUREMENT = "km"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-SIGNAL_DELETE_ENTITY = 'usgs_earthquakes_feed_delete_{}'
-SIGNAL_UPDATE_ENTITY = 'usgs_earthquakes_feed_update_{}'
+SIGNAL_DELETE_ENTITY = "usgs_earthquakes_feed_delete_{}"
+SIGNAL_UPDATE_ENTITY = "usgs_earthquakes_feed_update_{}"
 
-SOURCE = 'usgs_earthquakes_feed'
+SOURCE = "usgs_earthquakes_feed"
 
 VALID_FEED_TYPES = [
-    'past_hour_significant_earthquakes',
-    'past_hour_m45_earthquakes',
-    'past_hour_m25_earthquakes',
-    'past_hour_m10_earthquakes',
-    'past_hour_all_earthquakes',
-    'past_day_significant_earthquakes',
-    'past_day_m45_earthquakes',
-    'past_day_m25_earthquakes',
-    'past_day_m10_earthquakes',
-    'past_day_all_earthquakes',
-    'past_week_significant_earthquakes',
-    'past_week_m45_earthquakes',
-    'past_week_m25_earthquakes',
-    'past_week_m10_earthquakes',
-    'past_week_all_earthquakes',
-    'past_month_significant_earthquakes',
-    'past_month_m45_earthquakes',
-    'past_month_m25_earthquakes',
-    'past_month_m10_earthquakes',
-    'past_month_all_earthquakes',
+    "past_hour_significant_earthquakes",
+    "past_hour_m45_earthquakes",
+    "past_hour_m25_earthquakes",
+    "past_hour_m10_earthquakes",
+    "past_hour_all_earthquakes",
+    "past_day_significant_earthquakes",
+    "past_day_m45_earthquakes",
+    "past_day_m25_earthquakes",
+    "past_day_m10_earthquakes",
+    "past_day_all_earthquakes",
+    "past_week_significant_earthquakes",
+    "past_week_m45_earthquakes",
+    "past_week_m25_earthquakes",
+    "past_week_m10_earthquakes",
+    "past_week_all_earthquakes",
+    "past_month_significant_earthquakes",
+    "past_month_m45_earthquakes",
+    "past_month_m25_earthquakes",
+    "past_month_m10_earthquakes",
+    "past_month_all_earthquakes",
 ]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_FEED_TYPE): vol.In(VALID_FEED_TYPES),
-    vol.Optional(CONF_LATITUDE): cv.latitude,
-    vol.Optional(CONF_LONGITUDE): cv.longitude,
-    vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
-    vol.Optional(CONF_MINIMUM_MAGNITUDE, default=DEFAULT_MINIMUM_MAGNITUDE):
-        vol.All(vol.Coerce(float), vol.Range(min=0))
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_FEED_TYPE): vol.In(VALID_FEED_TYPES),
+        vol.Optional(CONF_LATITUDE): cv.latitude,
+        vol.Optional(CONF_LONGITUDE): cv.longitude,
+        vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
+        vol.Optional(
+            CONF_MINIMUM_MAGNITUDE, default=DEFAULT_MINIMUM_MAGNITUDE
+        ): vol.All(vol.Coerce(float), vol.Range(min=0)),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the USGS Earthquake Hazards Program Feed platform."""
     scan_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     feed_type = config[CONF_FEED_TYPE]
-    coordinates = (config.get(CONF_LATITUDE, hass.config.latitude),
-                   config.get(CONF_LONGITUDE, hass.config.longitude))
+    coordinates = (
+        config.get(CONF_LATITUDE, hass.config.latitude),
+        config.get(CONF_LONGITUDE, hass.config.longitude),
+    )
     radius_in_km = config[CONF_RADIUS]
     minimum_magnitude = config[CONF_MINIMUM_MAGNITUDE]
     # Initialize the entity manager.
     feed = UsgsEarthquakesFeedEntityManager(
-        hass, add_entities, scan_interval, coordinates, feed_type,
-        radius_in_km, minimum_magnitude)
+        hass,
+        add_entities,
+        scan_interval,
+        coordinates,
+        feed_type,
+        radius_in_km,
+        minimum_magnitude,
+    )
 
     def start_feed_manager(event):
         """Start feed manager."""
@@ -99,17 +111,31 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class UsgsEarthquakesFeedEntityManager:
     """Feed Entity Manager for USGS Earthquake Hazards Program feed."""
 
-    def __init__(self, hass, add_entities, scan_interval, coordinates,
-                 feed_type, radius_in_km, minimum_magnitude):
+    def __init__(
+        self,
+        hass,
+        add_entities,
+        scan_interval,
+        coordinates,
+        feed_type,
+        radius_in_km,
+        minimum_magnitude,
+    ):
         """Initialize the Feed Entity Manager."""
-        from geojson_client.usgs_earthquake_hazards_program_feed \
-            import UsgsEarthquakeHazardsProgramFeedManager
+        from geojson_client.usgs_earthquake_hazards_program_feed import (
+            UsgsEarthquakeHazardsProgramFeedManager,
+        )
 
         self._hass = hass
         self._feed_manager = UsgsEarthquakeHazardsProgramFeedManager(
-            self._generate_entity, self._update_entity, self._remove_entity,
-            coordinates, feed_type, filter_radius=radius_in_km,
-            filter_minimum_magnitude=minimum_magnitude)
+            self._generate_entity,
+            self._update_entity,
+            self._remove_entity,
+            coordinates,
+            feed_type,
+            filter_radius=radius_in_km,
+            filter_minimum_magnitude=minimum_magnitude,
+        )
         self._add_entities = add_entities
         self._scan_interval = scan_interval
 
@@ -121,8 +147,8 @@ class UsgsEarthquakesFeedEntityManager:
     def _init_regular_updates(self):
         """Schedule regular updates at the specified interval."""
         track_time_interval(
-            self._hass, lambda now: self._feed_manager.update(),
-            self._scan_interval)
+            self._hass, lambda now: self._feed_manager.update(), self._scan_interval
+        )
 
     def get_entry(self, external_id):
         """Get feed entry by external id."""
@@ -168,11 +194,15 @@ class UsgsEarthquakesEvent(GeolocationEvent):
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self._remove_signal_delete = async_dispatcher_connect(
-            self.hass, SIGNAL_DELETE_ENTITY.format(self._external_id),
-            self._delete_callback)
+            self.hass,
+            SIGNAL_DELETE_ENTITY.format(self._external_id),
+            self._delete_callback,
+        )
         self._remove_signal_update = async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_ENTITY.format(self._external_id),
-            self._update_callback)
+            self.hass,
+            SIGNAL_UPDATE_ENTITY.format(self._external_id),
+            self._update_callback,
+        )
 
     @callback
     def _delete_callback(self):
@@ -248,15 +278,15 @@ class UsgsEarthquakesEvent(GeolocationEvent):
         """Return the device state attributes."""
         attributes = {}
         for key, value in (
-                (ATTR_EXTERNAL_ID, self._external_id),
-                (ATTR_PLACE, self._place),
-                (ATTR_MAGNITUDE, self._magnitude),
-                (ATTR_TIME, self._time),
-                (ATTR_UPDATED, self._updated),
-                (ATTR_STATUS, self._status),
-                (ATTR_TYPE, self._type),
-                (ATTR_ALERT, self._alert),
-                (ATTR_ATTRIBUTION, self._attribution),
+            (ATTR_EXTERNAL_ID, self._external_id),
+            (ATTR_PLACE, self._place),
+            (ATTR_MAGNITUDE, self._magnitude),
+            (ATTR_TIME, self._time),
+            (ATTR_UPDATED, self._updated),
+            (ATTR_STATUS, self._status),
+            (ATTR_TYPE, self._type),
+            (ATTR_ALERT, self._alert),
+            (ATTR_ATTRIBUTION, self._attribution),
         ):
             if value or isinstance(value, bool):
                 attributes[key] = value

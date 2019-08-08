@@ -5,7 +5,10 @@ import struct
 import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
-from homeassistant.components.climate.const import SUPPORT_TARGET_TEMPERATURE
+from homeassistant.components.climate.const import (
+    SUPPORT_TARGET_TEMPERATURE,
+    HVAC_MODE_HEAT,
+)
 from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, CONF_SLAVE
 import homeassistant.helpers.config_validation as cv
 
@@ -13,30 +16,32 @@ from . import CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_TARGET_TEMP = 'target_temp_register'
-CONF_CURRENT_TEMP = 'current_temp_register'
-CONF_DATA_TYPE = 'data_type'
-CONF_COUNT = 'data_count'
-CONF_PRECISION = 'precision'
+CONF_TARGET_TEMP = "target_temp_register"
+CONF_CURRENT_TEMP = "current_temp_register"
+CONF_DATA_TYPE = "data_type"
+CONF_COUNT = "data_count"
+CONF_PRECISION = "precision"
 
-DATA_TYPE_INT = 'int'
-DATA_TYPE_UINT = 'uint'
-DATA_TYPE_FLOAT = 'float'
-DEPENDENCIES = ['modbus']
-
+DATA_TYPE_INT = "int"
+DATA_TYPE_UINT = "uint"
+DATA_TYPE_FLOAT = "float"
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
+HVAC_MODES = [HVAC_MODE_HEAT]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_CURRENT_TEMP): cv.positive_int,
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_SLAVE): cv.positive_int,
-    vol.Required(CONF_TARGET_TEMP): cv.positive_int,
-    vol.Optional(CONF_COUNT, default=2): cv.positive_int,
-    vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_FLOAT):
-        vol.In([DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT]),
-    vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-    vol.Optional(CONF_PRECISION, default=1): cv.positive_int,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_CURRENT_TEMP): cv.positive_int,
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_SLAVE): cv.positive_int,
+        vol.Required(CONF_TARGET_TEMP): cv.positive_int,
+        vol.Optional(CONF_COUNT, default=2): cv.positive_int,
+        vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_FLOAT): vol.In(
+            [DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT]
+        ),
+        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
+        vol.Optional(CONF_PRECISION, default=1): cv.positive_int,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -51,16 +56,37 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hub_name = config.get(CONF_HUB)
     hub = hass.data[MODBUS_DOMAIN][hub_name]
 
-    add_entities([ModbusThermostat(
-        hub, name, modbus_slave, target_temp_register, current_temp_register,
-        data_type, count, precision)], True)
+    add_entities(
+        [
+            ModbusThermostat(
+                hub,
+                name,
+                modbus_slave,
+                target_temp_register,
+                current_temp_register,
+                data_type,
+                count,
+                precision,
+            )
+        ],
+        True,
+    )
 
 
 class ModbusThermostat(ClimateDevice):
     """Representation of a Modbus Thermostat."""
 
-    def __init__(self, hub, name, modbus_slave, target_temp_register,
-                 current_temp_register, data_type, count, precision):
+    def __init__(
+        self,
+        hub,
+        name,
+        modbus_slave,
+        target_temp_register,
+        current_temp_register,
+        data_type,
+        count,
+        precision,
+    ):
         """Initialize the unit."""
         self._hub = hub
         self._name = name
@@ -72,16 +98,15 @@ class ModbusThermostat(ClimateDevice):
         self._data_type = data_type
         self._count = int(count)
         self._precision = precision
-        self._structure = '>f'
+        self._structure = ">f"
 
         data_types = {
-            DATA_TYPE_INT: {1: 'h', 2: 'i', 4: 'q'},
-            DATA_TYPE_UINT: {1: 'H', 2: 'I', 4: 'Q'},
-            DATA_TYPE_FLOAT: {1: 'e', 2: 'f', 4: 'd'},
+            DATA_TYPE_INT: {1: "h", 2: "i", 4: "q"},
+            DATA_TYPE_UINT: {1: "H", 2: "I", 4: "Q"},
+            DATA_TYPE_FLOAT: {1: "e", 2: "f", 4: "d"},
         }
 
-        self._structure = '>{}'.format(
-            data_types[self._data_type][self._count])
+        self._structure = ">{}".format(data_types[self._data_type][self._count])
 
     @property
     def supported_features(self):
@@ -90,10 +115,20 @@ class ModbusThermostat(ClimateDevice):
 
     def update(self):
         """Update Target & Current Temperature."""
-        self._target_temperature = self.read_register(
-            self._target_temperature_register)
+        self._target_temperature = self.read_register(self._target_temperature_register)
         self._current_temperature = self.read_register(
-            self._current_temperature_register)
+            self._current_temperature_register
+        )
+
+    @property
+    def hvac_mode(self):
+        """Return the current HVAC mode."""
+        return HVAC_MODE_HEAT
+
+    @property
+    def hvac_modes(self):
+        """Return the possible HVAC modes."""
+        return HVAC_MODES
 
     @property
     def name(self):
@@ -116,11 +151,10 @@ class ModbusThermostat(ClimateDevice):
         if target_temperature is None:
             return
         byte_string = struct.pack(self._structure, target_temperature)
-        register_value = struct.unpack('>h', byte_string[0:2])[0]
+        register_value = struct.unpack(">h", byte_string[0:2])[0]
 
         try:
-            self.write_register(
-                self._target_temperature_register, register_value)
+            self.write_register(self._target_temperature_register, register_value)
         except AttributeError as ex:
             _LOGGER.error(ex)
 
@@ -128,13 +162,15 @@ class ModbusThermostat(ClimateDevice):
         """Read holding register using the Modbus hub slave."""
         try:
             result = self._hub.read_holding_registers(
-                self._slave, register, self._count)
+                self._slave, register, self._count
+            )
         except AttributeError as ex:
             _LOGGER.error(ex)
-        byte_string = b''.join(
-            [x.to_bytes(2, byteorder='big') for x in result.registers])
+        byte_string = b"".join(
+            [x.to_bytes(2, byteorder="big") for x in result.registers]
+        )
         val = struct.unpack(self._structure, byte_string)[0]
-        register_value = format(val, '.{}f'.format(self._precision))
+        register_value = format(val, ".{}f".format(self._precision))
         return register_value
 
     def write_register(self, register, value):

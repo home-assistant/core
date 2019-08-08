@@ -6,78 +6,86 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, CONF_SENSORS, CONF_BINARY_SENSORS,
-    ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP)
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    CONF_SENSORS,
+    CONF_BINARY_SENSORS,
+    ATTR_ENTITY_ID,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send, async_dispatcher_connect)
+    async_dispatcher_send,
+    async_dispatcher_connect,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['pyeight==0.1.1']
-
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PARTNER = 'partner'
+CONF_PARTNER = "partner"
 
-DATA_EIGHT = 'eight_sleep'
+DATA_EIGHT = "eight_sleep"
 DEFAULT_PARTNER = False
-DOMAIN = 'eight_sleep'
+DOMAIN = "eight_sleep"
 
-HEAT_ENTITY = 'heat'
-USER_ENTITY = 'user'
+HEAT_ENTITY = "heat"
+USER_ENTITY = "user"
 
 HEAT_SCAN_INTERVAL = timedelta(seconds=60)
 USER_SCAN_INTERVAL = timedelta(seconds=300)
 
-SIGNAL_UPDATE_HEAT = 'eight_heat_update'
-SIGNAL_UPDATE_USER = 'eight_user_update'
+SIGNAL_UPDATE_HEAT = "eight_heat_update"
+SIGNAL_UPDATE_USER = "eight_user_update"
 
 NAME_MAP = {
-    'left_current_sleep': 'Left Sleep Session',
-    'left_last_sleep': 'Left Previous Sleep Session',
-    'left_bed_state': 'Left Bed State',
-    'left_presence': 'Left Bed Presence',
-    'left_bed_temp': 'Left Bed Temperature',
-    'left_sleep_stage': 'Left Sleep Stage',
-    'right_current_sleep': 'Right Sleep Session',
-    'right_last_sleep': 'Right Previous Sleep Session',
-    'right_bed_state': 'Right Bed State',
-    'right_presence': 'Right Bed Presence',
-    'right_bed_temp': 'Right Bed Temperature',
-    'right_sleep_stage': 'Right Sleep Stage',
-    'room_temp': 'Room Temperature',
+    "left_current_sleep": "Left Sleep Session",
+    "left_last_sleep": "Left Previous Sleep Session",
+    "left_bed_state": "Left Bed State",
+    "left_presence": "Left Bed Presence",
+    "left_bed_temp": "Left Bed Temperature",
+    "left_sleep_stage": "Left Sleep Stage",
+    "right_current_sleep": "Right Sleep Session",
+    "right_last_sleep": "Right Previous Sleep Session",
+    "right_bed_state": "Right Bed State",
+    "right_presence": "Right Bed Presence",
+    "right_bed_temp": "Right Bed Temperature",
+    "right_sleep_stage": "Right Sleep Stage",
+    "room_temp": "Room Temperature",
 }
 
-SENSORS = ['current_sleep',
-           'last_sleep',
-           'bed_state',
-           'bed_temp',
-           'sleep_stage']
+SENSORS = ["current_sleep", "last_sleep", "bed_state", "bed_temp", "sleep_stage"]
 
-SERVICE_HEAT_SET = 'heat_set'
+SERVICE_HEAT_SET = "heat_set"
 
-ATTR_TARGET_HEAT = 'target'
-ATTR_HEAT_DURATION = 'duration'
+ATTR_TARGET_HEAT = "target"
+ATTR_HEAT_DURATION = "duration"
 
 VALID_TARGET_HEAT = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=100))
 VALID_DURATION = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=28800))
 
-SERVICE_EIGHT_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
-    ATTR_TARGET_HEAT: VALID_TARGET_HEAT,
-    ATTR_HEAT_DURATION: VALID_DURATION,
-    })
+SERVICE_EIGHT_SCHEMA = vol.Schema(
+    {
+        ATTR_ENTITY_ID: cv.entity_ids,
+        ATTR_TARGET_HEAT: VALID_TARGET_HEAT,
+        ATTR_HEAT_DURATION: VALID_DURATION,
+    }
+)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PARTNER, default=DEFAULT_PARTNER): cv.boolean,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_PARTNER, default=DEFAULT_PARTNER): cv.boolean,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):
@@ -90,7 +98,7 @@ async def async_setup(hass, config):
     partner = conf.get(CONF_PARTNER)
 
     if hass.config.time_zone is None:
-        _LOGGER.error('Timezone is not set in Home Assistant.')
+        _LOGGER.error("Timezone is not set in Home Assistant.")
         return False
 
     timezone = hass.config.time_zone
@@ -111,7 +119,8 @@ async def async_setup(hass, config):
         async_dispatcher_send(hass, SIGNAL_UPDATE_HEAT)
 
         async_track_point_in_utc_time(
-            hass, async_update_heat_data, utcnow() + HEAT_SCAN_INTERVAL)
+            hass, async_update_heat_data, utcnow() + HEAT_SCAN_INTERVAL
+        )
 
     async def async_update_user_data(now):
         """Update user data from eight in USER_SCAN_INTERVAL."""
@@ -119,7 +128,8 @@ async def async_setup(hass, config):
         async_dispatcher_send(hass, SIGNAL_UPDATE_USER)
 
         async_track_point_in_utc_time(
-            hass, async_update_user_data, utcnow() + USER_SCAN_INTERVAL)
+            hass, async_update_user_data, utcnow() + USER_SCAN_INTERVAL
+        )
 
     await async_update_heat_data(None)
     await async_update_user_data(None)
@@ -131,22 +141,24 @@ async def async_setup(hass, config):
         for user in eight.users:
             obj = eight.users[user]
             for sensor in SENSORS:
-                sensors.append('{}_{}'.format(obj.side, sensor))
-            binary_sensors.append('{}_presence'.format(obj.side))
-        sensors.append('room_temp')
+                sensors.append("{}_{}".format(obj.side, sensor))
+            binary_sensors.append("{}_presence".format(obj.side))
+        sensors.append("room_temp")
     else:
         # No users, cannot continue
         return False
 
-    hass.async_create_task(discovery.async_load_platform(
-        hass, 'sensor', DOMAIN, {
-            CONF_SENSORS: sensors,
-        }, config))
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass, "sensor", DOMAIN, {CONF_SENSORS: sensors}, config
+        )
+    )
 
-    hass.async_create_task(discovery.async_load_platform(
-        hass, 'binary_sensor', DOMAIN, {
-            CONF_BINARY_SENSORS: binary_sensors,
-        }, config))
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass, "binary_sensor", DOMAIN, {CONF_BINARY_SENSORS: binary_sensors}, config
+        )
+    )
 
     async def async_service_handler(service):
         """Handle eight sleep service calls."""
@@ -157,7 +169,7 @@ async def async_setup(hass, config):
         duration = params.pop(ATTR_HEAT_DURATION, 0)
 
         for sens in sensor:
-            side = sens.split('_')[1]
+            side = sens.split("_")[1]
             userid = eight.fetch_userid(side)
             usrobj = eight.users[userid]
             await usrobj.set_heating_level(target, duration)
@@ -166,8 +178,8 @@ async def async_setup(hass, config):
 
     # Register services
     hass.services.async_register(
-        DOMAIN, SERVICE_HEAT_SET, async_service_handler,
-        schema=SERVICE_EIGHT_SCHEMA)
+        DOMAIN, SERVICE_HEAT_SET, async_service_handler, schema=SERVICE_EIGHT_SCHEMA
+    )
 
     async def stop_eight(event):
         """Handle stopping eight api session."""
@@ -187,13 +199,13 @@ class EightSleepUserEntity(Entity):
 
     async def async_added_to_hass(self):
         """Register update dispatcher."""
+
         @callback
         def async_eight_user_update():
             """Update callback."""
             self.async_schedule_update_ha_state(True)
 
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_USER, async_eight_user_update)
+        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_USER, async_eight_user_update)
 
     @property
     def should_poll(self):
@@ -210,13 +222,13 @@ class EightSleepHeatEntity(Entity):
 
     async def async_added_to_hass(self):
         """Register update dispatcher."""
+
         @callback
         def async_eight_heat_update():
             """Update callback."""
             self.async_schedule_update_ha_state(True)
 
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_HEAT, async_eight_heat_update)
+        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_HEAT, async_eight_heat_update)
 
     @property
     def should_poll(self):

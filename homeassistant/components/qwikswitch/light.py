@@ -3,8 +3,6 @@ from homeassistant.components.light import SUPPORT_BRIGHTNESS, Light
 
 from . import DOMAIN as QWIKSWITCH, QSToggleEntity
 
-DEPENDENCIES = [QWIKSWITCH]
-
 
 async def async_setup_platform(hass, _, add_entities, discovery_info=None):
     """Add lights from the main Qwikswitch component."""

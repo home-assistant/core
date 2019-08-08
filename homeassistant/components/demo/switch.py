@@ -5,21 +5,24 @@ from homeassistant.const import DEVICE_DEFAULT_NAME
 
 def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up the demo switches."""
-    add_entities_callback([
-        DemoSwitch('Decorative Lights', True, None, True),
-        DemoSwitch('AC', False, 'mdi:air-conditioner', False)
-    ])
+    add_entities_callback(
+        [
+            DemoSwitch("Decorative Lights", True, None, True),
+            DemoSwitch("AC", False, "mdi:air-conditioner", False),
+        ]
+    )
 
 
 class DemoSwitch(SwitchDevice):
     """Representation of a demo switch."""
 
-    def __init__(self, name, state, icon, assumed):
+    def __init__(self, name, state, icon, assumed, device_class=None):
         """Initialize the Demo switch."""
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = state
         self._icon = icon
         self._assumed = assumed
+        self._device_class = device_class
 
     @property
     def should_poll(self):
@@ -56,6 +59,11 @@ class DemoSwitch(SwitchDevice):
     def is_on(self):
         """Return true if switch is on."""
         return self._state
+
+    @property
+    def device_class(self):
+        """Return device of entity."""
+        return self._device_class
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""

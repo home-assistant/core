@@ -7,10 +7,8 @@ from . import BLINK_DATA, DEFAULT_BRAND
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['blink']
-
-ATTR_VIDEO_CLIP = 'video'
-ATTR_IMAGE = 'image'
+ATTR_VIDEO_CLIP = "video"
+ATTR_IMAGE = "image"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

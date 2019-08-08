@@ -7,19 +7,16 @@ from . import EDP_REDY, EdpRedyDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['edp_redy']
-
 # Load power in watts (W)
-ATTR_ACTIVE_POWER = 'active_power'
+ATTR_ACTIVE_POWER = "active_power"
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Perform the setup for re:dy devices."""
     session = hass.data[EDP_REDY]
     devices = []
     for device_json in session.modules_dict.values():
-        if 'HA_SWITCH' not in device_json['Capabilities']:
+        if "HA_SWITCH" not in device_json["Capabilities"]:
             continue
         devices.append(EdpRedySwitch(session, device_json))
 
@@ -31,14 +28,14 @@ class EdpRedySwitch(EdpRedyDevice, SwitchDevice):
 
     def __init__(self, session, device_json):
         """Initialize the switch."""
-        super().__init__(session, device_json['PKID'], device_json['Name'])
+        super().__init__(session, device_json["PKID"], device_json["Name"])
 
         self._active_power = None
 
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        return 'mdi:power-plug'
+        return "mdi:power-plug"
 
     @property
     def is_on(self):
@@ -68,8 +65,7 @@ class EdpRedySwitch(EdpRedyDevice, SwitchDevice):
             self.async_schedule_update_ha_state()
 
     async def _async_send_state_cmd(self, state):
-        state_json = {'devModuleId': self._id, 'key': 'RelayState',
-                      'value': state}
+        state_json = {"devModuleId": self._id, "key": "RelayState", "value": state}
         return await self._session.async_set_state_var(state_json)
 
     async def async_update(self):
@@ -84,12 +80,12 @@ class EdpRedySwitch(EdpRedyDevice, SwitchDevice):
         """Parse data received from the server."""
         super()._parse_data(data)
 
-        for state_var in data['StateVars']:
-            if state_var['Name'] == 'RelayState':
-                self._state = state_var['Value'] == 'true'
-            elif state_var['Name'] == 'ActivePower':
+        for state_var in data["StateVars"]:
+            if state_var["Name"] == "RelayState":
+                self._state = state_var["Value"] == "true"
+            elif state_var["Name"] == "ActivePower":
                 try:
-                    self._active_power = float(state_var['Value']) * 1000
+                    self._active_power = float(state_var["Value"]) * 1000
                 except ValueError:
                     _LOGGER.error("Could not parse power for %s", self._id)
                     self._active_power = None

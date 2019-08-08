@@ -4,32 +4,30 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME)
+from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
-REQUIREMENTS = ['spiderpy==1.3.1']
-
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'spider'
+DOMAIN = "spider"
 
-SPIDER_COMPONENTS = [
-    'climate',
-    'switch'
-]
+SPIDER_COMPONENTS = ["climate", "switch"]
 
 SCAN_INTERVAL = timedelta(seconds=120)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
-            cv.time_period,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
@@ -45,9 +43,9 @@ def setup(hass, config):
         api = SpiderApi(username, password, refresh_rate.total_seconds())
 
         hass.data[DOMAIN] = {
-            'controller': api,
-            'thermostats': api.get_thermostats(),
-            'power_plugs': api.get_power_plugs()
+            "controller": api,
+            "thermostats": api.get_thermostats(),
+            "power_plugs": api.get_power_plugs(),
         }
 
         for component in SPIDER_COMPONENTS:

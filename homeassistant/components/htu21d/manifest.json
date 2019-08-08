@@ -1,0 +1,11 @@
+{
+  "domain": "htu21d",
+  "name": "Htu21d",
+  "documentation": "https://www.home-assistant.io/components/htu21d",
+  "requirements": [
+    "i2csense==0.0.4",
+    "smbus-cffi==0.5.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

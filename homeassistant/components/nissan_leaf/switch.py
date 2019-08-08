@@ -7,8 +7,6 @@ from . import DATA_CLIMATE, DATA_LEAF, LeafEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['nissan_leaf']
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Nissan Leaf switch platform setup."""
@@ -34,8 +32,9 @@ class LeafClimateSwitch(LeafEntity, ToggleEntity):
     def log_registration(self):
         """Log registration."""
         _LOGGER.debug(
-            "Registered LeafClimateSwitch component with HASS for VIN %s",
-            self.car.leaf.vin)
+            "Registered LeafClimateSwitch integration with HASS for VIN %s",
+            self.car.leaf.vin,
+        )
 
     @property
     def device_state_attributes(self):

@@ -5,23 +5,25 @@ from binascii import hexlify, unhexlify
 import voluptuous as vol
 
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP, CONF_DEVICE, CONF_NAME, CONF_PIN, CONF_ADDRESS)
+    EVENT_HOMEASSISTANT_STOP,
+    CONF_DEVICE,
+    CONF_NAME,
+    CONF_PIN,
+    CONF_ADDRESS,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
-
-REQUIREMENTS = ['xbee-helper==0.0.7']
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'zigbee'
+DOMAIN = "zigbee"
 
-SIGNAL_ZIGBEE_FRAME_RECEIVED = 'zigbee_frame_received'
+SIGNAL_ZIGBEE_FRAME_RECEIVED = "zigbee_frame_received"
 
-CONF_BAUD = 'baud'
+CONF_BAUD = "baud"
 
-DEFAULT_DEVICE = '/dev/ttyUSB0'
+DEFAULT_DEVICE = "/dev/ttyUSB0"
 DEFAULT_BAUD = 9600
 DEFAULT_ADC_MAX_VOLTS = 1.2
 
@@ -35,22 +37,30 @@ CONVERT_ADC = None
 ZIGBEE_EXCEPTION = None
 ZIGBEE_TX_FAILURE = None
 
-ATTR_FRAME = 'frame'
+ATTR_FRAME = "frame"
 
 DEVICE = None
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_BAUD, default=DEFAULT_BAUD): cv.string,
-        vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_BAUD, default=DEFAULT_BAUD): cv.string,
+                vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_PIN): cv.positive_int,
-    vol.Optional(CONF_ADDRESS): cv.string,
-}, extra=vol.ALLOW_EXTRA)
+PLATFORM_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_PIN): cv.positive_int,
+        vol.Optional(CONF_ADDRESS): cv.string,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
@@ -110,9 +120,9 @@ def close_serial_port(*args):
 
 def frame_is_relevant(entity, frame):
     """Test whether the frame is relevant to the entity."""
-    if frame.get('source_addr_long') != entity.config.address:
+    if frame.get("source_addr_long") != entity.config.address:
         return False
-    if 'samples' not in frame:
+    if "samples" not in frame:
         return False
     return True
 
@@ -174,15 +184,9 @@ class ZigBeeDigitalInConfig(ZigBeePinConfig):
         "low" or "high".
         """
         if self._config.get("on_state", "").lower() == "low":
-            bool2state = {
-                True: False,
-                False: True
-            }
+            bool2state = {True: False, False: True}
         else:
-            bool2state = {
-                True: True,
-                False: False
-            }
+            bool2state = {True: True, False: False}
         state2bool = {v: k for k, v in bool2state.items()}
         return bool2state, state2bool
 
@@ -226,12 +230,12 @@ class ZigBeeDigitalOutConfig(ZigBeePinConfig):
         if self._config.get("on_state", "").lower() == "low":
             bool2state = {
                 True: GPIO_DIGITAL_OUTPUT_LOW,
-                False: GPIO_DIGITAL_OUTPUT_HIGH
+                False: GPIO_DIGITAL_OUTPUT_HIGH,
             }
         else:
             bool2state = {
                 True: GPIO_DIGITAL_OUTPUT_HIGH,
-                False: GPIO_DIGITAL_OUTPUT_LOW
+                False: GPIO_DIGITAL_OUTPUT_LOW,
             }
         state2bool = {v: k for k, v in bool2state.items()}
         return bool2state, state2bool
@@ -272,6 +276,7 @@ class ZigBeeDigitalIn(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
+
         def handle_frame(frame):
             """Handle an incoming frame.
 
@@ -280,7 +285,7 @@ class ZigBeeDigitalIn(Entity):
             """
             if not frame_is_relevant(self, frame):
                 return
-            sample = next(iter(frame['samples']))
+            sample = next(iter(frame["samples"]))
             pin_name = DIGITAL_PINS[self._config.pin]
             if pin_name not in sample:
                 # Doesn't contain information about our pin
@@ -288,11 +293,11 @@ class ZigBeeDigitalIn(Entity):
             # Set state to the value of sample, respecting any inversion
             # logic from the on_state config variable.
             self._state = self._config.state2bool[
-                self._config.bool2state[sample[pin_name]]]
+                self._config.bool2state[sample[pin_name]]
+            ]
             self.schedule_update_ha_state()
 
-        async_dispatcher_connect(
-            self.hass, SIGNAL_ZIGBEE_FRAME_RECEIVED, handle_frame)
+        async_dispatcher_connect(self.hass, SIGNAL_ZIGBEE_FRAME_RECEIVED, handle_frame)
 
     @property
     def name(self):
@@ -321,18 +326,21 @@ class ZigBeeDigitalIn(Entity):
         except ZIGBEE_TX_FAILURE:
             _LOGGER.warning(
                 "Transmission failure when attempting to get sample from "
-                "ZigBee device at address: %s", hexlify(self._config.address))
+                "ZigBee device at address: %s",
+                hexlify(self._config.address),
+            )
             return
         except ZIGBEE_EXCEPTION as exc:
-            _LOGGER.exception(
-                "Unable to get sample from Zigbee device: %s", exc)
+            _LOGGER.exception("Unable to get sample from Zigbee device: %s", exc)
             return
         pin_name = DIGITAL_PINS[self._config.pin]
         if pin_name not in sample:
             _LOGGER.warning(
-                "Pin %s (%s) was not in the sample provided by Zigbee device "
-                "%s.",
-                self._config.pin, pin_name, hexlify(self._config.address))
+                "Pin %s (%s) was not in the sample provided by Zigbee device " "%s.",
+                self._config.pin,
+                pin_name,
+                hexlify(self._config.address),
+            )
             return
         self._state = self._config.state2bool[sample[pin_name]]
 
@@ -344,17 +352,17 @@ class ZigBeeDigitalOut(ZigBeeDigitalIn):
         """Initialize the ZigBee digital out device."""
         try:
             DEVICE.set_gpio_pin(
-                self._config.pin,
-                self._config.bool2state[state],
-                self._config.address)
+                self._config.pin, self._config.bool2state[state], self._config.address
+            )
         except ZIGBEE_TX_FAILURE:
             _LOGGER.warning(
                 "Transmission failure when attempting to set output pin on "
-                "ZigBee device at address: %s", hexlify(self._config.address))
+                "ZigBee device at address: %s",
+                hexlify(self._config.address),
+            )
             return
         except ZIGBEE_EXCEPTION as exc:
-            _LOGGER.exception(
-                "Unable to set digital pin on ZigBee device: %s", exc)
+            _LOGGER.exception("Unable to set digital pin on ZigBee device: %s", exc)
             return
         self._state = state
         if not self.should_poll:
@@ -371,18 +379,18 @@ class ZigBeeDigitalOut(ZigBeeDigitalIn):
     def update(self):
         """Ask the ZigBee device what its output is set to."""
         try:
-            pin_state = DEVICE.get_gpio_pin(
-                self._config.pin,
-                self._config.address)
+            pin_state = DEVICE.get_gpio_pin(self._config.pin, self._config.address)
         except ZIGBEE_TX_FAILURE:
             _LOGGER.warning(
                 "Transmission failure when attempting to get output pin status"
                 " from ZigBee device at address: %s",
-                hexlify(self._config.address))
+                hexlify(self._config.address),
+            )
             return
         except ZIGBEE_EXCEPTION as exc:
             _LOGGER.exception(
-                "Unable to get output pin status from ZigBee device: %s", exc)
+                "Unable to get output pin status from ZigBee device: %s", exc
+            )
             return
         self._state = self._config.state2bool[pin_state]
 
@@ -397,6 +405,7 @@ class ZigBeeAnalogIn(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
+
         def handle_frame(frame):
             """Handle an incoming frame.
 
@@ -405,20 +414,17 @@ class ZigBeeAnalogIn(Entity):
             """
             if not frame_is_relevant(self, frame):
                 return
-            sample = frame['samples'].pop()
+            sample = frame["samples"].pop()
             pin_name = ANALOG_PINS[self._config.pin]
             if pin_name not in sample:
                 # Doesn't contain information about our pin
                 return
             self._value = CONVERT_ADC(
-                sample[pin_name],
-                ADC_PERCENTAGE,
-                self._config.max_voltage
+                sample[pin_name], ADC_PERCENTAGE, self._config.max_voltage
             )
             self.schedule_update_ha_state()
 
-        async_dispatcher_connect(
-            self.hass, SIGNAL_ZIGBEE_FRAME_RECEIVED, handle_frame)
+        async_dispatcher_connect(self.hass, SIGNAL_ZIGBEE_FRAME_RECEIVED, handle_frame)
 
     @property
     def name(self):
@@ -452,11 +458,13 @@ class ZigBeeAnalogIn(Entity):
                 self._config.pin,
                 self._config.max_voltage,
                 self._config.address,
-                ADC_PERCENTAGE)
+                ADC_PERCENTAGE,
+            )
         except ZIGBEE_TX_FAILURE:
             _LOGGER.warning(
                 "Transmission failure when attempting to get sample from "
-                "ZigBee device at address: %s", hexlify(self._config.address))
+                "ZigBee device at address: %s",
+                hexlify(self._config.address),
+            )
         except ZIGBEE_EXCEPTION as exc:
-            _LOGGER.exception(
-                "Unable to get sample from ZigBee device: %s", exc)
+            _LOGGER.exception("Unable to get sample from ZigBee device: %s", exc)

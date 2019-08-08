@@ -7,8 +7,6 @@ from homeassistant.components.camera import Camera
 
 from . import DATA_AUGUST, DEFAULT_TIMEOUT
 
-DEPENDENCIES = ['august']
-
 SCAN_INTERVAL = timedelta(seconds=5)
 
 
@@ -53,12 +51,12 @@ class AugustCamera(Camera):
     @property
     def brand(self):
         """Return the camera brand."""
-        return 'August'
+        return "August"
 
     @property
     def model(self):
         """Return the camera model."""
-        return 'Doorbell'
+        return "Doorbell"
 
     def camera_image(self):
         """Return bytes of camera image."""
@@ -66,12 +64,13 @@ class AugustCamera(Camera):
 
         if self._image_url is not latest.image_url:
             self._image_url = latest.image_url
-            self._image_content = requests.get(self._image_url,
-                                               timeout=self._timeout).content
+            self._image_content = requests.get(
+                self._image_url, timeout=self._timeout
+            ).content
 
         return self._image_content
 
     @property
     def unique_id(self) -> str:
         """Get the unique id of the camera."""
-        return '{:s}_camera'.format(self._doorbell.device_id)
+        return "{:s}_camera".format(self._doorbell.device_id)

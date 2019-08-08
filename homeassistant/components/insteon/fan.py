@@ -2,37 +2,37 @@
 import logging
 
 from homeassistant.components.fan import (
-    SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF, SUPPORT_SET_SPEED,
-    FanEntity)
+    SPEED_HIGH,
+    SPEED_LOW,
+    SPEED_MEDIUM,
+    SPEED_OFF,
+    SUPPORT_SET_SPEED,
+    FanEntity,
+)
 from homeassistant.const import STATE_OFF
 
 from . import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['insteon']
-
-SPEED_TO_HEX = {
-    SPEED_OFF: 0x00,
-    SPEED_LOW: 0x3f,
-    SPEED_MEDIUM: 0xbe,
-    SPEED_HIGH: 0xff,
-}
+SPEED_TO_HEX = {SPEED_OFF: 0x00, SPEED_LOW: 0x3F, SPEED_MEDIUM: 0xBE, SPEED_HIGH: 0xFF}
 
 FAN_SPEEDS = [STATE_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the INSTEON device class for the hass platform."""
-    insteon_modem = hass.data['insteon'].get('modem')
+    insteon_modem = hass.data["insteon"].get("modem")
 
-    address = discovery_info['address']
+    address = discovery_info["address"]
     device = insteon_modem.devices[address]
-    state_key = discovery_info['state_key']
+    state_key = discovery_info["state_key"]
 
-    _LOGGER.debug('Adding device %s entity %s to Fan platform',
-                  device.address.hex, device.states[state_key].name)
+    _LOGGER.debug(
+        "Adding device %s entity %s to Fan platform",
+        device.address.hex,
+        device.states[state_key].name,
+    )
 
     new_entity = InsteonFan(device, state_key)
 
@@ -78,9 +78,9 @@ class InsteonFan(InsteonEntity, FanEntity):
     @staticmethod
     def _hex_to_speed(speed: int):
         hex_speed = SPEED_OFF
-        if speed > 0xfe:
+        if speed > 0xFE:
             hex_speed = SPEED_HIGH
-        elif speed > 0x7f:
+        elif speed > 0x7F:
             hex_speed = SPEED_MEDIUM
         elif speed > 0:
             hex_speed = SPEED_LOW

@@ -25,29 +25,41 @@ class TestNotifyGroup(unittest.TestCase):
         self.service2.send_message = MagicMock(autospec=True)
 
         def mock_get_service(hass, config, discovery_info=None):
-            if config['name'] == 'demo1':
+            if config["name"] == "demo1":
                 return self.service1
             return self.service2
 
-        with assert_setup_component(2), \
-                patch.object(demo, 'get_service', mock_get_service):
-            setup_component(self.hass, notify.DOMAIN, {
-                'notify': [{
-                    'name': 'demo1',
-                    'platform': 'demo'
-                }, {
-                    'name': 'demo2',
-                    'platform': 'demo'
-                }]
-            })
+        with assert_setup_component(2, notify.DOMAIN), patch.object(
+            demo, "get_service", mock_get_service
+        ):
+            setup_component(
+                self.hass,
+                notify.DOMAIN,
+                {
+                    "notify": [
+                        {"name": "demo1", "platform": "demo"},
+                        {"name": "demo2", "platform": "demo"},
+                    ]
+                },
+            )
 
         self.service = run_coroutine_threadsafe(
-            group.async_get_service(self.hass, {'services': [
-                {'service': 'demo1'},
-                {'service': 'demo2',
-                 'data': {'target': 'unnamed device',
-                          'data': {'test': 'message'}}}]}),
-            self.hass.loop
+            group.async_get_service(
+                self.hass,
+                {
+                    "services": [
+                        {"service": "demo1"},
+                        {
+                            "service": "demo2",
+                            "data": {
+                                "target": "unnamed device",
+                                "data": {"test": "message"},
+                            },
+                        },
+                    ]
+                },
+            ),
+            self.hass.loop,
         ).result()
 
         assert self.service is not None
@@ -60,18 +72,20 @@ class TestNotifyGroup(unittest.TestCase):
         """Test sending a message with to a notify group."""
         run_coroutine_threadsafe(
             self.service.async_send_message(
-                'Hello', title='Test notification', data={'hello': 'world'}),
-            self.hass.loop).result()
+                "Hello", title="Test notification", data={"hello": "world"}
+            ),
+            self.hass.loop,
+        ).result()
         self.hass.block_till_done()
 
-        assert self.service1.send_message.mock_calls[0][1][0] == 'Hello'
+        assert self.service1.send_message.mock_calls[0][1][0] == "Hello"
         assert self.service1.send_message.mock_calls[0][2] == {
-            'title': 'Test notification',
-            'data': {'hello': 'world'}
+            "title": "Test notification",
+            "data": {"hello": "world"},
         }
-        assert self.service2.send_message.mock_calls[0][1][0] == 'Hello'
+        assert self.service2.send_message.mock_calls[0][1][0] == "Hello"
         assert self.service2.send_message.mock_calls[0][2] == {
-            'target': ['unnamed device'],
-            'title': 'Test notification',
-            'data': {'hello': 'world', 'test': 'message'}
+            "target": ["unnamed device"],
+            "title": "Test notification",
+            "data": {"hello": "world", "test": "message"},
         }

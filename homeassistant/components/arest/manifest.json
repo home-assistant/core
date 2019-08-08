@@ -1,0 +1,10 @@
+{
+  "domain": "arest",
+  "name": "Arest",
+  "documentation": "https://www.home-assistant.io/components/arest",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

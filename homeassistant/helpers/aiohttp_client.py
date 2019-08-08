@@ -17,18 +17,20 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
 
-DATA_CONNECTOR = 'aiohttp_connector'
-DATA_CONNECTOR_NOTVERIFY = 'aiohttp_connector_notverify'
-DATA_CLIENTSESSION = 'aiohttp_clientsession'
-DATA_CLIENTSESSION_NOTVERIFY = 'aiohttp_clientsession_notverify'
-SERVER_SOFTWARE = 'HomeAssistant/{0} aiohttp/{1} Python/{2[0]}.{2[1]}'.format(
-    __version__, aiohttp.__version__, sys.version_info)
+DATA_CONNECTOR = "aiohttp_connector"
+DATA_CONNECTOR_NOTVERIFY = "aiohttp_connector_notverify"
+DATA_CLIENTSESSION = "aiohttp_clientsession"
+DATA_CLIENTSESSION_NOTVERIFY = "aiohttp_clientsession_notverify"
+SERVER_SOFTWARE = "HomeAssistant/{0} aiohttp/{1} Python/{2[0]}.{2[1]}".format(
+    __version__, aiohttp.__version__, sys.version_info
+)
 
 
 @callback
 @bind_hass
-def async_get_clientsession(hass: HomeAssistantType,
-                            verify_ssl: bool = True) -> aiohttp.ClientSession:
+def async_get_clientsession(
+    hass: HomeAssistantType, verify_ssl: bool = True
+) -> aiohttp.ClientSession:
     """Return default aiohttp ClientSession.
 
     This method must be run in the event loop.
@@ -46,10 +48,12 @@ def async_get_clientsession(hass: HomeAssistantType,
 
 @callback
 @bind_hass
-def async_create_clientsession(hass: HomeAssistantType,
-                               verify_ssl: bool = True,
-                               auto_cleanup: bool = True,
-                               **kwargs: Any) -> aiohttp.ClientSession:
+def async_create_clientsession(
+    hass: HomeAssistantType,
+    verify_ssl: bool = True,
+    auto_cleanup: bool = True,
+    **kwargs: Any,
+) -> aiohttp.ClientSession:
     """Create a new ClientSession with kwargs, i.e. for cookies.
 
     If auto_cleanup is False, you need to call detach() after the session
@@ -64,7 +68,7 @@ def async_create_clientsession(hass: HomeAssistantType,
         loop=hass.loop,
         connector=connector,
         headers={USER_AGENT: SERVER_SOFTWARE},
-        **kwargs
+        **kwargs,
     )
 
     if auto_cleanup:
@@ -75,12 +79,15 @@ def async_create_clientsession(hass: HomeAssistantType,
 
 @bind_hass
 async def async_aiohttp_proxy_web(
-        hass: HomeAssistantType, request: web.BaseRequest,
-        web_coro: Awaitable[aiohttp.ClientResponse], buffer_size: int = 102400,
-        timeout: int = 10) -> Optional[web.StreamResponse]:
+    hass: HomeAssistantType,
+    request: web.BaseRequest,
+    web_coro: Awaitable[aiohttp.ClientResponse],
+    buffer_size: int = 102400,
+    timeout: int = 10,
+) -> Optional[web.StreamResponse]:
     """Stream websession request to aiohttp web response."""
     try:
-        with async_timeout.timeout(timeout, loop=hass.loop):
+        with async_timeout.timeout(timeout):
             req = await web_coro
 
     except asyncio.CancelledError:
@@ -97,22 +104,21 @@ async def async_aiohttp_proxy_web(
 
     try:
         return await async_aiohttp_proxy_stream(
-            hass,
-            request,
-            req.content,
-            req.headers.get(CONTENT_TYPE)
+            hass, request, req.content, req.headers.get(CONTENT_TYPE)
         )
     finally:
         req.close()
 
 
 @bind_hass
-async def async_aiohttp_proxy_stream(hass: HomeAssistantType,
-                                     request: web.BaseRequest,
-                                     stream: aiohttp.StreamReader,
-                                     content_type: str,
-                                     buffer_size: int = 102400,
-                                     timeout: int = 10) -> web.StreamResponse:
+async def async_aiohttp_proxy_stream(
+    hass: HomeAssistantType,
+    request: web.BaseRequest,
+    stream: aiohttp.StreamReader,
+    content_type: str,
+    buffer_size: int = 102400,
+    timeout: int = 10,
+) -> web.StreamResponse:
     """Stream a stream to aiohttp web response."""
     response = web.StreamResponse()
     response.content_type = content_type
@@ -120,7 +126,7 @@ async def async_aiohttp_proxy_stream(hass: HomeAssistantType,
 
     try:
         while True:
-            with async_timeout.timeout(timeout, loop=hass.loop):
+            with async_timeout.timeout(timeout):
                 data = await stream.read(buffer_size)
 
             if not data:
@@ -136,23 +142,25 @@ async def async_aiohttp_proxy_stream(hass: HomeAssistantType,
 
 @callback
 def _async_register_clientsession_shutdown(
-        hass: HomeAssistantType, clientsession: aiohttp.ClientSession) -> None:
+    hass: HomeAssistantType, clientsession: aiohttp.ClientSession
+) -> None:
     """Register ClientSession close on Home Assistant shutdown.
 
     This method must be run in the event loop.
     """
+
     @callback
     def _async_close_websession(event: Event) -> None:
         """Close websession."""
         clientsession.detach()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_CLOSE, _async_close_websession)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_close_websession)
 
 
 @callback
-def _async_get_connector(hass: HomeAssistantType,
-                         verify_ssl: bool = True) -> aiohttp.BaseConnector:
+def _async_get_connector(
+    hass: HomeAssistantType, verify_ssl: bool = True
+) -> aiohttp.BaseConnector:
     """Return the connector pool for aiohttp.
 
     This method must be run in the event loop.
@@ -163,19 +171,19 @@ def _async_get_connector(hass: HomeAssistantType,
         return cast(aiohttp.BaseConnector, hass.data[key])
 
     if verify_ssl:
-        ssl_context = \
-            ssl_util.client_context()  # type: Union[bool, SSLContext]
+        ssl_context = ssl_util.client_context()  # type: Union[bool, SSLContext]
     else:
         ssl_context = False
 
-    connector = aiohttp.TCPConnector(loop=hass.loop, ssl=ssl_context)
+    connector = aiohttp.TCPConnector(
+        loop=hass.loop, enable_cleanup_closed=True, ssl=ssl_context
+    )
     hass.data[key] = connector
 
     async def _async_close_connector(event: Event) -> None:
         """Close connector pool."""
         await connector.close()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_CLOSE, _async_close_connector)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_close_connector)
 
     return connector

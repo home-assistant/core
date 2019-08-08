@@ -13,7 +13,7 @@ class HangoutsCredentials(CredentialsPrompt):
     This implementation gets the user data as params.
     """
 
-    def __init__(self, email, password, pin=None):
+    def __init__(self, email, password, pin=None, auth_code=None):
         """Google account credentials.
 
         :param email: Google account email address.
@@ -23,6 +23,7 @@ class HangoutsCredentials(CredentialsPrompt):
         self._email = email
         self._password = password
         self._pin = pin
+        self._auth_code = auth_code
 
     def get_email(self):
         """Return email.
@@ -53,6 +54,20 @@ class HangoutsCredentials(CredentialsPrompt):
         :param pin: Google account verification code.
         """
         self._pin = pin
+
+    def get_authorization_code(self):
+        """Return the oauth authorization code.
+
+        :return: Google oauth code.
+        """
+        return self._auth_code
+
+    def set_authorization_code(self, code):
+        """Set the google oauth authorization code.
+
+        :param code: Oauth code returned after authentication with google.
+        """
+        self._auth_code = code
 
 
 class HangoutsRefreshToken(RefreshTokenCache):

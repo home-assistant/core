@@ -20,13 +20,12 @@ from .const import (
     CONF_REGION,
     CONF_SECRET_ACCESS_KEY,
     CONF_SERVICE,
+    CONF_VALIDATE,
     DATA_CONFIG,
     DATA_HASS_CONFIG,
     DATA_SESSIONS,
     DOMAIN,
 )
-
-REQUIREMENTS = ["aiobotocore==0.10.2"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,10 +35,13 @@ AWS_CREDENTIAL_SCHEMA = vol.Schema(
         vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
         vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
         vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
+        vol.Optional(CONF_VALIDATE, default=True): cv.boolean,
     }
 )
 
-DEFAULT_CREDENTIAL = [{CONF_NAME: "default", CONF_PROFILE_NAME: "default"}]
+DEFAULT_CREDENTIAL = [
+    {CONF_NAME: "default", CONF_PROFILE_NAME: "default", CONF_VALIDATE: False}
+]
 
 SUPPORTED_SERVICES = ["lambda", "sns", "sqs"]
 
@@ -62,9 +64,9 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(
-                    CONF_CREDENTIALS, default=DEFAULT_CREDENTIAL
-                ): vol.All(cv.ensure_list, [AWS_CREDENTIAL_SCHEMA]),
+                vol.Optional(CONF_CREDENTIALS, default=DEFAULT_CREDENTIAL): vol.All(
+                    cv.ensure_list, [AWS_CREDENTIAL_SCHEMA]
+                ),
                 vol.Optional(CONF_NOTIFY, default=[]): vol.All(
                     cv.ensure_list, [NOTIFY_PLATFORM_SCHEMA]
                 ),
@@ -107,9 +109,7 @@ async def async_setup_entry(hass, entry):
     if entry.source == config_entries.SOURCE_IMPORT:
         if conf is None:
             # user removed config from configuration.yaml, abort setup
-            hass.async_create_task(
-                hass.config_entries.async_remove(entry.entry_id)
-            )
+            hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
             return False
 
         if conf != entry.data:
@@ -143,9 +143,7 @@ async def async_setup_entry(hass, entry):
     # have to use discovery to load platform.
     for notify_config in conf[CONF_NOTIFY]:
         hass.async_create_task(
-            discovery.async_load_platform(
-                hass, "notify", DOMAIN, notify_config, config
-            )
+            discovery.async_load_platform(hass, "notify", DOMAIN, notify_config, config)
         )
 
     return validation
@@ -157,20 +155,22 @@ async def _validate_aws_credentials(hass, credential):
 
     aws_config = credential.copy()
     del aws_config[CONF_NAME]
+    del aws_config[CONF_VALIDATE]
 
     profile = aws_config.get(CONF_PROFILE_NAME)
 
     if profile is not None:
-        session = aiobotocore.AioSession(profile=profile, loop=hass.loop)
+        session = aiobotocore.AioSession(profile=profile)
         del aws_config[CONF_PROFILE_NAME]
         if CONF_ACCESS_KEY_ID in aws_config:
             del aws_config[CONF_ACCESS_KEY_ID]
         if CONF_SECRET_ACCESS_KEY in aws_config:
             del aws_config[CONF_SECRET_ACCESS_KEY]
     else:
-        session = aiobotocore.AioSession(loop=hass.loop)
+        session = aiobotocore.AioSession()
 
-    async with session.create_client("iam", **aws_config) as client:
-        await client.get_user()
+    if credential[CONF_VALIDATE]:
+        async with session.create_client("iam", **aws_config) as client:
+            await client.get_user()
 
     return session

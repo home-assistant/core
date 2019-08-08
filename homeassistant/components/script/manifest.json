@@ -1,0 +1,12 @@
+{
+  "domain": "script",
+  "name": "Script",
+  "documentation": "https://www.home-assistant.io/components/script",
+  "requirements": [],
+  "dependencies": [
+    "group"
+  ],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

@@ -7,20 +7,23 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.dt import as_local, parse_datetime, utcnow
 
 from . import (
-    BINARY_SENSORS, DATA_OPENUV_CLIENT, DATA_PROTECTION_WINDOW, DOMAIN,
-    TOPIC_UPDATE, TYPE_PROTECTION_WINDOW, OpenUvEntity)
+    BINARY_SENSORS,
+    DATA_OPENUV_CLIENT,
+    DATA_PROTECTION_WINDOW,
+    DOMAIN,
+    TOPIC_UPDATE,
+    TYPE_PROTECTION_WINDOW,
+    OpenUvEntity,
+)
 
 _LOGGER = logging.getLogger(__name__)
-ATTR_PROTECTION_WINDOW_ENDING_TIME = 'end_time'
-ATTR_PROTECTION_WINDOW_ENDING_UV = 'end_uv'
-ATTR_PROTECTION_WINDOW_STARTING_TIME = 'start_time'
-ATTR_PROTECTION_WINDOW_STARTING_UV = 'start_uv'
-
-DEPENDENCIES = ['openuv']
+ATTR_PROTECTION_WINDOW_ENDING_TIME = "end_time"
+ATTR_PROTECTION_WINDOW_ENDING_UV = "end_uv"
+ATTR_PROTECTION_WINDOW_STARTING_TIME = "start_time"
+ATTR_PROTECTION_WINDOW_STARTING_UV = "start_uv"
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up an OpenUV sensor based on existing config."""
     pass
 
@@ -33,8 +36,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     for sensor_type in openuv.binary_sensor_conditions:
         name, icon = BINARY_SENSORS[sensor_type]
         binary_sensors.append(
-            OpenUvBinarySensor(
-                openuv, sensor_type, name, icon, entry.entry_id))
+            OpenUvBinarySensor(openuv, sensor_type, name, icon, entry.entry_id)
+        )
 
     async_add_entities(binary_sensors, True)
 
@@ -73,18 +76,19 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorDevice):
     @property
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
-        return '{0}_{1}_{2}'.format(
-            self._latitude, self._longitude, self._sensor_type)
+        return "{0}_{1}_{2}".format(self._latitude, self._longitude, self._sensor_type)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
+
         @callback
         def update():
             """Update the state."""
             self.async_schedule_update_ha_state(True)
 
         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE, update)
+            self.hass, TOPIC_UPDATE, update
+        )
 
     async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listener when removed."""
@@ -99,14 +103,20 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorDevice):
             return
 
         if self._sensor_type == TYPE_PROTECTION_WINDOW:
-            self._state = parse_datetime(
-                data['from_time']) <= utcnow() <= parse_datetime(
-                    data['to_time'])
-            self._attrs.update({
-                ATTR_PROTECTION_WINDOW_ENDING_TIME:
-                    as_local(parse_datetime(data['to_time'])),
-                ATTR_PROTECTION_WINDOW_ENDING_UV: data['to_uv'],
-                ATTR_PROTECTION_WINDOW_STARTING_UV: data['from_uv'],
-                ATTR_PROTECTION_WINDOW_STARTING_TIME:
-                    as_local(parse_datetime(data['from_time'])),
-            })
+            self._state = (
+                parse_datetime(data["from_time"])
+                <= utcnow()
+                <= parse_datetime(data["to_time"])
+            )
+            self._attrs.update(
+                {
+                    ATTR_PROTECTION_WINDOW_ENDING_TIME: as_local(
+                        parse_datetime(data["to_time"])
+                    ),
+                    ATTR_PROTECTION_WINDOW_ENDING_UV: data["to_uv"],
+                    ATTR_PROTECTION_WINDOW_STARTING_UV: data["from_uv"],
+                    ATTR_PROTECTION_WINDOW_STARTING_TIME: as_local(
+                        parse_datetime(data["from_time"])
+                    ),
+                }
+            )

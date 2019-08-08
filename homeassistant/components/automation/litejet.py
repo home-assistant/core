@@ -9,22 +9,24 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_point_in_utc_time
 
-DEPENDENCIES = ['litejet']
-
 _LOGGER = logging.getLogger(__name__)
 
-CONF_NUMBER = 'number'
-CONF_HELD_MORE_THAN = 'held_more_than'
-CONF_HELD_LESS_THAN = 'held_less_than'
+CONF_NUMBER = "number"
+CONF_HELD_MORE_THAN = "held_more_than"
+CONF_HELD_LESS_THAN = "held_less_than"
 
-TRIGGER_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'litejet',
-    vol.Required(CONF_NUMBER): cv.positive_int,
-    vol.Optional(CONF_HELD_MORE_THAN):
-        vol.All(cv.time_period, cv.positive_timedelta),
-    vol.Optional(CONF_HELD_LESS_THAN):
-        vol.All(cv.time_period, cv.positive_timedelta)
-})
+TRIGGER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PLATFORM): "litejet",
+        vol.Required(CONF_NUMBER): cv.positive_int,
+        vol.Optional(CONF_HELD_MORE_THAN): vol.All(
+            cv.time_period, cv.positive_timedelta
+        ),
+        vol.Optional(CONF_HELD_LESS_THAN): vol.All(
+            cv.time_period, cv.positive_timedelta
+        ),
+    }
+)
 
 
 async def async_trigger(hass, config, action, automation_info):
@@ -38,14 +40,17 @@ async def async_trigger(hass, config, action, automation_info):
     @callback
     def call_action():
         """Call action with right context."""
-        hass.async_run_job(action, {
-            'trigger': {
-                CONF_PLATFORM: 'litejet',
-                CONF_NUMBER: number,
-                CONF_HELD_MORE_THAN: held_more_than,
-                CONF_HELD_LESS_THAN: held_less_than
+        hass.async_run_job(
+            action,
+            {
+                "trigger": {
+                    CONF_PLATFORM: "litejet",
+                    CONF_NUMBER: number,
+                    CONF_HELD_MORE_THAN: held_more_than,
+                    CONF_HELD_LESS_THAN: held_less_than,
+                }
             },
-        })
+        )
 
     # held_more_than and held_less_than: trigger on released (if in time range)
     # held_more_than: trigger after pressed with calculation
@@ -66,9 +71,8 @@ async def async_trigger(hass, config, action, automation_info):
             hass.add_job(call_action)
         if held_more_than is not None and held_less_than is None:
             cancel_pressed_more_than = track_point_in_utc_time(
-                hass,
-                pressed_more_than_satisfied,
-                dt_util.utcnow() + held_more_than)
+                hass, pressed_more_than_satisfied, dt_util.utcnow() + held_more_than
+            )
 
     def released():
         """Handle the release of the LiteJet switch's button."""
@@ -83,8 +87,8 @@ async def async_trigger(hass, config, action, automation_info):
             if held_more_than is None or held_time > held_more_than:
                 hass.add_job(call_action)
 
-    hass.data['litejet_system'].on_switch_pressed(number, pressed)
-    hass.data['litejet_system'].on_switch_released(number, released)
+    hass.data["litejet_system"].on_switch_pressed(number, pressed)
+    hass.data["litejet_system"].on_switch_released(number, released)
 
     def async_remove():
         """Remove all subscriptions used for this trigger."""

@@ -1,0 +1,10 @@
+{
+  "domain": "arwn",
+  "name": "Arwn",
+  "documentation": "https://www.home-assistant.io/components/arwn",
+  "requirements": [],
+  "dependencies": [
+    "mqtt"
+  ],
+  "codeowners": []
+}

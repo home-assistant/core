@@ -1,0 +1,10 @@
+{
+  "domain": "proxy",
+  "name": "Proxy",
+  "documentation": "https://www.home-assistant.io/components/proxy",
+  "requirements": [
+    "pillow==5.4.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

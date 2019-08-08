@@ -3,19 +3,46 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.homekit.const import (
-    CONF_FEATURE, CONF_FEATURE_LIST, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
-    HOMEKIT_NOTIFY_ID, TYPE_FAUCET, TYPE_OUTLET, TYPE_SHOWER, TYPE_SPRINKLER,
-    TYPE_SWITCH, TYPE_VALVE)
+    CONF_FEATURE,
+    CONF_FEATURE_LIST,
+    CONF_LINKED_BATTERY_SENSOR,
+    CONF_LOW_BATTERY_THRESHOLD,
+    FEATURE_ON_OFF,
+    FEATURE_PLAY_PAUSE,
+    HOMEKIT_NOTIFY_ID,
+    TYPE_FAUCET,
+    TYPE_OUTLET,
+    TYPE_SHOWER,
+    TYPE_SPRINKLER,
+    TYPE_SWITCH,
+    TYPE_VALVE,
+)
 from homeassistant.components.homekit.util import (
-    HomeKitSpeedMapping, SpeedRange, convert_to_float, density_to_air_quality,
-    dismiss_setup_message, show_setup_message, temperature_to_homekit,
-    temperature_to_states, validate_entity_config as vec,
-    validate_media_player_features)
+    HomeKitSpeedMapping,
+    SpeedRange,
+    convert_to_float,
+    density_to_air_quality,
+    dismiss_setup_message,
+    show_setup_message,
+    temperature_to_homekit,
+    temperature_to_states,
+    validate_entity_config as vec,
+    validate_media_player_features,
+)
 from homeassistant.components.persistent_notification import (
-    ATTR_MESSAGE, ATTR_NOTIFICATION_ID, DOMAIN)
+    ATTR_MESSAGE,
+    ATTR_NOTIFICATION_ID,
+    DOMAIN,
+)
 from homeassistant.const import (
-    ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_TYPE, STATE_UNKNOWN,
-    TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_CODE,
+    ATTR_SUPPORTED_FEATURES,
+    CONF_NAME,
+    CONF_TYPE,
+    STATE_UNKNOWN,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.core import State
 
 from tests.common import async_mock_service
@@ -23,67 +50,115 @@ from tests.common import async_mock_service
 
 def test_validate_entity_config():
     """Test validate entities."""
-    configs = [None, [], 'string', 12345,
-               {'invalid_entity_id': {}}, {'demo.test': 1},
-               {'demo.test': 'test'}, {'demo.test': [1, 2]},
-               {'demo.test': None}, {'demo.test': {CONF_NAME: None}},
-               {'media_player.test': {CONF_FEATURE_LIST: [
-                    {CONF_FEATURE: 'invalid_feature'}]}},
-               {'media_player.test': {CONF_FEATURE_LIST: [
+    configs = [
+        None,
+        [],
+        "string",
+        12345,
+        {"invalid_entity_id": {}},
+        {"demo.test": 1},
+        {"binary_sensor.demo": {CONF_LINKED_BATTERY_SENSOR: None}},
+        {"binary_sensor.demo": {CONF_LINKED_BATTERY_SENSOR: "switch.demo"}},
+        {"binary_sensor.demo": {CONF_LOW_BATTERY_THRESHOLD: "switch.demo"}},
+        {"binary_sensor.demo": {CONF_LOW_BATTERY_THRESHOLD: -10}},
+        {"demo.test": "test"},
+        {"demo.test": [1, 2]},
+        {"demo.test": None},
+        {"demo.test": {CONF_NAME: None}},
+        {"media_player.test": {CONF_FEATURE_LIST: [{CONF_FEATURE: "invalid_feature"}]}},
+        {
+            "media_player.test": {
+                CONF_FEATURE_LIST: [
                     {CONF_FEATURE: FEATURE_ON_OFF},
-                    {CONF_FEATURE: FEATURE_ON_OFF}]}},
-               {'switch.test': {CONF_TYPE: 'invalid_type'}}]
+                    {CONF_FEATURE: FEATURE_ON_OFF},
+                ]
+            }
+        },
+        {"switch.test": {CONF_TYPE: "invalid_type"}},
+    ]
 
     for conf in configs:
         with pytest.raises(vol.Invalid):
             vec(conf)
 
     assert vec({}) == {}
-    assert vec({'demo.test': {CONF_NAME: 'Name'}}) == \
-        {'demo.test': {CONF_NAME: 'Name'}}
+    assert vec({"demo.test": {CONF_NAME: "Name"}}) == {
+        "demo.test": {CONF_NAME: "Name", CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
 
-    assert vec({'alarm_control_panel.demo': {}}) == \
-        {'alarm_control_panel.demo': {ATTR_CODE: None}}
-    assert vec({'alarm_control_panel.demo': {ATTR_CODE: '1234'}}) == \
-        {'alarm_control_panel.demo': {ATTR_CODE: '1234'}}
+    assert vec(
+        {"binary_sensor.demo": {CONF_LINKED_BATTERY_SENSOR: "sensor.demo_battery"}}
+    ) == {
+        "binary_sensor.demo": {
+            CONF_LINKED_BATTERY_SENSOR: "sensor.demo_battery",
+            CONF_LOW_BATTERY_THRESHOLD: 20,
+        }
+    }
+    assert vec({"binary_sensor.demo": {CONF_LOW_BATTERY_THRESHOLD: 50}}) == {
+        "binary_sensor.demo": {CONF_LOW_BATTERY_THRESHOLD: 50}
+    }
 
-    assert vec({'lock.demo': {}}) == {'lock.demo': {ATTR_CODE: None}}
-    assert vec({'lock.demo': {ATTR_CODE: '1234'}}) == \
-        {'lock.demo': {ATTR_CODE: '1234'}}
+    assert vec({"alarm_control_panel.demo": {}}) == {
+        "alarm_control_panel.demo": {ATTR_CODE: None, CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
+    assert vec({"alarm_control_panel.demo": {ATTR_CODE: "1234"}}) == {
+        "alarm_control_panel.demo": {ATTR_CODE: "1234", CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
 
-    assert vec({'media_player.demo': {}}) == \
-        {'media_player.demo': {CONF_FEATURE_LIST: {}}}
-    config = {CONF_FEATURE_LIST: [{CONF_FEATURE: FEATURE_ON_OFF},
-                                  {CONF_FEATURE: FEATURE_PLAY_PAUSE}]}
-    assert vec({'media_player.demo': config}) == \
-        {'media_player.demo': {CONF_FEATURE_LIST:
-                               {FEATURE_ON_OFF: {}, FEATURE_PLAY_PAUSE: {}}}}
+    assert vec({"lock.demo": {}}) == {
+        "lock.demo": {ATTR_CODE: None, CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
+    assert vec({"lock.demo": {ATTR_CODE: "1234"}}) == {
+        "lock.demo": {ATTR_CODE: "1234", CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
 
-    assert vec({'switch.demo': {CONF_TYPE: TYPE_FAUCET}}) == \
-        {'switch.demo': {CONF_TYPE: TYPE_FAUCET}}
-    assert vec({'switch.demo': {CONF_TYPE: TYPE_OUTLET}}) == \
-        {'switch.demo': {CONF_TYPE: TYPE_OUTLET}}
-    assert vec({'switch.demo': {CONF_TYPE: TYPE_SHOWER}}) == \
-        {'switch.demo': {CONF_TYPE: TYPE_SHOWER}}
-    assert vec({'switch.demo': {CONF_TYPE: TYPE_SPRINKLER}}) == \
-        {'switch.demo': {CONF_TYPE: TYPE_SPRINKLER}}
-    assert vec({'switch.demo': {CONF_TYPE: TYPE_SWITCH}}) == \
-        {'switch.demo': {CONF_TYPE: TYPE_SWITCH}}
-    assert vec({'switch.demo': {CONF_TYPE: TYPE_VALVE}}) == \
-        {'switch.demo': {CONF_TYPE: TYPE_VALVE}}
+    assert vec({"media_player.demo": {}}) == {
+        "media_player.demo": {CONF_FEATURE_LIST: {}, CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
+    config = {
+        CONF_FEATURE_LIST: [
+            {CONF_FEATURE: FEATURE_ON_OFF},
+            {CONF_FEATURE: FEATURE_PLAY_PAUSE},
+        ]
+    }
+    assert vec({"media_player.demo": config}) == {
+        "media_player.demo": {
+            CONF_FEATURE_LIST: {FEATURE_ON_OFF: {}, FEATURE_PLAY_PAUSE: {}},
+            CONF_LOW_BATTERY_THRESHOLD: 20,
+        }
+    }
+
+    assert vec({"switch.demo": {CONF_TYPE: TYPE_FAUCET}}) == {
+        "switch.demo": {CONF_TYPE: TYPE_FAUCET, CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
+    assert vec({"switch.demo": {CONF_TYPE: TYPE_OUTLET}}) == {
+        "switch.demo": {CONF_TYPE: TYPE_OUTLET, CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
+    assert vec({"switch.demo": {CONF_TYPE: TYPE_SHOWER}}) == {
+        "switch.demo": {CONF_TYPE: TYPE_SHOWER, CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
+    assert vec({"switch.demo": {CONF_TYPE: TYPE_SPRINKLER}}) == {
+        "switch.demo": {CONF_TYPE: TYPE_SPRINKLER, CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
+    assert vec({"switch.demo": {CONF_TYPE: TYPE_SWITCH}}) == {
+        "switch.demo": {CONF_TYPE: TYPE_SWITCH, CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
+    assert vec({"switch.demo": {CONF_TYPE: TYPE_VALVE}}) == {
+        "switch.demo": {CONF_TYPE: TYPE_VALVE, CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
 
 
 def test_validate_media_player_features():
     """Test validate modes for media players."""
     config = {}
     attrs = {ATTR_SUPPORTED_FEATURES: 20873}
-    entity_state = State('media_player.demo', 'on', attrs)
+    entity_state = State("media_player.demo", "on", attrs)
     assert validate_media_player_features(entity_state, config) is True
 
     config = {FEATURE_ON_OFF: None}
     assert validate_media_player_features(entity_state, config) is True
 
-    entity_state = State('media_player.demo', 'on')
+    entity_state = State("media_player.demo", "on")
     assert validate_media_player_features(entity_state, config) is False
 
 
@@ -120,48 +195,46 @@ def test_density_to_air_quality():
 
 async def test_show_setup_msg(hass):
     """Test show setup message as persistence notification."""
-    pincode = b'123-45-678'
+    pincode = b"123-45-678"
 
-    call_create_notification = async_mock_service(hass, DOMAIN, 'create')
+    call_create_notification = async_mock_service(hass, DOMAIN, "create")
 
     await hass.async_add_job(show_setup_message, hass, pincode)
     await hass.async_block_till_done()
 
     assert call_create_notification
-    assert call_create_notification[0].data[ATTR_NOTIFICATION_ID] == \
-        HOMEKIT_NOTIFY_ID
+    assert call_create_notification[0].data[ATTR_NOTIFICATION_ID] == HOMEKIT_NOTIFY_ID
     assert pincode.decode() in call_create_notification[0].data[ATTR_MESSAGE]
 
 
 async def test_dismiss_setup_msg(hass):
     """Test dismiss setup message."""
-    call_dismiss_notification = async_mock_service(hass, DOMAIN, 'dismiss')
+    call_dismiss_notification = async_mock_service(hass, DOMAIN, "dismiss")
 
     await hass.async_add_job(dismiss_setup_message, hass)
     await hass.async_block_till_done()
 
     assert call_dismiss_notification
-    assert call_dismiss_notification[0].data[ATTR_NOTIFICATION_ID] == \
-        HOMEKIT_NOTIFY_ID
+    assert call_dismiss_notification[0].data[ATTR_NOTIFICATION_ID] == HOMEKIT_NOTIFY_ID
 
 
 def test_homekit_speed_mapping():
     """Test if the SpeedRanges from a speed_list are as expected."""
     # A standard 2-speed fan
-    speed_mapping = HomeKitSpeedMapping(['off', 'low', 'high'])
+    speed_mapping = HomeKitSpeedMapping(["off", "low", "high"])
     assert speed_mapping.speed_ranges == {
-        'off': SpeedRange(0, 0),
-        'low': SpeedRange(100 / 3, 50),
-        'high': SpeedRange(200 / 3, 100),
+        "off": SpeedRange(0, 0),
+        "low": SpeedRange(100 / 3, 50),
+        "high": SpeedRange(200 / 3, 100),
     }
 
     # A standard 3-speed fan
-    speed_mapping = HomeKitSpeedMapping(['off', 'low', 'medium', 'high'])
+    speed_mapping = HomeKitSpeedMapping(["off", "low", "medium", "high"])
     assert speed_mapping.speed_ranges == {
-        'off': SpeedRange(0, 0),
-        'low': SpeedRange(100 / 4, 100 / 3),
-        'medium': SpeedRange(200 / 4, 200 / 3),
-        'high': SpeedRange(300 / 4, 100),
+        "off": SpeedRange(0, 0),
+        "low": SpeedRange(100 / 4, 100 / 3),
+        "medium": SpeedRange(200 / 4, 200 / 3),
+        "high": SpeedRange(300 / 4, 100),
     }
 
     # a Dyson-like fan with 10 speeds
@@ -182,19 +255,21 @@ def test_homekit_speed_mapping():
 
 def test_speed_to_homekit():
     """Test speed conversion from HA to Homekit."""
-    speed_mapping = HomeKitSpeedMapping(['off', 'low', 'high'])
-    assert speed_mapping.speed_to_homekit('off') == 0
-    assert speed_mapping.speed_to_homekit('low') == 50
-    assert speed_mapping.speed_to_homekit('high') == 100
+    speed_mapping = HomeKitSpeedMapping(["off", "low", "high"])
+    assert speed_mapping.speed_to_homekit(None) is None
+    assert speed_mapping.speed_to_homekit("off") == 0
+    assert speed_mapping.speed_to_homekit("low") == 50
+    assert speed_mapping.speed_to_homekit("high") == 100
 
 
 def test_speed_to_states():
     """Test speed conversion from Homekit to HA."""
-    speed_mapping = HomeKitSpeedMapping(['off', 'low', 'high'])
-    assert speed_mapping.speed_to_states(0) == 'off'
-    assert speed_mapping.speed_to_states(33) == 'off'
-    assert speed_mapping.speed_to_states(34) == 'low'
-    assert speed_mapping.speed_to_states(50) == 'low'
-    assert speed_mapping.speed_to_states(66) == 'low'
-    assert speed_mapping.speed_to_states(67) == 'high'
-    assert speed_mapping.speed_to_states(100) == 'high'
+    speed_mapping = HomeKitSpeedMapping(["off", "low", "high"])
+    assert speed_mapping.speed_to_states(-1) == "off"
+    assert speed_mapping.speed_to_states(0) == "off"
+    assert speed_mapping.speed_to_states(33) == "off"
+    assert speed_mapping.speed_to_states(34) == "low"
+    assert speed_mapping.speed_to_states(50) == "low"
+    assert speed_mapping.speed_to_states(66) == "low"
+    assert speed_mapping.speed_to_states(67) == "high"
+    assert speed_mapping.speed_to_states(100) == "high"
