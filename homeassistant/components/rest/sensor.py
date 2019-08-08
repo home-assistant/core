@@ -7,8 +7,7 @@ import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
 from homeassistant import exceptions
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA)
+from homeassistant.components.sensor import PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_FORCE_UPDATE,
@@ -186,25 +185,24 @@ class RestSensor(Entity):
         if self._json_attrs and value:
             try:
                 if isinstance(self._json_attrs, template.Template):
-                    attr = self._json_attrs. \
-                        render_with_possible_json_value(value)
+                    attr = self._json_attrs.render_with_possible_json_value(value)
                 elif isinstance(self._json_attrs, dict):
                     json_dict = {}
                     try:
                         json_dict = json.loads(value)
                     except (ValueError, TypeError):
-                        _LOGGER.warning("REST result could not be parsed "
-                                        "as JSON")
+                        _LOGGER.warning("REST result could not be parsed " "as JSON")
                         _LOGGER.debug("Erroneous JSON: %s", value)
                     else:
                         attr.update(
-                            template.render_complex(self._json_attrs,
-                                                    {'value': value,
-                                                     'value_json': json_dict}))
+                            template.render_complex(
+                                self._json_attrs,
+                                {"value": value, "value_json": json_dict},
+                            )
+                        )
                 self._attributes = attr
             except (exceptions.TemplateError, vol.Invalid) as ex:
-                _LOGGER.error("Error rendering '%s' for template: %s",
-                              self.name, ex)
+                _LOGGER.error("Error rendering '%s' for template: %s", self.name, ex)
         if value is not None and self._value_template is not None:
             value = self._value_template.render_with_possible_json_value(value, None)
 

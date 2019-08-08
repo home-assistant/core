@@ -31,7 +31,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, template
 
-from .sensor import (CONF_JSON_ATTRS, DEFAULT_FORCE_UPDATE, RestData)
+from .sensor import CONF_JSON_ATTRS, DEFAULT_FORCE_UPDATE, RestData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,16 +98,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # No need to update the sensor now because it will determine its state
     # based in the rest resource that has just been retrieved.
-    add_entities([RestBinarySensor(
-        hass, rest, name, device_class,
-        value_template, json_attrs, force_update)])
+    add_entities(
+        [
+            RestBinarySensor(
+                hass, rest, name, device_class, value_template, json_attrs, force_update
+            )
+        ]
+    )
 
 
 class RestBinarySensor(BinarySensorDevice):
     """Representation of a REST binary sensor."""
 
-    def __init__(self, hass, rest, name, device_class, value_template,
-                 json_attrs, force_update):
+    def __init__(
+        self, hass, rest, name, device_class, value_template, json_attrs, force_update
+    ):
         """Initialize a REST binary sensor."""
         self._hass = hass
         self.rest = rest
@@ -171,28 +176,26 @@ class RestBinarySensor(BinarySensorDevice):
         if self._json_attrs and value:
             try:
                 if isinstance(self._json_attrs, template.Template):
-                    attr = self._json_attrs. \
-                        render_with_possible_json_value(value)
+                    attr = self._json_attrs.render_with_possible_json_value(value)
                 elif isinstance(self._json_attrs, dict):
                     json_dict = {}
                     try:
                         json_dict = json.loads(value)
                     except (ValueError, TypeError):
-                        _LOGGER.warning("REST result could not be parsed "
-                                        "as JSON")
+                        _LOGGER.warning("REST result could not be parsed " "as JSON")
                         _LOGGER.debug("Erroneous JSON: %s", value)
                     else:
                         attr.update(
-                            template.render_complex(self._json_attrs,
-                                                    {'value': value,
-                                                     'value_json': json_dict}))
+                            template.render_complex(
+                                self._json_attrs,
+                                {"value": value, "value_json": json_dict},
+                            )
+                        )
                 self._attributes = attr
             except (exceptions.TemplateError, vol.Invalid) as ex:
-                _LOGGER.error("Error rendering '%s' for template: %s",
-                              self.name, ex)
+                _LOGGER.error("Error rendering '%s' for template: %s", self.name, ex)
         if value is not None and self._value_template is not None:
-            value = self._value_template.render_with_possible_json_value(
-                value, None)
+            value = self._value_template.render_with_possible_json_value(value, None)
 
     @property
     def device_state_attributes(self):
