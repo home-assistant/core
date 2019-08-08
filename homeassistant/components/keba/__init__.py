@@ -136,7 +136,7 @@ class KebaHandler(KebaKeContact):
             )
             await asyncio.sleep(self._refresh_interval)
 
-        _LOGGER.debug("Periodic data request rescheduled.")
+        _LOGGER.debug("Periodic data request rescheduled")
         self._polling_task = self._hass.loop.create_task(self._periodic_request())
 
     async def setup(self, loop=None):
