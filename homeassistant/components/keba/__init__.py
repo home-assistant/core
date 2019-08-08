@@ -150,8 +150,8 @@ class KebaHandler(KebaKeContact):
         if self.get_value("Serial") is not None:
             self.device_name = f"keba_wallbox_{self.get_value('Serial')}"
             return True
-        else:
-            return False
+
+        return False
 
     def hass_callback(self, data):
         """Handle component notification via callback."""
