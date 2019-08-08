@@ -132,7 +132,7 @@ class KebaHandler(KebaKeContact):
         else:
             _LOGGER.debug(
                 "Periodic data request executed, now wait for %s seconds",
-                str(self._refresh_interval),
+                self._refresh_interval,
             )
             await asyncio.sleep(self._refresh_interval)
 
