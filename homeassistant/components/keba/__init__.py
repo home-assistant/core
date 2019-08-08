@@ -21,6 +21,9 @@ CONF_FS_FALLBACK = "failsafe_fallback"
 CONF_FS_PERSIST = "failsafe_persist"
 CONF_FS_INTERVAL = "refresh_interval"
 
+MAX_POLLING_INTERVAL = 5  # in seconds
+MAX_FAST_POLLING_COUNT = 4
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -109,9 +112,9 @@ class KebaHandler(KebaKeContact):
         self.rfid = rfid
         self.device_name = "keba_wallbox_"
 
-        # Ensure at least 5 seconds delay
-        self._refresh_interval = max(5, refresh_interval)
-        self._fast_polling_count = 9
+        # Ensure at least MAX_POLLING_INTERVAL seconds delay
+        self._refresh_interval = max(MAX_POLLING_INTERVAL, refresh_interval)
+        self._fast_polling_count = MAX_FAST_POLLING_COUNT
         self._polling_task = None
 
     def start_periodic_request(self):
@@ -122,7 +125,7 @@ class KebaHandler(KebaKeContact):
         """Send  periodic update requests."""
         await self.request_data()
 
-        if self._fast_polling_count < 4:
+        if self._fast_polling_count < MAX_FAST_POLLING_COUNT:
             self._fast_polling_count += 1
             _LOGGER.debug("Periodic data request executed, now wait for " "2 seconds.")
             await asyncio.sleep(2)
