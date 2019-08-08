@@ -254,13 +254,13 @@ class BinarySensorTemplate(BinarySensorDevice):
         )
 
         attrs = {}
-        for key, value in self._attribute_templates.items():
-            try:
-                attrs[key] = value.async_render()
-            except TemplateError as err:
-                _LOGGER.error("Error rendering attribute %s: %s", key, err)
-
-        self._attributes = attrs
+        if self._attribute_templates is not None:
+            for key, value in self._attribute_templates.items():
+                try:
+                    attrs[key] = value.async_render()
+                except TemplateError as err:
+                    _LOGGER.error("Error rendering attribute %s: %s", key, err)
+            self._attributes = attrs
 
         for property_name, template in templates.items():
             if template is None:
