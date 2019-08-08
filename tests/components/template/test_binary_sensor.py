@@ -169,31 +169,34 @@ class TestBinarySensorTemplate(unittest.TestCase):
     def test_attribute_templates(self):
         """Test attribute_templates template."""
         with assert_setup_component(1):
-            assert setup.setup_component(self.hass, 'binary_sensor', {
-                'binary_sensor': {
-                    'platform': 'template',
-                    'sensors': {
-                        'test_template_sensor': {
-                            'value_template': "{{ states.sensor.xyz.state }}",
-                            'attribute_templates': {
-                                'test_attribute':
-                                    "It {{ states.sensor.test_state.state }}.",
+            assert setup.setup_component(
+                self.hass,
+                "binary_sensor",
+                {
+                    "binary_sensor": {
+                        "platform": "template",
+                        "sensors": {
+                            "test_template_sensor": {
+                                "value_template": "{{ states.sensor.xyz.state }}",
+                                "attribute_templates": {
+                                    "test_attribute": "It {{ states.sensor.test_state.state }}."
+                                },
                             }
-                        }
+                        },
                     }
-                }
-            })
+                },
+            )
 
         self.hass.start()
         self.hass.block_till_done()
 
-        state = self.hass.states.get('binary_sensor.test_template_sensor')
-        assert state.attributes.get('test_attribute') == 'It .'
+        state = self.hass.states.get("binary_sensor.test_template_sensor")
+        assert state.attributes.get("test_attribute") == "It ."
 
-        self.hass.states.set('sensor.test_state', 'Works')
+        self.hass.states.set("sensor.test_state", "Works")
         self.hass.block_till_done()
-        state = self.hass.states.get('binary_sensor.test_template_sensor')
-        assert state.attributes['test_attribute'] == 'It Works.'
+        state = self.hass.states.get("binary_sensor.test_template_sensor")
+        assert state.attributes["test_attribute"] == "It Works."
 
     @mock.patch(
         "homeassistant.components.template.binary_sensor."
@@ -446,13 +449,10 @@ async def test_no_update_template_match_all(hass, caplog):
                         "entity_picture_template": "{{ 1 + 1 }}",
                     },
                 },
-                'all_attribute': {
-                    'value_template':
-                        '{{ states.binary_sensor.test_sensor.state }}',
-                    'attribute_templates': {
-                        'test_attribute': '{{ 1 + 1 }}',
-                    }
-                }
+                "all_attribute": {
+                    "value_template": "{{ states.binary_sensor.test_sensor.state }}",
+                    "attribute_templates": {"test_attribute": "{{ 1 + 1 }}"},
+                },
             }
         },
     )
@@ -506,7 +506,8 @@ async def test_no_update_template_match_all(hass, caplog):
         "binary_sensor.all_entity_picture"
     )
     await hass.helpers.entity_component.async_update_entity(
-        "binary_sensor.all_attribute")
+        "binary_sensor.all_attribute"
+    )
 
     assert hass.states.get("binary_sensor.all_state").state == "on"
     assert hass.states.get("binary_sensor.all_icon").state == "off"
