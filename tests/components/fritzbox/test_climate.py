@@ -13,7 +13,7 @@ class TestFritzboxClimate(unittest.TestCase):
     def setUp(self):
         """Create a mock device to test on."""
         self.device = Mock()
-        self.device.name = 'Test Thermostat'
+        self.device.name = "Test Thermostat"
         self.device.actual_temperature = 18.0
         self.device.target_temperature = 19.5
         self.device.comfort_temperature = 22.0
@@ -47,11 +47,11 @@ class TestFritzboxClimate(unittest.TestCase):
 
     def test_name(self):
         """Test name property."""
-        assert 'Test Thermostat' == self.thermostat.name
+        assert "Test Thermostat" == self.thermostat.name
 
     def test_temperature_unit(self):
         """Test temperature_unit property."""
-        assert '°C' == self.thermostat.temperature_unit
+        assert "°C" == self.thermostat.temperature_unit
 
     def test_precision(self):
         """Test precision property."""
@@ -71,50 +71,47 @@ class TestFritzboxClimate(unittest.TestCase):
         self.thermostat._target_temperature = 127.0
         assert self.thermostat.target_temperature == 30.0
 
-    @patch.object(FritzboxThermostat, 'set_hvac_mode')
+    @patch.object(FritzboxThermostat, "set_hvac_mode")
     def test_set_temperature_operation_mode(self, mock_set_op):
         """Test set_temperature by operation_mode."""
-        self.thermostat.set_temperature(hvac_mode='heat')
-        mock_set_op.assert_called_once_with('heat')
+        self.thermostat.set_temperature(hvac_mode="heat")
+        mock_set_op.assert_called_once_with("heat")
 
     def test_set_temperature_temperature(self):
         """Test set_temperature by temperature."""
         self.thermostat.set_temperature(temperature=23.0)
-        self.thermostat._device.set_target_temperature.\
-            assert_called_once_with(23.0)
+        self.thermostat._device.set_target_temperature.assert_called_once_with(23.0)
 
-    @patch.object(FritzboxThermostat, 'set_hvac_mode')
+    @patch.object(FritzboxThermostat, "set_hvac_mode")
     def test_set_temperature_none(self, mock_set_op):
         """Test set_temperature with no arguments."""
         self.thermostat.set_temperature()
         mock_set_op.assert_not_called()
         self.thermostat._device.set_target_temperature.assert_not_called()
 
-    @patch.object(FritzboxThermostat, 'set_hvac_mode')
+    @patch.object(FritzboxThermostat, "set_hvac_mode")
     def test_set_temperature_operation_mode_precedence(self, mock_set_op):
         """Test set_temperature for precedence of operation_mode arguement."""
-        self.thermostat.set_temperature(hvac_mode='heat',
-                                        temperature=23.0)
-        mock_set_op.assert_called_once_with('heat')
+        self.thermostat.set_temperature(hvac_mode="heat", temperature=23.0)
+        mock_set_op.assert_called_once_with("heat")
         self.thermostat._device.set_target_temperature.assert_not_called()
 
     def test_hvac_mode(self):
         """Test operation mode property for different temperatures."""
         self.thermostat._target_temperature = 127.0
-        assert 'heat' == self.thermostat.hvac_mode
+        assert "heat" == self.thermostat.hvac_mode
         self.thermostat._target_temperature = 126.5
-        assert 'off' == self.thermostat.hvac_mode
+        assert "off" == self.thermostat.hvac_mode
         self.thermostat._target_temperature = 22.0
-        assert 'heat' == self.thermostat.hvac_mode
+        assert "heat" == self.thermostat.hvac_mode
         self.thermostat._target_temperature = 16.0
-        assert 'heat' == self.thermostat.hvac_mode
+        assert "heat" == self.thermostat.hvac_mode
         self.thermostat._target_temperature = 12.5
-        assert 'heat' == self.thermostat.hvac_mode
+        assert "heat" == self.thermostat.hvac_mode
 
     def test_operation_list(self):
         """Test operation_list property."""
-        assert ['heat', 'off'] == \
-            self.thermostat.hvac_modes
+        assert ["heat", "off"] == self.thermostat.hvac_modes
 
     def test_min_max_temperature(self):
         """Test min_temp and max_temp properties."""
@@ -124,9 +121,9 @@ class TestFritzboxClimate(unittest.TestCase):
     def test_device_state_attributes(self):
         """Test device_state property."""
         attr = self.thermostat.device_state_attributes
-        assert attr['device_locked'] is True
-        assert attr['locked'] is False
-        assert attr['battery_low'] is True
+        assert attr["device_locked"] is True
+        assert attr["locked"] is False
+        assert attr["battery_low"] is True
 
     def test_update(self):
         """Test update function."""

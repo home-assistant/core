@@ -9,36 +9,43 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    LENGTH_KILOMETERS, CONF_MONITORED_CONDITIONS, CONF_NAME, ATTR_ATTRIBUTION)
+    LENGTH_KILOMETERS,
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    ATTR_ATTRIBUTION,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-URL = 'http://www.sytadin.fr/sys/barometres_de_la_circulation.jsp.html'
+URL = "http://www.sytadin.fr/sys/barometres_de_la_circulation.jsp.html"
 
 ATTRIBUTION = "Data provided by Direction des routes Île-de-France (DiRIF)"
 
-DEFAULT_NAME = 'Sytadin'
-REGEX = r'(\d*\.\d+|\d+)'
+DEFAULT_NAME = "Sytadin"
+REGEX = r"(\d*\.\d+|\d+)"
 
-OPTION_TRAFFIC_JAM = 'traffic_jam'
-OPTION_MEAN_VELOCITY = 'mean_velocity'
-OPTION_CONGESTION = 'congestion'
+OPTION_TRAFFIC_JAM = "traffic_jam"
+OPTION_MEAN_VELOCITY = "mean_velocity"
+OPTION_CONGESTION = "congestion"
 
 SENSOR_TYPES = {
-    OPTION_CONGESTION: ['Congestion', ''],
-    OPTION_MEAN_VELOCITY: ['Mean Velocity', LENGTH_KILOMETERS+'/h'],
-    OPTION_TRAFFIC_JAM: ['Traffic Jam', LENGTH_KILOMETERS],
+    OPTION_CONGESTION: ["Congestion", ""],
+    OPTION_MEAN_VELOCITY: ["Mean Velocity", LENGTH_KILOMETERS + "/h"],
+    OPTION_TRAFFIC_JAM: ["Traffic Jam", LENGTH_KILOMETERS],
 }
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=[OPTION_TRAFFIC_JAM]):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=[OPTION_TRAFFIC_JAM]): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        ),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -50,9 +57,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     dev = []
     for option in config.get(CONF_MONITORED_CONDITIONS):
         _LOGGER.debug("Sensor device - %s", option)
-        dev.append(SytadinSensor(
-            sytadin, name, option, SENSOR_TYPES[option][0],
-            SENSOR_TYPES[option][1]))
+        dev.append(
+            SytadinSensor(
+                sytadin, name, option, SENSOR_TYPES[option][0], SENSOR_TYPES[option][1]
+            )
+        )
     add_entities(dev, True)
 
 
@@ -71,7 +80,7 @@ class SytadinSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self._name, self._option)
+        return "{} {}".format(self._name, self._option)
 
     @property
     def state(self):
@@ -86,9 +95,7 @@ class SytadinSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
+        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def update(self):
         """Fetch new state data for the sensor."""
@@ -121,9 +128,9 @@ class SytadinData:
 
         try:
             raw_html = requests.get(self._resource, timeout=10).text
-            data = BeautifulSoup(raw_html, 'html.parser')
+            data = BeautifulSoup(raw_html, "html.parser")
 
-            values = data.select('.barometre_valeur')
+            values = data.select(".barometre_valeur")
             parse_traffic_jam = re.search(REGEX, values[0].text)
             if parse_traffic_jam:
                 self.traffic_jam = parse_traffic_jam.group()
