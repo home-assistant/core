@@ -28,29 +28,29 @@ from homeassistant.helpers.event import async_track_state_change, async_track_sa
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DELAY_ON = 'delay_on'
-CONF_DELAY_OFF = 'delay_off'
-CONF_ATTRIBUTE_TEMPLATES = 'attribute_templates'
+CONF_DELAY_ON = "delay_on"
+CONF_DELAY_OFF = "delay_off"
+CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 
-ATTRIBUTES_PREFIX = '_attributes.'
+ATTRIBUTES_PREFIX = "_attributes."
 
-SENSOR_SCHEMA = vol.Schema({
-    vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_ICON_TEMPLATE): cv.template,
-    vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
-    vol.Optional(CONF_ATTRIBUTE_TEMPLATES): vol.Schema({cv.string: cv.template}),
-    vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-    vol.Optional(CONF_DELAY_ON):
-        vol.All(cv.time_period, cv.positive_timedelta),
-    vol.Optional(CONF_DELAY_OFF):
-        vol.All(cv.time_period, cv.positive_timedelta),
-})
+SENSOR_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+        vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
+        vol.Optional(CONF_ATTRIBUTE_TEMPLATES): vol.Schema({cv.string: cv.template}),
+        vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
+        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_DELAY_ON): vol.All(cv.time_period, cv.positive_timedelta),
+        vol.Optional(CONF_DELAY_OFF): vol.All(cv.time_period, cv.positive_timedelta),
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA)}
+)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -67,11 +67,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         invalid_templates = []
 
-        templates = dict((
-            (CONF_VALUE_TEMPLATE, value_template),
-            (CONF_ICON_TEMPLATE, icon_template),
-            (CONF_ENTITY_PICTURE_TEMPLATE, entity_picture_template),
-        ))
+        templates = dict(
+            (
+                (CONF_VALUE_TEMPLATE, value_template),
+                (CONF_ICON_TEMPLATE, icon_template),
+                (CONF_ENTITY_PICTURE_TEMPLATE, entity_picture_template),
+            )
+        )
 
         if attribute_templates is not None:
             templates.update(attribute_templates)
@@ -88,7 +90,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             if template_entity_ids == MATCH_ALL:
                 entity_ids = MATCH_ALL
                 # Cut off _template from name
-                invalid_templates.append(tpl_name.replace('_template', ''))
+                invalid_templates.append(tpl_name.replace("_template", ""))
             elif entity_ids != MATCH_ALL:
                 entity_ids |= set(template_entity_ids)
 
@@ -244,10 +246,12 @@ class BinarySensorTemplate(BinarySensorDevice):
                 return
             _LOGGER.error("Could not render template %s: %s", self._name, ex)
 
-        templates = dict((
-            ('_icon', self._icon_template),
-            ('_entity_picture', self._entity_picture_template),
-        ))
+        templates = dict(
+            (
+                ("_icon", self._icon_template),
+                ("_entity_picture", self._entity_picture_template),
+            )
+        )
 
         attrs = {}
         for key, value in self._attribute_templates.items():
