@@ -73,9 +73,6 @@ async def webhook_id(hass, traccar_client):
     return result['result'].data['webhook_id']
 
 
-@pytest.mark.xfail(
-    reason='The webhook component does not support GET yet.'
-)
 async def test_missing_data(hass, traccar_client, webhook_id):
     """Test missing data."""
     url = '/api/webhook/{}'.format(webhook_id)
@@ -86,28 +83,25 @@ async def test_missing_data(hass, traccar_client, webhook_id):
     }
 
     # No data
-    req = await traccar_client.get(url)
+    req = await traccar_client.post(url)
     await hass.async_block_till_done()
     assert req.status == HTTP_UNPROCESSABLE_ENTITY
 
     # No latitude
     copy = data.copy()
     del copy['lat']
-    req = await traccar_client.get(url, params=copy)
+    req = await traccar_client.post(url, params=copy)
     await hass.async_block_till_done()
     assert req.status == HTTP_UNPROCESSABLE_ENTITY
 
     # No device
     copy = data.copy()
     del copy['id']
-    req = await traccar_client.get(url, params=copy)
+    req = await traccar_client.post(url, params=copy)
     await hass.async_block_till_done()
     assert req.status == HTTP_UNPROCESSABLE_ENTITY
 
 
-@pytest.mark.xfail(
-    reason='The webhook component does not support GET yet.'
-)
 async def test_enter_and_exit(hass, traccar_client, webhook_id):
     """Test when there is a known zone."""
     url = '/api/webhook/{}'.format(webhook_id)
@@ -124,7 +118,7 @@ async def test_enter_and_exit(hass, traccar_client, webhook_id):
     }
 
     # Enter the Home
-    req = await traccar_client.get(url, params=data)
+    req = await traccar_client.post(url, params=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
     state_name = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
@@ -132,7 +126,7 @@ async def test_enter_and_exit(hass, traccar_client, webhook_id):
     assert STATE_HOME == state_name
 
     # Enter Home again
-    req = await traccar_client.get(url, params=data)
+    req = await traccar_client.post(url, params=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
     state_name = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
@@ -143,7 +137,7 @@ async def test_enter_and_exit(hass, traccar_client, webhook_id):
     data['lat'] = 0
 
     # Enter Somewhere else
-    req = await traccar_client.get(url, params=data)
+    req = await traccar_client.post(url, params=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
     state_name = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
@@ -157,9 +151,6 @@ async def test_enter_and_exit(hass, traccar_client, webhook_id):
     assert len(ent_reg.entities) == 1
 
 
-@pytest.mark.xfail(
-    reason='The webhook component does not support GET yet.'
-)
 async def test_enter_with_attrs(hass, traccar_client, webhook_id):
     """Test when additional attributes are present."""
     url = '/api/webhook/{}'.format(webhook_id)
@@ -175,7 +166,7 @@ async def test_enter_with_attrs(hass, traccar_client, webhook_id):
         'altitude': 102
     }
 
-    req = await traccar_client.get(url, params=data)
+    req = await traccar_client.post(url, params=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
     state = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
@@ -198,7 +189,7 @@ async def test_enter_with_attrs(hass, traccar_client, webhook_id):
         'altitude': 123
     }
 
-    req = await traccar_client.get(url, params=data)
+    req = await traccar_client.post(url, params=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
     state = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
@@ -224,7 +215,7 @@ async def test_load_unload_entry(hass, traccar_client, webhook_id):
     }
 
     # Enter the Home
-    req = await traccar_client.get(url, params=data)
+    req = await traccar_client.post(url, params=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
     state_name = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
