@@ -450,7 +450,7 @@ async def test_no_update_template_match_all(hass, caplog):
                     'value_template':
                         '{{ states.binary_sensor.test_sensor.state }}',
                     'attribute_templates': {
-                      'test_attribute': '{{ 1 + 1 }}',
+                        'test_attribute': '{{ 1 + 1 }}',
                     }
                 }
             }
@@ -506,7 +506,7 @@ async def test_no_update_template_match_all(hass, caplog):
         "binary_sensor.all_entity_picture"
     )
     await hass.helpers.entity_component.async_update_entity(
-        "binary_sensor.all_attribute"")
+        "binary_sensor.all_attribute")
 
     assert hass.states.get("binary_sensor.all_state").state == "on"
     assert hass.states.get("binary_sensor.all_icon").state == "off"
