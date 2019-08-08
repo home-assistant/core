@@ -50,14 +50,20 @@ PLATFORM = "here_travel_time"
 APP_ID = "test"
 APP_CODE = "test"
 
-TRUCK_ORIGIN = "41.9798,-87.8801"
-TRUCK_DESTINATION = "41.9043,-87.9216"
+TRUCK_ORIGIN_LATITUDE = "41.9798"
+TRUCK_ORIGIN_LONGITUDE = "-87.8801"
+TRUCK_DESTINATION_LATITUDE = "41.9043"
+TRUCK_DESTINATION_LONGITUDE = "-87.9216"
 
-BIKE_ORIGIN = "41.9798,-87.8801"
-BIKE_DESTINATION = "41.9043,-87.9216"
+BIKE_ORIGIN_LATITUDE = "41.9798"
+BIKE_ORIGIN_LONGITUDE = "-87.8801"
+BIKE_DESTINATION_LATITUDE = "41.9043"
+BIKE_DESTINATION_LONGITUDE = "-87.9216"
 
-CAR_ORIGIN = "38.90,-77.04833"
-CAR_DESTINATION = "39.0,-77.1"
+CAR_ORIGIN_LATITUDE = "38.9"
+CAR_ORIGIN_LONGITUDE = "-77.04833"
+CAR_DESTINATION_LATITUDE = "39.0"
+CAR_DESTINATION_LONGITUDE = "-77.1"
 
 
 def _build_mock_url(origin, destination, modes, app_id, app_code, departure):
@@ -89,8 +95,12 @@ def _assert_truck_sensor(sensor):
     )
     assert sensor.attributes.get(CONF_UNIT_SYSTEM) == "metric"
     assert sensor.attributes.get(ATTR_DURATION_WITHOUT_TRAFFIC) == 13.533333333333333
-    assert sensor.attributes.get(ATTR_ORIGIN) == TRUCK_ORIGIN
-    assert sensor.attributes.get(ATTR_DESTINATION) == TRUCK_DESTINATION
+    assert sensor.attributes.get(ATTR_ORIGIN) == ",".join(
+        [TRUCK_ORIGIN_LATITUDE, TRUCK_ORIGIN_LONGITUDE]
+    )
+    assert sensor.attributes.get(ATTR_DESTINATION) == ",".join(
+        [TRUCK_DESTINATION_LATITUDE, TRUCK_DESTINATION_LONGITUDE]
+    )
     assert sensor.attributes.get(ATTR_ORIGIN_NAME) == ""
     assert sensor.attributes.get(ATTR_DESTINATION_NAME) == "Eisenhower Expy E"
     assert sensor.attributes.get(CONF_MODE) == TRAVEL_MODE_TRUCK
@@ -104,7 +114,12 @@ def requests_mock_truck_response(requests_mock):
     """Return a requests_mock for truck respones."""
     modes = ";".join([ROUTE_MODE_FASTEST, TRAVEL_MODE_TRUCK, TRAFFIC_MODE_DISABLED])
     response_url = _build_mock_url(
-        TRUCK_ORIGIN, TRUCK_DESTINATION, modes, APP_ID, APP_CODE, "now"
+        ",".join([TRUCK_ORIGIN_LATITUDE, TRUCK_ORIGIN_LONGITUDE]),
+        ",".join([TRUCK_DESTINATION_LATITUDE, TRUCK_DESTINATION_LONGITUDE]),
+        modes,
+        APP_ID,
+        APP_CODE,
+        "now",
     )
     requests_mock.get(
         response_url, text=load_fixture("here_travel_time/truck_response.json")
@@ -116,7 +131,12 @@ def requests_mock_car_disabled_response(requests_mock):
     """Return a requests_mock for truck respones."""
     modes = ";".join([ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_DISABLED])
     response_url = _build_mock_url(
-        CAR_ORIGIN, CAR_DESTINATION, modes, APP_ID, APP_CODE, "now"
+        ",".join([CAR_ORIGIN_LATITUDE, CAR_ORIGIN_LONGITUDE]),
+        ",".join([CAR_DESTINATION_LATITUDE, CAR_DESTINATION_LONGITUDE]),
+        modes,
+        APP_ID,
+        APP_CODE,
+        "now",
     )
     requests_mock.get(
         response_url, text=load_fixture("here_travel_time/car_response.json")
@@ -129,8 +149,10 @@ async def test_car(hass, requests_mock_car_disabled_response):
         DOMAIN: {
             "platform": PLATFORM,
             "name": "test",
-            "origin": CAR_ORIGIN,
-            "destination": CAR_DESTINATION,
+            "origin_latitude": CAR_ORIGIN_LATITUDE,
+            "origin_longitude": CAR_ORIGIN_LONGITUDE,
+            "destination_latitude": CAR_DESTINATION_LATITUDE,
+            "destination_longitude": CAR_DESTINATION_LONGITUDE,
             "app_id": APP_ID,
             "app_code": APP_CODE,
         }
@@ -151,8 +173,12 @@ async def test_car(hass, requests_mock_car_disabled_response):
     )
     assert sensor.attributes.get(CONF_UNIT_SYSTEM) == "metric"
     assert sensor.attributes.get(ATTR_DURATION_WITHOUT_TRAFFIC) == 30.05
-    assert sensor.attributes.get(ATTR_ORIGIN) == CAR_ORIGIN
-    assert sensor.attributes.get(ATTR_DESTINATION) == CAR_DESTINATION
+    assert sensor.attributes.get(ATTR_ORIGIN) == ",".join(
+        [CAR_ORIGIN_LATITUDE, CAR_ORIGIN_LONGITUDE]
+    )
+    assert sensor.attributes.get(ATTR_DESTINATION) == ",".join(
+        [CAR_DESTINATION_LATITUDE, CAR_DESTINATION_LONGITUDE]
+    )
     assert sensor.attributes.get(ATTR_ORIGIN_NAME) == "22nd St NW"
     assert sensor.attributes.get(ATTR_DESTINATION_NAME) == "Service Rd S"
     assert sensor.attributes.get(CONF_MODE) == TRAVEL_MODE_CAR
@@ -170,7 +196,12 @@ async def test_traffic_mode_enabled(hass, requests_mock):
     """Test that traffic mode enabled works."""
     modes = ";".join([ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_ENABLED])
     response_url = _build_mock_url(
-        CAR_ORIGIN, CAR_DESTINATION, modes, APP_ID, APP_CODE, "now"
+        ",".join([CAR_ORIGIN_LATITUDE, CAR_ORIGIN_LONGITUDE]),
+        ",".join([CAR_DESTINATION_LATITUDE, CAR_DESTINATION_LONGITUDE]),
+        modes,
+        APP_ID,
+        APP_CODE,
+        "now",
     )
     requests_mock.get(
         response_url, text=load_fixture("here_travel_time/car_enabled_response.json")
@@ -180,8 +211,10 @@ async def test_traffic_mode_enabled(hass, requests_mock):
         DOMAIN: {
             "platform": PLATFORM,
             "name": "test",
-            "origin": CAR_ORIGIN,
-            "destination": CAR_DESTINATION,
+            "origin_latitude": CAR_ORIGIN_LATITUDE,
+            "origin_longitude": CAR_ORIGIN_LONGITUDE,
+            "destination_latitude": CAR_DESTINATION_LATITUDE,
+            "destination_longitude": CAR_DESTINATION_LONGITUDE,
             "app_id": APP_ID,
             "app_code": APP_CODE,
             "traffic_mode": True,
@@ -203,8 +236,10 @@ async def test_imperial(hass, requests_mock_car_disabled_response):
         DOMAIN: {
             "platform": PLATFORM,
             "name": "test",
-            "origin": CAR_ORIGIN,
-            "destination": CAR_DESTINATION,
+            "origin_latitude": CAR_ORIGIN_LATITUDE,
+            "origin_longitude": CAR_ORIGIN_LONGITUDE,
+            "destination_latitude": CAR_DESTINATION_LATITUDE,
+            "destination_longitude": CAR_DESTINATION_LONGITUDE,
             "app_id": APP_ID,
             "app_code": APP_CODE,
             "unit_system": "imperial",
@@ -230,8 +265,10 @@ async def test_route_mode_shortest(hass, requests_mock):
         DOMAIN: {
             "platform": PLATFORM,
             "name": "test",
-            "origin": origin,
-            "destination": destination,
+            "origin_latitude": origin.split(",")[0],
+            "origin_longitude": origin.split(",")[1],
+            "destination_latitude": destination.split(",")[0],
+            "destination_longitude": destination.split(",")[1],
             "app_id": APP_ID,
             "app_code": APP_CODE,
             "route_mode": ROUTE_MODE_SHORTEST,
@@ -257,8 +294,10 @@ async def test_route_mode_fastest(hass, requests_mock):
         DOMAIN: {
             "platform": PLATFORM,
             "name": "test",
-            "origin": origin,
-            "destination": destination,
+            "origin_latitude": origin.split(",")[0],
+            "origin_longitude": origin.split(",")[1],
+            "destination_latitude": destination.split(",")[0],
+            "destination_longitude": destination.split(",")[1],
             "app_id": APP_ID,
             "app_code": APP_CODE,
             "traffic_mode": True,
@@ -276,8 +315,10 @@ async def test_truck(hass, requests_mock_truck_response):
         DOMAIN: {
             "platform": PLATFORM,
             "name": "test",
-            "origin": TRUCK_ORIGIN,
-            "destination": TRUCK_DESTINATION,
+            "origin_latitude": TRUCK_ORIGIN_LATITUDE,
+            "origin_longitude": TRUCK_ORIGIN_LONGITUDE,
+            "destination_latitude": TRUCK_DESTINATION_LATITUDE,
+            "destination_longitude": TRUCK_DESTINATION_LONGITUDE,
             "app_id": APP_ID,
             "app_code": APP_CODE,
             "mode": TRAVEL_MODE_TRUCK,
@@ -302,8 +343,10 @@ async def test_public_transport(hass, requests_mock):
         DOMAIN: {
             "platform": PLATFORM,
             "name": "test",
-            "origin": origin,
-            "destination": destination,
+            "origin_latitude": origin.split(",")[0],
+            "origin_longitude": origin.split(",")[1],
+            "destination_latitude": destination.split(",")[0],
+            "destination_longitude": destination.split(",")[1],
             "app_id": APP_ID,
             "app_code": APP_CODE,
             "mode": TRAVEL_MODE_PUBLIC,
@@ -350,8 +393,10 @@ async def test_public_transport_time_table(hass, requests_mock):
         DOMAIN: {
             "platform": PLATFORM,
             "name": "test",
-            "origin": origin,
-            "destination": destination,
+            "origin_latitude": origin.split(",")[0],
+            "origin_longitude": origin.split(",")[1],
+            "destination_latitude": destination.split(",")[0],
+            "destination_longitude": destination.split(",")[1],
             "app_id": APP_ID,
             "app_code": APP_CODE,
             "mode": TRAVEL_MODE_PUBLIC_TIME_TABLE,
@@ -397,8 +442,10 @@ async def test_pedestrian(hass, requests_mock):
         DOMAIN: {
             "platform": PLATFORM,
             "name": "test",
-            "origin": origin,
-            "destination": destination,
+            "origin_latitude": origin.split(",")[0],
+            "origin_longitude": origin.split(",")[1],
+            "destination_latitude": destination.split(",")[0],
+            "destination_longitude": destination.split(",")[1],
             "app_id": APP_ID,
             "app_code": APP_CODE,
             "mode": TRAVEL_MODE_PEDESTRIAN,
@@ -444,8 +491,10 @@ async def test_bicycle(hass, requests_mock):
         DOMAIN: {
             "platform": PLATFORM,
             "name": "test",
-            "origin": origin,
-            "destination": destination,
+            "origin_latitude": origin.split(",")[0],
+            "origin_longitude": origin.split(",")[1],
+            "destination_latitude": destination.split(",")[0],
+            "destination_longitude": destination.split(",")[1],
             "app_id": APP_ID,
             "app_code": APP_CODE,
             "mode": TRAVEL_MODE_BICYCLE,
@@ -486,15 +535,15 @@ async def test_location_zone(hass, requests_mock_truck_response):
             "zone": [
                 {
                     "name": "Destination",
-                    "latitude": TRUCK_DESTINATION.split(",")[0],
-                    "longitude": TRUCK_DESTINATION.split(",")[1],
+                    "latitude": TRUCK_DESTINATION_LATITUDE,
+                    "longitude": TRUCK_DESTINATION_LONGITUDE,
                     "radius": 250,
                     "passive": False,
                 },
                 {
                     "name": "Origin",
-                    "latitude": TRUCK_ORIGIN.split(",")[0],
-                    "longitude": TRUCK_ORIGIN.split(",")[1],
+                    "latitude": TRUCK_ORIGIN_LATITUDE,
+                    "longitude": TRUCK_ORIGIN_LONGITUDE,
                     "radius": 250,
                     "passive": False,
                 },
@@ -506,8 +555,8 @@ async def test_location_zone(hass, requests_mock_truck_response):
             DOMAIN: {
                 "platform": PLATFORM,
                 "name": "test",
-                "origin": "zone.origin",
-                "destination": "zone.destination",
+                "origin_zone": "zone.origin",
+                "destination_zone": "zone.destination",
                 "app_id": APP_ID,
                 "app_code": APP_CODE,
                 "mode": TRAVEL_MODE_TRUCK,
@@ -535,15 +584,15 @@ async def test_location_zone_friendly_name(hass, requests_mock_truck_response):
             "zone": [
                 {
                     "name": "Destination Friendly Name",
-                    "latitude": TRUCK_DESTINATION.split(",")[0],
-                    "longitude": TRUCK_DESTINATION.split(",")[1],
+                    "latitude": TRUCK_DESTINATION_LATITUDE,
+                    "longitude": TRUCK_DESTINATION_LONGITUDE,
                     "radius": 250,
                     "passive": False,
                 },
                 {
                     "name": "Origin",
-                    "latitude": TRUCK_ORIGIN.split(",")[0],
-                    "longitude": TRUCK_ORIGIN.split(",")[1],
+                    "latitude": TRUCK_ORIGIN_LATITUDE,
+                    "longitude": TRUCK_ORIGIN_LONGITUDE,
                     "radius": 250,
                     "passive": False,
                 },
@@ -555,8 +604,8 @@ async def test_location_zone_friendly_name(hass, requests_mock_truck_response):
             DOMAIN: {
                 "platform": PLATFORM,
                 "name": "test",
-                "origin": "zone.origin",
-                "destination": "Destination Friendly Name",
+                "origin_zone": "zone.origin",
+                "destination_zone_friendly_name": "Destination Friendly Name",
                 "app_id": APP_ID,
                 "app_code": APP_CODE,
                 "mode": TRAVEL_MODE_TRUCK,
@@ -580,15 +629,20 @@ async def test_location_sensor(hass, requests_mock_truck_response):
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
     with patch("homeassistant.util.dt.utcnow", return_value=utcnow):
-        hass.states.async_set("sensor.origin", TRUCK_ORIGIN)
-        hass.states.async_set("sensor.destination", TRUCK_DESTINATION)
+        hass.states.async_set(
+            "sensor.origin", ",".join([TRUCK_ORIGIN_LATITUDE, TRUCK_ORIGIN_LONGITUDE])
+        )
+        hass.states.async_set(
+            "sensor.destination",
+            ",".join([TRUCK_DESTINATION_LATITUDE, TRUCK_DESTINATION_LONGITUDE]),
+        )
 
         config = {
             DOMAIN: {
                 "platform": PLATFORM,
                 "name": "test",
-                "origin": "sensor.origin",
-                "destination": "sensor.destination",
+                "origin_sensor": "sensor.origin",
+                "destination_sensor": "sensor.destination",
                 "app_id": APP_ID,
                 "app_code": APP_CODE,
                 "mode": TRAVEL_MODE_TRUCK,
@@ -616,16 +670,16 @@ async def test_location_person(hass, requests_mock_truck_response):
             "person.origin",
             "unknown",
             {
-                "latitude": float(TRUCK_ORIGIN.split(",")[0]),
-                "longitude": float(TRUCK_ORIGIN.split(",")[1]),
+                "latitude": float(TRUCK_ORIGIN_LATITUDE),
+                "longitude": float(TRUCK_ORIGIN_LONGITUDE),
             },
         )
         hass.states.async_set(
             "person.destination",
             "unknown",
             {
-                "latitude": float(TRUCK_DESTINATION.split(",")[0]),
-                "longitude": float(TRUCK_DESTINATION.split(",")[1]),
+                "latitude": float(TRUCK_DESTINATION_LATITUDE),
+                "longitude": float(TRUCK_DESTINATION_LONGITUDE),
             },
         )
 
@@ -633,8 +687,8 @@ async def test_location_person(hass, requests_mock_truck_response):
             DOMAIN: {
                 "platform": PLATFORM,
                 "name": "test",
-                "origin": "person.origin",
-                "destination": "person.destination",
+                "origin_person": "person.origin",
+                "destination_person": "person.destination",
                 "app_id": APP_ID,
                 "app_code": APP_CODE,
                 "mode": TRAVEL_MODE_TRUCK,
@@ -662,16 +716,16 @@ async def test_location_device_tracker(hass, requests_mock_truck_response):
             "device_tracker.origin",
             "unknown",
             {
-                "latitude": float(TRUCK_ORIGIN.split(",")[0]),
-                "longitude": float(TRUCK_ORIGIN.split(",")[1]),
+                "latitude": float(TRUCK_ORIGIN_LATITUDE),
+                "longitude": float(TRUCK_ORIGIN_LONGITUDE),
             },
         )
         hass.states.async_set(
             "device_tracker.destination",
             "unknown",
             {
-                "latitude": float(TRUCK_DESTINATION.split(",")[0]),
-                "longitude": float(TRUCK_DESTINATION.split(",")[1]),
+                "latitude": float(TRUCK_DESTINATION_LATITUDE),
+                "longitude": float(TRUCK_DESTINATION_LONGITUDE),
             },
         )
 
@@ -679,8 +733,8 @@ async def test_location_device_tracker(hass, requests_mock_truck_response):
             DOMAIN: {
                 "platform": PLATFORM,
                 "name": "test",
-                "origin": "device_tracker.origin",
-                "destination": "device_tracker.destination",
+                "origin_device_tracker": "device_tracker.origin",
+                "destination_device_tracker": "device_tracker.destination",
                 "app_id": APP_ID,
                 "app_code": APP_CODE,
                 "mode": TRAVEL_MODE_TRUCK,
@@ -711,8 +765,8 @@ async def test_location_device_tracker_added_after_update(
             DOMAIN: {
                 "platform": PLATFORM,
                 "name": "test",
-                "origin": "device_tracker.origin",
-                "destination": "device_tracker.destination",
+                "origin_device_tracker": "device_tracker.origin",
+                "destination_device_tracker": "device_tracker.destination",
                 "app_id": APP_ID,
                 "app_code": APP_CODE,
                 "mode": TRAVEL_MODE_TRUCK,
@@ -730,16 +784,16 @@ async def test_location_device_tracker_added_after_update(
             "device_tracker.origin",
             "unknown",
             {
-                "latitude": float(TRUCK_ORIGIN.split(",")[0]),
-                "longitude": float(TRUCK_ORIGIN.split(",")[1]),
+                "latitude": float(TRUCK_ORIGIN_LATITUDE),
+                "longitude": float(TRUCK_ORIGIN_LONGITUDE),
             },
         )
         hass.states.async_set(
             "device_tracker.destination",
             "unknown",
             {
-                "latitude": float(TRUCK_DESTINATION.split(",")[0]),
-                "longitude": float(TRUCK_DESTINATION.split(",")[1]),
+                "latitude": float(TRUCK_DESTINATION_LATITUDE),
+                "longitude": float(TRUCK_DESTINATION_LONGITUDE),
             },
         )
 
@@ -761,8 +815,8 @@ async def test_location_device_tracker_in_zone(
         "zone": [
             {
                 "name": "Origin",
-                "latitude": TRUCK_ORIGIN.split(",")[0],
-                "longitude": TRUCK_ORIGIN.split(",")[1],
+                "latitude": TRUCK_ORIGIN_LATITUDE,
+                "longitude": TRUCK_ORIGIN_LONGITUDE,
                 "radius": 250,
                 "passive": False,
             }
@@ -776,8 +830,9 @@ async def test_location_device_tracker_in_zone(
         DOMAIN: {
             "platform": PLATFORM,
             "name": "test",
-            "origin": "device_tracker.origin",
-            "destination": TRUCK_DESTINATION,
+            "origin_device_tracker": "device_tracker.origin",
+            "destination_latitude": TRUCK_DESTINATION_LATITUDE,
+            "destination_longitude": TRUCK_DESTINATION_LONGITUDE,
             "app_id": APP_ID,
             "app_code": APP_CODE,
             "mode": TRAVEL_MODE_TRUCK,
@@ -793,7 +848,7 @@ async def test_location_device_tracker_in_zone(
 async def test_route_not_found(hass, requests_mock, caplog):
     """Test that route not found error is correctly handled."""
     caplog.set_level(logging.ERROR)
-    origin = "52.5160,13.3779"
+    origin = "52.516,13.3779"
     destination = "47.013399,-10.171986"
     modes = ";".join([ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_DISABLED])
     response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
@@ -806,8 +861,10 @@ async def test_route_not_found(hass, requests_mock, caplog):
         DOMAIN: {
             "platform": PLATFORM,
             "name": "test",
-            "origin": origin,
-            "destination": destination,
+            "origin_latitude": origin.split(",")[0],
+            "origin_longitude": origin.split(",")[1],
+            "destination_latitude": destination.split(",")[0],
+            "destination_longitude": destination.split(",")[1],
             "app_id": APP_ID,
             "app_code": APP_CODE,
         }
@@ -824,15 +881,17 @@ async def test_pattern_origin(hass, caplog):
         DOMAIN: {
             "platform": PLATFORM,
             "name": "test",
-            "origin": "138.90,-77.04833",
-            "destination": CAR_DESTINATION,
+            "origin_latitude": "138.90",
+            "origin_longitude": "-77.04833",
+            "destination_latitude": CAR_DESTINATION_LATITUDE,
+            "destination_longitude": CAR_DESTINATION_LONGITUDE,
             "app_id": APP_ID,
             "app_code": APP_CODE,
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
     assert len(caplog.records) == 1
-    assert "Origin has the wrong format:" in caplog.text
+    assert "invalid latitude" in caplog.text
 
 
 async def test_pattern_destination(hass, caplog):
@@ -842,21 +901,23 @@ async def test_pattern_destination(hass, caplog):
         DOMAIN: {
             "platform": PLATFORM,
             "name": "test",
-            "origin": CAR_ORIGIN,
-            "destination": "139.0,-77.1",
+            "origin_latitude": CAR_ORIGIN_LATITUDE,
+            "origin_longitude": CAR_ORIGIN_LONGITUDE,
+            "destination_latitude": "139.0",
+            "destination_longitude": "-77.1",
             "app_id": APP_ID,
             "app_code": APP_CODE,
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
     assert len(caplog.records) == 1
-    assert "Destination has the wrong format:" in caplog.text
+    assert "invalid latitude" in caplog.text
 
 
 async def test_invalid_credentials(hass, requests_mock, caplog):
     """Test that invalid credentials error is correctly handled."""
     caplog.set_level(logging.ERROR)
-    origin = "52.5160,13.3779"
+    origin = "52.516,13.3779"
     destination = "47.013399,-10.171986"
     modes = ";".join([ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_DISABLED])
     response_url = _build_mock_url(
@@ -871,8 +932,10 @@ async def test_invalid_credentials(hass, requests_mock, caplog):
         DOMAIN: {
             "platform": PLATFORM,
             "name": "test",
-            "origin": origin,
-            "destination": destination,
+            "origin_latitude": origin.split(",")[0],
+            "origin_longitude": origin.split(",")[1],
+            "destination_latitude": destination.split(",")[0],
+            "destination_longitude": destination.split(",")[1],
             "app_id": "invalid",
             "app_code": "invalid",
         }
