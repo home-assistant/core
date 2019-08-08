@@ -428,6 +428,32 @@ async def test_template_delay_off(hass):
     assert state.state == "on"
 
 
+async def test_invalid_attribute_template(hass, caplog):
+    """Test that errors are logged if rendering template fails."""
+    await setup.async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "template",
+                "sensors": {
+                    "invalid_attribute": {
+                        "value_template": "{{ 1 == 1 }}",
+                        "friendly_name_template": "{{ states.binary_sensor.unknown.attributes.friendly_name }}",
+                        "attribute_templates": {
+                            "test_attribute": "{{ states.binary_sensor.unknown.attributes.friendly_name }}"
+                        },
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1
+    assert ("Error rendering attribute test_attribute") in caplog.text
+    assert ("Could not render friendly_name template") in caplog.text
+
+
 async def test_no_update_template_match_all(hass, caplog):
     """Test that we do not update sensors that match on all."""
     hass.states.async_set("binary_sensor.test_sensor", "true")
