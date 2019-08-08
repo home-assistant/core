@@ -448,10 +448,10 @@ async def test_no_update_template_match_all(hass, caplog):
                         "value_template": "{{ states.binary_sensor.test_sensor.state }}",
                         "entity_picture_template": "{{ 1 + 1 }}",
                     },
-                },
-                "all_attribute": {
-                    "value_template": "{{ states.binary_sensor.test_sensor.state }}",
-                    "attribute_templates": {"test_attribute": "{{ 1 + 1 }}"},
+                    "all_attribute": {
+                        "value_template": "{{ states.binary_sensor.test_sensor.state }}",
+                        "attribute_templates": {"test_attribute": "{{ 1 + 1 }}"},
+                    },
                 },
             }
         },
