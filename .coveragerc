@@ -374,7 +374,7 @@ omit =
     homeassistant/components/metoffice/weather.py
     homeassistant/components/microsoft/tts.py
     homeassistant/components/miflora/sensor.py
-    homeassistant/components/mikrotik/device_tracker.py
+    homeassistant/components/mikrotik/*
     homeassistant/components/mill/climate.py
     homeassistant/components/mitemp_bt/sensor.py
     homeassistant/components/mjpeg/camera.py
