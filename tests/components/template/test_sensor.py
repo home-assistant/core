@@ -177,32 +177,34 @@ class TestTemplateSensor:
     def test_attribute_templates(self):
         """Test attribute_templates template."""
         with assert_setup_component(1):
-            assert setup_component(self.hass, 'sensor', {
-                'sensor': {
-                    'platform': 'template',
-                    'sensors': {
-                        'test_template_sensor': {
-                            'value_template':
-                                "{{ states.sensor.test_state.state }}",
-                            'attribute_templates': {
-                                'test_attribute':
-                                    "It {{ states.sensor.test_state.state }}.",
+            assert setup_component(
+                self.hass,
+                "sensor",
+                {
+                    "sensor": {
+                        "platform": "template",
+                        "sensors": {
+                            "test_template_sensor": {
+                                "value_template": "{{ states.sensor.test_state.state }}",
+                                "attribute_templates": {
+                                    "test_attribute": "It {{ states.sensor.test_state.state }}."
+                                },
                             }
-                        }
+                        },
                     }
-                }
-            })
+                },
+            )
 
         self.hass.start()
         self.hass.block_till_done()
 
-        state = self.hass.states.get('sensor.test_template_sensor')
-        assert state.attributes.get('test_attribute') == 'It .'
+        state = self.hass.states.get("sensor.test_template_sensor")
+        assert state.attributes.get("test_attribute") == "It ."
 
-        self.hass.states.set('sensor.test_state', 'Works')
+        self.hass.states.set("sensor.test_state", "Works")
         self.hass.block_till_done()
-        state = self.hass.states.get('sensor.test_template_sensor')
-        assert state.attributes['test_attribute'] == 'It Works.'
+        state = self.hass.states.get("sensor.test_template_sensor")
+        assert state.attributes["test_attribute"] == "It Works."
 
     def test_template_syntax_error(self):
         """Test templating syntax error."""
@@ -401,9 +403,7 @@ async def test_no_template_match_all(hass, caplog):
                     },
                     "invalid_attribute": {
                         "value_template": "{{ states.sensor.test_sensor.state }}",
-                        "attribute_templates": {
-                            "test_attribute": "{{ 1 + 1 }}",
-                        },
+                        "attribute_templates": {"test_attribute": "{{ 1 + 1 }}"},
                     },
                 },
             }
@@ -414,7 +414,7 @@ async def test_no_template_match_all(hass, caplog):
     assert hass.states.get("sensor.invalid_icon").state == "unknown"
     assert hass.states.get("sensor.invalid_entity_picture").state == "unknown"
     assert hass.states.get("sensor.invalid_friendly_name").state == "unknown"
-    
+
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 6
     assert (
@@ -475,9 +475,7 @@ async def test_no_template_match_all(hass, caplog):
     await hass.helpers.entity_component.async_update_entity(
         "sensor.invalid_friendly_name"
     )
-    await hass.helpers.entity_component.async_update_entity(
-        "sensor.invalid_attribute"
-    )
+    await hass.helpers.entity_component.async_update_entity("sensor.invalid_attribute")
 
     assert hass.states.get("sensor.invalid_state").state == "2"
     assert hass.states.get("sensor.invalid_icon").state == "hello"

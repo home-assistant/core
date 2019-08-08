@@ -33,9 +33,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 
-CONF_ATTRIBUTE_TEMPLATES = 'attribute_templates'
+CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 
-ATTRIBUTES_PREFIX = '_attributes.'
+ATTRIBUTES_PREFIX = "_attributes."
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,12 +76,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         manual_entity_ids = device_config.get(ATTR_ENTITY_ID)
         invalid_templates = []
 
-        templates = dict((
-            (CONF_VALUE_TEMPLATE, state_template),
-            (CONF_ICON_TEMPLATE, icon_template),
-            (CONF_ENTITY_PICTURE_TEMPLATE, entity_picture_template),
-            (CONF_FRIENDLY_NAME_TEMPLATE, friendly_name_template),
-        ))
+        templates = dict(
+            (
+                (CONF_VALUE_TEMPLATE, state_template),
+                (CONF_ICON_TEMPLATE, icon_template),
+                (CONF_ENTITY_PICTURE_TEMPLATE, entity_picture_template),
+                (CONF_FRIENDLY_NAME_TEMPLATE, friendly_name_template),
+            )
+        )
 
         if attribute_templates is not None:
             templates.update(attribute_templates)
@@ -98,7 +100,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             if template_entity_ids == MATCH_ALL:
                 entity_ids = MATCH_ALL
                 # Cut off _template from name
-                invalid_templates.append(tpl_name.replace('_template', ''))
+                invalid_templates.append(tpl_name.replace("_template", ""))
             elif entity_ids != MATCH_ALL:
                 entity_ids |= set(template_entity_ids)
 
