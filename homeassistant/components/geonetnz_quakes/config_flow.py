@@ -14,7 +14,15 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_MMI, DEFAULT_MMI, DEFAULT_RADIUS, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    CONF_MMI,
+    DEFAULT_MMI,
+    DEFAULT_RADIUS,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    DEFAULT_MINIMUM_MAGNITUDE,
+    CONF_MINIMUM_MAGNITUDE,
+)
 
 
 @callback
@@ -74,5 +82,10 @@ class GeonetnzQuakesFlowHandler(config_entries.ConfigFlow):
 
         scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         user_input.update({CONF_SCAN_INTERVAL: scan_interval.seconds})
+
+        minimum_magnitude = user_input.get(
+            CONF_MINIMUM_MAGNITUDE, DEFAULT_MINIMUM_MAGNITUDE
+        )
+        user_input.update({CONF_MINIMUM_MAGNITUDE: minimum_magnitude})
 
         return self.async_create_entry(title=identifier, data=user_input)

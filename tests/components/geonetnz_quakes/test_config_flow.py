@@ -86,12 +86,15 @@ async def test_step_import(hass):
         CONF_MMI: 2,
         CONF_UNIT_SYSTEM: "metric",
         CONF_SCAN_INTERVAL: 300.0,
+        CONF_MINIMUM_MAGNITUDE: 0.0,
     }
 
 
 async def test_step_user(hass):
     """Test that the user step works."""
-    conf = {CONF_LATITUDE: -41.2, CONF_LONGITUDE: 174.7, CONF_RADIUS: 25, CONF_MMI: 3}
+    hass.config.latitude = -41.2
+    hass.config.longitude = 174.7
+    conf = {CONF_RADIUS: 25, CONF_MMI: 4}
 
     flow = config_flow.GeonetnzQuakesFlowHandler()
     flow.hass = hass
@@ -103,36 +106,10 @@ async def test_step_user(hass):
         CONF_LATITUDE: -41.2,
         CONF_LONGITUDE: 174.7,
         CONF_RADIUS: 25,
-        CONF_MMI: 3,
+        CONF_MMI: 4,
         CONF_UNIT_SYSTEM: "metric",
         CONF_SCAN_INTERVAL: 300.0,
-    }
-
-
-async def test_custom_minimum_magnitude(hass):
-    """Test that a custom minimum magnitude is stored correctly."""
-    conf = {
-        CONF_LATITUDE: -41.2,
-        CONF_LONGITUDE: 174.7,
-        CONF_RADIUS: 25,
-        CONF_MINIMUM_MAGNITUDE: 8.0,
-        CONF_MMI: 2,
-    }
-
-    flow = config_flow.GeonetnzQuakesFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_user(user_input=conf)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "-41.2, 174.7"
-    assert result["data"] == {
-        CONF_LATITUDE: -41.2,
-        CONF_LONGITUDE: 174.7,
-        CONF_RADIUS: 25,
-        CONF_MMI: 2,
-        CONF_UNIT_SYSTEM: "metric",
-        CONF_MINIMUM_MAGNITUDE: 8.0,
-        CONF_SCAN_INTERVAL: 300.0,
+        CONF_MINIMUM_MAGNITUDE: 0.0,
     }
 
 
