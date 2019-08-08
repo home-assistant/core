@@ -121,9 +121,7 @@ MOCK_GAMES_DATA_LOCKED2 = {
 
 MOCK_GAMES = {MOCK_ID: MOCK_GAMES_DATA, MOCK_ID2: MOCK_GAMES_DATA2}
 
-MOCK_GAMES_LOCKED = {
-    MOCK_ID: MOCK_GAMES_DATA_LOCKED, MOCK_ID2: MOCK_GAMES_DATA_LOCKED2
-}
+MOCK_GAMES_LOCKED = {MOCK_ID: MOCK_GAMES_DATA_LOCKED, MOCK_ID2: MOCK_GAMES_DATA_LOCKED2}
 
 MOCK_HOST_NAME = "Fake PS4"
 MOCK_HOST_ID = "A0000A0AA000"
@@ -148,7 +146,7 @@ MOCK_STATUS_PLAYING = {
     "status": MOCK_STATUS_ON,
     "status_code": MOCK_ON_CODE,
     "device-discovery-protocol-version": MOCK_DDP_VERSION,
-    "system-version": MOCK_HOST_VERSION
+    "system-version": MOCK_HOST_VERSION,
 }
 
 MOCK_LOAD_GAMES = "homeassistant.components.ps4.media_player.load_games"
@@ -245,12 +243,9 @@ async def setup_mock_component(hass):
 
 def test_games_reformat_to_dict(hass):
     """Test old data format is converted to new format."""
-    with patch(
-        MOCK_LOAD,
-        return_value=MOCK_GAMES_DATA_OLD_STR_FORMAT,
-    ), patch(MOCK_SAVE, side_effect=MagicMock()), patch(
-        "os.path.isfile", return_value=True
-    ):
+    with patch(MOCK_LOAD, return_value=MOCK_GAMES_DATA_OLD_STR_FORMAT), patch(
+        MOCK_SAVE, side_effect=MagicMock()
+    ), patch("os.path.isfile", return_value=True):
         mock_games = ps4.load_games(hass)
 
     # New format is a nested dict.
@@ -268,11 +263,9 @@ def test_games_reformat_to_dict(hass):
 
 def test_load_games(hass):
     """Test that games are loaded correctly."""
-    with patch(
-        MOCK_LOAD, return_value=MOCK_GAMES
-    ), patch(MOCK_SAVE, side_effect=MagicMock()), patch(
-        "os.path.isfile", return_value=True
-    ):
+    with patch(MOCK_LOAD, return_value=MOCK_GAMES), patch(
+        MOCK_SAVE, side_effect=MagicMock()
+    ), patch("os.path.isfile", return_value=True):
         mock_games = ps4.load_games(hass)
 
     assert isinstance(mock_games, dict)
@@ -287,21 +280,17 @@ def test_load_games(hass):
 
 def test_loading_games_returns_dict(hass):
     """Test that loading games always returns a dict."""
-    with patch(
-        MOCK_LOAD, side_effect=HomeAssistantError
-    ), patch(MOCK_SAVE, side_effect=MagicMock()), patch(
-        "os.path.isfile", return_value=True
-    ):
+    with patch(MOCK_LOAD, side_effect=HomeAssistantError), patch(
+        MOCK_SAVE, side_effect=MagicMock()
+    ), patch("os.path.isfile", return_value=True):
         mock_games = ps4.load_games(hass)
 
     assert isinstance(mock_games, dict)
     assert not mock_games
 
-    with patch(
-        MOCK_LOAD, return_value="Some String"
-    ), patch(MOCK_SAVE, side_effect=MagicMock()), patch(
-        "os.path.isfile", return_value=True
-    ):
+    with patch(MOCK_LOAD, return_value="Some String"), patch(
+        MOCK_SAVE, side_effect=MagicMock()
+    ), patch("os.path.isfile", return_value=True):
         mock_games = ps4.load_games(hass)
 
     assert isinstance(mock_games, dict)
@@ -343,13 +332,10 @@ async def test_send_command(hass):
 
 async def mock_service_call(hass, service, data, original):
     """Mock media service call."""
-    with patch(MOCK_LOAD,
-               return_value=original),\
-            patch(MOCK_SAVE,
-                  side_effect=MagicMock()) as mock_save,\
-            patch("os.path.isfile", return_value=True):
-        await hass.services.async_call(
-            DOMAIN, service, data)
+    with patch(MOCK_LOAD, return_value=original), patch(
+        MOCK_SAVE, side_effect=MagicMock()
+    ) as mock_save, patch("os.path.isfile", return_value=True):
+        await hass.services.async_call(DOMAIN, service, data)
         await hass.async_block_till_done()
     assert len(mock_save.mock_calls) == 1
     args, _ = mock_save.call_args
@@ -371,7 +357,7 @@ async def test_media_edit(hass):
         ATTR_MEDIA_CONTENT_ID: MOCK_ID,
         ATTR_MEDIA_TITLE: mock_title,
         ATTR_MEDIA_IMAGE_URL: mock_url,
-        ATTR_MEDIA_CONTENT_TYPE: mock_type
+        ATTR_MEDIA_CONTENT_TYPE: mock_type,
     }
 
     await ps4.async_setup(hass, {})
@@ -394,9 +380,9 @@ async def test_media_edit_playing(hass):
     mock_url = "http://somenewurl.jpeg"
     mock_type = MEDIA_TYPE_APP
 
-    with patch("pyps4_homeassistant.ps4.get_status",
-               return_value=MOCK_STATUS_PLAYING),\
-            patch(MOCK_LOAD_GAMES, return_value=original):
+    with patch(
+        "pyps4_homeassistant.ps4.get_status", return_value=MOCK_STATUS_PLAYING
+    ), patch(MOCK_LOAD_GAMES, return_value=original):
         await setup_mock_component(hass)
 
     mock_entities = hass.states.async_entity_ids()
@@ -408,11 +394,12 @@ async def test_media_edit_playing(hass):
         ATTR_ENTITY_ID: mock_entity_id,
         ATTR_MEDIA_TITLE: mock_title,
         ATTR_MEDIA_IMAGE_URL: mock_url,
-        ATTR_MEDIA_CONTENT_TYPE: mock_type
+        ATTR_MEDIA_CONTENT_TYPE: mock_type,
     }
 
-    with patch("homeassistant.components.ps4.refresh_entity_media",
-               side_effect=MagicMock()) as mock_refresh:
+    with patch(
+        "homeassistant.components.ps4.refresh_entity_media", side_effect=MagicMock()
+    ) as mock_refresh:
         mock_games = await mock_service_call(hass, service, data, original)
         await hass.async_block_till_done()
 
@@ -450,10 +437,11 @@ async def test_media_unlock_playing(hass):
     service = "media_unlock_playing"
     original = MOCK_GAMES_LOCKED
 
-    with patch("pyps4_homeassistant.ps4.get_status",
-               return_value=MOCK_STATUS_PLAYING),\
-            patch(MOCK_LOAD, return_value=original),\
-            patch(MOCK_SAVE, side_effect=MagicMock()):
+    with patch(
+        "pyps4_homeassistant.ps4.get_status", return_value=MOCK_STATUS_PLAYING
+    ), patch(MOCK_LOAD, return_value=original), patch(
+        MOCK_SAVE, side_effect=MagicMock()
+    ):
         await setup_mock_component(hass)
         await hass.async_block_till_done()
 
@@ -464,8 +452,9 @@ async def test_media_unlock_playing(hass):
 
     data = {ATTR_ENTITY_ID: mock_entity_id}
 
-    with patch("homeassistant.components.ps4.refresh_entity_media",
-               side_effect=MagicMock()) as mock_refresh:
+    with patch(
+        "homeassistant.components.ps4.refresh_entity_media", side_effect=MagicMock()
+    ) as mock_refresh:
         mock_games = await mock_service_call(hass, service, data, original)
         await hass.async_block_till_done()
     await hass.async_block_till_done()
