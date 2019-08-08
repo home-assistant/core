@@ -16,10 +16,8 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_EVENT,
 )
-from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA, SOURCE_TYPE_GPS)
-from homeassistant.components.device_tracker.config_entry import (
-    DeviceTrackerEntity)
+from homeassistant.components.device_tracker import PLATFORM_SCHEMA, SOURCE_TYPE_GPS
+from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -117,23 +115,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry,
-                            async_add_entities):
+async def async_setup_entry(hass: HomeAssistantType, entry, async_add_entities):
     """Configure a dispatcher connection based on a config entry."""
+
     @callback
     def _receive_data(device, gps, battery, accuracy, attrs):
         """Receive set location."""
-        if device in hass.data[DOMAIN]['devices']:
+        if device in hass.data[DOMAIN]["devices"]:
             return
 
-        hass.data[DOMAIN]['devices'].add(device)
+        hass.data[DOMAIN]["devices"].add(device)
 
-        async_add_entities([TraccarEntity(
-            device, gps, battery, accuracy, attrs
-        )])
+        async_add_entities([TraccarEntity(device, gps, battery, accuracy, attrs)])
 
-    hass.data[DOMAIN]['unsub_device_tracker'][entry.entry_id] = \
-        async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
+    hass.data[DOMAIN]["unsub_device_tracker"][
+        entry.entry_id
+    ] = async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
 
     # Restore previously loaded devices
     dev_reg = await device_registry.async_get_registry(hass)
@@ -148,7 +145,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry,
 
     entities = []
     for dev_id in dev_ids:
-        hass.data[DOMAIN]['devices'].add(dev_id)
+        hass.data[DOMAIN]["devices"].add(dev_id)
         entity = TraccarEntity(dev_id, None, None, None, None)
         entities.append(entity)
 
@@ -329,11 +326,10 @@ class TraccarScanner:
                 )
 
 
-class TraccarEntity(DeviceTrackerEntity, RestoreEntity):
+class TraccarEntity(TrackerEntity, RestoreEntity):
     """Represent a tracked device."""
 
-    def __init__(
-            self, device, location, battery, accuracy, attributes):
+    def __init__(self, device, location, battery, accuracy, attributes):
         """Set up Geofency entity."""
         self._accuracy = accuracy
         self._attributes = attributes
@@ -386,10 +382,7 @@ class TraccarEntity(DeviceTrackerEntity, RestoreEntity):
     @property
     def device_info(self):
         """Return the device info."""
-        return {
-            'name': self._name,
-            'identifiers': {(DOMAIN, self._unique_id)},
-        }
+        return {"name": self._name, "identifiers": {(DOMAIN, self._unique_id)}}
 
     @property
     def source_type(self):
@@ -400,7 +393,8 @@ class TraccarEntity(DeviceTrackerEntity, RestoreEntity):
         """Register state update callback."""
         await super().async_added_to_hass()
         self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass, TRACKER_UPDATE, self._async_receive_data)
+            self.hass, TRACKER_UPDATE, self._async_receive_data
+        )
 
         # don't restore if we got created with data
         if self._location is not None:
@@ -419,10 +413,7 @@ class TraccarEntity(DeviceTrackerEntity, RestoreEntity):
             return
 
         attr = state.attributes
-        self._location = (
-            attr.get(ATTR_LATITUDE),
-            attr.get(ATTR_LONGITUDE),
-        )
+        self._location = (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
         self._accuracy = attr.get(ATTR_ACCURACY)
         self._attributes = {
             ATTR_ALTITUDE: attr.get(ATTR_ALTITUDE),
@@ -437,8 +428,7 @@ class TraccarEntity(DeviceTrackerEntity, RestoreEntity):
         self._unsub_dispatcher()
 
     @callback
-    def _async_receive_data(self, device, location, battery, accuracy,
-                            attributes):
+    def _async_receive_data(self, device, location, battery, accuracy, attributes):
         """Mark the device as seen."""
         if device != self.name:
             return
