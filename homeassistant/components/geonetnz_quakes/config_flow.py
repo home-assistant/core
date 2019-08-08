@@ -14,15 +14,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    CONF_MINIMUM_MAGNITUDE,
-    CONF_MMI,
-    DEFAULT_MINIMUM_MAGNITUDE,
-    DEFAULT_MMI,
-    DEFAULT_RADIUS,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-)
+from .const import CONF_MMI, DEFAULT_MMI, DEFAULT_RADIUS, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 
 @callback
@@ -44,19 +36,10 @@ class GeonetnzQuakesFlowHandler(config_entries.ConfigFlow):
         """Show the form to the user."""
         data_schema = vol.Schema(
             {
-                vol.Optional(
-                    CONF_LATITUDE, default=self.hass.config.latitude
-                ): cv.latitude,
-                vol.Optional(
-                    CONF_LONGITUDE, default=self.hass.config.longitude
-                ): cv.longitude,
-                vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): cv.positive_int,
                 vol.Optional(CONF_MMI, default=DEFAULT_MMI): vol.All(
                     vol.Coerce(int), vol.Range(min=-1, max=8)
                 ),
-                vol.Optional(
-                    CONF_MINIMUM_MAGNITUDE, default=DEFAULT_MINIMUM_MAGNITUDE
-                ): vol.All(vol.Coerce(float), vol.Range(min=0)),
+                vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): cv.positive_int,
             }
         )
 
@@ -73,6 +56,11 @@ class GeonetnzQuakesFlowHandler(config_entries.ConfigFlow):
         if not user_input:
             return await self._show_form()
 
+        latitude = user_input.get(CONF_LATITUDE, self.hass.config.latitude)
+        user_input.update({CONF_LATITUDE: latitude})
+        longitude = user_input.get(CONF_LONGITUDE, self.hass.config.longitude)
+        user_input.update({CONF_LONGITUDE: longitude})
+
         identifier = "{0}, {1}".format(
             user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE]
         )
@@ -84,6 +72,7 @@ class GeonetnzQuakesFlowHandler(config_entries.ConfigFlow):
         else:
             user_input[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_METRIC
 
-        user_input[CONF_SCAN_INTERVAL] = DEFAULT_SCAN_INTERVAL.total_seconds()
+        scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        user_input.update({CONF_SCAN_INTERVAL: scan_interval.seconds})
 
         return self.async_create_entry(title=identifier, data=user_input)

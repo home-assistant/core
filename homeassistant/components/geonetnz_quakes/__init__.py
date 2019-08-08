@@ -35,6 +35,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(
                     CONF_MINIMUM_MAGNITUDE, default=DEFAULT_MINIMUM_MAGNITUDE
                 ): vol.All(vol.Coerce(float), vol.Range(min=0)),
+                vol.Optional(
+                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                ): cv.time_period,
             }
         )
     },
@@ -51,8 +54,8 @@ async def async_setup(hass, config):
 
     latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
     longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
-    mmi = conf.get(CONF_MMI, DEFAULT_MMI)
-    scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    mmi = conf[CONF_MMI]
+    scan_interval = conf[CONF_SCAN_INTERVAL]
 
     identifier = "{0}, {1}".format(latitude, longitude)
     if identifier in configured_instances(hass):
