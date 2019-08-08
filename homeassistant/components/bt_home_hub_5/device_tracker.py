@@ -4,17 +4,20 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
-                                                     DeviceScanner)
+from homeassistant.components.device_tracker import (
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    DeviceScanner,
+)
 from homeassistant.const import CONF_HOST
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DEFAULT_IP = '192.168.1.254'
+CONF_DEFAULT_IP = "192.168.1.254"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string}
+)
 
 
 def get_scanner(hass, config):

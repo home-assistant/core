@@ -15,21 +15,22 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "USCIS"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_FRIENDLY_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required('case_id'): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_FRIENDLY_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Required("case_id"): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the platform in HASS and Case Information."""
-    uscis = UscisSensor(config['case_id'], config[CONF_FRIENDLY_NAME])
+    uscis = UscisSensor(config["case_id"], config[CONF_FRIENDLY_NAME])
     uscis.update()
     if uscis.valid_case_id:
         add_entities([uscis])
     else:
-        _LOGGER.error("Setup USCIS Sensor Fail"
-                      " check if your Case ID is Valid")
+        _LOGGER.error("Setup USCIS Sensor Fail" " check if your Case ID is Valid")
 
 
 class UscisSensor(Entity):
@@ -67,12 +68,11 @@ class UscisSensor(Entity):
     def update(self):
         """Fetch data from the USCIS website and update state attributes."""
         import uscisstatus
+
         try:
             status = uscisstatus.get_case_status(self._case_id)
-            self._attributes = {
-                self.CURRENT_STATUS: status['status']
-            }
-            self._state = status['date']
+            self._attributes = {self.CURRENT_STATUS: status["status"]}
+            self._state = status["date"]
             self.valid_case_id = True
 
         except ValueError:
