@@ -249,22 +249,21 @@ class BinarySensorTemplate(BinarySensorDevice):
             ('_entity_picture', self._entity_picture_template),
         ))
 
-        if self._attribute_templates is not None:
-            templates.update({'{}{}'.format(ATTRIBUTES_PREFIX, key): value
-                              for key, value
-                              in self._attribute_templates.items()})
+        attrs = {}
+        for key, value in self._attribute_templates.items():
+            try:
+                attrs[key] = value.async_render()
+            catch TemplateError as err:
+                _LOGGER.error("Error rendering attribute %s: %s, key, err)
+        
+        self._attributes = attrs
 
         for property_name, template in templates.items():
             if template is None:
                 continue
 
             try:
-                if property_name.startswith(ATTRIBUTES_PREFIX):
-                    attribute_name = property_name.replace(ATTRIBUTES_PREFIX,
-                                                           '')
-                    self._attributes[attribute_name] = template.async_render()
-                else:
-                    setattr(self, property_name, template.async_render())
+                setattr(self, property_name, template.async_render())
             except TemplateError as ex:
                 friendly_property_name = property_name[1:].replace("_", " ")
                 if ex.args and ex.args[0].startswith(
