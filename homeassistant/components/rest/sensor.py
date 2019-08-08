@@ -1,12 +1,14 @@
 """Support for RESTful API sensors."""
-import logging
 import json
+import logging
 
 import voluptuous as vol
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA
+from homeassistant import exceptions
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_FORCE_UPDATE,
@@ -27,7 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, template
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
         vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
+        vol.Optional(CONF_JSON_ATTRS): vol.Any(cv.template_complex, cv.template),
         vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
         vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(METHODS),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -82,6 +85,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if value_template is not None:
         value_template.hass = hass
+
+    template.attach(hass, json_attrs)
 
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
@@ -175,23 +180,31 @@ class RestSensor(Entity):
         self.rest.update()
         value = self.rest.data
 
-        if self._json_attrs:
-            self._attributes = {}
-            if value:
-                try:
-                    json_dict = json.loads(value)
-                    if isinstance(json_dict, dict):
-                        attrs = {
-                            k: json_dict[k] for k in self._json_attrs if k in json_dict
-                        }
-                        self._attributes = attrs
+        self._attributes = {}
+        attr = {}
+
+        if self._json_attrs and value:
+            try:
+                if isinstance(self._json_attrs, template.Template):
+                    attr = self._json_attrs. \
+                        render_with_possible_json_value(value)
+                elif isinstance(self._json_attrs, dict):
+                    json_dict = {}
+                    try:
+                        json_dict = json.loads(value)
+                    except (ValueError, TypeError):
+                        _LOGGER.warning("REST result could not be parsed "
+                                        "as JSON")
+                        _LOGGER.debug("Erroneous JSON: %s", value)
                     else:
-                        _LOGGER.warning("JSON result was not a dictionary")
-                except ValueError:
-                    _LOGGER.warning("REST result could not be parsed as JSON")
-                    _LOGGER.debug("Erroneous JSON: %s", value)
-            else:
-                _LOGGER.warning("Empty reply found when expecting JSON data")
+                        attr.update(
+                            template.render_complex(self._json_attrs,
+                                                    {'value': value,
+                                                     'value_json': json_dict}))
+                self._attributes = attr
+            except (exceptions.TemplateError, vol.Invalid) as ex:
+                _LOGGER.error("Error rendering '%s' for template: %s",
+                              self.name, ex)
         if value is not None and self._value_template is not None:
             value = self._value_template.render_with_possible_json_value(value, None)
 
