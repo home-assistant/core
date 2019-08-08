@@ -78,7 +78,7 @@ async def webhook_id(hass, traccar_client):
 async def test_missing_data(hass, traccar_client, webhook_id):
     """Test missing data."""
     url = "/api/webhook/{}".format(webhook_id)
-    data = {"lat": 1.0, "lon": 1.1, "id": "123"}
+    data = {"lat": "1.0", "lon": "1.1", "id": "123"}
 
     # No data
     req = await traccar_client.post(url)
@@ -105,13 +105,13 @@ async def test_enter_and_exit(hass, traccar_client, webhook_id):
     url = "/api/webhook/{}".format(webhook_id)
     data = {
         "timestamp": 123456789,
-        "lat": HOME_LATITUDE,
-        "lon": HOME_LONGITUDE,
+        "lat": str(HOME_LATITUDE),
+        "lon": str(HOME_LONGITUDE),
         "id": "123",
-        "accuracy": 10.5,
+        "accuracy": "10.5",
         "batt": 10,
         "speed": 100,
-        "bearing": 105.32,
+        "bearing": "105.32",
         "altitude": 102,
     }
 
@@ -141,7 +141,7 @@ async def test_enter_and_exit(hass, traccar_client, webhook_id):
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
     state_name = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["device"])
+        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"])
     ).state
     assert STATE_NOT_HOME == state_name
 
@@ -157,13 +157,13 @@ async def test_enter_with_attrs(hass, traccar_client, webhook_id):
     url = "/api/webhook/{}".format(webhook_id)
     data = {
         "timestamp": 123456789,
-        "lat": 1.0,
-        "lon": 1.1,
+        "lat": "1.0",
+        "lon": "1.1",
         "id": "123",
-        "accuracy": 10.5,
+        "accuracy": "10.5",
         "batt": 10,
         "speed": 100,
-        "bearing": 105.32,
+        "bearing": "105.32",
         "altitude": 102,
     }
 
@@ -179,8 +179,8 @@ async def test_enter_with_attrs(hass, traccar_client, webhook_id):
     assert state.attributes["altitude"] == 102.0
 
     data = {
-        "lat": HOME_LATITUDE,
-        "lon": HOME_LONGITUDE,
+        "lat": str(HOME_LATITUDE),
+        "lon": str(HOME_LONGITUDE),
         "id": "123",
         "accuracy": 123,
         "batt": 23,
@@ -207,7 +207,7 @@ async def test_enter_with_attrs(hass, traccar_client, webhook_id):
 async def test_load_unload_entry(hass, traccar_client, webhook_id):
     """Test that the appropriate dispatch signals are added and removed."""
     url = "/api/webhook/{}".format(webhook_id)
-    data = {"lat": HOME_LATITUDE, "lon": HOME_LONGITUDE, "id": "123"}
+    data = {"lat": str(HOME_LATITUDE), "lon": str(HOME_LONGITUDE), "id": "123"}
 
     # Enter the Home
     req = await traccar_client.post(url, params=data)
