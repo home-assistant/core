@@ -25,12 +25,14 @@ HA_USER_AGENT = "Home Assistant HaveIBeenPwned Sensor Component"
 MIN_TIME_BETWEEN_FORCED_UPDATES = timedelta(seconds=5)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
-URL = 'https://haveibeenpwned.com/api/v3/breachedaccount/'
+URL = "https://haveibeenpwned.com/api/v3/breachedaccount/"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_EMAIL): vol.All(cv.ensure_list, [cv.string]),
-    vol.Required(CONF_API_KEY): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_EMAIL): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required(CONF_API_KEY): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -152,8 +154,7 @@ class HaveIBeenPwnedData:
             url = "{}{}?truncateResponse=false".format(URL, self._email)
             header = {USER_AGENT: HA_USER_AGENT, "hibp-api-key": self._api_key}
             _LOGGER.debug("Checking for breaches for email: %s", self._email)
-            req = requests.get(url, headers=header,
-                               allow_redirects=True, timeout=5)
+            req = requests.get(url, headers=header, allow_redirects=True, timeout=5)
 
         except requests.exceptions.RequestException:
             _LOGGER.error("Failed fetching data for %s", self._email)
