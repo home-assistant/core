@@ -54,6 +54,10 @@ SENSOR_TYPES = {
     "docker_active": ["Containers active", "", "mdi:docker"],
     "docker_cpu_use": ["Containers CPU used", "%", "mdi:docker"],
     "docker_memory_use": ["Containers RAM used", "MiB", "mdi:docker"],
+    "network_ping": ["Ping", "ms", "mdi:check-network-outline"],
+    "network_port": ["TCP Port", "ms", "mdi:check-network-outline"],
+    "network_web": ["HTTP", "", "mdi:check-network-outline"],
+
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -244,6 +248,29 @@ class GlancesSensor(Entity):
                             mem_use += container["memory"]["usage"]
                         self._state = round(mem_use / 1024 ** 2, 1)
                 except KeyError:
+                    self._state = STATE_UNAVAILABLE
+            elif self.type == "network_ping":
+                try:
+                    for record in value["ports"]:
+                        if record["port"] == 0:
+                            self._state = round(record["status"] * 1000)
+                            break
+                except:
+                    self._state = STATE_UNAVAILABLE
+            elif self.type == "network_port":
+                try:
+                    for record in value["ports"]:
+                        if int(record["port"]) > 0:
+                            self._state = round(record["status"] * 1000)
+                            break
+                except:
+                    self._state = STATE_UNAVAILABLE
+            elif self.type == "network_web":
+                try:
+                    for record in value["ports"]:
+                        if record["indice"] == "web_1":
+                            self._state = "code " + str(record["status"])
+                except:
                     self._state = STATE_UNAVAILABLE
 
 
