@@ -173,7 +173,7 @@ class MikrotikClient:
         """Retrieve data from Mikrotik API."""
         if not self._connected or not self._client:
             if not self.connect_to_device():
-            return None
+                return None
         try:
             if params:
                 response = self._client(cmd=cmd, **params)
