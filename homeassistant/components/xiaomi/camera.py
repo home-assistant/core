@@ -58,7 +58,6 @@ class XiaomiCamera(Camera):
     def __init__(self, hass, config):
         """Initialize."""
         super().__init__()
-        self.hass = hass
         self._extra_arguments = config.get(CONF_FFMPEG_ARGUMENTS)
         self._last_image = None
         self._last_url = None
@@ -149,7 +148,7 @@ class XiaomiCamera(Camera):
             _LOGGER.error('Error parsing template %s: %s', self.host, exc)
             return self._last_image
 
-        url = await self.hass.async_add_job(self.get_latest_video_url, host)
+        url = await self.hass.async_add_executor_job(self.get_latest_video_url, host)
         if url != self._last_url:
             ffmpeg = ImageFrame(self._manager.binary, loop=self.hass.loop)
             self._last_image = await asyncio.shield(
