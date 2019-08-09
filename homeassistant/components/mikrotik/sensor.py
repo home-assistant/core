@@ -1,5 +1,4 @@
 """Mikrotik status sensors."""
-from datetime import timedelta
 import logging
 
 from homeassistant.helpers.entity import Entity
@@ -102,7 +101,10 @@ class MikrotikSensor(Entity):
                 add_unit = True
                 try:
                     value = "%.1f" % (float(value) / MEGA)
-                except:
+                except Exception as e:
+                    _LOGGER.error(
+                        "Mikrotik %s error converting value to float", self._name
+                    )
                     pass
 
             if key == self._state_item:

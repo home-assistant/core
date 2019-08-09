@@ -30,6 +30,7 @@ from .const import (
     CONF_ENCODING,
     CONF_ARP_PING,
     CONF_LOGIN_METHOD,
+    CONF_WAN_PORT,
     MIKROTIK_SERVICES,
     SENSORS,
     MTK_DEFAULT_WAN,

@@ -5,11 +5,13 @@ MIKROTIK = DOMAIN
 HOSTS = "hosts"
 MTK_LOGIN_PLAIN = "plain"
 MTK_LOGIN_TOKEN = "token"
+MTK_DEFAULT_WAN = "ether1"
 
 CONF_ARP_PING = "arp_ping"
 CONF_TRACK_DEVICES = "track_devices"
 CONF_LOGIN_METHOD = "login_method"
 CONF_ENCODING = "encoding"
+CONF_WAN_PORT = "wan_port"
 DEFAULT_ENCODING = "utf-8"
 
 INFO = "info"
