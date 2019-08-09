@@ -5,12 +5,12 @@ To update, run python3 -m script.hassfest
 
 
 FLOWS = [
+    "adguard",
     "ais_dom_device",
     "ais_drives_service",
     "ais_host",
     "ais_spotify_service",
     "ais_wifi_service",
-    "adguard",
     "ambiclimate",
     "ambient_station",
     "axis",
@@ -67,5 +67,5 @@ FLOWS = [
     "wwlln",
     "zha",
     "zone",
-    "zwave"
+    "zwave",
 ]
