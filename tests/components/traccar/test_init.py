@@ -29,7 +29,7 @@ def mock_dev_track(mock_device_tracker_conf):
 
 
 @pytest.fixture(name="client")
-async def traccar_client(loop, hass, aiohttp_client):
+async def client(loop, hass, aiohttp_client):
     """Mock client for Traccar (unauthenticated)."""
     assert await async_setup_component(hass, "persistent_notification", {})
 
@@ -75,38 +75,38 @@ async def webhook_id(hass, client):
     return result["result"].data["webhook_id"]
 
 
-async def test_missing_data(hass, traccar_client, webhook_id):
+async def test_missing_data(hass, client, webhook_id):
     """Test missing data."""
     url = "/api/webhook/{}".format(webhook_id)
     data = {"lat": "1.0", "lon": "1.1", "id": "123"}
 
     # No data
-    req = await traccar_client.post(url)
+    req = await client.post(url)
     await hass.async_block_till_done()
     assert req.status == HTTP_UNPROCESSABLE_ENTITY
 
     # No latitude
     copy = data.copy()
     del copy["lat"]
-    req = await traccar_client.post(url, params=copy)
+    req = await client.post(url, params=copy)
     await hass.async_block_till_done()
     assert req.status == HTTP_UNPROCESSABLE_ENTITY
 
     # No device
     copy = data.copy()
     del copy["id"]
-    req = await traccar_client.post(url, params=copy)
+    req = await client.post(url, params=copy)
     await hass.async_block_till_done()
     assert req.status == HTTP_UNPROCESSABLE_ENTITY
 
 
-async def test_enter_and_exit(hass, traccar_client, webhook_id):
+async def test_enter_and_exit(hass, client, webhook_id):
     """Test when there is a known zone."""
     url = "/api/webhook/{}".format(webhook_id)
     data = {"lat": str(HOME_LATITUDE), "lon": str(HOME_LONGITUDE), "id": "123"}
 
     # Enter the Home
-    req = await traccar_client.post(url, params=data)
+    req = await client.post(url, params=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
     state_name = hass.states.get(
@@ -115,7 +115,7 @@ async def test_enter_and_exit(hass, traccar_client, webhook_id):
     assert STATE_HOME == state_name
 
     # Enter Home again
-    req = await traccar_client.post(url, params=data)
+    req = await client.post(url, params=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
     state_name = hass.states.get(
@@ -127,7 +127,7 @@ async def test_enter_and_exit(hass, traccar_client, webhook_id):
     data["lat"] = 0
 
     # Enter Somewhere else
-    req = await traccar_client.post(url, params=data)
+    req = await client.post(url, params=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
     state_name = hass.states.get(
@@ -142,7 +142,7 @@ async def test_enter_and_exit(hass, traccar_client, webhook_id):
     assert len(ent_reg.entities) == 1
 
 
-async def test_enter_with_attrs(hass, traccar_client, webhook_id):
+async def test_enter_with_attrs(hass, client, webhook_id):
     """Test when additional attributes are present."""
     url = "/api/webhook/{}".format(webhook_id)
     data = {
@@ -157,7 +157,7 @@ async def test_enter_with_attrs(hass, traccar_client, webhook_id):
         "altitude": 102,
     }
 
-    req = await traccar_client.post(url, params=data)
+    req = await client.post(url, params=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
     state = hass.states.get("{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"]))
@@ -179,7 +179,7 @@ async def test_enter_with_attrs(hass, traccar_client, webhook_id):
         "altitude": 123,
     }
 
-    req = await traccar_client.post(url, params=data)
+    req = await client.post(url, params=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
     state = hass.states.get("{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"]))
@@ -191,14 +191,14 @@ async def test_enter_with_attrs(hass, traccar_client, webhook_id):
     assert state.attributes["altitude"] == 123
 
 
-async def test_two_devices(hass, traccar_client, webhook_id):
+async def test_two_devices(hass, client, webhook_id):
     """Test updating two different devices."""
     url = "/api/webhook/{}".format(webhook_id)
 
     data_device_1 = {"lat": "1.0", "lon": "1.1", "id": "device_1"}
 
     # Exit Home
-    req = await traccar_client.post(url, data=data_device_1)
+    req = await client.post(url, params=data_device_1)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
 
@@ -210,7 +210,7 @@ async def test_two_devices(hass, traccar_client, webhook_id):
     data_device_2["lat"] = str(HOME_LATITUDE)
     data_device_2["lon"] = str(HOME_LONGITUDE)
     data_device_2["id"] = "device_2"
-    req = await traccar_client.post(url, data=data_device_2)
+    req = await client.post(url, params=data_device_2)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
 
@@ -223,13 +223,13 @@ async def test_two_devices(hass, traccar_client, webhook_id):
 @pytest.mark.xfail(
     reason="The device_tracker component does not support unloading yet."
 )
-async def test_load_unload_entry(hass, traccar_client, webhook_id):
+async def test_load_unload_entry(hass, client, webhook_id):
     """Test that the appropriate dispatch signals are added and removed."""
     url = "/api/webhook/{}".format(webhook_id)
     data = {"lat": str(HOME_LATITUDE), "lon": str(HOME_LONGITUDE), "id": "123"}
 
     # Enter the Home
-    req = await traccar_client.post(url, params=data)
+    req = await client.post(url, params=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
     state_name = hass.states.get(
