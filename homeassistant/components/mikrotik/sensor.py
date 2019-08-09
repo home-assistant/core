@@ -101,9 +101,9 @@ class MikrotikSensor(Entity):
                 add_unit = True
                 try:
                     value = "%.1f" % (float(value) / MEGA)
-                except Exception as e:
+                except Exception as error:
                     _LOGGER.error(
-                        "Mikrotik %s error converting value to float", self._name
+                        "Mikrotik %s error %s", self._name, error
                     )
                     pass
 
