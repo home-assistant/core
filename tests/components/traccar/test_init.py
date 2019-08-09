@@ -29,7 +29,7 @@ def mock_dev_track(mock_device_tracker_conf):
 
 
 @pytest.fixture(name="client")
-async def client(loop, hass, aiohttp_client):
+async def traccar_client(loop, hass, aiohttp_client):
     """Mock client for Traccar (unauthenticated)."""
     assert await async_setup_component(hass, "persistent_notification", {})
 
