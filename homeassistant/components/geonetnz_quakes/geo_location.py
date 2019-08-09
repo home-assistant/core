@@ -25,7 +25,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
 from .const import CONF_MINIMUM_MAGNITUDE, CONF_MMI, DOMAIN, FEED
 
@@ -49,6 +49,10 @@ SOURCE = "geonetnz_quakes"
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the GeoNet NZ Quakes Feed platform."""
+    radius = entry.data[CONF_RADIUS]
+    unit_system = entry.data[CONF_UNIT_SYSTEM]
+    if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+        radius = METRIC_SYSTEM.length(radius, LENGTH_MILES)
     manager = GeonetnzQuakesFeedEntityManager(
         hass,
         async_add_entities,
@@ -56,8 +60,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entry.data[CONF_LATITUDE],
         entry.data[CONF_LONGITUDE],
         entry.data[CONF_MMI],
-        entry.data[CONF_RADIUS],
-        entry.data[CONF_UNIT_SYSTEM],
+        radius,
+        unit_system,
         entry.data[CONF_MINIMUM_MAGNITUDE],
     )
     hass.data[DOMAIN][FEED][entry.entry_id] = manager

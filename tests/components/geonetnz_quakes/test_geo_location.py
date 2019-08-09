@@ -1,12 +1,13 @@
 """The tests for the GeoNet NZ Quakes Feed integration."""
 import datetime
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, PropertyMock, ANY
 
+from aio_geojson_client.feed import GeoJsonFeed
 from asynctest import patch, CoroutineMock
 
 from homeassistant.components import geonetnz_quakes
 from homeassistant.components.geo_location import ATTR_SOURCE
-from homeassistant.components.geonetnz_quakes import DEFAULT_SCAN_INTERVAL
+from homeassistant.components.geonetnz_quakes import DEFAULT_SCAN_INTERVAL, FEED, DOMAIN
 from homeassistant.components.geonetnz_quakes.geo_location import (
     ATTR_EXTERNAL_ID,
     ATTR_MAGNITUDE,
@@ -14,6 +15,7 @@ from homeassistant.components.geonetnz_quakes.geo_location import (
     ATTR_MMI,
     ATTR_DEPTH,
     ATTR_QUALITY,
+    GeonetnzQuakesFeedEntityManager,
 )
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
@@ -192,7 +194,9 @@ async def test_setup_imperial(hass):
     utcnow = dt_util.utcnow()
     with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
         "aio_geojson_client.feed.GeoJsonFeed.update", new_callable=CoroutineMock
-    ) as mock_feed_update:
+    ) as mock_feed_update, patch(
+        "aio_geojson_client.feed.GeoJsonFeed.__init__", new_callable=CoroutineMock
+    ) as mock_feed_init:
         mock_feed_update.return_value = "OK", [mock_entry_1]
         assert await async_setup_component(hass, geonetnz_quakes.DOMAIN, CONFIG)
         # Artificially trigger update.
@@ -202,6 +206,9 @@ async def test_setup_imperial(hass):
 
         all_states = hass.states.async_all()
         assert len(all_states) == 1
+
+        # Test conversion of 200 miles to kilometers.
+        assert mock_feed_init.call_args[1].get("filter_radius") == 321.8688
 
         state = hass.states.get("geo_location.title_1")
         assert state is not None
