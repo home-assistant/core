@@ -1,4 +1,6 @@
 """Define tests for the GeoNet NZ Quakes config flow."""
+from datetime import timedelta
+
 import pytest
 from asynctest import patch, CoroutineMock
 
@@ -71,6 +73,8 @@ async def test_step_import(hass):
         CONF_RADIUS: 25,
         CONF_UNIT_SYSTEM: "metric",
         CONF_MMI: 2,
+        CONF_SCAN_INTERVAL: timedelta(minutes=4),
+        CONF_MINIMUM_MAGNITUDE: 2.5,
     }
 
     flow = config_flow.GeonetnzQuakesFlowHandler()
@@ -85,8 +89,8 @@ async def test_step_import(hass):
         CONF_RADIUS: 25,
         CONF_MMI: 2,
         CONF_UNIT_SYSTEM: "metric",
-        CONF_SCAN_INTERVAL: 300.0,
-        CONF_MINIMUM_MAGNITUDE: 0.0,
+        CONF_SCAN_INTERVAL: 240.0,
+        CONF_MINIMUM_MAGNITUDE: 2.5,
     }
 
 
