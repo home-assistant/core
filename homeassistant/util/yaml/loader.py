@@ -116,7 +116,10 @@ def _include_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
 
     """
     fname = os.path.join(os.path.dirname(loader.name), node.value)
-    return _add_reference(load_yaml(fname), loader, node)
+    try:
+        return _add_reference(load_yaml(fname), loader, node)
+    except FileNotFoundError:
+        raise HomeAssistantError(f"{node.start_mark}: Unable to read file {fname}.")
 
 
 def _is_file_valid(name: str) -> bool:
