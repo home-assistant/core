@@ -1,13 +1,12 @@
 """The tests for the GeoNet NZ Quakes Feed integration."""
 import datetime
-from unittest.mock import MagicMock, PropertyMock, ANY
+from unittest.mock import MagicMock
 
-from aio_geojson_client.feed import GeoJsonFeed
 from asynctest import patch, CoroutineMock
 
 from homeassistant.components import geonetnz_quakes
 from homeassistant.components.geo_location import ATTR_SOURCE
-from homeassistant.components.geonetnz_quakes import DEFAULT_SCAN_INTERVAL, FEED, DOMAIN
+from homeassistant.components.geonetnz_quakes import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.geonetnz_quakes.geo_location import (
     ATTR_EXTERNAL_ID,
     ATTR_MAGNITUDE,
@@ -15,7 +14,6 @@ from homeassistant.components.geonetnz_quakes.geo_location import (
     ATTR_MMI,
     ATTR_DEPTH,
     ATTR_QUALITY,
-    GeonetnzQuakesFeedEntityManager,
 )
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
