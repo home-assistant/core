@@ -1,4 +1,6 @@
 """Config flow to configure the GeoNet NZ Quakes integration."""
+import logging
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -23,6 +25,8 @@ from .const import (
     DEFAULT_MINIMUM_MAGNITUDE,
     CONF_MINIMUM_MAGNITUDE,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -61,13 +65,14 @@ class GeonetnzQuakesFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
+        _LOGGER.debug("User input: %s", user_input)
         if not user_input:
             return await self._show_form()
 
         latitude = user_input.get(CONF_LATITUDE, self.hass.config.latitude)
-        user_input.update({CONF_LATITUDE: latitude})
+        user_input[CONF_LATITUDE] = latitude
         longitude = user_input.get(CONF_LONGITUDE, self.hass.config.longitude)
-        user_input.update({CONF_LONGITUDE: longitude})
+        user_input[CONF_LONGITUDE] = longitude
 
         identifier = "{0}, {1}".format(
             user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE]
