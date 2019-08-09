@@ -41,11 +41,7 @@ LOGGER = logging.getLogger(__name__)
 
 DEVICE_ATTRIBUTES = [
     "_is_guest_by_uap",
-    "ap_mac",
     "authorized",
-    "bssid",
-    "ccq",
-    "channel",
     "essid",
     "hostname",
     "ip",
@@ -54,14 +50,11 @@ DEVICE_ATTRIBUTES = [
     "is_wired",
     "mac",
     "name",
-    "noise",
     "noted",
     "oui",
     "qos_policy_applied",
     "radio",
     "radio_proto",
-    "rssi",
-    "signal",
     "site_id",
     "vlan",
 ]
