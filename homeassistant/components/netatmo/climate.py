@@ -349,6 +349,7 @@ class HomeData:
         self.schedules = []
         self.home = home
         self.home_id = None
+        self.setup()
 
     def get_home_ids(self):
         """Get all the home ids returned by NetAtmo API."""
