@@ -51,6 +51,7 @@ FLOWS = [
     "tellduslive",
     "toon",
     "tplink",
+    "traccar",
     "tradfri",
     "twentemilieu",
     "twilio",
