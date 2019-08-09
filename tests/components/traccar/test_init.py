@@ -19,7 +19,6 @@ from homeassistant.setup import async_setup_component
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811
 
-# pylint: disable=redefined-outer-name
 
 
 @pytest.fixture(autouse=True)
