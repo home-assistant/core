@@ -45,6 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up a Xiaomi Camera."""
     _LOGGER.debug("Received configuration for model %s", config[CONF_MODEL])
@@ -141,7 +142,7 @@ class XiaomiCamera(Camera):
     async def async_camera_image(self):
         """Return a still image response from the camera."""
         from haffmpeg.tools import ImageFrame, IMAGE_JPEG
-        
+
         try:
             host = self.host.async_render()
         except TemplateError as exc:
