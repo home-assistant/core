@@ -6,59 +6,53 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_HEADERS,
-    CONF_NAME,
-    CONF_RESOURCE,
-    CONF_TIMEOUT,
-    CONF_METHOD,
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_VERIFY_SSL,
-)
+    CONF_HEADERS, CONF_NAME, CONF_RESOURCE, CONF_TIMEOUT, CONF_METHOD,
+    CONF_USERNAME, CONF_PASSWORD, CONF_VERIFY_SSL)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_BODY_OFF = "body_off"
-CONF_BODY_ON = "body_on"
-CONF_IS_ON_TEMPLATE = "is_on_template"
+CONF_BODY_OFF = 'body_off'
+CONF_BODY_ON = 'body_on'
+CONF_BODY_STATE = 'body_state'
+CONF_IS_ON_TEMPLATE = 'is_on_template'
 
-DEFAULT_METHOD = "post"
-DEFAULT_BODY_OFF = "OFF"
-DEFAULT_BODY_ON = "ON"
-DEFAULT_NAME = "REST Switch"
+DEFAULT_METHOD = 'post'
+DEFAULT_BODY_OFF = 'OFF'
+DEFAULT_BODY_ON = 'ON'
+DEFAULT_NAME = 'REST Switch'
 DEFAULT_TIMEOUT = 10
 DEFAULT_VERIFY_SSL = True
 
-SUPPORT_REST_METHODS = ["post", "put"]
+SUPPORT_REST_METHODS = ['post', 'put']
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_RESOURCE): cv.url,
-        vol.Optional(CONF_HEADERS): {cv.string: cv.string},
-        vol.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF): cv.template,
-        vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.template,
-        vol.Optional(CONF_IS_ON_TEMPLATE): cv.template,
-        vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.All(
-            vol.Lower, vol.In(SUPPORT_REST_METHODS)
-        ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
-        vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    }
-)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_RESOURCE): cv.url,
+    vol.Optional(CONF_HEADERS): {cv.string: cv.string},
+    vol.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF): cv.template,
+    vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.template,
+    vol.Optional(CONF_IS_ON_TEMPLATE): cv.template,
+    vol.Optional(CONF_BODY_STATE): cv.template,
+    vol.Optional(CONF_METHOD, default=DEFAULT_METHOD):
+        vol.All(vol.Lower, vol.In(SUPPORT_REST_METHODS)),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
+    vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+})
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the RESTful switch."""
     body_off = config.get(CONF_BODY_OFF)
     body_on = config.get(CONF_BODY_ON)
     is_on_template = config.get(CONF_IS_ON_TEMPLATE)
+    body_state = config.get(CONF_BODY_STATE)
     method = config.get(CONF_METHOD)
     headers = config.get(CONF_HEADERS)
     name = config.get(CONF_NAME)
@@ -77,21 +71,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         body_on.hass = hass
     if body_off is not None:
         body_off.hass = hass
+    if body_state is not None:
+        body_state.hass = hass
     timeout = config.get(CONF_TIMEOUT)
 
     try:
-        switch = RestSwitch(
-            name,
-            resource,
-            method,
-            headers,
-            auth,
-            body_on,
-            body_off,
-            is_on_template,
-            timeout,
-            verify_ssl,
-        )
+        switch = RestSwitch(name, resource, method, headers, auth, body_on,
+                            body_off, is_on_template, body_state, timeout, verify_ssl)
 
         req = await switch.get_device_state(hass)
         if req.status >= 400:
@@ -99,30 +85,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         else:
             async_add_entities([switch])
     except (TypeError, ValueError):
-        _LOGGER.error(
-            "Missing resource or schema in configuration. "
-            "Add http:// or https:// to your URL"
-        )
+        _LOGGER.error("Missing resource or schema in configuration. "
+                      "Add http:// or https:// to your URL")
     except (asyncio.TimeoutError, aiohttp.ClientError):
         _LOGGER.error("No route to resource/endpoint: %s", resource)
-
 
 class RestSwitch(SwitchDevice):
     """Representation of a switch that can be toggled using REST."""
 
-    def __init__(
-        self,
-        name,
-        resource,
-        method,
-        headers,
-        auth,
-        body_on,
-        body_off,
-        is_on_template,
-        timeout,
-        verify_ssl,
-    ):
+    def __init__(self, name, resource, method, headers, auth, body_on,
+                 body_off, is_on_template, body_state, timeout, verify_ssl):
         """Initialize the REST switch."""
         self._state = None
         self._name = name
@@ -133,6 +105,7 @@ class RestSwitch(SwitchDevice):
         self._body_on = body_on
         self._body_off = body_off
         self._is_on_template = is_on_template
+        self._body_state = body_state
         self._timeout = timeout
         self._verify_ssl = verify_ssl
 
@@ -157,8 +130,8 @@ class RestSwitch(SwitchDevice):
                 self._state = True
             else:
                 _LOGGER.error(
-                    "Can't turn on %s. Is resource/endpoint offline?", self._resource
-                )
+                    "Can't turn on %s. Is resource/endpoint offline?",
+                    self._resource)
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error while switching on %s", self._resource)
 
@@ -172,8 +145,8 @@ class RestSwitch(SwitchDevice):
                 self._state = False
             else:
                 _LOGGER.error(
-                    "Can't turn off %s. Is resource/endpoint offline?", self._resource
-                )
+                    "Can't turn off %s. Is resource/endpoint offline?",
+                    self._resource)
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error while switching off %s", self._resource)
 
@@ -183,11 +156,8 @@ class RestSwitch(SwitchDevice):
 
         with async_timeout.timeout(self._timeout):
             req = await getattr(websession, self._method)(
-                self._resource,
-                auth=self._auth,
-                data=bytes(body, "utf-8"),
-                headers=self._headers,
-            )
+                self._resource, auth=self._auth, data=bytes(body, 'utf-8'),
+                headers=self._headers)
             return req
 
     async def async_update(self):
@@ -203,20 +173,20 @@ class RestSwitch(SwitchDevice):
         """Get the latest data from REST API and update the state."""
         websession = async_get_clientsession(hass, self._verify_ssl)
 
+        body_state_t = self._body_state.async_render()
         with async_timeout.timeout(self._timeout):
-            req = await websession.get(
-                self._resource, auth=self._auth, headers=self._headers
-            )
+            req = await websession.get(self._resource, auth=self._auth,
+                                       data=bytes(body_state_t, 'utf-8'),
+                                       headers=self._headers)
             text = await req.text()
 
         if self._is_on_template is not None:
             text = self._is_on_template.async_render_with_possible_json_value(
-                text, "None"
-            )
+                text, 'None')
             text = text.lower()
-            if text == "true":
+            if text == 'true':
                 self._state = True
-            elif text == "false":
+            elif text == 'false':
                 self._state = False
             else:
                 self._state = None
