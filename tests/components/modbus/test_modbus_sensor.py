@@ -46,6 +46,7 @@ common_register_config = {CONF_NAME: "test-config", CONF_REGISTER: 1234}
 
 class ReadResult:
     """Storage class for register read results."""
+
     def __init__(self, register_words):
         """Init."""
         self.registers = register_words
@@ -76,12 +77,16 @@ async def run_test(hass, mock_hub, register_config, register_words, expected):
 
     # Initialize sensor
     now = dt_util.utcnow()
-    with mock.patch(("homeassistant.helpers.event." "dt_util.utcnow"), return_value=now):
+    with mock.patch(
+        ("homeassistant.helpers.event." "dt_util.utcnow"), return_value=now
+    ):
         assert await async_setup_component(hass, SENSOR_DOMAIN, config)
 
     # Trigger update call with time_changed event
     now += timedelta(seconds=scan_interval + 1)
-    with mock.patch(("homeassistant.helpers.event." "dt_util.utcnow"), return_value=now):
+    with mock.patch(
+        ("homeassistant.helpers.event." "dt_util.utcnow"), return_value=now
+    ):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
 
