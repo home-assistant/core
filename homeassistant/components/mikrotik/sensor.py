@@ -99,11 +99,7 @@ class MikrotikSensor(Entity):
             value = results.get(key)
             if any(unit in key for unit in UNITS):
                 add_unit = True
-                try:
-                    value = "%.1f" % (float(value) / MEGA)
-                except Exception as error:
-                    _LOGGER.error("Mikrotik %s error %s", self._name, error)
-                    pass
+                value = "%.1f" % (float(value) / MEGA)
 
             if key == self._state_item:
                 self._state = value
