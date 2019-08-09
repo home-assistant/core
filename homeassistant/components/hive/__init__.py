@@ -1,6 +1,6 @@
 """Support for the Hive devices."""
 import logging
-from .pyhiveapi import Pyhiveapi
+from pyhiveapi import Pyhiveapi
 import voluptuous as vol
 
 from homeassistant.const import (
