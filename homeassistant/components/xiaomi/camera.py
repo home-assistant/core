@@ -4,7 +4,10 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
+from homeassistant.components.camera import (
+    Camera,
+    PLATFORM_SCHEMA,
+)
 from homeassistant.exceptions import TemplateError
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import (
@@ -16,7 +19,9 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
+from homeassistant.helpers.aiohttp_client import (
+    async_aiohttp_proxy_stream,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,19 +41,34 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_HOST): cv.template,
-        vol.Required(CONF_MODEL): vol.Any(MODEL_YI, MODEL_XIAOFANG),
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
-        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        vol.Required(CONF_MODEL): vol.Any(
+            MODEL_YI, MODEL_XIAOFANG
+        ),
+        vol.Optional(
+            CONF_PORT, default=DEFAULT_PORT
+        ): cv.port,
+        vol.Optional(
+            CONF_PATH, default=DEFAULT_PATH
+        ): cv.string,
+        vol.Optional(
+            CONF_USERNAME, default=DEFAULT_USERNAME
+        ): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
+        vol.Optional(
+            CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS
+        ): cv.string,
     }
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass, config, async_add_entities, discovery_info=None
+):
     """Set up a Xiaomi Camera."""
-    _LOGGER.debug("Received configuration for model %s", config[CONF_MODEL])
+    _LOGGER.debug(
+        "Received configuration for model %s",
+        config[CONF_MODEL],
+    )
     async_add_entities([XiaomiCamera(hass, config)])
 
 
@@ -58,7 +78,9 @@ class XiaomiCamera(Camera):
     def __init__(self, hass, config):
         """Initialize."""
         super().__init__()
-        self._extra_arguments = config.get(CONF_FFMPEG_ARGUMENTS)
+        self._extra_arguments = config.get(
+            CONF_FFMPEG_ARGUMENTS
+        )
         self._last_image = None
         self._last_url = None
         self._manager = hass.data[DATA_FFMPEG]
@@ -100,25 +122,37 @@ class XiaomiCamera(Camera):
         try:
             ftp.cwd(self.path)
         except error_perm as exc:
-            _LOGGER.error("Unable to find path: %s - %s", self.path, exc)
+            _LOGGER.error(
+                "Unable to find path: %s - %s",
+                self.path,
+                exc,
+            )
             return False
 
         dirs = [d for d in ftp.nlst() if "." not in d]
         if not dirs:
-            _LOGGER.warning("There don't appear to be any folders")
+            _LOGGER.warning(
+                "There don't appear to be any folders"
+            )
             return False
 
         first_dir = latest_dir = dirs[-1]
         try:
             ftp.cwd(first_dir)
         except error_perm as exc:
-            _LOGGER.error("Unable to find path: %s - %s", first_dir, exc)
+            _LOGGER.error(
+                "Unable to find path: %s - %s",
+                first_dir,
+                exc,
+            )
             return False
 
         if self._model == MODEL_XIAOFANG:
             dirs = [d for d in ftp.nlst() if "." not in d]
             if not dirs:
-                _LOGGER.warning("There don't appear to be any uploaded videos")
+                _LOGGER.warning(
+                    "There don't appear to be any uploaded videos"
+                )
                 return False
 
             latest_dir = dirs[-1]
@@ -126,7 +160,10 @@ class XiaomiCamera(Camera):
 
         videos = [v for v in ftp.nlst() if ".tmp" not in v]
         if not videos:
-            _LOGGER.info('Video folder "%s" is empty; delaying', latest_dir)
+            _LOGGER.info(
+                'Video folder "%s" is empty; delaying',
+                latest_dir,
+            )
             return False
 
         if self._model == MODEL_XIAOFANG:
@@ -135,7 +172,12 @@ class XiaomiCamera(Camera):
             video = videos[-1]
 
         return "ftp://{0}:{1}@{2}:{3}{4}/{5}".format(
-            self.user, self.passwd, host, self.port, ftp.pwd(), video
+            self.user,
+            self.passwd,
+            host,
+            self.port,
+            ftp.pwd(),
+            video,
         )
 
     async def async_camera_image(self):
@@ -145,15 +187,25 @@ class XiaomiCamera(Camera):
         try:
             host = self.host.async_render()
         except TemplateError as exc:
-            _LOGGER.error('Error parsing template %s: %s', self.host, exc)
+            _LOGGER.error(
+                "Error parsing template %s: %s",
+                self.host,
+                exc,
+            )
             return self._last_image
 
-        url = await self.hass.async_add_executor_job(self.get_latest_video_url, host)
+        url = await self.hass.async_add_executor_job(
+            self.get_latest_video_url, host
+        )
         if url != self._last_url:
-            ffmpeg = ImageFrame(self._manager.binary, loop=self.hass.loop)
+            ffmpeg = ImageFrame(
+                self._manager.binary, loop=self.hass.loop
+            )
             self._last_image = await asyncio.shield(
                 ffmpeg.get_image(
-                    url, output_format=IMAGE_JPEG, extra_cmd=self._extra_arguments
+                    url,
+                    output_format=IMAGE_JPEG,
+                    extra_cmd=self._extra_arguments,
                 )
             )
             self._last_url = url
@@ -164,8 +216,12 @@ class XiaomiCamera(Camera):
         """Generate an HTTP MJPEG stream from the camera."""
         from haffmpeg.camera import CameraMjpeg
 
-        stream = CameraMjpeg(self._manager.binary, loop=self.hass.loop)
-        await stream.open_camera(self._last_url, extra_cmd=self._extra_arguments)
+        stream = CameraMjpeg(
+            self._manager.binary, loop=self.hass.loop
+        )
+        await stream.open_camera(
+            self._last_url, extra_cmd=self._extra_arguments
+        )
 
         try:
             stream_reader = await stream.get_reader()
