@@ -173,7 +173,10 @@ class RestSwitch(SwitchDevice):
         """Get the latest data from REST API and update the state."""
         websession = async_get_clientsession(hass, self._verify_ssl)
 
-        body_state_t = self._body_state.async_render()
+        body_state_t = None
+        if self._body_state is not None:
+            body_state_t = self._body_state.async_render()
+
         with async_timeout.timeout(self._timeout):
             req = await websession.get(self._resource, auth=self._auth,
                                        data=bytes(body_state_t, 'utf-8'),
