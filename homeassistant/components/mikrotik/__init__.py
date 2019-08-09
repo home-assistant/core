@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
+from homeassistant.components.sensor import DOMAIN as SENSOR
 from .const import (
     DOMAIN,
     HOSTS,
