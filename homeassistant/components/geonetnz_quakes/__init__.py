@@ -57,7 +57,7 @@ async def async_setup(hass, config):
     mmi = conf[CONF_MMI]
     scan_interval = conf[CONF_SCAN_INTERVAL]
 
-    identifier = "{0}, {1}".format(latitude, longitude)
+    identifier = f"{latitude}, {longitude}"
     if identifier in configured_instances(hass):
         return True
 

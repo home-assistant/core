@@ -33,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 def configured_instances(hass):
     """Return a set of configured GeoNet NZ Quakes instances."""
     return set(
-        "{0}, {1}".format(entry.data[CONF_LATITUDE], entry.data[CONF_LONGITUDE])
+        f"{entry.data[CONF_LATITUDE]}, {entry.data[CONF_LONGITUDE]}"
         for entry in hass.config_entries.async_entries(DOMAIN)
     )
 
@@ -74,9 +74,7 @@ class GeonetnzQuakesFlowHandler(config_entries.ConfigFlow):
         longitude = user_input.get(CONF_LONGITUDE, self.hass.config.longitude)
         user_input[CONF_LONGITUDE] = longitude
 
-        identifier = "{0}, {1}".format(
-            user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE]
-        )
+        identifier = f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}"
         if identifier in configured_instances(self.hass):
             return await self._show_form({"base": "identifier_exists"})
 
@@ -86,11 +84,11 @@ class GeonetnzQuakesFlowHandler(config_entries.ConfigFlow):
             user_input[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_METRIC
 
         scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        user_input.update({CONF_SCAN_INTERVAL: scan_interval.seconds})
+        user_input[CONF_SCAN_INTERVAL] = scan_interval.seconds
 
         minimum_magnitude = user_input.get(
             CONF_MINIMUM_MAGNITUDE, DEFAULT_MINIMUM_MAGNITUDE
         )
-        user_input.update({CONF_MINIMUM_MAGNITUDE: minimum_magnitude})
+        user_input[CONF_MINIMUM_MAGNITUDE] = minimum_magnitude
 
         return self.async_create_entry(title=identifier, data=user_input)
