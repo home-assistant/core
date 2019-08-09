@@ -137,11 +137,8 @@ class ZHAGateway:
         for device in self.application_controller.devices.values():
             if device.nwk == 0x0000:
                 continue
-            zha_device = self._async_get_or_create_device(device, False)
             init_tasks.append(
-                init_with_semaphore(
-                    self._async_handle_zha_startup(device, zha_device), semaphore
-                )
+                init_with_semaphore(self.async_device_restored(device), semaphore)
             )
         await asyncio.gather(*init_tasks)
 
@@ -354,12 +351,12 @@ class ZHAGateway:
                 "device - ieee: %s has been reset and readded or its nwk address changed",
                 zha_device.ieee,
             )
-            await self._async_handle_rejoin(zha_device)
+            await self._async_device_rejoined(zha_device)
         else:
             _LOGGER.debug(
                 "device - ieee: %s has joined the ZHA zigbee network", zha_device.ieee
             )
-            await self._async_handle_new_join(device, zha_device)
+            await self._async_device_joined(device, zha_device)
 
         device_info = async_get_device_info(
             self._hass, zha_device, self.ha_device_registry
@@ -373,7 +370,7 @@ class ZHAGateway:
             },
         )
 
-    async def _async_handle_new_join(self, device, zha_device):
+    async def _async_device_joined(self, device, zha_device):
         discovery_infos = []
         for endpoint_id, endpoint in device.endpoints.items():
             async_process_endpoint(
@@ -394,7 +391,10 @@ class ZHAGateway:
         for discovery_info in discovery_infos:
             async_dispatch_discovery_info(self._hass, True, discovery_info)
 
-    async def _async_handle_zha_startup(self, device, zha_device):
+    # only public for testing
+    async def async_device_restored(self, device):
+        """Add an existing device to the ZHA zigbee network when ZHA first starts."""
+        zha_device = self._async_get_or_create_device(device, False)
         discovery_infos = []
         for endpoint_id, endpoint in device.endpoints.items():
             async_process_endpoint(
@@ -423,7 +423,7 @@ class ZHAGateway:
         for discovery_info in discovery_infos:
             async_dispatch_discovery_info(self._hass, False, discovery_info)
 
-    async def _async_handle_rejoin(self, zha_device):
+    async def _async_device_rejoined(self, zha_device):
         _LOGGER.debug(
             "skipping discovery for previously discovered device: %s",
             "{} - is rejoin: {}".format(zha_device.ieee, True),
