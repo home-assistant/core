@@ -18,10 +18,12 @@
                 "title": "Digite a senha"
             },
             "discovery_confirm": {
+                "description": "Voc\u00ea quer adicionar o n\u00f3 ESPHome ` {name} ` ao Home Assistant?",
                 "title": "N\u00f3 ESPHome descoberto"
             },
             "user": {
                 "data": {
+                    "host": "Host",
                     "port": "Porta"
                 },
                 "description": "Por favor insira as configura\u00e7\u00f5es de conex\u00e3o de seu n\u00f3 de [ESPHome] (https://esphomelib.com/).",

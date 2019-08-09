@@ -374,7 +374,7 @@ omit =
     homeassistant/components/metoffice/weather.py
     homeassistant/components/microsoft/tts.py
     homeassistant/components/miflora/sensor.py
-    homeassistant/components/mikrotik/device_tracker.py
+    homeassistant/components/mikrotik/*
     homeassistant/components/mill/climate.py
     homeassistant/components/mitemp_bt/sensor.py
     homeassistant/components/mjpeg/camera.py
@@ -467,6 +467,7 @@ omit =
     homeassistant/components/plaato/*
     homeassistant/components/plex/media_player.py
     homeassistant/components/plex/sensor.py
+    homeassistant/components/plugwise/*
     homeassistant/components/plum_lightpad/*
     homeassistant/components/pocketcasts/sensor.py
     homeassistant/components/point/*
@@ -740,6 +741,7 @@ omit =
     homeassistant/components/zha/core/device.py
     homeassistant/components/zha/core/gateway.py
     homeassistant/components/zha/core/helpers.py
+    homeassistant/components/zha/core/registries.py
     homeassistant/components/zha/device_entity.py
     homeassistant/components/zha/entity.py
     homeassistant/components/zha/light.py

@@ -3,9 +3,11 @@ from pydeconz.sensor import Thermostat
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_TARGET_TEMPERATURE)
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, TEMP_CELSIUS)
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    SUPPORT_TARGET_TEMPERATURE,
+)
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -16,8 +18,7 @@ from .gateway import get_gateway_from_config_entry
 SUPPORT_HVAC = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up deCONZ platforms."""
     pass
 
@@ -36,16 +37,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         for sensor in sensors:
 
-            if sensor.type in Thermostat.ZHATYPE and \
-               not (not gateway.allow_clip_sensor and
-                    sensor.type.startswith('CLIP')):
+            if sensor.type in Thermostat.ZHATYPE and not (
+                not gateway.allow_clip_sensor and sensor.type.startswith("CLIP")
+            ):
 
                 entities.append(DeconzThermostat(sensor, gateway))
 
         async_add_entities(entities, True)
 
-    gateway.listeners.append(async_dispatcher_connect(
-        hass, gateway.async_event_new_device(NEW_SENSOR), async_add_climate))
+    gateway.listeners.append(
+        async_dispatcher_connect(
+            hass, gateway.async_event_new_device(NEW_SENSOR), async_add_climate
+        )
+    )
 
     async_add_climate(gateway.api.sensors.values())
 
@@ -91,16 +95,16 @@ class DeconzThermostat(DeconzDevice, ClimateDevice):
         data = {}
 
         if ATTR_TEMPERATURE in kwargs:
-            data['heatsetpoint'] = kwargs[ATTR_TEMPERATURE] * 100
+            data["heatsetpoint"] = kwargs[ATTR_TEMPERATURE] * 100
 
         await self._device.async_set_config(data)
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_HEAT:
-            data = {'mode': 'auto'}
+            data = {"mode": "auto"}
         elif hvac_mode == HVAC_MODE_OFF:
-            data = {'mode': 'off'}
+            data = {"mode": "off"}
 
         await self._device.async_set_config(data)
 

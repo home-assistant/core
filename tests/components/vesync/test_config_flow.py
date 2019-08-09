@@ -10,37 +10,37 @@ async def test_abort_already_setup(hass):
     """Test if we abort because component is already setup."""
     flow = config_flow.VeSyncFlowHandler()
     flow.hass = hass
-    MockConfigEntry(
-        domain=DOMAIN, title='user', data={'user': 'pass'}
-        ).add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, title="user", data={"user": "pass"}).add_to_hass(
+        hass
+    )
     result = await flow.async_step_user()
 
-    assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result['reason'] == 'already_setup'
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_setup"
 
 
 async def test_invalid_login_error(hass):
     """Test if we return error for invalid username and password."""
-    test_dict = {CONF_USERNAME: 'user', CONF_PASSWORD: 'pass'}
+    test_dict = {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
     flow = config_flow.VeSyncFlowHandler()
     flow.hass = hass
-    with patch('pyvesync.vesync.VeSync.login', return_value=False):
+    with patch("pyvesync.vesync.VeSync.login", return_value=False):
         result = await flow.async_step_user(user_input=test_dict)
 
-    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
-    assert result['errors'] == {'base': 'invalid_login'}
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "invalid_login"}
 
 
 async def test_config_flow_configuration_yaml(hass):
     """Test config flow with configuration.yaml user input."""
-    test_dict = {CONF_USERNAME: 'user', CONF_PASSWORD: 'pass'}
+    test_dict = {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
     flow = config_flow.VeSyncFlowHandler()
     flow.hass = hass
-    with patch('pyvesync.vesync.VeSync.login', return_value=True):
+    with patch("pyvesync.vesync.VeSync.login", return_value=True):
         result = await flow.async_step_import(test_dict)
 
-    assert result['data'].get(CONF_USERNAME) == test_dict[CONF_USERNAME]
-    assert result['data'].get(CONF_PASSWORD) == test_dict[CONF_PASSWORD]
+    assert result["data"].get(CONF_USERNAME) == test_dict[CONF_USERNAME]
+    assert result["data"].get(CONF_PASSWORD) == test_dict[CONF_PASSWORD]
 
 
 async def test_config_flow_user_input(hass):
@@ -48,10 +48,11 @@ async def test_config_flow_user_input(hass):
     flow = config_flow.VeSyncFlowHandler()
     flow.hass = hass
     result = await flow.async_step_user()
-    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
-    with patch('pyvesync.vesync.VeSync.login', return_value=True):
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    with patch("pyvesync.vesync.VeSync.login", return_value=True):
         result = await flow.async_step_user(
-            {CONF_USERNAME: 'user', CONF_PASSWORD: 'pass'})
-        assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result['data'][CONF_USERNAME] == 'user'
-        assert result['data'][CONF_PASSWORD] == 'pass'
+            {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["data"][CONF_USERNAME] == "user"
+        assert result["data"][CONF_PASSWORD] == "pass"

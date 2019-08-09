@@ -12,25 +12,28 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-NOTIFICATION_ID = 'canary_notification'
-NOTIFICATION_TITLE = 'Canary Setup'
+NOTIFICATION_ID = "canary_notification"
+NOTIFICATION_TITLE = "Canary Setup"
 
-DOMAIN = 'canary'
-DATA_CANARY = 'canary'
+DOMAIN = "canary"
+DATA_CANARY = "canary"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 DEFAULT_TIMEOUT = 10
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
-CANARY_COMPONENTS = [
-    'alarm_control_panel', 'camera', 'sensor'
-]
+CANARY_COMPONENTS = ["alarm_control_panel", "camera", "sensor"]
 
 
 def setup(hass, config):
@@ -45,11 +48,12 @@ def setup(hass, config):
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Canary service: %s", str(ex))
         hass.components.persistent_notification.create(
-            'Error: {}<br />'
-            'You will need to restart hass after fixing.'
-            ''.format(ex),
+            "Error: {}<br />"
+            "You will need to restart hass after fixing."
+            "".format(ex),
             title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID)
+            notification_id=NOTIFICATION_ID,
+        )
         return False
 
     for component in CANARY_COMPONENTS:
@@ -64,6 +68,7 @@ class CanaryData:
     def __init__(self, username, password, timeout):
         """Init the Canary data object."""
         from canary.api import Api
+
         self._api = Api(username, password, timeout)
 
         self._locations_by_id = {}
@@ -80,12 +85,14 @@ class CanaryData:
 
             self._locations_by_id[location_id] = location
             self._entries_by_location_id[location_id] = self._api.get_entries(
-                location_id, entry_type="motion", limit=1)
+                location_id, entry_type="motion", limit=1
+            )
 
             for device in location.devices:
                 if device.is_online:
-                    self._readings_by_device_id[device.device_id] = \
-                        self._api.get_latest_readings(device.device_id)
+                    self._readings_by_device_id[
+                        device.device_id
+                    ] = self._api.get_latest_readings(device.device_id)
 
     @property
     def locations(self):
@@ -107,9 +114,14 @@ class CanaryData:
     def get_reading(self, device_id, sensor_type):
         """Return reading for device_id and sensor type."""
         readings = self._readings_by_device_id.get(device_id, [])
-        return next((
-            reading.value for reading in readings
-            if reading.sensor_type == sensor_type), None)
+        return next(
+            (
+                reading.value
+                for reading in readings
+                if reading.sensor_type == sensor_type
+            ),
+            None,
+        )
 
     def set_location_mode(self, location_id, mode_name, is_private=False):
         """Set location mode."""

@@ -5,26 +5,30 @@ import threading
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.const import (CONF_HOST, CONF_PORT)
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_HOST, CONF_PORT
 
 _LOGGER = logging.getLogger(__name__)
 
 CONTROLLER = None
 
-CONF_COMM_TYPE = 'comm_type'
+CONF_COMM_TYPE = "comm_type"
 
-DOMAIN = 'mochad'
+DOMAIN = "mochad"
 
 REQ_LOCK = threading.Lock()
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_HOST, default='localhost'): cv.string,
-        vol.Optional(CONF_PORT, default=1099): cv.port,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_HOST, default="localhost"): cv.string,
+                vol.Optional(CONF_PORT, default=1099): cv.port,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
@@ -49,6 +53,7 @@ def setup(hass, config):
     def start_mochad(event):
         """Start the Mochad service."""
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_mochad)
+
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_mochad)
 
     return True

@@ -12,10 +12,11 @@ _LOGGER = logging.getLogger(__name__)
 def generate_audio_frame():
     """Generate a blank audio frame."""
     from av import AudioFrame
-    audio_frame = AudioFrame(format='dbl', layout='mono', samples=1024)
+
+    audio_frame = AudioFrame(format="dbl", layout="mono", samples=1024)
     # audio_bytes = b''.join(b'\x00\x00\x00\x00\x00\x00\x00\x00'
     #                        for i in range(0, 1024))
-    audio_bytes = b'\x00\x00\x00\x00\x00\x00\x00\x00' * 1024
+    audio_bytes = b"\x00\x00\x00\x00\x00\x00\x00\x00" * 1024
     audio_frame.planes[0].update(audio_bytes)
     audio_frame.sample_rate = AUDIO_SAMPLE_RATE
     audio_frame.time_base = Fraction(1, AUDIO_SAMPLE_RATE)
@@ -25,16 +26,15 @@ def generate_audio_frame():
 def create_stream_buffer(stream_output, video_stream, audio_frame):
     """Create a new StreamBuffer."""
     import av
+
     a_packet = None
     segment = io.BytesIO()
-    output = av.open(
-        segment, mode='w', format=stream_output.format)
+    output = av.open(segment, mode="w", format=stream_output.format)
     vstream = output.add_stream(template=video_stream)
     # Check if audio is requested
     astream = None
     if stream_output.audio_codec:
-        astream = output.add_stream(
-            stream_output.audio_codec, AUDIO_SAMPLE_RATE)
+        astream = output.add_stream(stream_output.audio_codec, AUDIO_SAMPLE_RATE)
         # Need to do it multiple times for some reason
         while not a_packet:
             a_packets = astream.encode(audio_frame)
@@ -46,6 +46,7 @@ def create_stream_buffer(stream_output, video_stream, audio_frame):
 def stream_worker(hass, stream, quit_event):
     """Handle consuming streams."""
     import av
+
     container = av.open(stream.source, options=stream.options)
     try:
         video_stream = container.streams.video[0]
@@ -62,7 +63,7 @@ def stream_worker(hass, stream, quit_event):
     sequence = 1
     # Holds the generated silence that needs to be muxed into the output
     audio_packets = {}
-    # The presentation timestamp of the first video packet we recieve
+    # The presentation timestamp of the first video packet we receive
     first_pts = 0
     # The decoder timestamp of the latest packet we processed
     last_dts = None
@@ -78,8 +79,7 @@ def stream_worker(hass, stream, quit_event):
         except (av.AVError, StopIteration) as ex:
             # End of stream, clear listeners and stop thread
             for fmt, _ in outputs.items():
-                hass.loop.call_soon_threadsafe(
-                    stream.outputs[fmt].put, None)
+                hass.loop.call_soon_threadsafe(stream.outputs[fmt].put, None)
             _LOGGER.error("Error demuxing stream: %s", str(ex))
             break
 
@@ -105,9 +105,9 @@ def stream_worker(hass, stream, quit_event):
                 del audio_packets[buffer.astream]
                 if stream.outputs.get(fmt):
                     hass.loop.call_soon_threadsafe(
-                        stream.outputs[fmt].put, Segment(
-                            sequence, buffer.segment, segment_duration
-                        ))
+                        stream.outputs[fmt].put,
+                        Segment(sequence, buffer.segment, segment_duration),
+                    )
 
             # Clear outputs and increment sequence
             outputs = {}
@@ -120,7 +120,8 @@ def stream_worker(hass, stream, quit_event):
                     continue
 
                 a_packet, buffer = create_stream_buffer(
-                    stream_output, video_stream, audio_frame)
+                    stream_output, video_stream, audio_frame
+                )
                 audio_packets[buffer.astream] = a_packet
                 outputs[stream_output.name] = buffer
 
@@ -129,7 +130,7 @@ def stream_worker(hass, stream, quit_event):
             # If we are attaching to a live stream that does not reset
             # timestamps for us, we need to do it ourselves by recording
             # the first presentation timestamp and subtracting it from
-            # subsequent packets we recieve.
+            # subsequent packets we receive.
             if (packet.pts * packet.time_base) > 1:
                 first_pts = packet.pts
             packet.dts = 0

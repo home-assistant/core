@@ -6,10 +6,9 @@ from .const import DOMAIN
 
 config_entry_flow.register_webhook_flow(
     DOMAIN,
-    'Twilio Webhook',
+    "Twilio Webhook",
     {
-        'twilio_url':
-            'https://www.twilio.com/docs/glossary/what-is-a-webhook',
-        'docs_url': 'https://www.home-assistant.io/components/twilio/'
-    }
+        "twilio_url": "https://www.twilio.com/docs/glossary/what-is-a-webhook",
+        "docs_url": "https://www.home-assistant.io/components/twilio/",
+    },
 )
