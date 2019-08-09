@@ -9,18 +9,21 @@ from .const import DOMAIN, HOSTS, CONF_WAN_PORT, SENSORS, MEGA, UNITS
 
 _LOGGER = logging.getLogger(__name__)
 
-def setup_platform(
-        hass, config, add_entities, discovery_info=None):
+
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the mikrotik sensors."""
     if discovery_info is None:
         return
 
     host = discovery_info[CONF_HOST]
-    api = hass.data[DOMAIN][HOSTS][host]['api']
+    api = hass.data[DOMAIN][HOSTS][host]["api"]
     hostname = api.get_hostname()
     add_entities(
-        [MikrotikSensor(api, hostname, sensor_type, discovery_info)
-         for sensor_type in discovery_info['sensors']])
+        [
+            MikrotikSensor(api, hostname, sensor_type, discovery_info)
+            for sensor_type in discovery_info["sensors"]
+        ]
+    )
 
 
 class MikrotikSensor(Entity):
@@ -35,15 +38,15 @@ class MikrotikSensor(Entity):
         self._available = True
         self._state = None
         self._attrs = {}
-        self._name = '{} {}'.format(hostname, SENSORS[sensor_type][0])
+        self._name = "{} {}".format(hostname, SENSORS[sensor_type][0])
         self._unit = self.sensor_data[1]
         self._icon = self.sensor_data[2]
         self._state_item = self.sensor_data[3]
         self._attr_items = self.sensor_data[5]
         self._cmds = self.sensor_data[4]
         self._params = self.sensor_data[6]
-        if self._params is not None and 'interface' in self._params:
-            self._params['interface'] = self.config.get(CONF_WAN_PORT)
+        if self._params is not None and "interface" in self._params:
+            self._params["interface"] = self.config.get(CONF_WAN_PORT)
 
     @property
     def name(self):
@@ -98,7 +101,7 @@ class MikrotikSensor(Entity):
             if any(unit in key for unit in UNITS):
                 add_unit = True
                 try:
-                    value = '%.1f' % (float(value) / MEGA)
+                    value = "%.1f" % (float(value) / MEGA)
                 except:
                     pass
 
@@ -106,5 +109,5 @@ class MikrotikSensor(Entity):
                 self._state = value
             elif key in self._attr_items:
                 if add_unit:
-                    value = "{} {}".format(value,self._unit)
+                    value = "{} {}".format(value, self._unit)
                 self._attrs[slugify(key)] = value

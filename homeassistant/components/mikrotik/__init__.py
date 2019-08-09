@@ -52,8 +52,7 @@ MIKROTIK_SCHEMA = vol.All(
             vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
             vol.Optional(CONF_TRACK_DEVICES, default=True): cv.boolean,
             vol.Optional(CONF_ARP_PING, default=False): cv.boolean,
-            vol.Optional(CONF_SENSORS):
-                vol.All(cv.ensure_list, [vol.In(SENSORS)]),
+            vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [vol.In(SENSORS)]),
             vol.Optional(CONF_WAN_PORT, default=MTK_DEFAULT_WAN): cv.string,
         }
     )
@@ -109,15 +108,16 @@ def setup(hass, config):
         sensors = device.get(CONF_SENSORS)
         if sensors:
             load_platform(
-                    hass,
-                    SENSOR,
-                    DOMAIN, {
-                        CONF_HOST: host,
-                        CONF_SENSORS: sensors,
-                        CONF_WAN_PORT: device.get(CONF_WAN_PORT),
-                    },
-                    config
-                )
+                hass,
+                SENSOR,
+                DOMAIN,
+                {
+                    CONF_HOST: host,
+                    CONF_SENSORS: sensors,
+                    CONF_WAN_PORT: device.get(CONF_WAN_PORT),
+                },
+                config,
+            )
 
         if track_devices:
             hass.data[DOMAIN][HOSTS][host][DEVICE_TRACKER] = True
