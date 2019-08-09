@@ -38,7 +38,7 @@ def _id(value: str) -> str:
 
 WEBHOOK_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_ID): _id,
+        vol.Required(ATTR_ID): vol.All(cv.string, _id),
         vol.Required(ATTR_LATITUDE): cv.latitude,
         vol.Required(ATTR_LONGITUDE): cv.longitude,
         vol.Optional(ATTR_ACCURACY, default=DEFAULT_ACCURACY): vol.Coerce(float),
