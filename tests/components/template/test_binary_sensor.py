@@ -439,9 +439,9 @@ async def test_invalid_attribute_template(hass, caplog):
                 "sensors": {
                     "invalid_attribute": {
                         "value_template": "{{ 1 == 1 }}",
-                        "friendly_name_template": "{{ states.binary_sensor.unknown.attributes.friendly_name }}",
+                        "entity_picture_template": "{{ states.binary_sensor.unknown.attributes.picture }}",
                         "attribute_templates": {
-                            "test_attribute": "{{ states.binary_sensor.unknown.attributes.friendly_name }}"
+                            "test_attribute": "{{ states.binary_sensor.unknown.attributes.picture }}"
                         },
                     }
                 },
