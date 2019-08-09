@@ -451,7 +451,7 @@ async def test_invalid_attribute_template(hass, caplog):
         },
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all()) == 2
     await hass.helpers.entity_component.async_update_entity(
         "binary_sensor.invalid_template"
     )
