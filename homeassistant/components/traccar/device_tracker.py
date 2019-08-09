@@ -119,14 +119,16 @@ async def async_setup_entry(hass: HomeAssistantType, entry, async_add_entities):
     """Configure a dispatcher connection based on a config entry."""
 
     @callback
-    def _receive_data(device, gps, battery, accuracy, attrs):
+    def _receive_data(device, latitude, longitude, battery, accuracy, attrs):
         """Receive set location."""
         if device in hass.data[DOMAIN]["devices"]:
             return
 
         hass.data[DOMAIN]["devices"].add(device)
 
-        async_add_entities([TraccarEntity(device, gps, battery, accuracy, attrs)])
+        async_add_entities(
+            [TraccarEntity(device, latitude, longitude, battery, accuracy, attrs)]
+        )
 
     hass.data[DOMAIN]["unsub_device_tracker"][
         entry.entry_id
@@ -146,7 +148,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry, async_add_entities):
     entities = []
     for dev_id in dev_ids:
         hass.data[DOMAIN]["devices"].add(dev_id)
-        entity = TraccarEntity(dev_id, None, None, None, None)
+        entity = TraccarEntity(dev_id, None, None, None, None, None)
         entities.append(entity)
 
     async_add_entities(entities)
@@ -329,13 +331,14 @@ class TraccarScanner:
 class TraccarEntity(TrackerEntity, RestoreEntity):
     """Represent a tracked device."""
 
-    def __init__(self, device, location, battery, accuracy, attributes):
+    def __init__(self, device, latitude, longitude, battery, accuracy, attributes):
         """Set up Geofency entity."""
         self._accuracy = accuracy
         self._attributes = attributes
         self._name = device
         self._battery = battery
-        self._location = location
+        self._latitude = latitude
+        self._longitude = longitude
         self._unsub_dispatcher = None
         self._unique_id = device
 
@@ -352,12 +355,12 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
     @property
     def latitude(self):
         """Return latitude value of the device."""
-        return self._location[0]
+        return self._latitude
 
     @property
     def longitude(self):
         """Return longitude value of the device."""
-        return self._location[1]
+        return self._longitude
 
     @property
     def location_accuracy(self):
@@ -397,12 +400,13 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
         )
 
         # don't restore if we got created with data
-        if self._location is not None:
+        if self._latitude is not None or self._longitude is not None:
             return
 
         state = await self.async_get_last_state()
         if state is None:
-            self._location = (None, None)
+            self._latitude = None
+            self._longitude = None
             self._accuracy = None
             self._attributes = {
                 ATTR_ALTITUDE: None,
@@ -413,7 +417,8 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
             return
 
         attr = state.attributes
-        self._location = (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
+        self._latitude = attr.get(ATTR_LATITUDE)
+        self._longitude = attr.get(ATTR_LONGITUDE)
         self._accuracy = attr.get(ATTR_ACCURACY)
         self._attributes = {
             ATTR_ALTITUDE: attr.get(ATTR_ALTITUDE),
@@ -428,12 +433,15 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
         self._unsub_dispatcher()
 
     @callback
-    def _async_receive_data(self, device, location, battery, accuracy, attributes):
+    def _async_receive_data(
+        self, device, latitude, longitude, battery, accuracy, attributes
+    ):
         """Mark the device as seen."""
         if device != self.name:
             return
 
-        self._location = location
+        self._latitude = latitude
+        self._longitude = longitude
         self._battery = battery
         self._accuracy = accuracy
         self._attributes.update(attributes)

@@ -28,7 +28,7 @@ def mock_dev_track(mock_device_tracker_conf):
     pass
 
 
-@pytest.fixture
+@pytest.fixture(name="client")
 async def traccar_client(loop, hass, aiohttp_client):
     """Mock client for Traccar (unauthenticated)."""
     assert await async_setup_component(hass, "persistent_notification", {})
@@ -60,7 +60,7 @@ async def setup_zones(loop, hass):
 
 
 @pytest.fixture
-async def webhook_id(hass, traccar_client):
+async def webhook_id(hass, client):
     """Initialize the Traccar component and get the webhook_id."""
     hass.config.api = Mock(base_url="http://example.com")
     result = await hass.config_entries.flow.async_init(
