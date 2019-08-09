@@ -431,7 +431,7 @@ async def test_template_delay_off(hass):
 async def test_invalid_attribute_template(hass, caplog):
     """Test that errors are logged if rendering template fails."""
     hass.states.async_set("binary_sensor.test_sensor", "true")
-    
+
     await setup.async_setup_component(
         hass,
         "binary_sensor",
@@ -452,7 +452,9 @@ async def test_invalid_attribute_template(hass, caplog):
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
-    await hass.helpers.entity_component.async_update_entity("binary_sensor.invalid_template")
+    await hass.helpers.entity_component.async_update_entity(
+        "binary_sensor.invalid_template"
+    )
 
     assert ("Error rendering attribute test_attribute") in caplog.text
     assert ("Could not render entity_picture template") in caplog.text
