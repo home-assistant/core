@@ -441,7 +441,6 @@ async def test_invalid_attribute_template(hass, caplog):
                 "sensors": {
                     "invalid_template": {
                         "value_template": "{{ states.binary_sensor.test_sensor }}",
-                        "entity_picture_template": "{{ states.binary_sensor.unknown.attributes.picture }}",
                         "attribute_templates": {
                             "test_attribute": "{{ states.binary_sensor.unknown.attributes.picture }}"
                         },
@@ -457,7 +456,6 @@ async def test_invalid_attribute_template(hass, caplog):
     )
 
     assert ("Error rendering attribute test_attribute") in caplog.text
-    assert ("Could not render entity_picture template") in caplog.text
 
 
 async def test_no_update_template_match_all(hass, caplog):
