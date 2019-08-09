@@ -60,7 +60,7 @@ async def setup_zones(loop, hass):
 
 
 @pytest.fixture(name="webhook_id")
-async def webhook_id(hass, client):
+async def webhook_id_fixture(hass, client):
     """Initialize the Traccar component and get the webhook_id."""
     hass.config.api = Mock(base_url="http://example.com")
     result = await hass.config_entries.flow.async_init(
