@@ -20,7 +20,6 @@ HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811
 
 
-
 @pytest.fixture(autouse=True)
 def mock_dev_track(mock_device_tracker_conf):
     """Mock device tracker config loading."""
