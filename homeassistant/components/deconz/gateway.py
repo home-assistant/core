@@ -63,12 +63,12 @@ class DeconzGateway:
     @property
     def allow_clip_sensor(self) -> bool:
         """Allow loading clip sensor from gateway."""
-        return self.config_entry.data.get(CONF_ALLOW_CLIP_SENSOR, True)
+        return self.config_entry.options.get(CONF_ALLOW_CLIP_SENSOR, True)
 
     @property
     def allow_deconz_groups(self) -> bool:
         """Allow loading deCONZ groups from gateway."""
-        return self.config_entry.data.get(CONF_ALLOW_DECONZ_GROUPS, True)
+        return self.config_entry.options.get(CONF_ALLOW_DECONZ_GROUPS, True)
 
     async def async_update_device_registry(self):
         """Update device registry."""
