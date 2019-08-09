@@ -103,11 +103,7 @@ async def test_missing_data(hass, traccar_client, webhook_id):
 async def test_enter_and_exit(hass, traccar_client, webhook_id):
     """Test when there is a known zone."""
     url = "/api/webhook/{}".format(webhook_id)
-    data = {
-        "lat": str(HOME_LATITUDE),
-        "lon": str(HOME_LONGITUDE),
-        "id": "123",
-    }
+    data = {"lat": str(HOME_LATITUDE), "lon": str(HOME_LONGITUDE), "id": "123"}
 
     # Enter the Home
     req = await traccar_client.post(url, params=data)
@@ -195,23 +191,18 @@ async def test_enter_with_attrs(hass, traccar_client, webhook_id):
     assert state.attributes["altitude"] == 123
 
 
-async def test_two_devices(hass, locative_client, webhook_id):
+async def test_two_devices(hass, traccar_client, webhook_id):
     """Test updating two different devices."""
     url = "/api/webhook/{}".format(webhook_id)
 
-    data_device_1 = {
-        "lat": "1.0",
-        "lon": "1.1",
-        "id": "device_1",
+    data_device_1 = {"lat": "1.0", "lon": "1.1", "id": "device_1"}
 
     # Exit Home
-    req = await locative_client.post(url, data=data_device_1)
+    req = await traccar_client.post(url, data=data_device_1)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
 
-    state = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data_device_1["id"])
-    )
+    state = hass.states.get("{}.{}".format(DEVICE_TRACKER_DOMAIN, data_device_1["id"]))
     assert state.state == "not_home"
 
     # Enter Home
@@ -219,17 +210,13 @@ async def test_two_devices(hass, locative_client, webhook_id):
     data_device_2["lat"] = str(HOME_LATITUDE)
     data_device_2["lon"] = str(HOME_LONGITUDE)
     data_device_2["id"] = "device_2"
-    req = await locative_client.post(url, data=data_device_2)
+    req = await traccar_client.post(url, data=data_device_2)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
 
-    state = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data_device_2["id"])
-    )
+    state = hass.states.get("{}.{}".format(DEVICE_TRACKER_DOMAIN, data_device_2["id"]))
     assert state.state == "home"
-    state = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data_device_1["id"])
-    )
+    state = hass.states.get("{}.{}".format(DEVICE_TRACKER_DOMAIN, data_device_1["id"]))
     assert state.state == "not_home"
 
 
