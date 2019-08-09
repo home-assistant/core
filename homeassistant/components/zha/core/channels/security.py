@@ -57,7 +57,7 @@ class IASZoneChannel(ZigbeeChannel):
         """Configure IAS device."""
         # Xiaomi devices don't need this and it disrupts pairing
         if self._zha_device.manufacturer == "LUMI":
-            self.debug("%s: finished IASZoneChannel configuration")
+            self.debug("finished IASZoneChannel configuration")
             return
         from zigpy.exceptions import DeliveryError
 
@@ -81,7 +81,7 @@ class IASZoneChannel(ZigbeeChannel):
                 self._cluster.ep_attribute,
                 str(ex),
             )
-        self.debug("%s: finished IASZoneChannel configuration")
+        self.debug("finished IASZoneChannel configuration")
 
         await self.get_attribute_value("zone_type", from_cache=False)
 
