@@ -7,7 +7,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_EMAIL, ATTR_ATTRIBUTION
+from homeassistant.const import CONF_EMAIL, CONF_API_KEY, ATTR_ATTRIBUTION
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_point_in_time
@@ -25,17 +25,21 @@ HA_USER_AGENT = "Home Assistant HaveIBeenPwned Sensor Component"
 MIN_TIME_BETWEEN_FORCED_UPDATES = timedelta(seconds=5)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
-URL = "https://haveibeenpwned.com/api/v2/breachedaccount/"
+URL = "https://haveibeenpwned.com/api/v3/breachedaccount/"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_EMAIL): vol.All(cv.ensure_list, [cv.string])}
+    {
+        vol.Required(CONF_EMAIL): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required(CONF_API_KEY): cv.string,
+    }
 )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the HaveIBeenPwned sensor."""
     emails = config.get(CONF_EMAIL)
-    data = HaveIBeenPwnedData(emails)
+    api_key = config[CONF_API_KEY]
+    data = HaveIBeenPwnedData(emails, api_key)
 
     devices = []
     for email in emails:
@@ -125,13 +129,14 @@ class HaveIBeenPwnedSensor(Entity):
 class HaveIBeenPwnedData:
     """Class for handling the data retrieval."""
 
-    def __init__(self, emails):
+    def __init__(self, emails, api_key):
         """Initialize the data object."""
         self._email_count = len(emails)
         self._current_index = 0
         self.data = {}
         self._email = emails[0]
         self._emails = emails
+        self._api_key = api_key
 
     def set_next_email(self):
         """Set the next email to be looked up."""
@@ -146,16 +151,10 @@ class HaveIBeenPwnedData:
     def update(self, **kwargs):
         """Get the latest data for current email from REST service."""
         try:
-            url = "{}{}".format(URL, self._email)
-
+            url = "{}{}?truncateResponse=false".format(URL, self._email)
+            header = {USER_AGENT: HA_USER_AGENT, "hibp-api-key": self._api_key}
             _LOGGER.debug("Checking for breaches for email: %s", self._email)
-
-            req = requests.get(
-                url,
-                headers={USER_AGENT: HA_USER_AGENT},
-                allow_redirects=True,
-                timeout=5,
-            )
+            req = requests.get(url, headers=header, allow_redirects=True, timeout=5)
 
         except requests.exceptions.RequestException:
             _LOGGER.error("Failed fetching data for %s", self._email)
