@@ -77,21 +77,17 @@ async def run_test(hass, mock_hub, register_config, register_words, expected):
 
     # Initialize sensor
     now = dt_util.utcnow()
-    with mock.patch(
-        ("homeassistant.helpers.event." "dt_util.utcnow"), return_value=now
-    ):
+    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
         assert await async_setup_component(hass, SENSOR_DOMAIN, config)
 
     # Trigger update call with time_changed event
     now += timedelta(seconds=scan_interval + 1)
-    with mock.patch(
-        ("homeassistant.helpers.event." "dt_util.utcnow"), return_value=now
-    ):
+    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
 
     # Check state
-    entity_id = SENSOR_DOMAIN + "." + sensor_name
+    entity_id = f"{SENSOR_DOMAIN}.{sensor_name}"
     state = hass.states.get(entity_id).state
     assert state == expected
 
