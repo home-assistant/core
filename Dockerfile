@@ -13,6 +13,7 @@ LABEL maintainer="Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>"
 #ENV INSTALL_SSOCR no
 #ENV INSTALL_DLIB no
 #ENV INSTALL_IPERF3 no
+#ENV INSTALL_LOCALES no
 
 VOLUME /config
 
