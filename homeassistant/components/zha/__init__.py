@@ -11,7 +11,6 @@ from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from . import config_flow  # noqa  # pylint: disable=unused-import
 from . import api
 from .core import ZHAGateway
-from .core.channels.registry import populate_channel_registry
 from .core.const import (
     COMPONENTS,
     CONF_BAUDRATE,
@@ -90,7 +89,6 @@ async def async_setup_entry(hass, config_entry):
     Will automatically load components to support devices found on the network.
     """
     establish_device_mappings()
-    populate_channel_registry()
 
     for component in COMPONENTS:
         hass.data[DATA_ZHA][component] = hass.data[DATA_ZHA].get(component, {})

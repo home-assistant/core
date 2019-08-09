@@ -41,6 +41,7 @@ from .const import (
     DEBUG_COMP_ZIGPY,
     DEBUG_COMP_ZIGPY_DECONZ,
     DEBUG_COMP_ZIGPY_XBEE,
+    DEBUG_COMP_ZIGPY_ZIGATE,
     DEBUG_LEVEL_CURRENT,
     DEBUG_LEVEL_ORIGINAL,
     DEBUG_LEVELS,
@@ -65,7 +66,7 @@ from .const import (
 from .device import DeviceStatus, ZHADevice
 from .discovery import async_dispatch_discovery_info, async_process_endpoint
 from .patches import apply_application_controller_patch
-from .registries import INPUT_BIND_ONLY_CLUSTERS, RADIO_TYPES
+from .registries import RADIO_TYPES
 from .store import async_get_registry
 
 _LOGGER = logging.getLogger(__name__)
@@ -126,10 +127,21 @@ class ZHAGateway:
         )
 
         init_tasks = []
+        semaphore = asyncio.Semaphore(2)
+
+        async def init_with_semaphore(coro, semaphore):
+            """Don't flood the zigbee network during initialization."""
+            async with semaphore:
+                await coro
+
         for device in self.application_controller.devices.values():
             if device.nwk == 0x0000:
                 continue
-            init_tasks.append(self.async_device_initialized(device, False))
+            init_tasks.append(
+                init_with_semaphore(
+                    self.async_device_initialized(device, False), semaphore
+                )
+            )
         await asyncio.gather(*init_tasks)
 
     def device_joined(self, device):
@@ -342,14 +354,6 @@ class ZHAGateway:
                     zha_device,
                     is_new_join,
                 )
-                if endpoint_id != 0:
-                    for cluster in endpoint.in_clusters.values():
-                        cluster.bind_only = (
-                            cluster.cluster_id in INPUT_BIND_ONLY_CLUSTERS
-                        )
-                    for cluster in endpoint.out_clusters.values():
-                        # output clusters are always bind only
-                        cluster.bind_only = True
         else:
             is_rejoin = is_new_join is True
             _LOGGER.debug(
@@ -409,6 +413,9 @@ def async_capture_log_levels():
         DEBUG_COMP_ZIGPY_DECONZ: logging.getLogger(
             DEBUG_COMP_ZIGPY_DECONZ
         ).getEffectiveLevel(),
+        DEBUG_COMP_ZIGPY_ZIGATE: logging.getLogger(
+            DEBUG_COMP_ZIGPY_ZIGATE
+        ).getEffectiveLevel(),
     }
 
 
@@ -420,6 +427,7 @@ def async_set_logger_levels(levels):
     logging.getLogger(DEBUG_COMP_ZIGPY).setLevel(levels[DEBUG_COMP_ZIGPY])
     logging.getLogger(DEBUG_COMP_ZIGPY_XBEE).setLevel(levels[DEBUG_COMP_ZIGPY_XBEE])
     logging.getLogger(DEBUG_COMP_ZIGPY_DECONZ).setLevel(levels[DEBUG_COMP_ZIGPY_DECONZ])
+    logging.getLogger(DEBUG_COMP_ZIGPY_ZIGATE).setLevel(levels[DEBUG_COMP_ZIGPY_ZIGATE])
 
 
 class LogRelayHandler(logging.Handler):

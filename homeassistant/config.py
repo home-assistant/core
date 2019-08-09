@@ -53,8 +53,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as CONF_CORE, SOURCE_YAML, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import Integration, async_get_integration, IntegrationNotFound
-from homeassistant.requirements import async_process_requirements
+from homeassistant.loader import Integration, IntegrationNotFound
+from homeassistant.requirements import (
+    async_get_integration_with_requirements,
+    RequirementsNotFound,
+)
 from homeassistant.util.yaml import load_yaml, SECRET_YAML
 from homeassistant.util.package import is_docker_env
 import homeassistant.helpers.config_validation as cv
@@ -658,27 +661,12 @@ async def merge_packages_config(
             domain = comp_name.split(" ")[0]
 
             try:
-                integration = await async_get_integration(hass, domain)
-            except IntegrationNotFound:
-                _log_pkg_error(pack_name, comp_name, config, "does not exist")
-                continue
-
-            if (
-                not hass.config.skip_pip
-                and integration.requirements
-                and not await async_process_requirements(
-                    hass, integration.domain, integration.requirements
+                integration = await async_get_integration_with_requirements(
+                    hass, domain
                 )
-            ):
-                _log_pkg_error(
-                    pack_name, comp_name, config, "unable to install all requirements"
-                )
-                continue
-
-            try:
                 component = integration.get_component()
-            except ImportError:
-                _log_pkg_error(pack_name, comp_name, config, "unable to import")
+            except (IntegrationNotFound, RequirementsNotFound, ImportError) as ex:
+                _log_pkg_error(pack_name, comp_name, config, str(ex))
                 continue
 
             if hasattr(component, "PLATFORM_SCHEMA"):
@@ -775,26 +763,15 @@ async def async_process_component_config(
             continue
 
         try:
-            p_integration = await async_get_integration(hass, p_name)
-        except IntegrationNotFound:
-            continue
-
-        if (
-            not hass.config.skip_pip
-            and p_integration.requirements
-            and not await async_process_requirements(
-                hass, p_integration.domain, p_integration.requirements
-            )
-        ):
-            _LOGGER.error(
-                "Unable to install all requirements for %s.%s", domain, p_name
-            )
+            p_integration = await async_get_integration_with_requirements(hass, p_name)
+        except (RequirementsNotFound, IntegrationNotFound) as ex:
+            _LOGGER.error("Platform error: %s - %s", domain, ex)
             continue
 
         try:
             platform = p_integration.get_platform(domain)
         except ImportError:
-            _LOGGER.exception("Failed to get platform %s.%s", domain, p_name)
+            _LOGGER.exception("Platform error: %s", domain)
             continue
 
         # Validate platform specific schema

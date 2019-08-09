@@ -14,7 +14,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .channels import AttributeListeningChannel, EventRelayChannel, ZDOChannel
-from .channels.registry import ZIGBEE_CHANNEL_REGISTRY
 from .const import (
     COMPONENTS,
     CONF_DEVICE_CONFIG,
@@ -35,6 +34,7 @@ from .registries import (
     SENSOR_TYPES,
     SINGLE_INPUT_CLUSTER_DEVICE_CLASS,
     SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS,
+    ZIGBEE_CHANNEL_REGISTRY,
 )
 
 _LOGGER = logging.getLogger(__name__)

@@ -337,6 +337,10 @@ class BroadlinkMP1Slot(BroadlinkRMSwitch):
         """Trigger update for all switches on the parent device."""
         self._parent_device.update()
         self._state = self._parent_device.get_outlet_status(self._slot)
+        if self._state is None:
+            self._is_available = False
+        else:
+            self._is_available = True
 
 
 class BroadlinkMP1Switch:

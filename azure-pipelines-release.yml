@@ -11,29 +11,23 @@ variables:
   - group: docker
   - group: github
   - group: twine
+resources:
+  repositories:
+    - repository: azure
+      type: github
+      name: 'home-assistant/ci-azure'
+      endpoint: 'home-assistant'
 
 
 stages:
 
 - stage: 'Validate'
   jobs:
-  - job: 'VersionValidate'
+  - template: templates/azp-job-version.yaml@azure
+  - job: 'Permission'
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-    - task: UsePythonVersion@0
-      displayName: 'Use Python 3.7'
-      inputs:
-        versionSpec: '3.7'
-    - script: |
-        setup_version="$(python setup.py -V)"
-        branch_version="$(Build.SourceBranchName)"
-
-        if [ "${setup_version}" != "${branch_version}" ]; then
-          echo "Version of tag ${branch_version} don't match with ${setup_version}!"
-          exit 1
-        fi
-      displayName: 'Check version of branch/tag'
     - script: |
         sudo apt-get install -y --no-install-recommends \
           jq curl

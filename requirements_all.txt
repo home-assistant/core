@@ -5,6 +5,7 @@ async_timeout==3.0.1
 attrs==19.1.0
 bcrypt==3.1.7
 certifi>=2019.6.16
+contextvars==2.4;python_version<"3.7"
 importlib-metadata==0.18
 jinja2>=2.10.1
 PyJWT==1.7.1
@@ -169,7 +170,7 @@ aiopvapi==1.6.14
 aioswitcher==2019.4.26
 
 # homeassistant.components.unifi
-aiounifi==9
+aiounifi==10
 
 # homeassistant.components.wwlln
 aiowwlln==1.0.0
@@ -190,7 +191,7 @@ ambiclimate==0.2.0
 amcrest==1.5.3
 
 # homeassistant.components.androidtv
-androidtv==0.0.18
+androidtv==0.0.21
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -320,7 +321,7 @@ buienradar==1.0.1
 caldav==0.6.1
 
 # homeassistant.components.cisco_mobility_express
-ciscomobilityexpress==0.3.1
+ciscomobilityexpress==0.3.3
 
 # homeassistant.components.ciscospark
 ciscosparkapi==0.4.2
@@ -442,7 +443,7 @@ env_canada==0.0.20
 # envirophat==0.0.6
 
 # homeassistant.components.enphase_envoy
-envoy_reader==0.8
+envoy_reader==0.8.6
 
 # homeassistant.components.season
 ephem==3.7.6.0
@@ -517,7 +518,7 @@ gearbest_parser==1.0.7
 geizhals==0.0.9
 
 # homeassistant.components.geniushub
-geniushub-client==0.5.4
+geniushub-client==0.5.8
 
 # homeassistant.components.geo_json_events
 # homeassistant.components.nsw_rural_fire_service_feed
@@ -587,7 +588,7 @@ ha-ffmpeg==2.0
 ha-philipsjs==0.0.8
 
 # homeassistant.components.plugwise
-haanna==0.10.0
+haanna==0.10.1
 
 # homeassistant.components.habitica
 habitipy==0.2.0
@@ -602,7 +603,7 @@ hass-nabucasa==0.16
 hbmqtt==0.9.4
 
 # homeassistant.components.jewish_calendar
-hdate==0.8.8
+hdate==0.9.0
 
 # homeassistant.components.heatmiser
 heatmiserV3==0.9.1
@@ -626,7 +627,7 @@ hole==0.3.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190801.0
+home-assistant-frontend==20190805.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.4
@@ -668,7 +669,7 @@ iglo==1.2.7
 ihcsdk==2.3.0
 
 # homeassistant.components.incomfort
-incomfort-client==0.3.0
+incomfort-client==0.3.1
 
 # homeassistant.components.influxdb
 influxdb==5.2.0
@@ -1644,7 +1645,7 @@ rjpl==0.3.5
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-roku==3.0.0
+roku==3.1
 
 # homeassistant.components.roomba
 roombapy==1.3.1
@@ -1983,6 +1984,9 @@ zigpy-homeassistant==0.7.0
 
 # homeassistant.components.zha
 zigpy-xbee-homeassistant==0.4.0
+
+# homeassistant.components.zha
+zigpy-zigate==0.1.0
 
 # homeassistant.components.zoneminder
 zm-py==0.3.3

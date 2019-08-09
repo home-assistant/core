@@ -110,10 +110,13 @@ class HomematicipHAP:
 
         Triggered when the HMIP HOME_CHANGED event has fired.
         There are several occasions for this event to happen.
-        We are only interested to check whether the access point
+        1. We are interested to check whether the access point
         is still connected. If not, device state changes cannot
         be forwarded to hass. So if access point is disconnected all devices
         are set to unavailable.
+        2. We need to update home including devices and groups after a reconnect.
+        3. We need to update home without devices and groups in all other cases.
+
         """
         if not self.home.connected:
             _LOGGER.error("HMIP access point has lost connection with the cloud")
@@ -127,6 +130,12 @@ class HomematicipHAP:
 
             job = self.hass.async_create_task(self.get_state())
             job.add_done_callback(self.get_state_finished)
+            self._accesspoint_connected = True
+        else:
+            # Update home with the given json from arg[0],
+            # without devices and groups.
+
+            self.home.update_home_only(args[0])
 
     async def get_state(self):
         """Update HMIP state and tell Home Assistant."""

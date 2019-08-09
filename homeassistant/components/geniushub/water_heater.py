@@ -1,6 +1,4 @@
 """Support for Genius Hub water_heater devices."""
-import logging
-
 from homeassistant.components.water_heater import (
     WaterHeaterDevice,
     SUPPORT_TARGET_TEMPERATURE,
@@ -14,8 +12,6 @@ from . import DOMAIN
 
 STATE_AUTO = "auto"
 STATE_MANUAL = "manual"
-
-_LOGGER = logging.getLogger(__name__)
 
 GH_HEATERS = ["hot water temperature"]
 
@@ -82,7 +78,7 @@ class GeniusWaterHeater(WaterHeaterDevice):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        tmp = self._boiler.__dict__.items()
+        tmp = self._boiler.data.items()
         return {"status": {k: v for k, v in tmp if k in GH_STATE_ATTRS}}
 
     @property
@@ -93,15 +89,12 @@ class GeniusWaterHeater(WaterHeaterDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        try:
-            return self._boiler.temperature
-        except AttributeError:
-            return None
+        return self._boiler.data.get("temperature")
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self._boiler.setpoint
+        return self._boiler.data["setpoint"]
 
     @property
     def min_temp(self):
@@ -131,7 +124,7 @@ class GeniusWaterHeater(WaterHeaterDevice):
     @property
     def current_operation(self):
         """Return the current operation mode."""
-        return GH_STATE_TO_HA[self._boiler.mode]
+        return GH_STATE_TO_HA[self._boiler.data["mode"]]
 
     async def async_set_operation_mode(self, operation_mode):
         """Set a new operation mode for this boiler."""

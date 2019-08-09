@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+import aiohttp
 import voluptuous as vol
 
 from geniushubclient import GeniusHubClient
@@ -41,32 +42,23 @@ async def async_setup(hass, hass_config):
         args = (kwargs.pop(CONF_TOKEN),)
 
     hass.data[DOMAIN] = {}
-    data = hass.data[DOMAIN]["data"] = GeniusData(hass, args, kwargs)
+    broker = GeniusBroker(hass, args, kwargs)
+
     try:
-        await data._client.hub.update()  # pylint: disable=protected-access
-    except AssertionError:  # assert response.status == HTTP_OK
-        _LOGGER.warning("Setup failed, check your configuration.", exc_info=True)
+        await broker._client.hub.update()  # pylint: disable=protected-access
+    except aiohttp.ClientResponseError as err:
+        _LOGGER.error("Setup failed, check your configuration, %s", err)
         return False
+    broker.make_debug_log_entries()
 
-    _LOGGER.debug(
-        # noqa; pylint: disable=protected-access
-        "zones_raw = %s",
-        data._client.hub._zones_raw,
-    )
-    _LOGGER.debug(
-        # noqa; pylint: disable=protected-access
-        "devices_raw = %s",
-        data._client.hub._devices_raw,
-    )
-
-    async_track_time_interval(hass, data.async_update, SCAN_INTERVAL)
+    async_track_time_interval(hass, broker.async_update, SCAN_INTERVAL)
 
     for platform in ["climate", "water_heater"]:
         hass.async_create_task(
             async_load_platform(hass, platform, DOMAIN, {}, hass_config)
         )
 
-    if data._client.api_version == 3:  # pylint: disable=protected-access
+    if broker._client.api_version == 3:  # pylint: disable=protected-access
         for platform in ["sensor", "binary_sensor"]:
             hass.async_create_task(
                 async_load_platform(hass, platform, DOMAIN, {}, hass_config)
@@ -75,7 +67,7 @@ async def async_setup(hass, hass_config):
     return True
 
 
-class GeniusData:
+class GeniusBroker:
     """Container for geniushub client and data."""
 
     def __init__(self, hass, args, kwargs):
@@ -89,19 +81,18 @@ class GeniusData:
         """Update the geniushub client's data."""
         try:
             await self._client.hub.update()
-        except AssertionError:  # assert response.status == HTTP_OK
-            _LOGGER.warning("Update failed.", exc_info=True)
+        except aiohttp.ClientResponseError as err:
+            _LOGGER.warning("Update failed, %s", err)
             return
-
-        _LOGGER.debug(
-            # noqa; pylint: disable=protected-access
-            "zones_raw = %s",
-            self._client.hub._zones_raw,
-        )
-        _LOGGER.debug(
-            # noqa; pylint: disable=protected-access
-            "devices_raw = %s",
-            self._client.hub._devices_raw,
-        )
+        self.make_debug_log_entries()
 
         async_dispatcher_send(self._hass, DOMAIN)
+
+    def make_debug_log_entries(self):
+        """Make any useful debug log entries."""
+        # pylint: disable=protected-access
+        _LOGGER.debug(
+            "Raw JSON: \n\nhub._raw_zones = %s \n\nhub._raw_devices = %s",
+            self._client.hub._raw_zones,
+            self._client.hub._raw_devices,
+        )

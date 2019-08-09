@@ -30,6 +30,7 @@ from .const import (
     CONF_DETECTION_TIME,
     CONF_DONT_TRACK_CLIENTS,
     CONF_DONT_TRACK_DEVICES,
+    CONF_DONT_TRACK_WIRED_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONTROLLER_ID,
@@ -40,11 +41,7 @@ LOGGER = logging.getLogger(__name__)
 
 DEVICE_ATTRIBUTES = [
     "_is_guest_by_uap",
-    "ap_mac",
     "authorized",
-    "bssid",
-    "ccq",
-    "channel",
     "essid",
     "hostname",
     "ip",
@@ -53,14 +50,11 @@ DEVICE_ATTRIBUTES = [
     "is_wired",
     "mac",
     "name",
-    "noise",
     "noted",
     "oui",
     "qos_policy_applied",
     "radio",
     "radio_proto",
-    "rssi",
-    "signal",
     "site_id",
     "vlan",
 ]
@@ -178,10 +172,18 @@ def update_items(controller, async_add_entities, tracked):
             ):
                 continue
 
+            if (
+                controller.unifi_config.get(CONF_DONT_TRACK_WIRED_CLIENTS, False)
+                and client.is_wired
+            ):
+                continue
+
             tracked[client_id] = UniFiClientTracker(client, controller)
             new_tracked.append(tracked[client_id])
             LOGGER.debug(
-                "New UniFi client tracker %s (%s)", client.hostname, client.mac
+                "New UniFi client tracker %s (%s)",
+                client.name or client.hostname,
+                client.mac,
             )
 
     if not controller.unifi_config.get(CONF_DONT_TRACK_DEVICES, False):
@@ -201,7 +203,11 @@ def update_items(controller, async_add_entities, tracked):
 
             tracked[device_id] = UniFiDeviceTracker(device, controller)
             new_tracked.append(tracked[device_id])
-            LOGGER.debug("New UniFi device tracker %s (%s)", device.name, device.mac)
+            LOGGER.debug(
+                "New UniFi device tracker %s (%s)",
+                device.name or device.model,
+                device.mac,
+            )
 
     if new_tracked:
         async_add_entities(new_tracked)
@@ -288,9 +294,10 @@ class UniFiDeviceTracker(ScannerEntity):
             CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
         )
 
-        if (
+        if self.device.last_seen and (
             dt_util.utcnow() - dt_util.utc_from_timestamp(float(self.device.last_seen))
-        ) < detection_time:
+            < detection_time
+        ):
             return True
         return False
 
@@ -302,7 +309,7 @@ class UniFiDeviceTracker(ScannerEntity):
     @property
     def name(self) -> str:
         """Return the name of the device."""
-        return self.device.name
+        return self.device.name or self.device.model
 
     @property
     def unique_id(self) -> str:
@@ -317,17 +324,24 @@ class UniFiDeviceTracker(ScannerEntity):
     @property
     def device_info(self):
         """Return a device description for device registry."""
-        return {
+        info = {
             "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
             "manufacturer": ATTR_MANUFACTURER,
             "model": self.device.model,
-            "name": self.device.name,
             "sw_version": self.device.version,
         }
+
+        if self.device.name:
+            info["name"] = self.device.name
+
+        return info
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
+        if not self.device.last_seen:
+            return {}
+
         attributes = {}
 
         attributes["upgradable"] = self.device.upgradable
