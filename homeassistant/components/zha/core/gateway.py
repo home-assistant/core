@@ -290,7 +290,7 @@ class ZHAGateway:
         self.debug_enabled = False
 
     @callback
-    def _async_get_or_create_device(self, zigpy_device, is_new_join):
+    def _async_get_or_create_device(self, zigpy_device):
         """Get or create a ZHA device."""
         zha_device = self._devices.get(zigpy_device.ieee)
         if zha_device is None:
@@ -304,9 +304,6 @@ class ZHAGateway:
                 manufacturer=zha_device.manufacturer,
                 model=zha_device.model,
             )
-        if not is_new_join:
-            entry = self.zha_storage.async_get_or_create(zha_device)
-            zha_device.async_update_last_seen(entry.last_seen)
         return zha_device
 
     @callback
@@ -336,7 +333,7 @@ class ZHAGateway:
         if device.nwk == 0x0000:
             return
 
-        zha_device = self._async_get_or_create_device(device, True)
+        zha_device = self._async_get_or_create_device(device)
 
         _LOGGER.debug(
             "device - ieee: %s entering async_device_initialized - is_new_join: %s",
@@ -357,6 +354,10 @@ class ZHAGateway:
                 "device - ieee: %s has joined the ZHA zigbee network", zha_device.ieee
             )
             await self._async_device_joined(device, zha_device)
+
+        # This is real traffic from a device so lets update last seen on the entry
+        entry = self.zha_storage.async_get_or_create(zha_device)
+        zha_device.async_update_last_seen(entry.last_seen)
 
         device_info = async_get_device_info(
             self._hass, zha_device, self.ha_device_registry
@@ -394,7 +395,7 @@ class ZHAGateway:
     # only public for testing
     async def async_device_restored(self, device):
         """Add an existing device to the ZHA zigbee network when ZHA first starts."""
-        zha_device = self._async_get_or_create_device(device, False)
+        zha_device = self._async_get_or_create_device(device)
         discovery_infos = []
         for endpoint_id, endpoint in device.endpoints.items():
             async_process_endpoint(
