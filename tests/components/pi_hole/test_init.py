@@ -2,16 +2,11 @@
 
 import unittest
 
-from homeassistant.components.pi_hole import sensor as pi_hole
+from homeassistant import setup
+from homeassistant.components import pi_hole
 from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from tests.common import get_test_home_assistant
-
-
-def mock_async_add_entities(sensors, enable):
-    """Mock function."""
-    return
 
 
 class TestComponentPiHole(unittest.TestCase):
@@ -28,7 +23,4 @@ class TestComponentPiHole(unittest.TestCase):
     def test_setup_no_config(self):
         """Test a successful setup with no configuration."""
         config = {CONF_MONITORED_CONDITIONS: []}
-        assert not run_coroutine_threadsafe(
-            pi_hole.async_setup_platform(self.hass, config, mock_async_add_entities),
-            self.hass.loop,
-        ).result()
+        assert setup.setup_component(self.hass, pi_hole.DOMAIN, {"pi_hole": config})

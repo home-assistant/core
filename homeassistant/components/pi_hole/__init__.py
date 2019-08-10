@@ -1,1 +1,115 @@
 """The pi_hole component."""
+import logging
+import voluptuous as vol
+
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_MONITORED_CONDITIONS,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.util import Throttle
+
+from .const import (
+    DOMAIN,
+    CONF_LOCATION,
+    DEFAULT_HOST,
+    DEFAULT_LOCATION,
+    DEFAULT_NAME,
+    DEFAULT_SSL,
+    DEFAULT_VERIFY_SSL,
+    MIN_TIME_BETWEEN_UPDATES,
+    MONITORED_CONDITIONS,
+)
+
+LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+                vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION): cv.string,
+                vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+                vol.Optional(
+                    CONF_MONITORED_CONDITIONS, default=["ads_blocked_today"]
+                ): vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+
+async def async_setup(hass, config):
+    """Set up the pi_hole integration."""
+    from hole import Hole
+
+    conf = config[DOMAIN]
+    name = conf.get(CONF_NAME)
+    host = conf.get(CONF_HOST)
+    use_tls = conf.get(CONF_SSL)
+    verify_tls = conf.get(CONF_VERIFY_SSL)
+    location = conf.get(CONF_LOCATION)
+
+    LOGGER.debug("Setting up %s integration with host %s", DOMAIN, host)
+
+    session = async_get_clientsession(hass, True)
+    pi_hole = PiHoleData(
+        Hole(
+            host,
+            hass.loop,
+            session,
+            location=location,
+            tls=use_tls,
+            verify_tls=verify_tls,
+        ),
+        name,
+    )
+
+    await pi_hole.async_update()
+
+    if pi_hole.api.data is None:
+        raise PlatformNotReady
+
+    hass.data[DOMAIN] = pi_hole
+
+    hass.async_create_task(
+        async_load_platform(
+            hass, SENSOR_DOMAIN, DOMAIN, conf.get(CONF_MONITORED_CONDITIONS), config
+        )
+    )
+
+    LOGGER.debug("%s integration setup complete", DOMAIN)
+
+    return True
+
+
+class PiHoleData:
+    """Get the latest data and update the states."""
+
+    def __init__(self, api, name):
+        """Initialize the data object."""
+        self.api = api
+        self.name = name
+        self.available = True
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    async def async_update(self):
+        """Get the latest data from the Pi-hole."""
+        from hole.exceptions import HoleError
+
+        try:
+            await self.api.get_data()
+            self.available = True
+        except HoleError:
+            LOGGER.error("Unable to fetch data from Pi-hole")
+            self.available = False
