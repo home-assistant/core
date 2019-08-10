@@ -251,32 +251,23 @@ class PrometheusMetrics:
             pass
 
     def _handle_sensor(self, state):
-        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        metric = self._component_config.get(state.entity_id).get(
-            CONF_OVERRIDE_METRIC)
-        if metric in (None, ''):
-            if self._override_metric:
-                metric = self._override_metric
-            else:
-                metric = state.attributes.get(ATTR_DEVICE_CLASS)
-                if metric in (None, ''):
-                    if self._default_metric:
-                        metric = self._default_metric
-                    else:
-                        if unit in (None, ''):
-                            _LOGGER.debug(
-                                "Unsupported sensor: %s",
-                                state.entity_id)
-                            metric = None
-                        else:
-                            metric = "{}_{}".format("sensor_unit",
-                                                    self._unit_string(unit))
-                else:
-                    metric = "{}_{}".format(metric,
-                                            self._unit_string(unit))
+        unit = self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
+        metric_handlers = [
+            self._sensor_override_component_metric,
+            self._sensor_override_metric,
+            self._sensor_attribute_metric,
+            self._sensor_default_metric,
+            self._sensor_fallback_metric
+            ]
+
+        for metric_handler in metric_handlers:
+            metric = metric_handler(state, unit)
+            if metric is not None:
+                break
 
         if metric is not None:
-            _metric = self._metric(metric, self.prometheus_client.Gauge,
+            _metric = self._metric(metric,
+                                   self.prometheus_client.Gauge,
                                    "Sensor data measured in {}".format(unit))
 
             try:
@@ -288,6 +279,37 @@ class PrometheusMetrics:
                 pass
 
         self._battery(state)
+
+    def _sensor_default_metric(self, state, unit):
+        """Get default metric"""
+        return self._default_metric
+
+    @staticmethod
+    def _sensor_attribute_metric(state, unit):
+        """Get metric based on device class attribute"""
+        metric = state.attributes.get(ATTR_DEVICE_CLASS)
+        if metric is not None:
+            return "{}_{}".format(metric, unit)
+        return None
+
+    def _sensor_override_metric(self, state, unit):
+        """Get metric from override in configuration"""
+        if self._override_metric:
+            return self._override_metric
+        return None
+
+    def _sensor_override_component_metric(self, state, unit):
+        """Get metric from override in component confioguration"""
+        return self._component_config.get(state.entity_id).get(
+            CONF_OVERRIDE_METRIC)
+
+    @staticmethod
+    def _sensor_fallback_metric(state, unit):
+        """Get metric from fallback logic for compatability"""
+        if unit in (None, ''):
+            _LOGGER.debug("Unsupported sensor: %s", state.entity_id)
+            return None
+        return "{}_{}".format("sensor_unit", unit)
 
     @staticmethod
     def _unit_string(unit):
