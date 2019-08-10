@@ -735,7 +735,7 @@ async def test_merge_once_only_lists(hass):
     """Test if we have a merge for a comp that may occur only once. Lists."""
     packages = {
         "pack_2": {
-            "api": {"list_1": ["item_2", "item_3"], "list_2": ["item_1"], "list_3": []}
+            "api": {"list_1": ["item_2", "item_3"], "list_2": ["item_4"], "list_3": []}
         }
     }
     config = {
@@ -745,7 +745,8 @@ async def test_merge_once_only_lists(hass):
     await config_util.merge_packages_config(hass, config, packages)
     assert config["api"] == {
         "list_1": ["item_1", "item_2", "item_3"],
-        "list_2": ["item_1"],
+        "list_2": ["item_4"],
+        "list_3": [],
     }
 
 
