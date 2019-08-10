@@ -20,10 +20,10 @@ RUN git clone --depth 1 https://github.com/home-assistant/hass-release \
     && cd hass-release \
     && pip3 install -e .
 
-WORKDIR /workspace
+WORKDIR /workspaces
 
 # Install Python dependencies from requirements.txt if it exists
-COPY requirements_test_all.txt homeassistant/package_constraints.txt /workspace/
+COPY requirements_test_all.txt homeassistant/package_constraints.txt .
 RUN pip3 install -r requirements_test_all.txt -c package_constraints.txt
 
 # Set the default shell to bash instead of sh
