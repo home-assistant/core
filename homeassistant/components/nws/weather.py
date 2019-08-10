@@ -45,7 +45,8 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data from National Weather Service/NOAA"
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
+SCAN_INTERVAL = timedelta(minutes=15)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 CONF_STATION = "station"
 
