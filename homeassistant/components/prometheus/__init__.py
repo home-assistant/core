@@ -309,30 +309,30 @@ class PrometheusMetrics:
         self._battery(state)
 
     def _sensor_default_metric(self, state, unit):
-        """Get default metric"""
+        """Get default metric."""
         return self._default_metric
 
     @staticmethod
     def _sensor_attribute_metric(state, unit):
-        """Get metric based on device class attribute"""
+        """Get metric based on device class attribute."""
         metric = state.attributes.get(ATTR_DEVICE_CLASS)
         if metric is not None:
             return "{}_{}".format(metric, unit)
         return None
 
     def _sensor_override_metric(self, state, unit):
-        """Get metric from override in configuration"""
+        """Get metric from override in configuration."""
         if self._override_metric:
             return self._override_metric
         return None
 
     def _sensor_override_component_metric(self, state, unit):
-        """Get metric from override in component confioguration"""
+        """Get metric from override in component confioguration."""
         return self._component_config.get(state.entity_id).get(CONF_OVERRIDE_METRIC)
 
     @staticmethod
     def _sensor_fallback_metric(state, unit):
-        """Get metric from fallback logic for compatability"""
+        """Get metric from fallback logic for compatability."""
         if unit in (None, ""):
             _LOGGER.debug("Unsupported sensor: %s", state.entity_id)
             return None
