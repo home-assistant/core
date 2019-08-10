@@ -114,17 +114,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except pyatmo.NoDevice:
         return
 
-    home_ids = []
+    home_ids = home_data.get_home_ids()
     rooms = {}
     if homes_conf is not None:
+        home_ids = []
         for home_conf in homes_conf:
             home = home_conf[CONF_NAME]
             home_id = home_data.homedata.gethomeId(home)
             if home_conf[CONF_ROOMS] != []:
                 rooms[home_id] = home_conf[CONF_ROOMS]
             home_ids.append(home_id)
-    else:
-        home_ids = home_data.get_home_ids()
 
     devices = []
     for home_id in home_ids:
@@ -349,7 +348,6 @@ class HomeData:
         self.schedules = []
         self.home = home
         self.home_id = None
-        self.setup()
 
     def get_home_ids(self):
         """Get all the home ids returned by NetAtmo API."""
