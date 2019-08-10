@@ -2,6 +2,7 @@
 import logging
 import struct
 
+from typing import Any, Union
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -36,6 +37,26 @@ DATA_TYPE_UINT = "uint"
 REGISTER_TYPE_HOLDING = "holding"
 REGISTER_TYPE_INPUT = "input"
 
+
+def number(value: Any) -> Union[int, float]:
+    """Coerce a value to number without losing precision."""
+    if isinstance(value, int):
+        return value
+
+    if isinstance(value, str):
+        try:
+            value = int(value)
+            return value
+        except (TypeError, ValueError):
+            pass
+
+    try:
+        value = float(value)
+        return value
+    except (TypeError, ValueError):
+        raise vol.Invalid("invalid number {}".format(value))
+
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_REGISTERS): [
@@ -47,13 +68,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                     [DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT, DATA_TYPE_CUSTOM]
                 ),
                 vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-                vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float),
+                vol.Optional(CONF_OFFSET, default=0): number,
                 vol.Optional(CONF_PRECISION, default=0): cv.positive_int,
                 vol.Optional(CONF_REGISTER_TYPE, default=REGISTER_TYPE_HOLDING): vol.In(
                     [REGISTER_TYPE_HOLDING, REGISTER_TYPE_INPUT]
                 ),
                 vol.Optional(CONF_REVERSE_ORDER, default=False): cv.boolean,
-                vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
+                vol.Optional(CONF_SCALE, default=1): number,
                 vol.Optional(CONF_SLAVE): cv.positive_int,
                 vol.Optional(CONF_STRUCTURE): cv.string,
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
@@ -207,6 +228,10 @@ class ModbusRegisterSensor(RestoreEntity):
             return
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
         val = struct.unpack(self._structure, byte_string)[0]
-        self._value = format(
-            self._scale * val + self._offset, ".{}f".format(self._precision)
-        )
+        val = self._scale * val + self._offset
+        if isinstance(val, int):
+            self._value = str(val)
+            if self._precision > 0:
+                self._value += "." + "0" * self._precision
+        else:
+            self._value = f"{val:.{self._precision}f}"
