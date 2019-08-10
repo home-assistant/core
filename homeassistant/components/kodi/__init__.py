@@ -3,12 +3,10 @@
 import asyncio
 import voluptuous as vol
 
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.kodi.const import DOMAIN
 from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
-
-from homeassistant.const import ATTR_ENTITY_ID
 
 
 SERVICE_ADD_MEDIA = "add_to_playlist"
