@@ -4,7 +4,7 @@ import datetime as dt
 import json
 import logging
 from collections import defaultdict
-from types import TracebackType
+from types import ModuleType, TracebackType
 from typing import (  # noqa: F401 pylint: disable=unused-import
     Awaitable,
     Dict,
@@ -162,12 +162,12 @@ async def async_reproduce_state(
             return
 
         try:
-            platform = component.get_platform("reproduce_state")
+            platform: Optional[ModuleType] = component.get_platform("reproduce_state")
         except ImportError:
             platform = None
 
         if platform:
-            await platform.async_reproduce_states(
+            await platform.async_reproduce_states(  # type: ignore
                 hass, states_by_domain, context=context
             )
         else:
