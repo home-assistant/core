@@ -2,11 +2,14 @@
 
 import asyncio
 import logging
+import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM
+from homeassistant.helpers import config_validation as cv
 from homeassistant.components.kodi.const import DOMAIN
 from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
 
+from homeassistant.const import ATTR_ENTITY_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +33,7 @@ KODI_ADD_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
         vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
     }
 )
-KODI_PLAYER_CALL_METHOD_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
+KODI_CALL_METHOD_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
     {vol.Required(ATTR_METHOD): cv.string}, extra=vol.ALLOW_EXTRA
 )
 
@@ -47,12 +50,49 @@ SERVICE_TO_METHOD = {
 
 
 async def async_setup(hass, config):
-    """Setup the Kodi integration."""
+    """Set up the Kodi integration."""
     if any(
         ((CONF_PLATFORM, DOMAIN) in cfg.items() for cfg in config.get(MP_DOMAIN, []))
     ):
         # Register the Kodi media_player services
         _LOGGER.critical("Has Kodi media_player")
+
+        async def async_service_handler(service):
+            """Map services to methods on MediaPlayerDevice."""
+            method = SERVICE_TO_METHOD.get(service.service)
+            if not method:
+                return
+
+            params = {
+                key: value for key, value in service.data.items() if key != "entity_id"
+            }
+            entity_ids = service.data.get("entity_id")
+            if entity_ids:
+                target_players = [
+                    player
+                    for player in hass.data[DOMAIN].values()
+                    if player.entity_id in entity_ids
+                ]
+            else:
+                target_players = hass.data[DOMAIN].values()
+
+            update_tasks = []
+            for player in target_players:
+                await getattr(player, method["method"])(**params)
+
+            for player in target_players:
+                if player.should_poll:
+                    update_coro = player.async_update_ha_state(True)
+                    update_tasks.append(update_coro)
+
+            if update_tasks:
+                await asyncio.wait(update_tasks)
+
+        for service in SERVICE_TO_METHOD:
+            schema = SERVICE_TO_METHOD[service]["schema"]
+            hass.services.async_register(
+                DOMAIN, service, async_service_handler, schema=schema
+            )
 
     # Return boolean to indicate that initialization was successful.
     return True

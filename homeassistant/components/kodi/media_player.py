@@ -1,5 +1,4 @@
 """Support for interfacing with the XBMC/Kodi JSON-RPC API."""
-import asyncio
 from collections import OrderedDict
 from functools import wraps
 import logging
@@ -10,6 +9,7 @@ import urllib
 import aiohttp
 import voluptuous as vol
 
+from homeassistant.components.kodi import SERVICE_CALL_METHOD
 from homeassistant.components.kodi.const import DOMAIN
 from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
@@ -34,7 +34,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -224,46 +223,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     hass.data[DOMAIN][ip_addr] = entity
     async_add_entities([entity], update_before_add=True)
-
-    async def async_service_handler(service):
-        """Map services to methods on MediaPlayerDevice."""
-        method = SERVICE_TO_METHOD.get(service.service)
-        if not method:
-            return
-
-        params = {
-            key: value for key, value in service.data.items() if key != "entity_id"
-        }
-        entity_ids = service.data.get("entity_id")
-        if entity_ids:
-            target_players = [
-                player
-                for player in hass.data[DOMAIN].values()
-                if player.entity_id in entity_ids
-            ]
-        else:
-            target_players = hass.data[DOMAIN].values()
-
-        update_tasks = []
-        for player in target_players:
-            await getattr(player, method["method"])(**params)
-
-        for player in target_players:
-            if player.should_poll:
-                update_coro = player.async_update_ha_state(True)
-                update_tasks.append(update_coro)
-
-        if update_tasks:
-            await asyncio.wait(update_tasks)
-
-    if hass.services.has_service(DOMAIN, SERVICE_ADD_MEDIA):
-        return
-
-    for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service]["schema"]
-        hass.services.async_register(
-            DOMAIN, service, async_service_handler, schema=schema
-        )
 
 
 def cmd(func):
