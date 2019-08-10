@@ -1,7 +1,6 @@
 """The kodi component."""
 
 import asyncio
-import logging
 import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM
@@ -10,8 +9,6 @@ from homeassistant.components.kodi.const import DOMAIN
 from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
 
 from homeassistant.const import ATTR_ENTITY_ID
-
-_LOGGER = logging.getLogger(__name__)
 
 
 SERVICE_ADD_MEDIA = "add_to_playlist"
@@ -55,8 +52,6 @@ async def async_setup(hass, config):
         ((CONF_PLATFORM, DOMAIN) in cfg.items() for cfg in config.get(MP_DOMAIN, []))
     ):
         # Register the Kodi media_player services
-        _LOGGER.critical("Has Kodi media_player")
-
         async def async_service_handler(service):
             """Map services to methods on MediaPlayerDevice."""
             method = SERVICE_TO_METHOD.get(service.service)
