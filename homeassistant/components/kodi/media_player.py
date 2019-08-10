@@ -134,40 +134,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-SERVICE_ADD_MEDIA = "add_to_playlist"
-SERVICE_CALL_METHOD = "call_method"
-
-ATTR_MEDIA_TYPE = "media_type"
-ATTR_MEDIA_NAME = "media_name"
-ATTR_MEDIA_ARTIST_NAME = "artist_name"
-ATTR_MEDIA_ID = "media_id"
-ATTR_METHOD = "method"
-
-MEDIA_PLAYER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
-
-MEDIA_PLAYER_ADD_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
-    {
-        vol.Required(ATTR_MEDIA_TYPE): cv.string,
-        vol.Optional(ATTR_MEDIA_ID): cv.string,
-        vol.Optional(ATTR_MEDIA_NAME): cv.string,
-        vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
-    }
-)
-MEDIA_PLAYER_CALL_METHOD_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
-    {vol.Required(ATTR_METHOD): cv.string}, extra=vol.ALLOW_EXTRA
-)
-
-SERVICE_TO_METHOD = {
-    SERVICE_ADD_MEDIA: {
-        "method": "async_add_media_to_playlist",
-        "schema": MEDIA_PLAYER_ADD_MEDIA_SCHEMA,
-    },
-    SERVICE_CALL_METHOD: {
-        "method": "async_call_method",
-        "schema": MEDIA_PLAYER_CALL_METHOD_SCHEMA,
-    },
-}
-
 
 def _check_deprecated_turn_off(hass, turn_off_action):
     """Create an equivalent script for old turn off actions."""
