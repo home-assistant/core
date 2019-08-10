@@ -224,8 +224,8 @@ class NWSWeather(WeatherEntity):
                 self.nws.station,
                 status,
             )
-        self.observation = self.nws.observation
-
+        else:
+            self.observation = self.nws.observation
         _LOGGER.debug("Updating forecast")
         try:
             await self.nws.update_forecast()
@@ -233,7 +233,8 @@ class NWSWeather(WeatherEntity):
             _LOGGER.error(
                 "Error updating forecast from station %s: %s", self.nws.station, status
             )
-        self._forecast = self.nws.forecast
+        else:
+            self._forecast = self.nws.forecast
 
     @property
     def attribution(self):
