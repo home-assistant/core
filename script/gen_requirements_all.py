@@ -43,6 +43,7 @@ COMMENT_REQUIREMENTS = (
 TEST_REQUIREMENTS = (
     "adguardhome",
     "ambiclimate",
+    "aio_geojson_geonetnz_quakes",
     "aioambient",
     "aioautomatic",
     "aiobotocore",

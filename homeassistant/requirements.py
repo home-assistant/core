@@ -5,8 +5,10 @@ import logging
 import os
 from typing import Any, Dict, List, Optional
 
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.package as pkg_util
 from homeassistant.core import HomeAssistant
+from homeassistant.loader import async_get_integration, Integration
 
 DATA_PIP_LOCK = "pip_lock"
 DATA_PKG_CACHE = "pkg_cache"
@@ -15,12 +17,44 @@ PROGRESS_FILE = ".pip_progress"
 _LOGGER = logging.getLogger(__name__)
 
 
+class RequirementsNotFound(HomeAssistantError):
+    """Raised when a component is not found."""
+
+    def __init__(self, domain: str, requirements: List) -> None:
+        """Initialize a component not found error."""
+        super().__init__(
+            "Requirements for {} not found: {}.".format(domain, requirements)
+        )
+        self.domain = domain
+        self.requirements = requirements
+
+
+async def async_get_integration_with_requirements(
+    hass: HomeAssistant, domain: str
+) -> Integration:
+    """Get an integration with installed requirements.
+
+    This can raise IntegrationNotFound if manifest or integration
+    is invalid, RequirementNotFound if there was some type of
+    failure to install requirements.
+    """
+    integration = await async_get_integration(hass, domain)
+
+    if hass.config.skip_pip or not integration.requirements:
+        return integration
+
+    await async_process_requirements(hass, integration.domain, integration.requirements)
+
+    return integration
+
+
 async def async_process_requirements(
     hass: HomeAssistant, name: str, requirements: List[str]
-) -> bool:
+) -> None:
     """Install the requirements for a component or platform.
 
-    This method is a coroutine.
+    This method is a coroutine. It will raise RequirementsNotFound
+    if an requirement can't be satisfied.
     """
     pip_lock = hass.data.get(DATA_PIP_LOCK)
     if pip_lock is None:
@@ -36,14 +70,7 @@ async def async_process_requirements(
             ret = await hass.async_add_executor_job(_install, hass, req, kwargs)
 
             if not ret:
-                _LOGGER.error(
-                    "Not initializing %s because could not install " "requirement %s",
-                    name,
-                    req,
-                )
-                return False
-
-    return True
+                raise RequirementsNotFound(name, [req])
 
 
 def _install(hass: HomeAssistant, req: str, kwargs: Dict) -> bool:

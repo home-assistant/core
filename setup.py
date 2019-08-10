@@ -37,6 +37,7 @@ REQUIRES = [
     "attrs==19.1.0",
     "bcrypt==3.1.7",
     "certifi>=2019.6.16",
+    'contextvars==2.4;python_version<"3.7"',
     "importlib-metadata==0.18",
     "jinja2>=2.10.1",
     "PyJWT==1.7.1",

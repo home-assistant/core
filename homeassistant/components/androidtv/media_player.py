@@ -3,6 +3,9 @@ import functools
 import logging
 import voluptuous as vol
 
+from androidtv import setup, ha_state_detection_rules_validator
+from androidtv.constants import APPS, KEYS
+
 from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
@@ -64,6 +67,7 @@ CONF_ADB_SERVER_IP = "adb_server_ip"
 CONF_ADB_SERVER_PORT = "adb_server_port"
 CONF_APPS = "apps"
 CONF_GET_SOURCES = "get_sources"
+CONF_STATE_DETECTION_RULES = "state_detection_rules"
 CONF_TURN_ON_COMMAND = "turn_on_command"
 CONF_TURN_OFF_COMMAND = "turn_off_command"
 
@@ -99,6 +103,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_APPS, default=dict()): vol.Schema({cv.string: cv.string}),
         vol.Optional(CONF_TURN_ON_COMMAND): cv.string,
         vol.Optional(CONF_TURN_OFF_COMMAND): cv.string,
+        vol.Optional(CONF_STATE_DETECTION_RULES, default={}): vol.Schema(
+            {cv.string: ha_state_detection_rules_validator(vol.Invalid)}
+        ),
     }
 )
 
@@ -114,8 +121,6 @@ ANDROIDTV_STATES = {
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Android TV / Fire TV platform."""
-    from androidtv import setup
-
     hass.data.setdefault(ANDROIDTV_DOMAIN, {})
 
     host = "{0}:{1}".format(config[CONF_HOST], config[CONF_PORT])
@@ -125,12 +130,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         adb_log = "using Python ADB implementation "
         if CONF_ADBKEY in config:
             aftv = setup(
-                host, config[CONF_ADBKEY], device_class=config[CONF_DEVICE_CLASS]
+                host,
+                config[CONF_ADBKEY],
+                device_class=config[CONF_DEVICE_CLASS],
+                state_detection_rules=config[CONF_STATE_DETECTION_RULES],
             )
             adb_log += "with adbkey='{0}'".format(config[CONF_ADBKEY])
 
         else:
-            aftv = setup(host, device_class=config[CONF_DEVICE_CLASS])
+            aftv = setup(
+                host,
+                device_class=config[CONF_DEVICE_CLASS],
+                state_detection_rules=config[CONF_STATE_DETECTION_RULES],
+            )
             adb_log += "without adbkey authentication"
     else:
         # Use "pure-python-adb" (communicate with ADB server)
@@ -139,6 +151,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             adb_server_ip=config[CONF_ADB_SERVER_IP],
             adb_server_port=config[CONF_ADB_SERVER_PORT],
             device_class=config[CONF_DEVICE_CLASS],
+            state_detection_rules=config[CONF_STATE_DETECTION_RULES],
         )
         adb_log = "using ADB server at {0}:{1}".format(
             config[CONF_ADB_SERVER_IP], config[CONF_ADB_SERVER_PORT]
@@ -251,11 +264,9 @@ class ADBDevice(MediaPlayerDevice):
 
     def __init__(self, aftv, name, apps, turn_on_command, turn_off_command):
         """Initialize the Android TV / Fire TV device."""
-        from androidtv.constants import APPS, KEYS
-
         self.aftv = aftv
         self._name = name
-        self._apps = APPS
+        self._apps = APPS.copy()
         self._apps.update(apps)
         self._keys = KEYS
 

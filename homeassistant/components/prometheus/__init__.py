@@ -10,13 +10,16 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
+    ATTR_DEVICE_CLASS,
     CONTENT_TYPE_TEXT_PLAIN,
     EVENT_STATE_CHANGED,
     TEMP_FAHRENHEIT,
+    TEMP_CELSIUS,
 )
 from homeassistant.helpers import entityfilter, state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.temperature import fahrenheit_to_celsius
+from homeassistant.helpers.entity_values import EntityValues
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +28,14 @@ API_ENDPOINT = "/api/prometheus"
 DOMAIN = "prometheus"
 CONF_FILTER = "filter"
 CONF_PROM_NAMESPACE = "namespace"
+CONF_COMPONENT_CONFIG = "component_config"
+CONF_COMPONENT_CONFIG_GLOB = "component_config_glob"
+CONF_COMPONENT_CONFIG_DOMAIN = "component_config_domain"
+CONF_DEFAULT_METRIC = "default_metric"
+CONF_OVERRIDE_METRIC = "override_metric"
+COMPONENT_CONFIG_SCHEMA_ENTRY = vol.Schema(
+    {vol.Optional(CONF_OVERRIDE_METRIC): cv.string}
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -32,6 +43,17 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
                 vol.Optional(CONF_PROM_NAMESPACE): cv.string,
+                vol.Optional(CONF_DEFAULT_METRIC): cv.string,
+                vol.Optional(CONF_OVERRIDE_METRIC): cv.string,
+                vol.Optional(CONF_COMPONENT_CONFIG, default={}): vol.Schema(
+                    {cv.entity_id: COMPONENT_CONFIG_SCHEMA_ENTRY}
+                ),
+                vol.Optional(CONF_COMPONENT_CONFIG_GLOB, default={}): vol.Schema(
+                    {cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}
+                ),
+                vol.Optional(CONF_COMPONENT_CONFIG_DOMAIN, default={}): vol.Schema(
+                    {cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}
+                ),
             }
         )
     },
@@ -49,8 +71,22 @@ def setup(hass, config):
     entity_filter = conf[CONF_FILTER]
     namespace = conf.get(CONF_PROM_NAMESPACE)
     climate_units = hass.config.units.temperature_unit
+    override_metric = conf.get(CONF_OVERRIDE_METRIC)
+    default_metric = conf.get(CONF_DEFAULT_METRIC)
+    component_config = EntityValues(
+        conf[CONF_COMPONENT_CONFIG],
+        conf[CONF_COMPONENT_CONFIG_DOMAIN],
+        conf[CONF_COMPONENT_CONFIG_GLOB],
+    )
+
     metrics = PrometheusMetrics(
-        prometheus_client, entity_filter, namespace, climate_units
+        prometheus_client,
+        entity_filter,
+        namespace,
+        climate_units,
+        component_config,
+        override_metric,
+        default_metric,
     )
 
     hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_event)
@@ -60,12 +96,32 @@ def setup(hass, config):
 class PrometheusMetrics:
     """Model all of the metrics which should be exposed to Prometheus."""
 
-    def __init__(self, prometheus_client, entity_filter, namespace, climate_units):
+    def __init__(
+        self,
+        prometheus_client,
+        entity_filter,
+        namespace,
+        climate_units,
+        component_config,
+        override_metric,
+        default_metric,
+    ):
         """Initialize Prometheus Metrics."""
         self.prometheus_client = prometheus_client
+        self._component_config = component_config
+        self._override_metric = override_metric
+        self._default_metric = default_metric
         self._filter = entity_filter
+        self._sensor_metric_handlers = [
+            self._sensor_override_component_metric,
+            self._sensor_override_metric,
+            self._sensor_attribute_metric,
+            self._sensor_default_metric,
+            self._sensor_fallback_metric,
+        ]
+
         if namespace:
-            self.metrics_prefix = "{}_".format(namespace)
+            self.metrics_prefix = f"{namespace}_"
         else:
             self.metrics_prefix = ""
         self._metrics = {}
@@ -84,7 +140,7 @@ class PrometheusMetrics:
         if not self._filter(state.entity_id):
             return
 
-        handler = "_handle_{}".format(domain)
+        handler = f"_handle_{domain}"
 
         if hasattr(self, handler):
             getattr(self, handler)(state)
@@ -103,7 +159,7 @@ class PrometheusMetrics:
         try:
             return self._metrics[metric]
         except KeyError:
-            full_metric_name = "{}{}".format(self.metrics_prefix, metric)
+            full_metric_name = f"{self.metrics_prefix}{metric}"
             self._metrics[metric] = factory(full_metric_name, documentation, labels)
             return self._metrics[metric]
 
@@ -229,30 +285,72 @@ class PrometheusMetrics:
             pass
 
     def _handle_sensor(self, state):
+        unit = self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
 
-        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        metric = state.entity_id.split(".")[1]
+        for metric_handler in self._sensor_metric_handlers:
+            metric = metric_handler(state, unit)
+            if metric is not None:
+                break
 
-        if "_" not in str(metric):
-            metric = state.entity_id.replace(".", "_")
+        if metric is not None:
+            _metric = self._metric(
+                metric, self.prometheus_client.Gauge, f"Sensor data measured in {unit}"
+            )
 
-        try:
-            int(metric.split("_")[-1])
-            metric = "_".join(metric.split("_")[:-1])
-        except ValueError:
-            pass
-
-        _metric = self._metric(metric, self.prometheus_client.Gauge, state.entity_id)
-
-        try:
-            value = self.state_as_number(state)
-            if unit == TEMP_FAHRENHEIT:
-                value = fahrenheit_to_celsius(value)
-            _metric.labels(**self._labels(state)).set(value)
-        except ValueError:
-            pass
+            try:
+                value = self.state_as_number(state)
+                if unit == TEMP_FAHRENHEIT:
+                    value = fahrenheit_to_celsius(value)
+                _metric.labels(**self._labels(state)).set(value)
+            except ValueError:
+                pass
 
         self._battery(state)
+
+    def _sensor_default_metric(self, state, unit):
+        """Get default metric."""
+        return self._default_metric
+
+    @staticmethod
+    def _sensor_attribute_metric(state, unit):
+        """Get metric based on device class attribute."""
+        metric = state.attributes.get(ATTR_DEVICE_CLASS)
+        if metric is not None:
+            return f"{metric}_{unit}"
+        return None
+
+    def _sensor_override_metric(self, state, unit):
+        """Get metric from override in configuration."""
+        if self._override_metric:
+            return self._override_metric
+        return None
+
+    def _sensor_override_component_metric(self, state, unit):
+        """Get metric from override in component confioguration."""
+        return self._component_config.get(state.entity_id).get(CONF_OVERRIDE_METRIC)
+
+    @staticmethod
+    def _sensor_fallback_metric(state, unit):
+        """Get metric from fallback logic for compatability."""
+        if unit in (None, ""):
+            _LOGGER.debug("Unsupported sensor: %s", state.entity_id)
+            return None
+        return f"sensor_unit_{unit}"
+
+    @staticmethod
+    def _unit_string(unit):
+        """Get a formatted string of the unit."""
+        if unit is None:
+            return
+
+        units = {
+            TEMP_CELSIUS: "c",
+            TEMP_FAHRENHEIT: "c",  # F should go into C metric
+            "%": "percent",
+        }
+        default = unit.replace("/", "_per_")
+        default = default.lower()
+        return units.get(unit, default)
 
     def _handle_switch(self, state):
         metric = self._metric(

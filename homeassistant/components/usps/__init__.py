@@ -37,6 +37,12 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Use config values to set up a function enabling status retrieval."""
+    _LOGGER.warning(
+        "The usps integration is deprecated and will be removed "
+        "in Home Assistant 0.100.0. For more information see ADR-0004:"
+        "https://github.com/home-assistant/architecture/blob/master/adr/0004-webscraping.md"
+    )
+
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)

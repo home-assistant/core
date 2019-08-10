@@ -349,6 +349,101 @@ def test_sqrt(hass):
         )
 
 
+def test_arc_sine(hass):
+    """Test arcus sine."""
+    tests = [
+        (-2.0, "-2.0"),  # value error
+        (-1.0, "-1.571"),
+        (-0.5, "-0.524"),
+        (0.0, "0.0"),
+        (0.5, "0.524"),
+        (1.0, "1.571"),
+        (2.0, "2.0"),  # value error
+        ('"error"', "error"),
+    ]
+
+    for value, expected in tests:
+        assert (
+            template.Template("{{ %s | asin | round(3) }}" % value, hass).async_render()
+            == expected
+        )
+
+
+def test_arc_cos(hass):
+    """Test arcus cosine."""
+    tests = [
+        (-2.0, "-2.0"),  # value error
+        (-1.0, "3.142"),
+        (-0.5, "2.094"),
+        (0.0, "1.571"),
+        (0.5, "1.047"),
+        (1.0, "0.0"),
+        (2.0, "2.0"),  # value error
+        ('"error"', "error"),
+    ]
+
+    for value, expected in tests:
+        assert (
+            template.Template("{{ %s | acos | round(3) }}" % value, hass).async_render()
+            == expected
+        )
+
+
+def test_arc_tan(hass):
+    """Test arcus tangent."""
+    tests = [
+        (-10.0, "-1.471"),
+        (-2.0, "-1.107"),
+        (-1.0, "-0.785"),
+        (-0.5, "-0.464"),
+        (0.0, "0.0"),
+        (0.5, "0.464"),
+        (1.0, "0.785"),
+        (2.0, "1.107"),
+        (10.0, "1.471"),
+        ('"error"', "error"),
+    ]
+
+    for value, expected in tests:
+        assert (
+            template.Template("{{ %s | atan | round(3) }}" % value, hass).async_render()
+            == expected
+        )
+
+
+def test_arc_tan2(hass):
+    """Test two parameter version of arcus tangent."""
+    tests = [
+        (-10.0, -10.0, "-2.356"),
+        (-10.0, 0.0, "-1.571"),
+        (-10.0, 10.0, "-0.785"),
+        (0.0, -10.0, "3.142"),
+        (0.0, 0.0, "0.0"),
+        (0.0, 10.0, "0.0"),
+        (10.0, -10.0, "2.356"),
+        (10.0, 0.0, "1.571"),
+        (10.0, 10.0, "0.785"),
+        (-4.0, 3.0, "-0.927"),
+        (-1.0, 2.0, "-0.464"),
+        (2.0, 1.0, "1.107"),
+        ('"duck"', '"goose"', "('duck', 'goose')"),
+    ]
+
+    for y, x, expected in tests:
+        assert (
+            template.Template(
+                "{{ (%s, %s) | atan2 | round(3) }}" % (y, x), hass
+            ).async_render()
+            == expected
+        )
+        assert (
+            template.Template(
+                "{{ atan2(%s, %s) | round(3) }}" % (y, x), hass
+            ).async_render()
+            == expected
+        )
+
+
 def test_strptime(hass):
     """Test the parse timestamp method."""
     tests = [
