@@ -241,6 +241,8 @@ def handle_render_template(hass, connection, msg):
         connection.subscriptions[msg["id"]] = async_track_state_change(
             hass, entity_ids, state_listener
         )
+    else:
+        connection.subscriptions[msg["id"]] = lambda: None
 
     connection.send_result(msg["id"])
     state_listener()
