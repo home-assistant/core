@@ -965,7 +965,7 @@ prezzibenzina-py==1.1.4
 proliphix==0.4.1
 
 # homeassistant.components.prometheus
-prometheus_client==0.2.0
+prometheus_client==0.7.1
 
 # homeassistant.components.tensorflow
 protobuf==3.6.1

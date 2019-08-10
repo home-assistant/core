@@ -244,7 +244,7 @@ pilight==0.1.1
 pmsensor==0.4
 
 # homeassistant.components.prometheus
-prometheus_client==0.2.0
+prometheus_client==0.7.1
 
 # homeassistant.components.ptvsd
 ptvsd==4.2.8
