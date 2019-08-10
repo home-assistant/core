@@ -389,3 +389,85 @@ async def test_subscribe_unsubscribe_events_state_changed(
     assert msg["type"] == "event"
     assert msg["event"]["event_type"] == "state_changed"
     assert msg["event"]["data"]["entity_id"] == "light.permitted"
+
+
+async def test_render_template_renders_template(
+    hass, websocket_client, hass_admin_user
+):
+    """Test simple template is rendered and updated."""
+    hass.states.async_set("light.test", "on")
+
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "render_template",
+            "template": "State is: {{ states('light.test') }}",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == "event"
+    event = msg["event"]
+    assert event == {"result": "State is: on"}
+
+    hass.states.async_set("light.test", "off")
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == "event"
+    event = msg["event"]
+    assert event == {"result": "State is: off"}
+
+
+async def test_render_template_with_manual_entity_ids(
+    hass, websocket_client, hass_admin_user
+):
+    """Test that updates to specified entity ids cause a template rerender."""
+    hass.states.async_set("light.test", "on")
+    hass.states.async_set("light.test2", "on")
+
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "render_template",
+            "template": "State is: {{ states('light.test') }}",
+            "entity_ids": ["light.test2"],
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == "event"
+    event = msg["event"]
+    assert event == {"result": "State is: on"}
+
+    hass.states.async_set("light.test2", "off")
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == "event"
+    event = msg["event"]
+    assert event == {"result": "State is: on"}
+
+
+async def test_render_template_returns_with_match_all(
+    hass, websocket_client, hass_admin_user
+):
+    """Test that a template that would match with all entities still return success."""
+    await websocket_client.send_json(
+        {"id": 5, "type": "render_template", "template": "State is: {{ 42 }}"}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
