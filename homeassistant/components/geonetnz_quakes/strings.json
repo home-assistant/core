@@ -3,13 +3,10 @@
     "title": "GeoNet NZ Quakes",
     "step": {
       "user": {
-        "title": "Fill in your location and filter details.",
+        "title": "Fill in your filter details.",
         "data": {
-          "latitude": "Latitude",
-          "longitude": "Longitude",
           "radius": "Radius",
-          "mmi": "MMI",
-          "minimum_magnitude": "Minimum Magnitude"
+          "mmi": "MMI"
         }
       }
     },
