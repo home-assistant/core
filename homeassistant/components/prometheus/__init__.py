@@ -121,7 +121,7 @@ class PrometheusMetrics:
         ]
 
         if namespace:
-            self.metrics_prefix = "{}_".format(namespace)
+            self.metrics_prefix = f"{namespace}_"
         else:
             self.metrics_prefix = ""
         self._metrics = {}
@@ -140,7 +140,7 @@ class PrometheusMetrics:
         if not self._filter(state.entity_id):
             return
 
-        handler = "_handle_{}".format(domain)
+        handler = f"_handle_{domain}"
 
         if hasattr(self, handler):
             getattr(self, handler)(state)
@@ -159,7 +159,7 @@ class PrometheusMetrics:
         try:
             return self._metrics[metric]
         except KeyError:
-            full_metric_name = "{}{}".format(self.metrics_prefix, metric)
+            full_metric_name = f"{self.metrics_prefix}{metric}"
             self._metrics[metric] = factory(full_metric_name, documentation, labels)
             return self._metrics[metric]
 
@@ -294,9 +294,7 @@ class PrometheusMetrics:
 
         if metric is not None:
             _metric = self._metric(
-                metric,
-                self.prometheus_client.Gauge,
-                "Sensor data measured in {}".format(unit),
+                metric, self.prometheus_client.Gauge, f"Sensor data measured in {unit}"
             )
 
             try:
@@ -318,7 +316,7 @@ class PrometheusMetrics:
         """Get metric based on device class attribute."""
         metric = state.attributes.get(ATTR_DEVICE_CLASS)
         if metric is not None:
-            return "{}_{}".format(metric, unit)
+            return f"{metric}_{unit}"
         return None
 
     def _sensor_override_metric(self, state, unit):
@@ -337,7 +335,7 @@ class PrometheusMetrics:
         if unit in (None, ""):
             _LOGGER.debug("Unsupported sensor: %s", state.entity_id)
             return None
-        return "{}_{}".format("sensor_unit", unit)
+        return f"sensor_unit_{unit}"
 
     @staticmethod
     def _unit_string(unit):
