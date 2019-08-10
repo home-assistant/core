@@ -543,21 +543,36 @@ class TadoClimate(ClimateDevice):
 
     @property
     def is_aux_heat(self) -> Optional[bool]:
+        """Return true if aux heater.
+
+        Requires SUPPORT_AUX_HEAT.
+        """
         return None
 
     def turn_aux_heat_on(self) -> None:
+        """Turn auxiliary heater on."""
         pass
 
     def turn_aux_heat_off(self) -> None:
+        """Turn auxiliary heater off."""
         pass
 
     @property
     def swing_mode(self) -> Optional[str]:
+        """Return the swing setting.
+
+        Requires SUPPORT_SWING_MODE.
+        """
         return None
 
     @property
     def swing_modes(self) -> Optional[List[str]]:
+        """Return the list of available swing modes.
+
+        Requires SUPPORT_SWING_MODE.
+        """
         return None
 
     def set_swing_mode(self, swing_mode: str) -> None:
+        """Set new target swing operation."""
         pass
