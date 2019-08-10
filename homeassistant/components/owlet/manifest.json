@@ -1,0 +1,12 @@
+{
+  "domain": "owlet",
+  "name": "Owlet",
+  "documentation": "https://www.home-assistant.io/components/owlet",
+  "requirements": [
+    "pyowlet==1.0.2"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@oblogic7"
+  ]
+}

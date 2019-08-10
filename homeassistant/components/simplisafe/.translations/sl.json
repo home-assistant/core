@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Ra\u010dun je \u017ee registriran",
+            "invalid_credentials": "Neveljavne poverilnice"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "Koda (za Home Assistant)",
+                    "password": "Geslo",
+                    "username": "E-po\u0161tni naslov"
+                },
+                "title": "Izpolnite svoje podatke"
+            }
+        },
+        "title": "SimpliSafe"
+    }
+}

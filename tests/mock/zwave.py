@@ -10,33 +10,26 @@ def value_changed(value):
         MockNetwork.SIGNAL_VALUE_CHANGED,
         value=value,
         node=value.node,
-        network=value.node._network
+        network=value.node._network,
     )
 
 
 def node_changed(node):
     """Fire a node changed."""
-    dispatcher.send(
-        MockNetwork.SIGNAL_NODE,
-        node=node,
-        network=node._network
-    )
+    dispatcher.send(MockNetwork.SIGNAL_NODE, node=node, network=node._network)
 
 
 def notification(node_id, network=None):
     """Fire a notification."""
     dispatcher.send(
-        MockNetwork.SIGNAL_NOTIFICATION,
-        args={'nodeId': node_id},
-        network=network
+        MockNetwork.SIGNAL_NOTIFICATION, args={"nodeId": node_id}, network=network
     )
 
 
 class MockOption(MagicMock):
     """Mock Z-Wave options."""
 
-    def __init__(self, device=None, config_path=None, user_path=None,
-                 cmd_line=None):
+    def __init__(self, device=None, config_path=None, user_path=None, cmd_line=None):
         """Initialize a Z-Wave mock options."""
         super().__init__()
         self.device = device
@@ -52,47 +45,46 @@ class MockOption(MagicMock):
 class MockNetwork(MagicMock):
     """Mock Z-Wave network."""
 
-    SIGNAL_NETWORK_FAILED = 'mock_NetworkFailed'
-    SIGNAL_NETWORK_STARTED = 'mock_NetworkStarted'
-    SIGNAL_NETWORK_READY = 'mock_NetworkReady'
-    SIGNAL_NETWORK_STOPPED = 'mock_NetworkStopped'
-    SIGNAL_NETWORK_RESETTED = 'mock_DriverResetted'
-    SIGNAL_NETWORK_AWAKED = 'mock_DriverAwaked'
-    SIGNAL_DRIVER_FAILED = 'mock_DriverFailed'
-    SIGNAL_DRIVER_READY = 'mock_DriverReady'
-    SIGNAL_DRIVER_RESET = 'mock_DriverReset'
-    SIGNAL_DRIVER_REMOVED = 'mock_DriverRemoved'
-    SIGNAL_GROUP = 'mock_Group'
-    SIGNAL_NODE = 'mock_Node'
-    SIGNAL_NODE_ADDED = 'mock_NodeAdded'
-    SIGNAL_NODE_EVENT = 'mock_NodeEvent'
-    SIGNAL_NODE_NAMING = 'mock_NodeNaming'
-    SIGNAL_NODE_NEW = 'mock_NodeNew'
-    SIGNAL_NODE_PROTOCOL_INFO = 'mock_NodeProtocolInfo'
-    SIGNAL_NODE_READY = 'mock_NodeReady'
-    SIGNAL_NODE_REMOVED = 'mock_NodeRemoved'
-    SIGNAL_SCENE_EVENT = 'mock_SceneEvent'
-    SIGNAL_VALUE = 'mock_Value'
-    SIGNAL_VALUE_ADDED = 'mock_ValueAdded'
-    SIGNAL_VALUE_CHANGED = 'mock_ValueChanged'
-    SIGNAL_VALUE_REFRESHED = 'mock_ValueRefreshed'
-    SIGNAL_VALUE_REMOVED = 'mock_ValueRemoved'
-    SIGNAL_POLLING_ENABLED = 'mock_PollingEnabled'
-    SIGNAL_POLLING_DISABLED = 'mock_PollingDisabled'
-    SIGNAL_CREATE_BUTTON = 'mock_CreateButton'
-    SIGNAL_DELETE_BUTTON = 'mock_DeleteButton'
-    SIGNAL_BUTTON_ON = 'mock_ButtonOn'
-    SIGNAL_BUTTON_OFF = 'mock_ButtonOff'
-    SIGNAL_ESSENTIAL_NODE_QUERIES_COMPLETE = \
-        'mock_EssentialNodeQueriesComplete'
-    SIGNAL_NODE_QUERIES_COMPLETE = 'mock_NodeQueriesComplete'
-    SIGNAL_AWAKE_NODES_QUERIED = 'mock_AwakeNodesQueried'
-    SIGNAL_ALL_NODES_QUERIED = 'mock_AllNodesQueried'
-    SIGNAL_ALL_NODES_QUERIED_SOME_DEAD = 'mock_AllNodesQueriedSomeDead'
-    SIGNAL_MSG_COMPLETE = 'mock_MsgComplete'
-    SIGNAL_NOTIFICATION = 'mock_Notification'
-    SIGNAL_CONTROLLER_COMMAND = 'mock_ControllerCommand'
-    SIGNAL_CONTROLLER_WAITING = 'mock_ControllerWaiting'
+    SIGNAL_NETWORK_FAILED = "mock_NetworkFailed"
+    SIGNAL_NETWORK_STARTED = "mock_NetworkStarted"
+    SIGNAL_NETWORK_READY = "mock_NetworkReady"
+    SIGNAL_NETWORK_STOPPED = "mock_NetworkStopped"
+    SIGNAL_NETWORK_RESETTED = "mock_DriverResetted"
+    SIGNAL_NETWORK_AWAKED = "mock_DriverAwaked"
+    SIGNAL_DRIVER_FAILED = "mock_DriverFailed"
+    SIGNAL_DRIVER_READY = "mock_DriverReady"
+    SIGNAL_DRIVER_RESET = "mock_DriverReset"
+    SIGNAL_DRIVER_REMOVED = "mock_DriverRemoved"
+    SIGNAL_GROUP = "mock_Group"
+    SIGNAL_NODE = "mock_Node"
+    SIGNAL_NODE_ADDED = "mock_NodeAdded"
+    SIGNAL_NODE_EVENT = "mock_NodeEvent"
+    SIGNAL_NODE_NAMING = "mock_NodeNaming"
+    SIGNAL_NODE_NEW = "mock_NodeNew"
+    SIGNAL_NODE_PROTOCOL_INFO = "mock_NodeProtocolInfo"
+    SIGNAL_NODE_READY = "mock_NodeReady"
+    SIGNAL_NODE_REMOVED = "mock_NodeRemoved"
+    SIGNAL_SCENE_EVENT = "mock_SceneEvent"
+    SIGNAL_VALUE = "mock_Value"
+    SIGNAL_VALUE_ADDED = "mock_ValueAdded"
+    SIGNAL_VALUE_CHANGED = "mock_ValueChanged"
+    SIGNAL_VALUE_REFRESHED = "mock_ValueRefreshed"
+    SIGNAL_VALUE_REMOVED = "mock_ValueRemoved"
+    SIGNAL_POLLING_ENABLED = "mock_PollingEnabled"
+    SIGNAL_POLLING_DISABLED = "mock_PollingDisabled"
+    SIGNAL_CREATE_BUTTON = "mock_CreateButton"
+    SIGNAL_DELETE_BUTTON = "mock_DeleteButton"
+    SIGNAL_BUTTON_ON = "mock_ButtonOn"
+    SIGNAL_BUTTON_OFF = "mock_ButtonOff"
+    SIGNAL_ESSENTIAL_NODE_QUERIES_COMPLETE = "mock_EssentialNodeQueriesComplete"
+    SIGNAL_NODE_QUERIES_COMPLETE = "mock_NodeQueriesComplete"
+    SIGNAL_AWAKE_NODES_QUERIED = "mock_AwakeNodesQueried"
+    SIGNAL_ALL_NODES_QUERIED = "mock_AllNodesQueried"
+    SIGNAL_ALL_NODES_QUERIED_SOME_DEAD = "mock_AllNodesQueriedSomeDead"
+    SIGNAL_MSG_COMPLETE = "mock_MsgComplete"
+    SIGNAL_NOTIFICATION = "mock_Notification"
+    SIGNAL_CONTROLLER_COMMAND = "mock_ControllerCommand"
+    SIGNAL_CONTROLLER_WAITING = "mock_ControllerWaiting"
 
     STATE_STOPPED = 0
     STATE_FAILED = 1
@@ -111,16 +103,21 @@ class MockNetwork(MagicMock):
 class MockNode(MagicMock):
     """Mock Z-Wave node."""
 
-    def __init__(self, *,
-                 node_id='567',
-                 name='Mock Node',
-                 manufacturer_id='ABCD',
-                 product_id='123',
-                 product_type='678',
-                 command_classes=None,
-                 can_wake_up_value=True,
-                 network=None,
-                 **kwargs):
+    def __init__(
+        self,
+        *,
+        node_id="567",
+        name="Mock Node",
+        manufacturer_id="ABCD",
+        product_id="123",
+        product_type="678",
+        command_classes=None,
+        can_wake_up_value=True,
+        manufacturer_name="Test Manufacturer",
+        product_name="Test Product",
+        network=None,
+        **kwargs,
+    ):
         """Initialize a Z-Wave mock node."""
         super().__init__()
         self.node_id = node_id
@@ -128,6 +125,8 @@ class MockNode(MagicMock):
         self.manufacturer_id = manufacturer_id
         self.product_id = product_id
         self.product_type = product_type
+        self.manufacturer_name = manufacturer_name
+        self.product_name = product_name
         self.can_wake_up_value = can_wake_up_value
         self._command_classes = command_classes or []
         if network is not None:
@@ -157,13 +156,16 @@ class MockValue(MagicMock):
 
     _mock_value_id = 1234
 
-    def __init__(self, *,
-                 label='Mock Value',
-                 node=None,
-                 instance=0,
-                 index=0,
-                 value_id=None,
-                 **kwargs):
+    def __init__(
+        self,
+        *,
+        label="Mock Value",
+        node=None,
+        instance=0,
+        index=0,
+        value_id=None,
+        **kwargs,
+    ):
         """Initialize a Z-Wave mock value."""
         super().__init__()
         self.label = label
@@ -174,6 +176,7 @@ class MockValue(MagicMock):
             MockValue._mock_value_id += 1
             value_id = MockValue._mock_value_id
         self.value_id = value_id
+        self.object_id = value_id
         for attr_name in kwargs:
             setattr(self, attr_name, kwargs[attr_name])
 
@@ -186,7 +189,7 @@ class MockValue(MagicMock):
         value_changed(self)
 
 
-class MockEntityValues():
+class MockEntityValues:
     """Mock Z-Wave entity values."""
 
     def __init__(self, **kwargs):

@@ -1,0 +1,15 @@
+{
+  "domain": "zha",
+  "name": "Zigbee Home Automation",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/components/zha",
+  "requirements": [
+    "bellows-homeassistant==0.9.0",
+    "zha-quirks==0.0.20",
+    "zigpy-deconz==0.2.1",
+    "zigpy-homeassistant==0.7.0",
+    "zigpy-xbee-homeassistant==0.4.0"
+  ],
+  "dependencies": [],
+  "codeowners": ["@dmulcahey", "@adminiuga"]
+}

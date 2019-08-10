@@ -1,7 +1,7 @@
 """Provide a mock standalone component."""
-DOMAIN = 'test_standalone'
+DOMAIN = "test_standalone"
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Mock a successful setup."""
     return True

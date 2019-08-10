@@ -40,6 +40,9 @@ set:
     add_entities:
       description: List of members they will change on group listening.
       example: domain.entity_id1, domain.entity_id2
+    all:
+      description: Enable this option if the group should only turn on when all entities are on.
+      example: True
 
 remove:
   description: Remove a user group.

@@ -1,1 +1,1 @@
-"""The tests for the homekit component."""
+"""Tests for the HomeKit component."""

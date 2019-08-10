@@ -1,0 +1,10 @@
+{
+  "domain": "filter",
+  "name": "Filter",
+  "documentation": "https://www.home-assistant.io/components/filter",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@dgomes"
+  ]
+}

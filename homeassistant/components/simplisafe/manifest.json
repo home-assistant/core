@@ -1,0 +1,13 @@
+{
+  "domain": "simplisafe",
+  "name": "Simplisafe",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/components/simplisafe",
+  "requirements": [
+    "simplisafe-python==4.2.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@bachya"
+  ]
+}

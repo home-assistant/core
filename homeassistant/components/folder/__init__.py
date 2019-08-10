@@ -1,0 +1,1 @@
+"""The folder component."""

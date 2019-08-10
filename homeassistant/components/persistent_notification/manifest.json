@@ -1,0 +1,10 @@
+{
+  "domain": "persistent_notification",
+  "name": "Persistent notification",
+  "documentation": "https://www.home-assistant.io/components/persistent_notification",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

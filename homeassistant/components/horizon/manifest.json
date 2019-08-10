@@ -1,0 +1,10 @@
+{
+  "domain": "horizon",
+  "name": "Horizon",
+  "documentation": "https://www.home-assistant.io/components/horizon",
+  "requirements": [
+    "horimote==0.4.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,41 +1,45 @@
 """Http views to control the config manager."""
-import asyncio
-
-import voluptuous as vol
-
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.exceptions import Unauthorized
+from homeassistant.helpers.data_entry_flow import (
+    FlowManagerIndexView,
+    FlowManagerResourceView,
+)
+from homeassistant.loader import async_get_config_flows
 
 
-REQUIREMENTS = ['voluptuous-serialize==1']
-
-
-@asyncio.coroutine
-def async_setup(hass):
+async def async_setup(hass):
     """Enable the Home Assistant views."""
     hass.http.register_view(ConfigManagerEntryIndexView)
     hass.http.register_view(ConfigManagerEntryResourceView)
-    hass.http.register_view(ConfigManagerFlowIndexView)
-    hass.http.register_view(ConfigManagerFlowResourceView)
+    hass.http.register_view(ConfigManagerFlowIndexView(hass.config_entries.flow))
+    hass.http.register_view(ConfigManagerFlowResourceView(hass.config_entries.flow))
     hass.http.register_view(ConfigManagerAvailableFlowView)
+    hass.http.register_view(
+        OptionManagerFlowIndexView(hass.config_entries.options.flow)
+    )
+    hass.http.register_view(
+        OptionManagerFlowResourceView(hass.config_entries.options.flow)
+    )
     return True
 
 
 def _prepare_json(result):
     """Convert result for JSON."""
-    if result['type'] != config_entries.RESULT_TYPE_FORM:
+    if result["type"] != data_entry_flow.RESULT_TYPE_FORM:
         return result
 
     import voluptuous_serialize
 
     data = result.copy()
 
-    schema = data['data_schema']
+    schema = data["data_schema"]
     if schema is None:
-        data['data_schema'] = []
+        data["data_schema"] = []
     else:
-        data['data_schema'] = voluptuous_serialize.convert(schema)
+        data["data_schema"] = voluptuous_serialize.convert(schema)
 
     return data
 
@@ -43,140 +47,180 @@ def _prepare_json(result):
 class ConfigManagerEntryIndexView(HomeAssistantView):
     """View to get available config entries."""
 
-    url = '/api/config/config_entries/entry'
-    name = 'api:config:config_entries:entry'
+    url = "/api/config/config_entries/entry"
+    name = "api:config:config_entries:entry"
 
-    @asyncio.coroutine
-    def get(self, request):
-        """List flows in progress."""
-        hass = request.app['hass']
-        return self.json([{
-            'entry_id': entry.entry_id,
-            'domain': entry.domain,
-            'title': entry.title,
-            'source': entry.source,
-            'state': entry.state,
-        } for entry in hass.config_entries.async_entries()])
+    async def get(self, request):
+        """List available config entries."""
+        hass = request.app["hass"]
+
+        return self.json(
+            [
+                {
+                    "entry_id": entry.entry_id,
+                    "domain": entry.domain,
+                    "title": entry.title,
+                    "source": entry.source,
+                    "state": entry.state,
+                    "connection_class": entry.connection_class,
+                    "supports_options": hasattr(
+                        config_entries.HANDLERS.get(entry.domain),
+                        "async_get_options_flow",
+                    ),
+                }
+                for entry in hass.config_entries.async_entries()
+            ]
+        )
 
 
 class ConfigManagerEntryResourceView(HomeAssistantView):
     """View to interact with a config entry."""
 
-    url = '/api/config/config_entries/entry/{entry_id}'
-    name = 'api:config:config_entries:entry:resource'
+    url = "/api/config/config_entries/entry/{entry_id}"
+    name = "api:config:config_entries:entry:resource"
 
-    @asyncio.coroutine
-    def delete(self, request, entry_id):
+    async def delete(self, request, entry_id):
         """Delete a config entry."""
-        hass = request.app['hass']
+        if not request["hass_user"].is_admin:
+            raise Unauthorized(config_entry_id=entry_id, permission="remove")
+
+        hass = request.app["hass"]
 
         try:
-            result = yield from hass.config_entries.async_remove(entry_id)
+            result = await hass.config_entries.async_remove(entry_id)
         except config_entries.UnknownEntry:
-            return self.json_message('Invalid entry specified', 404)
+            return self.json_message("Invalid entry specified", 404)
 
         return self.json(result)
 
 
-class ConfigManagerFlowIndexView(HomeAssistantView):
+class ConfigManagerFlowIndexView(FlowManagerIndexView):
     """View to create config flows."""
 
-    url = '/api/config/config_entries/flow'
-    name = 'api:config:config_entries:flow'
+    url = "/api/config/config_entries/flow"
+    name = "api:config:config_entries:flow"
 
-    @asyncio.coroutine
-    def get(self, request):
+    async def get(self, request):
         """List flows that are in progress but not started by a user.
 
         Example of a non-user initiated flow is a discovered Hue hub that
         requires user interaction to finish setup.
         """
-        hass = request.app['hass']
+        if not request["hass_user"].is_admin:
+            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
 
-        return self.json([
-            flow for flow in hass.config_entries.flow.async_progress()
-            if flow['source'] != config_entries.SOURCE_USER])
+        hass = request.app["hass"]
 
-    @RequestDataValidator(vol.Schema({
-        vol.Required('domain'): str,
-    }))
-    @asyncio.coroutine
-    def post(self, request, data):
+        return self.json(
+            [
+                flw
+                for flw in hass.config_entries.flow.async_progress()
+                if flw["context"]["source"] != config_entries.SOURCE_USER
+            ]
+        )
+
+    # pylint: disable=arguments-differ
+    async def post(self, request):
         """Handle a POST request."""
-        hass = request.app['hass']
+        if not request["hass_user"].is_admin:
+            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
 
-        try:
-            result = yield from hass.config_entries.flow.async_init(
-                data['domain'])
-        except config_entries.UnknownHandler:
-            return self.json_message('Invalid handler specified', 404)
-        except config_entries.UnknownStep:
-            return self.json_message('Handler does not support init', 400)
+        # pylint: disable=no-value-for-parameter
+        return await super().post(request)
 
-        result = _prepare_json(result)
+    def _prepare_result_json(self, result):
+        """Convert result to JSON."""
+        if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+            return super()._prepare_result_json(result)
 
-        return self.json(result)
+        data = result.copy()
+        data["result"] = data["result"].entry_id
+        data.pop("data")
+        return data
 
 
-class ConfigManagerFlowResourceView(HomeAssistantView):
+class ConfigManagerFlowResourceView(FlowManagerResourceView):
     """View to interact with the flow manager."""
 
-    url = '/api/config/config_entries/flow/{flow_id}'
-    name = 'api:config:config_entries:flow:resource'
+    url = "/api/config/config_entries/flow/{flow_id}"
+    name = "api:config:config_entries:flow:resource"
 
-    @asyncio.coroutine
-    def get(self, request, flow_id):
-        """Get the current state of a flow."""
-        hass = request.app['hass']
+    async def get(self, request, flow_id):
+        """Get the current state of a data_entry_flow."""
+        if not request["hass_user"].is_admin:
+            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
 
-        try:
-            result = yield from hass.config_entries.flow.async_configure(
-                flow_id)
-        except config_entries.UnknownFlow:
-            return self.json_message('Invalid flow specified', 404)
+        return await super().get(request, flow_id)
 
-        result = _prepare_json(result)
-
-        return self.json(result)
-
-    @RequestDataValidator(vol.Schema(dict), allow_empty=True)
-    @asyncio.coroutine
-    def post(self, request, flow_id, data):
+    # pylint: disable=arguments-differ
+    async def post(self, request, flow_id):
         """Handle a POST request."""
-        hass = request.app['hass']
+        if not request["hass_user"].is_admin:
+            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
 
-        try:
-            result = yield from hass.config_entries.flow.async_configure(
-                flow_id, data)
-        except config_entries.UnknownFlow:
-            return self.json_message('Invalid flow specified', 404)
-        except vol.Invalid:
-            return self.json_message('User input malformed', 400)
+        # pylint: disable=no-value-for-parameter
+        return await super().post(request, flow_id)
 
-        result = _prepare_json(result)
+    def _prepare_result_json(self, result):
+        """Convert result to JSON."""
+        if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+            return super()._prepare_result_json(result)
 
-        return self.json(result)
-
-    @asyncio.coroutine
-    def delete(self, request, flow_id):
-        """Cancel a flow in progress."""
-        hass = request.app['hass']
-
-        try:
-            hass.config_entries.flow.async_abort(flow_id)
-        except config_entries.UnknownFlow:
-            return self.json_message('Invalid flow specified', 404)
-
-        return self.json_message('Flow aborted')
+        data = result.copy()
+        data["result"] = data["result"].entry_id
+        data.pop("data")
+        return data
 
 
 class ConfigManagerAvailableFlowView(HomeAssistantView):
     """View to query available flows."""
 
-    url = '/api/config/config_entries/flow_handlers'
-    name = 'api:config:config_entries:flow_handlers'
+    url = "/api/config/config_entries/flow_handlers"
+    name = "api:config:config_entries:flow_handlers"
 
-    @asyncio.coroutine
-    def get(self, request):
+    async def get(self, request):
         """List available flow handlers."""
-        return self.json(config_entries.FLOWS)
+        hass = request.app["hass"]
+        return self.json(await async_get_config_flows(hass))
+
+
+class OptionManagerFlowIndexView(FlowManagerIndexView):
+    """View to create option flows."""
+
+    url = "/api/config/config_entries/entry/option/flow"
+    name = "api:config:config_entries:entry:resource:option:flow"
+
+    # pylint: disable=arguments-differ
+    async def post(self, request):
+        """Handle a POST request.
+
+        handler in request is entry_id.
+        """
+        if not request["hass_user"].is_admin:
+            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="edit")
+
+        # pylint: disable=no-value-for-parameter
+        return await super().post(request)
+
+
+class OptionManagerFlowResourceView(FlowManagerResourceView):
+    """View to interact with the option flow manager."""
+
+    url = "/api/config/config_entries/options/flow/{flow_id}"
+    name = "api:config:config_entries:options:flow:resource"
+
+    async def get(self, request, flow_id):
+        """Get the current state of a data_entry_flow."""
+        if not request["hass_user"].is_admin:
+            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="edit")
+
+        return await super().get(request, flow_id)
+
+    # pylint: disable=arguments-differ
+    async def post(self, request, flow_id):
+        """Handle a POST request."""
+        if not request["hass_user"].is_admin:
+            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="edit")
+
+        # pylint: disable=no-value-for-parameter
+        return await super().post(request, flow_id)

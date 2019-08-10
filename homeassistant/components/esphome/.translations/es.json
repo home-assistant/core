@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "ESP ya est\u00e1 configurado"
+        },
+        "error": {
+            "connection_error": "No se puede conectar a ESP. Aseg\u00farate de que tu archivo YAML contenga una l\u00ednea 'api:'.",
+            "invalid_password": "\u00a1Contrase\u00f1a incorrecta!",
+            "resolve_error": "No se puede resolver la direcci\u00f3n de ESP. Si el error persiste, configura una direcci\u00f3n IP est\u00e1tica: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
+        },
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Contrase\u00f1a"
+                },
+                "description": "Escribe la contrase\u00f1a que hayas puesto en la configuraci\u00f3n para {name}.",
+                "title": "Escribe la contrase\u00f1a"
+            },
+            "discovery_confirm": {
+                "description": "\u00bfQuieres a\u00f1adir el nodo `{name}` de ESPHome a Home Assistant?",
+                "title": "Nodo ESPHome descubierto"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Puerto"
+                },
+                "description": "Introduce la configuraci\u00f3n de la conexi\u00f3n de tu nodo [ESPHome](https://esphomelib.com/).",
+                "title": "ESPHome"
+            }
+        },
+        "title": "ESPHome"
+    }
+}
