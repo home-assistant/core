@@ -16,6 +16,7 @@ FLOWS = [
     "emulated_roku",
     "esphome",
     "geofency",
+    "geonetnz_quakes",
     "gpslogger",
     "hangouts",
     "heos",
