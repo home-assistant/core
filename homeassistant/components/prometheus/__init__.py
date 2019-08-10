@@ -112,6 +112,14 @@ class PrometheusMetrics:
         self._override_metric = override_metric
         self._default_metric = default_metric
         self._filter = entity_filter
+        self._sensor_metric_handlers = [
+            self._sensor_override_component_metric,
+            self._sensor_override_metric,
+            self._sensor_attribute_metric,
+            self._sensor_default_metric,
+            self._sensor_fallback_metric,
+        ]
+
         if namespace:
             self.metrics_prefix = "{}_".format(namespace)
         else:
@@ -278,15 +286,8 @@ class PrometheusMetrics:
 
     def _handle_sensor(self, state):
         unit = self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
-        metric_handlers = [
-            self._sensor_override_component_metric,
-            self._sensor_override_metric,
-            self._sensor_attribute_metric,
-            self._sensor_default_metric,
-            self._sensor_fallback_metric,
-        ]
 
-        for metric_handler in metric_handlers:
+        for metric_handler in self._sensor_metric_handlers:
             metric = metric_handler(state, unit)
             if metric is not None:
                 break
