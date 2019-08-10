@@ -5,7 +5,7 @@
   "documentation": "https://www.home-assistant.io/components/smartthings",
   "requirements": [
     "pysmartapp==0.3.2",
-    "pysmartthings==0.6.8"
+    "pysmartthings==0.6.9"
   ],
   "dependencies": [
     "webhook"

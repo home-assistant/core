@@ -10,10 +10,9 @@ from homeassistant.helpers.event import async_track_time_change
 
 _LOGGER = logging.getLogger(__name__)
 
-TRIGGER_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'time',
-    vol.Required(CONF_AT): cv.time,
-})
+TRIGGER_SCHEMA = vol.Schema(
+    {vol.Required(CONF_PLATFORM): "time", vol.Required(CONF_AT): cv.time}
+)
 
 
 async def async_trigger(hass, config, action, automation_info):
@@ -24,12 +23,8 @@ async def async_trigger(hass, config, action, automation_info):
     @callback
     def time_automation_listener(now):
         """Listen for time changes and calls action."""
-        hass.async_run_job(action, {
-            'trigger': {
-                'platform': 'time',
-                'now': now,
-            },
-        })
+        hass.async_run_job(action, {"trigger": {"platform": "time", "now": now}})
 
-    return async_track_time_change(hass, time_automation_listener,
-                                   hour=hours, minute=minutes, second=seconds)
+    return async_track_time_change(
+        hass, time_automation_listener, hour=hours, minute=minutes, second=seconds
+    )

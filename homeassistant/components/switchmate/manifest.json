@@ -3,7 +3,7 @@
   "name": "Switchmate",
   "documentation": "https://www.home-assistant.io/components/switchmate",
   "requirements": [
-    "pySwitchmate==0.4.5"
+    "pySwitchmate==0.4.6"
   ],
   "dependencies": [],
   "codeowners": [

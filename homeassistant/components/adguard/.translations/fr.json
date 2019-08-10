@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "existing_instance_updated": "La configuration existante a \u00e9t\u00e9 mise \u00e0 jour."
+        },
+        "error": {
+            "connection_error": "\u00c9chec de connexion."
+        },
+        "step": {
+            "hassio_confirm": {
+                "title": "AdGuard Home via le module compl\u00e9mentaire Hass.io"
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "password": "Mot de passe",
+                    "port": "Port",
+                    "ssl": "AdGuard Home utilise un certificat SSL",
+                    "username": "Nom d'utilisateur"
+                }
+            }
+        }
+    }
+}

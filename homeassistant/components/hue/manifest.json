@@ -6,6 +6,16 @@
   "requirements": [
     "aiohue==1.9.1"
   ],
+  "ssdp": {
+    "manufacturer": [
+      "Royal Philips Electronics"
+    ]
+  },
+  "homekit": {
+    "models": [
+      "BSB002"
+    ]
+  },
   "dependencies": [],
   "codeowners": [
     "@balloob"
