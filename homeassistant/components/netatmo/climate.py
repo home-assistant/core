@@ -109,8 +109,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     auth = hass.data[DATA_NETATMO_AUTH]
 
+    home_data = HomeData(auth)
     try:
-        home_data = HomeData(auth)
+        home_data.setup()
     except pyatmo.NoDevice:
         return
 
@@ -352,7 +353,6 @@ class HomeData:
 
     def get_home_ids(self):
         """Get all the home ids returned by NetAtmo API."""
-        self.setup()
         if self.homedata is None:
             return []
         for home_id in self.homedata.homes:
