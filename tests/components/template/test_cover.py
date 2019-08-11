@@ -16,6 +16,7 @@ from homeassistant.const import (
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
     STATE_CLOSED,
+    STATE_UNAVAILABLE,
     STATE_OPEN,
 )
 
@@ -837,6 +838,86 @@ async def test_entity_picture_template(hass, calls):
     state = hass.states.get("cover.test_template_cover")
 
     assert state.attributes["entity_picture"] == "/local/cover.png"
+
+
+async def test_availability_template(hass, calls):
+    """Test availability template."""
+    with assert_setup_component(1, "cover"):
+        assert await setup.async_setup_component(
+            hass,
+            "cover",
+            {
+                "cover": {
+                    "platform": "template",
+                    "covers": {
+                        "test_template_cover": {
+                            "value_template": "open",
+                            "open_cover": {
+                                "service": "cover.open_cover",
+                                "entity_id": "cover.test_state",
+                            },
+                            "close_cover": {
+                                "service": "cover.close_cover",
+                                "entity_id": "cover.test_state",
+                            },
+                            "availability_template": "{% if states.cover.test_state.state == 'open' %}"
+                            "true"
+                            "{% else %}"
+                            "false"
+                            "{% endif %}",
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.async_set("cover.test_state", STATE_CLOSED)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.async_set("cover.test_state", STATE_OPEN)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_availability_without_availability_template(hass, calls):
+    """Test that component is availble if there is no."""
+    with assert_setup_component(1, "cover"):
+        assert await setup.async_setup_component(
+            hass,
+            "cover",
+            {
+                "cover": {
+                    "platform": "template",
+                    "covers": {
+                        "test_template_cover": {
+                            "value_template": "open",
+                            "open_cover": {
+                                "service": "cover.open_cover",
+                                "entity_id": "cover.test_state",
+                            },
+                            "close_cover": {
+                                "service": "cover.close_cover",
+                                "entity_id": "cover.test_state",
+                            },
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def test_device_class(hass, calls):
