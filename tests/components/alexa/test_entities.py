@@ -5,15 +5,13 @@ from . import get_new_request, DEFAULT_CONFIG
 
 async def test_unsupported_domain(hass):
     """Discovery ignores entities of unknown domains."""
-    request = get_new_request('Alexa.Discovery', 'Discover')
+    request = get_new_request("Alexa.Discovery", "Discover")
 
-    hass.states.async_set(
-        'woz.boop', 'on', {'friendly_name': "Boop Woz"})
+    hass.states.async_set("woz.boop", "on", {"friendly_name": "Boop Woz"})
 
-    msg = await smart_home.async_handle_message(
-        hass, DEFAULT_CONFIG, request)
+    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
 
-    assert 'event' in msg
-    msg = msg['event']
+    assert "event" in msg
+    msg = msg["event"]
 
-    assert not msg['payload']['endpoints']
+    assert not msg["payload"]["endpoints"]

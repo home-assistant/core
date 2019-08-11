@@ -3,7 +3,7 @@
   "name": "Geo json events",
   "documentation": "https://www.home-assistant.io/components/geo_json_events",
   "requirements": [
-    "geojson_client==0.3"
+    "geojson_client==0.4"
   ],
   "dependencies": [],
   "codeowners": []

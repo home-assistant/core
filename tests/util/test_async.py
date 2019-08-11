@@ -9,11 +9,12 @@ import pytest
 from homeassistant.util import async_ as hasync
 
 
-@patch('asyncio.coroutines.iscoroutine')
-@patch('concurrent.futures.Future')
-@patch('threading.get_ident')
+@patch("asyncio.coroutines.iscoroutine")
+@patch("concurrent.futures.Future")
+@patch("threading.get_ident")
 def test_run_coroutine_threadsafe_from_inside_event_loop(
-        mock_ident, _, mock_iscoroutine):
+    mock_ident, _, mock_iscoroutine
+):
     """Testing calling run_coroutine_threadsafe from inside an event loop."""
     coro = MagicMock()
     loop = MagicMock()
@@ -45,11 +46,12 @@ def test_run_coroutine_threadsafe_from_inside_event_loop(
     assert len(loop.call_soon_threadsafe.mock_calls) == 2
 
 
-@patch('asyncio.coroutines.iscoroutine')
-@patch('concurrent.futures.Future')
-@patch('threading.get_ident')
+@patch("asyncio.coroutines.iscoroutine")
+@patch("concurrent.futures.Future")
+@patch("threading.get_ident")
 def test_fire_coroutine_threadsafe_from_inside_event_loop(
-        mock_ident, _, mock_iscoroutine):
+    mock_ident, _, mock_iscoroutine
+):
     """Testing calling fire_coroutine_threadsafe from inside an event loop."""
     coro = MagicMock()
     loop = MagicMock()
@@ -81,8 +83,8 @@ def test_fire_coroutine_threadsafe_from_inside_event_loop(
     assert len(loop.call_soon_threadsafe.mock_calls) == 2
 
 
-@patch('concurrent.futures.Future')
-@patch('threading.get_ident')
+@patch("concurrent.futures.Future")
+@patch("threading.get_ident")
 def test_run_callback_threadsafe_from_inside_event_loop(mock_ident, _):
     """Testing calling run_callback_threadsafe from inside an event loop."""
     callback = MagicMock()
@@ -122,9 +124,11 @@ class RunThreadsafeTests(TestCase):
     @staticmethod
     def run_briefly(loop):
         """Momentarily run a coroutine on the given loop."""
+
         @asyncio.coroutine
         def once():
             pass
+
         gen = once()
         t = loop.create_task(gen)
         try:
@@ -156,14 +160,16 @@ class RunThreadsafeTests(TestCase):
     def target_callback(self, fail=False, invalid=False):
         """Run add callback in the event loop."""
         future = hasync.run_callback_threadsafe(
-            self.loop, self.add_callback, 1, 2, fail, invalid)
+            self.loop, self.add_callback, 1, 2, fail, invalid
+        )
         try:
             return future.result()
         finally:
             future.done() or future.cancel()
 
-    def target_coroutine(self, fail=False, invalid=False, cancel=False,
-                         timeout=None, advance_coro=False):
+    def target_coroutine(
+        self, fail=False, invalid=False, cancel=False, timeout=None, advance_coro=False
+    ):
         """Run add coroutine in the event loop."""
         coro = self.add_coroutine(1, 2, fail, invalid, cancel)
         future = hasync.run_coroutine_threadsafe(coro, self.loop)

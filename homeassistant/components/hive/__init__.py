@@ -1,32 +1,38 @@
 """Support for the Hive devices."""
 import logging
 
+from pyhiveapi import Pyhiveapi
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME)
+from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'hive'
-DATA_HIVE = 'data_hive'
+DOMAIN = "hive"
+DATA_HIVE = "data_hive"
 DEVICETYPES = {
-    'binary_sensor': 'device_list_binary_sensor',
-    'climate': 'device_list_climate',
-    'light': 'device_list_light',
-    'switch': 'device_list_plug',
-    'sensor': 'device_list_sensor',
+    "binary_sensor": "device_list_binary_sensor",
+    "climate": "device_list_climate",
+    "water_heater": "device_list_water_heater",
+    "light": "device_list_light",
+    "switch": "device_list_plug",
+    "sensor": "device_list_sensor",
 }
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=2): cv.positive_int,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Optional(CONF_SCAN_INTERVAL, default=2): cv.positive_int,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 class HiveSession:
@@ -45,8 +51,6 @@ class HiveSession:
 
 def setup(hass, config):
     """Set up the Hive Component."""
-    from pyhiveapi import Pyhiveapi
-
     session = HiveSession()
     session.core = Pyhiveapi()
 
@@ -54,8 +58,7 @@ def setup(hass, config):
     password = config[DOMAIN][CONF_PASSWORD]
     update_interval = config[DOMAIN][CONF_SCAN_INTERVAL]
 
-    devicelist = session.core.initialise_api(
-        username, password, update_interval)
+    devicelist = session.core.initialise_api(username, password, update_interval)
 
     if devicelist is None:
         _LOGGER.error("Hive API initialization failed")

@@ -3,32 +3,41 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
-    SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_SET)
+    MEDIA_TYPE_MUSIC,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
+    SUPPORT_VOLUME_SET,
+)
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP, STATE_IDLE
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PIPELINE = 'pipeline'
+CONF_PIPELINE = "pipeline"
 
-DOMAIN = 'gstreamer'
+DOMAIN = "gstreamer"
 
-SUPPORT_GSTREAMER = SUPPORT_VOLUME_SET | SUPPORT_PLAY | SUPPORT_PAUSE |\
-     SUPPORT_PLAY_MEDIA | SUPPORT_NEXT_TRACK
+SUPPORT_GSTREAMER = (
+    SUPPORT_VOLUME_SET
+    | SUPPORT_PLAY
+    | SUPPORT_PAUSE
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_NEXT_TRACK
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_PIPELINE): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_NAME): cv.string, vol.Optional(CONF_PIPELINE): cv.string}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Gstreamer platform."""
     from gsp import GstreamerPlayer
+
     name = config.get(CONF_NAME)
     pipeline = config.get(CONF_PIPELINE)
     player = GstreamerPlayer(pipeline)
@@ -73,7 +82,7 @@ class GstreamerDevice(MediaPlayerDevice):
     def play_media(self, media_type, media_id, **kwargs):
         """Play media."""
         if media_type != MEDIA_TYPE_MUSIC:
-            _LOGGER.error('invalid media type')
+            _LOGGER.error("invalid media type")
             return
         self._player.queue(media_id)
 

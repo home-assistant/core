@@ -10,20 +10,19 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_MODEL_TYPE = 'model_type'
+ATTR_MODEL_TYPE = "model_type"
 # RSSI HAP -> Device
-ATTR_RSSI_DEVICE = 'rssi_device'
+ATTR_RSSI_DEVICE = "rssi_device"
 # RSSI Device -> HAP
-ATTR_RSSI_PEER = 'rssi_peer'
-ATTR_SABOTAGE = 'sabotage'
-ATTR_GROUP_MEMBER_UNREACHABLE = 'group_member_unreachable'
+ATTR_RSSI_PEER = "rssi_peer"
+ATTR_SABOTAGE = "sabotage"
+ATTR_GROUP_MEMBER_UNREACHABLE = "group_member_unreachable"
 
 
 class HomematicipGenericDevice(Entity):
     """Representation of an HomematicIP generic device."""
 
-    def __init__(self, home: AsyncHome, device,
-                 post: Optional[str] = None) -> None:
+    def __init__(self, home: AsyncHome, device, post: Optional[str] = None) -> None:
         """Initialize the generic device."""
         self._home = home
         self._device = device
@@ -36,16 +35,15 @@ class HomematicipGenericDevice(Entity):
         # Only physical devices should be HA devices.
         if isinstance(self._device, AsyncDevice):
             return {
-                'identifiers': {
+                "identifiers": {
                     # Serial numbers of Homematic IP device
                     (homematicip_cloud.DOMAIN, self._device.id)
                 },
-                'name': self._device.label,
-                'manufacturer': self._device.oem,
-                'model': self._device.modelType,
-                'sw_version': self._device.firmwareVersion,
-                'via_device': (
-                    homematicip_cloud.DOMAIN, self._device.homeId),
+                "name": self._device.label,
+                "manufacturer": self._device.oem,
+                "model": self._device.modelType,
+                "sw_version": self._device.firmwareVersion,
+                "via_device": (homematicip_cloud.DOMAIN, self._device.homeId),
             }
         return None
 
@@ -62,9 +60,9 @@ class HomematicipGenericDevice(Entity):
     def name(self) -> str:
         """Return the name of the generic device."""
         name = self._device.label
-        if self._home.name is not None and self._home.name != '':
+        if self._home.name is not None and self._home.name != "":
             name = "{} {}".format(self._home.name, name)
-        if self.post is not None and self.post != '':
+        if self.post is not None and self.post != "":
             name = "{} {}".format(name, self.post)
         return name
 
@@ -86,22 +84,20 @@ class HomematicipGenericDevice(Entity):
     @property
     def icon(self) -> Optional[str]:
         """Return the icon."""
-        if hasattr(self._device, 'lowBat') and self._device.lowBat:
-            return 'mdi:battery-outline'
-        if hasattr(self._device, 'sabotage') and self._device.sabotage:
-            return 'mdi:alert'
+        if hasattr(self._device, "lowBat") and self._device.lowBat:
+            return "mdi:battery-outline"
+        if hasattr(self._device, "sabotage") and self._device.sabotage:
+            return "mdi:alert"
         return None
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the generic device."""
         attr = {ATTR_MODEL_TYPE: self._device.modelType}
-        if hasattr(self._device, 'sabotage') and self._device.sabotage:
+        if hasattr(self._device, "sabotage") and self._device.sabotage:
             attr[ATTR_SABOTAGE] = self._device.sabotage
-        if hasattr(self._device, 'rssiDeviceValue') and \
-                self._device.rssiDeviceValue:
+        if hasattr(self._device, "rssiDeviceValue") and self._device.rssiDeviceValue:
             attr[ATTR_RSSI_DEVICE] = self._device.rssiDeviceValue
-        if hasattr(self._device, 'rssiPeerValue') and \
-                self._device.rssiPeerValue:
+        if hasattr(self._device, "rssiPeerValue") and self._device.rssiPeerValue:
             attr[ATTR_RSSI_PEER] = self._device.rssiPeerValue
         return attr
