@@ -151,7 +151,7 @@ class LightGroup(light.Light):
 
     async def async_turn_on(self, **kwargs):
         """Forward the turn_on command to all lights in the light group."""
-        data = {ATTR_ENTITY_ID: list(self._entity_ids)}
+        data = {ATTR_ENTITY_ID: self._entity_ids}
         emulate_color_temp_entity_ids = []
 
         if ATTR_BRIGHTNESS in kwargs:
@@ -162,14 +162,21 @@ class LightGroup(light.Light):
 
         if ATTR_COLOR_TEMP in kwargs:
             data[ATTR_COLOR_TEMP] = kwargs[ATTR_COLOR_TEMP]
-            for entity_id in list(self._entity_ids):
+
+            # Create a new entity list to mutate
+            updated_entities = list(self._entity_ids)
+
+            # Walk through initial entity ids, split entity lists by support
+            for entity_id in self._entity_ids:
                 state = self.hass.states.get(entity_id)
                 if state:
                     support = state.attributes.get(ATTR_SUPPORTED_FEATURES)
-                    # Only pass color temperature to supported entity_id's
-                    if support & SUPPORT_COLOR_TEMP == 0:
+                    # Only pass color temperature to supported entity_ids
+                    if bool(support & SUPPORT_COLOR) and \
+                       not bool(support & SUPPORT_COLOR_TEMP):
                         emulate_color_temp_entity_ids.append(entity_id)
-                        data[ATTR_ENTITY_ID].remove(entity_id)
+                        updated_entities.remove(entity_id)
+                        data[ATTR_ENTITY_ID] = updated_entities
 
         if ATTR_WHITE_VALUE in kwargs:
             data[ATTR_WHITE_VALUE] = kwargs[ATTR_WHITE_VALUE]
@@ -183,15 +190,17 @@ class LightGroup(light.Light):
         if ATTR_FLASH in kwargs:
             data[ATTR_FLASH] = kwargs[ATTR_FLASH]
 
-        if emulate_color_temp_entity_ids:
+        if len(emulate_color_temp_entity_ids) > 0:
             emulate_color_temp_data = data.copy()
             temp_k = color_util.color_temperature_mired_to_kelvin(
                 emulate_color_temp_data[ATTR_COLOR_TEMP])
             hs_color = color_util.color_temperature_to_hs(temp_k)
             emulate_color_temp_data[ATTR_HS_COLOR] = hs_color
             del emulate_color_temp_data[ATTR_COLOR_TEMP]
-            emulate_color_temp_data[ATTR_ENTITY_ID] = list(
-                emulate_color_temp_entity_ids)
+
+            emulate_color_temp_data[ATTR_ENTITY_ID] = \
+                emulate_color_temp_entity_ids
+
             await asyncio.gather(
                 self.hass.services.async_call(
                     light.DOMAIN,
