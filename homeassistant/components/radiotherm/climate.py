@@ -36,8 +36,8 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_FAN_ACTION = "fan_action"
 
 CONF_HOLD_TEMP = "hold_temp"
-CONF_AWAY_TEMPERATURE_HEAT = 'away_temperature_heat'
-CONF_AWAY_TEMPERATURE_COOL = 'away_temperature_cool'
+CONF_AWAY_TEMPERATURE_HEAT = "away_temperature_heat"
+CONF_AWAY_TEMPERATURE_COOL = "away_temperature_cool"
 
 DEFAULT_AWAY_TEMPERATURE_HEAT = 60
 DEFAULT_AWAY_TEMPERATURE_COOL = 85
@@ -87,12 +87,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_HOLD_TEMP, default=False): cv.boolean,
-        vol.Optional(CONF_AWAY_TEMPERATURE_HEAT,
-                     default=DEFAULT_AWAY_TEMPERATURE_HEAT):
-        vol.All(vol.Coerce(float), round_temp),
-        vol.Optional(CONF_AWAY_TEMPERATURE_COOL,
-                     default=DEFAULT_AWAY_TEMPERATURE_COOL):
-        vol.All(vol.Coerce(float), round_temp),
+        vol.Optional(
+            CONF_AWAY_TEMPERATURE_HEAT, default=DEFAULT_AWAY_TEMPERATURE_HEAT
+        ): vol.All(vol.Coerce(float), round_temp),
+        vol.Optional(
+            CONF_AWAY_TEMPERATURE_COOL, default=DEFAULT_AWAY_TEMPERATURE_COOL
+        ): vol.All(vol.Coerce(float), round_temp),
     }
 )
 
@@ -114,7 +114,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hold_temp = config.get(CONF_HOLD_TEMP)
     away_temps = [
         config.get(CONF_AWAY_TEMPERATURE_HEAT),
-        config.get(CONF_AWAY_TEMPERATURE_COOL)
+        config.get(CONF_AWAY_TEMPERATURE_COOL),
     ]
     tstats = []
 
