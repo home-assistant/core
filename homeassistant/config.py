@@ -322,7 +322,8 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
         config = load_yaml_config_file(path)
         return config
 
-    config = await hass.async_add_executor_job(_load_hass_yaml_config)
+    # Not using async_add_executor_job because this is an internal method.
+    config = await hass.loop.run_in_executor(None, _load_hass_yaml_config)
     core_config = config.get(CONF_CORE, {})
     await merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
     return config

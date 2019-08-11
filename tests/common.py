@@ -971,6 +971,8 @@ async def flush_store(store):
     if store._data is None:
         return
 
+    store._async_cleanup_stop_listener()
+    store._async_cleanup_delay_listener()
     await store._async_handle_write_data()
 
 

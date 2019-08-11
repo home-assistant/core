@@ -158,6 +158,7 @@ async def test_add_new_sensor(hass):
     sensor = Mock()
     sensor.name = "name"
     sensor.type = "ZHATemperature"
+    sensor.uniqueid = "1"
     sensor.BINARY = False
     sensor.register_async_callback = Mock()
     async_dispatcher_send(hass, gateway.async_event_new_device("sensor"), [sensor])

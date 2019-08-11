@@ -176,9 +176,6 @@ async def async_setup(hass, config):
 
 async def finish_setup(hass, config):
     """Finish set up once demo platforms are set up."""
-    lights = sorted(hass.states.async_entity_ids("light"))
-    switches = sorted(hass.states.async_entity_ids("switch"))
-
     # Set up history graph
     await bootstrap.async_setup_component(
         hass,
@@ -194,6 +191,9 @@ async def finish_setup(hass, config):
             }
         },
     )
+
+    lights = sorted(hass.states.async_entity_ids("light"))
+    switches = sorted(hass.states.async_entity_ids("switch"))
 
     # Set up scripts
     await bootstrap.async_setup_component(
