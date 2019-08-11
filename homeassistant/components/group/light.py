@@ -220,7 +220,7 @@ class LightGroup(light.Light):
         if ATTR_FLASH in kwargs:
             data[ATTR_FLASH] = kwargs[ATTR_FLASH]
 
-        if len(emulate_color_temp_entity_ids) > 0:
+        if emulate_color_temp_entity_ids:
             emulate_color_temp_data = data.copy()
             temp_k = color_util.color_temperature_mired_to_kelvin(
                 emulate_color_temp_data[ATTR_COLOR_TEMP]
