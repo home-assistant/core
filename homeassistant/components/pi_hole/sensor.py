@@ -15,13 +15,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info)
     pi_hole = hass.data[PIHOLE_DOMAIN]
     sensors = []
 
-    # Sometimes the async invocation doesnt contain the entire config
-    if CONF_MONITORED_CONDITIONS in config:
-        monitored_conditions = config[CONF_MONITORED_CONDITIONS]
+    if discovery_info is None:
+        return
 
-        sensors = [
-            PiHoleSensor(pi_hole, condition) for condition in monitored_conditions
-        ]
+    sensors = [
+        PiHoleSensor(pi_hole, condition)
+        for condition in config[CONF_MONITORED_CONDITIONS]
+    ]
 
     async_add_entities(sensors, True)
 
