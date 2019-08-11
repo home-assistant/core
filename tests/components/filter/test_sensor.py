@@ -60,6 +60,31 @@ class TestFilterSensor(unittest.TestCase):
 
     def test_chain(self):
         """Test if filter chaining works."""
+        config = {
+            "sensor": {
+                "platform": "filter",
+                "name": "test",
+                "entity_id": "sensor.test_monitored",
+                "filters": [
+                    {"filter": "outlier", "window_size": 10, "radius": 4.0},
+                    {"filter": "lowpass", "time_constant": 10, "precision": 2},
+                    {"filter": "throttle", "window_size": 1},
+                ],
+            }
+        }
+
+        with assert_setup_component(1, "sensor"):
+            assert setup_component(self.hass, "sensor", config)
+
+            for value in self.values:
+                self.hass.states.set(config["sensor"]["entity_id"], value.state)
+                self.hass.block_till_done()
+
+            state = self.hass.states.get("sensor.test")
+            assert "18.05" == state.state
+
+    def test_chain_history(self):
+        """Test if filter chaining works."""
         self.init_recorder()
         config = {
             "history": {},
