@@ -206,6 +206,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
             template_hlpr.Template("{{ 1 > 1 }}", self.hass),
             None,
             None,
+            None,
             MATCH_ALL,
             None,
             None,
@@ -263,6 +264,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
             "Parent",
             "motion",
             template_hlpr.Template("{{ 1 > 1 }}", self.hass),
+            None,
             None,
             None,
             MATCH_ALL,
@@ -392,6 +394,67 @@ async def test_template_delay_off(hass):
 
     state = hass.states.get("binary_sensor.test")
     assert state.state == "on"
+
+
+async def test_available_without_availability_template(hass):
+    """Ensure availability is true without an availability_template"""
+    config = {
+        "binary_sensor": {
+            "platform": "template",
+            "sensors": {
+                "test": {
+                    "friendly_name": "virtual thingy",
+                    "value_template": "true",
+                    "device_class": "motion",
+                    "delay_off": 5,
+                }
+            },
+        }
+    }
+    await setup.async_setup_component(hass, "binary_sensor", config)
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state != "unavailable"
+
+
+async def test_availability_template(hass):
+    """Test availability template."""
+    config = {
+        "binary_sensor": {
+            "platform": "template",
+            "sensors": {
+                "test": {
+                    "friendly_name": "virtual thingy",
+                    "value_template": "true",
+                    "device_class": "motion",
+                    "delay_off": 5,
+                    "availability_template": "{% if states.sensor.test_state.state == 'on' %}"
+                    "true"
+                    "{% else %}"
+                    "false"
+                    "{% endif %}",
+                }
+            },
+        }
+    }
+    hass.states.async_set("sensor.test_state", "on")
+    await setup.async_setup_component(hass, "binary_sensor", config)
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.async_set("sensor.test_state", "off")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "unavailable"
+
+    hass.states.async_set("sensor.test_state", "on")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state != "unavailable"
 
 
 async def test_no_update_template_match_all(hass, caplog):

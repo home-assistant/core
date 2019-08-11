@@ -13,6 +13,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ENTITY_ID,
+    CONF_AVAILABILITY_TEMPLATE,
     CONF_VALUE_TEMPLATE,
     CONF_ICON_TEMPLATE,
     CONF_ENTITY_PICTURE_TEMPLATE,
@@ -36,6 +37,7 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_ICON_TEMPLATE): cv.template,
         vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
+        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
         vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
@@ -57,6 +59,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         value_template = device_config[CONF_VALUE_TEMPLATE]
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         entity_picture_template = device_config.get(CONF_ENTITY_PICTURE_TEMPLATE)
+        availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
         entity_ids = set()
         manual_entity_ids = device_config.get(ATTR_ENTITY_ID)
 
@@ -66,6 +69,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             (CONF_VALUE_TEMPLATE, value_template),
             (CONF_ICON_TEMPLATE, icon_template),
             (CONF_ENTITY_PICTURE_TEMPLATE, entity_picture_template),
+            (CONF_AVAILABILITY_TEMPLATE, availability_template),
         ):
             if template is None:
                 continue
@@ -111,6 +115,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 value_template,
                 icon_template,
                 entity_picture_template,
+                availability_template,
                 entity_ids,
                 delay_on,
                 delay_off,
@@ -136,6 +141,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         value_template,
         icon_template,
         entity_picture_template,
+        availability_template,
         entity_ids,
         delay_on,
         delay_off,
@@ -148,12 +154,14 @@ class BinarySensorTemplate(BinarySensorDevice):
         self._template = value_template
         self._state = None
         self._icon_template = icon_template
+        self._availability_template = availability_template
         self._entity_picture_template = entity_picture_template
         self._icon = None
         self._entity_picture = None
         self._entities = entity_ids
         self._delay_on = delay_on
         self._delay_off = delay_off
+        self._available = True
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -208,6 +216,11 @@ class BinarySensorTemplate(BinarySensorDevice):
         """No polling needed."""
         return False
 
+    @property
+    def available(self):
+        """Availability indicator."""
+        return self._available
+
     @callback
     def _async_render(self):
         """Get the state of template."""
@@ -224,6 +237,17 @@ class BinarySensorTemplate(BinarySensorDevice):
                 )
                 return
             _LOGGER.error("Could not render template %s: %s", self._name, ex)
+
+        if self._availability_template is not None:
+            try:
+                result = self._availability_template.async_render()
+                self._available = result == "true"
+            except TemplateError as ex:
+                _LOGGER.error(ex)
+                self._available = True
+            except ValueError as ex:
+                _LOGGER.error(ex)
+                self._available = True
 
         for property_name, template in (
             ("_icon", self._icon_template),
