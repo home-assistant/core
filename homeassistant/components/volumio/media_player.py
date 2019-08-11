@@ -29,7 +29,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
-    SUPPORT_SHUFFLE_SET)
+    SUPPORT_SHUFFLE_SET,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
