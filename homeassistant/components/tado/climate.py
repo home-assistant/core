@@ -247,22 +247,18 @@ class TadoClimate(ClimateDevice):
         if self._ac_device and self._ac_support_heat and self._cooling:
             if self._active:
                 return CURRENT_HVAC_COOL
-            else:
-                return CURRENT_HVAC_IDLE
+            return CURRENT_HVAC_IDLE
         if self._ac_device and self._ac_support_heat and not self._cooling:
             if self._active:
                 return CURRENT_HVAC_HEAT
-            else:
-                return CURRENT_HVAC_IDLE
+            return CURRENT_HVAC_IDLE
         if self._ac_device and not self._ac_support_heat:
             if self._active:
                 return CURRENT_HVAC_COOL
-            else:
-                return CURRENT_HVAC_IDLE
+            return CURRENT_HVAC_IDLE
         if self._active:
             return CURRENT_HVAC_HEAT
-        else:
-            return CURRENT_HVAC_IDLE
+        return CURRENT_HVAC_IDLE
 
     @property
     def fan_mode(self):
@@ -329,7 +325,7 @@ class TadoClimate(ClimateDevice):
         if temperature is None:
             return
 
-        self._current_operation = CONST_OVERLAY_TADO_MODE
+        self._current_operation = CONST_OVERLAY_MANUAL
         self._overlay_mode = None
         self._target_temp = temperature
         self._control_heating()
@@ -479,7 +475,7 @@ class TadoClimate(ClimateDevice):
 
         if self._current_operation == CONST_MODE_SMART_SCHEDULE:
             _LOGGER.info(
-                "Switching mytado.com to SCHEDULE (default) " "for zone %s (%d)",
+                "Switching mytado.com to SCHEDULE (default) for zone %s (%d)",
                 self.zone_name,
                 self.zone_id,
             )
