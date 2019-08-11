@@ -6,7 +6,8 @@
   "dependencies": [
     "device_tracker",
     "group",
-    "light"
+    "light",
+    "person"
   ],
   "codeowners": []
 }
