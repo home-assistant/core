@@ -34,7 +34,9 @@ TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 DEFAULT_NAME = "Broadlink switch"
 DEFAULT_TIMEOUT = 10
+DEFAULT_RETRY = 3
 CONF_SLOTS = "slots"
+CONF_RETRY = "retry"
 
 RM_TYPES = [
     "rm",
@@ -82,6 +84,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_FRIENDLY_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_TYPE, default=SWITCH_TYPES[0]): vol.In(SWITCH_TYPES),
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        vol.Optional(CONF_RETRY, default=DEFAULT_RETRY): cv.positive_int,
     }
 )
 
@@ -200,7 +203,7 @@ class BroadlinkRMSwitch(SwitchDevice, RestoreEntity):
             self._state = False
             self.schedule_update_ha_state()
 
-    def _sendpacket(self, packet, retry=2):
+    def _sendpacket(self, packet, retry=CONF_RETRY):
         """Send packet to device."""
         if packet is None:
             _LOGGER.debug("Empty packet")
@@ -216,7 +219,7 @@ class BroadlinkRMSwitch(SwitchDevice, RestoreEntity):
             return self._sendpacket(packet, retry - 1)
         return True
 
-    def _auth(self, retry=2):
+    def _auth(self, retry=CONF_RETRY):
         try:
             auth = self._device.auth()
         except OSError:
@@ -238,7 +241,7 @@ class BroadlinkSP1Switch(BroadlinkRMSwitch):
         self._command_off = 0
         self._load_power = None
 
-    def _sendpacket(self, packet, retry=2):
+    def _sendpacket(self, packet, retry=CONF_RETRY):
         """Send packet to device."""
         try:
             self._device.set_power(packet)
@@ -277,7 +280,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
         """Synchronize state with switch."""
         self._update()
 
-    def _update(self, retry=2):
+    def _update(self, retry=CONF_RETRY):
         """Update the state of the device."""
         try:
             state = self._device.check_power()
@@ -313,7 +316,7 @@ class BroadlinkMP1Slot(BroadlinkRMSwitch):
         """Return true if unable to access real state of entity."""
         return False
 
-    def _sendpacket(self, packet, retry=2):
+    def _sendpacket(self, packet, retry=CONF_RETRY):
         """Send packet to device."""
         try:
             self._device.set_power(self._slot, packet)
@@ -362,7 +365,7 @@ class BroadlinkMP1Switch:
         """Fetch new state data for this device."""
         self._update()
 
-    def _update(self, retry=2):
+    def _update(self, retry=CONF_RETRY):
         """Update the state of the device."""
         try:
             states = self._device.check_power()
@@ -377,7 +380,7 @@ class BroadlinkMP1Switch:
             return self._update(max(0, retry - 1))
         self._states = states
 
-    def _auth(self, retry=2):
+    def _auth(self, retry=CONF_RETRY):
         """Authenticate the device."""
         try:
             auth = self._device.auth()
