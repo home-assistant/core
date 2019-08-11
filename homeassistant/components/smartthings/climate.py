@@ -228,35 +228,34 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
         self._hvac_mode = MODE_TO_STATE.get(thermostat_mode)
         if self._hvac_mode is None:
             _LOGGER.debug(
-                "Device %s (%s) returned an invalid" "hvac mode: %s",
+                "Device %s (%s) returned an invalid hvac mode: %s",
                 self._device.label,
                 self._device.device_id,
                 thermostat_mode,
             )
 
+        modes = set()
         supported_modes = self._device.status.supported_thermostat_modes
         if isinstance(supported_modes, Iterable):
-            operations = set()
             for mode in supported_modes:
                 state = MODE_TO_STATE.get(mode)
                 if state is not None:
-                    operations.add(state)
+                    modes.add(state)
                 else:
                     _LOGGER.debug(
-                        "Device %s (%s) returned an invalid "
-                        "supported thermostat mode: %s",
+                        "Device %s (%s) returned an invalid supported thermostat mode: %s",
                         self._device.label,
                         self._device.device_id,
                         mode,
                     )
-            self._hvac_modes = operations
         else:
             _LOGGER.debug(
-                "Device %s (%s) returned invalid supported " "thermostat modes: %s",
+                "Device %s (%s) returned invalid supported thermostat modes: %s",
                 self._device.label,
                 self._device.device_id,
                 supported_modes,
             )
+        self._hvac_modes = list(modes)
 
     @property
     def current_humidity(self):
