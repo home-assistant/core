@@ -1,11 +1,14 @@
 """Support for getting statistical data from a Pi-hole system."""
 import logging
 
-from homeassistant.const import CONF_MONITORED_CONDITIONS
-
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN as PIHOLE_DOMAIN, ATTR_BLOCKED_DOMAINS, MONITORED_CONDITIONS
+from .const import (
+    DOMAIN as PIHOLE_DOMAIN,
+    ATTR_BLOCKED_DOMAINS,
+    SENSOR_LIST,
+    SENSOR_DICT,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -18,10 +21,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info)
     if discovery_info is None:
         return
 
-    sensors = [
-        PiHoleSensor(pi_hole, condition)
-        for condition in config[CONF_MONITORED_CONDITIONS]
-    ]
+    sensors = [PiHoleSensor(pi_hole, sensor_name) for sensor_name in SENSOR_LIST]
 
     async_add_entities(sensors, True)
 
@@ -29,13 +29,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info)
 class PiHoleSensor(Entity):
     """Representation of a Pi-hole sensor."""
 
-    def __init__(self, pi_hole, condition):
+    def __init__(self, pi_hole, sensor_name):
         """Initialize a Pi-hole sensor."""
         self.pi_hole = pi_hole
         self._name = pi_hole.name
-        self._condition = condition
+        self._condition = sensor_name
 
-        variable_info = MONITORED_CONDITIONS[condition]
+        variable_info = SENSOR_DICT[sensor_name]
         self._condition_name = variable_info[0]
         self._unit_of_measurement = variable_info[1]
         self._icon = variable_info[2]

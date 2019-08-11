@@ -4,7 +4,6 @@ import unittest
 
 from homeassistant import setup
 from homeassistant.components import pi_hole
-from homeassistant.const import CONF_MONITORED_CONDITIONS
 
 from asynctest import CoroutineMock
 from hole import Hole
@@ -25,6 +24,6 @@ class TestComponentPiHole(unittest.TestCase):
 
     def test_setup_no_config(self):
         """Test a successful setup with no configuration."""
-        config = {CONF_MONITORED_CONDITIONS: []}
+        config = {}
         with patch.object(Hole, "get_data", new=CoroutineMock()):
             assert setup.setup_component(self.hass, pi_hole.DOMAIN, {"pi_hole": config})

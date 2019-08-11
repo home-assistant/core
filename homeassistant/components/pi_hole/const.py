@@ -16,7 +16,7 @@ ATTR_BLOCKED_DOMAINS = "domains_blocked"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
-MONITORED_CONDITIONS = {
+SENSOR_DICT = {
     "ads_blocked_today": ["Ads Blocked Today", "ads", "mdi:close-octagon-outline"],
     "ads_percentage_today": [
         "Ads Percentage Blocked Today",
@@ -39,3 +39,5 @@ MONITORED_CONDITIONS = {
     "unique_clients": ["DNS Unique Clients", "clients", "mdi:account-outline"],
     "unique_domains": ["DNS Unique Domains", "domains", "mdi:domain"],
 }
+
+SENSOR_LIST = list(SENSOR_DICT.keys())

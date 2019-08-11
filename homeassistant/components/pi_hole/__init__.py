@@ -2,13 +2,7 @@
 import logging
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_MONITORED_CONDITIONS,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -24,7 +18,6 @@ from .const import (
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
     MIN_TIME_BETWEEN_UPDATES,
-    MONITORED_CONDITIONS,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -38,9 +31,6 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
                 vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION): cv.string,
                 vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-                vol.Optional(
-                    CONF_MONITORED_CONDITIONS, default=["ads_blocked_today"]
-                ): vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
             }
         )
     },
@@ -79,9 +69,7 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = pi_hole
 
     hass.async_create_task(
-        async_load_platform(
-            hass, SENSOR_DOMAIN, DOMAIN, conf.get(CONF_MONITORED_CONDITIONS), config
-        )
+        async_load_platform(hass, SENSOR_DOMAIN, DOMAIN, None, config)
     )
 
     LOGGER.debug("%s integration setup complete", DOMAIN)
