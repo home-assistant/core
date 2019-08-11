@@ -53,8 +53,8 @@ API_THERMOSTAT_MODES = OrderedDict(
     [
         (climate.HVAC_MODE_HEAT, "HEAT"),
         (climate.HVAC_MODE_COOL, "COOL"),
-        (climate.HVAC_MODE_HEAT_COOL, "AUTO"),
         (climate.HVAC_MODE_AUTO, "AUTO"),
+        (climate.HVAC_MODE_HEAT_COOL, "AUTO"),
         (climate.HVAC_MODE_OFF, "OFF"),
         (climate.HVAC_MODE_FAN_ONLY, "OFF"),
         (climate.HVAC_MODE_DRY, "OFF"),
