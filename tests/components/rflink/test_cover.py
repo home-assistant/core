@@ -30,11 +30,11 @@ CONFIG = {
                 'name': 'test',
                 'aliases': ['test_alias_0_0'],
             },
-            'nonkaku_0_0': {
+            'cover_0_0': {
                 'name': 'dim_test',
             },
-            'nonkaku_0_1': {
-                'name': 'nonkaku_test',
+            'cover_0_1': {
+                'name': 'cover_test',
             }
         },
     },
@@ -53,9 +53,9 @@ async def test_default_setup(hass, monkeypatch):
     assert create.call_args_list[0][1]['ignore']
 
     # test default state of cover loaded from config
-    nonkaku_initial = hass.states.get(DOMAIN + '.test')
-    assert nonkaku_initial.state == STATE_CLOSED
-    assert nonkaku_initial.attributes['assumed_state']
+    cover_initial = hass.states.get(DOMAIN + '.test')
+    assert cover_initial.state == STATE_CLOSED
+    assert cover_initial.attributes['assumed_state']
 
     # cover should follow state of the hardware device by interpreting
     # incoming events for its name and aliases
@@ -67,10 +67,10 @@ async def test_default_setup(hass, monkeypatch):
     })
     await hass.async_block_till_done()
 
-    nonkaku_after_first_command = hass.states.get(DOMAIN + '.test')
-    assert nonkaku_after_first_command.state == STATE_OPEN
+    cover_after_first_command = hass.states.get(DOMAIN + '.test')
+    assert cover_after_first_command.state == STATE_OPEN
     # not sure why, but cover have always assumed_state=true
-    assert nonkaku_after_first_command.attributes.get('assumed_state')
+    assert cover_after_first_command.attributes.get('assumed_state')
 
     # mock incoming command event for this device
     event_callback({
@@ -88,8 +88,8 @@ async def test_default_setup(hass, monkeypatch):
     })
     await hass.async_block_till_done()
 
-    nonkaku_after_first_command = hass.states.get(DOMAIN + '.test')
-    assert nonkaku_after_first_command.state == STATE_OPEN
+    cover_after_first_command = hass.states.get(DOMAIN + '.test')
+    assert cover_after_first_command.state == STATE_OPEN
 
     # should respond to group command
     event_callback({
