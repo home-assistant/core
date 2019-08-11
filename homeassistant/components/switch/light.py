@@ -1,5 +1,6 @@
 """Light support for switch entities."""
 import logging
+from typing import cast
 
 import voluptuous as vol
 
@@ -38,7 +39,7 @@ async def async_setup_platform(
 ) -> None:
     """Initialize Light Switch platform."""
     async_add_entities(
-        [LightSwitch(config.get(CONF_NAME), config[CONF_ENTITY_ID])], True
+        [LightSwitch(cast(str, config.get(CONF_NAME)), config[CONF_ENTITY_ID])], True
     )
 
 

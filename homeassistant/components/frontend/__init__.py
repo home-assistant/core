@@ -47,22 +47,20 @@ MANIFEST_JSON = {
     "description": "Home automation platform that puts local control and privacy first.",
     "dir": "ltr",
     "display": "standalone",
-    "icons": [],
+    "icons": [
+        {
+            "src": "/static/icons/favicon-{size}x{size}.png".format(size=size),
+            "sizes": "{size}x{size}".format(size=size),
+            "type": "image/png",
+        }
+        for size in (192, 384, 512, 1024)
+    ],
     "lang": "en-US",
     "name": "Home Assistant",
     "short_name": "Assistant",
     "start_url": "/?homescreen=1",
     "theme_color": DEFAULT_THEME_COLOR,
 }
-
-for size in (192, 384, 512, 1024):
-    MANIFEST_JSON["icons"].append(
-        {
-            "src": "/static/icons/favicon-{size}x{size}.png".format(size=size),
-            "sizes": "{size}x{size}".format(size=size),
-            "type": "image/png",
-        }
-    )
 
 DATA_PANELS = "frontend_panels"
 DATA_JS_VERSION = "frontend_js_version"
