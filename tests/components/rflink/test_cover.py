@@ -751,7 +751,8 @@ async def test_inverted_cover(hass, monkeypatch):
     assert inverted_cover.state == STATE_OPEN
 
     # Sending the close command from HA should result
-    # in an 'DOWN' command sent to the standard device.
+    # in an 'DOWN' command sent to the 'RflinkCover'
+    # device that has its type set to 'standard'.
     hass.async_create_task(hass.services.async_call(
         DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: DOMAIN + '.cover_is_standard'}))
 
@@ -762,7 +763,8 @@ async def test_inverted_cover(hass, monkeypatch):
     assert protocol.send_command_ack.call_args_list[0][0][1] == 'DOWN'
 
     # Sending the open command from HA should result
-    # in an 'UP' command sent to the standard device.
+    # in an 'UP' command sent to the 'RflinkCover'
+    # device that has its type set to 'standard'.
     hass.async_create_task(hass.services.async_call(
         DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: DOMAIN + '.cover_is_standard'}))
 
@@ -773,7 +775,8 @@ async def test_inverted_cover(hass, monkeypatch):
     assert protocol.send_command_ack.call_args_list[1][0][1] == 'UP'
 
     # Sending the close command from HA should result
-    # in an 'DOWN' command sent to the standard device.
+    # in an 'DOWN' command sent to the 'RflinkCover'
+    # device that has its type not specified.
     hass.async_create_task(hass.services.async_call(
         DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: DOMAIN + '.cover_is_none'}))
 
@@ -784,7 +787,8 @@ async def test_inverted_cover(hass, monkeypatch):
     assert protocol.send_command_ack.call_args_list[2][0][1] == 'DOWN'
 
     # Sending the open command from HA should result
-    # in an 'UP' command sent to the standard device.
+    # in an 'UP' command sent to the 'RflinkCover'
+    # device that has its type not specified.
     hass.async_create_task(hass.services.async_call(
         DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: DOMAIN + '.cover_is_none'}))
 
@@ -795,7 +799,8 @@ async def test_inverted_cover(hass, monkeypatch):
     assert protocol.send_command_ack.call_args_list[3][0][1] == 'UP'
 
     # Sending the close command from HA should result
-    # in an 'UP' command sent to the inverted device.
+    # in an 'UP' command sent to the 'RflinkCover'
+    # device that has its type set to 'inverted'.
     hass.async_create_task(hass.services.async_call(
         DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: DOMAIN + '.cover_is_inverted'}))
 
@@ -806,7 +811,8 @@ async def test_inverted_cover(hass, monkeypatch):
     assert protocol.send_command_ack.call_args_list[4][0][1] == 'UP'
 
     # Sending the open command from HA should result
-    # in an 'DOWN' command sent to the inverted device.
+    # in an 'DOWN' command sent to the 'RflinkCover'
+    # device that has its type set to 'inverted'.
     hass.async_create_task(hass.services.async_call(
         DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: DOMAIN + '.cover_is_inverted'}))
 
@@ -817,7 +823,8 @@ async def test_inverted_cover(hass, monkeypatch):
     assert protocol.send_command_ack.call_args_list[5][0][1] == 'DOWN'
 
     # Sending the close command from HA should result
-    # in an 'DOWN' command sent to the standard device.
+    # in an 'DOWN' command sent to the 'InvertedRflinkCover'
+    # device that has its type set to 'standard'.
     hass.async_create_task(hass.services.async_call(
         DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: DOMAIN + '.inverted_cover_is_standard'}))
 
@@ -828,7 +835,8 @@ async def test_inverted_cover(hass, monkeypatch):
     assert protocol.send_command_ack.call_args_list[6][0][1] == 'DOWN'
 
     # Sending the open command from HA should result
-    # in an 'UP' command sent to the standard device.
+    # in an 'UP' command sent to the 'InvertedRflinkCover'
+    # device that has its type set to 'standard'.
     hass.async_create_task(hass.services.async_call(
         DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: DOMAIN + '.inverted_cover_is_standard'}))
 
@@ -839,7 +847,8 @@ async def test_inverted_cover(hass, monkeypatch):
     assert protocol.send_command_ack.call_args_list[7][0][1] == 'UP'
 
     # Sending the close command from HA should result
-    # in an 'UP' command sent to the inverted device.
+    # in an 'UP' command sent to the 'InvertedRflinkCover'
+    # device that has its type not specified.
     hass.async_create_task(hass.services.async_call(
         DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: DOMAIN + '.inverted_cover_is_none'}))
 
@@ -850,7 +859,8 @@ async def test_inverted_cover(hass, monkeypatch):
     assert protocol.send_command_ack.call_args_list[8][0][1] == 'UP'
 
     # Sending the open command from HA should result
-    # in an 'DOWN' command sent to the inverted device.
+    # in an 'DOWN' command sent to the 'InvertedRflinkCover'
+    # device that has its type not specified.
     hass.async_create_task(hass.services.async_call(
         DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: DOMAIN + '.inverted_cover_is_none'}))
 
@@ -861,7 +871,8 @@ async def test_inverted_cover(hass, monkeypatch):
     assert protocol.send_command_ack.call_args_list[9][0][1] == 'DOWN'
 
     # Sending the close command from HA should result
-    # in an 'UP' command sent to the inverted device.
+    # in an 'UP' command sent to the 'InvertedRflinkCover'
+    # device that has its type set to 'inverted'.
     hass.async_create_task(hass.services.async_call(
         DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: DOMAIN + '.inverted_cover_is_inverted'}))
 
@@ -872,7 +883,8 @@ async def test_inverted_cover(hass, monkeypatch):
     assert protocol.send_command_ack.call_args_list[10][0][1] == 'UP'
 
     # Sending the open command from HA should result
-    # in an 'DOWN' command sent to the inverted device.
+    # in an 'DOWN' command sent to the 'InvertedRflinkCover'
+    # device that has its type set to 'inverted'.
     hass.async_create_task(hass.services.async_call(
         DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: DOMAIN + '.inverted_cover_is_inverted'}))
 
