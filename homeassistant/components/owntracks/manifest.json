@@ -1,6 +1,7 @@
 {
   "domain": "owntracks",
   "name": "Owntracks",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/owntracks",
   "requirements": [
     "PyNaCl==1.3.0"

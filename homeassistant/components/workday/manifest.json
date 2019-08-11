@@ -3,7 +3,7 @@
   "name": "Workday",
   "documentation": "https://www.home-assistant.io/components/workday",
   "requirements": [
-    "holidays==0.9.10"
+    "holidays==0.9.11"
   ],
   "dependencies": [],
   "codeowners": []

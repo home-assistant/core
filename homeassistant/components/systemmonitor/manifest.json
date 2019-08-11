@@ -3,7 +3,7 @@
   "name": "Systemmonitor",
   "documentation": "https://www.home-assistant.io/components/systemmonitor",
   "requirements": [
-    "psutil==5.6.1"
+    "psutil==5.6.3"
   ],
   "dependencies": [],
   "codeowners": []

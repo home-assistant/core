@@ -10,15 +10,17 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (
-    ATTR_DATA, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
-    BaseNotificationService)
+    ATTR_DATA,
+    ATTR_TITLE,
+    ATTR_TITLE_DEFAULT,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 
 _LOGGER = logging.getLogger(__name__)
-_RESOURCE = 'https://api.prowlapp.com/publicapi/'
+_RESOURCE = "https://api.prowlapp.com/publicapi/"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_API_KEY): cv.string})
 
 
 async def async_get_service(hass, config, discovery_info=None):
@@ -38,27 +40,29 @@ class ProwlNotificationService(BaseNotificationService):
         """Send the message to the user."""
         response = None
         session = None
-        url = '{}{}'.format(_RESOURCE, 'add')
+        url = "{}{}".format(_RESOURCE, "add")
         data = kwargs.get(ATTR_DATA)
         payload = {
-            'apikey': self._api_key,
-            'application': 'Home-Assistant',
-            'event': kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
-            'description': message,
-            'priority': data['priority'] if data and 'priority' in data else 0
+            "apikey": self._api_key,
+            "application": "Home-Assistant",
+            "event": kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
+            "description": message,
+            "priority": data["priority"] if data and "priority" in data else 0,
         }
 
         _LOGGER.debug("Attempting call Prowl service at %s", url)
         session = async_get_clientsession(self._hass)
 
         try:
-            with async_timeout.timeout(10, loop=self._hass.loop):
+            with async_timeout.timeout(10):
                 response = await session.post(url, data=payload)
                 result = await response.text()
 
-            if response.status != 200 or 'error' in result:
-                _LOGGER.error("Prowl service returned http "
-                              "status %d, response %s",
-                              response.status, result)
+            if response.status != 200 or "error" in result:
+                _LOGGER.error(
+                    "Prowl service returned http " "status %d, response %s",
+                    response.status,
+                    result,
+                )
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout accessing Prowl at %s", url)

@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Vous ne pouvez configurer qu'un seul compte Somfy.",
+            "authorize_url_timeout": "Durée expirée pour la génération de l'url d'autorisation.",
+            "missing_configuration": "Le composant Somfy n'est pas configuré. Merci de suivre la documentation."
+        },
+        "create_entry": {
+            "default": "Authentification réussie avec Somfy."
+        },
+        "title": "Somfy"
+    }
+}

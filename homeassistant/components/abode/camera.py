@@ -49,7 +49,8 @@ class AbodeCamera(AbodeDevice, Camera):
 
         self.hass.async_add_job(
             self._data.abode.events.add_timeline_callback,
-            self._event, self._capture_callback
+            self._event,
+            self._capture_callback,
         )
 
     def capture(self):
@@ -66,8 +67,7 @@ class AbodeCamera(AbodeDevice, Camera):
         """Attempt to download the most recent capture."""
         if self._device.image_url:
             try:
-                self._response = requests.get(
-                    self._device.image_url, stream=True)
+                self._response = requests.get(self._device.image_url, stream=True)
 
                 self._response.raise_for_status()
             except requests.HTTPError as err:

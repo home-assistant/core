@@ -3,8 +3,10 @@
   "name": "Buienradar",
   "documentation": "https://www.home-assistant.io/components/buienradar",
   "requirements": [
-    "buienradar==0.91"
+    "buienradar==1.0.1"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@mjj4791", "@ties"
+  ]
 }
