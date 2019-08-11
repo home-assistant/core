@@ -21,6 +21,7 @@ import homeassistant.util.dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_RELEASE_NOTES = "release_notes"
+ATTR_CURRENT_VERSION = "current_version"
 
 CONF_REPORTING = "reporting"
 CONF_COMPONENT_REPORTING = "include_used_components"
@@ -107,6 +108,7 @@ async def async_setup(hass, config):
                 {
                     ATTR_FRIENDLY_NAME: "Update Available",
                     ATTR_RELEASE_NOTES: releasenotes,
+                    ATTR_CURRENT_VERSION: current_version
                 },
             )
         elif StrictVersion(newest) == StrictVersion(current_version):
