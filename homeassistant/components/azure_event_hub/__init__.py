@@ -25,18 +25,28 @@ CONF_EVENT_HUB_NAMESPACE = "event_hub_namespace"
 CONF_EVENT_HUB_INSTANCE_NAME = "event_hub_instance_name"
 CONF_EVENT_HUB_SAS_POLICY = "event_hub_sas_policy"
 CONF_EVENT_HUB_SAS_KEY = "event_hub_sas_key"
+CONF_EVENT_HUB_CON_STRING = "event_hub_connection_string"
+CONF_IOT_HUB_CON_STRING = "iot_hub_connection_string"
 CONF_FILTER = "filter"
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_EVENT_HUB_NAMESPACE): cv.string,
+        DOMAIN: vol.Any(
+            vol.Schema({
+                vol.Required(CONF_IOT_HUB_CON_STRING): cv.string,
+                vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
+            }),
+            vol.Schema({
+                vol.Required(CONF_EVENT_HUB_CON_STRING): cv.string,
+                vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
+            }),
+            vol.Schema({
+                vol.Required(CONF_EVENT_HUB_NAMESPACE): cv.string, 
                 vol.Required(CONF_EVENT_HUB_INSTANCE_NAME): cv.string,
                 vol.Required(CONF_EVENT_HUB_SAS_POLICY): cv.string,
                 vol.Required(CONF_EVENT_HUB_SAS_KEY): cv.string,
-                vol.Required(CONF_FILTER): FILTER_SCHEMA,
-            }
+                vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
+            }),
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -47,17 +57,21 @@ async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     """Activate Azure EH component."""
     config = yaml_config[DOMAIN]
 
-    event_hub_address = "amqps://{}.servicebus.windows.net/{}".format(
-        config[CONF_EVENT_HUB_NAMESPACE], config[CONF_EVENT_HUB_INSTANCE_NAME]
-    )
     entities_filter = config[CONF_FILTER]
+    if config[CONF_IOT_HUB_CON_STRING]:
+        client = EventHubClientAsync.from_iot_connection_string(config[CONF_IOT_HUB_CON_STRING])
+    elif config[CONF_EVENT_HUB_CON_STRING]:
+        client = EventHubClientAsync.from_connection_string(config[CONF_EVENT_HUB_CON_STRING])
+    else:
+        event_hub_address = "amqps://{}.servicebus.windows.net/{}".format(
+            config[CONF_EVENT_HUB_NAMESPACE], config[CONF_EVENT_HUB_INSTANCE_NAME]
+        )
+        client = EventHubClientAsync(
+            event_hub_address,
+            username=config[CONF_EVENT_HUB_SAS_POLICY],
+            password=config[CONF_EVENT_HUB_SAS_KEY],
+        )
 
-    client = EventHubClientAsync(
-        event_hub_address,
-        debug=True,
-        username=config[CONF_EVENT_HUB_SAS_POLICY],
-        password=config[CONF_EVENT_HUB_SAS_KEY],
-    )
     async_sender = client.add_async_sender()
     await client.run_async()
 
