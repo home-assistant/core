@@ -12,6 +12,9 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.state import HASS_DOMAIN
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 DOMAIN = "scene"
 STATE = "scening"
 STATES = "states"
