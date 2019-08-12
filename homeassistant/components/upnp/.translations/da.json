@@ -8,6 +8,10 @@
             "no_sensors_or_port_mapping": "Aktiv\u00e9r enten sensorer eller porttilknytning",
             "single_instance_allowed": "Det er kun n\u00f8dvendigt med en ops\u00e6tning af UPnP/IGD."
         },
+        "error": {
+            "one": "En",
+            "other": "Anden"
+        },
         "step": {
             "confirm": {
                 "description": "Er du sikker p\u00e5 at du vil konfigurere UPnP/IGD?",
