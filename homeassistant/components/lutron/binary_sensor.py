@@ -10,8 +10,6 @@ from homeassistant.components.binary_sensor import (
 
 from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Lutron occupancy sensors."""
