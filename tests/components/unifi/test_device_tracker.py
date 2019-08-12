@@ -69,6 +69,7 @@ DEVICE_1 = {
     "model": "US16P150",
     "name": "device_1",
     "overheating": False,
+    "state": 1,
     "type": "usw",
     "upgradable": False,
     "version": "4.0.42.10433",
@@ -81,6 +82,7 @@ DEVICE_2 = {
     "mac": "00:00:00:00:01:01",
     "model": "US16P150",
     "name": "device_1",
+    "state": 0,
     "type": "usw",
     "version": "4.0.42.10433",
 }
