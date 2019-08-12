@@ -236,7 +236,7 @@ class Volumio(MediaPlayerDevice):
     @property
     def shuffle(self):
         """Boolean if shuffle is enabled."""
-        return self._state.get("random", None)
+        return self._state.get("random", False)
 
     @property
     def source_list(self):
