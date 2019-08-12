@@ -1,7 +1,7 @@
 """The tests for the  Template switch platform."""
 from homeassistant.core import callback
 from homeassistant import setup
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNAVAILABLE
 
 from tests.common import get_test_home_assistant, assert_setup_component
 from tests.components.switch import common
@@ -134,6 +134,55 @@ class TestTemplateSwitch:
 
         state = self.hass.states.get("switch.test_template_switch")
         assert state.state == STATE_OFF
+
+    def test_available_template_with_entities(self):
+        """Test availability templates with values from other entities."""
+        availability_template = """
+            {% if is_state('availability_boolean.state', 'True') %}
+                {{ 'true' }}
+            {% else %}
+                {{ 'false' }}
+            {% endif %}
+        """
+        with assert_setup_component(1, "switch"):
+            assert setup.setup_component(
+                self.hass,
+                "switch",
+                {
+                    "switch": {
+                        "platform": "template",
+                        "switches": {
+                            "test_template_switch": {
+                                "value_template": "{{ 1 == 1 }}",
+                                "turn_on": {
+                                    "service": "switch.turn_on",
+                                    "entity_id": "switch.test_state",
+                                },
+                                "turn_off": {
+                                    "service": "switch.turn_off",
+                                    "entity_id": "switch.test_state",
+                                },
+                                "availability_template": availability_template,
+                            }
+                        },
+                    }
+                },
+            )
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        self.hass.states.set("availability_boolean.state", True)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("switch.test_template_switch")
+        assert state.state != STATE_UNAVAILABLE
+
+        self.hass.states.set("availability_boolean.state", False)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("switch.test_template_switch")
+        assert state.state == STATE_UNAVAILABLE
 
     def test_icon_template(self):
         """Test icon template."""
