@@ -8,6 +8,10 @@
             "no_sensors_or_port_mapping": "Aktivera minst sensorer eller portmappning",
             "single_instance_allowed": "Endast en enda konfiguration av UPnP/IGD \u00e4r n\u00f6dv\u00e4ndig."
         },
+        "error": {
+            "one": "En",
+            "other": "Andra"
+        },
         "step": {
             "confirm": {
                 "description": "Vill du konfigurera UPnP/IGD?",
