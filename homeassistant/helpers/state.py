@@ -154,7 +154,7 @@ async def async_reproduce_state(
 
     async def worker(domain: str, states_by_domain: List[State]) -> None:
         try:
-            component = await async_get_integration(hass, domain)
+            integration = await async_get_integration(hass, domain)
         except IntegrationNotFound:
             _LOGGER.warning(
                 "Trying to reproduce state for unknown integration: %s", domain
@@ -162,7 +162,7 @@ async def async_reproduce_state(
             return
 
         try:
-            platform: Optional[ModuleType] = component.get_platform("reproduce_state")
+            platform: Optional[ModuleType] = integration.get_platform("reproduce_state")
         except ImportError:
             platform = None
 
