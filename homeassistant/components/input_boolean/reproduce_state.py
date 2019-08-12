@@ -1,4 +1,4 @@
-"""Repdroduce a light state."""
+"""Reproduce an input boolean state."""
 import asyncio
 import logging
 from typing import Iterable, Optional
@@ -7,6 +7,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
+    STATE_OFF,
     ATTR_ENTITY_ID,
 )
 from homeassistant.core import Context, State
@@ -25,6 +26,12 @@ async def _async_reproduce_states(
 
     if cur_state is None:
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
+        return
+
+    if state.state not in (STATE_ON, STATE_OFF):
+        _LOGGER.warning(
+            "Invalid state specified for %s: %s", state.entity_id, state.state
+        )
         return
 
     if cur_state.state == state.state:

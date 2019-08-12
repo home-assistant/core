@@ -24,5 +24,18 @@ async def test_reproducing_states(hass):
         ],
         blocking=True,
     )
+    assert hass.states.get("input_boolean.initial_off").state == "on"
+    assert hass.states.get("input_boolean.initial_on").state == "off"
+
+    await hass.helpers.state.async_reproduce_state(
+        [
+            # Test invalid state
+            State("input_boolean.initial_on", "invalid_state"),
+            # Set to state it already is.
+            State("input_boolean.initial_off", "on"),
+        ],
+        blocking=True,
+    )
+
     assert hass.states.get("input_boolean.initial_on").state == "off"
     assert hass.states.get("input_boolean.initial_off").state == "on"
