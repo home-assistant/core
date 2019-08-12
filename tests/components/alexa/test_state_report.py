@@ -5,7 +5,7 @@ from . import TEST_URL, DEFAULT_CONFIG
 
 async def test_report_state(hass, aioclient_mock):
     """Test proactive state reports."""
-    aioclient_mock.post(TEST_URL, json={"data": "is irrelevant"})
+    aioclient_mock.post(TEST_URL, json={"data": "is irrelevant"}, status=202)
 
     hass.states.async_set(
         "binary_sensor.test_contact",
