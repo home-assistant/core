@@ -6,6 +6,9 @@ import voluptuous as vol
 from homeassistant.core import callback, CoreState
 from homeassistant.const import CONF_PLATFORM, CONF_EVENT, EVENT_HOMEASSISTANT_STOP
 
+
+# mypy: allow-untyped-defs
+
 EVENT_START = "start"
 EVENT_SHUTDOWN = "shutdown"
 _LOGGER = logging.getLogger(__name__)

@@ -10,6 +10,9 @@ from homeassistant.helpers.event import track_state_change
 from homeassistant.util.distance import convert
 from homeassistant.util.location import distance
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DIR_OF_TRAVEL = "dir_of_travel"
