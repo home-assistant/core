@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     CONF_ICON_TEMPLATE,
     CONF_ENTITY_PICTURE_TEMPLATE,
+    CONF_AVAILABILITY_TEMPLATE,
     ATTR_ENTITY_ID,
     CONF_SENSORS,
     EVENT_HOMEASSISTANT_START,
@@ -36,6 +37,7 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_ICON_TEMPLATE): cv.template,
         vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
         vol.Optional(CONF_FRIENDLY_NAME_TEMPLATE): cv.template,
+        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
         vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
         vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
@@ -56,6 +58,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         state_template = device_config[CONF_VALUE_TEMPLATE]
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         entity_picture_template = device_config.get(CONF_ENTITY_PICTURE_TEMPLATE)
+        availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         friendly_name_template = device_config.get(CONF_FRIENDLY_NAME_TEMPLATE)
         unit_of_measurement = device_config.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -70,6 +73,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             (CONF_ICON_TEMPLATE, icon_template),
             (CONF_ENTITY_PICTURE_TEMPLATE, entity_picture_template),
             (CONF_FRIENDLY_NAME_TEMPLATE, friendly_name_template),
+            (CONF_AVAILABILITY_TEMPLATE, availability_template),
         ):
             if template is None:
                 continue
@@ -111,6 +115,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 state_template,
                 icon_template,
                 entity_picture_template,
+                availability_template,
                 entity_ids,
                 device_class,
             )
@@ -136,6 +141,7 @@ class SensorTemplate(Entity):
         state_template,
         icon_template,
         entity_picture_template,
+        availability_template,
         entity_ids,
         device_class,
     ):
@@ -151,10 +157,12 @@ class SensorTemplate(Entity):
         self._state = None
         self._icon_template = icon_template
         self._entity_picture_template = entity_picture_template
+        self._availability_template = availability_template
         self._icon = None
         self._entity_picture = None
         self._entities = entity_ids
         self._device_class = device_class
+        self._available = True
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -210,6 +218,11 @@ class SensorTemplate(Entity):
         return self._unit_of_measurement
 
     @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return self._available
+
+    @property
     def should_poll(self):
         """No polling needed."""
         return False
@@ -261,3 +274,13 @@ class SensorTemplate(Entity):
                         self._name,
                         ex,
                     )
+        if self._availability_template is not None:
+            try:
+                result = self._availability_template.async_render()
+                self._available = result == "true"
+            except TemplateError as ex:
+                _LOGGER.error(ex)
+                self._available = True
+            except ValueError as ex:
+                _LOGGER.error(ex)
+                self._available = True
