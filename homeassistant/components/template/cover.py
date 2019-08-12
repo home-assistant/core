@@ -449,11 +449,8 @@ class CoverTemplate(CoverDevice):
                     )
                 else:
                     self._position = state
-            except TemplateError as ex:
-                _LOGGER.error(ex)
-                self._position = None
-            except ValueError as ex:
-                _LOGGER.error(ex)
+            except (TemplateError, ValueError) as err:
+                _LOGGER.error(err)
                 self._position = None
         if self._tilt_template is not None:
             try:
@@ -466,21 +463,15 @@ class CoverTemplate(CoverDevice):
                     )
                 else:
                     self._tilt_value = state
-            except TemplateError as ex:
-                _LOGGER.error(ex)
-                self._tilt_value = None
-            except ValueError as ex:
-                _LOGGER.error(ex)
+            except (TemplateError, ValueError) as err:
+                _LOGGER.error(err)
                 self._tilt_value = None
         if self._availability_template is not None:
             try:
                 result = self._availability_template.async_render()
                 self._available = result == "true"
-            except TemplateError as ex:
-                _LOGGER.error(ex)
-                self._available = True
-            except ValueError as ex:
-                _LOGGER.error(ex)
+            except (TemplateError, ValueError) as err:
+                _LOGGER.error(err)
                 self._available = True
 
         for property_name, template in (

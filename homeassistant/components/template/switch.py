@@ -251,9 +251,6 @@ class SwitchTemplate(SwitchDevice):
             try:
                 result = self._availability_template.async_render()
                 self._available = result == "true"
-            except TemplateError as ex:
-                _LOGGER.error(ex)
-                self._available = True
-            except ValueError as ex:
-                _LOGGER.error(ex)
+            except (TemplateError, ValueError) as err:
+                _LOGGER.error(err)
                 self._available = True

@@ -254,9 +254,9 @@ class TestTemplateLock:
         assert state.state == lock.STATE_UNLOCKED
 
         assert (
-            "Template lock Template Lock has no entity ids configured "
+            "Template lock 'Template Lock' has no entity ids configured "
             "to track nor were we able to extract the entities to track "
-            "from the value_template template. This entity will only "
+            "from the 'value_template' template. This entity will only "
             "be able to be updated manually."
         ) in caplog.text
 
