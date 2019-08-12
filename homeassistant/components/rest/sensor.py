@@ -83,8 +83,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         value_template.hass = hass
     if payload is not None:
         payload.hass = hass
-		
-
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
             auth = HTTPDigestAuth(username, password)
@@ -208,7 +206,6 @@ class RestSensor(Entity):
 class RestData:
     """Class for handling the data retrieval."""
 
-    
     def __init__(
         self, method, resource, auth, headers, payload, verify_ssl, timeout=DEFAULT_TIMEOUT
     ):
@@ -225,7 +222,7 @@ class RestData:
     def update(self):
         """Get the latest data from REST service with provided method."""
         _LOGGER.debug("Updating from %s", self._request.url)
-        if self._payload is not None: 
+        if self._payload is not None:
             self._request.prepare_body(self._payload.async_render(), None, None)
         try:
             with requests.Session() as sess:
