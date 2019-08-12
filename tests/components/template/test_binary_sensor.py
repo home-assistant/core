@@ -397,7 +397,7 @@ async def test_template_delay_off(hass):
 
 
 async def test_available_without_availability_template(hass):
-    """Ensure availability is true without an availability_template"""
+    """Ensure availability is true without an availability_template."""
     config = {
         "binary_sensor": {
             "platform": "template",

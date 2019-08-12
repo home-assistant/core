@@ -779,7 +779,7 @@ class TestTemplateLight:
         assert state.attributes["entity_picture"] == "/local/light.png"
 
     def test_available_template_with_entities(self):
-        """Test availability tempalates with values from other entities."""
+        """Test availability templates with values from other entities."""
         availability_template = """
             {% if is_state('availability_boolean.state', 'True') %}
                 {{ 'true' }}

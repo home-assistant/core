@@ -175,11 +175,6 @@ class SwitchTemplate(SwitchDevice):
         return False
 
     @property
-    def available(self):
-        """If switch is available."""
-        return self._state is not None
-
-    @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return self._icon
