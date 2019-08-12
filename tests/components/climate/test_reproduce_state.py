@@ -2,7 +2,7 @@
 
 import pytest
 
-from homeassistant.components.climate import async_reproduce_states
+from homeassistant.components.climate.reproduce_state import async_reproduce_states
 from homeassistant.components.climate.const import (
     ATTR_AUX_HEAT,
     ATTR_HUMIDITY,
