@@ -1,48 +1,65 @@
 """Generic device for the HomematicIP Cloud component."""
 import logging
+from typing import Optional
 
+from homematicip.aio.device import AsyncDevice
+from homematicip.aio.home import AsyncHome
+
+from homeassistant.components import homematicip_cloud
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CONNECTED = 'connected'
-ATTR_DEVICE_ID = 'device_id'
-ATTR_DEVICE_LABEL = 'device_label'
-ATTR_DEVICE_RSSI = 'device_rssi'
-ATTR_DUTY_CYCLE = 'duty_cycle'
-ATTR_FIRMWARE_STATE = 'firmware_state'
-ATTR_GROUP_TYPE = 'group_type'
-ATTR_HOME_ID = 'home_id'
-ATTR_HOME_NAME = 'home_name'
 ATTR_LOW_BATTERY = 'low_battery'
 ATTR_MODEL_TYPE = 'model_type'
-ATTR_OPERATION_LOCK = 'operation_lock'
+# RSSI HAP -> Device
+ATTR_RSSI_DEVICE = 'rssi_device'
+# RSSI Device -> HAP
+ATTR_RSSI_PEER = 'rssi_peer'
 ATTR_SABOTAGE = 'sabotage'
-ATTR_STATUS_UPDATE = 'status_update'
-ATTR_UNREACHABLE = 'unreachable'
+ATTR_GROUP_MEMBER_UNREACHABLE = 'group_member_unreachable'
 
 
 class HomematicipGenericDevice(Entity):
     """Representation of an HomematicIP generic device."""
 
-    def __init__(self, home, device, post=None):
+    def __init__(self, home: AsyncHome, device,
+                 post: Optional[str] = None) -> None:
         """Initialize the generic device."""
         self._home = home
         self._device = device
         self.post = post
         _LOGGER.info("Setting up %s (%s)", self.name, self._device.modelType)
 
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        # Only physical devices should be HA devices.
+        if isinstance(self._device, AsyncDevice):
+            return {
+                'identifiers': {
+                    # Serial numbers of Homematic IP device
+                    (homematicip_cloud.DOMAIN, self._device.id)
+                },
+                'name': self._device.label,
+                'manufacturer': self._device.oem,
+                'model': self._device.modelType,
+                'sw_version': self._device.firmwareVersion,
+                'via_hub': (homematicip_cloud.DOMAIN, self._device.homeId),
+            }
+        return None
+
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self._device.on_update(self._device_changed)
+        self._device.on_update(self._async_device_changed)
 
-    def _device_changed(self, *args, **kwargs):
+    def _async_device_changed(self, *args, **kwargs):
         """Handle device state changes."""
         _LOGGER.debug("Event %s (%s)", self.name, self._device.modelType)
         self.async_schedule_update_ha_state()
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the generic device."""
         name = self._device.label
         if self._home.name is not None and self._home.name != '':
@@ -52,22 +69,22 @@ class HomematicipGenericDevice(Entity):
         return name
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """No polling needed."""
         return False
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Device available."""
         return not self._device.unreach
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique ID."""
         return "{}_{}".format(self.__class__.__name__, self._device.id)
 
     @property
-    def icon(self):
+    def icon(self) -> Optional[str]:
         """Return the icon."""
         if hasattr(self._device, 'lowBat') and self._device.lowBat:
             return 'mdi:battery-outline'
@@ -80,7 +97,13 @@ class HomematicipGenericDevice(Entity):
         """Return the state attributes of the generic device."""
         attr = {ATTR_MODEL_TYPE: self._device.modelType}
         if hasattr(self._device, 'lowBat') and self._device.lowBat:
-            attr.update({ATTR_LOW_BATTERY: self._device.lowBat})
+            attr[ATTR_LOW_BATTERY] = self._device.lowBat
         if hasattr(self._device, 'sabotage') and self._device.sabotage:
-            attr.update({ATTR_SABOTAGE: self._device.sabotage})
+            attr[ATTR_SABOTAGE] = self._device.sabotage
+        if hasattr(self._device, 'rssiDeviceValue') and \
+                self._device.rssiDeviceValue:
+            attr[ATTR_RSSI_DEVICE] = self._device.rssiDeviceValue
+        if hasattr(self._device, 'rssiPeerValue') and \
+                self._device.rssiPeerValue:
+            attr[ATTR_RSSI_PEER] = self._device.rssiPeerValue
         return attr

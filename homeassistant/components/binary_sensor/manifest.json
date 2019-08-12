@@ -1,0 +1,8 @@
+{
+  "domain": "binary_sensor",
+  "name": "Binary sensor",
+  "documentation": "https://www.home-assistant.io/components/binary_sensor",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

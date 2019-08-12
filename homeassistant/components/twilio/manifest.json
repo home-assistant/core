@@ -1,0 +1,12 @@
+{
+  "domain": "twilio",
+  "name": "Twilio",
+  "documentation": "https://www.home-assistant.io/components/twilio",
+  "requirements": [
+    "twilio==6.19.1"
+  ],
+  "dependencies": [
+    "webhook"
+  ],
+  "codeowners": []
+}

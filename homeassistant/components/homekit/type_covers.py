@@ -11,11 +11,11 @@ from homeassistant.const import (
     STATE_CLOSED, STATE_OPEN)
 
 from . import TYPES
-from .accessories import debounce, HomeAccessory
+from .accessories import HomeAccessory, debounce
 from .const import (
     CHAR_CURRENT_DOOR_STATE, CHAR_CURRENT_POSITION, CHAR_POSITION_STATE,
-    CHAR_TARGET_DOOR_STATE, CHAR_TARGET_POSITION,
-    SERV_GARAGE_DOOR_OPENER, SERV_WINDOW_COVERING)
+    CHAR_TARGET_DOOR_STATE, CHAR_TARGET_POSITION, SERV_GARAGE_DOOR_OPENER,
+    SERV_WINDOW_COVERING)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,10 +46,12 @@ class GarageDoorOpener(HomeAccessory):
 
         params = {ATTR_ENTITY_ID: self.entity_id}
         if value == 0:
-            self.char_current_state.set_value(3)
+            if self.char_current_state.value != value:
+                self.char_current_state.set_value(3)
             self.call_service(DOMAIN, SERVICE_OPEN_COVER, params)
         elif value == 1:
-            self.char_current_state.set_value(2)
+            if self.char_current_state.value != value:
+                self.char_current_state.set_value(2)
             self.call_service(DOMAIN, SERVICE_CLOSE_COVER, params)
 
     def update_state(self, new_state):

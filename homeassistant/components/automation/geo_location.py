@@ -1,10 +1,4 @@
-"""
-Offer geo location automation rules.
-
-For more details about this automation trigger, please refer to the
-documentation at
-https://home-assistant.io/docs/automation/trigger/#geo-location-trigger
-"""
+"""Offer geolocation automation rules."""
 import voluptuous as vol
 
 from homeassistant.components.geo_location import DOMAIN
@@ -33,7 +27,7 @@ def source_match(state, source):
     return state and state.attributes.get('source') == source
 
 
-async def async_trigger(hass, config, action):
+async def async_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     source = config.get(CONF_SOURCE).lower()
     zone_entity_id = config.get(CONF_ZONE)

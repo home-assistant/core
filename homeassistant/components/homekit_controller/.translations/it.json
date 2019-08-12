@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'accessorio \u00e8 gi\u00e0 configurato con questo controller."
+        },
+        "error": {
+            "authentication_error": "Codice HomeKit errato. Per favore, controllate e riprovate.",
+            "unable_to_pair": "Impossibile abbinare, per favore riprova.",
+            "unknown_error": "Il dispositivo ha riportato un errore sconosciuto. L'abbinamento non \u00e8 riuscito."
+        },
+        "step": {
+            "pair": {
+                "data": {
+                    "pairing_code": "Codice di abbinamento"
+                },
+                "description": "Inserisci il codice di abbinamento HomeKit per usare questo accessorio",
+                "title": "Abbina con accessorio HomeKit"
+            },
+            "user": {
+                "data": {
+                    "device": "Dispositivo"
+                },
+                "description": "Selezionare il dispositivo che si desidera abbinare",
+                "title": "Abbina con accessorio HomeKit"
+            }
+        },
+        "title": "Accessorio HomeKit"
+    }
+}

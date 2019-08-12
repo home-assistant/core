@@ -1,0 +1,10 @@
+{
+  "domain": "tuya",
+  "name": "Tuya",
+  "documentation": "https://www.home-assistant.io/components/tuya",
+  "requirements": [
+    "tuyapy==0.1.3"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

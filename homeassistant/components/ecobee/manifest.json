@@ -1,0 +1,10 @@
+{
+  "domain": "ecobee",
+  "name": "Ecobee",
+  "documentation": "https://www.home-assistant.io/components/ecobee",
+  "requirements": [
+    "python-ecobee-api==0.0.18"
+  ],
+  "dependencies": ["configurator"],
+  "codeowners": []
+}

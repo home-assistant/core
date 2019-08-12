@@ -1,5 +1,6 @@
 """The tests for the MQTT automation."""
 import pytest
+from unittest import mock
 
 from homeassistant.setup import async_setup_component
 import homeassistant.components.automation as automation
@@ -92,3 +93,44 @@ async def test_if_not_fires_on_topic_but_no_payload_match(hass, calls):
     async_fire_mqtt_message(hass, 'test-topic', 'no-hello')
     await hass.async_block_till_done()
     assert 0 == len(calls)
+
+
+async def test_encoding_default(hass, calls):
+    """Test default encoding."""
+    mock_mqtt = await async_mock_mqtt_component(hass)
+
+    assert await async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'trigger': {
+                'platform': 'mqtt',
+                'topic': 'test-topic'
+            },
+            'action': {
+                'service': 'test.automation'
+            }
+        }
+    })
+
+    mock_mqtt.async_subscribe.assert_called_once_with(
+        'test-topic', mock.ANY, 0, 'utf-8')
+
+
+async def test_encoding_custom(hass, calls):
+    """Test default encoding."""
+    mock_mqtt = await async_mock_mqtt_component(hass)
+
+    assert await async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'trigger': {
+                'platform': 'mqtt',
+                'topic': 'test-topic',
+                'encoding': ''
+            },
+            'action': {
+                'service': 'test.automation'
+            }
+        }
+    })
+
+    mock_mqtt.async_subscribe.assert_called_once_with(
+        'test-topic', mock.ANY, 0, None)

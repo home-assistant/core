@@ -1,0 +1,9 @@
+set_datetime:
+  description: This can be used to dynamically set the date and/or time.
+  fields:
+    entity_id: {description: Entity id of the input datetime to set the new value.,
+      example: input_datetime.test_date_time}
+    date: {description: The target date the entity should be set to.,
+      example: '"date": "2019-04-22"'}
+    time: {description: The target time the entity should be set to.,
+      example: '"time": "05:30:00"'}

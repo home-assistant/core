@@ -28,6 +28,9 @@ PACKAGES=(
   libmpc-dev libmpfr-dev libgmp-dev
   # homeassistant.components.ffmpeg
   ffmpeg
+  # homeassistant.components.stream
+  libavformat-dev libavcodec-dev libavdevice-dev
+  libavutil-dev libswscale-dev libswresample-dev libavfilter-dev
   # homeassistant.components.sensor.iperf3
   iperf3
 )

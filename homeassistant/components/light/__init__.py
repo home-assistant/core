@@ -1,9 +1,4 @@
-"""
-Provides functionality to interact with lights.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/light/
-"""
+"""Provides functionality to interact with lights."""
 import asyncio
 import csv
 from datetime import timedelta
@@ -12,13 +7,16 @@ import os
 
 import voluptuous as vol
 
+from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.components.group import \
     ENTITY_ID_FORMAT as GROUP_ENTITY_ID_FORMAT
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     STATE_ON)
+from homeassistant.exceptions import UnknownUser, Unauthorized
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers import intent
@@ -26,7 +24,6 @@ from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
 
 DOMAIN = 'light'
-DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=30)
 
 GROUP_NAME_ALL_LIGHTS = 'all lights'
@@ -88,7 +85,7 @@ VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 
 LIGHT_TURN_ON_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
+    ATTR_ENTITY_ID: cv.comp_entity_ids,
     vol.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
     ATTR_TRANSITION: VALID_TRANSITION,
     ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
@@ -115,15 +112,12 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
 })
 
 LIGHT_TURN_OFF_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
+    ATTR_ENTITY_ID: cv.comp_entity_ids,
     ATTR_TRANSITION: VALID_TRANSITION,
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
 })
 
-LIGHT_TOGGLE_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
-    ATTR_TRANSITION: VALID_TRANSITION,
-})
+LIGHT_TOGGLE_SCHEMA = LIGHT_TURN_ON_SCHEMA
 
 PROFILE_SCHEMA = vol.Schema(
     vol.ExactSequence((str, cv.small_float, cv.small_float, cv.byte))
@@ -173,6 +167,17 @@ def preprocess_turn_on_alternatives(params):
     rgb_color = params.pop(ATTR_RGB_COLOR, None)
     if rgb_color is not None:
         params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
+
+
+def preprocess_turn_off(params):
+    """Process data for turning light off if brightness is 0."""
+    if ATTR_BRIGHTNESS in params and params[ATTR_BRIGHTNESS] == 0:
+        # Zero brightness: Light will be turned off
+        params = {k: v for k, v in params.items() if k in [ATTR_TRANSITION,
+                                                           ATTR_FLASH]}
+        return (True, params)  # Light should be turned off
+
+    return (False, None)  # Light should be turned on
 
 
 class SetIntentHandler(intent.IntentHandler):
@@ -253,21 +258,43 @@ async def async_setup(hass, config):
         params = service.data.copy()
 
         # Convert the entity ids to valid light ids
-        target_lights = component.async_extract_from_service(service)
+        target_lights = await component.async_extract_from_service(service)
         params.pop(ATTR_ENTITY_ID, None)
 
+        if service.context.user_id:
+            user = await hass.auth.async_get_user(service.context.user_id)
+            if user is None:
+                raise UnknownUser(context=service.context)
+
+            entity_perms = user.permissions.check_entity
+
+            for light in target_lights:
+                if not entity_perms(light, POLICY_CONTROL):
+                    raise Unauthorized(
+                        context=service.context,
+                        entity_id=light,
+                        permission=POLICY_CONTROL
+                    )
+
         preprocess_turn_on_alternatives(params)
+        turn_lights_off, off_params = preprocess_turn_off(params)
 
         update_tasks = []
         for light in target_lights:
             light.async_set_context(service.context)
 
             pars = params
+            off_pars = off_params
+            turn_light_off = turn_lights_off
             if not pars:
                 pars = params.copy()
                 pars[ATTR_PROFILE] = Profiles.get_default(light.entity_id)
                 preprocess_turn_on_alternatives(pars)
-            await light.async_turn_on(**pars)
+                turn_light_off, off_pars = preprocess_turn_off(pars)
+            if turn_light_off:
+                await light.async_turn_off(**off_pars)
+            else:
+                await light.async_turn_on(**pars)
 
             if not light.should_poll:
                 continue
@@ -422,6 +449,9 @@ class Light(ToggleEntity):
             data[ATTR_MIN_MIREDS] = self.min_mireds
             data[ATTR_MAX_MIREDS] = self.max_mireds
 
+        if supported_features & SUPPORT_EFFECT:
+            data[ATTR_EFFECT_LIST] = self.effect_list
+
         if self.is_on:
             if supported_features & SUPPORT_BRIGHTNESS:
                 data[ATTR_BRIGHTNESS] = self.brightness
@@ -429,7 +459,7 @@ class Light(ToggleEntity):
             if supported_features & SUPPORT_COLOR_TEMP:
                 data[ATTR_COLOR_TEMP] = self.color_temp
 
-            if self.supported_features & SUPPORT_COLOR and self.hs_color:
+            if supported_features & SUPPORT_COLOR and self.hs_color:
                 # pylint: disable=unsubscriptable-object,not-an-iterable
                 hs_color = self.hs_color
                 data[ATTR_HS_COLOR] = (
@@ -443,7 +473,6 @@ class Light(ToggleEntity):
                 data[ATTR_WHITE_VALUE] = self.white_value
 
             if supported_features & SUPPORT_EFFECT:
-                data[ATTR_EFFECT_LIST] = self.effect_list
                 data[ATTR_EFFECT] = self.effect
 
         return {key: val for key, val in data.items() if val is not None}

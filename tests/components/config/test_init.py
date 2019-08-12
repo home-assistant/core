@@ -29,7 +29,6 @@ def test_load_on_demand_already_loaded(hass, aiohttp_client):
         yield from async_setup_component(hass, 'config', {})
 
     yield from hass.async_block_till_done()
-    assert 'config.zwave' in hass.config.components
     assert stp.called
 
 
@@ -47,5 +46,4 @@ def test_load_on_demand_on_load(hass, aiohttp_client):
         hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: 'zwave'})
         yield from hass.async_block_till_done()
 
-    assert 'config.zwave' in hass.config.components
     assert stp.called

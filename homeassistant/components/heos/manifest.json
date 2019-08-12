@@ -1,0 +1,12 @@
+{
+  "domain": "heos",
+  "name": "HEOS",
+  "documentation": "https://www.home-assistant.io/components/heos",
+  "requirements": [
+    "pyheos==0.5.2"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@andrewsayre"
+  ]
+}

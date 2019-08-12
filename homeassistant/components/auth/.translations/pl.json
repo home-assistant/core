@@ -9,7 +9,7 @@
             },
             "step": {
                 "init": {
-                    "description": "Prosz\u0119 wybra\u0107 jedn\u0105 z us\u0142ugi powiadamiania:",
+                    "description": "Prosz\u0119 wybra\u0107 jedn\u0105 us\u0142ug\u0119 powiadamiania:",
                     "title": "Skonfiguruj has\u0142o jednorazowe dostarczone przez komponent powiadomie\u0144"
                 },
                 "setup": {

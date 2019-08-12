@@ -30,15 +30,15 @@ heal_network:
   description: Start a Z-Wave network heal. This might take a while and will slow down the Z-Wave network greatly while it is being processed. Refer to OZW_Log.txt for progress.
   fields:
     return_routes:
-    description: Whether or not to update the return routes from the nodes to the controller. Defaults to False.
-    example: True
+      description: Whether or not to update the return routes from the nodes to the controller. Defaults to False.
+      example: True
 
 heal_node:
   description: Start a Z-Wave node heal. Refer to OZW_Log.txt for progress.
   fields:
     return_routes:
-    description: Whether or not to update the return routes from the node to the controller. Defaults to False.
-    example: True
+      description: Whether or not to update the return routes from the node to the controller. Defaults to False.
+      example: True
 
 remove_node:
   description: Remove a node from the Z-Wave network. Refer to OZW_Log.txt for progress.
@@ -160,7 +160,7 @@ test_node:
       example: 10
     messages:
       description: Optional. Amount of test messages to send.
-      example: 3      
+      example: 3
 
 rename_node:
   description: Set the name of a node. This will also affect the IDs of all entities in the node.

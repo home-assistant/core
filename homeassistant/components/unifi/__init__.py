@@ -1,10 +1,4 @@
-"""
-Support for devices connected to UniFi POE.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/unifi/
-"""
-
+"""Support for devices connected to UniFi POE."""
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -21,8 +15,6 @@ from .errors import (
 DEFAULT_PORT = 8443
 DEFAULT_SITE_ID = 'default'
 DEFAULT_VERIFY_SSL = False
-
-REQUIREMENTS = ['aiounifi==3']
 
 
 async def async_setup(hass, config):

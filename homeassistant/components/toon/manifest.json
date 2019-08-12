@@ -1,0 +1,12 @@
+{
+  "domain": "toon",
+  "name": "Toon",
+  "documentation": "https://www.home-assistant.io/components/toon",
+  "requirements": [
+    "toonapilib==3.2.2"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@frenck"
+  ]
+}

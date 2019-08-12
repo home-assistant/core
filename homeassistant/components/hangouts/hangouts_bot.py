@@ -1,17 +1,19 @@
 """The Hangouts Bot."""
+import asyncio
 import io
 import logging
-import asyncio
+
 import aiohttp
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
 from homeassistant.helpers import dispatcher, intent
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
-    ATTR_MESSAGE, ATTR_TARGET, ATTR_DATA, CONF_CONVERSATIONS, DOMAIN,
+    ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, CONF_CONVERSATION_ID,
+    CONF_CONVERSATION_NAME, CONF_CONVERSATIONS, CONF_MATCHERS, DOMAIN,
     EVENT_HANGOUTS_CONNECTED, EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
-    EVENT_HANGOUTS_DISCONNECTED, EVENT_HANGOUTS_MESSAGE_RECEIVED,
-    CONF_MATCHERS, CONF_CONVERSATION_ID,
-    CONF_CONVERSATION_NAME, EVENT_HANGOUTS_CONVERSATIONS_RESOLVED, INTENT_HELP)
+    EVENT_HANGOUTS_CONVERSATIONS_RESOLVED, EVENT_HANGOUTS_DISCONNECTED,
+    EVENT_HANGOUTS_MESSAGE_RECEIVED, INTENT_HELP)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -312,6 +314,11 @@ class HangoutsBot:
     async def async_handle_update_users_and_conversations(self, _=None):
         """Handle the update_users_and_conversations service."""
         await self._async_list_conversations()
+
+    async def async_handle_reconnect(self, _=None):
+        """Handle the reconnect service."""
+        await self.async_disconnect()
+        await self.async_connect()
 
     def get_intents(self, conv_id):
         """Return the intents for a specific conversation."""

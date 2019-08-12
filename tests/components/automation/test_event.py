@@ -41,7 +41,7 @@ async def test_if_fires_on_event(hass, calls):
     hass.bus.async_fire('test_event', context=context)
     await hass.async_block_till_done()
     assert 1 == len(calls)
-    assert calls[0].context is context
+    assert calls[0].context.parent_id == context.id
 
     await common.async_turn_off(hass)
     await hass.async_block_till_done()

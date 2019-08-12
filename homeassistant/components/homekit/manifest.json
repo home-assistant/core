@@ -1,0 +1,12 @@
+{
+  "domain": "homekit",
+  "name": "Homekit",
+  "documentation": "https://www.home-assistant.io/components/homekit",
+  "requirements": [
+    "HAP-python==2.5.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@cdce8p"
+  ]
+}

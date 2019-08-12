@@ -2,8 +2,10 @@
 import asyncio
 from unittest.mock import patch
 
+import asynctest
 import pytest
 
+from homeassistant.core import valid_entity_id, callback
 from homeassistant.helpers import entity_registry
 
 from tests.common import mock_registry, flush_store
@@ -18,18 +20,36 @@ def registry(hass):
     return mock_registry(hass)
 
 
-@asyncio.coroutine
-def test_get_or_create_returns_same_entry(registry):
+@pytest.fixture
+def update_events(hass):
+    """Capture update events."""
+    events = []
+
+    @callback
+    def async_capture(event):
+        events.append(event.data)
+
+    hass.bus.async_listen(entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+                          async_capture)
+
+    return events
+
+
+async def test_get_or_create_returns_same_entry(hass, registry, update_events):
     """Make sure we do not duplicate entries."""
     entry = registry.async_get_or_create('light', 'hue', '1234')
     entry2 = registry.async_get_or_create('light', 'hue', '1234')
 
+    await hass.async_block_till_done()
+
     assert len(registry.entities) == 1
     assert entry is entry2
     assert entry.entity_id == 'light.hue_1234'
+    assert len(update_events) == 1
+    assert update_events[0]['action'] == 'create'
+    assert update_events[0]['entity_id'] == entry.entity_id
 
 
-@asyncio.coroutine
 def test_get_or_create_suggested_object_id(registry):
     """Test that suggested_object_id works."""
     entry = registry.async_get_or_create(
@@ -38,7 +58,6 @@ def test_get_or_create_suggested_object_id(registry):
     assert entry.entity_id == 'light.beer'
 
 
-@asyncio.coroutine
 def test_get_or_create_suggested_object_id_conflict_register(registry):
     """Test that we don't generate an entity id that is already registered."""
     entry = registry.async_get_or_create(
@@ -50,7 +69,6 @@ def test_get_or_create_suggested_object_id_conflict_register(registry):
     assert entry2.entity_id == 'light.beer_2'
 
 
-@asyncio.coroutine
 def test_get_or_create_suggested_object_id_conflict_existing(hass, registry):
     """Test that we don't generate an entity id that currently exists."""
     hass.states.async_set('light.hue_1234', 'on')
@@ -58,7 +76,6 @@ def test_get_or_create_suggested_object_id_conflict_existing(hass, registry):
     assert entry.entity_id == 'light.hue_1234_2'
 
 
-@asyncio.coroutine
 def test_create_triggers_save(hass, registry):
     """Test that registering entry triggers a save."""
     with patch.object(registry, 'async_schedule_save') as mock_schedule_save:
@@ -90,7 +107,6 @@ async def test_loading_saving_data(hass, registry):
     assert orig_entry2 == new_entry2
 
 
-@asyncio.coroutine
 def test_generate_entity_considers_registered_entities(registry):
     """Test that we don't create entity id that are already registered."""
     entry = registry.async_get_or_create('light', 'hue', '1234')
@@ -99,7 +115,6 @@ def test_generate_entity_considers_registered_entities(registry):
         'light.hue_1234_2'
 
 
-@asyncio.coroutine
 def test_generate_entity_considers_existing_entities(hass, registry):
     """Test that we don't create entity id that currently exists."""
     hass.states.async_set('light.kitchen', 'on')
@@ -107,7 +122,6 @@ def test_generate_entity_considers_existing_entities(hass, registry):
         'light.kitchen_2'
 
 
-@asyncio.coroutine
 def test_is_registered(registry):
     """Test that is_registered works."""
     entry = registry.async_get_or_create('light', 'hue', '1234')
@@ -165,7 +179,6 @@ async def test_loading_extra_values(hass, hass_storage):
     assert entry_disabled_user.disabled_by == entity_registry.DISABLED_USER
 
 
-@asyncio.coroutine
 def test_async_get_entity_id(registry):
     """Test that entity_id is returned."""
     entry = registry.async_get_or_create('light', 'hue', '1234')
@@ -175,7 +188,7 @@ def test_async_get_entity_id(registry):
     assert registry.async_get_entity_id('light', 'hue', '123') is None
 
 
-async def test_updating_config_entry_id(registry):
+async def test_updating_config_entry_id(hass, registry, update_events):
     """Test that we update config entry id in registry."""
     entry = registry.async_get_or_create(
         'light', 'hue', '5678', config_entry_id='mock-id-1')
@@ -184,8 +197,16 @@ async def test_updating_config_entry_id(registry):
     assert entry.entity_id == entry2.entity_id
     assert entry2.config_entry_id == 'mock-id-2'
 
+    await hass.async_block_till_done()
 
-async def test_removing_config_entry_id(registry):
+    assert len(update_events) == 2
+    assert update_events[0]['action'] == 'create'
+    assert update_events[0]['entity_id'] == entry.entity_id
+    assert update_events[1]['action'] == 'update'
+    assert update_events[1]['entity_id'] == entry.entity_id
+
+
+async def test_removing_config_entry_id(hass, registry, update_events):
     """Test that we update config entry id in registry."""
     entry = registry.async_get_or_create(
         'light', 'hue', '5678', config_entry_id='mock-id-1')
@@ -194,6 +215,14 @@ async def test_removing_config_entry_id(registry):
 
     entry = registry.entities[entry.entity_id]
     assert entry.config_entry_id is None
+
+    await hass.async_block_till_done()
+
+    assert len(update_events) == 2
+    assert update_events[0]['action'] == 'create'
+    assert update_events[0]['entity_id'] == entry.entity_id
+    assert update_events[1]['action'] == 'update'
+    assert update_events[1]['entity_id'] == entry.entity_id
 
 
 async def test_migration(hass):
@@ -222,3 +251,85 @@ async def test_migration(hass):
     assert entry.name == 'Test Name'
     assert entry.disabled_by == 'hass'
     assert entry.config_entry_id == 'test-config-id'
+
+
+async def test_loading_invalid_entity_id(hass, hass_storage):
+    """Test we autofix invalid entity IDs."""
+    hass_storage[entity_registry.STORAGE_KEY] = {
+        'version': entity_registry.STORAGE_VERSION,
+        'data': {
+            'entities': [
+                {
+                    'entity_id': 'test.invalid__middle',
+                    'platform': 'super_platform',
+                    'unique_id': 'id-invalid-middle',
+                    'name': 'registry override',
+                }, {
+                    'entity_id': 'test.invalid_end_',
+                    'platform': 'super_platform',
+                    'unique_id': 'id-invalid-end',
+                }, {
+                    'entity_id': 'test._invalid_start',
+                    'platform': 'super_platform',
+                    'unique_id': 'id-invalid-start',
+                }
+            ]
+        }
+    }
+
+    registry = await entity_registry.async_get_registry(hass)
+
+    entity_invalid_middle = registry.async_get_or_create(
+        'test', 'super_platform', 'id-invalid-middle')
+
+    assert valid_entity_id(entity_invalid_middle.entity_id)
+
+    entity_invalid_end = registry.async_get_or_create(
+        'test', 'super_platform', 'id-invalid-end')
+
+    assert valid_entity_id(entity_invalid_end.entity_id)
+
+    entity_invalid_start = registry.async_get_or_create(
+        'test', 'super_platform', 'id-invalid-start')
+
+    assert valid_entity_id(entity_invalid_start.entity_id)
+
+
+async def test_loading_race_condition(hass):
+    """Test only one storage load called when concurrent loading occurred ."""
+    with asynctest.patch(
+        'homeassistant.helpers.entity_registry.EntityRegistry.async_load',
+    ) as mock_load:
+        results = await asyncio.gather(
+            entity_registry.async_get_registry(hass),
+            entity_registry.async_get_registry(hass),
+        )
+
+        mock_load.assert_called_once_with()
+        assert results[0] == results[1]
+
+
+async def test_update_entity_unique_id(registry):
+    """Test entity's unique_id is updated."""
+    entry = registry.async_get_or_create(
+        'light', 'hue', '5678', config_entry_id='mock-id-1')
+    new_unique_id = '1234'
+    with patch.object(registry, 'async_schedule_save') as mock_schedule_save:
+        updated_entry = registry.async_update_entity(
+            entry.entity_id, new_unique_id=new_unique_id)
+    assert updated_entry != entry
+    assert updated_entry.unique_id == new_unique_id
+    assert mock_schedule_save.call_count == 1
+
+
+async def test_update_entity_unique_id_conflict(registry):
+    """Test migration raises when unique_id already in use."""
+    entry = registry.async_get_or_create(
+        'light', 'hue', '5678', config_entry_id='mock-id-1')
+    entry2 = registry.async_get_or_create(
+        'light', 'hue', '1234', config_entry_id='mock-id-1')
+    with patch.object(registry, 'async_schedule_save') as mock_schedule_save, \
+            pytest.raises(ValueError):
+        registry.async_update_entity(
+            entry.entity_id, new_unique_id=entry2.unique_id)
+    assert mock_schedule_save.call_count == 0

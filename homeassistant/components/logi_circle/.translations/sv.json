@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Du kan endast konfigurera ett Logi Circle-konto."
+        },
+        "create_entry": {
+            "default": "Autentiserad med Logi Circle."
+        },
+        "error": {
+            "auth_error": "API autentiseringen misslyckades.",
+            "follow_link": "V\u00e4nligen f\u00f6lj l\u00e4nken och autentisera innan du trycker p\u00e5 Skicka."
+        },
+        "step": {
+            "auth": {
+                "description": "V\u00e4nligen f\u00f6lj l\u00e4nken nedan och <b> Godk\u00e4nn </b> \u00e5tkomst till ditt Logic Circle-konto kom sedan tillbaka och tryck p\u00e5 <b> Skicka </b> nedan. \n\n [L\u00e4nk] ( {authorization_url} )",
+                "title": "Autentisera med Logi Circle"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Leverant\u00f6r"
+                },
+                "description": "V\u00e4lj vilken autentiseringsleverant\u00f6r du vill autentisera med Logi Circle.",
+                "title": "Verifieringsleverant\u00f6r"
+            }
+        },
+        "title": "Logi Circle"
+    }
+}

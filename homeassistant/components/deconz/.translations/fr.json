@@ -12,7 +12,7 @@
             "init": {
                 "data": {
                     "host": "H\u00f4te",
-                    "port": "Port (valeur par d\u00e9faut : 80)"
+                    "port": "Port"
                 },
                 "title": "Initialiser la passerelle deCONZ"
             },

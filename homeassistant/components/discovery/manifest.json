@@ -1,0 +1,10 @@
+{
+  "domain": "discovery",
+  "name": "Discovery",
+  "documentation": "https://www.home-assistant.io/components/discovery",
+  "requirements": [
+    "netdisco==2.6.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

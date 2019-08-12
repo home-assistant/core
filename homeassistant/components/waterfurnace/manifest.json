@@ -1,0 +1,10 @@
+{
+  "domain": "waterfurnace",
+  "name": "Waterfurnace",
+  "documentation": "https://www.home-assistant.io/components/waterfurnace",
+  "requirements": [
+    "waterfurnace==1.1.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

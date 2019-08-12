@@ -1,0 +1,1 @@
+"""The stride component."""

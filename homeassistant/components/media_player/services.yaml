@@ -131,7 +131,7 @@ play_media:
       description: The ID of the content to play. Platform dependent.
       example: 'https://home-assistant.io/images/cast/splash.png'
     media_content_type:
-      description: The type of the content to play. Must be one of music, tvshow, video, episode, channel or playlist
+      description: The type of the content to play. Must be one of image, music, tvshow, video, episode, channel or playlist
       example: 'music'
 
 select_source:
@@ -184,73 +184,6 @@ snapcast_restore:
     entity_id:
       description: Name(s) of entities that will be restored. Platform dependent.
       example: 'media_player.living_room'
-
-sonos_join:
-  description: Group player together.
-  fields:
-    master:
-      description: Entity ID of the player that should become the coordinator of the group.
-      example: 'media_player.living_room_sonos'
-    entity_id:
-      description: Name(s) of entities that will coordinate the grouping. Platform dependent.
-      example: 'media_player.living_room_sonos'
-
-sonos_unjoin:
-  description: Unjoin the player from a group.
-  fields:
-    entity_id:
-      description: Name(s) of entities that will be unjoined from their group. Platform dependent.
-      example: 'media_player.living_room_sonos'
-
-sonos_snapshot:
-  description: Take a snapshot of the media player.
-  fields:
-    entity_id:
-      description: Name(s) of entities that will be snapshot. Platform dependent.
-      example: 'media_player.living_room_sonos'
-    with_group:
-      description: True (default) or False. Snapshot with all group attributes.
-      example: 'true'
-
-sonos_restore:
-  description: Restore a snapshot of the media player.
-  fields:
-    entity_id:
-      description: Name(s) of entities that will be restored. Platform dependent.
-      example: 'media_player.living_room_sonos'
-    with_group:
-      description: True (default) or False. Restore with all group attributes.
-      example: 'true'
-
-sonos_set_sleep_timer:
-  description: Set a Sonos timer.
-  fields:
-    entity_id:
-      description: Name(s) of entities that will have a timer set.
-      example: 'media_player.living_room_sonos'
-    sleep_time:
-      description: Number of seconds to set the timer.
-      example: '900'
-
-sonos_clear_sleep_timer:
-  description: Clear a Sonos timer.
-  fields:
-    entity_id:
-      description: Name(s) of entities that will have the timer cleared.
-      example: 'media_player.living_room_sonos'
-
-sonos_set_option:
-  description: Set Sonos sound options.
-  fields:
-    entity_id:
-      description: Name(s) of entities that will have options set.
-      example: 'media_player.living_room_sonos'
-    night_sound:
-      description: Enable Night Sound mode
-      example: 'true'
-    speech_enhance:
-      description: Enable Speech Enhancement mode
-      example: 'true'
 
 channels_seek_forward:
   description: Seek forward by a set number of seconds.

@@ -1,9 +1,4 @@
-"""
-Provides functionality to notify people.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/notify/
-"""
+"""Provides functionality to notify people."""
 import asyncio
 import logging
 from functools import partial

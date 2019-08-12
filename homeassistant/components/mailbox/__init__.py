@@ -1,9 +1,4 @@
-"""
-Provides functionality for mailboxes.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mailbox/
-"""
+"""Support for Voice mailboxes."""
 import asyncio
 from contextlib import suppress
 from datetime import timedelta
@@ -23,7 +18,6 @@ from homeassistant.setup import async_prepare_setup_platform
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['http']
 DOMAIN = 'mailbox'
 
 EVENT = 'mailbox_updated'

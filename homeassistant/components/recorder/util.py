@@ -20,12 +20,16 @@ def session_scope(*, hass=None, session=None):
     if session is None:
         raise RuntimeError('Session required')
 
+    need_rollback = False
     try:
         yield session
-        session.commit()
+        if session.transaction:
+            need_rollback = True
+            session.commit()
     except Exception as err:  # pylint: disable=broad-except
         _LOGGER.error("Error executing query: %s", err)
-        session.rollback()
+        if need_rollback:
+            session.rollback()
         raise
     finally:
         session.close()
@@ -76,5 +80,4 @@ def execute(qry):
 
             if tryno == RETRIES - 1:
                 raise
-            else:
-                time.sleep(QUERY_RETRY_WAIT)
+            time.sleep(QUERY_RETRY_WAIT)

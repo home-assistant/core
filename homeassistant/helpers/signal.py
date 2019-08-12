@@ -2,6 +2,7 @@
 import logging
 import signal
 import sys
+from types import FrameType
 
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.const import RESTART_EXIT_CODE
@@ -16,7 +17,7 @@ def async_register_signal_handling(hass: HomeAssistant) -> None:
     """Register system signal handler for core."""
     if sys.platform != 'win32':
         @callback
-        def async_signal_handle(exit_code):
+        def async_signal_handle(exit_code: int) -> None:
             """Wrap signal handling.
 
             * queue call to shutdown task
@@ -49,7 +50,7 @@ def async_register_signal_handling(hass: HomeAssistant) -> None:
         old_sigint = None
 
         @callback
-        def async_signal_handle(exit_code, frame):
+        def async_signal_handle(exit_code: int, frame: FrameType) -> None:
             """Wrap signal handling.
 
             * queue call to shutdown task

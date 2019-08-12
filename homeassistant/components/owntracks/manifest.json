@@ -1,0 +1,15 @@
+{
+  "domain": "owntracks",
+  "name": "Owntracks",
+  "documentation": "https://www.home-assistant.io/components/owntracks",
+  "requirements": [
+    "PyNaCl==1.3.0"
+  ],
+  "dependencies": [
+    "webhook"
+  ],
+  "after_dependencies": [
+    "mqtt"
+  ],
+  "codeowners": []
+}

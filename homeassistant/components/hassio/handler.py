@@ -1,9 +1,4 @@
-"""
-Exposes regular REST commands as services.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/hassio/
-"""
+"""Handler for Hass.io."""
 import asyncio
 import logging
 import os
@@ -12,8 +7,10 @@ import aiohttp
 import async_timeout
 
 from homeassistant.components.http import (
-    CONF_API_PASSWORD, CONF_SERVER_HOST, CONF_SERVER_PORT,
-    CONF_SSL_CERTIFICATE)
+    CONF_SERVER_HOST,
+    CONF_SERVER_PORT,
+    CONF_SSL_CERTIFICATE,
+)
 from homeassistant.const import CONF_TIME_ZONE, SERVER_PORT
 
 from .const import X_HASSIO
@@ -65,7 +62,7 @@ class HassIO:
 
         This method return a coroutine.
         """
-        return self.send_command("/supervisor/ping", method="get")
+        return self.send_command("/supervisor/ping", method="get", timeout=15)
 
     @_api_data
     def get_homeassistant_info(self):
@@ -84,6 +81,14 @@ class HassIO:
         return self.send_command(
             "/addons/{}/info".format(addon), method="get")
 
+    @_api_data
+    def get_ingress_panels(self):
+        """Return data for Add-on ingress panels.
+
+        This method return a coroutine.
+        """
+        return self.send_command("/ingress/panels", method="get")
+
     @_api_bool
     def restart_homeassistant(self):
         """Restart Home-Assistant container.
@@ -99,13 +104,6 @@ class HassIO:
         This method return a coroutine.
         """
         return self.send_command("/homeassistant/stop")
-
-    def check_homeassistant_config(self):
-        """Check Home-Assistant config with Hass.io API.
-
-        This method return a coroutine.
-        """
-        return self.send_command("/homeassistant/check", timeout=600)
 
     @_api_data
     def retrieve_discovery_messages(self):
@@ -130,7 +128,6 @@ class HassIO:
         options = {
             'ssl': CONF_SSL_CERTIFICATE in http_config,
             'port': port,
-            'password': http_config.get(CONF_API_PASSWORD),
             'watchdog': True,
             'refresh_token': refresh_token,
         }

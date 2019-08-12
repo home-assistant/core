@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Konto er allerede registreret",
+            "invalid_credentials": "Ugyldige legitimationsoplysninger"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "Kode (til Home Assistant)",
+                    "password": "Adgangskode",
+                    "username": "Email adresse"
+                },
+                "title": "Udfyld dine oplysninger"
+            }
+        },
+        "title": "SimpliSafe"
+    }
+}

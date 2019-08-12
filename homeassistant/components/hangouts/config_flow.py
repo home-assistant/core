@@ -1,12 +1,14 @@
 """Config flow to configure Google Hangouts."""
+import functools
 import voluptuous as vol
+
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import callback
 
-from .const import CONF_2FA, CONF_REFRESH_TOKEN
-from .const import DOMAIN as HANGOUTS_DOMAIN
+from .const import CONF_2FA, CONF_REFRESH_TOKEN, CONF_AUTH_CODE, \
+    DOMAIN as HANGOUTS_DOMAIN
 
 
 @callback
@@ -42,13 +44,24 @@ class HangoutsFlowHandler(config_entries.ConfigFlow):
             from .hangups_utils import (HangoutsCredentials,
                                         HangoutsRefreshToken,
                                         GoogleAuthError, Google2FAError)
-            self._credentials = HangoutsCredentials(user_input[CONF_EMAIL],
-                                                    user_input[CONF_PASSWORD])
+            user_email = user_input[CONF_EMAIL]
+            user_password = user_input[CONF_PASSWORD]
+            user_auth_code = user_input.get(CONF_AUTH_CODE)
+            manual_login = user_auth_code is not None
+
+            user_pin = None
+            self._credentials = HangoutsCredentials(user_email,
+                                                    user_password,
+                                                    user_pin,
+                                                    user_auth_code)
             self._refresh_token = HangoutsRefreshToken(None)
             try:
-                await self.hass.async_add_executor_job(get_auth,
-                                                       self._credentials,
-                                                       self._refresh_token)
+                await self.hass.async_add_executor_job(
+                    functools.partial(get_auth,
+                                      self._credentials,
+                                      self._refresh_token,
+                                      manual_login=manual_login)
+                )
 
                 return await self.async_step_final()
             except GoogleAuthError as err:
@@ -64,7 +77,8 @@ class HangoutsFlowHandler(config_entries.ConfigFlow):
             step_id='user',
             data_schema=vol.Schema({
                 vol.Required(CONF_EMAIL): str,
-                vol.Required(CONF_PASSWORD): str
+                vol.Required(CONF_PASSWORD): str,
+                vol.Optional(CONF_AUTH_CODE): str
             }),
             errors=errors
         )

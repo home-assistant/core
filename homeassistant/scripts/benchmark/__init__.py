@@ -180,12 +180,15 @@ def _logbook_filtering(hass, last_changed, last_updated):
         'new_state': new_state
     })
 
-    events = [event] * 10**5
+    def yield_events(event):
+        # pylint: disable=protected-access
+        entities_filter = logbook._generate_filter_from_config({})
+        for _ in range(10**5):
+            if logbook._keep_event(event, entities_filter):
+                yield event
 
     start = timer()
 
-    # pylint: disable=protected-access
-    events = logbook._exclude_events(events, {})
-    list(logbook.humanify(None, events))
+    list(logbook.humanify(None, yield_events(event)))
 
     return timer() - start

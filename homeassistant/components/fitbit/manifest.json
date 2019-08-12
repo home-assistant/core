@@ -1,0 +1,15 @@
+{
+  "domain": "fitbit",
+  "name": "Fitbit",
+  "documentation": "https://www.home-assistant.io/components/fitbit",
+  "requirements": [
+    "fitbit==0.3.0"
+  ],
+  "dependencies": [
+    "configurator",
+    "http"
+  ],
+  "codeowners": [
+    "@robbiet480"
+  ]
+}

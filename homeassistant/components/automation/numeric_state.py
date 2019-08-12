@@ -1,9 +1,4 @@
-"""
-Offer numeric state listening automation rules.
-
-For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/docs/automation/trigger/#numeric-state-trigger
-"""
+"""Offer numeric state listening automation rules."""
 import logging
 
 import voluptuous as vol
@@ -28,7 +23,7 @@ TRIGGER_SCHEMA = vol.All(vol.Schema({
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_trigger(hass, config, action):
+async def async_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
     below = config.get(CONF_BELOW)

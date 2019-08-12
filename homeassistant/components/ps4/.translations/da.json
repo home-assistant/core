@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "credential_error": "Fejl ved hentning af legitimationsoplysninger.",
+            "devices_configured": "Alle de fundne enheder er allerede konfigureret.",
+            "no_devices_found": "Ingen PlayStation 4 enheder fundet p\u00e5 netv\u00e6rket.",
+            "port_987_bind_error": "Kunne ikke binde til port 987.",
+            "port_997_bind_error": "Kunne ikke binde til port 997."
+        },
+        "error": {
+            "login_failed": "Kunne ikke parre med PlayStation 4. Kontroller PIN er korrekt.",
+            "not_ready": "PlayStation 4 er ikke t\u00e6ndt eller tilsluttet til netv\u00e6rket."
+        },
+        "step": {
+            "creds": {
+                "description": "Legitimationsoplysninger er n\u00f8dvendige. Tryk p\u00e5 'Send' og derefter i PS4 2nd Screen App, v\u00e6lg opdater enheder og v\u00e6lg 'Home-Assistant' -enheden for at forts\u00e6tte.",
+                "title": "PlayStation 4"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN",
+                    "ip_address": "IP-adresse",
+                    "name": "Navn",
+                    "region": "Omr\u00e5de"
+                },
+                "description": "Indtast dine PlayStation 4 oplysninger. For 'PIN' skal du navigere til 'Indstillinger' p\u00e5 din PlayStation 4 konsol. G\u00e5 derefter til 'Indstillinger for mobilapp-forbindelse' og v\u00e6lg 'Tilf\u00f8j enhed'. Indtast den PIN der vises.",
+                "title": "PlayStation 4"
+            },
+            "mode": {
+                "title": "PlayStation 4"
+            }
+        },
+        "title": "PlayStation 4"
+    }
+}

@@ -11,12 +11,12 @@ VIEW_NAME = 'api:config:group:config'
 
 
 @asyncio.coroutine
-def test_get_device_config(hass, aiohttp_client):
+def test_get_device_config(hass, hass_client):
     """Test getting device config."""
     with patch.object(config, 'SECTIONS', ['group']):
         yield from async_setup_component(hass, 'config', {})
 
-    client = yield from aiohttp_client(hass.http.app)
+    client = yield from hass_client()
 
     def mock_read(path):
         """Mock reading data."""
@@ -40,12 +40,12 @@ def test_get_device_config(hass, aiohttp_client):
 
 
 @asyncio.coroutine
-def test_update_device_config(hass, aiohttp_client):
+def test_update_device_config(hass, hass_client):
     """Test updating device config."""
     with patch.object(config, 'SECTIONS', ['group']):
         yield from async_setup_component(hass, 'config', {})
 
-    client = yield from aiohttp_client(hass.http.app)
+    client = yield from hass_client()
 
     orig_data = {
         'hello.beer': {
@@ -89,12 +89,12 @@ def test_update_device_config(hass, aiohttp_client):
 
 
 @asyncio.coroutine
-def test_update_device_config_invalid_key(hass, aiohttp_client):
+def test_update_device_config_invalid_key(hass, hass_client):
     """Test updating device config."""
     with patch.object(config, 'SECTIONS', ['group']):
         yield from async_setup_component(hass, 'config', {})
 
-    client = yield from aiohttp_client(hass.http.app)
+    client = yield from hass_client()
 
     resp = yield from client.post(
         '/api/config/group/config/not a slug', data=json.dumps({
@@ -105,12 +105,12 @@ def test_update_device_config_invalid_key(hass, aiohttp_client):
 
 
 @asyncio.coroutine
-def test_update_device_config_invalid_data(hass, aiohttp_client):
+def test_update_device_config_invalid_data(hass, hass_client):
     """Test updating device config."""
     with patch.object(config, 'SECTIONS', ['group']):
         yield from async_setup_component(hass, 'config', {})
 
-    client = yield from aiohttp_client(hass.http.app)
+    client = yield from hass_client()
 
     resp = yield from client.post(
         '/api/config/group/config/hello_beer', data=json.dumps({
@@ -121,12 +121,12 @@ def test_update_device_config_invalid_data(hass, aiohttp_client):
 
 
 @asyncio.coroutine
-def test_update_device_config_invalid_json(hass, aiohttp_client):
+def test_update_device_config_invalid_json(hass, hass_client):
     """Test updating device config."""
     with patch.object(config, 'SECTIONS', ['group']):
         yield from async_setup_component(hass, 'config', {})
 
-    client = yield from aiohttp_client(hass.http.app)
+    client = yield from hass_client()
 
     resp = yield from client.post(
         '/api/config/group/config/hello_beer', data='not json')

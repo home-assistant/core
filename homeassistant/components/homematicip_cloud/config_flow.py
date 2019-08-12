@@ -1,17 +1,19 @@
 """Config flow to configure the HomematicIP Cloud component."""
+from typing import Set
+
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
-from .const import DOMAIN as HMIPC_DOMAIN
-from .const import HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME, HMIPC_PIN
-from .const import _LOGGER
+from .const import (
+    _LOGGER, DOMAIN as HMIPC_DOMAIN, HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME,
+    HMIPC_PIN)
 from .hap import HomematicipAuth
 
 
 @callback
-def configured_haps(hass):
+def configured_haps(hass: HomeAssistant) -> Set[str]:
     """Return a set of the configured access points."""
     return set(entry.data[HMIPC_HAPID] for entry
                in hass.config_entries.async_entries(HMIPC_DOMAIN))

@@ -1,0 +1,10 @@
+{
+  "domain": "vera",
+  "name": "Vera",
+  "documentation": "https://www.home-assistant.io/components/vera",
+  "requirements": [
+    "pyvera==0.2.45"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

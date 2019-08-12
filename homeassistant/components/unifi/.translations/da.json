@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Controller site er allerede konfigureret",
+            "user_privilege": "Bruger skal v\u00e6re administrator"
+        },
+        "error": {
+            "faulty_credentials": "Ugyldige legitimationsoplysninger",
+            "service_unavailable": "Service utilg\u00e6ngelig"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e6rt",
+                    "password": "Adgangskode",
+                    "port": "Port",
+                    "site": "Site ID",
+                    "username": "Brugernavn",
+                    "verify_ssl": "Controller bruger korrekt certifikat"
+                },
+                "title": "Konfigurer UniFi Controller"
+            }
+        },
+        "title": "UniFi Controller"
+    }
+}

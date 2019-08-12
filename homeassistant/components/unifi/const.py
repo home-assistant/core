@@ -1,8 +1,7 @@
 """Constants for the UniFi component."""
-
 import logging
 
-LOGGER = logging.getLogger('homeassistant.components.unifi')
+LOGGER = logging.getLogger(__package__)
 DOMAIN = 'unifi'
 
 CONTROLLER_ID = '{host}-{site}'

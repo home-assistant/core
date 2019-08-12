@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "credential_error": "Erreur lors de l'extraction des informations d'identification.",
+            "devices_configured": "Tous les p\u00e9riph\u00e9riques trouv\u00e9s sont d\u00e9j\u00e0 configur\u00e9s.",
+            "no_devices_found": "Aucun appareil PlayStation 4 trouv\u00e9 sur le r\u00e9seau.",
+            "port_987_bind_error": "Impossible de se connecter au port 997.",
+            "port_997_bind_error": "Impossible de se connecter au port 997."
+        },
+        "error": {
+            "login_failed": "\u00c9chec de l'association \u00e0 la PlayStation 4. V\u00e9rifiez que le code PIN est correct.",
+            "no_ipaddress": "Entrez l'adresse IP de la PlayStation 4 que vous souhaitez configurer.",
+            "not_ready": "PlayStation 4 n'est pas allum\u00e9e ou connect\u00e9e au r\u00e9seau."
+        },
+        "step": {
+            "creds": {
+                "description": "Informations d\u2019identification n\u00e9cessaires. Appuyez sur \u00ab\u00a0Envoyer\u00a0\u00bb puis dans la PS4 2\u00e8me \u00e9cran App, actualisez les p\u00e9riph\u00e9riques et s\u00e9lectionnez le dispositif \u00ab\u00a0Home Assistant\u00a0\u00bb pour continuer.",
+                "title": "PlayStation 4"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN",
+                    "ip_address": "Adresse IP",
+                    "name": "Nom",
+                    "region": "R\u00e9gion"
+                },
+                "description": "Entrez vos informations PlayStation 4. Pour \"Code PIN\", acc\u00e9dez \u00e0 \"Param\u00e8tres\" sur votre console PlayStation 4. Ensuite, acc\u00e9dez \u00e0 \"Param\u00e8tres de connexion de l'application mobile\" et s\u00e9lectionnez \"Ajouter un p\u00e9riph\u00e9rique\". Entrez le code PIN qui est affich\u00e9.",
+                "title": "PlayStation 4"
+            },
+            "mode": {
+                "data": {
+                    "ip_address": "Adresse IP (laissez vide si vous utilisez la d\u00e9couverte automatique).",
+                    "mode": "Mode de configuration"
+                },
+                "description": "S\u00e9lectionnez le mode de configuration. Le champ Adresse IP peut rester vide si vous s\u00e9lectionnez D\u00e9couverte automatique, car les p\u00e9riph\u00e9riques seront automatiquement d\u00e9couverts.",
+                "title": "PlayStation 4"
+            }
+        },
+        "title": "PlayStation 4"
+    }
+}

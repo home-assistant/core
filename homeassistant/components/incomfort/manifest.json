@@ -1,0 +1,12 @@
+{
+  "domain": "incomfort",
+  "name": "Intergas InComfort/Intouch Lan2RF gateway",
+  "documentation": "https://www.home-assistant.io/components/incomfort",
+  "requirements": [
+    "incomfort-client==0.2.8"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@zxdavb"
+  ]
+}

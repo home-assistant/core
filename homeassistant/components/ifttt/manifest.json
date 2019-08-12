@@ -1,0 +1,12 @@
+{
+  "domain": "ifttt",
+  "name": "Ifttt",
+  "documentation": "https://www.home-assistant.io/components/ifttt",
+  "requirements": [
+    "pyfttt==0.3"
+  ],
+  "dependencies": [
+    "webhook"
+  ],
+  "codeowners": []
+}

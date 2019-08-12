@@ -35,20 +35,12 @@ TURN_ON_TEST_CASES = [
             'brightness': 100
         }
     ],
-    # Brightness == 0
+    # Brightness == 1
     [
         {'can_set_dimmer': True},
-        {'brightness': 0},
+        {'brightness': 1},
         {
-            'brightness': 0
-        }
-    ],
-    # Brightness < 0
-    [
-        {'can_set_dimmer': True},
-        {'brightness': -1},
-        {
-            'brightness': 0
+            'brightness': 1
         }
     ],
     # Brightness > 254

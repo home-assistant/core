@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Mo\u017cesz skonfigurowa\u0107 tylko konto Point.",
+            "authorize_url_fail": "Nieznany b\u0142\u0105d podczas generowania url autoryzacji.",
+            "authorize_url_timeout": "Min\u0105\u0142 limit czasu generowania url autoryzacji.",
+            "external_setup": "Punkt pomy\u015blnie skonfigurowany.",
+            "no_flows": "Musisz skonfigurowa\u0107 Point, zanim b\u0119dziesz m\u00f3g\u0142 si\u0119 z nim uwierzytelni\u0107. [Przeczytaj instrukcje](https://www.home-assistant.io/components/point/)."
+        },
+        "create_entry": {
+            "default": "Pomy\u015blnie uwierzytelniono przy u\u017cyciu Minut dla urz\u0105dze\u0144 Point"
+        },
+        "error": {
+            "follow_link": "Prosz\u0119 klikn\u0105\u0107 link i uwierzytelni\u0107 przed naci\u015bni\u0119ciem przycisku Prze\u015blij",
+            "no_token": "Brak uwierzytelnienia za pomoc\u0105 Minut"
+        },
+        "step": {
+            "auth": {
+                "description": "Kliknij poni\u017cszy link i <b>Zaakceptuj</b> dost\u0119p do swojego konta Minut, a nast\u0119pnie wr\u00f3\u0107 i naci\u015bnij <b>Prze\u015blij</b> poni\u017cej. \n\n [Link]({authorization_url})",
+                "title": "Uwierzytelnienie Point"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Dostawca"
+                },
+                "description": "Wybierz, kt\u00f3rego dostawc\u0119 uwierzytelnienia chcesz u\u017cywa\u0107 z Point.",
+                "title": "Dostawca uwierzytelnienia"
+            }
+        },
+        "title": "Minut Point"
+    }
+}

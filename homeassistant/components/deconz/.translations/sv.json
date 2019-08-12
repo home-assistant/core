@@ -9,6 +9,12 @@
             "no_key": "Det gick inte att ta emot en API-nyckel"
         },
         "step": {
+            "hassio_confirm": {
+                "data": {
+                    "allow_clip_sensor": "Till\u00e5t import av virtuella sensorer"
+                },
+                "title": "deCONZ Zigbee gateway via Hass.io till\u00e4gg"
+            },
             "init": {
                 "data": {
                     "host": "V\u00e4rd",
@@ -28,6 +34,6 @@
                 "title": "Extra konfigurationsalternativ f\u00f6r deCONZ"
             }
         },
-        "title": "deCONZ"
+        "title": "deCONZ Zigbee Gateway"
     }
 }

@@ -1,0 +1,11 @@
+{
+  "domain": "route53",
+  "name": "Route53",
+  "documentation": "https://www.home-assistant.io/components/route53",
+  "requirements": [
+    "boto3==1.9.16",
+    "ipify==1.0.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

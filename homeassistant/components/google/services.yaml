@@ -1,0 +1,4 @@
+found_calendar:
+  description: Add calendar if it has not been already discovered.
+scan_for_calendars:
+  description: Scan for new calendars.

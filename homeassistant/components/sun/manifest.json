@@ -1,0 +1,10 @@
+{
+  "domain": "sun",
+  "name": "Sun",
+  "documentation": "https://www.home-assistant.io/components/sun",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

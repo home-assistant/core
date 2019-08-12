@@ -1,5 +1,4 @@
-"""Component entity and functionality."""
-
+"""Zone entity and functionality."""
 from homeassistant.const import ATTR_HIDDEN, ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import bind_hass
@@ -56,7 +55,7 @@ def async_active_zone(hass, latitude, longitude, radius=0):
     return closest
 
 
-def in_zone(zone, latitude, longitude, radius=0):
+def in_zone(zone, latitude, longitude, radius=0) -> bool:
     """Test if given latitude, longitude is in given zone.
 
     Async friendly.

@@ -1,0 +1,1 @@
+"""The coolmaster component."""

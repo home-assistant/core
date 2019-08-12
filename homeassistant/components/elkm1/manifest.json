@@ -1,0 +1,10 @@
+{
+  "domain": "elkm1",
+  "name": "Elkm1",
+  "documentation": "https://www.home-assistant.io/components/elkm1",
+  "requirements": [
+    "elkm1-lib==0.7.13"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

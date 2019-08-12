@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "confirm": {
+                "description": "Vill du st\u00e4lla in mobilappkomponenten?"
+            }
+        }
+    }
+}

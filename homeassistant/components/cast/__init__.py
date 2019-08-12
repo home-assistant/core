@@ -2,9 +2,7 @@
 from homeassistant import config_entries
 from homeassistant.helpers import config_entry_flow
 
-
 DOMAIN = 'cast'
-REQUIREMENTS = ['pychromecast==2.1.0']
 
 
 async def async_setup(hass, config):

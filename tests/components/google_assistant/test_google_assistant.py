@@ -8,7 +8,9 @@ import pytest
 
 from homeassistant import core, const, setup
 from homeassistant.components import (
-    fan, cover, light, switch, climate, async_setup, media_player)
+    fan, cover, light, switch, lock, media_player)
+from homeassistant.components.climate import const as climate
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.components import google_assistant as ga
 
 from . import DEMO_DEVICES
@@ -54,7 +56,7 @@ def assistant_client(loop, hass, aiohttp_client):
 def hass_fixture(loop, hass):
     """Set up a Home Assistant instance for these tests."""
     # We need to do this to get access to homeassistant/turn_(on,off)
-    loop.run_until_complete(async_setup(hass, {core.DOMAIN: {}}))
+    loop.run_until_complete(setup.async_setup_component(hass, core.DOMAIN, {}))
 
     loop.run_until_complete(
         setup.async_setup_component(hass, light.DOMAIN, {
@@ -96,7 +98,16 @@ def hass_fixture(loop, hass):
             }]
         }))
 
+    loop.run_until_complete(
+        setup.async_setup_component(hass, lock.DOMAIN, {
+            'lock': [{
+                'platform': 'demo'
+            }]
+        }))
+
     return hass
+
+# pylint: disable=redefined-outer-name
 
 
 @asyncio.coroutine
@@ -115,6 +126,9 @@ def test_sync_request(hass_fixture, assistant_client, auth_header):
     assert (
         sorted([dev['id'] for dev in devices])
         == sorted([dev['id'] for dev in DEMO_DEVICES]))
+
+    for dev in devices:
+        assert dev['id'] not in CLOUD_NEVER_EXPOSED_ENTITIES
 
     for dev, demo in zip(
             sorted(devices, key=lambda d: d['id']),
@@ -160,8 +174,12 @@ def test_query_request(hass_fixture, assistant_client, auth_header):
     assert devices['light.bed_light']['on'] is False
     assert devices['light.ceiling_lights']['on'] is True
     assert devices['light.ceiling_lights']['brightness'] == 70
-    assert devices['light.kitchen_lights']['color']['spectrumRGB'] == 16727919
-    assert devices['light.kitchen_lights']['color']['temperature'] == 4166
+    assert devices['light.kitchen_lights']['color']['spectrumHsv'] == {
+        'hue': 345,
+        'saturation': 0.75,
+        'value': 0.7058823529411765,
+    }
+    assert devices['light.kitchen_lights']['color']['temperatureK'] == 4166
     assert devices['media_player.lounge_room']['on'] is True
 
 
@@ -301,9 +319,9 @@ def test_execute_request(hass_fixture, assistant_client, auth_header):
                     }],
                     "execution": [{
                         "command":
-                        "action.devices.commands.BrightnessAbsolute",
+                        "action.devices.commands.setVolume",
                         "params": {
-                            "brightness": 70
+                            "volumeLevel": 70
                         }
                     }]
                 }, {

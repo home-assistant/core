@@ -1,11 +1,8 @@
-"""
-Component to send and receive Telegram messages.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/telegram_bot/
-"""
+"""Support to send and receive Telegram messages."""
 import io
+from ipaddress import ip_network
 from functools import partial
+import importlib
 import logging
 
 import requests
@@ -16,12 +13,9 @@ from homeassistant.components.notify import (
     ATTR_DATA, ATTR_MESSAGE, ATTR_TITLE)
 from homeassistant.const import (
     ATTR_COMMAND, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY,
-    CONF_PLATFORM, CONF_TIMEOUT, HTTP_DIGEST_AUTHENTICATION)
+    CONF_PLATFORM, CONF_TIMEOUT, HTTP_DIGEST_AUTHENTICATION, CONF_URL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
-from homeassistant.setup import async_prepare_setup_platform
-
-REQUIREMENTS = ['python-telegram-bot==11.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,10 +47,12 @@ ATTR_TEXT = 'text'
 ATTR_URL = 'url'
 ATTR_USER_ID = 'user_id'
 ATTR_USERNAME = 'username'
+ATTR_VERIFY_SSL = 'verify_ssl'
 
 CONF_ALLOWED_CHAT_IDS = 'allowed_chat_ids'
 CONF_PROXY_URL = 'proxy_url'
 CONF_PROXY_PARAMS = 'proxy_params'
+CONF_TRUSTED_NETWORKS = 'trusted_networks'
 
 DOMAIN = 'telegram_bot'
 
@@ -71,6 +67,7 @@ SERVICE_EDIT_CAPTION = 'edit_caption'
 SERVICE_EDIT_REPLYMARKUP = 'edit_replymarkup'
 SERVICE_ANSWER_CALLBACK_QUERY = 'answer_callback_query'
 SERVICE_DELETE_MESSAGE = 'delete_message'
+SERVICE_LEAVE_CHAT = 'leave_chat'
 
 EVENT_TELEGRAM_CALLBACK = 'telegram_callback'
 EVENT_TELEGRAM_COMMAND = 'telegram_command'
@@ -79,15 +76,34 @@ EVENT_TELEGRAM_TEXT = 'telegram_text'
 PARSER_HTML = 'html'
 PARSER_MD = 'markdown'
 
-PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PLATFORM): cv.string,
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_ALLOWED_CHAT_IDS):
-        vol.All(cv.ensure_list, [vol.Coerce(int)]),
-    vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
-    vol.Optional(CONF_PROXY_URL): cv.string,
-    vol.Optional(CONF_PROXY_PARAMS): dict,
-})
+DEFAULT_TRUSTED_NETWORKS = [
+    ip_network('149.154.167.197/32'),
+    ip_network('149.154.167.198/31'),
+    ip_network('149.154.167.200/29'),
+    ip_network('149.154.167.208/28'),
+    ip_network('149.154.167.224/29'),
+    ip_network('149.154.167.232/31')
+]
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.All(cv.ensure_list, [
+        vol.Schema({
+            vol.Required(CONF_PLATFORM): vol.In(
+                ('broadcast', 'polling', 'webhooks')),
+            vol.Required(CONF_API_KEY): cv.string,
+            vol.Required(CONF_ALLOWED_CHAT_IDS):
+                vol.All(cv.ensure_list, [vol.Coerce(int)]),
+            vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
+            vol.Optional(CONF_PROXY_URL): cv.string,
+            vol.Optional(CONF_PROXY_PARAMS): dict,
+            # webhooks
+            vol.Optional(CONF_URL): cv.url,
+            vol.Optional(CONF_TRUSTED_NETWORKS,
+                         default=DEFAULT_TRUSTED_NETWORKS):
+                vol.All(cv.ensure_list, [ip_network])
+            })
+        ])
+}, extra=vol.ALLOW_EXTRA)
 
 BASE_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
@@ -111,6 +127,7 @@ SERVICE_SCHEMA_SEND_FILE = BASE_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_USERNAME): cv.string,
     vol.Optional(ATTR_PASSWORD): cv.string,
     vol.Optional(ATTR_AUTHENTICATION): cv.string,
+    vol.Optional(ATTR_VERIFY_SSL): cv.boolean,
 })
 
 SERVICE_SCHEMA_SEND_LOCATION = BASE_SERVICE_SCHEMA.extend({
@@ -151,6 +168,10 @@ SERVICE_SCHEMA_DELETE_MESSAGE = vol.Schema({
         vol.Any(cv.positive_int, vol.All(cv.string, 'last')),
 }, extra=vol.ALLOW_EXTRA)
 
+SERVICE_SCHEMA_LEAVE_CHAT = vol.Schema({
+    vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
+})
+
 SERVICE_MAP = {
     SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
     SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
@@ -163,11 +184,12 @@ SERVICE_MAP = {
     SERVICE_EDIT_REPLYMARKUP: SERVICE_SCHEMA_EDIT_REPLYMARKUP,
     SERVICE_ANSWER_CALLBACK_QUERY: SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY,
     SERVICE_DELETE_MESSAGE: SERVICE_SCHEMA_DELETE_MESSAGE,
+    SERVICE_LEAVE_CHAT: SERVICE_SCHEMA_LEAVE_CHAT,
 }
 
 
 def load_data(hass, url=None, filepath=None, username=None, password=None,
-              authentication=None, num_retries=5):
+              authentication=None, num_retries=5, verify_ssl=None):
     """Load data into ByteIO/File container from a source."""
     try:
         if url is not None:
@@ -178,6 +200,8 @@ def load_data(hass, url=None, filepath=None, username=None, password=None,
                     params["auth"] = HTTPDigestAuth(username, password)
                 else:
                     params["auth"] = HTTPBasicAuth(username, password)
+            if verify_ssl is not None:
+                params["verify"] = verify_ssl
             retry_num = 0
             while retry_num < num_retries:
                 req = requests.get(url, **params)
@@ -214,36 +238,33 @@ async def async_setup(hass, config):
     if not config[DOMAIN]:
         return False
 
-    p_config = config[DOMAIN][0]
+    for p_config in config[DOMAIN]:
 
-    p_type = p_config.get(CONF_PLATFORM)
+        p_type = p_config.get(CONF_PLATFORM)
 
-    platform = await async_prepare_setup_platform(
-        hass, config, DOMAIN, p_type)
+        platform = importlib.import_module(
+            '.{}'.format(p_config[CONF_PLATFORM]), __name__)
 
-    if platform is None:
-        return
+        _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
+        try:
+            receiver_service = await \
+                platform.async_setup_platform(hass, p_config)
+            if receiver_service is False:
+                _LOGGER.error(
+                    "Failed to initialize Telegram bot %s", p_type)
+                return False
 
-    _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
-    try:
-        receiver_service = await \
-            platform.async_setup_platform(hass, p_config)
-        if receiver_service is False:
-            _LOGGER.error(
-                "Failed to initialize Telegram bot %s", p_type)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Error setting up platform %s", p_type)
             return False
 
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception("Error setting up platform %s", p_type)
-        return False
-
-    bot = initialize_bot(p_config)
-    notify_service = TelegramNotificationService(
-        hass,
-        bot,
-        p_config.get(CONF_ALLOWED_CHAT_IDS),
-        p_config.get(ATTR_PARSER)
-    )
+        bot = initialize_bot(p_config)
+        notify_service = TelegramNotificationService(
+            hass,
+            bot,
+            p_config.get(CONF_ALLOWED_CHAT_IDS),
+            p_config.get(ATTR_PARSER)
+        )
 
     async def async_send_telegram_message(service):
         """Handle sending Telegram Bot message service calls."""
@@ -425,11 +446,15 @@ class TelegramNotificationService:
                 params[ATTR_REPLY_TO_MSGID] = data[ATTR_REPLY_TO_MSGID]
             # Keyboards:
             if ATTR_KEYBOARD in data:
-                from telegram import ReplyKeyboardMarkup
+                from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
                 keys = data.get(ATTR_KEYBOARD)
                 keys = keys if isinstance(keys, list) else [keys]
-                params[ATTR_REPLYMARKUP] = ReplyKeyboardMarkup(
-                    [[key.strip() for key in row.split(",")] for row in keys])
+                if keys:
+                    params[ATTR_REPLYMARKUP] = ReplyKeyboardMarkup(
+                        [[key.strip() for key in row.split(",")]
+                         for row in keys])
+                else:
+                    params[ATTR_REPLYMARKUP] = ReplyKeyboardRemove(True)
             elif ATTR_KEYBOARD_INLINE in data:
                 from telegram import InlineKeyboardMarkup
                 keys = data.get(ATTR_KEYBOARD_INLINE)
@@ -539,6 +564,7 @@ class TelegramNotificationService:
             username=kwargs.get(ATTR_USERNAME),
             password=kwargs.get(ATTR_PASSWORD),
             authentication=kwargs.get(ATTR_AUTHENTICATION),
+            verify_ssl=kwargs.get(ATTR_VERIFY_SSL),
         )
         if file_content:
             for chat_id in self._get_target_chat_ids(target):
@@ -563,6 +589,15 @@ class TelegramNotificationService:
                            "Error sending location",
                            chat_id=chat_id,
                            latitude=latitude, longitude=longitude, **params)
+
+    def leave_chat(self, chat_id=None):
+        """Remove bot from chat."""
+        chat_id = self._get_target_chat_ids(chat_id)[0]
+        _LOGGER.debug("Leave from chat ID %s", chat_id)
+        leaved = self._send_msg(self.bot.leaveChat,
+                                "Error leaving chat",
+                                chat_id)
+        return leaved
 
 
 class BaseTelegramBotEntity:
@@ -633,7 +668,7 @@ class BaseTelegramBotEntity:
 
             self.hass.bus.async_fire(event, event_data)
             return True
-        elif ATTR_CALLBACK_QUERY in data:
+        if ATTR_CALLBACK_QUERY in data:
             event = EVENT_TELEGRAM_CALLBACK
             data = data.get(ATTR_CALLBACK_QUERY)
             message_ok, event_data = self._get_message_data(data)
@@ -647,6 +682,6 @@ class BaseTelegramBotEntity:
 
             self.hass.bus.async_fire(event, event_data)
             return True
-        else:
-            _LOGGER.warning("Message with unknown data received: %s", data)
-            return True
+
+        _LOGGER.warning("Message with unknown data received: %s", data)
+        return True

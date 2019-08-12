@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tilbeh\u00f8r er allerede konfigurert med denne kontrolleren.",
+            "already_paired": "Dette tilbeh\u00f8ret er allerede sammenkoblet med en annen enhet. Vennligst tilbakestill tilbeh\u00f8ret og pr\u00f8v igjen.",
+            "ignored_model": "HomeKit st\u00f8tte for denne modellen er blokkert da en mer funksjonsrik standard integrering er tilgjengelig.",
+            "invalid_config_entry": "Denne enheten vises som klar til \u00e5 sammenkoble, men det er allerede en motstridende konfigurasjonsoppf\u00f8ring for den i Home Assistant som m\u00e5 fjernes f\u00f8rst.",
+            "no_devices": "Ingen ukoblede enheter ble funnet"
+        },
+        "error": {
+            "authentication_error": "Ugyldig HomeKit kode. Vennligst sjekk den og pr\u00f8v igjen.",
+            "unable_to_pair": "Kunne ikke koble til, vennligst pr\u00f8v igjen.",
+            "unknown_error": "Enheten rapporterte en ukjent feil. Sammenkobling mislyktes."
+        },
+        "flow_title": "HomeKit Tilbeh\u00f8r: {name}",
+        "step": {
+            "pair": {
+                "data": {
+                    "pairing_code": "Sammenkoblingskode"
+                },
+                "description": "Skriv inn HomeKit sammenkoblingskoden for \u00e5 bruke dette tilbeh\u00f8ret",
+                "title": "Koble til HomeKit tilbeh\u00f8r"
+            },
+            "user": {
+                "data": {
+                    "device": "Enhet"
+                },
+                "description": "Velg enheten du vil koble til",
+                "title": "Koble til HomeKit tilbeh\u00f8r"
+            }
+        },
+        "title": "HomeKit tilbeh\u00f8r"
+    }
+}

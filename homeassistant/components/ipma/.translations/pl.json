@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "Nazwa ju\u017c istnieje"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Szeroko\u015b\u0107 geograficzna",
+                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna",
+                    "name": "Nazwa"
+                },
+                "description": "Portugalski Instytut Morza i Atmosfery",
+                "title": "Lokalizacja"
+            }
+        },
+        "title": "Portugalski serwis pogodowy (IPMA)"
+    }
+}

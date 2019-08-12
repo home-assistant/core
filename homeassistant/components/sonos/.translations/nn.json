@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Det vart ikkje funne noko Sonoseiningar p\u00e5 nettverket.",
+            "no_devices_found": "Det vart ikkje funne noko Sonos-einingar p\u00e5 nettverket.",
             "single_instance_allowed": "Du treng berre \u00e5 sette opp \u00e9in Sonos-konfigurasjon."
         },
         "step": {

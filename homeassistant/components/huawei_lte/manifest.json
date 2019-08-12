@@ -1,0 +1,12 @@
+{
+  "domain": "huawei_lte",
+  "name": "Huawei lte",
+  "documentation": "https://www.home-assistant.io/components/huawei_lte",
+  "requirements": [
+    "huawei-lte-api==1.1.5"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@scop"
+  ]
+}

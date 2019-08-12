@@ -9,6 +9,14 @@
             "no_key": "Impossibile ottenere una API key"
         },
         "step": {
+            "hassio_confirm": {
+                "data": {
+                    "allow_clip_sensor": "Consenti l'importazione di sensori virtuali",
+                    "allow_deconz_groups": "Consenti l'importazione di gruppi deCONZ"
+                },
+                "description": "Vuoi configurare Home Assistant per connettersi al gateway deCONZ fornito dal componente aggiuntivo hass.io {addon} ?",
+                "title": "Gateway Zigbee deCONZ tramite l'add-on Hass.io"
+            },
             "init": {
                 "data": {
                     "host": "Host",
@@ -28,6 +36,6 @@
                 "title": "Opzioni di configurazione extra per deCONZ"
             }
         },
-        "title": "deCONZ"
+        "title": "Gateway Zigbee deCONZ"
     }
 }

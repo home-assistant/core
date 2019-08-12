@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "bad_config_file": "Datos err\u00f3neos en el archivo de configuraci\u00f3n",
+            "link_local_address": "Las direcciones de enlace locales no son compatibles"
+        },
+        "error": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "device_unavailable": "El dispositivo no est\u00e1 disponible",
+            "faulty_credentials": "Credenciales de usuario incorrectas"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto",
+                    "username": "Nombre de usuario"
+                },
+                "title": "Configurar dispositivo Axis"
+            }
+        },
+        "title": "Dispositivo Axis"
+    }
+}

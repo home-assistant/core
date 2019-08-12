@@ -1,0 +1,12 @@
+{
+  "domain": "hue",
+  "name": "Philips Hue",
+  "documentation": "https://www.home-assistant.io/components/hue",
+  "requirements": [
+    "aiohue==1.9.1"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@balloob"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "domain": "rainmachine",
+  "name": "Rainmachine",
+  "documentation": "https://www.home-assistant.io/components/rainmachine",
+  "requirements": [
+    "regenmaschine==1.4.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@bachya"
+  ]
+}

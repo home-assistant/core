@@ -1,0 +1,10 @@
+{
+  "domain": "netgear",
+  "name": "Netgear",
+  "documentation": "https://www.home-assistant.io/components/netgear",
+  "requirements": [
+    "pynetgear==0.5.2"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}
