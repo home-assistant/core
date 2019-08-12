@@ -8,6 +8,12 @@
             "no_sensors_or_port_mapping": "W\u0142\u0105cz przynajmniej sensory lub mapowanie port\u00f3w",
             "single_instance_allowed": "Wymagana jest tylko jedna konfiguracja UPnP/IGD."
         },
+        "error": {
+            "few": "kilka",
+            "many": "wiele",
+            "one": "jeden",
+            "other": "inne"
+        },
         "step": {
             "confirm": {
                 "description": "Czy chcesz skonfigurowa\u0107 UPnP/IGD?",
