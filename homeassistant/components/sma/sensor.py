@@ -149,7 +149,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             config_sensors = [s.name for s in sensor_def]
         used_sensors = list(set(config_sensors + config[CONF_CUSTOM].keys()))
         for sensor in used_sensors:
-            hass_sensors.append(SMAsensor(sensor_def[name], []))
+            hass_sensors.append(SMAsensor(sensor_def[sensor], []))
 
     async_add_entities(hass_sensors)
 
