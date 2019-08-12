@@ -1,23 +1,23 @@
 {
     "config": {
-        "title": "Twente Milieu",
-        "step": {
-            "user": {
-                "title": "Twente Milieu",
-                "description": "Set up Twente Milieu providing waste collection information on your address.",
-                "data": {
-                    "post_code": "Postal code",
-                    "house_number": "House number",
-                    "house_letter": "House letter/additional"
-                }
-            }
+        "abort": {
+            "address_exists": "Address already set up."
         },
         "error": {
             "connection_error": "Failed to connect.",
             "invalid_address": "Address not found in Twente Milieu service area."
         },
-        "abort": {
-            "address_already_set_up": "Address already set up."
-        }
+        "step": {
+            "user": {
+                "data": {
+                    "house_letter": "House letter/additional",
+                    "house_number": "House number",
+                    "post_code": "Postal code"
+                },
+                "description": "Set up Twente Milieu providing waste collection information on your address.",
+                "title": "Twente Milieu"
+            }
+        },
+        "title": "Twente Milieu"
     }
 }
