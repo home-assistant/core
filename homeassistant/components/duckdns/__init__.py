@@ -42,14 +42,22 @@ async def async_setup(hass, config):
     token = config[DOMAIN][CONF_ACCESS_TOKEN]
     session = async_get_clientsession(hass)
 
-    result = await _update_duckdns(session, domain, token)
+    await _update_duckdns(session, domain, token)
 
-    if not result:
-        return False
+    fail = 0
+    enable = 0
 
     async def update_domain_interval(now):
         """Update the DuckDNS entry."""
-        await _update_duckdns(session, domain, token)
+        nonlocal fail, enable
+        if enable >= 0:
+            if await _update_duckdns(session, domain, token):
+                fail = 0
+            else:
+                fail += 1
+                enable = -11 if fail > 2 else -2
+        else:
+            enable += 1
 
     async def update_domain_service(call):
         """Update the DuckDNS entry."""
@@ -60,7 +68,7 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_SET_TXT, update_domain_service, schema=SERVICE_TXT_SCHEMA
     )
 
-    return result
+    return True
 
 
 _SENTINEL = object()

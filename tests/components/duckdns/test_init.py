@@ -1,7 +1,7 @@
 """Test the DuckDNS component."""
 import asyncio
 from datetime import timedelta
-
+import logging
 import pytest
 
 from homeassistant.loader import bind_hass
@@ -13,6 +13,7 @@ from tests.common import async_fire_time_changed
 
 DOMAIN = "bla"
 TOKEN = "abcdefgh"
+_LOGGER = logging.getLogger(__name__)
 
 
 @bind_hass
@@ -60,7 +61,7 @@ def test_setup(hass, aioclient_mock):
 
 
 @asyncio.coroutine
-def test_setup_fails_if_update_fails(hass, aioclient_mock):
+def test_setup_backoff(hass, aioclient_mock):
     """Test setup fails if first update fails."""
     aioclient_mock.get(
         duckdns.UPDATE_URL, params={"domains": DOMAIN, "token": TOKEN}, text="KO"
@@ -69,8 +70,18 @@ def test_setup_fails_if_update_fails(hass, aioclient_mock):
     result = yield from async_setup_component(
         hass, duckdns.DOMAIN, {"duckdns": {"domain": DOMAIN, "access_token": TOKEN}}
     )
-    assert not result
+    assert result
     assert aioclient_mock.call_count == 1
+
+    counts = [2] * 3 + [3] * 3 + [4] * 12 + [5] * 12 + [6] * 12 + [7] * 12
+    tme = utcnow()
+
+    for cnt in counts:
+        tme += timedelta(minutes=5)
+        async_fire_time_changed(hass, tme)
+        yield from hass.async_block_till_done()
+        _LOGGER.debug("expected cnt %s, got %s", cnt, aioclient_mock.call_count)
+        assert aioclient_mock.call_count == cnt
 
 
 @asyncio.coroutine
