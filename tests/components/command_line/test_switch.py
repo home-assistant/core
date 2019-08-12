@@ -28,136 +28,144 @@ class TestCommandSwitch(unittest.TestCase):
     def test_state_none(self):
         """Test with none state."""
         with tempfile.TemporaryDirectory() as tempdirname:
-            path = os.path.join(tempdirname, 'switch_status')
+            path = os.path.join(tempdirname, "switch_status")
             test_switch = {
-                'command_on': 'echo 1 > {}'.format(path),
-                'command_off': 'echo 0 > {}'.format(path),
+                "command_on": "echo 1 > {}".format(path),
+                "command_off": "echo 0 > {}".format(path),
             }
-            assert setup_component(self.hass, switch.DOMAIN, {
-                'switch': {
-                    'platform': 'command_line',
-                    'switches': {
-                        'test': test_switch
+            assert setup_component(
+                self.hass,
+                switch.DOMAIN,
+                {
+                    "switch": {
+                        "platform": "command_line",
+                        "switches": {"test": test_switch},
                     }
-                }
-            })
+                },
+            )
 
-            state = self.hass.states.get('switch.test')
+            state = self.hass.states.get("switch.test")
             assert STATE_OFF == state.state
 
-            common.turn_on(self.hass, 'switch.test')
+            common.turn_on(self.hass, "switch.test")
             self.hass.block_till_done()
 
-            state = self.hass.states.get('switch.test')
+            state = self.hass.states.get("switch.test")
             assert STATE_ON == state.state
 
-            common.turn_off(self.hass, 'switch.test')
+            common.turn_off(self.hass, "switch.test")
             self.hass.block_till_done()
 
-            state = self.hass.states.get('switch.test')
+            state = self.hass.states.get("switch.test")
             assert STATE_OFF == state.state
 
     def test_state_value(self):
         """Test with state value."""
         with tempfile.TemporaryDirectory() as tempdirname:
-            path = os.path.join(tempdirname, 'switch_status')
+            path = os.path.join(tempdirname, "switch_status")
             test_switch = {
-                'command_state': 'cat {}'.format(path),
-                'command_on': 'echo 1 > {}'.format(path),
-                'command_off': 'echo 0 > {}'.format(path),
-                'value_template': '{{ value=="1" }}'
+                "command_state": "cat {}".format(path),
+                "command_on": "echo 1 > {}".format(path),
+                "command_off": "echo 0 > {}".format(path),
+                "value_template": '{{ value=="1" }}',
             }
-            assert setup_component(self.hass, switch.DOMAIN, {
-                'switch': {
-                    'platform': 'command_line',
-                    'switches': {
-                        'test': test_switch
+            assert setup_component(
+                self.hass,
+                switch.DOMAIN,
+                {
+                    "switch": {
+                        "platform": "command_line",
+                        "switches": {"test": test_switch},
                     }
-                }
-            })
+                },
+            )
 
-            state = self.hass.states.get('switch.test')
+            state = self.hass.states.get("switch.test")
             assert STATE_OFF == state.state
 
-            common.turn_on(self.hass, 'switch.test')
+            common.turn_on(self.hass, "switch.test")
             self.hass.block_till_done()
 
-            state = self.hass.states.get('switch.test')
+            state = self.hass.states.get("switch.test")
             assert STATE_ON == state.state
 
-            common.turn_off(self.hass, 'switch.test')
+            common.turn_off(self.hass, "switch.test")
             self.hass.block_till_done()
 
-            state = self.hass.states.get('switch.test')
+            state = self.hass.states.get("switch.test")
             assert STATE_OFF == state.state
 
     def test_state_json_value(self):
         """Test with state JSON value."""
         with tempfile.TemporaryDirectory() as tempdirname:
-            path = os.path.join(tempdirname, 'switch_status')
-            oncmd = json.dumps({'status': 'ok'})
-            offcmd = json.dumps({'status': 'nope'})
+            path = os.path.join(tempdirname, "switch_status")
+            oncmd = json.dumps({"status": "ok"})
+            offcmd = json.dumps({"status": "nope"})
             test_switch = {
-                'command_state': 'cat {}'.format(path),
-                'command_on': 'echo \'{}\' > {}'.format(oncmd, path),
-                'command_off': 'echo \'{}\' > {}'.format(offcmd, path),
-                'value_template': '{{ value_json.status=="ok" }}'
+                "command_state": "cat {}".format(path),
+                "command_on": "echo '{}' > {}".format(oncmd, path),
+                "command_off": "echo '{}' > {}".format(offcmd, path),
+                "value_template": '{{ value_json.status=="ok" }}',
             }
-            assert setup_component(self.hass, switch.DOMAIN, {
-                'switch': {
-                    'platform': 'command_line',
-                    'switches': {
-                        'test': test_switch
+            assert setup_component(
+                self.hass,
+                switch.DOMAIN,
+                {
+                    "switch": {
+                        "platform": "command_line",
+                        "switches": {"test": test_switch},
                     }
-                }
-            })
+                },
+            )
 
-            state = self.hass.states.get('switch.test')
+            state = self.hass.states.get("switch.test")
             assert STATE_OFF == state.state
 
-            common.turn_on(self.hass, 'switch.test')
+            common.turn_on(self.hass, "switch.test")
             self.hass.block_till_done()
 
-            state = self.hass.states.get('switch.test')
+            state = self.hass.states.get("switch.test")
             assert STATE_ON == state.state
 
-            common.turn_off(self.hass, 'switch.test')
+            common.turn_off(self.hass, "switch.test")
             self.hass.block_till_done()
 
-            state = self.hass.states.get('switch.test')
+            state = self.hass.states.get("switch.test")
             assert STATE_OFF == state.state
 
     def test_state_code(self):
         """Test with state code."""
         with tempfile.TemporaryDirectory() as tempdirname:
-            path = os.path.join(tempdirname, 'switch_status')
+            path = os.path.join(tempdirname, "switch_status")
             test_switch = {
-                'command_state': 'cat {}'.format(path),
-                'command_on': 'echo 1 > {}'.format(path),
-                'command_off': 'echo 0 > {}'.format(path),
+                "command_state": "cat {}".format(path),
+                "command_on": "echo 1 > {}".format(path),
+                "command_off": "echo 0 > {}".format(path),
             }
-            assert setup_component(self.hass, switch.DOMAIN, {
-                'switch': {
-                    'platform': 'command_line',
-                    'switches': {
-                        'test': test_switch
+            assert setup_component(
+                self.hass,
+                switch.DOMAIN,
+                {
+                    "switch": {
+                        "platform": "command_line",
+                        "switches": {"test": test_switch},
                     }
-                }
-            })
+                },
+            )
 
-            state = self.hass.states.get('switch.test')
+            state = self.hass.states.get("switch.test")
             assert STATE_OFF == state.state
 
-            common.turn_on(self.hass, 'switch.test')
+            common.turn_on(self.hass, "switch.test")
             self.hass.block_till_done()
 
-            state = self.hass.states.get('switch.test')
+            state = self.hass.states.get("switch.test")
             assert STATE_ON == state.state
 
-            common.turn_off(self.hass, 'switch.test')
+            common.turn_off(self.hass, "switch.test")
             self.hass.block_till_done()
 
-            state = self.hass.states.get('switch.test')
+            state = self.hass.states.get("switch.test")
             assert STATE_ON == state.state
 
     def test_assumed_state_should_be_true_if_command_state_is_none(self):
@@ -178,7 +186,7 @@ class TestCommandSwitch(unittest.TestCase):
         assert no_state_device.assumed_state
 
         # Set state command
-        init_args[-2] = 'cat {}'
+        init_args[-2] = "cat {}"
 
         state_device = command_line.CommandSwitch(*init_args)
         assert not state_device.assumed_state
@@ -196,5 +204,5 @@ class TestCommandSwitch(unittest.TestCase):
         ]
 
         test_switch = command_line.CommandSwitch(*init_args)
-        assert test_switch.entity_id == 'switch.test_device_name'
-        assert test_switch.name == 'Test friendly name!'
+        assert test_switch.entity_id == "switch.test_device_name"
+        assert test_switch.name == "Test friendly name!"

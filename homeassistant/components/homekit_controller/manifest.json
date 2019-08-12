@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/homekit_controller",
   "requirements": [
-    "homekit[IP]==0.14.0"
+    "homekit[IP]==0.15.0"
   ],
   "dependencies": [],
   "zeroconf": ["_hap._tcp.local."],
