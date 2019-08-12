@@ -24,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_RELEASE_NOTES = "release_notes"
 ATTR_NEWEST_VERSION = "newest_version"
+ATTR_CURRENT_VERSION = "current_version"
 
 CONF_REPORTING = "reporting"
 CONF_COMPONENT_REPORTING = "include_used_components"
@@ -53,11 +54,12 @@ RESPONSE_SCHEMA = vol.Schema(
 class Updater:
     """Updater class for data exchange."""
 
-    def __init__(self, update_available: bool, newest_version: str, release_notes: str):
+    def __init__(self, update_available: bool, newest_version: str, release_notes: str, current_version: str):
         """Initialize attributes."""
         self.update_available = update_available
         self.release_notes = release_notes
         self.newest_version = newest_version
+        self.current_version = current_version
 
 
 def _create_uuid(hass, filename=UPDATER_UUID_FILE):
@@ -125,7 +127,7 @@ async def async_setup(hass, config):
         elif StrictVersion(newest) < StrictVersion(current_version):
             _LOGGER.debug("Local version is newer than the latest version (%s)", newest)
 
-        updater = Updater(update_available, newest, release_notes)
+        updater = Updater(update_available, newest, release_notes, current_version)
         async_dispatcher_send(hass, DISPATCHER_REMOTE_UPDATE, updater)
 
     # Update daily, start 1 hour after startup

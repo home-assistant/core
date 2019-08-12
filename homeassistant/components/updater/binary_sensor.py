@@ -4,7 +4,7 @@ from homeassistant.core import callback
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import ATTR_NEWEST_VERSION, ATTR_RELEASE_NOTES, DISPATCHER_REMOTE_UPDATE, Updater
+from . import ATTR_NEWEST_VERSION, ATTR_RELEASE_NOTES, ATTR_CURRENT_VERSION, DISPATCHER_REMOTE_UPDATE, Updater
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -20,6 +20,7 @@ class UpdaterBinary(BinarySensorDevice):
         self._update_available = None
         self._release_notes = None
         self._newest_version = None
+        self._current_version = None
         self._unsub_dispatcher = None
 
     @property
@@ -57,6 +58,8 @@ class UpdaterBinary(BinarySensorDevice):
             data[ATTR_RELEASE_NOTES] = self._release_notes
         if self._newest_version:
             data[ATTR_NEWEST_VERSION] = self._newest_version
+        if self._current_version:
+            data[ATTR_CURRENT_VERSION] = self._current_version
         return data
 
     async def async_added_to_hass(self):
@@ -68,6 +71,7 @@ class UpdaterBinary(BinarySensorDevice):
             self._newest_version = updater.newest_version
             self._release_notes = updater.release_notes
             self._update_available = updater.update_available
+            self._current_version = updater.current_version
             self.async_schedule_update_ha_state()
 
         self._unsub_dispatcher = async_dispatcher_connect(
