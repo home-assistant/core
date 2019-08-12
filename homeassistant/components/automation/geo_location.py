@@ -13,6 +13,9 @@ from homeassistant.const import (
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.config_validation import entity_domain
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 EVENT_ENTER = "enter"
 EVENT_LEAVE = "leave"
 DEFAULT_EVENT = EVENT_ENTER
