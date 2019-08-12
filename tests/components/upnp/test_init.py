@@ -18,7 +18,10 @@ class MockDevice(Device):
 
     def __init__(self, udn):
         """Initializer."""
-        super().__init__(MagicMock())
+        device = MagicMock()
+        device.manufacturer = "mock-manuf"
+        device.name = "mock-name"
+        super().__init__(device)
         self._udn = udn
         self.added_port_mappings = []
         self.removed_port_mappings = []

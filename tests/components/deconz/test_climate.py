@@ -178,6 +178,7 @@ async def test_add_new_climate_device(hass):
     sensor = Mock()
     sensor.name = "name"
     sensor.type = "ZHAThermostat"
+    sensor.uniqueid = "1"
     sensor.register_async_callback = Mock()
     async_dispatcher_send(hass, gateway.async_event_new_device("sensor"), [sensor])
     await hass.async_block_till_done()

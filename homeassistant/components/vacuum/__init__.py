@@ -324,6 +324,14 @@ class VacuumDevice(_BaseVacuum, ToggleEntity):
         """
         await self.hass.async_add_executor_job(partial(self.start_pause, **kwargs))
 
+    async def async_pause(self):
+        """Not supported."""
+        pass
+
+    async def async_start(self):
+        """Not supported."""
+        pass
+
 
 class StateVacuumDevice(_BaseVacuum):
     """Representation of a vacuum cleaner robot that supports states."""
@@ -378,3 +386,15 @@ class StateVacuumDevice(_BaseVacuum):
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(self.pause)
+
+    async def async_turn_on(self, **kwargs):
+        """Not supported."""
+        pass
+
+    async def async_turn_off(self, **kwargs):
+        """Not supported."""
+        pass
+
+    async def async_toggle(self, **kwargs):
+        """Not supported."""
+        pass

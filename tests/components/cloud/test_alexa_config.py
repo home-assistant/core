@@ -52,15 +52,16 @@ def patch_sync_helper():
     to_update = []
     to_remove = []
 
+    async def sync_helper(to_upd, to_rem):
+        to_update.extend([ent_id for ent_id in to_upd if ent_id not in to_update])
+        to_remove.extend([ent_id for ent_id in to_rem if ent_id not in to_remove])
+        return True
+
     with patch("homeassistant.components.cloud.alexa_config.SYNC_DELAY", 0), patch(
         "homeassistant.components.cloud.alexa_config.AlexaConfig._sync_helper",
-        side_effect=mock_coro,
-    ) as mock_helper:
+        side_effect=sync_helper,
+    ):
         yield to_update, to_remove
-
-    actual_to_update, actual_to_remove = mock_helper.mock_calls[0][1]
-    to_update.extend(actual_to_update)
-    to_remove.extend(actual_to_remove)
 
 
 async def test_alexa_update_expose_trigger_sync(hass, cloud_prefs):
