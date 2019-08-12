@@ -101,6 +101,7 @@ TEST_REQUIREMENTS = (
     "mficlient",
     "minio",
     "netdisco",
+    "nokia",
     "numpy",
     "oauth2client",
     "paho-mqtt",
@@ -221,7 +222,7 @@ def core_requirements():
     """Gather core requirements out of setup.py."""
     with open("setup.py") as inp:
         reqs_raw = re.search(r"REQUIRES = \[(.*?)\]", inp.read(), re.S).group(1)
-    return [x[1] for x in re.findall(r"(['\"])(.*?)\1", reqs_raw)]
+        return [x[1] for x in re.findall(r"(['\"])(.*?)\1", reqs_raw)]
 
 
 def gather_recursive_requirements(domain, seen=None):
