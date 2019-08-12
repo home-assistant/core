@@ -1,4 +1,5 @@
 """Support for Radio Thermostat wifi-enabled home thermostats."""
+
 import datetime
 import logging
 
@@ -366,9 +367,8 @@ class RadioThermostat(ClimateDevice):
             self._turn_away_mode_off()
 
     def _turn_away_mode_on(self):
-        """Turn away on.
-        The RTCOA app simulates away mode by using a hold.
-        """
+        """Turn away on."""
+        # The RTCOA app simulates away mode by using a hold.
         away_temp = None
         if not self._away:
             self._prev_temp = self._target_temperature
