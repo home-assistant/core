@@ -1983,7 +1983,7 @@ ziggo-mediabox-xl==1.1.0
 zigpy-deconz==0.2.1
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.7.0
+zigpy-homeassistant==0.7.1
 
 # homeassistant.components.zha
 zigpy-xbee-homeassistant==0.4.0
