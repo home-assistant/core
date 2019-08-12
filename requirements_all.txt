@@ -170,7 +170,7 @@ aiopvapi==1.6.14
 aioswitcher==2019.4.26
 
 # homeassistant.components.unifi
-aiounifi==10
+aiounifi==11
 
 # homeassistant.components.wwlln
 aiowwlln==1.0.0
@@ -1046,7 +1046,7 @@ pyalarmdotcom==0.3.2
 pyarlo==0.2.3
 
 # homeassistant.components.netatmo
-pyatmo==2.2.0
+pyatmo==2.2.1
 
 # homeassistant.components.apple_tv
 pyatv==0.3.12
@@ -1566,7 +1566,7 @@ pyuptimerobot==0.0.5
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.3.2
+pyvera==0.3.3
 
 # homeassistant.components.vesync
 pyvesync==1.1.0
