@@ -190,6 +190,7 @@ async def test_add_new_light(hass):
     gateway = await setup_gateway(hass, {})
     light = Mock()
     light.name = "name"
+    light.uniqueid = "1"
     light.register_async_callback = Mock()
     async_dispatcher_send(hass, gateway.async_event_new_device("light"), [light])
     await hass.async_block_till_done()
