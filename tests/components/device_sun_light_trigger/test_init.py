@@ -111,3 +111,42 @@ async def test_lights_turn_on_when_coming_home_after_sun_set(hass, scanner):
 
         await hass.async_block_till_done()
     assert light.is_on(hass)
+
+
+async def test_lights_turn_on_when_coming_home_after_sun_set_person(hass, scanner):
+    """Test lights turn on when coming home after sun set."""
+    test_time = datetime(2017, 4, 5, 3, 2, 3, tzinfo=dt_util.UTC)
+    with patch("homeassistant.util.dt.utcnow", return_value=test_time):
+        await common_light.async_turn_off(hass)
+
+        assert await async_setup_component(
+            hass,
+            "person",
+            {
+                "person": {
+                    "me": {
+                        "name": "Me",
+                        "device_entities": [DT_ENTITY_ID_FORMAT.format("device_1")],
+                    }
+                }
+            },
+        )
+
+        assert await async_setup_component(
+            hass,
+            "group",
+            {"group": {"a_person": {"name": "A person", "entities": "person.me"}}},
+        )
+
+        assert await async_setup_component(
+            hass, device_sun_light_trigger.DOMAIN, {device_sun_light_trigger.DOMAIN: {}}
+        )
+
+        # Person is device 1, so device 2 should have no impact
+        hass.states.async_set(DT_ENTITY_ID_FORMAT.format("device_2"), STATE_HOME)
+        await hass.async_block_till_done()
+        assert not light.is_on(hass)
+
+        hass.states.async_set(DT_ENTITY_ID_FORMAT.format("device_1"), STATE_HOME)
+        await hass.async_block_till_done()
+        assert light.is_on(hass)
