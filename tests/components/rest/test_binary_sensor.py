@@ -250,7 +250,6 @@ class TestRestBinarySensor(unittest.TestCase):
             self.name,
             self.device_class,
             None,
-            ["key"],
             self.json_attrs_tpl,
             self.force_update,
         )
@@ -269,7 +268,6 @@ class TestRestBinarySensor(unittest.TestCase):
             self.name,
             self.device_class,
             None,
-            ["key"],
             self.json_attrs_tpl,
             self.force_update,
         )
@@ -290,7 +288,6 @@ class TestRestBinarySensor(unittest.TestCase):
             self.name,
             self.device_class,
             None,
-            ["key"],
             self.json_attrs_tpl,
             self.force_update,
         )
@@ -311,7 +308,6 @@ class TestRestBinarySensor(unittest.TestCase):
             self.name,
             self.device_class,
             None,
-            ["key"],
             self.json_attrs_tpl,
             self.force_update,
         )
@@ -332,7 +328,6 @@ class TestRestBinarySensor(unittest.TestCase):
             self.name,
             self.device_class,
             self.value_template,
-            ["key"],
             self.json_attrs_tpl,
             self.force_update,
         )
