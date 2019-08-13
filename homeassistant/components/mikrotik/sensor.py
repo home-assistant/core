@@ -98,7 +98,8 @@ class MikrotikSensor(Entity):
         for key in results:
             value = results.get(key)
             if any(unit in key for unit in UNITS):
-                value = "%.1f" % (float(value) / MEGA)
+                value = float(value) / MEGA
+                value = f"{value:.2f}"
 
             if key == self._state_item:
                 self._state = value
