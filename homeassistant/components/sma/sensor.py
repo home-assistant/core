@@ -43,7 +43,7 @@ def _check_sensor_schema(conf):
     except (ImportError, AttributeError):
         return conf
 
-    customs = conf[CONF_CUSTOM].keys()
+    customs = list(conf[CONF_CUSTOM].keys())
 
     if isinstance(conf[CONF_SENSORS], dict):
         msg = '"sensors" should be a simple list from 0.99'
@@ -76,6 +76,7 @@ def _check_sensor_schema(conf):
             )
         elif sensor not in valid:
             raise vol.Invalid("{} does not exist".format(sensor))
+    return conf
 
 
 CUSTOM_SCHEMA = vol.Any(
@@ -96,8 +97,8 @@ PLATFORM_SCHEMA = vol.All(
             vol.Required(CONF_PASSWORD): cv.string,
             vol.Optional(CONF_GROUP, default=GROUPS[0]): vol.In(GROUPS),
             vol.Optional(CONF_SENSORS, default=[]): vol.Any(
-                vol.All(cv.ensure_list, [str]),
                 cv.schema_with_slug_keys(cv.ensure_list),  # will be deprecated
+                vol.All(cv.ensure_list, [str]),
             ),
             vol.Optional(CONF_CUSTOM, default={}): cv.schema_with_slug_keys(
                 CUSTOM_SCHEMA
@@ -147,7 +148,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if isinstance(config_sensors, list):
         if not config_sensors:  # Use all sensors by default
             config_sensors = [s.name for s in sensor_def]
-        used_sensors = list(set(config_sensors + config[CONF_CUSTOM].keys()))
+        used_sensors = list(set(config_sensors + list(config[CONF_CUSTOM].keys())))
         for sensor in used_sensors:
             hass_sensors.append(SMAsensor(sensor_def[sensor], []))
 
