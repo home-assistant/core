@@ -5,7 +5,6 @@ import voluptuous as vol
 import homeassistant.components.api as api
 import homeassistant.components.http as http
 from homeassistant.components.withings import async_setup, const, CONFIG_SCHEMA
-from homeassistant.components.withings.sensor import WITHINGS_MEASUREMENTS_MAP
 
 from .conftest import WithingsFactory, WithingsFactoryConfig
 
@@ -172,107 +171,6 @@ def test_config_schema_base_url():
             const.PROFILES: ["Person 1"],
         }
     )
-
-
-def test_config_schema_measurements():
-    """Test schema."""
-    result = config_schema_validate(
-        {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.PROFILES: ["Person 1"],
-        }
-    )
-    assert result[const.DOMAIN].get(const.MEASURES) == list(
-        WITHINGS_MEASUREMENTS_MAP.keys()
-    )
-
-    config_schema_assert_fail(
-        {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.PROFILES: ["Person 1"],
-            const.MEASURES: 123,
-        }
-    )
-    config_schema_assert_fail(
-        {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.PROFILES: ["Person 1"],
-            const.MEASURES: "",
-        }
-    )
-    config_schema_assert_fail(
-        {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.PROFILES: ["Person 1"],
-            const.MEASURES: "AAA",
-        }
-    )
-    config_schema_assert_fail(
-        {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.PROFILES: ["Person 1"],
-            const.MEASURES: [],
-        }
-    )
-    config_schema_assert_fail(
-        {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.PROFILES: ["Person 1"],
-            const.MEASURES: [123],
-        }
-    )
-    config_schema_assert_fail(
-        {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.PROFILES: ["Person 1"],
-            const.MEASURES: ["aaaa"],
-        }
-    )
-    config_schema_assert_fail(
-        {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.PROFILES: ["Person 1"],
-            const.MEASURES: [const.MEAS_BODY_TEMP_C, "AAA"],
-        }
-    )
-    config_schema_assert_fail(
-        {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.PROFILES: ["Person 1"],
-            const.MEASURES: [const.MEAS_BODY_TEMP_C, const.MEAS_BODY_TEMP_C],
-        }
-    )
-    result = config_schema_validate(
-        {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.PROFILES: ["Person 1"],
-            const.MEASURES: [const.MEAS_BODY_TEMP_C],
-        }
-    )
-    assert result[const.DOMAIN].get(const.MEASURES) == [const.MEAS_BODY_TEMP_C]
-
-    result = config_schema_validate(
-        {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.PROFILES: ["Person 1"],
-            const.MEASURES: [const.MEAS_BODY_TEMP_C, const.MEAS_BONE_MASS_KG],
-        }
-    )
-    assert result[const.DOMAIN].get(const.MEASURES) == [
-        const.MEAS_BODY_TEMP_C,
-        const.MEAS_BONE_MASS_KG,
-    ]
 
 
 async def test_async_setup_no_config(hass):

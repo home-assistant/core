@@ -54,11 +54,9 @@ class WithingsFactoryConfig:
             ],
         }
 
-        if measures:
-            self._withings_config[const.MEASURES] = measures
-
         self._api_config = api_config or {"base_url": "http://localhost/"}
         self._http_config = http_config or {}
+        self._measures = measures
 
         assert self._withings_config, "withings_config must be set."
         assert isinstance(
@@ -88,6 +86,11 @@ class WithingsFactoryConfig:
     def http_config(self):
         """Get http component config."""
         return self._http_config
+
+    @property
+    def measures(self):
+        """Get the measures."""
+        return self._measures
 
     @property
     def hass_config(self):
@@ -284,6 +287,12 @@ def withings_factory_fixture(request, hass) -> WithingsFactory:
             data_manager_get_throttle_interval_patch.start()
         )
 
+        get_measures_patch = asynctest.patch(
+            "homeassistant.components.withings.sensor.get_measures",
+            return_value=config.measures,
+        )
+        get_measures_patch.start()
+
         patches.extend(
             [
                 nokia_auth_get_credentials_patch,
@@ -291,7 +300,8 @@ def withings_factory_fixture(request, hass) -> WithingsFactory:
                 nokia_api_get_measures_patch,
                 nokia_api_get_sleep_patch,
                 nokia_api_get_sleep_summary_patch,
-                data_manager_get_throttle_interval_mock,
+                data_manager_get_throttle_interval_patch,
+                get_measures_patch,
             ]
         )
 

@@ -12,7 +12,6 @@ from homeassistant.helpers import config_validation as cv
 
 from . import config_flow, const
 from .common import _LOGGER, get_data_manager, NotAuthenticatedError
-from .sensor import WITHINGS_MEASUREMENTS_MAP
 
 DOMAIN = const.DOMAIN
 
@@ -30,14 +29,6 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Unique(),
                     vol.Length(min=1),
                     [vol.All(cv.string, vol.Length(min=1))],
-                ),
-                vol.Optional(
-                    const.MEASURES, default=list(WITHINGS_MEASUREMENTS_MAP)
-                ): vol.All(
-                    cv.ensure_list,
-                    vol.Unique(),
-                    vol.Length(min=1),
-                    [vol.All(cv.string, vol.In(list(WITHINGS_MEASUREMENTS_MAP)))],
                 ),
             }
         )

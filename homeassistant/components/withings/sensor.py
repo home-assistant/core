@@ -22,19 +22,25 @@ async def async_setup_entry(
 ):
     """Set up the sensor config entry."""
     data_manager = get_data_manager(hass, entry)
-    entities = create_sensor_entities(hass, data_manager)
+    entities = create_sensor_entities(data_manager)
     async_add_entities(entities, True)
 
 
-def create_sensor_entities(hass: HomeAssistantType, data_manager: WithingsDataManager):
+def get_measures():
+    """Get all the measures.
+
+    This function exists to be easily mockable so we can test
+    one measure at a time. This becomes necessary when integration
+    testing throttle functionality in the data manager.
+    """
+    return list(WITHINGS_MEASUREMENTS_MAP)
+
+
+def create_sensor_entities(data_manager: WithingsDataManager):
     """Create sensor entities."""
     entities = []
 
-    measures = (
-        hass.data.get(const.DOMAIN, {})
-        .get(const.CONFIG, {})
-        .get(const.MEASURES, list(WITHINGS_MEASUREMENTS_MAP))
-    )
+    measures = get_measures()
 
     for attribute in WITHINGS_ATTRIBUTES:
         if attribute.measurement not in measures:
