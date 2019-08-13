@@ -16,7 +16,7 @@ BASE_CFG = {
 
 
 async def test_sma_config_old(hass):
-    """test old config."""
+    """Test old config."""
     sensors = {"current_consumption": ["current_consumption"]}
 
     with assert_setup_component(1):
