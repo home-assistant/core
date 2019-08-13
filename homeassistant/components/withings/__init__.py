@@ -11,7 +11,7 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.helpers import config_validation as cv
 
 from . import config_flow, const
-from .common import _LOGGER, create_withings_data_manger, NotAuthenticatedError
+from .common import _LOGGER, get_data_manager, NotAuthenticatedError
 from .sensor import WITHINGS_MEASUREMENTS_MAP
 
 DOMAIN = const.DOMAIN
@@ -77,7 +77,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Withings from a config entry."""
-    data_manager = create_withings_data_manger(hass, entry)
+    data_manager = get_data_manager(hass, entry)
 
     _LOGGER.debug("Confirming we're authenticated")
     try:

@@ -247,7 +247,9 @@ class WithingsDataManager:
         return self._sleep_summary
 
 
-def create_withings_data_manger(hass: HomeAssistantType, entry: ConfigEntry):
+def create_withings_data_manger(
+    hass: HomeAssistantType, entry: ConfigEntry
+) -> WithingsDataManager:
     """Set up the sensor config entry."""
     entry_creds = entry.data.get(const.CREDENTIALS) or {}
     profile = entry.data[const.PROFILE]
@@ -280,3 +282,27 @@ def create_withings_data_manger(hass: HomeAssistantType, entry: ConfigEntry):
 
     _LOGGER.debug("Creating withings data manager for profile: %s", profile)
     return WithingsDataManager(hass, profile, api)
+
+
+def get_data_manager(
+    hass: HomeAssistantType, entry: ConfigEntry
+) -> WithingsDataManager:
+    """Get a data manager for a config entry.
+
+    If the data manager doesn't exist yet, it will be
+    created and cached for later use.
+    """
+    profile = entry.data.get(const.PROFILE)
+
+    if not hass.data.get(const.DOMAIN):
+        hass.data[const.DOMAIN] = {}
+
+    if not hass.data[const.DOMAIN].get(const.DATA_MANAGER):
+        hass.data[const.DOMAIN][const.DATA_MANAGER] = {}
+
+    if not hass.data[const.DOMAIN][const.DATA_MANAGER].get(profile):
+        hass.data[const.DOMAIN][const.DATA_MANAGER][
+            profile
+        ] = create_withings_data_manger(hass, entry)
+
+    return hass.data[const.DOMAIN][const.DATA_MANAGER][profile]

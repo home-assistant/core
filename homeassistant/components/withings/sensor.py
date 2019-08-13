@@ -7,7 +7,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
 
 from . import const
-from .common import _LOGGER, create_withings_data_manger, WithingsDataManager
+from .common import _LOGGER, WithingsDataManager, get_data_manager
 
 # There's only 3 calls (per profile) made to the withings api every 5
 # minutes (see throttle values). This component wouldn't benefit
@@ -21,7 +21,7 @@ async def async_setup_entry(
     async_add_entities: types.Callable[[types.List[Entity], bool], None],
 ):
     """Set up the sensor config entry."""
-    data_manager = create_withings_data_manger(hass, entry)
+    data_manager = get_data_manager(hass, entry)
     entities = create_sensor_entities(hass, data_manager)
     async_add_entities(entities, True)
 

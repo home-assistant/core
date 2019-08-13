@@ -23,10 +23,11 @@ _LOGGER = logging.getLogger(__name__)
 def register_flow_implementation(hass, client_id, client_secret, base_url, profiles):
     """Register a flow implementation.
 
-    domain: Domain of the component responsible for the implementation.
-    name: Name of the component.
+    hass: Home assistant object.
     client_id: Client id.
     client_secret: Client secret.
+    base_url: Base url of home assistant instance.
+    profiles: The profiles to work with.
     """
     if DATA_FLOW_IMPL not in hass.data:
         hass.data[DATA_FLOW_IMPL] = OrderedDict()
