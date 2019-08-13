@@ -4,6 +4,7 @@ import logging
 
 from homeassistant.util import slugify
 from homeassistant.components.cover import (
+    ATTR_POSITION,
     ENTITY_ID_FORMAT,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
@@ -115,9 +116,9 @@ class GoSlideCover(CoverDevice):
         """Stop the cover."""
         await self._hass.data[DOMAIN][API].slidestop(self._id)
 
-    async def async_set_cover_position(self, position):
+    async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        position = position / 100
+        position = kwargs[ATTR_POSITION] / 100
 
         if self._hass.data[DOMAIN][SLIDES][self._mac]["pos"] is not None:
             self._is_closed = (

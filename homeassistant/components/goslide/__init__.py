@@ -133,6 +133,7 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN][API] = GoSlideCloud(username, password, timeout)
 
+    # pylint: disable=broad-except
     try:
         result = await hass.data[DOMAIN][API].login()
     except Exception as err:
@@ -141,6 +142,7 @@ async def async_setup(hass, config):
         async_call_later(hass, retry, async_setup(hass, config))
         return True
 
+    # pylint: disable=no-else-return
     if result is None:
         _LOGGER.error("GoSlide API returned unknown error during " "authentication")
         return False
