@@ -1,0 +1,25 @@
+{
+    "config": {
+        "title": "Plex",
+        "step": {
+            "user": {
+                "title": "Set up Plex server",
+                "data": {
+                    "host": "Host",
+                    "token": "Token",
+                    "port": "Port",
+                    "ssl": "Use SSL",
+                    "verify_ssl": "Verify SSL certificate"
+                }
+            }
+        },
+        "error": {
+            "faulty_credentials": "Authorization failed",
+            "not_found": "Plex server not found"
+        },
+        "abort": {
+            "already_configured": "Plex server is already configured",
+            "unknown": "Failed for unknown reason"
+        }
+    }
+}

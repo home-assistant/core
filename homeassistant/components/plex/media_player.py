@@ -2,10 +2,10 @@
 from datetime import timedelta
 import json
 import logging
-
 import requests
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
@@ -21,6 +21,11 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_TOKEN,
+    CONF_VERIFY_SSL,
     DEVICE_DEFAULT_NAME,
     STATE_IDLE,
     STATE_OFF,
@@ -30,19 +35,22 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.util import dt as dt_util
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util.json import load_json
 
-_CONFIGURING = {}
+from .const import (
+    CONF_USE_EPISODE_ART,
+    CONF_SHOW_ALL_CONTROLS,
+    CONF_REMOVE_UNAVAILABLE_CLIENTS,
+    CONF_CLIENT_REMOVE_INTERVAL,
+    DOMAIN as PLEX_DOMAIN,
+    NAME_FORMAT,
+    PLEX_CLIENTS,
+    PLEX_CONFIG_FILE,
+    PLEX_MEDIA_PLAYER_OPTIONS,
+    PLEX_SERVER_CONFIG,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-NAME_FORMAT = "Plex {}"
-PLEX_CONFIG_FILE = "plex.conf"
-PLEX_DATA = "plex"
-
-CONF_USE_EPISODE_ART = "use_episode_art"
-CONF_SHOW_ALL_CONTROLS = "show_all_controls"
-CONF_REMOVE_UNAVAILABLE_CLIENTS = "remove_unavailable_clients"
-CONF_CLIENT_REMOVE_INTERVAL = "client_remove_interval"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -58,48 +66,74 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up the Plex platform."""
-    if PLEX_DATA not in hass.data:
-        hass.data[PLEX_DATA] = {}
+    if config:
+        hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = config
 
-    # get config from plex.conf
     file_config = load_json(hass.config.path(PLEX_CONFIG_FILE))
-
     if file_config:
-        # Setup a configured PlexServer
-        host, host_config = file_config.popitem()
-        token = host_config["token"]
-        try:
-            has_ssl = host_config["ssl"]
-        except KeyError:
-            has_ssl = False
-        try:
-            verify_ssl = host_config["verify"]
-        except KeyError:
-            verify_ssl = True
+        if not hass.config_entries.async_entries(PLEX_DOMAIN):
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    PLEX_DOMAIN,
+                    context={"source": config_entries.SOURCE_IMPORT},
+                    data=file_config,
+                )
+            )
+        else:
+            _LOGGER.warning(
+                "Legacy configuration can be removed: %s",
+                hass.config.path(PLEX_CONFIG_FILE),
+            )
 
-    # Via discovery
-    elif discovery_info is not None:
-        # Parse discovery data
-        host = discovery_info.get("host")
-        port = discovery_info.get("port")
-        host = f"{host}:{port}"
-        _LOGGER.info("Discovered PLEX server: %s", host)
+    if discovery_info:
+        if not hass.config_entries.async_entries(PLEX_DOMAIN):
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    PLEX_DOMAIN,
+                    context={"source": config_entries.SOURCE_DISCOVERY},
+                    data=discovery_info,
+                )
+            )
 
-        if host in _CONFIGURING:
-            return
-        token = None
-        has_ssl = False
-        verify_ssl = True
-    else:
-        return
 
-    setup_plexserver(
-        host, token, has_ssl, verify_ssl, hass, config, add_entities_callback
-    )
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Plex media_player from a config entry."""
+
+    def add_entities(devices, update_before_add=False):
+        """Sync version of async add devices."""
+        hass.add_job(async_add_entities, devices, update_before_add)
+
+    if PLEX_MEDIA_PLAYER_OPTIONS not in hass.data:
+        hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = {
+            CONF_USE_EPISODE_ART: False,
+            CONF_SHOW_ALL_CONTROLS: False,
+            CONF_REMOVE_UNAVAILABLE_CLIENTS: True,
+            CONF_CLIENT_REMOVE_INTERVAL: timedelta(seconds=600),
+        }
+
+    hass.async_add_executor_job(_setup_platform, hass, config_entry, add_entities)
+
+
+def _setup_platform(hass, config_entry, add_entities):
+    """Set up Plex media_player component."""
+    if PLEX_CLIENTS not in hass.data:
+        hass.data[PLEX_CLIENTS] = {}
+
+    server_info = config_entry.data.get(PLEX_SERVER_CONFIG, {})
+    if server_info:
+        setup_plexserver(
+            server_info[CONF_HOST],
+            server_info[CONF_PORT],
+            server_info[CONF_TOKEN],
+            server_info[CONF_SSL],
+            server_info[CONF_VERIFY_SSL],
+            hass,
+            add_entities,
+        )
 
 
 def setup_plexserver(
-    host, token, has_ssl, verify_ssl, hass, config, add_entities_callback
+    host, port, token, has_ssl, verify_ssl, hass, add_entities_callback
 ):
     """Set up a plexserver based on host parameter."""
     import plexapi.server
@@ -113,35 +147,19 @@ def setup_plexserver(
         cert_session.verify = False
     try:
         plexserver = plexapi.server.PlexServer(
-            f"{http_prefix}://{host}", token, cert_session
+            f"{http_prefix}://{host}:{port}", token, cert_session
         )
-        _LOGGER.info("Discovery configuration done (no token needed)")
     except (
         plexapi.exceptions.BadRequest,
         plexapi.exceptions.Unauthorized,
         plexapi.exceptions.NotFound,
     ) as error:
-        _LOGGER.info(error)
-        # No token or wrong token
-        request_configuration(host, hass, config, add_entities_callback)
-        return
+        _LOGGER.error(error)
 
-    # If we came here and configuring this host, mark as done
-    if host in _CONFIGURING:
-        request_id = _CONFIGURING.pop(host)
-        configurator = hass.components.configurator
-        configurator.request_done(request_id)
-        _LOGGER.info("Discovery configuration done")
+    _LOGGER.info("Connected to: %s://%s:%s", http_prefix, host, port)
 
-    # Save config
-    save_json(
-        hass.config.path(PLEX_CONFIG_FILE),
-        {host: {"token": token, "ssl": has_ssl, "verify": verify_ssl}},
-    )
-
-    _LOGGER.info("Connected to: %s://%s", http_prefix, host)
-
-    plex_clients = hass.data[PLEX_DATA]
+    config = hass.data[PLEX_MEDIA_PLAYER_OPTIONS]
+    plex_clients = hass.data[PLEX_CLIENTS]
     plex_sessions = {}
     track_time_interval(hass, lambda now: update_devices(), timedelta(seconds=10))
 
@@ -243,43 +261,6 @@ def setup_plexserver(
 
         if new_plex_clients:
             add_entities_callback(new_plex_clients)
-
-
-def request_configuration(host, hass, config, add_entities_callback):
-    """Request configuration steps from the user."""
-    configurator = hass.components.configurator
-    # We got an error if this method is called while we are configuring
-    if host in _CONFIGURING:
-        configurator.notify_errors(
-            _CONFIGURING[host], "Failed to register, please try again."
-        )
-
-        return
-
-    def plex_configuration_callback(data):
-        """Handle configuration changes."""
-        setup_plexserver(
-            host,
-            data.get("token"),
-            cv.boolean(data.get("has_ssl")),
-            cv.boolean(data.get("do_not_verify_ssl")),
-            hass,
-            config,
-            add_entities_callback,
-        )
-
-    _CONFIGURING[host] = configurator.request_config(
-        "Plex Media Server",
-        plex_configuration_callback,
-        description="Enter the X-Plex-Token",
-        entity_picture="/static/images/logo_plex_mediaserver.png",
-        submit_caption="Confirm",
-        fields=[
-            {"id": "token", "name": "X-Plex-Token", "type": ""},
-            {"id": "has_ssl", "name": "Use SSL", "type": ""},
-            {"id": "do_not_verify_ssl", "name": "Do not verify SSL", "type": ""},
-        ],
-    )
 
 
 class PlexClient(MediaPlayerDevice):
