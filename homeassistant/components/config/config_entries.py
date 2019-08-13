@@ -1,6 +1,9 @@
 """Http views to control the config manager."""
+import voluptuous as vol
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES
+from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers.data_entry_flow import (
@@ -17,12 +20,17 @@ async def async_setup(hass):
     hass.http.register_view(ConfigManagerFlowIndexView(hass.config_entries.flow))
     hass.http.register_view(ConfigManagerFlowResourceView(hass.config_entries.flow))
     hass.http.register_view(ConfigManagerAvailableFlowView)
+
     hass.http.register_view(
         OptionManagerFlowIndexView(hass.config_entries.options.flow)
     )
     hass.http.register_view(
         OptionManagerFlowResourceView(hass.config_entries.options.flow)
     )
+
+    hass.components.websocket_api.async_register_command(system_options_list)
+    hass.components.websocket_api.async_register_command(system_options_update)
+
     return True
 
 
@@ -231,3 +239,36 @@ class OptionManagerFlowResourceView(FlowManagerResourceView):
 
         # pylint: disable=no-value-for-parameter
         return await super().post(request, flow_id)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {"type": "/api/config/config_entries/system_options/list", "entry_id": str}
+)
+async def system_options_list(hass, connection, msg):
+    """List all alexa entities."""
+    changes = dict(msg)
+    entry_id = changes.pop("entry_id")
+    entry = hass.config_entries.async_get_entry(entry_id)
+
+    connection.send_result(msg["id"], entry.system_options.data)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        "type": "/api/config/config_entries/system_options/update",
+        "entry_id": str,
+        vol.Required("disable_new_entities"): bool,
+    }
+)
+async def system_options_update(hass, connection, msg):
+    """Update config entry system options."""
+    changes = dict(msg)
+    changes.pop("type")
+    entry_id = changes.pop("entry_id")
+    entry = hass.config_entries.async_get_entry(entry_id)
+
+    entry.system_options.update(changes["disable_new_entities"])

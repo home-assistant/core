@@ -130,7 +130,7 @@ class ConfigEntry:
         self.options = options or {}
 
         # Entry system options
-        self.system_options = system_options or {}
+        self.system_options = SystemOptions(system_options or {})
 
         # Source of the configuration (user, discovery, cloud)
         self.source = source
@@ -360,7 +360,7 @@ class ConfigEntry:
             "title": self.title,
             "data": self.data,
             "options": self.options,
-            "system_options": self.system_options,
+            "system_options": self.system_options.data,
             "source": self.source,
             "connection_class": self.connection_class,
         }
@@ -731,3 +731,16 @@ class OptionsFlow(data_entry_flow.FlowHandler):
     """Base class for config option flows."""
 
     pass
+
+
+class SystemOptions:
+    """"""
+
+    def __init__(self, data: dict) -> None:
+        """"""
+        self.data = data
+
+    @callback
+    def update(self, disable_new_entities: bool) -> None:
+        """"""
+        self.data["disable_new_entities"] = disable_new_entities
