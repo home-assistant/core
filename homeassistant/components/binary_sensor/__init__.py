@@ -75,6 +75,9 @@ DEVICE_CLASS_PRESENCE = "presence"
 # On means problem detected, Off means no problem (OK)
 DEVICE_CLASS_PROBLEM = "problem"
 
+# On means yes, Off means no
+DEVICE_CLASS_QUESTION = "question"
+
 # On means unsafe, Off means safe
 DEVICE_CLASS_SAFETY = "safety"
 
@@ -109,6 +112,7 @@ DEVICE_CLASSES = [
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESENCE,
     DEVICE_CLASS_PROBLEM,
+    DEVICE_CLASS_QUESTION,
     DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_SOUND,
