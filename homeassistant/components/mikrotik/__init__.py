@@ -110,6 +110,9 @@ def setup(hass, config):
             _LOGGER.error("Mikrotik %s error %s", host, api_error)
             continue
 
+        sensors = device.get(CONF_SENSORS)
+        if not sensors:
+            sensors = list(SENSORS)
         load_platform(
             hass,
             SENSOR,
