@@ -83,9 +83,6 @@ class MikrotikSensor(Entity):
         results = {}
         self._attrs = {}
         self._state = None
-        self._available = self.api.connected()
-        if not self._available:
-            return
 
         for cmd in self._cmds:
             data = self.api.command(cmd, self._params)
@@ -105,3 +102,5 @@ class MikrotikSensor(Entity):
                 self._state = value
             elif key in self._attr_items:
                 self._attrs[slugify(key)] = value
+
+        self._available = True
