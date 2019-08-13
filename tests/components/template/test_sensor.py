@@ -114,6 +114,45 @@ class TestTemplateSensor:
         state = self.hass.states.get("sensor.test_template_sensor")
         assert state.attributes["entity_picture"] == "/local/sensor.png"
 
+    def test_available_template(self):
+        """Test available template."""
+        with assert_setup_component(1):
+            assert setup_component(
+                self.hass,
+                "sensor",
+                {
+                    "sensor": {
+                        "platform": "template",
+                        "sensors": {
+                            "test_template_sensor": {
+                                "value_template": "{{ states.sensor.test_state.state }}",
+                                "available_template": "{{ states.sensor.test_state.state == "
+                                "'Works' }}",
+                            }
+                        },
+                    }
+                },
+            )
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("sensor.test_template_sensor")
+        assert not state.attributes.get("available")
+        assert state.state is None
+
+        self.hass.states.set("sensor.test_state", "Works")
+        self.hass.block_till_done()
+        state = self.hass.states.get("sensor.test_template_sensor")
+        assert state.attributes.get("available")
+        assert state.state == "Works"
+
+        self.hass.states.set("sensor.test_state", "Other value")
+        self.hass.block_till_done()
+        state = self.hass.states.get("sensor.test_template_sensor")
+        assert not state.attributes.get("available")
+        assert state.state is None
+
     def test_friendly_name_template(self):
         """Test friendly_name template."""
         with assert_setup_component(1):

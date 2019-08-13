@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_FRIENDLY_NAME_TEMPLATE,
     MATCH_ALL,
     CONF_DEVICE_CLASS,
-)
+    CONF_AVAILABLE_TEMPLATE)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
@@ -40,6 +40,7 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Optional(CONF_AVAILABLE_TEMPLATE): cv.template,
     }
 )
 
@@ -60,6 +61,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         friendly_name_template = device_config.get(CONF_FRIENDLY_NAME_TEMPLATE)
         unit_of_measurement = device_config.get(ATTR_UNIT_OF_MEASUREMENT)
         device_class = device_config.get(CONF_DEVICE_CLASS)
+        available_template = device_config.get(CONF_AVAILABLE_TEMPLATE)
 
         entity_ids = set()
         manual_entity_ids = device_config.get(ATTR_ENTITY_ID)
@@ -70,6 +72,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             (CONF_ICON_TEMPLATE, icon_template),
             (CONF_ENTITY_PICTURE_TEMPLATE, entity_picture_template),
             (CONF_FRIENDLY_NAME_TEMPLATE, friendly_name_template),
+            (CONF_AVAILABLE_TEMPLATE, available_template),
         ):
             if template is None:
                 continue
@@ -113,6 +116,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 entity_picture_template,
                 entity_ids,
                 device_class,
+                available_template,
             )
         )
     if not sensors:
@@ -138,6 +142,7 @@ class SensorTemplate(Entity):
         entity_picture_template,
         entity_ids,
         device_class,
+        available_template,
     ):
         """Initialize the sensor."""
         self.hass = hass
@@ -155,6 +160,8 @@ class SensorTemplate(Entity):
         self._entity_picture = None
         self._entities = entity_ids
         self._device_class = device_class
+        self._available = False
+        self._available_template = available_template
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -185,9 +192,14 @@ class SensorTemplate(Entity):
         return self._name
 
     @property
+    def available(self) -> bool:
+        """Return the entity availability status."""
+        return bool(self._available)
+
+    @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        return self._state if self.available else None
 
     @property
     def icon(self):
@@ -218,7 +230,9 @@ class SensorTemplate(Entity):
         """Update the state from the template."""
         try:
             self._state = self._template.async_render()
+            self._available = True
         except TemplateError as ex:
+            self._available = False
             if ex.args and ex.args[0].startswith(
                 "UndefinedError: 'None' has no attribute"
             ):
@@ -230,6 +244,7 @@ class SensorTemplate(Entity):
                 self._state = None
                 _LOGGER.error("Could not render template %s: %s", self._name, ex)
         for property_name, template in (
+            ("_available", self._available_template),
             ("_icon", self._icon_template),
             ("_entity_picture", self._entity_picture_template),
             ("_name", self._friendly_name_template),
