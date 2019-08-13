@@ -26,7 +26,7 @@ RUN virtualization/Docker/setup_docker_prereqs
 # Install hass component dependencies
 COPY requirements_all.txt requirements_all.txt
 RUN pip3 install --no-cache-dir -r requirements_all.txt && \
-    pip3 install --no-cache-dir mysqlclient psycopg2 uvloop==0.12.2 cchardet cython tensorflow
+    pip3 install --no-cache-dir mysqlclient psycopg2 cchardet cython tensorflow
 
 # Copy source
 COPY . .
