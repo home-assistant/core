@@ -273,6 +273,12 @@ class HKDevice:
             # connection was dropped.
             return
 
+        self.process_new_events(new_values_dict)
+
+        _LOGGER.debug("Finished HomeKit controller update")
+
+    def process_new_events(self, new_values_dict):
+        """Process events from accessory into HA state."""
         self.available = True
 
         for (aid, cid), value in new_values_dict.items():
@@ -280,8 +286,6 @@ class HKDevice:
             accessory[cid] = value
 
         self.hass.helpers.dispatcher.async_dispatcher_send(self.signal_state_updated)
-
-        _LOGGER.debug("Finished HomeKit controller update")
 
     async def get_characteristics(self, *args, **kwargs):
         """Read latest state from homekit accessory."""
@@ -298,9 +302,29 @@ class HKDevice:
             chars.append((row["aid"], row["iid"], row["value"]))
 
         async with self.pairing_lock:
-            await self.hass.async_add_executor_job(
+            results = await self.hass.async_add_executor_job(
                 self.pairing.put_characteristics, chars
             )
+
+        # Feed characteristics back into HA and update the current state
+        # results will only contain failures, so anythin in characteristics
+        # but not in results was applied successfully - we can just have HA
+        # reflect the change immediately.
+
+        new_entity_state = {}
+        for row in characteristics:
+            key = (row["aid"], row["iid"])
+
+            # If the key was returned by put_characteristics() then the
+            # change didnt work
+            if key in results:
+                continue
+
+            # Otherwise it was accepted and we can apply the change to
+            # our state
+            new_entity_state[key] = {"value": row["value"]}
+
+        self.process_new_events(new_entity_state)
 
     @property
     def unique_id(self):
