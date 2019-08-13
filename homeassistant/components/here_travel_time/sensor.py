@@ -26,18 +26,10 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_DESTINATION_LATITUDE = "destination_latitude"
 CONF_DESTINATION_LONGITUDE = "destination_longitude"
-CONF_DESTINATION_SENSOR = "destination_sensor"
-CONF_DESTINATION_DEVICE_TRACKER = "destination_device_tracker"
-CONF_DESTINATION_PERSON = "destination_person"
-CONF_DESTINATION_ZONE = "destination_zone"
-CONF_DESTINATION_ZONE_FRIENDLY_NAME = "destination_zone_friendly_name"
+CONF_DESTINATION_ENTITY_ID = "destination_entity_id"
 CONF_ORIGIN_LATITUDE = "origin_latitude"
 CONF_ORIGIN_LONGITUDE = "origin_longitude"
-CONF_ORIGIN_SENSOR = "origin_sensor"
-CONF_ORIGIN_DEVICE_TRACKER = "origin_device_tracker"
-CONF_ORIGIN_PERSON = "origin_person"
-CONF_ORIGIN_ZONE = "origin_zone"
-CONF_ORIGIN_ZONE_FRIENDLY_NAME = "origin_zone_friendly_name"
+CONF_ORIGIN_ENTITY_ID = "origin_entity_id"
 CONF_APP_ID = "app_id"
 CONF_APP_CODE = "app_code"
 CONF_TRAFFIC_MODE = "traffic_mode"
@@ -107,22 +99,8 @@ COORDINATE_SCHEMA = vol.Schema(
 )
 
 PLATFORM_SCHEMA = vol.All(
-    cv.has_at_least_one_key(
-        CONF_DESTINATION_LATITUDE,
-        CONF_DESTINATION_SENSOR,
-        CONF_DESTINATION_DEVICE_TRACKER,
-        CONF_DESTINATION_PERSON,
-        CONF_DESTINATION_ZONE,
-        CONF_DESTINATION_ZONE_FRIENDLY_NAME,
-    ),
-    cv.has_at_least_one_key(
-        CONF_ORIGIN_LATITUDE,
-        CONF_ORIGIN_SENSOR,
-        CONF_ORIGIN_DEVICE_TRACKER,
-        CONF_ORIGIN_PERSON,
-        CONF_ORIGIN_ZONE,
-        CONF_ORIGIN_ZONE_FRIENDLY_NAME,
-    ),
+    cv.has_at_least_one_key(CONF_DESTINATION_LATITUDE, CONF_DESTINATION_ENTITY_ID),
+    cv.has_at_least_one_key(CONF_ORIGIN_LATITUDE, CONF_ORIGIN_ENTITY_ID),
     PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_APP_ID): cv.string,
@@ -134,21 +112,11 @@ PLATFORM_SCHEMA = vol.All(
                 CONF_DESTINATION_LONGITUDE, "destination_coordinates"
             ): cv.longitude,
             vol.Exclusive(CONF_DESTINATION_LATITUDE, "destination"): cv.latitude,
-            vol.Exclusive(CONF_DESTINATION_SENSOR, "destination"): cv.entity_id,
-            vol.Exclusive(CONF_DESTINATION_DEVICE_TRACKER, "destination"): cv.entity_id,
-            vol.Exclusive(CONF_DESTINATION_PERSON, "destination"): cv.entity_id,
-            vol.Exclusive(CONF_DESTINATION_ZONE, "destination"): cv.entity_id,
-            vol.Exclusive(
-                CONF_DESTINATION_ZONE_FRIENDLY_NAME, "destination"
-            ): cv.string,
+            vol.Exclusive(CONF_DESTINATION_ENTITY_ID, "destination"): cv.entity_id,
             vol.Inclusive(CONF_ORIGIN_LATITUDE, "origin_coordinates"): cv.latitude,
             vol.Inclusive(CONF_ORIGIN_LONGITUDE, "origin_coordinates"): cv.longitude,
             vol.Exclusive(CONF_ORIGIN_LATITUDE, "origin"): cv.latitude,
-            vol.Exclusive(CONF_ORIGIN_SENSOR, "origin"): cv.entity_id,
-            vol.Exclusive(CONF_ORIGIN_DEVICE_TRACKER, "origin"): cv.entity_id,
-            vol.Exclusive(CONF_ORIGIN_PERSON, "origin"): cv.entity_id,
-            vol.Exclusive(CONF_ORIGIN_ZONE, "origin"): cv.entity_id,
-            vol.Exclusive(CONF_ORIGIN_ZONE_FRIENDLY_NAME, "origin"): cv.string,
+            vol.Exclusive(CONF_ORIGIN_ENTITY_ID, "origin"): cv.entity_id,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_MODE, default=TRAVEL_MODE_CAR): vol.In(TRAVEL_MODE),
             vol.Optional(CONF_ROUTE_MODE, default=ROUTE_MODE_FASTEST): vol.In(
@@ -176,16 +144,8 @@ async def async_setup_platform(
         origin = ",".join(
             [str(config[CONF_ORIGIN_LATITUDE]), str(config[CONF_ORIGIN_LONGITUDE])]
         )
-    elif config.get(CONF_ORIGIN_SENSOR) is not None:
-        origin = config[CONF_ORIGIN_SENSOR]
-    elif config.get(CONF_ORIGIN_DEVICE_TRACKER) is not None:
-        origin = config[CONF_ORIGIN_DEVICE_TRACKER]
-    elif config.get(CONF_ORIGIN_PERSON) is not None:
-        origin = config[CONF_ORIGIN_PERSON]
-    elif config.get(CONF_ORIGIN_ZONE) is not None:
-        origin = config[CONF_ORIGIN_ZONE]
-    elif config.get(CONF_ORIGIN_ZONE_FRIENDLY_NAME) is not None:
-        origin = config[CONF_ORIGIN_ZONE_FRIENDLY_NAME]
+    else:
+        origin = config[CONF_ORIGIN_ENTITY_ID]
 
     if config.get(CONF_DESTINATION_LATITUDE) is not None:
         destination = ",".join(
@@ -194,16 +154,8 @@ async def async_setup_platform(
                 str(config[CONF_DESTINATION_LONGITUDE]),
             ]
         )
-    elif config.get(CONF_DESTINATION_SENSOR) is not None:
-        destination = config[CONF_DESTINATION_SENSOR]
-    elif config.get(CONF_DESTINATION_DEVICE_TRACKER) is not None:
-        destination = config[CONF_DESTINATION_DEVICE_TRACKER]
-    elif config.get(CONF_DESTINATION_PERSON) is not None:
-        destination = config[CONF_DESTINATION_PERSON]
-    elif config.get(CONF_DESTINATION_ZONE) is not None:
-        destination = config[CONF_DESTINATION_ZONE]
-    elif config.get(CONF_DESTINATION_ZONE_FRIENDLY_NAME) is not None:
-        destination = config[CONF_DESTINATION_ZONE_FRIENDLY_NAME]
+    else:
+        destination = config[CONF_DESTINATION_ENTITY_ID]
 
     travel_mode = config.get(CONF_MODE)
     traffic_mode = config.get(CONF_TRAFFIC_MODE)
@@ -319,11 +271,6 @@ class HERETravelTimeSensor(Entity):
                 self._destination_entity_id
             )
 
-        self._here_data.destination = await self._resolve_zone(
-            self._here_data.destination
-        )
-        self._here_data.origin = await self._resolve_zone(self._here_data.origin)
-
         await self._hass.async_add_executor_job(self._here_data.update)
 
     async def _get_location_from_entity(self, entity_id: str) -> Optional[str]:
@@ -355,15 +302,6 @@ class HERETravelTimeSensor(Entity):
         """Get the lat/long string from an entities attributes."""
         attr = entity.attributes
         return "{},{}".format(attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
-
-    async def _resolve_zone(self, friendly_name: str) -> str:
-        """Get the lat/long string of a zone given its friendly_name."""
-        entities = self._hass.states.async_all()
-        for entity in entities:
-            if entity.domain == "zone" and entity.name == friendly_name:
-                return self._get_location_from_attributes(entity)
-
-        return friendly_name
 
 
 class HERETravelTimeData:

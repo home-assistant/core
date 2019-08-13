@@ -555,57 +555,8 @@ async def test_location_zone(hass, requests_mock_truck_response):
             DOMAIN: {
                 "platform": PLATFORM,
                 "name": "test",
-                "origin_zone": "zone.origin",
-                "destination_zone": "zone.destination",
-                "app_id": APP_ID,
-                "app_code": APP_CODE,
-                "mode": TRAVEL_MODE_TRUCK,
-            }
-        }
-        assert await async_setup_component(hass, DOMAIN, config)
-
-        sensor = hass.states.get("sensor.test")
-        _assert_truck_sensor(sensor)
-
-        # Test that update works more than once
-        async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
-        await hass.async_block_till_done()
-
-        sensor = hass.states.get("sensor.test")
-        _assert_truck_sensor(sensor)
-
-
-async def test_location_zone_friendly_name(hass, requests_mock_truck_response):
-    """Test that origin/destination supplied by a zone friendly_name works."""
-    utcnow = dt_util.utcnow()
-    # Patching 'utcnow' to gain more control over the timed update.
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow):
-        zone_config = {
-            "zone": [
-                {
-                    "name": "Destination Friendly Name",
-                    "latitude": TRUCK_DESTINATION_LATITUDE,
-                    "longitude": TRUCK_DESTINATION_LONGITUDE,
-                    "radius": 250,
-                    "passive": False,
-                },
-                {
-                    "name": "Origin",
-                    "latitude": TRUCK_ORIGIN_LATITUDE,
-                    "longitude": TRUCK_ORIGIN_LONGITUDE,
-                    "radius": 250,
-                    "passive": False,
-                },
-            ]
-        }
-        assert await async_setup_component(hass, "zone", zone_config)
-
-        config = {
-            DOMAIN: {
-                "platform": PLATFORM,
-                "name": "test",
-                "origin_zone": "zone.origin",
-                "destination_zone_friendly_name": "Destination Friendly Name",
+                "origin_entity_id": "zone.origin",
+                "destination_entity_id": "zone.destination",
                 "app_id": APP_ID,
                 "app_code": APP_CODE,
                 "mode": TRAVEL_MODE_TRUCK,
@@ -641,8 +592,8 @@ async def test_location_sensor(hass, requests_mock_truck_response):
             DOMAIN: {
                 "platform": PLATFORM,
                 "name": "test",
-                "origin_sensor": "sensor.origin",
-                "destination_sensor": "sensor.destination",
+                "origin_entity_id": "sensor.origin",
+                "destination_entity_id": "sensor.destination",
                 "app_id": APP_ID,
                 "app_code": APP_CODE,
                 "mode": TRAVEL_MODE_TRUCK,
@@ -687,8 +638,8 @@ async def test_location_person(hass, requests_mock_truck_response):
             DOMAIN: {
                 "platform": PLATFORM,
                 "name": "test",
-                "origin_person": "person.origin",
-                "destination_person": "person.destination",
+                "origin_entity_id": "person.origin",
+                "destination_entity_id": "person.destination",
                 "app_id": APP_ID,
                 "app_code": APP_CODE,
                 "mode": TRAVEL_MODE_TRUCK,
@@ -733,8 +684,8 @@ async def test_location_device_tracker(hass, requests_mock_truck_response):
             DOMAIN: {
                 "platform": PLATFORM,
                 "name": "test",
-                "origin_device_tracker": "device_tracker.origin",
-                "destination_device_tracker": "device_tracker.destination",
+                "origin_entity_id": "device_tracker.origin",
+                "destination_entity_id": "device_tracker.destination",
                 "app_id": APP_ID,
                 "app_code": APP_CODE,
                 "mode": TRAVEL_MODE_TRUCK,
@@ -765,8 +716,8 @@ async def test_location_device_tracker_added_after_update(
             DOMAIN: {
                 "platform": PLATFORM,
                 "name": "test",
-                "origin_device_tracker": "device_tracker.origin",
-                "destination_device_tracker": "device_tracker.destination",
+                "origin_entity_id": "device_tracker.origin",
+                "destination_entity_id": "device_tracker.destination",
                 "app_id": APP_ID,
                 "app_code": APP_CODE,
                 "mode": TRAVEL_MODE_TRUCK,
@@ -830,7 +781,7 @@ async def test_location_device_tracker_in_zone(
         DOMAIN: {
             "platform": PLATFORM,
             "name": "test",
-            "origin_device_tracker": "device_tracker.origin",
+            "origin_entity_id": "device_tracker.origin",
             "destination_latitude": TRUCK_DESTINATION_LATITUDE,
             "destination_longitude": TRUCK_DESTINATION_LONGITUDE,
             "app_id": APP_ID,
