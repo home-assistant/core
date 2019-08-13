@@ -88,6 +88,7 @@ class ConfigEntry:
         "title",
         "data",
         "options",
+        "system_options",
         "source",
         "connection_class",
         "state",
@@ -105,6 +106,7 @@ class ConfigEntry:
         source: str,
         connection_class: str,
         options: Optional[dict] = None,
+        system_options: Optional[dict] = None,
         entry_id: Optional[str] = None,
         state: str = ENTRY_STATE_NOT_LOADED,
     ) -> None:
@@ -126,6 +128,9 @@ class ConfigEntry:
 
         # Entry options
         self.options = options or {}
+
+        # Entry system options
+        self.system_options = system_options or {}
 
         # Source of the configuration (user, discovery, cloud)
         self.source = source
@@ -355,6 +360,7 @@ class ConfigEntry:
             "title": self.title,
             "data": self.data,
             "options": self.options,
+            "system_options": self.system_options,
             "source": self.source,
             "connection_class": self.connection_class,
         }
@@ -457,6 +463,8 @@ class ConfigEntries:
                 connection_class=entry.get("connection_class", CONN_CLASS_UNKNOWN),
                 # New in 0.89
                 options=entry.get("options"),
+                # New in 0.98
+                system_options=entry.get("system_options"),
             )
             for entry in config["entries"]
         ]
@@ -580,6 +588,7 @@ class ConfigEntries:
             title=result["title"],
             data=result["data"],
             options={},
+            system_options={},
             source=flow.context["source"],
             connection_class=flow.CONNECTION_CLASS,
         )
