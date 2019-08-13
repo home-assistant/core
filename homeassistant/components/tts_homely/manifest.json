@@ -1,0 +1,12 @@
+{
+  "domain": "tts_homely",
+  "name": "tts homely",
+  "documentation": "https://github.com/itdonline/hass_tts_homely",
+  "requirements": [
+    "gTTS-token==1.1.3"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@itdonline"
+  ]
+}
