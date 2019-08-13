@@ -48,7 +48,7 @@ MIKROTIK_SCHEMA = vol.All(
             vol.Optional(CONF_SSL, default=False): cv.boolean,
             vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
             vol.Optional(CONF_TRACK_DEVICES, default=True): cv.boolean,
-            vol.Optional(CONF_ARP_PING, default=False): cv.boolean,
+            vol.Optional(CONF_ARP_PING, default=True): cv.boolean,
         }
     )
 )
