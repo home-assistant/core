@@ -34,10 +34,11 @@ class MikrotikSensor(Entity):
         self.config = config
         self.sensor_type = sensor_type
         self.sensor_data = SENSORS[sensor_type]
+        self.sensor_name = SENSORS[sensor_type][0]
         self._available = True
         self._state = None
         self._attrs = {}
-        self._name = "{} {}".format(hostname, SENSORS[sensor_type][0])
+        self._name = f"{hostname} {self.sensor_name}"
         self._unit = self.sensor_data[1]
         self._icon = self.sensor_data[2]
         self._state_item = self.sensor_data[3]
@@ -98,12 +99,9 @@ class MikrotikSensor(Entity):
             add_unit = False
             value = results.get(key)
             if any(unit in key for unit in UNITS):
-                add_unit = True
                 value = "%.1f" % (float(value) / MEGA)
 
             if key == self._state_item:
                 self._state = value
             elif key in self._attr_items:
-                if add_unit:
-                    value = "{} {}".format(value, self._unit)
                 self._attrs[slugify(key)] = value

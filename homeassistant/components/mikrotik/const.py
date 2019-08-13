@@ -54,7 +54,6 @@ ATTR_DEVICE_TRACKER = [
 
 MEGA = 1048576
 
-SENSOR_SYSINFO = "sysinfo"
 SENSOR_CPU = "cpu"
 SENSOR_MEMORY = "memory"
 SENSOR_DISK = "disk"
@@ -64,18 +63,6 @@ SENSOR_UPLOAD_SPEED = "upload_speed"
 UNITS = ["bits-per-second", "byte", "memory", "space"]
 
 PARAM_SPEED = {"interface": MTK_DEFAULT_WAN, "duration": "1s"}
-ATTR_SYSINFO = [
-    "board-name",
-    "serial-number",
-    "version",
-    "factory-firmware",
-    "firmware-type",
-    "current-firmware",
-    "upgrade-frimware",
-    "routerboard",
-    "cpu",
-    "architecture-name",
-]
 
 ATTR_CPU = ["cpu", "cpu-frequency", "cpu-count"]
 
@@ -106,16 +93,6 @@ ATTR_UPLOAD = ["name", "rx-bytes"]
 # Sensor types are defined like:
 # Name, units, icon, state item, api cmd(s), ATTRutes
 SENSORS = {
-    SENSOR_SYSINFO: [
-        "System Info",
-        None,
-        "mdi:switch",
-        "board-name",
-        [MIKROTIK_SERVICES[INFO], MIKROTIK_SERVICES[RESOURCES]],
-        ATTR_SYSINFO,
-        None,
-        None,
-    ],
     SENSOR_CPU: [
         "CPU Load",
         "%",

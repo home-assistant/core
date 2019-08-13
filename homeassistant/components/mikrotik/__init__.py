@@ -77,6 +77,9 @@ def setup(hass, config):
         login = device.get(CONF_LOGIN_METHOD)
         encoding = device.get(CONF_ENCODING)
         track_devices = device.get(CONF_TRACK_DEVICES)
+        sensors = device.get(CONF_SENSORS)
+        if not sensors:
+            sensors = list(SENSORS)
 
         if CONF_PORT in device:
             port = device.get(CONF_PORT)
@@ -107,19 +110,17 @@ def setup(hass, config):
             _LOGGER.error("Mikrotik %s error %s", host, api_error)
             continue
 
-        sensors = device.get(CONF_SENSORS)
-        if sensors:
-            load_platform(
-                hass,
-                SENSOR,
-                DOMAIN,
-                {
-                    CONF_HOST: host,
-                    CONF_SENSORS: sensors,
-                    CONF_WAN_PORT: device.get(CONF_WAN_PORT),
-                },
-                config,
-            )
+        load_platform(
+            hass,
+            SENSOR,
+            DOMAIN,
+            {
+                CONF_HOST: host,
+                CONF_SENSORS: sensors,
+                CONF_WAN_PORT: device.get(CONF_WAN_PORT),
+            },
+            config,
+        )
 
         if track_devices:
             hass.data[DOMAIN][HOSTS][host][DEVICE_TRACKER] = True
