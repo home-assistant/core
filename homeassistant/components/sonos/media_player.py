@@ -102,6 +102,7 @@ class SonosData:
     def __init__(self, hass):
         """Initialize the data."""
         self.entities = []
+        self.discovered = []
         self.topology_condition = asyncio.Condition()
 
 
@@ -132,14 +133,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             """Handle a (re)discovered player."""
             try:
                 _LOGGER.debug("Reached _discovered_player, soco=%s", soco)
-                entity = _get_entity_from_soco_uid(hass, soco.uid)
 
-                if not entity:
+                if soco not in hass.data[DATA_SONOS].discovered:
                     _LOGGER.debug("Adding new entity")
+                    hass.data[DATA_SONOS].discovered.append(soco)
                     hass.add_job(async_add_entities, [SonosEntity(soco)])
                 else:
-                    _LOGGER.debug("Seen %s", entity)
-                    hass.add_job(entity.async_seen())
+                    entity = _get_entity_from_soco_uid(hass, soco.uid)
+                    if entity:
+                        _LOGGER.debug("Seen %s", entity)
+                        hass.add_job(entity.async_seen())
             except SoCoException as ex:
                 _LOGGER.debug("SoCoException, ex=%s", ex)
 
@@ -222,7 +225,10 @@ class _ProcessSonosEventQueue:
 
     def put(self, item, block=True, timeout=None):
         """Process event."""
-        self._handler(item)
+        try:
+            self._handler(item)
+        except SoCoException as ex:
+            _LOGGER.warning("Error calling %s: %s", self._handler, ex)
 
 
 def _get_entity_from_soco_uid(hass, uid):
@@ -318,7 +324,7 @@ class SonosEntity(MediaPlayerDevice):
         self._night_sound = None
         self._speech_enhance = None
         self._source_name = None
-        self._favorites = None
+        self._favorites = []
         self._soco_snapshot = None
         self._snapshot_group = None
 
@@ -748,6 +754,8 @@ class SonosEntity(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
+        if self._player_volume is None:
+            return None
         return self._player_volume / 100
 
     @property
