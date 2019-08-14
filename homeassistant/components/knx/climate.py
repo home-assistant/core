@@ -193,7 +193,7 @@ def async_add_entities_config(hass, config, async_add_entities):
 class KNXClimate(ClimateDevice):
     """Representation of a KNX climate device."""
 
-    def __init__(self, device, on_off_inverted = False):
+    def __init__(self, device, on_off_inverted=False):
         """Initialize of a KNX climate device."""
         self.device = device
         self._unit_of_measurement = TEMP_CELSIUS
