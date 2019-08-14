@@ -148,21 +148,23 @@ class SolarEdgeData:
         """Update the data from the SolarEdge Monitoring API."""
         try:
             response = self.api.get_status()
-            _LOGGER.debug("response from SolarEdge: %s", response)            
-            self.data["energyTotal"] = response.energy.total
-            self.data["energyThisYear"] = response.energy.thisYear
-            self.data["energyThisMonth"] = response.energy.thisMonth
-            self.data["energyToday"] = response.energy.today
-            self.data["currentPower"] = response.powerWatt
-
-            _LOGGER.debug("Updated SolarEdge overview data: %s", self.data)
-        except AttributeError:
-            _LOGGER.error("Missing details data in solaredge response")
-            _LOGGER.debug("Response is: %s", response)
-            return
+            _LOGGER.debug("response from SolarEdge: %s", response) 
         except (ConnectTimeout):
             _LOGGER.error("Connection timeout, skipping update")
             return        
         except (HTTPError):
             _LOGGER.error("Could not retrieve data, skipping update")
+            return
+        
+        """Processing the fetched data."""
+        try:       
+            self.data["energyTotal"] = response.energy.total
+            self.data["energyThisYear"] = response.energy.thisYear
+            self.data["energyThisMonth"] = response.energy.thisMonth
+            self.data["energyToday"] = response.energy.today
+            self.data["currentPower"] = response.powerWatt
+            _LOGGER.debug("Updated SolarEdge overview data: %s", self.data)
+        except AttributeError:
+            _LOGGER.error("Missing details data in SolarEdge response")
+            _LOGGER.debug("Response is: %s", response)
             return
