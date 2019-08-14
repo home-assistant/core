@@ -1,6 +1,8 @@
 """Support for Homekit climate devices."""
 import logging
 
+from homekit.model.characteristics import CharacteristicsTypes
+
 from homeassistant.components.climate import (
     ClimateDevice,
     DEFAULT_MIN_HUMIDITY,
@@ -84,9 +86,6 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
-
         return [
             CharacteristicsTypes.HEATING_COOLING_CURRENT,
             CharacteristicsTypes.HEATING_COOLING_TARGET,
