@@ -24,7 +24,7 @@ from homeassistant.util.yaml import load_yaml
 from .typing import HomeAssistantType
 
 
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
 
 PATH_REGISTRY = "entity_registry.yaml"
@@ -91,7 +91,9 @@ class EntityRegistry:
         return self.entities.get(entity_id)
 
     @callback
-    def async_get_entity_id(self, domain: str, platform: str, unique_id: str):
+    def async_get_entity_id(
+        self, domain: str, platform: str, unique_id: str
+    ) -> Optional[str]:
         """Check if an entity_id is currently registered."""
         for entity in self.entities.values():
             if (

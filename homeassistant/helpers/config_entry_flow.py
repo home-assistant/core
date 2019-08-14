@@ -2,9 +2,10 @@
 from functools import partial
 
 from homeassistant import config_entries
+from .typing import HomeAssistantType
 
 
-# mypy: allow-incomplete-defs, allow-untyped-defs
+# mypy: allow-untyped-defs
 
 
 def register_discovery_flow(domain, title, discovery_function, connection_class):
@@ -130,7 +131,9 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
         )
 
 
-async def webhook_async_remove_entry(hass, entry) -> None:
+async def webhook_async_remove_entry(
+    hass: HomeAssistantType, entry: config_entries.ConfigEntry
+) -> None:
     """Remove a webhook config entry."""
     if not entry.data.get("cloudhook") or "cloud" not in hass.config.components:
         return

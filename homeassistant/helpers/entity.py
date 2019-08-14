@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 import functools as ft
 from timeit import default_timer as timer
-from typing import Optional, List, Iterable
+from typing import Any, Optional, List, Iterable
 
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -34,8 +34,7 @@ from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util import dt as dt_util
 
 
-# mypy: allow-incomplete-defs, allow-untyped-defs, no-check-untyped-defs
-# mypy: no-warn-return-any
+# mypy: allow-untyped-defs, no-check-untyped-defs, no-warn-return-any
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -532,7 +531,7 @@ class ToggleEntity(Entity):
         """Return True if entity is on."""
         raise NotImplementedError()
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         raise NotImplementedError()
 
@@ -543,7 +542,7 @@ class ToggleEntity(Entity):
         """
         return self.hass.async_add_job(ft.partial(self.turn_on, **kwargs))
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         raise NotImplementedError()
 
@@ -554,7 +553,7 @@ class ToggleEntity(Entity):
         """
         return self.hass.async_add_job(ft.partial(self.turn_off, **kwargs))
 
-    def toggle(self, **kwargs) -> None:
+    def toggle(self, **kwargs: Any) -> None:
         """Toggle the entity."""
         if self.is_on:
             self.turn_off(**kwargs)
