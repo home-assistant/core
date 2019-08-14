@@ -253,7 +253,7 @@ async def system_options_list(hass, connection, msg):
     entry = hass.config_entries.async_get_entry(entry_id)
 
     if entry:
-        connection.send_result(msg["id"], entry.system_options.data)
+        connection.send_result(msg["id"], entry.system_options.disable_new_entities)
 
 
 @websocket_api.require_admin

@@ -20,7 +20,6 @@ from homeassistant.exceptions import HomeAssistantError, ConfigEntryNotReady
 from homeassistant.setup import async_setup_component, async_process_deps_reqs
 from homeassistant.util.decorator import Registry
 
-
 # mypy: allow-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
@@ -107,8 +106,8 @@ class ConfigEntry:
         data: dict,
         source: str,
         connection_class: str,
+        system_options: dict,
         options: Optional[dict] = None,
-        system_options: Optional[dict] = None,
         entry_id: Optional[str] = None,
         state: str = ENTRY_STATE_NOT_LOADED,
     ) -> None:
@@ -132,7 +131,7 @@ class ConfigEntry:
         self.options = options or {}
 
         # Entry system options
-        self.system_options = SystemOptions(system_options or {})
+        self.system_options = SystemOptions(**system_options)
 
         # Source of the configuration (user, discovery, cloud)
         self.source = source
@@ -362,7 +361,7 @@ class ConfigEntry:
             "title": self.title,
             "data": self.data,
             "options": self.options,
-            "system_options": self.system_options.data,
+            "system_options": self.system_options.as_dict(),
             "source": self.source,
             "connection_class": self.connection_class,
         }
@@ -466,7 +465,7 @@ class ConfigEntries:
                 # New in 0.89
                 options=entry.get("options"),
                 # New in 0.98
-                system_options=entry.get("system_options"),
+                system_options=entry.get("system_options", {}),
             )
             for entry in config["entries"]
         ]
@@ -740,3 +739,7 @@ class SystemOptions:
     """Config entry system options."""
 
     disable_new_entities = attr.ib(type=bool, default=False)
+
+    def as_dict(self):
+        """Return dictionary version of this config entrys system options."""
+        return {"disable_new_entities": self.disable_new_entities}

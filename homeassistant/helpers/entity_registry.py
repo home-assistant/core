@@ -161,9 +161,9 @@ class EntityRegistry:
             known_object_ids,
         )
 
-        disabled = None
+        disabled_by = None
         if entry.system_options.disable_new_entities:
-            disabled = DISABLED_USER
+            disabled_by = DISABLED_USER
 
         entity = RegistryEntry(
             entity_id=entity_id,
