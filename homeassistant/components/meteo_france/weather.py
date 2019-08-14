@@ -1,5 +1,5 @@
 """Support for Meteo-France weather service."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
 from homeassistant.components.weather import (
@@ -9,6 +9,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     WeatherEntity,
 )
+import homeassistant.util.dt as dt_util
 from homeassistant.const import TEMP_CELSIUS
 
 from . import ATTRIBUTION, CONDITION_CLASSES, CONF_CITY, DATA_METEO_FRANCE
@@ -83,7 +84,9 @@ class MeteoFranceWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast."""
-        reftime = datetime.now().replace(hour=12, minute=00)
+        reftime = dt_util.now(dt_util.get_time_zone("Europe/Paris")).replace(
+            hour=12, minute=00, second=00, microsecond=00
+        )
         reftime += timedelta(hours=24)
         forecast_data = []
         for key in self._data["forecast"]:
