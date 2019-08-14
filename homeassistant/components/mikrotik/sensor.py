@@ -4,7 +4,16 @@ import logging
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_HOST
 from homeassistant.util import slugify
-from .const import DOMAIN, HOSTS, CONF_WAN_PORT, SENSORS, MEGA, UNITS
+from .const import (
+    API,
+    DOMAIN,
+    HOSTS,
+    CONF_WAN_PORT,
+    SENSORS,
+    MEGA,
+    UNITS,
+    MIKROTIK_SERVICES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,7 +24,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     host = discovery_info[CONF_HOST]
-    api = hass.data[DOMAIN][HOSTS][host]["api"]
+    api = hass.data[DOMAIN][HOSTS][host][API]
     hostname = api.get_hostname()
     add_entities(
         [
@@ -35,7 +44,7 @@ class MikrotikSensor(Entity):
         self.sensor_type = sensor_type
         self.sensor_data = SENSORS[sensor_type]
         self.sensor_name = SENSORS[sensor_type][0]
-        self._available = True
+        self._available = False
         self._state = None
         self._attrs = {}
         self._name = f"{hostname} {self.sensor_name}"
@@ -43,7 +52,8 @@ class MikrotikSensor(Entity):
         self._icon = self.sensor_data[2]
         self._state_item = self.sensor_data[3]
         self._attr_items = self.sensor_data[5]
-        self._cmds = self.sensor_data[4]
+        self._method = self.sensor_data[4]
+        self._cmd = MIKROTIK_SERVICES[self._method]
         self._params = self.sensor_data[6]
         if self._params is not None and "interface" in self._params:
             self._params["interface"] = self.config.get(CONF_WAN_PORT)
@@ -80,24 +90,17 @@ class MikrotikSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the state."""
-        results = {}
-        self._attrs = {}
-        self._state = None
-
-        for cmd in self._cmds:
-            data = self.api.command(cmd, self._params)
-            if data is None:
-                _LOGGER.error("Mikrotik missing sensor data %s", self._name)
-                self._available = False
-                return
-            results.update(data[0])
-
+        data = self.api.command(self._cmd, self._params)
+        if data is None:
+            _LOGGER.error("Mikrotik missing sensor data %s", self._name)
+            self._available = False
+            return
+        results = data[0]
         for key in results:
-            value = results.get(key)
+            value = results[key]
             if any(unit in key for unit in UNITS):
                 value = float(value) / MEGA
-                value = f"{value:.2f}"
-
+                value = f"{value:.0f}"
             if key == self._state_item:
                 self._state = value
             elif key in self._attr_items:

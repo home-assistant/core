@@ -2,6 +2,7 @@
 
 DOMAIN = "mikrotik"
 MIKROTIK = DOMAIN
+API = "api"
 HOSTS = "hosts"
 MTK_LOGIN_PLAIN = "plain"
 MTK_LOGIN_TOKEN = "token"
@@ -14,6 +15,7 @@ CONF_ENCODING = "encoding"
 CONF_WAN_PORT = "wan_port"
 DEFAULT_ENCODING = "utf-8"
 
+NAME = "name"
 INFO = "info"
 IDENTITY = "identity"
 ARP = "arp"
@@ -21,6 +23,7 @@ DHCP = "dhcp"
 WIRELESS = "wireless"
 CAPSMAN = "capsman"
 RESOURCES = "resources"
+TRAFFIC = "traffic"
 
 MIKROTIK_SERVICES = {
     INFO: "/system/routerboard/getall",
@@ -30,6 +33,7 @@ MIKROTIK_SERVICES = {
     WIRELESS: "/interface/wireless/registration-table/getall",
     CAPSMAN: "/caps-man/registration-table/getall",
     RESOURCES: "/system/resource/getall",
+    TRAFFIC: "/interface/monitor-traffic",
 }
 
 ATTR_DEVICE_TRACKER = [
@@ -54,11 +58,11 @@ ATTR_DEVICE_TRACKER = [
 
 MEGA = 1048576
 
-SENSOR_CPU = "cpu"
-SENSOR_MEMORY = "memory"
-SENSOR_DISK = "disk"
-SENSOR_DOWNLOAD_SPEED = "download_speed"
-SENSOR_UPLOAD_SPEED = "upload_speed"
+CPU = "cpu"
+MEMORY = "memory"
+DISK = "disk"
+DOWNLOAD_SPEED = "download_speed"
+UPLOAD_SPEED = "upload_speed"
 
 UNITS = ["bits-per-second", "byte", "memory", "space"]
 
@@ -93,48 +97,40 @@ ATTR_UPLOAD = ["name", "rx-bytes"]
 # Sensor types are defined like:
 # Name, units, icon, state item, api cmd(s), ATTRutes
 SENSORS = {
-    SENSOR_CPU: [
-        "CPU Load",
-        "%",
-        "mdi:chip",
-        "cpu-load",
-        [MIKROTIK_SERVICES[RESOURCES]],
-        ATTR_CPU,
-        None,
-    ],
-    SENSOR_MEMORY: [
+    CPU: ["CPU Load", "%", "mdi:chip", "cpu-load", RESOURCES, ATTR_CPU, None],
+    MEMORY: [
         "Memory Free",
         "MiB",
         "mdi:memory",
         "free-memory",
-        [MIKROTIK_SERVICES[RESOURCES]],
+        RESOURCES,
         ATTR_MEMORY,
         None,
     ],
-    SENSOR_DISK: [
+    DISK: [
         "Disk Free",
         "MiB",
         "mdi:harddisk",
         "free-hdd-space",
-        [MIKROTIK_SERVICES[RESOURCES]],
+        RESOURCES,
         ATTR_DISK,
         None,
     ],
-    SENSOR_DOWNLOAD_SPEED: [
+    DOWNLOAD_SPEED: [
         "Download Speed",
         "Mbps",
         "mdi:download-network",
         "rx-bits-per-second",
-        ["/interface/monitor-traffic"],
+        TRAFFIC,
         ATTR_DOWNLOAD_SPEED,
         PARAM_SPEED,
     ],
-    SENSOR_UPLOAD_SPEED: [
+    UPLOAD_SPEED: [
         "Upload Speed",
         "Mbps",
         "mdi:upload-network",
         "tx-bits-per-second",
-        ["/interface/monitor-traffic"],
+        TRAFFIC,
         ATTR_UPLOAD_SPEED,
         PARAM_SPEED,
     ],

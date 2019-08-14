@@ -21,6 +21,7 @@ from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from .const import (
     DOMAIN,
+    NAME,
     HOSTS,
     MTK_LOGIN_PLAIN,
     MTK_LOGIN_TOKEN,
@@ -77,9 +78,7 @@ def setup(hass, config):
         login = device.get(CONF_LOGIN_METHOD)
         encoding = device.get(CONF_ENCODING)
         track_devices = device.get(CONF_TRACK_DEVICES)
-        sensors = device.get(CONF_SENSORS)
-        if not sensors:
-            sensors = list(SENSORS)
+        sensors = device.get(CONF_SENSORS, list(SENSORS))
 
         if CONF_PORT in device:
             port = device.get(CONF_PORT)
@@ -185,7 +184,7 @@ class MikrotikClient:
     def get_hostname(self):
         """Return device host name."""
         data = self.command(MIKROTIK_SERVICES[IDENTITY])
-        return data[0]["name"] if data else None
+        return data[0][NAME] if data else None
 
     def connected(self):
         """Return connected boolean."""
