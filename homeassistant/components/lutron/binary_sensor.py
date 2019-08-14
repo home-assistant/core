@@ -1,6 +1,4 @@
 """Support for Lutron Powr Savr occupancy sensors."""
-import logging
-
 from pylutron import OccupancyGroup
 
 from homeassistant.components.binary_sensor import (
