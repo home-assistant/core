@@ -16,13 +16,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def _async_has_devices(hass):
-    from .discovery import (
-        async_start_discovery_service, async_stop_discovery_service)
+    from .discovery import async_start_discovery_service, async_stop_discovery_service
 
     controller_ready = asyncio.Event()
     async_dispatcher_connect(
-        hass, DISPATCH_CONTROLLER_DISCOVERED,
-        lambda x: controller_ready.set())
+        hass, DISPATCH_CONTROLLER_DISCOVERED, lambda x: controller_ready.set()
+    )
 
     disco = await async_start_discovery_service(hass)
 
@@ -42,5 +41,5 @@ async def _async_has_devices(hass):
 
 
 config_entry_flow.register_discovery_flow(
-    IZONE, 'iZone Aircon', _async_has_devices,
-    config_entries.CONN_CLASS_LOCAL_POLL)
+    IZONE, "iZone Aircon", _async_has_devices, config_entries.CONN_CLASS_LOCAL_POLL
+)

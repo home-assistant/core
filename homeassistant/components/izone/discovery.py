@@ -6,14 +6,16 @@ import pizone
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send)
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     DATA_DISCOVERY_SERVICE,
     DISPATCH_CONTROLLER_DISCOVERED,
-    DISPATCH_CONTROLLER_DISCONNECTED, DISPATCH_CONTROLLER_RECONNECTED,
-    DISPATCH_CONTROLLER_UPDATE, DISPATCH_ZONE_UPDATE)
+    DISPATCH_CONTROLLER_DISCONNECTED,
+    DISPATCH_CONTROLLER_RECONNECTED,
+    DISPATCH_CONTROLLER_UPDATE,
+    DISPATCH_ZONE_UPDATE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,29 +32,23 @@ class DiscoveryService(pizone.Listener):
     # Listener interface
     def controller_discovered(self, ctrl: pizone.Controller) -> None:
         """Handle new controller discoverery."""
-        async_dispatcher_send(
-            self.hass, DISPATCH_CONTROLLER_DISCOVERED, ctrl)
+        async_dispatcher_send(self.hass, DISPATCH_CONTROLLER_DISCOVERED, ctrl)
 
-    def controller_disconnected(
-            self, ctrl: pizone.Controller, ex: Exception) -> None:
+    def controller_disconnected(self, ctrl: pizone.Controller, ex: Exception) -> None:
         """On disconnect from controller."""
-        async_dispatcher_send(
-            self.hass, DISPATCH_CONTROLLER_DISCONNECTED, ctrl, ex)
+        async_dispatcher_send(self.hass, DISPATCH_CONTROLLER_DISCONNECTED, ctrl, ex)
 
     def controller_reconnected(self, ctrl: pizone.Controller) -> None:
         """On reconnect to controller."""
-        async_dispatcher_send(
-            self.hass, DISPATCH_CONTROLLER_RECONNECTED, ctrl)
+        async_dispatcher_send(self.hass, DISPATCH_CONTROLLER_RECONNECTED, ctrl)
 
     def controller_update(self, ctrl: pizone.Controller) -> None:
         """System update message is recieved from the controller."""
-        async_dispatcher_send(
-            self.hass, DISPATCH_CONTROLLER_UPDATE, ctrl)
+        async_dispatcher_send(self.hass, DISPATCH_CONTROLLER_UPDATE, ctrl)
 
     def zone_update(self, ctrl: pizone.Controller, zone: pizone.Zone) -> None:
         """Zone update message is recieved from the controller."""
-        async_dispatcher_send(
-            self.hass, DISPATCH_ZONE_UPDATE, ctrl, zone)
+        async_dispatcher_send(self.hass, DISPATCH_ZONE_UPDATE, ctrl, zone)
 
 
 async def async_start_discovery_service(hass: HomeAssistantType):
@@ -76,8 +72,7 @@ async def async_start_discovery_service(hass: HomeAssistantType):
     async def shutdown_event(event):
         await async_stop_discovery_service(hass)
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, shutdown_event)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_event)
 
     return disco
 

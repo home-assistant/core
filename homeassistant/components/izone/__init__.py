@@ -14,18 +14,22 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import IZONE, DATA_CONFIG
-from .discovery import (
-    async_start_discovery_service, async_stop_discovery_service)
+from .discovery import async_start_discovery_service, async_stop_discovery_service
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema({
-    IZONE: vol.Schema({
-        vol.Optional(
-            CONF_EXCLUDE, default=[]
-        ): vol.All(cv.ensure_list, [cv.string]),
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        IZONE: vol.Schema(
+            {
+                vol.Optional(CONF_EXCLUDE, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                )
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
@@ -37,8 +41,11 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     hass.data[DATA_CONFIG] = conf
 
     # Explicitly added in the config file, create a config entry.
-    hass.async_create_task(hass.config_entries.flow.async_init(
-        IZONE, context={'source': config_entries.SOURCE_IMPORT}))
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            IZONE, context={"source": config_entries.SOURCE_IMPORT}
+        )
+    )
 
     return True
 
@@ -48,14 +55,13 @@ async def async_setup_entry(hass, entry):
     await async_start_discovery_service(hass)
 
     hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(
-            entry, 'climate'))
+        hass.config_entries.async_forward_entry_setup(entry, "climate")
+    )
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload the config entry and stop discovery process."""
     await async_stop_discovery_service(hass)
-    await hass.config_entries.async_forward_entry_unload(
-        entry, 'climate')
+    await hass.config_entries.async_forward_entry_unload(entry, "climate")
     return True

@@ -7,25 +7,42 @@ from pizone import Zone, Controller
 from homeassistant.core import callback
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT_COOL, HVAC_MODE_COOL, HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT, HVAC_MODE_OFF,
-    FAN_LOW, FAN_MEDIUM, FAN_HIGH, FAN_AUTO,
-    PRESET_ECO, PRESET_NONE,
-    SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_COOL,
+    HVAC_MODE_DRY,
+    HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    FAN_LOW,
+    FAN_MEDIUM,
+    FAN_HIGH,
+    FAN_AUTO,
+    PRESET_ECO,
+    PRESET_NONE,
+    SUPPORT_FAN_MODE,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, PRECISION_HALVES, TEMP_CELSIUS, CONF_EXCLUDE)
+    ATTR_TEMPERATURE,
+    PRECISION_HALVES,
+    TEMP_CELSIUS,
+    CONF_EXCLUDE,
+)
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, async_dispatcher_send)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
-    DATA_DISCOVERY_SERVICE, IZONE,
-    DISPATCH_CONTROLLER_DISCOVERED, DISPATCH_CONTROLLER_READY,
-    DISPATCH_CONTROLLER_DISCONNECTED, DISPATCH_CONTROLLER_RECONNECTED,
+    DATA_DISCOVERY_SERVICE,
+    IZONE,
+    DISPATCH_CONTROLLER_DISCOVERED,
+    DISPATCH_CONTROLLER_DISCONNECTED,
+    DISPATCH_CONTROLLER_RECONNECTED,
     DISPATCH_CONTROLLER_UPDATE,
-    DISPATCH_ZONE_UPDATE, DATA_CONFIG)
+    DISPATCH_ZONE_UPDATE,
+    DATA_CONFIG,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,8 +54,9 @@ _IZONE_FAN_TO_HA = {
 }
 
 
-async def async_setup_entry(hass: HomeAssistantType, config: ConfigType,
-                            async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistantType, config: ConfigType, async_add_entities
+):
     """Initialize an IZone Controller."""
     disco = hass.data[DATA_DISCOVERY_SERVICE]
 
@@ -49,9 +67,7 @@ async def async_setup_entry(hass: HomeAssistantType, config: ConfigType,
 
         # Filter out any entities excluded in the config file
         if conf and ctrl.device_uid in conf[CONF_EXCLUDE]:
-            _LOGGER.info(
-                "Controller UID=%s ignored as excluded",
-                ctrl.device_uid)
+            _LOGGER.info("Controller UID=%s ignored as excluded", ctrl.device_uid)
             return
         _LOGGER.info("Controller UID=%s discovered", ctrl.device_uid)
 
@@ -64,9 +80,7 @@ async def async_setup_entry(hass: HomeAssistantType, config: ConfigType,
         init_controller(controller)
 
     # connect to register any further components
-    async_dispatcher_connect(
-        hass, DISPATCH_CONTROLLER_DISCOVERED,
-        init_controller)
+    async_dispatcher_connect(hass, DISPATCH_CONTROLLER_DISCOVERED, init_controller)
 
     return True
 
@@ -78,10 +92,11 @@ class ControllerDevice(ClimateDevice):
         """Initialise ControllerDevice."""
         self._controller = controller
 
-        self._supported_features = (SUPPORT_FAN_MODE)
+        self._supported_features = SUPPORT_FAN_MODE
 
-        if ((controller.ras_mode == 'master' and controller.zone_ctrl == 13) 
-                or controller.ras_mode == 'RAS'):
+        if (
+            controller.ras_mode == "master" and controller.zone_ctrl == 13
+        ) or controller.ras_mode == "RAS":
             self._supported_features |= SUPPORT_TARGET_TEMPERATURE
 
         self._state_to_pizone = {
@@ -100,12 +115,10 @@ class ControllerDevice(ClimateDevice):
         self._available = True
 
         self._device_info = {
-            'identifiers': {
-                (IZONE, self.unique_id)
-            },
-            'name': self.name,
-            'manufacturer': 'IZone',
-            'model': self._controller.sys_type,
+            "identifiers": {(IZONE, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "IZone",
+            "model": self._controller.sys_type,
         }
 
         # Create the zones
@@ -117,15 +130,17 @@ class ControllerDevice(ClimateDevice):
         """Call on adding to hass."""
         # Register for connect/disconnect/update events
         @callback
-        def controller_disconnected(
-                ctrl: Controller, ex: Exception) -> None:
+        def controller_disconnected(ctrl: Controller, ex: Exception) -> None:
             """Disconnected from contrller."""
             if ctrl is not self._controller:
                 return
             self.set_available(False, ex)
-        self.async_on_remove(async_dispatcher_connect(
-            self.hass, DISPATCH_CONTROLLER_DISCONNECTED,
-            controller_disconnected))
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, DISPATCH_CONTROLLER_DISCONNECTED, controller_disconnected
+            )
+        )
 
         @callback
         def controller_reconnected(ctrl: Controller) -> None:
@@ -133,9 +148,12 @@ class ControllerDevice(ClimateDevice):
             if ctrl is not self._controller:
                 return
             self.set_available(True)
-        self.async_on_remove(async_dispatcher_connect(
-            self.hass, DISPATCH_CONTROLLER_RECONNECTED,
-            controller_reconnected))
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, DISPATCH_CONTROLLER_RECONNECTED, controller_reconnected
+            )
+        )
 
         @callback
         def controller_update(ctrl: Controller) -> None:
@@ -144,11 +162,11 @@ class ControllerDevice(ClimateDevice):
                 return
             self.async_schedule_update_ha_state()
 
-        self.async_on_remove(async_dispatcher_connect(
-            self.hass, DISPATCH_CONTROLLER_UPDATE,
-            controller_update))
-
-        async_dispatcher_send(self.hass, DISPATCH_CONTROLLER_READY)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, DISPATCH_CONTROLLER_UPDATE, controller_update
+            )
+        )
 
     @property
     def available(self) -> bool:
@@ -171,13 +189,13 @@ class ControllerDevice(ClimateDevice):
             return
 
         if available:
-            _LOGGER.info(
-                "Reconnected controller %s ",
-                self._controller.device_uid)
+            _LOGGER.info("Reconnected controller %s ", self._controller.device_uid)
         else:
             _LOGGER.info(
                 "Controller %s disconnected due to exception: %s",
-                self._controller.device_uid, ex)
+                self._controller.device_uid,
+                ex,
+            )
 
         self._available = available
         self.async_schedule_update_ha_state()
@@ -226,12 +244,18 @@ class ControllerDevice(ClimateDevice):
     def device_state_attributes(self):
         """Return the optional state attributes."""
         return {
-            'supply_temperature': show_temp(
-                self.hass, self.supply_temperature, self.temperature_unit,
-                self.precision),
-            'temp_setpoint': show_temp(
-                self.hass, self._controller.temp_setpoint,
-                self.temperature_unit, self.precision),
+            "supply_temperature": show_temp(
+                self.hass,
+                self.supply_temperature,
+                self.temperature_unit,
+                self.precision,
+            ),
+            "temp_setpoint": show_temp(
+                self.hass,
+                self._controller.temp_setpoint,
+                self.temperature_unit,
+                self.precision,
+            ),
         }
 
     @property
@@ -324,8 +348,7 @@ class ControllerDevice(ClimateDevice):
             return
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
-            await self.wrap_and_catch(
-                self._controller.set_temp_setpoint(temp))
+            await self.wrap_and_catch(self._controller.set_temp_setpoint(temp))
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
@@ -347,7 +370,8 @@ class ControllerDevice(ClimateDevice):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
         await self.wrap_and_catch(
-            self._controller.set_free_air(preset_mode == PRESET_ECO))
+            self._controller.set_free_air(preset_mode == PRESET_ECO)
+        )
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
@@ -378,17 +402,16 @@ class ZoneDevice(ClimateDevice):
             self._supported_features |= SUPPORT_TARGET_TEMPERATURE
 
         self._device_info = {
-            'identifiers': {
-                (IZONE, controller.unique_id, zone.index)
-            },
-            'name': self.name,
-            'manufacturer': 'IZone',
-            'via_device': (IZONE, controller.unique_id),
-            'model': zone.type.name.title(),
+            "identifiers": {(IZONE, controller.unique_id, zone.index)},
+            "name": self.name,
+            "manufacturer": "IZone",
+            "via_device": (IZONE, controller.unique_id),
+            "model": zone.type.name.title(),
         }
 
     async def async_added_to_hass(self):
         """Call on adding to hass."""
+
         def zone_update(ctrl: Controller, zone: Zone) -> None:
             """Handle zone data updates."""
             if zone is not self._zone:
@@ -396,8 +419,9 @@ class ZoneDevice(ClimateDevice):
             self._name = zone.name.title()
             self.async_schedule_update_ha_state()
 
-        self.async_on_remove(async_dispatcher_connect(
-            self.hass, DISPATCH_ZONE_UPDATE, zone_update))
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, DISPATCH_ZONE_UPDATE, zone_update)
+        )
 
     @property
     def available(self) -> bool:
@@ -417,8 +441,7 @@ class ZoneDevice(ClimateDevice):
     @property
     def unique_id(self):
         """Return the ID of the controller device."""
-        return "{}_z{}".format(
-            self._controller.unique_id, self._zone.index + 1)
+        return "{}_z{}".format(self._controller.unique_id, self._zone.index + 1)
 
     @property
     def name(self) -> str:
@@ -460,7 +483,7 @@ class ZoneDevice(ClimateDevice):
         for (key, value) in self._state_to_pizone.items():
             if value == mode:
                 return key
-        return ''
+        return ""
 
     @property
     def hvac_modes(self):
@@ -500,14 +523,12 @@ class ZoneDevice(ClimateDevice):
             return
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
-            await self._controller.wrap_and_catch(
-                self._zone.set_temp_setpoint(temp))
+            await self._controller.wrap_and_catch(self._zone.set_temp_setpoint(temp))
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target operation mode."""
         mode = self._state_to_pizone[hvac_mode]
-        await self._controller.wrap_and_catch(
-            self._zone.set_mode(mode))
+        await self._controller.wrap_and_catch(self._zone.set_mode(mode))
         self.async_schedule_update_ha_state()
 
     @property
@@ -518,15 +539,12 @@ class ZoneDevice(ClimateDevice):
     async def async_turn_on(self):
         """Turn device on (open zone)."""
         if self._zone.type == Zone.Type.AUTO:
-            await self._controller.wrap_and_catch(
-                self._zone.set_mode(Zone.Mode.AUTO))
+            await self._controller.wrap_and_catch(self._zone.set_mode(Zone.Mode.AUTO))
         else:
-            await self._controller.wrap_and_catch(
-                self._zone.set_mode(Zone.Mode.OPEN))
+            await self._controller.wrap_and_catch(self._zone.set_mode(Zone.Mode.OPEN))
         self.async_schedule_update_ha_state()
 
     async def async_turn_off(self):
         """Turn device off (close zone)."""
-        await self._controller.wrap_and_catch(
-            self._zone.set_mode(Zone.Mode.CLOSE))
+        await self._controller.wrap_and_catch(self._zone.set_mode(Zone.Mode.CLOSE))
         self.async_schedule_update_ha_state()
