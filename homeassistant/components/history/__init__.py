@@ -21,6 +21,9 @@ from homeassistant.const import ATTR_HIDDEN
 from homeassistant.components.recorder.util import session_scope, execute
 import homeassistant.helpers.config_validation as cv
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "history"

@@ -14,8 +14,10 @@
                 "data": {
                     "password": "Mot de passe",
                     "username": "Nom d'utilisateur"
-                }
+                },
+                "title": "Informations sur le compte Life360"
             }
-        }
+        },
+        "title": "Life360"
     }
 }

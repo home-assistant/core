@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     EVENT_HOMEASSISTANT_START,
     STATE_UNKNOWN,
+    STATE_UNAVAILABLE,
     ATTR_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import callback
@@ -131,7 +132,7 @@ class StatisticsSensor(Entity):
 
     def _add_state_to_queue(self, new_state):
         """Add the state to the queue."""
-        if new_state.state == STATE_UNKNOWN:
+        if new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
             return
 
         try:

@@ -71,7 +71,7 @@ aionotion==1.1.0
 aioswitcher==2019.4.26
 
 # homeassistant.components.unifi
-aiounifi==10
+aiounifi==11
 
 # homeassistant.components.wwlln
 aiowwlln==1.0.0
@@ -177,7 +177,7 @@ hdate==0.9.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190805.0
+home-assistant-frontend==20190811.0
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.15.0
@@ -403,4 +403,4 @@ wakeonlan==1.1.6
 zeroconf==0.23.0
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.7.0
+zigpy-homeassistant==0.7.1

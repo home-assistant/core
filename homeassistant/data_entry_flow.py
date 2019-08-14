@@ -175,11 +175,11 @@ class FlowHandler:
     """Handle the configuration flow of a component."""
 
     # Set by flow manager
-    flow_id = None
-    hass = None
+    flow_id: Optional[str] = None
+    hass: Optional[HomeAssistant] = None
     handler = None
-    cur_step = None
-    context = None  # type: Optional[Dict]
+    cur_step: Optional[Dict[str, str]] = None
+    context: Optional[Dict] = None
 
     # Set by _async_create_flow callback
     init_step = "init"

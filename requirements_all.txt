@@ -173,7 +173,7 @@ aiopvapi==1.6.14
 aioswitcher==2019.4.26
 
 # homeassistant.components.unifi
-aiounifi==10
+aiounifi==11
 
 # homeassistant.components.wwlln
 aiowwlln==1.0.0
@@ -630,7 +630,7 @@ hole==0.3.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190805.0
+home-assistant-frontend==20190811.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.4
@@ -1422,7 +1422,7 @@ pysuez==0.1.17
 pysupla==0.0.3
 
 # homeassistant.components.syncthru
-pysyncthru==0.4.2
+pysyncthru==0.4.3
 
 # homeassistant.components.tautulli
 pytautulli==0.5.0
@@ -1983,7 +1983,7 @@ ziggo-mediabox-xl==1.1.0
 zigpy-deconz==0.2.1
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.7.0
+zigpy-homeassistant==0.7.1
 
 # homeassistant.components.zha
 zigpy-xbee-homeassistant==0.4.0

@@ -2,6 +2,7 @@
 import asyncio
 import logging
 from functools import partial
+from typing import Optional
 
 import voluptuous as vol
 
@@ -10,7 +11,11 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers import config_per_platform, discovery
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
+
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -164,7 +169,7 @@ async def async_setup(hass, config):
 class BaseNotificationService:
     """An abstract class for notification services."""
 
-    hass = None
+    hass: Optional[HomeAssistantType] = None
 
     def send_message(self, message, **kwargs):
         """Send a message.
