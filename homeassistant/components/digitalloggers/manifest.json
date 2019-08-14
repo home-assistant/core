@@ -1,0 +1,10 @@
+{
+  "domain": "digitalloggers",
+  "name": "Digitalloggers",
+  "documentation": "https://www.home-assistant.io/components/digitalloggers",
+  "requirements": [
+    "dlipower==0.7.165"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

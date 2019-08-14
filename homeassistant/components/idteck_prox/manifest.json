@@ -1,0 +1,10 @@
+{
+  "domain": "idteck_prox",
+  "name": "Idteck prox",
+  "documentation": "https://www.home-assistant.io/components/idteck_prox",
+  "requirements": [
+    "rfk101py==0.0.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

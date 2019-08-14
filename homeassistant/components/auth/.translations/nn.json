@@ -6,7 +6,7 @@
             },
             "step": {
                 "init": {
-                    "description": "For \u00e5 aktivere tofaktorautentisering ved hjelp av tidsbaserte eingangspassord, skann QR-koden med autentiseringsappen din. Dersom du ikkje har ein, vil vi r\u00e5de deg til \u00e5 bruke anten [Google Authenticator] (https://support.google.com/accounts/answer/1066447) eller [Authy] (https://authy.com/). \n\n {qr_code} \n \nN\u00e5r du har skanna koda, skriv du inn den sekssifra koda fr\u00e5 appen din for \u00e5 stadfeste oppsettet. Dersom du har problemer med \u00e5 skanne QR-koda, gjer du eit manuelt oppsett med kode ** ` {code} ` **.",
+                    "description": "For \u00e5 aktivere to-faktor-autentisering ved hjelp av tid-baserte eingangspassord, skann QR-koden med autentiseringsappen din. Dersom du ikkje har ein, vil vi r\u00e5de deg til \u00e5 bruke anten [Google Authenticator] (https://support.google.com/accounts/answer/1066447) eller [Authy] (https://authy.com/). \n\n {qr_code} \n \nN\u00e5r du har skanna koda, skriv du inn den sekssifra koda fr\u00e5 appen din for \u00e5 stadfeste oppsettet. Dersom du har problemer med \u00e5 skanne QR-koda, gjer du eit manuelt oppsett med kode ** ` {code} ` **.",
                     "title": "Konfigurer to-faktor-autentisering ved hjelp av TOTP"
                 }
             },

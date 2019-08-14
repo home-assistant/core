@@ -1,0 +1,8 @@
+{
+  "domain": "pyload",
+  "name": "Pyload",
+  "documentation": "https://www.home-assistant.io/components/pyload",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

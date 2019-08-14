@@ -1,0 +1,10 @@
+{
+  "domain": "edimax",
+  "name": "Edimax",
+  "documentation": "https://www.home-assistant.io/components/edimax",
+  "requirements": [
+    "pyedimax==0.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

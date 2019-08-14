@@ -1,0 +1,10 @@
+{
+  "domain": "gitlab_ci",
+  "name": "Gitlab ci",
+  "documentation": "https://www.home-assistant.io/components/gitlab_ci",
+  "requirements": [
+    "python-gitlab==1.6.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

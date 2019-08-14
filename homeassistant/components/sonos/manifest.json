@@ -1,0 +1,18 @@
+{
+  "domain": "sonos",
+  "name": "Sonos",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/components/sonos",
+  "requirements": [
+    "pysonos==0.0.22"
+  ],
+  "dependencies": [],
+  "ssdp": {
+    "st": [
+      "urn:schemas-upnp-org:device:ZonePlayer:1"
+    ]
+  },
+  "codeowners": [
+    "@amelchio"
+  ]
+}

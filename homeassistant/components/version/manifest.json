@@ -1,0 +1,12 @@
+{
+  "domain": "version",
+  "name": "Version",
+  "documentation": "https://www.home-assistant.io/components/version",
+  "requirements": [
+    "pyhaversion==3.0.2"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

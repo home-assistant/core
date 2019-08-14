@@ -1,0 +1,10 @@
+{
+  "domain": "roku",
+  "name": "Roku",
+  "documentation": "https://www.home-assistant.io/components/roku",
+  "requirements": [
+    "roku==3.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,16 @@
+decrement:
+  description: Decrement the value of an input number entity by its stepping.
+  fields:
+    entity_id: {description: Entity id of the input number the should be decremented.,
+      example: input_number.threshold}
+increment:
+  description: Increment the value of an input number entity by its stepping.
+  fields:
+    entity_id: {description: Entity id of the input number the should be incremented.,
+      example: input_number.threshold}
+set_value:
+  description: Set the value of an input number entity.
+  fields:
+    entity_id: {description: Entity id of the input number to set the new value.,
+      example: input_number.threshold}
+    value: {description: The target value the entity should be set to., example: 42}

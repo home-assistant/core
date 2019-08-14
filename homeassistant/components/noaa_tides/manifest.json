@@ -1,0 +1,10 @@
+{
+  "domain": "noaa_tides",
+  "name": "Noaa tides",
+  "documentation": "https://www.home-assistant.io/components/noaa_tides",
+  "requirements": [
+    "py_noaa==0.3.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

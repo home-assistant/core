@@ -1,0 +1,10 @@
+{
+  "domain": "joaoapps_join",
+  "name": "Joaoapps join",
+  "documentation": "https://www.home-assistant.io/components/joaoapps_join",
+  "requirements": [
+    "python-join-api==0.0.4"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

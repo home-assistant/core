@@ -1,0 +1,10 @@
+{
+  "domain": "ebusd",
+  "name": "Ebusd",
+  "documentation": "https://www.home-assistant.io/components/ebusd",
+  "requirements": [
+    "ebusdpy==0.0.16"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}
