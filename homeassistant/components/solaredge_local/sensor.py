@@ -164,10 +164,3 @@ class SolarEdgeData:
         except (ConnectTimeout, HTTPError):
             _LOGGER.error("Could not retrieve data, skipping update")
             return
-
-        self.data["energyTotal"] = response.energy.total
-        self.data["energyThisYear"] = response.energy.thisYear
-        self.data["energyThisMonth"] = response.energy.thisMonth
-        self.data["energyToday"] = response.energy.today
-        self.data["currentPower"] = response.powerWatt
-        _LOGGER.debug("Updated SolarEdge overview data: %s", self.data)
