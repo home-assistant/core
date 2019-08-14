@@ -2582,6 +2582,7 @@ def get_context_suffix(hass):
 def _process(hass, text):
     """Process a line of text."""
     _LOGGER.info('Process text: ' + text)
+    global CURR_VIRTUAL_KEYBOARD_VALUE
     # clear text
     text = text.replace("&", 'and')
     text = text.replace("-", " ").lower()
@@ -2590,7 +2591,12 @@ def _process(hass, text):
     if CURR_ENTITIE_ENTERED and CURR_ENTITIE is not None:
         if CURR_ENTITIE.startswith('input_text.'):
             yield from hass.services.async_call('input_text', 'set_value', {"entity_id": CURR_ENTITIE, "value": text})
-            return
+            # return response to the hass conversation
+            ir = intent.IntentResponse()
+            ir.async_set_speech('wpisano w pole tekst: ' + text)
+            CURR_VIRTUAL_KEYBOARD_VALUE = text
+            ir.hass = hass
+            return ir
 
     global CURR_BUTTON_CODE
     s = False
