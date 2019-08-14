@@ -5,6 +5,7 @@ group:
     entities:
       - media_player.wbudowany_glosnik
       - input_number.media_player_speed
+      - input_boolean.ais_audio_mono
       - input_select.media_player_sound_mode
   pomoc_remote:
     name: Pomoc
