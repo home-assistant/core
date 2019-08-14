@@ -5,6 +5,7 @@ from json import JSONDecodeError
 import logging
 
 import aiohttp
+from pynws import SimpleNWS
 import voluptuous as vol
 
 from homeassistant.components.weather import (
@@ -38,8 +39,6 @@ from homeassistant.util import Throttle
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 from homeassistant.util.temperature import convert as convert_temperature
-
-from pynws import SimpleNWS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -165,15 +164,17 @@ def convert_condition(time, weather):
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the NWS weather platform."""
 
+    if (config.get(CONF_LATITUDE) and not config.get(CONF_LONGITUDE)) or (
+        not config.get(CONF_LATITUDE) and config.get(CONF_LONGITUDE)
+    ):
+        _LOGGER.error("Latitude/longitude not set in Home Assistant config")
+        return
+
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     station = config.get(CONF_STATION)
     api_key = config[CONF_API_KEY]
     mode = config[CONF_MODE]
-
-    if None in (latitude, longitude):
-        _LOGGER.error("Latitude/longitude not set in Home Assistant config")
-        return
 
     websession = async_get_clientsession(hass)
     # ID request as being from HA, pynws prepends the api_key in addition
