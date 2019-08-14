@@ -723,7 +723,7 @@ librouteros==2.3.0
 libsoundtouch==0.7.2
 
 # homeassistant.components.life360
-life360==4.0.1
+life360==4.1.1
 
 # homeassistant.components.lifx_legacy
 liffylights==0.9.4
