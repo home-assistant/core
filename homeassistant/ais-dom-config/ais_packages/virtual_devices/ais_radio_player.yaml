@@ -26,6 +26,11 @@ input_number:
     step: 0.1
     initial: 1
 
+input_boolean:
+  ais_audio_mono:
+    name: Dzwięk mono
+    icon: mdi:speaker
+
 group:
   Radio Player:
     control: hidden
