@@ -166,5 +166,3 @@ class SolarEdgeData:
             _LOGGER.debug("Updated SolarEdge overview data: %s", self.data)
         except AttributeError:
             _LOGGER.error("Missing details data in SolarEdge response")
-            _LOGGER.debug("Response is: %s", response)
-            return
