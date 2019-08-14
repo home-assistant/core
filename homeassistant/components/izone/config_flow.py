@@ -7,8 +7,9 @@ from async_timeout import timeout
 
 from homeassistant import config_entries
 from homeassistant.helpers import config_entry_flow
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import IZONE, TIMEOUT_DISCOVERY
+from .const import IZONE, TIMEOUT_DISCOVERY, DISPATCH_CONTROLLER_DISCOVERED
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,20 +19,25 @@ async def _async_has_devices(hass):
     from .discovery import (
         async_start_discovery_service, async_stop_discovery_service)
 
+    controller_ready = asyncio.Event()
+    async_dispatcher_connect(
+        hass, DISPATCH_CONTROLLER_DISCOVERED,
+        lambda x: controller_ready.set())
+
     disco = await async_start_discovery_service(hass)
 
     try:
         async with timeout(TIMEOUT_DISCOVERY):
-            await disco.controller_ready.wait()
+            await controller_ready.wait()
     except asyncio.TimeoutError:
         pass
 
-    if not disco.controllers:
+    if not disco.pi_disco.controllers:
         await async_stop_discovery_service(hass)
         _LOGGER.debug("No controllers found")
         return False
 
-    _LOGGER.debug("Controllers %s", disco.controllers)
+    _LOGGER.debug("Controllers %s", disco.pi_disco.controllers)
     return True
 
 

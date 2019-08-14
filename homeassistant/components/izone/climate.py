@@ -14,16 +14,18 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE, SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, PRECISION_HALVES, TEMP_CELSIUS)
+    ATTR_TEMPERATURE, PRECISION_HALVES, TEMP_CELSIUS, CONF_EXCLUDE)
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, async_dispatcher_send)
 
 from .const import (
     DATA_DISCOVERY_SERVICE, IZONE,
-    DISPATCH_CONTROLLER_DISCOVERED, DISPATCH_CONTROLLER_DISCONNECTED,
-    DISPATCH_CONTROLLER_RECONNECTED, DISPATCH_CONTROLLER_UPDATE,
-    DISPATCH_ZONE_UPDATE)
+    DISPATCH_CONTROLLER_DISCOVERED, DISPATCH_CONTROLLER_READY,
+    DISPATCH_CONTROLLER_DISCONNECTED, DISPATCH_CONTROLLER_RECONNECTED,
+    DISPATCH_CONTROLLER_UPDATE,
+    DISPATCH_ZONE_UPDATE, DATA_CONFIG)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,15 +43,24 @@ async def async_setup_entry(hass: HomeAssistantType, config: ConfigType,
     disco = hass.data[DATA_DISCOVERY_SERVICE]
 
     @callback
-    def init_controller(controller: Controller):
+    def init_controller(ctrl: Controller):
         """Register the controller device and the containing zones."""
-        device = ControllerDevice(controller)
+        conf = hass.data.get(DATA_CONFIG)  # type: ConfigType
+
+        # Filter out any entities excluded in the config file
+        if conf and ctrl.device_uid in conf[CONF_EXCLUDE]:
+            _LOGGER.info(
+                "Controller UID=%s ignored as excluded",
+                ctrl.device_uid)
+            return
+        _LOGGER.info("Controller UID=%s discovered", ctrl.device_uid)
+
+        device = ControllerDevice(ctrl)
         async_add_entities([device])
         async_add_entities(device.zones.values())
-        _LOGGER.info("Controller UID=%s added", controller.device_uid)
 
     # create any components not yet created
-    for controller in disco.controllers.values():
+    for controller in disco.pi_disco.controllers.values():
         init_controller(controller)
 
     # connect to register any further components
@@ -132,9 +143,12 @@ class ControllerDevice(ClimateDevice):
             if ctrl is not self._controller:
                 return
             self.async_schedule_update_ha_state()
+
         self.async_on_remove(async_dispatcher_connect(
             self.hass, DISPATCH_CONTROLLER_UPDATE,
             controller_update))
+
+        async_dispatcher_send(self.hass, DISPATCH_CONTROLLER_READY)
 
     @property
     def available(self) -> bool:
@@ -404,7 +418,7 @@ class ZoneDevice(ClimateDevice):
     def unique_id(self):
         """Return the ID of the controller device."""
         return "{}_z{}".format(
-            self._controller.unique_id, self._zone.index+1)
+            self._controller.unique_id, self._zone.index + 1)
 
     @property
     def name(self) -> str:

@@ -1,19 +1,16 @@
 """Internal discovery service for  iZone AC."""
 
 import logging
-from asyncio import Event
-from typing import Dict
-
 import pizone
 
-from homeassistant.const import CONF_EXCLUDE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send, async_dispatcher_connect)
+    async_dispatcher_send)
 
 from .const import (
-    DATA_CONFIG, DATA_DISCOVERY_SERVICE,
+    DATA_DISCOVERY_SERVICE,
     DISPATCH_CONTROLLER_DISCOVERED,
     DISPATCH_CONTROLLER_DISCONNECTED, DISPATCH_CONTROLLER_RECONNECTED,
     DISPATCH_CONTROLLER_UPDATE, DISPATCH_ZONE_UPDATE)
@@ -28,31 +25,7 @@ class DiscoveryService(pizone.Listener):
         """Initialise discovery service."""
         super().__init__()
         self.hass = hass
-        self.controllers = {}  # type: Dict[str, pizone.Controller]
-        self.controller_ready = Event()
-
         self.pi_disco = None
-
-        async def _controller_discovered(ctrl: pizone.Controller):
-            assert ctrl.device_uid not in self.controllers, \
-                "discovered device that already exists"
-            _LOGGER.debug("Controller discovered uid=%s", ctrl.device_uid)
-
-            conf = self.hass.data.get(DATA_CONFIG)  # type: ConfigType
-
-            # Filter out any entities excluded in the config file
-            if conf and ctrl.device_uid in conf[CONF_EXCLUDE]:
-                _LOGGER.info(
-                    "Controller UID=%s ignored as excluded",
-                    ctrl.device_uid)
-                return
-
-            self.controllers[ctrl.device_uid] = ctrl
-            self.controller_ready.set()
-
-        async_dispatcher_connect(
-            hass, DISPATCH_CONTROLLER_DISCOVERED,
-            _controller_discovered)
 
     # Listener interface
     def controller_discovered(self, ctrl: pizone.Controller) -> None:
