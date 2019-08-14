@@ -12,6 +12,8 @@ from typing import (
 )
 import weakref
 
+import attr
+
 from homeassistant import data_entry_flow, loader
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ConfigEntryNotReady
@@ -733,14 +735,18 @@ class OptionsFlow(data_entry_flow.FlowHandler):
     pass
 
 
+@attr.s(slots=True, frozen=True)
 class SystemOptions:
     """"""
 
-    def __init__(self, data: dict) -> None:
-        """"""
-        self.data = data
+    data = attr.ib(type=dict, default=None)
 
     @callback
-    def update(self, disable_new_entities: bool) -> None:
+    def update(self, *, disable_new_entities: bool) -> None:
         """"""
         self.data["disable_new_entities"] = disable_new_entities
+
+    @property
+    def disable_new_entities(self) -> str:
+        """"""
+        return self.data.get("disable_new_entities", False)

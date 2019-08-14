@@ -244,7 +244,7 @@ class OptionManagerFlowResourceView(FlowManagerResourceView):
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
-    {"type": "/api/config/config_entries/system_options/list", "entry_id": str}
+    {"type": "/config_entries/system_options/list", "entry_id": str}
 )
 async def system_options_list(hass, connection, msg):
     """List all alexa entities."""
@@ -259,9 +259,9 @@ async def system_options_list(hass, connection, msg):
 @websocket_api.async_response
 @websocket_api.websocket_command(
     {
-        "type": "/api/config/config_entries/system_options/update",
+        "type": "/config_entries/system_options/update",
         "entry_id": str,
-        vol.Required("disable_new_entities"): bool,
+        vol.Optional("disable_new_entities"): bool,
     }
 )
 async def system_options_update(hass, connection, msg):
@@ -271,4 +271,6 @@ async def system_options_update(hass, connection, msg):
     entry_id = changes.pop("entry_id")
     entry = hass.config_entries.async_get_entry(entry_id)
 
-    entry.system_options.update(changes["disable_new_entities"])
+    entry.system_options.update(
+        disable_new_entities=changes.get("disable_new_entities")
+    )

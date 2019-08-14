@@ -349,6 +349,14 @@ class EntityPlatform:
                 disabled_by=disabled_by,
             )
 
+            if not entry:
+                self.logger.info(
+                    "Not adding entity %s because entry doesn't add new entities",
+                    entity.name
+                    or '"{} {}"'.format(self.platform_name, entity.unique_id),
+                )
+                return
+
             if entry.disabled:
                 self.logger.info(
                     "Not adding entity %s because it's disabled",
