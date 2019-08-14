@@ -154,14 +154,16 @@ class EntityRegistry:
             )
 
         entry = self.hass.config_entries.async_get_entry(config_entry_id)
-        if entry.system_options.disable_new_entities:
-            return
 
         entity_id = self.async_generate_entity_id(
             domain,
             suggested_object_id or "{}_{}".format(platform, unique_id),
             known_object_ids,
         )
+
+        disabled = None
+        if entry.system_options.disable_new_entities:
+            disabled = DISABLED_USER
 
         entity = RegistryEntry(
             entity_id=entity_id,
