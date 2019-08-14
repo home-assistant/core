@@ -195,7 +195,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             device_name = config[CONF_NAME] if CONF_NAME in config else "Fire TV"
 
         add_entities([device])
-        _LOGGER.debug("Setup %s at %s%s", device_name, host, adb_log)
+        _LOGGER.debug("Setup %s at %s %s", device_name, host, adb_log)
         hass.data[ANDROIDTV_DOMAIN][host] = device
 
     if hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_ADB_COMMAND):
