@@ -43,6 +43,7 @@ DEFAULT_FILTER_TIME_INTERVAL = timedelta(days=7)
 
 SIGNAL_DELETE_ENTITY = "geonetnz_quakes_delete_{}"
 SIGNAL_UPDATE_ENTITY = "geonetnz_quakes_update_{}"
+SIGNAL_STATUS = "geonetnz_quakes_status_{}"
 
 SOURCE = "geonetnz_quakes"
 
@@ -56,6 +57,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     manager = GeonetnzQuakesFeedEntityManager(
         hass,
         async_add_entities,
+        entry.entry_id,
         entry.data[CONF_SCAN_INTERVAL],
         entry.data[CONF_LATITUDE],
         entry.data[CONF_LONGITUDE],
@@ -75,6 +77,7 @@ class GeonetnzQuakesFeedEntityManager:
         self,
         hass,
         async_add_entities,
+        config_entry_id,
         scan_interval,
         latitude,
         longitude,
@@ -97,8 +100,10 @@ class GeonetnzQuakesFeedEntityManager:
             filter_radius=radius_in_km,
             filter_minimum_magnitude=minimum_magnitude,
             filter_time=DEFAULT_FILTER_TIME_INTERVAL,
+            status_callback=self._status_update,
         )
         self._async_add_entities = async_add_entities
+        self._config_entry_id = config_entry_id
         self._scan_interval = timedelta(seconds=scan_interval)
         self._unit_system = unit_system
         self._track_time_remove_callback = None
@@ -131,6 +136,10 @@ class GeonetnzQuakesFeedEntityManager:
         """Get feed entry by external id."""
         return self._feed_manager.feed_entries.get(external_id)
 
+    def status_info(self):
+        """Return latest status update info received."""
+        return self._status_info
+
     async def _generate_entity(self, external_id):
         """Generate new entity."""
         new_entity = GeonetnzQuakesEvent(self, external_id, self._unit_system)
@@ -144,6 +153,12 @@ class GeonetnzQuakesFeedEntityManager:
     async def _remove_entity(self, external_id):
         """Remove entity."""
         async_dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
+
+    async def _status_update(self, status_info):
+        """Propagate status update."""
+        _LOGGER.debug("Status update received: %s", status_info)
+        self._status_info = status_info
+        async_dispatcher_send(self._hass, SIGNAL_STATUS.format(self._config_entry_id))
 
 
 class GeonetnzQuakesEvent(GeolocationEvent):

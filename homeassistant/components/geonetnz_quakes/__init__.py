@@ -19,6 +19,7 @@ from .const import (
     DEFAULT_RADIUS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    COMPONENTS,
     FEED,
 )
 
@@ -84,9 +85,10 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][FEED] = {}
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "geo_location")
-    )
+    for domain in COMPONENTS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, domain)
+        )
 
     return True
 
@@ -96,6 +98,7 @@ async def async_unload_entry(hass, config_entry):
     manager = hass.data[DOMAIN][FEED].pop(config_entry.entry_id)
     await manager.async_stop()
 
-    await hass.config_entries.async_forward_entry_unload(config_entry, "geo_location")
+    for domain in COMPONENTS:
+        await hass.config_entries.async_forward_entry_unload(config_entry, domain)
 
     return True
