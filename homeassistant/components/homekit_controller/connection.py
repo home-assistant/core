@@ -3,6 +3,14 @@ import asyncio
 import datetime
 import logging
 
+from homekit.exceptions import (
+    AccessoryDisconnectedError,
+    AccessoryNotFoundError,
+    EncryptionError,
+)
+from homekit.model.services import ServicesTypes
+from homekit.model.characteristics import CharacteristicsTypes
+
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, ENTITY_MAP
@@ -16,10 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_accessory_information(accessory):
     """Obtain the accessory information service of a HomeKit device."""
-    # pylint: disable=import-error
-    from homekit.model.services import ServicesTypes
-    from homekit.model.characteristics import CharacteristicsTypes
-
     result = {}
     for service in accessory["services"]:
         stype = service["type"].upper()
@@ -163,9 +167,6 @@ class HKDevice:
 
     async def async_refresh_entity_map(self, config_num):
         """Handle setup of a HomeKit accessory."""
-        # pylint: disable=import-error
-        from homekit.exceptions import AccessoryDisconnectedError
-
         try:
             async with self.pairing_lock:
                 self.accessories = await self.hass.async_add_executor_job(
@@ -205,8 +206,6 @@ class HKDevice:
         self._add_new_entities(self.listeners)
 
     def _add_new_entities(self, callbacks):
-        from homekit.model.services import ServicesTypes
-
         for accessory in self.accessories:
             aid = accessory["aid"]
             for service in accessory["services"]:
@@ -225,8 +224,6 @@ class HKDevice:
 
     def async_load_platforms(self):
         """Load any platforms needed by this HomeKit device."""
-        from homekit.model.services import ServicesTypes
-
         for accessory in self.accessories:
             for service in accessory["services"]:
                 stype = ServicesTypes.get_short(service["type"].upper())
@@ -246,13 +243,6 @@ class HKDevice:
 
     async def async_update(self, now=None):
         """Poll state of all entities attached to this bridge/accessory."""
-        # pylint: disable=import-error
-        from homekit.exceptions import (
-            AccessoryDisconnectedError,
-            AccessoryNotFoundError,
-            EncryptionError,
-        )
-
         if not self.pollable_characteristics:
             _LOGGER.debug("HomeKit connection not polling any characteristics.")
             return

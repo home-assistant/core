@@ -1,6 +1,8 @@
 """Support for Homekit switches."""
 import logging
 
+from homekit.model.characteristics import CharacteristicsTypes
+
 from homeassistant.components.switch import SwitchDevice
 
 from . import KNOWN_DEVICES, HomeKitEntity
@@ -41,9 +43,6 @@ class HomeKitSwitch(HomeKitEntity, SwitchDevice):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
-
         return [CharacteristicsTypes.ON, CharacteristicsTypes.OUTLET_IN_USE]
 
     def _update_on(self, value):
