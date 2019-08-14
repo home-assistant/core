@@ -12,7 +12,7 @@ from homeassistant.setup import setup_component
 import homeassistant.components.binary_sensor as binary_sensor
 import homeassistant.components.rest.binary_sensor as rest
 from homeassistant.const import STATE_ON, STATE_OFF
-from homeassistant.helpers import template
+from homeassistant.helpers.config_validation import template, template_complex
 
 from tests.common import get_test_home_assistant, assert_setup_component
 import pytest
@@ -110,6 +110,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
                         "username": "my username",
                         "password": "my password",
                         "headers": {"Accept": "application/json"},
+                        "json_attributes": {"key": "{{ value_json.key }}"}
                     }
                 },
             )
@@ -136,6 +137,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
                         "username": "my username",
                         "password": "my password",
                         "headers": {"Accept": "application/json"},
+                        "json_attributes": {"key": "{{ value_json.key }}"}
                     }
                 },
             )
@@ -154,9 +156,10 @@ class TestRestBinarySensor(unittest.TestCase):
         )
         self.name = "foo"
         self.device_class = "light"
-        self.value_template = template.Template("{{ value_json.key }}", self.hass)
-        self.json_attrs_tpl = template.Template("{{ value_json.key }}")
-        self.json_attrs_tpl.hass = self.hass
+        self.value_template = template("{{ value_json.key }}")
+        self.value_template.hass = self.hass
+        self.json_attrs = template_complex({"key": "{{ value_json.key }}"})
+        self.json_attrs["key"].hass = self.hass
         self.force_update = False
 
         self.binary_sensor = rest.RestBinarySensor(
@@ -165,7 +168,7 @@ class TestRestBinarySensor(unittest.TestCase):
             self.name,
             self.device_class,
             self.value_template,
-            self.json_attrs_tpl,
+            self.json_attrs,
             self.force_update,
         )
 
@@ -250,7 +253,7 @@ class TestRestBinarySensor(unittest.TestCase):
             self.name,
             self.device_class,
             None,
-            self.json_attrs_tpl,
+            self.json_attrs,
             self.force_update,
         )
         self.binary_sensor.update()
@@ -268,27 +271,7 @@ class TestRestBinarySensor(unittest.TestCase):
             self.name,
             self.device_class,
             None,
-            self.json_attrs_tpl,
-            self.force_update,
-        )
-        self.binary_sensor.update()
-        assert {} == self.binary_sensor.device_state_attributes
-        assert mock_logger.warning.called
-
-    @patch("homeassistant.components.rest.binary_sensor._LOGGER")
-    def test_update_with_json_attrs_not_dict(self, mock_logger):
-        """Test attributes get extracted from a JSON result."""
-        self.rest.update = Mock(
-            "rest.RestData.update",
-            side_effect=self.update_side_effect('["list", "of", "things"]'),
-        )
-        self.binary_sensor = rest.RestBinarySensor(
-            self.hass,
-            self.rest,
-            self.name,
-            self.device_class,
-            None,
-            self.json_attrs_tpl,
+            self.json_attrs,
             self.force_update,
         )
         self.binary_sensor.update()
@@ -308,7 +291,7 @@ class TestRestBinarySensor(unittest.TestCase):
             self.name,
             self.device_class,
             None,
-            self.json_attrs_tpl,
+            self.json_attrs,
             self.force_update,
         )
         self.binary_sensor.update()
@@ -328,10 +311,11 @@ class TestRestBinarySensor(unittest.TestCase):
             self.name,
             self.device_class,
             self.value_template,
-            self.json_attrs_tpl,
+            self.json_attrs,
             self.force_update,
         )
         self.binary_sensor.update()
 
         assert STATE_OFF == self.binary_sensor.state
-        assert not self.binary_sensor.device_state_attributes["key"], self.force_update
+        assert 'False' == self.binary_sensor.device_state_attributes["key"], \
+            self.force_update

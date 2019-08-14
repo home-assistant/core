@@ -11,7 +11,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import setup_component
 import homeassistant.components.sensor as sensor
 import homeassistant.components.rest.sensor as rest
-from homeassistant.helpers.config_validation import template
+from homeassistant.helpers.config_validation import template, template_complex
 
 from tests.common import get_test_home_assistant, assert_setup_component
 import pytest
@@ -98,6 +98,7 @@ class TestRestSensorSetup(unittest.TestCase):
                         "username": "my username",
                         "password": "my password",
                         "headers": {"Accept": "application/json"},
+                        "json_attributes": {"key": "{{ value_json.key }}"}
                     }
                 },
             )
@@ -151,8 +152,8 @@ class TestRestSensor(unittest.TestCase):
         self.device_class = None
         self.value_template = template("{{ value_json.key }}")
         self.value_template.hass = self.hass
-        self.json_attrs_tpl = template("{{ value_json | tojson }}")
-        self.json_attrs_tpl.hass = self.hass
+        self.json_attrs = template_complex({"key": "{{ value_json.key }}"})
+        self.json_attrs["key"].hass = self.hass
         self.force_update = False
 
         self.sensor = rest.RestSensor(
@@ -162,8 +163,7 @@ class TestRestSensor(unittest.TestCase):
             self.unit_of_measurement,
             self.device_class,
             self.value_template,
-            [],
-            self.json_attrs_tpl,
+            self.json_attrs,
             self.force_update,
         )
 
@@ -223,7 +223,6 @@ class TestRestSensor(unittest.TestCase):
             self.unit_of_measurement,
             self.device_class,
             None,
-            [],
             None,
             self.force_update,
         )
@@ -244,8 +243,7 @@ class TestRestSensor(unittest.TestCase):
             self.unit_of_measurement,
             self.device_class,
             None,
-            ["key"],
-            self.json_attrs_tpl,
+            self.json_attrs,
             self.force_update,
         )
         self.sensor.update()
@@ -264,30 +262,7 @@ class TestRestSensor(unittest.TestCase):
             self.unit_of_measurement,
             self.device_class,
             None,
-            ["key"],
-            self.json_attrs_tpl,
-            self.force_update,
-        )
-        self.sensor.update()
-        assert {} == self.sensor.device_state_attributes
-        assert mock_logger.warning.called
-
-    @patch("homeassistant.components.rest.sensor._LOGGER")
-    def test_update_with_json_attrs_not_dict(self, mock_logger):
-        """Test attributes get extracted from a JSON result."""
-        self.rest.update = Mock(
-            "rest.RestData.update",
-            side_effect=self.update_side_effect('["list", "of", "things"]'),
-        )
-        self.sensor = rest.RestSensor(
-            self.hass,
-            self.rest,
-            self.name,
-            self.unit_of_measurement,
-            self.device_class,
-            None,
-            ["key"],
-            self.json_attrs_tpl,
+            self.json_attrs,
             self.force_update,
         )
         self.sensor.update()
@@ -308,8 +283,7 @@ class TestRestSensor(unittest.TestCase):
             self.unit_of_measurement,
             self.device_class,
             None,
-            ["key"],
-            self.json_attrs_tpl,
+            self.json_attrs,
             self.force_update,
         )
         self.sensor.update()
@@ -332,8 +306,7 @@ class TestRestSensor(unittest.TestCase):
             self.unit_of_measurement,
             self.device_class,
             self.value_template,
-            ["key"],
-            self.json_attrs_tpl,
+            self.json_attrs,
             self.force_update,
         )
         self.sensor.update()
