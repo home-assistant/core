@@ -1,6 +1,8 @@
 """Support for Homekit Alarm Control Panel."""
 import logging
 
+from homekit.model.characteristics import CharacteristicsTypes
+
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -64,9 +66,6 @@ class HomeKitAlarmControlPanel(HomeKitEntity, AlarmControlPanel):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
-
         return [
             CharacteristicsTypes.SECURITY_SYSTEM_STATE_CURRENT,
             CharacteristicsTypes.SECURITY_SYSTEM_STATE_TARGET,

@@ -3,6 +3,7 @@ import os
 import json
 import logging
 
+import homekit
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -62,8 +63,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
     def __init__(self):
         """Initialize the homekit_controller flow."""
-        import homekit  # pylint: disable=import-error
-
         self.model = None
         self.hkid = None
         self.devices = {}
@@ -224,8 +223,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_pair(self, pair_info=None):
         """Pair with a new HomeKit accessory."""
-        import homekit  # pylint: disable=import-error
-
         # If async_step_pair is called with no pairing code then we do the M1
         # phase of pairing. If this is successful the device enters pairing
         # mode.
