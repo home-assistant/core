@@ -120,7 +120,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     broadlink_device,
                     device_config.get(CONF_COMMAND_ON),
                     device_config.get(CONF_COMMAND_OFF),
-                    retry_times
+                    retry_times,
                 )
             )
     elif switch_type in SP1_TYPES:
@@ -135,7 +135,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         parent_device = BroadlinkMP1Switch(broadlink_device, retry_times)
         for i in range(1, 5):
             slot = BroadlinkMP1Slot(
-                _get_mp1_slot_name(friendly_name, i), broadlink_device, i, parent_device, retry_times
+                _get_mp1_slot_name(friendly_name, i),
+                broadlink_device,
+                i,
+                parent_device,
+                retry_times,
             )
             switches.append(slot)
 
@@ -151,7 +155,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BroadlinkRMSwitch(SwitchDevice, RestoreEntity):
     """Representation of an Broadlink switch."""
 
-    def __init__(self, name, friendly_name, device, command_on, command_off, retry_times):
+    def __init__(
+        self, name, friendly_name, device, command_on, command_off, retry_times
+    ):
         """Initialize the switch."""
         self.entity_id = ENTITY_ID_FORMAT.format(slugify(name))
         self._name = friendly_name
