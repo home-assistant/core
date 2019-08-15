@@ -167,6 +167,9 @@ class MikrotikScanner(DeviceScanner):
             status = 0
             for result in data:
                 if "status" in result:
+                    _LOGGER.debug(
+                        "Mikrotik %s arp_ping error: %s", self.host, result["status"]
+                    )
                     status += 1
             if status == len(data):
                 return None
