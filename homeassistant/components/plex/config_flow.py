@@ -31,6 +31,7 @@ from .errors import ConfigNotReady, NoServersFound, TokenMissing
 
 _LOGGER = logging.getLogger(__package__)
 
+
 @config_entries.HANDLERS.register(DOMAIN)
 class PlexFlowHandler(config_entries.ConfigFlow):
     """Handle a Plex config flow."""
@@ -83,7 +84,7 @@ class PlexFlowHandler(config_entries.ConfigFlow):
             try:
                 if (username is None) and (plex_url is None):
                     raise ConfigNotReady
-            
+
                 if username:
                     if token is None:
                         self.current_login = {CONF_USERNAME: username}
@@ -91,7 +92,7 @@ class PlexFlowHandler(config_entries.ConfigFlow):
 
                     account = MyPlexAccount(username=username, token=token)
                     servers = [x for x in account.resources() if "server" in x.provides]
-                       
+
                     if len(servers) == 1:
                         plex_server = servers[0].name
                     elif len(servers) > 1:
@@ -99,7 +100,7 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                         pass
                     else:
                         raise NoServersFound
-                    
+
                     title = TITLE_TEMPLATE.format(plex_server, account.username)
                     data = {
                         CONF_USERNAME: username,
@@ -123,7 +124,7 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                     data = {
                         CONF_URL: plex_url,
                         CONF_TOKEN: token,
-                        CONF_VERIFY_SSL: verify_ssl
+                        CONF_VERIFY_SSL: verify_ssl,
                     }
 
                 return self.async_create_entry(
@@ -134,15 +135,17 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                 errors["base"] = "config_not_ready"
             except NoServersFound:
                 errors["base"] = "no_servers"
-            except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized, TokenMissing):
+            except (
+                plexapi.exceptions.BadRequest,
+                plexapi.exceptions.Unauthorized,
+                TokenMissing,
+            ):
                 errors["base"] = "faulty_credentials"
                 if token is None:
                     return self.async_show_form(
                         step_id="token",
-                        data_schema=vol.Schema({
-                            vol.Required(CONF_TOKEN): str
-                        }),
-                        errors={}
+                        data_schema=vol.Schema({vol.Required(CONF_TOKEN): str}),
+                        errors={},
                     )
             except (plexapi.exceptions.NotFound, requests.exceptions.ConnectionError):
                 errors["base"] = "not_found"

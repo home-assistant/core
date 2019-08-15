@@ -2,18 +2,11 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.const import (
-    CONF_USERNAME,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_TOKEN,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_USERNAME, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from .const import CONF_SERVER
+from .const import CONF_SERVER, PLEX_SERVER_CONFIG
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,10 +16,11 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Plex sensor.
 
-    Deprecated."""
+    Deprecated.
+    """
     _LOGGER.warning(
-        "Configuration via YAML is deprecated, please set up via Integrations")
-    return
+        "Configuration via YAML is deprecated, please set up via Integrations"
+    )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -70,14 +64,7 @@ def _setup_platform(hass, config_entry, add_entities):
 class PlexSensor(Entity):
     """Representation of a Plex now playing sensor."""
 
-    def __init__(
-        self,
-        plex_url,
-        plex_user,
-        plex_server,
-        plex_token,
-        verify_ssl,
-    ):
+    def __init__(self, plex_url, plex_user, plex_server, plex_token, verify_ssl):
         """Initialize the sensor."""
         from plexapi.myplex import MyPlexAccount
         from plexapi.server import PlexServer
