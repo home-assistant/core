@@ -84,10 +84,13 @@ class MeteoFranceWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast."""
-        reftime = dt_util.now(dt_util.get_time_zone("Europe/Paris")).replace(
-            hour=12, minute=00, second=00, microsecond=00
+        reftime = dt_util.as_utc(
+            dt_util.now(dt_util.get_time_zone("Europe/Paris")).replace(
+                hour=12, minute=00, second=00, microsecond=00
+            )
         )
         reftime += timedelta(hours=24)
+        _LOGGER.debug("reftime used for %s forecast: %s", self._data["name"], reftime)
         forecast_data = []
         for key in self._data["forecast"]:
             value = self._data["forecast"][key]
