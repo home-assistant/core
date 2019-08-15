@@ -1,11 +1,11 @@
 """Support for Netgear LTE binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.exceptions import PlatformNotReady
 
-from . import CONF_MONITORED_CONDITIONS, DATA_KEY, LTEEntity
-from .sensor_types import BINARY_SENSOR_CLASSES
+from . import DATA_KEY, LTEEntity
+from . import sensor_types
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,11 +20,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info)
     if not modem_data or not modem_data.data:
         raise PlatformNotReady
 
-    binary_sensor_conf = discovery_info[DOMAIN]
-    monitored_conditions = binary_sensor_conf[CONF_MONITORED_CONDITIONS]
-
     binary_sensors = []
-    for sensor_type in monitored_conditions:
+    for sensor_type in sensor_types.ALL_BINARY_SENSORS:
         binary_sensors.append(LTEBinarySensor(modem_data, sensor_type))
 
     async_add_entities(binary_sensors)
@@ -41,4 +38,4 @@ class LTEBinarySensor(LTEEntity, BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of binary sensor."""
-        return BINARY_SENSOR_CLASSES[self.sensor_type]
+        return sensor_types.BINARY_SENSOR_CLASSES[self.sensor_type]

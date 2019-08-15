@@ -1,11 +1,10 @@
 """Support for Netgear LTE sensors."""
 import logging
 
-from homeassistant.components.sensor import DOMAIN
 from homeassistant.exceptions import PlatformNotReady
 
-from . import CONF_MONITORED_CONDITIONS, DATA_KEY, LTEEntity
-from .sensor_types import SENSOR_SMS, SENSOR_SMS_TOTAL, SENSOR_USAGE, SENSOR_UNITS
+from . import DATA_KEY, LTEEntity
+from . import sensor_types
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,19 +19,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info)
     if not modem_data or not modem_data.data:
         raise PlatformNotReady
 
-    sensor_conf = discovery_info[DOMAIN]
-    monitored_conditions = sensor_conf[CONF_MONITORED_CONDITIONS]
-
     sensors = []
-    for sensor_type in monitored_conditions:
-        if sensor_type == SENSOR_SMS:
+
+    for sensor_type in sensor_types.ALL_SENSORS:
+        if sensor_type == sensor_types.SENSOR_SMS:
             sensors.append(SMSUnreadSensor(modem_data, sensor_type))
-        elif sensor_type == SENSOR_SMS_TOTAL:
+        elif sensor_type == sensor_types.SENSOR_SMS_TOTAL:
             sensors.append(SMSTotalSensor(modem_data, sensor_type))
-        elif sensor_type == SENSOR_USAGE:
+        elif sensor_type == sensor_types.SENSOR_USAGE:
             sensors.append(UsageSensor(modem_data, sensor_type))
-        else:
-            sensors.append(GenericSensor(modem_data, sensor_type))
+
+    for sensor_type in modem_data.data.items:
+        sensors.append(GenericSensor(modem_data, sensor_type))
 
     async_add_entities(sensors)
 
@@ -42,8 +40,8 @@ class LTESensor(LTEEntity):
 
     @property
     def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return SENSOR_UNITS[self.sensor_type]
+        """Return the unit of measurement (if known)."""
+        return sensor_types.SENSOR_UNITS.get(self.sensor_type)
 
 
 class SMSUnreadSensor(LTESensor):
@@ -68,6 +66,11 @@ class UsageSensor(LTESensor):
     """Data usage sensor entity."""
 
     @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return True
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         return round(self.modem_data.data.usage / 1024 ** 2, 1)
@@ -79,4 +82,4 @@ class GenericSensor(LTESensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return getattr(self.modem_data.data, self.sensor_type)
+        return self.modem_data.data.items.get(self.sensor_type)

@@ -9,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_RECIPIENT,
@@ -27,8 +26,6 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-
-from . import sensor_types
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,22 +60,6 @@ NOTIFY_SCHEMA = vol.Schema(
     }
 )
 
-SENSOR_SCHEMA = vol.Schema(
-    {
-        vol.Optional(
-            CONF_MONITORED_CONDITIONS, default=sensor_types.DEFAULT_SENSORS
-        ): vol.All(cv.ensure_list, [vol.In(sensor_types.ALL_SENSORS)])
-    }
-)
-
-BINARY_SENSOR_SCHEMA = vol.Schema(
-    {
-        vol.Optional(
-            CONF_MONITORED_CONDITIONS, default=sensor_types.DEFAULT_BINARY_SENSORS
-        ): vol.All(cv.ensure_list, [vol.In(sensor_types.ALL_BINARY_SENSORS)])
-    }
-)
-
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
@@ -91,10 +72,6 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Optional(NOTIFY_DOMAIN, default={}): vol.All(
                             cv.ensure_list, [NOTIFY_SCHEMA]
                         ),
-                        vol.Optional(SENSOR_DOMAIN, default={}): SENSOR_SCHEMA,
-                        vol.Optional(
-                            BINARY_SENSOR_DOMAIN, default={}
-                        ): BINARY_SENSOR_SCHEMA,
                     }
                 )
             ],
@@ -239,8 +216,7 @@ async def async_setup(hass, config):
             )
 
         # Sensor
-        sensor_conf = lte_conf.get(SENSOR_DOMAIN)
-        discovery_info = {CONF_HOST: lte_conf[CONF_HOST], SENSOR_DOMAIN: sensor_conf}
+        discovery_info = {CONF_HOST: lte_conf[CONF_HOST]}
         hass.async_create_task(
             discovery.async_load_platform(
                 hass, SENSOR_DOMAIN, DOMAIN, discovery_info, config
@@ -248,11 +224,7 @@ async def async_setup(hass, config):
         )
 
         # Binary Sensor
-        binary_sensor_conf = lte_conf.get(BINARY_SENSOR_DOMAIN)
-        discovery_info = {
-            CONF_HOST: lte_conf[CONF_HOST],
-            BINARY_SENSOR_DOMAIN: binary_sensor_conf,
-        }
+        discovery_info = {CONF_HOST: lte_conf[CONF_HOST]}
         hass.async_create_task(
             discovery.async_load_platform(
                 hass, BINARY_SENSOR_DOMAIN, DOMAIN, discovery_info, config
@@ -361,6 +333,11 @@ class LTEEntity(Entity):
     async def async_update(self):
         """Force update of state."""
         await self.modem_data.async_update()
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return False
 
     @property
     def should_poll(self):
