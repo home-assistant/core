@@ -2,19 +2,33 @@
     "config": {
         "title": "Plex",
         "step": {
-            "user": {
-                "title": "Set up Plex server",
+            "buildurl": {
+                "title": "Plex server connection",
                 "data": {
                     "host": "Host",
-                    "token": "Token",
                     "port": "Port",
                     "ssl": "Use SSL",
                     "verify_ssl": "Verify SSL certificate"
                 }
+            },
+            "token": {
+                "title": "Provide Plex token",
+                "data": {
+                    "token": "Token"
+                }
+            },
+            "user": {
+                "title": "Connect Plex server",
+                "data": {
+                    "username": "Plex username",
+                    "manual_setup": "Manually configure Host:Port"
+                }
             }
         },
         "error": {
+            "config_not_ready": "Configuration provided is incomplete",
             "faulty_credentials": "Authorization failed",
+            "no_servers": "No servers linked to account",
             "not_found": "Plex server not found"
         },
         "abort": {

@@ -21,10 +21,9 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    CONF_SSL,
     CONF_TOKEN,
+    CONF_URL,
+    CONF_USERNAME,
     CONF_VERIFY_SSL,
     DEVICE_DEFAULT_NAME,
     STATE_IDLE,
@@ -38,6 +37,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import load_json
 
 from .const import (
+    CONF_SERVER,
     CONF_USE_EPISODE_ART,
     CONF_SHOW_ALL_CONTROLS,
     CONF_REMOVE_UNAVAILABLE_CLIENTS,
@@ -121,42 +121,41 @@ def _setup_platform(hass, config_entry, add_entities):
 
     server_info = config_entry.data.get(PLEX_SERVER_CONFIG, {})
     if server_info:
-        setup_plexserver(
-            server_info[CONF_HOST],
-            server_info[CONF_PORT],
-            server_info[CONF_TOKEN],
-            server_info[CONF_SSL],
-            server_info[CONF_VERIFY_SSL],
-            hass,
-            add_entities,
-        )
+        setup_plexserver(server_info, hass, add_entities)
 
 
-def setup_plexserver(
-    host, port, token, has_ssl, verify_ssl, hass, add_entities_callback
-):
-    """Set up a plexserver based on host parameter."""
+def setup_plexserver(server_info, hass, add_entities_callback):
+    """Set up a Plex server."""
     import plexapi.server
     import plexapi.exceptions
+    from plexapi.myplex import MyPlexAccount
 
-    cert_session = None
-    http_prefix = "https" if has_ssl else "http"
-    if has_ssl and (verify_ssl is False):
-        _LOGGER.info("Ignoring SSL verification")
-        cert_session = requests.Session()
-        cert_session.verify = False
+    plex_user = server_info.get(CONF_USERNAME)
+    plex_token = server_info.get(CONF_TOKEN)
+    plex_server = server_info.get(CONF_SERVER)
     try:
-        plexserver = plexapi.server.PlexServer(
-            f"{http_prefix}://{host}:{port}", token, cert_session
-        )
+        if plex_user:
+            account = MyPlexAccount(username=plex_user, token=plex_token)
+            server = plex_server if plex_server else account.resources()[0].name
+            plexserver = account.resource(server).connect()
+            _LOGGER.info("Connected to: %s (%s)", server, plex_user)
+        else:
+            plex_url = server_info.get(CONF_URL)
+            cert_session = None
+            verify_ssl = server_info.get(CONF_VERIFY_SSL)
+            if plex_url.startswith("https") and not verify_ssl:
+                _LOGGER.info("Ignoring SSL verification")
+                cert_session = requests.Session()
+                cert_session.verify = False
+            plexserver = plexapi.server.PlexServer(plex_url, plex_token, cert_session)
+            _LOGGER.info("Connected to: %s", plex_url)
     except (
         plexapi.exceptions.BadRequest,
         plexapi.exceptions.Unauthorized,
         plexapi.exceptions.NotFound,
     ) as error:
         _LOGGER.error(error)
-
-    _LOGGER.info("Connected to: %s://%s:%s", http_prefix, host, port)
+        return
 
     config = hass.data[PLEX_MEDIA_PLAYER_OPTIONS]
     plex_clients = hass.data[PLEX_CLIENTS]
@@ -171,9 +170,7 @@ def setup_plexserver(
             _LOGGER.exception("Error listing plex devices")
             return
         except requests.exceptions.RequestException as ex:
-            _LOGGER.warning(
-                "Could not connect to plex server at http://%s (%s)", host, ex
-            )
+            _LOGGER.warning("Could not connect to Plex server (%s)", ex)
             return
 
         new_plex_clients = []
@@ -203,9 +200,7 @@ def setup_plexserver(
             _LOGGER.exception("Error listing plex sessions")
             return
         except requests.exceptions.RequestException as ex:
-            _LOGGER.warning(
-                "Could not connect to plex server at http://%s (%s)", host, ex
-            )
+            _LOGGER.warning("Could not connect to Plex server (%s)", ex)
             return
 
         plex_sessions.clear()
