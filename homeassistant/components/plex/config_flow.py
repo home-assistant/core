@@ -69,7 +69,7 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                     }
                 )
                 return self.async_show_form(
-                    step_id="buildurl", data_schema=data_schema, errors={}
+                    step_id="build_url", data_schema=data_schema, errors={}
                 )
 
             plex_server = user_input.get(CONF_SERVER)
@@ -167,7 +167,7 @@ class PlexFlowHandler(config_entries.ConfigFlow):
         config[CONF_TOKEN] = user_input.get(CONF_TOKEN)
         return await self.async_step_user(user_input=config)
 
-    async def async_step_buildurl(self, user_input=None):
+    async def async_step_build_url(self, user_input=None):
         """Build URL from components."""
         if user_input is None:
             return await self.async_step_user()

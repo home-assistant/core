@@ -2,8 +2,8 @@
     "config": {
         "title": "Plex",
         "step": {
-            "buildurl": {
-                "title": "Plex server connection",
+            "build_url": {
+                "title": "Plex server",
                 "data": {
                     "host": "Host",
                     "port": "Port",
@@ -21,7 +21,7 @@
                 "title": "Connect Plex server",
                 "data": {
                     "username": "Plex username",
-                    "manual_setup": "Manually configure Host:Port"
+                    "manual_setup": "Manual setup"
                 }
             }
         },
