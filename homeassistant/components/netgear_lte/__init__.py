@@ -43,6 +43,7 @@ EVENT_SMS = "netgear_lte_sms"
 SERVICE_DELETE_SMS = "delete_sms"
 SERVICE_SET_OPTION = "set_option"
 SERVICE_CONNECT_LTE = "connect_lte"
+SERVICE_DISCONNECT_LTE = "disconnect_lte"
 
 ATTR_HOST = "host"
 ATTR_SMS_ID = "sms_id"
@@ -122,6 +123,8 @@ SET_OPTION_SCHEMA = vol.Schema(
 
 CONNECT_LTE_SCHEMA = vol.Schema({vol.Optional(ATTR_HOST): cv.string})
 
+DISCONNECT_LTE_SCHEMA = vol.Schema({vol.Optional(ATTR_HOST): cv.string})
+
 
 @attr.s
 class ModemData:
@@ -199,18 +202,20 @@ async def async_setup(hass, config):
                     await modem_data.modem.set_autoconnect_mode(autoconnect)
             elif service.service == SERVICE_CONNECT_LTE:
                 await modem_data.modem.connect_lte()
+            elif service.service == SERVICE_DISCONNECT_LTE:
+                await modem_data.modem.disconnect_lte()
 
-        hass.services.async_register(
-            DOMAIN, SERVICE_DELETE_SMS, service_handler, schema=DELETE_SMS_SCHEMA
-        )
+        service_schemas = {
+            SERVICE_DELETE_SMS: DELETE_SMS_SCHEMA,
+            SERVICE_SET_OPTION: SET_OPTION_SCHEMA,
+            SERVICE_CONNECT_LTE: CONNECT_LTE_SCHEMA,
+            SERVICE_DISCONNECT_LTE: DISCONNECT_LTE_SCHEMA,
+        }
 
-        hass.services.async_register(
-            DOMAIN, SERVICE_SET_OPTION, service_handler, schema=SET_OPTION_SCHEMA
-        )
-
-        hass.services.async_register(
-            DOMAIN, SERVICE_CONNECT_LTE, service_handler, schema=CONNECT_LTE_SCHEMA
-        )
+        for service, schema in service_schemas.items():
+            hass.services.async_register(
+                DOMAIN, service, service_handler, schema=schema
+            )
 
     netgear_lte_config = config[DOMAIN]
 
