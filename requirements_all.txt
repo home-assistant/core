@@ -418,9 +418,6 @@ ebusdpy==0.0.16
 # homeassistant.components.ecoal_boiler
 ecoaliface==0.4.0
 
-# homeassistant.components.edp_redy
-edp_redy==0.0.3
-
 # homeassistant.components.ee_brightbox
 eebrightbox==0.0.4
 
