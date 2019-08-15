@@ -97,7 +97,7 @@ class GeonetnzQuakesSensor(Entity):
     @property
     def name(self) -> Optional[str]:
         """Return the name of the entity."""
-        return f"GeoNet NZ Quakes Status {self._config_title}"
+        return f"GeoNet NZ Quakes ({self._config_title})"
 
     @property
     def icon(self):
