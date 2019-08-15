@@ -103,6 +103,9 @@ class HKDevice:
         # this method.
         self._polling_interval_remover = None
 
+        # Never allow concurrent polling of the same accessory or bridge
+        self._polling_lock = asyncio.Lock()
+
     def add_pollable_characteristics(self, characteristics):
         """Add (aid, iid) pairs that we need to poll."""
         self.pollable_characteristics.extend(characteristics)
@@ -247,25 +250,30 @@ class HKDevice:
             _LOGGER.debug("HomeKit connection not polling any characteristics.")
             return
 
-        _LOGGER.debug("Starting HomeKit controller update")
-
-        try:
-            new_values_dict = await self.get_characteristics(
-                self.pollable_characteristics
-            )
-        except AccessoryNotFoundError:
-            # Not only did the connection fail, but also the accessory is not
-            # visible on the network.
-            self.async_set_unavailable()
-            return
-        except (AccessoryDisconnectedError, EncryptionError):
-            # Temporary connection failure. Device is still available but our
-            # connection was dropped.
+        if self._polling_lock.locked():
+            _LOGGER.warning("HomeKit controller update skipped as previous poll still in flight")
             return
 
-        self.process_new_events(new_values_dict)
+        async with self._polling_lock:
+            _LOGGER.debug("Starting HomeKit controller update")
 
-        _LOGGER.debug("Finished HomeKit controller update")
+            try:
+                new_values_dict = await self.get_characteristics(
+                    self.pollable_characteristics
+                )
+            except AccessoryNotFoundError:
+                # Not only did the connection fail, but also the accessory is not
+                # visible on the network.
+                self.async_set_unavailable()
+                return
+            except (AccessoryDisconnectedError, EncryptionError):
+                # Temporary connection failure. Device is still available but our
+                # connection was dropped.
+                return
+
+            self.process_new_events(new_values_dict)
+
+            _LOGGER.debug("Finished HomeKit controller update")
 
     def process_new_events(self, new_values_dict):
         """Process events from accessory into HA state."""
