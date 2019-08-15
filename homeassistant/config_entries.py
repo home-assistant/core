@@ -658,6 +658,12 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
     CONNECTION_CLASS = CONN_CLASS_UNKNOWN
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        raise data_entry_flow.UnknownHandler
+
     @callback
     def _async_current_entries(self):
         """Return current entries."""
@@ -691,7 +697,11 @@ class OptionsFlowManager:
         entry = self.hass.config_entries.async_get_entry(entry_id)
         if entry is None:
             return
-        flow = HANDLERS[entry.domain].async_get_options_flow(entry.data, entry.options)
+
+        if entry.domain not in HANDLERS:
+            raise data_entry_flow.UnknownHandler
+
+        flow = HANDLERS[entry.domain].async_get_options_flow(entry)
         return flow
 
     async def _async_finish_flow(self, flow, result):
@@ -706,3 +716,9 @@ class OptionsFlowManager:
 
         result["result"] = True
         return result
+
+
+class OptionsFlow(data_entry_flow.FlowHandler):
+    """Base class for config option flows."""
+
+    pass
