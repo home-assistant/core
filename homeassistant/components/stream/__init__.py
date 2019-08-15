@@ -60,7 +60,10 @@ def request_stream(hass, stream_source, *, fmt="hls", keepalive=False, options=N
         if (
             uvloop is not None
             and isinstance(hass.loop, uvloop.Loop)
-            and "shell_command" in hass.config.components
+            and (
+                "shell_command" in hass.config.components
+                or "ffmpeg" in hass.config.components
+            )
         ):
             _LOGGER.warning(
                 "You are using UVLoop with stream and shell_command. This is known to cause issues. Please uninstall uvloop."
