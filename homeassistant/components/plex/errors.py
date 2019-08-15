@@ -12,3 +12,7 @@ class ConfigNotReady(PlexException):
 
 class NoServersFound(PlexException):
     """No servers found on Plex account."""
+
+
+class TokenMissing(PlexException):
+    """Required auth token is unavailable."""
