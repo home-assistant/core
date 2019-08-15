@@ -20,6 +20,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info)
     if not modem_data or not modem_data.data:
         raise PlatformNotReady
 
+    _LOGGER.debug(
+        "Valid %s monitored_conditions keys and current values:", discovery_info["host"]
+    )
+    for key, value in modem_data.data.everything.items():
+        _LOGGER.debug("%s (%s)", key, value)
+
     sensor_conf = discovery_info[DOMAIN]
     monitored_conditions = sensor_conf[CONF_MONITORED_CONDITIONS]
 
@@ -31,8 +37,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info)
             sensors.append(SMSTotalSensor(modem_data, sensor_type))
         elif sensor_type == SENSOR_USAGE:
             sensors.append(UsageSensor(modem_data, sensor_type))
-        else:
+        elif "." not in sensor_type:
             sensors.append(GenericSensor(modem_data, sensor_type))
+        else:
+            sensors.append(AnySensor(modem_data, sensor_type))
 
     async_add_entities(sensors)
 
@@ -80,3 +88,17 @@ class GenericSensor(LTESensor):
     def state(self):
         """Return the state of the sensor."""
         return getattr(self.modem_data.data, self.sensor_type)
+
+
+class AnySensor(LTESensor):
+    """Sensor entity with arbitrary name."""
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement (unknown)."""
+        return None
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self.modem_data.data.everything.get(self.sensor_type)

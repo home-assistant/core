@@ -67,7 +67,15 @@ SENSOR_SCHEMA = vol.Schema(
     {
         vol.Optional(
             CONF_MONITORED_CONDITIONS, default=sensor_types.DEFAULT_SENSORS
-        ): vol.All(cv.ensure_list, [vol.In(sensor_types.ALL_SENSORS)])
+        ): vol.All(
+            cv.ensure_list,
+            [
+                vol.Any(
+                    vol.In(sensor_types.ALL_SENSORS),
+                    cv.matches_regex(r"^([a-z0-9]+\.)+[a-z0-9]+$"),
+                )
+            ],
+        )
     }
 )
 
