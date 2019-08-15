@@ -6,14 +6,13 @@ import os
 from typing import Dict, List, Optional, Callable, Union, Any, Type
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util import json as json_util
 from homeassistant.helpers.event import async_call_later
 
 
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
-# mypy: no-warn-return-any
+# mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
 
 STORAGE_DIR = ".storage"
 _LOGGER = logging.getLogger(__name__)
@@ -59,7 +58,7 @@ class Store:
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         version: int,
         key: str,
         private: bool = False,
@@ -94,6 +93,7 @@ class Store:
         """
         if self._load_task is None:
             self._load_task = self.hass.async_add_job(self._async_load())
+            assert self._load_task is not None
 
         return await self._load_task
 
@@ -138,7 +138,7 @@ class Store:
     @callback
     def async_delay_save(
         self, data_func: Callable[[], Dict], delay: Optional[int] = None
-    ):
+    ) -> None:
         """Save data with an optional delay."""
         self._data = {"version": self.version, "key": self.key, "data_func": data_func}
 
@@ -201,7 +201,7 @@ class Store:
             except (json_util.SerializationError, json_util.WriteError) as err:
                 _LOGGER.error("Error writing config for %s: %s", self.key, err)
 
-    def _write_data(self, path: str, data: Dict):
+    def _write_data(self, path: str, data: Dict) -> None:
         """Write the data."""
         if not os.path.isdir(os.path.dirname(path)):
             os.makedirs(os.path.dirname(path))
