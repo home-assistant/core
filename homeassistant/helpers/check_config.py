@@ -27,8 +27,7 @@ import homeassistant.util.yaml.loader as yaml_loader
 from homeassistant.exceptions import HomeAssistantError
 
 
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
-# mypy: no-warn-return-any
+# mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
 
 CheckConfigError = namedtuple("CheckConfigError", "message domain config")
 
