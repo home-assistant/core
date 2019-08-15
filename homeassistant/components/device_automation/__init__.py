@@ -1,5 +1,6 @@
 """Helpers for device automations."""
 import asyncio
+from datetime import timedelta
 import logging
 from typing import Any, List, MutableMapping
 from types import ModuleType
@@ -11,6 +12,7 @@ from homeassistant.const import CONF_PLATFORM, CONF_DOMAIN, CONF_DEVICE_ID
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.loader import async_get_integration, IntegrationNotFound
 
@@ -20,6 +22,7 @@ from .exceptions import InvalidDeviceAutomationConfig
 # mypy: allow-untyped-calls, allow-untyped-defs
 
 DOMAIN = "device_automation"
+SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +71,24 @@ async def async_setup(hass, config):
     hass.components.websocket_api.async_register_command(
         websocket_device_automation_get_trigger_capabilities
     )
+
+    component = hass.data[DOMAIN] = EntityComponent(
+        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
+    )
+
+    await component.async_setup(config)
     return True
+
+
+async def async_setup_entry(hass, entry):
+    """Set up a config entry."""
+    _LOGGER.warning("async_setup_entry: %s", entry)
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
 async def async_get_device_automation_platform(
