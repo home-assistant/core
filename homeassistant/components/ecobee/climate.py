@@ -304,7 +304,7 @@ class Thermostat(ClimateDevice):
                 self.vacation = event["name"]
                 return PRESET_VACATION
 
-        return None
+        return self._preset_modes[self.thermostat["program"]["currentClimateRef"]]
 
     @property
     def hvac_mode(self):
@@ -357,6 +357,9 @@ class Thermostat(ClimateDevice):
         status = self.thermostat["equipmentStatus"]
         return {
             "fan": self.fan,
+            "climate_mode": self._preset_modes[
+                self.thermostat["program"]["currentClimateRef"]
+            ],
             "equipment_running": status,
             "fan_min_on_time": self.thermostat["settings"]["fanMinOnTime"],
         }
