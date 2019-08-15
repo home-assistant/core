@@ -249,7 +249,7 @@ class OptionManagerFlowResourceView(FlowManagerResourceView):
 async def system_options_list(hass, connection, msg):
     """List all system options for a config entry."""
     changes = dict(msg)
-    entry_id = changes.pop("entry_id")
+    entry_id = changes["entry_id"]
     entry = hass.config_entries.async_get_entry(entry_id)
 
     if entry:
@@ -268,9 +268,10 @@ async def system_options_list(hass, connection, msg):
 async def system_options_update(hass, connection, msg):
     """Update config entry system options."""
     changes = dict(msg)
-    changes.pop("type")
-    entry_id = changes.pop("entry_id")
+    entry_id = changes["entry_id"]
     entry = hass.config_entries.async_get_entry(entry_id)
 
     if entry and "disable_new_entities" in changes:
-        entry.system_options.disable_new_entities = changes["disable_new_entities"]
+        entry.system_options.update(
+            disable_new_entities=changes["disable_new_entities"]
+        )

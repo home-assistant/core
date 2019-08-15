@@ -740,6 +740,10 @@ class SystemOptions:
 
     disable_new_entities = attr.ib(type=bool, default=False)
 
+    def update(self, *, disable_new_entities):
+        """Update properties."""
+        self.disable_new_entities = disable_new_entities
+
     def as_dict(self):
         """Return dictionary version of this config entrys system options."""
         return {"disable_new_entities": self.disable_new_entities}
