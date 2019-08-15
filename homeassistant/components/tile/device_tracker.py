@@ -126,7 +126,10 @@ class TileScanner:
         for tile in tiles:
             await self._async_see(
                 dev_id="tile_{0}".format(slugify(tile["tile_uuid"])),
-                gps=(tile["last_tile_state"]["latitude"], tile["last_tile_state"]["longitude"]),
+                gps=(
+                    tile["last_tile_state"]["latitude"],
+                    tile["last_tile_state"]["longitude"],
+                ),
                 attributes={
                     ATTR_ALTITUDE: tile["last_tile_state"]["altitude"],
                     ATTR_CONNECTION_STATE: tile["last_tile_state"]["connection_state"],
