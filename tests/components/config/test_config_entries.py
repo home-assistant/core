@@ -488,12 +488,8 @@ async def test_options_flow(hass, client):
     class TestFlow(core_ce.ConfigFlow):
         @staticmethod
         @callback
-        def async_get_options_flow(config, options):
+        def async_get_options_flow(config_entry):
             class OptionsFlowHandler(data_entry_flow.FlowHandler):
-                def __init__(self, config, options):
-                    self.config = config
-                    self.options = options
-
                 async def async_step_init(self, user_input=None):
                     schema = OrderedDict()
                     schema[vol.Required("enabled")] = bool
@@ -503,7 +499,7 @@ async def test_options_flow(hass, client):
                         description_placeholders={"enabled": "Set to true to be true"},
                     )
 
-            return OptionsFlowHandler(config, options)
+            return OptionsFlowHandler()
 
     MockConfigEntry(
         domain="test",
@@ -514,7 +510,7 @@ async def test_options_flow(hass, client):
     entry = hass.config_entries._entries[0]
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
-        url = "/api/config/config_entries/entry/option/flow"
+        url = "/api/config/config_entries/options/flow"
         resp = await client.post(url, json={"handler": entry.entry_id})
 
     assert resp.status == 200
@@ -538,12 +534,8 @@ async def test_two_step_options_flow(hass, client):
     class TestFlow(core_ce.ConfigFlow):
         @staticmethod
         @callback
-        def async_get_options_flow(config, options):
+        def async_get_options_flow(config_entry):
             class OptionsFlowHandler(data_entry_flow.FlowHandler):
-                def __init__(self, config, options):
-                    self.config = config
-                    self.options = options
-
                 async def async_step_init(self, user_input=None):
                     return self.async_show_form(
                         step_id="finish", data_schema=vol.Schema({"enabled": bool})
@@ -554,7 +546,7 @@ async def test_two_step_options_flow(hass, client):
                         title="Enable disable", data=user_input
                     )
 
-            return OptionsFlowHandler(config, options)
+            return OptionsFlowHandler()
 
     MockConfigEntry(
         domain="test",
@@ -565,7 +557,7 @@ async def test_two_step_options_flow(hass, client):
     entry = hass.config_entries._entries[0]
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
-        url = "/api/config/config_entries/entry/option/flow"
+        url = "/api/config/config_entries/options/flow"
         resp = await client.post(url, json={"handler": entry.entry_id})
 
         assert resp.status == 200
