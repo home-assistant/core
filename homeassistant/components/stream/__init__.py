@@ -4,6 +4,11 @@ import threading
 
 import voluptuous as vol
 
+try:
+    import uvloop
+except ImportError:
+    uvloop = None
+
 from homeassistant.auth.util import generate_secret
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_FILENAME
@@ -38,7 +43,7 @@ SERVICE_RECORD_SCHEMA = STREAM_SERVICE_SCHEMA.extend(
         vol.Optional(CONF_LOOKBACK, default=0): int,
     }
 )
-
+DATA_UVLOOP_WARN = "stream_uvloop_warn"
 # Set log level to error for libav
 logging.getLogger("libav").setLevel(logging.ERROR)
 
@@ -48,6 +53,21 @@ def request_stream(hass, stream_source, *, fmt="hls", keepalive=False, options=N
     """Set up stream with token."""
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("Stream integration is not set up.")
+
+    if DATA_UVLOOP_WARN not in hass.data:
+        hass.data[DATA_UVLOOP_WARN] = True
+        # Warn about https://github.com/home-assistant/home-assistant/issues/22999
+        if (
+            uvloop is not None
+            and isinstance(hass.loop, uvloop.Loop)
+            and (
+                "shell_command" in hass.config.components
+                or "ffmpeg" in hass.config.components
+            )
+        ):
+            _LOGGER.warning(
+                "You are using UVLoop with stream and shell_command. This is known to cause issues. Please uninstall uvloop."
+            )
 
     if options is None:
         options = {}
