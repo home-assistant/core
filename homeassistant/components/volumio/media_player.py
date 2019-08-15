@@ -29,6 +29,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
+    SUPPORT_SHUFFLE_SET,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -65,6 +66,7 @@ SUPPORT_VOLUMIO = (
     | SUPPORT_PLAY
     | SUPPORT_VOLUME_STEP
     | SUPPORT_SELECT_SOURCE
+    | SUPPORT_SHUFFLE_SET
     | SUPPORT_CLEAR_PLAYLIST
 )
 
@@ -232,6 +234,11 @@ class Volumio(MediaPlayerDevice):
         return self._name
 
     @property
+    def shuffle(self):
+        """Boolean if shuffle is enabled."""
+        return self._state.get("random", False)
+
+    @property
     def source_list(self):
         """Return the list of available input sources."""
         return self._playlists
@@ -294,6 +301,12 @@ class Volumio(MediaPlayerDevice):
 
         return self.send_volumio_msg(
             "commands", params={"cmd": "volume", "volume": self._lastvol}
+        )
+
+    def async_set_shuffle(self, shuffle):
+        """Enable/disable shuffle mode."""
+        return self.send_volumio_msg(
+            "commands", params={"cmd": "random", "value": str(shuffle)}
         )
 
     def async_select_source(self, source):
