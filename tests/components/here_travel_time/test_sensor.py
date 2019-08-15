@@ -11,7 +11,7 @@ from homeassistant.components.here_travel_time.sensor import (
     ATTR_DESTINATION_NAME,
     ATTR_DISTANCE,
     ATTR_DURATION,
-    ATTR_DURATION_WITHOUT_TRAFFIC,
+    ATTR_DURATION_IN_TRAFFIC,
     ATTR_ORIGIN,
     ATTR_ORIGIN_NAME,
     ATTR_ROUTE,
@@ -94,7 +94,7 @@ def _assert_truck_sensor(sensor):
         "IL-64 W - E North Ave; I-290 E - Eisenhower Expy E; I-290"
     )
     assert sensor.attributes.get(CONF_UNIT_SYSTEM) == "metric"
-    assert sensor.attributes.get(ATTR_DURATION_WITHOUT_TRAFFIC) == 13.533333333333333
+    assert sensor.attributes.get(ATTR_DURATION_IN_TRAFFIC) == 13.533333333333333
     assert sensor.attributes.get(ATTR_ORIGIN) == ",".join(
         [TRUCK_ORIGIN_LATITUDE, TRUCK_ORIGIN_LONGITUDE]
     )
@@ -161,18 +161,18 @@ async def test_car(hass, requests_mock_car_disabled_response):
     assert await async_setup_component(hass, DOMAIN, config)
 
     sensor = hass.states.get("sensor.test")
-    assert sensor.state == "31"
+    assert sensor.state == "30"
     assert sensor.attributes.get("unit_of_measurement") == UNIT_OF_MEASUREMENT
 
     assert sensor.attributes.get(ATTR_ATTRIBUTION) is None
-    assert sensor.attributes.get(ATTR_DURATION) == 31.016666666666666
+    assert sensor.attributes.get(ATTR_DURATION) == 30.05
     assert sensor.attributes.get(ATTR_DISTANCE) == 23.903
     assert sensor.attributes.get(ATTR_ROUTE) == (
         "US-29 - K St NW; US-29 - Whitehurst Fwy; "
         "I-495 N - Capital Beltway; MD-187 S - Old Georgetown Rd"
     )
     assert sensor.attributes.get(CONF_UNIT_SYSTEM) == "metric"
-    assert sensor.attributes.get(ATTR_DURATION_WITHOUT_TRAFFIC) == 30.05
+    assert sensor.attributes.get(ATTR_DURATION_IN_TRAFFIC) == 31.016666666666666
     assert sensor.attributes.get(ATTR_ORIGIN) == ",".join(
         [CAR_ORIGIN_LATITUDE, CAR_ORIGIN_LONGITUDE]
     )
@@ -188,7 +188,7 @@ async def test_car(hass, requests_mock_car_disabled_response):
 
     # Test traffic mode disabled
     assert sensor.attributes.get(ATTR_DURATION) != sensor.attributes.get(
-        ATTR_DURATION_WITHOUT_TRAFFIC
+        ATTR_DURATION_IN_TRAFFIC
     )
 
 
@@ -226,7 +226,7 @@ async def test_traffic_mode_enabled(hass, requests_mock):
 
     # Test traffic mode enabled
     assert sensor.attributes.get(ATTR_DURATION) != sensor.attributes.get(
-        ATTR_DURATION_WITHOUT_TRAFFIC
+        ATTR_DURATION_IN_TRAFFIC
     )
 
 
@@ -365,7 +365,7 @@ async def test_public_transport(hass, requests_mock):
         "332 - Palmer/Schiller; 332 - Cargo Rd./Delta Cargo; " "332 - Palmer/Schiller"
     )
     assert sensor.attributes.get(CONF_UNIT_SYSTEM) == "metric"
-    assert sensor.attributes.get(ATTR_DURATION_WITHOUT_TRAFFIC) == 89.16666666666667
+    assert sensor.attributes.get(ATTR_DURATION_IN_TRAFFIC) == 89.16666666666667
     assert sensor.attributes.get(ATTR_ORIGIN) == origin
     assert sensor.attributes.get(ATTR_DESTINATION) == destination
     assert sensor.attributes.get(ATTR_ORIGIN_NAME) == "Mannheim Rd"
@@ -415,7 +415,7 @@ async def test_public_transport_time_table(hass, requests_mock):
         "330 - Archer/Harlem (Terminal); 309 - Elmhurst Metra Station"
     )
     assert sensor.attributes.get(CONF_UNIT_SYSTEM) == "metric"
-    assert sensor.attributes.get(ATTR_DURATION_WITHOUT_TRAFFIC) == 79.73333333333333
+    assert sensor.attributes.get(ATTR_DURATION_IN_TRAFFIC) == 79.73333333333333
     assert sensor.attributes.get(ATTR_ORIGIN) == origin
     assert sensor.attributes.get(ATTR_DESTINATION) == destination
     assert sensor.attributes.get(ATTR_ORIGIN_NAME) == "Mannheim Rd"
@@ -466,7 +466,7 @@ async def test_pedestrian(hass, requests_mock):
         "E North Ave; E Third St"
     )
     assert sensor.attributes.get(CONF_UNIT_SYSTEM) == "metric"
-    assert sensor.attributes.get(ATTR_DURATION_WITHOUT_TRAFFIC) == 210.51666666666668
+    assert sensor.attributes.get(ATTR_DURATION_IN_TRAFFIC) == 210.51666666666668
     assert sensor.attributes.get(ATTR_ORIGIN) == origin
     assert sensor.attributes.get(ATTR_DESTINATION) == destination
     assert sensor.attributes.get(ATTR_ORIGIN_NAME) == "Mannheim Rd"
@@ -515,7 +515,7 @@ async def test_bicycle(hass, requests_mock):
         "E Third St; N Caroline Ave"
     )
     assert sensor.attributes.get(CONF_UNIT_SYSTEM) == "metric"
-    assert sensor.attributes.get(ATTR_DURATION_WITHOUT_TRAFFIC) == 54.86666666666667
+    assert sensor.attributes.get(ATTR_DURATION_IN_TRAFFIC) == 54.86666666666667
     assert sensor.attributes.get(ATTR_ORIGIN) == origin
     assert sensor.attributes.get(ATTR_DESTINATION) == destination
     assert sensor.attributes.get(ATTR_ORIGIN_NAME) == "Mannheim Rd"

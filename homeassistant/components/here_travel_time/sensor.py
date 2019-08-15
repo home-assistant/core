@@ -77,7 +77,7 @@ ATTR_ROUTE = "route"
 ATTR_ORIGIN = "origin"
 ATTR_DESTINATION = "destination"
 
-ATTR_DURATION_WITHOUT_TRAFFIC = "duration_without_traffic"
+ATTR_DURATION_IN_TRAFFIC = "duration_in_traffic"
 ATTR_ORIGIN_NAME = "origin_name"
 ATTR_DESTINATION_NAME = "destination_name"
 
@@ -207,8 +207,11 @@ class HERETravelTimeSensor(Entity):
     @property
     def state(self) -> Optional[str]:
         """Return the state of the sensor."""
-        if self._here_data.duration is not None:
-            return str(round(self._here_data.duration / 60))
+        if self._here_data.traffic_mode:
+            if self._here_data.traffic_time is not None:
+                return str(round(self._here_data.traffic_time / 60))
+        if self._here_data.base_time is not None:
+            return str(round(self._here_data.base_time / 60))
 
         return None
 
@@ -222,16 +225,16 @@ class HERETravelTimeSensor(Entity):
         self
     ) -> Optional[Dict[str, Union[None, float, str, bool]]]:
         """Return the state attributes."""
-        if self._here_data.duration is None:
+        if self._here_data.base_time is None:
             return None
 
         res = {}
         res[ATTR_ATTRIBUTION] = self._here_data.attribution
-        res[ATTR_DURATION] = self._here_data.duration / 60
+        res[ATTR_DURATION] = self._here_data.base_time / 60
         res[ATTR_DISTANCE] = self._here_data.distance
         res[ATTR_ROUTE] = self._here_data.route
         res[CONF_UNIT_SYSTEM] = self._here_data.units
-        res[ATTR_DURATION_WITHOUT_TRAFFIC] = self._here_data.base_time / 60
+        res[ATTR_DURATION_IN_TRAFFIC] = self._here_data.traffic_time / 60
         res[ATTR_ORIGIN] = self._here_data.origin
         res[ATTR_DESTINATION] = self._here_data.destination
         res[ATTR_ORIGIN_NAME] = self._here_data.origin_name
@@ -325,7 +328,7 @@ class HERETravelTimeData:
         self.traffic_mode = traffic_mode
         self.route_mode = route_mode
         self.attribution = None
-        self.duration = None
+        self.traffic_time = None
         self.distance = None
         self.route = None
         self.base_time = None
@@ -373,7 +376,10 @@ class HERETravelTimeData:
 
             self.attribution = None
             self.base_time = summary["baseTime"]
-            self.duration = summary["travelTime"]
+            if self.travel_mode in TRAVEL_MODES_VEHICLE:
+                self.traffic_time = summary["trafficTime"]
+            else:
+                self.traffic_time = self.base_time
             distance = summary["distance"]
             if self.units == CONF_UNIT_SYSTEM_IMPERIAL:
                 # Convert to miles.
