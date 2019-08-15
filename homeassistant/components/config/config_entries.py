@@ -187,8 +187,8 @@ class ConfigManagerAvailableFlowView(HomeAssistantView):
 class OptionManagerFlowIndexView(FlowManagerIndexView):
     """View to create option flows."""
 
-    url = "/api/config/config_entries/entry/option/flow"
-    name = "api:config:config_entries:entry:resource:option:flow"
+    url = "/api/config/config_entries/options/flow"
+    name = "api:config:config_entries:option:flow"
 
     # pylint: disable=arguments-differ
     async def post(self, request):

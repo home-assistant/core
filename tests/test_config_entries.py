@@ -666,12 +666,11 @@ async def test_entry_options(hass, manager):
     class TestFlow:
         @staticmethod
         @callback
-        def async_get_options_flow(config, options):
+        def async_get_options_flow(config_entry):
             class OptionsFlowHandler(data_entry_flow.FlowHandler):
-                def __init__(self, config, options):
-                    pass
+                pass
 
-            return OptionsFlowHandler(config, options)
+            return OptionsFlowHandler()
 
     config_entries.HANDLERS["test"] = TestFlow()
     flow = await manager.options._async_create_flow(
