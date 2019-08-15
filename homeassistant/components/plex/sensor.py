@@ -1,13 +1,9 @@
 """Support for Plex media server monitoring."""
 from datetime import timedelta
 import logging
-import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME,
     CONF_USERNAME,
-    CONF_PASSWORD,
     CONF_HOST,
     CONF_PORT,
     CONF_TOKEN,
@@ -16,62 +12,53 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
+
+from .const import CONF_SERVER, DEFAULT_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SERVER = "server"
-
-DEFAULT_HOST = "localhost"
-DEFAULT_NAME = "Plex"
-DEFAULT_PORT = 32400
-DEFAULT_SSL = False
-DEFAULT_VERIFY_SSL = True
-
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_TOKEN): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SERVER): cv.string,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    }
-)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Plex sensor.
+
+    Deprecated."""
+    _LOGGER.warning(
+        "Configuration via YAML is deprecated, please set up via Integrations")
+    return
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Plex sensor from a config entry."""
+
+    def add_entities(devices, update_before_add=False):
+        """Sync version of async add devices."""
+        hass.add_job(async_add_entities, devices, update_before_add)
+
+    hass.async_add_executor_job(_setup_platform, hass, config_entry, add_entities)
+
+
+def _setup_platform(hass, config_entry, add_entities):
     """Set up the Plex sensor."""
-    name = config.get(CONF_NAME)
-    plex_user = config.get(CONF_USERNAME)
-    plex_password = config.get(CONF_PASSWORD)
-    plex_server = config.get(CONF_SERVER)
-    plex_host = config.get(CONF_HOST)
-    plex_port = config.get(CONF_PORT)
-    plex_token = config.get(CONF_TOKEN)
-
-    plex_url = "{}://{}:{}".format(
-        "https" if config.get(CONF_SSL) else "http", plex_host, plex_port
-    )
-
     import plexapi.exceptions
+
+    server_info = config_entry.data.get(PLEX_SERVER_CONFIG, {})
+    if server_info:
+        plex_server = server_info.get(CONF_SERVER)
+	    plex_token = server_info.get(CONF_TOKEN)
+	    plex_url = server_info.get(CONF_URL)
+	    plex_user = server_info.get(CONF_USERNAME)
 
     try:
         add_entities(
             [
                 PlexSensor(
-                    name,
                     plex_url,
                     plex_user,
-                    plex_password,
                     plex_server,
                     plex_token,
-                    config.get(CONF_VERIFY_SSL),
+                    server_info.get(CONF_VERIFY_SSL),
                 )
             ],
             True,
@@ -90,10 +77,8 @@ class PlexSensor(Entity):
 
     def __init__(
         self,
-        name,
         plex_url,
         plex_user,
-        plex_password,
         plex_server,
         plex_token,
         verify_ssl,
@@ -103,7 +88,7 @@ class PlexSensor(Entity):
         from plexapi.server import PlexServer
         from requests import Session
 
-        self._name = name
+        self._name = DEFAULT_NAME
         self._state = 0
         self._now_playing = []
 
@@ -113,14 +98,12 @@ class PlexSensor(Entity):
             cert_session = Session()
             cert_session.verify = False
 
-        if plex_token:
-            self._server = PlexServer(plex_url, plex_token, cert_session)
-        elif plex_user and plex_password:
-            user = MyPlexAccount(plex_user, plex_password)
+        if plex_user and plex_token:
+            user = MyPlexAccount(username=plex_user, token=plex_token)
             server = plex_server if plex_server else user.resources()[0].name
             self._server = user.resource(server).connect()
         else:
-            self._server = PlexServer(plex_url, None, cert_session)
+            self._server = PlexServer(plex_url, plex_token, cert_session)
 
     @property
     def name(self):
