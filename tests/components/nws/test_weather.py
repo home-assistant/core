@@ -234,7 +234,7 @@ def test_fail_obs(hass, aioclient_mock):
 
 @asyncio.coroutine
 def test_fail_stn(hass, aioclient_mock):
-    """Test failing station update"""
+    """Test failing station update."""
     aioclient_mock.get(
         STAURL.format(40.0, -85.0),
         text=load_fixture("nws-weather-sta-valid.json"),
