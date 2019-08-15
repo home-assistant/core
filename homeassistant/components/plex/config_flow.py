@@ -27,7 +27,7 @@ from .const import (
     PLEX_SERVER_CONFIG,
     TITLE_TEMPLATE,
 )
-from .errors import ConfigNotReady, NoServersFound
+from .errors import ConfigNotReady, NoServersFound, TokenMissing
 
 _LOGGER = logging.getLogger(__package__)
 
