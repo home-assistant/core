@@ -19,7 +19,7 @@ ATTR_CREATED = "created"
 ATTR_UPDATED = "updated"
 ATTR_REMOVED = "removed"
 
-DEFAULT_UNIT_OF_MEASUREMENT = "earthquakes"
+DEFAULT_UNIT_OF_MEASUREMENT = "quakes"
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
