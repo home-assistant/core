@@ -13,7 +13,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from .const import CONF_SERVER, DEFAULT_NAME
+from .const import CONF_SERVER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,20 +44,15 @@ def _setup_platform(hass, config_entry, add_entities):
     import plexapi.exceptions
 
     server_info = config_entry.data.get(PLEX_SERVER_CONFIG, {})
-    if server_info:
-        plex_server = server_info.get(CONF_SERVER)
-	    plex_token = server_info.get(CONF_TOKEN)
-	    plex_url = server_info.get(CONF_URL)
-	    plex_user = server_info.get(CONF_USERNAME)
 
     try:
         add_entities(
             [
                 PlexSensor(
-                    plex_url,
-                    plex_user,
-                    plex_server,
-                    plex_token,
+                    server_info.get(CONF_URL),
+                    server_info.get(CONF_USERNAME),
+                    server_info.get(CONF_SERVER),
+                    server_info.get(CONF_TOKEN),
                     server_info.get(CONF_VERIFY_SSL),
                 )
             ],
@@ -88,7 +83,7 @@ class PlexSensor(Entity):
         from plexapi.server import PlexServer
         from requests import Session
 
-        self._name = DEFAULT_NAME
+        self._name = "Plex"
         self._state = 0
         self._now_playing = []
 
