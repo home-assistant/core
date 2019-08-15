@@ -18,6 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from .const import (
+    NAME,
     DOMAIN,
     HOSTS,
     MTK_LOGIN_PLAIN,
@@ -166,7 +167,7 @@ class MikrotikClient:
     def get_hostname(self):
         """Return device host name."""
         data = self.command(MIKROTIK_SERVICES[IDENTITY])
-        return data[0]["name"] if data else None
+        return data[0][NAME] if data else None
 
     def connected(self):
         """Return connected boolean."""
