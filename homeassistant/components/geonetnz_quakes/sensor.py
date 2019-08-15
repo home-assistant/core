@@ -19,6 +19,8 @@ ATTR_CREATED = "created"
 ATTR_UPDATED = "updated"
 ATTR_REMOVED = "removed"
 
+DEFAULT_UNIT_OF_MEASUREMENT = "earthquakes"
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the GeoNet NZ Quakes Feed platform."""
@@ -105,7 +107,7 @@ class GeonetnzQuakesSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "entities"
+        return DEFAULT_UNIT_OF_MEASUREMENT
 
     @property
     def device_state_attributes(self):
