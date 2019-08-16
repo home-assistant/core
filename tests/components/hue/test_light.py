@@ -221,6 +221,7 @@ async def setup_bridge(hass, mock_bridge):
         {"host": "mock-host"},
         "test",
         config_entries.CONN_CLASS_LOCAL_POLL,
+        system_options={},
     )
     await hass.config_entries.async_forward_entry_setup(config_entry, "light")
     # To flush out the service call to update the group

@@ -56,7 +56,7 @@ class RegistryEntry:
         type=str,
         default=None,
         validator=attr.validators.in_(
-            (DISABLED_HASS, DISABLED_USER, DISABLED_INTEGRATION, None)
+            (DISABLED_HASS, DISABLED_INTEGRATION, DISABLED_USER, None)
         ),
     )  # type: Optional[str]
     domain = attr.ib(type=str, init=False, repr=False)
