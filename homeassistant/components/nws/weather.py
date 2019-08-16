@@ -124,8 +124,12 @@ FORECAST_MODE = ["daynight", "hourly"]
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
+        vol.Inclusive(
+            CONF_LATITUDE, "coordinates", "Latitude and longitude must exist together"
+        ): cv.latitude,
+        vol.Inclusive(
+            CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
+        ): cv.longitude,
         vol.Optional(CONF_MODE, default="daynight"): vol.In(FORECAST_MODE),
         vol.Optional(CONF_STATION): cv.string,
         vol.Required(CONF_API_KEY): cv.string,
@@ -163,12 +167,6 @@ def convert_condition(time, weather):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the NWS weather platform."""
-
-    if (config.get(CONF_LATITUDE) and not config.get(CONF_LONGITUDE)) or (
-        not config.get(CONF_LATITUDE) and config.get(CONF_LONGITUDE)
-    ):
-        _LOGGER.error("Latitude/longitude not set in Home Assistant config")
-        return
 
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)

@@ -267,7 +267,7 @@ async def test_invalid_config(hass, aioclient_mock):
 
     hass.config.units = IMPERIAL_SYSTEM
 
-    with assert_setup_component(1, "weather"):
+    with assert_setup_component(0, "weather"):
         await async_setup_component(hass, "weather", INVALID_CONFIG)
 
     state = hass.states.get("weather.kmie")
