@@ -372,3 +372,17 @@ async def test_update_entity(registry):
         assert getattr(updated_entry, attr_name) != getattr(entry, attr_name)
 
         entry = updated_entry
+
+
+async def test_disabled_by(registry):
+    """Test that we can disable an entry when we create it."""
+    entry = registry.async_get_or_create("light", "hue", "5678", disabled_by="hass")
+    assert entry.disabled_by == "hass"
+
+    entry = registry.async_get_or_create(
+        "light", "hue", "5678", disabled_by="integration"
+    )
+    assert entry.disabled_by == "hass"
+
+    entry2 = registry.async_get_or_create("light", "hue", "1234")
+    assert entry2.disabled_by is None

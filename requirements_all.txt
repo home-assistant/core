@@ -260,13 +260,13 @@ batinfo==0.4.2
 # homeassistant.components.linksys_ap
 # homeassistant.components.scrape
 # homeassistant.components.sytadin
-beautifulsoup4==4.7.1
+beautifulsoup4==4.8.0
 
 # homeassistant.components.zha
 bellows-homeassistant==0.9.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.5.3
+bimmer_connected==0.5.6
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -753,7 +753,7 @@ logi_circle==0.2.2
 london-tube-status==0.2
 
 # homeassistant.components.luftdaten
-luftdaten==0.6.2
+luftdaten==0.6.3
 
 # homeassistant.components.lupusec
 lupupy==0.0.17
@@ -1398,7 +1398,7 @@ pysmartthings==0.6.9
 pysmarty==0.8
 
 # homeassistant.components.snmp
-pysnmp==4.4.9
+pysnmp==4.4.11
 
 # homeassistant.components.sonos
 pysonos==0.0.23
@@ -1446,7 +1446,7 @@ python-digitalocean==1.13.2
 python-ecobee-api==0.0.21
 
 # homeassistant.components.eq3btsmart
-# python-eq3bt==0.1.9
+# python-eq3bt==0.1.11
 
 # homeassistant.components.etherscan
 python-etherscan-api==0.0.3

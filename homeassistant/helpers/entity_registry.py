@@ -35,6 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 _UNDEF = object()
 DISABLED_HASS = "hass"
 DISABLED_USER = "user"
+DISABLED_INTEGRATION = "integration"
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "core.entity_registry"
@@ -53,7 +54,9 @@ class RegistryEntry:
     disabled_by = attr.ib(
         type=str,
         default=None,
-        validator=attr.validators.in_((DISABLED_HASS, DISABLED_USER, None)),
+        validator=attr.validators.in_(
+            (DISABLED_HASS, DISABLED_USER, DISABLED_INTEGRATION, None)
+        ),
     )  # type: Optional[str]
     domain = attr.ib(type=str, init=False, repr=False)
 
@@ -132,6 +135,7 @@ class EntityRegistry:
         config_entry_id=None,
         device_id=None,
         known_object_ids=None,
+        disabled_by=None,
     ):
         """Get entity. Create if it doesn't exist."""
         entity_id = self.async_get_entity_id(domain, platform, unique_id)
@@ -161,6 +165,7 @@ class EntityRegistry:
             device_id=device_id,
             unique_id=unique_id,
             platform=platform,
+            disabled_by=disabled_by,
         )
         self.entities[entity_id] = entity
         _LOGGER.info("Registered new %s.%s entity: %s", domain, platform, entity_id)

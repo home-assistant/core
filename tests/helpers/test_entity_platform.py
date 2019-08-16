@@ -775,3 +775,22 @@ async def test_device_info_not_overrides(hass):
     assert device.id == device2.id
     assert device2.manufacturer == "test-manufacturer"
     assert device2.model == "test-model"
+
+
+async def test_entity_disabled_by_integration(hass):
+    """Test entity disabled by integration."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+
+    entity_default = MockEntity(unique_id="default")
+    entity_disabled = MockEntity(
+        unique_id="disabled", entity_registry_enabled_default=False
+    )
+
+    await component.async_add_entities([entity_default, entity_disabled])
+
+    registry = await hass.helpers.entity_registry.async_get_registry()
+
+    entry_default = registry.async_get_or_create(DOMAIN, DOMAIN, "default")
+    assert entry_default.disabled_by is None
+    entry_disabled = registry.async_get_or_create(DOMAIN, DOMAIN, "disabled")
+    assert entry_disabled.disabled_by == "integration"
