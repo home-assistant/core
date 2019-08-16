@@ -458,7 +458,7 @@ class AuthManager:
             result["data"]
         )
 
-        if flow.context is not None and flow.context.get("credential_only"):
+        if flow.context.get("credential_only"):
             result["result"] = credentials
             return result
 
