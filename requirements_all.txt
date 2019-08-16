@@ -1624,7 +1624,7 @@ recollect-waste==1.0.1
 regenmaschine==1.5.1
 
 # homeassistant.components.python_script
-restrictedpython==4.0b8
+restrictedpython==4.0
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
