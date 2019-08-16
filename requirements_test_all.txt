@@ -205,7 +205,7 @@ libpurecool==0.5.0
 libsoundtouch==0.7.2
 
 # homeassistant.components.luftdaten
-luftdaten==0.6.2
+luftdaten==0.6.3
 
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
