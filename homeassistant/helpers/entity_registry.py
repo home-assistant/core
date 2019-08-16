@@ -201,7 +201,13 @@ class EntityRegistry:
 
     @callback
     def async_update_entity(
-        self, entity_id, *, name=_UNDEF, new_entity_id=_UNDEF, new_unique_id=_UNDEF
+        self,
+        entity_id,
+        *,
+        name=_UNDEF,
+        new_entity_id=_UNDEF,
+        new_unique_id=_UNDEF,
+        disabled_by=_UNDEF,
     ):
         """Update properties of an entity."""
         return self._async_update_entity(
@@ -209,6 +215,7 @@ class EntityRegistry:
             name=name,
             new_entity_id=new_entity_id,
             new_unique_id=new_unique_id,
+            disabled_by=disabled_by,
         )
 
     @callback
@@ -221,20 +228,21 @@ class EntityRegistry:
         new_entity_id=_UNDEF,
         device_id=_UNDEF,
         new_unique_id=_UNDEF,
+        disabled_by=_UNDEF,
     ):
         """Private facing update properties method."""
         old = self.entities[entity_id]
 
         changes = {}
 
-        if name is not _UNDEF and name != old.name:
-            changes["name"] = name
-
-        if config_entry_id is not _UNDEF and config_entry_id != old.config_entry_id:
-            changes["config_entry_id"] = config_entry_id
-
-        if device_id is not _UNDEF and device_id != old.device_id:
-            changes["device_id"] = device_id
+        for attr_name, value in (
+            ("name", name),
+            ("config_entry_id", config_entry_id),
+            ("device_id", device_id),
+            ("disabled_by", disabled_by),
+        ):
+            if value is not _UNDEF and value != getattr(old, attr_name):
+                changes[attr_name] = value
 
         if new_entity_id is not _UNDEF and new_entity_id != old.entity_id:
             if self.async_is_registered(new_entity_id):
