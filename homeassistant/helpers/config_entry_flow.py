@@ -1,29 +1,8 @@
 """Helpers for data entry flows for config entries."""
-from functools import partial
-
 from homeassistant import config_entries
 from .typing import HomeAssistantType
 
-
 # mypy: allow-untyped-defs
-
-
-def register_discovery_flow(domain, title, discovery_function, connection_class):
-    """Register flow for discovered integrations that not require auth."""
-    config_entries.HANDLERS.register(domain)(
-        partial(
-            DiscoveryFlowHandler, domain, title, discovery_function, connection_class
-        )
-    )
-
-
-def register_webhook_flow(domain, title, description_placeholder, allow_multiple=False):
-    """Register flow for webhook integrations."""
-    config_entries.HANDLERS.register(domain)(
-        partial(
-            WebhookFlowHandler, domain, title, description_placeholder, allow_multiple
-        )
-    )
 
 
 class DiscoveryFlowHandler(config_entries.ConfigFlow):
@@ -91,6 +70,18 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         return self.async_create_entry(title=self._title, data={})
 
 
+def register_discovery_flow(domain, title, discovery_function, connection_class):
+    """Register flow for discovered integrations that not require auth."""
+
+    class DiscoveryFlow(DiscoveryFlowHandler):
+        """Discovery flow handler."""
+
+        def __init__(self):
+            super().__init__(domain, title, discovery_function, connection_class)
+
+    config_entries.HANDLERS.register(domain)(DiscoveryFlow)
+
+
 class WebhookFlowHandler(config_entries.ConfigFlow):
     """Handle a webhook config flow."""
 
@@ -129,6 +120,18 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
             data={"webhook_id": webhook_id, "cloudhook": cloudhook},
             description_placeholders=self._description_placeholder,
         )
+
+
+def register_webhook_flow(domain, title, description_placeholder, allow_multiple=False):
+    """Register flow for webhook integrations."""
+
+    class WebhookFlow(WebhookFlowHandler):
+        """Webhook flow handler."""
+
+        def __init__(self):
+            super().__init__(domain, title, description_placeholder, allow_multiple)
+
+    config_entries.HANDLERS.register(domain)(WebhookFlow)
 
 
 async def webhook_async_remove_entry(

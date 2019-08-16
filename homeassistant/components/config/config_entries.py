@@ -59,7 +59,8 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
         for entry in hass.config_entries.async_entries():
             handler = config_entries.HANDLERS.get(entry.domain)
             supports_options = (
-                hasattr(handler, "async_get_options_flow")
+                # Guard in case handler is no longer registered (custom compnoent etc)
+                handler is not None
                 # pylint: disable=comparison-with-callable
                 and handler.async_get_options_flow
                 != config_entries.ConfigFlow.async_get_options_flow
