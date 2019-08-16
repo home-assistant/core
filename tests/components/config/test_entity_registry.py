@@ -105,9 +105,9 @@ async def test_get_entity(hass, client):
     }
 
 
-async def test_update_entity_name(hass, client):
-    """Test updating entity name."""
-    mock_registry(
+async def test_update_entity(hass, client):
+    """Test updating entity."""
+    registry = mock_registry(
         hass,
         {
             "test_domain.world": RegistryEntry(
@@ -133,6 +133,32 @@ async def test_update_entity_name(hass, client):
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "name": "after update",
+            "disabled_by": "user",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["result"] == {
+        "config_entry_id": None,
+        "device_id": None,
+        "disabled_by": "user",
+        "platform": "test_platform",
+        "entity_id": "test_domain.world",
+        "name": "after update",
+    }
+
+    state = hass.states.get("test_domain.world")
+    assert state.name == "after update"
+
+    assert registry.entities["test_domain.world"].disabled_by == "user"
+
+    await client.send_json(
+        {
+            "id": 7,
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "disabled_by": None,
         }
     )
 
@@ -146,9 +172,6 @@ async def test_update_entity_name(hass, client):
         "entity_id": "test_domain.world",
         "name": "after update",
     }
-
-    state = hass.states.get("test_domain.world")
-    assert state.name == "after update"
 
 
 async def test_update_entity_no_changes(hass, client):
