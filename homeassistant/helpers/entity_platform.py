@@ -8,6 +8,7 @@ from homeassistant.core import callback, valid_entity_id, split_entity_id
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.util.async_ import run_callback_threadsafe, run_coroutine_threadsafe
 
+from .entity_registry import DISABLED_INTEGRATION
 from .event import async_track_time_interval, async_call_later
 
 
@@ -333,6 +334,10 @@ class EntityPlatform:
                 if device:
                     device_id = device.id
 
+            disabled_by: Optional[str] = None
+            if not entity.entity_registry_enabled_default:
+                disabled_by = DISABLED_INTEGRATION
+
             entry = entity_registry.async_get_or_create(
                 self.domain,
                 self.platform_name,
@@ -341,6 +346,7 @@ class EntityPlatform:
                 config_entry_id=config_entry_id,
                 device_id=device_id,
                 known_object_ids=self.entities.keys(),
+                disabled_by=disabled_by,
             )
 
             if entry.disabled:
