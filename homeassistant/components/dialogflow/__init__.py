@@ -87,12 +87,12 @@ async_remove_entry = config_entry_flow.webhook_async_remove_entry
 
 def dialogflow_error_response(message, error):
     """Return a response saying the error message."""
-    _api_version = get_api_version(message)
-    if _api_version is V1:
+    api_version = get_api_version(message)
+    if api_version is V1:
         parameters = message["result"]["parameters"]
-    elif _api_version is V2:
+    elif api_version is V2:
         parameters = message["queryResult"]["parameters"]
-    dialogflow_response = DialogflowResponse(parameters, get_api_version(message))
+    dialogflow_response = DialogflowResponse(parameters, api_version)
     dialogflow_response.add_speech(error)
     return dialogflow_response.as_dict()
 
@@ -114,7 +114,7 @@ async def async_handle_message(hass, message):
         )
         req = message.get("result")
         action_incomplete = req.get("actionIncomplete", True)
-        if action_incomplete is True:
+        if action_incomplete:
             return
 
     elif _api_version is V2:
