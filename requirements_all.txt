@@ -260,7 +260,7 @@ batinfo==0.4.2
 # homeassistant.components.linksys_ap
 # homeassistant.components.scrape
 # homeassistant.components.sytadin
-beautifulsoup4==4.7.1
+beautifulsoup4==4.8.0
 
 # homeassistant.components.zha
 bellows-homeassistant==0.9.0
