@@ -76,6 +76,7 @@ def _platform_validator(config):
         )
     except ImportError:
         raise vol.Invalid("Invalid platform specified") from None
+
     return platform.TRIGGER_SCHEMA(config)
 
 
