@@ -1,6 +1,5 @@
 """Helpers for sun events."""
 import datetime
-import logging
 from typing import Optional, Union, TYPE_CHECKING
 
 from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
@@ -13,8 +12,6 @@ if TYPE_CHECKING:
     import astral  # pylint: disable=unused-import
 
 DATA_LOCATION_CACHE = "astral_location_cache"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @callback
