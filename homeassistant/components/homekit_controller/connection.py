@@ -251,7 +251,9 @@ class HKDevice:
             return
 
         if self._polling_lock.locked():
-            _LOGGER.warning("HomeKit controller update skipped as previous poll still in flight")
+            _LOGGER.warning(
+                "HomeKit controller update skipped as previous poll still in flight"
+            )
             return
 
         async with self._polling_lock:
