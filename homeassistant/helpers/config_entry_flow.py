@@ -19,7 +19,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         title: str,
         discovery_function: DiscoveryFunctionType,
         connection_class: str,
-    ):
+    ) -> None:
         """Initialize the discovery config flow."""
         self._domain = domain
         self._title = title
@@ -90,7 +90,7 @@ def register_discovery_flow(
     class DiscoveryFlow(DiscoveryFlowHandler):
         """Discovery flow handler."""
 
-        def __init__(self):
+        def __init__(self) -> None:
             super().__init__(domain, title, discovery_function, connection_class)
 
     config_entries.HANDLERS.register(domain)(DiscoveryFlow)
@@ -107,7 +107,7 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
         title: str,
         description_placeholder: dict,
         allow_multiple: bool,
-    ):
+    ) -> None:
         """Initialize the discovery config flow."""
         self._domain = domain
         self._title = title
@@ -150,7 +150,7 @@ def register_webhook_flow(
     class WebhookFlow(WebhookFlowHandler):
         """Webhook flow handler."""
 
-        def __init__(self):
+        def __init__(self) -> None:
             super().__init__(domain, title, description_placeholder, allow_multiple)
 
     config_entries.HANDLERS.register(domain)(WebhookFlow)
