@@ -216,6 +216,11 @@ class Entity:
         """Time that a context is considered recent."""
         return timedelta(seconds=5)
 
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return True
+
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
     # are used to perform a very specific function. Overwriting these may
