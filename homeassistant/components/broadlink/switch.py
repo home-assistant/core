@@ -34,7 +34,7 @@ TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 DEFAULT_NAME = "Broadlink switch"
 DEFAULT_TIMEOUT = 10
-DEFAULT_RETRY = 3
+DEFAULT_RETRY = 2
 CONF_SLOTS = "slots"
 CONF_RETRY = "retry"
 
