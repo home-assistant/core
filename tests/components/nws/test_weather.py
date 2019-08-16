@@ -1,6 +1,4 @@
 """Tests for the NWS weather component."""
-import asyncio
-
 from homeassistant.components.nws.weather import ATTR_FORECAST_PRECIP_PROB
 from homeassistant.components.weather import (
     ATTR_WEATHER_HUMIDITY,
@@ -106,8 +104,7 @@ OBSURL = "https://api.weather.gov/stations/{}/observations/"
 FORCURL = "https://api.weather.gov/points/{},{}/forecast"
 
 
-@asyncio.coroutine
-def test_imperial(hass, aioclient_mock):
+async def test_imperial(hass, aioclient_mock):
     """Test with imperial units."""
     aioclient_mock.get(
         STAURL.format(40.0, -85.0), text=load_fixture("nws-weather-sta-valid.json")
@@ -124,7 +121,7 @@ def test_imperial(hass, aioclient_mock):
     hass.config.units = IMPERIAL_SYSTEM
 
     with assert_setup_component(1, "weather"):
-        yield from async_setup_component(hass, "weather", MINIMAL_CONFIG)
+        await async_setup_component(hass, "weather", MINIMAL_CONFIG)
 
     state = hass.states.get("weather.kmie")
     assert state
@@ -139,8 +136,7 @@ def test_imperial(hass, aioclient_mock):
         assert forecast[0].get(key) == value
 
 
-@asyncio.coroutine
-def test_metric(hass, aioclient_mock):
+async def test_metric(hass, aioclient_mock):
     """Test with metric units."""
     aioclient_mock.get(
         STAURL.format(40.0, -85.0), text=load_fixture("nws-weather-sta-valid.json")
@@ -157,7 +153,7 @@ def test_metric(hass, aioclient_mock):
     hass.config.units = METRIC_SYSTEM
 
     with assert_setup_component(1, "weather"):
-        yield from async_setup_component(hass, "weather", MINIMAL_CONFIG)
+        await async_setup_component(hass, "weather", MINIMAL_CONFIG)
 
     state = hass.states.get("weather.kmie")
     assert state
@@ -172,8 +168,7 @@ def test_metric(hass, aioclient_mock):
         assert forecast[0].get(key) == value
 
 
-@asyncio.coroutine
-def test_none(hass, aioclient_mock):
+async def test_none(hass, aioclient_mock):
     """Test with imperial units."""
     aioclient_mock.get(
         STAURL.format(40.0, -85.0), text=load_fixture("nws-weather-sta-valid.json")
@@ -190,7 +185,7 @@ def test_none(hass, aioclient_mock):
     hass.config.units = IMPERIAL_SYSTEM
 
     with assert_setup_component(1, "weather"):
-        yield from async_setup_component(hass, "weather", MINIMAL_CONFIG)
+        await async_setup_component(hass, "weather", MINIMAL_CONFIG)
 
     state = hass.states.get("weather.kmie")
     assert state
@@ -205,8 +200,7 @@ def test_none(hass, aioclient_mock):
         assert forecast[0].get(key) is None
 
 
-@asyncio.coroutine
-def test_fail_obs(hass, aioclient_mock):
+async def test_fail_obs(hass, aioclient_mock):
     """Test failing observation/forecast update."""
     aioclient_mock.get(
         STAURL.format(40.0, -85.0), text=load_fixture("nws-weather-sta-valid.json")
@@ -226,14 +220,13 @@ def test_fail_obs(hass, aioclient_mock):
     hass.config.units = IMPERIAL_SYSTEM
 
     with assert_setup_component(1, "weather"):
-        yield from async_setup_component(hass, "weather", MINIMAL_CONFIG)
+        await async_setup_component(hass, "weather", MINIMAL_CONFIG)
 
     state = hass.states.get("weather.kmie")
     assert state
 
 
-@asyncio.coroutine
-def test_fail_stn(hass, aioclient_mock):
+async def test_fail_stn(hass, aioclient_mock):
     """Test failing station update."""
     aioclient_mock.get(
         STAURL.format(40.0, -85.0),
@@ -252,14 +245,13 @@ def test_fail_stn(hass, aioclient_mock):
     hass.config.units = IMPERIAL_SYSTEM
 
     with assert_setup_component(1, "weather"):
-        yield from async_setup_component(hass, "weather", MINIMAL_CONFIG)
+        await async_setup_component(hass, "weather", MINIMAL_CONFIG)
 
     state = hass.states.get("weather.kmie")
     assert state is None
 
 
-@asyncio.coroutine
-def test_invalid_config(hass, aioclient_mock):
+async def test_invalid_config(hass, aioclient_mock):
     """Test invalid config.."""
     aioclient_mock.get(
         STAURL.format(40.0, -85.0), text=load_fixture("nws-weather-sta-valid.json")
@@ -276,7 +268,7 @@ def test_invalid_config(hass, aioclient_mock):
     hass.config.units = IMPERIAL_SYSTEM
 
     with assert_setup_component(1, "weather"):
-        yield from async_setup_component(hass, "weather", INVALID_CONFIG)
+        await async_setup_component(hass, "weather", INVALID_CONFIG)
 
     state = hass.states.get("weather.kmie")
     assert state is None
