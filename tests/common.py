@@ -908,6 +908,11 @@ class MockEntity(entity.Entity):
         """Info how it links to a device."""
         return self._handle("device_info")
 
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._handle("entity_registry_enabled_default")
+
     def _handle(self, attr):
         """Return attribute value."""
         if attr in self._values:

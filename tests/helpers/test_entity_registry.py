@@ -352,3 +352,17 @@ async def test_update_entity_unique_id_conflict(registry):
     ) as mock_schedule_save, pytest.raises(ValueError):
         registry.async_update_entity(entry.entity_id, new_unique_id=entry2.unique_id)
     assert mock_schedule_save.call_count == 0
+
+
+async def test_disabled_by(registry):
+    """Test that we can disable an entry when we create it."""
+    entry = registry.async_get_or_create("light", "hue", "5678", disabled_by="hass")
+    assert entry.disabled_by == "hass"
+
+    entry = registry.async_get_or_create(
+        "light", "hue", "5678", disabled_by="integration"
+    )
+    assert entry.disabled_by == "hass"
+
+    entry2 = registry.async_get_or_create("light", "hue", "1234")
+    assert entry2.disabled_by is None
