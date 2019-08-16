@@ -126,7 +126,7 @@ class ECSensor(Entity):
         value = sensor_data.get("value")
 
         if value is None or value == []:
-            self._state = 'None'
+            self._state = "None"
         elif isinstance(value, list):
             self._state = " | ".join([str(s.get("title")) for s in value])
             self._attr.update(
@@ -135,13 +135,15 @@ class ECSensor(Entity):
                     ATTR_TIME: " | ".join([str(s.get("date")) for s in value]),
                 }
             )
-        elif self.sensor_type == 'tendency':
+        elif self.sensor_type == "tendency":
             self._state = str(value).capitalize()
         else:
             self._state = value
 
-        if sensor_data.get("unit") == "C" or self.sensor_type in ['wind_chill',
-                                                                  'humidex']:
+        if sensor_data.get("unit") == "C" or self.sensor_type in [
+            "wind_chill",
+            "humidex",
+        ]:
             self._unit = TEMP_CELSIUS
         else:
             self._unit = sensor_data.get("unit")

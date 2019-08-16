@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_STATION = "station"
 ATTR_LOCATION = "location"
-ATTR_UPDATED = 'updated'
+ATTR_UPDATED = "updated"
 
 CONF_ATTRIBUTION = "Data provided by Environment Canada"
 CONF_STATION = "station"
@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_LOOP, default=True): cv.boolean,
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_STATION): vol.Match(r'^C[A-Z]{4}$|^[A-Z]{3}$'),
+        vol.Optional(CONF_STATION): vol.Match(r"^C[A-Z]{4}$|^[A-Z]{3}$"),
         vol.Inclusive(CONF_LATITUDE, "latlon"): cv.latitude,
         vol.Inclusive(CONF_LONGITUDE, "latlon"): cv.longitude,
         vol.Optional(CONF_PRECIP_TYPE): ["RAIN", "SNOW"],
@@ -92,7 +92,7 @@ class ECCamera(Camera):
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             ATTR_LOCATION: self.radar_object.station_name,
             ATTR_STATION: self.radar_object.station_code,
-            ATTR_UPDATED: self.timestamp
+            ATTR_UPDATED: self.timestamp,
         }
 
         return attr
