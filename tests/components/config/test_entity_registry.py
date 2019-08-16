@@ -105,7 +105,7 @@ async def test_get_entity(hass, client):
     }
 
 
-async def test_update_entit(hass, client):
+async def test_update_entity(hass, client):
     """Test updating entity."""
     registry = mock_registry(
         hass,
