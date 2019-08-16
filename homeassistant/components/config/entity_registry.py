@@ -69,6 +69,8 @@ async def websocket_get_entity(hass, connection, msg):
         # If passed in, we update value. Passing None will remove old value.
         vol.Optional("name"): vol.Any(str, None),
         vol.Optional("new_entity_id"): str,
+        # We only allow setting disabled_by user via API.
+        vol.Optional("disabled_by"): vol.Any("user", None),
     }
 )
 async def websocket_update_entity(hass, connection, msg):
@@ -88,6 +90,9 @@ async def websocket_update_entity(hass, connection, msg):
 
     if "name" in msg:
         changes["name"] = msg["name"]
+
+    if "disabled_by" in msg:
+        changes["disabled_by"] = msg["disabled_by"]
 
     if "new_entity_id" in msg and msg["new_entity_id"] != msg["entity_id"]:
         changes["new_entity_id"] = msg["new_entity_id"]
