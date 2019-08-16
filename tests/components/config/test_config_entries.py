@@ -37,65 +37,61 @@ def client(hass, hass_client):
     yield hass.loop.run_until_complete(hass_client())
 
 
-@HANDLERS.register("comp1")
-class Comp1ConfigFlow:
-    """Config flow with options flow."""
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config, options):
-        """Get options flow."""
-        pass
-
-
-@HANDLERS.register("comp2")
-class Comp2ConfigFlow:
-    """Config flow without options flow."""
-
-    def __init__(self):
-        """Init."""
-        pass
-
-
 async def test_get_entries(hass, client):
     """Test get entries."""
-    MockConfigEntry(
-        domain="comp1",
-        title="Test 1",
-        source="bla",
-        connection_class=core_ce.CONN_CLASS_LOCAL_POLL,
-    ).add_to_hass(hass)
-    MockConfigEntry(
-        domain="comp2",
-        title="Test 2",
-        source="bla2",
-        state=core_ce.ENTRY_STATE_LOADED,
-        connection_class=core_ce.CONN_CLASS_ASSUMED,
-    ).add_to_hass(hass)
+    with patch.dict(HANDLERS, clear=True):
 
-    resp = await client.get("/api/config/config_entries/entry")
-    assert resp.status == 200
-    data = await resp.json()
-    for entry in data:
-        entry.pop("entry_id")
-    assert data == [
-        {
-            "domain": "comp1",
-            "title": "Test 1",
-            "source": "bla",
-            "state": "not_loaded",
-            "connection_class": "local_poll",
-            "supports_options": True,
-        },
-        {
-            "domain": "comp2",
-            "title": "Test 2",
-            "source": "bla2",
-            "state": "loaded",
-            "connection_class": "assumed",
-            "supports_options": False,
-        },
-    ]
+        @HANDLERS.register("comp1")
+        class Comp1ConfigFlow:
+            """Config flow with options flow."""
+
+            @staticmethod
+            @callback
+            def async_get_options_flow(config, options):
+                """Get options flow."""
+                pass
+
+        hass.helpers.config_entry_flow.register_discovery_flow(
+            "comp2", "Comp 2", lambda: None, core_ce.CONN_CLASS_ASSUMED
+        )
+
+        MockConfigEntry(
+            domain="comp1",
+            title="Test 1",
+            source="bla",
+            connection_class=core_ce.CONN_CLASS_LOCAL_POLL,
+        ).add_to_hass(hass)
+        MockConfigEntry(
+            domain="comp2",
+            title="Test 2",
+            source="bla2",
+            state=core_ce.ENTRY_STATE_LOADED,
+            connection_class=core_ce.CONN_CLASS_ASSUMED,
+        ).add_to_hass(hass)
+
+        resp = await client.get("/api/config/config_entries/entry")
+        assert resp.status == 200
+        data = await resp.json()
+        for entry in data:
+            entry.pop("entry_id")
+        assert data == [
+            {
+                "domain": "comp1",
+                "title": "Test 1",
+                "source": "bla",
+                "state": "not_loaded",
+                "connection_class": "local_poll",
+                "supports_options": True,
+            },
+            {
+                "domain": "comp2",
+                "title": "Test 2",
+                "source": "bla2",
+                "state": "loaded",
+                "connection_class": "assumed",
+                "supports_options": False,
+            },
+        ]
 
 
 @asyncio.coroutine

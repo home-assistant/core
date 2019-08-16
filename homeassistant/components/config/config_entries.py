@@ -54,8 +54,17 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
         """List available config entries."""
         hass = request.app["hass"]
 
-        return self.json(
-            [
+        results = []
+
+        for entry in hass.config_entries.async_entries():
+            handler = config_entries.HANDLERS.get(entry.domain)
+            supports_options = (
+                hasattr(handler, "async_get_options_flow")
+                # pylint: disable=comparison-with-callable
+                and handler.async_get_options_flow
+                != config_entries.ConfigFlow.async_get_options_flow
+            )
+            results.append(
                 {
                     "entry_id": entry.entry_id,
                     "domain": entry.domain,
@@ -63,14 +72,11 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
                     "source": entry.source,
                     "state": entry.state,
                     "connection_class": entry.connection_class,
-                    "supports_options": hasattr(
-                        config_entries.HANDLERS.get(entry.domain),
-                        "async_get_options_flow",
-                    ),
+                    "supports_options": supports_options,
                 }
-                for entry in hass.config_entries.async_entries()
-            ]
-        )
+            )
+
+        return self.json(results)
 
 
 class ConfigManagerEntryResourceView(HomeAssistantView):
