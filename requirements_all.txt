@@ -853,7 +853,7 @@ nuheat==0.3.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.16.4
+numpy==1.17.0
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
