@@ -88,6 +88,9 @@ G_AIS_SECURE_ANDROID_ID_DOM = None
 #
 G_AIS_GATE_REQ = {}
 
+#
+G_AIS_START_IS_DONE = False
+
 
 def get_pass_for_ssid(ssid):
     for item in GLOBAL_SCAN_WIFI_ANSWER["ScanResult"]:

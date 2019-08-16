@@ -7,6 +7,7 @@ https://ai-speaker.com
 import asyncio
 import os
 import logging
+import homeassistant.ais_dom.ais_global as ais_global
 
 DOMAIN = "ais_amplifier_service"
 _LOGGER = logging.getLogger(__name__)
@@ -90,17 +91,19 @@ def set_bt_mode():
 @asyncio.coroutine
 def _change_audio_to_mono(hass, call):
     mode = hass.states.get("input_boolean.ais_audio_mono").state
+    info_text = ""
     if mode == "on":
         comm = r'su -c "settings put system master_mono 1"'
         os.system(comm)
-        yield from hass.services.async_call(
-            "ais_ai_service", "say_it", {"text": "Dźwięk mono włączony"}
-        )
+        info_text = "włączony"
     else:
         comm = r'su -c "settings put system master_mono 0"'
         os.system(comm)
+        info_text = "wyłączony"
+
+    if ais_global.G_AIS_START_IS_DONE:
         yield from hass.services.async_call(
-            "ais_ai_service", "say_it", {"text": "Dźwięk mono wyłączony"}
+            "ais_ai_service", "say_it", {"text": "Dźwięk mono " + info_text}
         )
 
 

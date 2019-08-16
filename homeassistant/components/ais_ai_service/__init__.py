@@ -1672,6 +1672,10 @@ async def async_setup(hass, config):
                    "Sprawdź połączenie z Internetem."
         _say_it(hass, text)
 
+        # set the flag to info that the AIS start part is done - this is needed to don't say some info before this flag
+        ais_global.G_AIS_START_IS_DONE = True
+
+
     @asyncio.coroutine
     def set_context(service):
         """Set the context in app."""

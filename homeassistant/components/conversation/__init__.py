@@ -168,7 +168,6 @@ async def _process(hass, text):
             return response
 
 
-
 class ConversationProcessView(http.HomeAssistantView):
     """View to retrieve shopping list content."""
 
