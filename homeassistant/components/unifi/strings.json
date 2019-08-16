@@ -22,5 +22,23 @@
             "already_configured": "Controller site is already configured",
             "user_privilege": "User needs to be administrator"
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Configure UniFi device tracker",
+                "data": {
+                    "show_things": "Show Things"
+                }
+            },
+            "device_tracker": {
+                "title": "Configure UniFi device tracker",
+                "data": {
+                    "ap_mac": "Enable attribute showing which access point client is connected to",
+                    "last_seen": "Enable attribute showing the time client was last seen",
+                    "rx_tx": "Enable attribute showing client bandwidth usage"
+                }
+            }
+        }
     }
 }
