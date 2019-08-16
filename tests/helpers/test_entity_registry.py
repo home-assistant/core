@@ -352,3 +352,23 @@ async def test_update_entity_unique_id_conflict(registry):
     ) as mock_schedule_save, pytest.raises(ValueError):
         registry.async_update_entity(entry.entity_id, new_unique_id=entry2.unique_id)
     assert mock_schedule_save.call_count == 0
+
+
+async def test_update_entity(registry):
+    """Test updating entity."""
+    entry = registry.async_get_or_create(
+        "light", "hue", "5678", config_entry_id="mock-id-1"
+    )
+
+    for attr_name, new_value in (
+        ("name", "new name"),
+        ("disabled_by", entity_registry.DISABLED_USER),
+    ):
+        changes = {attr_name: new_value}
+        updated_entry = registry.async_update_entity(entry.entity_id, **changes)
+
+        assert updated_entry != entry
+        assert getattr(updated_entry, attr_name) == new_value
+        assert getattr(updated_entry, attr_name) != getattr(entry, attr_name)
+
+        entry = updated_entry
