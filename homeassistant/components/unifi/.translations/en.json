@@ -1,26 +1,43 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Controller site is already configured",
-            "user_privilege": "User needs to be administrator"
+        "title": "UniFi Controller",
+        "step": {
+            "user": {
+                "title": "Set up UniFi Controller",
+                "data": {
+                    "host": "Host",
+                    "username": "User name",
+                    "password": "Password",
+                    "port": "Port",
+                    "site": "Site ID",
+                    "verify_ssl": "Controller using proper certificate"
+                }
+            }
         },
         "error": {
             "faulty_credentials": "Bad user credentials",
             "service_unavailable": "No service available"
         },
+        "abort": {
+            "already_configured": "Controller site is already configured",
+            "user_privilege": "User needs to be administrator"
+        }
+    },
+    "options": {
         "step": {
-            "user": {
+            "init": {
                 "data": {
-                    "host": "Host",
-                    "password": "Password",
-                    "port": "Port",
-                    "site": "Site ID",
-                    "username": "User name",
-                    "verify_ssl": "Controller using proper certificate"
-                },
-                "title": "Set up UniFi Controller"
+                    "show_things": "Show Things"
+                }
+            },
+            "device_tracker": {
+                "description": "Configure UniFi device tracker",
+                "data": {
+                    "ap_mac": "Enable attribute showing which access point client is connected to",
+                    "last_seen": "Enable attribute showing the time client was last seen",
+                    "rx_tx": "Enable attribute showing client bandwidth usage"
+                }
             }
-        },
-        "title": "UniFi Controller"
+        }
     }
 }
