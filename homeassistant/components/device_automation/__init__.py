@@ -82,7 +82,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up a config entry."""
-    _LOGGER.warning("async_setup_entry: %s", entry)
     return await hass.data[DOMAIN].async_setup_entry(entry)
 
 
