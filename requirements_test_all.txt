@@ -221,7 +221,7 @@ netdisco==2.6.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.16.4
+numpy==1.17.0
 
 # homeassistant.components.google
 oauth2client==4.0.0
