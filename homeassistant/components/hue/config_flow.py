@@ -62,7 +62,7 @@ class HueFlowHandler(config_entries.ConfigFlow):
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
         if user_input is not None:
-            self.host = user_input["host"]
+            self.host = self.context["host"] = user_input["host"]
             return await self.async_step_link()
 
         websession = aiohttp_client.async_get_clientsession(self.hass)
@@ -141,10 +141,11 @@ class HueFlowHandler(config_entries.ConfigFlow):
         if "HASS Bridge" in discovery_info.get("name", ""):
             return self.async_abort(reason="already_configured")
 
-        # pylint: disable=unsupported-assignment-operation
         host = self.context["host"] = discovery_info.get("host")
 
-        if any(host == flow["context"]["host"] for flow in self._async_in_progress()):
+        if any(
+            host == flow["context"].get("host") for flow in self._async_in_progress()
+        ):
             return self.async_abort(reason="already_in_progress")
 
         if host in configured_hosts(self.hass):
@@ -166,10 +167,11 @@ class HueFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_homekit(self, homekit_info):
         """Handle HomeKit discovery."""
-        # pylint: disable=unsupported-assignment-operation
         host = self.context["host"] = homekit_info.get("host")
 
-        if any(host == flow["context"]["host"] for flow in self._async_in_progress()):
+        if any(
+            host == flow["context"].get("host") for flow in self._async_in_progress()
+        ):
             return self.async_abort(reason="already_in_progress")
 
         if host in configured_hosts(self.hass):
@@ -192,7 +194,7 @@ class HueFlowHandler(config_entries.ConfigFlow):
         and create an entry. Otherwise we will delegate to `link` step which
         will ask user to link the bridge.
         """
-        host = import_info["host"]
+        host = self.context["host"] = import_info["host"]
         path = import_info.get("path")
 
         if path is not None:
