@@ -266,7 +266,7 @@ beautifulsoup4==4.7.1
 bellows-homeassistant==0.9.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.5.3
+bimmer_connected==0.5.6
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -1446,7 +1446,7 @@ python-digitalocean==1.13.2
 python-ecobee-api==0.0.21
 
 # homeassistant.components.eq3btsmart
-# python-eq3bt==0.1.9
+# python-eq3bt==0.1.11
 
 # homeassistant.components.etherscan
 python-etherscan-api==0.0.3
