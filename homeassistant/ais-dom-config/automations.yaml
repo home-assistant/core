@@ -15,6 +15,10 @@
        val: true
    - service: ais_ai_service.publish_command_to_frame
      data:
+       key: WifiConnectionInfo
+       val: true
+   - service: ais_ai_service.publish_command_to_frame
+     data:
        key: relaunch
        val: true
    - service: ais_cloud.get_players
@@ -50,11 +54,6 @@
    - service: ais_ai_service.prepare_remote_menu
    - service: ais_ai_service.check_local_ip
    - service: ais_amplifier_service.get_audio_mono
-   - service: ais_ai_service.publish_command_to_frame
-     data:
-       key: WifiConnectionInfo
-       val: true
-   - delay: '5'
    - service: mqtt.publish
      data:
        payload: 1

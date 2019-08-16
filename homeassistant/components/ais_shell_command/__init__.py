@@ -193,32 +193,26 @@ def _led(hass, call):
         "su -c ' " + script + " " + str(brightness) + "'",
         shell=True, stdout=None, stderr=None)
 
+
 @asyncio.coroutine
 def _set_ais_secure_android_id_dom(hass, call):
-    import subprocess
-    try:
-        android_id = subprocess.check_output('su -c "settings get secure android_id"', shell=True, timeout=15)
-        android_id = android_id.decode("utf-8").replace('\n', '')
-    except Exception:
-        _LOGGER.warning("Can't get secure gate id for the device!")
-        from uuid import getnode as get_mac
-        android_id = get_mac()
+    # the G_AIS_SECURE_ANDROID_ID_DOM can be set from frame during the wifi_connection_info
+    if ais_global.G_AIS_SECURE_ANDROID_ID_DOM is None:
+        import subprocess
+        try:
+            android_id = subprocess.check_output('su -c "settings get secure android_id"', shell=True, timeout=15)
+            android_id = android_id.decode("utf-8").replace('\n', '')
+        except Exception:
+            _LOGGER.warning("Can't get secure gate id for the device!")
+            from uuid import getnode as get_mac
+            android_id = get_mac()
 
-    ais_global.G_AIS_SECURE_ANDROID_ID_DOM = "dom-" + str(android_id)
+        ais_global.G_AIS_SECURE_ANDROID_ID_DOM = "dom-" + str(android_id)
+
     hass.states.async_set('sensor.ais_secure_android_id_dom', ais_global.G_AIS_SECURE_ANDROID_ID_DOM,
                           {"friendly_name": "Unikalny identyfikator bramki",
                            "icon": "mdi:account-card-details"})
     _LOGGER.info("sensor.ais_secure_android_id_dom -> " + ais_global.G_AIS_SECURE_ANDROID_ID_DOM)
-
-    # try:
-    #     android_id = open('/sys/class/net/eth0/address').readline()
-    # except Exception:
-    #     import uuid
-    #     import re
-    #     android_id = (''.join(re.findall('..', '%012x' % uuid.getnode())))
-    #
-    # ais_global.G_AIS_SECURE_ANDROID_ID_DOM = "dom-" + str(android_id).replace(':', '').strip()
-    # hass.states.async_set('sensor.ais_secure_android_id_dom', "dom-" + str(android_id))
 
 
 @asyncio.coroutine
