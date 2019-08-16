@@ -117,7 +117,7 @@ class YouTubeData:
                 ais_global.G_OFFLINE_MODE = True
                 yield from self.hass.services.async_call(
                     'ais_ai_service', 'say_it', {
-                        "text": "Brak odpowiedzi, sprawdz połączenie z Intenetem"
+                        "text": "Brak odpowiedzi, sprawdź połączenie z Intenetem"
                     })
                 _LOGGER.error('process_search_async ' + str(e))
                 return

@@ -70,7 +70,7 @@ def _process_ask_async(hass, call):
         except:
             yield from hass.services.async_call(
                 'ais_ai_service', 'say_it', {
-                    "text": "Nie udało się wykonać, sprawdz połączenie z Intenetem"
+                    "text": "Nie udało się wykonać, sprawdź połączenie z Intenetem"
                 })
             return
 

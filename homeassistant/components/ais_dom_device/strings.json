@@ -20,7 +20,7 @@
         },
         "add_device": {
           "description": "Dodajemy do bramki o identyfikatorze: **{gate_id}**\nnowe urządzenie o identyfikatorze: **{device_id}**",
-          "title": "Podaj nazwę dla urządzenia, sprawdz pozostałe parametry z domyślnymi wartościami",
+          "title": "Podaj nazwę dla urządzenia, sprawdź pozostałe parametry z domyślnymi wartościami",
           "data": { "name": "Nazwa urządzenia",
                     "type": "Dodaj do grupy",
                     "networks": "Sieć WiFi do której dołączyć urządzenie",
@@ -36,7 +36,7 @@
         "name_error": "Wybrana nazwa może mieć maksymalnie 32 znaki"
       },
       "abort": {
-        "add_failed": "Nie udało się dodać nowego urządzenia, proszę sprawdz podane parametry i spróbuj ponownie.\n\n Informacja o błędzie: {error_info}",
+        "add_failed": "Nie udało się dodać nowego urządzenia, proszę sprawdź podane parametry i spróbuj ponownie.\n\n Informacja o błędzie: {error_info}",
         "add_not_possible": "Nie można dodać urządzenia.\n\n Informacja o błędzie: {error_info}",
         "add_executed": "Przesyłamy ustawienia do urządzenia.\n\n Podczas tego kroku konieczne jest rozłączenie bramki **AIS dom** z sieci WiFi, zajmie to tylko chwilę.\n\n Po pomyślnym dodaniu, nowe urządzenie pojawi się automatycznie na liście urządzeń."
       }

@@ -361,15 +361,15 @@ async def async_start(
             async_dispatcher_send(
                 hass, MQTT_DISCOVERY_NEW.format(component, 'mqtt'), payload
             )
-            # AIS dom, we are doing this here because the
-            # EVENT_PLATFORM_DISCOVERED is not always fired
-            # prepare ais dom menu
-            # hass.async_add_job(
-            #     hass.services.async_call(
-            #         'ais_ai_service',
-            #         'prepare_remote_menu'
-            #     )
-            # )
+
+            # AIS dom, we are doing this here to inform user about new device
+            if "name" in payload and component != "sensor":
+                hass.async_add_job(
+                    hass.services.async_call(
+                        'ais_ai_service',
+                        'say_it', {"text": "Dodano urządzenie " + payload["name"] + ". Możesz już nim sterować."}
+                    )
+                )
 
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
