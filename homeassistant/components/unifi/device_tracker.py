@@ -41,6 +41,7 @@ LOGGER = logging.getLogger(__name__)
 
 DEVICE_ATTRIBUTES = [
     "_is_guest_by_uap",
+    "ap_mac",
     "authorized",
     "essid",
     "hostname",
