@@ -56,7 +56,8 @@ class GeonetnzQuakesSensor(Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed from hass."""
-        self._remove_signal_status()
+        if self._remove_signal_status:
+            self._remove_signal_status()
 
     @callback
     def _update_status_callback(self):
