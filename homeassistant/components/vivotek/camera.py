@@ -116,11 +116,52 @@ class VivotekCamera(Camera):
         """Return the interval between frames of the mjpeg stream."""
         return self._frame_interval
 
+    async def async_event_enabled(self, event_key):
+        """Return true if event for the provided key is enabled."""
+        value = await self.async_get_param(event_key)
+        return int(value.replace("'", "")) == 1
+
     def event_enabled(self, event_key):
         """Return true if event for the provided key is enabled."""
-        response = self.get_param(self._event_0_key)
-        _LOGGER.debug("Vivotek camera response: %s", response)
+        response = self.get_param(event_key)
+        # _LOGGER.debug("Vivotek camera response: %s", response)
         return int(response.replace("'", "")) == 1
+
+    # async def async_get_param(self, param):
+    #     """Return the value of the provided key."""
+    #     try:
+    #         websession = async_get_clientsession(
+    #             self.hass, verify_ssl=self.verify_ssl
+    #         )
+    #         with async_timeout.timeout(10):
+    #             response = await websession.get(
+    #                 self._get_param_url,
+    #                 auth=self._auth,
+    #                 params={param},
+    #             )
+    #         text = await response.text()
+    #         _LOGGER.info("Vivotek camera GET response text: %s", text)
+    #         return text.strip().split("=")[1]
+    #     except asyncio.TimeoutError:
+    #         _LOGGER.error("Timeout getting Vivotek camera parameter: %s", self._name)
+    #     except aiohttp.ClientError as err:
+    #         _LOGGER.error("Error getting Vivotek camera parameter: %s", err)
+
+    async def async_set_param(self, param, value):
+        """Set the value of the provided key."""
+        try:
+            websession = async_get_clientsession(self.hass, verify_ssl=self.verify_ssl)
+            with async_timeout.timeout(10):
+                response = await websession.post(
+                    self._set_param_url, auth=self._auth, data={param: value}
+                )
+            text = await response.text()
+            _LOGGER.info("Vivotek camera SET response text: %s", text)
+            return text.strip().split("=")[1]
+        except asyncio.TimeoutError:
+            _LOGGER.error("Timeout setting Vivotek camera parameter: %s", self._name)
+        except aiohttp.ClientError as err:
+            _LOGGER.error("Error setting Vivotek camera parameter: %s", err)
 
     def get_param(self, param):
         """Return the value of the provided key."""
@@ -136,15 +177,15 @@ class VivotekCamera(Camera):
         except requests.exceptions.RequestException as error:
             _LOGGER.error("Error getting Vivotek camera parameter: %s", error)
 
-    def set_param(self, param, value):
-        """Set the value of the provided key."""
-        try:
-            response = requests.post(
-                self._set_param_url, auth=self._requests_auth, data={param: value}
-            )
-            return response.content.decode("utf-8").strip().split("=")[1]
-        except requests.exceptions.RequestException as error:
-            _LOGGER.error("Error setting Vivotek camera parameter: %s", error)
+    # def set_param(self, param, value):
+    #     """Set the value of the provided key."""
+    #     try:
+    #         response = requests.post(
+    #             self._set_param_url, auth=self._requests_auth, data={param: value}
+    #         )
+    #         return response.content.decode("utf-8").strip().split("=")[1]
+    #     except requests.exceptions.RequestException as error:
+    #         _LOGGER.error("Error setting Vivotek camera parameter: %s", error)
 
     def camera_image(self):
         """Return bytes of camera image."""
@@ -210,10 +251,11 @@ class VivotekCamera(Camera):
     def motion_detection_enabled(self):
         return self.event_enabled(self._event_0_key)
 
-    def enable_motion_detection(self):
+    async def enable_motion_detection(self):
         """Enable motion detection in camera."""
-        self.set_param(self._event_0_key, 1)
+        await self.async_set_param(self._event_0_key, 1)
 
-    def disable_motion_detection(self):
+    async def disable_motion_detection(self):
         """Disable motion detection in camera."""
-        self.set_param(self._event_0_key, 0)
+        # self.set_param(self._event_0_key, 0)
+        await self.async_set_param(self._event_0_key, 0)
