@@ -399,3 +399,13 @@ async def test_disabled_by(registry):
 
     entry2 = registry.async_get_or_create("light", "hue", "1234")
     assert entry2.disabled_by is None
+
+    mock_config = MockConfigEntry(
+        domain="light",
+        entry_id="mock-id-1",
+        system_options={"disable_new_entities": True},
+    )
+    entry3 = registry.async_get_or_create(
+        "light", "hue", "90AB", config_entry=mock_config
+    )
+    assert entry3.disabled_by == "integration"
