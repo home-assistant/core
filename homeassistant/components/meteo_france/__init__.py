@@ -121,7 +121,7 @@ def setup(hass, config):
             weather_alert_client.update_data()
         except VigilanceMeteoError as exp:
             _LOGGER.error(
-                "Unexpected error when creating the" "vigilance_meteoFrance proxy: %s ",
+                "Unexpected error when creating the vigilance_meteoFrance proxy: %s ",
                 exp,
             )
     else:
