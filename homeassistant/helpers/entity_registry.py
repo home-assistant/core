@@ -56,7 +56,13 @@ class RegistryEntry:
         type=str,
         default=None,
         validator=attr.validators.in_(
-            (DISABLED_HASS, DISABLED_INTEGRATION, DISABLED_USER, None)
+            (
+                DISABLED_HASS,
+                DISABLED_USER,
+                DISABLED_INTEGRATION,
+                DISABLED_CONFIG_ENTRY,
+                None,
+            )
         ),
     )  # type: Optional[str]
     domain = attr.ib(type=str, init=False, repr=False)
@@ -165,7 +171,11 @@ class EntityRegistry:
             known_object_ids,
         )
 
-        if config_entry and config_entry.system_options.disable_new_entities:
+        if (
+            disabled_by is None
+            and config_entry
+            and config_entry.system_options.disable_new_entities
+        ):
             disabled_by = DISABLED_INTEGRATION
 
         entity = RegistryEntry(
