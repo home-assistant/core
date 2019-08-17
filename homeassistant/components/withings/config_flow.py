@@ -82,6 +82,10 @@ class WithingsFlowHandler(config_entries.ConfigFlow):
             scope=",".join(["user.info", "user.metrics", "user.activity"]),
         )
 
+    async def async_step_import(self, user_input=None):
+        """Create user step."""
+        return await self.async_step_user(user_input)
+
     async def async_step_user(self, user_input=None):
         """Create an entry for selecting a profile."""
         flow = self.hass.data.get(DATA_FLOW_IMPL, {})
