@@ -314,7 +314,8 @@ class Camera(Entity):
         """Initialize a camera."""
         self.is_streaming = False
         self.content_type = DEFAULT_CONTENT_TYPE
-        self.access_tokens = collections.deque([], 2)
+        # Cannot properly type the following line until Python 3.6.1
+        self.access_tokens = collections.deque([], 2)  # type: ignore
         self.async_update_token()
 
     @property
