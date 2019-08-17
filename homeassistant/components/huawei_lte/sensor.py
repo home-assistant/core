@@ -203,7 +203,7 @@ class HuaweiLteSensor(Entity):
         try:
             value = self.data[self.path]
         except KeyError:
-            _LOGGER.warning("%s not in data", self.path)
+            _LOGGER.debug("%s not in data", self.path)
             value = None
 
         formatter = self.meta.get("formatter")

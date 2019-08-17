@@ -101,8 +101,8 @@ class RouterData:
             if debugging or path in self._subscriptions:
                 try:
                     setattr(self, path, func())
-                except ResponseErrorNotSupportedException as ex:
-                    _LOGGER.warning("%s not supported by device", path, exc_info=ex)
+                except ResponseErrorNotSupportedException:
+                    _LOGGER.warning("%s not supported by device", path)
                     self._subscriptions.discard(path)
                 finally:
                     _LOGGER.debug("%s=%s", path, getattr(self, path))
