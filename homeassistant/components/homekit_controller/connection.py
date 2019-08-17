@@ -259,7 +259,9 @@ class HKDevice:
                 self._polling_lock_warned = True
             return
 
-        self._polling_lock_warned = False
+        if self._polling_lock_warned:
+            _LOGGER.info("HomeKit controller no longer detecting back pressure - not skipping poll")
+            self._polling_lock_warned = False
 
         async with self._polling_lock:
             _LOGGER.debug("Starting HomeKit controller update")
