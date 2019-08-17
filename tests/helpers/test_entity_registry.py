@@ -368,8 +368,9 @@ async def test_update_entity_unique_id_conflict(registry):
 
 async def test_update_entity(registry):
     """Test updating entity."""
+    mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
     entry = registry.async_get_or_create(
-        "light", "hue", "5678", config_entry_id="mock-id-1"
+        "light", "hue", "5678", config_entry=mock_config
     )
 
     for attr_name, new_value in (

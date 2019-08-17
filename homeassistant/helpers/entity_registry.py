@@ -165,7 +165,6 @@ class EntityRegistry:
             known_object_ids,
         )
 
-        disabled_by = None
         if config_entry and config_entry.system_options.disable_new_entities:
             disabled_by = DISABLED_INTEGRATION
 
