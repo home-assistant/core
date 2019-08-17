@@ -121,6 +121,7 @@ TEST_REQUIREMENTS = (
     "pyopenuv",
     "pyotp",
     "pyps4-homeassistant",
+    "pysma",
     "pysmartapp",
     "pysmartthings",
     "pysonos",
