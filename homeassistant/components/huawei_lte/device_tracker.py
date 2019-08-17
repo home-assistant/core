@@ -1,8 +1,8 @@
 """Support for device tracking of Huawei LTE routers."""
+import logging
 from typing import Any, Dict, List, Optional
 
 import attr
-import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
