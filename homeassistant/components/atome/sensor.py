@@ -64,16 +64,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     user_id_path = hass.config.path(ATOME_USER_ID)
     user_reference_path = hass.config.path(ATOME_USER_REFERENCE)
 
-    atome = AtomeSensor(
-        name,
-        username,
-        password,
-        timeout,
-        cookie_path,
-        user_id_path,
-        user_reference_path,
-    )
-    user_id, user_reference = atome._login(username, password)
+    # atome = AtomeSensor(
+    #     name,
+    #     username,
+    #     password,
+    #     timeout,
+    #     cookie_path,
+    #     user_id_path,
+    #     user_reference_path,
+    # )
+    # user_id, user_reference = atome._login(username, password)
     # # Login the user into the Atome API.
     # payload = {"email": username,
     #           "plainPassword": password}
@@ -148,7 +148,8 @@ class AtomeSensor(Entity):
         self._attributes = None
         self._state = None
         # self.update = Throttle(SCAN_INTERVAL)(self._update)
-        self.update()
+        # self.update()
+        self._login(username, password)
 
     @property
     def name(self):
@@ -183,12 +184,13 @@ class AtomeSensor(Entity):
         response_json = req.json()
         # _LOGGER.debug(response_json)
         session_cookie = req.cookies.get(COOKIE_NAME)
-        user_id = str(response_json["id"])
-        user_reference = response_json["subscriptions"][0]["reference"]
 
         if session_cookie is None:
             _LOGGER.exception("Login unsuccessful. Check your credentials")
             return False
+
+        user_id = str(response_json["id"])
+        user_reference = response_json["subscriptions"][0]["reference"]
 
         # store cookie
         with open(self._cookie_path, "wb") as f:
