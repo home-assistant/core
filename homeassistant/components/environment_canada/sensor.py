@@ -125,9 +125,7 @@ class ECSensor(Entity):
         self._name = sensor_data.get("label")
         value = sensor_data.get("value")
 
-        if value is None or value == []:
-            self._state = "None"
-        elif isinstance(value, list):
+        if isinstance(value, list):
             self._state = " | ".join([str(s.get("title")) for s in value])
             self._attr.update(
                 {
