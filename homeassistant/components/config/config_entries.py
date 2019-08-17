@@ -252,7 +252,7 @@ async def system_options_list(hass, connection, msg):
     entry = hass.config_entries.async_get_entry(entry_id)
 
     if entry:
-        connection.send_result(msg["id"], entry.system_options.disable_new_entities)
+        connection.send_result(msg["id"], entry.system_options.as_dict())
 
 
 @websocket_api.require_admin
@@ -267,9 +267,12 @@ async def system_options_list(hass, connection, msg):
 async def system_options_update(hass, connection, msg):
     """Update config entry system options."""
     changes = dict(msg)
+    changes.pop("id")
     changes.pop("type")
     entry_id = changes.pop("entry_id")
     entry = hass.config_entries.async_get_entry(entry_id)
 
     if entry and changes:
         entry.system_options.update(**changes)
+
+        connection.send_result(msg["id"], entry.system_options.as_dict())
