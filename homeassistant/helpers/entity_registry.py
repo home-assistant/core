@@ -167,7 +167,7 @@ class EntityRegistry:
 
         disabled_by = None
         if config_entry and config_entry.system_options.disable_new_entities:
-            disabled_by = DISABLED_CONFIG_ENTRY
+            disabled_by = DISABLED_INTEGRATION
 
         entity = RegistryEntry(
             entity_id=entity_id,
