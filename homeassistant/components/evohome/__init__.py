@@ -7,9 +7,9 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, Dict, Optional, Tuple
 
-import requests.exceptions
+import aiohttp.client_exceptions
 import voluptuous as vol
-import evohomeclient2
+import evohomeclient3 as evohomeclient2
 
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -22,7 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -30,7 +30,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
-    track_time_interval,
+    async_track_time_interval,
 )
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.dt import parse_datetime, utcnow
@@ -90,7 +90,7 @@ def _handle_exception(err) -> bool:
         )
         return False
 
-    except requests.exceptions.ConnectionError:
+    except aiohttp.ClientConnectionError:
         # this appears to be common with Honeywell's servers
         _LOGGER.warning(
             "Unable to connect with the vendor's server. "
@@ -100,15 +100,15 @@ def _handle_exception(err) -> bool:
         )
         return False
 
-    except requests.exceptions.HTTPError:
-        if err.response.status_code == HTTP_SERVICE_UNAVAILABLE:
+    except aiohttp.ClientResponseError:
+        if err.status == HTTP_SERVICE_UNAVAILABLE:
             _LOGGER.warning(
                 "Vendor says their server is currently unavailable. "
                 "Check the vendor's status page."
             )
             return False
 
-        if err.response.status_code == HTTP_TOO_MANY_REQUESTS:
+        if err.status == HTTP_TOO_MANY_REQUESTS:
             _LOGGER.warning(
                 "The vendor's API rate limit has been exceeded. "
                 "Consider increasing the %s.",
@@ -116,20 +116,25 @@ def _handle_exception(err) -> bool:
             )
             return False
 
-        raise  # we don't expect/handle any other HTTPErrors
+        raise  # we don't expect/handle any other ClientResponseError
 
 
-def setup(hass: HomeAssistantType, hass_config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistantType, hass_config: ConfigType) -> bool:
     """Create a (EMEA/EU-based) Honeywell evohome system."""
     broker = EvoBroker(hass, hass_config[DOMAIN])
-    if not broker.init_client():
+    if not await broker.init_client():
         return False
 
-    load_platform(hass, "climate", DOMAIN, {}, hass_config)
+    await async_load_platform(hass, "climate", DOMAIN, {}, hass_config)
     if broker.tcs.hotwater:
-        load_platform(hass, "water_heater", DOMAIN, {}, hass_config)
+        await async_load_platform(hass, "water_heater", DOMAIN, {}, hass_config)
 
-    track_time_interval(hass, broker.update, hass_config[DOMAIN][CONF_SCAN_INTERVAL])
+    async_track_time_interval(
+        hass,
+        broker.update,
+        # hass_config[DOMAIN][CONF_SCAN_INTERVAL]
+        timedelta(seconds=10),  # TODO: for testing only!
+    )
 
     return True
 
@@ -141,8 +146,7 @@ class EvoBroker:
         """Initialize the evohome client and data structure."""
         self.hass = hass
         self.params = params
-
-        self.config = self.status = self.timers = {}
+        self.config = {}
 
         self.client = self.tcs = None
         self._app_storage = {}
@@ -150,32 +154,33 @@ class EvoBroker:
         hass.data[DOMAIN] = {}
         hass.data[DOMAIN]["broker"] = self
 
-    def init_client(self) -> bool:
+    async def init_client(self) -> bool:
         """Initialse the evohome data broker.
 
         Return True if this is successful, otherwise return False.
         """
-        refresh_token, access_token, access_token_expires = asyncio.run_coroutine_threadsafe(
-            self._load_auth_tokens(), self.hass.loop
-        ).result()
+        refresh_token, access_token, access_token_expires = (
+            await self._load_auth_tokens()
+        )
+        #   (None, None, None)  # TODO: testing only
+        #   ("AAA", None, None)  # TODO: check what happens with a bad refresh token
 
         # evohomeclient2 uses naive/local datetimes
         if access_token_expires is not None:
             access_token_expires = _utc_to_local_dt(access_token_expires)
 
-        try:
-            client = self.client = evohomeclient2.EvohomeClient(
-                self.params[CONF_USERNAME],
-                self.params[CONF_PASSWORD],
-                refresh_token=refresh_token,
-                access_token=access_token,
-                access_token_expires=access_token_expires,
-            )
+        client = self.client = evohomeclient2.EvohomeClient(
+            self.params[CONF_USERNAME],
+            self.params[CONF_PASSWORD],
+            refresh_token=refresh_token,
+            access_token=access_token,
+            access_token_expires=access_token_expires,
+            debug=True,
+        )
 
-        except (
-            requests.exceptions.RequestException,
-            evohomeclient2.AuthenticationError,
-        ) as err:
+        try:
+            await client.login()
+        except (aiohttp.ClientResponseError, evohomeclient2.AuthenticationError) as err:
             if not _handle_exception(err):
                 return False
 
@@ -205,12 +210,10 @@ class EvoBroker:
             ._control_systems[0]
         )
 
-        _LOGGER.debug("Config = %s", self.config)
+        _LOGGER.warn("Config = %s", self.config)  # TODO: should be debug
         if _LOGGER.isEnabledFor(logging.DEBUG):
             # don't do an I/O unless required
-            _LOGGER.debug(
-                "Status = %s", client.locations[loc_idx].status()[GWS][0][TCS][0]
-            )
+            await self.update(utcnow())  # _LOGGER.debug("Status = %s", self.status)
 
         return True
 
@@ -254,29 +257,28 @@ class EvoBroker:
             access_token_expires + self.params[CONF_SCAN_INTERVAL],
         )
 
-    def update(self, *args, **kwargs) -> None:
+    async def update(self, *args, **kwargs) -> None:
         """Get the latest state data of the entire evohome Location.
 
         This includes state data for the Controller and all its child devices,
         such as the operating mode of the Controller and the current temp of
         its children (e.g. Zones, DHW controller).
         """
+        _LOGGER.warn("args[0] = %s", args[0])
+
         loc_idx = self.params[CONF_LOCATION_IDX]
 
         try:
-            status = self.client.locations[loc_idx].status()[GWS][0][TCS][0]
-        except (
-            requests.exceptions.RequestException,
-            evohomeclient2.AuthenticationError,
-        ) as err:
+            status = await self.client.locations[loc_idx].status()
+        except (aiohttp.ClientResponseError, evohomeclient2.AuthenticationError) as err:
             _handle_exception(err)
-        else:
-            self.timers["statusUpdated"] = utcnow()
-
-        _LOGGER.debug("Status = %s", status)
 
         # inform the evohome devices that state data has been updated
         async_dispatcher_send(self.hass, DOMAIN, {"signal": "refresh"})
+
+        _LOGGER.warn(
+            "Status = %s", status[GWS][0][TCS][0]
+        )  # TODO: should be _LOGGER.debug()
 
 
 class EvoDevice(Entity):
@@ -399,14 +401,20 @@ class EvoDevice(Entity):
         """Return the temperature unit to use in the frontend UI."""
         return TEMP_CELSIUS
 
-    def _update_schedule(self) -> None:
+    async def _update_schedule(self) -> None:
         """Get the latest state data."""
         if (
             not self._schedule.get("DailySchedules")
             or parse_datetime(self.setpoints["next"]["from"]) < utcnow()
         ):
-            self._schedule = self._evo_device.schedule()
+            try:
+                self._schedule = await self._evo_device.schedule()
+            except (
+                aiohttp.ClientResponseError,
+                evohomeclient2.AuthenticationError,
+            ) as err:
+                _handle_exception(err)
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Get the latest state data."""
-        self._update_schedule()
+        await self._update_schedule()

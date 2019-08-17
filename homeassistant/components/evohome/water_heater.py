@@ -2,8 +2,8 @@
 import logging
 from typing import List
 
-import requests.exceptions
-import evohomeclient2
+import aiohttp.client_exceptions
+import evohomeclient3 as evohomeclient2
 
 from homeassistant.components.water_heater import (
     SUPPORT_OPERATION_MODE,
@@ -23,7 +23,9 @@ EVO_STATE_TO_HA = {v: k for k, v in HA_STATE_TO_EVO.items()}
 HA_OPMODE_TO_DHW = {STATE_ON: EVO_FOLLOW, STATE_OFF: EVO_PERMOVER}
 
 
-def setup_platform(hass, hass_config, add_entities, discovery_info=None) -> None:
+async def async_setup_platform(
+    hass, hass_config, add_entities, discovery_info=None
+) -> None:
     """Create the DHW controller."""
     broker = hass.data[DOMAIN]["broker"]
 
@@ -73,7 +75,7 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         """Return the current temperature."""
         return self._evo_device.temperatureStatus["temperature"]
 
-    def set_operation_mode(self, operation_mode: str) -> None:
+    async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode for a DHW controller."""
         op_mode = HA_OPMODE_TO_DHW[operation_mode]
 
@@ -81,7 +83,7 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         until = None  # EVO_FOLLOW, EVO_PERMOVER
 
         if op_mode == EVO_TEMPOVER and self._schedule["DailySchedules"]:
-            self._update_schedule()
+            await self._update_schedule()
             if self._schedule["DailySchedules"]:
                 until = parse_datetime(self.setpoints["next"]["from"])
                 until = until.strftime(EVO_STRFTIME)
@@ -89,9 +91,6 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         data = {"Mode": op_mode, "State": state, "UntilTime": until}
 
         try:
-            self._evo_device._set_dhw(data)  # pylint: disable=protected-access
-        except (
-            requests.exceptions.RequestException,
-            evohomeclient2.AuthenticationError,
-        ) as err:
+            await self._evo_device._set_dhw(data)  # pylint: disable=protected-access
+        except (aiohttp.ClientResponseError, evohomeclient2.AuthenticationError) as err:
             _handle_exception(err)
