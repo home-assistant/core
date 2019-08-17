@@ -9,41 +9,47 @@ import logging
 
 import asyncio
 from datetime import timedelta
+from aiohttp import ClientError
 import voluptuous as vol
+from webdav3.client import Client
+from webdav3.exceptions import WebDavException
 
-from homeassistant.components.camera import (Camera,
-                                             PLATFORM_SCHEMA, SUPPORT_ON_OFF,
-                                             SUPPORT_STREAM)
+from homeassistant.components.camera import Camera, PLATFORM_SCHEMA, SUPPORT_ON_OFF
 from homeassistant.const import (
-    CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PATH, CONF_NAME, CONF_TOKEN
+    CONF_HOST,
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    CONF_PATH,
+    CONF_NAME,
+    CONF_TOKEN,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
-_LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['webdavclient3==0.11']
+_LOGGER = logging.getLogger(__name__)
 
 CONF_CERTIFICATE_PATH = "ssl_client_certificate"
 CONF_IMAGE_INTERVAL = "image_interval"
 CONF_KEY_PATH = "ssl_client_key"
 
-IMAGE_URL = '/api/camera_proxy/{0}?token={1}&frame={2}'
-STREAM_URL = '/api/camera_proxy_stream/{0}?token={1}'
+STREAM_URL = "/api/camera_proxy_stream/{0}?token={1}"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_TOKEN): cv.string,
-    vol.Optional(CONF_CERTIFICATE_PATH): cv.string,
-    vol.Optional(CONF_KEY_PATH): cv.string,
-    vol.Optional(CONF_PATH, default="/"): cv.string,
-    vol.Required(CONF_IMAGE_INTERVAL): cv.time_period,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_TOKEN): cv.string,
+        vol.Optional(CONF_CERTIFICATE_PATH): cv.string,
+        vol.Optional(CONF_KEY_PATH): cv.string,
+        vol.Optional(CONF_PATH, default="/"): cv.string,
+        vol.Required(CONF_IMAGE_INTERVAL): cv.time_period,
+    }
+)
 
 # This must be separate from frame interval since listing can be expensive
 SCAN_INTERVAL = timedelta(minutes=15)
@@ -51,9 +57,6 @@ SCAN_INTERVAL = timedelta(minutes=15)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a single webdav camera."""
-    from webdav3.client import Client
-    from webdav3.exceptions import WebDavException
-
     name = config[CONF_NAME]
     host = config[CONF_HOST]
     path = config[CONF_PATH]
@@ -62,27 +65,27 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     token = config.get(CONF_TOKEN)
     cert_path = config.get(CONF_CERTIFICATE_PATH)
     key_path = config.get(CONF_KEY_PATH)
-    client = Client({
-        "webdav_hostname": host,
-        "webdav_login": username,
-        "webdav_password": password,
-        "webdav_token": token,
-        "webdav_cert_path": cert_path,
-        "webdav_key_path": key_path,
-        "webdav_root": path,
-    })
+    client = Client(
+        {
+            "webdav_hostname": host,
+            "webdav_login": username,
+            "webdav_password": password,
+            "webdav_token": token,
+            "webdav_cert_path": cert_path,
+            "webdav_key_path": key_path,
+            "webdav_root": path,
+        }
+    )
     session = async_get_clientsession(hass)
 
     try:
-        client.list('/')  # This will throw if we can't access the share
+        client.list("/")  # This will throw if we can't access the share
         add_entities(
             [WebDavCamera(name, client, session, config[CONF_IMAGE_INTERVAL])],
-            update_before_add=True)
+            update_before_add=True,
+        )
     except WebDavException as exception:
-        _LOGGER.warning(
-            "Failed to connect to %s: %s",
-            client.get_url(""),
-            exception)
+        _LOGGER.warning("Failed to connect to %s: %s", client.get_url(""), exception)
         raise PlatformNotReady()
 
 
@@ -98,7 +101,7 @@ class WebDavCamera(Camera):
         self._available = True
         self._has_images = True
         self._client = client
-        self._directory = '/'
+        self._directory = "/"
         self._files = []
         self._image_interval = image_interval
         self._image_number = 0
@@ -131,15 +134,16 @@ class WebDavCamera(Camera):
     @property
     def supported_features(self):
         """Return supported features."""
-        return [SUPPORT_ON_OFF, SUPPORT_STREAM]
+        return [SUPPORT_ON_OFF]
 
     def update(self):
         """Fetch the current contents of the file share."""
-        from webdav3.exceptions import WebDavException
         try:
-            self._files = [filename for filename in
-                           self._client.list(self._directory) if
-                           not filename.endswith('/')]
+            self._files = [
+                filename
+                for filename in self._client.list(self._directory)
+                if not filename.endswith("/")
+            ]
             self._files.sort()
             if not self._available:
                 self._available = True
@@ -149,9 +153,8 @@ class WebDavCamera(Camera):
             if self._available:
                 self._available = False
                 _LOGGER.warning(
-                    "Could not open WebDAV camera %s. Message: %s",
-                    self.name,
-                    exception)
+                    "Could not open WebDAV camera %s. Message: %s", self.name, exception
+                )
 
     @property
     def available(self):
@@ -168,7 +171,6 @@ class WebDavCamera(Camera):
         with await self._image_lock:
             if self._image is not None:
                 return self._image
-            from aiohttp import ClientError
             file_name = self._image_url
 
             try:
@@ -190,10 +192,9 @@ class WebDavCamera(Camera):
     def turn_on(self):
         """Start playing through files in the share."""
         if not self._stop_advancing:
-            self._stop_advancing = \
-                async_track_time_interval(self.hass,
-                                          self._advance,
-                                          self._image_interval)
+            self._stop_advancing = async_track_time_interval(
+                self.hass, self._advance, self._image_interval
+            )
 
     def turn_off(self):
         """Stop playing through files in the share."""
@@ -214,21 +215,21 @@ class WebDavCamera(Camera):
         while images_checked < len(self._files):
             self._image_number += 1
             images_checked += 1
-            content_type = self._client.get_property(self._image_filename,
-                                                     {'name': 'getcontenttype',
-                                                      'namespace': 'DAV:'})
-            if content_type is None or not content_type.startswith('image/'):
+            content_type = self._client.get_property(
+                self._image_filename, {"name": "getcontenttype", "namespace": "DAV:"}
+            )
+            if content_type is None or not content_type.startswith("image/"):
                 continue
 
             with await self._image_lock:
                 self._image = None
             self.async_schedule_update_ha_state()
             if not self._has_images:
-                _LOGGER.info("Image files have appeared on %s",
-                             self._client.get_url(''))
+                _LOGGER.info(
+                    "Image files have appeared on %s", self._client.get_url("")
+                )
                 self._has_images = True
             return
         if self._has_images:
-            _LOGGER.warning("Found no image files on %s",
-                            self._client.get_url(''))
+            _LOGGER.warning("Found no image files on %s", self._client.get_url(""))
             self._has_images = False
