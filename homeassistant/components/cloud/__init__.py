@@ -4,11 +4,15 @@ import logging
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
-from homeassistant.components.alexa import smart_home as alexa_sh
+from homeassistant.components.alexa import const as alexa_const
 from homeassistant.components.google_assistant import const as ga_c
 from homeassistant.const import (
-    CONF_MODE, CONF_NAME, CONF_REGION, EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP)
+    CONF_MODE,
+    CONF_NAME,
+    CONF_REGION,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entityfilter
@@ -17,64 +21,87 @@ from homeassistant.util.aiohttp import MockRequest
 
 from . import http_api
 from .const import (
-    CONF_ACME_DIRECTORY_SERVER, CONF_ALEXA, CONF_ALIASES,
-    CONF_CLOUDHOOK_CREATE_URL, CONF_COGNITO_CLIENT_ID, CONF_ENTITY_CONFIG,
-    CONF_FILTER, CONF_GOOGLE_ACTIONS, CONF_GOOGLE_ACTIONS_SYNC_URL,
-    CONF_RELAYER, CONF_REMOTE_API_URL, CONF_SUBSCRIPTION_INFO_URL,
-    CONF_USER_POOL_ID, DOMAIN, MODE_DEV, MODE_PROD)
+    CONF_ACME_DIRECTORY_SERVER,
+    CONF_ALEXA,
+    CONF_ALIASES,
+    CONF_CLOUDHOOK_CREATE_URL,
+    CONF_COGNITO_CLIENT_ID,
+    CONF_ENTITY_CONFIG,
+    CONF_FILTER,
+    CONF_GOOGLE_ACTIONS,
+    CONF_GOOGLE_ACTIONS_SYNC_URL,
+    CONF_RELAYER,
+    CONF_REMOTE_API_URL,
+    CONF_SUBSCRIPTION_INFO_URL,
+    CONF_USER_POOL_ID,
+    DOMAIN,
+    MODE_DEV,
+    MODE_PROD,
+    CONF_ALEXA_ACCESS_TOKEN_URL,
+)
 from .prefs import CloudPreferences
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_MODE = MODE_PROD
 
-SERVICE_REMOTE_CONNECT = 'remote_connect'
-SERVICE_REMOTE_DISCONNECT = 'remote_disconnect'
+SERVICE_REMOTE_CONNECT = "remote_connect"
+SERVICE_REMOTE_DISCONNECT = "remote_disconnect"
 
 
-ALEXA_ENTITY_SCHEMA = vol.Schema({
-    vol.Optional(alexa_sh.CONF_DESCRIPTION): cv.string,
-    vol.Optional(alexa_sh.CONF_DISPLAY_CATEGORIES): cv.string,
-    vol.Optional(alexa_sh.CONF_NAME): cv.string,
-})
+ALEXA_ENTITY_SCHEMA = vol.Schema(
+    {
+        vol.Optional(alexa_const.CONF_DESCRIPTION): cv.string,
+        vol.Optional(alexa_const.CONF_DISPLAY_CATEGORIES): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+    }
+)
 
-GOOGLE_ENTITY_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(ga_c.CONF_ROOM_HINT): cv.string,
-})
+GOOGLE_ENTITY_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ga_c.CONF_ROOM_HINT): cv.string,
+    }
+)
 
-ASSISTANT_SCHEMA = vol.Schema({
-    vol.Optional(CONF_FILTER, default=dict): entityfilter.FILTER_SCHEMA,
-})
+ASSISTANT_SCHEMA = vol.Schema(
+    {vol.Optional(CONF_FILTER, default=dict): entityfilter.FILTER_SCHEMA}
+)
 
-ALEXA_SCHEMA = ASSISTANT_SCHEMA.extend({
-    vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ALEXA_ENTITY_SCHEMA}
-})
+ALEXA_SCHEMA = ASSISTANT_SCHEMA.extend(
+    {vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ALEXA_ENTITY_SCHEMA}}
+)
 
-GACTIONS_SCHEMA = ASSISTANT_SCHEMA.extend({
-    vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: GOOGLE_ENTITY_SCHEMA},
-})
+GACTIONS_SCHEMA = ASSISTANT_SCHEMA.extend(
+    {vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: GOOGLE_ENTITY_SCHEMA}}
+)
 
 # pylint: disable=no-value-for-parameter
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_MODE, default=DEFAULT_MODE):
-            vol.In([MODE_DEV, MODE_PROD]),
-        # Change to optional when we include real servers
-        vol.Optional(CONF_COGNITO_CLIENT_ID): str,
-        vol.Optional(CONF_USER_POOL_ID): str,
-        vol.Optional(CONF_REGION): str,
-        vol.Optional(CONF_RELAYER): str,
-        vol.Optional(CONF_GOOGLE_ACTIONS_SYNC_URL): vol.Url(),
-        vol.Optional(CONF_SUBSCRIPTION_INFO_URL): vol.Url(),
-        vol.Optional(CONF_CLOUDHOOK_CREATE_URL): vol.Url(),
-        vol.Optional(CONF_REMOTE_API_URL): vol.Url(),
-        vol.Optional(CONF_ACME_DIRECTORY_SERVER): vol.Url(),
-        vol.Optional(CONF_ALEXA): ALEXA_SCHEMA,
-        vol.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_MODE, default=DEFAULT_MODE): vol.In(
+                    [MODE_DEV, MODE_PROD]
+                ),
+                vol.Optional(CONF_COGNITO_CLIENT_ID): str,
+                vol.Optional(CONF_USER_POOL_ID): str,
+                vol.Optional(CONF_REGION): str,
+                vol.Optional(CONF_RELAYER): str,
+                vol.Optional(CONF_GOOGLE_ACTIONS_SYNC_URL): vol.Url(),
+                vol.Optional(CONF_SUBSCRIPTION_INFO_URL): vol.Url(),
+                vol.Optional(CONF_CLOUDHOOK_CREATE_URL): vol.Url(),
+                vol.Optional(CONF_REMOTE_API_URL): vol.Url(),
+                vol.Optional(CONF_ACME_DIRECTORY_SERVER): vol.Url(),
+                vol.Optional(CONF_ALEXA): ALEXA_SCHEMA,
+                vol.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
+                vol.Optional(CONF_ALEXA_ACCESS_TOKEN_URL): str,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 class CloudNotAvailable(HomeAssistantError):
@@ -92,8 +119,7 @@ def async_is_logged_in(hass) -> bool:
 @callback
 def async_active_subscription(hass) -> bool:
     """Test if user has an active subscription."""
-    return \
-        async_is_logged_in(hass) and not hass.data[DOMAIN].subscription_expired
+    return async_is_logged_in(hass) and not hass.data[DOMAIN].subscription_expired
 
 
 @bind_hass
@@ -103,7 +129,7 @@ async def async_create_cloudhook(hass, webhook_id: str) -> str:
         raise CloudNotAvailable
 
     hook = await hass.data[DOMAIN].cloudhooks.async_create(webhook_id, True)
-    return hook['cloudhook_url']
+    return hook["cloudhook_url"]
 
 
 @bind_hass
@@ -120,6 +146,9 @@ async def async_delete_cloudhook(hass, webhook_id: str) -> None:
 def async_remote_ui_url(hass) -> str:
     """Get the remote UI URL."""
     if not async_is_logged_in(hass):
+        raise CloudNotAvailable
+
+    if not hass.data[DOMAIN].remote.instance_domain:
         raise CloudNotAvailable
 
     return "https://" + hass.data[DOMAIN].remote.instance_domain
@@ -153,9 +182,16 @@ async def async_setup(hass, config):
     await prefs.async_initialize()
 
     # Cloud user
-    if not prefs.cloud_user:
+    user = None
+    if prefs.cloud_user:
+        # Fetch the user. It can happen that the user no longer exists if
+        # an image was restored without restoring the cloud prefs.
+        user = await hass.auth.async_get_user(prefs.cloud_user)
+
+    if user is None:
         user = await hass.auth.async_create_system_user(
-            'Home Assistant Cloud', [GROUP_ID_ADMIN])
+            "Home Assistant Cloud", [GROUP_ID_ADMIN]
+        )
         await prefs.async_update(cloud_user=user.id)
 
     # Initialize Cloud
@@ -185,14 +221,27 @@ async def async_setup(hass, config):
             await prefs.async_update(remote_enabled=False)
 
     hass.helpers.service.async_register_admin_service(
-        DOMAIN, SERVICE_REMOTE_CONNECT, _service_handler)
+        DOMAIN, SERVICE_REMOTE_CONNECT, _service_handler
+    )
     hass.helpers.service.async_register_admin_service(
-        DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler)
+        DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler
+    )
+
+    loaded_binary_sensor = False
 
     async def _on_connect():
         """Discover RemoteUI binary sensor."""
-        hass.async_create_task(hass.helpers.discovery.async_load_platform(
-            'binary_sensor', DOMAIN, {}, config))
+        nonlocal loaded_binary_sensor
+
+        if loaded_binary_sensor:
+            return
+
+        loaded_binary_sensor = True
+        hass.async_create_task(
+            hass.helpers.discovery.async_load_platform(
+                "binary_sensor", DOMAIN, {}, config
+            )
+        )
 
     cloud.iot.register_on_connect(_on_connect)
 

@@ -24,22 +24,24 @@ class TestSQLSensor(unittest.TestCase):
     def test_query(self):
         """Test the SQL sensor."""
         config = {
-            'sensor': {
-                'platform': 'sql',
-                'db_url': 'sqlite://',
-                'queries': [{
-                    'name': 'count_tables',
-                    'query': 'SELECT 5 as value',
-                    'column': 'value',
-                }]
+            "sensor": {
+                "platform": "sql",
+                "db_url": "sqlite://",
+                "queries": [
+                    {
+                        "name": "count_tables",
+                        "query": "SELECT 5 as value",
+                        "column": "value",
+                    }
+                ],
             }
         }
 
-        assert setup_component(self.hass, 'sensor', config)
+        assert setup_component(self.hass, "sensor", config)
 
-        state = self.hass.states.get('sensor.count_tables')
-        assert state.state == '5'
-        assert state.attributes['value'] == 5
+        state = self.hass.states.get("sensor.count_tables")
+        assert state.state == "5"
+        assert state.attributes["value"] == 5
 
     def test_invalid_query(self):
         """Test the SQL sensor for invalid queries."""
@@ -47,18 +49,20 @@ class TestSQLSensor(unittest.TestCase):
             validate_sql_select("DROP TABLE *")
 
         config = {
-            'sensor': {
-                'platform': 'sql',
-                'db_url': 'sqlite://',
-                'queries': [{
-                    'name': 'count_tables',
-                    'query': 'SELECT * value FROM sqlite_master;',
-                    'column': 'value',
-                }]
+            "sensor": {
+                "platform": "sql",
+                "db_url": "sqlite://",
+                "queries": [
+                    {
+                        "name": "count_tables",
+                        "query": "SELECT * value FROM sqlite_master;",
+                        "column": "value",
+                    }
+                ],
             }
         }
 
-        assert setup_component(self.hass, 'sensor', config)
+        assert setup_component(self.hass, "sensor", config)
 
-        state = self.hass.states.get('sensor.count_tables')
+        state = self.hass.states.get("sensor.count_tables")
         assert state.state == STATE_UNKNOWN

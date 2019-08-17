@@ -14,7 +14,7 @@ from tests.common import (
     mock_mqtt_component,
     fire_mqtt_message,
     mock_state_change_event,
-    fire_time_changed
+    fire_time_changed,
 )
 
 
@@ -30,18 +30,18 @@ class TestMqttEventStream:
         """Stop everything that was started."""
         self.hass.stop()
 
-    def add_eventstream(self, sub_topic=None, pub_topic=None,
-                        ignore_event=None):
+    def add_eventstream(self, sub_topic=None, pub_topic=None, ignore_event=None):
         """Add a mqtt_eventstream component."""
         config = {}
         if sub_topic:
-            config['subscribe_topic'] = sub_topic
+            config["subscribe_topic"] = sub_topic
         if pub_topic:
-            config['publish_topic'] = pub_topic
+            config["publish_topic"] = pub_topic
         if ignore_event:
-            config['ignore_event'] = ignore_event
-        return setup_component(self.hass, eventstream.DOMAIN, {
-            eventstream.DOMAIN: config})
+            config["ignore_event"] = ignore_event
+        return setup_component(
+            self.hass, eventstream.DOMAIN, {eventstream.DOMAIN: config}
+        )
 
     def test_setup_succeeds(self):
         """Test the success of the setup."""
@@ -50,31 +50,31 @@ class TestMqttEventStream:
     def test_setup_with_pub(self):
         """Test the setup with subscription."""
         # Should start off with no listeners for all events
-        assert self.hass.bus.listeners.get('*') is None
+        assert self.hass.bus.listeners.get("*") is None
 
-        assert self.add_eventstream(pub_topic='bar')
+        assert self.add_eventstream(pub_topic="bar")
         self.hass.block_till_done()
 
         # Verify that the event handler has been added as a listener
-        assert self.hass.bus.listeners.get('*') == 1
+        assert self.hass.bus.listeners.get("*") == 1
 
-    @patch('homeassistant.components.mqtt.async_subscribe')
+    @patch("homeassistant.components.mqtt.async_subscribe")
     def test_subscribe(self, mock_sub):
         """Test the subscription."""
-        sub_topic = 'foo'
+        sub_topic = "foo"
         assert self.add_eventstream(sub_topic=sub_topic)
         self.hass.block_till_done()
 
         # Verify that the this entity was subscribed to the topic
         mock_sub.assert_called_with(self.hass, sub_topic, ANY)
 
-    @patch('homeassistant.components.mqtt.async_publish')
-    @patch('homeassistant.core.dt_util.utcnow')
+    @patch("homeassistant.components.mqtt.async_publish")
+    @patch("homeassistant.core.dt_util.utcnow")
     def test_state_changed_event_sends_message(self, mock_utcnow, mock_pub):
         """Test the sending of a new message if event changed."""
         now = dt_util.as_utc(dt_util.now())
-        e_id = 'fake.entity'
-        pub_topic = 'bar'
+        e_id = "fake.entity"
+        pub_topic = "bar"
         mock_utcnow.return_value = now
 
         # Add the eventstream component for publishing events
@@ -86,7 +86,7 @@ class TestMqttEventStream:
         mock_pub.reset_mock()
 
         # Set a state of an entity
-        mock_state_change_event(self.hass, State(e_id, 'on'))
+        mock_state_change_event(self.hass, State(e_id, "on"))
         self.hass.block_till_done()
 
         # The order of the JSON is indeterminate,
@@ -98,7 +98,7 @@ class TestMqttEventStream:
         # we were looking for
         msg = mock_pub.call_args[0][2]
         event = {}
-        event['event_type'] = EVENT_STATE_CHANGED
+        event["event_type"] = EVENT_STATE_CHANGED
         new_state = {
             "last_updated": now.isoformat(),
             "state": "on",
@@ -106,17 +106,17 @@ class TestMqttEventStream:
             "attributes": {},
             "last_changed": now.isoformat(),
         }
-        event['event_data'] = {"new_state": new_state, "entity_id": e_id}
+        event["event_data"] = {"new_state": new_state, "entity_id": e_id}
 
         # Verify that the message received was that expected
         result = json.loads(msg)
-        result['event_data']['new_state'].pop('context')
+        result["event_data"]["new_state"].pop("context")
         assert result == event
 
-    @patch('homeassistant.components.mqtt.async_publish')
+    @patch("homeassistant.components.mqtt.async_publish")
     def test_time_event_does_not_send_message(self, mock_pub):
         """Test the sending of a new message if time event."""
-        assert self.add_eventstream(pub_topic='bar')
+        assert self.add_eventstream(pub_topic="bar")
         self.hass.block_till_done()
 
         # Reset the mock because it will have already gotten calls for the
@@ -128,7 +128,7 @@ class TestMqttEventStream:
 
     def test_receiving_remote_event_fires_hass_event(self):
         """Test the receiving of the remotely fired event."""
-        sub_topic = 'foo'
+        sub_topic = "foo"
         assert self.add_eventstream(sub_topic=sub_topic)
         self.hass.block_till_done()
 
@@ -138,68 +138,57 @@ class TestMqttEventStream:
         def listener(_):
             calls.append(1)
 
-        self.hass.bus.listen_once('test_event', listener)
+        self.hass.bus.listen_once("test_event", listener)
         self.hass.block_till_done()
 
         payload = json.dumps(
-            {'event_type': 'test_event', 'event_data': {}},
-            cls=JSONEncoder
+            {"event_type": "test_event", "event_data": {}}, cls=JSONEncoder
         )
         fire_mqtt_message(self.hass, sub_topic, payload)
         self.hass.block_till_done()
 
         assert 1 == len(calls)
 
-    @patch('homeassistant.components.mqtt.async_publish')
+    @patch("homeassistant.components.mqtt.async_publish")
     def test_ignored_event_doesnt_send_over_stream(self, mock_pub):
         """Test the ignoring of sending events if defined."""
-        assert self.add_eventstream(pub_topic='bar',
-                                    ignore_event=['state_changed'])
+        assert self.add_eventstream(pub_topic="bar", ignore_event=["state_changed"])
         self.hass.block_till_done()
 
-        e_id = 'entity.test_id'
+        e_id = "entity.test_id"
         event = {}
-        event['event_type'] = EVENT_STATE_CHANGED
-        new_state = {
-            "state": "on",
-            "entity_id": e_id,
-            "attributes": {},
-        }
-        event['event_data'] = {"new_state": new_state, "entity_id": e_id}
+        event["event_type"] = EVENT_STATE_CHANGED
+        new_state = {"state": "on", "entity_id": e_id, "attributes": {}}
+        event["event_data"] = {"new_state": new_state, "entity_id": e_id}
 
         # Reset the mock because it will have already gotten calls for the
         # mqtt_eventstream state change on initialization, etc.
         mock_pub.reset_mock()
 
         # Set a state of an entity
-        mock_state_change_event(self.hass, State(e_id, 'on'))
+        mock_state_change_event(self.hass, State(e_id, "on"))
         self.hass.block_till_done()
 
         assert not mock_pub.called
 
-    @patch('homeassistant.components.mqtt.async_publish')
+    @patch("homeassistant.components.mqtt.async_publish")
     def test_wrong_ignored_event_sends_over_stream(self, mock_pub):
         """Test the ignoring of sending events if defined."""
-        assert self.add_eventstream(pub_topic='bar',
-                                    ignore_event=['statee_changed'])
+        assert self.add_eventstream(pub_topic="bar", ignore_event=["statee_changed"])
         self.hass.block_till_done()
 
-        e_id = 'entity.test_id'
+        e_id = "entity.test_id"
         event = {}
-        event['event_type'] = EVENT_STATE_CHANGED
-        new_state = {
-            "state": "on",
-            "entity_id": e_id,
-            "attributes": {},
-        }
-        event['event_data'] = {"new_state": new_state, "entity_id": e_id}
+        event["event_type"] = EVENT_STATE_CHANGED
+        new_state = {"state": "on", "entity_id": e_id, "attributes": {}}
+        event["event_data"] = {"new_state": new_state, "entity_id": e_id}
 
         # Reset the mock because it will have already gotten calls for the
         # mqtt_eventstream state change on initialization, etc.
         mock_pub.reset_mock()
 
         # Set a state of an entity
-        mock_state_change_event(self.hass, State(e_id, 'on'))
+        mock_state_change_event(self.hass, State(e_id, "on"))
         self.hass.block_till_done()
 
         assert mock_pub.called

@@ -6,5 +6,7 @@
     "python_awair==0.0.4"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@danielsjf"
+  ]
 }

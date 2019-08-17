@@ -11,16 +11,14 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-DANFOSS_AIR_PLATFORMS = ['sensor', 'binary_sensor', 'switch']
-DOMAIN = 'danfoss_air'
+DANFOSS_AIR_PLATFORMS = ["sensor", "binary_sensor", "switch"]
+DOMAIN = "danfoss_air"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Schema({vol.Required(CONF_HOST): cv.string})}, extra=vol.ALLOW_EXTRA
+)
 
 
 def setup(hass, config):
@@ -59,31 +57,41 @@ class DanfossAir:
         """Use the data from Danfoss Air API."""
         _LOGGER.debug("Fetching data from Danfoss Air CCM module")
         from pydanfossair.commands import ReadCommand
-        self._data[ReadCommand.exhaustTemperature] \
-            = self._client.command(ReadCommand.exhaustTemperature)
-        self._data[ReadCommand.outdoorTemperature] \
-            = self._client.command(ReadCommand.outdoorTemperature)
-        self._data[ReadCommand.supplyTemperature] \
-            = self._client.command(ReadCommand.supplyTemperature)
-        self._data[ReadCommand.extractTemperature] \
-            = self._client.command(ReadCommand.extractTemperature)
-        self._data[ReadCommand.humidity] \
-            = round(self._client.command(ReadCommand.humidity), 2)
-        self._data[ReadCommand.filterPercent] \
-            = round(self._client.command(ReadCommand.filterPercent), 2)
-        self._data[ReadCommand.bypass] \
-            = self._client.command(ReadCommand.bypass)
-        self._data[ReadCommand.fan_step] \
-            = self._client.command(ReadCommand.fan_step)
-        self._data[ReadCommand.supply_fan_speed] \
-            = self._client.command(ReadCommand.supply_fan_speed)
-        self._data[ReadCommand.exhaust_fan_speed] \
-            = self._client.command(ReadCommand.exhaust_fan_speed)
-        self._data[ReadCommand.away_mode] \
-            = self._client.command(ReadCommand.away_mode)
-        self._data[ReadCommand.boost] \
-            = self._client.command(ReadCommand.boost)
-        self._data[ReadCommand.battery_percent] \
-            = self._client.command(ReadCommand.battery_percent)
+
+        self._data[ReadCommand.exhaustTemperature] = self._client.command(
+            ReadCommand.exhaustTemperature
+        )
+        self._data[ReadCommand.outdoorTemperature] = self._client.command(
+            ReadCommand.outdoorTemperature
+        )
+        self._data[ReadCommand.supplyTemperature] = self._client.command(
+            ReadCommand.supplyTemperature
+        )
+        self._data[ReadCommand.extractTemperature] = self._client.command(
+            ReadCommand.extractTemperature
+        )
+        self._data[ReadCommand.humidity] = round(
+            self._client.command(ReadCommand.humidity), 2
+        )
+        self._data[ReadCommand.filterPercent] = round(
+            self._client.command(ReadCommand.filterPercent), 2
+        )
+        self._data[ReadCommand.bypass] = self._client.command(ReadCommand.bypass)
+        self._data[ReadCommand.fan_step] = self._client.command(ReadCommand.fan_step)
+        self._data[ReadCommand.supply_fan_speed] = self._client.command(
+            ReadCommand.supply_fan_speed
+        )
+        self._data[ReadCommand.exhaust_fan_speed] = self._client.command(
+            ReadCommand.exhaust_fan_speed
+        )
+        self._data[ReadCommand.away_mode] = self._client.command(ReadCommand.away_mode)
+        self._data[ReadCommand.boost] = self._client.command(ReadCommand.boost)
+        self._data[ReadCommand.battery_percent] = self._client.command(
+            ReadCommand.battery_percent
+        )
+        self._data[ReadCommand.bypass] = self._client.command(ReadCommand.bypass)
+        self._data[ReadCommand.automatic_bypass] = self._client.command(
+            ReadCommand.automatic_bypass
+        )
 
         _LOGGER.debug("Done fetching data from Danfoss Air CCM module")

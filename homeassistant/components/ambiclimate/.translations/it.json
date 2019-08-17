@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "L'account Ambiclimate \u00e8 configurato."
+        },
+        "title": "Ambiclimate"
+    }
+}

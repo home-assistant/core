@@ -10,8 +10,7 @@ from .sensor_types import BINARY_SENSOR_CLASSES
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info):
     """Set up Netgear LTE binary sensor devices."""
     if discovery_info is None:
         return

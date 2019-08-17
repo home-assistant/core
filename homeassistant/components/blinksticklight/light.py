@@ -4,24 +4,31 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light,
-    PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS,
+    ATTR_HS_COLOR,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    Light,
+    PLATFORM_SCHEMA,
+)
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SERIAL = 'serial'
+CONF_SERIAL = "serial"
 
-DEFAULT_NAME = 'Blinkstick'
+DEFAULT_NAME = "Blinkstick"
 
 SUPPORT_BLINKSTICK = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SERIAL): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_SERIAL): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -94,9 +101,9 @@ class BlinkStickLight(Light):
             self._brightness = 255
 
         rgb_color = color_util.color_hsv_to_RGB(
-            self._hs_color[0], self._hs_color[1], self._brightness / 255 * 100)
-        self._stick.set_color(
-            red=rgb_color[0], green=rgb_color[1], blue=rgb_color[2])
+            self._hs_color[0], self._hs_color[1], self._brightness / 255 * 100
+        )
+        self._stick.set_color(red=rgb_color[0], green=rgb_color[1], blue=rgb_color[2])
 
     def turn_off(self, **kwargs):
         """Turn the device off."""

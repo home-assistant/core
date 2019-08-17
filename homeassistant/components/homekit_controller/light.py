@@ -1,20 +1,41 @@
 """Support for Homekit lights."""
 import logging
 
+from homekit.model.characteristics import CharacteristicsTypes
+
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR, SUPPORT_COLOR_TEMP, Light)
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    Light,
+)
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up Homekit lighting."""
-    if discovery_info is not None:
-        accessory = hass.data[KNOWN_DEVICES][discovery_info['serial']]
-        add_entities([HomeKitLight(accessory, discovery_info)], True)
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Legacy set up platform."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Homekit lightbulb."""
+    hkid = config_entry.data["AccessoryPairingID"]
+    conn = hass.data[KNOWN_DEVICES][hkid]
+
+    def async_add_service(aid, service):
+        if service["stype"] != "lightbulb":
+            return False
+        info = {"aid": aid, "iid": service["iid"]}
+        async_add_entities([HomeKitLight(conn, info)], True)
+        return True
+
+    conn.add_listener(async_add_service)
 
 
 class HomeKitLight(HomeKitEntity, Light):
@@ -31,8 +52,6 @@ class HomeKitLight(HomeKitEntity, Light):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
         return [
             CharacteristicsTypes.ON,
             CharacteristicsTypes.BRIGHTNESS,
@@ -101,29 +120,39 @@ class HomeKitLight(HomeKitEntity, Light):
 
         characteristics = []
         if hs_color is not None:
-            characteristics.append({'aid': self._aid,
-                                    'iid': self._chars['hue'],
-                                    'value': hs_color[0]})
-            characteristics.append({'aid': self._aid,
-                                    'iid': self._chars['saturation'],
-                                    'value': hs_color[1]})
+            characteristics.append(
+                {"aid": self._aid, "iid": self._chars["hue"], "value": hs_color[0]}
+            )
+            characteristics.append(
+                {
+                    "aid": self._aid,
+                    "iid": self._chars["saturation"],
+                    "value": hs_color[1],
+                }
+            )
         if brightness is not None:
-            characteristics.append({'aid': self._aid,
-                                    'iid': self._chars['brightness'],
-                                    'value': int(brightness * 100 / 255)})
+            characteristics.append(
+                {
+                    "aid": self._aid,
+                    "iid": self._chars["brightness"],
+                    "value": int(brightness * 100 / 255),
+                }
+            )
 
         if temperature is not None:
-            characteristics.append({'aid': self._aid,
-                                    'iid': self._chars['color-temperature'],
-                                    'value': int(temperature)})
-        characteristics.append({'aid': self._aid,
-                                'iid': self._chars['on'],
-                                'value': True})
+            characteristics.append(
+                {
+                    "aid": self._aid,
+                    "iid": self._chars["color-temperature"],
+                    "value": int(temperature),
+                }
+            )
+        characteristics.append(
+            {"aid": self._aid, "iid": self._chars["on"], "value": True}
+        )
         await self._accessory.put_characteristics(characteristics)
 
     async def async_turn_off(self, **kwargs):
         """Turn the specified light off."""
-        characteristics = [{'aid': self._aid,
-                            'iid': self._chars['on'],
-                            'value': False}]
+        characteristics = [{"aid": self._aid, "iid": self._chars["on"], "value": False}]
         await self._accessory.put_characteristics(characteristics)

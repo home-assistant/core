@@ -4,15 +4,15 @@ from base64 import b64decode
 from unittest.mock import MagicMock, patch, call
 
 import pytest
-import voluptuous as vol
 
 from homeassistant.util.dt import utcnow
-from homeassistant.components.broadlink import async_setup_service
-from homeassistant.components.broadlink.const import (
-    DOMAIN, SERVICE_LEARN, SERVICE_SEND)
+from homeassistant.components.broadlink import async_setup_service, data_packet
+from homeassistant.components.broadlink.const import DOMAIN, SERVICE_LEARN, SERVICE_SEND
 
-DUMMY_IR_PACKET = ("JgBGAJKVETkRORA6ERQRFBEUERQRFBE5ETkQOhAVEBUQFREUEBUQ"
-                   "OhEUERQRORE5EBURFBA6EBUQOhE5EBUQFRA6EDoRFBEADQUAAA==")
+DUMMY_IR_PACKET = (
+    "JgBGAJKVETkRORA6ERQRFBEUERQRFBE5ETkQOhAVEBUQFREUEBUQ"
+    "OhEUERQRORE5EBURFBA6EBUQOhE5EBUQFRA6EDoRFBEADQUAAA=="
+)
 DUMMY_HOST = "192.168.0.2"
 
 
@@ -20,10 +20,15 @@ DUMMY_HOST = "192.168.0.2"
 def dummy_broadlink():
     """Mock broadlink module so we don't have that dependency on tests."""
     broadlink = MagicMock()
-    with patch.dict('sys.modules', {
-            'broadlink': broadlink,
-    }):
+    with patch.dict("sys.modules", {"broadlink": broadlink}):
         yield broadlink
+
+
+async def test_padding(hass):
+    """Verify that non padding strings are allowed."""
+    assert data_packet("Jg") == b"&"
+    assert data_packet("Jg=") == b"&"
+    assert data_packet("Jg==") == b"&"
 
 
 async def test_send(hass):
@@ -34,15 +39,13 @@ async def test_send(hass):
     async_setup_service(hass, DUMMY_HOST, mock_device)
     await hass.async_block_till_done()
 
-    await hass.services.async_call(DOMAIN, SERVICE_SEND, {
-        "host": DUMMY_HOST,
-        "packet": (DUMMY_IR_PACKET)
-    })
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SEND, {"host": DUMMY_HOST, "packet": (DUMMY_IR_PACKET)}
+    )
     await hass.async_block_till_done()
 
     assert mock_device.send_data.call_count == 1
-    assert mock_device.send_data.call_args == call(
-        b64decode(DUMMY_IR_PACKET))
+    assert mock_device.send_data.call_args == call(b64decode(DUMMY_IR_PACKET))
 
 
 async def test_learn(hass):
@@ -51,15 +54,14 @@ async def test_learn(hass):
     mock_device.enter_learning.return_value = None
     mock_device.check_data.return_value = b64decode(DUMMY_IR_PACKET)
 
-    with patch.object(hass.components.persistent_notification,
-                      'async_create') as mock_create:
+    with patch.object(
+        hass.components.persistent_notification, "async_create"
+    ) as mock_create:
 
         async_setup_service(hass, DUMMY_HOST, mock_device)
         await hass.async_block_till_done()
 
-        await hass.services.async_call(DOMAIN, SERVICE_LEARN, {
-            "host": DUMMY_HOST,
-        })
+        await hass.services.async_call(DOMAIN, SERVICE_LEARN, {"host": DUMMY_HOST})
         await hass.async_block_till_done()
 
         assert mock_device.enter_learning.call_count == 1
@@ -67,8 +69,8 @@ async def test_learn(hass):
 
         assert mock_create.call_count == 1
         assert mock_create.call_args == call(
-            "Received packet is: {}".format(DUMMY_IR_PACKET),
-            title='Broadlink switch')
+            "Received packet is: {}".format(DUMMY_IR_PACKET), title="Broadlink switch"
+        )
 
 
 async def test_learn_timeout(hass):
@@ -82,15 +84,13 @@ async def test_learn_timeout(hass):
 
     now = utcnow()
 
-    with patch.object(hass.components.persistent_notification,
-                      'async_create') as mock_create, \
-            patch('homeassistant.components.broadlink.utcnow') as mock_utcnow:
+    with patch.object(
+        hass.components.persistent_notification, "async_create"
+    ) as mock_create, patch("homeassistant.components.broadlink.utcnow") as mock_utcnow:
 
         mock_utcnow.side_effect = [now, now + timedelta(20)]
 
-        await hass.services.async_call(DOMAIN, SERVICE_LEARN, {
-            "host": DUMMY_HOST,
-        })
+        await hass.services.async_call(DOMAIN, SERVICE_LEARN, {"host": DUMMY_HOST})
         await hass.async_block_till_done()
 
         assert mock_device.enter_learning.call_count == 1
@@ -98,20 +98,5 @@ async def test_learn_timeout(hass):
 
         assert mock_create.call_count == 1
         assert mock_create.call_args == call(
-            "No signal was received",
-            title='Broadlink switch')
-
-
-async def test_ipv4():
-    """Test ipv4 parsing."""
-    from homeassistant.components.broadlink import ipv4_address
-
-    schema = vol.Schema(ipv4_address)
-
-    for value in ('invalid', '1', '192', '192.168',
-                  '192.168.0', '192.168.0.A'):
-        with pytest.raises(vol.MultipleInvalid):
-            schema(value)
-
-    for value in ('192.168.0.1', '10.0.0.1'):
-        schema(value)
+            "No signal was received", title="Broadlink switch"
+        )
