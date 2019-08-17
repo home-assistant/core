@@ -1,4 +1,5 @@
 """Support for MQTT binary sensors."""
+from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -16,12 +17,17 @@ from homeassistant.const import (
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
     CONF_VALUE_TEMPLATE,
+    STATE_UNAVAILABLE,
+    STATE_ON,
+    STATE_OFF,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.helpers.event as evt
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.util import dt as dt_util
 
 from . import (
     ATTR_DISCOVERY_HASH,
@@ -43,12 +49,15 @@ CONF_OFF_DELAY = "off_delay"
 DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_FORCE_UPDATE = False
+CONF_AVAILABILITY_TOPIC = "availability_topic"
+CONF_EXPIRE_AFTER = "expire_after"
 
 PLATFORM_SCHEMA = (
     mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
             vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_OFF_DELAY): vol.All(vol.Coerce(int), vol.Range(min=0)),
@@ -112,6 +121,7 @@ class MqttBinarySensor(
         self._unique_id = config.get(CONF_UNIQUE_ID)
         self._state = None
         self._sub_state = None
+        self._expiration_trigger = None
         self._delay_listener = None
 
         device_config = config.get(CONF_DEVICE)
@@ -120,6 +130,15 @@ class MqttBinarySensor(
         MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_hash, self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
+
+        availability_topic = self._avail_config.get(CONF_AVAILABILITY_TOPIC)
+
+        # If no availability topic, the sensor is always available.
+        # If we set an availability topic, we default the availability to false
+        if availability_topic is None:
+            self._available = True
+        else:
+            self._available = False
 
     async def async_added_to_hass(self):
         """Subscribe mqtt events."""
@@ -153,6 +172,30 @@ class MqttBinarySensor(
         def state_message_received(msg):
             """Handle a new received MQTT state message."""
             payload = msg.payload
+            # auto-expire enabled?
+            expire_after = self._config.get(CONF_EXPIRE_AFTER)
+            self._available = True
+
+            _LOGGER.debug(
+                "Expire after set to %s for entity: %s with state_topic: %s",
+                expire_after,
+                self._config[CONF_NAME],
+                self._config[CONF_STATE_TOPIC],
+            )
+
+            if expire_after is not None and expire_after > 0:
+                # Reset old trigger
+                if self._expiration_trigger:
+                    self._expiration_trigger()
+                    self._expiration_trigger = None
+
+                # Set new trigger
+                expiration_at = dt_util.utcnow() + timedelta(seconds=expire_after)
+
+                self._expiration_trigger = async_track_point_in_utc_time(
+                    self.hass, self.value_is_expired, expiration_at
+                )
+
             value_template = self._config.get(CONF_VALUE_TEMPLATE)
             if value_template is not None:
                 payload = value_template.async_render_with_possible_json_value(
@@ -202,6 +245,14 @@ class MqttBinarySensor(
         await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
 
+    @callback
+    def value_is_expired(self, *_):
+        """Triggered when value is expired."""
+
+        self._expiration_trigger = None
+        self._available = False
+        self.async_write_ha_state()
+
     @property
     def should_poll(self):
         """Return the polling state."""
@@ -231,3 +282,11 @@ class MqttBinarySensor(
     def unique_id(self):
         """Return a unique ID."""
         return self._unique_id
+
+    @property
+    def state(self):
+        """Return the state of the binary sensor."""
+        if self._available:
+            return STATE_ON if self.is_on else STATE_OFF
+
+        return STATE_UNAVAILABLE
