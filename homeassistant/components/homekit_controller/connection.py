@@ -105,6 +105,7 @@ class HKDevice:
 
         # Never allow concurrent polling of the same accessory or bridge
         self._polling_lock = asyncio.Lock()
+        self._polling_lock_warned = False
 
     def add_pollable_characteristics(self, characteristics):
         """Add (aid, iid) pairs that we need to poll."""
@@ -251,10 +252,14 @@ class HKDevice:
             return
 
         if self._polling_lock.locked():
-            _LOGGER.warning(
-                "HomeKit controller update skipped as previous poll still in flight"
-            )
+            if not self._polling_lock_warned:
+                _LOGGER.warning(
+                    "HomeKit controller update skipped as previous poll still in flight"
+                )
+                self._polling_lock_warned = True
             return
+
+        self._polling_lock_warned = False
 
         async with self._polling_lock:
             _LOGGER.debug("Starting HomeKit controller update")
