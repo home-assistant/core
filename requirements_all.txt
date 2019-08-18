@@ -566,7 +566,7 @@ googledevices==1.0.2
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
 
-# homeassistant.components.goslide
+# homeassistant.components.slide
 goslide-api==0.2.1
 
 # homeassistant.components.remote_rpi_gpio
