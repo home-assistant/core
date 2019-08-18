@@ -6,7 +6,7 @@ https://home-assistant.io/components/withings/
 """
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, SOURCE_IMPORT, SOURCE_USER
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.helpers import config_validation as cv
 
@@ -59,7 +59,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": const.SOURCE_IMPORT}, data={}
+            DOMAIN, context={"source": SOURCE_IMPORT}, data={}
         )
     )
 
@@ -79,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             hass.config_entries.flow.async_init(
                 const.DOMAIN,
                 context={
-                    "source": const.SOURCE_USER,
+                    "source": SOURCE_USER,
                     const.PROFILE: data_manager.profile,
                 },
                 data={},

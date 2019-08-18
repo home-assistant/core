@@ -9,7 +9,7 @@ from homeassistant.components.withings import DOMAIN
 from homeassistant.components.withings.common import NotAuthenticatedError
 import homeassistant.components.withings.const as const
 from homeassistant.components.withings.sensor import async_setup_entry
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, SOURCE_USER
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.typing import HomeAssistantType
@@ -243,7 +243,7 @@ async def test_async_setup_check_credentials(
 
         async_init_mock.assert_called_with(
             const.DOMAIN,
-            context={"source": const.SOURCE_USER, const.PROFILE: profile},
+            context={"source": SOURCE_USER, const.PROFILE: profile},
             data={},
         )
 

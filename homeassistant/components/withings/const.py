@@ -3,9 +3,6 @@ import homeassistant.const as const
 
 DATA_MANAGER = "data_manager"
 
-SOURCE_IMPORT = "import"
-SOURCE_USER = "user"
-
 BASE_URL = "base_url"
 CLIENT_ID = "client_id"
 CLIENT_SECRET = "client_secret"

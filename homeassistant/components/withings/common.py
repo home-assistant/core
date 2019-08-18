@@ -247,7 +247,7 @@ class WithingsDataManager:
         return self._sleep_summary
 
 
-def create_withings_data_manger(
+def create_withings_data_manager(
     hass: HomeAssistantType, entry: ConfigEntry
 ) -> WithingsDataManager:
     """Set up the sensor config entry."""
@@ -303,6 +303,6 @@ def get_data_manager(
     if not hass.data[const.DOMAIN][const.DATA_MANAGER].get(profile):
         hass.data[const.DOMAIN][const.DATA_MANAGER][
             profile
-        ] = create_withings_data_manger(hass, entry)
+        ] = create_withings_data_manager(hass, entry)
 
     return hass.data[const.DOMAIN][const.DATA_MANAGER][profile]
