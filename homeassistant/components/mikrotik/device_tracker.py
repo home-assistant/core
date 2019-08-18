@@ -149,7 +149,9 @@ class MikrotikScanner(DeviceScanner):
             for attr in ATTR_DEVICE_TRACKER:
                 if attr in device and device[attr] is not None:
                     attrs[slugify(attr)] = device[attr]
-
+            attrs["scanner_type"] = self.method
+            attrs["scanner_host"] = self.host
+            attrs["scanner_hostname"] = self.hostname
             self.device_tracker[mac] = attrs
 
     def do_arp_ping(self, ip_address, interface):
