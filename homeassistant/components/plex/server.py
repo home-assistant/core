@@ -34,7 +34,7 @@ def setup_plex_server(server_config):
     else:
         session = None
         if url.startswith("https") and not verify_ssl:
-            session = requests.Session()
+            session = Session()
             session.verify = False
         plex_server = PlexServer(url, token, session)
     return plex_server
