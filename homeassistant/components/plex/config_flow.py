@@ -74,7 +74,7 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                 )
 
             
-            plex_url = user_input.get(CONF_URL)
+            url = user_input.get(CONF_URL)
             token = user_input.get(CONF_TOKEN)
             username = user_input.get(CONF_USERNAME)
             server_name = user_input.get(CONF_SERVER)
@@ -82,7 +82,7 @@ class PlexFlowHandler(config_entries.ConfigFlow):
             data = {}
 
             try:
-                if (username is None) and (plex_url is None):
+                if (username is None) and (url is None):
                     raise ConfigNotReady
 
                 plex_server = setup_plex_server(user_input)
@@ -109,7 +109,7 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                         CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL]
                     }
                     data = {
-                        CONF_URL: plex_url,
+                        CONF_URL: url,
                         CONF_TOKEN: token,
                         CONF_VERIFY_SSL: verify_ssl,
                     }
@@ -182,10 +182,10 @@ class PlexFlowHandler(config_entries.ConfigFlow):
         """Import from legacy Plex file config."""
         host_and_port, host_config = import_config.popitem()
         prefix = "https" if host_config[CONF_SSL] else "http"
-        plex_url = "{}://{}".format(prefix, host_and_port)
+        url = "{}://{}".format(prefix, host_and_port)
 
         config = {
-            CONF_URL: plex_url,
+            CONF_URL: url,
             CONF_TOKEN: host_config[CONF_TOKEN],
             CONF_VERIFY_SSL: host_config["verify"],
         }
