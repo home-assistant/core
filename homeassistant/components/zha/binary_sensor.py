@@ -19,7 +19,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .core.const import (
     CHANNEL_ATTRIBUTE,
-    CHANNEL_IAS_WD,
     CHANNEL_ON_OFF,
     CHANNEL_ZONE,
     DATA_ZHA,
@@ -30,11 +29,6 @@ from .core.const import (
     SENSOR_TYPE,
     SIGNAL_ATTR_UPDATED,
     UNKNOWN,
-    WARNING_DEVICE_MODE_EMERGENCY,
-    WARNING_DEVICE_SOUND_HIGH,
-    WARNING_DEVICE_SQUAWK_MODE_ARMED,
-    WARNING_DEVICE_STROBE_HIGH,
-    WARNING_DEVICE_STROBE_YES,
     ZHA_DISCOVERY_NEW,
     ZONE,
 )
@@ -183,59 +177,3 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
             self._state = await self._attr_channel.get_attribute_value(
                 self._attr_channel.value_attribute
             )
-
-
-class WarningDevice(BinarySensor):
-    """ZHA IAS warning device."""
-
-    def __init__(self, **kwargs):
-        """Initialize the ZHA IAS warning sensor."""
-        super().__init__(**kwargs)
-        self._ias_wd_channel = self.cluster_channels.get(CHANNEL_IAS_WD)
-
-    async def squawk(
-        self,
-        mode=WARNING_DEVICE_SQUAWK_MODE_ARMED,
-        strobe=WARNING_DEVICE_STROBE_YES,
-        squawk_level=WARNING_DEVICE_SOUND_HIGH,
-    ):
-        """Issue a squawk command.
-
-        This command uses the WD capabilities to emit a quick audible/visible pulse called a
-        "squawk". The squawk command has no effect if the WD is currently active
-        (warning in progress).
-        """
-        await self._ias_wd_channel.squawk(
-            mode=mode, strobe=strobe, squawk_level=squawk_level
-        )
-
-    async def start_warning(
-        self,
-        mode=WARNING_DEVICE_MODE_EMERGENCY,
-        strobe=WARNING_DEVICE_STROBE_YES,
-        siren_level=WARNING_DEVICE_SOUND_HIGH,
-        warning_duration=5,  # seconds
-        strobe_duty_cycle=0x00,
-        strobe_intensity=WARNING_DEVICE_STROBE_HIGH,
-    ):
-        """Issue a start warning command.
-
-        This command starts the WD operation. The WD alerts the surrounding area by audible
-        (siren) and visual (strobe) signals.
-
-        strobe_duty_cycle indicates the length of the flash cycle. This provides a means
-        of varying the flash duration for different alarm types (e.g., fire, police, burglar).
-        Valid range is 0-100 in increments of 10. All other values SHALL be rounded to the
-        nearest valid value. Strobe SHALL calculate duty cycle over a duration of one second.
-        The ON state SHALL precede the OFF state. For example, if Strobe Duty Cycle Field specifies
-        “40,” then the strobe SHALL flash ON for 4/10ths of a second and then turn OFF for
-        6/10ths of a second.
-        """
-        await self._ias_wd_channel.squawk(
-            mode=mode,
-            strobe=strobe,
-            siren_level=siren_level,
-            warning_duration=warning_duration,
-            strobe_duty_cycle=strobe_duty_cycle,
-            strobe_intensity=strobe_intensity,
-        )
