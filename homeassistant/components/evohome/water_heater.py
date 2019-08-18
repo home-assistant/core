@@ -1,5 +1,4 @@
 """Support for WaterHeater devices of (EMEA/EU) Honeywell TCC systems."""
-from datetime import timedelta
 import logging
 from typing import List
 
@@ -10,7 +9,7 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import PRECISION_WHOLE, STATE_OFF, STATE_ON
 from homeassistant.util.dt import parse_datetime
 
-from . import _handle_exception, EvoDevice
+from . import EvoDevice
 from .const import DOMAIN, EVO_STRFTIME, EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER
 
 _LOGGER = logging.getLogger(__name__)
@@ -94,5 +93,5 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         data = {"Mode": op_mode, "State": state, "UntilTime": until}
 
         await self._call_client_api(
-            self._evo_device._set_dhw(data)
-        )  # pylint: disable=protected-access
+            self._evo_device._set_dhw(data)  # pylint: disable=protected-access
+        )

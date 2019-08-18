@@ -2,7 +2,6 @@
 
 Such systems include evohome (multi-zone), and Round Thermostat (single zone).
 """
-import asyncio
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Dict, Optional, Tuple
@@ -199,15 +198,14 @@ class EvoBroker:
             return False
 
         self.tcs = (
-            client.locations[loc_idx]  # noqa: E501; pylint: disable=protected-access
+            client.locations[loc_idx]  # pylint: disable=protected-access
             ._gateways[0]
             ._control_systems[0]
         )
 
         _LOGGER.debug("Config = %s", self.config)
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            # don't do an I/O unless required
-            await self.update()  # does: _LOGGER.debug("Status = %s"...
+        if _LOGGER.isEnabledFor(logging.DEBUG):  # don't do an I/O unless required
+            await self.update()  # includes: _LOGGER.debug("Status = %s"...
 
         return True
 

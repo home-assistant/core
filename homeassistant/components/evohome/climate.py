@@ -22,7 +22,7 @@ from homeassistant.const import PRECISION_TENTHS
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.dt import parse_datetime
 
-from . import CONF_LOCATION_IDX, _handle_exception, EvoDevice
+from . import CONF_LOCATION_IDX, EvoDevice
 from .const import (
     DOMAIN,
     EVO_RESET,
@@ -162,8 +162,8 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
     async def _set_tcs_mode(self, op_mode: str) -> None:
         """Set the Controller to any of its native EVO_* operating modes."""
         await self._call_client_api(
-            self._evo_tcs._set_status(op_mode)
-        )  # pylint: disable=protected-access
+            self._evo_tcs._set_status(op_mode)  # pylint: disable=protected-access
+        )
 
     @property
     def hvac_modes(self) -> List[str]:
