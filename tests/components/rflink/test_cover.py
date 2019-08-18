@@ -389,7 +389,7 @@ async def test_restore_state(hass, monkeypatch):
     state = hass.states.get(DOMAIN + ".c4")
     assert state
     assert state.state == STATE_CLOSED
-    assert state.attributes['assumed_state']
+    assert state.attributes["assumed_state"]
 
 
 # The code checks the ID, it will use the
