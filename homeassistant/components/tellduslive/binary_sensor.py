@@ -10,8 +10,7 @@ from .entry import TelldusLiveEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up TelldusLive.
 
     Can only be called when a user accidentally mentions the platform in their
@@ -22,6 +21,7 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up tellduslive sensors dynamically."""
+
     async def async_discover_binary_sensor(device_id):
         """Discover and add a discovered sensor."""
         client = hass.data[tellduslive.DOMAIN]
@@ -30,8 +30,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_dispatcher_connect(
         hass,
         tellduslive.TELLDUS_DISCOVERY_NEW.format(
-            binary_sensor.DOMAIN, tellduslive.DOMAIN),
-        async_discover_binary_sensor)
+            binary_sensor.DOMAIN, tellduslive.DOMAIN
+        ),
+        async_discover_binary_sensor,
+    )
 
 
 class TelldusLiveSensor(TelldusLiveEntity, BinarySensorDevice):

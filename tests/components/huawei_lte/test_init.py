@@ -9,11 +9,8 @@ from homeassistant.components import huawei_lte
 @pytest.fixture(autouse=True)
 def routerdata():
     """Set up a router data for testing."""
-    rd = huawei_lte.RouterData(Mock())
-    rd.device_information = {
-        'SoftwareVersion': '1.0',
-        'nested': {'foo': 'bar'},
-    }
+    rd = huawei_lte.RouterData(Mock(), "de:ad:be:ef:00:00")
+    rd.device_information = {"SoftwareVersion": "1.0", "nested": {"foo": "bar"}}
     return rd
 
 
@@ -47,4 +44,4 @@ async def test_routerdata_get_longer(routerdata):
 
 async def test_routerdata_get_dict(routerdata):
     """Test that returning an intermediate dict works."""
-    assert routerdata["device_information.nested"] == {'foo': 'bar'}
+    assert routerdata["device_information.nested"] == {"foo": "bar"}

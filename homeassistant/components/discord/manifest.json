@@ -3,7 +3,7 @@
   "name": "Discord",
   "documentation": "https://www.home-assistant.io/components/discord",
   "requirements": [
-    "discord.py==0.16.12"
+    "discord.py==1.2.3"
   ],
   "dependencies": [],
   "codeowners": []

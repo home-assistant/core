@@ -6,16 +6,22 @@ import voluptuous as vol
 from homeassistant.const import CONF_API_KEY, CONF_SENDER
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA,
-                                             BaseNotificationService)
+from homeassistant.components.notify import (
+    ATTR_TARGET,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_SENDER, default='HA'):
-        vol.All(cv.string, vol.Match(r"^(\+?[1-9]\d{1,14}|\w{1,11})$")),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_SENDER, default="HA"): vol.All(
+            cv.string, vol.Match(r"^(\+?[1-9]\d{1,14}|\w{1,11})$")
+        ),
+    }
+)
 
 
 def get_service(hass, config, discovery_info=None):
@@ -53,7 +59,8 @@ class MessageBirdNotificationService(BaseNotificationService):
         for target in targets:
             try:
                 self.client.message_create(
-                    self.sender, target, message, {'reference': 'HA'})
+                    self.sender, target, message, {"reference": "HA"}
+                )
             except ErrorException as exception:
                 _LOGGER.error("Failed to notify %s: %s", target, exception)
                 continue

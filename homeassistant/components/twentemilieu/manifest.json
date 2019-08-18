@@ -1,0 +1,13 @@
+{
+    "domain": "twentemilieu",
+    "name": "Twente Milieu",
+    "config_flow": true,
+    "documentation": "https://www.home-assistant.io/components/twentemilieu",
+    "requirements": [
+        "twentemilieu==0.1.0"
+    ],
+    "dependencies": [],
+    "codeowners": [
+        "@frenck"
+    ]
+}

@@ -3,7 +3,7 @@
   "name": "Xiaomi aqara",
   "documentation": "https://www.home-assistant.io/components/xiaomi_aqara",
   "requirements": [
-    "PyXiaomiGateway==0.12.2"
+    "PyXiaomiGateway==0.12.4"
   ],
   "dependencies": [],
   "codeowners": [

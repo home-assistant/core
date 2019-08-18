@@ -1,5 +1,6 @@
 """Support for Switchbot."""
 import logging
+from typing import Any, Dict
 
 import voluptuous as vol
 
@@ -10,7 +11,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Switchbot'
+DEFAULT_NAME = "Switchbot"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -36,6 +37,7 @@ class SwitchBot(SwitchDevice, RestoreEntity):
         import switchbot
 
         self._state = None
+        self._last_run_success = None
         self._name = name
         self._mac = mac
         self._device = switchbot.Switchbot(mac=mac)
@@ -46,17 +48,23 @@ class SwitchBot(SwitchDevice, RestoreEntity):
         state = await self.async_get_last_state()
         if not state:
             return
-        self._state = state.state
+        self._state = state.state == "on"
 
     def turn_on(self, **kwargs) -> None:
         """Turn device on."""
         if self._device.turn_on():
             self._state = True
+            self._last_run_success = True
+        else:
+            self._last_run_success = False
 
     def turn_off(self, **kwargs) -> None:
         """Turn device off."""
         if self._device.turn_off():
             self._state = False
+            self._last_run_success = True
+        else:
+            self._last_run_success = False
 
     @property
     def assumed_state(self) -> bool:
@@ -71,9 +79,14 @@ class SwitchBot(SwitchDevice, RestoreEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
-        return self._mac.replace(':', '')
+        return self._mac.replace(":", "")
 
     @property
     def name(self) -> str:
         """Return the name of the switch."""
         return self._name
+
+    @property
+    def device_state_attributes(self) -> Dict[str, Any]:
+        """Return the state attributes."""
+        return {"last_run_success": self._last_run_success}

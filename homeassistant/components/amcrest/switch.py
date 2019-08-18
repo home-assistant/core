@@ -1,42 +1,54 @@
 """Support for toggling Amcrest IP camera settings."""
 import logging
 
-from homeassistant.const import CONF_NAME, CONF_SWITCHES, STATE_OFF, STATE_ON
+from amcrest import AmcrestError
+
+from homeassistant.const import CONF_NAME, CONF_SWITCHES
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import ToggleEntity
 
-from . import DATA_AMCREST, SWITCHES
+from .const import DATA_AMCREST, DEVICES, SERVICE_UPDATE
+from .helpers import log_update_error, service_signal
 
 _LOGGER = logging.getLogger(__name__)
 
+MOTION_DETECTION = "motion_detection"
+MOTION_RECORDING = "motion_recording"
+# Switch types are defined like: Name, icon
+SWITCHES = {
+    MOTION_DETECTION: ["Motion Detection", "mdi:run-fast"],
+    MOTION_RECORDING: ["Motion Recording", "mdi:record-rec"],
+}
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the IP Amcrest camera switch platform."""
     if discovery_info is None:
         return
 
     name = discovery_info[CONF_NAME]
-    switches = discovery_info[CONF_SWITCHES]
-    camera = hass.data[DATA_AMCREST][name].device
-
-    all_switches = []
-
-    for setting in switches:
-        all_switches.append(AmcrestSwitch(setting, camera, name))
-
-    async_add_entities(all_switches, True)
+    device = hass.data[DATA_AMCREST][DEVICES][name]
+    async_add_entities(
+        [
+            AmcrestSwitch(name, device, setting)
+            for setting in discovery_info[CONF_SWITCHES]
+        ],
+        True,
+    )
 
 
 class AmcrestSwitch(ToggleEntity):
     """Representation of an Amcrest IP camera switch."""
 
-    def __init__(self, setting, camera, name):
+    def __init__(self, name, device, setting):
         """Initialize the Amcrest switch."""
+        self._name = "{} {}".format(name, SWITCHES[setting][0])
+        self._signal_name = name
+        self._api = device.api
         self._setting = setting
-        self._camera = camera
-        self._name = '{} {}'.format(SWITCHES[setting][0], name)
+        self._state = False
         self._icon = SWITCHES[setting][1]
-        self._state = None
+        self._unsub_dispatcher = None
 
     @property
     def name(self):
@@ -44,41 +56,71 @@ class AmcrestSwitch(ToggleEntity):
         return self._name
 
     @property
-    def state(self):
-        """Return the state of the switch."""
-        return self._state
-
-    @property
     def is_on(self):
         """Return true if switch is on."""
-        return self._state == STATE_ON
+        return self._state
 
     def turn_on(self, **kwargs):
         """Turn setting on."""
-        if self._setting == 'motion_detection':
-            self._camera.motion_detection = 'true'
-        elif self._setting == 'motion_recording':
-            self._camera.motion_recording = 'true'
+        if not self.available:
+            return
+        try:
+            if self._setting == MOTION_DETECTION:
+                self._api.motion_detection = "true"
+            elif self._setting == MOTION_RECORDING:
+                self._api.motion_recording = "true"
+        except AmcrestError as error:
+            log_update_error(_LOGGER, "turn on", self.name, "switch", error)
 
     def turn_off(self, **kwargs):
         """Turn setting off."""
-        if self._setting == 'motion_detection':
-            self._camera.motion_detection = 'false'
-        elif self._setting == 'motion_recording':
-            self._camera.motion_recording = 'false'
+        if not self.available:
+            return
+        try:
+            if self._setting == MOTION_DETECTION:
+                self._api.motion_detection = "false"
+            elif self._setting == MOTION_RECORDING:
+                self._api.motion_recording = "false"
+        except AmcrestError as error:
+            log_update_error(_LOGGER, "turn off", self.name, "switch", error)
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._api.available
 
     def update(self):
         """Update setting state."""
-        _LOGGER.debug("Polling state for setting: %s ", self._name)
+        if not self.available:
+            return
+        _LOGGER.debug("Updating %s switch", self._name)
 
-        if self._setting == 'motion_detection':
-            detection = self._camera.is_motion_detector_on()
-        elif self._setting == 'motion_recording':
-            detection = self._camera.is_record_on_motion_detection()
-
-        self._state = STATE_ON if detection else STATE_OFF
+        try:
+            if self._setting == MOTION_DETECTION:
+                detection = self._api.is_motion_detector_on()
+            elif self._setting == MOTION_RECORDING:
+                detection = self._api.is_record_on_motion_detection()
+            self._state = detection
+        except AmcrestError as error:
+            log_update_error(_LOGGER, "update", self.name, "switch", error)
 
     @property
     def icon(self):
         """Return the icon for the switch."""
         return self._icon
+
+    async def async_on_demand_update(self):
+        """Update state."""
+        self.async_schedule_update_ha_state(True)
+
+    async def async_added_to_hass(self):
+        """Subscribe to update signal."""
+        self._unsub_dispatcher = async_dispatcher_connect(
+            self.hass,
+            service_signal(SERVICE_UPDATE, self._signal_name),
+            self.async_on_demand_update,
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect from update signal."""
+        self._unsub_dispatcher()

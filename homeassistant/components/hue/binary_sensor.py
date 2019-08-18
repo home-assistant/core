@@ -1,17 +1,20 @@
 """Hue binary sensor entities."""
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, DEVICE_CLASS_MOTION)
+    BinarySensorDevice,
+    DEVICE_CLASS_MOTION,
+)
 from homeassistant.components.hue.sensor_base import (
-    GenericZLLSensor, async_setup_entry as shared_async_setup_entry)
+    GenericZLLSensor,
+    async_setup_entry as shared_async_setup_entry,
+)
 
 
-PRESENCE_NAME_FORMAT = "{} presence"
+PRESENCE_NAME_FORMAT = "{} motion"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer binary sensor setup to the shared sensor module."""
-    await shared_async_setup_entry(
-        hass, config_entry, async_add_entities, binary=True)
+    await shared_async_setup_entry(hass, config_entry, async_add_entities, binary=True)
 
 
 class HuePresence(GenericZLLSensor, BinarySensorDevice):
@@ -26,3 +29,13 @@ class HuePresence(GenericZLLSensor, BinarySensorDevice):
     def is_on(self):
         """Return true if the binary sensor is on."""
         return self.sensor.presence
+
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        attributes = super().device_state_attributes
+        if "sensitivity" in self.sensor.config:
+            attributes["sensitivity"] = self.sensor.config["sensitivity"]
+        if "sensitivitymax" in self.sensor.config:
+            attributes["sensitivity_max"] = self.sensor.config["sensitivitymax"]
+        return attributes

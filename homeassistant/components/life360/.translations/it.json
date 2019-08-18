@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "invalid_credentials": "Credenziali non valide",
+            "user_already_configured": "L'account \u00e8 gi\u00e0 stato configurato"
+        },
+        "create_entry": {
+            "default": "Per impostare le opzioni avanzate, consultare la [Documentazione Life360] ( {docs_url} )."
+        },
+        "error": {
+            "invalid_credentials": "Credenziali non valide",
+            "invalid_username": "Nome utente non valido",
+            "user_already_configured": "L'account \u00e8 gi\u00e0 stato configurato"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "title": "Informazioni sull'account Life360"
+            }
+        },
+        "title": "Life360"
+    }
+}
