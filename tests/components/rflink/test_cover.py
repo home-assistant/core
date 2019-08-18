@@ -815,4 +815,3 @@ async def test_inverted_cover(hass, monkeypatch):
     assert hass.states.get(DOMAIN + '.newkaku_type_inverted').state == STATE_OPEN
     assert protocol.send_command_ack.call_args_list[11][0][0] == 'newkaku_device_6'
     assert protocol.send_command_ack.call_args_list[11][0][1] == 'DOWN'
-
