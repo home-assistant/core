@@ -85,6 +85,6 @@ class FritzBoxScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        _LOGGER.info("Scanning")
+        _LOGGER.debug("Scanning")
         self.last_results = self.fritz_box.get_hosts_info()
         return True
