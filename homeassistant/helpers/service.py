@@ -7,6 +7,10 @@ from typing import Callable
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
+from homeassistant.components.python_script import (
+    DOMAIN as PYTHON_SCRIPT_DOMAIN,
+    FOLDER as PYTHON_SCRIPT_FOLDER,
+)
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, ATTR_AREA_ID
 import homeassistant.core as ha
 from homeassistant.exceptions import (
@@ -165,16 +169,39 @@ async def async_extract_entity_ids(hass, service_call, expand_group=True):
 async def _load_services_file(hass: HomeAssistantType, domain: str) -> JSON_TYPE:
     """Load services file for an integration."""
     integration = await async_get_integration(hass, domain)
+    services = {}
     try:
+        # For the python_script domain, look for 2 services.yaml files
+        if domain == PYTHON_SCRIPT_DOMAIN:
+            # 1. The integration's services.yaml file
+            services = await hass.async_add_executor_job(
+                load_yaml, str(integration.file_path / "services.yaml")
+            )
+
+            # 2. A user-provided services.yaml file
+            user_services = await hass.async_add_executor_job(
+                load_yaml,
+                str(
+                    hass.config.config_dir
+                    + "/{}/services.yaml".format(PYTHON_SCRIPT_FOLDER)
+                ),
+            )
+
+            # Don't overwrite the integration's services.yaml info
+            user_services.update(services)
+
+            return user_services
+
+        # For all other domains, there is only 1 services.yaml file
         return await hass.async_add_executor_job(
             load_yaml, str(integration.file_path / "services.yaml")
         )
     except FileNotFoundError:
         _LOGGER.warning("Unable to find services.yaml for the %s integration", domain)
-        return {}
+        return services
     except HomeAssistantError:
         _LOGGER.warning("Unable to parse services.yaml for the %s integration", domain)
-        return {}
+        return services
 
 
 @bind_hass
