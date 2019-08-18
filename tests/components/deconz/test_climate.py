@@ -71,7 +71,8 @@ async def setup_gateway(hass, data, allow_clip_sensor=True):
         ENTRY_CONFIG,
         "test",
         config_entries.CONN_CLASS_LOCAL_PUSH,
-        ENTRY_OPTIONS,
+        system_options={},
+        options=ENTRY_OPTIONS,
     )
     gateway = deconz.DeconzGateway(hass, config_entry)
     gateway.api = DeconzSession(hass.loop, session, **config_entry.data)

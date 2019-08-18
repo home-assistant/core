@@ -343,7 +343,7 @@ class EntityPlatform:
                 self.platform_name,
                 entity.unique_id,
                 suggested_object_id=suggested_object_id,
-                config_entry_id=config_entry_id,
+                config_entry=self.config_entry,
                 device_id=device_id,
                 known_object_ids=self.entities.keys(),
                 disabled_by=disabled_by,
