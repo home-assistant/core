@@ -127,12 +127,12 @@ class AtomeSensor(Entity):
         return self._state
 
     def load_file(self, filename):
-        """Loads a file stored with pickle."""
+        """A function to load a file stored with pickle."""
         with open(filename, "rb") as file:
             return pickle.load(file)
 
     def save_file(self, content, filename):
-        """Saves a file stored with pickle."""
+        """A function to save a file stored with pickle."""
         with open(filename, "wb") as file:
             pickle.dump(content, file)
 
