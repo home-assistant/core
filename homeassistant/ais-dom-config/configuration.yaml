@@ -133,3 +133,16 @@ ais_amplifier_service:
 
 #
 person:
+
+ais_ingress:
+
+panel_custom:
+  - name: hassio-main
+    sidebar_title: Visual Studio Code
+    sidebar_icon: mdi:visual-studio-code
+    js_url: /api/hassio/app/entrypoint.js
+    url_path: vscode
+    embed_iframe: true
+    require_admin: true
+    config:
+      ingress: a0d7b954_vscode
