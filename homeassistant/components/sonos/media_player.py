@@ -15,6 +15,7 @@ from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_MUSIC,
+    MEDIA_TYPE_PLAYLIST,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -943,7 +944,7 @@ class SonosEntity(MediaPlayerDevice):
 
         If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
         """
-        if media_type == "playlist":
+        if media_type == MEDIA_TYPE_PLAYLIST:
             try:
                 playlists = self.soco.get_sonos_playlists()
                 playlist = next(p for p in playlists if p.title == media_id)
