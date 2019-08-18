@@ -335,7 +335,7 @@ async def test_device_info_is_assummed(hass):
     mock_unique_id = ps4.format_unique_id(MOCK_CREDS, MOCK_HOST_ID)
     mock_e_registry = mock_registry(hass)
     mock_e_registry.async_get_or_create(
-        "media_player", DOMAIN, mock_unique_id, config_entry_id=MOCK_ENTRY_ID
+        "media_player", DOMAIN, mock_unique_id, config_entry=MOCK_CONFIG
     )
     mock_entity_id = mock_e_registry.async_get_entity_id(
         "media_player", DOMAIN, mock_unique_id

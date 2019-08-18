@@ -262,6 +262,7 @@ async def setup_controller(hass, mock_controller):
         "test",
         config_entries.CONN_CLASS_LOCAL_POLL,
         entry_id=1,
+        system_options={},
     )
     mock_controller.config_entry = config_entry
 
@@ -468,20 +469,31 @@ async def test_restoring_client(hass, mock_controller):
     mock_controller.mock_client_all_responses.append([CLIENT_1])
     mock_controller.unifi_config = {unifi.CONF_BLOCK_CLIENT: ["random mac"]}
 
+    config_entry = config_entries.ConfigEntry(
+        1,
+        unifi.DOMAIN,
+        "Mock Title",
+        ENTRY_CONFIG,
+        "test",
+        config_entries.CONN_CLASS_LOCAL_POLL,
+        entry_id=1,
+        system_options={},
+    )
+
     registry = await entity_registry.async_get_registry(hass)
     registry.async_get_or_create(
         switch.DOMAIN,
         unifi.DOMAIN,
         "poe-{}".format(CLIENT_1["mac"]),
         suggested_object_id=CLIENT_1["hostname"],
-        config_entry_id=1,
+        config_entry=config_entry,
     )
     registry.async_get_or_create(
         switch.DOMAIN,
         unifi.DOMAIN,
         "poe-{}".format(CLIENT_2["mac"]),
         suggested_object_id=CLIENT_2["hostname"],
-        config_entry_id=1,
+        config_entry=config_entry,
     )
 
     await setup_controller(hass, mock_controller)

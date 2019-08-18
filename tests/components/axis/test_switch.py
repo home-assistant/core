@@ -59,6 +59,7 @@ async def setup_device(hass):
         ENTRY_CONFIG,
         "test",
         config_entries.CONN_CLASS_LOCAL_PUSH,
+        system_options={},
         options=ENTRY_OPTIONS,
     )
     device = axis.AxisNetworkDevice(hass, config_entry)
