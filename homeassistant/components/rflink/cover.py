@@ -23,8 +23,8 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
-TYPE_STANDARD = 'standard'
-TYPE_INVERTED = 'inverted'
+TYPE_STANDARD = "standard"
+TYPE_INVERTED = "inverted"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -35,9 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             {
                 cv.string: {
                     vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_TYPE): vol.Any(
-                        TYPE_STANDARD, TYPE_INVERTED
-                    ),
+                    vol.Optional(CONF_TYPE): vol.Any(TYPE_STANDARD, TYPE_INVERTED),
                     vol.Optional(CONF_ALIASES, default=[]): vol.All(
                         cv.ensure_list, [cv.string]
                     ),
@@ -64,7 +62,7 @@ def entity_type_for_device_id(device_id):
     """
     entity_type_mapping = {
         # KlikAanKlikUit cover have the controls inverted
-        'newkaku': TYPE_INVERTED,
+        "newkaku": TYPE_INVERTED,
     }
     protocol = device_id.split('_')[0]
     return entity_type_mapping.get(protocol, None)
@@ -166,10 +164,6 @@ class InvertedRflinkCover(RflinkCover):
 
     async def _async_send_command(self, cmd, repetitions):
         """Will invert only the UP/DOWN commands."""
-        _LOGGER.debug(
-            "Getting command: %s for Rflink device: %s", cmd, self._device_id)
-        cmd_inv = {
-            'UP': 'DOWN',
-            'DOWN': 'UP',
-        }
+        _LOGGER.debug("Getting command: %s for Rflink device: %s", cmd, self._device_id)
+        cmd_inv = {"UP": "DOWN", "DOWN": "UP"}
         await super()._async_send_command(cmd_inv.get(cmd, cmd), repetitions)
