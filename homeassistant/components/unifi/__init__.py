@@ -34,7 +34,7 @@ CONTROLLER_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_DONT_TRACK_CLIENTS): cv.boolean,
         vol.Optional(CONF_DONT_TRACK_DEVICES): cv.boolean,
-        vol.Optional(CONF_DONT_TRACK_NEW_CLIENTS, default=True): cv.boolean,
+        vol.Optional(CONF_DONT_TRACK_NEW_CLIENTS, default=False): cv.boolean,
         vol.Optional(CONF_DONT_TRACK_WIRED_CLIENTS): cv.boolean,
         vol.Optional(CONF_DETECTION_TIME): vol.All(
             cv.time_period, cv.positive_timedelta
