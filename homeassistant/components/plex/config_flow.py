@@ -25,7 +25,6 @@ from .const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     PLEX_SERVER_CONFIG,
-    TITLE_TEMPLATE,
 )
 from .errors import ConfigNotReady, NoServersFound, ServerNotSpecified, TokenMissing
 from .server import setup_plex_server
@@ -99,7 +98,6 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                     if not server_name:
                         server_name = plex_server.friendlyName
 
-                    title = TITLE_TEMPLATE.format(server_name, account.username)
                     data = {
                         CONF_USERNAME: username,
                         CONF_TOKEN: token,
@@ -110,12 +108,13 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                         CONF_URL: plex_url,
                         CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL]
                     }
-                    title = TITLE_TEMPLATE.format(plex_url, "Direct")
                     data = {
                         CONF_URL: plex_url,
                         CONF_TOKEN: token,
                         CONF_VERIFY_SSL: verify_ssl,
                     }
+
+                title = "{} ({})".format(plex_server.friendlyName, username if username else "Direct")
 
                 return self.async_create_entry(
                     title=title, data={PLEX_SERVER_CONFIG: data}
