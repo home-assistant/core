@@ -1,21 +1,21 @@
 """Support for device tracking of Huawei LTE routers."""
+import logging
 from typing import Any, Dict, List, Optional
 
 import attr
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA, DeviceScanner,
-)
+from homeassistant.components.device_tracker import PLATFORM_SCHEMA, DeviceScanner
 from homeassistant.const import CONF_URL
 from . import DATA_KEY, RouterData
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_URL): cv.url,
-})
 
-HOSTS_PATH = "wlan_host_list.Hosts"
+_LOGGER = logging.getLogger(__name__)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Optional(CONF_URL): cv.url})
+
+HOSTS_PATH = "wlan_host_list.Hosts.Host"
 
 
 def get_scanner(hass, config):
@@ -36,11 +36,12 @@ class HuaweiLteScanner(DeviceScanner):
     def scan_devices(self) -> List[str]:
         """Scan for devices."""
         self.data.update()
-        self._hosts = {
-            x["MacAddress"]: x
-            for x in self.data[HOSTS_PATH + ".Host"]
-            if x.get("MacAddress")
-        }
+        try:
+            self._hosts = {
+                x["MacAddress"]: x for x in self.data[HOSTS_PATH] if x.get("MacAddress")
+            }
+        except KeyError:
+            _LOGGER.debug("%s not in data", HOSTS_PATH)
         return list(self._hosts)
 
     def get_device_name(self, device: str) -> Optional[str]:

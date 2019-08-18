@@ -1,14 +1,21 @@
 """Support for Homekit Alarm Control Panel."""
 import logging
 
+from homekit.model.characteristics import CharacteristicsTypes
+
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
+    ATTR_BATTERY_LEVEL,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_TRIGGERED,
+)
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
-ICON = 'mdi:security'
+ICON = "mdi:security"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,13 +35,24 @@ TARGET_STATE_MAP = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up Homekit Alarm Control Panel support."""
-    if discovery_info is None:
-        return
-    accessory = hass.data[KNOWN_DEVICES][discovery_info['serial']]
-    add_entities([HomeKitAlarmControlPanel(accessory, discovery_info)],
-                 True)
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Legacy set up platform."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Homekit alarm control panel."""
+    hkid = config_entry.data["AccessoryPairingID"]
+    conn = hass.data[KNOWN_DEVICES][hkid]
+
+    def async_add_service(aid, service):
+        if service["stype"] != "security-system":
+            return False
+        info = {"aid": aid, "iid": service["iid"]}
+        async_add_entities([HomeKitAlarmControlPanel(conn, info)], True)
+        return True
+
+    conn.add_listener(async_add_service)
 
 
 class HomeKitAlarmControlPanel(HomeKitEntity, AlarmControlPanel):
@@ -48,8 +66,6 @@ class HomeKitAlarmControlPanel(HomeKitEntity, AlarmControlPanel):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
         return [
             CharacteristicsTypes.SECURITY_SYSTEM_STATE_CURRENT,
             CharacteristicsTypes.SECURITY_SYSTEM_STATE_TARGET,
@@ -90,9 +106,13 @@ class HomeKitAlarmControlPanel(HomeKitEntity, AlarmControlPanel):
 
     async def set_alarm_state(self, state, code=None):
         """Send state command."""
-        characteristics = [{'aid': self._aid,
-                            'iid': self._chars['security-system-state.target'],
-                            'value': TARGET_STATE_MAP[state]}]
+        characteristics = [
+            {
+                "aid": self._aid,
+                "iid": self._chars["security-system-state.target"],
+                "value": TARGET_STATE_MAP[state],
+            }
+        ]
         await self._accessory.put_characteristics(characteristics)
 
     @property
@@ -101,6 +121,4 @@ class HomeKitAlarmControlPanel(HomeKitEntity, AlarmControlPanel):
         if self._battery_level is None:
             return None
 
-        return {
-            ATTR_BATTERY_LEVEL: self._battery_level,
-        }
+        return {ATTR_BATTERY_LEVEL: self._battery_level}

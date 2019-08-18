@@ -1,6 +1,7 @@
 {
   "domain": "ios",
   "name": "Ios",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/ios",
   "requirements": [],
   "dependencies": [

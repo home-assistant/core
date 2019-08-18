@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "all_configured": "TelldusLive is already configured",
             "already_setup": "TelldusLive is already configured",
             "authorize_url_fail": "Unknown error generating an authorize url.",
             "authorize_url_timeout": "Timeout generating authorize url.",

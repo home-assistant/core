@@ -1,6 +1,7 @@
 """Support to check for available updates."""
 import asyncio
 from datetime import timedelta
+
 # pylint: disable=import-error,no-name-in-module
 from distutils.version import StrictVersion
 import json
@@ -11,43 +12,59 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, __version__ as current_version)
+from homeassistant.const import __version__ as current_version
 from homeassistant.helpers import event
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers import discovery
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_RELEASE_NOTES = 'release_notes'
+ATTR_RELEASE_NOTES = "release_notes"
+ATTR_NEWEST_VERSION = "newest_version"
 
-CONF_REPORTING = 'reporting'
-CONF_COMPONENT_REPORTING = 'include_used_components'
+CONF_REPORTING = "reporting"
+CONF_COMPONENT_REPORTING = "include_used_components"
 
-DOMAIN = 'updater'
+DOMAIN = "updater"
 
-ENTITY_ID = 'updater.updater'
+DISPATCHER_REMOTE_UPDATE = "updater_remote_update"
 
-UPDATER_URL = 'https://updater.home-assistant.io/'
-UPDATER_UUID_FILE = '.uuid'
+UPDATER_URL = "https://updater.home-assistant.io/"
+UPDATER_UUID_FILE = ".uuid"
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: {
-    vol.Optional(CONF_REPORTING, default=True): cv.boolean,
-    vol.Optional(CONF_COMPONENT_REPORTING, default=False): cv.boolean,
-}}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: {
+            vol.Optional(CONF_REPORTING, default=True): cv.boolean,
+            vol.Optional(CONF_COMPONENT_REPORTING, default=False): cv.boolean,
+        }
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
-RESPONSE_SCHEMA = vol.Schema({
-    vol.Required('version'): cv.string,
-    vol.Required('release-notes'): cv.url,
-})
+RESPONSE_SCHEMA = vol.Schema(
+    {vol.Required("version"): cv.string, vol.Required("release-notes"): cv.url}
+)
+
+
+class Updater:
+    """Updater class for data exchange."""
+
+    def __init__(self, update_available: bool, newest_version: str, release_notes: str):
+        """Initialize attributes."""
+        self.update_available = update_available
+        self.release_notes = release_notes
+        self.newest_version = newest_version
 
 
 def _create_uuid(hass, filename=UPDATER_UUID_FILE):
     """Create UUID and save it in a file."""
-    with open(hass.config.path(filename), 'w') as fptr:
+    with open(hass.config.path(filename), "w") as fptr:
         _uuid = uuid.uuid4().hex
-        fptr.write(json.dumps({'uuid': _uuid}))
+        fptr.write(json.dumps({"uuid": _uuid}))
         return _uuid
 
 
@@ -56,7 +73,7 @@ def _load_uuid(hass, filename=UPDATER_UUID_FILE):
     try:
         with open(hass.config.path(filename)) as fptr:
             jsonf = json.loads(fptr.read())
-            return uuid.UUID(jsonf['uuid'], version=4).hex
+            return uuid.UUID(jsonf["uuid"], version=4).hex
     except (ValueError, AttributeError):
         return None
     except FileNotFoundError:
@@ -65,9 +82,13 @@ def _load_uuid(hass, filename=UPDATER_UUID_FILE):
 
 async def async_setup(hass, config):
     """Set up the updater component."""
-    if 'dev' in current_version:
+    if "dev" in current_version:
         # This component only makes sense in release versions
         _LOGGER.info("Running on 'dev', only analytics will be submitted")
+
+    hass.async_create_task(
+        discovery.async_load_platform(hass, "binary_sensor", DOMAIN, {}, config)
+    )
 
     config = config.get(DOMAIN, {})
     if config.get(CONF_REPORTING):
@@ -84,10 +105,10 @@ async def async_setup(hass, config):
         if result is None:
             return
 
-        newest, releasenotes = result
+        newest, release_notes = result
 
         # Skip on dev
-        if newest is None or 'dev' in current_version:
+        if newest is None or "dev" in current_version:
             return
 
         # Load data from supervisor on hass.io
@@ -95,21 +116,23 @@ async def async_setup(hass, config):
             newest = hass.components.hassio.get_homeassistant_version()
 
         # Validate version
+        update_available = False
         if StrictVersion(newest) > StrictVersion(current_version):
-            _LOGGER.info("The latest available version is %s", newest)
-            hass.states.async_set(
-                ENTITY_ID, newest, {ATTR_FRIENDLY_NAME: 'Update Available',
-                                    ATTR_RELEASE_NOTES: releasenotes}
-            )
+            _LOGGER.info("The latest available version of Home Assistant is %s", newest)
+            update_available = True
         elif StrictVersion(newest) == StrictVersion(current_version):
-            _LOGGER.info(
-                "You are on the latest version (%s) of Home Assistant", newest)
+            _LOGGER.info("You are on the latest version (%s) of Home Assistant", newest)
+        elif StrictVersion(newest) < StrictVersion(current_version):
+            _LOGGER.debug("Local version is newer than the latest version (%s)", newest)
+
+        updater = Updater(update_available, newest, release_notes)
+        async_dispatcher_send(hass, DISPATCHER_REMOTE_UPDATE, updater)
 
     # Update daily, start 1 hour after startup
     _dt = dt_util.utcnow() + timedelta(hours=1)
     event.async_track_utc_time_change(
-        hass, check_new_version,
-        hour=_dt.hour, minute=_dt.minute, second=_dt.second)
+        hass, check_new_version, hour=_dt.hour, minute=_dt.minute, second=_dt.second
+    )
 
     return True
 
@@ -117,32 +140,34 @@ async def async_setup(hass, config):
 async def get_newest_version(hass, huuid, include_components):
     """Get the newest Home Assistant version."""
     if huuid:
-        info_object = \
-            await hass.helpers.system_info.async_get_system_info()
+        info_object = await hass.helpers.system_info.async_get_system_info()
 
         if include_components:
-            info_object['components'] = list(hass.config.components)
+            info_object["components"] = list(hass.config.components)
 
         import distro
 
-        linux_dist = await hass.async_add_executor_job(
-            distro.linux_distribution, False)
-        info_object['distribution'] = linux_dist[0]
-        info_object['os_version'] = linux_dist[1]
+        linux_dist = await hass.async_add_executor_job(distro.linux_distribution, False)
+        info_object["distribution"] = linux_dist[0]
+        info_object["os_version"] = linux_dist[1]
 
-        info_object['huuid'] = huuid
+        info_object["huuid"] = huuid
     else:
         info_object = {}
 
     session = async_get_clientsession(hass)
     try:
-        with async_timeout.timeout(5, loop=hass.loop):
+        with async_timeout.timeout(5):
             req = await session.post(UPDATER_URL, json=info_object)
-        _LOGGER.info(("Submitted analytics to Home Assistant servers. "
-                      "Information submitted includes %s"), info_object)
+        _LOGGER.info(
+            (
+                "Submitted analytics to Home Assistant servers. "
+                "Information submitted includes %s"
+            ),
+            info_object,
+        )
     except (asyncio.TimeoutError, aiohttp.ClientError):
-        _LOGGER.error("Could not contact Home Assistant Update to check "
-                      "for updates")
+        _LOGGER.error("Could not contact Home Assistant Update to check for updates")
         return None
 
     try:
@@ -153,7 +178,7 @@ async def get_newest_version(hass, huuid, include_components):
 
     try:
         res = RESPONSE_SCHEMA(res)
-        return res['version'], res['release-notes']
+        return res["version"], res["release-notes"]
     except vol.Invalid:
         _LOGGER.error("Got unexpected response: %s", res)
         return None

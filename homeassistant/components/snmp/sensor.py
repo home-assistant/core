@@ -1,90 +1,85 @@
 """Support for displaying collected data over SNMP."""
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT, CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
-    CONF_USERNAME, CONF_VALUE_TEMPLATE)
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_USERNAME,
+    CONF_VALUE_TEMPLATE,
+    STATE_UNKNOWN,
+)
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+
+from .const import (
+    CONF_ACCEPT_ERRORS,
+    CONF_AUTH_KEY,
+    CONF_AUTH_PROTOCOL,
+    CONF_BASEOID,
+    CONF_COMMUNITY,
+    CONF_DEFAULT_VALUE,
+    CONF_PRIV_KEY,
+    CONF_PRIV_PROTOCOL,
+    CONF_VERSION,
+    DEFAULT_AUTH_PROTOCOL,
+    DEFAULT_COMMUNITY,
+    DEFAULT_HOST,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DEFAULT_PRIV_PROTOCOL,
+    DEFAULT_VERSION,
+    MAP_AUTH_PROTOCOLS,
+    MAP_PRIV_PROTOCOLS,
+    SNMP_VERSIONS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_BASEOID = 'baseoid'
-CONF_COMMUNITY = 'community'
-CONF_VERSION = 'version'
-CONF_AUTH_KEY = 'auth_key'
-CONF_AUTH_PROTOCOL = 'auth_protocol'
-CONF_PRIV_KEY = 'priv_key'
-CONF_PRIV_PROTOCOL = 'priv_protocol'
-CONF_ACCEPT_ERRORS = 'accept_errors'
-CONF_DEFAULT_VALUE = 'default_value'
-
-DEFAULT_COMMUNITY = 'public'
-DEFAULT_HOST = 'localhost'
-DEFAULT_NAME = 'SNMP'
-DEFAULT_PORT = '161'
-DEFAULT_VERSION = '1'
-DEFAULT_AUTH_PROTOCOL = 'none'
-DEFAULT_PRIV_PROTOCOL = 'none'
-
-SNMP_VERSIONS = {
-    '1': 0,
-    '2c': 1,
-    '3': None
-}
-
-MAP_AUTH_PROTOCOLS = {
-    'none': 'usmNoAuthProtocol',
-    'hmac-md5': 'usmHMACMD5AuthProtocol',
-    'hmac-sha': 'usmHMACSHAAuthProtocol',
-    'hmac128-sha224': 'usmHMAC128SHA224AuthProtocol',
-    'hmac192-sha256': 'usmHMAC192SHA256AuthProtocol',
-    'hmac256-sha384': 'usmHMAC256SHA384AuthProtocol',
-    'hmac384-sha512': 'usmHMAC384SHA512AuthProtocol',
-}
-
-MAP_PRIV_PROTOCOLS = {
-    'none': 'usmNoPrivProtocol',
-    'des': 'usmDESPrivProtocol',
-    '3des-ede': 'usm3DESEDEPrivProtocol',
-    'aes-cfb-128': 'usmAesCfb128Protocol',
-    'aes-cfb-192': 'usmAesCfb192Protocol',
-    'aes-cfb-256': 'usmAesCfb256Protocol',
-}
-
 SCAN_INTERVAL = timedelta(seconds=10)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_BASEOID): cv.string,
-    vol.Optional(CONF_ACCEPT_ERRORS, default=False): cv.boolean,
-    vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
-    vol.Optional(CONF_DEFAULT_VALUE): cv.string,
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.In(SNMP_VERSIONS),
-    vol.Optional(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_AUTH_KEY): cv.string,
-    vol.Optional(CONF_AUTH_PROTOCOL, default=DEFAULT_AUTH_PROTOCOL):
-        vol.In(MAP_AUTH_PROTOCOLS),
-    vol.Optional(CONF_PRIV_KEY): cv.string,
-    vol.Optional(CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL):
-        vol.In(MAP_PRIV_PROTOCOLS),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_BASEOID): cv.string,
+        vol.Optional(CONF_ACCEPT_ERRORS, default=False): cv.boolean,
+        vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
+        vol.Optional(CONF_DEFAULT_VALUE): cv.string,
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.In(SNMP_VERSIONS),
+        vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_AUTH_KEY): cv.string,
+        vol.Optional(CONF_AUTH_PROTOCOL, default=DEFAULT_AUTH_PROTOCOL): vol.In(
+            MAP_AUTH_PROTOCOLS
+        ),
+        vol.Optional(CONF_PRIV_KEY): cv.string,
+        vol.Optional(CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL): vol.In(
+            MAP_PRIV_PROTOCOLS
+        ),
+    }
+)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the SNMP sensor."""
     from pysnmp.hlapi.asyncio import (
-        getCmd, CommunityData, SnmpEngine, UdpTransportTarget, ContextData,
-        ObjectType, ObjectIdentity, UsmUserData)
+        getCmd,
+        CommunityData,
+        SnmpEngine,
+        UdpTransportTarget,
+        ContextData,
+        ObjectType,
+        ObjectIdentity,
+        UsmUserData,
+    )
 
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -105,20 +100,23 @@ async def async_setup_platform(
     if value_template is not None:
         value_template.hass = hass
 
-    if version == '3':
+    if version == "3":
         import pysnmp.hlapi.asyncio as hlapi
 
         if not authkey:
-            authproto = 'none'
+            authproto = "none"
         if not privkey:
-            privproto = 'none'
+            privproto = "none"
 
         request_args = [
             SnmpEngine(),
             UsmUserData(
-                username, authKey=authkey or None, privKey=privkey or None,
+                username,
+                authKey=authkey or None,
+                privKey=privkey or None,
                 authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
-                privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),),
+                privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
+            ),
             UdpTransportTarget((host, port)),
             ContextData(),
         ]
@@ -131,7 +129,8 @@ async def async_setup_platform(
         ]
 
     errindication, _, _, _ = await getCmd(
-        *request_args, ObjectType(ObjectIdentity(baseoid)))
+        *request_args, ObjectType(ObjectIdentity(baseoid))
+    )
 
     if errindication and not accept_errors:
         _LOGGER.error("Please check the details in the configuration file")
@@ -176,7 +175,8 @@ class SnmpSensor(Entity):
             value = STATE_UNKNOWN
         elif self._value_template is not None:
             value = self._value_template.async_render_with_possible_json_value(
-                value, STATE_UNKNOWN)
+                value, STATE_UNKNOWN
+            )
 
         self._state = value
 
@@ -194,16 +194,20 @@ class SnmpData:
 
     async def async_update(self):
         """Get the latest data from the remote SNMP capable host."""
-        from pysnmp.hlapi.asyncio import (getCmd, ObjectType, ObjectIdentity)
+        from pysnmp.hlapi.asyncio import getCmd, ObjectType, ObjectIdentity
 
         errindication, errstatus, errindex, restable = await getCmd(
-            *self._request_args, ObjectType(ObjectIdentity(self._baseoid)))
+            *self._request_args, ObjectType(ObjectIdentity(self._baseoid))
+        )
 
         if errindication and not self._accept_errors:
             _LOGGER.error("SNMP error: %s", errindication)
         elif errstatus and not self._accept_errors:
-            _LOGGER.error("SNMP error: %s at %s", errstatus.prettyPrint(),
-                          errindex and restable[-1][int(errindex) - 1] or '?')
+            _LOGGER.error(
+                "SNMP error: %s at %s",
+                errstatus.prettyPrint(),
+                errindex and restable[-1][int(errindex) - 1] or "?",
+            )
         elif (errindication or errstatus) and self._accept_errors:
             self.value = self._default_value
         else:

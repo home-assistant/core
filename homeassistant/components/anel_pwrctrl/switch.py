@@ -6,24 +6,26 @@ from datetime import timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
+from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PORT_RECV = 'port_recv'
-CONF_PORT_SEND = 'port_send'
+CONF_PORT_RECV = "port_recv"
+CONF_PORT_SEND = "port_send"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PORT_RECV): cv.port,
-    vol.Required(CONF_PORT_SEND): cv.port,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_HOST): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_PORT_RECV): cv.port,
+        vol.Required(CONF_PORT_SEND): cv.port,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_HOST): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -38,8 +40,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         master = DeviceMaster(
-            username=username, password=password, read_port=port_send,
-            write_port=port_recv)
+            username=username,
+            password=password,
+            read_port=port_send,
+            write_port=port_recv,
+        )
         master.query(ip_addr=host)
     except socket.error as ex:
         _LOGGER.error("Unable to discover PwrCtrl device: %s", str(ex))
@@ -49,8 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for device in master.devices.values():
         parent_device = PwrCtrlDevice(device)
         devices.extend(
-            PwrCtrlSwitch(switch, parent_device)
-            for switch in device.switches.values()
+            PwrCtrlSwitch(switch, parent_device) for switch in device.switches.values()
         )
 
     add_entities(devices)
@@ -72,9 +76,8 @@ class PwrCtrlSwitch(SwitchDevice):
     @property
     def unique_id(self):
         """Return the unique ID of the device."""
-        return '{device}-{switch_idx}'.format(
-            device=self._port.device.host,
-            switch_idx=self._port.get_index()
+        return "{device}-{switch_idx}".format(
+            device=self._port.device.host, switch_idx=self._port.get_index()
         )
 
     @property
