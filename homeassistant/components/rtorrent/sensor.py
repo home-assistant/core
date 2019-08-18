@@ -6,31 +6,37 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_URL, CONF_NAME,
-    CONF_MONITORED_VARIABLES, STATE_IDLE)
+    CONF_URL,
+    CONF_NAME,
+    CONF_MONITORED_VARIABLES,
+    STATE_IDLE,
+)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPE_CURRENT_STATUS = 'current_status'
-SENSOR_TYPE_DOWNLOAD_SPEED = 'download_speed'
-SENSOR_TYPE_UPLOAD_SPEED = 'upload_speed'
+SENSOR_TYPE_CURRENT_STATUS = "current_status"
+SENSOR_TYPE_DOWNLOAD_SPEED = "download_speed"
+SENSOR_TYPE_UPLOAD_SPEED = "upload_speed"
 
-DEFAULT_NAME = 'rtorrent'
+DEFAULT_NAME = "rtorrent"
 SENSOR_TYPES = {
-    SENSOR_TYPE_CURRENT_STATUS: ['Status', None],
-    SENSOR_TYPE_DOWNLOAD_SPEED: ['Down Speed', 'kB/s'],
-    SENSOR_TYPE_UPLOAD_SPEED: ['Up Speed', 'kB/s'],
+    SENSOR_TYPE_CURRENT_STATUS: ["Status", None],
+    SENSOR_TYPE_DOWNLOAD_SPEED: ["Down Speed", "kB/s"],
+    SENSOR_TYPE_UPLOAD_SPEED: ["Up Speed", "kB/s"],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_URL): cv.url,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_MONITORED_VARIABLES, default=list(SENSOR_TYPES)):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_URL): cv.url,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_MONITORED_VARIABLES, default=list(SENSOR_TYPES)): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        ),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -73,7 +79,7 @@ class RTorrentSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self.client_name, self._name)
+        return "{} {}".format(self.client_name, self._name)
 
     @property
     def state(self):
@@ -99,8 +105,8 @@ class RTorrentSensor(Entity):
         try:
             self.data = multicall()
             self._available = True
-        except (xmlrpc.client.ProtocolError, ConnectionRefusedError):
-            _LOGGER.error("Connection to rtorrent lost")
+        except (xmlrpc.client.ProtocolError, ConnectionRefusedError, OSError) as ex:
+            _LOGGER.error("Connection to rtorrent failed (%s)", ex)
             self._available = False
             return
 
@@ -110,11 +116,11 @@ class RTorrentSensor(Entity):
         if self.type == SENSOR_TYPE_CURRENT_STATUS:
             if self.data:
                 if upload > 0 and download > 0:
-                    self._state = 'up_down'
+                    self._state = "up_down"
                 elif upload > 0 and download == 0:
-                    self._state = 'seeding'
+                    self._state = "seeding"
                 elif upload == 0 and download > 0:
-                    self._state = 'downloading'
+                    self._state = "downloading"
                 else:
                     self._state = STATE_IDLE
             else:

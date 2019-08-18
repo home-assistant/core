@@ -9,7 +9,7 @@ from homeassistant.const import STATE_ON, STATE_OFF
 from tests.common import get_test_home_assistant
 from tests.components.remote import common
 
-ENTITY_ID = 'remote.remote_one'
+ENTITY_ID = "remote.remote_one"
 
 
 class TestDemoRemote(unittest.TestCase):
@@ -19,9 +19,9 @@ class TestDemoRemote(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        assert setup_component(self.hass, remote.DOMAIN, {'remote': {
-            'platform': 'demo',
-        }})
+        assert setup_component(
+            self.hass, remote.DOMAIN, {"remote": {"platform": "demo"}}
+        )
 
     # pylint: disable=invalid-name
     def tearDown(self):
@@ -45,8 +45,11 @@ class TestDemoRemote(unittest.TestCase):
         state = self.hass.states.get(ENTITY_ID)
         assert state.state == STATE_ON
 
-        common.send_command(self.hass, 'test', entity_id=ENTITY_ID)
+        common.send_command(self.hass, "test", entity_id=ENTITY_ID)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_ID)
-        assert state.attributes == \
-            {'friendly_name': 'Remote One', 'last_command_sent': 'test'}
+        assert state.attributes == {
+            "friendly_name": "Remote One",
+            "last_command_sent": "test",
+            "supported_features": 0,
+        }

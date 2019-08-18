@@ -19,24 +19,19 @@ _LOGGER = logging.getLogger(__name__)
 
 
 NO_TIMEOUT = re.compile(
-    r'^(?:'
-    r'|homeassistant/update'
-    r'|hassos/update'
-    r'|hassos/update/cli'
-    r'|supervisor/update'
-    r'|addons/[^/]+/(?:update|install|rebuild)'
-    r'|snapshots/.+/full'
-    r'|snapshots/.+/partial'
-    r'|snapshots/[^/]+/(?:upload|download)'
-    r')$'
+    r"^(?:"
+    r"|homeassistant/update"
+    r"|hassos/update"
+    r"|hassos/update/cli"
+    r"|supervisor/update"
+    r"|addons/[^/]+/(?:update|install|rebuild)"
+    r"|snapshots/.+/full"
+    r"|snapshots/.+/partial"
+    r"|snapshots/[^/]+/(?:upload|download)"
+    r")$"
 )
 
-NO_AUTH = re.compile(
-    r'^(?:'
-    r'|app/.*'
-    r'|addons/[^/]+/logo'
-    r')$'
-)
+NO_AUTH = re.compile(r"^(?:" r"|app/.*" r"|addons/[^/]+/logo" r")$")
 
 
 class HassIOView(HomeAssistantView):
@@ -52,7 +47,7 @@ class HassIOView(HomeAssistantView):
         self._websession = websession
 
     async def _handle(
-            self, request: web.Request, path: str
+        self, request: web.Request, path: str
     ) -> Union[web.Response, web.StreamResponse]:
         """Route data to Hass.io."""
         if _need_auth(path) and not request[KEY_AUTHENTICATED]:
@@ -64,26 +59,26 @@ class HassIOView(HomeAssistantView):
     post = _handle
 
     async def _command_proxy(
-            self, path: str, request: web.Request
+        self, path: str, request: web.Request
     ) -> Union[web.Response, web.StreamResponse]:
         """Return a client request with proxy origin for Hass.io supervisor.
 
         This method is a coroutine.
         """
         read_timeout = _get_timeout(path)
-        hass = request.app['hass']
-
         data = None
         headers = _init_header(request)
 
         try:
-            with async_timeout.timeout(10, loop=hass.loop):
+            with async_timeout.timeout(10):
                 data = await request.read()
 
             method = getattr(self._websession, request.method.lower())
             client = await method(
-                "http://{}/{}".format(self._host, path), data=data,
-                headers=headers, timeout=read_timeout
+                "http://{}/{}".format(self._host, path),
+                data=data,
+                headers=headers,
+                timeout=read_timeout,
             )
 
             # Simple request
@@ -91,9 +86,7 @@ class HassIOView(HomeAssistantView):
                 # Return Response
                 body = await client.read()
                 return web.Response(
-                    content_type=client.content_type,
-                    status=client.status,
-                    body=body,
+                    content_type=client.content_type, status=client.status, body=body
                 )
 
             # Stream response
@@ -118,15 +111,15 @@ class HassIOView(HomeAssistantView):
 def _init_header(request: web.Request) -> Dict[str, str]:
     """Create initial header."""
     headers = {
-        X_HASSIO: os.environ.get('HASSIO_TOKEN', ""),
+        X_HASSIO: os.environ.get("HASSIO_TOKEN", ""),
         CONTENT_TYPE: request.content_type,
     }
 
     # Add user data
-    user = request.get('hass_user')
+    user = request.get("hass_user")
     if user is not None:
-        headers[X_HASS_USER_ID] = request['hass_user'].id
-        headers[X_HASS_IS_ADMIN] = str(int(request['hass_user'].is_admin))
+        headers[X_HASS_USER_ID] = request["hass_user"].id
+        headers[X_HASS_IS_ADMIN] = str(int(request["hass_user"].is_admin))
 
     return headers
 

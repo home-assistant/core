@@ -12,8 +12,8 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
 
-CURRENT_SENSORS = 'current_sensors'
-SENSOR_MANAGER = 'sensor_manager'
+CURRENT_SENSORS = "current_sensors"
+SENSOR_MANAGER_FORMAT = "{}_sensor_manager"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,16 +26,16 @@ def _device_id(aiohue_sensor):
     return device_id
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities,
-                            binary=False):
+async def async_setup_entry(hass, config_entry, async_add_entities, binary=False):
     """Set up the Hue sensors from a config entry."""
-    bridge = hass.data[hue.DOMAIN][config_entry.data['host']]
+    bridge = hass.data[hue.DOMAIN][config_entry.data["host"]]
     hass.data[hue.DOMAIN].setdefault(CURRENT_SENSORS, {})
 
-    manager = hass.data[hue.DOMAIN].get(SENSOR_MANAGER)
+    sm_key = SENSOR_MANAGER_FORMAT.format(config_entry.data["host"])
+    manager = hass.data[hue.DOMAIN].get(sm_key)
     if manager is None:
         manager = SensorManager(hass, bridge)
-        hass.data[hue.DOMAIN][SENSOR_MANAGER] = manager
+        hass.data[hue.DOMAIN][sm_key] = manager
 
     manager.register_component(binary, async_add_entities)
     await manager.start()
@@ -55,31 +55,36 @@ class SensorManager:
         import aiohue
         from .binary_sensor import HuePresence, PRESENCE_NAME_FORMAT
         from .sensor import (
-            HueLightLevel, HueTemperature, LIGHT_LEVEL_NAME_FORMAT,
-            TEMPERATURE_NAME_FORMAT)
+            HueLightLevel,
+            HueTemperature,
+            LIGHT_LEVEL_NAME_FORMAT,
+            TEMPERATURE_NAME_FORMAT,
+        )
 
         self.hass = hass
         self.bridge = bridge
         self._component_add_entities = {}
         self._started = False
 
-        self.sensor_config_map.update({
-            aiohue.sensors.TYPE_ZLL_LIGHTLEVEL: {
-                "binary": False,
-                "name_format": LIGHT_LEVEL_NAME_FORMAT,
-                "class": HueLightLevel,
-            },
-            aiohue.sensors.TYPE_ZLL_TEMPERATURE: {
-                "binary": False,
-                "name_format": TEMPERATURE_NAME_FORMAT,
-                "class": HueTemperature,
-            },
-            aiohue.sensors.TYPE_ZLL_PRESENCE: {
-                "binary": True,
-                "name_format": PRESENCE_NAME_FORMAT,
-                "class": HuePresence,
-            },
-        })
+        self.sensor_config_map.update(
+            {
+                aiohue.sensors.TYPE_ZLL_LIGHTLEVEL: {
+                    "binary": False,
+                    "name_format": LIGHT_LEVEL_NAME_FORMAT,
+                    "class": HueLightLevel,
+                },
+                aiohue.sensors.TYPE_ZLL_TEMPERATURE: {
+                    "binary": False,
+                    "name_format": TEMPERATURE_NAME_FORMAT,
+                    "class": HueTemperature,
+                },
+                aiohue.sensors.TYPE_ZLL_PRESENCE: {
+                    "binary": True,
+                    "name_format": PRESENCE_NAME_FORMAT,
+                    "class": HuePresence,
+                },
+            }
+        )
 
     def register_component(self, binary, async_add_entities):
         """Register async_add_entities methods for components."""
@@ -93,15 +98,18 @@ class SensorManager:
             return
 
         self._started = True
-        _LOGGER.info('Starting sensor polling loop with %s second interval',
-                     self.SCAN_INTERVAL.total_seconds())
+        _LOGGER.info(
+            "Starting sensor polling loop with %s second interval",
+            self.SCAN_INTERVAL.total_seconds(),
+        )
 
         async def async_update_bridge(now):
             """Will update sensors from the bridge."""
             await self.async_update_items()
 
             async_track_point_in_utc_time(
-                self.hass, async_update_bridge, utcnow() + self.SCAN_INTERVAL)
+                self.hass, async_update_bridge, utcnow() + self.SCAN_INTERVAL
+            )
 
         await async_update_bridge(None)
 
@@ -116,23 +124,23 @@ class SensorManager:
             with async_timeout.timeout(4):
                 await api.update()
         except (asyncio.TimeoutError, aiohue.AiohueException) as err:
-            _LOGGER.debug('Failed to fetch sensor: %s', err)
+            _LOGGER.debug("Failed to fetch sensor: %s", err)
 
             if not self.bridge.available:
                 return
 
-            _LOGGER.error('Unable to reach bridge %s (%s)', self.bridge.host,
-                          err)
+            _LOGGER.error("Unable to reach bridge %s (%s)", self.bridge.host, err)
             self.bridge.available = False
 
             return
 
         finally:
-            _LOGGER.debug('Finished sensor request in %.3f seconds',
-                          monotonic() - start)
+            _LOGGER.debug(
+                "Finished sensor request in %.3f seconds", monotonic() - start
+            )
 
         if not self.bridge.available:
-            _LOGGER.info('Reconnected to bridge %s', self.bridge.host)
+            _LOGGER.info("Reconnected to bridge %s", self.bridge.host)
             self.bridge.available = True
 
         new_sensors = []
@@ -164,8 +172,7 @@ class SensorManager:
         for item_id in api:
             existing = current.get(api[item_id].uniqueid)
             if existing is not None:
-                self.hass.async_create_task(
-                    existing.async_maybe_update_ha_state())
+                self.hass.async_create_task(existing.async_maybe_update_ha_state())
                 continue
 
             primary_sensor = None
@@ -174,15 +181,15 @@ class SensorManager:
                 continue
 
             base_name = api[item_id].name
-            primary_sensor = primary_sensor_devices.get(
-                _device_id(api[item_id]))
+            primary_sensor = primary_sensor_devices.get(_device_id(api[item_id]))
             if primary_sensor is not None:
                 base_name = primary_sensor.name
             name = sensor_config["name_format"].format(base_name)
 
             current[api[item_id].uniqueid] = sensor_config["class"](
-                api[item_id], name, self.bridge, primary_sensor=primary_sensor)
-            if sensor_config['binary']:
+                api[item_id], name, self.bridge, primary_sensor=primary_sensor
+            )
+            if sensor_config["binary"]:
                 new_binary_sensors.append(current[api[item_id].uniqueid])
             else:
                 new_sensors.append(current[api[item_id].uniqueid])
@@ -233,13 +240,14 @@ class GenericHueSensor:
     @property
     def available(self):
         """Return if sensor is available."""
-        return self.bridge.available and (self.bridge.allow_unreachable or
-                                          self.sensor.config['reachable'])
+        return self.bridge.available and (
+            self.bridge.allow_unreachable or self.sensor.config["reachable"]
+        )
 
     @property
     def swupdatestate(self):
         """Return detail of available software updates for this device."""
-        return self.primary_sensor.raw.get('swupdate', {}).get('state')
+        return self.primary_sensor.raw.get("swupdate", {}).get("state")
 
     async def async_maybe_update_ha_state(self):
         """Try to update Home Assistant with current state of entity.
@@ -249,8 +257,7 @@ class GenericHueSensor:
         try:
             await self._async_update_ha_state()
         except (RuntimeError, NoEntitySpecifiedError):
-            _LOGGER.debug(
-                "Hue sensor update requested before it has been added.")
+            _LOGGER.debug("Hue sensor update requested before it has been added.")
 
     @property
     def device_info(self):
@@ -259,16 +266,12 @@ class GenericHueSensor:
         Links individual entities together in the hass device registry.
         """
         return {
-            'identifiers': {
-                (hue.DOMAIN, self.device_id)
-            },
-            'name': self.primary_sensor.name,
-            'manufacturer': self.primary_sensor.manufacturername,
-            'model': (
-                self.primary_sensor.productname or
-                self.primary_sensor.modelid),
-            'sw_version': self.primary_sensor.swversion,
-            'via_hub': (hue.DOMAIN, self.bridge.api.config.bridgeid),
+            "identifiers": {(hue.DOMAIN, self.device_id)},
+            "name": self.primary_sensor.name,
+            "manufacturer": self.primary_sensor.manufacturername,
+            "model": (self.primary_sensor.productname or self.primary_sensor.modelid),
+            "sw_version": self.primary_sensor.swversion,
+            "via_device": (hue.DOMAIN, self.bridge.api.config.bridgeid),
         }
 
 
@@ -278,6 +281,4 @@ class GenericZLLSensor(GenericHueSensor):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        return {
-            "battery_level": self.sensor.battery
-        }
+        return {"battery_level": self.sensor.battery}

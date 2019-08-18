@@ -4,27 +4,33 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    DeviceScanner,
+)
 from homeassistant.const import CONF_HOST
+import homeassistant.helpers.config_validation as cv
+
+from .const import (
+    CONF_AUTH_KEY,
+    CONF_BASEOID,
+    CONF_COMMUNITY,
+    CONF_PRIV_KEY,
+    DEFAULT_COMMUNITY,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_AUTHKEY = 'authkey'
-CONF_BASEOID = 'baseoid'
-CONF_COMMUNITY = 'community'
-CONF_PRIVKEY = 'privkey'
-
-DEFAULT_COMMUNITY = 'public'
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_BASEOID): cv.string,
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
-    vol.Inclusive(CONF_AUTHKEY, 'keys'): cv.string,
-    vol.Inclusive(CONF_PRIVKEY, 'keys'): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_BASEOID): cv.string,
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
+        vol.Inclusive(CONF_AUTH_KEY, "keys"): cv.string,
+        vol.Inclusive(CONF_PRIV_KEY, "keys"): cv.string,
+    }
+)
 
 
 def get_scanner(hass, config):
@@ -41,18 +47,19 @@ class SnmpScanner(DeviceScanner):
         """Initialize the scanner."""
         from pysnmp.entity.rfc3413.oneliner import cmdgen
         from pysnmp.entity import config as cfg
+
         self.snmp = cmdgen.CommandGenerator()
 
         self.host = cmdgen.UdpTransportTarget((config[CONF_HOST], 161))
-        if CONF_AUTHKEY not in config or CONF_PRIVKEY not in config:
+        if CONF_AUTH_KEY not in config or CONF_PRIV_KEY not in config:
             self.auth = cmdgen.CommunityData(config[CONF_COMMUNITY])
         else:
             self.auth = cmdgen.UsmUserData(
                 config[CONF_COMMUNITY],
-                config[CONF_AUTHKEY],
-                config[CONF_PRIVKEY],
+                config[CONF_AUTH_KEY],
+                config[CONF_PRIV_KEY],
                 authProtocol=cfg.usmHMACSHAAuthProtocol,
-                privProtocol=cfg.usmAesCfb128Protocol
+                privProtocol=cfg.usmAesCfb128Protocol,
             )
         self.baseoid = cmdgen.MibVariable(config[CONF_BASEOID])
         self.last_results = []
@@ -64,8 +71,7 @@ class SnmpScanner(DeviceScanner):
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
-        return [client['mac'] for client in self.last_results
-                if client.get('mac')]
+        return [client["mac"] for client in self.last_results if client.get("mac")]
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
@@ -92,23 +98,27 @@ class SnmpScanner(DeviceScanner):
         devices = []
 
         errindication, errstatus, errindex, restable = self.snmp.nextCmd(
-            self.auth, self.host, self.baseoid)
+            self.auth, self.host, self.baseoid
+        )
 
         if errindication:
             _LOGGER.error("SNMPLIB error: %s", errindication)
             return
         if errstatus:
-            _LOGGER.error("SNMP error: %s at %s", errstatus.prettyPrint(),
-                          errindex and restable[int(errindex) - 1][0] or '?')
+            _LOGGER.error(
+                "SNMP error: %s at %s",
+                errstatus.prettyPrint(),
+                errindex and restable[int(errindex) - 1][0] or "?",
+            )
             return
 
         for resrow in restable:
             for _, val in resrow:
                 try:
-                    mac = binascii.hexlify(val.asOctets()).decode('utf-8')
+                    mac = binascii.hexlify(val.asOctets()).decode("utf-8")
                 except AttributeError:
                     continue
-                _LOGGER.debug("Found MAC %s", mac)
-                mac = ':'.join([mac[i:i+2] for i in range(0, len(mac), 2)])
-                devices.append({'mac': mac})
+                _LOGGER.debug("Found MAC address: %s", mac)
+                mac = ":".join([mac[i : i + 2] for i in range(0, len(mac), 2)])
+                devices.append({"mac": mac})
         return devices

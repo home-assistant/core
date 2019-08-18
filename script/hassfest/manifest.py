@@ -7,15 +7,27 @@ from voluptuous.humanize import humanize_error
 from .model import Integration
 
 
-MANIFEST_SCHEMA = vol.Schema({
-    vol.Required('domain'): str,
-    vol.Required('name'): str,
-    vol.Required('documentation'): str,
-    vol.Required('requirements'): [str],
-    vol.Required('dependencies'): [str],
-    vol.Optional('after_dependencies'): [str],
-    vol.Required('codeowners'): [str],
-})
+MANIFEST_SCHEMA = vol.Schema(
+    {
+        vol.Required("domain"): str,
+        vol.Required("name"): str,
+        vol.Optional("config_flow"): bool,
+        vol.Optional("zeroconf"): [str],
+        vol.Optional("ssdp"): vol.Schema(
+            {
+                vol.Optional("st"): [str],
+                vol.Optional("manufacturer"): [str],
+                vol.Optional("device_type"): [str],
+            }
+        ),
+        vol.Optional("homekit"): vol.Schema({vol.Optional("models"): [str]}),
+        vol.Required("documentation"): str,
+        vol.Required("requirements"): [str],
+        vol.Required("dependencies"): [str],
+        vol.Optional("after_dependencies"): [str],
+        vol.Required("codeowners"): [str],
+    }
+)
 
 
 def validate_manifest(integration: Integration):
@@ -24,14 +36,14 @@ def validate_manifest(integration: Integration):
         MANIFEST_SCHEMA(integration.manifest)
     except vol.Invalid as err:
         integration.add_error(
-            'manifest',
-            "Invalid manifest: {}".format(
-                humanize_error(integration.manifest, err)))
+            "manifest",
+            "Invalid manifest: {}".format(humanize_error(integration.manifest, err)),
+        )
         integration.manifest = None
         return
 
-    if integration.manifest['domain'] != integration.path.name:
-        integration.add_error('manifest', 'Domain does not match dir name')
+    if integration.manifest["domain"] != integration.path.name:
+        integration.add_error("manifest", "Domain does not match dir name")
 
 
 def validate(integrations: Dict[str, Integration], config):

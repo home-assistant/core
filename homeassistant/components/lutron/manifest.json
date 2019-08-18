@@ -3,7 +3,7 @@
   "name": "Lutron",
   "documentation": "https://www.home-assistant.io/components/lutron",
   "requirements": [
-    "pylutron==0.2.0"
+    "pylutron==0.2.2"
   ],
   "dependencies": [],
   "codeowners": []
