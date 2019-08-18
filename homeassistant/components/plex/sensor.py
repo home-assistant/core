@@ -2,11 +2,10 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.const import CONF_USERNAME, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from .const import CONF_SERVER, PLEX_SERVER_CONFIG
+from .const import PLEX_SERVER_CONFIG
 from .server import setup_plex_server
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,10 +40,7 @@ def _setup_platform(hass, config_entry, add_entities):
     server_config = config_entry.data.get(PLEX_SERVER_CONFIG, {})
 
     try:
-        add_entities(
-            [PlexSensor(server_config)],
-            True,
-        )
+        add_entities([PlexSensor(server_config)], True)
     except (
         plexapi.exceptions.BadRequest,
         plexapi.exceptions.Unauthorized,

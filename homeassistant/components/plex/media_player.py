@@ -21,10 +21,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import (
-    CONF_TOKEN,
     CONF_URL,
     CONF_USERNAME,
-    CONF_VERIFY_SSL,
     DEVICE_DEFAULT_NAME,
     STATE_IDLE,
     STATE_OFF,

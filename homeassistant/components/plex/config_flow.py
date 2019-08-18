@@ -1,9 +1,6 @@
 """Config flow for Plex."""
 import logging
 import plexapi.exceptions
-from plexapi.myplex import MyPlexAccount
-from plexapi.server import PlexServer
-from requests import Session
 import requests.exceptions
 import voluptuous as vol
 
@@ -73,7 +70,6 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                     step_id="build_url", data_schema=data_schema, errors={}
                 )
 
-            
             url = user_input.get(CONF_URL)
             token = user_input.get(CONF_TOKEN)
             username = user_input.get(CONF_USERNAME)
@@ -94,18 +90,20 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                     data = {
                         CONF_USERNAME: username,
                         CONF_TOKEN: token,
-                        CONF_SERVER: server_name
+                        CONF_SERVER: server_name,
                     }
                 else:
                     data = {
                         CONF_URL: url,
                         CONF_TOKEN: token,
-                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL]
+                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
                     }
 
                 plex_server = setup_plex_server(user_input)
 
-                title = "{} ({})".format(plex_server.friendlyName, username if username else "Direct")
+                title = "{} ({})".format(
+                    plex_server.friendlyName, username if username else "Direct"
+                )
 
                 if username and not server_name:
                     data[CONF_SERVER] = plex_server.friendlyName

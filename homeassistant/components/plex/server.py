@@ -1,11 +1,7 @@
 """Shared function to create Plex server instances."""
-from homeassistant.const import (
-    CONF_TOKEN,
-    CONF_URL,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 from .const import CONF_SERVER
+
 
 def setup_plex_server(server_config):
     """Connect to Plex and return server object.
@@ -33,8 +29,10 @@ def setup_plex_server(server_config):
         if not available_servers:
             raise NoServersFound("No Plex servers linked to this account")
         if not server_name and len(available_servers) > 1:
-            raise ServerNotSpecified("Multiple Plex servers available but selection not provided")
-            
+            raise ServerNotSpecified(
+                "Multiple Plex servers available but selection not provided"
+            )
+
         server_choice = server_name if server_name else available_servers[0].name
         plex_server = account.resource(server_choice).connect()
     else:

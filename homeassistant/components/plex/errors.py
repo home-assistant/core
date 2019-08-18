@@ -15,7 +15,7 @@ class NoServersFound(PlexException):
 
 
 class ServerNotSpecified(PlexException):
-    """Multiple servers linked to account without choice provided"""
+    """Multiple servers linked to account without choice provided."""
 
 
 class TokenMissing(PlexException):
