@@ -1,29 +1,48 @@
 """Test pi_hole component."""
 
-import unittest
-
-from homeassistant import setup
 from homeassistant.components import pi_hole
 
 from asynctest import CoroutineMock
 from hole import Hole
-from tests.common import get_test_home_assistant
+from tests.common import async_setup_component
 from unittest.mock import patch
 
 
-class TestComponentPiHole(unittest.TestCase):
-    """Test the pi_hole component."""
+def mock_pihole_data_call(Hole):
+    """Need to override so as to allow mocked data."""
+    Hole.__init__ = (
+        lambda self, host, loop, session, location, tls, verify_tls=True, api_token=None: None
+    )
+    Hole.data = {
+        "ads_blocked_today": 0,
+        "ads_percentage_today": 0,
+        "clients_ever_seen": 0,
+        "dns_queries_today": 0,
+        "domains_being_blocked": 0,
+        "queries_cached": 0,
+        "queries_forwarded": 0,
+        "status": 0,
+        "unique_clients": 0,
+        "unique_domains": 0,
+    }
+    pass
 
-    def setUp(self):  # pylint: disable=invalid-name
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
 
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop down everything that was started."""
-        self.hass.stop()
+async def test_setup_no_config(hass):
+    """Tests component setup with no config."""
+    with patch.object(
+        Hole, "get_data", new=CoroutineMock(side_effect=mock_pihole_data_call(Hole))
+    ):
+        assert await async_setup_component(hass, pi_hole.DOMAIN, {pi_hole.DOMAIN: {}})
 
-    def test_setup_no_config(self):
-        """Test a successful setup with no configuration."""
-        config = {}
-        with patch.object(Hole, "get_data", new=CoroutineMock()):
-            assert setup.setup_component(self.hass, pi_hole.DOMAIN, {"pi_hole": config})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.pi_hole_ads_blocked_today").state == "0"
+    assert hass.states.get("sensor.pi_hole_ads_percentage_blocked_today").state == "0"
+    assert hass.states.get("sensor.pi_hole_dns_queries_cached").state == "0"
+    assert hass.states.get("sensor.pi_hole_dns_queries_forwarded").state == "0"
+    assert hass.states.get("sensor.pi_hole_dns_queries_today").state == "0"
+    assert hass.states.get("sensor.pi_hole_dns_unique_clients").state == "0"
+    assert hass.states.get("sensor.pi_hole_dns_unique_domains").state == "0"
+    assert hass.states.get("sensor.pi_hole_domains_blocked").state == "0"
+    assert hass.states.get("sensor.pi_hole_seen_clients").state == "0"

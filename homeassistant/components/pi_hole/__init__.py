@@ -68,9 +68,7 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN] = pi_hole
 
-    hass.async_create_task(
-        async_load_platform(hass, SENSOR_DOMAIN, DOMAIN, None, config)
-    )
+    hass.async_create_task(async_load_platform(hass, SENSOR_DOMAIN, DOMAIN, {}, config))
 
     LOGGER.debug("%s integration setup complete", DOMAIN)
 
