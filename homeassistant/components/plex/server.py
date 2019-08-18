@@ -22,18 +22,19 @@ def setup_plex_server(server_config):
     plex_server = None
     if username:
         account = MyPlexAccount(username=username, token=token)
-        
-        if not account.resources():
+        available_servers = [x for x in account.resources() if "server" in x.provides]
+
+        if not available_servers:
             raise NoServersFound("No Plex servers linked to this account")
-        if not server_name and len(account.resources()) > 1:
+        if not server_name and len(available_servers) > 1:
             raise ServerNotSpecified("Multiple Plex servers available but selection not provided")
             
-        server_choice = server_name if server_name else account.resources()[0].name
+        server_choice = server_name if server_name else available_servers[0].name
         plex_server = account.resource(server_choice).connect()
     else:
         session = None
         if url.startswith("https") and not verify_ssl:
             session = requests.Session()
             session.verify = False
-        plex_server = plexapi.server.PlexServer(url, token, session)
+        plex_server = PlexServer(url, token, session)
     return plex_server
