@@ -27,6 +27,7 @@ from tests.common import (
     mock_coro,
     mock_registry,
     mock_device_registry,
+    patch_yaml_files,
 )
 
 
@@ -283,6 +284,56 @@ def test_async_get_all_descriptions(hass):
 
     assert "description" in descriptions[logger.DOMAIN]["set_level"]
     assert "fields" in descriptions[logger.DOMAIN]["set_level"]
+
+    # Test that the services descriptions for python_script work correctly
+    python_script = hass.components.python_script
+    python_script_config = {python_script.DOMAIN: {}}
+    python_scripts = [
+        "/some/config/dir/{}/no_description.py".format(python_script.DOMAIN),
+        "/some/config/dir/{}/has_description.py".format(python_script.DOMAIN),
+    ]
+
+    # User-provided services.yaml file
+    service_descriptions = (
+        "has_description:\n"
+        "  description: Description of has_description.py.\n"
+        "  fields:\n"
+        "    fake_param:\n"
+        "      description: Parameter used by has_description.py.\n"
+        "      example: 'This is a test of python_script.has_description'"
+    )
+    services_yaml = {
+        hass.config.config_dir
+        + "/{}/services.yaml".format(python_script.FOLDER): service_descriptions
+    }
+
+    with patch(
+        "homeassistant.components.python_script.os.path.isdir", return_value=True
+    ), patch(
+        "homeassistant.components.python_script.glob.iglob", return_value=python_scripts
+    ), patch_yaml_files(
+        services_yaml
+    ):
+        yield from async_setup_component(
+            hass, python_script.DOMAIN, python_script_config
+        )
+        descriptions = yield from service.async_get_all_descriptions(hass)
+
+    assert len(descriptions) == 3
+
+    assert descriptions[python_script.DOMAIN]["no_description"]["description"] == ""
+    assert bool(descriptions[python_script.DOMAIN]["no_description"]["fields"]) is False
+
+    has_description = descriptions[python_script.DOMAIN]["has_description"]
+    assert has_description["description"] == "Description of has_description.py."
+    assert (
+        has_description["fields"]["fake_param"]["description"]
+        == "Parameter used by has_description.py."
+    )
+    assert (
+        has_description["fields"]["fake_param"]["example"]
+        == "This is a test of python_script.has_description"
+    )
 
 
 async def test_call_with_required_features(hass, mock_entities):
