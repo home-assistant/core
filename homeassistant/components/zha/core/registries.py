@@ -152,6 +152,7 @@ def establish_device_mappings():
             zha.DeviceType.ON_OFF_LIGHT_SWITCH: SWITCH,
             zha.DeviceType.ON_OFF_PLUG_IN_UNIT: SWITCH,
             zha.DeviceType.SMART_PLUG: SWITCH,
+            zha.DeviceType.IAS_WARNING_DEVICE: BINARY_SENSOR,
         }
     )
 
