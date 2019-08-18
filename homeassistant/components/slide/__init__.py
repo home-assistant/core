@@ -47,7 +47,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass, config):
-    """Set up the GoSlide platform."""
+    """Set up the Slide platform."""
 
     # pylint: disable=unused-argument
     async def update_slides(now=None):
@@ -55,13 +55,13 @@ async def async_setup(hass, config):
         result = await hass.data[DOMAIN][API].slidesoverview()
 
         if result is None:
-            _LOGGER.error("GoSlide API does not work or returned an error")
+            _LOGGER.error("Slide API does not work or returned an error")
             return
 
         if result:
-            _LOGGER.debug("GoSlide API returned %d slide(s)", len(result))
+            _LOGGER.debug("Slide API returned %d slide(s)", len(result))
         else:
-            _LOGGER.warning("GoSlide API returned 0 slides")
+            _LOGGER.warning("Slide API returned 0 slides")
 
         for key in hass.data[DOMAIN][SLIDES]:
             hass.data[DOMAIN][SLIDES][key]["pos"] = None
@@ -69,7 +69,7 @@ async def async_setup(hass, config):
         for slide in result:
             if "device_id" not in slide:
                 _LOGGER.error(
-                    "Found invalid GoSlide entry, 'device_id' is " "missing. Entry=%s",
+                    "Found invalid Slide entry, 'device_id' is " "missing. Entry=%s",
                     slide,
                 )
                 continue
@@ -137,17 +137,17 @@ async def async_setup(hass, config):
     try:
         result = await hass.data[DOMAIN][API].login()
     except Exception as err:
-        _LOGGER.error("Error connecting to GoSlide Cloud: %s", str(err))
+        _LOGGER.error("Error connecting to Slide Cloud: %s", str(err))
         _LOGGER.error("Going to retry in %s seconds", retry)
         async_call_later(hass, retry, async_setup(hass, config))
         return True
 
     # pylint: disable=no-else-return
     if result is None:
-        _LOGGER.error("GoSlide API returned unknown error during " "authentication")
+        _LOGGER.error("Slide API returned unknown error during " "authentication")
         return False
     elif result is False:
-        _LOGGER.error("GoSlide authentication failed, check " "username/password")
+        _LOGGER.error("Slide authentication failed, check " "username/password")
         return False
 
     await update_slides()

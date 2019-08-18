@@ -26,13 +26,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     entities = []
 
     for key in hass.data[DOMAIN][SLIDES]:
-        _LOGGER.debug("Setting up GoSlide entity: %s", hass.data[DOMAIN][SLIDES][key])
-        entities.append(GoSlideCover(hass, hass.data[DOMAIN][SLIDES][key]))
+        _LOGGER.debug("Setting up Slide entity: %s", hass.data[DOMAIN][SLIDES][key])
+        entities.append(SlideCover(hass, hass.data[DOMAIN][SLIDES][key]))
 
     async_add_entities(entities)
 
 
-class GoSlideCover(CoverDevice):
+class SlideCover(CoverDevice):
     """Representation of a Go Slide cover."""
 
     def __init__(self, hass, slide):
@@ -41,7 +41,7 @@ class GoSlideCover(CoverDevice):
         self._mac = slide["mac"]
         self._id = slide["id"]
         self._name = slide["name"]
-        self._entity_id = ENTITY_ID_FORMAT.format(slugify("goslide_" + self._mac))
+        self._entity_id = ENTITY_ID_FORMAT.format(slugify("slide_" + self._mac))
         self._is_closed = None
 
     @property
