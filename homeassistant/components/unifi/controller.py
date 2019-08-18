@@ -15,6 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .const import (
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
+    CONF_DONT_TRACK_NEW_CLIENTS,
     CONF_SITE_ID,
     CONTROLLER_ID,
     LOGGER,
@@ -154,6 +155,14 @@ class UniFiController:
             ):
                 self.unifi_config = unifi_config
                 break
+
+        if (
+            self.config_entry.system_options.disable_new_entities
+            != unifi_config[CONF_DONT_TRACK_NEW_CLIENTS]
+        ):
+            self.config_entry.system_options.disable_new_entities = unifi_config[
+                CONF_DONT_TRACK_NEW_CLIENTS
+            ]
 
         for platform in ["device_tracker", "switch"]:
             hass.async_create_task(
