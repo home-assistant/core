@@ -950,9 +950,12 @@ class SonosEntity(MediaPlayerDevice):
                 self.soco.clear_queue()
                 self.soco.add_to_queue(playlist)
                 self.soco.play_from_queue(0)
+                return
             except StopIteration:
                 _LOGGER.error('Could not find a Sonos playlist named "%s".', media_id)
-        elif kwargs.get(ATTR_MEDIA_ENQUEUE):
+                # Fall through to the previous behavior, in case someone is relying on
+                # passing a URI with a media_type of "playlist"
+        if kwargs.get(ATTR_MEDIA_ENQUEUE):
             try:
                 self.soco.add_uri_to_queue(media_id)
             except SoCoUPnPException:
