@@ -1,4 +1,11 @@
 """Shared function to create Plex server instances."""
+from homeassistant.const import (
+    CONF_TOKEN,
+    CONF_URL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
+from .const import CONF_SERVER
 
 def setup_plex_server(server_config):
     from plexapi.myplex import MyPlexAccount
