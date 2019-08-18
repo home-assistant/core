@@ -1,29 +1,21 @@
-""" Linky Atome """
+"""Linky Atome."""
 import logging
-
-_LOGGER = logging.getLogger(__name__)
-
 
 from datetime import timedelta
 
 import pickle
 import voluptuous as vol
-from requests.exceptions import HTTPError, ConnectTimeout
 
-from homeassistant.const import (
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_TIMEOUT,
-    STATE_UNAVAILABLE,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT, CONF_NAME
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
 import homeassistant.helpers.config_validation as cv
 
 import requests
+
+
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "atome"
 DEFAULT_UNIT = "W"
