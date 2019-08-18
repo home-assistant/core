@@ -1910,7 +1910,7 @@ watchdog==0.8.3
 waterfurnace==1.1.0
 
 # homeassistant.components.webdav
-webdavclient3==0.11
+webdavclient3==0.12
 
 # homeassistant.components.cisco_webex_teams
 webexteamssdk==1.1.1
