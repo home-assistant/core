@@ -1699,7 +1699,7 @@ simplepush==1.1.4
 simplisafe-python==4.3.0
 
 # homeassistant.components.sisyphus
-sisyphus-control==2.2
+sisyphus-control==2.2.1
 
 # homeassistant.components.skybell
 skybellpy==0.4.0
