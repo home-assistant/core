@@ -944,30 +944,30 @@ class SonosEntity(MediaPlayerDevice):
 
         If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
         """
-        if media_type == MEDIA_TYPE_PLAYLIST:
+        if media_type == MEDIA_TYPE_MUSIC:
+            if kwargs.get(ATTR_MEDIA_ENQUEUE):
+                try:
+                    self.soco.add_uri_to_queue(media_id)
+                except SoCoUPnPException:
+                    _LOGGER.error(
+                        'Error parsing media uri "%s", '
+                        "please check it's a valid media resource "
+                        "supported by Sonos",
+                        media_id,
+                    )
+            else:
+                self.soco.play_uri(media_id)
+        elif media_type == MEDIA_TYPE_PLAYLIST:
             try:
                 playlists = self.soco.get_sonos_playlists()
                 playlist = next(p for p in playlists if p.title == media_id)
                 self.soco.clear_queue()
                 self.soco.add_to_queue(playlist)
                 self.soco.play_from_queue(0)
-                return
             except StopIteration:
-                _LOGGER.error('Could not find a Sonos playlist named "%s".', media_id)
-                # Fall through to the previous behavior, in case someone is relying on
-                # passing a URI with a media_type of "playlist"
-        if kwargs.get(ATTR_MEDIA_ENQUEUE):
-            try:
-                self.soco.add_uri_to_queue(media_id)
-            except SoCoUPnPException:
-                _LOGGER.error(
-                    'Error parsing media uri "%s", '
-                    "please check it's a valid media resource "
-                    "supported by Sonos",
-                    media_id,
-                )
+                _LOGGER.error('Could not find a Sonos playlist named "%s"', media_id)
         else:
-            self.soco.play_uri(media_id)
+            _LOGGER.error('Sonos does not support a media type of "%s"', media_type)
 
     @soco_error()
     def join(self, slaves):
