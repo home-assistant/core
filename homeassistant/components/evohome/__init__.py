@@ -159,8 +159,6 @@ class EvoBroker:
         refresh_token, access_token, access_token_expires = (
             await self._load_auth_tokens()
         )
-        #   (None, None, None)  # TODO: testing only
-        #   ("AAA", None, None)  # TODO: check what happens with a bad refresh token
 
         # evohomeclient2 uses naive/local datetimes
         if access_token_expires is not None:
@@ -172,7 +170,6 @@ class EvoBroker:
             refresh_token=refresh_token,
             access_token=access_token,
             access_token_expires=access_token_expires,
-            debug=True,
         )
 
         try:
@@ -207,10 +204,12 @@ class EvoBroker:
             ._control_systems[0]
         )
 
-        _LOGGER.warn("Config = %s", self.config)  # TODO: should be debug
+        _LOGGER.debug("Config = %s", self.config)
         if _LOGGER.isEnabledFor(logging.DEBUG):
             # don't do an I/O unless required
-            await self.update(utcnow())  # _LOGGER.debug("Status = %s", self.status)
+            await self.update(
+                utcnow()
+            )  # does: _LOGGER.debug("Status = %s", self.status)
 
         return True
 
@@ -273,9 +272,7 @@ class EvoBroker:
         # inform the evohome devices that state data has been updated
         async_dispatcher_send(self.hass, DOMAIN, {"signal": "refresh"})
 
-        _LOGGER.warn(
-            "Status = %s", status[GWS][0][TCS][0]
-        )  # TODO: should be _LOGGER.debug()
+        _LOGGER.debug("Status = %s", status[GWS][0][TCS][0])
 
 
 class EvoDevice(Entity):
