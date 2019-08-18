@@ -1,9 +1,8 @@
 {
-  "domain": "energy",
+  "domain": "atome",
   "name": "Atome",
   "documentation": "",
   "dependencies": [],
   "codeowners": [],
-  "requirements": [],
-  "homeassistant":"0.96.0"
+  "requirements": []
 } 
