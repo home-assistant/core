@@ -3,9 +3,6 @@ from datetime import datetime
 import logging
 from typing import Any, Dict, Optional, List
 
-import aiohttp.client_exceptions
-import evohomeclient3 as evohomeclient2
-
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
@@ -126,10 +123,9 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
 
         until == None means indefinitely (i.e. PermanentOverride)
         """
-        try:
-            await self._evo_device.set_temperature(temperature, until)
-        except (aiohttp.ClientResponseError, evohomeclient2.AuthenticationError) as err:
-            _handle_exception(err)
+        await self._call_client_api(
+            self._evo_device.set_temperature(temperature, until)
+        )
 
     async def _set_zone_mode(self, op_mode: str) -> None:
         """Set a Zone to one of its native EVO_* operating modes.
@@ -150,13 +146,7 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
         (by default) 5C, and 'Away', Zones to (by default) 12C.
         """
         if op_mode == EVO_FOLLOW:
-            try:
-                await self._evo_device.cancel_temp_override()
-            except (
-                aiohttp.ClientResponseError,
-                evohomeclient2.AuthenticationError,
-            ) as err:
-                _handle_exception(err)
+            await self._call_client_api(self._evo_device.cancel_temp_override())
             return
 
         temperature = self._evo_device.setpointStatus["targetHeatTemperature"]
@@ -171,11 +161,9 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
 
     async def _set_tcs_mode(self, op_mode: str) -> None:
         """Set the Controller to any of its native EVO_* operating modes."""
-        try:
-            # noqa: E501; pylint: disable=protected-access
-            await self._evo_tcs._set_status(op_mode)
-        except (aiohttp.ClientResponseError, evohomeclient2.AuthenticationError) as err:
-            _handle_exception(err)
+        await self._call_client_api(
+            self._evo_tcs._set_status(op_mode)
+        )  # pylint: disable=protected-access
 
     @property
     def hvac_modes(self) -> List[str]:
@@ -209,6 +197,11 @@ class EvoZone(EvoClimateDevice):
 
         self._supported_features = SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
         self._preset_modes = list(HA_PRESET_TO_EVO)
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._evo_device.temperatureStatus.get("isAvailable", False)
 
     @property
     def hvac_mode(self) -> str:

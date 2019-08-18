@@ -1,9 +1,7 @@
 """Support for WaterHeater devices of (EMEA/EU) Honeywell TCC systems."""
+from datetime import timedelta
 import logging
 from typing import List
-
-import aiohttp.client_exceptions
-import evohomeclient3 as evohomeclient2
 
 from homeassistant.components.water_heater import (
     SUPPORT_OPERATION_MODE,
@@ -61,6 +59,11 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         self._operation_list = list(HA_OPMODE_TO_DHW)
 
     @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._evo_device.temperatureStatus.get("isAvailable", False)
+
+    @property
     def current_operation(self) -> str:
         """Return the current operating mode (On, or Off)."""
         return EVO_STATE_TO_HA[self._evo_device.stateStatus["state"]]
@@ -90,7 +93,6 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
 
         data = {"Mode": op_mode, "State": state, "UntilTime": until}
 
-        try:
-            await self._evo_device._set_dhw(data)  # pylint: disable=protected-access
-        except (aiohttp.ClientResponseError, evohomeclient2.AuthenticationError) as err:
-            _handle_exception(err)
+        await self._call_client_api(
+            self._evo_device._set_dhw(data)
+        )  # pylint: disable=protected-access

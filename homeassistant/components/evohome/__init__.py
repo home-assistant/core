@@ -9,7 +9,7 @@ from typing import Any, Dict, Optional, Tuple
 
 import aiohttp.client_exceptions
 import voluptuous as vol
-import evohomeclient3 as evohomeclient2
+import evohomeclient2
 
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -130,10 +130,7 @@ async def async_setup(hass: HomeAssistantType, hass_config: ConfigType) -> bool:
         await async_load_platform(hass, "water_heater", DOMAIN, {}, hass_config)
 
     async_track_time_interval(
-        hass,
-        broker.update,
-        # hass_config[DOMAIN][CONF_SCAN_INTERVAL]
-        timedelta(seconds=10),  # TODO: for testing only!
+        hass, broker.update, hass_config[DOMAIN][CONF_SCAN_INTERVAL]
     )
 
     return True
@@ -291,6 +288,7 @@ class EvoDevice(Entity):
     def __init__(self, evo_broker, evo_device) -> None:
         """Initialize the evohome entity."""
         self._evo_device = evo_device
+        self._evo_broker = evo_broker
         self._evo_tcs = evo_broker.tcs
 
         self._name = self._icon = self._precision = None
@@ -400,6 +398,18 @@ class EvoDevice(Entity):
     def temperature_unit(self) -> str:
         """Return the temperature unit to use in the frontend UI."""
         return TEMP_CELSIUS
+
+    async def _call_client_api(self, api_function) -> None:
+        try:
+            await api_function
+        except (aiohttp.ClientResponseError, evohomeclient2.AuthenticationError) as err:
+            _handle_exception(err)
+
+        point_in_time = utcnow() + timedelta(seconds=3)
+
+        async_track_point_in_utc_time(
+            self.hass, self._evo_broker.update(point_in_time), point_in_time
+        )
 
     async def _update_schedule(self) -> None:
         """Get the latest state data."""
