@@ -33,6 +33,7 @@ ATOME_COOKIE = "atome_cookies.pickle"
 ATOME_USER_ID = "atome_user_id.pickle"
 ATOME_USER_REFERENCE = "atome_user_reference.pickle"
 SCAN_INTERVAL = timedelta(seconds=30)
+SESSION_RENEW_INTERVAL = timedelta(minutes=55)
 DEFAULT_TIMEOUT = 10
 
 
@@ -53,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Linky sensor."""
+    """Set up the sensor."""
     name = config.get(CONF_NAME)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -63,44 +64,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     cookie_path = hass.config.path(ATOME_COOKIE)
     user_id_path = hass.config.path(ATOME_USER_ID)
     user_reference_path = hass.config.path(ATOME_USER_REFERENCE)
-
-    # atome = AtomeSensor(
-    #     name,
-    #     username,
-    #     password,
-    #     timeout,
-    #     cookie_path,
-    #     user_id_path,
-    #     user_reference_path,
-    # )
-    # user_id, user_reference = atome._login(username, password)
-    # # Login the user into the Atome API.
-    # payload = {"email": username,
-    #           "plainPassword": password}
-
-    # req = requests.post(API_BASE_URI + API_ENDPOINT_LOGIN, json=payload, headers={"content-type":"application/json"})
-    # response_json = req.json()
-    # # _LOGGER.debug(response_json)
-    # session_cookie = req.cookies.get(COOKIE_NAME)
-    # user_id = str(response_json['id'])
-    # user_reference = response_json['subscriptions'][0]['reference']
-
-    # if session_cookie is None:
-    #     _LOGGER.exception("Login unsuccessful. Check your credentials")
-    #     return False
-
-    # # store cookie
-    # with open(cookie_path, 'wb') as f:
-    #   pickle.dump(session_cookie, f)
-    # # store user id
-    # with open(user_id_path, 'wb') as f:
-    #   pickle.dump(user_id, f)
-    # # store user ref
-    # with open(user_reference_path, 'wb') as f:
-    #   pickle.dump(user_reference, f)
-
-    # _LOGGER.info("Successfully logged in to Atome API. User ID: [%s], User REF: [%s]", user_id, user_reference)
-    # # /LOGIN
 
     add_entities(
         [
@@ -119,7 +82,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class AtomeSensor(Entity):
-    """Representation of a sensor entity for Linky."""
+    """Representation of a sensor entity for Atome."""
 
     def __init__(
         self,
@@ -170,6 +133,7 @@ class AtomeSensor(Entity):
         with open(filename, "rb") as f:
             return pickle.load(f)
 
+    # @Throttle(SESSION_RENEW_INTERVAL)
     def _login(self, username, password):
 
         # Login the user into the Atome API.
@@ -203,7 +167,7 @@ class AtomeSensor(Entity):
             pickle.dump(user_reference, f)
 
         _LOGGER.info(
-            "Successfully logged in to Atome API. User ID: [%s], User REF: [%s]",
+            "ATOME: Successfully logged in to Atome API. User ID: [%s], User REF: [%s]",
             user_id,
             user_reference,
         )
@@ -218,11 +182,12 @@ class AtomeSensor(Entity):
         req = requests.get(url, cookies=cookies, timeout=self._timeout)
         values = req.json()
 
-        if req.status_code == 302:
-            _LOGGER.warning("Unable to fetch Linky data: need to re-login! ")
+        if req.status_code == 403:
+            self._login(self._username, self._password)
+            _LOGGER.warning("Unable to fetch Atome data: %s %s ", req.status_code, url)
 
         if req.status_code != 200:
-            _LOGGER.warning("Unable to fetch Linky data: %s %s ", req.status_code, url)
+            _LOGGER.warning("Unable to fetch Atome data: %s %s ", req.status_code, url)
 
         return values
 
