@@ -207,9 +207,7 @@ class EvoBroker:
         _LOGGER.debug("Config = %s", self.config)
         if _LOGGER.isEnabledFor(logging.DEBUG):
             # don't do an I/O unless required
-            await self.update(
-                utcnow()
-            )  # does: _LOGGER.debug("Status = %s", self.status)
+            await self.update()  # does: _LOGGER.debug("Status = %s"...
 
         return True
 
@@ -260,8 +258,6 @@ class EvoBroker:
         such as the operating mode of the Controller and the current temp of
         its children (e.g. Zones, DHW controller).
         """
-        _LOGGER.warn("args[0] = %s", args[0])
-
         loc_idx = self.params[CONF_LOCATION_IDX]
 
         try:
