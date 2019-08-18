@@ -25,9 +25,9 @@ import homeassistant.helpers.config_validation as cv
 
 import requests
 
-KILOWATT_HOUR = "kWh"
 DEFAULT_NAME = "atome"
 DEFAULT_UNIT = "W"
+DEFAULT_CLASS = "power"
 
 ATOME_COOKIE = "atome_cookies.pickle"
 ATOME_USER_ID = "atome_user_id.pickle"
@@ -99,6 +99,7 @@ class AtomeSensor(Entity):
         self._name = name
         # self._unit = DEFAULT_UNIT
         self._unit_of_measurement = DEFAULT_UNIT
+        self._device_class = DEFAULT_CLASS
 
         self._username = username
         self._password = password
@@ -123,6 +124,11 @@ class AtomeSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        return self._device_class
 
     @property
     def state(self):
@@ -181,6 +187,9 @@ class AtomeSensor(Entity):
 
         req = requests.get(url, cookies=cookies, timeout=self._timeout)
         values = req.json()
+
+        if req.status_code == 302:
+            _LOGGER.warning("Unable to fetch Atome data: need to re-login! ")
 
         if req.status_code == 403:
             self._login(self._username, self._password)
