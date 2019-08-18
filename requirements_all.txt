@@ -1361,9 +1361,6 @@ pyrecswitch==1.0.2
 # homeassistant.components.repetier
 pyrepetier==3.0.5
 
-# homeassistant.components.ruter
-pyruter==1.1.0
-
 # homeassistant.components.sabnzbd
 pysabnzbd==1.1.0
 
