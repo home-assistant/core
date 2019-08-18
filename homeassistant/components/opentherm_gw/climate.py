@@ -8,7 +8,8 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
-    HVAC_MODE_AUTO,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
     SUPPORT_TARGET_TEMPERATURE,
     PRESET_AWAY,
     PRESET_NONE,
@@ -51,6 +52,7 @@ class OpenThermClimate(ClimateDevice):
         self.temp_precision = gw_dev.climate_config.get(CONF_PRECISION)
         self._current_operation = None
         self._current_temperature = None
+        self._hvac_mode = HVAC_MODE_HEAT
         self._new_target_temperature = None
         self._target_temperature = None
         self._away_mode_a = None
@@ -73,8 +75,10 @@ class OpenThermClimate(ClimateDevice):
         cooling_active = status.get(gw_vars.DATA_SLAVE_COOLING_ACTIVE)
         if ch_active and flame_on:
             self._current_operation = CURRENT_HVAC_HEAT
+            self._hvac_mode = HVAC_MODE_HEAT
         elif cooling_active:
             self._current_operation = CURRENT_HVAC_COOL
+            self._hvac_mode = HVAC_MODE_COOL
         else:
             self._current_operation = CURRENT_HVAC_IDLE
 
@@ -148,7 +152,7 @@ class OpenThermClimate(ClimateDevice):
     @property
     def hvac_mode(self):
         """Return current HVAC mode."""
-        return HVAC_MODE_AUTO
+        return self._hvac_mode
 
     @property
     def hvac_modes(self):
