@@ -44,7 +44,7 @@ SCRIPT_ENTRY_SCHEMA = vol.Schema(
     {
         CONF_ALIAS: cv.string,
         vol.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_DESCRIPTION): cv.string,
+        vol.Optional(CONF_DESCRIPTION, default=""): cv.string,
         vol.Optional(CONF_FIELDS, default={}): {
             cv.string: {vol.In([CONF_DESCRIPTION, CONF_EXAMPLE]): cv.string}
         },
@@ -139,6 +139,7 @@ async def _async_process_config(hass, config, component):
 
     scripts = []
 
+    hass.data.setdefault("service_description_cache", {})
     for object_id, cfg in config.get(DOMAIN, {}).items():
         alias = cfg.get(CONF_ALIAS, object_id)
         script = ScriptEntity(hass, object_id, alias, cfg[CONF_SEQUENCE])
@@ -146,6 +147,14 @@ async def _async_process_config(hass, config, component):
         hass.services.async_register(
             DOMAIN, object_id, service_handler, schema=SCRIPT_SERVICE_SCHEMA
         )
+
+        service_desc = {
+            CONF_DESCRIPTION: cfg[CONF_DESCRIPTION],
+            CONF_FIELDS: cfg[CONF_FIELDS],
+        }
+        hass.data["service_description_cache"][
+            ENTITY_ID_FORMAT.format(object_id)
+        ] = service_desc
 
     await component.async_add_entities(scripts)
 
