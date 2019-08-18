@@ -100,7 +100,8 @@ async def test_setup(hass):
         await hass.async_block_till_done()
 
         all_states = hass.states.async_all()
-        assert len(all_states) == 3
+        # 3 geolocation and 1 sensor entities
+        assert len(all_states) == 4
 
         state = hass.states.get("geo_location.title_1")
         assert state is not None
@@ -162,7 +163,7 @@ async def test_setup(hass):
         await hass.async_block_till_done()
 
         all_states = hass.states.async_all()
-        assert len(all_states) == 3
+        assert len(all_states) == 4
 
         # Simulate an update - empty data, but successful update,
         # so no changes to entities.
@@ -171,7 +172,7 @@ async def test_setup(hass):
         await hass.async_block_till_done()
 
         all_states = hass.states.async_all()
-        assert len(all_states) == 3
+        assert len(all_states) == 4
 
         # Simulate an update - empty data, removes all entities
         mock_feed_update.return_value = "ERROR", None
@@ -179,7 +180,7 @@ async def test_setup(hass):
         await hass.async_block_till_done()
 
         all_states = hass.states.async_all()
-        assert len(all_states) == 0
+        assert len(all_states) == 1
 
 
 async def test_setup_imperial(hass):
