@@ -14,6 +14,7 @@ from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 
+
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "atome"
