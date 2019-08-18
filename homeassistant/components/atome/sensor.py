@@ -72,6 +72,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
+def load_file(filename):
+    """Load filename."""
+    with open(filename, "rb") as file:
+        return pickle.load(file)
+
+
+def save_file(content, filename):
+    """Save content to a file."""
+    with open(filename, "wb") as file:
+        pickle.dump(content, file)
+
+
 class AtomeSensor(Entity):
     """Representation of a sensor entity for Atome."""
 
@@ -126,16 +138,6 @@ class AtomeSensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
-    def load_file(self, filename):
-        """Load filename."""
-        with open(filename, "rb") as file:
-            return pickle.load(file)
-
-    def save_file(self, content, filename):
-        """Save content to a file."""
-        with open(filename, "wb") as file:
-            pickle.dump(content, file)
-
     # @Throttle(SESSION_RENEW_INTERVAL)
     def _login(self, username, password):
 
@@ -160,11 +162,11 @@ class AtomeSensor(Entity):
         user_reference = response_json["subscriptions"][0]["reference"]
 
         # store cookie
-        self.save_file(session_cookie, self._cookie_path)
+        save_file(session_cookie, self._cookie_path)
         # store user id
-        self.save_file(user_id, self._user_id_path)
+        save_file(user_id, self._user_id_path)
         # store user ref
-        self.save_file(user_reference, self._user_reference_path)
+        save_file(user_reference, self._user_reference_path)
 
         _LOGGER.info(
             "ATOME: Successfully logged in to Atome API. User ID: [%s], User REF: [%s]",
@@ -176,7 +178,7 @@ class AtomeSensor(Entity):
 
     def _get_data(self, url):
 
-        cookie = self.load_file(self._cookie_path)
+        cookie = load_file(self._cookie_path)
         cookies = {COOKIE_NAME: cookie}
 
         req = requests.get(url, cookies=cookies, timeout=self._timeout)
@@ -199,8 +201,8 @@ class AtomeSensor(Entity):
         """Update device state."""
         _LOGGER.debug("ATOME: Starting update of Atome Data")
 
-        user_id = self.load_file(self._user_id_path)
-        user_reference = self.load_file(self._user_reference_path)
+        user_id = load_file(self._user_id_path)
+        user_reference = load_file(self._user_reference_path)
 
         url = (
             API_BASE_URI
