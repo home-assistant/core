@@ -9,35 +9,52 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import (
-    CONF_ALIASES, CONF_DEVICE_DEFAULTS, CONF_DEVICES, CONF_FIRE_EVENT,
-    CONF_GROUP, CONF_GROUP_ALIASES, CONF_NOGROUP_ALIASES,
-    CONF_SIGNAL_REPETITIONS, DEVICE_DEFAULTS_SCHEMA, RflinkCommand)
+    CONF_ALIASES,
+    CONF_DEVICE_DEFAULTS,
+    CONF_DEVICES,
+    CONF_FIRE_EVENT,
+    CONF_GROUP,
+    CONF_GROUP_ALIASES,
+    CONF_NOGROUP_ALIASES,
+    CONF_SIGNAL_REPETITIONS,
+    DEVICE_DEFAULTS_SCHEMA,
+    RflinkCommand
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 TYPE_STANDARD = 'standard'
 TYPE_INVERTED = 'inverted'
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})):
-    DEVICE_DEFAULTS_SCHEMA,
-    vol.Optional(CONF_DEVICES, default={}): vol.Schema({
-        cv.string: {
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_TYPE):
-                vol.Any(TYPE_STANDARD, TYPE_INVERTED),
-            vol.Optional(CONF_ALIASES, default=[]):
-                vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_GROUP_ALIASES, default=[]):
-                vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_NOGROUP_ALIASES, default=[]):
-                vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-            vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
-            vol.Optional(CONF_GROUP, default=True): cv.boolean,
-        },
-    }),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(
+            CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})
+        ): DEVICE_DEFAULTS_SCHEMA,
+        vol.Optional(CONF_DEVICES, default={}): vol.Schema(
+            {
+                cv.string: {
+                    vol.Optional(CONF_NAME): cv.string,
+                    vol.Optional(CONF_TYPE): vol.Any(
+                        TYPE_STANDARD, TYPE_INVERTED
+                    ),
+                    vol.Optional(CONF_ALIASES, default=[]): vol.All(
+                        cv.ensure_list, [cv.string]
+                    ),
+                    vol.Optional(CONF_GROUP_ALIASES, default=[]): vol.All(
+                        cv.ensure_list, [cv.string]
+                    ),
+                    vol.Optional(CONF_NOGROUP_ALIASES, default=[]): vol.All(
+                        cv.ensure_list, [cv.string]
+                    ),
+                    vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+                    vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
+                    vol.Optional(CONF_GROUP, default=True): cv.boolean,
+                },
+            }
+        ),
+    }
+)
 
 
 def entity_type_for_device_id(device_id):
@@ -111,10 +128,10 @@ class RflinkCover(RflinkCommand, CoverDevice, RestoreEntity):
         """Adjust state if Rflink picks up a remote command for this device."""
         self.cancel_queued_send_commands()
 
-        command = event['command']
-        if command in ['on', 'allon', 'up']:
+        command = event["command"]
+        if command in ["on", "allon", "up"]:
             self._state = True
-        elif command in ['off', 'alloff', 'down']:
+        elif command in ["off", "alloff", "down"]:
             self._state = False
 
     @property
