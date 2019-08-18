@@ -31,6 +31,9 @@ ATTR_LAST_ACTION = "last_action"
 ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_VARIABLES = "variables"
 
+CONF_DESCRIPTION = "description"
+CONF_EXAMPLE = "example"
+CONF_FIELDS = "fields"
 CONF_SEQUENCE = "sequence"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -38,7 +41,14 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 GROUP_NAME_ALL_SCRIPTS = "all scripts"
 
 SCRIPT_ENTRY_SCHEMA = vol.Schema(
-    {CONF_ALIAS: cv.string, vol.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA}
+    {
+        CONF_ALIAS: cv.string,
+        vol.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_DESCRIPTION): cv.string,
+        vol.Optional(CONF_FIELDS, default={}): {
+            cv.string: {vol.In([CONF_DESCRIPTION, CONF_EXAMPLE]): cv.string}
+        },
+    }
 )
 
 CONFIG_SCHEMA = vol.Schema(
