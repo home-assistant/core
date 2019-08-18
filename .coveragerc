@@ -241,7 +241,6 @@ omit =
     homeassistant/components/google_cloud/tts.py
     homeassistant/components/google_maps/device_tracker.py
     homeassistant/components/google_travel_time/sensor.py
-    homeassistant/components/googlehome/*
     homeassistant/components/gpmdp/media_player.py
     homeassistant/components/gpsd/sensor.py
     homeassistant/components/greeneye_monitor/*
