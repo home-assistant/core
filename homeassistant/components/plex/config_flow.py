@@ -27,7 +27,8 @@ from .const import (
     PLEX_SERVER_CONFIG,
     TITLE_TEMPLATE,
 )
-from .errors import ConfigNotReady, NoServersFound, TokenMissing
+from .errors import ConfigNotReady, NoServersFound, ServerNotSpecified, TokenMissing
+from .server import setup_plex_server
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -73,11 +74,11 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                     step_id="build_url", data_schema=data_schema, errors={}
                 )
 
-            plex_server = user_input.get(CONF_SERVER)
+            
             plex_url = user_input.get(CONF_URL)
             token = user_input.get(CONF_TOKEN)
             username = user_input.get(CONF_USERNAME)
-            verify_ssl = user_input.get(CONF_VERIFY_SSL)
+            server_name = user_input.get(CONF_SERVER)
 
             data = {}
 
@@ -85,41 +86,30 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                 if (username is None) and (plex_url is None):
                     raise ConfigNotReady
 
+                plex_server = setup_plex_server(user_input)
+
                 if username:
                     if token is None:
-                        self.current_login = {CONF_USERNAME: username}
+                        self.current_login = {
+                            CONF_USERNAME: username,
+                            CONF_SERVER: server_name
+                        }
                         raise TokenMissing
 
-                    account = MyPlexAccount(username=username, token=token)
-                    servers = [x for x in account.resources() if "server" in x.provides]
+                    if not server_name:
+                        server_name = plex_server.friendlyName
 
-                    if len(servers) == 1:
-                        plex_server = servers[0].name
-                    elif len(servers) > 1:
-                        """ TODO: Step to select server"""
-                        pass
-                    else:
-                        raise NoServersFound
-
-                    title = TITLE_TEMPLATE.format(plex_server, account.username)
+                    title = TITLE_TEMPLATE.format(server_name, account.username)
                     data = {
                         CONF_USERNAME: username,
                         CONF_TOKEN: token,
-                        CONF_SERVER: plex_server,
+                        CONF_SERVER: server_name
                     }
-                elif plex_url:
+                else:
                     self.current_login = {
                         CONF_URL: plex_url,
-                        CONF_VERIFY_SSL: verify_ssl,
+                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL]
                     }
-
-                    cert_session = None
-                    if not verify_ssl:
-                        cert_session = Session()
-                        cert_session.verify = False
-
-                    PlexServer(plex_url, token, cert_session)
-
                     title = TITLE_TEMPLATE.format(plex_url, "Direct")
                     data = {
                         CONF_URL: plex_url,
@@ -135,6 +125,8 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                 errors["base"] = "config_not_ready"
             except NoServersFound:
                 errors["base"] = "no_servers"
+            except ServerNotSpecified:
+                errors["base"] = "server_not_specified"
             except (
                 plexapi.exceptions.BadRequest,
                 plexapi.exceptions.Unauthorized,

@@ -29,7 +29,8 @@
             "config_not_ready": "Configuration provided is incomplete",
             "faulty_credentials": "Authorization failed",
             "no_servers": "No servers linked to account",
-            "not_found": "Plex server not found"
+            "not_found": "Plex server not found",
+            "server_not_specified": "Multiple servers available, select one"
         },
         "abort": {
             "already_configured": "Plex server is already configured",

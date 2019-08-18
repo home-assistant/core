@@ -7,6 +7,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 from .const import CONF_SERVER, PLEX_SERVER_CONFIG
+from .server import setup_plex_server
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,19 +38,11 @@ def _setup_platform(hass, config_entry, add_entities):
     """Set up the Plex sensor."""
     import plexapi.exceptions
 
-    server_info = config_entry.data.get(PLEX_SERVER_CONFIG, {})
+    server_config = config_entry.data.get(PLEX_SERVER_CONFIG, {})
 
     try:
         add_entities(
-            [
-                PlexSensor(
-                    server_info.get(CONF_URL),
-                    server_info.get(CONF_USERNAME),
-                    server_info.get(CONF_SERVER),
-                    server_info.get(CONF_TOKEN),
-                    server_info.get(CONF_VERIFY_SSL),
-                )
-            ],
+            [PlexSensor(server_config)],
             True,
         )
     except (
@@ -64,28 +57,12 @@ def _setup_platform(hass, config_entry, add_entities):
 class PlexSensor(Entity):
     """Representation of a Plex now playing sensor."""
 
-    def __init__(self, plex_url, plex_user, plex_server, plex_token, verify_ssl):
+    def __init__(self, server_config):
         """Initialize the sensor."""
-        from plexapi.myplex import MyPlexAccount
-        from plexapi.server import PlexServer
-        from requests import Session
-
         self._name = "Plex"
         self._state = 0
         self._now_playing = []
-
-        cert_session = None
-        if not verify_ssl:
-            _LOGGER.info("Ignoring SSL verification")
-            cert_session = Session()
-            cert_session.verify = False
-
-        if plex_user and plex_token:
-            user = MyPlexAccount(username=plex_user, token=plex_token)
-            server = plex_server if plex_server else user.resources()[0].name
-            self._server = user.resource(server).connect()
-        else:
-            self._server = PlexServer(plex_url, plex_token, cert_session)
+        self._server = setup_plex_server(server_config)
 
     @property
     def name(self):

@@ -14,5 +14,9 @@ class NoServersFound(PlexException):
     """No servers found on Plex account."""
 
 
+class ServerNotSpecified(PlexException):
+    """Multiple servers linked to account without choice provided"""
+
+
 class TokenMissing(PlexException):
     """Required auth token is unavailable."""

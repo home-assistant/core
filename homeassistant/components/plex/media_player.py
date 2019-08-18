@@ -49,6 +49,7 @@ from .const import (
     PLEX_MEDIA_PLAYER_OPTIONS,
     PLEX_SERVER_CONFIG,
 )
+from .server import setup_plex_server
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -119,36 +120,17 @@ def _setup_platform(hass, config_entry, add_entities):
     if PLEX_CLIENTS not in hass.data:
         hass.data[PLEX_CLIENTS] = {}
 
-    server_info = config_entry.data.get(PLEX_SERVER_CONFIG, {})
-    if server_info:
-        setup_plexserver(server_info, hass, add_entities)
+    server_config = config_entry.data.get(PLEX_SERVER_CONFIG, {})
+    if server_config:
+        setup_plexserver(server_config, hass, add_entities)
 
 
-def setup_plexserver(server_info, hass, add_entities_callback):
+def setup_plexserver(server_config, hass, add_entities_callback):
     """Set up a Plex server."""
-    import plexapi.server
     import plexapi.exceptions
-    from plexapi.myplex import MyPlexAccount
 
-    plex_user = server_info.get(CONF_USERNAME)
-    plex_token = server_info.get(CONF_TOKEN)
-    plex_server = server_info.get(CONF_SERVER)
     try:
-        if plex_user:
-            account = MyPlexAccount(username=plex_user, token=plex_token)
-            server = plex_server if plex_server else account.resources()[0].name
-            plexserver = account.resource(server).connect()
-            _LOGGER.info("Connected to: %s (%s)", server, plex_user)
-        else:
-            plex_url = server_info.get(CONF_URL)
-            cert_session = None
-            verify_ssl = server_info.get(CONF_VERIFY_SSL)
-            if plex_url.startswith("https") and not verify_ssl:
-                _LOGGER.info("Ignoring SSL verification")
-                cert_session = requests.Session()
-                cert_session.verify = False
-            plexserver = plexapi.server.PlexServer(plex_url, plex_token, cert_session)
-            _LOGGER.info("Connected to: %s", plex_url)
+        plexserver = setup_plex_server(server_config)
     except (
         plexapi.exceptions.BadRequest,
         plexapi.exceptions.Unauthorized,
@@ -156,6 +138,15 @@ def setup_plexserver(server_info, hass, add_entities_callback):
     ) as error:
         _LOGGER.error(error)
         return
+
+    url = server_config.get(CONF_URL)
+    username = server_config.get(CONF_USERNAME)
+    server = server_config.get(CONF_SERVER)
+
+    if username:
+        _LOGGER.info("Connected to: %s (%s)", server, username)
+    else:
+        _LOGGER.info("Connected to: %s", url)
 
     config = hass.data[PLEX_MEDIA_PLAYER_OPTIONS]
     plex_clients = hass.data[PLEX_CLIENTS]
