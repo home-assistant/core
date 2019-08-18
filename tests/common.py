@@ -665,6 +665,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         title="Mock Title",
         state=None,
         options={},
+        system_options={},
         connection_class=config_entries.CONN_CLASS_UNKNOWN,
     ):
         """Initialize a mock config entry."""
@@ -672,6 +673,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
             "entry_id": entry_id or uuid.uuid4().hex,
             "domain": domain,
             "data": data or {},
+            "system_options": system_options,
             "options": options,
             "version": version,
             "title": title,

@@ -306,6 +306,7 @@ async def setup_bridge(hass, mock_bridge, hostname=None):
         {"host": hostname},
         "test",
         config_entries.CONN_CLASS_LOCAL_POLL,
+        system_options={},
     )
     await hass.config_entries.async_forward_entry_setup(config_entry, "binary_sensor")
     await hass.config_entries.async_forward_entry_setup(config_entry, "sensor")

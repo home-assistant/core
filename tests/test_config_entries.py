@@ -596,6 +596,22 @@ async def test_updating_entry_data(manager):
     assert entry.data == {"second": True}
 
 
+async def test_updating_entry_system_options(manager):
+    """Test that we can update an entry data."""
+    entry = MockConfigEntry(
+        domain="test",
+        data={"first": True},
+        state=config_entries.ENTRY_STATE_SETUP_ERROR,
+        system_options={"disable_new_entities": True},
+    )
+    entry.add_to_manager(manager)
+
+    assert entry.system_options.disable_new_entities
+
+    entry.system_options.update(disable_new_entities=False)
+    assert not entry.system_options.disable_new_entities
+
+
 async def test_update_entry_options_and_trigger_listener(hass, manager):
     """Test that we can update entry options and trigger listener."""
     entry = MockConfigEntry(domain="test", options={"first": True})

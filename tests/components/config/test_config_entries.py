@@ -584,3 +584,47 @@ async def test_two_step_options_flow(hass, client):
             "description": None,
             "description_placeholders": None,
         }
+
+
+async def test_list_system_options(hass, hass_ws_client):
+    """Test that we can list an entries system options."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    entry = MockConfigEntry(domain="demo")
+    entry.add_to_hass(hass)
+
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/system_options/list",
+            "entry_id": entry.entry_id,
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"disable_new_entities": False}
+
+
+async def test_update_system_options(hass, hass_ws_client):
+    """Test that we can update system options."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    entry = MockConfigEntry(domain="demo")
+    entry.add_to_hass(hass)
+
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/system_options/update",
+            "entry_id": entry.entry_id,
+            "disable_new_entities": True,
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["disable_new_entities"]
+    assert entry.system_options.disable_new_entities
