@@ -46,6 +46,7 @@ async def test_setup_with_config(hass):
             unifi.CONF_BLOCK_CLIENT: ["12:34:56:78:90:AB"],
             unifi.CONF_DETECTION_TIME: timedelta(seconds=3),
             unifi.CONF_SSID_FILTER: ["ssid"],
+            unifi.CONF_DONT_TRACK_NEW_CLIENTS: False,
         }
     ]
 

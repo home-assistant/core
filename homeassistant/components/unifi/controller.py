@@ -157,10 +157,11 @@ class UniFiController:
                 break
 
         if (
-            self.config_entry.system_options.disable_new_entities
-            != unifi_config[CONF_DONT_TRACK_NEW_CLIENTS]
+            CONF_DONT_TRACK_NEW_CLIENTS in self.unifi_config
+            and self.config_entry.system_options.disable_new_entities
+            != self.unifi_config[CONF_DONT_TRACK_NEW_CLIENTS]
         ):
-            self.config_entry.system_options.disable_new_entities = unifi_config[
+            self.config_entry.system_options.disable_new_entities = self.unifi_config[
                 CONF_DONT_TRACK_NEW_CLIENTS
             ]
 
