@@ -109,7 +109,6 @@ homeassistant/components/google_cloud/* @lufton
 homeassistant/components/google_translate/* @awarecan
 homeassistant/components/google_travel_time/* @robbiet480
 homeassistant/components/googlehome/* @ludeeus
-homeassistant/components/goslide/* @ualex73
 homeassistant/components/gpsd/* @fabaff
 homeassistant/components/group/* @home-assistant/core
 homeassistant/components/gtfs/* @robbiet480
@@ -234,6 +233,7 @@ homeassistant/components/shell_command/* @home-assistant/core
 homeassistant/components/shiftr/* @fabaff
 homeassistant/components/shodan/* @fabaff
 homeassistant/components/simplisafe/* @bachya
+homeassistant/components/slide/* @ualex73
 homeassistant/components/sma/* @kellerza
 homeassistant/components/smarthab/* @outadoc
 homeassistant/components/smartthings/* @andrewsayre
