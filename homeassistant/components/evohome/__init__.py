@@ -405,7 +405,7 @@ class EvoDevice(Entity):
         except (aiohttp.ClientResponseError, evohomeclient2.AuthenticationError) as err:
             _handle_exception(err)
 
-        point_in_time = utcnow() + timedelta(seconds=3)
+        point_in_time = utcnow() + timedelta(seconds=2)
 
         async_track_point_in_utc_time(
             self.hass, self._evo_broker.update(point_in_time), point_in_time
