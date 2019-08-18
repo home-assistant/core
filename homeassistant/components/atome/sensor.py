@@ -5,14 +5,13 @@ from datetime import timedelta
 
 import pickle
 import voluptuous as vol
+import requests
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT, CONF_NAME
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
-
-import requests
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -127,9 +126,9 @@ class AtomeSensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
-    def _load_file(self, filename):
-        with open(filename, "rb") as f:
-            return pickle.load(f)
+    def load_file(self, filename):
+        with open(filename, "rb") as file:
+            return pickle.load(file)
 
     # @Throttle(SESSION_RENEW_INTERVAL)
     def _login(self, username, password):
@@ -155,14 +154,14 @@ class AtomeSensor(Entity):
         user_reference = response_json["subscriptions"][0]["reference"]
 
         # store cookie
-        with open(self._cookie_path, "wb") as f:
-            pickle.dump(session_cookie, f)
+        with open(self._cookie_path, "wb") as file:
+            pickle.dump(session_cookie, file)
         # store user id
-        with open(self._user_id_path, "wb") as f:
-            pickle.dump(user_id, f)
+        with open(self._user_id_path, "wb") as file:
+            pickle.dump(user_id, file)
         # store user ref
-        with open(self._user_reference_path, "wb") as f:
-            pickle.dump(user_reference, f)
+        with open(self._user_reference_path, "wb") as file:
+            pickle.dump(user_reference, file)
 
         _LOGGER.info(
             "ATOME: Successfully logged in to Atome API. User ID: [%s], User REF: [%s]",
@@ -174,7 +173,7 @@ class AtomeSensor(Entity):
 
     def _get_data(self, url):
 
-        cookie = self._load_file(self._cookie_path)
+        cookie = self.load_file(self._cookie_path)
         cookies = {COOKIE_NAME: cookie}
 
         req = requests.get(url, cookies=cookies, timeout=self._timeout)
@@ -197,8 +196,8 @@ class AtomeSensor(Entity):
         """Update device state."""
         _LOGGER.debug("ATOME: Starting update of Atome Data")
 
-        user_id = self._load_file(self._user_id_path)
-        user_reference = self._load_file(self._user_reference_path)
+        user_id = self.load_file(self._user_id_path)
+        user_reference = self.load_file(self._user_reference_path)
 
         url = (
             API_BASE_URI
@@ -211,7 +210,3 @@ class AtomeSensor(Entity):
 
         values = self._get_data(url)
         self._state = values["last"]
-
-    #  TODO
-    #  getData
-    #  login
