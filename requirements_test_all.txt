@@ -121,9 +121,6 @@ enocean==0.50
 # homeassistant.components.season
 ephem==3.7.6.0
 
-# homeassistant.components.evohome
-evohomeclient==0.4.0
-
 # homeassistant.components.feedreader
 feedparser-homeassistant==5.2.2.dev1
 
