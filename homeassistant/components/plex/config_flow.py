@@ -85,18 +85,11 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                 if (username is None) and (url is None):
                     raise ConfigNotReady
 
-                plex_server = setup_plex_server(user_input)
+                self.current_login = user_input
 
                 if username:
                     if token is None:
-                        self.current_login = {
-                            CONF_USERNAME: username,
-                            CONF_SERVER: server_name
-                        }
                         raise TokenMissing
-
-                    if not server_name:
-                        server_name = plex_server.friendlyName
 
                     data = {
                         CONF_USERNAME: username,
@@ -104,17 +97,18 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                         CONF_SERVER: server_name
                     }
                 else:
-                    self.current_login = {
-                        CONF_URL: plex_url,
-                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL]
-                    }
                     data = {
                         CONF_URL: url,
                         CONF_TOKEN: token,
-                        CONF_VERIFY_SSL: verify_ssl,
+                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL]
                     }
 
+                plex_server = setup_plex_server(user_input)
+
                 title = "{} ({})".format(plex_server.friendlyName, username if username else "Direct")
+
+                if username and not server_name:
+                    data[CONF_SERVER] = plex_server.friendlyName
 
                 return self.async_create_entry(
                     title=title, data={PLEX_SERVER_CONFIG: data}
