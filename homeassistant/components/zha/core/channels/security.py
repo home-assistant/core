@@ -74,8 +74,6 @@ class IasWd(ZigbeeChannel):
         value = IasWd.set_bit(value, 6, mode, 2)
         value = IasWd.set_bit(value, 7, mode, 3)
 
-        self.warning("SQUAWKING!!!!!!!!!!!!!!!!!!!!!!!")
-
         await self.device.issue_cluster_command(
             self.cluster.endpoint.endpoint_id,
             self.cluster.cluster_id,
