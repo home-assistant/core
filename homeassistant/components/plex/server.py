@@ -8,6 +8,12 @@ from homeassistant.const import (
 from .const import CONF_SERVER
 
 def setup_plex_server(server_config):
+    """Connect to Plex and return server object.
+
+    Expects one of:
+        username + token + (server_name)
+        url + (token) + verify_ssl
+    """
     from plexapi.myplex import MyPlexAccount
     from plexapi.server import PlexServer
     from requests import Session
