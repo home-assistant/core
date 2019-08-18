@@ -78,10 +78,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 const.DOMAIN,
-                context={
-                    "source": SOURCE_USER,
-                    const.PROFILE: data_manager.profile,
-                },
+                context={"source": SOURCE_USER, const.PROFILE: data_manager.profile},
                 data={},
             )
         )
