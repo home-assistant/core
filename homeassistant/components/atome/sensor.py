@@ -127,8 +127,14 @@ class AtomeSensor(Entity):
         return self._state
 
     def load_file(self, filename):
+        """Loads a file stored with pickle."""
         with open(filename, "rb") as file:
             return pickle.load(file)
+
+    def save_file(self, content, filename):
+        """Saves a file stored with pickle."""
+        with open(filename, "wb") as file:
+            pickle.dump(content, file)
 
     # @Throttle(SESSION_RENEW_INTERVAL)
     def _login(self, username, password):
@@ -154,14 +160,11 @@ class AtomeSensor(Entity):
         user_reference = response_json["subscriptions"][0]["reference"]
 
         # store cookie
-        with open(self._cookie_path, "wb") as file:
-            pickle.dump(session_cookie, file)
+        self.save_file(session_cookie, self._cookie_path)
         # store user id
-        with open(self._user_id_path, "wb") as file:
-            pickle.dump(user_id, file)
+        self.save_file(user_id, self._user_id_path)
         # store user ref
-        with open(self._user_reference_path, "wb") as file:
-            pickle.dump(user_reference, file)
+        self.save_file(user_reference, self._user_reference_path)
 
         _LOGGER.info(
             "ATOME: Successfully logged in to Atome API. User ID: [%s], User REF: [%s]",
