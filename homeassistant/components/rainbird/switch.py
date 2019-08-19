@@ -85,7 +85,7 @@ class RainBirdSwitch(SwitchDevice):
         response = self._rainbird.currentIrrigation()
         if response is None:
             return None
-        elif isinstance(response,  dict) and "sprinklers" in response:
+        elif isinstance(response, dict) and "sprinklers" in response:
             return response["sprinklers"][self._zone]
 
     def update(self):
