@@ -107,6 +107,7 @@ class GeonetnzQuakesFeedEntityManager:
         self._scan_interval = timedelta(seconds=scan_interval)
         self._unit_system = unit_system
         self._track_time_remove_callback = None
+        self._status_info = None
 
     async def async_init(self):
         """Schedule regular updates based on configured time interval."""
