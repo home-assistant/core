@@ -1,6 +1,5 @@
 """The tests for the GeoNet NZ Quakes Feed integration."""
 import datetime
-from unittest.mock import MagicMock
 
 from asynctest import patch, CoroutineMock
 
@@ -14,14 +13,6 @@ from homeassistant.components.geonetnz_quakes.geo_location import (
     ATTR_MMI,
     ATTR_DEPTH,
     ATTR_QUALITY,
-)
-from homeassistant.components.geonetnz_quakes.sensor import (
-    ATTR_STATUS,
-    ATTR_LAST_UPDATE,
-    ATTR_CREATED,
-    ATTR_UPDATED,
-    ATTR_REMOVED,
-    ATTR_LAST_UPDATE_SUCCESSFUL,
 )
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
@@ -38,37 +29,9 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 from tests.common import async_fire_time_changed
 import homeassistant.util.dt as dt_util
+from tests.components.geonetnz_quakes import _generate_mock_feed_entry
 
 CONFIG = {geonetnz_quakes.DOMAIN: {CONF_RADIUS: 200}}
-
-
-def _generate_mock_feed_entry(
-    external_id,
-    title,
-    distance_to_home,
-    coordinates,
-    attribution=None,
-    depth=None,
-    magnitude=None,
-    mmi=None,
-    locality=None,
-    quality=None,
-    time=None,
-):
-    """Construct a mock feed entry for testing purposes."""
-    feed_entry = MagicMock()
-    feed_entry.external_id = external_id
-    feed_entry.title = title
-    feed_entry.distance_to_home = distance_to_home
-    feed_entry.coordinates = coordinates
-    feed_entry.attribution = attribution
-    feed_entry.depth = depth
-    feed_entry.magnitude = magnitude
-    feed_entry.mmi = mmi
-    feed_entry.locality = locality
-    feed_entry.quality = quality
-    feed_entry.time = time
-    return feed_entry
 
 
 async def test_setup(hass):
@@ -164,17 +127,6 @@ async def test_setup(hass):
         }
         assert float(state.state) == 25.5
 
-        state = hass.states.get("sensor.geonet_nz_quakes_32_87336_117_22743")
-        assert state is not None
-        assert int(state.state) == 3
-        assert state.name == "GeoNet NZ Quakes (32.87336, -117.22743)"
-        attributes = state.attributes
-        assert attributes[ATTR_STATUS] == "OK"
-        assert attributes[ATTR_CREATED] == 3
-        assert attributes[ATTR_LAST_UPDATE] == attributes[ATTR_LAST_UPDATE_SUCCESSFUL]
-        assert attributes[ATTR_UNIT_OF_MEASUREMENT] == "quakes"
-        assert attributes[ATTR_ICON] == "mdi:pulse"
-
         # Simulate an update - two existing, one new entry, one outdated entry
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_4, mock_entry_3]
         async_fire_time_changed(hass, utcnow + DEFAULT_SCAN_INTERVAL)
@@ -182,12 +134,6 @@ async def test_setup(hass):
 
         all_states = hass.states.async_all()
         assert len(all_states) == 4
-
-        state = hass.states.get("sensor.geonet_nz_quakes_32_87336_117_22743")
-        attributes = state.attributes
-        assert attributes[ATTR_CREATED] == 1
-        assert attributes[ATTR_UPDATED] == 2
-        assert attributes[ATTR_REMOVED] == 1
 
         # Simulate an update - empty data, but successful update,
         # so no changes to entities.
@@ -205,10 +151,6 @@ async def test_setup(hass):
 
         all_states = hass.states.async_all()
         assert len(all_states) == 1
-
-        state = hass.states.get("sensor.geonet_nz_quakes_32_87336_117_22743")
-        attributes = state.attributes
-        assert attributes[ATTR_REMOVED] == 3
 
 
 async def test_setup_imperial(hass):
