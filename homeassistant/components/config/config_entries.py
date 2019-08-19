@@ -272,7 +272,11 @@ async def system_options_update(hass, connection, msg):
     entry_id = changes.pop("entry_id")
     entry = hass.config_entries.async_get_entry(entry_id)
 
-    if entry and changes:
-        entry.system_options.update(**changes)
+    if entry is None:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Config entry not found"
+        )
+        return
 
-        connection.send_result(msg["id"], entry.system_options.as_dict())
+    hass.config_entries.async_update_entry(entry, system_options=changes)
+    connection.send_result(msg["id"], entry.system_options.as_dict())
