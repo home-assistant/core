@@ -15,6 +15,14 @@ from homeassistant.components.geonetnz_quakes.geo_location import (
     ATTR_DEPTH,
     ATTR_QUALITY,
 )
+from homeassistant.components.geonetnz_quakes.sensor import (
+    ATTR_STATUS,
+    ATTR_LAST_UPDATE,
+    ATTR_CREATED,
+    ATTR_UPDATED,
+    ATTR_REMOVED,
+    ATTR_LAST_UPDATE_SUCCESSFUL,
+)
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     CONF_RADIUS,
@@ -156,14 +164,30 @@ async def test_setup(hass):
         }
         assert float(state.state) == 25.5
 
-        # Simulate an update - one existing, one new entry,
-        # one outdated entry
+        state = hass.states.get("sensor.geonet_nz_quakes_32_87336_117_22743")
+        assert state is not None
+        assert int(state.state) == 3
+        assert state.name == "GeoNet NZ Quakes (32.87336, -117.22743)"
+        attributes = state.attributes
+        assert attributes[ATTR_STATUS] == "OK"
+        assert attributes[ATTR_CREATED] == 3
+        assert attributes[ATTR_LAST_UPDATE] == attributes[ATTR_LAST_UPDATE_SUCCESSFUL]
+        assert attributes[ATTR_UNIT_OF_MEASUREMENT] == "quakes"
+        assert attributes[ATTR_ICON] == "mdi:pulse"
+
+        # Simulate an update - two existing, one new entry, one outdated entry
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_4, mock_entry_3]
         async_fire_time_changed(hass, utcnow + DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
         all_states = hass.states.async_all()
         assert len(all_states) == 4
+
+        state = hass.states.get("sensor.geonet_nz_quakes_32_87336_117_22743")
+        attributes = state.attributes
+        assert attributes[ATTR_CREATED] == 1
+        assert attributes[ATTR_UPDATED] == 2
+        assert attributes[ATTR_REMOVED] == 1
 
         # Simulate an update - empty data, but successful update,
         # so no changes to entities.
@@ -181,6 +205,10 @@ async def test_setup(hass):
 
         all_states = hass.states.async_all()
         assert len(all_states) == 1
+
+        state = hass.states.get("sensor.geonet_nz_quakes_32_87336_117_22743")
+        attributes = state.attributes
+        assert attributes[ATTR_REMOVED] == 3
 
 
 async def test_setup_imperial(hass):
