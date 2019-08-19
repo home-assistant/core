@@ -1386,7 +1386,7 @@ pysesame2==1.0.1
 pysher==1.0.1
 
 # homeassistant.components.sma
-pysma==0.3.2
+pysma==0.3.4
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.2
