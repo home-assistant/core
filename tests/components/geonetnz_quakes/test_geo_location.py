@@ -164,7 +164,9 @@ async def test_setup_imperial(hass):
     with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
         "aio_geojson_client.feed.GeoJsonFeed.update", new_callable=CoroutineMock
     ) as mock_feed_update, patch(
-        "aio_geojson_client.feed.GeoJsonFeed.__init__", new_callable=CoroutineMock
+        "aio_geojson_client.feed.GeoJsonFeed.__init__",
+        new_callable=CoroutineMock,
+        create=True,
     ) as mock_feed_init:
         mock_feed_update.return_value = "OK", [mock_entry_1]
         assert await async_setup_component(hass, geonetnz_quakes.DOMAIN, CONFIG)
@@ -174,7 +176,7 @@ async def test_setup_imperial(hass):
         await hass.async_block_till_done()
 
         all_states = hass.states.async_all()
-        assert len(all_states) == 1
+        assert len(all_states) == 2
 
         # Test conversion of 200 miles to kilometers.
         assert mock_feed_init.call_args[1].get("filter_radius") == 321.8688
