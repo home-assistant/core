@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 def is_bluetooth_device(device) -> bool:
-    """Check whether a device is a bluetooth device using its mac."""
+    """Check whether a device is a bluetooth device by its mac."""
     return device.mac and device.mac[:3].upper() == BT_PREFIX
 
 
@@ -119,7 +119,7 @@ def setup_scanner(hass: HomeAssistantType, config: dict, see, discovery_info=Non
 
     if track_new:
         for mac, device_name in discover_devices(bluetooth, device_id):
-            if mac not in devices_to_track | devices_to_not_track:
+            if mac not in devices_to_track and mac not in devices_to_not_track:
                 devices_to_track.add(mac)
                 see_device(see, mac, device_name)
 
@@ -140,7 +140,7 @@ def setup_scanner(hass: HomeAssistantType, config: dict, see, discovery_info=Non
         try:
             if track_new:
                 for mac, device_name in discover_devices(bluetooth, device_id):
-                    if mac not in devices_to_track | devices_to_not_track:
+                    if mac not in devices_to_track and mac not in devices_to_not_track:
                         devices_to_track.add(mac)
 
             for mac in devices_to_track:
