@@ -337,8 +337,9 @@ def test_async_get_all_descriptions_python_script_with_services_yaml(hass):
         "      example: 'This is a test of python_script.has_description'"
     )
     services_yaml = {
-        hass.config.config_dir
-        + "/{}/services.yaml".format(python_script.FOLDER): service_descriptions
+        "{}/{}/services.yaml".format(
+            hass.config.config_dir, python_script.FOLDER
+        ): service_descriptions
     }
 
     with patch(
@@ -385,8 +386,9 @@ def test_async_get_all_descriptions_python_script_with_invalid_services_yaml(has
     # Invalid user-provided services.yaml file
     service_descriptions = "invalid:\n - item 1\n  - item 2"
     services_yaml = {
-        hass.config.config_dir
-        + "/{}/services.yaml".format(python_script.FOLDER): service_descriptions
+        "{}/{}/services.yaml".format(
+            hass.config.config_dir, python_script.FOLDER
+        ): service_descriptions
     }
 
     with patch(

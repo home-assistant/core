@@ -181,9 +181,8 @@ async def _load_services_file(hass: HomeAssistantType, domain: str) -> JSON_TYPE
             # 2. A user-provided services.yaml file
             user_services = await hass.async_add_executor_job(
                 load_yaml,
-                str(
-                    hass.config.config_dir
-                    + "/{}/services.yaml".format(PYTHON_SCRIPT_FOLDER)
+                "{}/{}/services.yaml".format(
+                    hass.config.config_dir, PYTHON_SCRIPT_FOLDER
                 ),
             )
 
