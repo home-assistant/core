@@ -13,7 +13,8 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_SELECT_SOURCE,
     SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_STOP, SUPPORT_PLAY, MediaPlayerDevice)
+    SUPPORT_STOP, SUPPORT_PLAY, SUPPORT_SELECT_SOUND_MODE, 
+    MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
@@ -23,7 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'Music station'
 
 SUPPORT_DENON = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE \
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE | \
+    SUPPORT_SELECT_SOUND_MODE
 
 SUPPORT_MEDIA_MODES = SUPPORT_PAUSE | SUPPORT_STOP | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_PLAY
@@ -43,6 +45,9 @@ MEDIA_MODES = {'Tuner': 'TUNER', 'Media server': 'SERVER',
                'Pandora': 'PANDORA', 'LastFM': 'LASTFM',
                'Flickr': 'FLICKR', 'Favorites': 'FAVORITES',
                'Internet Radio': 'IRADIO', 'USB/IPOD': 'USB/IPOD'}
+
+SOUND_MODES = {'PSDYNVOL HEV': 'Night Mode On',
+               'PSYDYNVOL OFF': 'Night Mode Off'}
 
 # Sub-modes of 'NET/USB'
 # {'USB': 'USB', 'iPod Direct': 'IPD', 'Internet Radio': 'IRP',
@@ -73,6 +78,7 @@ class DenonDevice(MediaPlayerDevice):
         self._muted = False
         self._mediasource = ''
         self._mediainfo = ''
+        self._sound_mode = 'PSDYNVOL OFF'
 
         self._should_setup_sources = True
 
@@ -115,12 +121,14 @@ class DenonDevice(MediaPlayerDevice):
         return lines[0] if lines else ''
 
     def telnet_command(self, command):
-        """Establish a telnet connection and sends `command`."""
+        """Establish a telnet connection, send `command`, and verify."""
         telnet = telnetlib.Telnet(self._host)
         _LOGGER.debug("Sending: %s", command)
         telnet.write(command.encode('ASCII') + b'\r')
-        telnet.read_very_eager()  # skip response
-        telnet.close()
+        if telnet.read_until(command.encode(), 0.2):
+            self.telnet_command(command)
+        else:
+            telnet.close()
 
     def update(self):
         """Get the latest details from the device."""
@@ -152,6 +160,8 @@ class DenonDevice(MediaPlayerDevice):
                 self._mediainfo += line[len(answer_codes.pop(0)):] + '\n'
         else:
             self._mediainfo = self.source
+
+        self._sound_mode = self.telnet_request(telnet, 'PSDYNVOL ?')
 
         telnet.close()
         return True
@@ -187,6 +197,11 @@ class DenonDevice(MediaPlayerDevice):
         return sorted(list(self._source_list.keys()))
 
     @property
+    def sound_mode_list(self):
+        """Return the list of available sound modes."""
+        return ['Night Mode On', 'Night Mode Off']
+
+    @property
     def media_title(self):
         """Return the current media info."""
         return self._mediainfo
@@ -205,6 +220,15 @@ class DenonDevice(MediaPlayerDevice):
             if self._mediasource == name:
                 return pretty_name
 
+    @property
+    def sound_mode(self):
+        """Return the current sound mode."""
+        if self._sound_mode == 'PSDYNVOL HEV':
+            return 'Night Mode On'
+        else:
+            return 'Night Mode Off'
+            
+
     def turn_off(self):
         """Turn off media player."""
         self.telnet_command('PWSTANDBY')
@@ -212,7 +236,6 @@ class DenonDevice(MediaPlayerDevice):
     def volume_up(self):
         """Volume up media player."""
         self.telnet_command('MVUP')
-
     def volume_down(self):
         """Volume down media player."""
         self.telnet_command('MVDOWN')
@@ -253,3 +276,10 @@ class DenonDevice(MediaPlayerDevice):
     def select_source(self, source):
         """Select input source."""
         self.telnet_command('SI' + self._source_list.get(source))
+
+    def select_sound_mode(self, mode):
+        """Turn night mode on or off."""
+        if mode == 'Night Mode On':
+            self.telnet_command('PSDYNVOL HEV')
+        else:
+            self.telnet_command('PSDYNVOL OFF')
