@@ -534,7 +534,6 @@ omit =
     homeassistant/components/rtorrent/sensor.py
     homeassistant/components/russound_rio/media_player.py
     homeassistant/components/russound_rnet/media_player.py
-    homeassistant/components/ruter/sensor.py
     homeassistant/components/sabnzbd/*
     homeassistant/components/satel_integra/*
     homeassistant/components/scrape/sensor.py

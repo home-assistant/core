@@ -33,6 +33,7 @@ EVENT_ENTITY_REGISTRY_UPDATED = "entity_registry_updated"
 SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
 _UNDEF = object()
+DISABLED_CONFIG_ENTRY = "config_entry"
 DISABLED_HASS = "hass"
 DISABLED_USER = "user"
 DISABLED_INTEGRATION = "integration"
@@ -55,7 +56,13 @@ class RegistryEntry:
         type=str,
         default=None,
         validator=attr.validators.in_(
-            (DISABLED_HASS, DISABLED_USER, DISABLED_INTEGRATION, None)
+            (
+                DISABLED_HASS,
+                DISABLED_USER,
+                DISABLED_INTEGRATION,
+                DISABLED_CONFIG_ENTRY,
+                None,
+            )
         ),
     )  # type: Optional[str]
     domain = attr.ib(type=str, init=False, repr=False)
@@ -132,13 +139,18 @@ class EntityRegistry:
         unique_id,
         *,
         suggested_object_id=None,
-        config_entry_id=None,
+        config_entry=None,
         device_id=None,
         known_object_ids=None,
         disabled_by=None,
     ):
         """Get entity. Create if it doesn't exist."""
+        config_entry_id = None
+        if config_entry:
+            config_entry_id = config_entry.entry_id
+
         entity_id = self.async_get_entity_id(domain, platform, unique_id)
+
         if entity_id:
             return self._async_update_entity(
                 entity_id,
@@ -158,6 +170,13 @@ class EntityRegistry:
             suggested_object_id or "{}_{}".format(platform, unique_id),
             known_object_ids,
         )
+
+        if (
+            disabled_by is None
+            and config_entry
+            and config_entry.system_options.disable_new_entities
+        ):
+            disabled_by = DISABLED_INTEGRATION
 
         entity = RegistryEntry(
             entity_id=entity_id,

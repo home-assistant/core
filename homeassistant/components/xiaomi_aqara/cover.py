@@ -19,7 +19,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
         for device in gateway.devices["cover"]:
             model = device["model"]
-            if model == "curtain":
+            if model in ["curtain", "curtain.aq2", "curtain.hagl04"]:
                 if "proto" not in device or int(device["proto"][0:1]) == 1:
                     data_key = DATA_KEY_PROTO_V1
                 else:
