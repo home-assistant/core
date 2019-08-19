@@ -57,8 +57,8 @@ class RainBirdSensor(Entity):
         _LOGGER.debug("Updating sensor: %s", self._name)
         if self._sensor_type == "rainsensor":
             result = self._controller.currentRainSensorState()
-            if result['type'] == 'CurrentRainSensorStateResponse':
-                self._state = result['sensorState']
+            if result["type"] == "CurrentRainSensorStateResponse":
+                self._state = result["sensorState"]
             else:
                 self._state = None
 

@@ -71,17 +71,17 @@ class RainBirdSwitch(SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         response = self._rainbird.startIrrigation(int(self._zone), int(self._duration))
-        if response['type'] == 'AcknowledgeResponse':
+        if response["type"] == "AcknowledgeResponse":
             self._state = True
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        if self._rainbird.stopIrrigation()['type'] == 'AcknowledgeResponse':
+        if self._rainbird.stopIrrigation()["type"] == "AcknowledgeResponse":
             self._state = False
 
     def get_device_status(self):
         """Get the status of the switch from Rain Bird Controller."""
-        return self._rainbird.currentIrrigation()['sprinklers']
+        return self._rainbird.currentIrrigation()["sprinklers"]
 
     def update(self):
         """Update switch status."""
