@@ -63,7 +63,7 @@ async def async_setup(hass, config):
 
     # Wait for KebaHandler setup complete (initial values loaded)
     if not await keba.setup():
-        _LOGGER.warning("Could not find a charging station at %s", host)
+        _LOGGER.error("Could not find a charging station at %s", host)
         return False
 
     # Set failsafe mode at start up of home assistant
