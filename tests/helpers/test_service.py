@@ -285,7 +285,41 @@ def test_async_get_all_descriptions(hass):
     assert "description" in descriptions[logger.DOMAIN]["set_level"]
     assert "fields" in descriptions[logger.DOMAIN]["set_level"]
 
-    # Test that the services descriptions for python_script work correctly
+
+@asyncio.coroutine
+def test_async_get_all_descriptions_python_script_without_services_yaml(hass):
+    """Test async_get_all_descriptions for the python_script integration.
+
+    Case 1 of 3: No user-provided services.yaml file.
+    """
+    python_script = hass.components.python_script
+    python_script_config = {python_script.DOMAIN: {}}
+    python_scripts = [
+        "/some/config/dir/{}/no_description.py".format(python_script.DOMAIN)
+    ]
+
+    with patch(
+        "homeassistant.components.python_script.os.path.isdir", return_value=True
+    ), patch(
+        "homeassistant.components.python_script.glob.iglob", return_value=python_scripts
+    ):
+        yield from async_setup_component(
+            hass, python_script.DOMAIN, python_script_config
+        )
+        descriptions = yield from service.async_get_all_descriptions(hass)
+
+    assert len(descriptions) == 1
+
+    assert descriptions[python_script.DOMAIN]["no_description"]["description"] == ""
+    assert bool(descriptions[python_script.DOMAIN]["no_description"]["fields"]) is False
+
+
+@asyncio.coroutine
+def test_async_get_all_descriptions_python_script_with_services_yaml(hass):
+    """Test async_get_all_descriptions for the python_script integration.
+
+    Case 2 of 3: Valid user-provided services.yaml file.
+    """
     python_script = hass.components.python_script
     python_script_config = {python_script.DOMAIN: {}}
     python_scripts = [
@@ -319,7 +353,7 @@ def test_async_get_all_descriptions(hass):
         )
         descriptions = yield from service.async_get_all_descriptions(hass)
 
-    assert len(descriptions) == 3
+    assert len(descriptions) == 1
 
     assert descriptions[python_script.DOMAIN]["no_description"]["description"] == ""
     assert bool(descriptions[python_script.DOMAIN]["no_description"]["fields"]) is False
@@ -333,6 +367,45 @@ def test_async_get_all_descriptions(hass):
     assert (
         has_description["fields"]["fake_param"]["example"]
         == "This is a test of python_script.has_description"
+    )
+
+
+@asyncio.coroutine
+def test_async_get_all_descriptions_python_script_with_invalid_services_yaml(hass):
+    """Test async_get_all_descriptions for the python_script integration.
+
+    Case 3 of 3: Invalid user-provided services.yaml file.
+    """
+    python_script = hass.components.python_script
+    python_script_config = {python_script.DOMAIN: {}}
+    python_scripts = [
+        "/some/config/dir/{}/has_description.py".format(python_script.DOMAIN)
+    ]
+
+    # Invalid user-provided services.yaml file
+    service_descriptions = "invalid:\n - item 1\n  - item 2"
+    services_yaml = {
+        hass.config.config_dir
+        + "/{}/services.yaml".format(python_script.FOLDER): service_descriptions
+    }
+
+    with patch(
+        "homeassistant.components.python_script.os.path.isdir", return_value=True
+    ), patch(
+        "homeassistant.components.python_script.glob.iglob", return_value=python_scripts
+    ), patch_yaml_files(
+        services_yaml
+    ):
+        yield from async_setup_component(
+            hass, python_script.DOMAIN, python_script_config
+        )
+        descriptions = yield from service.async_get_all_descriptions(hass)
+
+    assert len(descriptions) == 1
+
+    assert descriptions[python_script.DOMAIN]["has_description"]["description"] == ""
+    assert (
+        bool(descriptions[python_script.DOMAIN]["has_description"]["fields"]) is False
     )
 
 
