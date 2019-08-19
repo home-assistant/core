@@ -111,7 +111,7 @@ def setup_scanner(hass: HomeAssistantType, config: dict, see, discovery_info=Non
 
     # If track new devices is true discover new devices on startup.
     track_new: bool = config.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
-    _LOGGER.debug(f"Tracking new devices = {track_new}")
+    _LOGGER.debug("Tracking new devices = %s", track_new)
 
     if not devices_to_track and not track_new:
         # This isn't an error, because user might just want to collect bluetooth devices
