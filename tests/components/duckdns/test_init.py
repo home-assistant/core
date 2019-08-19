@@ -8,12 +8,14 @@ from homeassistant.loader import bind_hass
 from homeassistant.setup import async_setup_component
 from homeassistant.components import duckdns
 from homeassistant.util.dt import utcnow
+from homeassistant.components.duckdns import async_track_time_interval_backoff
 
 from tests.common import async_fire_time_changed
 
 DOMAIN = "bla"
 TOKEN = "abcdefgh"
 _LOGGER = logging.getLogger(__name__)
+INTERVAL = duckdns.INTERVAL
 
 
 @bind_hass
@@ -52,6 +54,9 @@ def test_setup(hass, aioclient_mock):
     result = yield from async_setup_component(
         hass, duckdns.DOMAIN, {"duckdns": {"domain": DOMAIN, "access_token": TOKEN}}
     )
+
+    yield from hass.async_block_till_done()
+
     assert result
     assert aioclient_mock.call_count == 1
 
@@ -71,17 +76,29 @@ def test_setup_backoff(hass, aioclient_mock):
         hass, duckdns.DOMAIN, {"duckdns": {"domain": DOMAIN, "access_token": TOKEN}}
     )
     assert result
+    yield from hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
 
-    counts = [2] * 3 + [3] * 3 + [4] * 12 + [5] * 12 + [6] * 12 + [7] * 12
+    # Copy of the DuckDNS intervals from duckdns/__init__.py
+    intervals = (
+        INTERVAL,
+        INTERVAL,
+        INTERVAL,
+        INTERVAL * 3,
+        INTERVAL * 3,
+        INTERVAL * 6,
+        INTERVAL * 12,
+    )
     tme = utcnow()
+    yield from hass.async_block_till_done()
 
-    for cnt in counts:
-        tme += timedelta(minutes=5)
+    _LOGGER.debug("Backoff...")
+    for idx in range(1, len(intervals)):
+        tme += intervals[idx]
         async_fire_time_changed(hass, tme)
         yield from hass.async_block_till_done()
-        _LOGGER.debug("expected cnt %s, got %s", cnt, aioclient_mock.call_count)
-        assert aioclient_mock.call_count == cnt
+
+        assert aioclient_mock.call_count == idx + 1
 
 
 @asyncio.coroutine
@@ -116,3 +133,65 @@ def test_service_clear_txt(hass, aioclient_mock, setup_duckdns):
     assert aioclient_mock.call_count == 0
     yield from async_set_txt(hass, None)
     assert aioclient_mock.call_count == 1
+
+
+@asyncio.coroutine
+def test_async_track_time_interval_backoff(hass):
+    """Test setup fails if first update fails."""
+    ret_val = False
+    call_count = 0
+    tme = None
+
+    async def _return(now):
+        nonlocal call_count, ret_val, tme
+        if tme is None:
+            tme = now
+        call_count += 1
+        return ret_val
+
+    intervals = (
+        INTERVAL,
+        INTERVAL * 2,
+        INTERVAL * 5,
+        INTERVAL * 9,
+        INTERVAL * 10,
+        INTERVAL * 11,
+        INTERVAL * 12,
+    )
+
+    async_track_time_interval_backoff(hass, _return, intervals)
+    yield from hass.async_block_till_done()
+
+    assert call_count == 1
+
+    _LOGGER.debug("Backoff...")
+    for idx in range(1, len(intervals)):
+        tme += intervals[idx]
+        async_fire_time_changed(hass, tme)
+        yield from hass.async_block_till_done()
+
+        assert call_count == idx + 1
+
+    _LOGGER.debug("Max backoff reached - intervals[-1]")
+    for _idx in range(1, 10):
+        tme += intervals[-1]
+        async_fire_time_changed(hass, tme)
+        yield from hass.async_block_till_done()
+
+        assert call_count == idx + 1 + _idx
+
+    _LOGGER.debug("Reset backoff")
+    call_count = 0
+    ret_val = True
+    tme += intervals[-1]
+    async_fire_time_changed(hass, tme)
+    yield from hass.async_block_till_done()
+    assert call_count == 1
+
+    _LOGGER.debug("No backoff - intervals[0]")
+    for _idx in range(2, 10):
+        tme += intervals[0]
+        async_fire_time_changed(hass, tme)
+        yield from hass.async_block_till_done()
+
+        assert call_count == _idx
