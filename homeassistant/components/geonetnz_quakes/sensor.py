@@ -30,6 +30,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 
 class GeonetnzQuakesSensor(Entity):
+    """This is a status sensor for the GeoNet NZ Quakes integration."""
+
     def __init__(self, config_entry_id, config_title):
         """Initialize entity."""
         self._config_entry_id = config_entry_id
