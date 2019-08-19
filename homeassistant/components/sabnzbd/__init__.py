@@ -104,7 +104,7 @@ async def async_configure_sabnzbd(
 
     host = config[CONF_HOST]
     port = config[CONF_PORT]
-    web_root = config[CONF_PATH]
+    web_root = config.get(CONF_PATH)
     uri_scheme = "https" if use_ssl else "http"
     base_url = BASE_URL_FORMAT.format(uri_scheme, host, port)
     if api_key is None:
