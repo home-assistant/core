@@ -310,7 +310,7 @@ pyps4-homeassistant==0.8.7
 pyqwikswitch==0.93
 
 # homeassistant.components.sma
-pysma==0.3.2
+pysma==0.3.4
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.2
