@@ -38,6 +38,7 @@ COMMENT_REQUIREMENTS = (
     "rpi-rf",
     "RPi.GPIO",
     "smbus-cffi",
+    "tensorflow",
 )
 
 TEST_REQUIREMENTS = (
