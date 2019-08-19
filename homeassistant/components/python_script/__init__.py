@@ -11,6 +11,7 @@ from homeassistant.const import SERVICE_RELOAD
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.util import sanitize_filename
+from homeassistant.util.yaml.loader import load_yaml
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,9 +91,23 @@ def discover_scripts(hass):
             continue
         hass.services.remove(DOMAIN, existing_service)
 
+    # Load user-provided service descriptions from python_scripts/services.yaml
+    services_yaml = os.path.join(path, "services.yaml")
+    if os.path.exists(services_yaml):
+        services_dict = load_yaml(services_yaml)
+    else:
+        services_dict = {}
+
+    hass.data.setdefault("service_description_cache", {})
     for fil in glob.iglob(os.path.join(path, "*.py")):
         name = os.path.splitext(os.path.basename(fil))[0]
         hass.services.register(DOMAIN, name, python_script_service_handler)
+
+        if name in services_dict:
+            hass.data["service_description_cache"]["{}.{}".format(DOMAIN, name)] = {
+                "description": services_dict[name].get("description", ""),
+                "fields": services_dict[name].get("fields", {}),
+            }
 
 
 @bind_hass
