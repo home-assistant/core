@@ -2,10 +2,11 @@
 from datetime import timedelta
 import logging
 
+from homeassistant.const import CONF_URL, CONF_USERNAME
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from .const import PLEX_SERVER_CONFIG
+from .const import CONF_SERVER, PLEX_SERVER_CONFIG
 from .server import setup_plex_server
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,6 +49,15 @@ def _setup_platform(hass, config_entry, add_entities):
     ) as error:
         _LOGGER.error(error)
         return
+
+    url = server_config.get(CONF_URL)
+    username = server_config.get(CONF_USERNAME)
+    server = server_config.get(CONF_SERVER)
+
+    if username:
+        _LOGGER.info("Connected to: %s (%s)", server, username)
+    else:
+        _LOGGER.info("Connected to: %s", url)
 
 
 class PlexSensor(Entity):
