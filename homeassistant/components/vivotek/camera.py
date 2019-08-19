@@ -34,20 +34,20 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_CONTENT_TYPE = "content_type"
 CONF_LIMIT_REFETCH_TO_URL_CHANGE = "limit_refetch_to_url_change"
-CONF_STILL_IMAGE_URL = "still_image_url"
 CONF_STREAM_SOURCE = "stream_source"
 CONF_FRAMERATE = "framerate"
 
 DEFAULT_NAME = "Vivotek Camera"
 DEFAULT_EVENT_0_KEY = "event_i0_enable"
-DEFAULT_PARAM_PATHS = {
+DEFAULT_PATHS = {
     "get": "/cgi-bin/admin/getparam.cgi",
     "set": "/cgi-bin/admin/setparam.cgi",
+    "still": "/cgi-bin/viewer/video.jpg",
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_STILL_IMAGE_URL): cv.template,
+        vol.Required(CONF_IP_ADDRESS): cv.string,
         vol.Optional(CONF_STREAM_SOURCE, default=None): vol.Any(None, cv.string),
         vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
@@ -59,7 +59,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_CONTENT_TYPE, default=DEFAULT_CONTENT_TYPE): cv.string,
         vol.Optional(CONF_FRAMERATE, default=2): cv.positive_int,
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-        vol.Required(CONF_IP_ADDRESS): cv.string,
     }
 )
 
@@ -78,19 +77,18 @@ class VivotekCamera(Camera):
         self.hass = hass
         self._authentication = device_info.get(CONF_AUTHENTICATION)
         self._name = device_info.get(CONF_NAME)
-        self._still_image_url = device_info[CONF_STILL_IMAGE_URL]
-        self._stream_source = device_info[CONF_STREAM_SOURCE]
-        self._still_image_url.hass = hass
         self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
         self._frame_interval = 1 / device_info[CONF_FRAMERATE]
-        self._supported_features = SUPPORT_STREAM if self._stream_source else 0
         self.content_type = device_info[CONF_CONTENT_TYPE]
         self.verify_ssl = device_info[CONF_VERIFY_SSL]
         self._event_i0_status = None
         self._event_0_key = DEFAULT_EVENT_0_KEY
         self._ip = device_info.get(CONF_IP_ADDRESS)
-        self._get_param_url = "http://" + self._ip + DEFAULT_PARAM_PATHS["get"]
-        self._set_param_url = "http://" + self._ip + DEFAULT_PARAM_PATHS["set"]
+
+        self._get_param_url = "https://" + self._ip + DEFAULT_PATHS["get"]
+        self._set_param_url = "https://" + self._ip + DEFAULT_PATHS["set"]
+        self._still_image_url = "https://" + self._ip + DEFAULT_PATHS["still"]
+
         username = device_info.get(CONF_USERNAME)
         password = device_info.get(CONF_PASSWORD)
 
@@ -102,6 +100,18 @@ class VivotekCamera(Camera):
                 self._requests_auth = HTTPBasicAuth(username, password)
         else:
             self._auth = None
+
+        if device_info[CONF_STREAM_SOURCE]:
+            self._stream_source = (
+                "rtsp://%s:%s@%s:554/live.sdp",
+                username,
+                password,
+                device_info[CONF_STREAM_SOURCE],
+            )
+        else:
+            self._stream_source = None
+
+        self._supported_features = SUPPORT_STREAM if self._stream_source else 0
 
         self._last_url = None
         self._last_image = None
@@ -124,28 +134,7 @@ class VivotekCamera(Camera):
     def event_enabled(self, event_key):
         """Return true if event for the provided key is enabled."""
         response = self.get_param(event_key)
-        # _LOGGER.debug("Vivotek camera response: %s", response)
         return int(response.replace("'", "")) == 1
-
-    # async def async_get_param(self, param):
-    #     """Return the value of the provided key."""
-    #     try:
-    #         websession = async_get_clientsession(
-    #             self.hass, verify_ssl=self.verify_ssl
-    #         )
-    #         with async_timeout.timeout(10):
-    #             response = await websession.get(
-    #                 self._get_param_url,
-    #                 auth=self._auth,
-    #                 params={param},
-    #             )
-    #         text = await response.text()
-    #         _LOGGER.info("Vivotek camera GET response text: %s", text)
-    #         return text.strip().split("=")[1]
-    #     except asyncio.TimeoutError:
-    #         _LOGGER.error("Timeout getting Vivotek camera parameter: %s", self._name)
-    #     except aiohttp.ClientError as err:
-    #         _LOGGER.error("Error getting Vivotek camera parameter: %s", err)
 
     async def async_set_param(self, param, value):
         """Set the value of the provided key."""
@@ -177,16 +166,6 @@ class VivotekCamera(Camera):
         except requests.exceptions.RequestException as error:
             _LOGGER.error("Error getting Vivotek camera parameter: %s", error)
 
-    # def set_param(self, param, value):
-    #     """Set the value of the provided key."""
-    #     try:
-    #         response = requests.post(
-    #             self._set_param_url, auth=self._requests_auth, data={param: value}
-    #         )
-    #         return response.content.decode("utf-8").strip().split("=")[1]
-    #     except requests.exceptions.RequestException as error:
-    #         _LOGGER.error("Error setting Vivotek camera parameter: %s", error)
-
     def camera_image(self):
         """Return bytes of camera image."""
         return run_coroutine_threadsafe(
@@ -195,11 +174,7 @@ class VivotekCamera(Camera):
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-        try:
-            url = self._still_image_url.async_render()
-        except TemplateError as err:
-            _LOGGER.error("Error parsing template %s: %s", self._still_image_url, err)
-            return self._last_image
+        url = self._still_image_url
 
         if url == self._last_url and self._limit_refetch:
             return self._last_image
@@ -257,5 +232,4 @@ class VivotekCamera(Camera):
 
     async def disable_motion_detection(self):
         """Disable motion detection in camera."""
-        # self.set_param(self._event_0_key, 0)
         await self.async_set_param(self._event_0_key, 0)
