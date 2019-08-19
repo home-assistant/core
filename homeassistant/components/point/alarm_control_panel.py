@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 EVENT_MAP = {
     "off": STATE_ALARM_DISARMED,
-    "alarm_silenced": STATE_ALARM_ARMED_AWAY,
+    "alarm_silenced": STATE_ALARM_DISARMED,
     "alarm_grace_period_expired": STATE_ALARM_TRIGGERED,
 }
 
@@ -63,11 +63,14 @@ class MinutPointAlarmControl(AlarmControlPanel):
         """Process new event from the webhook."""
         _type = data.get("event", {}).get("type")
         _device_id = data.get("event", {}).get("device_id")
-        if _device_id not in self._home["devices"] or _type not in EVENT_MAP:
+        _changed_by = data.get("event", {}).get("user_id")
+        if (
+            _device_id not in self._home["devices"] and _type not in EVENT_MAP
+        ) and _type != "alarm_silenced":  # alarm_silenced does not have device_id
             return
         _LOGGER.debug("Received webhook: %s", _type)
-        self._home["alarm_status"] = EVENT_MAP[_type]
-        self._changed_by = _device_id
+        self._home["alarm_status"] = _type
+        self._changed_by = _changed_by
         self.async_schedule_update_ha_state()
 
     @property
