@@ -19,6 +19,7 @@ ATTR_CREATED = "created"
 ATTR_UPDATED = "updated"
 ATTR_REMOVED = "removed"
 
+DEFAULT_ICON = "mdi:pulse"
 DEFAULT_UNIT_OF_MEASUREMENT = "quakes"
 
 
@@ -103,7 +104,7 @@ class GeonetnzQuakesSensor(Entity):
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        return "mdi:pulse"
+        return DEFAULT_ICON
 
     @property
     def unit_of_measurement(self):
