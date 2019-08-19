@@ -692,6 +692,9 @@ jsonrpc-async==0.6
 # homeassistant.components.kodi
 jsonrpc-websocket==0.6
 
+# homeassistant.components.keba
+keba-kecontact==0.2.0
+
 # homeassistant.scripts.keyring
 keyring==17.1.1
 
