@@ -14,7 +14,7 @@ from urllib3.exceptions import HTTPError
 
 _LOGGER = logging.getLogger(__name__)
 
-_METADATA_RE = re.compile('x-amz-meta-(.*)', re.IGNORECASE)
+_METADATA_RE = re.compile("x-amz-meta-(.*)", re.IGNORECASE)
 
 
 def normalize_metadata(metadata: dict) -> dict:
@@ -31,39 +31,20 @@ def normalize_metadata(metadata: dict) -> dict:
 
 
 def create_minio_client(
-        endpoint: str,
-        access_key: str,
-        secret_key: str,
-        secure: bool
+    endpoint: str, access_key: str, secret_key: str, secure: bool
 ) -> Minio:
     """Create Minio client."""
-    return Minio(
-        endpoint,
-        access_key,
-        secret_key,
-        secure
-    )
+    return Minio(endpoint, access_key, secret_key, secure)
 
 
 def get_minio_notification_response(
-        minio_client,
-        bucket_name: str,
-        prefix: str,
-        suffix: str,
-        events: List[str]
+    minio_client, bucket_name: str, prefix: str, suffix: str, events: List[str]
 ):
     """Start listening to minio events. Copied from minio-py."""
-    query = {
-        'prefix': prefix,
-        'suffix': suffix,
-        'events': events,
-    }
+    query = {"prefix": prefix, "suffix": suffix, "events": events}
     # pylint: disable=protected-access
     return minio_client._url_open(
-        'GET',
-        bucket_name=bucket_name,
-        query=query,
-        preload_content=False
+        "GET", bucket_name=bucket_name, query=query, preload_content=False
     )
 
 
@@ -84,8 +65,8 @@ class MinioEventStreamIterator(Iterable):
         while True:
             line = next(self._stream)
             if line.strip():
-                event = json.loads(line.decode('utf-8'))
-                if event['Records'] is not None:
+                event = json.loads(line.decode("utf-8"))
+                if event["Records"] is not None:
                     return event
 
     def close(self):
@@ -97,16 +78,16 @@ class MinioEventThread(threading.Thread):
     """Thread wrapper around minio notification blocking stream."""
 
     def __init__(
-            self,
-            queue: Queue,
-            endpoint: str,
-            access_key: str,
-            secret_key: str,
-            secure: bool,
-            bucket_name: str,
-            prefix: str,
-            suffix: str,
-            events: List[str]
+        self,
+        queue: Queue,
+        endpoint: str,
+        access_key: str,
+        secret_key: str,
+        secure: bool,
+        bucket_name: str,
+        prefix: str,
+        suffix: str,
+        events: List[str],
     ):
         """Copy over all Minio client options."""
         super().__init__()
@@ -132,22 +113,16 @@ class MinioEventThread(threading.Thread):
 
     def run(self):
         """Create MinioClient and run the loop."""
-        _LOGGER.info('Running MinioEventThread')
+        _LOGGER.info("Running MinioEventThread")
 
         self._should_stop = False
 
         minio_client = create_minio_client(
-            self._endpoint,
-            self._access_key,
-            self._secret_key,
-            self._secure
+            self._endpoint, self._access_key, self._secret_key, self._secure
         )
 
-        while True:
-            if self._should_stop:
-                break
-
-            _LOGGER.info('Connecting to minio event stream')
+        while not self._should_stop:
+            _LOGGER.info("Connecting to minio event stream")
             response = None
             try:
                 response = get_minio_notification_response(
@@ -155,44 +130,36 @@ class MinioEventThread(threading.Thread):
                     self._bucket_name,
                     self._prefix,
                     self._suffix,
-                    self._events
+                    self._events,
                 )
 
                 self._event_stream_it = MinioEventStreamIterator(response)
 
-                self._iterate_event_stream(
-                    self._event_stream_it,
-                    minio_client
-                )
+                self._iterate_event_stream(self._event_stream_it, minio_client)
             except json.JSONDecodeError:
                 if response:
                     response.close()
             except HTTPError as error:
-                _LOGGER.error('Failed to connect to Minio endpoint: %s', error)
+                _LOGGER.error("Failed to connect to Minio endpoint: %s", error)
+
+                # Wait before attempting to connect again.
+                time.sleep(1)
             except AttributeError:
                 # When response is closed, iterator will fail to access
                 # the underlying socket descriptor.
                 break
 
-            # Wait before attempting to connect again.
-            time.sleep(1)
-
     def _iterate_event_stream(self, event_stream_it, minio_client):
         for event in event_stream_it:
             for event_name, bucket, key, metadata in iterate_objects(event):
-                presigned_url = ''
+                presigned_url = ""
                 try:
-                    presigned_url = minio_client.presigned_get_object(
-                        bucket, key
-                    )
+                    presigned_url = minio_client.presigned_get_object(bucket, key)
                 # Fail gracefully. If for whatever reason this stops working,
                 # it shouldn't prevent it from firing events.
                 # pylint: disable=broad-except
                 except Exception as error:
-                    _LOGGER.error(
-                        'Failed to generate presigned url: %s',
-                        error
-                    )
+                    _LOGGER.error("Failed to generate presigned url: %s", error)
 
                 queue_entry = {
                     "event_name": event_name,
@@ -201,20 +168,20 @@ class MinioEventThread(threading.Thread):
                     "presigned_url": presigned_url,
                     "metadata": metadata,
                 }
-                _LOGGER.debug('Queue entry, %s', queue_entry)
+                _LOGGER.debug("Queue entry, %s", queue_entry)
                 self._queue.put(queue_entry)
 
     def stop(self):
         """Cancel event stream and join the thread."""
-        _LOGGER.info('Stopping event thread')
+        _LOGGER.debug("Stopping event thread")
         self._should_stop = True
         if self._event_stream_it is not None:
             self._event_stream_it.close()
             self._event_stream_it = None
 
-        _LOGGER.info('Joining event thread')
+        _LOGGER.debug("Joining event thread")
         self.join()
-        _LOGGER.info('Event thread joined')
+        _LOGGER.debug("Event thread joined")
 
 
 def iterate_objects(event):
@@ -223,18 +190,18 @@ def iterate_objects(event):
 
     Most of the time it should still be only one record.
     """
-    records = event.get('Records', [])
+    records = event.get("Records", [])
 
     for record in records:
-        event_name = record.get('eventName')
-        bucket = record.get('s3', {}).get('bucket', {}).get('name')
-        key = record.get('s3', {}).get('object', {}).get('key')
+        event_name = record.get("eventName")
+        bucket = record.get("s3", {}).get("bucket", {}).get("name")
+        key = record.get("s3", {}).get("object", {}).get("key")
         metadata = normalize_metadata(
-            record.get('s3', {}).get('object', {}).get('userMetadata', {})
+            record.get("s3", {}).get("object", {}).get("userMetadata", {})
         )
 
         if not bucket or not key:
-            _LOGGER.info('Invalid bucket and/or key, %s, %s', bucket, key)
+            _LOGGER.warning("Invalid bucket and/or key, %s, %s", bucket, key)
             continue
 
         key = unquote(key)
