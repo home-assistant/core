@@ -62,6 +62,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+STATE_DETECTING_MOTION = "detecting motion"
+STATE_IDLE = "idle"
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up a generic IP Camera."""
@@ -111,10 +114,15 @@ class VivotekCamera(Camera):
         else:
             self._stream_source = None
 
+        self._brand = "Vivotek"
+        self._model = self.get_param("system_info_modelname").replace("'", "")
+
         self._supported_features = SUPPORT_STREAM if self._stream_source else 0
 
         self._last_url = None
         self._last_image = None
+
+        self._motion_detection_enabled = self.event_enabled(self._event_0_key)
 
     @property
     def supported_features(self):
@@ -224,12 +232,31 @@ class VivotekCamera(Camera):
 
     @property
     def motion_detection_enabled(self):
-        return self.event_enabled(self._event_0_key)
-
-    async def enable_motion_detection(self):
-        """Enable motion detection in camera."""
-        await self.async_set_param(self._event_0_key, 1)
+        return self._motion_detection_enabled
 
     async def disable_motion_detection(self):
         """Disable motion detection in camera."""
-        await self.async_set_param(self._event_0_key, 0)
+        response = await self.async_set_param(self._event_0_key, 0)
+        self._motion_detection_enabled = int(response.replace("'", "")) == 1
+
+    async def enable_motion_detection(self):
+        """Enable motion detection in camera."""
+        response = await self.async_set_param(self._event_0_key, 1)
+        self._motion_detection_enabled = int(response.replace("'", "")) == 1
+
+    @property
+    def brand(self):
+        """Return the camera brand."""
+        return self._brand
+
+    @property
+    def model(self):
+        """Return the camera model."""
+        return self._model
+
+    @property
+    def state(self):
+        """Return the camera state."""
+        if self.motion_detection_enabled:
+            return STATE_DETECTING_MOTION
+        return STATE_IDLE
