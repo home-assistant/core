@@ -24,16 +24,15 @@ def setup_plex_server(server_config):
     plex_server = None
     if username:
         account = MyPlexAccount(username=username, token=token)
-        available_servers = [x for x in account.resources() if "server" in x.provides]
+        available_servers = [
+            x.name for x in account.resources() if "server" in x.provides
+        ]
 
         if not available_servers:
-            raise NoServersFound("No Plex servers linked to this account")
+            raise NoServersFound
         if not server_name and len(available_servers) > 1:
-            raise ServerNotSpecified(
-                "Multiple Plex servers available but selection not provided"
-            )
-
-        server_choice = server_name if server_name else available_servers[0].name
+            raise ServerNotSpecified(available_servers)
+        server_choice = server_name if server_name else available_servers[0]
         plex_server = account.resource(server_choice).connect()
     else:
         session = None

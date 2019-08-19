@@ -116,8 +116,14 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                 errors["base"] = "config_not_ready"
             except NoServersFound:
                 errors["base"] = "no_servers"
-            except ServerNotSpecified:
-                errors["base"] = "server_not_specified"
+            except ServerNotSpecified as available_servers:
+                return self.async_show_form(
+                    step_id="select_server",
+                    data_schema=vol.Schema(
+                        {vol.Required(CONF_SERVER): vol.In(available_servers[0])}
+                    ),
+                    errors={},
+                )
             except (
                 plexapi.exceptions.BadRequest,
                 plexapi.exceptions.Unauthorized,
@@ -151,6 +157,15 @@ class PlexFlowHandler(config_entries.ConfigFlow):
 
         config = self.current_login
         config[CONF_TOKEN] = user_input.get(CONF_TOKEN)
+        return await self.async_step_user(user_input=config)
+
+    async def async_step_select_server(self, user_input=None):
+        """Use selected Plex server."""
+        if user_input is None:
+            return await self.async_step_user()
+
+        config = self.current_login
+        config[CONF_SERVER] = user_input.get(CONF_SERVER)
         return await self.async_step_user(user_input=config)
 
     async def async_step_build_url(self, user_input=None):

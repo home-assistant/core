@@ -11,6 +11,12 @@
                     "verify_ssl": "Verify SSL certificate"
                 }
             },
+            "select_server": {
+                "title": "Select Plex server",
+                "data": {
+                    "server": "Server"
+                }
+            },
             "token": {
                 "title": "Provide Plex token",
                 "data": {
