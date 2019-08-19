@@ -83,7 +83,10 @@ class RainBirdSwitch(SwitchDevice):
     def get_device_status(self):
         """Get the status of the switch from Rain Bird Controller."""
         response = self._rainbird.currentIrrigation()
-        return response["sprinklers"] if response else None
+        if response is None:
+            return None
+        elif isinstance(response,  dict) and "sprinklers" in response:
+            return response["sprinklers"][self._zone]
 
     def update(self):
         """Update switch status."""
