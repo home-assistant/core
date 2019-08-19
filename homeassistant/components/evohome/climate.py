@@ -201,7 +201,7 @@ class EvoZone(EvoClimateDevice):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._evo_device.temperatureStatus.get("isAvailable", False)
+        return self._evo_device.temperatureStatus["isAvailable"]
 
     @property
     def hvac_mode(self) -> str:

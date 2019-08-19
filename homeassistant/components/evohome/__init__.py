@@ -20,6 +20,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
@@ -169,6 +170,7 @@ class EvoBroker:
             refresh_token=refresh_token,
             access_token=access_token,
             access_token_expires=access_token_expires,
+            session=async_get_clientsession(self.hass),
         )
 
         try:
