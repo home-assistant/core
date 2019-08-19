@@ -308,6 +308,7 @@ omit =
     homeassistant/components/joaoapps_join/*
     homeassistant/components/juicenet/*
     homeassistant/components/kankun/switch.py
+    homeassistant/components/keba/*
     homeassistant/components/keenetic_ndms2/device_tracker.py
     homeassistant/components/keyboard/*
     homeassistant/components/keyboard_remote/*
