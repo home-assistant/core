@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.service import SERVICE_DESCRIPTION_CACHE
 from homeassistant.loader import bind_hass
 from homeassistant.util import sanitize_filename
 from homeassistant.util.yaml.loader import load_yaml
@@ -98,13 +99,13 @@ def discover_scripts(hass):
     else:
         services_dict = {}
 
-    hass.data.setdefault("service_description_cache", {})
+    hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
     for fil in glob.iglob(os.path.join(path, "*.py")):
         name = os.path.splitext(os.path.basename(fil))[0]
         hass.services.register(DOMAIN, name, python_script_service_handler)
 
         if name in services_dict:
-            hass.data["service_description_cache"]["{}.{}".format(DOMAIN, name)] = {
+            hass.data[SERVICE_DESCRIPTION_CACHE]["{}.{}".format(DOMAIN, name)] = {
                 "description": services_dict[name].get("description", ""),
                 "fields": services_dict[name].get("fields", {}),
             }
