@@ -263,7 +263,7 @@ batinfo==0.4.2
 beautifulsoup4==4.8.0
 
 # homeassistant.components.zha
-bellows-homeassistant==0.9.0
+bellows-homeassistant==0.9.1
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.5.3
@@ -1980,7 +1980,7 @@ zhong_hong_hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-deconz==0.2.1
+zigpy-deconz==0.2.2
 
 # homeassistant.components.zha
 zigpy-homeassistant==0.7.1
