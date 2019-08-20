@@ -146,65 +146,37 @@ def update_items(controller, async_add_entities, tracked):
     """Update tracked device state from the controller."""
     new_tracked = []
 
-    if controller.option_track_clients:
+    for client_id in controller.api.clients:
 
-        for client_id in controller.api.clients:
-
-            if client_id in tracked:
-                if not tracked[client_id].enabled:
-                    continue
-                LOGGER.debug(
-                    "Updating UniFi tracked client %s (%s)",
-                    tracked[client_id].entity_id,
-                    tracked[client_id].client.mac,
-                )
-                tracked[client_id].async_schedule_update_ha_state()
-                continue
-
-            client = controller.api.clients[client_id]
-
-            if (
-                not client.is_wired
-                and controller.option_ssid_filter
-                and client.essid not in controller.option_ssid_filter
-            ):
-                continue
-
-            if not controller.option_track_wired_clients and client.is_wired:
-                continue
-
-            tracked[client_id] = UniFiClientTracker(client, controller)
-            new_tracked.append(tracked[client_id])
+        if client_id in tracked and tracked[client_id].entity_id:
             LOGGER.debug(
-                "New UniFi client tracker %s (%s)",
-                client.name or client.hostname,
-                client.mac,
+                "Updating UniFi tracked client %s (%s)",
+                tracked[client_id].entity_id,
+                tracked[client_id].client.mac,
             )
+            tracked[client_id].async_schedule_update_ha_state()
+            continue
 
-    if controller.option_track_devices:
+        client = controller.api.clients[client_id]
 
-        for device_id in controller.api.devices:
+        tracked[client_id] = UniFiClientTracker(client, controller)
+        new_tracked.append(tracked[client_id])
 
-            if device_id in tracked:
-                if not tracked[device_id].enabled:
-                    continue
-                LOGGER.debug(
-                    "Updating UniFi tracked device %s (%s)",
-                    tracked[device_id].entity_id,
-                    tracked[device_id].device.mac,
-                )
-                tracked[device_id].async_schedule_update_ha_state()
-                continue
+    for device_id in controller.api.devices:
 
-            device = controller.api.devices[device_id]
-
-            tracked[device_id] = UniFiDeviceTracker(device, controller)
-            new_tracked.append(tracked[device_id])
+        if device_id in tracked and tracked[device_id].entity_id:
             LOGGER.debug(
-                "New UniFi device tracker %s (%s)",
-                device.name or device.model,
-                device.mac,
+                "Updating UniFi tracked device %s (%s)",
+                tracked[device_id].entity_id,
+                tracked[device_id].device.mac,
             )
+            tracked[device_id].async_schedule_update_ha_state()
+            continue
+
+        device = controller.api.devices[device_id]
+
+        tracked[device_id] = UniFiDeviceTracker(device, controller)
+        new_tracked.append(tracked[device_id])
 
     if new_tracked:
         async_add_entities(new_tracked)
@@ -217,6 +189,28 @@ class UniFiClientTracker(ScannerEntity):
         """Set up tracked client."""
         self.client = client
         self.controller = controller
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        if not self.controller.option_track_clients:
+            return False
+
+        if (
+            not self.client.is_wired
+            and self.controller.option_ssid_filter
+            and self.client.essid not in self.controller.option_ssid_filter
+        ):
+            return False
+
+        if not self.controller.option_track_wired_clients and self.client.is_wired:
+            return False
+
+        return True
+
+    async def async_added_to_hass(self):
+        """Client entity created."""
+        LOGGER.debug("New UniFi client tracker %s (%s)", self.name, self.client.mac)
 
     async def async_update(self):
         """Synchronize state with controller."""
@@ -276,6 +270,18 @@ class UniFiDeviceTracker(ScannerEntity):
         """Set up tracked device."""
         self.device = device
         self.controller = controller
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        if not self.controller.option_track_devices:
+            return False
+
+        return True
+
+    async def async_added_to_hass(self):
+        """Subscribe to device events."""
+        LOGGER.debug("New UniFi device tracker %s (%s)", self.name, self.device.mac)
 
     async def async_update(self):
         """Synchronize state with controller."""
