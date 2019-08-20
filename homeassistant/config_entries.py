@@ -670,6 +670,12 @@ async def _old_conf_migrator(old_config):
 class ConfigFlow(data_entry_flow.FlowHandler):
     """Base class for config flows with some helpers."""
 
+    def __init_subclass__(cls, domain=None, **kwargs):
+        """Initialize a subclass, register if possible."""
+        super().__init_subclass__(**kwargs)  # type: ignore
+        if domain is not None:
+            HANDLERS.register(domain)(cls)
+
     CONNECTION_CLASS = CONN_CLASS_UNKNOWN
 
     @staticmethod
