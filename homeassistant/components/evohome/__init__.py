@@ -270,6 +270,7 @@ class EvoBroker:
             evohomeclient2.AuthenticationError,
         ) as err:
             _handle_exception(err)
+            status = str(err)
         else:
             self.timers["statusUpdated"] = utcnow()
 
