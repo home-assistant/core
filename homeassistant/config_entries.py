@@ -668,7 +668,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
     def __init_subclass__(cls, domain=None, **kwargs):
         """Initialize a subclass, register if possible."""
-        super().__init_subclass__(**kwargs)
+        super().__init_subclass__(**kwargs)  # type: ignore
         if domain is not None:
             HANDLERS.register(domain)(cls)
 
