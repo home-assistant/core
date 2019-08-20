@@ -30,8 +30,7 @@ from .server import setup_plex_server
 _LOGGER = logging.getLogger(__package__)
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class PlexFlowHandler(config_entries.ConfigFlow):
+class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Plex config flow."""
 
     VERSION = 1
