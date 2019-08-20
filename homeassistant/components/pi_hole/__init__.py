@@ -11,7 +11,6 @@ from homeassistant.const import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.helpers import config_validation as cv
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.util import Throttle
@@ -76,9 +75,6 @@ async def async_setup(hass, config):
     )
 
     await pi_hole.async_update()
-
-    if pi_hole.api.data is None:
-        raise PlatformNotReady
 
     hass.data[DOMAIN] = pi_hole
 
