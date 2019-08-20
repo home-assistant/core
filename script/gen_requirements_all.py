@@ -99,6 +99,7 @@ TEST_REQUIREMENTS = (
     "pyMetno",
     "mbddns",
     "mficlient",
+    "minio",
     "netdisco",
     "numpy",
     "oauth2client",
