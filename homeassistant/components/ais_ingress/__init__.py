@@ -1,7 +1,6 @@
 """Hass.io Add-on ingress service."""
 import asyncio
 import logging
-import os
 from ipaddress import ip_address
 from typing import Dict, Union
 
@@ -22,11 +21,11 @@ DOMAIN = "ais_ingress"
 
 
 @callback
-def async_setup_ingress_view(hass: HomeAssistantType, host: str):
+def async_setup_ingress_view(hass: HomeAssistantType, host: str, port: str):
     """Auth setup."""
     websession = hass.helpers.aiohttp_client.async_get_clientsession()
 
-    hassio_ingress = HassIOIngress(host, websession)
+    hassio_ingress = HassIOIngress(host, port, websession)
     hass.http.register_view(hassio_ingress)
 
 
@@ -37,15 +36,15 @@ class HassIOIngress(HomeAssistantView):
     url = "/api/ingress/{path:.*}"
     requires_auth = False
 
-    def __init__(self, host: str, websession: aiohttp.ClientSession):
+    def __init__(self, host: str, port: str, websession: aiohttp.ClientSession):
         """Initialize a Hass.io ingress view."""
         self._host = host
+        self._port = port
         self._websession = websession
 
     def _create_url(self, path: str) -> str:
         """Create URL to service."""
-        # return "http://{}/ingress/{}".format(self._host, path)
-        return "http://localhost:8888/{}".format(path)
+        return "http://{}:{}/{}".format(self._host, self._port, path)
 
     async def _handle(
         self, request: web.Request, path: str
@@ -57,6 +56,8 @@ class HassIOIngress(HomeAssistantView):
                 return await self._handle_websocket(request, path)
 
             # Request
+            # if not request["ha_authenticated"]:
+            #     return web.Response(status=401)
             return await self._handle_request(request, path)
 
         except aiohttp.ClientError as err:
@@ -251,11 +252,10 @@ async def _websocket_forward(ws_from, ws_to):
 
 async def async_setup(hass, config):
     """Set up the  component."""
-
+    config = config.get(DOMAIN, {})
+    host = config.get("host")
+    port = config.get("port")
     # Init ingress feature
-    async_setup_ingress_view(hass, "localhost")
-
-    # Init add-on ingress panels
-    # await async_setup_addon_panel(hass, hassio)
+    async_setup_ingress_view(hass, host, port)
 
     return True

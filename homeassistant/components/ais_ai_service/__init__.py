@@ -2877,6 +2877,7 @@ def _process_command_from_frame(hass, service):
 def _post_message(message, hass):
     """Post the message to TTS service."""
     message = message.replace("°C", "stopni Celsjusza")
+    message = message.replace("(Pobrane z Google)", "")
     # replace emoticons
     emoji_pattern = re.compile(
         "["
@@ -2900,7 +2901,6 @@ def _post_message(message, hass):
     )
 
     text = emoji_pattern.sub(r"", message)
-    _LOGGER.debug("tekst wysłany do przeczytania: " + text)
     j_data = {
         "text": text,
         "pitch": ais_global.GLOBAL_TTS_PITCH,

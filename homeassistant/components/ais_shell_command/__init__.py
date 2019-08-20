@@ -4,15 +4,17 @@ Exposes regular shell commands as services.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/shell_command/
 """
-from homeassistant.const import (CONF_IP_ADDRESS, CONF_MAC)
+from homeassistant.const import CONF_IP_ADDRESS, CONF_MAC
 import asyncio
 import logging
 import os
 import homeassistant.ais_dom.ais_global as ais_global
-REQUIREMENTS = ['requests_futures']
-DOMAIN = 'ais_shell_command'
+
+REQUIREMENTS = ["requests_futures"]
+DOMAIN = "ais_shell_command"
 GLOBAL_X = 0
 _LOGGER = logging.getLogger(__name__)
+
 
 @asyncio.coroutine
 def async_setup(hass, config):
@@ -84,38 +86,28 @@ def async_setup(hass, config):
         yield from _set_ais_secure_android_id_dom(hass, service)
 
     # register services
+    hass.services.async_register(DOMAIN, "change_host_name", change_host_name)
+    hass.services.async_register(DOMAIN, "execute_command", execute_command)
+    hass.services.async_register(DOMAIN, "execute_script", execute_script)
+    hass.services.async_register(DOMAIN, "execute_upgrade", execute_upgrade)
+    hass.services.async_register(DOMAIN, "execute_restart", execute_restart)
+    hass.services.async_register(DOMAIN, "execute_stop", execute_stop)
+    hass.services.async_register(DOMAIN, "key_event", key_event)
     hass.services.async_register(
-        DOMAIN, 'change_host_name', change_host_name)
+        DOMAIN, "scan_network_for_devices", scan_network_for_devices
+    )
+    hass.services.async_register(DOMAIN, "scan_device", scan_device)
     hass.services.async_register(
-        DOMAIN, 'execute_command', execute_command)
+        DOMAIN, "show_network_devices_info", show_network_devices_info
+    )
+    hass.services.async_register(DOMAIN, "led", led)
     hass.services.async_register(
-        DOMAIN, 'execute_script', execute_script)
-    hass.services.async_register(
-        DOMAIN, 'execute_upgrade', execute_upgrade)
-    hass.services.async_register(
-        DOMAIN, 'execute_restart', execute_restart)
-    hass.services.async_register(
-        DOMAIN, 'execute_stop', execute_stop)
-    hass.services.async_register(
-        DOMAIN, 'key_event', key_event)
-    hass.services.async_register(
-        DOMAIN, 'scan_network_for_devices', scan_network_for_devices)
-    hass.services.async_register(
-        DOMAIN, 'scan_device', scan_device)
-    hass.services.async_register(
-        DOMAIN, 'show_network_devices_info', show_network_devices_info)
-    hass.services.async_register(
-        DOMAIN, 'led', led)
-    hass.services.async_register(
-        DOMAIN, 'set_ais_secure_android_id_dom', set_ais_secure_android_id_dom)
-    hass.services.async_register(
-        DOMAIN, 'init_local_sdcard', init_local_sdcard)
-    hass.services.async_register(
-        DOMAIN, 'flush_logs', flush_logs)
-    hass.services.async_register(
-        DOMAIN, 'change_remote_access', change_remote_access)
-    hass.services.async_register(
-        DOMAIN, 'ssh_remote_access', ssh_remote_access)
+        DOMAIN, "set_ais_secure_android_id_dom", set_ais_secure_android_id_dom
+    )
+    hass.services.async_register(DOMAIN, "init_local_sdcard", init_local_sdcard)
+    hass.services.async_register(DOMAIN, "flush_logs", flush_logs)
+    hass.services.async_register(DOMAIN, "change_remote_access", change_remote_access)
+    hass.services.async_register(DOMAIN, "ssh_remote_access", ssh_remote_access)
     return True
 
 
@@ -125,9 +117,10 @@ def _change_host_name(hass, call):
         _LOGGER.error("No host name provided")
         return
     new_host_name = call.data["hostname"]
-    file = '/data/data/pl.sviete.dom/.ais/ais-hostname'
+    file = "/data/data/pl.sviete.dom/.ais/ais-hostname"
     command = 'echo "net.hostname = ' + new_host_name + '" > ' + file
     import subprocess
+
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
     process.wait()
     command = 'su -c "/data/data/pl.sviete.dom/.ais/run_as_root.sh"'
@@ -138,11 +131,15 @@ def _change_host_name(hass, call):
 @asyncio.coroutine
 def _change_remote_access(hass, call):
     import os
-    access = hass.states.get('input_boolean.ais_remote_access').state
-    gate_id = hass.states.get('sensor.ais_secure_android_id_dom').state
-    if access == 'on':
+
+    access = hass.states.get("input_boolean.ais_remote_access").state
+    gate_id = hass.states.get("sensor.ais_secure_android_id_dom").state
+    if access == "on":
         os.system("pm2 delete tunnel")
-        os.system("pm2 start lt --name tunnel -- -h http://paczka.pro -p 8180 -s " + gate_id)
+        os.system(
+            "pm2 start lt --name tunnel --restart-delay=30000 -- -h http://paczka.pro -p 8180 -s "
+            + gate_id
+        )
         os.system("pm2 save")
     else:
         os.system("pm2 delete tunnel")
@@ -151,16 +148,22 @@ def _change_remote_access(hass, call):
 
 @asyncio.coroutine
 def _ssh_remote_access(hass, call):
-    access = 'on'
+    access = "on"
     if "access" in call.data:
         access = call.data["access"]
-    gate_id = 'ssh-' + hass.states.get('sensor.ais_secure_android_id_dom').state
+    gate_id = "ssh-" + hass.states.get("sensor.ais_secure_android_id_dom").state
     import os
-    if access == 'on':
+
+    if access == "on":
         os.system("pm2 delete ssh-tunnel")
-        os.system("pm2 start lt --name ssh-tunnel -- -h http://paczka.pro -p 8888 -s " + gate_id)
+        os.system(
+            "pm2 start lt --name ssh-tunnel --restart-delay=30000 -- -h http://paczka.pro -p 8888 -s "
+            + gate_id
+        )
         os.system("pm2 save")
-        _LOGGER.warning("You have SSH access to gate on http://" + gate_id + ".paczka.pro")
+        _LOGGER.warning(
+            "You have SSH access to gate on http://" + gate_id + ".paczka.pro"
+        )
     else:
         os.system("pm2 delete ssh-tunnel")
         os.system("pm2 save")
@@ -173,9 +176,10 @@ def _key_event(hass, call):
         return
     key_code = call.data["key_code"]
     import subprocess
+
     subprocess.Popen(
-        "su -c 'input keyevent " + key_code + "'",
-        shell=True, stdout=None, stderr=None)
+        "su -c 'input keyevent " + key_code + "'", shell=True, stdout=None, stderr=None
+    )
 
 
 @asyncio.coroutine
@@ -186,12 +190,16 @@ def _led(hass, call):
     brightness = call.data["brightness"]
 
     script = str(os.path.dirname(__file__))
-    script += '/scripts/led.sh'
+    script += "/scripts/led.sh"
 
     import subprocess
+
     subprocess.Popen(
         "su -c ' " + script + " " + str(brightness) + "'",
-        shell=True, stdout=None, stderr=None)
+        shell=True,
+        stdout=None,
+        stderr=None,
+    )
 
 
 @asyncio.coroutine
@@ -199,27 +207,39 @@ def _set_ais_secure_android_id_dom(hass, call):
     # the G_AIS_SECURE_ANDROID_ID_DOM can be set from frame during the wifi_connection_info
     if ais_global.G_AIS_SECURE_ANDROID_ID_DOM is None:
         import subprocess
+
         try:
-            android_id = subprocess.check_output('su -c "settings get secure android_id"', shell=True, timeout=15)
-            android_id = android_id.decode("utf-8").replace('\n', '')
+            android_id = subprocess.check_output(
+                'su -c "settings get secure android_id"', shell=True, timeout=15
+            )
+            android_id = android_id.decode("utf-8").replace("\n", "")
         except Exception:
             _LOGGER.warning("Can't get secure gate id for the device!")
             from uuid import getnode as get_mac
+
             android_id = get_mac()
 
         ais_global.G_AIS_SECURE_ANDROID_ID_DOM = "dom-" + str(android_id)
 
-    hass.states.async_set('sensor.ais_secure_android_id_dom', ais_global.G_AIS_SECURE_ANDROID_ID_DOM,
-                          {"friendly_name": "Unikalny identyfikator bramki",
-                           "icon": "mdi:account-card-details"})
-    _LOGGER.info("sensor.ais_secure_android_id_dom -> " + ais_global.G_AIS_SECURE_ANDROID_ID_DOM)
+    hass.states.async_set(
+        "sensor.ais_secure_android_id_dom",
+        ais_global.G_AIS_SECURE_ANDROID_ID_DOM,
+        {
+            "friendly_name": "Unikalny identyfikator bramki",
+            "icon": "mdi:account-card-details",
+        },
+    )
+    _LOGGER.info(
+        "sensor.ais_secure_android_id_dom -> " + ais_global.G_AIS_SECURE_ANDROID_ID_DOM
+    )
 
 
 @asyncio.coroutine
 def _init_local_sdcard(hass, call):
     script = str(os.path.dirname(__file__))
-    script += '/scripts/init_local_sdcard.sh'
+    script += "/scripts/init_local_sdcard.sh"
     import subprocess
+
     subprocess.Popen(script, shell=True, stdout=None, stderr=None)
 
 
@@ -249,15 +269,16 @@ def _execute_command(hass, call):
         icon = call.data["icon"]
 
     import subprocess
+
     process = subprocess.Popen(
-        command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
     output, err = process.communicate()
     _LOGGER.error("err: " + str(err))
     if ret_entity is not None:
-        hass.states.async_set(ret_entity, output, {
-          "friendly_name": friendly_name,
-          "icon": icon
-        })
+        hass.states.async_set(
+            ret_entity, output, {"friendly_name": friendly_name, "icon": icon}
+        )
 
 
 @asyncio.coroutine
@@ -267,6 +288,7 @@ def _execute_script(hass, call):
         return
     script = call.data["script"]
     import subprocess
+
     process = subprocess.Popen(script, shell=True, stdout=subprocess.PIPE)
     process.wait()
     _LOGGER.info("_execute_script, return: " + str(process.returncode))
@@ -275,33 +297,38 @@ def _execute_script(hass, call):
 @asyncio.coroutine
 def _execute_upgrade(hass, call):
     # check the status of the sensor to choide the correct upgrade method
-    state = hass.states.get('sensor.version_info')
-    reinstall_android_app = state.attributes.get('reinstall_android_app')
-    reinstall_dom_app = state.attributes.get('reinstall_dom_app')
-    apt = state.attributes.get('apt')
-    beta = state.attributes.get('beta', False)
+    state = hass.states.get("sensor.version_info")
+    reinstall_android_app = state.attributes.get("reinstall_android_app")
+    reinstall_dom_app = state.attributes.get("reinstall_dom_app")
+    apt = state.attributes.get("apt")
+    beta = state.attributes.get("beta", False)
 
     if reinstall_dom_app is None or reinstall_dom_app is False:
-        yield from hass.services.async_call('ais_ai_service', 'say_it', {
-                "text": "Sprawdzam dostępność aktualizacji"
-            })
-        yield from hass.services.async_call('ais_updater', 'check_version')
+        yield from hass.services.async_call(
+            "ais_ai_service", "say_it", {"text": "Sprawdzam dostępność aktualizacji"}
+        )
+        yield from hass.services.async_call("ais_updater", "check_version")
     else:
-        yield from hass.services.async_call('ais_ai_service', 'say_it', {
-            "text": "Aktualizuje system do najnowszej wersji. Do usłyszenia."
-        })
+        yield from hass.services.async_call(
+            "ais_ai_service",
+            "say_it",
+            {"text": "Aktualizuje system do najnowszej wersji. Do usłyszenia."},
+        )
         if apt is not None and apt != "":
             _LOGGER.info("We have apt dependencies " + str(apt))
             try:
                 apt_script = str(os.path.dirname(__file__))
-                apt_script += '/scripts/apt_install.sh'
+                apt_script += "/scripts/apt_install.sh"
                 f = open(str(apt_script), "w")
                 f.write("#!/data/data/pl.sviete.dom/files/usr/bin/sh" + os.linesep)
                 for l in apt.split(","):
                     f.write(l + os.linesep)
                 f.close()
                 import subprocess
-                apt_process = subprocess.Popen(apt_script, shell=True, stdout=None, stderr=None)
+
+                apt_process = subprocess.Popen(
+                    apt_script, shell=True, stdout=None, stderr=None
+                )
                 apt_process.wait()
                 _LOGGER.info("apt_install, return: " + str(apt_process.returncode))
             except Exception as e:
@@ -310,51 +337,48 @@ def _execute_upgrade(hass, call):
             _LOGGER.info("No apt dependencies this time!")
 
         import subprocess
+
         if reinstall_android_app is None or reinstall_android_app is False:
             # partial update (without android app)
             script = str(os.path.dirname(__file__))
-            script += '/scripts/upgrade_ais.sh'
+            script += "/scripts/upgrade_ais.sh"
             process = subprocess.Popen(script, shell=True, stdout=subprocess.PIPE)
             process.wait()
             _LOGGER.info("_execute_upgrade, return: " + str(process.returncode))
-            yield from hass.services.async_call('homeassistant', 'restart')
+            yield from hass.services.async_call("homeassistant", "restart")
         else:
             # full update
             script = str(os.path.dirname(__file__))
             if beta:
-                script += '/scripts/upgrade_ais_full_beta.sh'
+                script += "/scripts/upgrade_ais_full_beta.sh"
             else:
-                script += '/scripts/upgrade_ais_full.sh'
+                script += "/scripts/upgrade_ais_full.sh"
             process = subprocess.Popen(script, shell=True, stdout=subprocess.PIPE)
             process.wait()
             _LOGGER.info("_execute_upgrade, return: " + str(process.returncode))
-            yield from hass.services.async_call('homeassistant', 'stop')
+            yield from hass.services.async_call("homeassistant", "stop")
 
 
 @asyncio.coroutine
 def _execute_restart(hass, call):
     import subprocess
-    subprocess.Popen(
-        "su -c reboot",
-        shell=True, stdout=None, stderr=None)
+
+    subprocess.Popen("su -c reboot", shell=True, stdout=None, stderr=None)
 
 
 @asyncio.coroutine
 def _execute_stop(hass, call):
     import subprocess
-    subprocess.Popen(
-        "su -c 'reboot -p'",
-        shell=True, stdout=None, stderr=None)
+
+    subprocess.Popen("su -c 'reboot -p'", shell=True, stdout=None, stderr=None)
 
 
 @asyncio.coroutine
 def _show_network_devices_info(hass, call):
     import homeassistant.ais_dom.ais_device_search_mqtt.sensor as dsm
+
     info = dsm.get_text()
-    hass.states.async_set(
-        'sensor.network_devices_info_value', 'ok', {
-            'text': info
-        })
+    hass.states.async_set("sensor.network_devices_info_value", "ok", {"text": info})
 
 
 @asyncio.coroutine
@@ -367,6 +391,7 @@ def _scan_device(hass, call):
     from requests_futures.sessions import FuturesSession
     from urllib.parse import urlparse
     import homeassistant.ais_dom.ais_device_search_mqtt.sensor as dsm
+
     session = FuturesSession()
 
     def bg_cb(resp, *args, **kwargs):
@@ -379,9 +404,8 @@ def _scan_device(hass, call):
             dsm.NET_DEVICES.append("- " + name + ", http://" + hostname)
             info = dsm.get_text()
             hass.states.async_set(
-                'sensor.network_devices_info_value', '', {
-                    'text': info
-                })
+                "sensor.network_devices_info_value", "", {"text": info}
+            )
         except Exception:
             pass
 
@@ -394,34 +418,38 @@ def _scan_device(hass, call):
             ip = json_ws_resp["IPAddressIPv4"]
             mac = json_ws_resp["MacWlan0"]
             dsm.DOM_DEVICES.append(
-                "- " + model + " " + manufacturer + ", http://" + ip + ':8180')
+                "- " + model + " " + manufacturer + ", http://" + ip + ":8180"
+            )
             info = dsm.get_text()
             hass.states.async_set(
-                'sensor.network_devices_info_value', '', {
-                    'text': info
-                })
+                "sensor.network_devices_info_value", "", {"text": info}
+            )
             # add the device to the speakers lists
             hass.async_add_job(
                 hass.services.async_call(
-                    'ais_cloud', 'get_players', {
-                        'device_name':  model + " " + manufacturer
-                        + "(" + ip + ")",
+                    "ais_cloud",
+                    "get_players",
+                    {
+                        "device_name": model + " " + manufacturer + "(" + ip + ")",
                         CONF_IP_ADDRESS: ip,
-                        CONF_MAC: mac
-                    }))
+                        CONF_MAC: mac,
+                    },
+                )
+            )
         except Exception:
             pass
 
-    session.get(url, hooks={'response': bg_cb})
-    session.get(url_a, hooks={'response': bg_cb_a})
+    session.get(url, hooks={"response": bg_cb})
+    session.get(url_a, hooks={"response": bg_cb_a})
     hass.async_add_job(
-        hass.services.async_call(
-            'ais_shell_command', 'scan_network_for_devices'))
+        hass.services.async_call("ais_shell_command", "scan_network_for_devices")
+    )
 
 
 @asyncio.coroutine
 def _scan_network_for_devices(hass, call):
     import homeassistant.ais_dom.ais_device_search_mqtt.sensor as dsm
+
     global GLOBAL_X
     GLOBAL_MY_IP = ais_global.get_my_global_ip()
     info = ""
@@ -431,66 +459,62 @@ def _scan_network_for_devices(hass, call):
         dsm.MQTT_DEVICES = []
         dsm.NET_DEVICES = []
         dsm.DOM_DEVICES = []
-        hass.states.async_set('sensor.network_devices_info_value', '', {
-            'text': 'wykrywam, to może potrwać kilka minut...'
-        })
+        hass.states.async_set(
+            "sensor.network_devices_info_value",
+            "",
+            {"text": "wykrywam, to może potrwać kilka minut..."},
+        )
 
         # send the message to all robots in network
-        yield from hass.services.async_call('mqtt', 'publish', {
-            'topic': 'cmnd/dom/status',
-            'payload': 0
-        })
+        yield from hass.services.async_call(
+            "mqtt", "publish", {"topic": "cmnd/dom/status", "payload": 0}
+        )
         # fix for new robots, Tasmota 6.4.0
-        yield from hass.services.async_call('mqtt', 'publish', {
-            'topic': 'dom/cmnd/status',
-            'payload': 0
-        })
+        yield from hass.services.async_call(
+            "mqtt", "publish", {"topic": "dom/cmnd/status", "payload": 0}
+        )
         # disco
-        yield from hass.services.async_call('mqtt', 'publish', {
-            'topic': 'dom/cmnd/SetOption19',
-            'payload': 1
-        })
+        yield from hass.services.async_call(
+            "mqtt", "publish", {"topic": "dom/cmnd/SetOption19", "payload": 1}
+        )
 
         yield from hass.services.async_call(
-            'ais_shell_command', 'scan_network_for_devices')
+            "ais_shell_command", "scan_network_for_devices"
+        )
     # 256
     elif 0 < GLOBAL_X < 256:
         GLOBAL_X += 1
         rest_url = "http://{}.{}/cm?cmnd=status"
-        url = rest_url.format(GLOBAL_MY_IP.rsplit('.', 1)[0], str(GLOBAL_X))
-        info = "Sprawdzam " + GLOBAL_MY_IP.rsplit('.', 1)[0]
+        url = rest_url.format(GLOBAL_MY_IP.rsplit(".", 1)[0], str(GLOBAL_X))
+        info = "Sprawdzam " + GLOBAL_MY_IP.rsplit(".", 1)[0]
         info += "." + str(GLOBAL_X) + "\n"
         info += dsm.get_text()
-        hass.states.async_set(
-            'sensor.network_devices_info_value', '', {
-                'text': info
-            })
+        hass.states.async_set("sensor.network_devices_info_value", "", {"text": info})
 
         # search android devices
         rest_url_a = "http://{}.{}:8122"
-        url_a = rest_url_a.format(
-            GLOBAL_MY_IP.rsplit('.', 1)[0], str(GLOBAL_X))
+        url_a = rest_url_a.format(GLOBAL_MY_IP.rsplit(".", 1)[0], str(GLOBAL_X))
 
         yield from hass.services.async_call(
-            'ais_shell_command', 'scan_device', {
-                "url": url,
-                "url_a": url_a
-            })
+            "ais_shell_command", "scan_device", {"url": url, "url_a": url_a}
+        )
 
     else:
         GLOBAL_X = 0
         hass.states.async_set(
-            'sensor.network_devices_info_value', '', {
-                'text': dsm.get_text()
-                })
+            "sensor.network_devices_info_value", "", {"text": dsm.get_text()}
+        )
 
 
 @asyncio.coroutine
 def _flush_logs(hass, call):
     import os
+
     # pm2
     os.system("pm2 flush")
     # pip cache
     os.system("rm -rf /data/data/pl.sviete.dom/files/home/.cache/pip")
     # recorder.purge
-    yield from hass.services.async_call('recorder', 'purge', {"keep_days": 3, "repack": True})
+    yield from hass.services.async_call(
+        "recorder", "purge", {"keep_days": 3, "repack": True}
+    )

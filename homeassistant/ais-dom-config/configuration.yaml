@@ -134,4 +134,7 @@ ais_amplifier_service:
 #
 person:
 
+#
 ais_ingress:
+  host: localhost
+  port: 8888
