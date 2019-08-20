@@ -264,11 +264,11 @@ class EvoBroker:
             status = await self.client.locations[loc_idx].status()
         except (aiohttp.ClientResponseError, evohomeclient2.AuthenticationError) as err:
             _handle_exception(err)
+        else:
+            # inform the evohome devices that state data has been updated
+            async_dispatcher_send(self.hass, DOMAIN, {"signal": "refresh"})
 
-        # inform the evohome devices that state data has been updated
-        async_dispatcher_send(self.hass, DOMAIN, {"signal": "refresh"})
-
-        _LOGGER.debug("Status = %s", status[GWS][0][TCS][0])
+            _LOGGER.debug("Status = %s", status[GWS][0][TCS][0])
 
 
 class EvoDevice(Entity):
