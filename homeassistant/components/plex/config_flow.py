@@ -17,6 +17,7 @@ from homeassistant.const import (
 
 from .const import (
     CONF_SERVER,
+    CONF_SERVER_IDENTIFIER,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
@@ -44,10 +45,6 @@ class PlexFlowHandler(config_entries.ConfigFlow):
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         errors = {}
-
-        for entry in self._async_current_entries():
-            if PLEX_SERVER_CONFIG in entry.data:
-                return self.async_abort(reason="already_configured")
 
         if user_input is not None:
             if user_input.get("manual_setup"):
@@ -101,6 +98,12 @@ class PlexFlowHandler(config_entries.ConfigFlow):
 
                 plex_server = setup_plex_server(user_input)
 
+                server_id = plex_server.machineIdentifier
+
+                for entry in self._async_current_entries():
+                    if entry.data[CONF_SERVER_IDENTIFIER] == server_id:
+                        return self.async_abort(reason="already_configured")
+
                 title = "{} ({})".format(
                     plex_server.friendlyName, username if username else "Direct"
                 )
@@ -109,7 +112,8 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                     data[CONF_SERVER] = plex_server.friendlyName
 
                 return self.async_create_entry(
-                    title=title, data={PLEX_SERVER_CONFIG: data}
+                    title=title,
+                    data={CONF_SERVER_IDENTIFIER: server_id, PLEX_SERVER_CONFIG: data},
                 )
 
             except ConfigNotReady:
