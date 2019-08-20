@@ -3,8 +3,8 @@
     "title": "Traccar",
     "step": {
       "user": {
-        "title": "Set up the Traccar",
-        "description": "Are you sure you want to set up the Traccar?"
+        "title": "Set up Traccar",
+        "description": "Are you sure you want to set up Traccar?"
       }
     },
     "abort": {
