@@ -10,7 +10,6 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ENTRY_ID = "entry_id"
 ATTR_STATUS = "status"
 ATTR_LAST_UPDATE = "last_update"
 ATTR_LAST_UPDATE_SUCCESSFUL = "last_update_successful"
@@ -125,7 +124,6 @@ class GeonetnzQuakesSensor(Entity):
             (ATTR_CREATED, self._created),
             (ATTR_UPDATED, self._updated),
             (ATTR_REMOVED, self._removed),
-            (ATTR_ENTRY_ID, self._config_entry_id),
         ):
             if value or isinstance(value, bool):
                 attributes[key] = value
