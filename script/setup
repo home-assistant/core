@@ -8,4 +8,4 @@ cd "$(dirname "$0")/.."
 script/bootstrap
 
 pre-commit install
-pip3.6 install -e .
+pip3.7 install -e .

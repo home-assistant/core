@@ -3,7 +3,9 @@
   "name": "AIS Updater",
   "config_flow": false,
   "documentation": "https://www.ai-speaker.com",
-  "requirements": [],
+  "requirements": [
+    "distro==1.4.0"
+  ],
   "dependencies": [],
   "codeowners": []
 }

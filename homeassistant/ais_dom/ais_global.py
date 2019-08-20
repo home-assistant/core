@@ -12,7 +12,7 @@ G_DRIVE_SHARED_WITH_ME = "Udostępnione dla mnie"
 # TTS settings
 GLOBAL_TTS_RATE = 1
 GLOBAL_TTS_PITCH = 1
-GLOBAL_TTS_VOICE = 'pl-pl-x-oda-local'
+GLOBAL_TTS_VOICE = "pl-pl-x-oda-local"
 
 # audio nature
 G_AN_RADIO = "Radio"
@@ -32,30 +32,30 @@ G_LOCAL_EXO_PLAYER_ENTITY_ID = "media_player.wbudowany_glosnik"
 G_CURR_MEDIA_CONTENT = {}
 
 # actions on remote
-G_ACTION_DELETE = 'delete'
-G_ACTION_SET_AUDIO_SPEED = 'set_audio_speed'
-G_ACTION_SET_AUDIO_SHUFFLE = 'set_audio_shuffle'
+G_ACTION_DELETE = "delete"
+G_ACTION_SET_AUDIO_SPEED = "set_audio_speed"
+G_ACTION_SET_AUDIO_SHUFFLE = "set_audio_shuffle"
 
 G_ICON_FOR_AUDIO = {
-    G_AN_RADIO: 'mdi:radio',
-    G_AN_PODCAST: 'mdi:podcast',
-    G_AN_MUSIC: 'mdi:youtube',
-    G_AN_AUDIOBOOK: 'mdi:audiobook',
-    G_AN_SPOTIFY: 'mdi:spotify',
-    G_AN_LOCAL: 'mdi:folder',
-    G_AN_FAVORITE: 'mdi:heart',
-    G_AN_BOOKMARK: 'mdi:bookmark'
+    G_AN_RADIO: "mdi:radio",
+    G_AN_PODCAST: "mdi:podcast",
+    G_AN_MUSIC: "mdi:youtube",
+    G_AN_AUDIOBOOK: "mdi:audiobook",
+    G_AN_SPOTIFY: "mdi:spotify",
+    G_AN_LOCAL: "mdi:folder",
+    G_AN_FAVORITE: "mdi:heart",
+    G_AN_BOOKMARK: "mdi:bookmark",
 }
 
 G_NAME_FOR_AUDIO_NATURE = {
-    G_AN_RADIO: 'Radio',
-    G_AN_PODCAST: 'Podcast',
-    G_AN_MUSIC: 'YouTube',
-    G_AN_AUDIOBOOK: 'Audio książka',
-    G_AN_SPOTIFY: 'Spotify',
-    G_AN_LOCAL: 'Dysk',
-    G_AN_FAVORITE: 'Ulubione',
-    G_AN_BOOKMARK: 'Zakładki'
+    G_AN_RADIO: "Radio",
+    G_AN_PODCAST: "Podcast",
+    G_AN_MUSIC: "YouTube",
+    G_AN_AUDIOBOOK: "Audio książka",
+    G_AN_SPOTIFY: "Spotify",
+    G_AN_LOCAL: "Dysk",
+    G_AN_FAVORITE: "Ulubione",
+    G_AN_BOOKMARK: "Zakładki",
 }
 
 
@@ -90,6 +90,8 @@ G_AIS_GATE_REQ = {}
 
 #
 G_AIS_START_IS_DONE = False
+G_AIS_NEW_DEVICE_NAME = ""
+G_AIS_NEW_DEVICE_START_ADD_TIME = None
 
 
 def get_pass_for_ssid(ssid):
@@ -103,12 +105,16 @@ def get_sercure_android_id_dom():
     global G_AIS_SECURE_ANDROID_ID_DOM
     if G_AIS_SECURE_ANDROID_ID_DOM is None:
         import subprocess
+
         try:
-            android_id = subprocess.check_output('su -c "settings get secure android_id"', shell=True, timeout=10)
-            android_id = android_id.decode("utf-8").replace('\n', '')
+            android_id = subprocess.check_output(
+                'su -c "settings get secure android_id"', shell=True, timeout=10
+            )
+            android_id = android_id.decode("utf-8").replace("\n", "")
         except Exception:
             _LOGGER.warning("Can't get secure gate id for the device!")
             from uuid import getnode as get_mac
+
             android_id = get_mac()
 
         G_AIS_SECURE_ANDROID_ID_DOM = "dom-" + str(android_id)
@@ -149,14 +155,25 @@ def set_global_my_ip(pIP):
     global GLOBAL_MY_IP
     if pIP is None:
         try:
-            GLOBAL_MY_IP = (([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2]
-                      if not ip.startswith('127.')] or [[(s.connect(('8.8.8.8', 53)),
-                      s.getsockname()[0], s.close()) for s in
-                      [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]])
-                      + ['no IP found'])[0]
+            GLOBAL_MY_IP = (
+                (
+                    [
+                        ip
+                        for ip in socket.gethostbyname_ex(socket.gethostname())[2]
+                        if not ip.startswith("127.")
+                    ]
+                    or [
+                        [
+                            (s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close())
+                            for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]
+                        ][0][1]
+                    ]
+                )
+                + ["no IP found"]
+            )[0]
         except Exception as e:
             _LOGGER.error("Error: " + str(e))
-            GLOBAL_MY_IP = '127.0.0.1'
+            GLOBAL_MY_IP = "127.0.0.1"
     else:
         GLOBAL_MY_IP = pIP
 
@@ -173,14 +190,13 @@ def get_ais_gate_req_answer(req_id):
 
 
 def get_audio_speed_name(speed):
-    l_speed = int(float(speed)*100)
+    l_speed = int(float(speed) * 100)
     if l_speed == 100:
-        return 'normalna'
+        return "normalna"
     elif l_speed < 100:
-        return 'wolniej o ' + str(100 - l_speed) + '%'
+        return "wolniej o " + str(100 - l_speed) + "%"
     elif l_speed > 100:
-        return 'szybciej o ' + str(l_speed) + '%'
+        return "szybciej o " + str(l_speed) + "%"
 
 
 set_global_my_ip(None)
-

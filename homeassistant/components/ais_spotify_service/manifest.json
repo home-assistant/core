@@ -3,7 +3,9 @@
   "name": "AIS Serwis Spotify",
   "config_flow": true,
   "documentation": "https://ai-speaker.com",
-  "requirements": [],
+  "requirements": [
+    "spotipy-homeassistant==2.4.4.dev1"
+  ],
   "dependencies": [],
   "codeowners": []
 }

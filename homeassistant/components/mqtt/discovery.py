@@ -359,17 +359,37 @@ async def async_start(
                     hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
 
             async_dispatcher_send(
-                hass, MQTT_DISCOVERY_NEW.format(component, 'mqtt'), payload
+                hass, MQTT_DISCOVERY_NEW.format(component, "mqtt"), payload
             )
 
             # AIS dom, we are doing this here to inform user about new device
             if "name" in payload and component != "sensor":
-                hass.async_add_job(
-                    hass.services.async_call(
-                        'ais_ai_service',
-                        'say_it', {"text": "Dodano urządzenie " + payload["name"] + ". Możesz już nim sterować."}
-                    )
-                )
+                # 1. only if ais start is done
+                import homeassistant.ais_dom.ais_global as ais_global
+
+                if ais_global.G_AIS_START_IS_DONE:
+                    # 2. the device name is the same as the new added device
+                    if (
+                        ais_global.G_AIS_NEW_DEVICE_NAME == payload["name"]
+                        and ais_global.G_AIS_NEW_DEVICE_START_ADD_TIME is not None
+                    ):
+                        # 3. only if we are did add new device in less than 5 minutes ago
+                        import time
+
+                        end = time.time()
+                        diff = end - ais_global.G_AIS_NEW_DEVICE_START_ADD_TIME
+                        if diff < 360:
+                            await hass.async_add_job(
+                                hass.services.async_call(
+                                    "ais_ai_service",
+                                    "say_it",
+                                    {
+                                        "text": "Dodano urządzenie "
+                                        + payload["name"]
+                                        + ". Możesz już nim sterować."
+                                    },
+                                )
+                            )
 
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()

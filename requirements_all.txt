@@ -1983,3 +1983,16 @@ zigpy-xbee-homeassistant==0.4.0
 
 # homeassistant.components.zoneminder
 zm-py==0.3.3
+
+# components ais dom
+spotipy-homeassistant==2.4.4.dev1
+distro==1.4.0
+babel==2.7.0
+pypng==0.0.20
+fuzzywuzzy
+feedparser
+bs4
+readability-lxml
+mutagen
+pexpect
+requests_futures

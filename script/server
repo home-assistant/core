@@ -5,4 +5,4 @@
 set -e
 
 cd "$(dirname "$0")/.."
-python3.6 -m homeassistant -c /data/data/pl.sviete.dom/files/home/AIS
+python3.7 -m homeassistant -c /data/data/pl.sviete.dom/files/home/AIS
