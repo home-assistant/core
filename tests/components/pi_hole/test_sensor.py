@@ -1,27 +1,14 @@
 """Test pi_hole sensor."""
 
-from homeassistant.components.pi_hole import (
-    sensor as pi_hole,
-    DOMAIN as PIHOLE_DOMAIN,
-    PiHoleData,
-)
+from homeassistant.components.pi_hole import PiHoleData
+from homeassistant.components.pi_hole.sensor import PiHoleSensor, SENSOR_DICT
+from unittest.mock import patch
 
 
-added_sensors = []
+def test_sensor_class_init(hass):
+    """Test that a sensot is constructed correctly."""
+    data = PiHoleData(None, "Test Pi-Hole")
+    with patch.dict(SENSOR_DICT, {"test": ["Test", "widgets", "mdi:test"]}):
+        sensor = PiHoleSensor(data, "test")
 
-
-def mock_async_add_entities(sensors, enable):
-    """Mock function."""
-    global added_sensors
-    added_sensors = sensors
-    return
-
-
-async def test_setup_no_monitored_conditions(hass):
-    """Test a successful setup with no monitored_conditions."""
-    hass.data[PIHOLE_DOMAIN] = PiHoleData(None, None)
-
-    config = {}
-    await pi_hole.async_setup_platform(hass, config, mock_async_add_entities, None)
-
-    assert len(added_sensors) == 0
+        assert sensor.name == "Test Pi-Hole Test"
