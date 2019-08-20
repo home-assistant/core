@@ -51,7 +51,7 @@ async def async_setup(hass, hass_config):
     broker = GeniusBroker(hass, args, kwargs)
 
     try:
-        await broker.client.update()  # pylint: disable=protected-access
+        await broker.client.update()
     except aiohttp.ClientResponseError as err:
         _LOGGER.error("Setup failed, check your configuration, %s", err)
         return False

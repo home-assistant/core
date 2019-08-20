@@ -39,8 +39,8 @@ class GeniusBattery(GeniusEntity):
     @property
     def icon(self) -> str:
         """Return the icon of the sensor."""
-        # noqa; pylint: disable=protected-access
-        values = self._device._raw["childValues"]
+
+        values = self._device._raw["childValues"]  # pylint: disable=protected-access
 
         last_comms = utc_from_timestamp(values["lastComms"]["val"])
         if "WakeUp_Interval" in values:
@@ -85,7 +85,7 @@ class GeniusBattery(GeniusEntity):
         attrs = {}
         attrs["assigned_zone"] = self._device.data["assignedZones"][0]["name"]
 
-        # noqa; pylint: disable=protected-access
+        # pylint: disable=protected-access
         last_comms = self._device._raw["childValues"]["lastComms"]["val"]
         attrs["last_comms"] = utc_from_timestamp(last_comms).isoformat()
 
