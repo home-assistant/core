@@ -2,11 +2,12 @@
 {
 	"name": "Home Assistant Dev",
 	"context": "..",
-	"dockerFile": "Dockerfile",
+	"dockerFile": "../Dockerfile.dev",
 	"postCreateCommand": "pip3 install -e .",
 	"appPort": 8123,
 	"runArgs": [
-		"-e", "GIT_EDITOR=\"code --wait\""
+		"-e",
+		"GIT_EDITOR=\"code --wait\""
 	],
 	"extensions": [
 		"ms-python.python",
