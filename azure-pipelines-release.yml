@@ -158,32 +158,32 @@ stages:
         set -e
         export DOCKER_CLI_EXPERIMENTAL=enabled
 
-        docker manifest create homeassistant/home-assistant:$(Build.SourceBranchName) \
+        sudo docker manifest create homeassistant/home-assistant:$(Build.SourceBranchName) \
           homeassistant/amd64-homeassistant:$(Build.SourceBranchName) \
           homeassistant/i386-homeassistant:$(Build.SourceBranchName) \
           homeassistant/armhf-homeassistant:$(Build.SourceBranchName) \
           homeassistant/armv7-homeassistant:$(Build.SourceBranchName) \
           homeassistant/aarch64-homeassistant:$(Build.SourceBranchName)
 
-        docker manifest annotate homeassistant/home-assistant:$(Build.SourceBranchName) \
+        sudo docker manifest annotate homeassistant/home-assistant:$(Build.SourceBranchName) \
           homeassistant/amd64-homeassistant:$(Build.SourceBranchName) \
           --os linux --arch amd64
 
-        docker manifest annotate homeassistant/home-assistant:$(Build.SourceBranchName) \
+        sudo docker manifest annotate homeassistant/home-assistant:$(Build.SourceBranchName) \
           homeassistant/i386-homeassistant:$(Build.SourceBranchName) \
           --os linux --arch i386
 
-        docker manifest annotate homeassistant/home-assistant:$(Build.SourceBranchName) \
+        sudo docker manifest annotate homeassistant/home-assistant:$(Build.SourceBranchName) \
           homeassistant/armhf-homeassistant:$(Build.SourceBranchName) \
           --os linux --arch arm32v6
 
-        docker manifest annotate homeassistant/home-assistant:$(Build.SourceBranchName) \
+        sudo docker manifest annotate homeassistant/home-assistant:$(Build.SourceBranchName) \
           homeassistant/armv7-homeassistant:$(Build.SourceBranchName) \
           --os linux --arch arm32v7
 
-        docker manifest annotate homeassistant/home-assistant:$(Build.SourceBranchName) \
+        sudo docker manifest annotate homeassistant/home-assistant:$(Build.SourceBranchName) \
           homeassistant/aarch64-homeassistant:$(Build.SourceBranchName) \
           --os linux --arch arm64v8
 
-        docker manifest push --purge homeassistant/home-assistant:$(Build.SourceBranchName)
+        sudo docker manifest push --purge homeassistant/home-assistant:$(Build.SourceBranchName)
       displayName: 'Create Meta-Image'
