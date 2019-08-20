@@ -60,7 +60,7 @@ stages:
     - script: |
         export TWINE_USERNAME="$(twineUser)"
         export TWINE_PASSWORD="$(twinePassword)"
-        
+
         twine upload dist/* --skip-existing
       displayName: 'Upload pypi'
   - job: 'ReleaseDocker'
@@ -150,3 +150,59 @@ stages:
         git commit -am "Bump Home Assistant $version"
         git push
       displayName: 'Update version files'
+  - job: 'ReleaseDocker'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - script: |
+        set -e
+        export DOCKER_CLI_EXPERIMENTAL=enabled
+
+        function create_manifest() {
+          local tag_l=$1
+          local tag_r=$2
+
+          sudo docker manifest create homeassistant/home-assistant:${tag_l} \
+            homeassistant/amd64-homeassistant:${tag_r} \
+            homeassistant/i386-homeassistant:${tag_r} \
+            homeassistant/armhf-homeassistant:${tag_r} \
+            homeassistant/armv7-homeassistant:${tag_r} \
+            homeassistant/aarch64-homeassistant:${tag_r}
+
+          sudo docker manifest annotate homeassistant/home-assistant:${tag_l} \
+            homeassistant/amd64-homeassistant:${tag_r} \
+            --os linux --arch amd64
+
+          sudo docker manifest annotate homeassistant/home-assistant:${tag_l} \
+            homeassistant/i386-homeassistant:${tag_r} \
+            --os linux --arch i386
+
+          sudo docker manifest annotate homeassistant/home-assistant:${tag_l} \
+            homeassistant/armhf-homeassistant:${tag_r} \
+            --os linux --arch arm --variant=v6
+
+          sudo docker manifest annotate homeassistant/home-assistant:${tag_l} \
+            homeassistant/armv7-homeassistant:${tag_r} \
+            --os linux --arch arm --variant=v7
+
+          sudo docker manifest annotate homeassistant/home-assistant:${tag_l} \
+            homeassistant/aarch64-homeassistant:${tag_r} \
+            --os linux --arch arm64 --variant=v8
+
+          sudo docker manifest push --purge homeassistant/home-assistant:${tag_l}
+        }
+
+        # Create version tag
+        create_manifest "$(Build.SourceBranchName)" "$(Build.SourceBranchName)"
+
+        # Create general tags
+        if [[ "$version" =~ d ]]; then
+          create_manifest "dev" "$(Build.SourceBranchName)"
+        elif [[ "$version" =~ b ]]; then
+          create_manifest "beta" "$(Build.SourceBranchName)"
+        else
+          create_manifest "stable" "$(Build.SourceBranchName)"
+          create_manifest "latest" "$(Build.SourceBranchName)"
+        fi
+
+      displayName: 'Create Meta-Image'
