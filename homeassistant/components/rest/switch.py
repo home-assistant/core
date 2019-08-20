@@ -217,8 +217,10 @@ class RestSwitch(SwitchDevice):
 
         with async_timeout.timeout(self._timeout):
             req = await websession.get(
-                self._resource, auth=self._auth, data=bytes(body_state_t, 'utf-8'),
-                headers=self._headers
+                self._resource,
+                auth=self._auth,
+                data=bytes(body_state_t, "utf-8"),
+                headers=self._headers,
             )
             text = await req.text()
 
