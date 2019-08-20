@@ -44,8 +44,7 @@ def _find_username_from_config(hass, filename):
             return None
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class HueFlowHandler(config_entries.ConfigFlow):
+class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Hue config flow."""
 
     VERSION = 1
