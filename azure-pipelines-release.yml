@@ -197,12 +197,12 @@ stages:
 
         # Create general tags
         if [[ "$version" =~ d ]]; then
-          create_manifest "$(Build.SourceBranchName)" "dev"
+          create_manifest "dev" "$(Build.SourceBranchName)"
         elif [[ "$version" =~ b ]]; then
-          create_manifest "$(Build.SourceBranchName)" "beta"
+          create_manifest "beta" "$(Build.SourceBranchName)"
         else
-          create_manifest "$(Build.SourceBranchName)" "stable"
-          create_manifest "$(Build.SourceBranchName)" "latest"
+          create_manifest "stable" "$(Build.SourceBranchName)"
+          create_manifest "latest" "$(Build.SourceBranchName)"
         fi
 
       displayName: 'Create Meta-Image'
