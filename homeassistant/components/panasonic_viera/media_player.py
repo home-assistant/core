@@ -14,6 +14,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
+    SUPPORT_DISPLAY,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
@@ -47,6 +48,7 @@ SUPPORT_VIERATV = (
     | SUPPORT_PLAY
     | SUPPORT_PLAY_MEDIA
     | SUPPORT_STOP
+    | SUPPORT_DISPLAY
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -109,6 +111,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         self._host = host
         self._volume = 0
         self._app_power = app_power
+        self._display = True
 
     @property
     def unique_id(self) -> str:
@@ -153,6 +156,11 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._muted
+    
+    @property
+    def is_display_on(self):
+        """Boolean if screen is currently on."""
+        return self._display   
 
     @property
     def supported_features(self):
@@ -183,11 +191,15 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
     def volume_down(self):
         """Volume down media player."""
         self._remote.volume_down()
-
+        
     def mute_volume(self, mute):
         """Send mute command."""
         self._remote.set_mute(mute)
-
+    
+    def display(self, display):
+        """Send screen on or off command."""
+        self._remote.set_display(display)
+        
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         volume = int(volume * 100)
