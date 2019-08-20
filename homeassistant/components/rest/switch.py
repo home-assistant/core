@@ -24,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_BODY_OFF = "body_off"
 CONF_BODY_ON = "body_on"
+CONF_BODY_STATE = "body_state"
 CONF_IS_ON_TEMPLATE = "is_on_template"
 
 DEFAULT_METHOD = "post"
@@ -41,6 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_HEADERS): {cv.string: cv.string},
         vol.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF): cv.template,
         vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.template,
+        vol.Optional(CONF_BODY_STATE): cv.template,
         vol.Optional(CONF_IS_ON_TEMPLATE): cv.template,
         vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.All(
             vol.Lower, vol.In(SUPPORT_REST_METHODS)
@@ -58,6 +60,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the RESTful switch."""
     body_off = config.get(CONF_BODY_OFF)
     body_on = config.get(CONF_BODY_ON)
+    body_state = config.get(CONF_BODY_STATE)
     is_on_template = config.get(CONF_IS_ON_TEMPLATE)
     method = config.get(CONF_METHOD)
     headers = config.get(CONF_HEADERS)
@@ -77,6 +80,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         body_on.hass = hass
     if body_off is not None:
         body_off.hass = hass
+    if body_state is not None:
+        body_state.hass = hass
     timeout = config.get(CONF_TIMEOUT)
 
     try:
@@ -88,6 +93,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             auth,
             body_on,
             body_off,
+            body_state,
             is_on_template,
             timeout,
             verify_ssl,
@@ -119,6 +125,7 @@ class RestSwitch(SwitchDevice):
         auth,
         body_on,
         body_off,
+        body_state,
         is_on_template,
         timeout,
         verify_ssl,
@@ -132,6 +139,7 @@ class RestSwitch(SwitchDevice):
         self._auth = auth
         self._body_on = body_on
         self._body_off = body_off
+        self._body_state = body_state
         self._is_on_template = is_on_template
         self._timeout = timeout
         self._verify_ssl = verify_ssl
@@ -203,9 +211,14 @@ class RestSwitch(SwitchDevice):
         """Get the latest data from REST API and update the state."""
         websession = async_get_clientsession(hass, self._verify_ssl)
 
+        body_state_t = None
+        if self._body_state is not None:
+            body_state_t = self._body_state.async_render()
+
         with async_timeout.timeout(self._timeout):
             req = await websession.get(
-                self._resource, auth=self._auth, headers=self._headers
+                self._resource, auth=self._auth, data=bytes(body_state_t, 'utf-8'),
+                headers=self._headers
             )
             text = await req.text()
 
