@@ -373,40 +373,46 @@ async def test_continue_flow_unauth(hass, client, hass_admin_user):
     assert resp.status == 401
 
 
-@asyncio.coroutine
-def test_get_progress_index(hass, client):
+async def test_get_progress_index(hass, hass_ws_client):
     """Test querying for the flows that are in progress."""
+    assert await async_setup_component(hass, "config", {})
     mock_entity_platform(hass, "config_flow.test", None)
+    ws_client = await hass_ws_client(hass)
 
     class TestFlow(core_ce.ConfigFlow):
         VERSION = 5
 
-        @asyncio.coroutine
-        def async_step_hassio(self, info):
-            return (yield from self.async_step_account())
+        async def async_step_hassio(self, info):
+            return await self.async_step_account()
 
-        @asyncio.coroutine
-        def async_step_account(self, user_input=None):
+        async def async_step_account(self, user_input=None):
             return self.async_show_form(step_id="account")
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
-        form = yield from hass.config_entries.flow.async_init(
+        form = await hass.config_entries.flow.async_init(
             "test", context={"source": "hassio"}
         )
 
-    resp = yield from client.get("/api/config/config_entries/flow")
-    assert resp.status == 200
-    data = yield from resp.json()
-    assert data == [
+    await ws_client.send_json({"id": 5, "type": "config_entries/flow/progress"})
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == [
         {"flow_id": form["flow_id"], "handler": "test", "context": {"source": "hassio"}}
     ]
 
 
-async def test_get_progress_index_unauth(hass, client, hass_admin_user):
+async def test_get_progress_index_unauth(hass, hass_ws_client, hass_admin_user):
     """Test we can't get flows that are in progress."""
+    assert await async_setup_component(hass, "config", {})
     hass_admin_user.groups = []
-    resp = await client.get("/api/config/config_entries/flow")
-    assert resp.status == 401
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json({"id": 5, "type": "config_entries/flow/progress"})
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "unauthorized"
 
 
 @asyncio.coroutine
