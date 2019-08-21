@@ -30,6 +30,7 @@ CONF_IS_ON_TEMPLATE = "is_on_template"
 DEFAULT_METHOD = "post"
 DEFAULT_BODY_OFF = "OFF"
 DEFAULT_BODY_ON = "ON"
+DEFAULT_BODY_STATE = ""
 DEFAULT_NAME = "REST Switch"
 DEFAULT_TIMEOUT = 10
 DEFAULT_VERIFY_SSL = True
@@ -42,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_HEADERS): {cv.string: cv.string},
         vol.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF): cv.template,
         vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.template,
-        vol.Optional(CONF_BODY_STATE): cv.template,
+        vol.Optional(CONF_BODY_STATE, default=DEFAULT_BODY_STATE): cv.template,
         vol.Optional(CONF_IS_ON_TEMPLATE): cv.template,
         vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.All(
             vol.Lower, vol.In(SUPPORT_REST_METHODS)
