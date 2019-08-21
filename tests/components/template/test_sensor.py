@@ -377,6 +377,36 @@ class TestTemplateSensor:
         assert "device_class" not in state.attributes
 
 
+async def test_invalid_attribute_template(hass, caplog):
+    """Test that errors are logged if rendering template fails."""
+    hass.states.async_set("binary_sensor.test_sensor", "true")
+
+    await setup.async_setup_component(
+        hass,
+        "sensor",
+        {
+            "binary_sensor": {
+                "platform": "template",
+                "sensors": {
+                    "invalid_template": {
+                        "value_template": "{{ states.sensor.test_sensor.state }}",
+                        "attribute_templates": {
+                            "test_attribute": "{{ states.binary_sensor.unknown.attributes.picture }}"
+                        },
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 2
+    await hass.helpers.entity_component.async_update_entity(
+        "binary_sensor.invalid_template"
+    )
+
+    assert ("Error rendering attribute test_attribute") in caplog.text
+
+
 async def test_no_template_match_all(hass, caplog):
     """Test that we do not allow sensors that match on all."""
     hass.states.async_set("sensor.test_sensor", "startup")
