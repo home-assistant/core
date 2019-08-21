@@ -1,0 +1,57 @@
+# Describes the format for available iCloud services
+
+reset:
+  description: Reset the iCloud account and re build it.
+  fields:
+    username:
+      description: Your iCloud email.
+      example: 'steve@apple.com'
+
+update:
+  description: Update iCloud devices.
+  fields:
+    username:
+      description: Your iCloud email.
+      example: 'steve@apple.com'
+
+play_sound:
+  description: Play sound on an Apple device.
+  fields:
+    username:
+      description: (required) Your iCloud email.
+      example: 'steve@apple.com'
+    device_name:
+      description: (required) The name of the Apple device to play a sound.
+      example: 'stevesiphone'
+
+display_message:
+  description: Display a message on an Apple device.
+  fields:
+    username:
+      description: (required) Your iCloud email.
+      example: 'steve@apple.com'
+    device_name:
+      description: (required) The name of the Apple device to display the message.
+      example: 'stevesiphone'
+    message:
+      description: (required) The content of your message.
+    sound:
+      description: To make a sound when displaying the message (boolean).
+      example: 'true'
+
+lost_device:
+  description: Make an Apple device in lost state.
+  fields:
+    username:
+      description: (required) Your iCloud email.
+      example: 'steve@apple.com'
+    device_name:
+      description: (required) The name of the Apple device to set lost.
+      example: 'stevesiphone'
+    number:
+      description: (required) The phone number to call in lost mode (must contain country code).
+      example: '+33450020100'
+    message:
+      description: (required) The message to display in lost mode.
+      example: 'Call me'
+

@@ -34,6 +34,7 @@ FLOWS = [
     "huawei_lte",
     "hue",
     "iaqualink",
+    "icloud",
     "ifttt",
     "ios",
     "ipma",
