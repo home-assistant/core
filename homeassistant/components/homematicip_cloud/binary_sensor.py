@@ -38,7 +38,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
-from .device import ATTR_GROUP_MEMBER_UNREACHABLE
+from .device import ATTR_GROUP_MEMBER_UNREACHABLE, ATTR_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -310,6 +310,10 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice, BinarySensorD
     def device_state_attributes(self):
         """Return the state attributes of the security zone group."""
         attr = super().device_state_attributes
+
+        # Remove ATTR_ID from dict, because security groups don't have
+        # device id/sgtin, just an ugly uuid that is referenced no where else.
+        del attr[ATTR_ID]
 
         if self._device.motionDetected:
             attr[ATTR_MOTIONDETECTED] = True
