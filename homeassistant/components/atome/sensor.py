@@ -57,20 +57,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
     return True
 
+
 class AtomeSensor(Entity):
     """Representation of a sensor entity for Atome."""
 
-    def __init__(self,name,client: AtomeClient):
-
+    def __init__(self, name, client: AtomeClient):
         """Initialize the sensor."""
-        _LOGGER.debug("ATOME: INIT : %s",str(client))
+        _LOGGER.debug("ATOME: INIT : %s", str(client))
         self._name = name
         # self._unit = DEFAULT_UNIT
         self._unit_of_measurement = DEFAULT_UNIT
         self._device_class = DEFAULT_CLASS
 
         self._client = client
-
 
         self._attributes = None
         self._state = None
@@ -105,7 +104,6 @@ class AtomeSensor(Entity):
     def _get_data(self):
 
         return self._client.get_live()
-
 
     @Throttle(SCAN_INTERVAL)
     def update(self):
