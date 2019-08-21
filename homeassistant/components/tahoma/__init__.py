@@ -30,7 +30,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-TAHOMA_COMPONENTS = ["scene", "sensor", "cover", "switch", "binary_sensor"]
+TAHOMA_COMPONENTS = ["scene", "sensor", "cover", "switch", "binary_sensor", "lock"]
 
 TAHOMA_TYPES = {
     "io:ExteriorVenetianBlindIOComponent": "cover",
@@ -56,6 +56,7 @@ TAHOMA_TYPES = {
     "rts:GarageDoor4TRTSComponent": "switch",
     "rts:RollerShutterRTSComponent": "cover",
     "rts:VenetianBlindRTSComponent": "cover",
+    "opendoors:OpenDoorsSmartLockComponent": "lock"
 }
 
 
