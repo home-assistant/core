@@ -45,7 +45,7 @@ class TahomaLock(TahomaDevice, LockDevice):
             self._state = STATE_LOCKED
         else:
             self._state = STATE_UNLOCKED
-        self._available = (
+        self._available = bool(
             self.tahoma_device.active_states.get("core:AvailabilityState")
             == "available"
         )
@@ -88,3 +88,8 @@ class TahomaLock(TahomaDevice, LockDevice):
         ]
         attr["name"] = self.tahoma_device.active_states["core:NameState"]
         return attr
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
