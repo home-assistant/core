@@ -63,7 +63,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         entity_picture_template = device_config.get(CONF_ENTITY_PICTURE_TEMPLATE)
         entity_ids = set()
         manual_entity_ids = device_config.get(ATTR_ENTITY_ID)
-        attribute_templates = device_config.get(CONF_ATTRIBUTE_TEMPLATES)
+        attribute_templates = device_config.get(CONF_ATTRIBUTE_TEMPLATES,{})
 
         invalid_templates = []
 
