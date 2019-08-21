@@ -11,7 +11,16 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
-from .const import CONF_CONTROLLER, CONF_SITE_ID, DOMAIN, LOGGER
+from .const import (
+    CONF_CONTROLLER,
+    CONF_DONT_TRACK_CLIENTS,
+    CONF_DONT_TRACK_DEVICES,
+    CONF_DONT_TRACK_WIRED_CLIENTS,
+    CONF_DETECTION_TIME,
+    CONF_SITE_ID,
+    DOMAIN,
+    LOGGER,
+)
 from .controller import get_controller
 from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
 
@@ -172,15 +181,27 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        "ap_mac", default=self.config_entry.options.get("ap_mac", False)
+                        CONF_DONT_TRACK_CLIENTS,
+                        default=self.config_entry.options.get(
+                            CONF_DONT_TRACK_CLIENTS, False
+                        ),
                     ): bool,
                     vol.Optional(
-                        "last_seen",
-                        default=self.config_entry.options.get("last_seen", False),
+                        CONF_DONT_TRACK_DEVICES,
+                        default=self.config_entry.options.get(
+                            CONF_DONT_TRACK_DEVICES, False
+                        ),
                     ): bool,
                     vol.Optional(
-                        "rx_tx", default=self.config_entry.options.get("rx_tx", False)
+                        CONF_DONT_TRACK_WIRED_CLIENTS,
+                        default=self.config_entry.options.get(
+                            CONF_DONT_TRACK_WIRED_CLIENTS, False
+                        ),
                     ): bool,
+                    vol.Optional(
+                        CONF_DETECTION_TIME,
+                        default=self.config_entry.options.get(CONF_DETECTION_TIME, 300),
+                    ): int,
                 }
             ),
         )

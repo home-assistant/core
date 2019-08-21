@@ -34,9 +34,10 @@
             "device_tracker": {
                 "title": "Configure UniFi device tracker",
                 "data": {
-                    "ap_mac": "Enable attribute showing which access point client is connected to",
-                    "last_seen": "Enable attribute showing the time client was last seen",
-                    "rx_tx": "Enable attribute showing client bandwidth usage"
+                    "detection_time": "Time in seconds from last seen until considered away",
+                    "dont_track_clients": "Do not track any network client",
+                    "dont_track_devices": "Do not track any network device (Ubiquiti devices)",
+                    "dont_track_wired_clients": "Do not track any wired network client"
                 }
             }
         }
