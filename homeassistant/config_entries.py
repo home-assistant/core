@@ -837,7 +837,7 @@ class EntityRegistryDisabledHandler:
         )
 
 
-async def support_entry_unload(hass, domain) -> bool:
+async def support_entry_unload(hass: HomeAssistant, domain: str) -> bool:
     """Test if a domain supports entry unloading."""
     integration = await loader.async_get_integration(hass, domain)
     component = integration.get_component()
