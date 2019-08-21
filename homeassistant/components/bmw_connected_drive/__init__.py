@@ -143,7 +143,10 @@ class BMWConnectedDriveAccount:
             for listener in self._update_listeners:
                 listener()
         except IOError as exception:
-            _LOGGER.error("Error updating the vehicle state")
+            _LOGGER.error(
+                "Could not connect to the BMW Connected Drive portal. "
+                "The vehicle state could not be updated."
+            )
             _LOGGER.exception(exception)
 
     def add_update_listener(self, listener):
