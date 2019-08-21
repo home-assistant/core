@@ -30,7 +30,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-TAHOMA_COMPONENTS = ["scene", "sensor", "cover", "switch", "binary_sensor"]
+TAHOMA_COMPONENTS = ["scene", "sensor", "cover", "switch", "binary_sensor", "lock"]
 
 TAHOMA_TYPES = {
     "io:ExteriorVenetianBlindIOComponent": "cover",
@@ -56,6 +56,7 @@ TAHOMA_TYPES = {
     "rts:GarageDoor4TRTSComponent": "switch",
     "rts:RollerShutterRTSComponent": "cover",
     "rts:VenetianBlindRTSComponent": "cover",
+    "opendoors:OpenDoorsSmartLockComponent": "lock"
 }
 
 
@@ -127,12 +128,11 @@ class TahomaDevice(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        return {"tahoma_device_id": self.tahoma_device.url}
+        return {'tahoma_device_id': self.tahoma_device.url}
 
     def apply_action(self, cmd_name, *args):
         """Apply Action to Device."""
         from tahoma_api import Action
-
         action = Action(self.tahoma_device.url)
         action.add_command(cmd_name, *args)
         self.controller.apply_actions("HomeAssistant", [action])
