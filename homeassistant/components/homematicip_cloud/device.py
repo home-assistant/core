@@ -22,6 +22,25 @@ ATTR_DEVICE_OVERHEATED = "device_overheated"
 ATTR_DEVICE_OVERLOADED = "device_overloaded"
 ATTR_DEVICE_UNTERVOLTAGE = "device_undervoltage"
 
+DEVICE_ATTRIBUTE_ICONS = {
+    "lowBat": "mdi:battery-outline",
+    "sabotage": "mdi:alert",
+    "deviceOverheated": "mdi:alert",
+    "deviceOverloaded": "mdi:alert",
+    "deviceUndervoltage": "mdi:alert",
+}
+
+DEVICE_ATTRIBUTES = {
+    "modelType": ATTR_MODEL_TYPE,
+    "id": ATTR_ID,
+    "sabotage": ATTR_SABOTAGE,
+    "rssiDeviceValue": ATTR_RSSI_DEVICE,
+    "rssiPeerValue": ATTR_RSSI_PEER,
+    "deviceOverheated": ATTR_DEVICE_OVERHEATED,
+    "deviceOverloaded": ATTR_DEVICE_OVERLOADED,
+    "deviceUndervoltage": ATTR_DEVICE_UNTERVOLTAGE,
+}
+
 
 class HomematicipGenericDevice(Entity):
     """Representation of an HomematicIP generic device."""
@@ -88,42 +107,19 @@ class HomematicipGenericDevice(Entity):
     @property
     def icon(self) -> Optional[str]:
         """Return the icon."""
-
-        if hasattr(self._device, "lowBat") and self._device.lowBat:
-            return "mdi:battery-outline"
-        if hasattr(self._device, "sabotage") and self._device.sabotage:
-            return "mdi:alert"
-        if hasattr(self._device, "deviceOverheated") and self._device.deviceOverheated:
-            return "mdi:alert"
-        if hasattr(self._device, "deviceOverloaded") and self._device.deviceOverloaded:
-            return "mdi:alert"
-        if (
-            hasattr(self._device, "deviceUndervoltage")
-            and self._device.deviceUndervoltage
-        ):
-            return "mdi:alert"
+        for attr, icon in DEVICE_ATTRIBUTE_ICONS.items():
+            if getattr(self._device, attr, None):
+                return icon
 
         return None
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the generic device."""
-        attr = {ATTR_MODEL_TYPE: self._device.modelType, ATTR_ID: self._device.id}
+        state_attr = {}
+        for attr, attr_key in DEVICE_ATTRIBUTES.items():
+            attr_value = getattr(self._device, attr, None)
+            if attr_value:
+                state_attr[attr_key] = attr_value
 
-        if hasattr(self._device, "sabotage") and self._device.sabotage:
-            attr[ATTR_SABOTAGE] = self._device.sabotage
-        if hasattr(self._device, "rssiDeviceValue") and self._device.rssiDeviceValue:
-            attr[ATTR_RSSI_DEVICE] = self._device.rssiDeviceValue
-        if hasattr(self._device, "rssiPeerValue") and self._device.rssiPeerValue:
-            attr[ATTR_RSSI_PEER] = self._device.rssiPeerValue
-        if hasattr(self._device, "deviceOverheated") and self._device.deviceOverheated:
-            attr[ATTR_DEVICE_OVERHEATED] = self._device.deviceOverheated
-        if hasattr(self._device, "deviceOverloaded") and self._device.deviceOverloaded:
-            attr[ATTR_DEVICE_OVERLOADED] = self._device.deviceOverloaded
-        if (
-            hasattr(self._device, "deviceUndervoltage")
-            and self._device.deviceUndervoltage
-        ):
-            attr[ATTR_DEVICE_UNTERVOLTAGE] = self._device.deviceUndervoltage
-
-        return attr
+        return state_attr
