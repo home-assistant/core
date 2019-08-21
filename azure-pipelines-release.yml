@@ -155,6 +155,13 @@ stages:
       vmImage: 'ubuntu-latest'
     steps:
     - script: |
+        echo '{ "experimental": true }' | sudo tee /etc/docker/daemon.json
+        sudo service docker restart
+
+        sleep 15
+        sudo docker login -u $(dockerUser) -p $(dockerPassword)
+      displayName: 'Enable manifest / Docker login'
+    - script: |
         set -e
         export DOCKER_CLI_EXPERIMENTAL=enabled
 
