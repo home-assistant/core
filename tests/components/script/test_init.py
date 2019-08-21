@@ -17,6 +17,7 @@ from homeassistant.const import (
     EVENT_SCRIPT_STARTED,
 )
 from homeassistant.core import Context, callback, split_entity_id
+from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import bind_hass
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.exceptions import ServiceNotFound
@@ -242,6 +243,61 @@ class TestScriptComponent(unittest.TestCase):
 
         assert self.hass.states.get("script.test2") is not None
         assert self.hass.services.has_service(script.DOMAIN, "test2")
+
+
+async def test_service_descriptions(hass):
+    """Test that service descriptions are loaded and reloaded correctly."""
+    # Test 1: has "description" but no "fields"
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "test": {
+                    "description": "test description",
+                    "sequence": [{"delay": {"seconds": 5}}],
+                }
+            }
+        },
+    )
+
+    descriptions = await async_get_all_descriptions(hass)
+
+    assert descriptions[DOMAIN]["test"]["description"] == "test description"
+    assert not descriptions[DOMAIN]["test"]["fields"]
+
+    # Test 2: has "fields" but no "description"
+    await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        return_value={
+            "script": {
+                "test": {
+                    "fields": {
+                        "test_param": {
+                            "description": "test_param description",
+                            "example": "test_param example",
+                        }
+                    },
+                    "sequence": [{"delay": {"seconds": 5}}],
+                }
+            }
+        },
+    ):
+        with patch("homeassistant.config.find_config_file", return_value=""):
+            await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    descriptions = await async_get_all_descriptions(hass)
+
+    assert descriptions[script.DOMAIN]["test"]["description"] == ""
+    assert (
+        descriptions[script.DOMAIN]["test"]["fields"]["test_param"]["description"]
+        == "test_param description"
+    )
+    assert (
+        descriptions[script.DOMAIN]["test"]["fields"]["test_param"]["example"]
+        == "test_param example"
+    )
 
 
 async def test_shared_context(hass):
