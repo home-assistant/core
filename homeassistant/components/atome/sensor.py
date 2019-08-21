@@ -10,7 +10,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
-
+ 
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,8 +21,6 @@ DEFAULT_CLASS = "power"
 SCAN_INTERVAL = timedelta(seconds=30)
 SESSION_RENEW_INTERVAL = timedelta(minutes=55)
 DEFAULT_TIMEOUT = 10
-
-
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -39,7 +37,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config.get(CONF_NAME)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-
 
     """Initiate Atome Client object"""
     try:
