@@ -285,6 +285,43 @@ def test_async_get_all_descriptions(hass):
     assert "fields" in descriptions[logger.DOMAIN]["set_level"]
 
 
+@asyncio.coroutine
+def test_async_get_descriptions_script(hass):
+    """Test async_set_service_schema for the script integration."""
+    script = hass.components.script
+    script_config = {
+        script.DOMAIN: {
+            "test1": {"sequence": [{"service": "homeassistant.restart"}]},
+            "test2": {
+                "description": "test2",
+                "fields": {
+                    "param": {
+                        "description": "param_description",
+                        "example": "param_example",
+                    }
+                },
+                "sequence": [{"service": "homeassistant.restart"}],
+            },
+        }
+    }
+
+    yield from async_setup_component(hass, script.DOMAIN, script_config)
+    descriptions = yield from service.async_get_all_descriptions(hass)
+
+    assert descriptions[script.DOMAIN]["test1"]["description"] == ""
+    assert not descriptions[script.DOMAIN]["test1"]["fields"]
+
+    assert descriptions[script.DOMAIN]["test2"]["description"] == "test2"
+    assert (
+        descriptions[script.DOMAIN]["test2"]["fields"]["param"]["description"]
+        == "param_description"
+    )
+    assert (
+        descriptions[script.DOMAIN]["test2"]["fields"]["param"]["example"]
+        == "param_example"
+    )
+
+
 async def test_call_with_required_features(hass, mock_entities):
     """Test service calls invoked only if entity has required feautres."""
     test_service_mock = Mock(return_value=mock_coro())

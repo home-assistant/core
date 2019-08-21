@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
-from homeassistant.helpers.service import SERVICE_DESCRIPTION_CACHE
+from homeassistant.helpers.service import async_set_service_schema
 
 from homeassistant.helpers.script import Script
 
@@ -140,7 +140,6 @@ async def _async_process_config(hass, config, component):
 
     scripts = []
 
-    hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
     for object_id, cfg in config.get(DOMAIN, {}).items():
         alias = cfg.get(CONF_ALIAS, object_id)
         script = ScriptEntity(hass, object_id, alias, cfg[CONF_SEQUENCE])
@@ -149,13 +148,12 @@ async def _async_process_config(hass, config, component):
             DOMAIN, object_id, service_handler, schema=SCRIPT_SERVICE_SCHEMA
         )
 
+        # Register the service description
         service_desc = {
             CONF_DESCRIPTION: cfg[CONF_DESCRIPTION],
             CONF_FIELDS: cfg[CONF_FIELDS],
         }
-        hass.data[SERVICE_DESCRIPTION_CACHE][
-            ENTITY_ID_FORMAT.format(object_id)
-        ] = service_desc
+        async_set_service_schema(hass, DOMAIN, object_id, service_desc)
 
     await component.async_add_entities(scripts)
 
