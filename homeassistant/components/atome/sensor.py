@@ -72,7 +72,7 @@ class AtomeSensor(Entity):
         self._attributes = None
         self._state = None
         self._login()
-        self.get_live()
+        self._get_data()
 
     @property
     def name(self):
