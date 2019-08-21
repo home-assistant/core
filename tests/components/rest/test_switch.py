@@ -102,6 +102,7 @@ class TestRestSwitch:
         self.auth = None
         self.body_on = Template("on", self.hass)
         self.body_off = Template("off", self.hass)
+        self.body_state = Template("", self.hass)
         self.switch = rest.RestSwitch(
             self.name,
             self.resource,
@@ -110,6 +111,7 @@ class TestRestSwitch:
             self.auth,
             self.body_on,
             self.body_off,
+            self.body_state,
             None,
             10,
             True,
