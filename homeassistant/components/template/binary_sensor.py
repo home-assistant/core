@@ -1,5 +1,6 @@
 """Support for exposing a templated binary sensor."""
 import logging
+from itertools import chain
 
 import voluptuous as vol
 
@@ -25,8 +26,6 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change, async_track_same_state
-
-from itertools import chain
 
 _LOGGER = logging.getLogger(__name__)
 
