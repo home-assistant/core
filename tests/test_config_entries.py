@@ -521,31 +521,32 @@ async def test_discovery_notification(hass):
     mock_entity_platform(hass, "config_flow.test", None)
     await async_setup_component(hass, "persistent_notification", {})
 
-    class TestFlow(config_entries.ConfigFlow):
-        VERSION = 5
+    with patch.dict(config_entries.HANDLERS):
 
-        async def async_step_discovery(self, user_input=None):
-            if user_input is not None:
-                return self.async_create_entry(
-                    title="Test Title", data={"token": "abcd"}
-                )
-            return self.async_show_form(step_id="discovery")
+        class TestFlow(config_entries.ConfigFlow, domain="test"):
+            VERSION = 5
 
-    with patch.dict(config_entries.HANDLERS, {"test": TestFlow}):
+            async def async_step_discovery(self, user_input=None):
+                if user_input is not None:
+                    return self.async_create_entry(
+                        title="Test Title", data={"token": "abcd"}
+                    )
+                return self.async_show_form(step_id="discovery")
+
         result = await hass.config_entries.flow.async_init(
             "test", context={"source": config_entries.SOURCE_DISCOVERY}
         )
 
-    await hass.async_block_till_done()
-    state = hass.states.get("persistent_notification.config_entry_discovery")
-    assert state is not None
+        await hass.async_block_till_done()
+        state = hass.states.get("persistent_notification.config_entry_discovery")
+        assert state is not None
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
-    await hass.async_block_till_done()
-    state = hass.states.get("persistent_notification.config_entry_discovery")
-    assert state is None
+        await hass.async_block_till_done()
+        state = hass.states.get("persistent_notification.config_entry_discovery")
+        assert state is None
 
 
 async def test_discovery_notification_not_created(hass):
@@ -594,6 +595,22 @@ async def test_updating_entry_data(manager):
 
     manager.async_update_entry(entry, data={"second": True})
     assert entry.data == {"second": True}
+
+
+async def test_updating_entry_system_options(manager):
+    """Test that we can update an entry data."""
+    entry = MockConfigEntry(
+        domain="test",
+        data={"first": True},
+        state=config_entries.ENTRY_STATE_SETUP_ERROR,
+        system_options={"disable_new_entities": True},
+    )
+    entry.add_to_manager(manager)
+
+    assert entry.system_options.disable_new_entities
+
+    entry.system_options.update(disable_new_entities=False)
+    assert not entry.system_options.disable_new_entities
 
 
 async def test_update_entry_options_and_trigger_listener(hass, manager):
@@ -666,12 +683,11 @@ async def test_entry_options(hass, manager):
     class TestFlow:
         @staticmethod
         @callback
-        def async_get_options_flow(config, options):
+        def async_get_options_flow(config_entry):
             class OptionsFlowHandler(data_entry_flow.FlowHandler):
-                def __init__(self, config, options):
-                    pass
+                pass
 
-            return OptionsFlowHandler(config, options)
+            return OptionsFlowHandler()
 
     config_entries.HANDLERS["test"] = TestFlow()
     flow = await manager.options._async_create_flow(

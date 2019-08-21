@@ -3,6 +3,14 @@ import asyncio
 import datetime
 import logging
 
+from homekit.exceptions import (
+    AccessoryDisconnectedError,
+    AccessoryNotFoundError,
+    EncryptionError,
+)
+from homekit.model.services import ServicesTypes
+from homekit.model.characteristics import CharacteristicsTypes
+
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, ENTITY_MAP
@@ -16,10 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_accessory_information(accessory):
     """Obtain the accessory information service of a HomeKit device."""
-    # pylint: disable=import-error
-    from homekit.model.services import ServicesTypes
-    from homekit.model.characteristics import CharacteristicsTypes
-
     result = {}
     for service in accessory["services"]:
         stype = service["type"].upper()
@@ -99,6 +103,10 @@ class HKDevice:
         # this method.
         self._polling_interval_remover = None
 
+        # Never allow concurrent polling of the same accessory or bridge
+        self._polling_lock = asyncio.Lock()
+        self._polling_lock_warned = False
+
     def add_pollable_characteristics(self, characteristics):
         """Add (aid, iid) pairs that we need to poll."""
         self.pollable_characteristics.extend(characteristics)
@@ -163,9 +171,6 @@ class HKDevice:
 
     async def async_refresh_entity_map(self, config_num):
         """Handle setup of a HomeKit accessory."""
-        # pylint: disable=import-error
-        from homekit.exceptions import AccessoryDisconnectedError
-
         try:
             async with self.pairing_lock:
                 self.accessories = await self.hass.async_add_executor_job(
@@ -205,8 +210,6 @@ class HKDevice:
         self._add_new_entities(self.listeners)
 
     def _add_new_entities(self, callbacks):
-        from homekit.model.services import ServicesTypes
-
         for accessory in self.accessories:
             aid = accessory["aid"]
             for service in accessory["services"]:
@@ -225,8 +228,6 @@ class HKDevice:
 
     def async_load_platforms(self):
         """Load any platforms needed by this HomeKit device."""
-        from homekit.model.services import ServicesTypes
-
         for accessory in self.accessories:
             for service in accessory["services"]:
                 stype = ServicesTypes.get_short(service["type"].upper())
@@ -246,36 +247,44 @@ class HKDevice:
 
     async def async_update(self, now=None):
         """Poll state of all entities attached to this bridge/accessory."""
-        # pylint: disable=import-error
-        from homekit.exceptions import (
-            AccessoryDisconnectedError,
-            AccessoryNotFoundError,
-            EncryptionError,
-        )
-
         if not self.pollable_characteristics:
             _LOGGER.debug("HomeKit connection not polling any characteristics.")
             return
 
-        _LOGGER.debug("Starting HomeKit controller update")
+        if self._polling_lock.locked():
+            if not self._polling_lock_warned:
+                _LOGGER.warning(
+                    "HomeKit controller update skipped as previous poll still in flight"
+                )
+                self._polling_lock_warned = True
+            return
 
-        try:
-            new_values_dict = await self.get_characteristics(
-                self.pollable_characteristics
+        if self._polling_lock_warned:
+            _LOGGER.info(
+                "HomeKit controller no longer detecting back pressure - not skipping poll"
             )
-        except AccessoryNotFoundError:
-            # Not only did the connection fail, but also the accessory is not
-            # visible on the network.
-            self.async_set_unavailable()
-            return
-        except (AccessoryDisconnectedError, EncryptionError):
-            # Temporary connection failure. Device is still available but our
-            # connection was dropped.
-            return
+            self._polling_lock_warned = False
 
-        self.process_new_events(new_values_dict)
+        async with self._polling_lock:
+            _LOGGER.debug("Starting HomeKit controller update")
 
-        _LOGGER.debug("Finished HomeKit controller update")
+            try:
+                new_values_dict = await self.get_characteristics(
+                    self.pollable_characteristics
+                )
+            except AccessoryNotFoundError:
+                # Not only did the connection fail, but also the accessory is not
+                # visible on the network.
+                self.async_set_unavailable()
+                return
+            except (AccessoryDisconnectedError, EncryptionError):
+                # Temporary connection failure. Device is still available but our
+                # connection was dropped.
+                return
+
+            self.process_new_events(new_values_dict)
+
+            _LOGGER.debug("Finished HomeKit controller update")
 
     def process_new_events(self, new_values_dict):
         """Process events from accessory into HA state."""

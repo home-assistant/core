@@ -19,6 +19,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.const import MINOR_VERSION, MAJOR_VERSION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +31,7 @@ CONF_SENSORS = "sensors"
 CONF_UNIT = "unit"
 
 GROUPS = ["user", "installer"]
+OLD_CONFIG_DEPRECATED = MAJOR_VERSION > 0 or MINOR_VERSION > 98
 
 
 def _check_sensor_schema(conf):
@@ -41,16 +43,39 @@ def _check_sensor_schema(conf):
     except (ImportError, AttributeError):
         return conf
 
-    for name in conf[CONF_CUSTOM]:
-        valid.append(name)
+    customs = list(conf[CONF_CUSTOM].keys())
 
-    for sname, attrs in conf[CONF_SENSORS].items():
-        if sname not in valid:
-            raise vol.Invalid("{} does not exist".format(sname))
-        for attr in attrs:
-            if attr in valid:
-                continue
-            raise vol.Invalid("{} does not exist [{}]".format(attr, sname))
+    if isinstance(conf[CONF_SENSORS], dict):
+        msg = '"sensors" should be a simple list from 0.99'
+        if OLD_CONFIG_DEPRECATED:
+            raise vol.Invalid(msg)
+        _LOGGER.warning(msg)
+        valid.extend(customs)
+
+        for sname, attrs in conf[CONF_SENSORS].items():
+            if sname not in valid:
+                raise vol.Invalid("{} does not exist".format(sname))
+            if attrs:
+                _LOGGER.warning(
+                    "Attributes on sensors will be deprecated in 0.99. Start using only individual sensors: %s: %s",
+                    sname,
+                    ", ".join(attrs),
+                )
+            for attr in attrs:
+                if attr in valid:
+                    continue
+                raise vol.Invalid("{} does not exist [{}]".format(attr, sname))
+        return conf
+
+    # Sensors is a list (only option from from 0.99)
+    for sensor in conf[CONF_SENSORS]:
+        if sensor in customs:
+            _LOGGER.warning(
+                "All custom sensors will be added automatically, no need to include them in sensors: %s",
+                sensor,
+            )
+        elif sensor not in valid:
+            raise vol.Invalid("{} does not exist".format(sensor))
     return conf
 
 
@@ -59,7 +84,7 @@ CUSTOM_SCHEMA = vol.Any(
         vol.Required(CONF_KEY): vol.All(cv.string, vol.Length(min=13, max=15)),
         vol.Required(CONF_UNIT): cv.string,
         vol.Optional(CONF_FACTOR, default=1): vol.Coerce(float),
-        vol.Optional(CONF_PATH): vol.All(cv.ensure_list, [str]),
+        vol.Optional(CONF_PATH): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 
@@ -71,8 +96,9 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
             vol.Required(CONF_PASSWORD): cv.string,
             vol.Optional(CONF_GROUP, default=GROUPS[0]): vol.In(GROUPS),
-            vol.Optional(CONF_SENSORS, default={}): cv.schema_with_slug_keys(
-                cv.ensure_list
+            vol.Optional(CONF_SENSORS, default=[]): vol.Any(
+                cv.schema_with_slug_keys(cv.ensure_list),  # will be deprecated
+                vol.All(cv.ensure_list, [str]),
             ),
             vol.Optional(CONF_CUSTOM, default={}): cv.schema_with_slug_keys(
                 CUSTOM_SCHEMA
@@ -104,20 +130,29 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     # Use all sensors by default
     config_sensors = config[CONF_SENSORS]
-    if not config_sensors:
-        config_sensors = {s.name: [] for s in sensor_def}
-
-    # Prepare all HASS sensor entities
     hass_sensors = []
     used_sensors = []
-    for name, attr in config_sensors.items():
-        sub_sensors = [sensor_def[s] for s in attr]
-        hass_sensors.append(SMAsensor(sensor_def[name], sub_sensors))
-        used_sensors.append(name)
-        used_sensors.extend(attr)
+
+    if isinstance(config_sensors, dict):  # will be remove from 0.99
+        if not config_sensors:  # Use all sensors by default
+            config_sensors = {s.name: [] for s in sensor_def}
+
+        # Prepare all HASS sensor entities
+        for name, attr in config_sensors.items():
+            sub_sensors = [sensor_def[s] for s in attr]
+            hass_sensors.append(SMAsensor(sensor_def[name], sub_sensors))
+            used_sensors.append(name)
+            used_sensors.extend(attr)
+        used_sensors = [sensor_def[s] for s in set(used_sensors)]
+
+    if isinstance(config_sensors, list):
+        if not config_sensors:  # Use all sensors by default
+            config_sensors = [s.name for s in sensor_def]
+        used_sensors = list(set(config_sensors + list(config[CONF_CUSTOM].keys())))
+        for sensor in used_sensors:
+            hass_sensors.append(SMAsensor(sensor_def[sensor], []))
 
     async_add_entities(hass_sensors)
-    used_sensors = [sensor_def[s] for s in set(used_sensors)]
 
     # Init the SMA interface
     session = async_get_clientsession(hass, verify_ssl=config[CONF_VERIFY_SSL])
@@ -172,7 +207,7 @@ class SMAsensor(Entity):
     def __init__(self, pysma_sensor, sub_sensors):
         """Initialize the sensor."""
         self._sensor = pysma_sensor
-        self._sub_sensors = sub_sensors
+        self._sub_sensors = sub_sensors  # Can be remove from 0.99
 
         self._attr = {s.name: "" for s in sub_sensors}
         self._state = self._sensor.value
@@ -193,7 +228,7 @@ class SMAsensor(Entity):
         return self._sensor.unit
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self):  # Can be remove from 0.99
         """Return the state attributes of the sensor."""
         return self._attr
 
@@ -206,7 +241,7 @@ class SMAsensor(Entity):
         """Update this sensor."""
         update = False
 
-        for sens in self._sub_sensors:
+        for sens in self._sub_sensors:  # Can be remove from 0.99
             newval = "{} {}".format(sens.value, sens.unit)
             if self._attr[sens.name] != newval:
                 update = True

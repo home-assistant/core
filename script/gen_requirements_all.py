@@ -38,6 +38,7 @@ COMMENT_REQUIREMENTS = (
     "rpi-rf",
     "RPi.GPIO",
     "smbus-cffi",
+    "tensorflow",
 )
 
 TEST_REQUIREMENTS = (
@@ -98,6 +99,7 @@ TEST_REQUIREMENTS = (
     "pyMetno",
     "mbddns",
     "mficlient",
+    "minio",
     "netdisco",
     "numpy",
     "oauth2client",
@@ -122,6 +124,7 @@ TEST_REQUIREMENTS = (
     "pyopenuv",
     "pyotp",
     "pyps4-homeassistant",
+    "pysma",
     "pysmartapp",
     "pysmartthings",
     "pysonos",

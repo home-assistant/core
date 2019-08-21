@@ -179,7 +179,7 @@ class FlowHandler:
     hass: Optional[HomeAssistant] = None
     handler = None
     cur_step: Optional[Dict[str, str]] = None
-    context: Optional[Dict] = None
+    context: Dict
 
     # Set by _async_create_flow callback
     init_step = "init"

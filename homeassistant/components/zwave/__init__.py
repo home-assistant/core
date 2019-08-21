@@ -564,11 +564,6 @@ async def async_setup_entry(hass, config_entry):
         _LOGGER.info("Z-Wave soft_reset have been initialized")
         network.controller.soft_reset()
 
-    def update_config(service):
-        """Update the config from git."""
-        _LOGGER.info("Configuration update has been initialized")
-        network.controller.update_ozw_config()
-
     def test_network(service):
         """Test the network by sending commands to all the nodes."""
         _LOGGER.info("Z-Wave test_network have been initialized")
@@ -891,7 +886,6 @@ async def async_setup_entry(hass, config_entry):
         hass.services.register(DOMAIN, const.SERVICE_CANCEL_COMMAND, cancel_command)
         hass.services.register(DOMAIN, const.SERVICE_HEAL_NETWORK, heal_network)
         hass.services.register(DOMAIN, const.SERVICE_SOFT_RESET, soft_reset)
-        hass.services.register(DOMAIN, const.SERVICE_UPDATE_CONFIG, update_config)
         hass.services.register(DOMAIN, const.SERVICE_TEST_NETWORK, test_network)
         hass.services.register(DOMAIN, const.SERVICE_STOP_NETWORK, stop_network)
         hass.services.register(

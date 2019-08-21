@@ -12,12 +12,13 @@ from typing import (
 )
 import weakref
 
+import attr
+
 from homeassistant import data_entry_flow, loader
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ConfigEntryNotReady
 from homeassistant.setup import async_setup_component, async_process_deps_reqs
 from homeassistant.util.decorator import Registry
-
 
 # mypy: allow-untyped-defs
 
@@ -88,6 +89,7 @@ class ConfigEntry:
         "title",
         "data",
         "options",
+        "system_options",
         "source",
         "connection_class",
         "state",
@@ -104,6 +106,7 @@ class ConfigEntry:
         data: dict,
         source: str,
         connection_class: str,
+        system_options: dict,
         options: Optional[dict] = None,
         entry_id: Optional[str] = None,
         state: str = ENTRY_STATE_NOT_LOADED,
@@ -126,6 +129,9 @@ class ConfigEntry:
 
         # Entry options
         self.options = options or {}
+
+        # Entry system options
+        self.system_options = SystemOptions(**system_options)
 
         # Source of the configuration (user, discovery, cloud)
         self.source = source
@@ -355,6 +361,7 @@ class ConfigEntry:
             "title": self.title,
             "data": self.data,
             "options": self.options,
+            "system_options": self.system_options.as_dict(),
             "source": self.source,
             "connection_class": self.connection_class,
         }
@@ -457,6 +464,8 @@ class ConfigEntries:
                 connection_class=entry.get("connection_class", CONN_CLASS_UNKNOWN),
                 # New in 0.89
                 options=entry.get("options"),
+                # New in 0.98
+                system_options=entry.get("system_options", {}),
             )
             for entry in config["entries"]
         ]
@@ -513,7 +522,9 @@ class ConfigEntries:
         return await self.async_setup(entry_id)
 
     @callback
-    def async_update_entry(self, entry, *, data=_UNDEF, options=_UNDEF):
+    def async_update_entry(
+        self, entry, *, data=_UNDEF, options=_UNDEF, system_options=_UNDEF
+    ):
         """Update a config entry."""
         if data is not _UNDEF:
             entry.data = data
@@ -521,10 +532,12 @@ class ConfigEntries:
         if options is not _UNDEF:
             entry.options = options
 
-        if data is not _UNDEF or options is not _UNDEF:
-            for listener_ref in entry.update_listeners:
-                listener = listener_ref()
-                self.hass.async_create_task(listener(self.hass, entry))
+        if system_options is not _UNDEF:
+            entry.system_options.update(**system_options)
+
+        for listener_ref in entry.update_listeners:
+            listener = listener_ref()
+            self.hass.async_create_task(listener(self.hass, entry))
 
         self._async_schedule_save()
 
@@ -580,6 +593,7 @@ class ConfigEntries:
             title=result["title"],
             data=result["data"],
             options={},
+            system_options={},
             source=flow.context["source"],
             connection_class=flow.CONNECTION_CLASS,
         )
@@ -656,7 +670,19 @@ async def _old_conf_migrator(old_config):
 class ConfigFlow(data_entry_flow.FlowHandler):
     """Base class for config flows with some helpers."""
 
+    def __init_subclass__(cls, domain=None, **kwargs):
+        """Initialize a subclass, register if possible."""
+        super().__init_subclass__(**kwargs)  # type: ignore
+        if domain is not None:
+            HANDLERS.register(domain)(cls)
+
     CONNECTION_CLASS = CONN_CLASS_UNKNOWN
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        raise data_entry_flow.UnknownHandler
 
     @callback
     def _async_current_entries(self):
@@ -691,7 +717,11 @@ class OptionsFlowManager:
         entry = self.hass.config_entries.async_get_entry(entry_id)
         if entry is None:
             return
-        flow = HANDLERS[entry.domain].async_get_options_flow(entry.data, entry.options)
+
+        if entry.domain not in HANDLERS:
+            raise data_entry_flow.UnknownHandler
+
+        flow = HANDLERS[entry.domain].async_get_options_flow(entry)
         return flow
 
     async def _async_finish_flow(self, flow, result):
@@ -706,3 +736,24 @@ class OptionsFlowManager:
 
         result["result"] = True
         return result
+
+
+class OptionsFlow(data_entry_flow.FlowHandler):
+    """Base class for config option flows."""
+
+    pass
+
+
+@attr.s(slots=True)
+class SystemOptions:
+    """Config entry system options."""
+
+    disable_new_entities = attr.ib(type=bool, default=False)
+
+    def update(self, *, disable_new_entities):
+        """Update properties."""
+        self.disable_new_entities = disable_new_entities
+
+    def as_dict(self):
+        """Return dictionary version of this config entrys system options."""
+        return {"disable_new_entities": self.disable_new_entities}

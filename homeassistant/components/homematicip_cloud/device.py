@@ -11,6 +11,7 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MODEL_TYPE = "model_type"
+ATTR_ID = "id"
 # RSSI HAP -> Device
 ATTR_RSSI_DEVICE = "rssi_device"
 # RSSI Device -> HAP
@@ -93,7 +94,8 @@ class HomematicipGenericDevice(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the generic device."""
-        attr = {ATTR_MODEL_TYPE: self._device.modelType}
+        attr = {ATTR_MODEL_TYPE: self._device.modelType, ATTR_ID: self._device.id}
+
         if hasattr(self._device, "sabotage") and self._device.sabotage:
             attr[ATTR_SABOTAGE] = self._device.sabotage
         if hasattr(self._device, "rssiDeviceValue") and self._device.rssiDeviceValue:
