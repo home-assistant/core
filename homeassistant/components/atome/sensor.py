@@ -10,7 +10,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
- 
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,8 +40,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Initiate Atome Client object"""
     try:
         client = AtomeClient(username, password)
-        _LOGGER.debug("ATOME: CLIENT : user:%s, pass:%s, %s",username, password, pprint(client))
-
     except PyAtomeError as exp:
         _LOGGER.error(exp)
     except Exception as exp:
