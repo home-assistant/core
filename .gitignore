@@ -124,3 +124,6 @@ desktop.ini
 
 # monkeytype
 monkeytype.sqlite3
+
+# This is left behind by Azure Restore Cache
+tmp_cache
