@@ -1,5 +1,4 @@
 """Test UniFi setup process."""
-from datetime import timedelta
 from unittest.mock import Mock, patch
 
 from homeassistant.components import unifi
@@ -44,7 +43,7 @@ async def test_setup_with_config(hass):
             unifi.CONF_HOST: "1.2.3.4",
             unifi.CONF_SITE_ID: "My site",
             unifi.CONF_BLOCK_CLIENT: ["12:34:56:78:90:AB"],
-            unifi.CONF_DETECTION_TIME: timedelta(seconds=3),
+            unifi.CONF_DETECTION_TIME: 3,
             unifi.CONF_SSID_FILTER: ["ssid"],
         }
     ]

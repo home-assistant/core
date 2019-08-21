@@ -11,9 +11,6 @@ from .const import (
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
-    CONF_DONT_TRACK_CLIENTS,
-    CONF_DONT_TRACK_DEVICES,
-    CONF_DONT_TRACK_WIRED_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONTROLLER_ID,
@@ -23,6 +20,9 @@ from .const import (
 from .controller import UniFiController
 
 CONF_CONTROLLERS = "controllers"
+CONF_DONT_TRACK_CLIENTS = "dont_track_clients"
+CONF_DONT_TRACK_DEVICES = "dont_track_devices"
+CONF_DONT_TRACK_WIRED_CLIENTS = "dont_track_wired_clients"
 
 CONTROLLER_SCHEMA = vol.Schema(
     {
@@ -34,9 +34,7 @@ CONTROLLER_SCHEMA = vol.Schema(
         vol.Optional(CONF_DONT_TRACK_CLIENTS): cv.boolean,
         vol.Optional(CONF_DONT_TRACK_DEVICES): cv.boolean,
         vol.Optional(CONF_DONT_TRACK_WIRED_CLIENTS): cv.boolean,
-        vol.Optional(CONF_DETECTION_TIME): vol.All(
-            cv.time_period, cv.positive_timedelta
-        ),
+        vol.Optional(CONF_DETECTION_TIME): cv.positive_int,
         vol.Optional(CONF_SSID_FILTER): vol.All(cv.ensure_list, [cv.string]),
     }
 )
