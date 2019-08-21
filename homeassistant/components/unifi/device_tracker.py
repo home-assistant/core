@@ -163,6 +163,7 @@ def update_items(controller, async_add_entities, tracked):
 
             if (
                 not client.is_wired
+                and controller.option_ssid_filter
                 and client.essid not in controller.option_ssid_filter
             ):
                 continue

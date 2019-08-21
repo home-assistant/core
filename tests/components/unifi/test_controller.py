@@ -40,6 +40,7 @@ async def test_controller_setup():
     hass.data = {UNIFI_CONFIG: {}}
     entry = Mock()
     entry.data = ENTRY_CONFIG
+    entry.options = {}
     api = Mock()
     api.initialize.return_value = mock_coro(True)
     api.sites.return_value = mock_coro(CONTROLLER_SITES)
@@ -89,6 +90,7 @@ async def test_controller_mac():
     hass.data = {UNIFI_CONFIG: {}}
     entry = Mock()
     entry.data = ENTRY_CONFIG
+    entry.options = {}
     client = Mock()
     client.ip = "1.2.3.4"
     client.mac = "00:11:22:33:44:55"
@@ -111,6 +113,7 @@ async def test_controller_no_mac():
     hass.data = {UNIFI_CONFIG: {}}
     entry = Mock()
     entry.data = ENTRY_CONFIG
+    entry.options = {}
     client = Mock()
     client.ip = "5.6.7.8"
     api = Mock()
@@ -182,6 +185,7 @@ async def test_reset_unloads_entry_if_setup():
     hass.data = {UNIFI_CONFIG: {}}
     entry = Mock()
     entry.data = ENTRY_CONFIG
+    entry.options = {}
     api = Mock()
     api.initialize.return_value = mock_coro(True)
     api.sites.return_value = mock_coro(CONTROLLER_SITES)
