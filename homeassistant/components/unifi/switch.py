@@ -74,7 +74,7 @@ def update_items(controller, async_add_entities, switches, switches_off):
     devices = controller.api.devices
 
     # block client
-    for client_id in controller.block_clients:
+    for client_id in controller.option_block_clients:
 
         block_client_id = "block-{}".format(client_id)
 

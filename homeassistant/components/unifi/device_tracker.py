@@ -27,12 +27,7 @@ import homeassistant.util.dt as dt_util
 from .const import (
     ATTR_MANUFACTURER,
     CONF_CONTROLLER,
-    CONF_DETECTION_TIME,
-    CONF_DONT_TRACK_CLIENTS,
-    CONF_DONT_TRACK_DEVICES,
-    CONF_DONT_TRACK_WIRED_CLIENTS,
     CONF_SITE_ID,
-    CONF_SSID_FILTER,
     CONTROLLER_ID,
     DOMAIN as UNIFI_DOMAIN,
 )
@@ -151,11 +146,11 @@ def update_items(controller, async_add_entities, tracked):
     """Update tracked device state from the controller."""
     new_tracked = []
 
-    if not controller.unifi_config.get(CONF_DONT_TRACK_CLIENTS, False):
+    if controller.option_track_clients:
 
         for client_id in controller.api.clients:
 
-            if client_id in tracked:
+            if client_id in tracked and tracked[client_id].entity_id:
                 LOGGER.debug(
                     "Updating UniFi tracked client %s (%s)",
                     tracked[client_id].entity_id,
@@ -168,15 +163,12 @@ def update_items(controller, async_add_entities, tracked):
 
             if (
                 not client.is_wired
-                and CONF_SSID_FILTER in controller.unifi_config
-                and client.essid not in controller.unifi_config[CONF_SSID_FILTER]
+                and controller.option_ssid_filter
+                and client.essid not in controller.option_ssid_filter
             ):
                 continue
 
-            if (
-                controller.unifi_config.get(CONF_DONT_TRACK_WIRED_CLIENTS, False)
-                and client.is_wired
-            ):
+            if not controller.option_track_wired_clients and client.is_wired:
                 continue
 
             tracked[client_id] = UniFiClientTracker(client, controller)
@@ -187,11 +179,11 @@ def update_items(controller, async_add_entities, tracked):
                 client.mac,
             )
 
-    if not controller.unifi_config.get(CONF_DONT_TRACK_DEVICES, False):
+    if controller.option_track_devices:
 
         for device_id in controller.api.devices:
 
-            if device_id in tracked:
+            if device_id in tracked and tracked[device_id].entity_id:
                 LOGGER.debug(
                     "Updating UniFi tracked device %s (%s)",
                     tracked[device_id].entity_id,
@@ -229,14 +221,11 @@ class UniFiClientTracker(ScannerEntity):
     @property
     def is_connected(self):
         """Return true if the client is connected to the network."""
-        detection_time = self.controller.unifi_config.get(
-            CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
-        )
-
         if (
             dt_util.utcnow() - dt_util.utc_from_timestamp(float(self.client.last_seen))
-        ) < detection_time:
+        ) < self.controller.option_detection_time:
             return True
+
         return False
 
     @property
@@ -291,15 +280,12 @@ class UniFiDeviceTracker(ScannerEntity):
     @property
     def is_connected(self):
         """Return true if the device is connected to the network."""
-        detection_time = self.controller.unifi_config.get(
-            CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
-        )
-
         if self.device.state == 1 and (
             dt_util.utcnow() - dt_util.utc_from_timestamp(float(self.device.last_seen))
-            < detection_time
+            < self.controller.option_detection_time
         ):
             return True
+
         return False
 
     @property

@@ -22,5 +22,20 @@
             "already_configured": "Controller site is already configured",
             "user_privilege": "User needs to be administrator"
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {}
+            },
+            "device_tracker": {
+                "data": {
+                    "detection_time": "Time in seconds from last seen until considered away",
+                    "track_clients": "Track network clients",
+                    "track_devices": "Track network devices (Ubiquiti devices)",
+                    "track_wired_clients": "Include wired network clients"
+                }
+            }
+        }
     }
 }
