@@ -191,15 +191,15 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                         ),
                     ): bool,
                     vol.Optional(
-                        CONF_TRACK_DEVICES,
-                        default=self.config_entry.options.get(
-                            CONF_TRACK_DEVICES, DEFAULT_TRACK_DEVICES
-                        ),
-                    ): bool,
-                    vol.Optional(
                         CONF_TRACK_WIRED_CLIENTS,
                         default=self.config_entry.options.get(
                             CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
+                        ),
+                    ): bool,
+                    vol.Optional(
+                        CONF_TRACK_DEVICES,
+                        default=self.config_entry.options.get(
+                            CONF_TRACK_DEVICES, DEFAULT_TRACK_DEVICES
                         ),
                     ): bool,
                     vol.Optional(
