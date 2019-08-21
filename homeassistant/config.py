@@ -322,7 +322,8 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
         config = load_yaml_config_file(path)
         return config
 
-    config = await hass.async_add_executor_job(_load_hass_yaml_config)
+    # Not using async_add_executor_job because this is an internal method.
+    config = await hass.loop.run_in_executor(None, _load_hass_yaml_config)
     core_config = config.get(CONF_CORE, {})
     await merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
     return config
@@ -631,10 +632,9 @@ def _recursive_merge(conf: Dict[str, Any], package: Dict[str, Any]) -> Union[boo
             error = _recursive_merge(conf=conf[key], package=pack_conf)
 
         elif isinstance(pack_conf, list):
-            if not pack_conf:
-                continue
-            conf[key] = cv.ensure_list(conf.get(key))
-            conf[key].extend(cv.ensure_list(pack_conf))
+            conf[key] = cv.remove_falsy(
+                cv.ensure_list(conf.get(key)) + cv.ensure_list(pack_conf)
+            )
 
         else:
             if conf.get(key) is not None:
@@ -669,22 +669,17 @@ async def merge_packages_config(
                 _log_pkg_error(pack_name, comp_name, config, str(ex))
                 continue
 
-            if hasattr(component, "PLATFORM_SCHEMA"):
-                if not comp_conf:
-                    continue  # Ensure we dont add Falsy items to list
-                config[comp_name] = cv.ensure_list(config.get(comp_name))
-                config[comp_name].extend(cv.ensure_list(comp_conf))
-                continue
+            merge_list = hasattr(component, "PLATFORM_SCHEMA")
 
-            if hasattr(component, "CONFIG_SCHEMA"):
+            if not merge_list and hasattr(component, "CONFIG_SCHEMA"):
                 merge_type, _ = _identify_config_schema(component)
+                merge_list = merge_type == "list"
 
-                if merge_type == "list":
-                    if not comp_conf:
-                        continue  # Ensure we dont add Falsy items to list
-                    config[comp_name] = cv.ensure_list(config.get(comp_name))
-                    config[comp_name].extend(cv.ensure_list(comp_conf))
-                    continue
+            if merge_list:
+                config[comp_name] = cv.remove_falsy(
+                    cv.ensure_list(config.get(comp_name)) + cv.ensure_list(comp_conf)
+                )
+                continue
 
             if comp_conf is None:
                 comp_conf = OrderedDict()

@@ -1,6 +1,8 @@
 """Support for Homekit lights."""
 import logging
 
+from homekit.model.characteristics import CharacteristicsTypes
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -50,9 +52,6 @@ class HomeKitLight(HomeKitEntity, Light):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
-
         return [
             CharacteristicsTypes.ON,
             CharacteristicsTypes.BRIGHTNESS,

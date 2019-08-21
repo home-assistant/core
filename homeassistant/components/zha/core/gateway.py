@@ -138,9 +138,7 @@ class ZHAGateway:
             if device.nwk == 0x0000:
                 continue
             init_tasks.append(
-                init_with_semaphore(
-                    self.async_device_initialized(device, False), semaphore
-                )
+                init_with_semaphore(self.async_device_restored(device), semaphore)
             )
         await asyncio.gather(*init_tasks)
 
@@ -181,7 +179,7 @@ class ZHAGateway:
 
     def device_initialized(self, device):
         """Handle device joined and basic information discovered."""
-        self._hass.async_create_task(self.async_device_initialized(device, True))
+        self._hass.async_create_task(self.async_device_initialized(device))
 
     def device_left(self, device):
         """Handle device leaving the network."""
@@ -292,7 +290,7 @@ class ZHAGateway:
         self.debug_enabled = False
 
     @callback
-    def _async_get_or_create_device(self, zigpy_device, is_new_join):
+    def _async_get_or_create_device(self, zigpy_device):
         """Get or create a ZHA device."""
         zha_device = self._devices.get(zigpy_device.ieee)
         if zha_device is None:
@@ -306,9 +304,6 @@ class ZHAGateway:
                 manufacturer=zha_device.manufacturer,
                 model=zha_device.model,
             )
-        if not is_new_join:
-            entry = self.zha_storage.async_get_or_create(zha_device)
-            zha_device.async_update_last_seen(entry.last_seen)
         return zha_device
 
     @callback
@@ -333,43 +328,94 @@ class ZHAGateway:
             self.zha_storage.async_update(device)
         await self.zha_storage.async_save()
 
-    async def async_device_initialized(self, device, is_new_join):
+    async def async_device_initialized(self, device):
         """Handle device joined and basic information discovered (async)."""
         if device.nwk == 0x0000:
             return
 
-        zha_device = self._async_get_or_create_device(device, is_new_join)
+        zha_device = self._async_get_or_create_device(device)
 
-        is_rejoin = False
-        if zha_device.status is not DeviceStatus.INITIALIZED:
-            discovery_infos = []
-            for endpoint_id, endpoint in device.endpoints.items():
-                async_process_endpoint(
-                    self._hass,
-                    self._config,
-                    endpoint_id,
-                    endpoint,
-                    discovery_infos,
-                    device,
-                    zha_device,
-                    is_new_join,
-                )
-        else:
-            is_rejoin = is_new_join is True
+        _LOGGER.debug(
+            "device - %s entering async_device_initialized - is_new_join: %s",
+            "0x{:04x}:{}".format(device.nwk, device.ieee),
+            zha_device.status is not DeviceStatus.INITIALIZED,
+        )
+
+        if zha_device.status is DeviceStatus.INITIALIZED:
+            # ZHA already has an initialized device so either the device was assigned a
+            # new nwk or device was physically reset and added again without being removed
             _LOGGER.debug(
-                "skipping discovery for previously discovered device: %s",
-                "{} - is rejoin: {}".format(zha_device.ieee, is_rejoin),
+                "device - %s has been reset and readded or its nwk address changed",
+                "0x{:04x}:{}".format(device.nwk, device.ieee),
+            )
+            await self._async_device_rejoined(zha_device)
+        else:
+            _LOGGER.debug(
+                "device - %s has joined the ZHA zigbee network",
+                "0x{:04x}:{}".format(device.nwk, device.ieee),
+            )
+            await self._async_device_joined(device, zha_device)
+
+        # This is real traffic from a device so lets update last seen on the entry
+        entry = self.zha_storage.async_get_or_create(zha_device)
+        zha_device.async_update_last_seen(entry.last_seen)
+
+        device_info = async_get_device_info(
+            self._hass, zha_device, self.ha_device_registry
+        )
+        async_dispatcher_send(
+            self._hass,
+            ZHA_GW_MSG,
+            {
+                ATTR_TYPE: ZHA_GW_MSG_DEVICE_FULL_INIT,
+                ZHA_GW_MSG_DEVICE_INFO: device_info,
+            },
+        )
+
+    async def _async_device_joined(self, device, zha_device):
+        discovery_infos = []
+        for endpoint_id, endpoint in device.endpoints.items():
+            async_process_endpoint(
+                self._hass,
+                self._config,
+                endpoint_id,
+                endpoint,
+                discovery_infos,
+                device,
+                zha_device,
+                True,
             )
 
-        if is_new_join:
-            # configure the device
-            await zha_device.async_configure()
-            zha_device.update_available(True)
-        elif zha_device.is_mains_powered:
+        await zha_device.async_configure()
+        # will cause async_init to fire so don't explicitly call it
+        zha_device.update_available(True)
+
+        for discovery_info in discovery_infos:
+            async_dispatch_discovery_info(self._hass, True, discovery_info)
+
+    # only public for testing
+    async def async_device_restored(self, device):
+        """Add an existing device to the ZHA zigbee network when ZHA first starts."""
+        zha_device = self._async_get_or_create_device(device)
+        discovery_infos = []
+        for endpoint_id, endpoint in device.endpoints.items():
+            async_process_endpoint(
+                self._hass,
+                self._config,
+                endpoint_id,
+                endpoint,
+                discovery_infos,
+                device,
+                zha_device,
+                False,
+            )
+
+        if zha_device.is_mains_powered:
             # the device isn't a battery powered device so we should be able
             # to update it now
             _LOGGER.debug(
-                "attempting to request fresh state for %s %s",
+                "attempting to request fresh state for device - %s %s %s",
+                "0x{:04x}:{}".format(zha_device.nwk, zha_device.ieee),
                 zha_device.name,
                 "with power source: {}".format(zha_device.power_source),
             )
@@ -377,22 +423,18 @@ class ZHAGateway:
         else:
             await zha_device.async_initialize(from_cache=True)
 
-        if not is_rejoin:
-            for discovery_info in discovery_infos:
-                async_dispatch_discovery_info(self._hass, is_new_join, discovery_info)
+        for discovery_info in discovery_infos:
+            async_dispatch_discovery_info(self._hass, False, discovery_info)
 
-        if is_new_join:
-            device_info = async_get_device_info(
-                self._hass, zha_device, self.ha_device_registry
-            )
-            async_dispatcher_send(
-                self._hass,
-                ZHA_GW_MSG,
-                {
-                    ATTR_TYPE: ZHA_GW_MSG_DEVICE_FULL_INIT,
-                    ZHA_GW_MSG_DEVICE_INFO: device_info,
-                },
-            )
+    async def _async_device_rejoined(self, zha_device):
+        _LOGGER.debug(
+            "skipping discovery for previously discovered device - %s",
+            "0x{:04x}:{}".format(zha_device.nwk, zha_device.ieee),
+        )
+        # we don't have to do this on a nwk swap but we don't have a way to tell currently
+        await zha_device.async_configure()
+        # will cause async_init to fire so don't explicitly call it
+        zha_device.update_available(True)
 
     async def shutdown(self):
         """Stop ZHA Controller Application."""

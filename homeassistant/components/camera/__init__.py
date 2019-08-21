@@ -52,6 +52,9 @@ from homeassistant.setup import async_when_setup
 from .const import DOMAIN, DATA_CAMERA_PREFS
 from .prefs import CameraPreferences
 
+
+# mypy: allow-untyped-calls, allow-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_ENABLE_MOTION = "enable_motion_detection"
@@ -311,7 +314,7 @@ class Camera(Entity):
         """Initialize a camera."""
         self.is_streaming = False
         self.content_type = DEFAULT_CONTENT_TYPE
-        self.access_tokens = collections.deque([], 2)
+        self.access_tokens: collections.deque = collections.deque([], 2)
         self.async_update_token()
 
     @property

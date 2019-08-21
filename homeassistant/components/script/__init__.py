@@ -20,6 +20,7 @@ from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
+from homeassistant.helpers.service import async_set_service_schema
 
 from homeassistant.helpers.script import Script
 
@@ -31,6 +32,9 @@ ATTR_LAST_ACTION = "last_action"
 ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_VARIABLES = "variables"
 
+CONF_DESCRIPTION = "description"
+CONF_EXAMPLE = "example"
+CONF_FIELDS = "fields"
 CONF_SEQUENCE = "sequence"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -38,7 +42,17 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 GROUP_NAME_ALL_SCRIPTS = "all scripts"
 
 SCRIPT_ENTRY_SCHEMA = vol.Schema(
-    {CONF_ALIAS: cv.string, vol.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA}
+    {
+        CONF_ALIAS: cv.string,
+        vol.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_DESCRIPTION, default=""): cv.string,
+        vol.Optional(CONF_FIELDS, default={}): {
+            cv.string: {
+                vol.Optional(CONF_DESCRIPTION): cv.string,
+                vol.Optional(CONF_EXAMPLE): cv.string,
+            }
+        },
+    }
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -136,6 +150,13 @@ async def _async_process_config(hass, config, component):
         hass.services.async_register(
             DOMAIN, object_id, service_handler, schema=SCRIPT_SERVICE_SCHEMA
         )
+
+        # Register the service description
+        service_desc = {
+            CONF_DESCRIPTION: cfg[CONF_DESCRIPTION],
+            CONF_FIELDS: cfg[CONF_FIELDS],
+        }
+        async_set_service_schema(hass, DOMAIN, object_id, service_desc)
 
     await component.async_add_entities(scripts)
 

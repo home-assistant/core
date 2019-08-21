@@ -262,7 +262,7 @@ def request_configuration(host, hass, config, add_entities_callback):
             host,
             data.get("token"),
             cv.boolean(data.get("has_ssl")),
-            cv.boolean(data.get("do_not_verify")),
+            cv.boolean(data.get("do_not_verify_ssl")),
             hass,
             config,
             add_entities_callback,

@@ -11,10 +11,8 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DOMAIN
+from . import DOMAIN, GeniusEntity
 
 ATTR_DURATION = "duration"
 
@@ -38,31 +36,23 @@ async def async_setup_platform(
     client = hass.data[DOMAIN]["client"]
 
     entities = [
-        GeniusClimateZone(client, z) for z in client.hub.zone_objs if z.type in GH_ZONES
+        GeniusClimateZone(z) for z in client.zone_objs if z.data["type"] in GH_ZONES
     ]
     async_add_entities(entities)
 
 
-class GeniusClimateZone(ClimateDevice):
+class GeniusClimateZone(GeniusEntity, ClimateDevice):
     """Representation of a Genius Hub climate device."""
 
-    def __init__(self, client, zone):
+    def __init__(self, zone) -> None:
         """Initialize the climate device."""
-        self._client = client
-        self._zone = zone
+        super().__init__()
 
+        self._zone = zone
         if hasattr(self._zone, "occupied"):  # has a movement sensor
             self._preset_modes = list(HA_PRESET_TO_GH)
         else:
             self._preset_modes = [PRESET_BOOST]
-
-    async def async_added_to_hass(self) -> Awaitable[None]:
-        """Run when entity about to be added."""
-        async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
-
-    @callback
-    def _refresh(self) -> None:
-        self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
     def name(self) -> str:
@@ -76,11 +66,6 @@ class GeniusClimateZone(ClimateDevice):
         return {"status": {k: v for k, v in tmp if k in GH_STATE_ATTRS}}
 
     @property
-    def should_poll(self) -> bool:
-        """Return False as the geniushub devices should not be polled."""
-        return False
-
-    @property
     def icon(self) -> str:
         """Return the icon to use in the frontend UI."""
         return "mdi:radiator"
@@ -91,7 +76,7 @@ class GeniusClimateZone(ClimateDevice):
         return self._zone.data["temperature"]
 
     @property
-    def target_temperature(self) -> Optional[float]:
+    def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self._zone.data["setpoint"]
 

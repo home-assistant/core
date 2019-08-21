@@ -19,7 +19,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, State
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.loader import bind_hass
 
 from .const import (
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -35,6 +34,9 @@ from .const import (
     SERVICE_SELECT_SOUND_MODE,
     DOMAIN,
 )
+
+
+# mypy: allow-incomplete-defs, allow-untyped-defs
 
 
 async def _async_reproduce_states(
@@ -89,7 +91,6 @@ async def _async_reproduce_states(
         )
 
 
-@bind_hass
 async def async_reproduce_states(
     hass: HomeAssistantType, states: Iterable[State], context: Optional[Context] = None
 ) -> None:

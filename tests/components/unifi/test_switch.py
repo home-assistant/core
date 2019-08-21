@@ -250,7 +250,7 @@ def mock_controller(hass):
     return controller
 
 
-async def setup_controller(hass, mock_controller):
+async def setup_controller(hass, mock_controller, options={}):
     """Load the UniFi switch platform with the provided controller."""
     hass.config.components.add(unifi.DOMAIN)
     hass.data[unifi.DOMAIN] = {CONTROLLER_ID: mock_controller}
@@ -262,6 +262,8 @@ async def setup_controller(hass, mock_controller):
         "test",
         config_entries.CONN_CLASS_LOCAL_POLL,
         entry_id=1,
+        system_options={},
+        options=options,
     )
     mock_controller.config_entry = config_entry
 
@@ -319,11 +321,9 @@ async def test_switches(hass, mock_controller):
     mock_controller.mock_client_responses.append([CLIENT_1, CLIENT_4])
     mock_controller.mock_device_responses.append([DEVICE_1])
     mock_controller.mock_client_all_responses.append([BLOCKED, UNBLOCKED, CLIENT_1])
-    mock_controller.unifi_config = {
-        unifi.CONF_BLOCK_CLIENT: [BLOCKED["mac"], UNBLOCKED["mac"]]
-    }
+    options = {unifi.CONF_BLOCK_CLIENT: [BLOCKED["mac"], UNBLOCKED["mac"]]}
 
-    await setup_controller(hass, mock_controller)
+    await setup_controller(hass, mock_controller, options)
     assert len(mock_controller.mock_requests) == 3
     assert len(hass.states.async_all()) == 5
 
@@ -466,7 +466,18 @@ async def test_restoring_client(hass, mock_controller):
     mock_controller.mock_client_responses.append([CLIENT_2])
     mock_controller.mock_device_responses.append([DEVICE_1])
     mock_controller.mock_client_all_responses.append([CLIENT_1])
-    mock_controller.unifi_config = {unifi.CONF_BLOCK_CLIENT: ["random mac"]}
+    options = {unifi.CONF_BLOCK_CLIENT: ["random mac"]}
+
+    config_entry = config_entries.ConfigEntry(
+        1,
+        unifi.DOMAIN,
+        "Mock Title",
+        ENTRY_CONFIG,
+        "test",
+        config_entries.CONN_CLASS_LOCAL_POLL,
+        entry_id=1,
+        system_options={},
+    )
 
     registry = await entity_registry.async_get_registry(hass)
     registry.async_get_or_create(
@@ -474,17 +485,17 @@ async def test_restoring_client(hass, mock_controller):
         unifi.DOMAIN,
         "poe-{}".format(CLIENT_1["mac"]),
         suggested_object_id=CLIENT_1["hostname"],
-        config_entry_id=1,
+        config_entry=config_entry,
     )
     registry.async_get_or_create(
         switch.DOMAIN,
         unifi.DOMAIN,
         "poe-{}".format(CLIENT_2["mac"]),
         suggested_object_id=CLIENT_2["hostname"],
-        config_entry_id=1,
+        config_entry=config_entry,
     )
 
-    await setup_controller(hass, mock_controller)
+    await setup_controller(hass, mock_controller, options)
     assert len(mock_controller.mock_requests) == 3
     assert len(hass.states.async_all()) == 3
 

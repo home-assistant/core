@@ -1,5 +1,4 @@
 """Support for interfacing with the XBMC/Kodi JSON-RPC API."""
-import asyncio
 from collections import OrderedDict
 from functools import wraps
 import logging
@@ -10,9 +9,10 @@ import urllib
 import aiohttp
 import voluptuous as vol
 
+from homeassistant.components.kodi import SERVICE_CALL_METHOD
+from homeassistant.components.kodi.const import DOMAIN
 from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    DOMAIN,
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
@@ -34,7 +34,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -134,42 +133,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-SERVICE_ADD_MEDIA = "kodi_add_to_playlist"
-SERVICE_CALL_METHOD = "kodi_call_method"
-
-DATA_KODI = "kodi"
-
-ATTR_MEDIA_TYPE = "media_type"
-ATTR_MEDIA_NAME = "media_name"
-ATTR_MEDIA_ARTIST_NAME = "artist_name"
-ATTR_MEDIA_ID = "media_id"
-ATTR_METHOD = "method"
-
-MEDIA_PLAYER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
-
-MEDIA_PLAYER_ADD_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
-    {
-        vol.Required(ATTR_MEDIA_TYPE): cv.string,
-        vol.Optional(ATTR_MEDIA_ID): cv.string,
-        vol.Optional(ATTR_MEDIA_NAME): cv.string,
-        vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
-    }
-)
-MEDIA_PLAYER_CALL_METHOD_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
-    {vol.Required(ATTR_METHOD): cv.string}, extra=vol.ALLOW_EXTRA
-)
-
-SERVICE_TO_METHOD = {
-    SERVICE_ADD_MEDIA: {
-        "method": "async_add_media_to_playlist",
-        "schema": MEDIA_PLAYER_ADD_MEDIA_SCHEMA,
-    },
-    SERVICE_CALL_METHOD: {
-        "method": "async_call_method",
-        "schema": MEDIA_PLAYER_CALL_METHOD_SCHEMA,
-    },
-}
-
 
 def _check_deprecated_turn_off(hass, turn_off_action):
     """Create an equivalent script for old turn off actions."""
@@ -205,8 +168,8 @@ def _check_deprecated_turn_off(hass, turn_off_action):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Kodi platform."""
-    if DATA_KODI not in hass.data:
-        hass.data[DATA_KODI] = dict()
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = dict()
 
     unique_id = None
     # Is this a manual configuration?
@@ -231,14 +194,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # Only add a device once, so discovered devices do not override manual
     # config.
     ip_addr = socket.gethostbyname(host)
-    if ip_addr in hass.data[DATA_KODI]:
+    if ip_addr in hass.data[DOMAIN]:
         return
 
     # If we got an unique id, check that it does not exist already.
     # This is necessary as netdisco does not deterministally return the same
     # advertisement when the service is offered over multiple IP addresses.
     if unique_id is not None:
-        for device in hass.data[DATA_KODI].values():
+        for device in hass.data[DOMAIN].values():
             if device.unique_id == unique_id:
                 return
 
@@ -258,48 +221,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         unique_id=unique_id,
     )
 
-    hass.data[DATA_KODI][ip_addr] = entity
+    hass.data[DOMAIN][ip_addr] = entity
     async_add_entities([entity], update_before_add=True)
-
-    async def async_service_handler(service):
-        """Map services to methods on MediaPlayerDevice."""
-        method = SERVICE_TO_METHOD.get(service.service)
-        if not method:
-            return
-
-        params = {
-            key: value for key, value in service.data.items() if key != "entity_id"
-        }
-        entity_ids = service.data.get("entity_id")
-        if entity_ids:
-            target_players = [
-                player
-                for player in hass.data[DATA_KODI].values()
-                if player.entity_id in entity_ids
-            ]
-        else:
-            target_players = hass.data[DATA_KODI].values()
-
-        update_tasks = []
-        for player in target_players:
-            await getattr(player, method["method"])(**params)
-
-        for player in target_players:
-            if player.should_poll:
-                update_coro = player.async_update_ha_state(True)
-                update_tasks.append(update_coro)
-
-        if update_tasks:
-            await asyncio.wait(update_tasks)
-
-    if hass.services.has_service(DOMAIN, SERVICE_ADD_MEDIA):
-        return
-
-    for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service]["schema"]
-        hass.services.async_register(
-            DOMAIN, service, async_service_handler, schema=schema
-        )
 
 
 def cmd(func):

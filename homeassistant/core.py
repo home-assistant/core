@@ -276,7 +276,7 @@ class HomeAssistant:
         self.state = CoreState.running
         _async_create_timer(self)
 
-    def add_job(self, target: Callable[..., None], *args: Any) -> None:
+    def add_job(self, target: Callable[..., Any], *args: Any) -> None:
         """Add job to the executor pool.
 
         target: target to call.

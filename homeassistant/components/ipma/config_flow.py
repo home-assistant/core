@@ -1,7 +1,7 @@
 """Config flow to configure IPMA component."""
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -9,7 +9,7 @@ from .const import DOMAIN, HOME_LOCATION_NAME
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class IpmaFlowHandler(data_entry_flow.FlowHandler):
+class IpmaFlowHandler(config_entries.ConfigFlow):
     """Config flow for IPMA component."""
 
     VERSION = 1
