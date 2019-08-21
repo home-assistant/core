@@ -180,6 +180,7 @@ homeassistant/components/nello/* @pschmitt
 homeassistant/components/ness_alarm/* @nickw444
 homeassistant/components/nest/* @awarecan
 homeassistant/components/netdata/* @fabaff
+homeassistant/components/netgear_lte/* @amelchio
 homeassistant/components/nextbus/* @vividboarder
 homeassistant/components/nissan_leaf/* @filcole
 homeassistant/components/nmbs/* @thibmaek
