@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_DEVICES,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_ILLUMINANCE,
     TEMP_CELSIUS,
 )
 from homeassistant.exceptions import PlatformNotReady
@@ -34,6 +35,7 @@ DEVICE_CLASS_PM2_5 = "PM2.5"
 DEVICE_CLASS_PM10 = "PM10"
 DEVICE_CLASS_CARBON_DIOXIDE = "CO2"
 DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS = "VOC"
+DEVICE_CLASS_DECIBELS = "decibels"
 DEVICE_CLASS_SCORE = "score"
 
 SENSOR_TYPES = {
@@ -73,6 +75,16 @@ SENSOR_TYPES = {
         "device_class": DEVICE_CLASS_PM10,
         "unit_of_measurement": "µg/m3",
         "icon": "mdi:cloud",
+    },
+    "LUX": {
+        "device_class": DEVICE_CLASS_ILLUMINANCE,
+        "unit_of_measurement": "lx",
+        "icon": "mdi:weather-sunny",
+    },
+    "SPL_A": {
+        "device_class": DEVICE_CLASS_DECIBELS,
+        "unit_of_measurement": "dB",
+        "icon": "mdi:ear-hearing",
     },
     "score": {
         "device_class": DEVICE_CLASS_SCORE,
