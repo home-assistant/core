@@ -47,7 +47,10 @@ SCRIPT_ENTRY_SCHEMA = vol.Schema(
         vol.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_DESCRIPTION, default=""): cv.string,
         vol.Optional(CONF_FIELDS, default={}): {
-            cv.string: {vol.In([CONF_DESCRIPTION, CONF_EXAMPLE]): cv.string}
+            cv.string: {
+                vol.Optional(CONF_DESCRIPTION): cv.string,
+                vol.Optional(CONF_EXAMPLE): cv.string,
+            }
         },
     }
 )
