@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.template/
 """
 import logging
 from typing import Optional
+from itertools import chain
 
 import voluptuous as vol
 
@@ -34,8 +35,6 @@ from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
-
-ATTRIBUTES_PREFIX = "_attributes."
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,25 +69,23 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         friendly_name_template = device_config.get(CONF_FRIENDLY_NAME_TEMPLATE)
         unit_of_measurement = device_config.get(ATTR_UNIT_OF_MEASUREMENT)
         device_class = device_config.get(CONF_DEVICE_CLASS)
-        attribute_templates = device_config.get(CONF_ATTRIBUTE_TEMPLATES)
+        attribute_templates = device_config.get(CONF_ATTRIBUTE_TEMPLATES, {})
 
         entity_ids = set()
         manual_entity_ids = device_config.get(ATTR_ENTITY_ID)
         invalid_templates = []
 
-        templates = dict(
-            (
-                (CONF_VALUE_TEMPLATE, state_template),
-                (CONF_ICON_TEMPLATE, icon_template),
-                (CONF_ENTITY_PICTURE_TEMPLATE, entity_picture_template),
-                (CONF_FRIENDLY_NAME_TEMPLATE, friendly_name_template),
-            )
-        )
+        templates = {
+            CONF_VALUE_TEMPLATE: state_template,
+            CONF_ICON_TEMPLATE: icon_template,
+            CONF_ENTITY_PICTURE_TEMPLATE: entity_picture_template,
+            CONF_FRIENDLY_NAME_TEMPLATE: friendly_name_template,
+        }
 
         if attribute_templates is not None:
             templates.update(attribute_templates)
 
-        for tpl_name, template in templates.items():
+        for tpl_name, template in chain(templates.items(), attribute_templates.items()):
             if template is None:
                 continue
             template.hass = hass
@@ -257,6 +254,12 @@ class SensorTemplate(Entity):
                 self._state = None
                 _LOGGER.error("Could not render template %s: %s", self._name, ex)
 
+        templates = {
+            "_icon": self._icon_template,
+            "_entity_picture": self._entity_picture_template,
+            "_name": self._friendly_name_template,
+        }
+
         attrs = {}
         for key, value in self._attribute_templates.items():
             try:
@@ -266,11 +269,7 @@ class SensorTemplate(Entity):
 
         self._attributes = attrs
 
-        for property_name, template in (
-            ("_icon", self._icon_template),
-            ("_entity_picture", self._entity_picture_template),
-            ("_name", self._friendly_name_template),
-        ):
+        for property_name, template in templates.items():
             if template is None:
                 continue
 
