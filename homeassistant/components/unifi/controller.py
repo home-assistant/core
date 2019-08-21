@@ -216,9 +216,7 @@ class UniFiController:
             ]
 
         if CONF_DETECTION_TIME in self.unifi_config:
-            options[CONF_DETECTION_TIME] = int(
-                self.unifi_config[CONF_DETECTION_TIME].total_seconds()
-            )
+            options[CONF_DETECTION_TIME] = self.unifi_config[CONF_DETECTION_TIME]
 
         if CONF_SSID_FILTER in self.unifi_config:
             options[CONF_SSID_FILTER] = self.unifi_config[CONF_SSID_FILTER]
