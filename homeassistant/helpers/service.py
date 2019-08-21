@@ -232,13 +232,14 @@ async def async_get_all_descriptions(hass):
 
 
 @ha.callback
+@bind_hass
 def async_set_service_schema(hass, domain, service, schema):
     """Register a description for a service."""
     hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
 
     description = {
-        "description": schema.get("description", ""),
-        "fields": schema.get("fields", {}),
+        "description": schema.get("description") or "",
+        "fields": schema.get("fields") or {},
     }
 
     hass.data[SERVICE_DESCRIPTION_CACHE]["{}.{}".format(domain, service)] = description

@@ -362,3 +362,39 @@ async def test_turning_no_scripts_off(hass):
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {"entity_id": []}, blocking=True
     )
+
+
+async def test_async_get_descriptions_script(hass):
+    """Test async_set_service_schema for the script integration."""
+    script = hass.components.script
+    script_config = {
+        script.DOMAIN: {
+            "test1": {"sequence": [{"service": "homeassistant.restart"}]},
+            "test2": {
+                "description": "test2",
+                "fields": {
+                    "param": {
+                        "description": "param_description",
+                        "example": "param_example",
+                    }
+                },
+                "sequence": [{"service": "homeassistant.restart"}],
+            },
+        }
+    }
+
+    await async_setup_component(hass, script.DOMAIN, script_config)
+    descriptions = await hass.helpers.service.async_get_all_descriptions()
+
+    assert descriptions[script.DOMAIN]["test1"]["description"] == ""
+    assert not descriptions[script.DOMAIN]["test1"]["fields"]
+
+    assert descriptions[script.DOMAIN]["test2"]["description"] == "test2"
+    assert (
+        descriptions[script.DOMAIN]["test2"]["fields"]["param"]["description"]
+        == "param_description"
+    )
+    assert (
+        descriptions[script.DOMAIN]["test2"]["fields"]["param"]["example"]
+        == "param_example"
+    )
