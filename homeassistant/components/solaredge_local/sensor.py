@@ -156,7 +156,6 @@ class SolarEdgeData:
             _LOGGER.error("Could not retrieve data, skipping update")
             return
 
-        """Processing the fetched data."""
         try:
             self.data["energyTotal"] = response.energy.total
             self.data["energyThisYear"] = response.energy.thisYear
