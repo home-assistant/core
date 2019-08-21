@@ -40,8 +40,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Initiate Atome Client object"""
     try:
         client = AtomeClient(username, password)
-    except PyAtomeError as exp:
-        _LOGGER.error(exp)
     except Exception as exp:
         _LOGGER.error(exp)
     # finally:
