@@ -32,8 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_DELAY_ON = "delay_on"
 CONF_DELAY_OFF = "delay_off"
-
-ATTRIBUTES_PREFIX = "_attributes."
+CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 
 SENSOR_SCHEMA = vol.Schema(
     {
