@@ -64,7 +64,6 @@ class AtomeSensor(Entity):
 
         """Initialize the sensor."""
         _LOGGER.debug("ATOME: INIT : %s",str(client))
-        _LOGGER.debug("ATOME: INIT : %s",pprint(client))
         self._name = name
         # self._unit = DEFAULT_UNIT
         self._unit_of_measurement = DEFAULT_UNIT
