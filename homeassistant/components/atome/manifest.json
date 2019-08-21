@@ -3,6 +3,6 @@
   "name": "Atome",
   "documentation": "https://www.home-assistant.io/components/atome",
   "dependencies": [],
-  "codeowners": ["@baqs"],
+  "codeowners": [""],
   "requirements": ["pyatome==0.0.6"]
 } 
