@@ -1,11 +1,9 @@
 """Linky Atome."""
 import logging
-
 from datetime import timedelta
-
-import pickle
+from pyatome import AtomeClient
 import voluptuous as vol
-import requests
+
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT, CONF_NAME
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -14,25 +12,16 @@ from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "atome"
 DEFAULT_UNIT = "W"
 DEFAULT_CLASS = "power"
 
-ATOME_COOKIE = "atome_cookies.pickle"
-ATOME_USER_ID = "atome_user_id.pickle"
-ATOME_USER_REFERENCE = "atome_user_reference.pickle"
 SCAN_INTERVAL = timedelta(seconds=30)
 SESSION_RENEW_INTERVAL = timedelta(minutes=55)
 DEFAULT_TIMEOUT = 10
 
-
-COOKIE_NAME = "PHPSESSID"
-API_BASE_URI = "https://esoftlink.esoftthings.com"
-API_ENDPOINT_LOGIN = "/api/user/login.json"
-API_ENDPOINT_LIVE = "/measure/live.json"
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -50,74 +39,50 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config.get(CONF_NAME)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    timeout = config.get(CONF_TIMEOUT)
 
-    # # LOGIN
-    cookie_path = hass.config.path(ATOME_COOKIE)
-    user_id_path = hass.config.path(ATOME_USER_ID)
-    user_reference_path = hass.config.path(ATOME_USER_REFERENCE)
+
+    """Initiate Atome Client object"""
+    try:
+        client = AtomeClient(username, password)
+        _LOGGER.debug("ATOME: CLIENT : user:%s, pass:%s, %s",username, password, pprint(client))
+
+    except PyAtomeError as exp:
+        _LOGGER.error(exp)
+    except Exception as exp:
+        _LOGGER.error(exp)
+    # finally:
+    #     client.close_session()
 
     add_entities(
         [
             AtomeSensor(
                 name,
-                username,
-                password,
-                timeout,
-                cookie_path,
-                user_id_path,
-                user_reference_path,
+                client
             )
         ]
     )
     return True
 
-
-def load_file(filename):
-    """Load filename."""
-    with open(filename, "rb") as file:
-        return pickle.load(file)
-
-
-def save_file(content, filename):
-    """Save content to a file."""
-    with open(filename, "wb") as file:
-        pickle.dump(content, file)
-
-
 class AtomeSensor(Entity):
     """Representation of a sensor entity for Atome."""
 
-    def __init__(
-        self,
-        name,
-        username,
-        password,
-        timeout,
-        cookie_path,
-        user_id_path,
-        user_reference_path,
-    ):
+    def __init__(self,name,client: AtomeClient):
+
         """Initialize the sensor."""
-        _LOGGER.debug("ATOME: INIT")
+        _LOGGER.debug("ATOME: INIT : %s",str(client))
+        _LOGGER.debug("ATOME: INIT : %s",pprint(client))
         self._name = name
         # self._unit = DEFAULT_UNIT
         self._unit_of_measurement = DEFAULT_UNIT
         self._device_class = DEFAULT_CLASS
 
-        self._username = username
-        self._password = password
-        self._timeout = timeout
+        self._client = client
 
-        self._cookie_path = cookie_path
-        self._user_id_path = user_id_path
-        self._user_reference_path = user_reference_path
 
         self._attributes = None
         self._state = None
-        # self.update = Throttle(SCAN_INTERVAL)(self._update)
-        # self.update()
-        self._login(username, password)
+        self._login()
+        self.get_live()
 
     @property
     def name(self):
@@ -140,79 +105,19 @@ class AtomeSensor(Entity):
         return self._state
 
     # @Throttle(SESSION_RENEW_INTERVAL)
-    def _login(self, username, password):
+    def _login(self):
 
-        # Login the user into the Atome API.
-        payload = {"email": username, "plainPassword": password}
+        return self._client.login()
 
-        req = requests.post(
-            API_BASE_URI + API_ENDPOINT_LOGIN,
-            json=payload,
-            headers={"content-type": "application/json"},
-            timeout=self._timeout,
-        )
-        response_json = req.json()
-        # _LOGGER.debug(response_json)
-        session_cookie = req.cookies.get(COOKIE_NAME)
+    def _get_data(self):
 
-        if session_cookie is None:
-            _LOGGER.exception("Login unsuccessful. Check your credentials")
-            return False
+        return self._client.get_live()
 
-        user_id = str(response_json["id"])
-        user_reference = response_json["subscriptions"][0]["reference"]
-
-        # store cookie
-        save_file(session_cookie, self._cookie_path)
-        # store user id
-        save_file(user_id, self._user_id_path)
-        # store user ref
-        save_file(user_reference, self._user_reference_path)
-
-        _LOGGER.info(
-            "ATOME: Successfully logged in to Atome API. User ID: [%s], User REF: [%s]",
-            user_id,
-            user_reference,
-        )
-        # /LOGIN
-        return user_id, user_reference
-
-    def _get_data(self, url):
-
-        cookie = load_file(self._cookie_path)
-        cookies = {COOKIE_NAME: cookie}
-
-        req = requests.get(url, cookies=cookies, timeout=self._timeout)
-        values = req.json()
-
-        if req.status_code == 302:
-            _LOGGER.warning("Unable to fetch Atome data: need to re-login! ")
-
-        if req.status_code == 403:
-            self._login(self._username, self._password)
-            _LOGGER.warning("Unable to fetch Atome data: %s %s ", req.status_code, url)
-
-        if req.status_code != 200:
-            _LOGGER.warning("Unable to fetch Atome data: %s %s ", req.status_code, url)
-
-        return values
 
     @Throttle(SCAN_INTERVAL)
     def update(self):
         """Update device state."""
         _LOGGER.debug("ATOME: Starting update of Atome Data")
 
-        user_id = load_file(self._user_id_path)
-        user_reference = load_file(self._user_reference_path)
-
-        url = (
-            API_BASE_URI
-            + "/api/subscription/"
-            + user_id
-            + "/"
-            + user_reference
-            + API_ENDPOINT_LIVE
-        )
-
-        values = self._get_data(url)
+        values = self._get_data()
         self._state = values["last"]

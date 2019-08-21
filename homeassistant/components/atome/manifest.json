@@ -1,8 +1,8 @@
 {
   "domain": "atome",
   "name": "Atome",
-  "documentation": "",
+  "documentation": "https://www.home-assistant.io/components/atome",
   "dependencies": [],
-  "codeowners": [],
-  "requirements": []
+  "codeowners": ["@baqs"],
+  "requirements": ["pyatome==0.0.6"]
 } 
