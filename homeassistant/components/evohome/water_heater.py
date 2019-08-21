@@ -21,7 +21,7 @@ HA_OPMODE_TO_DHW = {STATE_ON: EVO_FOLLOW, STATE_OFF: EVO_PERMOVER}
 
 
 async def async_setup_platform(
-    hass, hass_config, add_entities, discovery_info=None
+    hass, hass_config, async_add_entities, discovery_info=None
 ) -> None:
     """Create the DHW controller."""
     broker = hass.data[DOMAIN]["broker"]
@@ -32,7 +32,7 @@ async def async_setup_platform(
 
     evo_dhw = EvoDHW(broker, broker.tcs.hotwater)
 
-    add_entities([evo_dhw], update_before_add=True)
+    async_add_entities([evo_dhw], update_before_add=True)
 
 
 class EvoDHW(EvoDevice, WaterHeaterDevice):

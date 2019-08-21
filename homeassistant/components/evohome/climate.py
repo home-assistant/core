@@ -63,7 +63,10 @@ HA_PRESET_TO_EVO = {v: k for k, v in EVO_PRESET_TO_HA.items()}
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, hass_config: ConfigType, add_entities, discovery_info=None
+    hass: HomeAssistantType,
+    hass_config: ConfigType,
+    async_add_entities,
+    discovery_info=None,
 ) -> None:
     """Create the evohome Controller, and its Zones, if any."""
     broker = hass.data[DOMAIN]["broker"]
@@ -88,7 +91,7 @@ async def async_setup_platform(
             zone.name,
         )
 
-        add_entities([EvoThermostat(broker, zone)], update_before_add=True)
+        async_add_entities([EvoThermostat(broker, zone)], update_before_add=True)
         return
 
     controller = EvoController(broker, broker.tcs)
@@ -104,7 +107,7 @@ async def async_setup_platform(
         )
         zones.append(EvoZone(broker, zone))
 
-    add_entities([controller] + zones, update_before_add=True)
+    async_add_entities([controller] + zones, update_before_add=True)
 
 
 class EvoClimateDevice(EvoDevice, ClimateDevice):
