@@ -22,6 +22,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class TahomaLock(TahomaDevice, LockDevice):
+    """Representation a Tahoma Lock."""
 
     def __init__(self, tahoma_device, controller):
         """Initialize the device."""
@@ -37,7 +38,7 @@ class TahomaLock(TahomaDevice, LockDevice):
         self._battery_level = self.tahoma_device.active_states['core:BatteryState']
         self._name = self.tahoma_device.active_states['core:NameState']
         if self._battery_level == 'low':
-            _LOGGER.warning("Lock "+self._name+" has low battery")
+            _LOGGER.warning("Lock " + self._name + " has low battery")
         if self._battery_level == 'verylow':
             _LOGGER.error("Lock " + self._name + " has very low battery")
         if self.tahoma_device.active_states.get('core:LockedUnlockedState') == 'locked':
@@ -47,18 +48,22 @@ class TahomaLock(TahomaDevice, LockDevice):
         self._available = self.tahoma_device.active_states.get('core:AvailabilityState') == 'available'
 
     def open(self, **kwargs):
+        """Open the door latch."""
         pass
 
     def unlock(self, **kwargs):
-        _LOGGER.info("unlocking ",self._name)
+        """Unlock the door."""
+        _LOGGER.info("unlocking ", self._name)
         self.apply_action('unlock')
 
     def lock(self, **kwargs):
-        _LOGGER.info("locking ",self._name)
+        """Lock the door."""
+        _LOGGER.info("locking ", self._name)
         self.apply_action('lock')
 
     @property
     def is_locked(self):
+        """Return true if the lock is locked."""
         return self._state == STATE_LOCKED
 
     @property
