@@ -1,7 +1,7 @@
 """Tests for the PS4 media player platform."""
 from unittest.mock import MagicMock, patch
 
-from pyps4_homeassistant.credential import get_ddp_message
+from pyps4_2ndscreen.credential import get_ddp_message
 
 from homeassistant.components import ps4
 from homeassistant.components.media_player.const import (
@@ -295,9 +295,7 @@ async def test_media_attributes_are_loaded(hass):
 async def test_device_info_is_set_from_status_correctly(hass):
     """Test that device info is set correctly from status update."""
     mock_d_registry = mock_device_registry(hass)
-    with patch(
-        "pyps4_homeassistant.ps4.get_status", return_value=MOCK_STATUS_OFF
-    ), patch(MOCK_SAVE, side_effect=MagicMock()):
+    with patch("pyps4_2ndscreen.ps4.get_status", return_value=MOCK_STATUS_OFF):
         mock_entity_id = await setup_mock_component(hass)
 
     await hass.async_block_till_done()
@@ -447,9 +445,9 @@ async def test_media_stop(hass):
 async def test_select_source(hass):
     """Test that select source service calls function with title."""
     mock_data = {MOCK_TITLE_ID: MOCK_GAMES_DATA}
-    with patch(
-        "pyps4_homeassistant.ps4.get_status", return_value=MOCK_STATUS_IDLE
-    ), patch(MOCK_LOAD, return_value=mock_data):
+    with patch("pyps4_2ndscreen.ps4.get_status", return_value=MOCK_STATUS_IDLE), patch(
+        MOCK_LOAD, return_value=mock_data
+    ):
         mock_entity_id = await setup_mock_component(hass)
 
     mock_func = "{}{}".format(
@@ -473,9 +471,9 @@ async def test_select_source(hass):
 async def test_select_source_caps(hass):
     """Test that select source service calls function with upper case title."""
     mock_data = {MOCK_TITLE_ID: MOCK_GAMES_DATA}
-    with patch(
-        "pyps4_homeassistant.ps4.get_status", return_value=MOCK_STATUS_IDLE
-    ), patch(MOCK_LOAD, return_value=mock_data):
+    with patch("pyps4_2ndscreen.ps4.get_status", return_value=MOCK_STATUS_IDLE), patch(
+        MOCK_LOAD, return_value=mock_data
+    ):
         mock_entity_id = await setup_mock_component(hass)
 
     mock_func = "{}{}".format(
@@ -502,9 +500,9 @@ async def test_select_source_caps(hass):
 async def test_select_source_id(hass):
     """Test that select source service calls function with Title ID."""
     mock_data = {MOCK_TITLE_ID: MOCK_GAMES_DATA}
-    with patch(
-        "pyps4_homeassistant.ps4.get_status", return_value=MOCK_STATUS_IDLE
-    ), patch(MOCK_LOAD, return_value=mock_data):
+    with patch("pyps4_2ndscreen.ps4.get_status", return_value=MOCK_STATUS_IDLE), patch(
+        MOCK_LOAD, return_value=mock_data
+    ):
         mock_entity_id = await setup_mock_component(hass)
 
     mock_func = "{}{}".format(
