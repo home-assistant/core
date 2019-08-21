@@ -114,8 +114,8 @@ def setup_scanner(hass: HomeAssistantType, config: dict, see, discovery_info=Non
     _LOGGER.debug("Tracking new devices = %s", track_new)
 
     if not devices_to_track and not track_new:
-        # This isn't an error, because user might just want to collect bluetooth devices
-        _LOGGER.info("No Bluetooth devices to track and not tracking new devices")
+        _LOGGER.warning("No Bluetooth devices to track and not tracking new devices")
+        return False
 
     if track_new:
         for mac, device_name in discover_devices(bluetooth, device_id):
