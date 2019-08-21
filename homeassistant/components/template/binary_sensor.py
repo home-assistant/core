@@ -26,11 +26,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change, async_track_same_state
 
+from itertools import chain
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DELAY_ON = "delay_on"
 CONF_DELAY_OFF = "delay_off"
-CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 
 ATTRIBUTES_PREFIX = "_attributes."
 
@@ -67,18 +68,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         invalid_templates = []
 
-        templates = dict(
-            (
-                (CONF_VALUE_TEMPLATE, value_template),
-                (CONF_ICON_TEMPLATE, icon_template),
-                (CONF_ENTITY_PICTURE_TEMPLATE, entity_picture_template),
-            )
-        )
+        templates = {
+            CONF_VALUE_TEMPLATE: value_template,
+            CONF_ICON_TEMPLATE: icon_template,
+            CONF_ENTITY_PICTURE_TEMPLATE: entity_picture_template
+        }
 
-        if attribute_templates is not None:
-            templates.update(attribute_templates)
-
-        for tpl_name, template in templates.items():
+        for tpl_name, template in chain(templates.items(), attribute_templates.items()):
             if template is None:
                 continue
             template.hass = hass
@@ -246,12 +242,10 @@ class BinarySensorTemplate(BinarySensorDevice):
                 return
             _LOGGER.error("Could not render template %s: %s", self._name, ex)
 
-        templates = dict(
-            (
-                ("_icon", self._icon_template),
-                ("_entity_picture", self._entity_picture_template),
-            )
-        )
+        templates = {
+            "_icon": self._icon_template,
+            "_entity_picture": self._entity_picture_template,
+        }
 
         attrs = {}
         if self._attribute_templates is not None:
