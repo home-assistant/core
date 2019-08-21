@@ -26,18 +26,14 @@
     "options": {
         "step": {
             "init": {
-                "title": "Configure UniFi device tracker",
-                "data": {
-                    "show_things": "Show Things"
-                }
+                "data": {}
             },
             "device_tracker": {
-                "title": "Configure UniFi device tracker",
                 "data": {
                     "detection_time": "Time in seconds from last seen until considered away",
-                    "dont_track_clients": "Do not track any network client",
-                    "dont_track_devices": "Do not track any network device (Ubiquiti devices)",
-                    "dont_track_wired_clients": "Do not track any wired network client"
+                    "track_clients": "Track all network clients",
+                    "track_devices": "Track all network devices (Ubiquiti devices)",
+                    "track_wired_clients": "Track wired network clients"
                 }
             }
         }

@@ -146,7 +146,7 @@ def update_items(controller, async_add_entities, tracked):
     """Update tracked device state from the controller."""
     new_tracked = []
 
-    if not controller.option_dont_track_clients:
+    if controller.option_track_clients:
 
         for client_id in controller.api.clients:
 
@@ -167,7 +167,7 @@ def update_items(controller, async_add_entities, tracked):
             ):
                 continue
 
-            if controller.option_dont_track_wired_clients and client.is_wired:
+            if not controller.option_track_wired_clients and client.is_wired:
                 continue
 
             tracked[client_id] = UniFiClientTracker(client, controller)
@@ -178,7 +178,7 @@ def update_items(controller, async_add_entities, tracked):
                 client.mac,
             )
 
-    if not controller.option_dont_track_devices:
+    if controller.option_track_devices:
 
         for device_id in controller.api.devices:
 

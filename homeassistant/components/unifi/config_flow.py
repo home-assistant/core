@@ -13,11 +13,15 @@ from homeassistant.const import (
 
 from .const import (
     CONF_CONTROLLER,
-    CONF_DONT_TRACK_CLIENTS,
-    CONF_DONT_TRACK_DEVICES,
-    CONF_DONT_TRACK_WIRED_CLIENTS,
+    CONF_TRACK_CLIENTS,
+    CONF_TRACK_DEVICES,
+    CONF_TRACK_WIRED_CLIENTS,
     CONF_DETECTION_TIME,
     CONF_SITE_ID,
+    DEFAULT_TRACK_CLIENTS,
+    DEFAULT_TRACK_DEVICES,
+    DEFAULT_TRACK_WIRED_CLIENTS,
+    DEFAULT_DETECTION_TIME,
     DOMAIN,
     LOGGER,
 )
@@ -181,26 +185,28 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_DONT_TRACK_CLIENTS,
+                        CONF_TRACK_CLIENTS,
                         default=self.config_entry.options.get(
-                            CONF_DONT_TRACK_CLIENTS, False
+                            CONF_TRACK_CLIENTS, DEFAULT_TRACK_CLIENTS
                         ),
                     ): bool,
                     vol.Optional(
-                        CONF_DONT_TRACK_DEVICES,
+                        CONF_TRACK_DEVICES,
                         default=self.config_entry.options.get(
-                            CONF_DONT_TRACK_DEVICES, False
+                            CONF_TRACK_DEVICES, DEFAULT_TRACK_DEVICES
                         ),
                     ): bool,
                     vol.Optional(
-                        CONF_DONT_TRACK_WIRED_CLIENTS,
+                        CONF_TRACK_WIRED_CLIENTS,
                         default=self.config_entry.options.get(
-                            CONF_DONT_TRACK_WIRED_CLIENTS, False
+                            CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
                         ),
                     ): bool,
                     vol.Optional(
                         CONF_DETECTION_TIME,
-                        default=self.config_entry.options.get(CONF_DETECTION_TIME, 300),
+                        default=self.config_entry.options.get(
+                            CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
+                        ),
                     ): int,
                 }
             ),
