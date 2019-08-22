@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional, Tuple
 
 import aiohttp.client_exceptions
 import voluptuous as vol
-import evohomeclient2
+import evohomeasync2
 
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -81,9 +81,10 @@ def _handle_exception(err) -> bool:
     try:
         raise err
 
-    except evohomeclient2.AuthenticationError:
+    except evohomeasync2.AuthenticationError:
         _LOGGER.error(
             "Failed to (re)authenticate with the vendor's server. "
+            "Check your network and the vendor's service status page. "
             "Check that your username and password are correct. "
             "Message is: %s",
             err,
@@ -94,7 +95,7 @@ def _handle_exception(err) -> bool:
         # this appears to be common with Honeywell's servers
         _LOGGER.warning(
             "Unable to connect with the vendor's server. "
-            "Check your network and the vendor's status page."
+            "Check your network and the vendor's service status page. "
             "Message is: %s",
             err,
         )
@@ -103,15 +104,15 @@ def _handle_exception(err) -> bool:
     except aiohttp.ClientResponseError:
         if err.status == HTTP_SERVICE_UNAVAILABLE:
             _LOGGER.warning(
-                "Vendor says their server is currently unavailable. "
-                "Check the vendor's status page."
+                "The vendor says their server is currently unavailable. "
+                "Check the vendor's service status page."
             )
             return False
 
         if err.status == HTTP_TOO_MANY_REQUESTS:
             _LOGGER.warning(
                 "The vendor's API rate limit has been exceeded. "
-                "Consider increasing the %s.",
+                "If this message persists, consider increasing the %s.",
                 CONF_SCAN_INTERVAL,
             )
             return False
@@ -160,11 +161,11 @@ class EvoBroker:
             await self._load_auth_tokens()
         )
 
-        # evohomeclient2 uses naive/local datetimes
+        # evohomeasync2 uses naive/local datetimes
         if access_token_expires is not None:
             access_token_expires = _utc_to_local_dt(access_token_expires)
 
-        client = self.client = evohomeclient2.EvohomeClient(
+        client = self.client = evohomeasync2.EvohomeClient(
             self.params[CONF_USERNAME],
             self.params[CONF_PASSWORD],
             refresh_token=refresh_token,
@@ -175,7 +176,7 @@ class EvoBroker:
 
         try:
             await client.login()
-        except (aiohttp.ClientResponseError, evohomeclient2.AuthenticationError) as err:
+        except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
             if not _handle_exception(err):
                 return False
 
@@ -234,7 +235,7 @@ class EvoBroker:
         return (None, None, None)  # account switched: so tokens wont be valid
 
     async def _save_auth_tokens(self, *args) -> None:
-        # evohomeclient2 uses naive/local datetimes
+        # evohomeasync2 uses naive/local datetimes
         access_token_expires = _local_dt_to_utc(self.client.access_token_expires)
 
         self._app_storage[CONF_USERNAME] = self.params[CONF_USERNAME]
@@ -262,7 +263,7 @@ class EvoBroker:
 
         try:
             status = await self.client.locations[loc_idx].status()
-        except (aiohttp.ClientResponseError, evohomeclient2.AuthenticationError) as err:
+        except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
             _handle_exception(err)
         else:
             # inform the evohome devices that state data has been updated
@@ -395,7 +396,7 @@ class EvoDevice(Entity):
     async def _call_client_api(self, api_function) -> None:
         try:
             await api_function
-        except (aiohttp.ClientResponseError, evohomeclient2.AuthenticationError) as err:
+        except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
             _handle_exception(err)
 
         point_in_time = utcnow() + timedelta(seconds=2)
@@ -412,10 +413,7 @@ class EvoDevice(Entity):
         ):
             try:
                 self._schedule = await self._evo_device.schedule()
-            except (
-                aiohttp.ClientResponseError,
-                evohomeclient2.AuthenticationError,
-            ) as err:
+            except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
                 _handle_exception(err)
 
     async def async_update(self) -> None:
