@@ -177,12 +177,10 @@ class ConfigEntry:
                     self.domain,
                     err,
                 )
-                if self.domain == integration.domain:
-                    self.state = ENTRY_STATE_SETUP_ERROR
+                self.state = ENTRY_STATE_SETUP_ERROR
                 return
 
-        # Perform migration
-        if integration.domain == self.domain:
+            # Perform migration
             if not await self.async_migrate(hass):
                 self.state = ENTRY_STATE_MIGRATION_ERROR
                 return
