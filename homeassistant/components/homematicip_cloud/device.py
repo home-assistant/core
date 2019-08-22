@@ -117,9 +117,10 @@ class HomematicipGenericDevice(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the generic device."""
         state_attr = {}
-        for attr, attr_key in DEVICE_ATTRIBUTES.items():
-            attr_value = getattr(self._device, attr, None)
-            if attr_value:
-                state_attr[attr_key] = attr_value
+        if isinstance(self._device, AsyncDevice):
+            for attr, attr_key in DEVICE_ATTRIBUTES.items():
+                attr_value = getattr(self._device, attr, None)
+                if attr_value:
+                    state_attr[attr_key] = attr_value
 
         return state_attr
