@@ -116,6 +116,7 @@ ANDROIDTV_STATES = {
     "standby": STATE_STANDBY,
     "playing": STATE_PLAYING,
     "paused": STATE_PAUSED,
+    "stopped": STATE_STANDBY,
 }
 
 
