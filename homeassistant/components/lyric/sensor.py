@@ -184,8 +184,6 @@ class LyricSensor(LyricDeviceEntity):
                     now = dt_util.utcnow()
                     if time <= now.time():
                         now = now + timedelta(days=1)
-                    state = dt_util.as_local(
-                        dt_util.as_utc(datetime.combine(now.date(), time))
-                    )
+                    state = dt_util.as_utc(datetime.combine(now.date(), time))
                 self._state = state
             self._available = True
