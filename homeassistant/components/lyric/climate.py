@@ -38,8 +38,9 @@ from .const import DATA_LYRIC_CLIENT, DATA_LYRIC_DEVICES, DOMAIN, SERVICE_HOLD_T
 _LOGGER = logging.getLogger(__name__)
 
 PRESET_NO_HOLD = "NoHold"
-PRESET_TEMPORARY_HOLD = "TemporaryHold"
+PRESET_HOLD_UNTIL = "HoldUntil"
 PRESET_PERMANENT_HOLD = "PermanentHold"
+PRESET_TEMPORARY_HOLD = "TemporaryHold"
 PRESET_VACATION_HOLD = "VacationHold"
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
@@ -214,6 +215,7 @@ class LyricThermostat(LyricDeviceEntity, ClimateDevice):
         """Return preset modes."""
         return [
             PRESET_NO_HOLD,
+            PRESET_HOLD_UNTIL,
             PRESET_TEMPORARY_HOLD,
             PRESET_PERMANENT_HOLD,
             PRESET_VACATION_HOLD,
