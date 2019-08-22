@@ -13,14 +13,30 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.components import sensor
 from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_QOS, CONF_STATE_TOPIC, MqttAttributes,
-    MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
+    ATTR_DISCOVERY_HASH,
+    CONF_QOS,
+    CONF_STATE_TOPIC,
+    MqttAttributes,
+    MqttAvailability,
+    MqttDiscoveryUpdate,
+    MqttEntityDeviceInfo,
+    subscription,
+)
 from homeassistant.components.mqtt.discovery import (
-    MQTT_DISCOVERY_NEW, clear_discovery_hash)
+    MQTT_DISCOVERY_NEW,
+    clear_discovery_hash,
+)
 from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
-    CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN,
-    CONF_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_DEVICE_CLASS, CONF_DEVICE)
+    CONF_FORCE_UPDATE,
+    CONF_NAME,
+    CONF_VALUE_TEMPLATE,
+    STATE_UNKNOWN,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_ICON,
+    CONF_DEVICE_CLASS,
+    CONF_DEVICE,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components import mqtt
 import homeassistant.helpers.config_validation as cv
@@ -30,13 +46,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_EXPIRE_AFTER = 'expire_after'
-CONF_JSON_ATTRS = 'json_attributes'
-CONF_UNIQUE_ID = 'unique_id'
+CONF_EXPIRE_AFTER = "expire_after"
+CONF_JSON_ATTRS = "json_attributes"
+CONF_UNIQUE_ID = "unique_id"
 
-DEFAULT_NAME = 'MQTT Sensor'
+DEFAULT_NAME = "MQTT Sensor"
 DEFAULT_FORCE_UPDATE = False
-DEPENDENCIES = ['mqtt']
+DEPENDENCIES = ["mqtt"]
 SCAN_INTERVAL = timedelta(seconds=600000000)
 
 MQTT_DEVICES = []
@@ -44,18 +60,23 @@ NET_DEVICES = []
 DOM_DEVICES = []
 
 
-PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_ICON): cv.icon,
-    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-    vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
-    vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
-    vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-    vol.Optional(CONF_UNIQUE_ID): cv.string,
-    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
-    mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
+PLATFORM_SCHEMA = (
+    mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+            vol.Optional(CONF_ICON): cv.icon,
+            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
+            vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
+            vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+            vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+        }
+    )
+    .extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
+    .extend(mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
+)
 
 
 def get_text():
@@ -65,13 +86,15 @@ def get_text():
     """Return the state of the entity."""
     info = ""
     if len(MQTT_DEVICES) > 0:
-        info = "\n### Sterowalne urządzenia w brokerze mqtt (" + str(
-            len(MQTT_DEVICES)) + "):\n"
+        info = (
+            "\n### Sterowalne urządzenia w brokerze mqtt ("
+            + str(len(MQTT_DEVICES))
+            + "):\n"
+        )
         for d in MQTT_DEVICES:
             info += "- " + d["FriendlyName"] + ", http://" + d["IPAddress"] + "\n"
     if len(NET_DEVICES) > 0:
-        info += "\n### Sterowalne urządzenia w sieci (" + str(
-            len(NET_DEVICES)) + "):\n"
+        info += "\n### Sterowalne urządzenia w sieci (" + str(len(NET_DEVICES)) + "):\n"
         for d in NET_DEVICES:
             info += str(d) + "\n"
     if len(DOM_DEVICES) > 0:
@@ -81,39 +104,63 @@ def get_text():
     return info
 
 
-async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                               async_add_entities, discovery_info=None):
+def get_text_to_say():
+    """Return the info about devices"""
+    import time
+
+    # Wait for 5 seconds
+    time.sleep(10)
+    if len(MQTT_DEVICES) > 0 or len(NET_DEVICES) > 0:
+        info = "Wykryto "
+    else:
+        info = "Nie wykryto sterowanych urządzeń."
+    if len(MQTT_DEVICES) > 0:
+        info += " sterowalne urządzenia podłączone do bramki w ilości " + str(
+            len(MQTT_DEVICES)
+        )
+    if len(NET_DEVICES) > 0:
+        if len(MQTT_DEVICES) > 0:
+            info += " i "
+        info += " sterowalne urządzenia w sieci w ilości " + str(len(NET_DEVICES))
+    return info
+
+
+async def async_setup_platform(
+    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+):
     """Set up MQTT sensors through configuration.yaml."""
     await _async_setup_entity(config, async_add_entities)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT sensors dynamically through MQTT discovery."""
+
     async def async_discover_sensor(discovery_payload):
         """Discover and add a discovered MQTT sensor."""
         try:
             discovery_hash = discovery_payload[ATTR_DISCOVERY_HASH]
             config = PLATFORM_SCHEMA(discovery_payload)
-            await _async_setup_entity(config, async_add_entities,
-                                      discovery_hash)
+            await _async_setup_entity(config, async_add_entities, discovery_hash)
         except Exception:
             if discovery_hash:
                 clear_discovery_hash(hass, discovery_hash)
             raise
 
-    async_dispatcher_connect(hass,
-                             MQTT_DISCOVERY_NEW.format(sensor.DOMAIN, 'mqtt'),
-                             async_discover_sensor)
+    async_dispatcher_connect(
+        hass, MQTT_DISCOVERY_NEW.format(sensor.DOMAIN, "mqtt"), async_discover_sensor
+    )
 
 
-async def _async_setup_entity(config: ConfigType, async_add_entities,
-                              discovery_hash=None):
+async def _async_setup_entity(
+    config: ConfigType, async_add_entities, discovery_hash=None
+):
     """Set up MQTT sensor."""
     async_add_entities([MqttSensor(config, discovery_hash)])
 
 
-class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
-                 MqttEntityDeviceInfo, Entity):
+class MqttSensor(
+    MqttAttributes, MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, Entity
+):
     """Representation of a sensor that can be updated using MQTT."""
 
     def __init__(self, config, discovery_hash):
@@ -128,13 +175,14 @@ class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         device_config = config.get(CONF_DEVICE)
 
         if config.get(CONF_JSON_ATTRS):
-            _LOGGER.warning('configuration variable "json_attributes" is '
-                            'deprecated, replace with "json_attributes_topic"')
+            _LOGGER.warning(
+                'configuration variable "json_attributes" is '
+                'deprecated, replace with "json_attributes_topic"'
+            )
 
         MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_hash,
-                                     self.discovery_update)
+        MqttDiscoveryUpdate.__init__(self, discovery_hash, self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, device_config)
 
     async def async_added_to_hass(self):
@@ -189,7 +237,13 @@ class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                             d["FriendlyName"] = friendly_name
                 if device_not_exist:
                     MQTT_DEVICES.append(
-                        {"topic": topic, "FriendlyName": friendly_name, "IPAddress": ip_address, "Sensors": sensors})
+                        {
+                            "topic": topic,
+                            "FriendlyName": friendly_name,
+                            "IPAddress": ip_address,
+                            "Sensors": sensors,
+                        }
+                    )
 
             except Exception as e:
                 _LOGGER.info("Error: " + str(e))
@@ -204,7 +258,8 @@ class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
         self._sub_state = await subscription.async_unsubscribe_topics(
-            self.hass, self._sub_state)
+            self.hass, self._sub_state
+        )
         await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
 
@@ -238,7 +293,7 @@ class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     @property
     def state(self):
         """Return the state of the entity."""
-        return ' '
+        return " "
 
     @property
     def device_state_attributes(self):

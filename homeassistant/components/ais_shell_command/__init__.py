@@ -504,6 +504,9 @@ def _scan_network_for_devices(hass, call):
         hass.states.async_set(
             "sensor.network_devices_info_value", "", {"text": dsm.get_text()}
         )
+        yield from hass.services.async_call(
+            "ais_ai_service", "say_it", {"text": dsm.get_text_to_say()}
+        )
 
 
 @asyncio.coroutine
