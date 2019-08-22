@@ -364,19 +364,6 @@ class LeafDataStore:
         from pycarwings2 import CarwingsError
 
         try:
-            # First, check nissan servers for the latest data
-            start_server_info = await self.hass.async_add_executor_job(
-                self.leaf.get_latest_battery_status
-            )
-
-            # Store the date from the nissan servers
-            start_date = self._extract_start_date(start_server_info)
-            if start_date is None:
-                _LOGGER.info("No start date from servers. Aborting")
-                return None
-
-            _LOGGER.debug("Start server date=%s", start_date)
-
             # Request battery update from the car
             _LOGGER.debug("Requesting battery update, %s", self.leaf.vin)
             request = await self.hass.async_add_executor_job(self.leaf.request_update)
@@ -393,20 +380,29 @@ class LeafDataStore:
                 )
                 await asyncio.sleep(PYCARWINGS2_SLEEP)
 
-                # Note leaf.get_status_from_update is always returning 0, so
-                # don't try to use it anymore.
-                server_info = await self.hass.async_add_executor_job(
-                    self.leaf.get_latest_battery_status
+                # We don't use the response from get_status_from_update
+                # apart from knowing that the car has responded saying it
+                # has given the latest battery status to Nissan.
+                check_result_info = await self.hass.async_add_executore_job(
+                    self.leaf.get_status_from_update(request)
                 )
 
-                latest_date = self._extract_start_date(server_info)
-                _LOGGER.debug("Latest server date=%s", latest_date)
-                if latest_date is not None and latest_date != start_date:
+                if check_result_info is not None:
+                    # Get the latest battery status from Nissan servers.
+                    # This has the SOC in it.
+                    server_info = await self.hass.async_add_executor_job(
+                        self.leaf.get_latest_battery_status
+                    )
                     return server_info
 
             _LOGGER.debug(
                 "%s attempts exceeded return latest data from server",
                 MAX_RESPONSE_ATTEMPTS,
+            )
+            # Get the latest data from the nissan servers, even though
+            # it may be out of date, it's better than nothing.
+            server_info = await self.hass.async_add_executor_job(
+                self.leaf.get_latest_battery_status
             )
             return server_info
         except CarwingsError:
