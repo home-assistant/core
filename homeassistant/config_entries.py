@@ -388,7 +388,7 @@ class ConfigEntries:
         self._hass_config = hass_config
         self._entries = []  # type: List[ConfigEntry]
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
-        EntityRegistryDisabledHandler(hass)
+        EntityRegistryDisabledHandler(hass).async_setup()
 
     @callback
     def async_domains(self) -> List[str]:
@@ -777,7 +777,10 @@ class EntityRegistryDisabledHandler:
         self.changed: Set[str] = set()
         self._remove_call_later: Optional[Callable[[], None]] = None
 
-        hass.bus.async_listen(
+    @callback
+    def async_setup(self):
+        """Set up the disable handler."""
+        self.hass.bus.async_listen(
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED, self._handle_entry_updated
         )
 

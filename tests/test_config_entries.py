@@ -950,6 +950,7 @@ async def test_reload_entry_entity_registry_ignores_no_entry(hass):
 async def test_reload_entry_entity_registry_works(hass):
     """Test we schedule an entry to be reloaded if disabled_by is updated."""
     handler = config_entries.EntityRegistryDisabledHandler(hass)
+    handler.async_setup()
     registry = mock_registry(hass)
 
     config_entry = MockConfigEntry(
