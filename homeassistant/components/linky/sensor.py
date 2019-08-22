@@ -18,7 +18,7 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DEFAULT_TIMEOUT, DOMAIN
@@ -104,7 +104,7 @@ class LinkyAccount:
         )
         self.sensors.append(LinkySensor("Linky last year", self, YEARLY, INDEX_LAST))
 
-        track_time_interval(hass, self.update_linky_data, SCAN_INTERVAL)
+        async_track_time_interval(hass, self.update_linky_data, SCAN_INTERVAL)
 
     def update_linky_data(self, event_time):
         """Fetch new state data for the sensor."""
@@ -175,7 +175,7 @@ class LinkySensor(Entity):
             CONF_USERNAME: self._username,
         }
 
-    def update(self):
+    async def async_update(self) -> None:
         """Retrieve the new data for the sensor."""
         _LOGGER.error("LINKY_SENSOR:sensor update : %s", self.name)
         data = self.__account.data[self._scale][self.__when]
