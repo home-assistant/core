@@ -99,9 +99,6 @@ class Entity:
     # If we reported if this entity was slow
     _slow_reported = False
 
-    # If we reported this entity is updated while disabled
-    _disabled_reported = False
-
     # Protect for multiple updates
     _update_staged = False
 
