@@ -2828,6 +2828,10 @@ def _process_command_from_frame(hass, service):
                 "media_content_id": service.data["payload"],
             },
         )
+    elif service.data["topic"] == "ais/execute_script":
+        hass.services.call(
+            "ais_shell_command", "execute_script", {"script": service.data["payload"]}
+        )
 
     elif service.data["topic"] == "ais/tts_voice":
         # this is done only once on start to set the voice on hass from android

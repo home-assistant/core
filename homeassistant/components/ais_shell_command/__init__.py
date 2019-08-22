@@ -287,6 +287,12 @@ def _execute_script(hass, call):
         _LOGGER.error("No script")
         return
     script = call.data["script"]
+
+    if script == "reset_usb.sh":
+        # take the full path
+        script = str(os.path.dirname(__file__))
+        script += "/scripts/reset_usb.sh"
+
     import subprocess
 
     process = subprocess.Popen(script, shell=True, stdout=subprocess.PIPE)
