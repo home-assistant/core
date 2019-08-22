@@ -292,8 +292,7 @@ def test_reload(hass):
     assert hass.services.has_service("python_script", "reload")
 
 
-@asyncio.coroutine
-def test_service_descriptions(hass):
+async def test_service_descriptions(hass):
     """Test that service descriptions are loaded and reloaded correctly."""
     # Test 1: no user-provided services.yaml file
     scripts1 = [
@@ -324,9 +323,9 @@ def test_service_descriptions(hass):
     ), patch_yaml_files(
         services_yaml1
     ):
-        yield from async_setup_component(hass, DOMAIN, {})
+        await async_setup_component(hass, DOMAIN, {})
 
-        descriptions = yield from async_get_all_descriptions(hass)
+        descriptions = await async_get_all_descriptions(hass)
 
     assert len(descriptions) == 1
 
@@ -372,8 +371,8 @@ def test_service_descriptions(hass):
     ), patch_yaml_files(
         services_yaml2
     ):
-        yield from hass.services.async_call(DOMAIN, "reload", {}, blocking=True)
-        descriptions = yield from async_get_all_descriptions(hass)
+        await hass.services.async_call(DOMAIN, "reload", {}, blocking=True)
+        descriptions = await async_get_all_descriptions(hass)
 
     assert len(descriptions) == 1
 
