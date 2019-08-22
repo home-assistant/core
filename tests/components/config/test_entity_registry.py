@@ -127,13 +127,13 @@ async def test_update_entity(hass, client):
     assert state is not None
     assert state.name == "before update"
 
+    # UPDATE NAME
     await client.send_json(
         {
             "id": 6,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "name": "after update",
-            "disabled_by": "user",
         }
     )
 
@@ -142,7 +142,7 @@ async def test_update_entity(hass, client):
     assert msg["result"] == {
         "config_entry_id": None,
         "device_id": None,
-        "disabled_by": "user",
+        "disabled_by": None,
         "platform": "test_platform",
         "entity_id": "test_domain.world",
         "name": "after update",
@@ -151,11 +151,24 @@ async def test_update_entity(hass, client):
     state = hass.states.get("test_domain.world")
     assert state.name == "after update"
 
-    assert registry.entities["test_domain.world"].disabled_by == "user"
-
+    # UPDATE DISABLED_BY TO USER
     await client.send_json(
         {
             "id": 7,
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "disabled_by": "user",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert registry.entities["test_domain.world"].disabled_by == "user"
+
+    # UPDATE DISABLED_BY TO NONE
+    await client.send_json(
+        {
+            "id": 8,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "disabled_by": None,
