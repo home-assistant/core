@@ -216,6 +216,7 @@ stages:
           create_manifest "stable" "$(Build.SourceBranchName)"
           create_manifest "latest" "$(Build.SourceBranchName)"
           create_manifest "beta" "$(Build.SourceBranchName)"
+          create_manifest "rc" "$(Build.SourceBranchName)"
         fi
 
       displayName: 'Create Meta-Image'
