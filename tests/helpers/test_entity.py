@@ -7,13 +7,13 @@ from unittest.mock import MagicMock, patch, PropertyMock
 
 import pytest
 
-import homeassistant.helpers.entity as entity
+from homeassistant.helpers import entity, entity_registry
 from homeassistant.core import Context
 from homeassistant.const import ATTR_HIDDEN, ATTR_DEVICE_CLASS
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.helpers.entity_values import EntityValues
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_registry
 
 
 def test_generate_entity_id_requires_hass_or_ids():
@@ -499,3 +499,30 @@ async def test_set_context_expired(hass):
     assert hass.states.get("hello.world").context != context
     assert ent._context is None
     assert ent._context_set is None
+
+
+async def test_warn_disabled(hass, caplog):
+    """Test we warn once if we write to a disabled entity."""
+    entry = entity_registry.RegistryEntry(
+        entity_id="hello.world",
+        unique_id="test-unique-id",
+        platform="test-platform",
+        disabled_by="user",
+    )
+    mock_registry(hass, {"hello.world": entry})
+
+    ent = entity.Entity()
+    ent.hass = hass
+    ent.entity_id = "hello.world"
+    ent.registry_entry = entry
+    ent.platform = MagicMock(platform_name="test-platform")
+
+    caplog.clear()
+    ent.async_write_ha_state()
+    assert hass.states.get("hello.world") is None
+    assert "Entity hello.world is incorrectly being triggered" in caplog.text
+
+    caplog.clear()
+    ent.async_write_ha_state()
+    assert hass.states.get("hello.world") is None
+    assert caplog.text == ""

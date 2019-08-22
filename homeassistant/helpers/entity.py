@@ -99,6 +99,9 @@ class Entity:
     # If we reported if this entity was slow
     _slow_reported = False
 
+    # If we reported this entity is updated while disabled
+    _disabled_reported = False
+
     # Protect for multiple updates
     _update_staged = False
 
@@ -273,6 +276,16 @@ class Entity:
     @callback
     def _async_write_ha_state(self):
         """Write the state to the state machine."""
+        if self.registry_entry and self.registry_entry.disabled_by:
+            if not self._disabled_reported:
+                self._disabled_reported = True
+                _LOGGER.warning(
+                    "Entity %s is incorrectly being triggered for updates while it is disabled. This is a bug in the %s integration.",
+                    self.entity_id,
+                    self.platform.platform_name,
+                )
+            return
+
         start = timer()
 
         attr = {}
