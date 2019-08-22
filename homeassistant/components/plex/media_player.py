@@ -25,8 +25,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import (
-    CONF_URL,
-    CONF_USERNAME,
     DEVICE_DEFAULT_NAME,
     STATE_IDLE,
     STATE_OFF,
@@ -39,7 +37,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import load_json
 
 from .const import (
-    CONF_SERVER,
     CONF_USE_EPISODE_ART,
     CONF_SHOW_ALL_CONTROLS,
     CONF_REMOVE_UNAVAILABLE_CLIENTS,
@@ -156,11 +153,10 @@ def setup_plexserver(server_config, config, hass, add_entities_callback):
         _LOGGER.error(error)
         return
 
-    url = server_config.get(CONF_URL)
-    username = server_config.get(CONF_USERNAME)
-    server = server_config.get(CONF_SERVER)
+    server_name = plexserver.friendlyName
+    server_url = plexserver._baseurl  # pylint: disable=W0212
 
-    _LOGGER.info("Connected to: %s (%s)", server, username if username else url)
+    _LOGGER.info("Connected to: %s (%s)", server_name, server_url)
 
     plex_clients = hass.data[PLEX_CLIENTS]
     plex_sessions = {}

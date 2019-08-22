@@ -2,11 +2,10 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.const import CONF_URL, CONF_USERNAME
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from .const import CONF_SERVER, PLEX_SERVER_CONFIG
+from .const import PLEX_SERVER_CONFIG
 from .server import setup_plex_server
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,7 +40,7 @@ def _setup_platform(hass, config_entry, add_entities):
     server_config = config_entry.data.get(PLEX_SERVER_CONFIG, {})
 
     try:
-        add_entities([PlexSensor(server_config)], True)
+        sensor = PlexSensor(server_config)
     except (
         plexapi.exceptions.BadRequest,
         plexapi.exceptions.Unauthorized,
@@ -50,14 +49,9 @@ def _setup_platform(hass, config_entry, add_entities):
         _LOGGER.error(error)
         return
 
-    url = server_config.get(CONF_URL)
-    username = server_config.get(CONF_USERNAME)
-    server = server_config.get(CONF_SERVER)
+    add_entities([sensor], True)
 
-    if username:
-        _LOGGER.info("Connected to: %s (%s)", server, username)
-    else:
-        _LOGGER.info("Connected to: %s", url)
+    _LOGGER.info("Connected to: %s (%s)", sensor.server_name, sensor.server_url)
 
 
 class PlexSensor(Entity):
@@ -68,12 +62,24 @@ class PlexSensor(Entity):
         self._state = 0
         self._now_playing = []
         self._server = setup_plex_server(server_config)
-        self._name = "Plex ({})".format(self._server.friendlyName)
+        self._server_url = self._server._baseurl  # pylint: disable=W0212
+        self._server_name = self._server.friendlyName
+        self._name = "Plex ({})".format(self._server_name)
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def server_name(self):
+        """Return the name of the sensor's Plex server."""
+        return self._server_name
+
+    @property
+    def server_url(self):
+        """Return the URL of the sensor's Plex server."""
+        return self._server_url
 
     @property
     def state(self):
