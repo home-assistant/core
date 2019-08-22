@@ -45,14 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # finally:
     #     client.close_session()
 
-    add_entities(
-        [
-            AtomeSensor(
-                name,
-                client
-            )
-        ]
-    )
+    add_entities([AtomeSensor(name, client)])
     return True
 
 
