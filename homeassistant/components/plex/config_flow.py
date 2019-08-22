@@ -245,23 +245,19 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
                         {
                             vol.Required(
                                 CONF_USE_EPISODE_ART,
-                                default=self.options.get(CONF_USE_EPISODE_ART, False),
+                                default=self.options[CONF_USE_EPISODE_ART],
                             ): bool,
                             vol.Required(
                                 CONF_SHOW_ALL_CONTROLS,
-                                default=self.options.get(CONF_SHOW_ALL_CONTROLS, False),
+                                default=self.options[CONF_SHOW_ALL_CONTROLS],
                             ): bool,
                             vol.Required(
                                 CONF_REMOVE_UNAVAILABLE_CLIENTS,
-                                default=self.options.get(
-                                    CONF_REMOVE_UNAVAILABLE_CLIENTS, True
-                                ),
+                                default=self.options[CONF_REMOVE_UNAVAILABLE_CLIENTS],
                             ): bool,
                             vol.Required(
                                 CONF_CLIENT_REMOVE_INTERVAL,
-                                default=self.options.get(
-                                    CONF_CLIENT_REMOVE_INTERVAL, 600
-                                ),
+                                default=self.options[CONF_CLIENT_REMOVE_INTERVAL],
                             ): vol.All(int, vol.Range(min=1)),
                         }
                     ),

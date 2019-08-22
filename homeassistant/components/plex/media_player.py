@@ -105,15 +105,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hass.add_job(async_add_entities, devices, update_before_add)
 
     options = dict(config_entry.options)
-    if MP_DOMAIN in options:
-        hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = options[MP_DOMAIN]
-    else:
+    config = hass.data.get(PLEX_MEDIA_PLAYER_OPTIONS, {})
+    if config:
+        _LOGGER.warning("Legacy Plex media_player configuration should be removed.")
+
+    # If no existing config options, use YAML config or fallback to defaults
+    if MP_DOMAIN not in options:
         options[MP_DOMAIN] = {}
-        config = hass.data.get(PLEX_MEDIA_PLAYER_OPTIONS, {})
-        if config:
-            _LOGGER.warning(
-                "Imported legacy Plex media_player configuration, can be removed."
-            )
 
         options[MP_DOMAIN][CONF_USE_EPISODE_ART] = config.get(
             CONF_USE_EPISODE_ART, False
@@ -128,7 +126,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             CONF_CLIENT_REMOVE_INTERVAL, 600
         )
 
-        hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = options[MP_DOMAIN]
         hass.config_entries.async_update_entry(config_entry, options=options)
 
     hass.async_add_executor_job(_setup_platform, hass, config_entry, add_entities)
@@ -139,12 +136,13 @@ def _setup_platform(hass, config_entry, add_entities):
     if PLEX_CLIENTS not in hass.data:
         hass.data[PLEX_CLIENTS] = {}
 
-    server_config = config_entry.data.get(PLEX_SERVER_CONFIG, {})
-    if server_config:
-        setup_plexserver(server_config, hass, add_entities)
+    server_config = config_entry.data[PLEX_SERVER_CONFIG]
+    media_player_config = config_entry.options[MP_DOMAIN]
+
+    setup_plexserver(server_config, media_player_config, hass, add_entities)
 
 
-def setup_plexserver(server_config, hass, add_entities_callback):
+def setup_plexserver(server_config, config, hass, add_entities_callback):
     """Set up a Plex server."""
     import plexapi.exceptions
 
@@ -167,7 +165,6 @@ def setup_plexserver(server_config, hass, add_entities_callback):
     else:
         _LOGGER.info("Connected to: %s", url)
 
-    config = hass.data[PLEX_MEDIA_PLAYER_OPTIONS]
     plex_clients = hass.data[PLEX_CLIENTS]
     plex_sessions = {}
     track_time_interval(hass, lambda now: update_devices(), timedelta(seconds=10))
