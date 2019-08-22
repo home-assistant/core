@@ -84,7 +84,10 @@ DEVICE_CLASSES = [DEFAULT_DEVICE_CLASS, DEVICE_ANDROIDTV, DEVICE_FIRETV]
 SERVICE_ADB_COMMAND = "adb_command"
 
 SERVICE_ADB_COMMAND_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_ENTITY_ID): cv.entity_ids, vol.Required(ATTR_COMMAND): cv.string}
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(ATTR_COMMAND): cv.string
+    }
 )
 
 
@@ -168,7 +171,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         else:
             device_name = "Android TV / Fire TV device"
 
-        _LOGGER.warning("Could not connect to %s at %s %s", device_name, host, adb_log)
+        _LOGGER.warning("Could not connect to %s at %s %s",
+                        device_name, host, adb_log)
         raise PlatformNotReady
 
     if host in hass.data[ANDROIDTV_DOMAIN]:
@@ -177,6 +181,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if aftv.DEVICE_CLASS == DEVICE_ANDROIDTV:
             device = AndroidTVDevice(
                 aftv,
+                host,
                 config[CONF_NAME],
                 config[CONF_APPS],
                 config.get(CONF_TURN_ON_COMMAND),
@@ -407,14 +412,17 @@ class ADBDevice(MediaPlayerDevice):
 class AndroidTVDevice(ADBDevice):
     """Representation of an Android TV device."""
 
-    def __init__(self, aftv, name, apps, turn_on_command, turn_off_command):
+    def __init__(self, aftv, host, name, apps, turn_on_command, turn_off_command):
         """Initialize the Android TV device."""
         super().__init__(aftv, name, apps, turn_on_command, turn_off_command)
 
+        self._host = host
         self._device = None
         self._device_properties = self.aftv.device_properties
         self._is_volume_muted = None
         self._unique_id = self._device_properties.get("serialno")
+        if not self._unique_id:
+            self._unique_id = host
         self._volume_level = None
 
     @adb_decorator(override_available=True)
