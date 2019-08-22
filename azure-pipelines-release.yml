@@ -180,7 +180,7 @@ stages:
 
           sudo docker --config .docker manifest annotate homeassistant/home-assistant:${tag_l} \
             homeassistant/i386-homeassistant:${tag_r} \
-            --os linux --arch i386
+            --os linux --arch 386
 
           sudo docker --config .docker manifest annotate homeassistant/home-assistant:${tag_l} \
             homeassistant/armhf-homeassistant:${tag_r} \
