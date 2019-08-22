@@ -197,6 +197,12 @@ stages:
           sudo docker --config .docker manifest push --purge homeassistant/home-assistant:${tag_l}
         }
 
+        sudo docker pull homeassistant/amd64-homeassistant:$(Build.SourceBranchName)
+        sudo docker pull homeassistant/i368-homeassistant:$(Build.SourceBranchName)
+        sudo docker pull homeassistant/armhf-homeassistant:$(Build.SourceBranchName)
+        sudo docker pull homeassistant/armv7-homeassistant:$(Build.SourceBranchName)
+        sudo docker pull homeassistant/aarch64-homeassistant:$(Build.SourceBranchName)
+
         # Create version tag
         create_manifest "$(Build.SourceBranchName)" "$(Build.SourceBranchName)"
 
@@ -205,6 +211,7 @@ stages:
           create_manifest "dev" "$(Build.SourceBranchName)"
         elif [[ "$version" =~ b ]]; then
           create_manifest "beta" "$(Build.SourceBranchName)"
+          create_manifest "rc" "$(Build.SourceBranchName)"
         else
           create_manifest "stable" "$(Build.SourceBranchName)"
           create_manifest "latest" "$(Build.SourceBranchName)"
