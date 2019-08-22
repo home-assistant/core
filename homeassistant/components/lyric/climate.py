@@ -80,8 +80,7 @@ async def async_setup_entry(
 
     temp_unit = hass.config.units.temperature_unit
     entities = [
-        LyricThermostat(device, location, temp_unit)
-        for location, device in lyric.devices()
+        LyricThermostat(device, location, temp_unit) for location, device in devices
     ]
 
     async_add_entities(entities, True)
@@ -94,13 +93,13 @@ async def async_setup_entry(
         _LOGGER.debug("hold_time_service: %s; %s", entity_ids, time)
 
         if entity_ids == "all":
-            target_thermostats = devices
-        elif entity_ids:
-            target_thermostats = [
-                device for device in devices if device.entity_id in entity_ids
-            ]
+            target_thermostats = entities
         else:
-            target_thermostats = devices
+            target_thermostats = [
+                entity for entity in entities if entity.entity_id in entity_ids
+            ]
+
+        _LOGGER.debug("target_thermostats: %s", target_thermostats)
 
         for thermostat in target_thermostats:
             await thermostat.async_set_preset_period(time)
