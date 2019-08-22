@@ -42,5 +42,25 @@
             "already_configured": "Plex server is already configured",
             "unknown": "Failed for unknown reason"
         }
+    },
+    "options": {
+        "step": {
+            "plex_platforms": {
+                "description": "Configure platforms enabled for Plex",
+                "data": {
+                    "enable_media_player": "Enable Media Player",
+                    "enable_sensor": "Enable Sensor"
+                }
+            },
+            "plex_mp_settings": {
+                "description": "Options for Plex Media Players",
+                "data": {
+                    "use_episode_art": "Use episode art",
+                    "show_all_controls": "Show all controls",
+                    "remove_unavailable_clients": "Remove unavailable clients",
+                    "client_remove_interval": "Client removal interval (seconds)"
+                }
+            }
+        }
     }
 }

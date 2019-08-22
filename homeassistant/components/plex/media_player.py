@@ -6,7 +6,11 @@ import requests
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import (
+    DOMAIN as MP_DOMAIN,
+    MediaPlayerDevice,
+    PLATFORM_SCHEMA,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
@@ -56,9 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_USE_EPISODE_ART, default=False): cv.boolean,
         vol.Optional(CONF_SHOW_ALL_CONTROLS, default=False): cv.boolean,
         vol.Optional(CONF_REMOVE_UNAVAILABLE_CLIENTS, default=True): cv.boolean,
-        vol.Optional(
-            CONF_CLIENT_REMOVE_INTERVAL, default=timedelta(seconds=600)
-        ): vol.All(cv.time_period, cv.positive_timedelta),
+        vol.Optional(CONF_CLIENT_REMOVE_INTERVAL, default=600): cv.positive_int,
     }
 )
 
@@ -102,13 +104,32 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Sync version of async add devices."""
         hass.add_job(async_add_entities, devices, update_before_add)
 
-    if PLEX_MEDIA_PLAYER_OPTIONS not in hass.data:
-        hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = {
-            CONF_USE_EPISODE_ART: False,
-            CONF_SHOW_ALL_CONTROLS: False,
-            CONF_REMOVE_UNAVAILABLE_CLIENTS: True,
-            CONF_CLIENT_REMOVE_INTERVAL: timedelta(seconds=600),
-        }
+    options = dict(config_entry.options)
+    if MP_DOMAIN in options:
+        hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = options[MP_DOMAIN]
+    else:
+        options[MP_DOMAIN] = {}
+        config = hass.data.get(PLEX_MEDIA_PLAYER_OPTIONS, {})
+        if config:
+            _LOGGER.warning(
+                "Imported legacy Plex media_player configuration, can be removed."
+            )
+
+        options[MP_DOMAIN][CONF_USE_EPISODE_ART] = config.get(
+            CONF_USE_EPISODE_ART, False
+        )
+        options[MP_DOMAIN][CONF_SHOW_ALL_CONTROLS] = config.get(
+            CONF_SHOW_ALL_CONTROLS, False
+        )
+        options[MP_DOMAIN][CONF_REMOVE_UNAVAILABLE_CLIENTS] = config.get(
+            CONF_REMOVE_UNAVAILABLE_CLIENTS, True
+        )
+        options[MP_DOMAIN][CONF_CLIENT_REMOVE_INTERVAL] = config.get(
+            CONF_CLIENT_REMOVE_INTERVAL, 600
+        )
+
+        hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = options[MP_DOMAIN]
+        hass.config_entries.async_update_entry(config_entry, options=options)
 
     hass.async_add_executor_job(_setup_platform, hass, config_entry, add_entities)
 
@@ -235,7 +256,7 @@ def setup_plexserver(server_config, hass, add_entities_callback):
                 continue
 
             if (dt_util.utcnow() - client.marked_unavailable) >= (
-                config.get(CONF_CLIENT_REMOVE_INTERVAL)
+                timedelta(seconds=config[CONF_CLIENT_REMOVE_INTERVAL])
             ):
                 hass.add_job(client.async_remove())
                 clients_to_remove.append(client.machine_identifier)

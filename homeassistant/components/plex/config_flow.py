@@ -1,10 +1,12 @@
 """Config flow for Plex."""
+from copy import copy
 import logging
 import plexapi.exceptions
 import requests.exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -14,10 +16,17 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import callback
 
 from .const import (
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
+    CONF_ENABLE_MEDIA_PLAYER,
+    CONF_ENABLE_SENSOR,
+    CONF_USE_EPISODE_ART,
+    CONF_SHOW_ALL_CONTROLS,
+    CONF_REMOVE_UNAVAILABLE_CLIENTS,
+    CONF_CLIENT_REMOVE_INTERVAL,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
@@ -35,6 +44,12 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return PlexOptionsFlowHandler(config_entry)
 
     def __init__(self):
         """Initialize the Plex flow."""
@@ -202,3 +217,93 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         _LOGGER.info("Imported Plex configuration from legacy config file")
         return await self.async_step_user(user_input=config)
+
+
+class PlexOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle Plex options."""
+
+    def __init__(self, config_entry):
+        """Initialize Plex options flow."""
+        self.config_entry = config_entry
+        self.options = copy(config_entry.options)
+
+    async def async_step_init(self, user_input=None):
+        """Manage the Plex options."""
+        return await self.async_step_plex_platforms()
+
+    async def async_step_plex_platforms(self, user_input=None):
+        """Choose Plex platforms to enable."""
+        if user_input is not None:
+            self.options[CONF_ENABLE_MEDIA_PLAYER] = user_input[
+                CONF_ENABLE_MEDIA_PLAYER
+            ]
+            self.options[CONF_ENABLE_SENSOR] = user_input[CONF_ENABLE_SENSOR]
+            if user_input[CONF_ENABLE_MEDIA_PLAYER]:
+                return self.async_show_form(
+                    step_id="plex_mp_settings",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(
+                                CONF_USE_EPISODE_ART,
+                                default=self.options.get(CONF_USE_EPISODE_ART, False),
+                            ): bool,
+                            vol.Required(
+                                CONF_SHOW_ALL_CONTROLS,
+                                default=self.options.get(CONF_SHOW_ALL_CONTROLS, False),
+                            ): bool,
+                            vol.Required(
+                                CONF_REMOVE_UNAVAILABLE_CLIENTS,
+                                default=self.options.get(
+                                    CONF_REMOVE_UNAVAILABLE_CLIENTS, True
+                                ),
+                            ): bool,
+                            vol.Required(
+                                CONF_CLIENT_REMOVE_INTERVAL,
+                                default=self.options.get(
+                                    CONF_CLIENT_REMOVE_INTERVAL, 600
+                                ),
+                            ): vol.All(int, vol.Range(min=1)),
+                        }
+                    ),
+                )
+
+            return self.async_create_entry(title="", data=self.options)
+
+        return self.async_show_form(
+            step_id="plex_platforms",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_ENABLE_MEDIA_PLAYER,
+                        default=self.config_entry.options.get(
+                            CONF_ENABLE_MEDIA_PLAYER, True
+                        ),
+                    ): bool,
+                    vol.Required(
+                        CONF_ENABLE_SENSOR,
+                        default=self.config_entry.options.get(CONF_ENABLE_SENSOR, True),
+                    ): bool,
+                }
+            ),
+        )
+
+    async def async_step_plex_mp_settings(self, user_input=None):
+        """Manage the Plex media_player options."""
+        if user_input is not None:
+            if MP_DOMAIN not in self.options:
+                self.options[MP_DOMAIN] = {}
+
+            self.options[MP_DOMAIN][CONF_USE_EPISODE_ART] = user_input[
+                CONF_USE_EPISODE_ART
+            ]
+            self.options[MP_DOMAIN][CONF_SHOW_ALL_CONTROLS] = user_input[
+                CONF_SHOW_ALL_CONTROLS
+            ]
+            self.options[MP_DOMAIN][CONF_REMOVE_UNAVAILABLE_CLIENTS] = user_input[
+                CONF_REMOVE_UNAVAILABLE_CLIENTS
+            ]
+            self.options[MP_DOMAIN][CONF_CLIENT_REMOVE_INTERVAL] = user_input[
+                CONF_CLIENT_REMOVE_INTERVAL
+            ]
+
+        return self.async_create_entry(title="", data=self.options)
