@@ -82,9 +82,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             CONF_FRIENDLY_NAME_TEMPLATE: friendly_name_template,
         }
 
-        if attribute_templates is not None:
-            templates.update(attribute_templates)
-
         for tpl_name, template in chain(templates.items(), attribute_templates.items()):
             if template is None:
                 continue
