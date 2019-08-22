@@ -215,6 +215,7 @@ stages:
         else
           create_manifest "stable" "$(Build.SourceBranchName)"
           create_manifest "latest" "$(Build.SourceBranchName)"
+          create_manifest "beta" "$(Build.SourceBranchName)"
         fi
 
       displayName: 'Create Meta-Image'
