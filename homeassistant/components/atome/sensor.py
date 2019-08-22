@@ -1,8 +1,8 @@
 """Linky Atome."""
-import logging
 from datetime import timedelta
 from pyatome.client import AtomeClient, PyAtomeError
 import voluptuous as vol
+import logging
 
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT, CONF_NAME
