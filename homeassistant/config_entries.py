@@ -796,7 +796,15 @@ class EntityRegistryDisabledHandler:
 
         entity_entry = self.registry.async_get(event.data["entity_id"])
 
-        if entity_entry is None or entity_entry.config_entry_id is None:
+        if (
+            # Stop if no entry found
+            entity_entry is None
+            # Stop if entry not connected to config entry
+            or entity_entry.config_entry_id is None
+            # Stop if the entry got disabled. In that case the entity handles it
+            # themselves.
+            or entity_entry.disabled_by
+        ):
             return
 
         config_entry = self.hass.config_entries.async_get_entry(

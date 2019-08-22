@@ -977,8 +977,14 @@ async def test_reload_entry_entity_registry_works(hass):
     assert not handler.changed
     assert handler._remove_call_later is None
 
-    # Changed disabled_by, check unloading.
+    # Disable entity, we should not do anything, only act when enabled.
     registry.async_update_entity(entity_entry.entity_id, disabled_by="user")
+    await hass.async_block_till_done()
+    assert not handler.changed
+    assert handler._remove_call_later is None
+
+    # Enable entity, check we are reloading config entry.
+    registry.async_update_entity(entity_entry.entity_id, disabled_by=None)
     await hass.async_block_till_done()
     assert handler.changed == {config_entry.entry_id}
     assert handler._remove_call_later is not None

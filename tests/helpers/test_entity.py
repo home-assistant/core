@@ -526,3 +526,28 @@ async def test_warn_disabled(hass, caplog):
     ent.async_write_ha_state()
     assert hass.states.get("hello.world") is None
     assert caplog.text == ""
+
+
+async def test_disabled_in_entity_registry(hass):
+    """Test entity is removed if we disable entity registry entry."""
+
+    registry = mock_registry(hass, {"hello.world": entry})
+
+    ent = entity.Entity()
+    ent.hass = hass
+    ent.entity_id = "hello.world"
+    ent.registry_entry = entry
+
+    await ent.async_internal_added_to_hass()
+    ent.async_write_ha_state()
+    assert hass.states.get("hello.world") is not None
+
+    entry2 = registry.async_update_entity("hello.world", disabled_by=None)
+    await hass.async_block_till_done()
+    assert hass.states.get("hello.world") is not None
+    assert entry2 != entry
+    assert ent.registry_entry == entry2
+
+    registry.async_update_entity("hello.world", disabled_by="user")
+    await hass.async_block_till_done()
+    assert hass.states.get("hello.world") is None
