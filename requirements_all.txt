@@ -1055,6 +1055,9 @@ pyarlo==0.2.3
 # homeassistant.components.netatmo
 pyatmo==2.2.1
 
+# homeassistant.components.atome
+pyatome==0.0.7
+
 # homeassistant.components.apple_tv
 pyatv==0.3.12
 
