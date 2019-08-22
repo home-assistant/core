@@ -17,6 +17,9 @@ from homeassistant.const import (
     CONF_PORT,
     STATE_OFF,
     STATE_ON,
+    STATE_IDLE,
+    STATE_WARMING,
+    STATE_COOLING,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -102,13 +105,33 @@ class PjLinkDevice(MediaPlayerDevice):
 
         with self.projector() as projector:
             try:
+                current_source = format_input_source(*projector.get_input())
+                self._current_source = current_source
+            except ProjectorError as err:
+                if str(err) == "unavailable time":
+                    self._current_source = None
+                else:
+                    raise
+            try:
+                self._muted = projector.get_mute()[1]
+            except ProjectorError as err:
+                if str(err) == "unavailable time":
+                    self._muted = False
+                else:
+                    raise
+            try:
                 pwstate = projector.get_power()
-                if pwstate in ("on", "warm-up"):
-                    self._pwstate = STATE_ON
+                if pwstate == "on":
+                    if self._current_source is not None:
+                        self._pwstate = STATE_ON
+                    else:
+                        self._pwstate = STATE_IDLE
+                elif pwstate == "warm-up":
+                    self._pwstate = STATE_WARMING
+                elif pwstate == "cooling":
+                    self._pwstate = STATE_COOLING
                 else:
                     self._pwstate = STATE_OFF
-                self._muted = projector.get_mute()[1]
-                self._current_source = format_input_source(*projector.get_input())
             except KeyError as err:
                 if str(err) == "'OK'":
                     self._pwstate = STATE_OFF

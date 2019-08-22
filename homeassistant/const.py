@@ -217,6 +217,8 @@ STATE_UNLOCKED = "unlocked"
 STATE_UNAVAILABLE = "unavailable"
 STATE_OK = "ok"
 STATE_PROBLEM = "problem"
+STATE_COOLING = "cooling_down"
+STATE_WARMING = "warming_up"
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Attribution
