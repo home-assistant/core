@@ -268,7 +268,7 @@ class VenstarThermostat(ClimateDevice):
                 success = False
                 _LOGGER.error(
                     "The thermostat is currently not in a mode "
-                    "that supports target temperature"
+                    "that supports target temperature: %s", operation_mode
                 )
 
             if not success:
