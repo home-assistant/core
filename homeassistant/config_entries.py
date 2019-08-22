@@ -778,7 +778,7 @@ class EntityRegistryDisabledHandler:
         self._remove_call_later: Optional[Callable[[], None]] = None
 
     @callback
-    def async_setup(self):
+    def async_setup(self) -> None:
         """Set up the disable handler."""
         self.hass.bus.async_listen(
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED, self._handle_entry_updated
