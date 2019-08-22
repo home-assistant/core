@@ -37,9 +37,23 @@ ENTRY_CONFIG = {CONF_CONTROLLER: CONTROLLER_DATA}
 async def test_controller_setup():
     """Successful setup."""
     hass = Mock()
-    hass.data = {UNIFI_CONFIG: {}}
+    hass.data = {
+        UNIFI_CONFIG: [
+            {
+                CONF_HOST: CONTROLLER_DATA[CONF_HOST],
+                CONF_SITE_ID: "nice name",
+                controller.CONF_BLOCK_CLIENT: [],
+                controller.CONF_TRACK_CLIENTS: True,
+                controller.CONF_TRACK_DEVICES: True,
+                controller.CONF_TRACK_WIRED_CLIENTS: True,
+                controller.CONF_DETECTION_TIME: 300,
+                controller.CONF_SSID_FILTER: [],
+            }
+        ]
+    }
     entry = Mock()
     entry.data = ENTRY_CONFIG
+    entry.options = {}
     api = Mock()
     api.initialize.return_value = mock_coro(True)
     api.sites.return_value = mock_coro(CONTROLLER_SITES)
@@ -89,6 +103,7 @@ async def test_controller_mac():
     hass.data = {UNIFI_CONFIG: {}}
     entry = Mock()
     entry.data = ENTRY_CONFIG
+    entry.options = {}
     client = Mock()
     client.ip = "1.2.3.4"
     client.mac = "00:11:22:33:44:55"
@@ -111,6 +126,7 @@ async def test_controller_no_mac():
     hass.data = {UNIFI_CONFIG: {}}
     entry = Mock()
     entry.data = ENTRY_CONFIG
+    entry.options = {}
     client = Mock()
     client.ip = "5.6.7.8"
     api = Mock()
@@ -182,6 +198,7 @@ async def test_reset_unloads_entry_if_setup():
     hass.data = {UNIFI_CONFIG: {}}
     entry = Mock()
     entry.data = ENTRY_CONFIG
+    entry.options = {}
     api = Mock()
     api.initialize.return_value = mock_coro(True)
     api.sites.return_value = mock_coro(CONTROLLER_SITES)
