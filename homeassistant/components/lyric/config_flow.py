@@ -8,9 +8,15 @@ from lyric import Lyric
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigFlow
-from .const import (AUTH_CALLBACK_NAME, AUTH_CALLBACK_PATH, DOMAIN,
-                    CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_LYRIC_CONFIG_FILE,
-                    DATA_LYRIC_CONFIG)
+from .const import (
+    AUTH_CALLBACK_NAME,
+    AUTH_CALLBACK_PATH,
+    DOMAIN,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_LYRIC_CONFIG_FILE,
+    DATA_LYRIC_CONFIG,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,10 +38,10 @@ class LyricFlowHandler(ConfigFlow):
     async def async_step_user(self, code=None):
         """Handle a flow initiated by the user."""
         if self._async_current_entries():
-            return self.async_abort(reason='single_instance_allowed')
+            return self.async_abort(reason="single_instance_allowed")
 
         if not self.hass.data.get(DATA_LYRIC_CONFIG):
-            return self.async_abort(reason='no_config')
+            return self.async_abort(reason="no_config")
 
         conf = self.hass.data.get(DATA_LYRIC_CONFIG)
 
@@ -54,26 +60,28 @@ class LyricFlowHandler(ConfigFlow):
             with async_timeout.timeout(10):
                 client_id = self.client_id
                 client_secret = self.client_secret
-                redirect_uri = '{}{}'.format(
-                    self.hass.config.api.base_url, AUTH_CALLBACK_PATH)
-                token_cache_file = self.hass.config.path(
-                    CONF_LYRIC_CONFIG_FILE)
+                redirect_uri = "{}{}".format(
+                    self.hass.config.api.base_url, AUTH_CALLBACK_PATH
+                )
+                token_cache_file = self.hass.config.path(CONF_LYRIC_CONFIG_FILE)
 
-                self.lyric = Lyric(app_name='Home Assistant',
-                                   client_id=client_id,
-                                   client_secret=client_secret,
-                                   redirect_uri=redirect_uri,
-                                   token_cache_file=token_cache_file)
+                self.lyric = Lyric(
+                    app_name="Home Assistant",
+                    client_id=client_id,
+                    client_secret=client_secret,
+                    redirect_uri=redirect_uri,
+                    token_cache_file=token_cache_file,
+                )
 
                 self.hass.http.register_view(LyricAuthCallbackView())
 
                 url = self.lyric.getauthorize_url
 
                 return self.async_external_step(
-                    step_id='auth',
-                    url=url[:url.find('&state=') + 7] + self.flow_id)
+                    step_id="auth", url=url[: url.find("&state=") + 7] + self.flow_id
+                )
         except asyncio.TimeoutError:
-            return self.async_abort(reason='authorize_url_timeout')
+            return self.async_abort(reason="authorize_url_timeout")
 
     async def async_step_code(self, code):
         """Received code for authentication."""
@@ -85,12 +93,12 @@ class LyricFlowHandler(ConfigFlow):
         self.lyric.authorization_code(self.code, self.flow_id)
 
         return self.async_create_entry(
-            title='Lyric',
+            title="Lyric",
             data={
-                'client_id': self.client_id,
-                'client_secret': self.client_secret,
-                'token': self.lyric.token
-            }
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+                "token": self.lyric.token,
+            },
         )
 
 
@@ -106,22 +114,19 @@ class LyricAuthCallbackView(HomeAssistantView):
         """Receive authorization code."""
         from aiohttp import web_response
 
-        if 'code' not in request.query or 'state' not in request.query:
+        if "code" not in request.query or "state" not in request.query:
             return web_response.Response(
-                text="Missing code or state parameter in {}".format(
-                    request.url)
+                text="Missing code or state parameter in {}".format(request.url)
             )
 
-        hass = request.app['hass']
+        hass = request.app["hass"]
         hass.async_create_task(
             hass.config_entries.flow.async_configure(
-                flow_id=request.query['state'],
-                user_input=request.query['code']
-            ))
+                flow_id=request.query["state"], user_input=request.query["code"]
+            )
+        )
 
         return web_response.Response(
-            headers={
-                'content-type': 'text/html'
-            },
-            text="<script>window.close()</script>"
+            headers={"content-type": "text/html"},
+            text="<script>window.close()</script>",
         )

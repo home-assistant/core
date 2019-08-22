@@ -11,50 +11,62 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_HEAT_COOL,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE)
-from homeassistant.const import (ATTR_ENTITY_ID, ATTR_TEMPERATURE, ATTR_TIME,
-                                 TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
+    HVAC_MODE_OFF,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT_COOL,
+    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_PRESET_MODE,
+)
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    ATTR_TIME,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.helpers.config_validation as cv
 from . import LyricDeviceEntity
-from .const import (DATA_LYRIC_CLIENT, DATA_LYRIC_DEVICES, DOMAIN,
-                    SERVICE_HOLD_TIME)
+from .const import DATA_LYRIC_CLIENT, DATA_LYRIC_DEVICES, DOMAIN, SERVICE_HOLD_TIME
 
 _LOGGER = logging.getLogger(__name__)
 
-PRESET_NO_HOLD = 'NoHold'
-PRESET_TEMPORARY_HOLD = 'TemporaryHold'
-PRESET_PERMANENT_HOLD = 'PermanentHold'
-PRESET_VACATION_HOLD = 'VacationHold'
+PRESET_NO_HOLD = "NoHold"
+PRESET_TEMPORARY_HOLD = "TemporaryHold"
+PRESET_PERMANENT_HOLD = "PermanentHold"
+PRESET_VACATION_HOLD = "VacationHold"
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE)
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
-HOLD_PERIOD_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
-    vol.Required(ATTR_TIME): cv.string
-})
+HOLD_PERIOD_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
+        vol.Required(ATTR_TIME): cv.string,
+    }
+)
 
 LYRIC_HVAC_MODES = {
-    HVAC_MODE_OFF: 'OFF',
-    HVAC_MODE_HEAT: 'HEAT',
-    HVAC_MODE_COOL: 'COOL',
-    HVAC_MODE_HEAT_COOL: 'HEAT_COOL'
+    HVAC_MODE_OFF: "OFF",
+    HVAC_MODE_HEAT: "HEAT",
+    HVAC_MODE_COOL: "COOL",
+    HVAC_MODE_HEAT_COOL: "HEAT_COOL",
 }
 
 HVAC_MODES = {
-    'OFF': HVAC_MODE_OFF,
-    'HEAT': HVAC_MODE_HEAT,
-    'COOL': HVAC_MODE_COOL,
-    'HEAT_COOL': HVAC_MODE_HEAT_COOL
+    "OFF": HVAC_MODE_OFF,
+    "HEAT": HVAC_MODE_HEAT,
+    "COOL": HVAC_MODE_COOL,
+    "HEAT_COOL": HVAC_MODE_HEAT_COOL,
 }
 
 
 async def async_setup_entry(
-        hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up Lyric thermostat based on a config entry."""
     lyric = hass.data[DOMAIN][DATA_LYRIC_CLIENT]
@@ -67,8 +79,10 @@ async def async_setup_entry(
     hass.data[DOMAIN][DATA_LYRIC_DEVICES] = devices
 
     temp_unit = hass.config.units.temperature_unit
-    entities = [LyricThermostat(device, location, temp_unit)
-                for location, device in lyric.devices()]
+    entities = [
+        LyricThermostat(device, location, temp_unit)
+        for location, device in lyric.devices()
+    ]
 
     async_add_entities(entities, True)
 
@@ -77,13 +91,14 @@ async def async_setup_entry(
         entity_ids = service.data[ATTR_ENTITY_ID]
         time = service.data[ATTR_TIME]
 
-        _LOGGER.debug('hold_time_service: %s; %s', entity_ids, time)
+        _LOGGER.debug("hold_time_service: %s; %s", entity_ids, time)
 
-        if entity_ids == 'all':
+        if entity_ids == "all":
             target_thermostats = devices
         elif entity_ids:
-            target_thermostats = [device for device in devices
-                                  if device.entity_id in entity_ids]
+            target_thermostats = [
+                device for device in devices if device.entity_id in entity_ids
+            ]
         else:
             target_thermostats = devices
 
@@ -91,8 +106,8 @@ async def async_setup_entry(
             await thermostat.async_set_preset_period(time)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_HOLD_TIME, hold_time_service,
-        schema=HOLD_PERIOD_SCHEMA)
+        DOMAIN, SERVICE_HOLD_TIME, hold_time_service, schema=HOLD_PERIOD_SCHEMA
+    )
 
 
 class LyricThermostat(LyricDeviceEntity, ClimateDevice):
@@ -100,8 +115,8 @@ class LyricThermostat(LyricDeviceEntity, ClimateDevice):
 
     def __init__(self, device, location, temp_unit) -> None:
         """Initialize the thermostat."""
-        unique_id = '{}_climate'.format(device.macID)
-        name = '{}'.format(device.name)
+        unique_id = "{}_climate".format(device.macID)
+        name = "{}".format(device.name)
 
         self._unit = temp_unit
 
@@ -197,8 +212,12 @@ class LyricThermostat(LyricDeviceEntity, ClimateDevice):
     @property
     def preset_modes(self) -> Optional[List[str]]:
         """Return preset modes."""
-        return [PRESET_NO_HOLD, PRESET_TEMPORARY_HOLD,
-                PRESET_PERMANENT_HOLD, PRESET_VACATION_HOLD]
+        return [
+            PRESET_NO_HOLD,
+            PRESET_TEMPORARY_HOLD,
+            PRESET_PERMANENT_HOLD,
+            PRESET_VACATION_HOLD,
+        ]
 
     @property
     def min_temp(self) -> float:
@@ -224,7 +243,7 @@ class LyricThermostat(LyricDeviceEntity, ClimateDevice):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set hvac mode."""
-        _LOGGER.debug('Set hvac mode: %s', hvac_mode)
+        _LOGGER.debug("Set hvac mode: %s", hvac_mode)
         self.device.operationMode = LYRIC_HVAC_MODES[hvac_mode]
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -250,7 +269,7 @@ class LyricThermostat(LyricDeviceEntity, ClimateDevice):
             self._max_temperature = self.device.maxSetpoint
             self._schedule_type = self.device.scheduleType
             self._schedule_sub_type = self.device.scheduleSubType
-            if self.device.units == 'Celsius':
+            if self.device.units == "Celsius":
                 self._temperature_scale = TEMP_CELSIUS
             else:
                 self._temperature_scale = TEMP_FAHRENHEIT
