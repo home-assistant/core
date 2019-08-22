@@ -1,5 +1,4 @@
 """Test the DuckDNS component."""
-import asyncio
 from datetime import timedelta
 import logging
 import pytest
@@ -19,13 +18,12 @@ INTERVAL = duckdns.INTERVAL
 
 
 @bind_hass
-@asyncio.coroutine
-def async_set_txt(hass, txt):
+async def async_set_txt(hass, txt):
     """Set the txt record. Pass in None to remove it.
 
     This is a legacy helper method. Do not use it for new tests.
     """
-    yield from hass.services.async_call(
+    await hass.services.async_call(
         duckdns.DOMAIN, duckdns.SERVICE_SET_TXT, {duckdns.ATTR_TXT: txt}, blocking=True
     )
 
@@ -44,65 +42,60 @@ def setup_duckdns(hass, aioclient_mock):
     )
 
 
-@asyncio.coroutine
-def test_setup(hass, aioclient_mock):
+async def test_setup(hass, aioclient_mock):
     """Test setup works if update passes."""
     aioclient_mock.get(
         duckdns.UPDATE_URL, params={"domains": DOMAIN, "token": TOKEN}, text="OK"
     )
 
-    result = yield from async_setup_component(
+    result = await async_setup_component(
         hass, duckdns.DOMAIN, {"duckdns": {"domain": DOMAIN, "access_token": TOKEN}}
     )
 
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert result
     assert aioclient_mock.call_count == 1
 
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert aioclient_mock.call_count == 2
 
 
-@asyncio.coroutine
-def test_setup_backoff(hass, aioclient_mock):
+async def test_setup_backoff(hass, aioclient_mock):
     """Test setup fails if first update fails."""
     aioclient_mock.get(
         duckdns.UPDATE_URL, params={"domains": DOMAIN, "token": TOKEN}, text="KO"
     )
 
-    result = yield from async_setup_component(
+    result = await async_setup_component(
         hass, duckdns.DOMAIN, {"duckdns": {"domain": DOMAIN, "access_token": TOKEN}}
     )
     assert result
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
 
     # Copy of the DuckDNS intervals from duckdns/__init__.py
     intervals = (
         INTERVAL,
-        INTERVAL,
-        INTERVAL,
-        INTERVAL * 3,
-        INTERVAL * 3,
-        INTERVAL * 6,
-        INTERVAL * 12,
+        timedelta(minutes=1),
+        timedelta(minutes=5),
+        timedelta(minutes=15),
+        timedelta(minutes=30),
     )
     tme = utcnow()
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     _LOGGER.debug("Backoff...")
     for idx in range(1, len(intervals)):
         tme += intervals[idx]
         async_fire_time_changed(hass, tme)
-        yield from hass.async_block_till_done()
+        await hass.async_block_till_done()
 
         assert aioclient_mock.call_count == idx + 1
 
 
-@asyncio.coroutine
-def test_service_set_txt(hass, aioclient_mock, setup_duckdns):
+async def test_service_set_txt(hass, aioclient_mock, setup_duckdns):
     """Test set txt service call."""
     # Empty the fixture mock requests
     aioclient_mock.clear_requests()
@@ -114,12 +107,11 @@ def test_service_set_txt(hass, aioclient_mock, setup_duckdns):
     )
 
     assert aioclient_mock.call_count == 0
-    yield from async_set_txt(hass, "some-txt")
+    await async_set_txt(hass, "some-txt")
     assert aioclient_mock.call_count == 1
 
 
-@asyncio.coroutine
-def test_service_clear_txt(hass, aioclient_mock, setup_duckdns):
+async def test_service_clear_txt(hass, aioclient_mock, setup_duckdns):
     """Test clear txt service call."""
     # Empty the fixture mock requests
     aioclient_mock.clear_requests()
@@ -131,12 +123,11 @@ def test_service_clear_txt(hass, aioclient_mock, setup_duckdns):
     )
 
     assert aioclient_mock.call_count == 0
-    yield from async_set_txt(hass, None)
+    await async_set_txt(hass, None)
     assert aioclient_mock.call_count == 1
 
 
-@asyncio.coroutine
-def test_async_track_time_interval_backoff(hass):
+async def test_async_track_time_interval_backoff(hass):
     """Test setup fails if first update fails."""
     ret_val = False
     call_count = 0
@@ -160,7 +151,7 @@ def test_async_track_time_interval_backoff(hass):
     )
 
     async_track_time_interval_backoff(hass, _return, intervals)
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert call_count == 1
 
@@ -168,7 +159,7 @@ def test_async_track_time_interval_backoff(hass):
     for idx in range(1, len(intervals)):
         tme += intervals[idx]
         async_fire_time_changed(hass, tme)
-        yield from hass.async_block_till_done()
+        await hass.async_block_till_done()
 
         assert call_count == idx + 1
 
@@ -176,7 +167,7 @@ def test_async_track_time_interval_backoff(hass):
     for _idx in range(1, 10):
         tme += intervals[-1]
         async_fire_time_changed(hass, tme)
-        yield from hass.async_block_till_done()
+        await hass.async_block_till_done()
 
         assert call_count == idx + 1 + _idx
 
@@ -185,13 +176,13 @@ def test_async_track_time_interval_backoff(hass):
     ret_val = True
     tme += intervals[-1]
     async_fire_time_changed(hass, tme)
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert call_count == 1
 
     _LOGGER.debug("No backoff - intervals[0]")
     for _idx in range(2, 10):
         tme += intervals[0]
         async_fire_time_changed(hass, tme)
-        yield from hass.async_block_till_done()
+        await hass.async_block_till_done()
 
         assert call_count == _idx

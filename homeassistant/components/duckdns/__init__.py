@@ -52,12 +52,10 @@ async def async_setup(hass, config):
 
     intervals = (
         INTERVAL,
-        INTERVAL,
-        INTERVAL,
-        INTERVAL * 3,
-        INTERVAL * 3,
-        INTERVAL * 6,
-        INTERVAL * 12,
+        timedelta(minutes=1),
+        timedelta(minutes=5),
+        timedelta(minutes=15),
+        timedelta(minutes=30),
     )
     async_track_time_interval_backoff(hass, update_domain_interval, intervals)
 
@@ -94,7 +92,6 @@ async def _update_duckdns(session, domain, token, *, txt=_SENTINEL, clear=False)
     body = await resp.text()
 
     if body != "OK":
-        _LOGGER.debug("time %s", dt_util.utcnow())
         _LOGGER.warning("Updating DuckDNS domain failed: %s", domain)
         return False
 
