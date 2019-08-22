@@ -8,12 +8,9 @@ import pytest
 
 from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.util.dt import get_time_zone, set_default_time_zone
-from homeassistant.setup import setup_component
-from homeassistant.components.jewish_calendar.sensor import (
-    JewishCalSensor,
-    CANDLE_LIGHT_DEFAULT,
-)
-from tests.common import get_test_home_assistant
+from homeassistant.setup import async_setup_component
+from homeassistant.components import jewish_calendar
+from homeassistant.components.jewish_calendar.sensor import JewishCalendarSensor
 
 
 _LatLng = namedtuple("_LatLng", ["lat", "lng"])
@@ -26,7 +23,7 @@ def make_nyc_test_params(dtime, results, havdalah_offset=0):
     """Make test params for NYC."""
     return (
         dtime,
-        CANDLE_LIGHT_DEFAULT,
+        jewish_calendar.CANDLE_LIGHT_DEFAULT,
         havdalah_offset,
         True,
         "America/New_York",
@@ -40,7 +37,7 @@ def make_jerusalem_test_params(dtime, results, havdalah_offset=0):
     """Make test params for Jerusalem."""
     return (
         dtime,
-        CANDLE_LIGHT_DEFAULT,
+        jewish_calendar.CANDLE_LIGHT_DEFAULT,
         havdalah_offset,
         False,
         "Asia/Jerusalem",
@@ -50,51 +47,32 @@ def make_jerusalem_test_params(dtime, results, havdalah_offset=0):
     )
 
 
+async def test_jewish_calendar_min_config(hass):
+    """Test minimum jewish calendar configuration."""
+    assert await async_setup_component(
+        hass, jewish_calendar.DOMAIN, {"jewish_calendar": {}}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.jewish_calendar_date") is not None
+
+
+async def test_jewish_calendar_hebrew(hass):
+    """Test jewish calendar sensor with language set to hebrew."""
+    assert await async_setup_component(
+        hass, jewish_calendar.DOMAIN, {"jewish_calendar": {"language": "hebrew"}}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.jewish_calendar_date") is not None
+
+
 class TestJewishCalenderSensor:
     """Test the Jewish Calendar sensor."""
-
-    # pylint: disable=attribute-defined-outside-init
-    def setup_method(self, method):
-        """Set up things to run when tests begin."""
-        self.hass = get_test_home_assistant()
 
     def teardown_method(self, method):
         """Stop everything that was started."""
         self.hass.stop()
         # Reset the default timezone, so we don't affect other tests
         set_default_time_zone(get_time_zone("UTC"))
-
-    def test_jewish_calendar_min_config(self):
-        """Test minimum jewish calendar configuration."""
-        config = {"sensor": {"platform": "jewish_calendar"}}
-        assert setup_component(self.hass, "sensor", config)
-
-    def test_jewish_calendar_hebrew(self):
-        """Test jewish calendar sensor with language set to hebrew."""
-        config = {"sensor": {"platform": "jewish_calendar", "language": "hebrew"}}
-
-        assert setup_component(self.hass, "sensor", config)
-
-    def test_jewish_calendar_multiple_sensors(self):
-        """Test jewish calendar sensor with multiple sensors setup."""
-        config = {
-            "sensor": {
-                "platform": "jewish_calendar",
-                "sensors": [
-                    "date",
-                    "weekly_portion",
-                    "holiday_name",
-                    "holyness",
-                    "first_light",
-                    "gra_end_shma",
-                    "mga_end_shma",
-                    "plag_mincha",
-                    "first_stars",
-                ],
-            }
-        }
-
-        assert setup_component(self.hass, "sensor", config)
 
     test_params = [
         (
@@ -237,7 +215,7 @@ class TestJewishCalenderSensor:
         test_time = time_zone.localize(cur_time)
         self.hass.config.latitude = latitude
         self.hass.config.longitude = longitude
-        sensor = JewishCalSensor(
+        sensor = JewishCalendarSensor(
             name="test",
             language=language,
             sensor_type=sensor,
@@ -564,7 +542,7 @@ class TestJewishCalenderSensor:
             if sensor_type.startswith("hebrew_"):
                 language = "hebrew"
                 sensor_type = sensor_type.replace("hebrew_", "")
-            sensor = JewishCalSensor(
+            sensor = JewishCalendarSensor(
                 name="test",
                 language=language,
                 sensor_type=sensor_type,
@@ -642,7 +620,7 @@ class TestJewishCalenderSensor:
         test_time = time_zone.localize(now)
         self.hass.config.latitude = latitude
         self.hass.config.longitude = longitude
-        sensor = JewishCalSensor(
+        sensor = JewishCalendarSensor(
             name="test",
             language="english",
             sensor_type="issur_melacha_in_effect",
@@ -718,7 +696,7 @@ class TestJewishCalenderSensor:
         test_time = time_zone.localize(now)
         self.hass.config.latitude = latitude
         self.hass.config.longitude = longitude
-        sensor = JewishCalSensor(
+        sensor = JewishCalendarSensor(
             name="test",
             language="english",
             sensor_type="omer_count",

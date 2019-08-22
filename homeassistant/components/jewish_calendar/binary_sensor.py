@@ -1,0 +1,70 @@
+"""Support for Jewish Calendar binary sensors."""
+import logging
+
+from homeassistant.components.binary_sensor import BinarySensorDevice
+import homeassistant.util.dt as dt_util
+
+from . import DOMAIN, SENSOR_TYPES
+
+_LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the Jewish Calendar binary sensor devices."""
+    if discovery_info is None:
+        return
+
+    for sensor, sensor_info in SENSOR_TYPES["binary"].items():
+        async_add_entities(
+            [JewishCalendarBinarySensor(hass.data[DOMAIN], sensor, sensor_info)]
+        )
+
+
+class JewishCalendarBinarySensor(BinarySensorDevice):
+    """Representation of an Jewish Calendar binary sensor."""
+
+    def __init__(self, data, sensor, sensor_info):
+        """Initialize the binary sensor."""
+        self._location = data["location"]
+        self._type = sensor
+        self._name = f"{data['name']} {sensor_info[0]}"
+        self._icon = sensor_info[1]
+        self._hebrew = data["language"] == "hebrew"
+        self._candle_lighting_offset = data["candle_lighting_offset"]
+        self._havdalah_offset = data["havdalah_offset"]
+        self._state = False
+        _LOGGER.debug("Sensor %s initialized", self._type)
+
+    @property
+    def icon(self):
+        """Return the icon of the entity."""
+        return self._icon
+
+    @property
+    def name(self):
+        """Return the name of the entity."""
+        return self._name
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
+    def is_on(self):
+        """Return true if sensor is on."""
+        import hdate
+
+        zmanim = hdate.Zmanim(
+            date=dt_util.now(),
+            location=self._location,
+            candle_lighting_offset=self._candle_lighting_offset,
+            havdalah_offset=self._havdalah_offset,
+            hebrew=self._hebrew,
+        )
+
+        if self._type == "issur_melacha_in_effect":
+            self._state = zmanim.issur_melacha_in_effect
+        else:
+            self._state = False
+            _LOGGER.error("Undefined sensor type %s", self._type)
