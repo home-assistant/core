@@ -160,10 +160,7 @@ def setup_plexserver(server_config, config, hass, add_entities_callback):
     username = server_config.get(CONF_USERNAME)
     server = server_config.get(CONF_SERVER)
 
-    if username:
-        _LOGGER.info("Connected to: %s (%s)", server, username)
-    else:
-        _LOGGER.info("Connected to: %s", url)
+    _LOGGER.info("Connected to: %s (%s)", server, username if username else url)
 
     plex_clients = hass.data[PLEX_CLIENTS]
     plex_sessions = {}
