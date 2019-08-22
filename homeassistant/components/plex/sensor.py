@@ -65,10 +65,10 @@ class PlexSensor(Entity):
 
     def __init__(self, server_config):
         """Initialize the sensor."""
-        self._name = "Plex"
         self._state = 0
         self._now_playing = []
         self._server = setup_plex_server(server_config)
+        self._name = "Plex ({})".format(self._server.friendlyName)
 
     @property
     def name(self):
