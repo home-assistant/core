@@ -281,7 +281,7 @@ class Entity:
                 self._disabled_reported = True
                 _LOGGER.warning(
                     "Entity %s is incorrectly being triggered for updates while it is disabled. This is a bug in the %s integration.",
-                    self.registry_entry.entity_id,
+                    self.entity_id,
                     self.platform.platform_name,
                 )
             return

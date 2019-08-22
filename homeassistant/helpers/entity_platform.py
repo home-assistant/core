@@ -349,6 +349,9 @@ class EntityPlatform:
                 disabled_by=disabled_by,
             )
 
+            entity.registry_entry = entry
+            entity.entity_id = entry.entity_id
+
             if entry.disabled:
                 self.logger.info(
                     "Not adding entity %s because it's disabled",
@@ -357,9 +360,6 @@ class EntityPlatform:
                     or '"{} {}"'.format(self.platform_name, entity.unique_id),
                 )
                 return
-
-            entity.registry_entry = entry
-            entity.entity_id = entry.entity_id
 
         # We won't generate an entity ID if the platform has already set one
         # We will however make sure that platform cannot pick a registered ID
