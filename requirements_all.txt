@@ -1854,7 +1854,7 @@ tplink==0.2.1
 transmissionrpc==0.11
 
 # homeassistant.components.tuya
-tuyaha==0.0.2
+tuyaha==0.0.3
 
 # homeassistant.components.twentemilieu
 twentemilieu==0.1.0
