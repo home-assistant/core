@@ -29,12 +29,6 @@ input_select:
       - "Andrzej"
     icon: mdi:voice
     initial: "Jola lokalnie"
-  tts_player:
-    name: 'Powiadamiaj dodatkowo'
-    options:
-      - "-"
-    initial: "-"
-    icon: mdi:cellphone-message
 input_number:
   assistant_rate:
     name: "Szybkość mowy"
@@ -57,10 +51,4 @@ group:
       - input_select.assistant_voice
       - input_number.assistant_rate
       - input_number.assistant_tone
-      - input_select.tts_player
-
-#  ais_android_certification:
-#    name: Certyfikacja urządzenia
-#    entities:
-#      - weblink.uncertified_android_registration
 

@@ -115,13 +115,13 @@ def get_text_to_say():
     else:
         info = "Nie wykryto sterowanych urządzeń."
     if len(MQTT_DEVICES) > 0:
-        info += " sterowalne urządzenia podłączone do bramki w ilości " + str(
+        info += " sterowalne urządzenia podłączone do bramki w liczbie: " + str(
             len(MQTT_DEVICES)
         )
     if len(NET_DEVICES) > 0:
         if len(MQTT_DEVICES) > 0:
             info += " i "
-        info += " sterowalne urządzenia w sieci w ilości " + str(len(NET_DEVICES))
+        info += " sterowalne urządzenia w sieci w liczbie: " + str(len(NET_DEVICES))
     return info
 
 

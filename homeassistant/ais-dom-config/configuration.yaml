@@ -95,7 +95,7 @@ media_extractor:
 
 # Enables the frontend
 frontend:
-  # development_repo: /home/andrzej/Projects/AIS-home-assistant-polymer
+#  development_repo: /home/andrzej/Projects/AIS-home-assistant-polymer
   javascript_version: latest
   themes: !include_dir_merge_named themes
 
@@ -134,7 +134,11 @@ ais_amplifier_service:
 #
 person:
 
-#
-ais_ingress:
-  host: localhost
-  port: 8888
+# TODO check this before delivery
+# /api/ingress/
+#ais_ingress:
+#  host: localhost
+#  port: 8888
+
+# test
+# cloud:

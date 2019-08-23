@@ -9,10 +9,9 @@ from aiohttp import hdrs, web
 from aiohttp.web_exceptions import HTTPBadGateway
 from multidict import CIMultiDict
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.core import callback
 from homeassistant.helpers.typing import HomeAssistantType
-
 from .const import X_HASSIO, X_INGRESS_PATH
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,7 +23,7 @@ DOMAIN = "ais_ingress"
 def async_setup_ingress_view(hass: HomeAssistantType, host: str, port: str):
     """Auth setup."""
     websession = hass.helpers.aiohttp_client.async_get_clientsession()
-
+    _LOGGER.error("websession " + str(websession))
     hassio_ingress = HassIOIngress(host, port, websession)
     hass.http.register_view(hassio_ingress)
 
@@ -49,6 +48,11 @@ class HassIOIngress(HomeAssistantView):
     async def _handle(
         self, request: web.Request, path: str
     ) -> Union[web.Response, web.StreamResponse, web.WebSocketResponse]:
+        """Check the authentication"""
+        # authenticated = request.get(KEY_AUTHENTICATED, False)
+        # _LOGGER.warning("request " + str(request))
+        # if not authenticated:
+        #     return web.Response(status=401)
         """Route data to ingress service."""
         try:
             # Websocket

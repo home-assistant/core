@@ -147,10 +147,10 @@ async def async_setup(hass, config):
                 )
             else:
                 if ais_global.G_AIS_START_IS_DONE:
+                    text = info.replace("Naciśnij OK aby zainstalować.", "")
+                    text = text.replace("Naciśnij OK/URUCHOM aby zainstalować.", "")
                     await hass.services.async_call(
-                        "ais_ai_service",
-                        "say_it",
-                        {"text": info.replace("Naciśnij OK aby zainstalować.", "")},
+                        "ais_ai_service", "say_it", {"text": text}
                     )
 
         else:
@@ -243,7 +243,17 @@ async def get_system_info(hass, include_components):
 
 
 async def get_newest_version(hass, huuid, include_components):
-    """Get the newest Home Assistant version."""
+    """Get the newest Ais dom version."""
+    hass.states.async_set(
+        ENTITY_ID,
+        "sprawdzam",
+        {
+            ATTR_FRIENDLY_NAME: "Wersja",
+            "icon": "mdi:update",
+            "reinstall_dom_app": False,
+            "reinstall_android_app": False,
+        },
+    )
     if huuid:
         info_object = await get_system_info(hass, include_components)
         info_object["huuid"] = huuid
@@ -263,8 +273,8 @@ async def get_newest_version(hass, huuid, include_components):
         )
     except (asyncio.TimeoutError, aiohttp.ClientError):
         _LOGGER.error("Could not contact AIS dom to check " "for updates")
-        info = "Wersja. Nie można skontaktować się z usługą AIS dom "
-        info += "żeby sprawdzić dostępność aktualizacji"
+        info = "Nie można skontaktować się z usługą AIS dom."
+        info += "Spróbuj ponownie później."
         hass.states.async_set(
             ENTITY_ID,
             info,

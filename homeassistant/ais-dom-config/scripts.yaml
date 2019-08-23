@@ -13,11 +13,11 @@ ais_restart_system:
     - service: ais_shell_command.execute_restart
 
 ais_cloud_sync:
-  alias: 'Synchronizacja z serwisem Asystent domowy'
+  alias: 'Synchronizacja z Portalem Integratora'
   sequence:
     - service: ais_ai_service.say_it
       data:
-        text: "Synchronizuje treści i ustawienia z serwisem."
+        text: "Synchronizuje treści i ustawienia z Portalem Integratora."
     - service: ais_updater.check_version
     - service: ais_cloud.get_radio_types
     - service: ais_cloud.get_podcast_types
