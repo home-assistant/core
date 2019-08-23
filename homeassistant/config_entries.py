@@ -3,13 +3,7 @@ import asyncio
 import logging
 import functools
 import uuid
-from typing import (
-    Any,
-    Callable,
-    List,
-    Optional,
-    Set,  # noqa pylint: disable=unused-import
-)
+from typing import Any, Callable, List, Optional, Set
 import weakref
 
 import attr
@@ -19,6 +13,7 @@ from homeassistant.core import callback, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ConfigEntryNotReady
 from homeassistant.setup import async_setup_component, async_process_deps_reqs
 from homeassistant.util.decorator import Registry
+from homeassistant.helpers import entity_registry
 
 # mypy: allow-untyped-defs
 
@@ -161,8 +156,6 @@ class ConfigEntry:
 
         try:
             component = integration.get_component()
-            if self.domain == integration.domain:
-                integration.get_platform("config_flow")
         except ImportError as err:
             _LOGGER.error(
                 "Error importing integration %s to set up %s config entry: %s",
@@ -174,8 +167,20 @@ class ConfigEntry:
                 self.state = ENTRY_STATE_SETUP_ERROR
             return
 
-        # Perform migration
-        if integration.domain == self.domain:
+        if self.domain == integration.domain:
+            try:
+                integration.get_platform("config_flow")
+            except ImportError as err:
+                _LOGGER.error(
+                    "Error importing platform config_flow from integration %s to set up %s config entry: %s",
+                    integration.domain,
+                    self.domain,
+                    err,
+                )
+                self.state = ENTRY_STATE_SETUP_ERROR
+                return
+
+            # Perform migration
             if not await self.async_migrate(hass):
                 self.state = ENTRY_STATE_MIGRATION_ERROR
                 return
@@ -383,6 +388,7 @@ class ConfigEntries:
         self._hass_config = hass_config
         self._entries = []  # type: List[ConfigEntry]
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        EntityRegistryDisabledHandler(hass).async_setup()
 
     @callback
     def async_domains(self) -> List[str]:
@@ -757,3 +763,91 @@ class SystemOptions:
     def as_dict(self):
         """Return dictionary version of this config entrys system options."""
         return {"disable_new_entities": self.disable_new_entities}
+
+
+class EntityRegistryDisabledHandler:
+    """Handler to handle when entities related to config entries updating disabled_by."""
+
+    RELOAD_AFTER_UPDATE_DELAY = 30
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the handler."""
+        self.hass = hass
+        self.registry: Optional[entity_registry.EntityRegistry] = None
+        self.changed: Set[str] = set()
+        self._remove_call_later: Optional[Callable[[], None]] = None
+
+    @callback
+    def async_setup(self) -> None:
+        """Set up the disable handler."""
+        self.hass.bus.async_listen(
+            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED, self._handle_entry_updated
+        )
+
+    async def _handle_entry_updated(self, event):
+        """Handle entity registry entry update."""
+        if (
+            event.data["action"] != "update"
+            or "disabled_by" not in event.data["changes"]
+        ):
+            return
+
+        if self.registry is None:
+            self.registry = await entity_registry.async_get_registry(self.hass)
+
+        entity_entry = self.registry.async_get(event.data["entity_id"])
+
+        if (
+            # Stop if no entry found
+            entity_entry is None
+            # Stop if entry not connected to config entry
+            or entity_entry.config_entry_id is None
+            # Stop if the entry got disabled. In that case the entity handles it
+            # themselves.
+            or entity_entry.disabled_by
+        ):
+            return
+
+        config_entry = self.hass.config_entries.async_get_entry(
+            entity_entry.config_entry_id
+        )
+
+        if config_entry.entry_id not in self.changed and await support_entry_unload(
+            self.hass, config_entry.domain
+        ):
+            self.changed.add(config_entry.entry_id)
+
+        if not self.changed:
+            return
+
+        # We are going to delay reloading on *every* entity registry change so that
+        # if a user is happily clicking along, it will only reload at the end.
+
+        if self._remove_call_later:
+            self._remove_call_later()
+
+        self._remove_call_later = self.hass.helpers.event.async_call_later(
+            self.RELOAD_AFTER_UPDATE_DELAY, self._handle_reload
+        )
+
+    async def _handle_reload(self, _now):
+        """Handle a reload."""
+        self._remove_call_later = None
+        to_reload = self.changed
+        self.changed = set()
+
+        _LOGGER.info(
+            "Reloading config entries because disabled_by changed in entity registry: %s",
+            ", ".join(self.changed),
+        )
+
+        await asyncio.gather(
+            *[self.hass.config_entries.async_reload(entry_id) for entry_id in to_reload]
+        )
+
+
+async def support_entry_unload(hass: HomeAssistant, domain: str) -> bool:
+    """Test if a domain supports entry unloading."""
+    integration = await loader.async_get_integration(hass, domain)
+    component = integration.get_component()
+    return hasattr(component, "async_unload_entry")

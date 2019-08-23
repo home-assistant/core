@@ -503,6 +503,10 @@ class Entity:
         old = self.registry_entry
         self.registry_entry = ent_reg.async_get(data["entity_id"])
 
+        if self.registry_entry.disabled_by is not None:
+            await self.async_remove()
+            return
+
         if self.registry_entry.entity_id == old.entity_id:
             self.async_write_ha_state()
             return
