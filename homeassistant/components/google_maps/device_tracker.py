@@ -52,7 +52,7 @@ class GoogleMapsScanner:
         self.see = see
         self.username = config[CONF_USERNAME]
         self.max_gps_accuracy = config[CONF_MAX_GPS_ACCURACY]
-        self.scan_interval = timedelta(seconds=config.get(CONF_SCAN_INTERVAL, 60))
+        self.scan_interval = config.get(CONF_SCAN_INTERVAL) or timedelta(60)
 
         credfile = "{}.{}".format(
             hass.config.path(CREDENTIALS_FILE), slugify(self.username)
