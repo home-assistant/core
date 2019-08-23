@@ -163,6 +163,7 @@ async def test_update_entity(hass, client):
 
     msg = await client.receive_json()
 
+    assert hass.states.get("test_domain.world") is None
     assert registry.entities["test_domain.world"].disabled_by == "user"
 
     # UPDATE DISABLED_BY TO NONE
