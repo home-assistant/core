@@ -33,7 +33,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 def setup(hass, config):
     """Set up Zeroconf and make Home Assistant discoverable."""
-    zeroconf_name = "{}.{}".format(hass.config.location_name, ZEROCONF_TYPE)
+    zeroconf_name = f"{hass.config.location_name}.{ZEROCONF_TYPE}"
 
     params = {
         "version": __version__,

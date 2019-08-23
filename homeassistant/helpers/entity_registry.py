@@ -166,9 +166,7 @@ class EntityRegistry:
             )
 
         entity_id = self.async_generate_entity_id(
-            domain,
-            suggested_object_id or "{}_{}".format(platform, unique_id),
-            known_object_ids,
+            domain, suggested_object_id or f"{platform}_{unique_id}", known_object_ids
         )
 
         if (

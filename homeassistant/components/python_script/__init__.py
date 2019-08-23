@@ -113,7 +113,7 @@ def discover_scripts(hass):
 @bind_hass
 def execute_script(hass, name, data=None):
     """Execute a script."""
-    filename = "{}.py".format(name)
+    filename = f"{name}.py"
     with open(hass.config.path(FOLDER, sanitize_filename(filename))) as fil:
         source = fil.read()
     execute(hass, filename, source, data)
@@ -166,9 +166,7 @@ def execute(hass, filename, source, data=None):
             or isinstance(obj, TimeWrapper)
             and name not in ALLOWED_TIME
         ):
-            raise ScriptError(
-                "Not allowed to access {}.{}".format(obj.__class__.__name__, name)
-            )
+            raise ScriptError(f"Not allowed to access {obj.__class__.__name__}.{name}")
 
         return getattr(obj, name, default)
 
@@ -188,7 +186,7 @@ def execute(hass, filename, source, data=None):
         "_iter_unpack_sequence_": guarded_iter_unpack_sequence,
         "_unpack_sequence_": guarded_unpack_sequence,
     }
-    logger = logging.getLogger("{}.{}".format(__name__, filename))
+    logger = logging.getLogger(f"{__name__}.{filename}")
     local = {"hass": hass, "data": data or {}, "logger": logger}
 
     try:

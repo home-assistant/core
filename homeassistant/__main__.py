@@ -168,7 +168,7 @@ def get_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--runner",
         action="store_true",
-        help="On restart exit with code {}".format(RESTART_EXIT_CODE),
+        help=f"On restart exit with code {RESTART_EXIT_CODE}",
     )
     parser.add_argument(
         "--script", nargs=argparse.REMAINDER, help="Run one of the embedded scripts"
@@ -240,7 +240,7 @@ def write_pid(pid_file: str) -> None:
         with open(pid_file, "w") as file:
             file.write(str(pid))
     except IOError:
-        print("Fatal Error: Unable to write pid file {}".format(pid_file))
+        print(f"Fatal Error: Unable to write pid file {pid_file}")
         sys.exit(1)
 
 
@@ -326,7 +326,7 @@ def try_to_restart() -> None:
             thread.is_alive() and not thread.daemon for thread in threading.enumerate()
         )
         if nthreads > 1:
-            sys.stderr.write("Found {} non-daemonic threads.\n".format(nthreads))
+            sys.stderr.write(f"Found {nthreads} non-daemonic threads.\n")
 
     # Somehow we sometimes seem to trigger an assertion in the python threading
     # module. It seems we find threads that have no associated OS level thread
