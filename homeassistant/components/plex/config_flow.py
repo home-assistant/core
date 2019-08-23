@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_URL,
     CONF_USERNAME,
+    CONF_PASSWORD,
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
@@ -220,7 +221,48 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_VERIFY_SSL: host_config["verify"],
         }
 
-        _LOGGER.info("Imported Plex configuration from legacy config file")
+        _LOGGER.info("Imported configuration from legacy config file")
+        return await self.async_step_user(user_input=config)
+
+    async def async_step_import_sensor(self, import_config):
+        """Import from Plex Sensor configuration.
+
+        Legacy.
+        """
+        if self._async_in_progress():
+            return self.async_abort(reason="already_in_progress")
+
+        host = import_config.get(CONF_HOST)
+        port = import_config.get(CONF_PORT)
+        username = import_config.get(CONF_USERNAME)
+        password = import_config.get(CONF_PASSWORD)
+        token = import_config.get(CONF_TOKEN)
+        server = import_config.get(CONF_SERVER)
+
+        if username:
+            if password:
+                _LOGGER.warning(
+                    "Password no longer supported, please set up via Integrations"
+                )
+                return self.async_abort(reason="password_provided")
+
+            if token:
+                config = {
+                    CONF_USERNAME: username,
+                    CONF_TOKEN: token,
+                    CONF_SERVER: server,
+                }
+        else:
+            prefix = "https" if import_config[CONF_SSL] else "http"
+            url = "{}://{}:{}".format(prefix, host, port)
+
+            config = {
+                CONF_URL: url,
+                CONF_TOKEN: token,
+                CONF_VERIFY_SSL: import_config[CONF_VERIFY_SSL],
+            }
+
+        _LOGGER.info("Imported Plex credentials from sensor configuration")
         return await self.async_step_user(user_input=config)
 
 

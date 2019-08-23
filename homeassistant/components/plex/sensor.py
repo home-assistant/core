@@ -1,16 +1,52 @@
 """Support for Plex media server monitoring."""
 from datetime import timedelta
 import logging
+import voluptuous as vol
+
+from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    CONF_HOST,
+    CONF_PORT,
+    CONF_TOKEN,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+)
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
 
-from .const import PLEX_SERVER_CONFIG
+from .const import (
+    CONF_SERVER,
+    DEFAULT_PORT,
+    DEFAULT_SSL,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN as PLEX_DOMAIN,
+    PLEX_SERVER_CONFIG,
+)
 from .server import setup_plex_server
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_HOST = "localhost"
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_TOKEN): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_SERVER): cv.string,
+        vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -18,9 +54,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     Deprecated.
     """
-    _LOGGER.warning(
-        "Configuration via YAML is deprecated, please set up via Integrations"
-    )
+    if config:
+        if not hass.config_entries.async_entries(PLEX_DOMAIN):
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    PLEX_DOMAIN, context={"source": "import_sensor"}, data=config
+                )
+            )
+        else:
+            _LOGGER.warning("Legacy configuration can be removed.")
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
