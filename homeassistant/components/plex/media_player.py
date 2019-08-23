@@ -73,7 +73,7 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     PLEX_DOMAIN,
-                    context={"source": config_entries.SOURCE_IMPORT},
+                    context={"source": "import_media_player"},
                     data=file_config,
                 )
             )
