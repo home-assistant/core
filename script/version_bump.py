@@ -3,6 +3,7 @@
 import argparse
 import re
 import subprocess
+from datetime import datetime
 
 from packaging.version import Version
 
@@ -80,6 +81,16 @@ def bump_version(version, bump_type):
             to_change["release"] = _bump_release(version.release, "patch")
             to_change["pre"] = ("b", 0)
 
+    elif bump_type == "nightly":
+        # Convert 0.70.0d0 to 0.70.0d20190424, fails when run on non dev release
+        if not version.is_devrelease:
+            raise ValueError("Can only be run on dev release")
+
+        to_change["dev"] = (
+            "dev",
+            datetime.utcnow().date().isoformat().replace("-", ""),
+        )
+
     else:
         assert False, f"Unsupported type: {bump_type}"
 
@@ -109,7 +120,7 @@ def main():
     parser.add_argument(
         "type",
         help="The type of the bump the version to.",
-        choices=["beta", "dev", "patch", "minor"],
+        choices=["beta", "dev", "patch", "minor", "nightly"],
     )
     parser.add_argument(
         "--commit", action="store_true", help="Create a version bump commit."
@@ -128,6 +139,8 @@ def main():
 
 def test_bump_version():
     """Make sure it all works."""
+    import pytest
+
     assert bump_version(Version("0.56.0"), "beta") == Version("0.56.1b0")
     assert bump_version(Version("0.56.0b3"), "beta") == Version("0.56.0b4")
     assert bump_version(Version("0.56.0.dev0"), "beta") == Version("0.56.0b0")
@@ -146,6 +159,13 @@ def test_bump_version():
     assert bump_version(Version("0.56.3.b3"), "minor") == Version("0.57.0")
     assert bump_version(Version("0.56.0.dev0"), "minor") == Version("0.56.0")
     assert bump_version(Version("0.56.2.dev0"), "minor") == Version("0.57.0")
+
+    today = datetime.utcnow().date().isoformat().replace("-", "")
+    assert bump_version(Version("0.56.0.dev0"), "nightly") == Version(
+        f"0.56.0.dev{today}"
+    )
+    with pytest.raises(ValueError):
+        assert bump_version(Version("0.56.0"), "nightly")
 
 
 if __name__ == "__main__":
