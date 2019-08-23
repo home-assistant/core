@@ -51,6 +51,7 @@
    - service: ais_yt_service.search
    - delay: '1'
    - service: ais_ai_service.prepare_remote_menu
+   - service: ais_shell_command.change_remote_access
    - service: ais_ai_service.check_local_ip
    - service: ais_amplifier_service.get_audio_mono
    - service: mqtt.publish
@@ -64,7 +65,6 @@
        topic: dom/cmnd/state
    - delay: '1'
    - service: ais_ai_service.welcome_home
-   - service: ais_shell_command.change_remote_access
    - service: camera.snapshot
      data:
        entity_id: camera.remote_access

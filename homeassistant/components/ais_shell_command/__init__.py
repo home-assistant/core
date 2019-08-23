@@ -132,6 +132,7 @@ def _change_host_name(hass, call):
 def _change_remote_access(hass, call):
     import os
 
+    text = " dostęp z Internetu"
     access = hass.states.get("input_boolean.ais_remote_access").state
     gate_id = hass.states.get("sensor.ais_secure_android_id_dom").state
     if access == "on":
@@ -141,9 +142,13 @@ def _change_remote_access(hass, call):
             + gate_id
         )
         os.system("pm2 save")
+        text = "Aktywuje " + text
     else:
         os.system("pm2 delete tunnel")
         os.system("pm2 save")
+        text = "Zatrzymuje " + text
+    if ais_global.G_AIS_START_IS_DONE:
+        yield from hass.services.async_call("ais_ai_service", "say_it", {"text": text})
 
 
 @asyncio.coroutine
