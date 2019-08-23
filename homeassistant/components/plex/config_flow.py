@@ -200,6 +200,9 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery(self, discovery_info):
         """Set default host and port from discovery."""
+        if self._async_in_progress():
+            return self.async_abort(reason="already_in_progress")
+
         self.discovery_info = discovery_info
         return await self.async_step_user()
 
