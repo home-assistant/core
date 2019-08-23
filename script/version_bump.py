@@ -81,7 +81,7 @@ def bump_version(version, bump_type):
             to_change["pre"] = ("b", 0)
 
     else:
-        assert False, "Unsupported type: {}".format(bump_type)
+        assert False, f"Unsupported type: {bump_type}"
 
     temp = Version("0")
     temp._version = version._version._replace(**to_change)
@@ -95,15 +95,9 @@ def write_version(version):
 
     major, minor, patch = str(version).split(".", 2)
 
-    content = re.sub(
-        "MAJOR_VERSION = .*\n", "MAJOR_VERSION = {}\n".format(major), content
-    )
-    content = re.sub(
-        "MINOR_VERSION = .*\n", "MINOR_VERSION = {}\n".format(minor), content
-    )
-    content = re.sub(
-        "PATCH_VERSION = .*\n", "PATCH_VERSION = '{}'\n".format(patch), content
-    )
+    content = re.sub("MAJOR_VERSION = .*\n", f"MAJOR_VERSION = {major}\n", content)
+    content = re.sub("MINOR_VERSION = .*\n", f"MINOR_VERSION = {minor}\n", content)
+    content = re.sub("PATCH_VERSION = .*\n", f"PATCH_VERSION = '{patch}'\n", content)
 
     with open("homeassistant/const.py", "wt") as fil:
         content = fil.write(content)
@@ -129,7 +123,7 @@ def main():
     if not arguments.commit:
         return
 
-    subprocess.run(["git", "commit", "-am", "Bumped version to {}".format(bumped)])
+    subprocess.run(["git", "commit", "-am", f"Bumped version to {bumped}"])
 
 
 def test_bump_version():

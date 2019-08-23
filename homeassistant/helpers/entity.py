@@ -243,11 +243,11 @@ class Entity:
         This method must be run in the event loop.
         """
         if self.hass is None:
-            raise RuntimeError("Attribute hass is None for {}".format(self))
+            raise RuntimeError(f"Attribute hass is None for {self}")
 
         if self.entity_id is None:
             raise NoEntitySpecifiedError(
-                "No entity id specified for entity {}".format(self.name)
+                f"No entity id specified for entity {self.name}"
             )
 
         # update entity data
@@ -264,11 +264,11 @@ class Entity:
     def async_write_ha_state(self):
         """Write the state to the state machine."""
         if self.hass is None:
-            raise RuntimeError("Attribute hass is None for {}".format(self))
+            raise RuntimeError(f"Attribute hass is None for {self}")
 
         if self.entity_id is None:
             raise NoEntitySpecifiedError(
-                "No entity id specified for entity {}".format(self.name)
+                f"No entity id specified for entity {self.name}"
             )
 
         self._async_write_ha_state()
