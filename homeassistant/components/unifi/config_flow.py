@@ -33,8 +33,7 @@ DEFAULT_SITE_ID = "default"
 DEFAULT_VERIFY_SSL = False
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class UnifiFlowHandler(config_entries.ConfigFlow):
+class UnifiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a UniFi config flow."""
 
     VERSION = 1
