@@ -1365,7 +1365,7 @@ class Config:
             self.time_zone = time_zone
             dt_util.set_default_time_zone(time_zone)
         else:
-            raise ValueError("Received invalid time zone {}".format(time_zone_str))
+            raise ValueError(f"Received invalid time zone {time_zone_str}")
 
     @callback
     def _update(

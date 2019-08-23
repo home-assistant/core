@@ -317,7 +317,7 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
         path = find_config_file(hass.config.config_dir)
         if path is None:
             raise HomeAssistantError(
-                "Config file not found in: {}".format(hass.config.config_dir)
+                f"Config file not found in: {hass.config.config_dir}"
             )
         config = load_yaml_config_file(path)
         return config
@@ -443,7 +443,7 @@ def _format_config_error(ex: vol.Invalid, domain: str, config: Dict) -> str:
 
     This method must be run in the event loop.
     """
-    message = "Invalid config for [{}]: ".format(domain)
+    message = f"Invalid config for [{domain}]: "
     if "extra keys not allowed" in ex.error_message:
         message += (
             "[{option}] is an invalid option for [{domain}]. "
@@ -705,7 +705,7 @@ async def merge_packages_config(
             error = _recursive_merge(conf=config[comp_name], package=comp_conf)
             if error:
                 _log_pkg_error(
-                    pack_name, comp_name, config, "has duplicate key '{}'".format(error)
+                    pack_name, comp_name, config, f"has duplicate key '{error}'"
                 )
 
     return config
@@ -777,7 +777,7 @@ async def async_process_component_config(
                     p_config
                 )
             except vol.Invalid as ex:
-                async_log_exception(ex, "{}.{}".format(domain, p_name), p_config, hass)
+                async_log_exception(ex, f"{domain}.{p_name}", p_config, hass)
                 continue
 
         platforms.append(p_validated)
@@ -836,7 +836,7 @@ def async_notify_setup_error(
         else:
             part = name
 
-        message += " - {}\n".format(part)
+        message += f" - {part}\n"
 
     message += "\nPlease check your config."
 

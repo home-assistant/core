@@ -126,7 +126,7 @@ class FlowManager:
         self, flow: Any, step_id: str, user_input: Optional[Dict]
     ) -> Dict:
         """Handle a step of a flow."""
-        method = "async_step_{}".format(step_id)
+        method = f"async_step_{step_id}"
 
         if not hasattr(flow, method):
             self._progress.pop(flow.flow_id)
