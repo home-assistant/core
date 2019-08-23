@@ -77,9 +77,9 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
                     data=file_config,
                 )
             )
-        else:
+        elif not discovery_info:
             _LOGGER.warning(
-                "Legacy configuration can be removed: %s",
+                "Legacy config file can be removed: %s",
                 hass.config.path(PLEX_CONFIG_FILE),
             )
 
@@ -104,7 +104,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     options = dict(config_entry.options)
     config = hass.data.get(PLEX_MEDIA_PLAYER_OPTIONS, {})
     if config:
-        _LOGGER.warning("Legacy Plex media_player configuration should be removed.")
+        _LOGGER.warning("Legacy configuration can be removed.")
 
     # If no existing config options, use YAML config or fallback to defaults
     if MP_DOMAIN not in options:
