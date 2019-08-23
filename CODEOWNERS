@@ -190,6 +190,7 @@ homeassistant/components/notify/* @home-assistant/core
 homeassistant/components/notion/* @bachya
 homeassistant/components/nsw_fuel_station/* @nickw444
 homeassistant/components/nuki/* @pschmitt
+homeassistant/components/nws/* @MatthewFlamm
 homeassistant/components/ohmconnect/* @robbiet480
 homeassistant/components/onboarding/* @home-assistant/core
 homeassistant/components/opentherm_gw/* @mvn23
