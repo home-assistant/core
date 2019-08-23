@@ -120,6 +120,7 @@ TEST_REQUIREMENTS = (
     "pylitejet",
     "pymfy",
     "pymonoprice",
+    "pynws",
     "pynx584",
     "pyopenuv",
     "pyotp",
