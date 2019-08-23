@@ -61,10 +61,10 @@ def async_request_config(
     Will return an ID to be used for sequent calls.
     """
     if link_name is not None and link_url is not None:
-        description += "\n\n[{}]({})".format(link_name, link_url)
+        description += f"\n\n[{link_name}]({link_url})"
 
     if description_image is not None:
-        description += "\n\n![Description image]({})".format(description_image)
+        description += f"\n\n![Description image]({description_image})"
 
     instance = hass.data.get(_KEY_INSTANCE)
 

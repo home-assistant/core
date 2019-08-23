@@ -94,7 +94,7 @@ class AuthStore:
         for group_id in group_ids or []:
             group = self._groups.get(group_id)
             if group is None:
-                raise ValueError("Invalid group specified {}".format(group_id))
+                raise ValueError(f"Invalid group specified {group_id}")
             groups.append(group)
 
         kwargs = {

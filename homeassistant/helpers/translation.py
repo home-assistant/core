@@ -20,9 +20,9 @@ def recursive_flatten(prefix: Any, data: Dict) -> Dict[str, Any]:
     output = {}
     for key, value in data.items():
         if isinstance(value, dict):
-            output.update(recursive_flatten("{}{}.".format(prefix, key), value))
+            output.update(recursive_flatten(f"{prefix}{key}.", value))
         else:
-            output["{}{}".format(prefix, key)] = value
+            output[f"{prefix}{key}"] = value
     return output
 
 
@@ -60,7 +60,7 @@ async def component_translation_file(
     if integration.file_path.name != domain:
         return None
 
-    filename = "{}.json".format(language)
+    filename = f"{language}.json"
     return str(integration.file_path / ".translations" / filename)
 
 
