@@ -20,6 +20,7 @@ from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
+    CONF_ENABLE_SENSOR,
     CONF_SERVER,
     DEFAULT_PORT,
     DEFAULT_SSL,
@@ -71,6 +72,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     def add_entities(devices, update_before_add=False):
         """Sync version of async add devices."""
         hass.add_job(async_add_entities, devices, update_before_add)
+
+    options = dict(config_entry.options)
+    if CONF_ENABLE_SENSOR not in options:
+        options[CONF_ENABLE_SENSOR] = True
+        hass.config_entries.async_update_entry(config_entry, options=options)
 
     hass.async_add_executor_job(_setup_platform, hass, config_entry, add_entities)
 
