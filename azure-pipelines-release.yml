@@ -198,7 +198,7 @@ stages:
         }
 
         sudo docker pull homeassistant/amd64-homeassistant:$(Build.SourceBranchName)
-        sudo docker pull homeassistant/i368-homeassistant:$(Build.SourceBranchName)
+        sudo docker pull homeassistant/i386-homeassistant:$(Build.SourceBranchName)
         sudo docker pull homeassistant/armhf-homeassistant:$(Build.SourceBranchName)
         sudo docker pull homeassistant/armv7-homeassistant:$(Build.SourceBranchName)
         sudo docker pull homeassistant/aarch64-homeassistant:$(Build.SourceBranchName)
