@@ -289,29 +289,7 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
             ]
             self.options[CONF_ENABLE_SENSOR] = user_input[CONF_ENABLE_SENSOR]
             if user_input[CONF_ENABLE_MEDIA_PLAYER]:
-                return self.async_show_form(
-                    step_id="plex_mp_settings",
-                    data_schema=vol.Schema(
-                        {
-                            vol.Required(
-                                CONF_USE_EPISODE_ART,
-                                default=self.options[CONF_USE_EPISODE_ART],
-                            ): bool,
-                            vol.Required(
-                                CONF_SHOW_ALL_CONTROLS,
-                                default=self.options[CONF_SHOW_ALL_CONTROLS],
-                            ): bool,
-                            vol.Required(
-                                CONF_REMOVE_UNAVAILABLE_CLIENTS,
-                                default=self.options[CONF_REMOVE_UNAVAILABLE_CLIENTS],
-                            ): bool,
-                            vol.Required(
-                                CONF_CLIENT_REMOVE_INTERVAL,
-                                default=self.options[CONF_CLIENT_REMOVE_INTERVAL],
-                            ): vol.All(int, vol.Range(min=1)),
-                        }
-                    ),
-                )
+                return await self.async_step_plex_mp_settings()
 
             return self.async_create_entry(title="", data=self.options)
 
@@ -351,5 +329,30 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
             self.options[MP_DOMAIN][CONF_CLIENT_REMOVE_INTERVAL] = user_input[
                 CONF_CLIENT_REMOVE_INTERVAL
             ]
+            return self.async_create_entry(title="", data=self.options)
 
-        return self.async_create_entry(title="", data=self.options)
+        return self.async_show_form(
+            step_id="plex_mp_settings",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USE_EPISODE_ART,
+                        default=self.options[MP_DOMAIN][CONF_USE_EPISODE_ART],
+                    ): bool,
+                    vol.Required(
+                        CONF_SHOW_ALL_CONTROLS,
+                        default=self.options[MP_DOMAIN][CONF_SHOW_ALL_CONTROLS],
+                    ): bool,
+                    vol.Required(
+                        CONF_REMOVE_UNAVAILABLE_CLIENTS,
+                        default=self.options[MP_DOMAIN][
+                            CONF_REMOVE_UNAVAILABLE_CLIENTS
+                        ],
+                    ): bool,
+                    vol.Required(
+                        CONF_CLIENT_REMOVE_INTERVAL,
+                        default=self.options[MP_DOMAIN][CONF_CLIENT_REMOVE_INTERVAL],
+                    ): vol.All(int, vol.Range(min=1)),
+                }
+            ),
+        )
