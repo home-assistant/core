@@ -270,6 +270,9 @@ class ADBDevice(MediaPlayerDevice):
         self._apps.update(apps)
         self._keys = KEYS
 
+        self._device_properties = self.aftv.device_properties
+        self._unique_id = self._device_properties.get("serialno")
+
         self.turn_on_command = turn_on_command
         self.turn_off_command = turn_off_command
 
@@ -337,6 +340,11 @@ class ADBDevice(MediaPlayerDevice):
     def state(self):
         """Return the state of the player."""
         return self._state
+
+    @property
+    def unique_id(self):
+        """Return the device unique id."""
+        return self._unique_id
 
     @adb_decorator()
     def media_play(self):
@@ -412,9 +420,7 @@ class AndroidTVDevice(ADBDevice):
         super().__init__(aftv, name, apps, turn_on_command, turn_off_command)
 
         self._device = None
-        self._device_properties = self.aftv.device_properties
         self._is_volume_muted = None
-        self._unique_id = self._device_properties.get("serialno")
         self._volume_level = None
 
     @adb_decorator(override_available=True)
@@ -453,11 +459,6 @@ class AndroidTVDevice(ADBDevice):
     def supported_features(self):
         """Flag media player features that are supported."""
         return SUPPORT_ANDROIDTV
-
-    @property
-    def unique_id(self):
-        """Return the device unique id."""
-        return self._unique_id
 
     @property
     def volume_level(self):
