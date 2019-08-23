@@ -302,7 +302,7 @@ class EntityRegistry:
 
         self.async_schedule_save()
 
-        data = {"action": "update", "entity_id": entity_id}
+        data = {"action": "update", "entity_id": entity_id, "changes": list(changes)}
 
         if old.entity_id != entity_id:
             data["old_entity_id"] = old.entity_id
