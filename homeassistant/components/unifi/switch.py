@@ -220,7 +220,7 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchDevice, RestoreEntity):
             or self.client.sw_mac
             and (
                 self.controller.available
-                or self.client.sw_mac in self.controller.api.devices
+                and self.client.sw_mac in self.controller.api.devices
             )
         )
 

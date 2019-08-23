@@ -20,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_registry import DISABLED_CONFIG_ENTRY
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
@@ -138,6 +139,30 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_dispatcher_connect(hass, controller.event_update, update_controller)
 
+    @callback
+    def update_disable_on_entities():
+        """Update the values of the controller."""
+        for entity in tracked.values():
+
+            if (
+                entity.entity_registry_enabled_default
+                and entity.registry_entry.disabled_by
+            ):
+                registry.async_update_entity(
+                    entity.registry_entry.entity_id, disabled_by=None
+                )
+            elif (
+                not entity.entity_registry_enabled_default
+                and not entity.registry_entry.disabled_by
+            ):
+                registry.async_update_entity(
+                    entity.registry_entry.entity_id, disabled_by=DISABLED_CONFIG_ENTRY
+                )
+
+    async_dispatcher_connect(
+        hass, controller.event_options_update, update_disable_on_entities
+    )
+
     update_controller()
 
 
@@ -148,13 +173,9 @@ def update_items(controller, async_add_entities, tracked):
 
     for client_id in controller.api.clients:
 
-        if client_id in tracked and tracked[client_id].entity_id:
-            LOGGER.debug(
-                "Updating UniFi tracked client %s (%s)",
-                tracked[client_id].entity_id,
-                tracked[client_id].client.mac,
-            )
-            tracked[client_id].async_schedule_update_ha_state()
+        if client_id in tracked:
+            if tracked[client_id].registry_entry.disabled_by is None:
+                tracked[client_id].async_schedule_update_ha_state()
             continue
 
         client = controller.api.clients[client_id]
@@ -164,13 +185,9 @@ def update_items(controller, async_add_entities, tracked):
 
     for device_id in controller.api.devices:
 
-        if device_id in tracked and tracked[device_id].entity_id:
-            LOGGER.debug(
-                "Updating UniFi tracked device %s (%s)",
-                tracked[device_id].entity_id,
-                tracked[device_id].device.mac,
-            )
-            tracked[device_id].async_schedule_update_ha_state()
+        if device_id in tracked:
+            if tracked[device_id].registry_entry.disabled_by is None:
+                tracked[device_id].async_schedule_update_ha_state()
             continue
 
         device = controller.api.devices[device_id]
@@ -214,7 +231,11 @@ class UniFiClientTracker(ScannerEntity):
 
     async def async_update(self):
         """Synchronize state with controller."""
-        await self.controller.request_update()
+        if self.registry_entry.disabled_by is None:
+            LOGGER.debug(
+                "Updating UniFi tracked client %s (%s)", self.entity_id, self.client.mac
+            )
+            await self.controller.request_update()
 
     @property
     def is_connected(self):
@@ -285,7 +306,11 @@ class UniFiDeviceTracker(ScannerEntity):
 
     async def async_update(self):
         """Synchronize state with controller."""
-        await self.controller.request_update()
+        if self.registry_entry.disabled_by is None:
+            LOGGER.debug(
+                "Updating UniFi tracked device %s (%s)", self.entity_id, self.device.mac
+            )
+            await self.controller.request_update()
 
     @property
     def is_connected(self):
