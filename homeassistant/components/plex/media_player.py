@@ -37,7 +37,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import load_json
 
 from .const import (
-    CONF_ENABLE_MEDIA_PLAYER,
     CONF_USE_EPISODE_ART,
     CONF_SHOW_ALL_CONTROLS,
     CONF_REMOVE_UNAVAILABLE_CLIENTS,
@@ -108,9 +107,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         _LOGGER.warning("Legacy configuration can be removed.")
 
     # If no existing config options, use YAML config or fallback to defaults
-    if CONF_ENABLE_MEDIA_PLAYER not in options:
-        options[CONF_ENABLE_MEDIA_PLAYER] = True
-
     if MP_DOMAIN not in options:
         options[MP_DOMAIN] = {}
 
