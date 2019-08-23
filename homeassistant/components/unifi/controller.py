@@ -199,29 +199,54 @@ class UniFiController:
                 self.unifi_config = unifi_config
                 break
 
-        options = dict(self.config_entry.options)
+        old_options = dict(self.config_entry.options)
+        new_options = {}
 
-        if CONF_BLOCK_CLIENT in self.unifi_config:
-            options[CONF_BLOCK_CLIENT] = self.unifi_config[CONF_BLOCK_CLIENT]
+        if (
+            CONF_BLOCK_CLIENT in self.unifi_config
+            and self.option_block_clients != self.unifi_config[CONF_BLOCK_CLIENT]
+        ):
+            new_options[CONF_BLOCK_CLIENT] = self.unifi_config[CONF_BLOCK_CLIENT]
 
-        if CONF_TRACK_CLIENTS in self.unifi_config:
-            options[CONF_TRACK_CLIENTS] = self.unifi_config[CONF_TRACK_CLIENTS]
+        if (
+            CONF_TRACK_CLIENTS in self.unifi_config
+            and self.option_track_clients != self.unifi_config[CONF_TRACK_CLIENTS]
+        ):
+            new_options[CONF_TRACK_CLIENTS] = self.unifi_config[CONF_TRACK_CLIENTS]
 
-        if CONF_TRACK_DEVICES in self.unifi_config:
-            options[CONF_TRACK_DEVICES] = self.unifi_config[CONF_TRACK_DEVICES]
+        if (
+            CONF_TRACK_DEVICES in self.unifi_config
+            and self.option_track_devices != self.unifi_config[CONF_TRACK_DEVICES]
+        ):
+            new_options[CONF_TRACK_DEVICES] = self.unifi_config[CONF_TRACK_DEVICES]
 
-        if CONF_TRACK_WIRED_CLIENTS in self.unifi_config:
-            options[CONF_TRACK_WIRED_CLIENTS] = self.unifi_config[
+        if (
+            CONF_TRACK_WIRED_CLIENTS in self.unifi_config
+            and self.option_track_wired_clients
+            != self.unifi_config[CONF_TRACK_WIRED_CLIENTS]
+        ):
+            new_options[CONF_TRACK_WIRED_CLIENTS] = self.unifi_config[
                 CONF_TRACK_WIRED_CLIENTS
             ]
 
-        if CONF_DETECTION_TIME in self.unifi_config:
-            options[CONF_DETECTION_TIME] = self.unifi_config[CONF_DETECTION_TIME]
+        if (
+            CONF_DETECTION_TIME in self.unifi_config
+            and self.option_detection_time
+            != timedelta(seconds=self.unifi_config[CONF_DETECTION_TIME])
+        ):
+            new_options[CONF_DETECTION_TIME] = self.unifi_config[CONF_DETECTION_TIME]
 
-        if CONF_SSID_FILTER in self.unifi_config:
-            options[CONF_SSID_FILTER] = self.unifi_config[CONF_SSID_FILTER]
+        if (
+            CONF_SSID_FILTER in self.unifi_config
+            and self.option_ssid_filter != self.unifi_config[CONF_SSID_FILTER]
+        ):
+            new_options[CONF_SSID_FILTER] = self.unifi_config[CONF_SSID_FILTER]
 
-        hass.config_entries.async_update_entry(self.config_entry, options=options)
+        if False and new_options:
+            options = {**old_options, **new_options}
+            hass.config_entries.async_update_entry(self.config_entry, options=options)
+
+        self.config_entry.add_update_listener(self.async_reload)
 
         for platform in ["device_tracker", "switch"]:
             hass.async_create_task(
@@ -231,6 +256,13 @@ class UniFiController:
             )
 
         return True
+
+    @staticmethod
+    async def async_reload(hass, entry):
+        """Triggered by config entry options updates."""
+        # hass.entity_registry.async_update_entity()
+        if entry.state == "loaded":
+            await hass.config_entries.async_reload(entry.entry_id)
 
     async def async_reset(self):
         """Reset this controller to default state.
