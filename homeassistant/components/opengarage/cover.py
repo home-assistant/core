@@ -13,7 +13,6 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import (
     CONF_NAME,
-    STATE_UNKNOWN,
     STATE_CLOSED,
     STATE_OPEN,
     CONF_COVERS,
@@ -36,8 +35,6 @@ CONF_DEVICE_KEY = "device_key"
 DEFAULT_NAME = "OpenGarage"
 DEFAULT_PORT = 80
 
-STATE_OFFLINE = "offline"
-
 STATES_MAP = {0: STATE_CLOSED, 1: STATE_OPEN}
 
 COVER_SCHEMA = vol.Schema(
@@ -59,7 +56,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     covers = []
     devices = config.get(CONF_COVERS)
 
-    for _, device_config in devices.items():
+    for device_config in devices.values():
         args = {
             CONF_NAME: device_config.get(CONF_NAME),
             CONF_HOST: device_config.get(CONF_HOST),
@@ -103,7 +100,7 @@ class OpenGarageCover(CoverDevice):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        if self._state in [STATE_UNKNOWN, STATE_OFFLINE]:
+        if self._state is None:
             return None
         return self._state in [STATE_CLOSED, STATE_OPENING]
 
@@ -133,13 +130,12 @@ class OpenGarageCover(CoverDevice):
             _LOGGER.error(
                 "Unable to connect to OpenGarage device: %(reason)s", dict(reason=ex)
             )
-            self._state = STATE_OFFLINE
             self._available = False
             return
 
         if self._name is None and status["name"] is not None:
             self._name = status["name"]
-        state = STATES_MAP.get(status.get("door"), STATE_UNKNOWN)
+        state = STATES_MAP.get(status.get("door"))
         if self._state_before_move is not None:
             if self._state_before_move != state:
                 self._state = state
@@ -161,23 +157,25 @@ class OpenGarageCover(CoverDevice):
 
     def _push_button(self):
         """Send commands to API."""
+        result = 0
         try:
             response = requests.get(
                 "{}/cc?dkey={}&click=1".format(self.opengarage_url, self._device_key),
                 timeout=10,
             ).json()
+            result = response["result"]
+            if result == 1:
+                return
+
         except requests.exceptions.RequestException as ex:
             _LOGGER.error(
                 "Unable to connect to OpenGarage device: %(reason)s", dict(reason=ex)
             )
-            self._state = self._state_before_move
-            self._state_before_move = None
-            return
-
-        if response["result"] == 2:
+        if result == 2:
             _LOGGER.error("Unable to control %s: Device key is incorrect", self._name)
-            self._state = self._state_before_move
-            self._state_before_move = None
+
+        self._state = self._state_before_move
+        self._state_before_move = None
 
     @property
     def device_class(self):
