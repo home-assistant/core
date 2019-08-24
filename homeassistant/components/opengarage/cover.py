@@ -82,7 +82,7 @@ class OpenGarageCover(CoverDevice):
         self.opengarage_url = "http://{}:{}".format(args[CONF_HOST], args[CONF_PORT])
         self.hass = hass
         self._name = args[CONF_NAME]
-        self.device_id = args["device_id"]
+        self.device_id = args[CONF_DEVICE_ID]
         self._device_key = args[CONF_DEVICE_KEY]
         self._state = None
         self._state_before_move = None
