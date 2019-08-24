@@ -97,7 +97,7 @@ async def async_setup(hass, config):
     async def check_new_version(now):
         say_it = False
         # check if we have datetime.datetime or call.data object
-        if "data" in now:
+        if type(now) == "ServiceCall":
             if "say" in now.data:
                 say_it = now.data["say"]
         """Check if a new version is available and report if one is."""

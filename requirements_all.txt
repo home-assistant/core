@@ -1993,6 +1993,4 @@ fuzzywuzzy
 feedparser
 bs4
 readability-lxml
-mutagen
-pexpect
 requests_futures
