@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     covers = []
     devices = config.get(CONF_COVERS)
 
-    for device_id, device_config in devices.items():
+    for _, device_config in devices.items():
         args = {
             CONF_NAME: device_config.get(CONF_NAME),
             CONF_HOST: device_config.get(CONF_HOST),
