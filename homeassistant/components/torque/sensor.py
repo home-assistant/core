@@ -89,7 +89,6 @@ class TorqueReceiveDataView(HomeAssistantView):
             elif is_unit:
                 pid = convert_pid(is_unit.group(1))
 
-                # Fix for degree symbol
                 temp_unit = data[key]
                 if '\\xC2\\xB0' in temp_unit:
                     temp_unit = temp_unit.replace('\\xC2\\xB0', '°')
