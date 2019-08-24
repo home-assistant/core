@@ -95,6 +95,11 @@ async def async_setup(hass, config):
     include_components = config.get(CONF_COMPONENT_REPORTING)
 
     async def check_new_version(now):
+        say_it = False
+        # check if we have datetime.datetime or call.data object
+        if "data" in now:
+            if "say" in now.data:
+                say_it = now.data["say"]
         """Check if a new version is available and report if one is."""
         result = await get_newest_version(hass, huuid, include_components)
 
@@ -138,7 +143,7 @@ async def async_setup(hass, config):
             # say info about update
             import homeassistant.components.ais_ai_service as ais_ai
 
-            if (
+            if say_it or (
                 ais_ai.CURR_ENTITIE == "script.ais_update_system"
                 and ais_ai.CURR_BUTTON_CODE == 23
             ):
@@ -156,10 +161,10 @@ async def async_setup(hass, config):
         else:
 
             info = "Twój system jest aktualny, wersja " + newest + ". "
-            # only if from remote
+            # only if not executed by scheduler
             import homeassistant.components.ais_ai_service as ais_ai
 
-            if (
+            if say_it or (
                 ais_ai.CURR_ENTITIE == "script.ais_update_system"
                 and ais_ai.CURR_BUTTON_CODE == 23
             ):

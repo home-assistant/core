@@ -307,6 +307,9 @@ def _execute_script(hass, call):
 
 @asyncio.coroutine
 def _execute_upgrade(hass, call):
+    say_it = False
+    if "say" in call.data:
+        say_it = call.data["say"]
     # check the status of the sensor to choide the correct upgrade method
     state = hass.states.get("sensor.version_info")
     reinstall_android_app = state.attributes.get("reinstall_android_app")
@@ -318,7 +321,9 @@ def _execute_upgrade(hass, call):
         yield from hass.services.async_call(
             "ais_ai_service", "say_it", {"text": "Sprawdzam dostępność aktualizacji"}
         )
-        yield from hass.services.async_call("ais_updater", "check_version")
+        yield from hass.services.async_call(
+            "ais_updater", "check_version", {"say": say_it}
+        )
     else:
         yield from hass.services.async_call(
             "ais_ai_service",
