@@ -148,6 +148,22 @@ async def websocket_get_devices(hass, connection, msg):
     connection.send_result(msg[ID], devices)
 
 
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {vol.Required(TYPE): "zha/device", vol.Required(ATTR_IEEE): convert_ieee}
+)
+async def websocket_get_device(hass, connection, msg):
+    """Get ZHA devices."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    ha_device_registry = await async_get_registry(hass)
+    ieee = msg[ATTR_IEEE]
+    device = async_get_device_info(
+        hass, zha_gateway.devices[ieee], ha_device_registry=ha_device_registry
+    )
+    connection.send_result(msg[ID], device)
+
+
 @callback
 def async_get_device_info(hass, device, ha_device_registry=None):
     """Get ZHA device."""
@@ -587,6 +603,7 @@ def async_load_api(hass):
 
     websocket_api.async_register_command(hass, websocket_permit_devices)
     websocket_api.async_register_command(hass, websocket_get_devices)
+    websocket_api.async_register_command(hass, websocket_get_device)
     websocket_api.async_register_command(hass, websocket_reconfigure_node)
     websocket_api.async_register_command(hass, websocket_device_clusters)
     websocket_api.async_register_command(hass, websocket_device_cluster_attributes)
