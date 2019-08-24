@@ -1,7 +1,7 @@
 {
   "domain": "growatt_server",
   "name": "Growatt Server",
-  "documentation": "https://github.com/indykoning/home-assistant-growatt-server/blob/master/README.md",
+  "documentation": "https://www.home-assistant.io/components/growatt_server/",
   "requirements": [
     "growattServer==0.0.1"
   ],
