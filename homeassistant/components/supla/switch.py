@@ -38,4 +38,3 @@ class SuplaSwitch(SuplaChannel, SwitchDevice):
         if state:
             return state["on"]
         return False
-
