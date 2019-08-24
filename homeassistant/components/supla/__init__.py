@@ -19,7 +19,7 @@ CONF_SERVERS = "servers"
 
 SUPLA_FUNCTION_HA_CMP_MAP = {
     "CONTROLLINGTHEROLLERSHUTTER": "cover",
-    "LIGHTSWITCH": "switch"
+    "LIGHTSWITCH": "switch",
 }
 SUPLA_CHANNELS = "supla_channels"
 SUPLA_SERVERS = "supla_servers"
