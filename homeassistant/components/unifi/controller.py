@@ -247,9 +247,10 @@ class UniFiController:
                     config
                 ] != self.config_entry.options.get(option):
                     new_options[option] = unifi_config[config]
-                elif config != option and unifi_config[
-                    config
-                ] == self.config_entry.options.get(option):
+                elif config != option and (
+                    option not in self.config_entry.options
+                    or unifi_config[config] == self.config_entry.options.get(option)
+                ):
                     new_options[option] = not unifi_config[config]
 
         if new_options:

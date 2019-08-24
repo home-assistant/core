@@ -69,10 +69,10 @@ DEVICE_1 = {
     "mac": "00:00:00:00:01:01",
     "model": "US16P150",
     "name": "device_1",
-    "overheating": False,
+    "overheating": True,
     "state": 1,
     "type": "usw",
-    "upgradable": False,
+    "upgradable": True,
     "version": "4.0.42.10433",
 }
 DEVICE_2 = {
