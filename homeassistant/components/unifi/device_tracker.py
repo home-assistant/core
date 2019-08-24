@@ -137,7 +137,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Update the values of the controller."""
         update_items(controller, async_add_entities, tracked)
 
-    async_dispatcher_connect(hass, controller.event_update, update_controller)
+    async_dispatcher_connect(hass, controller.signal_update, update_controller)
 
     @callback
     def update_disable_on_entities():
@@ -160,7 +160,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 )
 
     async_dispatcher_connect(
-        hass, controller.event_options_update, update_disable_on_entities
+        hass, controller.signal_options_update, update_disable_on_entities
     )
 
     update_controller()
@@ -174,7 +174,7 @@ def update_items(controller, async_add_entities, tracked):
     for client_id in controller.api.clients:
 
         if client_id in tracked:
-            if tracked[client_id].registry_entry.disabled_by is None:
+            if tracked[client_id].enabled:
                 tracked[client_id].async_schedule_update_ha_state()
             continue
 
@@ -186,7 +186,7 @@ def update_items(controller, async_add_entities, tracked):
     for device_id in controller.api.devices:
 
         if device_id in tracked:
-            if tracked[device_id].registry_entry.disabled_by is None:
+            if tracked[device_id].enabled:
                 tracked[device_id].async_schedule_update_ha_state()
             continue
 
@@ -231,11 +231,10 @@ class UniFiClientTracker(ScannerEntity):
 
     async def async_update(self):
         """Synchronize state with controller."""
-        if self.registry_entry.disabled_by is None:
-            LOGGER.debug(
-                "Updating UniFi tracked client %s (%s)", self.entity_id, self.client.mac
-            )
-            await self.controller.request_update()
+        LOGGER.debug(
+            "Updating UniFi tracked client %s (%s)", self.entity_id, self.client.mac
+        )
+        await self.controller.request_update()
 
     @property
     def is_connected(self):
@@ -306,11 +305,10 @@ class UniFiDeviceTracker(ScannerEntity):
 
     async def async_update(self):
         """Synchronize state with controller."""
-        if self.registry_entry.disabled_by is None:
-            LOGGER.debug(
-                "Updating UniFi tracked device %s (%s)", self.entity_id, self.device.mac
-            )
-            await self.controller.request_update()
+        LOGGER.debug(
+            "Updating UniFi tracked device %s (%s)", self.entity_id, self.device.mac
+        )
+        await self.controller.request_update()
 
     @property
     def is_connected(self):

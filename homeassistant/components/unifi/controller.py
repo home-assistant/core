@@ -18,6 +18,9 @@ from .const import (
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_DONT_TRACK_CLIENTS,
+    CONF_DONT_TRACK_DEVICES,
+    CONF_DONT_TRACK_WIRED_CLIENTS,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
@@ -116,18 +119,14 @@ class UniFiController:
         return None
 
     @property
-    def event_update(self):
+    def signal_update(self):
         """Event specific per UniFi entry to signal new data."""
-        return "unifi-update-{}".format(
-            CONTROLLER_ID.format(host=self.host, site=self.site)
-        )
+        return f"unifi-update-{CONTROLLER_ID.format(host=self.host, site=self.site)}"
 
     @property
-    def event_options_update(self):
+    def signal_options_update(self):
         """Event specific per UniFi entry to signal new options."""
-        return "unifi-options-{}".format(
-            CONTROLLER_ID.format(host=self.host, site=self.site)
-        )
+        return f"unifi-options-{CONTROLLER_ID.format(host=self.host, site=self.site)}"
 
     async def request_update(self):
         """Request an update."""
@@ -171,7 +170,7 @@ class UniFiController:
             LOGGER.info("Reconnected to controller %s", self.host)
             self.available = True
 
-        async_dispatcher_send(self.hass, self.event_update)
+        async_dispatcher_send(self.hass, self.signal_update)
 
     async def async_setup(self):
         """Set up a UniFi controller."""
@@ -198,61 +197,7 @@ class UniFiController:
             LOGGER.error("Unknown error connecting with UniFi controller: %s", err)
             return False
 
-        unifi_config = {}
-        for config in hass.data[UNIFI_CONFIG]:
-            if (
-                self.host == config[CONF_HOST]
-                and self.site_name == config[CONF_SITE_ID]
-            ):
-                unifi_config = config
-                break
-
-        old_options = dict(self.config_entry.options)
-        new_options = {}
-
-        if (
-            CONF_BLOCK_CLIENT in unifi_config
-            and self.option_block_clients != unifi_config[CONF_BLOCK_CLIENT]
-        ):
-            new_options[CONF_BLOCK_CLIENT] = unifi_config[CONF_BLOCK_CLIENT]
-
-        if (
-            CONF_TRACK_CLIENTS in unifi_config
-            and self.option_track_clients != unifi_config[CONF_TRACK_CLIENTS]
-        ):
-            new_options[CONF_TRACK_CLIENTS] = unifi_config[CONF_TRACK_CLIENTS]
-
-            if (
-                CONF_TRACK_WIRED_CLIENTS in unifi_config
-                and self.option_track_wired_clients
-                != unifi_config[CONF_TRACK_WIRED_CLIENTS]
-            ):
-                new_options[CONF_TRACK_WIRED_CLIENTS] = unifi_config[
-                    CONF_TRACK_WIRED_CLIENTS
-                ]
-
-        if (
-            CONF_TRACK_DEVICES in unifi_config
-            and self.option_track_devices != unifi_config[CONF_TRACK_DEVICES]
-        ):
-            new_options[CONF_TRACK_DEVICES] = unifi_config[CONF_TRACK_DEVICES]
-
-        if (
-            CONF_DETECTION_TIME in unifi_config
-            and self.option_detection_time
-            != timedelta(seconds=unifi_config[CONF_DETECTION_TIME])
-        ):
-            new_options[CONF_DETECTION_TIME] = unifi_config[CONF_DETECTION_TIME]
-
-        if (
-            CONF_SSID_FILTER in unifi_config
-            and self.option_ssid_filter != unifi_config[CONF_SSID_FILTER]
-        ):
-            new_options[CONF_SSID_FILTER] = unifi_config[CONF_SSID_FILTER]
-
-        if False and new_options:
-            options = {**old_options, **new_options}
-            hass.config_entries.async_update_entry(self.config_entry, options=options)
+        self.import_configuration()
 
         self.config_entry.add_update_listener(self.async_options_updated)
 
@@ -273,7 +218,45 @@ class UniFiController:
             site=entry.data[CONF_CONTROLLER][CONF_SITE_ID],
         )
         controller = hass.data[DOMAIN][controller_id]
-        async_dispatcher_send(hass, controller.event_options_update)
+        async_dispatcher_send(hass, controller.signal_options_update)
+
+    def import_configuration(self):
+        """Import configuration to config entry options."""
+        unifi_config = {}
+        for config in self.hass.data[UNIFI_CONFIG]:
+            if (
+                self.host == config[CONF_HOST]
+                and self.site_name == config[CONF_SITE_ID]
+            ):
+                unifi_config = config
+                break
+
+        old_options = dict(self.config_entry.options)
+        new_options = {}
+
+        for config, option in (
+            (CONF_BLOCK_CLIENT, CONF_BLOCK_CLIENT),
+            (CONF_DONT_TRACK_CLIENTS, CONF_TRACK_CLIENTS),
+            (CONF_DONT_TRACK_WIRED_CLIENTS, CONF_TRACK_WIRED_CLIENTS),
+            (CONF_DONT_TRACK_DEVICES, CONF_TRACK_DEVICES),
+            (CONF_DETECTION_TIME, CONF_DETECTION_TIME),
+            (CONF_SSID_FILTER, CONF_SSID_FILTER),
+        ):
+            if config in unifi_config:
+                if config == option and unifi_config[
+                    config
+                ] != self.config_entry.options.get(option):
+                    new_options[option] = unifi_config[config]
+                elif config != option and unifi_config[
+                    config
+                ] == self.config_entry.options.get(option):
+                    new_options[option] = not unifi_config[config]
+
+        if new_options:
+            options = {**old_options, **new_options}
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, options=options
+            )
 
     async def async_reset(self):
         """Reset this controller to default state.
