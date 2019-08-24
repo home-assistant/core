@@ -225,6 +225,7 @@ def async_setup(hass, config):
             else:
                 ais_global.GLOBAL_TTS_VOICE = "pl-pl-x-oda-local"
             # publish to frame
+            hass.services.call("ais_ai_service", "say_it", {"text": voice})
             hass.services.call(
                 "ais_ai_service",
                 "publish_command_to_frame",
