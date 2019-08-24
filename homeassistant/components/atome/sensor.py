@@ -1,8 +1,8 @@
 """Linky Atome."""
-from datetime import timedelta
-from pyatome import AtomeClient
-import voluptuous as vol
 import logging
+from datetime import timedelta
+from pyatome.client import AtomeClient, PyAtomeError
+import voluptuous as vol
 
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT, CONF_NAME
@@ -37,11 +37,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    """Initiate Atome Client object"""
     try:
         client = AtomeClient(username, password)
-    except Exception as exp:
+    except PyAtomeError as exp:
         _LOGGER.error(exp)
+        return False
     # finally:
     #     client.close_session()
 
@@ -101,5 +101,13 @@ class AtomeSensor(Entity):
         """Update device state."""
         _LOGGER.debug("ATOME: Starting update of Atome Data")
 
-        values = self._get_data()
-        self._state = values["last"]
+        try:
+            values = self._get_data()
+            self._state = values["last"]
+
+        except KeyError as error:
+            _LOGGER.error(
+                "Key error (%s), it seems the 'last' value is not accessible. Here is what I got: %s",
+                str(error),
+                str(values),
+            )
