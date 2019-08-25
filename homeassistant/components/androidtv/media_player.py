@@ -432,7 +432,8 @@ class AndroidTVDevice(ADBDevice):
             self._available = self.aftv.connect(always_log_errors=False)
 
             # To be safe, wait until the next update to run ADB commands.
-            return
+            if not self.aftv.adb_server_ip:
+                return
 
         # If the ADB connection is not intact, don't update.
         if not self._available:
@@ -507,7 +508,8 @@ class FireTVDevice(ADBDevice):
             self._available = self.aftv.connect(always_log_errors=False)
 
             # To be safe, wait until the next update to run ADB commands.
-            return
+            if not self.aftv.adb_server_ip:
+                return
 
         # If the ADB connection is not intact, don't update.
         if not self._available:

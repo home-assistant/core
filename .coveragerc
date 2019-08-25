@@ -31,7 +31,6 @@ omit =
     homeassistant/components/amcrest/*
     homeassistant/components/ampio/*
     homeassistant/components/android_ip_webcam/*
-    homeassistant/components/androidtv/*
     homeassistant/components/anel_pwrctrl/switch.py
     homeassistant/components/anthemav/media_player.py
     homeassistant/components/apache_kafka/*
