@@ -32,7 +32,7 @@ def setup_real_ip(app, use_x_forwarded_for, trusted_proxies):
                 )
             ):
                 request[KEY_REAL_IP] = ip_address(
-                    request.headers.get(X_FORWARDED_FOR).split(", ")[-1]
+                    request.headers.get(X_FORWARDED_FOR).split(", ")[0]
                 )
         except ValueError:
             pass

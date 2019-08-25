@@ -81,7 +81,7 @@ async def test_use_x_forwarded_for_with_spoofed_header(aiohttp_client):
     )
     assert resp.status == 200
     text = await resp.text()
-    assert text == "255.255.255.255"
+    assert text == "222.222.222.222"
 
 
 async def test_use_x_forwarded_for_with_nonsense_header(aiohttp_client):
