@@ -445,7 +445,9 @@ class AndroidTVDevice(ADBDevice):
             self.aftv.update()
         )
 
-        self._state = ANDROIDTV_STATES[state]
+        self._state = ANDROIDTV_STATES.get(state)
+        if self._state is None:
+            self._available = False
 
     @property
     def is_volume_muted(self):
@@ -522,7 +524,9 @@ class FireTVDevice(ADBDevice):
             self._get_sources
         )
 
-        self._state = ANDROIDTV_STATES[state]
+        self._state = ANDROIDTV_STATES.get(state)
+        if self._state is None:
+            self._available = False
 
     @property
     def source(self):

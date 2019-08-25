@@ -63,6 +63,9 @@ PATCH_PYTHON_ADB_CONNECT_FAIL = patch(
 PATCH_PYTHON_ADB_COMMAND_FAIL = patch(
     "adb.adb_commands.AdbCommands.Shell", adb_shell_python_adb_error
 )
+PATCH_PYTHON_ADB_COMMAND_NONE = patch(
+    "adb.adb_commands.AdbCommands.Shell", return_value=None
+)
 
 PATCH_ADB_SERVER_CONNECT_SUCCESS = patch(
     "adb_messenger.client.Client.device", return_value=AdbAvailable()
@@ -75,6 +78,9 @@ PATCH_ADB_SERVER_CONNECT_FAIL = patch(
 )
 PATCH_ADB_SERVER_COMMAND_FAIL = patch(
     "{}.AdbAvailable.shell".format(__name__), adb_shell_adb_server_error
+)
+PATCH_ADB_SERVER_COMMAND_NONE = patch(
+    "{}.AdbAvailable.shell".format(__name__), return_value=None
 )
 
 
@@ -122,6 +128,26 @@ class TestAndroidTVPythonImplementation(unittest.TestCase):
             in logs.output[0]
         )
 
+    def test_adb_shell_returns_none(self):
+        """Test the case that the ADB shell command returns `None`.
+
+        The state should be `None` and the device should be unavailable.
+        """
+        with PATCH_PYTHON_ADB_COMMAND_NONE:
+            self.aftv.update()
+            self.assertFalse(self.aftv.available)
+            self.assertIsNone(self.aftv.state)
+
+        with PATCH_PYTHON_ADB_CONNECT_SUCCESS, PATCH_PYTHON_ADB_COMMAND_SUCCESS:
+            # Update 1 will reconnect
+            self.aftv.update()
+            self.assertTrue(self.aftv.available)
+
+            # Update 2 will update the state
+            self.aftv.update()
+            self.assertTrue(self.aftv.available)
+            self.assertIsNotNone(self.aftv.state)
+
 
 class TestAndroidTVServerImplementation(unittest.TestCase):
     """Test the androidtv media player for an Android TV device."""
@@ -167,6 +193,21 @@ class TestAndroidTVServerImplementation(unittest.TestCase):
             )
             in logs.output[0]
         )
+
+    def test_adb_shell_returns_none(self):
+        """Test the case that the ADB shell command returns `None`.
+
+        The state should be `None` and the device should be unavailable.
+        """
+        with PATCH_ADB_SERVER_COMMAND_NONE:
+            self.aftv.update()
+            self.assertFalse(self.aftv.available)
+            self.assertIsNone(self.aftv.state)
+
+        with PATCH_ADB_SERVER_CONNECT_SUCCESS:
+            self.aftv.update()
+            self.assertTrue(self.aftv.available)
+            self.assertIsNotNone(self.aftv.state)
 
 
 class TestFireTVPythonImplementation(TestAndroidTVPythonImplementation):
