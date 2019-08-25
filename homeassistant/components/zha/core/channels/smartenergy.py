@@ -115,17 +115,17 @@ class Metering(AttributeListeningChannel):
 
     @callback
     def attribute_updated(self, attrid, value):
-        """Called when attribute has been updated."""
-        super().attribute_updated(attrid, value * self._multiplier /
-                                  self._divisor)
+        """Handle attribute update from Metering cluster."""
+        super().attribute_updated(attrid, value * self._multiplier
+                                  / self._divisor)
 
     @property
     def unit_of_measurement(self):
-        """Returns unit of measurement."""
+        """Return unit of measurement."""
         return self.unit_of_measure_map.get(self._unit_enum & 0x7f, 'unknown')
 
     async def fetch_config(self, from_cache):
-        """Fetches config from device and updates format specifier."""
+        """Fetch config from device and updates format specifier."""
         self._divisor = await self.get_attribute_value(
             "divisor", from_cache=from_cache
         )
@@ -144,9 +144,9 @@ class Metering(AttributeListeningChannel):
         if self._multiplier is None or self._multiplier == 0:
             self._multiplier = 1
         if self._unit_enum is None:
-            self._unit_enum = 0x7f # unknown
+            self._unit_enum = 0x7f  # unknown
         if fmting is None:
-            fmting = 0xf9 # 1 digit to the right, 15 digits to the left
+            fmting = 0xf9  # 1 digit to the right, 15 digits to the left
 
         r_digits = fmting & 0x07  # digits to the right of decimal point
         l_digits = (fmting >> 3) & 0x0F  # digits to the left of decimal point
