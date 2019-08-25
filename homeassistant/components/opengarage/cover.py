@@ -157,22 +157,23 @@ class OpenGarageCover(CoverDevice):
 
     def _push_button(self):
         """Send commands to API."""
-        result = 0
+        result = -1
         try:
-            response = requests.get(
+            result = requests.get(
                 "{}/cc?dkey={}&click=1".format(self.opengarage_url, self._device_key),
                 timeout=10,
-            ).json()
-            result = response["result"]
-            if result == 1:
-                return
-
+            ).json()["result"]
         except requests.exceptions.RequestException as ex:
             _LOGGER.error(
                 "Unable to connect to OpenGarage device: %(reason)s", dict(reason=ex)
             )
+        if result == 1:
+            return
+
         if result == 2:
             _LOGGER.error("Unable to control %s: Device key is incorrect", self._name)
+        elif result > 2:
+            _LOGGER.error("Unable to control %s: Error code", self._name, result)
 
         self._state = self._state_before_move
         self._state_before_move = None
