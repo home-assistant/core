@@ -7,7 +7,7 @@ import growattServer
 
 import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_USERNAME, CONF_PASSWORD)
+from homeassistant.const import CONF_NAME, CONF_USERNAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # Get a list of inverters for specified plant to add sensors for.
     inverters = api.inverter_list(plant_id)
 
-    entities = [GrowattInverter(api, f"%{name}_Total", plant_id, username, password)]
+    entities = [GrowattInverter(api, f"{name}_Total", plant_id, username, password)]
 
     # Add sensors for each inverter in the specified plant.
     for inverter in inverters:
@@ -65,9 +65,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             )
         )
 
-    add_entities(
-        entities, True
-    )
+    add_entities(entities, True)
 
 
 class GrowattInverter(Entity):
@@ -124,11 +122,40 @@ class GrowattInverter(Entity):
                 total_info = self.api.plant_info(self.inverter_id)
                 del total_info["deviceList"]
                 self._state = total_info["invTodayPpv"]
-                self.attributes = total_info
+                self.attributes = {
+                    "money_today": total_info["plantMoneyText"],
+                    "money_total": total_info["totalMoneyText"],
+                    "energy_today": total_info["todayEnergy"],
+                    "current_wattage": total_info["invTodayPpv"],
+                    "current_voltage": total_info["totalEnergy"],
+                    "maximum_output": total_info["nominalPower"],
+                }
             else:
                 inverter_info = self.api.inverter_detail(self.inverter_id)
 
-                self.attributes = inverter_info["data"]
                 self._state = inverter_info["data"]["pac"]
+                self.attributes = {
+                    "energy_today": inverter_info["data"]["e_today"],
+                    "energy_total": inverter_info["data"]["e_total"],
+                    "voltage_input_1": inverter_info["data"]["vpv1"],
+                    "amperage_input_1": inverter_info["data"]["ipv1"],
+                    "wattage_input_1": inverter_info["data"]["ppv1"],
+                    "voltage_input_2": inverter_info["data"]["vpv2"],
+                    "amperage_input_2": inverter_info["data"]["ipv2"],
+                    "wattage_input_2": inverter_info["data"]["ppv2"],
+                    "voltage_input_3": inverter_info["data"]["vpv3"],
+                    "amperage_input_3": inverter_info["data"]["ipv3"],
+                    "wattage_input_3": inverter_info["data"]["ppv3"],
+                    "inverter_internal_wattage": inverter_info["data"]["ppv"],
+                    "inverter_reactive_voltage": inverter_info["data"]["vacr"],
+                    "inverter_reactive_amperage": inverter_info["data"]["iacr"],
+                    "frequency": inverter_info["data"]["fac"],
+                    "current_wattage": inverter_info["data"]["pac"],
+                    "current_reactive_wattage": inverter_info["data"]["pacr"],
+                    "fault": inverter_info["data"]["strfault"],
+                    "warning": inverter_info["data"]["strwarning"],
+                    "break": inverter_info["data"]["strbreak"],
+                    "warning_id": inverter_info["data"]["pidwarning"],
+                }
         except json.decoder.JSONDecodeError:
             _LOGGER.error("Unable to fetch data from Growatt server")
