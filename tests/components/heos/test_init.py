@@ -2,7 +2,7 @@
 import asyncio
 
 from asynctest import Mock, patch
-from pyheos import CommandError, const
+from pyheos import CommandFailedError, HeosError, const
 import pytest
 
 from homeassistant.components.heos import (
@@ -117,31 +117,27 @@ async def test_async_setup_entry_not_signed_in_loads_platforms(
 async def test_async_setup_entry_connect_failure(hass, config_entry, controller):
     """Connection failure raises ConfigEntryNotReady."""
     config_entry.add_to_hass(hass)
-    errors = [ConnectionError, asyncio.TimeoutError]
-    for error in errors:
-        controller.connect.side_effect = error
-        with pytest.raises(ConfigEntryNotReady):
-            await async_setup_entry(hass, config_entry)
-            await hass.async_block_till_done()
-        assert controller.connect.call_count == 1
-        assert controller.disconnect.call_count == 1
-        controller.connect.reset_mock()
-        controller.disconnect.reset_mock()
+    controller.connect.side_effect = HeosError()
+    with pytest.raises(ConfigEntryNotReady):
+        await async_setup_entry(hass, config_entry)
+        await hass.async_block_till_done()
+    assert controller.connect.call_count == 1
+    assert controller.disconnect.call_count == 1
+    controller.connect.reset_mock()
+    controller.disconnect.reset_mock()
 
 
 async def test_async_setup_entry_player_failure(hass, config_entry, controller):
     """Failure to retrieve players/sources raises ConfigEntryNotReady."""
     config_entry.add_to_hass(hass)
-    errors = [ConnectionError, asyncio.TimeoutError]
-    for error in errors:
-        controller.get_players.side_effect = error
-        with pytest.raises(ConfigEntryNotReady):
-            await async_setup_entry(hass, config_entry)
-            await hass.async_block_till_done()
-        assert controller.connect.call_count == 1
-        assert controller.disconnect.call_count == 1
-        controller.connect.reset_mock()
-        controller.disconnect.reset_mock()
+    controller.get_players.side_effect = HeosError()
+    with pytest.raises(ConfigEntryNotReady):
+        await async_setup_entry(hass, config_entry)
+        await hass.async_block_till_done()
+    assert controller.connect.call_count == 1
+    assert controller.disconnect.call_count == 1
+    controller.connect.reset_mock()
+    controller.disconnect.reset_mock()
 
 
 async def test_unload_entry(hass, config_entry, controller):
@@ -167,7 +163,7 @@ async def test_update_sources_retry(hass, config_entry, config, controller, capl
     source_manager = hass.data[DOMAIN][DATA_SOURCE_MANAGER]
     source_manager.retry_delay = 0
     source_manager.max_retry_attempts = 1
-    controller.get_favorites.side_effect = CommandError("Test", "test", 0)
+    controller.get_favorites.side_effect = CommandFailedError("Test", "test", 0)
     controller.dispatcher.send(
         const.SIGNAL_CONTROLLER_EVENT, const.EVENT_SOURCES_CHANGED, {}
     )
