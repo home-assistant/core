@@ -126,7 +126,7 @@ def setup(hass, config):
     state.update(now=None)
 
     track_time_interval(
-        hass, state.update, interval/3
+        hass, state.update, interval
     )
 
     return True
@@ -159,7 +159,8 @@ class JLRData:
         _LOGGER.info("Updating vehicle data")
         #for vehicle in self.vehicles:
 
-
+        for vehicle in self.vehicles:
+            self.vehicles[vehicle].get_status()
         dispatcher_send(self._hass, SIGNAL_STATE_UPDATED)
 
 

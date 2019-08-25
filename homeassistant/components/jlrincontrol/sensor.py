@@ -1,7 +1,13 @@
 """Support for JLR InControl sensors."""
 import logging
 
+from homeassistant.components.jlrincontrol import (
+    SIGNAL_STATE_UPDATED
+)
+
 from homeassistant.components.jlrincontrol import JLREntity, RESOURCES
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +25,7 @@ class JLRSensor(JLREntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        _LOGGER.info("Updating==========================================")
+        _LOGGER.info("Updating ==========================================")
         val = self.get_updated_info()
         if val is None:
             return val
@@ -39,6 +45,10 @@ class JLRSensor(JLREntity):
     def update(self):
         _LOGGER.info("Updating here xxxxxxxxxxxxx")
 
+    async def async_added_to_hass(self):
+        _LOGGER.info("CONNECTING TO DISPATCHER ==============================================")
+        async_dispatcher_connect(self.hass, SIGNAL_STATE_UPDATED, self._schedule_immediate_update)
+
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
@@ -48,3 +58,8 @@ class JLRSensor(JLREntity):
     def icon(self):
         """Return the icon."""
         return RESOURCES[self._attribute][2]
+
+    @callback
+    def _schedule_immediate_update(self):
+        _LOGGER.info("IN CALLBACK HERE ==========XXXXXXXXXXXXXXXXXX===================")
+        self.async_schedule_update_ha_state(True)
