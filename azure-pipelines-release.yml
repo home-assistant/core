@@ -5,6 +5,13 @@ trigger:
     include:
     - '*'
 pr: none
+schedules:
+- cron: '0 1 * * *'
+  displayName: 'nightly builds'
+  branches:
+    include:
+    - dev
+  always: true
 variables:
   - name: versionBuilder
     value: '6.1'
@@ -24,6 +31,8 @@ stages:
 - stage: 'Validate'
   jobs:
   - template: templates/azp-job-version.yaml@azure
+    parameters:
+      ignoreDev: true
   - job: 'Permission'
     pool:
       vmImage: 'ubuntu-latest'
@@ -42,10 +51,12 @@ stages:
         echo "${created_by} is not allowed to create an release!"
         exit 1
       displayName: 'Check rights'
+      condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'dev'))
 
 - stage: 'Build'
   jobs:
   - job: 'ReleasePython'
+    condition: startsWith(variables['Build.SourceBranch'], 'refs/tags')
     pool:
       vmImage: 'ubuntu-latest'
     steps:
