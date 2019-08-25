@@ -44,6 +44,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Discover and add a MQTT camera."""
         try:
             discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
+            print(discovery_payload)
+            del discovery_payload['device']
             config = PLATFORM_SCHEMA(discovery_payload)
             await _async_setup_entity(config, async_add_entities, discovery_hash)
         except Exception:
