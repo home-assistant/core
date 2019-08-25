@@ -9,6 +9,7 @@ HUMIDITY_ICON = "mdi:water-percent"
 TEMP_C_ICON = "mdi:thermometer"
 BRIGHTNESS_ICON = "mdi:brightness-6"
 CO2_ICON = "mdi:periodic-table-co2"
+BATTERY_ICON = "mdi:battery"
 
 UNIT_PERCENT = "%"
 UNIT_LUX = "lux"
@@ -159,11 +160,48 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity):
         return self._state
 
 
+class HomeKitBatterySensor(HomeKitEntity):
+    """Representation of a Homekit battery sensor."""
+
+    def __init__(self, *args):
+        """Initialise the entity."""
+        super().__init__(*args)
+        self._state = None
+
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity is tracking."""
+        return [CharacteristicsTypes.BATTERY_LEVEL]
+
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return "{} {}".format(super().name, "Battery")
+
+    @property
+    def icon(self):
+        """Return the sensor icon."""
+        return BATTERY_ICON
+
+    @property
+    def unit_of_measurement(self):
+        """Return units for the sensor."""
+        return UNIT_PERCENT
+
+    def _update_battery_level(self, value):
+        self._state = value
+
+    @property
+    def state(self):
+        """Return the current battery level percentage."""
+        return self._state
+
+
 ENTITY_TYPES = {
     "humidity": HomeKitHumiditySensor,
     "temperature": HomeKitTemperatureSensor,
     "light": HomeKitLightSensor,
     "carbon-dioxide": HomeKitCarbonDioxideSensor,
+    "battery": HomeKitBatterySensor,
 }
 
 
