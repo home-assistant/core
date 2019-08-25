@@ -128,7 +128,11 @@ class BeewiSmartClimPoller:
         _LOGGER.debug("MiTempBtSensorPoller initiated with backend %s", self._backend)
 
     def get_value(self, device):
-        """Return the value from the cached data."""
+        """
+        Return the value from the cached data.
+
+        In the case it's outdated, it will call the update endpoint to refresh those values.
+        """
         if (self._last_update is None) or (
             datetime.now() - timedelta(minutes=3) > self._last_update
         ):
@@ -145,7 +149,12 @@ class BeewiSmartClimPoller:
         return None
 
     def update_data(self):
-        """Get data from device."""
+        """
+        Get data from device.
+
+        This method reads the handle 0x003f that contains temperature, humidity
+        and battery level.
+        """
         from btlewrap.base import BluetoothInterface, BluetoothBackendException
 
         bt_interface = BluetoothInterface(self._backend, "hci0")
