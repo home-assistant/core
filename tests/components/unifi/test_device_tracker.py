@@ -15,6 +15,8 @@ from homeassistant.components.unifi.const import (
     CONF_CONTROLLER,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
+    CONF_TRACK_DEVICES,
+    CONF_TRACK_WIRED_CLIENTS,
     UNIFI_CONFIG,
 )
 from homeassistant.const import (
@@ -149,6 +151,7 @@ async def setup_controller(hass, mock_controller, options={}):
         system_options={},
         options=options,
     )
+    hass.config_entries._entries.append(config_entry)
     mock_controller.config_entry = config_entry
 
     await mock_controller.async_update()
@@ -229,6 +232,25 @@ async def test_tracked_devices(hass, mock_controller):
 
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1.state == STATE_UNAVAILABLE
+
+    mock_controller.config_entry.add_update_listener(
+        mock_controller.async_options_updated
+    )
+    hass.config_entries.async_update_entry(
+        mock_controller.config_entry,
+        options={
+            CONF_SSID_FILTER: [],
+            CONF_TRACK_WIRED_CLIENTS: False,
+            CONF_TRACK_DEVICES: False,
+        },
+    )
+    await hass.async_block_till_done()
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1
+    client_2 = hass.states.get("device_tracker.wired_client")
+    assert client_2 is None
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1 is None
 
 
 async def test_restoring_client(hass, mock_controller):
