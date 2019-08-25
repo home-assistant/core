@@ -80,19 +80,19 @@ class Metering(AttributeListeningChannel):
     REPORT_CONFIG = [{"attr": "instantaneous_demand", "config": REPORT_CONFIG_DEFAULT}]
 
     unit_of_measure_map = {
-        0x00: 'kW',
-        0x01: 'm³/h',
-        0x02: 'ft³/h',
-        0x03: 'ccf/h',
-        0x04: 'US gal/h',
-        0x05: 'IMP gal/h',
-        0x06: 'BTU/h',
-        0x07: 'l/h',
-        0x08: 'kPa',
-        0x09: 'kPa',
-        0x0a: 'mcf/h',
-        0x0b: 'unitless',
-        0x0c: 'MJ/s',
+        0x00: "kW",
+        0x01: "m³/h",
+        0x02: "ft³/h",
+        0x03: "ccf/h",
+        0x04: "US gal/h",
+        0x05: "IMP gal/h",
+        0x06: "BTU/h",
+        0x07: "l/h",
+        0x08: "kPa",
+        0x09: "kPa",
+        0x0A: "mcf/h",
+        0x0B: "unitless",
+        0x0C: "MJ/s",
     }
 
     def __init__(self, cluster, device):
@@ -116,19 +116,16 @@ class Metering(AttributeListeningChannel):
     @callback
     def attribute_updated(self, attrid, value):
         """Handle attribute update from Metering cluster."""
-        super().attribute_updated(attrid, value * self._multiplier
-                                  / self._divisor)
+        super().attribute_updated(attrid, value * self._multiplier / self._divisor)
 
     @property
     def unit_of_measurement(self):
         """Return unit of measurement."""
-        return self.unit_of_measure_map.get(self._unit_enum & 0x7f, 'unknown')
+        return self.unit_of_measure_map.get(self._unit_enum & 0x7F, "unknown")
 
     async def fetch_config(self, from_cache):
         """Fetch config from device and updates format specifier."""
-        self._divisor = await self.get_attribute_value(
-            "divisor", from_cache=from_cache
-        )
+        self._divisor = await self.get_attribute_value("divisor", from_cache=from_cache)
         self._multiplier = await self.get_attribute_value(
             "multiplier", from_cache=from_cache
         )
@@ -144,9 +141,9 @@ class Metering(AttributeListeningChannel):
         if self._multiplier is None or self._multiplier == 0:
             self._multiplier = 1
         if self._unit_enum is None:
-            self._unit_enum = 0x7f  # unknown
+            self._unit_enum = 0x7F  # unknown
         if fmting is None:
-            fmting = 0xf9  # 1 digit to the right, 15 digits to the left
+            fmting = 0xF9  # 1 digit to the right, 15 digits to the left
 
         r_digits = fmting & 0x07  # digits to the right of decimal point
         l_digits = (fmting >> 3) & 0x0F  # digits to the left of decimal point
@@ -155,11 +152,9 @@ class Metering(AttributeListeningChannel):
         width = r_digits + l_digits + (1 if r_digits > 0 else 0)
 
         if fmting & 0x80:
-            self._format_spec = '{:' + str(width) + '.' + \
-                                str(r_digits) + 'f}'
+            self._format_spec = "{:" + str(width) + "." + str(r_digits) + "f}"
         else:
-            self._format_spec = '{:0' + str(width) + '.' + \
-                                str(r_digits) + 'f}'
+            self._format_spec = "{:0" + str(width) + "." + str(r_digits) + "f}"
 
     def formatter_function(self, value):
         """Return formatted value for display."""
