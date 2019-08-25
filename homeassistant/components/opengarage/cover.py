@@ -173,7 +173,7 @@ class OpenGarageCover(CoverDevice):
         if result == 2:
             _LOGGER.error("Unable to control %s: Device key is incorrect", self._name)
         elif result > 2:
-            _LOGGER.error("Unable to control %s: Error code", self._name, result)
+            _LOGGER.error("Unable to control %s: Error code %s", self._name, result)
 
         self._state = self._state_before_move
         self._state_before_move = None
