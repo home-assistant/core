@@ -277,7 +277,7 @@ pydeconz==62
 pydispatcher==2.0.5
 
 # homeassistant.components.heos
-pyheos==0.5.2
+pyheos==0.6.0
 
 # homeassistant.components.homematic
 pyhomematic==0.1.60
