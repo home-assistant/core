@@ -314,6 +314,9 @@ bt_proximity==0.2
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
 
+# homeassistant.components.beewi_smartclim
+btlewrap==0.0.4
+
 # homeassistant.components.bt_smarthub
 btsmarthub_devicelist==0.1.3
 
