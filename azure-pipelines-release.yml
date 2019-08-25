@@ -51,7 +51,7 @@ stages:
         echo "${created_by} is not allowed to create an release!"
         exit 1
       displayName: 'Check rights'
-      condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'dev'))
+      condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags'))
 
 - stage: 'Build'
   jobs:
