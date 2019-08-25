@@ -56,8 +56,13 @@ _LOGGER.error("LINKY_SENSOR")
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Old way of setting up the Linky platform."""
+    pass
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up Linky sensor from legacy config file."""
-    _LOGGER.error("LINKY_SENSOR:setup_platform")
+    _LOGGER.error("LINKY_SENSOR:async_setup_platform")
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config
@@ -76,6 +81,7 @@ async def async_setup_entry(
         entry.data[CONF_PASSWORD],
         entry.data[CONF_TIMEOUT],
     )
+    account.setup()
     async_add_entities(account.sensors, True)
 
 
@@ -86,12 +92,15 @@ class LinkyAccount:
         """Initialise the Linky account."""
 
         _LOGGER.error("LINKY_SENSOR:account init")
+        self.hass = hass
         self._username = username
-        self.__password = password
+        self._password = password
         self._timeout = timeout
         self._data = None
         self.sensors = []
 
+    def setup(self):
+        """Setups the component."""
         self.update_linky_data(dt_util.utcnow())
 
         self.sensors.append(LinkySensor("Linky yesterday", self, DAILY, INDEX_LAST))
@@ -104,11 +113,11 @@ class LinkyAccount:
         )
         self.sensors.append(LinkySensor("Linky last year", self, YEARLY, INDEX_LAST))
 
-        async_track_time_interval(hass, self.update_linky_data, SCAN_INTERVAL)
+        async_track_time_interval(self.hass, self.update_linky_data, SCAN_INTERVAL)
 
     def update_linky_data(self, event_time):
         """Fetch new state data for the sensor."""
-        client = LinkyClient(self._username, self.__password, None, self._timeout)
+        client = LinkyClient(self._username, self._password, None, self._timeout)
         try:
             client.login()
             client.fetch_data()

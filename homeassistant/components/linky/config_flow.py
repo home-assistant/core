@@ -6,6 +6,7 @@ from pylinky.client import LinkyClient, PyLinkyError
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
+from homeassistant.core import callback
 
 from .const import DEFAULT_TIMEOUT, DOMAIN
 
@@ -23,7 +24,7 @@ class LinkyFlowHandler(config_entries.ConfigFlow):
     def __init__(self):
         """Initialize Linky config flow."""
         self._username = None
-        self.__password = None
+        self._password = None
         self._timeout = None
 
     def _configuration_exists(self, username: str) -> bool:
@@ -33,7 +34,8 @@ class LinkyFlowHandler(config_entries.ConfigFlow):
                 return True
         return False
 
-    async def _show_setup_form(self, user_input=None, errors=None):
+    @callback
+    def _show_setup_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""
 
         if user_input is None:
@@ -49,10 +51,6 @@ class LinkyFlowHandler(config_entries.ConfigFlow):
                     vol.Required(
                         CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
                     ): str,
-                    vol.Required(
-                        CONF_TIMEOUT,
-                        default=user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
-                    ): int,
                 }
             ),
             errors=errors or {},
@@ -65,17 +63,17 @@ class LinkyFlowHandler(config_entries.ConfigFlow):
             return await self._show_setup_form(user_input, None)
 
         self._username = user_input[CONF_USERNAME]
-        self.__password = user_input[CONF_PASSWORD]
-        self._timeout = user_input[CONF_TIMEOUT]
+        self._password = user_input[CONF_PASSWORD]
+        self._timeout = user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
 
         if self._configuration_exists(self._username):
             errors = {}
             errors[CONF_USERNAME] = "username_exists"
             return await self._show_setup_form(user_input, errors)
 
-        client = LinkyClient(self._username, self.__password, None, self._timeout)
+        client = LinkyClient(self._username, self._password, None, self._timeout)
         try:
-            client.login()
+            self.hass.async_add_executor_job(client.login)
             client.fetch_data()
         except PyLinkyError as exp:
             _LOGGER.error(exp)
@@ -90,7 +88,7 @@ class LinkyFlowHandler(config_entries.ConfigFlow):
             title=self._username,
             data={
                 CONF_USERNAME: self._username,
-                CONF_PASSWORD: self.__password,
+                CONF_PASSWORD: self._password,
                 CONF_TIMEOUT: self._timeout,
             },
         )
