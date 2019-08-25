@@ -28,7 +28,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_DISTANCE_SENSOR = "distance_sensor"
 ATTR_DOOR_STATE = "door_state"
 ATTR_SIGNAL_STRENGTH = "wifi_signal"
-ATTR_VEHICLE = "vehicle_state"
 
 CONF_DEVICE_KEY = "device_key"
 
@@ -148,8 +147,6 @@ class OpenGarageCover(CoverDevice):
             self._device_state_attributes[ATTR_SIGNAL_STRENGTH] = status.get("rssi")
         if status.get("dist") is not None:
             self._device_state_attributes[ATTR_DISTANCE_SENSOR] = status.get("dist")
-        if status.get("vehicle") is not None:
-            self._device_state_attributes[ATTR_VEHICLE] = status.get("vehicle")
         if self._state is not None:
             self._device_state_attributes[ATTR_DOOR_STATE] = self._state
 
