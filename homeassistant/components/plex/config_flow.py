@@ -33,7 +33,7 @@ from .const import (
     DOMAIN,
     PLEX_SERVER_CONFIG,
 )
-from .errors import ConfigNotReady, NoServersFound, ServerNotSpecified, TokenMissing
+from .errors import ConfigNotReady, NoServersFound, ServerNotSpecified
 from .server import setup_plex_server
 
 _LOGGER = logging.getLogger(__package__)
@@ -76,6 +76,7 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                         ): int,
                         vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
                         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
+                        vol.Optional(CONF_TOKEN): str,
                     }
                 )
                 return self.async_show_form(
@@ -84,32 +85,23 @@ class PlexFlowHandler(config_entries.ConfigFlow):
 
             url = user_input.get(CONF_URL)
             token = user_input.get(CONF_TOKEN)
-            username = user_input.get(CONF_USERNAME)
             server_name = user_input.get(CONF_SERVER)
 
             data = {}
 
             try:
-                if (username is None) and (url is None):
-                    raise ConfigNotReady
-
                 self.current_login = user_input
 
-                if username:
-                    if token is None:
-                        raise TokenMissing
-
-                    data = {
-                        CONF_USERNAME: username,
-                        CONF_TOKEN: token,
-                        CONF_SERVER: server_name,
-                    }
-                else:
+                if url:
                     data = {
                         CONF_URL: url,
                         CONF_TOKEN: token,
                         CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
                     }
+                elif token:
+                    data = {CONF_TOKEN: token, CONF_SERVER: server_name}
+                else:
+                    raise ConfigNotReady
 
                 plex_server = setup_plex_server(user_input)
 
@@ -119,7 +111,7 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                     if entry.data[CONF_SERVER_IDENTIFIER] == server_id:
                         return self.async_abort(reason="already_configured")
 
-                if username and not server_name:
+                if not url and not server_name:
                     data[CONF_SERVER] = plex_server.friendlyName
 
                 return self.async_create_entry(
@@ -139,18 +131,8 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                     ),
                     errors={},
                 )
-            except (
-                plexapi.exceptions.BadRequest,
-                plexapi.exceptions.Unauthorized,
-                TokenMissing,
-            ):
+            except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized):
                 errors["base"] = "faulty_credentials"
-                if token is None:
-                    return self.async_show_form(
-                        step_id="token",
-                        data_schema=vol.Schema({vol.Required(CONF_TOKEN): str}),
-                        errors={},
-                    )
             except (plexapi.exceptions.NotFound, requests.exceptions.ConnectionError):
                 errors["base"] = "not_found"
             except Exception as error:  # pylint: disable=broad-except
@@ -158,21 +140,17 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                 return self.async_abort(reason="unknown")
 
         data_schema = vol.Schema(
-            {vol.Optional(CONF_USERNAME): str, vol.Optional("manual_setup"): bool}
+            {
+                vol.Optional(
+                    CONF_TOKEN, default=self.current_login.get(CONF_TOKEN, "")
+                ): str,
+                vol.Optional("manual_setup"): bool,
+            }
         )
 
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
         )
-
-    async def async_step_token(self, user_input=None):
-        """Get auth token from user if needed."""
-        if user_input is None:
-            return await self.async_step_user()
-
-        config = self.current_login
-        config[CONF_TOKEN] = user_input.get(CONF_TOKEN)
-        return await self.async_step_user(user_input=config)
 
     async def async_step_select_server(self, user_input=None):
         """Use selected Plex server."""
@@ -239,20 +217,13 @@ class PlexFlowHandler(config_entries.ConfigFlow):
         token = import_config.get(CONF_TOKEN)
         server = import_config.get(CONF_SERVER)
 
-        if username:
-            if password:
-                _LOGGER.warning(
-                    "Password no longer supported, please set up via Integrations"
-                )
-                return self.async_abort(reason="password_provided")
+        if username or password:
+            _LOGGER.error(
+                "Login with password not supported, please set up via Integrations"
+            )
+            return self.async_abort(reason="password_provided")
 
-            if token:
-                config = {
-                    CONF_USERNAME: username,
-                    CONF_TOKEN: token,
-                    CONF_SERVER: server,
-                }
-        else:
+        if host and port:
             prefix = "https" if import_config[CONF_SSL] else "http"
             url = "{}://{}:{}".format(prefix, host, port)
 
@@ -261,6 +232,10 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                 CONF_TOKEN: token,
                 CONF_VERIFY_SSL: import_config[CONF_VERIFY_SSL],
             }
+        elif token:
+            config = {CONF_TOKEN: token, CONF_SERVER: server}
+        else:
+            return self.async_abort(reason="invalid_import")
 
         _LOGGER.info("Imported Plex credentials from sensor configuration")
         return await self.async_step_user(user_input=config)

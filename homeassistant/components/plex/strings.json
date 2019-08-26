@@ -8,7 +8,8 @@
                     "host": "Host",
                     "port": "Port",
                     "ssl": "Use SSL",
-                    "verify_ssl": "Verify SSL certificate"
+                    "verify_ssl": "Verify SSL certificate",
+                    "token": "Token (if required)"
                 }
             },
             "select_server": {
@@ -18,16 +19,11 @@
                     "server": "Server"
                 }
             },
-            "token": {
-                "title": "Provide Plex token",
-                "data": {
-                    "token": "Token"
-                }
-            },
             "user": {
                 "title": "Connect Plex server",
+                "description": "Enter a Plex token for automatic setup or manually configure.",
                 "data": {
-                    "username": "Plex username",
+                    "token": "Plex token",
                     "manual_setup": "Manual setup"
                 }
             }

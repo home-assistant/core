@@ -16,7 +16,3 @@ class NoServersFound(PlexException):
 
 class ServerNotSpecified(PlexException):
     """Multiple servers linked to account without choice provided."""
-
-
-class TokenMissing(PlexException):
-    """Required auth token is unavailable."""
