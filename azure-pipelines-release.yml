@@ -124,113 +124,113 @@ stages:
 
 - stage: 'Publish'
   jobs:
-    - job: 'ReleaseHassio'
-      pool:
-        vmImage: 'ubuntu-latest'
-      steps:
-      - template: templates/azp-step-ha-version.yaml@azure
-      - script: |
-          sudo apt-get install -y --no-install-recommends \
-            git jq curl
+  - job: 'ReleaseHassio'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - template: templates/azp-step-ha-version.yaml@azure
+    - script: |
+        sudo apt-get install -y --no-install-recommends \
+          git jq curl
 
-          git config --global user.name "Pascal Vizeli"
-          git config --global user.email "pvizeli@syshack.ch"
-          git config --global credential.helper store
+        git config --global user.name "Pascal Vizeli"
+        git config --global user.email "pvizeli@syshack.ch"
+        git config --global credential.helper store
 
-          echo "https://$(githubToken):x-oauth-basic@github.com" > $HOME/.git-credentials
-        displayName: 'Install requirements'
-      - script: |
-          set -e
+        echo "https://$(githubToken):x-oauth-basic@github.com" > $HOME/.git-credentials
+      displayName: 'Install requirements'
+    - script: |
+        set -e
 
-          version="$(homeassistantRelease)"
+        version="$(homeassistantRelease)"
 
-          git clone https://github.com/home-assistant/hassio-version
-          cd hassio-version
+        git clone https://github.com/home-assistant/hassio-version
+        cd hassio-version
 
-          dev_version="$(jq --raw-output '.homeassistant.default' dev.json)"
-          beta_version="$(jq --raw-output '.homeassistant.default' beta.json)"
-          stable_version="$(jq --raw-output '.homeassistant.default' stable.json)"
+        dev_version="$(jq --raw-output '.homeassistant.default' dev.json)"
+        beta_version="$(jq --raw-output '.homeassistant.default' beta.json)"
+        stable_version="$(jq --raw-output '.homeassistant.default' stable.json)"
 
-          if [[ "$version" =~ d ]]; then
-            sed -i "s|$dev_version|$version|g" dev.json
-          elif [[ "$version" =~ b ]]; then
-            sed -i "s|$beta_version|$version|g" beta.json
-          else
-            sed -i "s|$beta_version|$version|g" beta.json
-            sed -i "s|$stable_version|$version|g" stable.json
-          fi
+        if [[ "$version" =~ d ]]; then
+          sed -i "s|$dev_version|$version|g" dev.json
+        elif [[ "$version" =~ b ]]; then
+          sed -i "s|$beta_version|$version|g" beta.json
+        else
+          sed -i "s|$beta_version|$version|g" beta.json
+          sed -i "s|$stable_version|$version|g" stable.json
+        fi
 
-          git commit -am "Bump Home Assistant $version"
-          git push
-        displayName: 'Update version files'
-    - job: 'ReleaseDocker'
-      pool:
-        vmImage: 'ubuntu-latest'
-      steps:
-      - template: templates/azp-step-ha-version.yaml@azure
-      - script: |
-          mkdir -p ~/.docker
-          echo '{ "experimental": "enabled" }' > .docker/config.json
+        git commit -am "Bump Home Assistant $version"
+        git push
+      displayName: 'Update version files'
+  - job: 'ReleaseDocker'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - template: templates/azp-step-ha-version.yaml@azure
+    - script: |
+        mkdir -p ~/.docker
+        echo '{ "experimental": "enabled" }' > .docker/config.json
 
-          sudo docker login -u $(dockerUser) -p $(dockerPassword)
-        displayName: 'Enable manifest / Docker login'
-      - script: |
-          set -e
+        sudo docker login -u $(dockerUser) -p $(dockerPassword)
+      displayName: 'Enable manifest / Docker login'
+    - script: |
+        set -e
 
-          function create_manifest() {
-            local tag_l=$1
-            local tag_r=$2
+        function create_manifest() {
+          local tag_l=$1
+          local tag_r=$2
 
-            sudo docker --config .docker manifest create homeassistant/home-assistant:${tag_l} \
-              homeassistant/amd64-homeassistant:${tag_r} \
-              homeassistant/i386-homeassistant:${tag_r} \
-              homeassistant/armhf-homeassistant:${tag_r} \
-              homeassistant/armv7-homeassistant:${tag_r} \
-              homeassistant/aarch64-homeassistant:${tag_r}
+          sudo docker --config .docker manifest create homeassistant/home-assistant:${tag_l} \
+            homeassistant/amd64-homeassistant:${tag_r} \
+            homeassistant/i386-homeassistant:${tag_r} \
+            homeassistant/armhf-homeassistant:${tag_r} \
+            homeassistant/armv7-homeassistant:${tag_r} \
+            homeassistant/aarch64-homeassistant:${tag_r}
 
-            sudo docker --config .docker manifest annotate homeassistant/home-assistant:${tag_l} \
-              homeassistant/amd64-homeassistant:${tag_r} \
-              --os linux --arch amd64
+          sudo docker --config .docker manifest annotate homeassistant/home-assistant:${tag_l} \
+            homeassistant/amd64-homeassistant:${tag_r} \
+            --os linux --arch amd64
 
-            sudo docker --config .docker manifest annotate homeassistant/home-assistant:${tag_l} \
-              homeassistant/i386-homeassistant:${tag_r} \
-              --os linux --arch 386
+          sudo docker --config .docker manifest annotate homeassistant/home-assistant:${tag_l} \
+            homeassistant/i386-homeassistant:${tag_r} \
+            --os linux --arch 386
 
-            sudo docker --config .docker manifest annotate homeassistant/home-assistant:${tag_l} \
-              homeassistant/armhf-homeassistant:${tag_r} \
-              --os linux --arch arm --variant=v6
+          sudo docker --config .docker manifest annotate homeassistant/home-assistant:${tag_l} \
+            homeassistant/armhf-homeassistant:${tag_r} \
+            --os linux --arch arm --variant=v6
 
-            sudo docker --config .docker manifest annotate homeassistant/home-assistant:${tag_l} \
-              homeassistant/armv7-homeassistant:${tag_r} \
-              --os linux --arch arm --variant=v7
+          sudo docker --config .docker manifest annotate homeassistant/home-assistant:${tag_l} \
+            homeassistant/armv7-homeassistant:${tag_r} \
+            --os linux --arch arm --variant=v7
 
-            sudo docker --config .docker manifest annotate homeassistant/home-assistant:${tag_l} \
-              homeassistant/aarch64-homeassistant:${tag_r} \
-              --os linux --arch arm64 --variant=v8
+          sudo docker --config .docker manifest annotate homeassistant/home-assistant:${tag_l} \
+            homeassistant/aarch64-homeassistant:${tag_r} \
+            --os linux --arch arm64 --variant=v8
 
-            sudo docker --config .docker manifest push --purge homeassistant/home-assistant:${tag_l}
-          }
+          sudo docker --config .docker manifest push --purge homeassistant/home-assistant:${tag_l}
+        }
 
-          sudo docker pull homeassistant/amd64-homeassistant:$(homeassistantRelease)
-          sudo docker pull homeassistant/i386-homeassistant:$(homeassistantRelease)
-          sudo docker pull homeassistant/armhf-homeassistant:$(homeassistantRelease)
-          sudo docker pull homeassistant/armv7-homeassistant:$(homeassistantRelease)
-          sudo docker pull homeassistant/aarch64-homeassistant:$(homeassistantRelease)
+        sudo docker pull homeassistant/amd64-homeassistant:$(homeassistantRelease)
+        sudo docker pull homeassistant/i386-homeassistant:$(homeassistantRelease)
+        sudo docker pull homeassistant/armhf-homeassistant:$(homeassistantRelease)
+        sudo docker pull homeassistant/armv7-homeassistant:$(homeassistantRelease)
+        sudo docker pull homeassistant/aarch64-homeassistant:$(homeassistantRelease)
 
-          # Create version tag
-          create_manifest "$(homeassistantRelease)" "$(homeassistantRelease)"
+        # Create version tag
+        create_manifest "$(homeassistantRelease)" "$(homeassistantRelease)"
 
-          # Create general tags
-          if [[ "$version" =~ d ]]; then
-            create_manifest "dev" "$(homeassistantRelease)"
-          elif [[ "$version" =~ b ]]; then
-            create_manifest "beta" "$(homeassistantRelease)"
-            create_manifest "rc" "$(homeassistantRelease)"
-          else
-            create_manifest "stable" "$(homeassistantRelease)"
-            create_manifest "latest" "$(homeassistantRelease)"
-            create_manifest "beta" "$(homeassistantRelease)"
-            create_manifest "rc" "$(homeassistantRelease)"
-          fi
+        # Create general tags
+        if [[ "$version" =~ d ]]; then
+          create_manifest "dev" "$(homeassistantRelease)"
+        elif [[ "$version" =~ b ]]; then
+          create_manifest "beta" "$(homeassistantRelease)"
+          create_manifest "rc" "$(homeassistantRelease)"
+        else
+          create_manifest "stable" "$(homeassistantRelease)"
+          create_manifest "latest" "$(homeassistantRelease)"
+          create_manifest "beta" "$(homeassistantRelease)"
+          create_manifest "rc" "$(homeassistantRelease)"
+        fi
 
-        displayName: 'Create Meta-Image'
+      displayName: 'Create Meta-Image'
