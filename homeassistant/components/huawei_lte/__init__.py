@@ -174,6 +174,9 @@ def _setup_lte(hass, lte_config) -> None:
 
     def cleanup(event):
         """Clean up resources."""
-        client.user.logout()
+        try:
+            client.user.logout()
+        except ResponseErrorNotSupportedException as ex:
+            _LOGGER.debug("Logout not supported by device", exc_info=ex)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
