@@ -1,26 +1,22 @@
-"""
-Support for Soma Smartshades.
-"""
+"""Support for Soma Smartshades."""
 import logging
 from datetime import timedelta
-from functools import partial
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
-from homeassistant.components.somfy import config_flow
+from homeassistant.components.soma import config_flow
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
 from homeassistant.const import (
-    CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_PORT,
-    CONF_USERNAME)
+    CONF_HOST, CONF_PORT)
 
 from homeassistant.util import Throttle
 
-from .const import DOMAIN, HOST, PORT, API
+from .const import DOMAIN, HOST, API
 
 DEVICES = 'devices'
 
@@ -60,20 +56,11 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Soma from a config entry."""
-    def token_saver(token):
-        _LOGGER.debug('Saving updated token')
-        entry.data[CONF_TOKEN] = token
-        update_entry = partial(
-            hass.config_entries.async_update_entry,
-            data={**entry.data}
-        )
-        hass.add_job(update_entry, entry)
-
     from api.soma_api import SomaApi
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][API] = SomaApi(entry.data[HOST])
-
-    await update_all_devices(hass)
+    hass.data[DOMAIN][DEVICES] = await hass.async_add_executor_job(
+            hass.data[DOMAIN][API].list_devices)
 
     for component in SOMA_COMPONENTS:
         hass.async_create_task(
@@ -84,7 +71,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload a config entry."""
-    #hass.data[DOMAIN].pop(API, None)
     return True
 
 
@@ -95,6 +81,7 @@ class SomaEntity(Entity):
         """Initialize the Soma device."""
         self.device = device
         self.api = api
+        self.current_position = 50
 
     @property
     def unique_id(self):
@@ -120,26 +107,12 @@ class SomaEntity(Entity):
 
     async def async_update(self):
         """Update the device with the latest data."""
-        await update_all_devices(self.hass)
-        devices = self.hass.data[DOMAIN][DEVICES]
-        #self.device = next((d for d in devices if d.id == self.device.id),
-        #                   self.device)
+        #await update_all_devices(self.hass)
+        ret = await self.hass.async_add_executor_job(
+                self.api.get_shade_state, self.device['mac'])
+        self.current_position = ret['position']
 
     def has_capability(self, capability):
         """Test if device has a capability."""
         capabilities = self.device.capabilities
         return bool([c for c in capabilities if c.name == capability])
-
-
-@Throttle(MIN_TIME_BETWEEN_UPDATES)
-async def update_all_devices(hass):
-    """Update all the devices."""
-    from requests import HTTPError
-    try:
-        data = hass.data[DOMAIN]
-        data[DEVICES] = await hass.async_add_executor_job(
-            data[API].list_devices)
-    except HTTPError:
-        _LOGGER.warning("Cannot update devices")
-        return False
-    return True

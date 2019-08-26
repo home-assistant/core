@@ -8,6 +8,6 @@
     "@ratsept"
   ],
   "requirements": [
-    "pysoma==0.0.4"
+    "pysoma==0.0.6"
   ]
 }

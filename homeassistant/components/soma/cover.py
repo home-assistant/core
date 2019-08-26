@@ -4,10 +4,14 @@ Support for Soma Covers.
 For more details about this platform, please refer to the documentation at
 """
 
-from homeassistant.components.cover import CoverDevice, ATTR_POSITION, \
-    ATTR_TILT_POSITION
-from homeassistant.components.soma import DOMAIN, SomaEntity, DEVICES, API
+import logging
 
+from homeassistant.components.cover import CoverDevice, ATTR_POSITION
+from homeassistant.components.soma import DOMAIN, SomaEntity, DEVICES, API
+from homeassistant.exceptions import PlatformNotReady
+
+
+_LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Soma cover platform."""
@@ -34,9 +38,9 @@ async def async_setup_platform(hass, config, async_add_entities,
 class SomaCover(SomaEntity, CoverDevice):
     """Representation of a Soma cover device."""
 
-    def __init__(self, device, api):
-        """Initialize the Soma device."""
-        super().__init__(device, api)
+    # def __init__(self, device, api):
+    #    """Initialize the Soma device."""
+    #    super().__init__(device, api)
 
     async def async_update(self):
         """Update the device with the latest data."""
@@ -44,22 +48,28 @@ class SomaCover(SomaEntity, CoverDevice):
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        self.api.close_shade(self.device['mac'])
+        if self.api.close_shade(self.device['mac']) != 'success':
+            raise PlatformNotReady()
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        self.api.open_shade(self.device['mac'])
+        if self.api.open_shade(self.device['mac']) != 'success':
+            raise PlatformNotReady()
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
 
     def set_cover_position(self, **kwargs):
         """Move the cover shutter to a specific position."""
+        _LOGGER.warning(str(kwargs[ATTR_POSITION]));
+        position = kwargs[ATTR_POSITION]
+        if self.api.set_shade_position(self.device['mac'], kwargs[ATTR_POSITION]) != 'success':
+            raise PlatformNotReady()
 
     @property
     def current_cover_position(self):
         """Return the current position of cover shutter."""
-        position = None
+        position = self.current_position
         return position
 
     @property
