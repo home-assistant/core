@@ -7,7 +7,6 @@ import voluptuous as vol
 from pylinky.client import DAILY, MONTHLY, YEARLY, LinkyClient, PyLinkyError
 
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -66,13 +65,10 @@ async def async_setup_entry(
     """Add Linky entries."""
     _LOGGER.error("LINKY_SENSOR:async_setup_entry")
     account = LinkyAccount(
-        hass,
-        entry.data[CONF_USERNAME],
-        entry.data[CONF_PASSWORD],
-        entry.data[CONF_TIMEOUT],
+        entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], entry.data[CONF_TIMEOUT]
     )
 
-    account.update_linky_data(dt_util.utcnow())
+    await hass.async_add_executor_job(account.update_linky_data())
 
     sensors = [
         LinkySensor("Linky yesterday", account, DAILY, INDEX_LAST),
@@ -90,17 +86,16 @@ async def async_setup_entry(
 class LinkyAccount:
     """Representation of a Linky account."""
 
-    def __init__(self, hass, username, password, timeout):
+    def __init__(self, username, password, timeout):
         """Initialise the Linky account."""
 
         _LOGGER.error("LINKY_SENSOR:account init")
-        self.hass = hass
         self._username = username
         self._password = password
         self._timeout = timeout
         self._data = None
 
-    def update_linky_data(self, event_time):
+    def update_linky_data(self, event_time=None):
         """Fetch new state data for the sensor."""
         client = LinkyClient(self._username, self._password, None, self._timeout)
         try:

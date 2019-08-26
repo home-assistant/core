@@ -1,7 +1,7 @@
 """The linky component."""
 import logging
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import callback
 from homeassistant.helpers.typing import HomeAssistantType
@@ -14,12 +14,6 @@ _LOGGER.error("LINKY_INIT")
 
 async def async_setup(hass, config):
     """Set up Linky sensor from legacy config file."""
-    _LOGGER.error("LINKY_SENSOR:async_setup")
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
     return True
 
 
@@ -39,7 +33,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         _LOGGER.error("LINKY_INIT:async_start")
         for eid in hass.data[DOMAIN]:
             entry = hass.data[DOMAIN][eid]
-            _LOGGER.error("LINKY_INIT:entry %s", entry.entry_id)
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(entry, "sensor")
             )
