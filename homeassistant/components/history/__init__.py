@@ -154,19 +154,20 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None)
     from sqlalchemy import and_, func
 
     with session_scope(hass=hass) as session:
+        query = session.query(States)
+
         if entity_ids and len(entity_ids) == 1:
             # Use an entirely different (and extremely fast) query if we only
             # have a single entity id
-            most_recent_state_ids = (
-                session.query(States.state_id.label("max_state_id"))
-                .filter(
-                    (States.last_updated < utc_point_in_time)
-                    & (States.entity_id.in_(entity_ids))
+            query = (
+                query.filter(
+                    States.last_updated >= run.start,
+                    States.last_updated < utc_point_in_time,
+                    States.entity_id.in_(entity_ids),
                 )
                 .order_by(States.last_updated.desc())
+                .limit(1)
             )
-
-            most_recent_state_ids = most_recent_state_ids.limit(1)
 
         else:
             # We have more than one entity to look at (most commonly we want
@@ -203,19 +204,15 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None)
 
             most_recent_state_ids = most_recent_state_ids.group_by(States.entity_id)
 
-        most_recent_state_ids = most_recent_state_ids.subquery()
+            most_recent_state_ids = most_recent_state_ids.subquery()
 
-        query = (
-            session.query(States)
-            .join(
+            query = query.join(
                 most_recent_state_ids,
                 States.state_id == most_recent_state_ids.c.max_state_id,
-            )
-            .filter((~States.domain.in_(IGNORE_DOMAINS)))
-        )
+            ).filter(~States.domain.in_(IGNORE_DOMAINS))
 
-        if filters:
-            query = filters.apply(query, entity_ids)
+            if filters:
+                query = filters.apply(query, entity_ids)
 
         return [
             state
