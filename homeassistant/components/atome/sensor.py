@@ -48,12 +48,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         client = AtomeClient(username, password)
     except PyAtomeError as exp:
         _LOGGER.error(exp)
-        return False
-    # finally:
-    #     client.close_session()
+        return
 
-    add_entities([AtomeSensor(name, client)])
-    return True
+    add_entities([AtomeSensor(name, client)], True)
 
 
 class AtomeSensor(Entity):
@@ -61,18 +58,13 @@ class AtomeSensor(Entity):
 
     def __init__(self, name, client: AtomeClient):
         """Initialize the sensor."""
-        _LOGGER.debug("ATOME: INIT : %s", str(client))
         self._name = name
-        # self._unit = DEFAULT_UNIT
-        # self._unit_of_measurement = DEFAULT_UNIT
-        # self._device_class = DEVICE_CLASS_POWER
 
         self._client = client
 
         self._attributes = None
         self._state = None
         self._login()
-        self._get_data()
 
     @property
     def name(self):
@@ -106,17 +98,11 @@ class AtomeSensor(Entity):
     @Throttle(SCAN_INTERVAL)
     def update(self):
         """Update device state."""
-        _LOGGER.debug("ATOME: Starting update of Atome Data")
 
         try:
             values = self._get_data()
             self._state = values["last"]
+            _LOGGER.debug("Updating atome data. Got: %d", self._state)
 
         except KeyError as error:
-            _LOGGER.error(
-                """Key error (%s), it seems the 'last'
-                value is not accessible.
-                Here is what I got: %s""",
-                str(error),
-                str(values),
-            )
+            _LOGGER.error("Missing last value in values: %s: %s", values, error)
