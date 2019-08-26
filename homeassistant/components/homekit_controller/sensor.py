@@ -2,7 +2,6 @@
 from homekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.const import DEVICE_CLASS_BATTERY, TEMP_CELSIUS
-from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -191,7 +190,26 @@ class HomeKitBatterySensor(HomeKitEntity):
     @property
     def icon(self):
         """Return the sensor icon."""
-        return icon_for_battery_level(self._state, self._charging)
+        if not self.available or self.state is None:
+            return "mdi:battery-unknown"
+
+        battery_level = self._state
+        charging = self._charging
+
+        # This is similar to the logic in helpers.icon, but we have delegated the
+        # decision about what mdi:battery-alert is to the device.
+        icon = "mdi:battery"
+        if charging and self._state > 10:
+            icon += "-charging-{}".format(int(round(battery_level / 20 - 0.01)) * 20)
+        elif charging:
+            icon += "-outline"
+        elif self._low_battery:
+            icon += "-alert"
+        elif battery_level < 95:
+            modifier = max(int(round(battery_level / 10 - 0.01)) * 10, 10)
+            icon += "-{}".format(modifier)
+
+        return icon
 
     @property
     def unit_of_measurement(self):
