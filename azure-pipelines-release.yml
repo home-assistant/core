@@ -220,9 +220,9 @@ stages:
         create_manifest "$(homeassistantRelease)" "$(homeassistantRelease)"
 
         # Create general tags
-        if [[ "$version" =~ d ]]; then
+        if [[ "$(homeassistantRelease)" =~ d ]]; then
           create_manifest "dev" "$(homeassistantRelease)"
-        elif [[ "$version" =~ b ]]; then
+        elif [[ "$(homeassistantRelease)" =~ b ]]; then
           create_manifest "beta" "$(homeassistantRelease)"
           create_manifest "rc" "$(homeassistantRelease)"
         else
