@@ -191,7 +191,7 @@ async def test_add_new_climate_device(hass):
     sensor.type = "ZHAThermostat"
     sensor.uniqueid = "1"
     sensor.register_async_callback = Mock()
-    async_dispatcher_send(hass, gateway.async_event_new_device("sensor"), [sensor])
+    async_dispatcher_send(hass, gateway.async_signal_new_device("sensor"), [sensor])
     await hass.async_block_till_done()
     assert "climate.name" in gateway.deconz_ids
 
@@ -203,7 +203,7 @@ async def test_do_not_allow_clipsensor(hass):
     sensor.name = "name"
     sensor.type = "CLIPThermostat"
     sensor.register_async_callback = Mock()
-    async_dispatcher_send(hass, gateway.async_event_new_device("sensor"), [sensor])
+    async_dispatcher_send(hass, gateway.async_signal_new_device("sensor"), [sensor])
     await hass.async_block_till_done()
     assert len(gateway.deconz_ids) == 0
 

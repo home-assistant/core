@@ -37,9 +37,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         for sensor in sensors:
 
-            if not sensor.BINARY and not (
-                not gateway.allow_clip_sensor and sensor.type.startswith("CLIP")
-            ):
+            if not sensor.BINARY:
 
                 if sensor.type in Switch.ZHATYPE:
                     if sensor.battery:
@@ -52,7 +50,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     gateway.listeners.append(
         async_dispatcher_connect(
-            hass, gateway.async_event_new_device(NEW_SENSOR), async_add_sensor
+            hass, gateway.async_signal_new_device(NEW_SENSOR), async_add_sensor
         )
     )
 
