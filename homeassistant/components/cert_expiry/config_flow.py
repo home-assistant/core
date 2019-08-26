@@ -18,8 +18,7 @@ def certexpiry_entries(hass: HomeAssistant):
     )
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class CertexpiryConfigFlow(config_entries.ConfigFlow):
+class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
@@ -29,9 +28,9 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow):
         """Initialize the config flow."""
         self._errors = {}
 
-    def _prt_in_configuration_exists(self, host: str, prt: int) -> bool:
+    def _prt_in_configuration_exists(self, host: str, port: int) -> bool:
         """Return True if host, port combination exists in configuration."""
-        if (host, prt) in certexpiry_entries(self.hass):
+        if (host, port) in certexpiry_entries(self.hass):
             return True
         return False
 

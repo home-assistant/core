@@ -28,15 +28,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up certificate expiry sensor."""
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
         )
     )
-    return True
 
 
 async def async_setup_entry(hass, entry, async_add_entities):

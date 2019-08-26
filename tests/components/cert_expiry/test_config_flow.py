@@ -72,8 +72,7 @@ async def test_import(hass):
 
 
 async def test_abort_if_already_setup(hass):
-    """Test we abort if Daikin is already setup."""
-    pass
+    """Test we abort if the cert is already setup."""
     flow = init_config_flow(hass)
     MockConfigEntry(
         domain="cert_expiry",
@@ -87,7 +86,7 @@ async def test_abort_if_already_setup(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "host_port_exists"
 
-    # Should  same HOST and PORT (default)
+    # Should be the same HOST and PORT (default)
     result = await flow.async_step_user(
         {CONF_HOST: HOST, CONF_NAME: NAME, CONF_PORT: DEFAULT_PORT}
     )
