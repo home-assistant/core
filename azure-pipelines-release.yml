@@ -26,6 +26,7 @@ resources:
       endpoint: 'home-assistant'
 
 stages:
+
 - stage: 'Validate'
   jobs:
   - template: templates/azp-job-version.yaml@azure
@@ -63,15 +64,15 @@ stages:
       inputs:
         versionSpec: '3.7'
     - script: pip install twine wheel
-      displayName: "Install tools"
+      displayName: 'Install tools'
     - script: python setup.py sdist bdist_wheel
-      displayName: "Build package"
+      displayName: 'Build package'
     - script: |
         export TWINE_USERNAME="$(twineUser)"
         export TWINE_PASSWORD="$(twinePassword)"
 
         twine upload dist/* --skip-existing
-      displayName: "Upload pypi"
+      displayName: 'Upload pypi'
   - job: 'ReleaseDocker'
     timeoutInMinutes: 240
     pool:
