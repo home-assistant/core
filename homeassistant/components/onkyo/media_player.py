@@ -390,7 +390,7 @@ class OnkyoDeviceZone(OnkyoDevice):
         volume_raw = self.command("zone{}.volume=query".format(self._zone))
         mute_raw = self.command("zone{}.muting=query".format(self._zone))
         current_source_raw = self.command("zone{}.selector=query".format(self._zone))
-
+        preset_raw = self.command("zone{}.preset=query".format(self._zone))
         # If we received a source value, but not a volume value
         # it's likely this zone permanently does not support volume.
         if current_source_raw and not volume_raw:
@@ -416,7 +416,11 @@ class OnkyoDeviceZone(OnkyoDevice):
             else:
                 self._current_source = "_".join([i for i in current_source_tuples[1]])
         self._muted = bool(mute_raw[1] == "on")
-
+        self._attributes["preset"] = (
+            preset_raw[1]
+            if preset_raw and self._current_source.lower() == "radio"
+            else None
+        )
         if self._supports_volume:
             self._volume = volume_raw[1] / 80.0
 
