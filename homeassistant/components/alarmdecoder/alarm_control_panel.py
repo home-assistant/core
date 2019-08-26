@@ -6,7 +6,6 @@ import voluptuous as vol
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.const import (
     ATTR_CODE,
-    ATTR_ENTITY_ID,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
@@ -18,17 +17,14 @@ from . import DATA_AD, SIGNAL_PANEL_MESSAGE
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = "alarmdecoder"
+
 SERVICE_ALARM_TOGGLE_CHIME = "alarmdecoder_alarm_toggle_chime"
 ALARM_TOGGLE_CHIME_SCHEMA = vol.Schema({vol.Required(ATTR_CODE): cv.string})
 
-SERVICE_ALARM_KEYPRESS = "alarmdecoder_alarm_keypress"
+SERVICE_ALARM_KEYPRESS = "alarm_keypress"
 ATTR_KEYPRESS = "keypress"
-ALARM_KEYPRESS_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_KEYPRESS): cv.string,
-    }
-)
+ALARM_KEYPRESS_SCHEMA = vol.Schema({vol.Required(ATTR_KEYPRESS): cv.string})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -50,11 +46,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     def alarm_keypress_handler(service):
         """Register keypress handler."""
-        keypress = service.data.get(ATTR_KEYPRESS)
+        keypress = service.data[ATTR_KEYPRESS]
         device.alarm_keypress(keypress)
 
     hass.services.register(
-        alarm.DOMAIN,
+        DOMAIN,
         SERVICE_ALARM_KEYPRESS,
         alarm_keypress_handler,
         schema=ALARM_KEYPRESS_SCHEMA,
@@ -168,7 +164,7 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
         if code:
             self.hass.data[DATA_AD].send("{!s}9".format(code))
 
-    def alarm_keypress(self, keypress=None):
+    def alarm_keypress(self, keypress):
         """Send custom keypresses."""
         if keypress:
             self.hass.data[DATA_AD].send(keypress)
