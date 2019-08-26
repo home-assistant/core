@@ -1,31 +1,38 @@
 """Linky Atome."""
 import logging
-from datetime import timedelta
-from pyatome.client import AtomeClient, PyAtomeError
 import voluptuous as vol
 
+from datetime import timedelta
+from pyatome.client import AtomeClient
+from pyatome.client import PyAtomeError
 
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT, CONF_NAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_NAME,
+    DEVICE_CLASS_POWER,
+    POWER_WATT,
+)
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+
 from homeassistant.helpers.entity import Entity
+
 from homeassistant.util import Throttle
+
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "atome"
-DEFAULT_UNIT = "W"
-DEFAULT_CLASS = "power"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 SESSION_RENEW_INTERVAL = timedelta(minutes=55)
-DEFAULT_TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
@@ -33,9 +40,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor."""
-    name = config.get(CONF_NAME)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
+    name = config[CONF_NAME]
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
 
     try:
         client = AtomeClient(username, password)
@@ -57,8 +64,8 @@ class AtomeSensor(Entity):
         _LOGGER.debug("ATOME: INIT : %s", str(client))
         self._name = name
         # self._unit = DEFAULT_UNIT
-        self._unit_of_measurement = DEFAULT_UNIT
-        self._device_class = DEFAULT_CLASS
+        # self._unit_of_measurement = DEFAULT_UNIT
+        # self._device_class = DEVICE_CLASS_POWER
 
         self._client = client
 
@@ -75,12 +82,12 @@ class AtomeSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return self._unit_of_measurement
+        return POWER_WATT
 
     @property
     def device_class(self):
         """Return the device class."""
-        return self._device_class
+        return DEVICE_CLASS_POWER
 
     @property
     def state(self):
@@ -89,11 +96,11 @@ class AtomeSensor(Entity):
 
     # @Throttle(SESSION_RENEW_INTERVAL)
     def _login(self):
-
-        return self._client.login()
+        """Login to Atome API, create session."""
+        self._client.login()
 
     def _get_data(self):
-
+        """Retrieve live data."""
         return self._client.get_live()
 
     @Throttle(SCAN_INTERVAL)
@@ -107,7 +114,9 @@ class AtomeSensor(Entity):
 
         except KeyError as error:
             _LOGGER.error(
-                "Key error (%s), it seems the 'last' value is not accessible. Here is what I got: %s",
+                """Key error (%s), it seems the 'last'
+                value is not accessible.
+                Here is what I got: %s""",
                 str(error),
                 str(values),
             )
