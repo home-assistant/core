@@ -49,6 +49,7 @@ class DeconzScene(Scene):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect scene object when removed."""
+        del self.gateway.deconz_ids[self.entity_id]
         self._scene = None
 
     async def async_activate(self):

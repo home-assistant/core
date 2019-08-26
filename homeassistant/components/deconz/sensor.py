@@ -13,7 +13,7 @@ from homeassistant.util import slugify
 
 from .const import ATTR_DARK, ATTR_ON, NEW_SENSOR
 from .deconz_device import DeconzDevice
-from .gateway import get_gateway_from_config_entry
+from .gateway import get_gateway_from_config_entry, DeconzEntityHandler
 
 ATTR_CURRENT = "current"
 ATTR_POWER = "power"
@@ -30,6 +30,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ sensors."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
+    entity_handler = DeconzEntityHandler(gateway)
+
     @callback
     def async_add_sensor(sensors):
         """Add sensors from deCONZ."""
@@ -44,7 +46,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         entities.append(DeconzBattery(sensor, gateway))
 
                 else:
-                    entities.append(DeconzSensor(sensor, gateway))
+                    new_sensor = DeconzSensor(sensor, gateway)
+                    entity_handler.add_entity(new_sensor)
+                    entities.append(new_sensor)
 
         async_add_entities(entities, True)
 

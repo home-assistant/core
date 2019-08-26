@@ -3,7 +3,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_registry import DISABLED_CONFIG_ENTRY
 
 from .const import DOMAIN as DECONZ_DOMAIN
 
@@ -15,13 +14,7 @@ class DeconzDevice(Entity):
         """Set up device and add update callback to get data from websocket."""
         self._device = device
         self.gateway = gateway
-        self.listeners = [
-            async_dispatcher_connect(
-                gateway.hass,
-                gateway.signal_options_update,
-                self.update_entity_registry_disable,
-            )
-        ]
+        self.listeners = []
 
     @property
     def entity_registry_enabled_default(self):
@@ -33,19 +26,6 @@ class DeconzDevice(Entity):
             return False
 
         return True
-
-    @callback
-    def update_entity_registry_disable(self, entity_registry):
-        """Update if entity should be disabled."""
-        if self.entity_registry_enabled_default != self.enabled:
-            disabled_by = None
-
-            if self.enabled:
-                disabled_by = DISABLED_CONFIG_ENTRY
-
-            entity_registry.async_update_entity(
-                self.registry_entry.entity_id, disabled_by=disabled_by
-            )
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""
