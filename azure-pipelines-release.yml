@@ -3,7 +3,7 @@
 trigger:
   tags:
     include:
-      - "*"
+      - '*'
 pr: none
 schedules:
   - cron: "0 1 * * *"
@@ -14,7 +14,7 @@ schedules:
     always: true
 variables:
   - name: versionBuilder
-    value: "6.3"
+    value: '6.3'
   - group: docker
   - group: github
   - group: twine
@@ -22,46 +22,46 @@ resources:
   repositories:
     - repository: azure
       type: github
-      name: "home-assistant/ci-azure"
-      endpoint: "home-assistant"
+      name: 'home-assistant/ci-azure'
+      endpoint: 'home-assistant'
 
 stages:
-- stage: "Validate"
+- stage: 'Validate'
   jobs:
   - template: templates/azp-job-version.yaml@azure
     parameters:
       ignoreDev: true
-  - job: "Permission"
+  - job: 'Permission'
     pool:
-      vmImage: "ubuntu-latest"
+      vmImage: 'ubuntu-latest'
     steps:
-      - script: |
-          sudo apt-get install -y --no-install-recommends \
-            jq curl
+    - script: |
+        sudo apt-get install -y --no-install-recommends \
+          jq curl
 
-          release="$(Build.SourceBranchName)"
-          created_by="$(curl -s https://api.github.com/repos/home-assistant/home-assistant/releases/tags/${release} | jq --raw-output '.author.login')"
+        release="$(Build.SourceBranchName)"
+        created_by="$(curl -s https://api.github.com/repos/home-assistant/home-assistant/releases/tags/${release} | jq --raw-output '.author.login')"
 
-          if [[ "${created_by}" =~ ^(balloob|pvizeli|fabaff|robbiet480)$ ]]; then
-            exit 0
-          fi
+        if [[ "${created_by}" =~ ^(balloob|pvizeli|fabaff|robbiet480)$ ]]; then
+          exit 0
+        fi
 
-          echo "${created_by} is not allowed to create an release!"
-          exit 1
-        displayName: "Check rights"
-        condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags'))
+        echo "${created_by} is not allowed to create an release!"
+        exit 1
+      displayName: 'Check rights'
+      condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags'))
 
-- stage: "Build"
+- stage: 'Build'
   jobs:
-  - job: "ReleasePython"
+  - job: 'ReleasePython'
     condition: startsWith(variables['Build.SourceBranch'], 'refs/tags')
     pool:
-      vmImage: "ubuntu-latest"
+      vmImage: 'ubuntu-latest'
     steps:
     - task: UsePythonVersion@0
-      displayName: "Use Python 3.7"
+      displayName: 'Use Python 3.7'
       inputs:
-        versionSpec: "3.7"
+        versionSpec: '3.7'
     - script: pip install twine wheel
       displayName: "Install tools"
     - script: python setup.py sdist bdist_wheel
@@ -72,34 +72,34 @@ stages:
 
         twine upload dist/* --skip-existing
       displayName: "Upload pypi"
-  - job: "ReleaseDocker"
+  - job: 'ReleaseDocker'
     timeoutInMinutes: 240
     pool:
-      vmImage: "ubuntu-latest"
+      vmImage: 'ubuntu-latest'
     strategy:
       maxParallel: 5
       matrix:
         amd64:
-          buildArch: "amd64"
-          buildMachine: "qemux86-64,intel-nuc"
+          buildArch: 'amd64'
+          buildMachine: 'qemux86-64,intel-nuc'
         i386:
-          buildArch: "i386"
-          buildMachine: "qemux86"
+          buildArch: 'i386'
+          buildMachine: 'qemux86'
         armhf:
-          buildArch: "armhf"
-          buildMachine: "qemuarm,raspberrypi"
+          buildArch: 'armhf'
+          buildMachine: 'qemuarm,raspberrypi'
         armv7:
-          buildArch: "armv7"
-          buildMachine: "raspberrypi2,raspberrypi3,raspberrypi4,odroid-xu,tinker"
+          buildArch: 'armv7'
+          buildMachine: 'raspberrypi2,raspberrypi3,raspberrypi4,odroid-xu,tinker'
         aarch64:
-          buildArch: "aarch64"
-          buildMachine: "qemuarm-64,raspberrypi3-64,raspberrypi4-64,odroid-c2,orangepi-prime"
+          buildArch: 'aarch64'
+          buildMachine: 'qemuarm-64,raspberrypi3-64,raspberrypi4-64,odroid-c2,orangepi-prime'
     steps:
     - template: templates/azp-step-ha-version.yaml@azure
     - script: sudo docker login -u $(dockerUser) -p $(dockerPassword)
-      displayName: "Docker hub login"
+      displayName: 'Docker hub login'
     - script: sudo docker pull homeassistant/amd64-builder:$(versionBuilder)
-      displayName: "Install Builder"
+      displayName: 'Install Builder'
     - script: |
         set -e
 
@@ -119,13 +119,13 @@ stages:
           --homeassistant-machine "$(homeassistantRelease)=$(buildMachine)" \
           -r https://github.com/home-assistant/hassio-homeassistant \
           -t machine --docker-hub homeassistant
-      displayName: "Build Release"
+      displayName: 'Build Release'
 
-- stage: "Publish"
+- stage: 'Publish'
   jobs:
-    - job: "ReleaseHassio"
+    - job: 'ReleaseHassio'
       pool:
-        vmImage: "ubuntu-latest"
+        vmImage: 'ubuntu-latest'
       steps:
       - template: templates/azp-step-ha-version.yaml@azure
       - script: |
@@ -137,7 +137,7 @@ stages:
           git config --global credential.helper store
 
           echo "https://$(githubToken):x-oauth-basic@github.com" > $HOME/.git-credentials
-        displayName: "Install requirements"
+        displayName: 'Install requirements'
       - script: |
           set -e
 
@@ -161,10 +161,10 @@ stages:
 
           git commit -am "Bump Home Assistant $version"
           git push
-        displayName: "Update version files"
-    - job: "ReleaseDocker"
+        displayName: 'Update version files'
+    - job: 'ReleaseDocker'
       pool:
-        vmImage: "ubuntu-latest"
+        vmImage: 'ubuntu-latest'
       steps:
       - template: templates/azp-step-ha-version.yaml@azure
       - script: |
@@ -172,7 +172,7 @@ stages:
           echo '{ "experimental": "enabled" }' > .docker/config.json
 
           sudo docker login -u $(dockerUser) -p $(dockerPassword)
-        displayName: "Enable manifest / Docker login"
+        displayName: 'Enable manifest / Docker login'
       - script: |
           set -e
 
@@ -232,4 +232,4 @@ stages:
             create_manifest "rc" "$(homeassistantRelease)"
           fi
 
-        displayName: "Create Meta-Image"
+        displayName: 'Create Meta-Image'
