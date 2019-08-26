@@ -1,7 +1,7 @@
 """Support for Homekit sensors."""
 from homekit.model.characteristics import CharacteristicsTypes
 
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import DEVICE_CLASS_BATTERY, TEMP_CELSIUS
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import KNOWN_DEVICES, HomeKitEntity
@@ -177,6 +177,11 @@ class HomeKitBatterySensor(HomeKitEntity):
             CharacteristicsTypes.STATUS_LO_BATT,
             CharacteristicsTypes.CHARGING_STATE,
         ]
+
+    @property
+    def device_class(self) -> str:
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_BATTERY
 
     @property
     def name(self):
