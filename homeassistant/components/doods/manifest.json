@@ -1,0 +1,8 @@
+{
+    "domain": "doods",
+    "name": "DOODS - Distributed Outside Object Detection Service",
+    "documentation": "https://www.home-assistant.io/components/doods",
+    "requirements": [],
+    "dependencies": [],
+    "codeowners": []
+}
