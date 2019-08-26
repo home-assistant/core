@@ -249,7 +249,7 @@ class OnkyoDevice(MediaPlayerDevice):
         mute_raw = self.command("audio-muting query")
         current_source_raw = self.command("input-selector query")
         hdmi_out_raw = self.command("hdmi-output-selector query")
-
+        preset_raw = self.command("preset query")
         if not (volume_raw and mute_raw and current_source_raw):
             return
 
@@ -265,6 +265,11 @@ class OnkyoDevice(MediaPlayerDevice):
                 break
             else:
                 self._current_source = "_".join([i for i in current_source_tuples[1]])
+        self._attributes["preset"] = (
+            preset_raw[1]
+            if preset_raw and self._current_source.lower() == "radio"
+            else None
+        )
         self._muted = bool(mute_raw[1] == "on")
         self._volume = volume_raw[1] / self._max_volume
 
