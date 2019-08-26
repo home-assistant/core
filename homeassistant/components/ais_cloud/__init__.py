@@ -397,18 +397,18 @@ class AisColudData:
                 try:
                     json_ws_resp = ws_resp.json()
                     self.cache.store_audio_type(ais_global.G_AN_RADIO, json_ws_resp)
+                    types = [ais_global.G_EMPTY_OPTION]
+                    for item in json_ws_resp["data"]:
+                        types.append(item)
+                    # populate list with all stations from selected type
+                    self.hass.services.call(
+                        "input_select",
+                        "set_options",
+                        {"entity_id": "input_select.radio_type", "options": types},
+                    )
                 except:
                     _LOGGER.error("RADIO WS resp " + str(ws_resp))
 
-            types = [ais_global.G_EMPTY_OPTION]
-            for item in json_ws_resp["data"]:
-                types.append(item)
-            # populate list with all stations from selected type
-            self.hass.services.call(
-                "input_select",
-                "set_options",
-                {"entity_id": "input_select.radio_type", "options": types},
-            )
             # ----------------
             # --- PODCASTS ---
             # ----------------
@@ -419,17 +419,18 @@ class AisColudData:
                 try:
                     json_ws_resp = ws_resp.json()
                     self.cache.store_audio_type(ais_global.G_AN_PODCAST, json_ws_resp)
+                    types = [ais_global.G_EMPTY_OPTION]
+                    for item in json_ws_resp["data"]:
+                        types.append(item)
+                    # populate list with all podcast from selected type
+                    self.hass.services.call(
+                        "input_select",
+                        "set_options",
+                        {"entity_id": "input_select.podcast_type", "options": types},
+                    )
                 except:
                     _LOGGER.error("PODCASTS WS resp " + str(ws_resp))
-            types = [ais_global.G_EMPTY_OPTION]
-            for item in json_ws_resp["data"]:
-                types.append(item)
-            # populate list with all podcast from selected type
-            self.hass.services.call(
-                "input_select",
-                "set_options",
-                {"entity_id": "input_select.podcast_type", "options": types},
-            )
+
             # ----------------
             # ----- NEWS -----
             # ----------------
@@ -440,17 +441,20 @@ class AisColudData:
                 try:
                     json_ws_resp = ws_resp.json()
                     self.cache.store_audio_type(ais_global.G_AN_NEWS, json_ws_resp)
+                    types = [ais_global.G_EMPTY_OPTION]
+                    for item in json_ws_resp["data"]:
+                        types.append(item)
+                    # populate list with all news types from selected type
+                    self.hass.services.call(
+                        "input_select",
+                        "set_options",
+                        {
+                            "entity_id": "input_select.rss_news_category",
+                            "options": types,
+                        },
+                    )
                 except:
                     _LOGGER.error("NEWS WS resp " + str(ws_resp))
-            types = [ais_global.G_EMPTY_OPTION]
-            for item in json_ws_resp["data"]:
-                types.append(item)
-            # populate list with all news types from selected type
-            self.hass.services.call(
-                "input_select",
-                "set_options",
-                {"entity_id": "input_select.rss_news_category", "options": types},
-            )
 
         yield from self.hass.async_add_job(load)
 

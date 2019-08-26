@@ -1,0 +1,10 @@
+{
+  "domain": "ais_help",
+  "name": "Pomoc",
+  "documentation": "https://sviete.github.io/AIS-docs",
+  "requirements": [],
+  "dependencies": [
+    "frontend"
+  ],
+  "codeowners": []
+}
