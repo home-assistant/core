@@ -161,6 +161,13 @@ async def websocket_get_device(hass, connection, msg):
     device = async_get_device_info(
         hass, zha_gateway.devices[ieee], ha_device_registry=ha_device_registry
     )
+    if not device:
+        connection.send_message(
+            websocket_api.error_message(
+                msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Device not found"
+            )
+        )
+        return
     connection.send_result(msg[ID], device)
 
 
