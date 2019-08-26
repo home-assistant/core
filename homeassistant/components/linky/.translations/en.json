@@ -10,11 +10,10 @@
             "user": {
                 "data": {
                     "password": "Password",
-                    "timeout": "Timeout",
                     "username": "Email"
                 },
-                "description": "Enter your credentials and preferences",
-                "title": "Linky parameters"
+                "description": "Enter your credentials",
+                "title": "Linky"
             }
         },
         "title": "Linky"

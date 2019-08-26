@@ -60,7 +60,7 @@ class LinkyFlowHandler(config_entries.ConfigFlow):
         """Handle a flow initiated by the user."""
 
         if user_input is None:
-            return await self._show_setup_form(user_input, None)
+            return self._show_setup_form(user_input, None)
 
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
@@ -69,17 +69,17 @@ class LinkyFlowHandler(config_entries.ConfigFlow):
         if self._configuration_exists(self._username):
             errors = {}
             errors[CONF_USERNAME] = "username_exists"
-            return await self._show_setup_form(user_input, errors)
+            return self._show_setup_form(user_input, errors)
 
         client = LinkyClient(self._username, self._password, None, self._timeout)
         try:
-            self.hass.async_add_executor_job(client.login)
-            client.fetch_data()
+            await self.hass.async_add_executor_job(client.login)
+            await self.hass.async_add_executor_job(client.fetch_data)
         except PyLinkyError as exp:
             _LOGGER.error(exp)
             errors = {}
             errors["PyLinkyError"] = exp
-            return await self._show_setup_form(user_input, None)
+            return self._show_setup_form(user_input, None)
         finally:
             client.close_session()
 

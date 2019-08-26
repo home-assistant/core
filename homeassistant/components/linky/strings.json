@@ -3,12 +3,11 @@
         "title": "Linky",
         "step": {
             "user": {
-                "title": "Linky parameters",
-                "description": "Enter your credentials and preferences",
+                "title": "Linky",
+                "description": "Enter your credentials",
                 "data": {
                     "username": "Email",
-                    "password": "Password",
-                    "timeout": "Timeout"
+                    "password": "Password"
                 }
             }
         },
