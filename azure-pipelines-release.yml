@@ -14,7 +14,7 @@ schedules:
     always: true
 variables:
   - name: versionBuilder
-    value: "6.2"
+    value: "6.3"
   - group: docker
   - group: github
   - group: twine
