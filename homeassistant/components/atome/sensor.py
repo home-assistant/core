@@ -50,6 +50,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error(exp)
         return
 
+    client.login()
+
     add_entities([AtomeSensor(name, client)], True)
 
 
@@ -59,12 +61,8 @@ class AtomeSensor(Entity):
     def __init__(self, name, client: AtomeClient):
         """Initialize the sensor."""
         self._name = name
-
         self._client = client
-
-        self._attributes = None
         self._state = None
-        self._login()
 
     @property
     def name(self):
