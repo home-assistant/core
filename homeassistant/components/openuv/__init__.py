@@ -296,6 +296,7 @@ class OpenUV:
             data = await self.client.uv_index()
             self.data[DATA_UV] = data
 
+
 class OpenUvEntity(Entity):
     """Define a generic OpenUV entity."""
 
