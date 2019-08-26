@@ -13,6 +13,7 @@
             },
             "select_server": {
                 "title": "Select Plex server",
+                "description": "Multiple servers available, select one:",
                 "data": {
                     "server": "Server"
                 }
@@ -39,8 +40,10 @@
             "server_not_specified": "Multiple servers available, select one"
         },
         "abort": {
-            "already_configured": "Plex server is already configured",
-            "already_in_progress": "Plex server is being configured",
+            "already_configured": "This Plex server is already configured",
+            "already_in_progress": "Plex is being configured",
+            "invalid_import": "Imported configuration is invalid",
+            "password_provided": "Login with password not supported",
             "unknown": "Failed for unknown reason"
         }
     },
