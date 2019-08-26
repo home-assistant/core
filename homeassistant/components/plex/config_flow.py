@@ -119,15 +119,11 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                     if entry.data[CONF_SERVER_IDENTIFIER] == server_id:
                         return self.async_abort(reason="already_configured")
 
-                title = "{} ({})".format(
-                    plex_server.friendlyName, username if username else "Direct"
-                )
-
                 if username and not server_name:
                     data[CONF_SERVER] = plex_server.friendlyName
 
                 return self.async_create_entry(
-                    title=title,
+                    title=plex_server.friendlyName,
                     data={CONF_SERVER_IDENTIFIER: server_id, PLEX_SERVER_CONFIG: data},
                 )
 
