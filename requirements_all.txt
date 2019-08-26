@@ -1201,7 +1201,7 @@ pyhomematic==0.1.60
 pyhomeworks==0.0.6
 
 # homeassistant.components.hydroquebec
-pyhydroquebec==2.2.2
+pyhydroquebec==2.4.0
 
 # homeassistant.components.ialarm
 pyialarm==0.3
