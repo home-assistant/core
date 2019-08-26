@@ -11,13 +11,13 @@ from .const import (
     CONF_CLIENT_SECRET,
     CONF_ENDPOINT,
     CONF_ENTITY_CONFIG,
-    CONF_FILTER
+    CONF_FILTER,
 )
 from .state_report import async_enable_proactive_mode
 from .smart_home import async_handle_message
 
 _LOGGER = logging.getLogger(__name__)
-SMART_HOME_HTTP_ENDPOINT = '/api/alexa/smart_home'
+SMART_HOME_HTTP_ENDPOINT = "/api/alexa/smart_home"
 
 
 class AlexaConfig(AbstractConfig):
@@ -25,17 +25,22 @@ class AlexaConfig(AbstractConfig):
 
     def __init__(self, hass, config):
         """Initialize Alexa config."""
+        super().__init__(hass)
         self._config = config
 
         if config.get(CONF_CLIENT_ID) and config.get(CONF_CLIENT_SECRET):
-            self._auth = Auth(hass, config[CONF_CLIENT_ID],
-                              config[CONF_CLIENT_SECRET])
+            self._auth = Auth(hass, config[CONF_CLIENT_ID], config[CONF_CLIENT_SECRET])
         else:
             self._auth = None
 
     @property
     def supports_auth(self):
         """Return if config supports auth."""
+        return self._auth is not None
+
+    @property
+    def should_report_state(self):
+        """Return if we should proactively report states."""
         return self._auth is not None
 
     @property
@@ -46,7 +51,7 @@ class AlexaConfig(AbstractConfig):
     @property
     def entity_config(self):
         """Return entity config."""
-        return self._config.get(CONF_ENTITY_CONFIG, {})
+        return self._config.get(CONF_ENTITY_CONFIG) or {}
 
     def should_expose(self, entity_id):
         """If an entity should be exposed."""
@@ -73,7 +78,7 @@ async def async_setup(hass, config):
     smart_home_config = AlexaConfig(hass, config)
     hass.http.register_view(SmartHomeView(smart_home_config))
 
-    if smart_home_config.supports_auth:
+    if smart_home_config.should_report_state:
         await async_enable_proactive_mode(hass, smart_home_config)
 
 
@@ -81,7 +86,7 @@ class SmartHomeView(HomeAssistantView):
     """Expose Smart Home v3 payload interface via HTTP POST."""
 
     url = SMART_HOME_HTTP_ENDPOINT
-    name = 'api:alexa:smart_home'
+    name = "api:alexa:smart_home"
 
     def __init__(self, smart_home_config):
         """Initialize."""
@@ -94,15 +99,14 @@ class SmartHomeView(HomeAssistantView):
         Lambda, which will need to forward the requests to here and pass back
         the response.
         """
-        hass = request.app['hass']
-        user = request['hass_user']
+        hass = request.app["hass"]
+        user = request["hass_user"]
         message = await request.json()
 
         _LOGGER.debug("Received Alexa Smart Home request: %s", message)
 
         response = await async_handle_message(
-            hass, self.smart_home_config, message,
-            context=core.Context(user_id=user.id)
+            hass, self.smart_home_config, message, context=core.Context(user_id=user.id)
         )
         _LOGGER.debug("Sending Alexa Smart Home response: %s", response)
-        return b'' if response is None else self.json(response)
+        return b"" if response is None else self.json(response)

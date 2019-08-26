@@ -11,8 +11,9 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Mopar Switch platform."""
     data = hass.data[MOPAR_DOMAIN]
-    add_entities([MoparSwitch(data, index)
-                  for index, _ in enumerate(data.vehicles)], True)
+    add_entities(
+        [MoparSwitch(data, index) for index, _ in enumerate(data.vehicles)], True
+    )
 
 
 class MoparSwitch(SwitchDevice):
@@ -21,7 +22,7 @@ class MoparSwitch(SwitchDevice):
     def __init__(self, data, index):
         """Initialize the Switch."""
         self._index = index
-        self._name = '{} Switch'.format(data.get_vehicle_name(self._index))
+        self._name = "{} Switch".format(data.get_vehicle_name(self._index))
         self._actuate = data.actuate
         self._state = None
 
@@ -42,10 +43,10 @@ class MoparSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn on the Mopar Vehicle."""
-        if self._actuate('engine_on', self._index):
+        if self._actuate("engine_on", self._index):
             self._state = STATE_ON
 
     def turn_off(self, **kwargs):
         """Turn off the Mopar Vehicle."""
-        if self._actuate('engine_off', self._index):
+        if self._actuate("engine_off", self._index):
             self._state = STATE_OFF

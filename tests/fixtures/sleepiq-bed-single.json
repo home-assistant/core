@@ -1,0 +1,27 @@
+{
+   "beds" : [
+      {
+         "dualSleep" : false,
+         "base" : "FlexFit",
+         "sku" : "AILE",
+         "model" : "ILE",
+         "size" : "KING",
+         "isKidsBed" : false,
+         "sleeperRightId" : "-80",
+         "accountId" : "-32",
+         "bedId" : "-31",
+         "registrationDate" : "2016-07-22T14:00:58Z",
+         "serial" : null,
+         "reference" : "95000794555-1",
+         "macAddress" : "CD13A384BA51",
+         "version" : null,
+         "purchaseDate" : "2016-06-22T00:00:00Z",
+         "sleeperLeftId" : "0",
+         "zipcode" : "12345",
+         "returnRequestStatus" : 0,
+         "name" : "ILE",
+         "status" : 1,
+         "timezone" : "US/Eastern"
+      }
+   ]
+}

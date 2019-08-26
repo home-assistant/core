@@ -14,7 +14,7 @@
                 "data": {
                     "password": "Has\u0142o"
                 },
-                "description": "Wprowad\u017a has\u0142o ustawione w konfiguracji dla {nazwa}.",
+                "description": "Wprowad\u017a has\u0142o ustawione w konfiguracji dla {name}.",
                 "title": "Wprowad\u017a has\u0142o"
             },
             "discovery_confirm": {

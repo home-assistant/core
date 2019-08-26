@@ -2,19 +2,23 @@
 
 import logging
 from numbers import Number
-from homeassistant.const import (VOLUME_LITERS, VOLUME_MILLILITERS,
-                                 VOLUME_GALLONS, VOLUME_FLUID_OUNCE,
-                                 VOLUME, UNIT_NOT_RECOGNIZED_TEMPLATE)
+from homeassistant.const import (
+    VOLUME_LITERS,
+    VOLUME_MILLILITERS,
+    VOLUME_GALLONS,
+    VOLUME_FLUID_OUNCE,
+    VOLUME,
+    UNIT_NOT_RECOGNIZED_TEMPLATE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-VALID_UNITS = [VOLUME_LITERS, VOLUME_MILLILITERS, VOLUME_GALLONS,
-               VOLUME_FLUID_OUNCE]
+VALID_UNITS = [VOLUME_LITERS, VOLUME_MILLILITERS, VOLUME_GALLONS, VOLUME_FLUID_OUNCE]
 
 
 def __liter_to_gallon(liter: float) -> float:
     """Convert a volume measurement in Liter to Gallon."""
-    return liter * .2642
+    return liter * 0.2642
 
 
 def __gallon_to_liter(gallon: float) -> float:
@@ -25,15 +29,15 @@ def __gallon_to_liter(gallon: float) -> float:
 def convert(volume: float, from_unit: str, to_unit: str) -> float:
     """Convert a temperature from one unit to another."""
     if from_unit not in VALID_UNITS:
-        raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit,
-                                                             VOLUME))
+        raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, VOLUME))
     if to_unit not in VALID_UNITS:
         raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, VOLUME))
 
     if not isinstance(volume, Number):
-        raise TypeError('{} is not of numeric type'.format(volume))
+        raise TypeError(f"{volume} is not of numeric type")
 
-    if from_unit == to_unit:
+    # type ignore: https://github.com/python/mypy/issues/7207
+    if from_unit == to_unit:  # type: ignore
         return volume
 
     result = volume
