@@ -167,10 +167,16 @@ class HomeKitBatterySensor(HomeKitEntity):
         """Initialise the entity."""
         super().__init__(*args)
         self._state = None
+        self._low_battery = False
+        self._charging = False
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
-        return [CharacteristicsTypes.BATTERY_LEVEL]
+        return [
+            CharacteristicsTypes.BATTERY_LEVEL,
+            CharacteristicsTypes.STATUS_LO_BATT,
+            CharacteristicsTypes.CHARGING_STATE,
+        ]
 
     @property
     def name(self):
@@ -180,7 +186,7 @@ class HomeKitBatterySensor(HomeKitEntity):
     @property
     def icon(self):
         """Return the sensor icon."""
-        return icon_for_battery_level(self._state, False)
+        return icon_for_battery_level(self._state, self._charging)
 
     @property
     def unit_of_measurement(self):
@@ -189,6 +195,15 @@ class HomeKitBatterySensor(HomeKitEntity):
 
     def _update_battery_level(self, value):
         self._state = value
+
+    def _update_status_lo_batt(self, value):
+        self._low_battery = value == 1
+
+    def _update_charging_state(self, value):
+        # 0 = not charging
+        # 1 = charging
+        # 2 = not chargeable
+        self._charging = value == 1
 
     @property
     def state(self):
