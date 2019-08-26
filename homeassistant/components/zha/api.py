@@ -158,9 +158,11 @@ async def websocket_get_device(hass, connection, msg):
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     ha_device_registry = await async_get_registry(hass)
     ieee = msg[ATTR_IEEE]
-    device = async_get_device_info(
-        hass, zha_gateway.devices[ieee], ha_device_registry=ha_device_registry
-    )
+    device = None
+    if ieee in zha_gateway.devices:
+        device = async_get_device_info(
+            hass, zha_gateway.devices[ieee], ha_device_registry=ha_device_registry
+        )
     if not device:
         connection.send_message(
             websocket_api.error_message(
