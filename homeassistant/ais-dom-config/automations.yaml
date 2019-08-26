@@ -42,11 +42,11 @@
    - service: ais_bookmarks.get_favorites
    - delay: '1'
    - service: ais_bookmarks.get_bookmarks
-   - delay: '1'
+   - delay: '2'
    - service: ais_cloud.get_radio_types
-   - delay: '1'
+   - delay: '2'
    - service: ais_cloud.get_podcast_types
-   - delay: '1'
+   - delay: '2'
    - service: ais_cloud.get_rss_news_category
    - service: ais_yt_service.search
    - delay: '1'

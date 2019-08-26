@@ -2403,14 +2403,6 @@ def _publish_command_to_frame(hass, key, val, ip):
     url = G_HTTP_REST_SERVICE_BASE_URL.format(ip)
 
     if key == "WifiConnectToSid":
-        # enable the wifi info
-        hass.async_run_job(
-            hass.services.async_call(
-                "input_boolean",
-                "turn_on",
-                {"entity_id": "input_boolean.ais_android_wifi_changes_notify"},
-            )
-        )
         ssid = val.split(";")[0]
         if ssid is None or ssid == "-" or ssid == "":
             _say_it(hass, "Wybierz sieć WiFi z listy")

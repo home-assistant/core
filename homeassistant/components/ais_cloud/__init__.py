@@ -394,8 +394,11 @@ class AisColudData:
             if ws_resp is None:
                 json_ws_resp = self.cache.audio_type(ais_global.G_AN_RADIO)
             else:
-                json_ws_resp = ws_resp.json()
-                self.cache.store_audio_type(ais_global.G_AN_RADIO, json_ws_resp)
+                try:
+                    json_ws_resp = ws_resp.json()
+                    self.cache.store_audio_type(ais_global.G_AN_RADIO, json_ws_resp)
+                except:
+                    _LOGGER.error("RADIO WS resp " + str(ws_resp))
 
             types = [ais_global.G_EMPTY_OPTION]
             for item in json_ws_resp["data"]:
@@ -413,8 +416,11 @@ class AisColudData:
             if ws_resp is None:
                 json_ws_resp = self.cache.audio_type(ais_global.G_AN_PODCAST)
             else:
-                json_ws_resp = ws_resp.json()
-                self.cache.store_audio_type(ais_global.G_AN_PODCAST, json_ws_resp)
+                try:
+                    json_ws_resp = ws_resp.json()
+                    self.cache.store_audio_type(ais_global.G_AN_PODCAST, json_ws_resp)
+                except:
+                    _LOGGER.error("PODCASTS WS resp " + str(ws_resp))
             types = [ais_global.G_EMPTY_OPTION]
             for item in json_ws_resp["data"]:
                 types.append(item)
@@ -431,8 +437,11 @@ class AisColudData:
             if ws_resp is None:
                 json_ws_resp = self.cache.audio_type(ais_global.G_AN_NEWS)
             else:
-                json_ws_resp = ws_resp.json()
-                self.cache.store_audio_type(ais_global.G_AN_NEWS, json_ws_resp)
+                try:
+                    json_ws_resp = ws_resp.json()
+                    self.cache.store_audio_type(ais_global.G_AN_NEWS, json_ws_resp)
+                except:
+                    _LOGGER.error("NEWS WS resp " + str(ws_resp))
             types = [ais_global.G_EMPTY_OPTION]
             for item in json_ws_resp["data"]:
                 types.append(item)

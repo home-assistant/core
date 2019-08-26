@@ -55,11 +55,6 @@ input_select:
       - "-"
     initial: "-"
     icon: mdi:home-plus
-input_boolean:
-  ais_android_wifi_changes_notify:
-    name: Powiadamiaj o zmianach Wifi
-    initial: off
-    icon: mdi:voice
 
 group:
   Internet Status:
@@ -73,7 +68,6 @@ group:
       - input_select.ais_android_wifi_network
       - input_text.ais_android_wifi_password
       - script.ais_connect_android_wifi_network
-      - input_boolean.ais_android_wifi_changes_notify
   AIS add IOT device:
     name: Dodaj nowe urządzenia
     control: hidden
