@@ -13,6 +13,7 @@ from homeassistant.components.zha.core.const import (
     ATTR_MANUFACTURER,
     ATTR_ENDPOINT_ID,
 )
+from homeassistant.components.websocket_api import const
 from .common import async_init_zigpy_device
 
 
@@ -133,3 +134,15 @@ async def test_list_devices(hass, config_entry, zha_gateway, zha_client):
         msg = await zha_client.receive_json()
         device2 = msg["result"]
         assert device == device2
+
+
+async def test_device_not_found(hass, config_entry, zha_gateway, zha_client):
+    """Test not found response from get device API."""
+    await zha_client.send_json(
+        {ID: 6, TYPE: "zha/device", ATTR_IEEE: "28:6d:97:00:01:04:11:8c"}
+    )
+    msg = await zha_client.receive_json()
+    assert msg["id"] == 6
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == const.ERR_NOT_FOUND
