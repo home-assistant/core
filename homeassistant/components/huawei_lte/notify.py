@@ -1,4 +1,5 @@
 """Support for Huawei LTE router notifications."""
+
 import logging
 
 import voluptuous as vol
@@ -12,7 +13,8 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_RECIPIENT, CONF_URL
 import homeassistant.helpers.config_validation as cv
 
-from . import DATA_KEY
+from .const import DOMAIN
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +46,7 @@ class HuaweiLteSmsNotificationService(BaseNotificationService):
         if not targets or not message:
             return
 
-        data = self.hass.data[DATA_KEY].get_data(self.config)
+        data = self.hass.data[DOMAIN].get_data(self.config)
         if not data:
             _LOGGER.error("Router not available")
             return
