@@ -2,6 +2,7 @@
 from homekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -9,7 +10,6 @@ HUMIDITY_ICON = "mdi:water-percent"
 TEMP_C_ICON = "mdi:thermometer"
 BRIGHTNESS_ICON = "mdi:brightness-6"
 CO2_ICON = "mdi:periodic-table-co2"
-BATTERY_ICON = "mdi:battery"
 
 UNIT_PERCENT = "%"
 UNIT_LUX = "lux"
@@ -180,7 +180,7 @@ class HomeKitBatterySensor(HomeKitEntity):
     @property
     def icon(self):
         """Return the sensor icon."""
-        return BATTERY_ICON
+        return icon_for_battery_level(self._state, False)
 
     @property
     def unit_of_measurement(self):
