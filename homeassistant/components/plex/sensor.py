@@ -1,6 +1,8 @@
 """Support for Plex media server monitoring."""
 from datetime import timedelta
 import logging
+import plexapi.exceptions
+import requests.exceptions
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA
@@ -76,8 +78,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 def _setup_platform(hass, config_entry, add_entities):
     """Set up the Plex sensor."""
-    import plexapi.exceptions
-
     server_config = config_entry.data.get(PLEX_SERVER_CONFIG, {})
 
     try:
@@ -140,7 +140,17 @@ class PlexSensor(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update method for Plex sensor."""
-        sessions = self._server.sessions()
+        try:
+            sessions = self._server.sessions()
+        except plexapi.exceptions.BadRequest:
+            _LOGGER.exception("Error listing current Plex sessions")
+            return
+        except requests.exceptions.RequestException as ex:
+            _LOGGER.warning(
+                "Temporary error connecting to %s (%s)", self.server_name, ex
+            )
+            return
+
         now_playing = []
         for sess in sessions:
             user = sess.usernames[0]
