@@ -3,7 +3,7 @@
   "name": "Hydroquebec",
   "documentation": "https://www.home-assistant.io/components/hydroquebec",
   "requirements": [
-    "pyhydroquebec==2.2.2"
+    "pyhydroquebec==2.4.0"
   ],
   "dependencies": [],
   "codeowners": []
