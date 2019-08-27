@@ -11,11 +11,9 @@ from homeassistant.core import callback
 from .const import DEFAULT_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.error("LINKY_CONFIG_FLOW")
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class LinkyFlowHandler(config_entries.ConfigFlow):
+class LinkyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Linky config flow."""
 
     VERSION = 1

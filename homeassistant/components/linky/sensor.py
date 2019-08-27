@@ -3,11 +3,8 @@ import json
 import logging
 from datetime import timedelta
 
-import voluptuous as vol
 from pylinky.client import DAILY, MONTHLY, YEARLY, LinkyClient, PyLinkyError
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -19,8 +16,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
-
-from .const import DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,16 +38,6 @@ SENSORS_INDEX_LABEL = 0
 SENSORS_INDEX_SCALE = 1
 SENSORS_INDEX_WHEN = 2
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    }
-)
-
-_LOGGER.error("LINKY_SENSOR")
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up the Linky platform."""
@@ -68,7 +53,7 @@ async def async_setup_entry(
         entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], entry.data[CONF_TIMEOUT]
     )
 
-    await hass.async_add_executor_job(account.update_linky_data())
+    await hass.async_add_executor_job(account.update_linky_data)
 
     sensors = [
         LinkySensor("Linky yesterday", account, DAILY, INDEX_LAST),
