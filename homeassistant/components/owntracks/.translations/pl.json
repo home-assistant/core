@@ -8,7 +8,7 @@
         },
         "step": {
             "user": {
-                "description": "Czy na pewno chcesz skonfigurowa\u0107 OwnTracks?",
+                "description": "\n\n![AIS logo](/static/icons/owntracks.png)\n\nCzy na pewno chcesz skonfigurowa\u0107 OwnTracks?",
                 "title": "Konfiguracja  OwnTracks"
             }
         },

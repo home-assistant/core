@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Set up OwnTracks",
-        "description": "Are you sure you want to set up OwnTracks?"
+        "description": "\n\n![AIS logo](/static/icons/owntracks.png)\n\nAre you sure you want to set up OwnTracks?"
       }
     },
     "abort": {

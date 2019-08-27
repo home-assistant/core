@@ -918,7 +918,9 @@ def say_curr_entity(hass):
             _say_it(hass, info)
         return
     elif entity_id == "sensor.ais_secure_android_id_dom":
-        _say_it(hass, info_name + " " + info_data + ". Aby przeliterować naciśnij OK.")
+        _say_it(
+            hass, info_name + " " + info_data + ". Aby przeliterować naciśnij 'OK'."
+        )
         return
     elif entity_id == "sensor.ais_connect_iot_device_info":
         info = (
@@ -2847,13 +2849,18 @@ def _process_command_from_frame(hass, service):
         state = hass.states.get("input_select.assistant_voice").state
         if state != set_voice:
             # set the voice, on change we will inform Android frame
-            hass.async_run_job(
-                hass.services.async_call(
-                    "input_select",
-                    "select_option",
-                    {"entity_id": "input_select.assistant_voice", "option": set_voice},
+            # only after startup
+            if ais_global.G_AIS_START_IS_DONE:
+                hass.async_run_job(
+                    hass.services.async_call(
+                        "input_select",
+                        "select_option",
+                        {
+                            "entity_id": "input_select.assistant_voice",
+                            "option": set_voice,
+                        },
+                    )
                 )
-            )
         else:
             # publish back to frame
             hass.services.call(
