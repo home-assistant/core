@@ -1059,7 +1059,7 @@ pyarlo==0.2.3
 pyatmo==2.2.1
 
 # homeassistant.components.apple_tv
-pyatv==0.3.12
+pyatv==0.3.13
 
 # homeassistant.components.bbox
 pybbox==0.0.5-alpha
