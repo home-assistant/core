@@ -6,6 +6,7 @@ import requests
 import base64
 import time
 import voluptuous as vol
+from pydoods import PyDOODS
 
 from homeassistant.components.image_processing import (
     CONF_CONFIDENCE,
@@ -73,53 +74,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_detectors(url, auth_key):
-    """Check the health and return its id if healthy."""
-    kwargs = {}
-    if auth_key:
-        kwargs['headers'] = {'doods-auth-key': auth_key}
-    try:
-        response = requests.get(
-            url + "/detectors",
-            **kwargs
-        )
-        if response.status_code == HTTP_UNAUTHORIZED:
-            _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
-            return None
-        if response.status_code == HTTP_OK:
-            return response.json()
-    except requests.exceptions.ConnectionError:
-        _LOGGER.error("ConnectionError: Is %s running?", CLASSIFIER)
-        return None
-
-
-def detect(url, auth_key, image, dconfig):
-    """Post an image to the detector."""
-    kwargs = {}
-    if auth_key:
-        kwargs['headers'] = {'doods-auth-key': auth_key}
-    try:
-        response = requests.post(
-            url + "/detect",
-            json={"data": encode_image(image), "detect": dconfig},
-            **kwargs
-        )
-        if response.status_code == HTTP_UNAUTHORIZED:
-            _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
-            return None
-        if response.status_code == HTTP_OK:
-            return response.json()
-    except requests.exceptions.ConnectionError:
-        _LOGGER.error("ConnectionError: Is %s running?", CLASSIFIER)
-        return None
-
-
-def encode_image(image):
-    """base64 encode an image stream."""
-    base64_img = base64.b64encode(image).decode('ascii')
-    return base64_img
-
-
 def draw_box(draw, box, img_width, img_height, text="", color=(255, 255, 0)):
     """Draw bounding box on image."""
     ymin, xmin, ymax, xmax = box
@@ -143,7 +97,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     url = config[CONF_URL]
     auth_key = config[CONF_AUTH_KEY]
     detector_name = config[CONF_DETECTOR]
-    response = get_detectors(url, auth_key)
+
+    doods = PyDOODS(url, auth_key)
+    response = doods.get_detectors()
     if not isinstance(response, dict):
         _LOGGER.warning("Could not connect to doods server: %s", url)
         return
@@ -166,8 +122,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 hass,
                 camera[CONF_ENTITY_ID],
                 camera.get(CONF_NAME),
-                url,
-                auth_key,
+                doods,
                 detector,
                 config,
             )
@@ -183,8 +138,7 @@ class Doods(ImageProcessingEntity):
         hass,
         camera_entity,
         name,
-        url,
-        auth_key,
+        doods,
         detector,
         config,
     ):
@@ -195,8 +149,7 @@ class Doods(ImageProcessingEntity):
             self._name = name
         else:
             self._name = "Doods {0}".format(split_entity_id(camera_entity)[1])
-        self._url = url
-        self._auth_key = auth_key
+        self._doods = doods
         self._file_out = config.get(CONF_FILE_OUT)
 
         # detector config and aspect ratio
@@ -355,7 +308,7 @@ class Doods(ImageProcessingEntity):
         # Run detection
         start = time.time()
         dconfig = {}
-        response = detect(self._url, self._auth_key, image, self._dconfig)
+        response = self._doods.detect(image, self._dconfig)
         _LOGGER.info("doods detect: %s response: %s duration: %s",
                      self._dconfig, response, time.time()-start)
 
