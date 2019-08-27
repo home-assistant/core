@@ -661,7 +661,7 @@ def async_load_api(hass):
 
     async def warning_device_squawk(service):
         """Issue the squawk command for an IAS warning device."""
-        ieee = service.data.get(ATTR_IEEE)
+        ieee = service.data[ATTR_IEEE]
         mode = service.data.get(ATTR_WARNING_DEVICE_MODE)
         strobe = service.data.get(ATTR_WARNING_DEVICE_STROBE)
         level = service.data.get(ATTR_LEVEL)
@@ -688,7 +688,7 @@ def async_load_api(hass):
 
     async def warning_device_warn(service):
         """Issue the warning command for an IAS warning device."""
-        ieee = service.data.get(ATTR_IEEE)
+        ieee = service.data[ATTR_IEEE]
         mode = service.data.get(ATTR_WARNING_DEVICE_MODE)
         strobe = service.data.get(ATTR_WARNING_DEVICE_STROBE)
         level = service.data.get(ATTR_LEVEL)
