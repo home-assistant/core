@@ -211,26 +211,26 @@ async def async_setup_entry(hass, config_entry):
 
     hass.services.async_register(DOMAIN, "update_data", update_data)
 
-    async def update_sensor_data(service):
-        """Refresh OpenUV sensor data."""
-        _LOGGER.debug("Refreshing OpenUV sensor data")
+    async def update_uv_index_data(service):
+        """Refresh OpenUV UV index data."""
+        _LOGGER.debug("Refreshing OpenUV UV index data")
 
         try:
-            await openuv.async_update_sensors()
+            await openuv.async_update_uv_index_data()
         except OpenUvError as err:
             _LOGGER.error("Error during data update: %s", err)
             return
 
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
-    hass.services.async_register(DOMAIN, "update_sensor_data", update_sensor_data)
+    hass.services.async_register(DOMAIN, "update_uv_index_data", update_uv_index_data)
 
     async def update_protection_data(service):
-        """Refresh OpenUV binary sensor data."""
-        _LOGGER.debug("Refreshing OpenUV binary sensor data")
+        """Refresh OpenUV protection window data."""
+        _LOGGER.debug("Refreshing OpenUV protection window data")
 
         try:
-            await openuv.async_update_binary_sensors()
+            await openuv.async_update_protection_data()
         except OpenUvError as err:
             _LOGGER.error("Error during data update: %s", err)
             return
@@ -262,39 +262,28 @@ class OpenUV:
         self.data = {}
         self.sensor_conditions = sensor_conditions
 
+    async def async_update_protection_data(self):
+        """Update binary sensor (protection window) data."""
+        if TYPE_PROTECTION_WINDOW in self.binary_sensor_conditions:
+            resp = await self.client.uv_protection_window()
+            data = resp["result"]
+
+            if data.get("from_time") and data.get("to_time"):
+                self.data[DATA_PROTECTION_WINDOW] = data
+            else:
+                _LOGGER.debug("No valid protection window data for this location")
+                self.data[DATA_PROTECTION_WINDOW] = {}
+
+    async def async_update_uv_index_data(self):
+        """Update sensor (uv index, etc) data."""
+        if any(c in self.sensor_conditions for c in SENSORS):
+            data = await self.client.uv_index()
+            self.data[DATA_UV] = data
+
     async def async_update(self):
         """Update sensor/binary sensor data."""
-        if TYPE_PROTECTION_WINDOW in self.binary_sensor_conditions:
-            resp = await self.client.uv_protection_window()
-            data = resp["result"]
-
-            if data.get("from_time") and data.get("to_time"):
-                self.data[DATA_PROTECTION_WINDOW] = data
-            else:
-                _LOGGER.debug("No valid protection window data for this location")
-                self.data[DATA_PROTECTION_WINDOW] = {}
-
-        if any(c in self.sensor_conditions for c in SENSORS):
-            data = await self.client.uv_index()
-            self.data[DATA_UV] = data
-
-    async def async_update_binary_sensors(self):
-        """Update binary sensor data."""
-        if TYPE_PROTECTION_WINDOW in self.binary_sensor_conditions:
-            resp = await self.client.uv_protection_window()
-            data = resp["result"]
-
-            if data.get("from_time") and data.get("to_time"):
-                self.data[DATA_PROTECTION_WINDOW] = data
-            else:
-                _LOGGER.debug("No valid protection window data for this location")
-                self.data[DATA_PROTECTION_WINDOW] = {}
-
-    async def async_update_sensors(self):
-        """Update sensor data."""
-        if any(c in self.sensor_conditions for c in SENSORS):
-            data = await self.client.uv_index()
-            self.data[DATA_UV] = data
+        await self.async_update_protection_data()
+        await self.async_update_uv_index_data()
 
 
 class OpenUvEntity(Entity):
