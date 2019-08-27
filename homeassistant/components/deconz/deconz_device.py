@@ -47,8 +47,7 @@ class DeconzDevice(Entity):
     @callback
     def async_update_callback(self, force_update=False):
         """Update the device's state."""
-        if self.enabled:
-            self.async_schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     @property
     def name(self):
