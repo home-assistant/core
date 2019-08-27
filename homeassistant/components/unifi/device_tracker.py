@@ -164,29 +164,20 @@ def update_items(controller, async_add_entities, tracked):
     """Update tracked device state from the controller."""
     new_tracked = []
 
-    for client_id in controller.api.clients:
+    for items, tracker_class in (
+        (controller.api.clients, UniFiClientTracker),
+        (controller.api.devices, UniFiDeviceTracker),
+    ):
 
-        if client_id in tracked:
-            if tracked[client_id].enabled:
-                tracked[client_id].async_schedule_update_ha_state()
-            continue
+        for item_id in items:
 
-        client = controller.api.clients[client_id]
+            if item_id in tracked:
+                if tracked[item_id].enabled:
+                    tracked[item_id].async_schedule_update_ha_state()
+                continue
 
-        tracked[client_id] = UniFiClientTracker(client, controller)
-        new_tracked.append(tracked[client_id])
-
-    for device_id in controller.api.devices:
-
-        if device_id in tracked:
-            if tracked[device_id].enabled:
-                tracked[device_id].async_schedule_update_ha_state()
-            continue
-
-        device = controller.api.devices[device_id]
-
-        tracked[device_id] = UniFiDeviceTracker(device, controller)
-        new_tracked.append(tracked[device_id])
+            tracked[item_id] = tracker_class(items[item_id], controller)
+            new_tracked.append(tracked[item_id])
 
     if new_tracked:
         async_add_entities(new_tracked)
