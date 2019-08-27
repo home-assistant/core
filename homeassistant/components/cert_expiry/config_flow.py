@@ -28,8 +28,10 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._errors = {}
 
-    def _prt_in_configuration_exists(self, host: str, port: int) -> bool:
+    def _prt_in_configuration_exists(self, user_input) -> bool:
         """Return True if host, port combination exists in configuration."""
+        host = user_input[CONF_HOST]
+        port = user_input.get(CONF_PORT, DEFAULT_PORT)
         if (host, port) in certexpiry_entries(self.hass):
             return True
         return False
@@ -38,10 +40,10 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Step when user intializes a integration."""
         self._errors = {}
         if user_input is not None:
-            name = slugify(user_input[CONF_NAME])
-            host = user_input[CONF_HOST]
-            prt = user_input[CONF_PORT]
-            if not self._prt_in_configuration_exists(host, prt):
+            if not self._prt_in_configuration_exists(user_input):
+                name = slugify(user_input[CONF_NAME])
+                host = user_input[CONF_HOST]
+                prt = user_input[CONF_PORT]
                 return self.async_create_entry(
                     title=name, data={CONF_HOST: host, CONF_PORT: prt}
                 )
@@ -69,11 +71,6 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         Only host was required in the yaml file all other fields are optional
         """
-        host = user_input[CONF_HOST]
-        prt = user_input.get(CONF_PORT, DEFAULT_PORT)
-        name = user_input.get(CONF_NAME, host)
-        if self._prt_in_configuration_exists(host, prt):
+        if self._prt_in_configuration_exists(user_input):
             return self.async_abort(reason="host_port_exists")
-        return await self.async_step_user(
-            {CONF_NAME: name, CONF_HOST: host, CONF_PORT: prt}
-        )
+        return await self.async_step_user(user_input)

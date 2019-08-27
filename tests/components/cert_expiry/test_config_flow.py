@@ -47,7 +47,7 @@ async def test_import(hass):
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == DEFAULT_PORT
 
-    # import with only host
+    # import with host and name
     result = await flow.async_step_import({CONF_HOST: HOST, CONF_NAME: NAME})
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "cert_expiry_test_1_2_3"
