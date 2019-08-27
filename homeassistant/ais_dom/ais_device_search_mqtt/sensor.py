@@ -111,17 +111,19 @@ def get_text_to_say():
     # Wait for 5 seconds
     time.sleep(10)
     if len(MQTT_DEVICES) > 0 or len(NET_DEVICES) > 0:
-        info = "Wykryto "
+        info = ""
     else:
         info = "Nie wykryto sterowanych urządzeń."
     if len(MQTT_DEVICES) > 0:
-        info += " sterowalne urządzenia podłączone do bramki w liczbie: " + str(
+        info += "Liczba wykrytych sterowalnych urządzeń podłączonych do bramki: " + str(
             len(MQTT_DEVICES)
         )
     if len(NET_DEVICES) > 0:
         if len(MQTT_DEVICES) > 0:
-            info += " i "
-        info += " sterowalne urządzenia w sieci w liczbie: " + str(len(NET_DEVICES))
+            info += ". "
+        info += "Liczba wykrytych sterowalnych urządzeń w sieci: " + str(
+            len(NET_DEVICES)
+        )
     return info
 
 

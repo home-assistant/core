@@ -119,6 +119,10 @@ async def async_setup(hass, config):
         if StrictVersion(newest) > StrictVersion(current_version):
             _LOGGER.info("The latest available version is %s", newest)
             info = "Dostępna jest nowa wersja " + newest + ". " + releasenotes
+            info_for_screen = info.replace("Naciśnij OK aby zainstalować.", "")
+            info_for_screen = info_for_screen.replace(
+                "Naciśnij OK/URUCHOM aby zainstalować.", ""
+            )
             hass.states.async_set(
                 ENTITY_ID,
                 info,
@@ -140,6 +144,16 @@ async def async_setup(hass, config):
                     "icon": "mdi:download",
                 },
             )
+
+            # notify about update
+            hass.components.persistent_notification.async_create(
+                title="Dostępna jest nowa wersja " + newest,
+                message=(
+                    info_for_screen + "[ Przejdz by zainstalować](/config/ais_dom)"
+                ),
+                notification_id="ais_update_notification",
+            )
+
             # say info about update
             import homeassistant.components.ais_ai_service as ais_ai
 
@@ -152,12 +166,9 @@ async def async_setup(hass, config):
                 )
             else:
                 if ais_global.G_AIS_START_IS_DONE:
-                    text = info.replace("Naciśnij OK aby zainstalować.", "")
-                    text = text.replace("Naciśnij OK/URUCHOM aby zainstalować.", "")
                     await hass.services.async_call(
-                        "ais_ai_service", "say_it", {"text": text}
+                        "ais_ai_service", "say_it", {"text": info_for_screen}
                     )
-
         else:
 
             info = "Twój system jest aktualny, wersja " + newest + ". "
