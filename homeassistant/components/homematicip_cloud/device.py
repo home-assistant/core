@@ -77,7 +77,7 @@ class HomematicipGenericDevice(Entity):
     def _async_device_changed(self, *args, **kwargs):
         """Handle device state changes."""
         # Don't update disabled entities
-        if self.registry_entry is None or not self.registry_entry.disabled:
+        if self.enabled:
             _LOGGER.debug("Event %s (%s)", self.name, self._device.modelType)
             self.async_schedule_update_ha_state()
         else:

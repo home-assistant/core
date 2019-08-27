@@ -196,6 +196,11 @@ class Entity:
         return True
 
     @property
+    def enabled(self):
+        """Return if the entity is enabled in the entity registry."""
+        return self.registry_entry is None or not self.registry_entry.disabled
+
+    @property
     def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
         return False
