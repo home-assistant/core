@@ -144,20 +144,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Update the values of the controller."""
         for entity in tracked.values():
 
-            if (
-                entity.entity_registry_enabled_default
-                and entity.registry_entry.disabled_by
-            ):
-                registry.async_update_entity(
-                    entity.registry_entry.entity_id, disabled_by=None
-                )
-            elif (
-                not entity.entity_registry_enabled_default
-                and not entity.registry_entry.disabled_by
-            ):
-                registry.async_update_entity(
-                    entity.registry_entry.entity_id, disabled_by=DISABLED_CONFIG_ENTRY
-                )
+            disabled_by = None
+            if not entity.entity_registry_enabled_default and entity.enabled:
+                disabled_by = DISABLED_CONFIG_ENTRY
+
+            registry.async_update_entity(
+                entity.registry_entry.entity_id, disabled_by=disabled_by
+            )
 
     async_dispatcher_connect(
         hass, controller.signal_options_update, update_disable_on_entities
