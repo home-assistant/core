@@ -371,7 +371,7 @@ async def test_broker_regenerates_token(hass, config_entry):
         stored_action = action
 
     with patch(
-        "homeassistant.components.smartthings" ".async_track_time_interval",
+        "homeassistant.components.smartthings.async_track_time_interval",
         new=async_track_time_interval,
     ):
         broker = smartthings.DeviceBroker(hass, config_entry, token, Mock(), [], [])
