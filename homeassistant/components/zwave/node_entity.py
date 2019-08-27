@@ -167,6 +167,14 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             info["via_device"] = (DOMAIN, 1)
         return info
 
+    def maybe_update_application_version(self, value):
+        """Update application version if value is a Command Class Version, Application Value."""
+        if (
+            value.command_class == COMMAND_CLASS_VERSION
+            and value.label == "Application Version"
+        ):
+            self._application_version = value.data
+
     def network_node_value_added(self, node=None, value=None, args=None):
         """Handle a added value to a none on the network."""
         if node and node.node_id != self.node_id:
@@ -174,12 +182,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         if args is not None and "nodeId" in args and args["nodeId"] != self.node_id:
             return
 
-        # Handle COMMAND_CLASS_VERSION "application_version"
-        if (
-            value.command_class == COMMAND_CLASS_VERSION
-            and value.label == "Application Version"
-        ):
-            self._application_version = value.data
+        self.maybe_update_application_version(value)
 
     def network_node_changed(self, node=None, value=None, args=None):
         """Handle a changed node on the network."""
@@ -191,6 +194,8 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         # Process central scene activation
         if value is not None and value.command_class == COMMAND_CLASS_CENTRAL_SCENE:
             self.central_scene_activated(value.index, value.data)
+
+        self.maybe_update_application_version(value)
 
         self.node_changed()
 
