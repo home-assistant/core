@@ -170,7 +170,8 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
     def maybe_update_application_version(self, value):
         """Update application version if value is a Command Class Version, Application Value."""
         if (
-            value.command_class == COMMAND_CLASS_VERSION
+            value
+            and value.command_class == COMMAND_CLASS_VERSION
             and value.label == "Application Version"
         ):
             self._application_version = value.data

@@ -164,22 +164,26 @@ async def test_central_scene_activated(hass, mock_openzwave):
     assert events[0].data[const.ATTR_SCENE_DATA] == scene_data
 
 
-async def test_application_version_in_device_state_attributes_after_change(
-    hass, mock_openzwave
-):
-    """Test central scene activated event."""
-    mock_receivers = []
+async def test_application_version(hass, mock_openzwave):
+    """Test application version."""
+    mock_receivers = {}
+
+    signal_mocks = [
+        mock_zwave.MockNetwork.SIGNAL_VALUE_CHANGED,
+        mock_zwave.MockNetwork.SIGNAL_VALUE_ADDED,
+    ]
 
     def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == mock_zwave.MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
+        if signal in signal_mocks:
+            mock_receivers[signal] = receiver
 
     node = mock_zwave.MockNode(node_id=11)
 
     with patch("pydispatch.dispatcher.connect", new=mock_connect):
         entity = node_entity.ZWaveNodeEntity(node, mock_openzwave)
 
-    assert len(mock_receivers) == 1
+    for signal_mock in signal_mocks:
+        assert signal_mock in mock_receivers.keys()
 
     events = []
 
@@ -196,16 +200,34 @@ async def test_application_version_in_device_state_attributes_after_change(
     entity.hass = hass
     entity.entity_id = "zwave.mock_node"
 
+    # Fire off an added value
     value = mock_zwave.MockValue(
         command_class=const.COMMAND_CLASS_VERSION,
         label="Application Version",
         data="5.10",
     )
-    hass.async_add_job(mock_receivers[0], node, value)
+    hass.async_add_job(
+        mock_receivers[mock_zwave.MockNetwork.SIGNAL_VALUE_ADDED], node, value
+    )
     await hass.async_block_till_done()
 
     assert (
         entity.device_state_attributes[node_entity.ATTR_APPLICATION_VERSION] == "5.10"
+    )
+
+    # Fire off a changed
+    value = mock_zwave.MockValue(
+        command_class=const.COMMAND_CLASS_VERSION,
+        label="Application Version",
+        data="4.14",
+    )
+    hass.async_add_job(
+        mock_receivers[mock_zwave.MockNetwork.SIGNAL_VALUE_CHANGED], node, value
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        entity.device_state_attributes[node_entity.ATTR_APPLICATION_VERSION] == "4.14"
     )
 
 
