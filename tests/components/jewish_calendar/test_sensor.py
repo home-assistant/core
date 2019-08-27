@@ -223,6 +223,7 @@ class TestJewishCalenderSensor:
         time_zone = get_time_zone(tzname)
         test_time = time_zone.localize(cur_time)
 
+        default_time_zone = str(hass.config.time_zone)
         hass.config.set_time_zone(tzname)
         hass.config.latitude = latitude
         hass.config.longitude = longitude
@@ -246,6 +247,7 @@ class TestJewishCalenderSensor:
             )
 
         assert hass.states.get(f"sensor.test_{sensor}").state == str(result)
+        hass.config.set_time_zone(default_time_zone)
 
     shabbat_params = [
         make_nyc_test_params(
@@ -558,6 +560,7 @@ class TestJewishCalenderSensor:
             if isinstance(value, dt):
                 value = value.replace(tzinfo=None)
                 result[sensor_type] = time_zone.localize(value)
+        default_time_zone = str(hass.config.time_zone)
         hass.config.set_time_zone(tzname)
         hass.config.latitude = latitude
         hass.config.longitude = longitude
@@ -592,6 +595,7 @@ class TestJewishCalenderSensor:
             assert hass.states.get(f"sensor.test_{sensor_type}").state == str(
                 result_value
             ), f"Value for {sensor_type}"
+        hass.config.set_time_zone(default_time_zone)
 
     melacha_params = [
         make_nyc_test_params(dt(2018, 9, 1, 16, 0), "on"),
@@ -654,6 +658,7 @@ class TestJewishCalenderSensor:
         time_zone = get_time_zone(tzname)
         test_time = time_zone.localize(now)
 
+        default_time_zone = str(hass.config.time_zone)
         hass.config.set_time_zone(tzname)
         hass.config.latitude = latitude
         hass.config.longitude = longitude
@@ -682,6 +687,7 @@ class TestJewishCalenderSensor:
             hass.states.get("binary_sensor.test_issur_melacha_in_effect").state
             == result
         )
+        hass.config.set_time_zone(default_time_zone)
 
     omer_params = [
         make_nyc_test_params(dt(2019, 4, 21, 0, 0), 1),
@@ -742,6 +748,7 @@ class TestJewishCalenderSensor:
         time_zone = get_time_zone(tzname)
         test_time = time_zone.localize(now)
 
+        default_time_zone = str(hass.config.time_zone)
         hass.config.set_time_zone(tzname)
         hass.config.latitude = latitude
         hass.config.longitude = longitude
@@ -767,3 +774,4 @@ class TestJewishCalenderSensor:
             )
 
         assert hass.states.get("sensor.test_omer_count").state == result
+        hass.config.set_time_zone(default_time_zone)
