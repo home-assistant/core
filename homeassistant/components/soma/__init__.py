@@ -14,8 +14,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.const import (
     CONF_HOST, CONF_PORT)
 
-from homeassistant.util import Throttle
-
 from .const import DOMAIN, HOST, API
 
 DEVICES = 'devices'
@@ -60,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][API] = SomaApi(entry.data[HOST])
     hass.data[DOMAIN][DEVICES] = await hass.async_add_executor_job(
-            hass.data[DOMAIN][API].list_devices)
+        hass.data[DOMAIN][API].list_devices)
 
     for component in SOMA_COMPONENTS:
         hass.async_create_task(
@@ -107,9 +105,8 @@ class SomaEntity(Entity):
 
     async def async_update(self):
         """Update the device with the latest data."""
-        #await update_all_devices(self.hass)
         ret = await self.hass.async_add_executor_job(
-                self.api.get_shade_state, self.device['mac'])
+            self.api.get_shade_state, self.device['mac'])
         self.current_position = ret['position']
 
     def has_capability(self, capability):
