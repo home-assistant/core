@@ -770,8 +770,8 @@ class TestJewishCalenderSensor:
 
         with alter_time(test_time):
             await hass.helpers.entity_component.async_update_entity(
-                "sensor.test_omer_count"
+                "sensor.test_day_of_the_omer"
             )
 
-        assert hass.states.get("sensor.test_omer_count").state == result
+        assert hass.states.get("sensor.test_day_of_the_omer").state == result
         hass.config.set_time_zone(default_time_zone)
