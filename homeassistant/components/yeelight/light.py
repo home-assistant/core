@@ -654,7 +654,7 @@ class YeelightColorLight(YeelightGenericLight):
         return YEELIGHT_COLOR_EFFECT_LIST
 
 
-class YeelightWhiteTempLightsupport(YeelightGenericLight):
+class YeelightWhiteTempLightsupport:
     """Representation of a Color Yeelight light."""
 
     @property
@@ -667,7 +667,9 @@ class YeelightWhiteTempLightsupport(YeelightGenericLight):
         return YEELIGHT_TEMP_ONLY_EFFECT_LIST
 
 
-class YeelightWhiteTempWithoutNightlightSwitch(YeelightWhiteTempLightsupport):
+class YeelightWhiteTempWithoutNightlightSwitch(
+    YeelightGenericLight, YeelightWhiteTempLightsupport
+):
     """White temp light, when nightlight switch is not set to light."""
 
     @property
@@ -675,7 +677,7 @@ class YeelightWhiteTempWithoutNightlightSwitch(YeelightWhiteTempLightsupport):
         return "current_brightness"
 
 
-class YeelightWithNightLight(YeelightWhiteTempLightsupport):
+class YeelightWithNightLight(YeelightGenericLight, YeelightWhiteTempLightsupport):
     """Representation of a Yeelight with nightlight support.
 
     It represents case when nightlight switch is set to light.
@@ -722,30 +724,26 @@ class YeelightNightLightMode(YeelightGenericLight):
         return YEELIGHT_TEMP_ONLY_EFFECT_LIST
 
 
-class YeelightWithAmbientLightSupport(YeelightGenericLight):
-    """Representation of a Yeelight which has ambilight support."""
+class YeelightWithAmbientWithoutNightlight(YeelightWhiteTempWithoutNightlightSwitch):
+    """Representation of a Yeelight which has ambilight support.
+
+    And nightlight switch type is none.
+    """
 
     @property
     def _power_property(self):
         return "main_power"
 
 
-class YeelightWithAmbientWithoutNightlight(
-    YeelightWithAmbientLightSupport, YeelightWhiteTempWithoutNightlightSwitch
-):
-    """Representation of a Yeelight which has ambilight support.
-
-    And nightlight switch type is none.
-    """
-
-
-class YeelightWithAmbientAndNightlight(
-    YeelightWithAmbientLightSupport, YeelightWithNightLight
-):
+class YeelightWithAmbientAndNightlight(YeelightWithNightLight):
     """Representation of a Yeelight which has ambilight support.
 
     And nightlight switch type is set to light.
     """
+
+    @property
+    def _power_property(self):
+        return "main_power"
 
 
 class YeelightAmbientLight(YeelightColorLight):
