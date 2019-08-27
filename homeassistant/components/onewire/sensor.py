@@ -33,6 +33,7 @@ DEVICE_SENSORS = {
     "7E": {"temperature": "EDS0068/temperature", "pressure": "EDS0068/pressure"},
 }
 
+
 SENSOR_TYPES = {
     "temperature": ["temperature", TEMP_CELSIUS],
     "humidity": ["humidity", "%"],
