@@ -18,7 +18,7 @@ SENSOR_TYPES = {
     "data": {
         "date": ["Date", "mdi:judaism"],
         "weekly_portion": ["Parshat Hashavua", "mdi:book-open-variant"],
-        "holiday_name": ["Holiday", "mdi:calendar-star"],
+        "holiday_name": ["Holiday name", "mdi:calendar-star"],
         "holiday_type": ["Holiday type", "mdi:counter"],
         "omer_count": ["Day of the Omer", "mdi:counter"],
     },

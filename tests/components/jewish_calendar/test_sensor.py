@@ -1,5 +1,6 @@
 """The tests for the Jewish calendar sensor platform."""
 from collections import namedtuple
+from contextlib import contextmanager
 from datetime import time
 from datetime import datetime as dt
 from unittest.mock import patch
@@ -47,6 +48,16 @@ def make_jerusalem_test_params(dtime, results, havdalah_offset=0):
         JERUSALEM_LATLNG.lng,
         results,
     )
+
+
+@contextmanager
+def alter_time(retval):
+    """Manage multiple time mocks."""
+    patch1 = patch("homeassistant.util.dt.utcnow", return_value=retval)
+    patch2 = patch("homeassistant.util.dt.now", return_value=retval)
+
+    with patch1, patch2:
+        yield
 
 
 class TestJewishCalenderSensor:
@@ -113,14 +124,14 @@ class TestJewishCalenderSensor:
             False,
             "Rosh Hashana I",
         ),
-        (dt(2018, 9, 10), "UTC", 31.778, 35.235, "english", "holyness", False, 1),
+        (dt(2018, 9, 10), "UTC", 31.778, 35.235, "english", "holiday_type", False, 1),
         (
             dt(2018, 9, 8),
             "UTC",
             31.778,
             35.235,
             "hebrew",
-            "weekly_portion",
+            "parshat_hashavua",
             False,
             "נצבים",
         ),
@@ -130,7 +141,7 @@ class TestJewishCalenderSensor:
             40.7128,
             -74.0060,
             "hebrew",
-            "first_stars",
+            "t_set_hakochavim",
             True,
             time(19, 48),
         ),
@@ -140,7 +151,7 @@ class TestJewishCalenderSensor:
             31.778,
             35.235,
             "hebrew",
-            "first_stars",
+            "t_set_hakochavim",
             False,
             time(19, 21),
         ),
@@ -150,7 +161,7 @@ class TestJewishCalenderSensor:
             31.778,
             35.235,
             "hebrew",
-            "weekly_portion",
+            "parshat_hashavua",
             False,
             "לך לך",
         ),
@@ -223,20 +234,25 @@ class TestJewishCalenderSensor:
         hass.config.latitude = latitude
         hass.config.longitude = longitude
 
-        with patch("homeassistant.util.dt.now", return_value=test_time):
-            assert await async_setup_component(
-                hass,
-                jewish_calendar.DOMAIN,
-                {
-                    "jewish_calendar": {
-                        "name": "test",
-                        "language": language,
-                        "diaspora": diaspora,
-                    }
-                },
+        assert await async_setup_component(
+            hass,
+            jewish_calendar.DOMAIN,
+            {
+                "jewish_calendar": {
+                    "name": "test",
+                    "language": language,
+                    "diaspora": diaspora,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+        with alter_time(test_time):
+            await hass.helpers.entity_component.async_update_entity(
+                f"sensor.test_{sensor}"
             )
-            await hass.async_block_till_done()
-            assert hass.states.get(f"sensor.test_{sensor}").state == result
+
+        assert hass.states.get(f"sensor.test_{sensor}").state == str(result)
 
     shabbat_params = [
         make_nyc_test_params(
@@ -549,30 +565,34 @@ class TestJewishCalenderSensor:
         hass.config.latitude = latitude
         hass.config.longitude = longitude
 
-        with patch("homeassistant.util.dt.now", return_value=test_time):
-            for sensor_type, result_value in result.items():
-                language = "english"
-                if sensor_type.startswith("hebrew_"):
-                    language = "hebrew"
-                    sensor_type = sensor_type.replace("hebrew_", "")
+        for sensor_type, result_value in result.items():
+            language = "english"
+            if sensor_type.startswith("hebrew_"):
+                language = "hebrew"
+                sensor_type = sensor_type.replace("hebrew_", "")
 
-                assert await async_setup_component(
-                    hass,
-                    jewish_calendar.DOMAIN,
-                    {
-                        "jewish_calendar": {
-                            "name": "test",
-                            "language": language,
-                            "diaspora": diaspora,
-                            "candle_lighting_minutes_before_sunset": candle_lighting,
-                            "havdalah_minutes_after_sunset": havdalah,
-                        }
-                    },
+            assert await async_setup_component(
+                hass,
+                jewish_calendar.DOMAIN,
+                {
+                    "jewish_calendar": {
+                        "name": "test",
+                        "language": language,
+                        "diaspora": diaspora,
+                        "candle_lighting_minutes_before_sunset": candle_lighting,
+                        "havdalah_minutes_after_sunset": havdalah,
+                    }
+                },
+            )
+            await hass.async_block_till_done()
+
+            with alter_time(test_time):
+                await hass.helpers.entity_component.async_update_entity(
+                    f"sensor.test_{sensor_type}"
                 )
-                await hass.async_block_till_done()
-                assert (
-                    hass.states.get(f"sensor.test_{sensor_type}").state == result_value
-                ), f"Value for {sensor_type}"
+            assert (
+                hass.states.get(f"sensor.test_{sensor_type}").state == result_value
+            ), f"Value for {sensor_type}"
 
     melacha_params = [
         make_nyc_test_params(dt(2018, 9, 1, 16, 0), True),
@@ -638,25 +658,30 @@ class TestJewishCalenderSensor:
         hass.config.latitude = latitude
         hass.config.longitude = longitude
 
-        with patch("homeassistant.util.dt.now", return_value=test_time):
-            assert await async_setup_component(
-                hass,
-                jewish_calendar.DOMAIN,
-                {
-                    "jewish_calendar": {
-                        "name": "test",
-                        "language": "english",
-                        "diaspora": diaspora,
-                        "candle_lighting_minutes_before_sunset": candle_lighting,
-                        "havdalah_minutes_after_sunset": havdalah,
-                    }
-                },
+        assert await async_setup_component(
+            hass,
+            jewish_calendar.DOMAIN,
+            {
+                "jewish_calendar": {
+                    "name": "test",
+                    "language": "english",
+                    "diaspora": diaspora,
+                    "candle_lighting_minutes_before_sunset": candle_lighting,
+                    "havdalah_minutes_after_sunset": havdalah,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+        with alter_time(test_time):
+            await hass.helpers.entity_component.async_update_entity(
+                "binary_sensor.test_issur_melacha_in_effect"
             )
-            await hass.async_block_till_done()
-            assert (
-                hass.states.get(f"binary_sensor.test_issur_melacha_in_effect").state
-                == result
-            )
+
+        assert (
+            hass.states.get("binary_sensor.test_issur_melacha_in_effect").state
+            == result
+        )
 
     omer_params = [
         make_nyc_test_params(dt(2019, 4, 21, 0, 0), 1),
@@ -720,19 +745,24 @@ class TestJewishCalenderSensor:
         hass.config.latitude = latitude
         hass.config.longitude = longitude
 
-        with patch("homeassistant.util.dt.now", return_value=test_time):
-            assert await async_setup_component(
-                hass,
-                jewish_calendar.DOMAIN,
-                {
-                    "jewish_calendar": {
-                        "name": "test",
-                        "language": "english",
-                        "diaspora": diaspora,
-                        "candle_lighting_minutes_before_sunset": candle_lighting,
-                        "havdalah_minutes_after_sunset": havdalah,
-                    }
-                },
+        assert await async_setup_component(
+            hass,
+            jewish_calendar.DOMAIN,
+            {
+                "jewish_calendar": {
+                    "name": "test",
+                    "language": "english",
+                    "diaspora": diaspora,
+                    "candle_lighting_minutes_before_sunset": candle_lighting,
+                    "havdalah_minutes_after_sunset": havdalah,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+        with alter_time(test_time):
+            await hass.helpers.entity_component.async_update_entity(
+                "sensor.test_omer_count"
             )
-            await hass.async_block_till_done()
-            assert hass.states.get(f"sensor.test_omer_count").state == result
+
+        assert hass.states.get("sensor.test_omer_count").state == result

@@ -104,7 +104,7 @@ class JewishCalendarSensor(Entity):
             self._state = lagging_date.upcoming_shabbat.parasha
         elif self._type == "holiday_name":
             self._state = date.holiday_description
-        elif self._type == "holyness":
+        elif self._type == "holiday_type":
             self._state = date.holiday_type
         elif self._type == "upcoming_shabbat_candle_lighting":
             times = make_zmanim(lagging_date.upcoming_shabbat.previous_day.gdate)
