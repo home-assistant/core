@@ -41,9 +41,9 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._errors = {}
         if user_input is not None:
             if not self._prt_in_configuration_exists(user_input):
-                name = slugify(user_input[CONF_NAME])
                 host = user_input[CONF_HOST]
-                prt = user_input[CONF_PORT]
+                name = slugify(user_input.get(CONF_NAME, DEFAULT_NAME))
+                prt = user_input.get(CONF_PORT, DEFAULT_PORT)
                 return self.async_create_entry(
                     title=name, data={CONF_HOST: host, CONF_PORT: prt}
                 )
