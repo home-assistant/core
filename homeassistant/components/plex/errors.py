@@ -6,10 +6,6 @@ class PlexException(HomeAssistantError):
     """Base class for Plex exceptions."""
 
 
-class ConfigNotReady(PlexException):
-    """Not enough configuration provided to attempt connection."""
-
-
 class NoServersFound(PlexException):
     """No servers found on Plex account."""
 

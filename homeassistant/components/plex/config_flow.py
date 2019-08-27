@@ -33,7 +33,7 @@ from .const import (
     DOMAIN,
     PLEX_SERVER_CONFIG,
 )
-from .errors import ConfigNotReady, NoServersFound, ServerNotSpecified
+from .errors import NoServersFound, ServerNotSpecified
 from .server import setup_plex_server
 
 _LOGGER = logging.getLogger(__package__)
@@ -83,26 +83,9 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                     step_id="build_url", data_schema=data_schema, errors={}
                 )
 
-            url = user_input.get(CONF_URL)
-            token = user_input.get(CONF_TOKEN)
-            server_name = user_input.get(CONF_SERVER)
-
-            data = {}
+            self.current_login = user_input
 
             try:
-                self.current_login = user_input
-
-                if url:
-                    data = {
-                        CONF_URL: url,
-                        CONF_TOKEN: token,
-                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
-                    }
-                elif token:
-                    data = {CONF_TOKEN: token, CONF_SERVER: server_name}
-                else:
-                    raise ConfigNotReady
-
                 plex_server = setup_plex_server(user_input)
 
                 server_id = plex_server.machineIdentifier
@@ -111,16 +94,26 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                     if entry.data[CONF_SERVER_IDENTIFIER] == server_id:
                         return self.async_abort(reason="already_configured")
 
-                if not url and not server_name:
-                    data[CONF_SERVER] = plex_server.friendlyName
+                url = plex_server._baseurl  # pylint: disable=W0212
+                token = user_input.get(CONF_TOKEN)
+
+                data = {CONF_URL: url}
+                if token:
+                    data[CONF_TOKEN] = token
+                if url.startswith("https"):
+                    data[CONF_VERIFY_SSL] = user_input.get(
+                        CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL
+                    )
 
                 return self.async_create_entry(
                     title=plex_server.friendlyName,
-                    data={CONF_SERVER_IDENTIFIER: server_id, PLEX_SERVER_CONFIG: data},
+                    data={
+                        CONF_SERVER: plex_server.friendlyName,
+                        CONF_SERVER_IDENTIFIER: server_id,
+                        PLEX_SERVER_CONFIG: data,
+                    },
                 )
 
-            except ConfigNotReady:
-                errors["base"] = "config_not_ready"
             except NoServersFound:
                 errors["base"] = "no_servers"
             except ServerNotSpecified as available_servers:
