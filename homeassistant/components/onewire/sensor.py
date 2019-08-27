@@ -30,10 +30,7 @@ DEVICE_SENSORS = {
     "28": {"temperature": "temperature"},
     "3B": {"temperature": "temperature"},
     "42": {"temperature": "temperature"},
-    "7E": {
-        "temperature": "EDS0068/temperature",
-        "pressure": "EDS0068/pressure",
-    },
+    "7E": {"temperature": "EDS0068/temperature", "pressure": "EDS0068/pressure"},
 }
 
 SENSOR_TYPES = {
