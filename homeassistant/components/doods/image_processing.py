@@ -16,11 +16,7 @@ from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
-from homeassistant.const import (
-    HTTP_BAD_REQUEST,
-    HTTP_OK,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.const import HTTP_BAD_REQUEST, HTTP_OK, HTTP_UNAUTHORIZED
 from homeassistant.core import split_entity_id
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
@@ -112,7 +108,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if not detector:
         _LOGGER.warning(
-            "Detector %s is not supported by doods server %s", detector_name, url)
+            "Detector %s is not supported by doods server %s", detector_name, url
+        )
         return
 
     entities = []
@@ -133,15 +130,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class Doods(ImageProcessingEntity):
     """Doods image processing service client."""
 
-    def __init__(
-        self,
-        hass,
-        camera_entity,
-        name,
-        doods,
-        detector,
-        config,
-    ):
+    def __init__(self, hass, camera_entity, name, doods, detector, config):
         """Initialize the DOODS entity."""
         self.hass = hass
         self._camera_entity = camera_entity
@@ -171,8 +160,7 @@ class Doods(ImageProcessingEntity):
             if isinstance(label, dict):
                 label_name = label.get(CONF_NAME)
                 if label_name not in detector["labels"] and label_name != "*":
-                    _LOGGER.warning(
-                        "Detector does not support label %s", label_name)
+                    _LOGGER.warning("Detector does not support label %s", label_name)
                     continue
 
                 # Label Confidence
@@ -194,8 +182,7 @@ class Doods(ImageProcessingEntity):
                     ]
             else:
                 if label not in detector["labels"] and label != "*":
-                    _LOGGER.warning(
-                        "Detector does not support label %s", label)
+                    _LOGGER.warning("Detector does not support label %s", label)
                     continue
                 self._label_areas[label] = [0, 0, 1, 1]
                 if label not in dconfig or dconfig[label] > confidence:
@@ -259,19 +246,13 @@ class Doods(ImageProcessingEntity):
         # Draw custom global region/area
         if self._area != [0, 0, 1, 1]:
             draw_box(
-                draw, self._area, img_width, img_height, "Detection Area", (
-                    0, 255, 255)
+                draw, self._area, img_width, img_height, "Detection Area", (0, 255, 255)
             )
 
         for label, values in matches.items():
 
             # Draw custom label regions/areas
-            if label in self._label_areas and self._label_areas[label] != [
-                0,
-                0,
-                1,
-                1,
-            ]:
+            if label in self._label_areas and self._label_areas[label] != [0, 0, 1, 1]:
                 box_label = "{} Detection Area".format(label.capitalize())
                 draw_box(
                     draw,
@@ -286,8 +267,14 @@ class Doods(ImageProcessingEntity):
             for instance in values:
                 box_label = "{0} {1:.1f}%".format(label, instance["score"])
                 # Already scaled, use 1 for width and height
-                draw_box(draw, instance["box"], img_width,
-                         img_height, box_label, (255, 255, 0))
+                draw_box(
+                    draw,
+                    instance["box"],
+                    img_width,
+                    img_height,
+                    box_label,
+                    (255, 255, 0),
+                )
 
         for path in paths:
             _LOGGER.info("Saving results image to %s", path)
@@ -298,19 +285,27 @@ class Doods(ImageProcessingEntity):
 
         from PIL import Image
         import io
+
         img = Image.open(io.BytesIO(bytearray(image)))
         img_width, img_height = img.size
 
-        if self._aspect and abs((img_width/img_height) - self._aspect) > 0.1:
-            _LOGGER.warn("The image aspect: %s and the detector aspect: %s differ by more than 0.1",
-                         (img_width/img_height), self._aspect)
+        if self._aspect and abs((img_width / img_height) - self._aspect) > 0.1:
+            _LOGGER.warn(
+                "The image aspect: %s and the detector aspect: %s differ by more than 0.1",
+                (img_width / img_height),
+                self._aspect,
+            )
 
         # Run detection
         start = time.time()
         dconfig = {}
         response = self._doods.detect(image, self._dconfig)
-        _LOGGER.info("doods detect: %s response: %s duration: %s",
-                     self._dconfig, response, time.time()-start)
+        _LOGGER.info(
+            "doods detect: %s response: %s duration: %s",
+            self._dconfig,
+            response,
+            time.time() - start,
+        )
 
         matches = {}
         total_matches = 0
@@ -349,8 +344,7 @@ class Doods(ImageProcessingEntity):
 
                     if label not in matches.keys():
                         matches[label] = []
-                    matches[label].append(
-                        {"score": float(score), "box": boxes})
+                    matches[label].append({"score": float(score), "box": boxes})
                     total_matches += 1
 
                     # Save Images
@@ -360,7 +354,8 @@ class Doods(ImageProcessingEntity):
                             if isinstance(path_template, template.Template):
                                 paths.append(
                                     path_template.render(
-                                        camera_entity=self._camera_entity)
+                                        camera_entity=self._camera_entity
+                                    )
                                 )
                             else:
                                 paths.append(path_template)
