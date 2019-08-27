@@ -52,10 +52,11 @@ class JewishCalendarBinarySensor(BinarySensorDevice):
 
     @property
     def is_on(self):
+        """Return true if sensor is on."""
         return self._state
 
     async def async_update(self):
-        """Return true if sensor is on."""
+        """Update the state of the sensor."""
         import hdate
 
         zmanim = hdate.Zmanim(
