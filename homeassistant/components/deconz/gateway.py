@@ -14,7 +14,10 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_registry import DISABLED_CONFIG_ENTRY
+from homeassistant.helpers.entity_registry import (
+    async_get_registry,
+    DISABLED_CONFIG_ENTRY,
+)
 from homeassistant.util import slugify
 
 from .const import (
@@ -164,7 +167,6 @@ class DeconzGateway:
     async def async_options_updated(hass, entry):
         """Triggered by config entry options updates."""
         gateway = get_gateway_from_config_entry(hass, entry)
-        from homeassistant.helpers.entity_registry import async_get_registry
 
         registry = await async_get_registry(hass)
         async_dispatcher_send(hass, gateway.signal_options_update, registry)
