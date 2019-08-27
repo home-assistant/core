@@ -26,7 +26,7 @@ class SomaFlowHandler(config_entries.ConfigFlow):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Instantiate config flow."""
@@ -51,6 +51,10 @@ class SomaFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_creation(self, user_input=None):
         """Finish config flow."""
+        from api.soma_api import SomaApi
+        api = SomaApi(user_input['host'])
+        devices = await self.hass.async_add_executor_job(
+            api.list_devices)
         _LOGGER.info('Successfully set up Soma Connect')
         return self.async_create_entry(
             title='Soma Connect',
