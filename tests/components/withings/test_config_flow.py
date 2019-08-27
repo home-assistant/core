@@ -55,16 +55,33 @@ def test_flow_handler_async_profile_config_entry(
 ):
     """Test profile config entry."""
     config_entries = [
-        ConfigEntry(1, const.DOMAIN, "AAA", {}, "source", "connection_class"),
         ConfigEntry(
-            1,
-            const.DOMAIN,
-            "Person 1",
-            {const.PROFILE: "Person 1"},
-            "source",
-            "connection_class",
+            version=1,
+            domain=const.DOMAIN,
+            title="AAA",
+            data={},
+            source="source",
+            connection_class="connection_class",
+            system_options={},
         ),
-        ConfigEntry(1, const.DOMAIN, "BBB", {}, "source", "connection_class"),
+        ConfigEntry(
+            version=1,
+            domain=const.DOMAIN,
+            title="Person 1",
+            data={const.PROFILE: "Person 1"},
+            source="source",
+            connection_class="connection_class",
+            system_options={},
+        ),
+        ConfigEntry(
+            version=1,
+            domain=const.DOMAIN,
+            title="BBB",
+            data={},
+            source="source",
+            connection_class="connection_class",
+            system_options={},
+        ),
     ]
 
     hass.config_entries.async_entries = MagicMock(return_value=config_entries)

@@ -9,9 +9,9 @@ from oauthlib.oauth2.rfc6749.errors import MissingTokenError
 from requests_oauthlib import TokenUpdated
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.util import slugify
+from homeassistant.util import dt, slugify
 
 from . import const
 
@@ -22,13 +22,13 @@ NOT_AUTHENTICATED_ERROR = re.compile(
 )
 
 
-class NotAuthenticatedError(Exception):
+class NotAuthenticatedError(HomeAssistantError):
     """Raise when not authenticated with the service."""
 
     pass
 
 
-class ServiceError(Exception):
+class ServiceError(HomeAssistantError):
     """Raise when the service has an error."""
 
     pass
@@ -219,7 +219,7 @@ class WithingsDataManager:
 
     async def update_sleep_summary(self):
         """Update the sleep summary data."""
-        now = datetime.datetime.utcnow()
+        now = dt.utcnow()
         yesterday = now - datetime.timedelta(days=1)
         yesterday_noon = datetime.datetime(
             yesterday.year,

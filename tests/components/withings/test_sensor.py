@@ -293,6 +293,7 @@ async def test_async_setup_entry_credentials_saver(hass: HomeAssistantType):
             },
             source="source",
             connection_class="conn_class",
+            system_options={},
         )
 
         await async_setup_entry(hass, config_entry, async_add_entities)

@@ -2,7 +2,6 @@
 Support for the Withings API.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/withings/
 """
 import voluptuous as vol
 
@@ -51,10 +50,10 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     config_flow.register_flow_implementation(
         hass,
-        conf.get(const.CLIENT_ID),
-        conf.get(const.CLIENT_SECRET),
+        conf[const.CLIENT_ID],
+        conf[const.CLIENT_SECRET],
         base_url,
-        conf.get(const.PROFILES),
+        conf[const.PROFILES],
     )
 
     hass.async_create_task(
