@@ -138,11 +138,16 @@ class WWLLNEventManager:
             return
 
         new_strike_ids = set(self._strikes)
+        # Remove all managed entities that are not in the latest update anymore.
         ids_to_remove = self._managed_strike_ids.difference(new_strike_ids)
         self._remove_events(ids_to_remove)
 
+        # Create new entities for all strikes that are not managed entities yet.
         ids_to_create = new_strike_ids.difference(self._managed_strike_ids)
         self._create_events(ids_to_create)
+
+        # Store all external IDs of all managed strikes.
+        self._managed_strike_ids = new_strike_ids
 
 
 class WWLLNEvent(GeolocationEvent):
