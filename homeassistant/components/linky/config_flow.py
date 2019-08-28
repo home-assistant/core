@@ -98,7 +98,6 @@ class LinkyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         finally:
             client.close_session()
 
-        _LOGGER.error("LINKY_CONFIG_FLOW:async_create_entry")
         return self.async_create_entry(
             title=self._username,
             data={

@@ -49,7 +49,6 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Add Linky entries."""
-    _LOGGER.error("LINKY_SENSOR:async_setup_entry")
     account = LinkyAccount(
         entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], entry.data[CONF_TIMEOUT]
     )
@@ -74,8 +73,6 @@ class LinkyAccount:
 
     def __init__(self, username, password, timeout):
         """Initialise the Linky account."""
-
-        _LOGGER.error("LINKY_SENSOR:account init")
         self._username = username
         self._password = password
         self._timeout = timeout
@@ -94,8 +91,6 @@ class LinkyAccount:
         finally:
             client.close_session()
 
-        _LOGGER.error("LINKY_SENSOR:update finished")
-
     @property
     def username(self):
         """Return the username."""
@@ -112,7 +107,6 @@ class LinkySensor(Entity):
 
     def __init__(self, name, account: LinkyAccount, scale, when):
         """Initialize the sensor."""
-        _LOGGER.error("LINKY_SENSOR:sensor init : %s", name)
         self._name = name
         self._account = account
         self._scale = scale
@@ -152,7 +146,6 @@ class LinkySensor(Entity):
 
     async def async_update(self) -> None:
         """Retrieve the new data for the sensor."""
-        _LOGGER.error("LINKY_SENSOR:sensor update : %s", self.name)
         data = self._account.data[self._scale][self._when]
         self._consumption = data[CONSUMPTION]
         self._time = data[TIME]
