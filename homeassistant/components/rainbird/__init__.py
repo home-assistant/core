@@ -29,13 +29,12 @@ def setup(hass, config):
 
     from pyrainbird import RainbirdController
 
-    controller = RainbirdController()
-    controller.setConfig(server, password)
+    controller = RainbirdController(server, password)
 
     _LOGGER.debug("Rain Bird Controller set to: %s", server)
 
     initial_status = controller.currentIrrigation()
-    if initial_status == -1:
+    if initial_status and initial_status["type"] != "CurrentStationsActiveResponse":
         _LOGGER.error("Error getting state. Possible configuration issues")
         return False
 

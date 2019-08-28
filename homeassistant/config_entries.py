@@ -3,21 +3,17 @@ import asyncio
 import logging
 import functools
 import uuid
-from typing import (
-    Any,
-    Callable,
-    List,
-    Optional,
-    Set,  # noqa pylint: disable=unused-import
-)
+from typing import Any, Callable, List, Optional, Set
 import weakref
+
+import attr
 
 from homeassistant import data_entry_flow, loader
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ConfigEntryNotReady
 from homeassistant.setup import async_setup_component, async_process_deps_reqs
 from homeassistant.util.decorator import Registry
-
+from homeassistant.helpers import entity_registry
 
 # mypy: allow-untyped-defs
 
@@ -88,6 +84,7 @@ class ConfigEntry:
         "title",
         "data",
         "options",
+        "system_options",
         "source",
         "connection_class",
         "state",
@@ -104,6 +101,7 @@ class ConfigEntry:
         data: dict,
         source: str,
         connection_class: str,
+        system_options: dict,
         options: Optional[dict] = None,
         entry_id: Optional[str] = None,
         state: str = ENTRY_STATE_NOT_LOADED,
@@ -126,6 +124,9 @@ class ConfigEntry:
 
         # Entry options
         self.options = options or {}
+
+        # Entry system options
+        self.system_options = SystemOptions(**system_options)
 
         # Source of the configuration (user, discovery, cloud)
         self.source = source
@@ -155,8 +156,6 @@ class ConfigEntry:
 
         try:
             component = integration.get_component()
-            if self.domain == integration.domain:
-                integration.get_platform("config_flow")
         except ImportError as err:
             _LOGGER.error(
                 "Error importing integration %s to set up %s config entry: %s",
@@ -168,8 +167,20 @@ class ConfigEntry:
                 self.state = ENTRY_STATE_SETUP_ERROR
             return
 
-        # Perform migration
-        if integration.domain == self.domain:
+        if self.domain == integration.domain:
+            try:
+                integration.get_platform("config_flow")
+            except ImportError as err:
+                _LOGGER.error(
+                    "Error importing platform config_flow from integration %s to set up %s config entry: %s",
+                    integration.domain,
+                    self.domain,
+                    err,
+                )
+                self.state = ENTRY_STATE_SETUP_ERROR
+                return
+
+            # Perform migration
             if not await self.async_migrate(hass):
                 self.state = ENTRY_STATE_MIGRATION_ERROR
                 return
@@ -355,6 +366,7 @@ class ConfigEntry:
             "title": self.title,
             "data": self.data,
             "options": self.options,
+            "system_options": self.system_options.as_dict(),
             "source": self.source,
             "connection_class": self.connection_class,
         }
@@ -376,6 +388,7 @@ class ConfigEntries:
         self._hass_config = hass_config
         self._entries = []  # type: List[ConfigEntry]
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        EntityRegistryDisabledHandler(hass).async_setup()
 
     @callback
     def async_domains(self) -> List[str]:
@@ -457,6 +470,8 @@ class ConfigEntries:
                 connection_class=entry.get("connection_class", CONN_CLASS_UNKNOWN),
                 # New in 0.89
                 options=entry.get("options"),
+                # New in 0.98
+                system_options=entry.get("system_options", {}),
             )
             for entry in config["entries"]
         ]
@@ -513,7 +528,9 @@ class ConfigEntries:
         return await self.async_setup(entry_id)
 
     @callback
-    def async_update_entry(self, entry, *, data=_UNDEF, options=_UNDEF):
+    def async_update_entry(
+        self, entry, *, data=_UNDEF, options=_UNDEF, system_options=_UNDEF
+    ):
         """Update a config entry."""
         if data is not _UNDEF:
             entry.data = data
@@ -521,10 +538,12 @@ class ConfigEntries:
         if options is not _UNDEF:
             entry.options = options
 
-        if data is not _UNDEF or options is not _UNDEF:
-            for listener_ref in entry.update_listeners:
-                listener = listener_ref()
-                self.hass.async_create_task(listener(self.hass, entry))
+        if system_options is not _UNDEF:
+            entry.system_options.update(**system_options)
+
+        for listener_ref in entry.update_listeners:
+            listener = listener_ref()
+            self.hass.async_create_task(listener(self.hass, entry))
 
         self._async_schedule_save()
 
@@ -580,6 +599,7 @@ class ConfigEntries:
             title=result["title"],
             data=result["data"],
             options={},
+            system_options={},
             source=flow.context["source"],
             connection_class=flow.CONNECTION_CLASS,
         )
@@ -656,7 +676,19 @@ async def _old_conf_migrator(old_config):
 class ConfigFlow(data_entry_flow.FlowHandler):
     """Base class for config flows with some helpers."""
 
+    def __init_subclass__(cls, domain=None, **kwargs):
+        """Initialize a subclass, register if possible."""
+        super().__init_subclass__(**kwargs)  # type: ignore
+        if domain is not None:
+            HANDLERS.register(domain)(cls)
+
     CONNECTION_CLASS = CONN_CLASS_UNKNOWN
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        raise data_entry_flow.UnknownHandler
 
     @callback
     def _async_current_entries(self):
@@ -691,7 +723,11 @@ class OptionsFlowManager:
         entry = self.hass.config_entries.async_get_entry(entry_id)
         if entry is None:
             return
-        flow = HANDLERS[entry.domain].async_get_options_flow(entry.data, entry.options)
+
+        if entry.domain not in HANDLERS:
+            raise data_entry_flow.UnknownHandler
+
+        flow = HANDLERS[entry.domain].async_get_options_flow(entry)
         return flow
 
     async def _async_finish_flow(self, flow, result):
@@ -706,3 +742,112 @@ class OptionsFlowManager:
 
         result["result"] = True
         return result
+
+
+class OptionsFlow(data_entry_flow.FlowHandler):
+    """Base class for config option flows."""
+
+    pass
+
+
+@attr.s(slots=True)
+class SystemOptions:
+    """Config entry system options."""
+
+    disable_new_entities = attr.ib(type=bool, default=False)
+
+    def update(self, *, disable_new_entities):
+        """Update properties."""
+        self.disable_new_entities = disable_new_entities
+
+    def as_dict(self):
+        """Return dictionary version of this config entrys system options."""
+        return {"disable_new_entities": self.disable_new_entities}
+
+
+class EntityRegistryDisabledHandler:
+    """Handler to handle when entities related to config entries updating disabled_by."""
+
+    RELOAD_AFTER_UPDATE_DELAY = 30
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the handler."""
+        self.hass = hass
+        self.registry: Optional[entity_registry.EntityRegistry] = None
+        self.changed: Set[str] = set()
+        self._remove_call_later: Optional[Callable[[], None]] = None
+
+    @callback
+    def async_setup(self) -> None:
+        """Set up the disable handler."""
+        self.hass.bus.async_listen(
+            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED, self._handle_entry_updated
+        )
+
+    async def _handle_entry_updated(self, event):
+        """Handle entity registry entry update."""
+        if (
+            event.data["action"] != "update"
+            or "disabled_by" not in event.data["changes"]
+        ):
+            return
+
+        if self.registry is None:
+            self.registry = await entity_registry.async_get_registry(self.hass)
+
+        entity_entry = self.registry.async_get(event.data["entity_id"])
+
+        if (
+            # Stop if no entry found
+            entity_entry is None
+            # Stop if entry not connected to config entry
+            or entity_entry.config_entry_id is None
+            # Stop if the entry got disabled. In that case the entity handles it
+            # themselves.
+            or entity_entry.disabled_by
+        ):
+            return
+
+        config_entry = self.hass.config_entries.async_get_entry(
+            entity_entry.config_entry_id
+        )
+
+        if config_entry.entry_id not in self.changed and await support_entry_unload(
+            self.hass, config_entry.domain
+        ):
+            self.changed.add(config_entry.entry_id)
+
+        if not self.changed:
+            return
+
+        # We are going to delay reloading on *every* entity registry change so that
+        # if a user is happily clicking along, it will only reload at the end.
+
+        if self._remove_call_later:
+            self._remove_call_later()
+
+        self._remove_call_later = self.hass.helpers.event.async_call_later(
+            self.RELOAD_AFTER_UPDATE_DELAY, self._handle_reload
+        )
+
+    async def _handle_reload(self, _now):
+        """Handle a reload."""
+        self._remove_call_later = None
+        to_reload = self.changed
+        self.changed = set()
+
+        _LOGGER.info(
+            "Reloading config entries because disabled_by changed in entity registry: %s",
+            ", ".join(self.changed),
+        )
+
+        await asyncio.gather(
+            *[self.hass.config_entries.async_reload(entry_id) for entry_id in to_reload]
+        )
+
+
+async def support_entry_unload(hass: HomeAssistant, domain: str) -> bool:
+    """Test if a domain supports entry unloading."""
+    integration = await loader.async_get_integration(hass, domain)
+    component = integration.get_component()
+    return hasattr(component, "async_unload_entry")

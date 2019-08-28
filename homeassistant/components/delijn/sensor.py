@@ -50,7 +50,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
         await line.get_passages()
         if line.passages is None:
-            _LOGGER.warning("No data recieved from De Lijn")
+            _LOGGER.warning("No data received from De Lijn")
             return
         sensors.append(DeLijnPublicTransportSensor(line, name))
 
@@ -71,7 +71,7 @@ class DeLijnPublicTransportSensor(Entity):
         """Get the latest data from the De Lijn API."""
         await self.line.get_passages()
         if self.line.passages is None:
-            _LOGGER.warning("No data recieved from De Lijn")
+            _LOGGER.warning("No data received from De Lijn")
             return
         try:
             first = self.line.passages[0]

@@ -15,10 +15,6 @@ homeassistant/*.py @home-assistant/core
 homeassistant/helpers/* @home-assistant/core
 homeassistant/util/* @home-assistant/core
 
-# Virtualization
-Dockerfile @home-assistant/docker
-virtualization/Docker/* @home-assistant/docker
-
 # Other code
 homeassistant/scripts/check_config.py @kellerza
 

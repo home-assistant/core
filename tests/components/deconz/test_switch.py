@@ -67,6 +67,7 @@ async def setup_gateway(hass, data):
         ENTRY_CONFIG,
         "test",
         config_entries.CONN_CLASS_LOCAL_PUSH,
+        system_options={},
     )
     gateway = deconz.DeconzGateway(hass, config_entry)
     gateway.api = DeconzSession(loop, session, **config_entry.data)
@@ -140,6 +141,7 @@ async def test_add_new_switch(hass):
     switch = Mock()
     switch.name = "name"
     switch.type = "Smart plug"
+    switch.uniqueid = "1"
     switch.register_async_callback = Mock()
     async_dispatcher_send(hass, gateway.async_event_new_device("light"), [switch])
     await hass.async_block_till_done()

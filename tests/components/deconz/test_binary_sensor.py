@@ -59,7 +59,8 @@ async def setup_gateway(hass, data, allow_clip_sensor=True):
         ENTRY_CONFIG,
         "test",
         config_entries.CONN_CLASS_LOCAL_PUSH,
-        ENTRY_OPTIONS,
+        system_options={},
+        options=ENTRY_OPTIONS,
     )
     gateway = deconz.DeconzGateway(hass, config_entry)
     gateway.api = DeconzSession(loop, session, **config_entry.data)
@@ -115,6 +116,7 @@ async def test_add_new_sensor(hass):
     sensor.name = "name"
     sensor.type = "ZHAPresence"
     sensor.BINARY = True
+    sensor.uniqueid = "1"
     sensor.register_async_callback = Mock()
     async_dispatcher_send(hass, gateway.async_event_new_device("sensor"), [sensor])
     await hass.async_block_till_done()

@@ -163,7 +163,7 @@ class AlexaResponse:
 
         The Alexa response includes a list of properties which provides
         feedback on how states have changed. For example if a user asks,
-        "Alexa, set theromstat to 20 degrees", the API expects a response with
+        "Alexa, set thermostat to 20 degrees", the API expects a response with
         the new value of the property, and Alexa will respond to the user
         "Thermostat set to 20 degrees".
 

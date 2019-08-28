@@ -63,7 +63,7 @@ def stream_worker(hass, stream, quit_event):
     sequence = 1
     # Holds the generated silence that needs to be muxed into the output
     audio_packets = {}
-    # The presentation timestamp of the first video packet we recieve
+    # The presentation timestamp of the first video packet we receive
     first_pts = 0
     # The decoder timestamp of the latest packet we processed
     last_dts = None
@@ -130,7 +130,7 @@ def stream_worker(hass, stream, quit_event):
             # If we are attaching to a live stream that does not reset
             # timestamps for us, we need to do it ourselves by recording
             # the first presentation timestamp and subtracting it from
-            # subsequent packets we recieve.
+            # subsequent packets we receive.
             if (packet.pts * packet.time_base) > 1:
                 first_pts = packet.pts
             packet.dts = 0

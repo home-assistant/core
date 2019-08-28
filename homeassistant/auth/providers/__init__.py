@@ -165,14 +165,9 @@ async def load_auth_provider_module(
 
     # https://github.com/python/mypy/issues/1424
     reqs = module.REQUIREMENTS  # type: ignore
-    req_success = await requirements.async_process_requirements(
+    await requirements.async_process_requirements(
         hass, "auth provider {}".format(provider), reqs
     )
-
-    if not req_success:
-        raise HomeAssistantError(
-            "Unable to process requirements of auth provider {}".format(provider)
-        )
 
     processed.add(provider)
     return module

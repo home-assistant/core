@@ -4,6 +4,9 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 
+
+# mypy: allow-untyped-calls, allow-untyped-defs
+
 DATA_STORAGE = "frontend_storage"
 STORAGE_VERSION_USER_DATA = 1
 STORAGE_KEY_USER_DATA = "frontend.user_data_{}"

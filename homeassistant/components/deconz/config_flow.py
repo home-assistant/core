@@ -1,5 +1,6 @@
 """Config flow to configure deCONZ component."""
 import asyncio
+from copy import copy
 
 import async_timeout
 import voluptuous as vol
@@ -12,7 +13,13 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_BRIDGEID, DEFAULT_PORT, DOMAIN
+from .const import (
+    CONF_ALLOW_CLIP_SENSOR,
+    CONF_ALLOW_DECONZ_GROUPS,
+    CONF_BRIDGEID,
+    DEFAULT_PORT,
+    DOMAIN,
+)
 
 DECONZ_MANUFACTURERURL = "http://www.dresden-elektronik.de"
 CONF_SERIAL = "serial"
@@ -44,6 +51,12 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     _hassio_discovery = None
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return DeconzOptionsFlowHandler(config_entry)
 
     def __init__(self):
         """Initialize the deCONZ config flow."""
@@ -233,4 +246,42 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
         return self.async_show_form(
             step_id="hassio_confirm",
             description_placeholders={"addon": self._hassio_discovery["addon"]},
+        )
+
+
+class DeconzOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle deCONZ options."""
+
+    def __init__(self, config_entry):
+        """Initialize deCONZ options flow."""
+        self.config_entry = config_entry
+        self.options = copy(config_entry.options)
+
+    async def async_step_init(self, user_input=None):
+        """Manage the deCONZ options."""
+        return await self.async_step_deconz_devices()
+
+    async def async_step_deconz_devices(self, user_input=None):
+        """Manage the deconz devices options."""
+        if user_input is not None:
+            self.options[CONF_ALLOW_CLIP_SENSOR] = user_input[CONF_ALLOW_CLIP_SENSOR]
+            self.options[CONF_ALLOW_DECONZ_GROUPS] = user_input[
+                CONF_ALLOW_DECONZ_GROUPS
+            ]
+            return self.async_create_entry(title="", data=self.options)
+
+        return self.async_show_form(
+            step_id="deconz_devices",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_ALLOW_CLIP_SENSOR,
+                        default=self.config_entry.options[CONF_ALLOW_CLIP_SENSOR],
+                    ): bool,
+                    vol.Optional(
+                        CONF_ALLOW_DECONZ_GROUPS,
+                        default=self.config_entry.options[CONF_ALLOW_DECONZ_GROUPS],
+                    ): bool,
+                }
+            ),
         )

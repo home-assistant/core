@@ -1,7 +1,7 @@
 """Config flow to configure Met component."""
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -17,8 +17,7 @@ def configured_instances(hass):
     )
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class MetFlowHandler(data_entry_flow.FlowHandler):
+class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for Met component."""
 
     VERSION = 1

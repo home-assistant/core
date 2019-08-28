@@ -15,6 +15,7 @@ from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_MUSIC,
+    MEDIA_TYPE_PLAYLIST,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -102,6 +103,7 @@ class SonosData:
     def __init__(self, hass):
         """Initialize the data."""
         self.entities = []
+        self.discovered = []
         self.topology_condition = asyncio.Condition()
 
 
@@ -132,14 +134,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             """Handle a (re)discovered player."""
             try:
                 _LOGGER.debug("Reached _discovered_player, soco=%s", soco)
-                entity = _get_entity_from_soco_uid(hass, soco.uid)
 
-                if not entity:
+                if soco not in hass.data[DATA_SONOS].discovered:
                     _LOGGER.debug("Adding new entity")
+                    hass.data[DATA_SONOS].discovered.append(soco)
                     hass.add_job(async_add_entities, [SonosEntity(soco)])
                 else:
-                    _LOGGER.debug("Seen %s", entity)
-                    hass.add_job(entity.async_seen())
+                    entity = _get_entity_from_soco_uid(hass, soco.uid)
+                    if entity:
+                        _LOGGER.debug("Seen %s", entity)
+                        hass.add_job(entity.async_seen())
             except SoCoException as ex:
                 _LOGGER.debug("SoCoException, ex=%s", ex)
 
@@ -222,7 +226,10 @@ class _ProcessSonosEventQueue:
 
     def put(self, item, block=True, timeout=None):
         """Process event."""
-        self._handler(item)
+        try:
+            self._handler(item)
+        except SoCoException as ex:
+            _LOGGER.warning("Error calling %s: %s", self._handler, ex)
 
 
 def _get_entity_from_soco_uid(hass, uid):
@@ -318,7 +325,7 @@ class SonosEntity(MediaPlayerDevice):
         self._night_sound = None
         self._speech_enhance = None
         self._source_name = None
-        self._favorites = None
+        self._favorites = []
         self._soco_snapshot = None
         self._snapshot_group = None
 
@@ -748,6 +755,8 @@ class SonosEntity(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
+        if self._player_volume is None:
+            return None
         return self._player_volume / 100
 
     @property
@@ -930,20 +939,35 @@ class SonosEntity(MediaPlayerDevice):
         """
         Send the play_media command to the media player.
 
+        If media_type is "playlist", media_id should be a Sonos
+        Playlist name.  Otherwise, media_id should be a URI.
+
         If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
         """
-        if kwargs.get(ATTR_MEDIA_ENQUEUE):
+        if media_type == MEDIA_TYPE_MUSIC:
+            if kwargs.get(ATTR_MEDIA_ENQUEUE):
+                try:
+                    self.soco.add_uri_to_queue(media_id)
+                except SoCoUPnPException:
+                    _LOGGER.error(
+                        'Error parsing media uri "%s", '
+                        "please check it's a valid media resource "
+                        "supported by Sonos",
+                        media_id,
+                    )
+            else:
+                self.soco.play_uri(media_id)
+        elif media_type == MEDIA_TYPE_PLAYLIST:
             try:
-                self.soco.add_uri_to_queue(media_id)
-            except SoCoUPnPException:
-                _LOGGER.error(
-                    'Error parsing media uri "%s", '
-                    "please check it's a valid media resource "
-                    "supported by Sonos",
-                    media_id,
-                )
+                playlists = self.soco.get_sonos_playlists()
+                playlist = next(p for p in playlists if p.title == media_id)
+                self.soco.clear_queue()
+                self.soco.add_to_queue(playlist)
+                self.soco.play_from_queue(0)
+            except StopIteration:
+                _LOGGER.error('Could not find a Sonos playlist named "%s"', media_id)
         else:
-            self.soco.play_uri(media_id)
+            _LOGGER.error('Sonos does not support a media type of "%s"', media_type)
 
     @soco_error()
     def join(self, slaves):
