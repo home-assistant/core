@@ -33,7 +33,6 @@ class JewishCalendarBinarySensor(BinarySensorDevice):
         self._candle_lighting_offset = data["candle_lighting_offset"]
         self._havdalah_offset = data["havdalah_offset"]
         self._state = False
-        _LOGGER.debug("Sensor %s initialized", self._type)
 
     @property
     def icon(self):

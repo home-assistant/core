@@ -7,6 +7,8 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.helpers.discovery import async_load_platform
 import homeassistant.helpers.config_validation as cv
 
+import hdate
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "jewish_calendar"
@@ -53,8 +55,8 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 vol.Optional(CONF_DIASPORA, default=False): cv.boolean,
-                vol.Optional(CONF_LATITUDE): cv.latitude,
-                vol.Optional(CONF_LONGITUDE): cv.longitude,
+                vol.Inclusive(CONF_LATITUDE): cv.latitude,
+                vol.Inclusive(CONF_LONGITUDE): cv.longlongitude,
                 vol.Optional(CONF_LANGUAGE, default="english"): vol.In(
                     ["hebrew", "english"]
                 ),
@@ -72,10 +74,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Jewish Calendar component."""
-    import hdate
-
-    _LOGGER.debug("Configuration loaded: %s", config)
-
     name = config[DOMAIN].get(CONF_NAME)
     language = config[DOMAIN].get(CONF_LANGUAGE)
 
@@ -85,10 +83,6 @@ async def async_setup(hass, config):
 
     candle_lighting_offset = config[DOMAIN].get(CONF_CANDLE_LIGHT_MINUTES)
     havdalah_offset = config[DOMAIN].get(CONF_HAVDALAH_OFFSET_MINUTES)
-
-    if None in (latitude, longitude):
-        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return
 
     location = hdate.Location(
         latitude=latitude,
