@@ -1056,7 +1056,7 @@ pyarlo==0.2.3
 pyatmo==2.2.1
 
 # homeassistant.components.atome
-pyatome==0.0.15
+pyatome==0.1.1
 
 # homeassistant.components.apple_tv
 pyatv==0.3.12
