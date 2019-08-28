@@ -9,7 +9,7 @@
         },
         "step": {
             "user": {
-                "description": "Czy chcesz skonfigurowa\u0107 Plaato Airlock?",
+                "description": "Czy na pewno chcesz skonfigurowa\u0107 Airlock Plaato?",
                 "title": "Konfiguracja Plaato Webhook"
             }
         },
