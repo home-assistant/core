@@ -13,7 +13,8 @@ def supports_encryption():
         import nacl  # noqa pylint: disable=unused-import
 
         return True
-    except OSError:
+    # ais dom
+    except:
         return False
 
 
@@ -34,8 +35,9 @@ class OwnTracksFlow(config_entries.ConfigFlow):
         webhook_id, webhook_url, cloudhook = await self._get_webhook_id()
         #
         from homeassistant.ais_dom import ais_global
+
         gate_id = ais_global.get_sercure_android_id_dom()
-        webhook_url = webhook_url.replace("localhost:8180", gate_id + '.paczka.pro')
+        webhook_url = webhook_url.replace("localhost:8180", gate_id + ".paczka.pro")
 
         secret = generate_secret(16)
 

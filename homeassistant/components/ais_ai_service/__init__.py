@@ -2740,36 +2740,6 @@ def _process_command_from_frame(hass, service):
         # current connection info
         cci = json.loads(service.data["payload"])
         ais_global.set_my_ssid(cci["ssid"])
-        info = "Wifi: "
-        if "ssid" in cci:
-            if "dom_" + ais_global.G_MODEL_SONOFF_S20 in cci["ssid"].lower():
-                info += "gniazdo "
-            elif "dom_" + ais_global.G_MODEL_SONOFF_B1 in cci["ssid"].lower():
-                info += "żarówka "
-            elif "dom_" + ais_global.G_MODEL_SONOFF_TH in cci["ssid"].lower():
-                info += "przełącznik z czujnikami "
-            elif "dom_" + ais_global.G_MODEL_SONOFF_SLAMPHER in cci["ssid"].lower():
-                info += "oprawka "
-            elif "dom_" + ais_global.G_MODEL_SONOFF_TOUCH in cci["ssid"].lower():
-                info += "przełącznik dotykowy "
-            elif "dom_" + ais_global.G_MODEL_SONOFF_POW in cci["ssid"].lower():
-                info += "przełącznik z pomiarem mocy"
-            elif "dom_" + ais_global.G_MODEL_SONOFF_DUAL in cci["ssid"].lower():
-                info += "podwójny przełącznik"
-            elif "dom_" + ais_global.G_MODEL_SONOFF_BASIC in cci["ssid"].lower():
-                info += "przełącznik"
-            elif "dom_" + ais_global.G_MODEL_SONOFF_IFAN in cci["ssid"].lower():
-                info += "wentylator sufitowy"
-            elif "dom_" + ais_global.G_MODEL_SONOFF_T11 in cci["ssid"].lower():
-                info = "przełącznik dotykowy pojedynczy"
-            elif "dom_" + ais_global.G_MODEL_SONOFF_T12 in cci["ssid"].lower():
-                info = "przełącznik dotykowy podwójny"
-            elif "dom_" + ais_global.G_MODEL_SONOFF_T13 in cci["ssid"].lower():
-                info = "przełącznik dotykowy potrójny"
-            else:
-                info += cci["ssid"] + " "
-        if "state" in cci:
-            info += cci["state"]
         # check if we are now online
         if ais_global.GLOBAL_MY_IP == "127.0.0.1":
             ais_global.set_global_my_ip(None)
@@ -2781,9 +2751,6 @@ def _process_command_from_frame(hass, service):
                 # hass.async_run_job(async_load_platform(hass, 'ais_cloud', 'ais_cloud', {}, {}))
                 # hass.async_run_job(async_load_platform(hass, 'ais_yt_service', 'ais_yt_service', {}, {}))
                 # hass.async_run_job(async_load_platform(hass, 'ais_knowledge_service', 'ais_knowledge_service'...
-        state = hass.states.get("input_boolean.ais_android_wifi_changes_notify").state
-        if state == "on":
-            _say_it(hass, info)
         return
     elif service.data["topic"] == "ais/go_to_player":
         go_to_player(hass, False)
