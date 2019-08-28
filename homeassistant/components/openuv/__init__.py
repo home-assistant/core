@@ -1,5 +1,6 @@
 """Support for UV data from openuv.io."""
 import logging
+import asyncio
 
 import voluptuous as vol
 
@@ -22,8 +23,6 @@ from homeassistant.helpers.service import verify_domain_control
 
 from .config_flow import configured_instances
 from .const import DOMAIN
-
-import asyncio
 
 _LOGGER = logging.getLogger(__name__)
 
