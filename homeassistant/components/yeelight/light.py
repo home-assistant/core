@@ -341,11 +341,10 @@ def setup_services(hass):
 
     @service_call
     def service_set_color_flow_scene(target_device, params):
-        params[ATTR_TRANSITIONS] = _transitions_config_parser(params[ATTR_TRANSITIONS])
         flow = Flow(
             count=params[ATTR_COUNT],
             action=Flow.actions[params[ATTR_ACTION]],
-            transitions=params[ATTR_TRANSITIONS],
+            transitions=_transitions_config_parser(params[ATTR_TRANSITIONS]),
         )
         target_device.set_scene(SceneClass.CF, flow)
 
