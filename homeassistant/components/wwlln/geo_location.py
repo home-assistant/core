@@ -88,6 +88,7 @@ class WWLLNEventManager:
     @callback
     def _create_events(self, ids_to_create):
         """Create new geo location events."""
+        _LOGGER.debug("Going to create %s", ids_to_create)
         events = []
         for strike_id in ids_to_create:
             strike = self._strikes[strike_id]
@@ -106,6 +107,7 @@ class WWLLNEventManager:
     @callback
     def _remove_events(self, ids_to_remove):
         """Remove old geo location events."""
+        _LOGGER.debug("Going to remove %s", ids_to_remove)
         for strike_id in ids_to_remove:
             async_dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(strike_id))
 
