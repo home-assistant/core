@@ -97,11 +97,11 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                 url = plex_server._baseurl  # pylint: disable=W0212
                 token = user_input.get(CONF_TOKEN)
 
-                data = {CONF_URL: url}
+                server_config = {CONF_URL: url}
                 if token:
-                    data[CONF_TOKEN] = token
+                    server_config[CONF_TOKEN] = token
                 if url.startswith("https"):
-                    data[CONF_VERIFY_SSL] = user_input.get(
+                    server_config[CONF_VERIFY_SSL] = user_input.get(
                         CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL
                     )
 
@@ -110,7 +110,7 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                     data={
                         CONF_SERVER: plex_server.friendlyName,
                         CONF_SERVER_IDENTIFIER: server_id,
-                        PLEX_SERVER_CONFIG: data,
+                        PLEX_SERVER_CONFIG: server_config,
                     },
                 )
 
