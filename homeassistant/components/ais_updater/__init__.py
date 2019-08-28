@@ -170,7 +170,10 @@ async def async_setup(hass, config):
                         "ais_ai_service", "say_it", {"text": info_for_screen}
                     )
         else:
-
+            # dismiss update notification
+            hass.components.persistent_notification.async_dismiss(
+                "ais_update_notification"
+            )
             info = "Twój system jest aktualny, wersja " + newest + ". "
             # only if not executed by scheduler
             import homeassistant.components.ais_ai_service as ais_ai
