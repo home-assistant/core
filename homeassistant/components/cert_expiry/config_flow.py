@@ -1,4 +1,6 @@
 """Config flow for the Cert Expiry platform."""
+import socket
+import ssl
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -7,6 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
 from .const import DOMAIN, DEFAULT_PORT, DEFAULT_NAME
+from .sensor import TIMEOUT
 
 
 @callback
@@ -36,18 +39,37 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return True
         return False
 
+    def _test_connection(self, user_input=None):
+        """Test connection to the server and try to get the certtificate."""
+        try:
+            address = (user_input[CONF_HOST], user_input.get(CONF_PORT, DEFAULT_PORT))
+            with socket.create_connection(address, timeout=TIMEOUT) as sock:
+                ctx = ssl.create_default_context()
+                with ctx.wrap_socket(sock, server_hostname=address[0]):
+                    return True
+        except socket.gaierror:
+            self._errors[CONF_HOST] = 'resolve_failed'
+        except socket.timeout:
+            self._errors[CONF_HOST] = 'connection_timeout'
+        except OSError:
+            self._errors[CONF_HOST] = 'certificate_fetch_failed'
+        return False
+
     async def async_step_user(self, user_input=None):
         """Step when user intializes a integration."""
         self._errors = {}
         if user_input is not None:
-            if not self._prt_in_configuration_exists(user_input):
-                host = user_input[CONF_HOST]
-                name = slugify(user_input.get(CONF_NAME, DEFAULT_NAME))
-                prt = user_input.get(CONF_PORT, DEFAULT_PORT)
-                return self.async_create_entry(
-                    title=name, data={CONF_HOST: host, CONF_PORT: prt}
-                )
-            self._errors[CONF_HOST] = "host_port_exists"
+            # set some defaults in case we need to return to the form
+            if self._prt_in_configuration_exists(user_input):
+                self._errors[CONF_HOST] = "host_port_exists"
+            else:
+                if self._test_connection(user_input):
+                    host = user_input[CONF_HOST]
+                    name = slugify(user_input.get(CONF_NAME, DEFAULT_NAME))
+                    prt = user_input.get(CONF_PORT, DEFAULT_PORT)
+                    return self.async_create_entry(
+                        title=name, data={CONF_HOST: host, CONF_PORT: prt}
+                    )
         else:
             user_input = {}
             user_input[CONF_NAME] = DEFAULT_NAME
@@ -58,9 +80,9 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_NAME, default=user_input[CONF_NAME]): str,
+                    vol.Required(CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)): str,
                     vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
-                    vol.Required(CONF_PORT, default=user_input[CONF_PORT]): int,
+                    vol.Required(CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)): int,
                 }
             ),
             errors=self._errors,

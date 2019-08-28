@@ -1,4 +1,8 @@
 """Tests for the Cert Expiry config flow."""
+import pytest
+import socket
+from unittest.mock import patch
+
 from homeassistant import data_entry_flow
 from homeassistant.components.cert_expiry import config_flow
 from homeassistant.components.cert_expiry.const import DEFAULT_PORT
@@ -7,8 +11,15 @@ from homeassistant.const import CONF_PORT, CONF_NAME, CONF_HOST
 from tests.common import MockConfigEntry
 
 NAME = "Cert Expiry test 1 2 3"
-PORT = 445
-HOST = "google.com"
+PORT = 443
+HOST = "example.com"
+
+
+@pytest.fixture(name="test_connect")
+def mock_controller():
+    """Mock a successfull _prt_in_configuration_exists."""
+    with patch("homeassistant.components.cert_expiry.config_flow.CertexpiryConfigFlow._test_connection", return_value=True):
+        yield
 
 
 def init_config_flow(hass):
@@ -18,7 +29,7 @@ def init_config_flow(hass):
     return flow
 
 
-async def test_user(hass):
+async def test_user(hass, test_connect):
     """Test user config."""
     flow = init_config_flow(hass)
 
@@ -36,14 +47,14 @@ async def test_user(hass):
     assert result["data"][CONF_PORT] == PORT
 
 
-async def test_import(hass):
+async def test_import(hass, test_connect):
     """Test import step."""
     flow = init_config_flow(hass)
 
     # import with only host
     result = await flow.async_step_import({CONF_HOST: HOST})
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "google_com"
+    assert result["title"] == "ssl_certificate_expiry"
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == DEFAULT_PORT
 
@@ -57,7 +68,7 @@ async def test_import(hass):
     # improt with host and port
     result = await flow.async_step_import({CONF_HOST: HOST, CONF_PORT: PORT})
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "google_com"
+    assert result["title"] == "ssl_certificate_expiry"
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == PORT
 
@@ -71,7 +82,7 @@ async def test_import(hass):
     assert result["data"][CONF_PORT] == PORT
 
 
-async def test_abort_if_already_setup(hass):
+async def test_abort_if_already_setup(hass, test_connect):
     """Test we abort if the cert is already setup."""
     flow = init_config_flow(hass)
     MockConfigEntry(
@@ -101,3 +112,29 @@ async def test_abort_if_already_setup(hass):
     assert result["title"] == "cert_expiry_test_1_2_3"
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == 888
+
+
+async def test_abort_on_socket_failed(hass):
+    """Test we abort of we have errors during socket creation."""
+    flow = init_config_flow(hass)
+
+    with patch("socket.create_connection", side_effect=socket.gaierror()):
+        result = await flow.async_step_user(
+            {CONF_HOST: HOST}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {CONF_HOST: "resolve_failed"}
+
+    with patch("socket.create_connection", side_effect=socket.timeout()):
+        result = await flow.async_step_user(
+            {CONF_HOST: HOST}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {CONF_HOST: "connection_timeout"}
+
+    with patch("socket.create_connection", side_effect=OSError()):
+        result = await flow.async_step_user(
+            {CONF_HOST: HOST}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {CONF_HOST: "certificate_fetch_failed"}

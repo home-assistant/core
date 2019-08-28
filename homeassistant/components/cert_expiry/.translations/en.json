@@ -4,7 +4,10 @@
             "host_port_exists": "This host and port combination is already configured"
         },
         "error": {
-            "host_port_exists": "This host and port combination is already configured"
+            "certificate_fetch_failed": "Can not fetch certificate from this host and port combination",
+            "connection_timeout": "Timeout whemn connecting to this host",
+            "host_port_exists": "This host and port combination is already configured",
+            "resolve_failed": "This host can not be resolved"
         },
         "step": {
             "user": {
