@@ -1,0 +1,8 @@
+{
+  "domain": "moscow_yandex_transport",
+  "name": "Moscow Yandex transport",
+  "documentation": "https://www.home-assistant.io/components/moscow_yandex_transport",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}
