@@ -10,6 +10,7 @@ FLOWS = [
     "ambient_station",
     "axis",
     "cast",
+    "cert_expiry",
     "daikin",
     "deconz",
     "dialogflow",
