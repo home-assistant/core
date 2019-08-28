@@ -552,8 +552,10 @@ async def test_disabled_in_entity_registry(hass):
     await hass.async_block_till_done()
     assert entry2 != entry
     assert ent.registry_entry == entry2
+    assert ent.enabled is True
 
     entry3 = registry.async_update_entity("hello.world", disabled_by="user")
     await hass.async_block_till_done()
     assert entry3 != entry2
     assert ent.registry_entry == entry3
+    assert ent.enabled is False
