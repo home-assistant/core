@@ -13,12 +13,11 @@ from homeassistant.const import CONF_NAME, CONF_HOST, CONF_PORT
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, DEFAULT_NAME, DEFAULT_PORT
+from .helper import get_cert
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(hours=12)
-
-TIMEOUT = 10.0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -85,13 +84,8 @@ class SSLCertificate(Entity):
 
     def update(self):
         """Fetch the certificate information."""
-        ctx = ssl.create_default_context()
         try:
-            address = (self.server_name, self.server_port)
-            with socket.create_connection(address, timeout=TIMEOUT) as sock:
-                with ctx.wrap_socket(sock, server_hostname=address[0]) as ssock:
-                    cert = ssock.getpeercert()
-
+            cert = get_cert(self.server_name, self.server_port)
         except socket.gaierror:
             _LOGGER.error("Cannot resolve hostname: %s", self.server_name)
             self._available = False

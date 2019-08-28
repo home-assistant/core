@@ -1,6 +1,5 @@
 """Config flow for the Cert Expiry platform."""
 import socket
-import ssl
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -9,7 +8,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
 from .const import DOMAIN, DEFAULT_PORT, DEFAULT_NAME
-from .sensor import TIMEOUT
+from .helper import get_cert
 
 
 @callback
@@ -42,11 +41,8 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _test_connection(self, user_input=None):
         """Test connection to the server and try to get the certtificate."""
         try:
-            address = (user_input[CONF_HOST], user_input.get(CONF_PORT, DEFAULT_PORT))
-            with socket.create_connection(address, timeout=TIMEOUT) as sock:
-                ctx = ssl.create_default_context()
-                with ctx.wrap_socket(sock, server_hostname=address[0]):
-                    return True
+            get_cert(user_input[CONF_HOST], user_input.get(CONF_PORT, DEFAULT_PORT))
+            return True
         except socket.gaierror:
             self._errors[CONF_HOST] = "resolve_failed"
         except socket.timeout:
