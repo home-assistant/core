@@ -55,8 +55,8 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 vol.Optional(CONF_DIASPORA, default=False): cv.boolean,
-                vol.Inclusive(CONF_LATITUDE): cv.latitude,
-                vol.Inclusive(CONF_LONGITUDE): cv.longlongitude,
+                vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
+                vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
                 vol.Optional(CONF_LANGUAGE, default="english"): vol.In(
                     ["hebrew", "english"]
                 ),
