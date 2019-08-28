@@ -1,16 +1,16 @@
 {
     "config": {
         "abort": {
-            "invalid_credentials": "B\u0142\u0119dne dane uwierzytelniaj\u0105ce",
-            "user_already_configured": "Konto jest ju\u017c skonfigurowane."
+            "invalid_credentials": "Nieprawid\u0142owe dane uwierzytelniaj\u0105ce",
+            "user_already_configured": "Konto zosta\u0142o ju\u017c skonfigurowane."
         },
         "create_entry": {
             "default": "Aby skonfigurowa\u0107 zaawansowane ustawienia, zapoznaj si\u0119 z [dokumentacj\u0105 Life360]({docs_url})."
         },
         "error": {
-            "invalid_credentials": "B\u0142\u0119dne dane uwierzytelniaj\u0105ce",
+            "invalid_credentials": "Nieprawid\u0142owe dane uwierzytelniaj\u0105ce",
             "invalid_username": "Nieprawid\u0142owa nazwa u\u017cytkownika",
-            "user_already_configured": "Konto jest ju\u017c skonfigurowane."
+            "user_already_configured": "Konto zosta\u0142o ju\u017c skonfigurowane."
         },
         "step": {
             "user": {
