@@ -2,7 +2,7 @@
     "config": {
         "title": "Plex",
         "step": {
-            "build_url": {
+            "manual_setup": {
                 "title": "Plex server",
                 "data": {
                     "host": "Host",
