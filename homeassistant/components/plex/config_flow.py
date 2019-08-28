@@ -62,26 +62,9 @@ class PlexFlowHandler(config_entries.ConfigFlow):
         errors = {}
 
         if user_input is not None:
-            if user_input.get("manual_setup"):
-                data_schema = vol.Schema(
-                    {
-                        vol.Required(
-                            CONF_HOST, default=self.discovery_info.get(CONF_HOST)
-                        ): str,
-                        vol.Required(
-                            CONF_PORT,
-                            default=int(
-                                self.discovery_info.get(CONF_PORT, DEFAULT_PORT)
-                            ),
-                        ): int,
-                        vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
-                        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
-                        vol.Optional(CONF_TOKEN): str,
-                    }
-                )
-                return self.async_show_form(
-                    step_id="build_url", data_schema=data_schema, errors={}
-                )
+            manual_setup = user_input.get("manual_setup")
+            if manual_setup is True:
+                return await self.async_step_manual_setup()
 
             self.current_login = user_input
 
@@ -145,6 +128,32 @@ class PlexFlowHandler(config_entries.ConfigFlow):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
+    async def async_step_manual_setup(self, user_input=None):
+        """Begin manual configuration."""
+        if user_input is None:
+            data_schema = vol.Schema(
+                {
+                    vol.Required(
+                        CONF_HOST, default=self.discovery_info.get(CONF_HOST)
+                    ): str,
+                    vol.Required(
+                        CONF_PORT,
+                        default=int(self.discovery_info.get(CONF_PORT, DEFAULT_PORT)),
+                    ): int,
+                    vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
+                    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
+                    vol.Optional(CONF_TOKEN): str,
+                }
+            )
+            return self.async_show_form(step_id="manual_setup", data_schema=data_schema)
+
+        host = user_input.pop(CONF_HOST)
+        port = user_input.pop(CONF_PORT)
+        user_input[CONF_URL] = "{}://{}:{}".format(
+            "https" if user_input.get(CONF_SSL) else "http", host, port
+        )
+        return await self.async_step_user(user_input=user_input)
+
     async def async_step_select_server(self, user_input=None):
         """Use selected Plex server."""
         if user_input is None:
@@ -153,18 +162,6 @@ class PlexFlowHandler(config_entries.ConfigFlow):
         config = self.current_login
         config[CONF_SERVER] = user_input.get(CONF_SERVER)
         return await self.async_step_user(user_input=config)
-
-    async def async_step_build_url(self, user_input=None):
-        """Build URL from components."""
-        if user_input is None:
-            return await self.async_step_user()
-
-        host = user_input.pop(CONF_HOST)
-        port = user_input.pop(CONF_PORT)
-        user_input[CONF_URL] = "{}://{}:{}".format(
-            "https" if user_input.get(CONF_SSL) else "http", host, port
-        )
-        return await self.async_step_user(user_input=user_input)
 
     async def async_step_discovery(self, discovery_info):
         """Set default host and port from discovery."""
