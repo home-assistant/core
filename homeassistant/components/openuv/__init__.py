@@ -258,7 +258,7 @@ class OpenUV:
                 resp = await self.client.uv_protection_window()
                 self.data[DATA_PROTECTION_WINDOW] = resp["result"]
             except OpenUvError as err:
-                _LOGGER.error("Error during data update: %s", err)
+                _LOGGER.error("Error during protection data update: %s", err)
                 self.data[DATA_PROTECTION_WINDOW] = {}
                 return
 
@@ -271,13 +271,12 @@ class OpenUV:
                 data = await self.client.uv_index()
                 self.data[DATA_UV] = data
             except OpenUvError as err:
-                _LOGGER.error("Error during data update: %s", err)
+                _LOGGER.error("Error during uv index data update: %s", err)
                 self.data[DATA_UV] = {}
                 return
 
     async def async_update(self):
         """Update sensor/binary sensor data."""
-
         tasks = [self.async_update_protection_data(), self.async_update_uv_index_data()]
         await asyncio.gather(*tasks)
 
