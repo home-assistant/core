@@ -119,8 +119,6 @@ class JewishCalendarSensor(Entity):
         elif self._type == "upcoming_havdalah":
             times = make_zmanim(lagging_date.upcoming_shabbat_or_yom_tov.last_day.gdate)
             self._state = times.havdalah
-        elif self._type == "issur_melacha_in_effect":
-            self._state = make_zmanim(now).issur_melacha_in_effect
         elif self._type == "omer_count":
             self._state = date.omer_day
         else:

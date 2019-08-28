@@ -12,7 +12,7 @@ from . import alter_time, make_nyc_test_params, make_jerusalem_test_params
 
 
 class TestJewishCalenderSensor:
-    """Test the Jewish Calendar sensor."""
+    """Test the Jewish Calendar sensors."""
 
     async def test_jewish_calendar_min_config(self, hass):
         """Test minimum jewish calendar configuration."""
