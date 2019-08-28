@@ -19,7 +19,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     CONF_IP_ADDRESS,
 )
-from homeassistant.exceptions import TemplateError
 from homeassistant.components.camera import (
     PLATFORM_SCHEMA,
     DEFAULT_CONTENT_TYPE,
@@ -232,6 +231,7 @@ class VivotekCamera(Camera):
 
     @property
     def motion_detection_enabled(self):
+        """Return the camera motion detection status."""
         return self._motion_detection_enabled
 
     async def disable_motion_detection(self):
