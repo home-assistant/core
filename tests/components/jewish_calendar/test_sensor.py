@@ -1,6 +1,7 @@
 """The tests for the Jewish calendar sensors."""
 from datetime import time
 from datetime import datetime as dt
+from unittest.mock import patch
 
 import pytest
 
@@ -8,7 +9,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.setup import async_setup_component
 from homeassistant.components import jewish_calendar
 
-from . import alter_time, make_nyc_test_params, make_jerusalem_test_params
+from . import make_nyc_test_params, make_jerusalem_test_params
 
 ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
 
@@ -184,7 +185,7 @@ async def test_jewish_calendar_sensor(
     )
     await hass.async_block_till_done()
 
-    with alter_time(test_time):
+    with patch("homeassistant.util.dt.now", return_value=test_time):
         await hass.helpers.entity_component.async_update_entity(f"sensor.test_{sensor}")
 
     assert hass.states.get(f"sensor.test_{sensor}").state == str(result)
@@ -523,7 +524,7 @@ async def test_shabbat_times_sensor(
 
         sensor_type = sensor_type.replace(f"{language}_", "")
 
-        with alter_time(test_time):
+        with patch("homeassistant.util.dt.now", return_value=test_time):
             await hass.helpers.entity_component.async_update_entity(
                 f"sensor.test_{sensor_type}"
             )
@@ -603,7 +604,7 @@ async def test_omer_sensor(
     )
     await hass.async_block_till_done()
 
-    with alter_time(test_time):
+    with patch("homeassistant.util.dt.now", return_value=test_time):
         await hass.helpers.entity_component.async_update_entity(
             "sensor.test_day_of_the_omer"
         )

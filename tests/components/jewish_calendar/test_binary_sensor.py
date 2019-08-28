@@ -1,5 +1,6 @@
 """The tests for the Jewish calendar binary sensors."""
 from datetime import datetime as dt
+from unittest.mock import patch
 
 import pytest
 
@@ -8,7 +9,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.setup import async_setup_component
 from homeassistant.components import jewish_calendar
 
-from . import alter_time, make_nyc_test_params, make_jerusalem_test_params
+from . import make_nyc_test_params, make_jerusalem_test_params
 
 ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
 
@@ -91,7 +92,7 @@ async def test_issur_melacha_sensor(
     )
     await hass.async_block_till_done()
 
-    with alter_time(test_time):
+    with patch("homeassistant.util.dt.now", return_value=test_time):
         await hass.helpers.entity_component.async_update_entity(
             "binary_sensor.test_issur_melacha_in_effect"
         )
