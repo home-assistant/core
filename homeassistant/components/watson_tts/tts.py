@@ -17,7 +17,7 @@ DEFAULT_URL = "https://stream.watsonplatform.net/text-to-speech/api"
 CONF_VOICE = "voice"
 CONF_OUTPUT_FORMAT = "output_format"
 CONF_TEXT_TYPE = "text"
-CONF_TELEMETRY = "enable_telemetry"
+CONF_TELEMETRY = "disable_telemetry"
 
 # List from https://tinyurl.com/watson-tts-docs
 SUPPORTED_VOICES = [
@@ -78,7 +78,7 @@ CONTENT_TYPE_EXTENSIONS = {
 
 DEFAULT_VOICE = "en-US_AllisonVoice"
 DEFAULT_OUTPUT_FORMAT = "audio/mp3"
-DEFAULT_TELEMETRY = False
+DEFAULT_TELEMETRY = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -118,7 +118,6 @@ class WatsonTTSProvider(Provider):
         self.default_voice = default_voice
         self.output_format = output_format
         self.name = "Watson TTS"
-        #test: Watson telemetry opt-out
 
     @property
     def supported_languages(self):
