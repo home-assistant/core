@@ -133,11 +133,6 @@ class VivotekCamera(Camera):
         """Return the interval between frames of the mjpeg stream."""
         return self._frame_interval
 
-    async def async_event_enabled(self, event_key):
-        """Return true if event for the provided key is enabled."""
-        value = await self.async_get_param(event_key)
-        return int(value.replace("'", "")) == 1
-
     def event_enabled(self, event_key):
         """Return true if event for the provided key is enabled."""
         response = self.get_param(event_key)
