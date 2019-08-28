@@ -773,5 +773,5 @@ class TestJewishCalenderSensor:
                 "sensor.test_day_of_the_omer"
             )
 
-        assert hass.states.get("sensor.test_day_of_the_omer").state == result
+        assert hass.states.get("sensor.test_day_of_the_omer").state == str(result)
         hass.config.set_time_zone(default_time_zone)
