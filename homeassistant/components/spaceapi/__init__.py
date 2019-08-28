@@ -7,9 +7,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
-    ATTR_LATITUDE,
     ATTR_LOCATION,
-    ATTR_LONGITUDE,
     ATTR_STATE,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ADDRESS,
@@ -26,6 +24,8 @@ import homeassistant.util.dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ADDRESS = "address"
+ATTR_LATITUDE = "lat"
+ATTR_LONGITUDE = "lon"
 ATTR_API = "api"
 ATTR_CLOSE = "close"
 ATTR_CONTACT = "contact"
