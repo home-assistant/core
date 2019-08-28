@@ -136,7 +136,7 @@ test_ids = [
     "date_output_hebrew",
     "holiday_name",
     "holiday_name_english",
-    "holyness",
+    "holiday_type",
     "torah_reading",
     "first_stars_ny",
     "first_stars_jerusalem",
