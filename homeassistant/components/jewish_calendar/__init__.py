@@ -3,11 +3,12 @@ import logging
 
 import voluptuous as vol
 
+import hdate
+
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.helpers.discovery import async_load_platform
 import homeassistant.helpers.config_validation as cv
 
-import hdate
 
 _LOGGER = logging.getLogger(__name__)
 
