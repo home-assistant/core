@@ -3,7 +3,8 @@ import json
 import logging
 from datetime import timedelta
 
-from pylinky.client import DAILY, MONTHLY, YEARLY, LinkyClient, PyLinkyError
+from pylinky.client import DAILY, MONTHLY, YEARLY, LinkyClient
+from pylinky.client import PyLinkyException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -88,7 +89,7 @@ class LinkyAccount:
             client.fetch_data()
             self._data = client.get_data()
             _LOGGER.debug(json.dumps(self._data, indent=2))
-        except PyLinkyError as exp:
+        except PyLinkyException as exp:
             _LOGGER.error(exp)
         finally:
             client.close_session()

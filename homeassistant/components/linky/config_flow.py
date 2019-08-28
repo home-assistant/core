@@ -2,7 +2,13 @@
 import logging
 
 import voluptuous as vol
-from pylinky.client import LinkyClient, PyLinkyError
+from pylinky.client import LinkyClient
+from pylinky.exceptions import (
+    PyLinkyAccessException,
+    PyLinkyEnedisException,
+    PyLinkyException,
+    PyLinkyWrongLoginException,
+)
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
@@ -56,6 +62,7 @@ class LinkyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
+        errors = {}
 
         if user_input is None:
             return self._show_setup_form(user_input, None)
@@ -65,7 +72,6 @@ class LinkyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._timeout = user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
 
         if self._configuration_exists(self._username):
-            errors = {}
             errors[CONF_USERNAME] = "username_exists"
             return self._show_setup_form(user_input, errors)
 
@@ -73,11 +79,22 @@ class LinkyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await self.hass.async_add_executor_job(client.login)
             await self.hass.async_add_executor_job(client.fetch_data)
-        except PyLinkyError as exp:
+        except PyLinkyAccessException as exp:
             _LOGGER.error(exp)
-            errors = {}
-            errors["PyLinkyError"] = exp
-            return self._show_setup_form(user_input, None)
+            errors["base"] = "access"
+            return self._show_setup_form(user_input, errors)
+        except PyLinkyEnedisException as exp:
+            _LOGGER.error(exp)
+            errors["base"] = "enedis"
+            return self._show_setup_form(user_input, errors)
+        except PyLinkyWrongLoginException as exp:
+            _LOGGER.error(exp)
+            errors["base"] = "wrong_login"
+            return self._show_setup_form(user_input, errors)
+        except PyLinkyException as exp:
+            _LOGGER.error(exp)
+            errors["base"] = "unknown"
+            return self._show_setup_form(user_input, errors)
         finally:
             client.close_session()
 
