@@ -46,11 +46,6 @@ class JewishCalendarBinarySensor(BinarySensorDevice):
         return self._name
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def is_on(self):
         """Return true if sensor is on."""
         return self._state
