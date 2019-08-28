@@ -1,5 +1,5 @@
 """Linky component constants."""
 
-DOMAIN = 'linky'
+DOMAIN = "linky"
 
 DEFAULT_TIMEOUT = 10
