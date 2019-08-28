@@ -20,6 +20,9 @@ from homeassistant.const import (
 )
 from homeassistant.components import group
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 DOMAIN = "switch"
 SCAN_INTERVAL = timedelta(seconds=30)
 

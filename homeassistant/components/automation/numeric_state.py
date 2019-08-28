@@ -16,6 +16,9 @@ from homeassistant.const import (
 from homeassistant.helpers.event import async_track_state_change, async_track_same_state
 from homeassistant.helpers import condition, config_validation as cv, template
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 TRIGGER_SCHEMA = vol.All(
     vol.Schema(
         {

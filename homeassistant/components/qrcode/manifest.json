@@ -3,7 +3,7 @@
   "name": "Qrcode",
   "documentation": "https://www.home-assistant.io/components/qrcode",
   "requirements": [
-    "pillow==5.4.1",
+    "pillow==6.1.0",
     "pyzbar==0.1.7"
   ],
   "dependencies": [],

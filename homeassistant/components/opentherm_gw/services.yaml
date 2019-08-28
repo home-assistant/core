@@ -35,6 +35,23 @@ set_control_setpoint:
         A value of 0 disables the central heating setpoint override.
       example: '37.5'
 
+set_hot_water_ovrd:
+  description: >
+    Set the domestic hot water enable option on the gateway.
+  fields:
+    gateway_id:
+      description: The gateway_id of the OpenTherm Gateway.
+      example: 'opentherm_gateway'
+    dhw_override:
+      description: >
+        Control the domestic hot water enable option. If the boiler has
+        been configured to let the room unit control when to keep a
+        small amount of water preheated, this command can influence
+        that.
+        Value should be 0 or 1 to enable the override in off or on
+        state, or "A" to disable the override.
+      example: '1'
+
 set_gpio_mode:
   description: Change the function of the GPIO pins of the gateway.
   fields:

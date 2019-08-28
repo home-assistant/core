@@ -25,6 +25,9 @@ from homeassistant.const import (
 )
 from homeassistant.components import group
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 ATTR_CHANGED_BY = "changed_by"
 
 DOMAIN = "lock"

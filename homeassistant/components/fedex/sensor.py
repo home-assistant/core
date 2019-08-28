@@ -44,6 +44,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Fedex platform."""
     import fedexdeliverymanager
 
+    _LOGGER.warning(
+        "The fedex integration is deprecated and will be removed "
+        "in Home Assistant 0.100.0. For more information see ADR-0004:"
+        "https://github.com/home-assistant/architecture/blob/master/adr/0004-webscraping.md"
+    )
+
     name = config.get(CONF_NAME)
     update_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
 

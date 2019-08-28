@@ -116,7 +116,7 @@ class LogEntry:
         return frozenset([self.message, self.root_cause])
 
     def to_dict(self):
-        """Convert object into dict to maintain backward compatability."""
+        """Convert object into dict to maintain backward compatibility."""
         return vars(self)
 
 

@@ -6,6 +6,7 @@ from asynctest import Mock, patch
 from pysmartthings import InstalledAppStatus, OAuthToken
 import pytest
 
+from homeassistant.setup import async_setup_component
 from homeassistant.components import cloud, smartthings
 from homeassistant.components.smartthings.const import (
     CONF_CLOUDHOOK_URL,
@@ -25,6 +26,7 @@ from tests.common import MockConfigEntry
 
 async def test_migration_creates_new_flow(hass, smartthings_mock, config_entry):
     """Test migration deletes app and creates new flow."""
+    assert await async_setup_component(hass, "persistent_notification", {})
     config_entry.version = 1
     config_entry.add_to_hass(hass)
 
@@ -50,6 +52,7 @@ async def test_unrecoverable_api_errors_create_new_flow(
     403 (forbidden/not found): Occurs when the app or installed app could
         not be retrieved/found (likely deleted?)
     """
+    assert await async_setup_component(hass, "persistent_notification", {})
     config_entry.add_to_hass(hass)
     smartthings_mock.app.side_effect = ClientResponseError(None, None, status=401)
 

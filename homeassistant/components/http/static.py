@@ -6,6 +6,9 @@ from aiohttp.web import FileResponse
 from aiohttp.web_exceptions import HTTPNotFound, HTTPForbidden
 from aiohttp.web_urldispatcher import StaticResource
 
+
+# mypy: allow-untyped-defs
+
 CACHE_TIME = 31 * 86400  # = 1 month
 CACHE_HEADERS = {hdrs.CACHE_CONTROL: "public, max-age={}".format(CACHE_TIME)}
 
@@ -39,7 +42,8 @@ class CachingStaticResource(StaticResource):
         if filepath.is_dir():
             return await super()._handle(request)
         if filepath.is_file():
-            return FileResponse(
+            # type ignore: https://github.com/aio-libs/aiohttp/pull/3976
+            return FileResponse(  # type: ignore
                 filepath, chunk_size=self._chunk_size, headers=CACHE_HEADERS
             )
         raise HTTPNotFound

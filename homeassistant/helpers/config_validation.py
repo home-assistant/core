@@ -11,7 +11,7 @@ from datetime import (
 )
 from socket import _GLOBAL_DEFAULT_TIMEOUT
 from numbers import Number
-from typing import Any, Union, TypeVar, Callable, Sequence, Dict, Optional
+from typing import Any, Union, TypeVar, Callable, List, Dict, Optional
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -191,7 +191,7 @@ def isdir(value: Any) -> str:
     return dir_in
 
 
-def ensure_list(value: Union[T, Sequence[T], None]) -> Sequence[T]:
+def ensure_list(value: Union[T, List[T], None]) -> List[T]:
     """Wrap value in list if it is not one."""
     if value is None:
         return []
@@ -207,7 +207,7 @@ def entity_id(value: Any) -> str:
     raise vol.Invalid("Entity ID {} is an invalid entity id".format(value))
 
 
-def entity_ids(value: Union[str, Sequence]) -> Sequence[str]:
+def entity_ids(value: Union[str, List]) -> List[str]:
     """Validate Entity IDs."""
     if value is None:
         raise vol.Invalid("Entity IDs can not be None")
@@ -234,7 +234,7 @@ def entity_domain(domain: str):
 def entities_domain(domain: str):
     """Validate that entities belong to domain."""
 
-    def validate(values: Union[str, Sequence]) -> Sequence[str]:
+    def validate(values: Union[str, List]) -> List[str]:
         """Test if entity domain is domain."""
         values = entity_ids(values)
         for ent_id in values:
@@ -261,7 +261,7 @@ def icon(value):
     if ":" in value:
         return value
 
-    raise vol.Invalid('Icons should be specifed on the form "prefix:name"')
+    raise vol.Invalid('Icons should be specified in the form "prefix:name"')
 
 
 time_period_dict = vol.All(
@@ -370,7 +370,7 @@ def positive_timedelta(value: timedelta) -> timedelta:
     return value
 
 
-def remove_falsy(value: Sequence[T]) -> Sequence[T]:
+def remove_falsy(value: List[T]) -> List[T]:
     """Remove falsy values from a list."""
     return [v for v in value if v]
 
@@ -562,7 +562,7 @@ def uuid4_hex(value):
     return result.hex
 
 
-def ensure_list_csv(value: Any) -> Sequence:
+def ensure_list_csv(value: Any) -> List:
     """Ensure that input is a list or make one from comma-separated string."""
     if isinstance(value, str):
         return [member.strip() for member in value.split(",")]

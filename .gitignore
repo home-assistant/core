@@ -50,6 +50,7 @@ develop-eggs
 .installed.cfg
 lib
 lib64
+pip-wheel-metadata
 
 # Logs
 *.log
@@ -58,9 +59,11 @@ pip-log.txt
 # Unit test / coverage reports
 .coverage
 .tox
+coverage.xml
 nosetests.xml
 htmlcov/
 test-reports/
+test-results.xml
 
 # Translations
 *.mo
@@ -121,3 +124,6 @@ desktop.ini
 
 # monkeytype
 monkeytype.sqlite3
+
+# This is left behind by Azure Restore Cache
+tmp_cache

@@ -152,7 +152,7 @@ class LinkySensor(Entity):
         }
 
     def update(self):
-        """Retreive the new data for the sensor."""
+        """Retrieve the new data for the sensor."""
         data = self.__account.data[self._scale][self.__when]
         self.__consumption = data[CONSUMPTION]
         self.__time = data[TIME]

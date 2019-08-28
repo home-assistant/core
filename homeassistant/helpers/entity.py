@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 import functools as ft
 from timeit import default_timer as timer
-from typing import Optional, List, Iterable
+from typing import Any, Optional, List, Iterable
 
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -34,8 +34,7 @@ from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util import dt as dt_util
 
 
-# mypy: allow-incomplete-defs, allow-untyped-defs, no-check-untyped-defs
-# mypy: no-warn-return-any
+# mypy: allow-untyped-defs, no-check-untyped-defs, no-warn-return-any
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -99,6 +98,9 @@ class Entity:
 
     # If we reported if this entity was slow
     _slow_reported = False
+
+    # If we reported this entity is updated while disabled
+    _disabled_reported = False
 
     # Protect for multiple updates
     _update_staged = False
@@ -217,6 +219,11 @@ class Entity:
         """Time that a context is considered recent."""
         return timedelta(seconds=5)
 
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return True
+
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
     # are used to perform a very specific function. Overwriting these may
@@ -269,6 +276,16 @@ class Entity:
     @callback
     def _async_write_ha_state(self):
         """Write the state to the state machine."""
+        if self.registry_entry and self.registry_entry.disabled_by:
+            if not self._disabled_reported:
+                self._disabled_reported = True
+                _LOGGER.warning(
+                    "Entity %s is incorrectly being triggered for updates while it is disabled. This is a bug in the %s integration.",
+                    self.entity_id,
+                    self.platform.platform_name,
+                )
+            return
+
         start = timer()
 
         attr = {}
@@ -486,6 +503,10 @@ class Entity:
         old = self.registry_entry
         self.registry_entry = ent_reg.async_get(data["entity_id"])
 
+        if self.registry_entry.disabled_by is not None:
+            await self.async_remove()
+            return
+
         if self.registry_entry.entity_id == old.entity_id:
             self.async_write_ha_state()
             return
@@ -532,7 +553,7 @@ class ToggleEntity(Entity):
         """Return True if entity is on."""
         raise NotImplementedError()
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         raise NotImplementedError()
 
@@ -543,7 +564,7 @@ class ToggleEntity(Entity):
         """
         return self.hass.async_add_job(ft.partial(self.turn_on, **kwargs))
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         raise NotImplementedError()
 
@@ -554,7 +575,7 @@ class ToggleEntity(Entity):
         """
         return self.hass.async_add_job(ft.partial(self.turn_off, **kwargs))
 
-    def toggle(self, **kwargs) -> None:
+    def toggle(self, **kwargs: Any) -> None:
         """Toggle the entity."""
         if self.is_on:
             self.turn_off(**kwargs)

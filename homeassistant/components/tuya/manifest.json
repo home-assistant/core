@@ -3,7 +3,7 @@
   "name": "Tuya",
   "documentation": "https://www.home-assistant.io/components/tuya",
   "requirements": [
-    "tuyaha==0.0.2"
+    "tuyaha==0.0.3"
   ],
   "dependencies": [],
   "codeowners": []
