@@ -83,44 +83,52 @@ class JewishCalendarSensor(Entity):
             )
 
         date = hdate.HDate(today, diaspora=self._diaspora, hebrew=self._hebrew)
-        lagging_date = date
 
-        # Advance Hebrew date if sunset has passed.
-        # Not all sensors should advance immediately when the Hebrew date
-        # officially changes (i.e. after sunset), hence lagging_date.
-        if now > sunset:
-            date = date.next_day
+        # The Jewish day starts after darkness (called "tzais") and finishes at
+        # sunset ("shkia"). The time in between is a gray area (aka "Bein
+        # Hashmashot" - literally: "in between the sun and the moon").
+
+        # For some sensors, it is more interesting to consider the date to be
+        # tomorrow based on sunset ("shkia"), for others based on "tzais".
+        # Hence the following variables.
+        after_tzais_date = after_shkia_date = date
         today_times = make_zmanim(today)
+
+        if now > sunset:
+            after_shkia_date = date.next_day
+
         if today_times.havdalah and now > today_times.havdalah:
-            lagging_date = lagging_date.next_day
+            after_tzais_date = date.next_day
 
         # Terminology note: by convention in py-libhdate library, "upcoming"
         # refers to "current" or "upcoming" dates.
         if self._type == "date":
-            self._state = date.hebrew_date
+            self._state = after_shkia_date.hebrew_date
         elif self._type == "weekly_portion":
             # Compute the weekly portion based on the upcoming shabbat.
-            self._state = lagging_date.upcoming_shabbat.parasha
+            self._state = after_tzais_date.upcoming_shabbat.parasha
         elif self._type == "holiday_name":
-            self._state = date.holiday_description
+            self._state = after_shkia_date.holiday_description
         elif self._type == "holiday_type":
-            self._state = date.holiday_type
+            self._state = after_shkia_date.holiday_type
         elif self._type == "upcoming_shabbat_candle_lighting":
-            times = make_zmanim(lagging_date.upcoming_shabbat.previous_day.gdate)
+            times = make_zmanim(after_tzais_date.upcoming_shabbat.previous_day.gdate)
             self._state = times.candle_lighting
         elif self._type == "upcoming_candle_lighting":
             times = make_zmanim(
-                lagging_date.upcoming_shabbat_or_yom_tov.first_day.previous_day.gdate
+                after_tzais_date.upcoming_shabbat_or_yom_tov.first_day.previous_day.gdate
             )
             self._state = times.candle_lighting
         elif self._type == "upcoming_shabbat_havdalah":
-            times = make_zmanim(lagging_date.upcoming_shabbat.gdate)
+            times = make_zmanim(after_tzais_date.upcoming_shabbat.gdate)
             self._state = times.havdalah
         elif self._type == "upcoming_havdalah":
-            times = make_zmanim(lagging_date.upcoming_shabbat_or_yom_tov.last_day.gdate)
+            times = make_zmanim(
+                after_tzais_date.upcoming_shabbat_or_yom_tov.last_day.gdate
+            )
             self._state = times.havdalah
         elif self._type == "omer_count":
-            self._state = date.omer_day
+            self._state = after_shkia_date.omer_day
         else:
             times = make_zmanim(today).zmanim
             self._state = times[self._type].time()
