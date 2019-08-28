@@ -196,11 +196,6 @@ class Entity:
         return True
 
     @property
-    def enabled(self):
-        """Return if the entity is enabled in the entity registry."""
-        return self.registry_entry is None or not self.registry_entry.disabled
-
-    @property
     def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
         return False
@@ -233,6 +228,11 @@ class Entity:
     # These properties and methods are either managed by Home Assistant or they
     # are used to perform a very specific function. Overwriting these may
     # produce undesirable effects in the entity's operation.
+
+    @property
+    def enabled(self):
+        """Return if the entity is enabled in the entity registry."""
+        return self.registry_entry is None or not self.registry_entry.disabled
 
     @callback
     def async_set_context(self, context):
