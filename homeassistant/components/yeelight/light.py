@@ -132,6 +132,8 @@ MODEL_TO_DEVICE_TYPE = {
     "ceiling4": BulbType.WhiteTempMood,
 }
 
+VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Range(min=1, max=100))
+
 SERVICE_SCHEMA_SET_MODE = YEELIGHT_SERVICE_SCHEMA.extend(
     {vol.Required(ATTR_MODE): vol.In([mode.name.lower() for mode in PowerMode])}
 )
@@ -145,9 +147,7 @@ SERVICE_SCHEMA_SET_COLOR_SCENE = YEELIGHT_SERVICE_SCHEMA.extend(
         vol.Required(ATTR_RGB_COLOR): vol.All(
             vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)
         ),
-        vol.Required(ATTR_BRIGHTNESS): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=100)
-        ),
+        vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
     }
 )
 
@@ -162,9 +162,7 @@ SERVICE_SCHEMA_SET_HSV_SCENE = YEELIGHT_SERVICE_SCHEMA.extend(
             ),
             vol.Coerce(tuple),
         ),
-        vol.Required(ATTR_BRIGHTNESS): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=100)
-        ),
+        vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
     }
 )
 
@@ -173,9 +171,7 @@ SERVICE_SCHEMA_SET_CT_SCENE = YEELIGHT_SERVICE_SCHEMA.extend(
         vol.Required(ATTR_KELVIN): vol.All(
             vol.Coerce(int), vol.Range(min=1700, max=6500)
         ),
-        vol.Required(ATTR_BRIGHTNESS): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=100)
-        ),
+        vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
     }
 )
 
@@ -186,9 +182,7 @@ SERVICE_SCHEMA_SET_CF_SCENE = YEELIGHT_SERVICE_SCHEMA.extend(
 SERVICE_SCHEMA_SET_AUTO_DELAY_OFF = YEELIGHT_SERVICE_SCHEMA.extend(
     {
         vol.Required(ATTR_MINUTES): vol.All(vol.Coerce(int), vol.Range(min=1, max=60)),
-        vol.Required(ATTR_BRIGHTNESS): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=100)
-        ),
+        vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
     }
 )
 
