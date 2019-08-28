@@ -4,15 +4,21 @@ from datetime import datetime as dt
 
 import pytest
 
-from homeassistant.util.dt import get_time_zone
+import homeassistant.util.dt as dt_util
 from homeassistant.setup import async_setup_component
 from homeassistant.components import jewish_calendar
 
 from . import alter_time, make_nyc_test_params, make_jerusalem_test_params
 
+ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
+
 
 class TestJewishCalenderSensor:
     """Test the Jewish Calendar sensors."""
+
+    def tearDown(self):
+        """Reset time zone."""
+        dt_util.set_default_time_zone(ORIG_TIME_ZONE)
 
     async def test_jewish_calendar_min_config(self, hass):
         """Test minimum jewish calendar configuration."""
@@ -150,7 +156,7 @@ class TestJewishCalenderSensor:
 
     @pytest.mark.parametrize(
         [
-            "cur_time",
+            "now",
             "tzname",
             "latitude",
             "longitude",
@@ -163,23 +169,13 @@ class TestJewishCalenderSensor:
         ids=test_ids,
     )
     async def test_jewish_calendar_sensor(
-        self,
-        hass,
-        cur_time,
-        tzname,
-        latitude,
-        longitude,
-        language,
-        sensor,
-        diaspora,
-        result,
+        self, hass, now, tzname, latitude, longitude, language, sensor, diaspora, result
     ):
         """Test Jewish calendar sensor output."""
-        time_zone = get_time_zone(tzname)
-        test_time = time_zone.localize(cur_time)
+        time_zone = dt_util.get_time_zone(tzname)
+        test_time = time_zone.localize(now)
 
-        default_time_zone = str(hass.config.time_zone)
-        hass.config.set_time_zone(tzname)
+        dt_util.set_default_time_zone(time_zone)
         hass.config.latitude = latitude
         hass.config.longitude = longitude
 
@@ -202,7 +198,6 @@ class TestJewishCalenderSensor:
             )
 
         assert hass.states.get(f"sensor.test_{sensor}").state == str(result)
-        hass.config.set_time_zone(default_time_zone)
 
     shabbat_params = [
         make_nyc_test_params(
@@ -508,15 +503,11 @@ class TestJewishCalenderSensor:
         result,
     ):
         """Test sensor output for upcoming shabbat/yomtov times."""
-        time_zone = get_time_zone(tzname)
+        time_zone = dt_util.get_time_zone(tzname)
         test_time = time_zone.localize(now)
 
-        for sensor_type, value in result.items():
-            if isinstance(value, dt):
-                value = value.replace(tzinfo=None)
-                result[sensor_type] = time_zone.localize(value)
-        default_time_zone = str(hass.config.time_zone)
-        hass.config.set_time_zone(tzname)
+        dt_util.set_default_time_zone(time_zone)
+
         hass.config.latitude = latitude
         hass.config.longitude = longitude
 
@@ -550,7 +541,6 @@ class TestJewishCalenderSensor:
             assert hass.states.get(f"sensor.test_{sensor_type}").state == str(
                 result_value
             ), f"Value for {sensor_type}"
-        hass.config.set_time_zone(default_time_zone)
 
     omer_params = [
         make_nyc_test_params(dt(2019, 4, 21, 0, 0), "1"),
@@ -608,11 +598,10 @@ class TestJewishCalenderSensor:
         result,
     ):
         """Test Omer Count sensor output."""
-        time_zone = get_time_zone(tzname)
+        time_zone = dt_util.get_time_zone(tzname)
         test_time = time_zone.localize(now)
 
-        default_time_zone = str(hass.config.time_zone)
-        hass.config.set_time_zone(tzname)
+        dt_util.set_default_time_zone(time_zone)
         hass.config.latitude = latitude
         hass.config.longitude = longitude
 
@@ -637,4 +626,3 @@ class TestJewishCalenderSensor:
             )
 
         assert hass.states.get("sensor.test_day_of_the_omer").state == result
-        hass.config.set_time_zone(default_time_zone)

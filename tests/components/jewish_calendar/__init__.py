@@ -1,9 +1,11 @@
 """Tests for the jewish_calendar component."""
+from datetime import datetime
 from collections import namedtuple
 from contextlib import contextmanager
 from unittest.mock import patch
 
 from homeassistant.components import jewish_calendar
+import homeassistant.util.dt as dt_util
 
 
 _LatLng = namedtuple("_LatLng", ["lat", "lng"])
@@ -14,6 +16,12 @@ JERUSALEM_LATLNG = _LatLng(31.778, 35.235)
 
 def make_nyc_test_params(dtime, results, havdalah_offset=0):
     """Make test params for NYC."""
+    if isinstance(results, dict):
+        time_zone = dt_util.get_time_zone("America/New_York")
+        results = {
+            key: time_zone.localize(value) if isinstance(value, datetime) else value
+            for key, value in results.items()
+        }
     return (
         dtime,
         jewish_calendar.CANDLE_LIGHT_DEFAULT,
@@ -28,6 +36,12 @@ def make_nyc_test_params(dtime, results, havdalah_offset=0):
 
 def make_jerusalem_test_params(dtime, results, havdalah_offset=0):
     """Make test params for Jerusalem."""
+    if isinstance(results, dict):
+        time_zone = dt_util.get_time_zone("Asia/Jerusalem")
+        results = {
+            key: time_zone.localize(value) if isinstance(value, datetime) else value
+            for key, value in results.items()
+        }
     return (
         dtime,
         jewish_calendar.CANDLE_LIGHT_DEFAULT,

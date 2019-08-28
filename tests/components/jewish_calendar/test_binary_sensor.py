@@ -4,15 +4,21 @@ from datetime import datetime as dt
 import pytest
 
 from homeassistant.const import STATE_ON, STATE_OFF
-from homeassistant.util.dt import get_time_zone
+import homeassistant.util.dt as dt_util
 from homeassistant.setup import async_setup_component
 from homeassistant.components import jewish_calendar
 
 from . import alter_time, make_nyc_test_params, make_jerusalem_test_params
 
+ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
+
 
 class TestJewishCalenderBinarySensor:
     """Test the Jewish Calendar binary sensors."""
+
+    def tearDown(self):
+        """Reset time zone."""
+        dt_util.set_default_time_zone(ORIG_TIME_ZONE)
 
     melacha_params = [
         make_nyc_test_params(dt(2018, 9, 1, 16, 0), STATE_ON),
@@ -72,11 +78,10 @@ class TestJewishCalenderBinarySensor:
         result,
     ):
         """Test Issur Melacha sensor output."""
-        time_zone = get_time_zone(tzname)
+        time_zone = dt_util.get_time_zone(tzname)
         test_time = time_zone.localize(now)
 
-        default_time_zone = str(hass.config.time_zone)
-        hass.config.set_time_zone(tzname)
+        dt_util.set_default_time_zone(time_zone)
         hass.config.latitude = latitude
         hass.config.longitude = longitude
 
@@ -104,4 +109,3 @@ class TestJewishCalenderBinarySensor:
             hass.states.get("binary_sensor.test_issur_melacha_in_effect").state
             == result
         )
-        hass.config.set_time_zone(default_time_zone)
