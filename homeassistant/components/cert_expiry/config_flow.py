@@ -48,11 +48,11 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 with ctx.wrap_socket(sock, server_hostname=address[0]):
                     return True
         except socket.gaierror:
-            self._errors[CONF_HOST] = 'resolve_failed'
+            self._errors[CONF_HOST] = "resolve_failed"
         except socket.timeout:
-            self._errors[CONF_HOST] = 'connection_timeout'
+            self._errors[CONF_HOST] = "connection_timeout"
         except OSError:
-            self._errors[CONF_HOST] = 'certificate_fetch_failed'
+            self._errors[CONF_HOST] = "certificate_fetch_failed"
         return False
 
     async def async_step_user(self, user_input=None):
@@ -80,9 +80,13 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)): str,
+                    vol.Required(
+                        CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
+                    ): str,
                     vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
-                    vol.Required(CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)): int,
+                    vol.Required(
+                        CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)
+                    ): int,
                 }
             ),
             errors=self._errors,

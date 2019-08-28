@@ -18,7 +18,10 @@ HOST = "example.com"
 @pytest.fixture(name="test_connect")
 def mock_controller():
     """Mock a successfull _prt_in_configuration_exists."""
-    with patch("homeassistant.components.cert_expiry.config_flow.CertexpiryConfigFlow._test_connection", return_value=True):
+    with patch(
+        "homeassistant.components.cert_expiry.config_flow.CertexpiryConfigFlow._test_connection",
+        return_value=True,
+    ):
         yield
 
 
@@ -119,22 +122,16 @@ async def test_abort_on_socket_failed(hass):
     flow = init_config_flow(hass)
 
     with patch("socket.create_connection", side_effect=socket.gaierror()):
-        result = await flow.async_step_user(
-            {CONF_HOST: HOST}
-        )
+        result = await flow.async_step_user({CONF_HOST: HOST})
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {CONF_HOST: "resolve_failed"}
 
     with patch("socket.create_connection", side_effect=socket.timeout()):
-        result = await flow.async_step_user(
-            {CONF_HOST: HOST}
-        )
+        result = await flow.async_step_user({CONF_HOST: HOST})
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {CONF_HOST: "connection_timeout"}
 
     with patch("socket.create_connection", side_effect=OSError()):
-        result = await flow.async_step_user(
-            {CONF_HOST: HOST}
-        )
+        result = await flow.async_step_user({CONF_HOST: HOST})
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {CONF_HOST: "certificate_fetch_failed"}
