@@ -19,6 +19,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     PRESET_BOOST,
     PRESET_NONE,
+    SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE,
     SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE,
@@ -40,7 +41,8 @@ REMOTEC_ZXT_120 = 0x8377
 REMOTEC_ZXT_120_THERMOSTAT = (REMOTEC, REMOTEC_ZXT_120)
 ATTR_OPERATING_STATE = "operating_state"
 ATTR_FAN_STATE = "fan_state"
-
+ATTR_FAN_ACTION = "fan_action"
+AUX_HEAT_ZWAVE_MODE = "Aux Heat"
 
 # Device is in manufacturer specific mode (e.g. setting the valve manually)
 PRESET_MANUFACTURER_SPECIFIC = "Manufacturer Specific"
@@ -54,7 +56,6 @@ HVAC_STATE_MAPPINGS = {
     "heat": HVAC_MODE_HEAT,
     "heat mode": HVAC_MODE_HEAT,
     "heat (default)": HVAC_MODE_HEAT,
-    "aux heat": HVAC_MODE_HEAT,
     "furnace": HVAC_MODE_HEAT,
     "fan only": HVAC_MODE_FAN_ONLY,
     "dry air": HVAC_MODE_DRY,
@@ -62,6 +63,7 @@ HVAC_STATE_MAPPINGS = {
     "cool": HVAC_MODE_COOL,
     "heat_cool": HVAC_MODE_HEAT_COOL,
     "auto": HVAC_MODE_HEAT_COOL,
+    "auto changeover": HVAC_MODE_HEAT_COOL,
 }
 
 HVAC_CURRENT_MAPPINGS = {
@@ -127,13 +129,14 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         self._hvac_list = None  # [zwave_mode]
         self._hvac_mapping = None  # {ha_mode:zwave_mode}
         self._hvac_mode = None  # ha_mode
+        self._aux_heat = None
         self._default_hvac_mode = None  # ha_mode
         self._preset_mapping = None  # {ha_mode:zwave_mode}
         self._preset_list = None  # [zwave_mode]
         self._preset_mode = None  # ha_mode if exists, else zwave_mode
         self._current_fan_mode = None
         self._fan_modes = None
-        self._fan_state = None
+        self._fan_action = None
         self._current_swing_mode = None
         self._swing_modes = None
         self._unit = temp_unit
@@ -159,6 +162,8 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             support |= SUPPORT_FAN_MODE
         if self._zxt_120 == 1 and self.values.zxt_120_swing_mode:
             support |= SUPPORT_SWING_MODE
+        if self._aux_heat:
+            support |= SUPPORT_AUX_HEAT
         if self._preset_list:
             support |= SUPPORT_PRESET_MODE
         return support
@@ -177,7 +182,10 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                 for mode in mode_list:
                     ha_mode = HVAC_STATE_MAPPINGS.get(str(mode).lower())
                     ha_preset = PRESET_MAPPINGS.get(str(mode).lower())
-                    if ha_mode and ha_mode not in self._hvac_mapping:
+                    if mode == AUX_HEAT_ZWAVE_MODE:
+                        # Aux Heat should not be included in any mapping
+                        self._aux_heat = True
+                    elif ha_mode and ha_mode not in self._hvac_mapping:
                         self._hvac_mapping[ha_mode] = mode
                         self._hvac_list.append(ha_mode)
                     elif ha_preset and ha_preset not in self._preset_mapping:
@@ -246,6 +254,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         _LOGGER.debug("self._hvac_mode=%s", self._hvac_mode)
         _LOGGER.debug("self._default_hvac_mode=%s", self._default_hvac_mode)
         _LOGGER.debug("self._hvac_action=%s", self._hvac_action)
+        _LOGGER.debug("self._aux_heat=%s", self._aux_heat)
         _LOGGER.debug("self._preset_mapping=%s", self._preset_mapping)
         _LOGGER.debug("self._preset_list=%s", self._preset_list)
         _LOGGER.debug("self._preset_mode=%s", self._preset_mode)
@@ -291,8 +300,8 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             self._hvac_action = HVAC_CURRENT_MAPPINGS.get(str(mode).lower(), mode)
 
         # Fan operating state
-        if self.values.fan_state:
-            self._fan_state = self.values.fan_state.data
+        if self.values.fan_action:
+            self._fan_action = self.values.fan_action.data
 
     @property
     def fan_mode(self):
@@ -357,6 +366,15 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         return self._hvac_action
 
     @property
+    def is_aux_heat(self):
+        """Return true if aux heater."""
+        if not self._aux_heat:
+            return None
+        if self.values.mode.data == AUX_HEAT_ZWAVE_MODE:
+            return True
+        return False
+
+    @property
     def preset_mode(self):
         """Return preset operation ie. eco, away.
 
@@ -404,6 +422,25 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         _LOGGER.debug("Set operation_mode to %s", operation_mode)
         self.values.mode.data = operation_mode
 
+    def turn_aux_heat_on(self):
+        """Turn auxillary heater on."""
+        if not self._aux_heat:
+            return
+        operation_mode = AUX_HEAT_ZWAVE_MODE
+        _LOGGER.debug("Aux heat on. Set operation mode to %s", operation_mode)
+        self.values.mode.data = operation_mode
+
+    def turn_aux_heat_off(self):
+        """Turn auxillary heater off."""
+        if not self._aux_heat:
+            return
+        if HVAC_MODE_HEAT in self._hvac_mapping:
+            operation_mode = self._hvac_mapping.get(HVAC_MODE_HEAT)
+        else:
+            operation_mode = self._hvac_mapping.get(HVAC_MODE_OFF)
+        _LOGGER.debug("Aux heat off. Set operation mode to %s", operation_mode)
+        self.values.mode.data = operation_mode
+
     def set_preset_mode(self, preset_mode):
         """Set new target preset mode."""
         _LOGGER.debug("Set preset_mode to %s", preset_mode)
@@ -426,3 +463,11 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         if self._zxt_120 == 1:
             if self.values.zxt_120_swing_mode:
                 self.values.zxt_120_swing_mode.data = swing_mode
+
+    @property
+    def device_state_attributes(self):
+        """Return the optional state attributes."""
+        data = super().device_state_attributes
+        if self._fan_action:
+            data[ATTR_FAN_ACTION] = self._fan_action
+        return data

@@ -6,6 +6,7 @@ from numbers import Number
 from functools import partial
 from copy import copy
 from datetime import timedelta
+from typing import Optional
 
 import voluptuous as vol
 
@@ -241,7 +242,8 @@ class SensorFilter(Entity):
                         entity_id=self._entity,
                     )
                 )
-                history_list.extend([state for state in filter_history[self._entity]])
+                if self._entity in filter_history:
+                    history_list.extend(filter_history[self._entity])
             if largest_window_time > timedelta(seconds=0):
                 start = dt_util.utcnow() - largest_window_time
                 filter_history = await self.hass.async_add_job(
@@ -252,13 +254,14 @@ class SensorFilter(Entity):
                         entity_id=self._entity,
                     )
                 )
-                history_list.extend(
-                    [
-                        state
-                        for state in filter_history[self._entity]
-                        if state not in history_list
-                    ]
-                )
+                if self._entity in filter_history:
+                    history_list.extend(
+                        [
+                            state
+                            for state in filter_history[self._entity]
+                            if state not in history_list
+                        ]
+                    )
 
             # Sort the window states
             history_list = sorted(history_list, key=lambda s: s.last_updated)
@@ -333,17 +336,21 @@ class FilterState:
 
 
 class Filter:
-    """Filter skeleton.
+    """Filter skeleton."""
 
-    Args:
-        window_size (int): size of the sliding window that holds previous
-                                values
-        precision (int): round filtered value to precision value
-        entity (string): used for debugging only
-    """
+    def __init__(
+        self,
+        name,
+        window_size: int = 1,
+        precision: Optional[int] = None,
+        entity: Optional[str] = None,
+    ):
+        """Initialize common attributes.
 
-    def __init__(self, name, window_size=1, precision=None, entity=None):
-        """Initialize common attributes."""
+        :param window_size: size of the sliding window that holds previous values
+        :param precision: round filtered value to precision value
+        :param entity: used for debugging only
+        """
         if isinstance(window_size, int):
             self.states = deque(maxlen=window_size)
             self.window_unit = WINDOW_SIZE_UNIT_NUMBER_EVENTS
@@ -394,14 +401,19 @@ class RangeFilter(Filter):
 
     Determines if new state is in the range of upper_bound and lower_bound.
     If not inside, lower or upper bound is returned instead.
-
-    Args:
-        upper_bound (float): band upper bound
-        lower_bound (float): band lower bound
     """
 
-    def __init__(self, entity, lower_bound=None, upper_bound=None):
-        """Initialize Filter."""
+    def __init__(
+        self,
+        entity,
+        lower_bound: Optional[float] = None,
+        upper_bound: Optional[float] = None,
+    ):
+        """Initialize Filter.
+
+        :param upper_bound: band upper bound
+        :param lower_bound: band lower bound
+        """
         super().__init__(FILTER_NAME_RANGE, entity=entity)
         self._lower_bound = lower_bound
         self._upper_bound = upper_bound
@@ -441,13 +453,13 @@ class OutlierFilter(Filter):
     """BASIC outlier filter.
 
     Determines if new state is in a band around the median.
-
-    Args:
-        radius (float): band radius
     """
 
-    def __init__(self, window_size, precision, entity, radius):
-        """Initialize Filter."""
+    def __init__(self, window_size, precision, entity, radius: float):
+        """Initialize Filter.
+
+        :param radius: band radius
+        """
         super().__init__(FILTER_NAME_OUTLIER, window_size, precision, entity)
         self._radius = radius
         self._stats_internal = Counter()
@@ -475,13 +487,9 @@ class OutlierFilter(Filter):
 
 @FILTERS.register(FILTER_NAME_LOWPASS)
 class LowPassFilter(Filter):
-    """BASIC Low Pass Filter.
+    """BASIC Low Pass Filter."""
 
-    Args:
-        time_constant (int): time constant.
-    """
-
-    def __init__(self, window_size, precision, entity, time_constant):
+    def __init__(self, window_size, precision, entity, time_constant: int):
         """Initialize Filter."""
         super().__init__(FILTER_NAME_LOWPASS, window_size, precision, entity)
         self._time_constant = time_constant
@@ -505,15 +513,15 @@ class TimeSMAFilter(Filter):
     """Simple Moving Average (SMA) Filter.
 
     The window_size is determined by time, and SMA is time weighted.
-
-    Args:
-        type (enum): type of algorithm used to connect discrete values
     """
 
     def __init__(
         self, window_size, precision, entity, type
     ):  # pylint: disable=redefined-builtin
-        """Initialize Filter."""
+        """Initialize Filter.
+
+        :param type: type of algorithm used to connect discrete values
+        """
         super().__init__(FILTER_NAME_TIME_SMA, window_size, precision, entity)
         self._time_window = window_size
         self.last_leak = None

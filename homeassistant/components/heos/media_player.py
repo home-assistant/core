@@ -1,11 +1,10 @@
 """Denon HEOS Media Player."""
-import asyncio
 from functools import reduce, wraps
 import logging
 from operator import ior
 from typing import Sequence
 
-from pyheos import CommandError, const as heos_const
+from pyheos import HeosError, const as heos_const
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -83,12 +82,7 @@ def log_command_error(command: str):
         async def wrapper(*args, **kwargs):
             try:
                 await func(*args, **kwargs)
-            except (
-                CommandError,
-                asyncio.TimeoutError,
-                ConnectionError,
-                ValueError,
-            ) as ex:
+            except (HeosError, ValueError) as ex:
                 _LOGGER.error("Unable to %s: %s", command, ex)
 
         return wrapper

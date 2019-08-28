@@ -9,8 +9,10 @@ import voluptuous as vol
 
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.loader import bind_hass
 from homeassistant.util import sanitize_filename
+from homeassistant.util.yaml.loader import load_yaml
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,9 +92,22 @@ def discover_scripts(hass):
             continue
         hass.services.remove(DOMAIN, existing_service)
 
+    # Load user-provided service descriptions from python_scripts/services.yaml
+    services_yaml = os.path.join(path, "services.yaml")
+    if os.path.exists(services_yaml):
+        services_dict = load_yaml(services_yaml)
+    else:
+        services_dict = {}
+
     for fil in glob.iglob(os.path.join(path, "*.py")):
         name = os.path.splitext(os.path.basename(fil))[0]
         hass.services.register(DOMAIN, name, python_script_service_handler)
+
+        service_desc = {
+            "description": services_dict.get(name, {}).get("description", ""),
+            "fields": services_dict.get(name, {}).get("fields", {}),
+        }
+        async_set_service_schema(hass, DOMAIN, name, service_desc)
 
 
 @bind_hass

@@ -17,6 +17,7 @@ from homeassistant.const import (
     EVENT_SCRIPT_STARTED,
 )
 from homeassistant.core import Context, callback, split_entity_id
+from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import bind_hass
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.exceptions import ServiceNotFound
@@ -244,6 +245,61 @@ class TestScriptComponent(unittest.TestCase):
         assert self.hass.services.has_service(script.DOMAIN, "test2")
 
 
+async def test_service_descriptions(hass):
+    """Test that service descriptions are loaded and reloaded correctly."""
+    # Test 1: has "description" but no "fields"
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "test": {
+                    "description": "test description",
+                    "sequence": [{"delay": {"seconds": 5}}],
+                }
+            }
+        },
+    )
+
+    descriptions = await async_get_all_descriptions(hass)
+
+    assert descriptions[DOMAIN]["test"]["description"] == "test description"
+    assert not descriptions[DOMAIN]["test"]["fields"]
+
+    # Test 2: has "fields" but no "description"
+    await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        return_value={
+            "script": {
+                "test": {
+                    "fields": {
+                        "test_param": {
+                            "description": "test_param description",
+                            "example": "test_param example",
+                        }
+                    },
+                    "sequence": [{"delay": {"seconds": 5}}],
+                }
+            }
+        },
+    ):
+        with patch("homeassistant.config.find_config_file", return_value=""):
+            await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    descriptions = await async_get_all_descriptions(hass)
+
+    assert descriptions[script.DOMAIN]["test"]["description"] == ""
+    assert (
+        descriptions[script.DOMAIN]["test"]["fields"]["test_param"]["description"]
+        == "test_param description"
+    )
+    assert (
+        descriptions[script.DOMAIN]["test"]["fields"]["test_param"]["example"]
+        == "test_param example"
+    )
+
+
 async def test_shared_context(hass):
     """Test that the shared context is passed down the chain."""
     event = "test_event"
@@ -305,4 +361,40 @@ async def test_turning_no_scripts_off(hass):
     # Testing it doesn't raise
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {"entity_id": []}, blocking=True
+    )
+
+
+async def test_async_get_descriptions_script(hass):
+    """Test async_set_service_schema for the script integration."""
+    script = hass.components.script
+    script_config = {
+        script.DOMAIN: {
+            "test1": {"sequence": [{"service": "homeassistant.restart"}]},
+            "test2": {
+                "description": "test2",
+                "fields": {
+                    "param": {
+                        "description": "param_description",
+                        "example": "param_example",
+                    }
+                },
+                "sequence": [{"service": "homeassistant.restart"}],
+            },
+        }
+    }
+
+    await async_setup_component(hass, script.DOMAIN, script_config)
+    descriptions = await hass.helpers.service.async_get_all_descriptions()
+
+    assert descriptions[script.DOMAIN]["test1"]["description"] == ""
+    assert not descriptions[script.DOMAIN]["test1"]["fields"]
+
+    assert descriptions[script.DOMAIN]["test2"]["description"] == "test2"
+    assert (
+        descriptions[script.DOMAIN]["test2"]["fields"]["param"]["description"]
+        == "param_description"
+    )
+    assert (
+        descriptions[script.DOMAIN]["test2"]["fields"]["param"]["example"]
+        == "param_example"
     )

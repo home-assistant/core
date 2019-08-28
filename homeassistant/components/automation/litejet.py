@@ -9,6 +9,9 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_point_in_utc_time
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_NUMBER = "number"

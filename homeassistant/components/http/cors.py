@@ -5,6 +5,9 @@ from aiohttp.hdrs import ACCEPT, CONTENT_TYPE, ORIGIN, AUTHORIZATION
 from homeassistant.const import HTTP_HEADER_HA_AUTH, HTTP_HEADER_X_REQUESTED_WITH
 from homeassistant.core import callback
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 ALLOWED_CORS_HEADERS = [
     ORIGIN,
     ACCEPT,

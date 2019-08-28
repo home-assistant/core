@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Une seule instance est n\u00e9cessaire."
+        }
+    }
+}

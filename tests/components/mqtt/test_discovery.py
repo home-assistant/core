@@ -1,7 +1,14 @@
 """The tests for the MQTT discovery."""
+from pathlib import Path
+import re
+
 from unittest.mock import patch
 
 from homeassistant.components import mqtt
+from homeassistant.components.mqtt.abbreviations import (
+    ABBREVIATIONS,
+    DEVICE_ABBREVIATIONS,
+)
 from homeassistant.components.mqtt.discovery import ALREADY_DISCOVERED, async_start
 from homeassistant.const import STATE_OFF, STATE_ON
 
@@ -243,6 +250,59 @@ async def test_discovery_expansion(hass, mqtt_mock, caplog):
 
     state = hass.states.get("switch.DiscoveryExpansionTest1")
     assert state.state == STATE_ON
+
+
+ABBREVIATIONS_WHITE_LIST = [
+    # MQTT client/server settings
+    "CONF_BIRTH_MESSAGE",
+    "CONF_BROKER",
+    "CONF_CERTIFICATE",
+    "CONF_CLIENT_CERT",
+    "CONF_CLIENT_ID",
+    "CONF_CLIENT_KEY",
+    "CONF_DISCOVERY",
+    "CONF_DISCOVERY_PREFIX",
+    "CONF_EMBEDDED",
+    "CONF_KEEPALIVE",
+    "CONF_TLS_INSECURE",
+    "CONF_TLS_VERSION",
+    "CONF_WILL_MESSAGE",
+    # Undocumented device configuration
+    "CONF_DEPRECATED_VIA_HUB",
+    "CONF_VIA_DEVICE",
+    # Already short
+    "CONF_FAN_MODE_LIST",
+    "CONF_HOLD_LIST",
+    "CONF_HS",
+    "CONF_MODE_LIST",
+    "CONF_PRECISION",
+    "CONF_QOS",
+    "CONF_SCHEMA",
+    "CONF_SWING_MODE_LIST",
+    "CONF_TEMP_STEP",
+]
+
+
+async def test_missing_discover_abbreviations(hass, mqtt_mock, caplog):
+    """Check MQTT platforms for missing abbreviations."""
+    missing = []
+    regex = re.compile(r"(CONF_[a-zA-Z\d_]*) *= *[\'\"]([a-zA-Z\d_]*)[\'\"]")
+    for fil in Path(mqtt.__file__).parent.rglob("*.py"):
+        with open(fil) as file:
+            matches = re.findall(regex, file.read())
+            for match in matches:
+                if (
+                    match[1] not in ABBREVIATIONS.values()
+                    and match[1] not in DEVICE_ABBREVIATIONS.values()
+                    and match[0] not in ABBREVIATIONS_WHITE_LIST
+                ):
+                    missing.append(
+                        "{}: no abbreviation for {} ({})".format(
+                            fil, match[1], match[0]
+                        )
+                    )
+
+    assert not missing
 
 
 async def test_implicit_state_topic_alarm(hass, mqtt_mock, caplog):

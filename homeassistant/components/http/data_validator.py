@@ -4,6 +4,9 @@ import logging
 
 import voluptuous as vol
 
+
+# mypy: allow-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 

@@ -34,6 +34,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
+from .device import ATTR_MODEL_TYPE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,9 +143,14 @@ class HomematicipAccesspointStatus(HomematicipGenericDevice):
         """Return the unit this state is expressed in."""
         return "%"
 
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the security zone group."""
+        return {ATTR_MODEL_TYPE: self._device.modelType}
+
 
 class HomematicipHeatingThermostat(HomematicipGenericDevice):
-    """Represenation of a HomematicIP heating thermostat device."""
+    """Representation of a HomematicIP heating thermostat device."""
 
     def __init__(self, home: AsyncHome, device) -> None:
         """Initialize heating thermostat device."""
@@ -173,7 +179,7 @@ class HomematicipHeatingThermostat(HomematicipGenericDevice):
 
 
 class HomematicipHumiditySensor(HomematicipGenericDevice):
-    """Represenation of a HomematicIP Cloud humidity device."""
+    """Representation of a HomematicIP Cloud humidity device."""
 
     def __init__(self, home: AsyncHome, device) -> None:
         """Initialize the thermometer device."""
@@ -233,7 +239,7 @@ class HomematicipTemperatureSensor(HomematicipGenericDevice):
 
 
 class HomematicipIlluminanceSensor(HomematicipGenericDevice):
-    """Represenation of a HomematicIP Illuminance device."""
+    """Representation of a HomematicIP Illuminance device."""
 
     def __init__(self, home: AsyncHome, device) -> None:
         """Initialize the  device."""
@@ -259,7 +265,7 @@ class HomematicipIlluminanceSensor(HomematicipGenericDevice):
 
 
 class HomematicipPowerSensor(HomematicipGenericDevice):
-    """Represenation of a HomematicIP power measuring device."""
+    """Representation of a HomematicIP power measuring device."""
 
     def __init__(self, home: AsyncHome, device) -> None:
         """Initialize the  device."""
@@ -272,7 +278,7 @@ class HomematicipPowerSensor(HomematicipGenericDevice):
 
     @property
     def state(self) -> float:
-        """Represenation of the HomematicIP power comsumption value."""
+        """Representation of the HomematicIP power comsumption value."""
         return self._device.currentPowerConsumption
 
     @property
@@ -282,7 +288,7 @@ class HomematicipPowerSensor(HomematicipGenericDevice):
 
 
 class HomematicipWindspeedSensor(HomematicipGenericDevice):
-    """Represenation of a HomematicIP wind speed sensor."""
+    """Representation of a HomematicIP wind speed sensor."""
 
     def __init__(self, home: AsyncHome, device) -> None:
         """Initialize the  device."""
@@ -290,7 +296,7 @@ class HomematicipWindspeedSensor(HomematicipGenericDevice):
 
     @property
     def state(self) -> float:
-        """Represenation of the HomematicIP wind speed value."""
+        """Representation of the HomematicIP wind speed value."""
         return self._device.windSpeed
 
     @property
@@ -313,7 +319,7 @@ class HomematicipWindspeedSensor(HomematicipGenericDevice):
 
 
 class HomematicipTodayRainSensor(HomematicipGenericDevice):
-    """Represenation of a HomematicIP rain counter of a day sensor."""
+    """Representation of a HomematicIP rain counter of a day sensor."""
 
     def __init__(self, home: AsyncHome, device) -> None:
         """Initialize the  device."""
@@ -321,7 +327,7 @@ class HomematicipTodayRainSensor(HomematicipGenericDevice):
 
     @property
     def state(self) -> float:
-        """Represenation of the HomematicIP todays rain value."""
+        """Representation of the HomematicIP todays rain value."""
         return round(self._device.todayRainCounter, 2)
 
     @property

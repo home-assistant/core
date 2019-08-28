@@ -112,7 +112,7 @@ class Scanner:
                 return (entry, info_from_entry(entry, None), domains)
             return None
 
-        # Multiple entries usally share same location. Make sure
+        # Multiple entries usually share same location. Make sure
         # we fetch it only once.
         info_req = self._description_cache.get(xml_location)
 

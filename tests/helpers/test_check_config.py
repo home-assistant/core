@@ -75,7 +75,7 @@ async def test_component_platform_not_found(hass, loop):
 
         assert res.keys() == {"homeassistant"}
         assert res.errors[0] == CheckConfigError(
-            "Integration not found: beer", None, None
+            "Component error: beer - Integration beer not found.", None, None
         )
 
         # Only 1 error expected
@@ -95,9 +95,7 @@ async def test_component_platform_not_found_2(hass, loop):
         assert res["light"] == []
 
         assert res.errors[0] == CheckConfigError(
-            "Integration beer not found when trying to verify its " "light platform.",
-            None,
-            None,
+            "Platform error light.beer - Integration beer not found.", None, None
         )
 
         # Only 1 error expected

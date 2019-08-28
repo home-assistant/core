@@ -16,6 +16,9 @@ from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.restore_state import RestoreEntity
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_SOURCE_ID = "source"
