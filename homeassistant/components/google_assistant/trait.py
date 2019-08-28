@@ -16,6 +16,7 @@ from homeassistant.components import (
     sensor,
     switch,
     vacuum,
+    alarm_control_panel,
 )
 from homeassistant.components.climate import const as climate
 from homeassistant.const import (
@@ -31,6 +32,18 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     ATTR_ASSUMED_STATE,
+    SERVICE_ALARM_DISARM,
+    SERVICE_ALARM_ARM_HOME,
+    SERVICE_ALARM_ARM_AWAY,
+    SERVICE_ALARM_ARM_NIGHT,
+    SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+    SERVICE_ALARM_TRIGGER,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    STATE_ALARM_TRIGGERED,
+    ATTR_CODE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN
@@ -62,6 +75,7 @@ TRAIT_FANSPEED = PREFIX_TRAITS + "FanSpeed"
 TRAIT_MODES = PREFIX_TRAITS + "Modes"
 TRAIT_OPENCLOSE = PREFIX_TRAITS + "OpenClose"
 TRAIT_VOLUME = PREFIX_TRAITS + "Volume"
+TRAIT_ARMDISARM = PREFIX_TRAITS + "ArmDisarm"
 
 PREFIX_COMMANDS = "action.devices.commands."
 COMMAND_ONOFF = PREFIX_COMMANDS + "OnOff"
@@ -85,6 +99,7 @@ COMMAND_MODES = PREFIX_COMMANDS + "SetModes"
 COMMAND_OPENCLOSE = PREFIX_COMMANDS + "OpenClose"
 COMMAND_SET_VOLUME = PREFIX_COMMANDS + "setVolume"
 COMMAND_VOLUME_RELATIVE = PREFIX_COMMANDS + "volumeRelative"
+COMMAND_ARMDISARM = PREFIX_COMMANDS + "ArmDisarm"
 
 TRAITS = []
 
@@ -868,6 +883,88 @@ class LockUnlockTrait(_Trait):
             lock.DOMAIN,
             service,
             {ATTR_ENTITY_ID: self.state.entity_id},
+            blocking=True,
+            context=data.context,
+        )
+
+
+@register_trait
+class ArmDisArmTrait(_Trait):
+    """Trait to Arm or Disarm a Security System.
+
+    https://developers.google.com/actions/smarthome/traits/armdisarm
+    """
+
+    name = TRAIT_ARMDISARM
+    commands = [COMMAND_ARMDISARM]
+
+    state_to_service = {
+        STATE_ALARM_ARMED_HOME: SERVICE_ALARM_ARM_HOME,
+        STATE_ALARM_ARMED_AWAY: SERVICE_ALARM_ARM_AWAY,
+        STATE_ALARM_ARMED_NIGHT: SERVICE_ALARM_ARM_NIGHT,
+        STATE_ALARM_ARMED_CUSTOM_BYPASS: SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+        STATE_ALARM_TRIGGERED: SERVICE_ALARM_TRIGGER,
+    }
+
+    @staticmethod
+    def supported(domain, features, device_class):
+        """Test if state is supported."""
+        return domain == alarm_control_panel.DOMAIN
+
+    @staticmethod
+    def might_2fa(domain, features, device_class):
+        """Return if the trait might ask for 2FA."""
+        return True
+
+    def sync_attributes(self):
+        """Return ArmDisarm attributes for a sync request."""
+        response = {}
+        levels = []
+        for key in self.state_to_service:
+            level = {
+                "level_name": key,
+                "level_values": [
+                    {
+                        "level_synonym": [
+                            key.split("_")[1 if key != STATE_ALARM_TRIGGERED else 0]
+                        ],
+                        "lang": "en",
+                    }
+                ],
+            }
+            levels.append(level)
+        response["availableArmLevels"] = {"levels": levels, "ordered": False}
+        return response
+
+    def query_attributes(self):
+        """Return ArmDisarm query attributes."""
+        if "post_pending_state" in self.state.attributes:
+            armed_state = self.state.attributes["post_pending_state"]
+        else:
+            armed_state = self.state.state
+
+        return {
+            "isArmed": armed_state in self.state_to_service,
+            "currentArmLevel": armed_state,
+        }
+
+    async def execute(self, command, data, params, challenge):
+        """Execute an ArmDisarm command."""
+        if params["arm"] and self.state.attributes["code_arm_required"]:
+            _verify_pin_challenge(data, self.state, challenge)
+        elif params["arm"]:
+            service = self.state_to_service[params["armLevel"]]
+        else:
+            _verify_pin_challenge(data, self.state, challenge)
+            service = SERVICE_ALARM_DISARM
+
+        await self.hass.services.async_call(
+            alarm_control_panel.DOMAIN,
+            service,
+            {
+                ATTR_ENTITY_ID: self.state.entity_id,
+                ATTR_CODE: challenge["pin"] if challenge else "",
+            },
             blocking=True,
             context=data.context,
         )

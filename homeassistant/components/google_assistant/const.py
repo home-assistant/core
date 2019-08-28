@@ -15,6 +15,7 @@ from homeassistant.components import (
     sensor,
     switch,
     vacuum,
+    alarm_control_panel,
 )
 
 DOMAIN = "google_assistant"
@@ -48,6 +49,7 @@ DEFAULT_EXPOSED_DOMAINS = [
     "lock",
     "binary_sensor",
     "sensor",
+    "alarm_control_panel",
 ]
 
 PREFIX_TYPES = "action.devices.types."
@@ -66,6 +68,7 @@ TYPE_SENSOR = PREFIX_TYPES + "SENSOR"
 TYPE_DOOR = PREFIX_TYPES + "DOOR"
 TYPE_TV = PREFIX_TYPES + "TV"
 TYPE_SPEAKER = PREFIX_TYPES + "SPEAKER"
+TYPE_ALARM = PREFIX_TYPES + "SECURITYSYSTEM"
 
 SERVICE_REQUEST_SYNC = "request_sync"
 HOMEGRAPH_URL = "https://homegraph.googleapis.com/"
@@ -106,6 +109,7 @@ DOMAIN_TO_GOOGLE_TYPES = {
     script.DOMAIN: TYPE_SCENE,
     switch.DOMAIN: TYPE_SWITCH,
     vacuum.DOMAIN: TYPE_VACUUM,
+    alarm_control_panel.DOMAIN: TYPE_ALARM,
 }
 
 DEVICE_CLASS_TO_GOOGLE_TYPES = {
