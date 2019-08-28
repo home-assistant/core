@@ -63,8 +63,4 @@ class JewishCalendarBinarySensor(BinarySensorDevice):
             hebrew=self._hebrew,
         )
 
-        if self._type == "issur_melacha_in_effect":
-            self._state = zmanim.issur_melacha_in_effect
-        else:
-            self._state = False
-            _LOGGER.error("Undefined sensor type %s", self._type)
+        self._state = zmanim.issur_melacha_in_effect
