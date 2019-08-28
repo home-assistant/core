@@ -16,15 +16,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if discovery_info is None:
         return
 
-    for sensor, sensor_info in SENSOR_TYPES["data"].items():
-        async_add_entities(
-            [JewishCalendarSensor(hass.data[DOMAIN], sensor, sensor_info)]
-        )
+    async_add_entities(
+        [
+            JewishCalendarSensor(hass.data[DOMAIN], sensor, sensor_info)
+            for sensor, sensor_info in SENSOR_TYPES["data"].items()
+        ]
+    )
 
-    for sensor, sensor_info in SENSOR_TYPES["time"].items():
-        async_add_entities(
-            [JewishCalendarSensor(hass.data[DOMAIN], sensor, sensor_info)]
-        )
+    async_add_entities(
+        [
+            JewishCalendarSensor(hass.data[DOMAIN], sensor, sensor_info)
+            for sensor, sensor_info in SENSOR_TYPES["time"].items()
+        ]
+    )
 
 
 class JewishCalendarSensor(Entity):

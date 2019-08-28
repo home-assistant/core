@@ -14,10 +14,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if discovery_info is None:
         return
 
-    for sensor, sensor_info in SENSOR_TYPES["binary"].items():
-        async_add_entities(
-            [JewishCalendarBinarySensor(hass.data[DOMAIN], sensor, sensor_info)]
-        )
+    async_add_entities(
+        [
+            JewishCalendarBinarySensor(hass.data[DOMAIN], sensor, sensor_info)
+            for sensor, sensor_info in SENSOR_TYPES["binary"].items()
+        ]
+    )
 
 
 class JewishCalendarBinarySensor(BinarySensorDevice):
