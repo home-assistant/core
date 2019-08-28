@@ -5,5 +5,5 @@
     "requirements": [],
     "config_flow": true,
     "dependencies": [],
-    "codeowners": []
+    "codeowners": ["@cereal2nd"]
 }
