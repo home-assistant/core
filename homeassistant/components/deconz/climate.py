@@ -6,6 +6,7 @@ from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
+    HVAC_MODE_AUTO,
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -16,9 +17,9 @@ from .const import ATTR_OFFSET, ATTR_VALVE, NEW_SENSOR
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
-SUPPORT_HVAC = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
 _LOGGER = logging.getLogger(__name__)
 
+SUPPORT_HVAC = [HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF]
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -71,8 +72,10 @@ class DeconzThermostat(DeconzDevice, ClimateDevice):
 
         Need to be one of HVAC_MODE_*.
         """
-        if self._device.on:
-            return HVAC_MODE_HEAT
+        if self._device.mode in SUPPORT_HVAC:
+            return self._device.mode
+        # If unsupported HVAC_MODE then return HVAC_MODE_OFF as default
+        _LOGGER.error("Got an unsupported HVAC_MODE: '%s' mode is %s", self._device.name, self._device.mode)
         return HVAC_MODE_OFF
 
     @property
@@ -105,6 +108,8 @@ class DeconzThermostat(DeconzDevice, ClimateDevice):
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_HEAT:
+            data = {"mode": "heat"}
+        elif hvac_mode == HVAC_MODE_AUTO:
             data = {"mode": "auto"}
         elif hvac_mode == HVAC_MODE_OFF:
             data = {"mode": "off"}
