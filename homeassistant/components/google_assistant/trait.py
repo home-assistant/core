@@ -920,13 +920,16 @@ class ArmDisArmTrait(_Trait):
         """Return ArmDisarm attributes for a sync request."""
         response = {}
         levels = []
-        for key in self.state_to_service:
+        for state in self.state_to_service:
             level = {
-                "level_name": key,
+                "level_name": state,
                 "level_values": [
                     {
                         "level_synonym": [
-                            key.split("_")[1 if key != STATE_ALARM_TRIGGERED else 0]
+                            state.replace("_", " "),
+                            state.split("_")[
+                                1 if state != STATE_ALARM_TRIGGERED else 0
+                            ],
                         ],
                         "lang": "en",
                     }
@@ -952,7 +955,7 @@ class ArmDisArmTrait(_Trait):
         """Execute an ArmDisarm command."""
         if params["arm"] and self.state.attributes["code_arm_required"]:
             _verify_pin_challenge(data, self.state, challenge)
-        elif params["arm"]:
+        elif params["arm"] and not params.get("cancel"):
             service = self.state_to_service[params["armLevel"]]
         else:
             _verify_pin_challenge(data, self.state, challenge)
