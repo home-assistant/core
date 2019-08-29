@@ -1,4 +1,5 @@
 """The tests for the Jewish calendar binary sensors."""
+from datetime import timedelta
 from datetime import datetime as dt
 from unittest.mock import patch
 
@@ -8,6 +9,8 @@ from homeassistant.const import STATE_ON, STATE_OFF
 import homeassistant.util.dt as dt_util
 from homeassistant.setup import async_setup_component
 from homeassistant.components import jewish_calendar
+
+from tests.common import async_fire_time_changed
 
 from . import make_nyc_test_params, make_jerusalem_test_params
 
@@ -85,9 +88,9 @@ async def test_issur_melacha_sensor(
     await hass.async_block_till_done()
 
     with patch("homeassistant.util.dt.now", return_value=test_time):
-        await hass.helpers.entity_component.async_update_entity(
-            "binary_sensor.test_issur_melacha_in_effect"
-        )
+        future = dt_util.utcnow() + timedelta(seconds=30)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
 
         assert (
             hass.states.get("binary_sensor.test_issur_melacha_in_effect").state

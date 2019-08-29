@@ -1,5 +1,5 @@
 """The tests for the Jewish calendar sensors."""
-from datetime import time
+from datetime import time, timedelta
 from datetime import datetime as dt
 from unittest.mock import patch
 
@@ -8,6 +8,7 @@ import pytest
 import homeassistant.util.dt as dt_util
 from homeassistant.setup import async_setup_component
 from homeassistant.components import jewish_calendar
+from tests.common import async_fire_time_changed
 
 from . import make_nyc_test_params, make_jerusalem_test_params
 
@@ -179,7 +180,9 @@ async def test_jewish_calendar_sensor(
     await hass.async_block_till_done()
 
     with patch("homeassistant.util.dt.now", return_value=test_time):
-        await hass.helpers.entity_component.async_update_entity(f"sensor.test_{sensor}")
+        future = dt_util.utcnow() + timedelta(seconds=30)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
 
     assert hass.states.get(f"sensor.test_{sensor}").state == str(result)
 
@@ -518,9 +521,9 @@ async def test_shabbat_times_sensor(
         sensor_type = sensor_type.replace(f"{language}_", "")
 
         with patch("homeassistant.util.dt.now", return_value=test_time):
-            await hass.helpers.entity_component.async_update_entity(
-                f"sensor.test_{sensor_type}"
-            )
+            future = dt_util.utcnow() + timedelta(seconds=30)
+            async_fire_time_changed(hass, future)
+            await hass.async_block_till_done()
 
         assert hass.states.get(f"sensor.test_{sensor_type}").state == str(
             result_value
@@ -598,8 +601,8 @@ async def test_omer_sensor(
     await hass.async_block_till_done()
 
     with patch("homeassistant.util.dt.now", return_value=test_time):
-        await hass.helpers.entity_component.async_update_entity(
-            "sensor.test_day_of_the_omer"
-        )
+        future = dt_util.utcnow() + timedelta(seconds=30)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
 
     assert hass.states.get("sensor.test_day_of_the_omer").state == result
