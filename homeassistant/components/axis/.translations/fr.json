@@ -8,6 +8,7 @@
         },
         "error": {
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "already_in_progress": "Le flux de configuration de l'appareil est d\u00e9j\u00e0 en cours.",
             "device_unavailable": "L'appareil n'est pas disponible",
             "faulty_credentials": "Mauvaises informations d'identification de l'utilisateur"
         },
