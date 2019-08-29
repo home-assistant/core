@@ -51,14 +51,11 @@ class VeluxModule:
             _LOGGER.info("velux interface terminated")
             await self.pyvlx.disconnect()                    
         
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
-        #from custom_components.pyvlx import PyVLX                
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)                   
         from pyvlx import PyVLX
         host = config[DOMAIN].get(CONF_HOST)
         password = config[DOMAIN].get(CONF_PASSWORD)
-        self.pyvlx = PyVLX(
-            host=host,
-            password=password)
+        self.pyvlx = PyVLX(host=host, password=password)
 
     async def async_start(self):
         """Start velux component."""
