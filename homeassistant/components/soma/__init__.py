@@ -57,8 +57,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     from api.soma_api import SomaApi
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][API] = SomaApi(entry.data[HOST])
-    hass.data[DOMAIN][DEVICES] = await hass.async_add_executor_job(
+    ret = await hass.async_add_executor_job(
         hass.data[DOMAIN][API].list_devices)
+    hass.data[DOMAIN][DEVICES] = ret['shades']
 
     for component in SOMA_COMPONENTS:
         hass.async_create_task(

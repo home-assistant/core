@@ -45,22 +45,26 @@ class SomaCover(SomaEntity, CoverDevice):
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        if self.api.close_shade(self.device['mac']) != 'success':
+        if self.api.close_shade(self.device['mac'])['result'] != 'success':
             raise PlatformNotReady()
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        if self.api.open_shade(self.device['mac']) != 'success':
+        if self.api.open_shade(self.device['mac'])['result'] != 'success':
             raise PlatformNotReady()
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
+        # Set cover position to some value where up/down are both enabled
+        self.current_position = 50
+        if self.api.stop_shade(self.device['mac'])['result'] != 'success':
+            raise PlatformNotReady()
 
     def set_cover_position(self, **kwargs):
         """Move the cover shutter to a specific position."""
         self.current_position = kwargs[ATTR_POSITION]
         if self.api.set_shade_position(
-                self.device['mac'], kwargs[ATTR_POSITION]) != 'success':
+                self.device['mac'], kwargs[ATTR_POSITION])['result'] != 'success':
             raise PlatformNotReady()
 
     @property
