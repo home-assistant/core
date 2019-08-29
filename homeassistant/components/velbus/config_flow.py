@@ -18,8 +18,7 @@ def velbus_entries(hass: HomeAssistant):
     )
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class VelbusConfigFlow(config_entries.ConfigFlow):
+class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
