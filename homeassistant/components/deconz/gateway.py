@@ -31,6 +31,7 @@ from .errors import AuthenticationRequired, CannotConnect
 
 _LOGGER = logging.getLogger(__name__)
 
+
 @callback
 def get_gateway_from_config_entry(hass, config_entry):
     """Return gateway with a matching bridge id."""

@@ -9,6 +9,7 @@ from .const import DOMAIN as DECONZ_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class DeconzDevice(Entity):
     """Representation of a deCONZ device."""
 
