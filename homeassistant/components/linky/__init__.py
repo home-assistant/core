@@ -33,7 +33,6 @@ async def async_setup(hass, config):
     if conf is None:
         return True
 
-    _LOGGER.error(hass.config_entries.async_entries(DOMAIN))
     for linky_account_conf in conf:
         hass.async_create_task(
             hass.config_entries.flow.async_init(

@@ -119,6 +119,7 @@ TEST_REQUIREMENTS = (
     "pyheos",
     "pyhomematic",
     "pyiqvia",
+    "pylinky",
     "pylitejet",
     "pymfy",
     "pymonoprice",

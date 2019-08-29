@@ -34,7 +34,7 @@ class LinkyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def _configuration_exists(self, username: str) -> bool:
         """Return True if username exists in configuration."""
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.title == username:
+            if entry.data[CONF_USERNAME] == username:
                 return True
         return False
 
