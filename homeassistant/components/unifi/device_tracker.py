@@ -150,7 +150,12 @@ def update_items(controller, async_add_entities, tracked):
 
         for client_id in controller.api.clients:
 
-            if client_id in tracked and tracked[client_id].entity_id:
+            if client_id in tracked:
+                if (
+                    tracked[client_id].registry_entry is None
+                    or tracked[client_id].registry_entry.disabled
+                ):
+                    continue
                 LOGGER.debug(
                     "Updating UniFi tracked client %s (%s)",
                     tracked[client_id].entity_id,
@@ -183,7 +188,12 @@ def update_items(controller, async_add_entities, tracked):
 
         for device_id in controller.api.devices:
 
-            if device_id in tracked and tracked[device_id].entity_id:
+            if device_id in tracked:
+                if (
+                    tracked[device_id].registry_entry is None
+                    or tracked[device_id].registry_entry.disabled
+                ):
+                    continue
                 LOGGER.debug(
                     "Updating UniFi tracked device %s (%s)",
                     tracked[device_id].entity_id,
