@@ -71,12 +71,8 @@ class DeconzThermostat(DeconzDevice, ClimateDevice):
         """
         if self._device.mode in SUPPORT_HVAC:
             return self._device.mode
-        # If unsupported HVAC_MODE then return HVAC_MODE_OFF as default
-        _LOGGER.error(
-            "Got an unsupported HVAC_MODE: '%s' mode is %s",
-            self._device.name,
-            self._device.mode,
-        )
+        elif self._device.state_on:
+            return HVAC_MODE_HEAT
         return HVAC_MODE_OFF
 
     @property
