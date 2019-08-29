@@ -17,7 +17,6 @@ DEFAULT_URL = "https://stream.watsonplatform.net/text-to-speech/api"
 CONF_VOICE = "voice"
 CONF_OUTPUT_FORMAT = "output_format"
 CONF_TEXT_TYPE = "text"
-CONF_TELEMETRY = "disable_telemetry"
 
 # List from https://tinyurl.com/watson-tts-docs
 SUPPORTED_VOICES = [
@@ -78,7 +77,6 @@ CONTENT_TYPE_EXTENSIONS = {
 
 DEFAULT_VOICE = "en-US_AllisonVoice"
 DEFAULT_OUTPUT_FORMAT = "audio/mp3"
-DEFAULT_TELEMETRY = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -88,7 +86,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_OUTPUT_FORMAT, default=DEFAULT_OUTPUT_FORMAT): vol.In(
             SUPPORTED_OUTPUT_FORMATS
         ),
-        vol.Optional(CONF_TELEMETRY, default=DEFAULT_TELEMETRY): cv.boolean,
     }
 )
 
@@ -102,7 +99,7 @@ def get_engine(hass, config):
     supported_languages = list({s[:5] for s in SUPPORTED_VOICES})
     default_voice = config[CONF_VOICE]
     output_format = config[CONF_OUTPUT_FORMAT]
-    service.set_default_headers({'x-watson-learning-opt-out': config[CONF_TELEMETRY]})
+    service.set_default_headers({'x-watson-learning-opt-out': "true"})
 
     return WatsonTTSProvider(service, supported_languages, default_voice, output_format)
 
