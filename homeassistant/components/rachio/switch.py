@@ -117,7 +117,7 @@ class RachioStandbySwitch(RachioSwitch):
 
     @property
     def unique_id(self) -> str:
-        """Return a unique id by combinining controller id and purpose."""
+        """Return a unique id by combining controller id and purpose."""
         return "{}-standby".format(self._controller.controller_id)
 
     @property
@@ -182,7 +182,7 @@ class RachioZone(RachioSwitch):
 
     @property
     def unique_id(self) -> str:
-        """Return a unique id by combinining controller id and zone number."""
+        """Return a unique id by combining controller id and zone number."""
         return "{}-zone-{}".format(self._controller.controller_id, self.zone_id)
 
     @property

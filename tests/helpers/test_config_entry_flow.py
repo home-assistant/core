@@ -80,6 +80,7 @@ async def test_discovery_single_instance(hass, discovery_flow_conf, source):
     """Test we not allow duplicates."""
     flow = config_entries.HANDLERS["test"]()
     flow.hass = hass
+    flow.context = {}
 
     MockConfigEntry(domain="test").add_to_hass(hass)
     result = await getattr(flow, "async_step_{}".format(source))({})
@@ -93,6 +94,7 @@ async def test_discovery_confirmation(hass, discovery_flow_conf, source):
     """Test we ask for confirmation via discovery."""
     flow = config_entries.HANDLERS["test"]()
     flow.hass = hass
+    flow.context = {}
 
     result = await getattr(flow, "async_step_{}".format(source))({})
 

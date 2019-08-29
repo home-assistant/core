@@ -30,6 +30,10 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime, utcnow
 
+
+# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: no-check-untyped-defs, no-warn-return-any
+
 DOMAIN = "automation"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 

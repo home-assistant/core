@@ -51,7 +51,7 @@ NORMAL_INPUTS = {
     "Dvd": "DVD",
     "Blue ray": "BD",
     "TV": "TV",
-    "Satelite / Cable": "SAT/CBL",
+    "Satellite / Cable": "SAT/CBL",
     "Game": "GAME",
     "Game2": "GAME2",
     "Video Aux": "V.AUX",

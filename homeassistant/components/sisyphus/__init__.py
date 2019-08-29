@@ -35,7 +35,7 @@ async def async_setup(hass, config):
         """Filters out excessively verbose logs from SocketIO."""
 
         def filter(self, record):
-            if record.msg.contains("waiting for connection"):
+            if "waiting for connection" in record.msg:
                 return False
             return True
 

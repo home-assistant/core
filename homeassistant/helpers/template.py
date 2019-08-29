@@ -714,6 +714,41 @@ def tangent(value):
         return value
 
 
+def arc_sine(value):
+    """Filter to get arc sine of the value."""
+    try:
+        return math.asin(float(value))
+    except (ValueError, TypeError):
+        return value
+
+
+def arc_cosine(value):
+    """Filter to get arc cosine of the value."""
+    try:
+        return math.acos(float(value))
+    except (ValueError, TypeError):
+        return value
+
+
+def arc_tangent(value):
+    """Filter to get arc tangent of the value."""
+    try:
+        return math.atan(float(value))
+    except (ValueError, TypeError):
+        return value
+
+
+def arc_tangent2(*args):
+    """Filter to calculate four quadrant arc tangent of y / x."""
+    try:
+        if len(args) == 1 and isinstance(args[0], (list, tuple)):
+            args = args[0]
+
+        return math.atan2(float(args[0]), float(args[1]))
+    except (ValueError, TypeError):
+        return args
+
+
 def square_root(value):
     """Filter to get square root of the value."""
     try:
@@ -872,6 +907,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["sin"] = sine
         self.filters["cos"] = cosine
         self.filters["tan"] = tangent
+        self.filters["asin"] = arc_sine
+        self.filters["acos"] = arc_cosine
+        self.filters["atan"] = arc_tangent
+        self.filters["atan2"] = arc_tangent2
         self.filters["sqrt"] = square_root
         self.filters["as_timestamp"] = forgiving_as_timestamp
         self.filters["timestamp_custom"] = timestamp_custom
@@ -899,6 +938,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["pi"] = math.pi
         self.globals["tau"] = math.pi * 2
         self.globals["e"] = math.e
+        self.globals["asin"] = arc_sine
+        self.globals["acos"] = arc_cosine
+        self.globals["atan"] = arc_tangent
+        self.globals["atan2"] = arc_tangent2
         self.globals["float"] = forgiving_float
         self.globals["now"] = dt_util.now
         self.globals["utcnow"] = dt_util.utcnow

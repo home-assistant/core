@@ -13,21 +13,18 @@ from random import uniform
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from ..helpers import (
-    configure_reporting,
-    construct_unique_id,
-    safe_read,
-    get_attr_id_by_name,
-    bind_cluster,
-    LogMixin,
-)
+
 from ..const import (
+    CHANNEL_ATTRIBUTE,
+    CHANNEL_EVENT_RELAY,
+    CHANNEL_ZDO,
     REPORT_CONFIG_DEFAULT,
+    REPORT_CONFIG_MAX_INT,
+    REPORT_CONFIG_MIN_INT,
+    REPORT_CONFIG_RPT_CHANGE,
     SIGNAL_ATTR_UPDATED,
-    ATTRIBUTE_CHANNEL,
-    EVENT_RELAY_CHANNEL,
-    ZDO_CHANNEL,
 )
+from ..helpers import LogMixin, get_attr_id_by_name, safe_read
 from ..registries import CLUSTER_REPORT_CONFIGS
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,6 +80,7 @@ class ZigbeeChannel(LogMixin):
     """Base channel for a Zigbee cluster."""
 
     CHANNEL_NAME = None
+    REPORT_CONFIG = ()
 
     def __init__(self, cluster, device):
         """Initialize ZigbeeChannel."""
@@ -92,9 +90,15 @@ class ZigbeeChannel(LogMixin):
         self._generic_id = "channel_0x{:04x}".format(cluster.cluster_id)
         self._cluster = cluster
         self._zha_device = device
-        self._unique_id = construct_unique_id(cluster)
+        self._unique_id = "{}:{}:0x{:04x}".format(
+            str(device.ieee), cluster.endpoint.endpoint_id, cluster.cluster_id
+        )
+        # this keeps logs consistent with zigpy logging
+        self._log_id = "0x{:04x}:{}:0x{:04x}".format(
+            device.nwk, cluster.endpoint.endpoint_id, cluster.cluster_id
+        )
         self._report_config = CLUSTER_REPORT_CONFIGS.get(
-            self._cluster.cluster_id, [{"attr": 0, "config": REPORT_CONFIG_DEFAULT}]
+            self._cluster.cluster_id, self.REPORT_CONFIG
         )
         self._status = ChannelStatus.CREATED
         self._cluster.add_listener(self)
@@ -133,29 +137,75 @@ class ZigbeeChannel(LogMixin):
         """Set the reporting configuration."""
         self._report_config = report_config
 
+    async def bind(self):
+        """Bind a zigbee cluster.
+
+        This also swallows DeliveryError exceptions that are thrown when
+        devices are unreachable.
+        """
+        from zigpy.exceptions import DeliveryError
+
+        try:
+            res = await self.cluster.bind()
+            self.debug("bound '%s' cluster: %s", self.cluster.ep_attribute, res[0])
+        except (DeliveryError, Timeout) as ex:
+            self.debug(
+                "Failed to bind '%s' cluster: %s", self.cluster.ep_attribute, str(ex)
+            )
+
+    async def configure_reporting(
+        self,
+        attr,
+        report_config=(
+            REPORT_CONFIG_MIN_INT,
+            REPORT_CONFIG_MAX_INT,
+            REPORT_CONFIG_RPT_CHANGE,
+        ),
+    ):
+        """Configure attribute reporting for a cluster.
+
+        This also swallows DeliveryError exceptions that are thrown when
+        devices are unreachable.
+        """
+        from zigpy.exceptions import DeliveryError
+
+        attr_name = self.cluster.attributes.get(attr, [attr])[0]
+
+        kwargs = {}
+        if self.cluster.cluster_id >= 0xFC00 and self.device.manufacturer_code:
+            kwargs["manufacturer"] = self.device.manufacturer_code
+
+        min_report_int, max_report_int, reportable_change = report_config
+        try:
+            res = await self.cluster.configure_reporting(
+                attr, min_report_int, max_report_int, reportable_change, **kwargs
+            )
+            self.debug(
+                "reporting '%s' attr on '%s' cluster: %d/%d/%d: Result: '%s'",
+                attr_name,
+                self.cluster.ep_attribute,
+                min_report_int,
+                max_report_int,
+                reportable_change,
+                res,
+            )
+        except (DeliveryError, Timeout) as ex:
+            self.debug(
+                "failed to set reporting for '%s' attr on '%s' cluster: %s",
+                attr_name,
+                self.cluster.ep_attribute,
+                str(ex),
+            )
+
     async def async_configure(self):
         """Set cluster binding and attribute reporting."""
-        manufacturer = None
-        manufacturer_code = self._zha_device.manufacturer_code
         # Xiaomi devices don't need this and it disrupts pairing
         if self._zha_device.manufacturer != "LUMI":
-            if self.cluster.cluster_id >= 0xFC00 and manufacturer_code:
-                manufacturer = manufacturer_code
-            await bind_cluster(self._unique_id, self.cluster)
-            if not self.cluster.bind_only:
+            await self.bind()
+            if self.cluster.cluster_id not in self.cluster.endpoint.out_clusters:
                 for report_config in self._report_config:
-                    attr = report_config.get("attr")
-                    min_report_interval, max_report_interval, change = report_config.get(
-                        "config"
-                    )
-                    await configure_reporting(
-                        self._unique_id,
-                        self.cluster,
-                        attr,
-                        min_report=min_report_interval,
-                        max_report=max_report_interval,
-                        reportable_change=change,
-                        manufacturer=manufacturer,
+                    await self.configure_reporting(
+                        report_config["attr"], report_config["config"]
                     )
                     await asyncio.sleep(uniform(0.1, 0.5))
 
@@ -217,7 +267,7 @@ class ZigbeeChannel(LogMixin):
     def log(self, level, msg, *args):
         """Log a message."""
         msg = "[%s]: " + msg
-        args = (self.unique_id,) + args
+        args = (self._log_id,) + args
         _LOGGER.log(level, msg, *args)
 
     def __getattr__(self, name):
@@ -232,7 +282,8 @@ class ZigbeeChannel(LogMixin):
 class AttributeListeningChannel(ZigbeeChannel):
     """Channel for attribute reports from the cluster."""
 
-    CHANNEL_NAME = ATTRIBUTE_CHANNEL
+    CHANNEL_NAME = CHANNEL_ATTRIBUTE
+    REPORT_CONFIG = [{"attr": 0, "config": REPORT_CONFIG_DEFAULT}]
 
     def __init__(self, cluster, device):
         """Initialize AttributeListeningChannel."""
@@ -266,11 +317,11 @@ class ZDOChannel(LogMixin):
 
     def __init__(self, cluster, device):
         """Initialize ZDOChannel."""
-        self.name = ZDO_CHANNEL
+        self.name = CHANNEL_ZDO
         self._cluster = cluster
         self._zha_device = device
         self._status = ChannelStatus.CREATED
-        self._unique_id = "{}_ZDO".format(device.name)
+        self._unique_id = "{}:{}_ZDO".format(str(device.ieee), device.name)
         self._cluster.add_listener(self)
 
     @property
@@ -320,7 +371,7 @@ class ZDOChannel(LogMixin):
 class EventRelayChannel(ZigbeeChannel):
     """Event relay that can be attached to zigbee clusters."""
 
-    CHANNEL_NAME = EVENT_RELAY_CHANNEL
+    CHANNEL_NAME = CHANNEL_EVENT_RELAY
 
     @callback
     def attribute_updated(self, attrid, value):
@@ -345,3 +396,17 @@ class EventRelayChannel(ZigbeeChannel):
             self.zha_send_event(
                 self._cluster, self._cluster.server_commands.get(command_id)[0], args
             )
+
+
+# pylint: disable=wrong-import-position
+from . import closures  # noqa
+from . import general  # noqa
+from . import homeautomation  # noqa
+from . import hvac  # noqa
+from . import lighting  # noqa
+from . import lightlink  # noqa
+from . import manufacturerspecific  # noqa
+from . import measurement  # noqa
+from . import protocol  # noqa
+from . import security  # noqa
+from . import smartenergy  # noqa

@@ -27,6 +27,9 @@ from .real_ip import setup_real_ip
 from .static import CACHE_HEADERS, CachingStaticResource
 from .view import HomeAssistantView  # noqa
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 DOMAIN = "http"
 
 CONF_API_PASSWORD = "api_password"

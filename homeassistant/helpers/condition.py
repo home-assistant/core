@@ -321,8 +321,24 @@ def sun(
     before_offset = before_offset or timedelta(0)
     after_offset = after_offset or timedelta(0)
 
-    sunrise = get_astral_event_date(hass, SUN_EVENT_SUNRISE, today)
-    sunset = get_astral_event_date(hass, SUN_EVENT_SUNSET, today)
+    sunrise_today = get_astral_event_date(hass, SUN_EVENT_SUNRISE, today)
+    sunset_today = get_astral_event_date(hass, SUN_EVENT_SUNSET, today)
+
+    sunrise = sunrise_today
+    sunset = sunset_today
+    if today > dt_util.as_local(
+        cast(datetime, sunrise_today)
+    ).date() and SUN_EVENT_SUNRISE in (before, after):
+        tomorrow = dt_util.as_local(utcnow + timedelta(days=1)).date()
+        sunrise_tomorrow = get_astral_event_date(hass, SUN_EVENT_SUNRISE, tomorrow)
+        sunrise = sunrise_tomorrow
+
+    if today > dt_util.as_local(
+        cast(datetime, sunset_today)
+    ).date() and SUN_EVENT_SUNSET in (before, after):
+        tomorrow = dt_util.as_local(utcnow + timedelta(days=1)).date()
+        sunset_tomorrow = get_astral_event_date(hass, SUN_EVENT_SUNSET, tomorrow)
+        sunset = sunset_tomorrow
 
     if sunrise is None and SUN_EVENT_SUNRISE in (before, after):
         # There is no sunrise today

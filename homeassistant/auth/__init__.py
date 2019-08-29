@@ -103,7 +103,9 @@ class AuthManager:
         """Return a list of available auth providers."""
         # AIS dom ----------------------------------------------------------------
         try:
-            remote_access = self.hass.states.get('input_boolean.ais_remote_access').state
+            remote_access = self.hass.states.get(
+                "input_boolean.ais_remote_access"
+            ).state
             if remote_access == "on":
                 ext_provider = OrderedDict()  # type: _ProviderDict
                 for p in self._providers:
@@ -113,7 +115,7 @@ class AuthManager:
                 # Return only homeassistant provider
                 return list(ext_provider.values())
         except Exception as e:
-            _LOGGER.info('Can not get remote access on start: ' + str(e))
+            _LOGGER.info("Can not get remote access on start: " + str(e))
         # Return a list of all available auth providers
         # AIS dom ----------------------------------------------------------------
         return list(self._providers.values())
@@ -473,7 +475,7 @@ class AuthManager:
             result["data"]
         )
 
-        if flow.context is not None and flow.context.get("credential_only"):
+        if flow.context.get("credential_only"):
             result["result"] = credentials
             return result
 

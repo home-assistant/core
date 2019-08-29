@@ -1,5 +1,5 @@
 """Support for Genius Hub water_heater devices."""
-import logging
+from typing import Any, Awaitable, Dict, Optional, List
 
 from homeassistant.components.water_heater import (
     WaterHeaterDevice,
@@ -7,15 +7,11 @@ from homeassistant.components.water_heater import (
     SUPPORT_OPERATION_MODE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DOMAIN
+from . import DOMAIN, GeniusEntity
 
 STATE_AUTO = "auto"
 STATE_MANUAL = "manual"
-
-_LOGGER = logging.getLogger(__name__)
 
 GH_HEATERS = ["hot water temperature"]
 
@@ -48,96 +44,81 @@ async def async_setup_platform(
     client = hass.data[DOMAIN]["client"]
 
     entities = [
-        GeniusWaterHeater(client, z)
-        for z in client.hub.zone_objs
-        if z.type in GH_HEATERS
+        GeniusWaterHeater(z) for z in client.zone_objs if z.data["type"] in GH_HEATERS
     ]
 
     async_add_entities(entities)
 
 
-class GeniusWaterHeater(WaterHeaterDevice):
+class GeniusWaterHeater(GeniusEntity, WaterHeaterDevice):
     """Representation of a Genius Hub water_heater device."""
 
-    def __init__(self, client, boiler):
+    def __init__(self, boiler) -> None:
         """Initialize the water_heater device."""
-        self._client = client
-        self._boiler = boiler
+        super().__init__()
 
+        self._boiler = boiler
         self._operation_list = list(HA_OPMODE_TO_GH)
 
-    async def async_added_to_hass(self):
-        """Run when entity about to be added."""
-        async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
-
-    @callback
-    def _refresh(self):
-        self.async_schedule_update_ha_state(force_refresh=True)
-
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the water_heater device."""
         return self._boiler.name
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the device state attributes."""
-        tmp = self._boiler.__dict__.items()
-        return {"status": {k: v for k, v in tmp if k in GH_STATE_ATTRS}}
+        return {
+            "status": {
+                k: v for k, v in self._boiler.data.items() if k in GH_STATE_ATTRS
+            }
+        }
 
     @property
-    def should_poll(self) -> bool:
-        """Return False as the geniushub devices should not be polled."""
-        return False
-
-    @property
-    def current_temperature(self):
+    def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
-        try:
-            return self._boiler.temperature
-        except AttributeError:
-            return None
+        return self._boiler.data.get("temperature")
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
-        return self._boiler.setpoint
+        return self._boiler.data["setpoint"]
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return max valid temperature that can be set."""
         return GH_MIN_TEMP
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return max valid temperature that can be set."""
         return GH_MAX_TEMP
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return TEMP_CELSIUS
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Return the list of supported features."""
         return GH_SUPPORT_FLAGS
 
     @property
-    def operation_list(self):
+    def operation_list(self) -> List[str]:
         """Return the list of available operation modes."""
         return self._operation_list
 
     @property
-    def current_operation(self):
+    def current_operation(self) -> str:
         """Return the current operation mode."""
-        return GH_STATE_TO_HA[self._boiler.mode]
+        return GH_STATE_TO_HA[self._boiler.data["mode"]]
 
-    async def async_set_operation_mode(self, operation_mode):
+    async def async_set_operation_mode(self, operation_mode) -> Awaitable[None]:
         """Set a new operation mode for this boiler."""
         await self._boiler.set_mode(HA_OPMODE_TO_GH[operation_mode])
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs) -> Awaitable[None]:
         """Set a new target temperature for this boiler."""
         temperature = kwargs[ATTR_TEMPERATURE]
         await self._boiler.set_override(temperature, 3600)  # 1 hour

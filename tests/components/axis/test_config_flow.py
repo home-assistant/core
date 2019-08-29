@@ -39,6 +39,8 @@ async def test_flow_works(hass):
         mock_device.side_effect = mock_constructor
         mock_device.vapix.params.system_serialnumber = "serialnumber"
         mock_device.vapix.params.prodnbr = "prodnbr"
+        mock_device.vapix.params.prodtype = "prodtype"
+        mock_device.vapix.params.firmware_version = "firmware_version"
 
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN, context={"source": "user"}
@@ -220,6 +222,10 @@ async def test_zeroconf_flow_known_device(hass):
             return mock_device
 
         mock_device.side_effect = mock_constructor
+        mock_device.vapix.params.system_serialnumber = "serialnumber"
+        mock_device.vapix.params.prodnbr = "prodnbr"
+        mock_device.vapix.params.prodtype = "prodtype"
+        mock_device.vapix.params.firmware_version = "firmware_version"
 
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
@@ -338,6 +344,8 @@ async def test_import_flow_works(hass):
         mock_device.side_effect = mock_constructor
         mock_device.vapix.params.system_serialnumber = "serialnumber"
         mock_device.vapix.params.prodnbr = "prodnbr"
+        mock_device.vapix.params.prodtype = "prodtype"
+        mock_device.vapix.params.firmware_version = "firmware_version"
 
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,

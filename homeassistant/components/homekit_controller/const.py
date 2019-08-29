@@ -21,6 +21,7 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     "lock-mechanism": "lock",
     "contact": "binary_sensor",
     "motion": "binary_sensor",
+    "carbon-dioxide": "sensor",
     "humidity": "sensor",
     "light": "sensor",
     "temperature": "sensor",

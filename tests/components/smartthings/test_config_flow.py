@@ -6,6 +6,7 @@ from asynctest import Mock, patch
 from pysmartthings import APIResponseError
 
 from homeassistant import data_entry_flow
+from homeassistant.setup import async_setup_component
 from homeassistant.components import cloud
 from homeassistant.components.smartthings import smartapp
 from homeassistant.components.smartthings.config_flow import SmartThingsFlowHandler
@@ -288,6 +289,7 @@ async def test_multiple_config_entry_created_when_installed(
     hass, app, locations, installed_apps, smartthings_mock
 ):
     """Test a config entries are created for multiple installs."""
+    assert await async_setup_component(hass, "persistent_notification", {})
     flow = SmartThingsFlowHandler()
     flow.hass = hass
     flow.access_token = str(uuid4())

@@ -34,7 +34,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.util.async_ import run_coroutine_threadsafe
 
-from .reproduce_state import async_reproduce_states  # noqa
 
 DOMAIN = "group"
 
@@ -213,7 +212,7 @@ async def async_setup(hass, config):
 
     async def reload_service_handler(service):
         """Remove all user-defined groups and load new ones from config."""
-        #auto = list(filter(lambda e: not e.user_defined, component.entities))
+        # auto = list(filter(lambda e: not e.user_defined, component.entities))
         # fix for ais-dom groups defined in packages
         auto = list(component.entities)
 

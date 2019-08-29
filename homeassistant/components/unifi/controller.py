@@ -1,4 +1,6 @@
 """UniFi Controller abstraction."""
+from datetime import timedelta
+
 import asyncio
 import ssl
 import async_timeout
@@ -15,8 +17,19 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .const import (
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
+    CONF_DETECTION_TIME,
+    CONF_TRACK_CLIENTS,
+    CONF_TRACK_DEVICES,
+    CONF_TRACK_WIRED_CLIENTS,
     CONF_SITE_ID,
+    CONF_SSID_FILTER,
     CONTROLLER_ID,
+    DEFAULT_BLOCK_CLIENTS,
+    DEFAULT_TRACK_CLIENTS,
+    DEFAULT_TRACK_DEVICES,
+    DEFAULT_TRACK_WIRED_CLIENTS,
+    DEFAULT_DETECTION_TIME,
+    DEFAULT_SSID_FILTER,
     LOGGER,
     UNIFI_CONFIG,
 )
@@ -59,9 +72,40 @@ class UniFiController:
         return self._site_role
 
     @property
-    def block_clients(self):
-        """Return list of clients to block."""
-        return self.unifi_config.get(CONF_BLOCK_CLIENT, [])
+    def option_block_clients(self):
+        """Config entry option with list of clients to control network access."""
+        return self.config_entry.options.get(CONF_BLOCK_CLIENT, DEFAULT_BLOCK_CLIENTS)
+
+    @property
+    def option_track_clients(self):
+        """Config entry option to not track clients."""
+        return self.config_entry.options.get(CONF_TRACK_CLIENTS, DEFAULT_TRACK_CLIENTS)
+
+    @property
+    def option_track_devices(self):
+        """Config entry option to not track devices."""
+        return self.config_entry.options.get(CONF_TRACK_DEVICES, DEFAULT_TRACK_DEVICES)
+
+    @property
+    def option_track_wired_clients(self):
+        """Config entry option to not track wired clients."""
+        return self.config_entry.options.get(
+            CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
+        )
+
+    @property
+    def option_detection_time(self):
+        """Config entry option defining number of seconds from last seen to away."""
+        return timedelta(
+            seconds=self.config_entry.options.get(
+                CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
+            )
+        )
+
+    @property
+    def option_ssid_filter(self):
+        """Config entry option listing what SSIDs are being used to track clients."""
+        return self.config_entry.options.get(CONF_SSID_FILTER, DEFAULT_SSID_FILTER)
 
     @property
     def mac(self):
@@ -96,7 +140,7 @@ class UniFiController:
             with async_timeout.timeout(10):
                 await self.api.clients.update()
                 await self.api.devices.update()
-                if self.block_clients:
+                if self.option_block_clients:
                     await self.api.clients_all.update()
 
         except aiounifi.LoginRequired:
@@ -154,6 +198,30 @@ class UniFiController:
             ):
                 self.unifi_config = unifi_config
                 break
+
+        options = dict(self.config_entry.options)
+
+        if CONF_BLOCK_CLIENT in self.unifi_config:
+            options[CONF_BLOCK_CLIENT] = self.unifi_config[CONF_BLOCK_CLIENT]
+
+        if CONF_TRACK_CLIENTS in self.unifi_config:
+            options[CONF_TRACK_CLIENTS] = self.unifi_config[CONF_TRACK_CLIENTS]
+
+        if CONF_TRACK_DEVICES in self.unifi_config:
+            options[CONF_TRACK_DEVICES] = self.unifi_config[CONF_TRACK_DEVICES]
+
+        if CONF_TRACK_WIRED_CLIENTS in self.unifi_config:
+            options[CONF_TRACK_WIRED_CLIENTS] = self.unifi_config[
+                CONF_TRACK_WIRED_CLIENTS
+            ]
+
+        if CONF_DETECTION_TIME in self.unifi_config:
+            options[CONF_DETECTION_TIME] = self.unifi_config[CONF_DETECTION_TIME]
+
+        if CONF_SSID_FILTER in self.unifi_config:
+            options[CONF_SSID_FILTER] = self.unifi_config[CONF_SSID_FILTER]
+
+        hass.config_entries.async_update_entry(self.config_entry, options=options)
 
         for platform in ["device_tracker", "switch"]:
             hass.async_create_task(

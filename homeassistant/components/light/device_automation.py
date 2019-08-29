@@ -14,6 +14,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from . import DOMAIN
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 CONF_TURN_OFF = "turn_off"
 CONF_TURN_ON = "turn_on"
 

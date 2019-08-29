@@ -9,10 +9,6 @@ homeassistant/*.py @home-assistant/core
 homeassistant/helpers/* @home-assistant/core
 homeassistant/util/* @home-assistant/core
 
-# Virtualization
-Dockerfile @home-assistant/docker
-virtualization/Docker/* @home-assistant/docker
-
 # Other code
 homeassistant/scripts/check_config.py @kellerza
 
@@ -24,6 +20,7 @@ homeassistant/components/alpha_vantage/* @fabaff
 homeassistant/components/amazon_polly/* @robbiet480
 homeassistant/components/ambiclimate/* @danielhiversen
 homeassistant/components/ambient_station/* @bachya
+homeassistant/components/androidtv/* @JeffLIrion
 homeassistant/components/apache_kafka/* @bachya
 homeassistant/components/api/* @home-assistant/core
 homeassistant/components/aprs/* @PhilRW
@@ -43,6 +40,7 @@ homeassistant/components/azure_event_hub/* @eavanvalkenburg
 homeassistant/components/bitcoin/* @fabaff
 homeassistant/components/bizkaibus/* @UgaitzEtxebarria
 homeassistant/components/blink/* @fronzbot
+homeassistant/components/bmw_connected_drive/* @gerard33
 homeassistant/components/braviatv/* @robbiet480
 homeassistant/components/broadlink/* @danielhiversen
 homeassistant/components/brunt/* @eavanvalkenburg
@@ -73,7 +71,6 @@ homeassistant/components/discogs/* @thibmaek
 homeassistant/components/doorbird/* @oblogic7
 homeassistant/components/dweet/* @fabaff
 homeassistant/components/ecovacs/* @OverloadUT
-homeassistant/components/edp_redy/* @abmantis
 homeassistant/components/egardia/* @jeroenterheerdt
 homeassistant/components/eight_sleep/* @mezz64
 homeassistant/components/elv/* @majuss
@@ -101,13 +98,13 @@ homeassistant/components/fronius/* @nielstron
 homeassistant/components/frontend/* @home-assistant/frontend
 homeassistant/components/gearbest/* @HerrHofrat
 homeassistant/components/geniushub/* @zxdavb
+homeassistant/components/geonetnz_quakes/* @exxamalte
 homeassistant/components/gitter/* @fabaff
 homeassistant/components/glances/* @fabaff
 homeassistant/components/gntp/* @robbiet480
 homeassistant/components/google_cloud/* @lufton
 homeassistant/components/google_translate/* @awarecan
 homeassistant/components/google_travel_time/* @robbiet480
-homeassistant/components/googlehome/* @ludeeus
 homeassistant/components/gpsd/* @fabaff
 homeassistant/components/group/* @home-assistant/core
 homeassistant/components/gtfs/* @robbiet480
@@ -142,6 +139,7 @@ homeassistant/components/ipma/* @dgomes
 homeassistant/components/iqvia/* @bachya
 homeassistant/components/irish_rail_transport/* @ttroy50
 homeassistant/components/jewish_calendar/* @tsvi
+homeassistant/components/keba/* @dannerph
 homeassistant/components/knx/* @Julius2342
 homeassistant/components/kodi/* @armills
 homeassistant/components/konnected/* @heythisisnate
@@ -171,6 +169,7 @@ homeassistant/components/meteoalarm/* @rolfberkenbosch
 homeassistant/components/miflora/* @danielhiversen @ChristianKuehnel
 homeassistant/components/mill/* @danielhiversen
 homeassistant/components/min_max/* @fabaff
+homeassistant/components/minio/* @tkislan
 homeassistant/components/mobile_app/* @robbiet480
 homeassistant/components/monoprice/* @etsinko
 homeassistant/components/moon/* @fabaff
@@ -181,6 +180,7 @@ homeassistant/components/nello/* @pschmitt
 homeassistant/components/ness_alarm/* @nickw444
 homeassistant/components/nest/* @awarecan
 homeassistant/components/netdata/* @fabaff
+homeassistant/components/netgear_lte/* @amelchio
 homeassistant/components/nextbus/* @vividboarder
 homeassistant/components/nissan_leaf/* @filcole
 homeassistant/components/nmbs/* @thibmaek
@@ -203,6 +203,7 @@ homeassistant/components/philips_js/* @elupus
 homeassistant/components/pi_hole/* @fabaff
 homeassistant/components/plaato/* @JohNan
 homeassistant/components/plant/* @ChristianKuehnel
+homeassistant/components/plugwise/* @laetificat @CoMPaTech
 homeassistant/components/point/* @fredrike
 homeassistant/components/ps4/* @ktnrg45
 homeassistant/components/ptvsd/* @swamp-ig
@@ -220,7 +221,6 @@ homeassistant/components/repetier/* @MTrab
 homeassistant/components/rfxtrx/* @danielhiversen
 homeassistant/components/rmvtransport/* @cgtobi
 homeassistant/components/roomba/* @pschmitt
-homeassistant/components/ruter/* @ludeeus
 homeassistant/components/scene/* @home-assistant/core
 homeassistant/components/scrape/* @fabaff
 homeassistant/components/script/* @home-assistant/core
@@ -286,7 +286,7 @@ homeassistant/components/updater/* @home-assistant/core
 homeassistant/components/upnp/* @robbiet480
 homeassistant/components/uptimerobot/* @ludeeus
 homeassistant/components/utility_meter/* @dgomes
-homeassistant/components/velbus/* @ceral2nd
+homeassistant/components/velbus/* @cereal2nd
 homeassistant/components/velux/* @Julius2342
 homeassistant/components/version/* @fabaff
 homeassistant/components/vesync/* @markperdue @webdjoe

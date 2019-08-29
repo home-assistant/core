@@ -121,7 +121,7 @@ def setup(hass, config):
             weather_alert_client.update_data()
         except VigilanceMeteoError as exp:
             _LOGGER.error(
-                "Unexpected error when creating the" "vigilance_meteoFrance proxy: %s ",
+                "Unexpected error when creating the vigilance_meteoFrance proxy: %s ",
                 exp,
             )
     else:
@@ -152,7 +152,7 @@ def setup(hass, config):
 
         if CONF_MONITORED_CONDITIONS in location:
             monitored_conditions = location[CONF_MONITORED_CONDITIONS]
-            _LOGGER.debug("meteo_france sensor platfrom loaded for %s", city)
+            _LOGGER.debug("meteo_france sensor platform loaded for %s", city)
             load_platform(
                 hass,
                 "sensor",

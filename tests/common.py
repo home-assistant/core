@@ -665,6 +665,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         title="Mock Title",
         state=None,
         options={},
+        system_options={},
         connection_class=config_entries.CONN_CLASS_UNKNOWN,
     ):
         """Initialize a mock config entry."""
@@ -672,6 +673,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
             "entry_id": entry_id or uuid.uuid4().hex,
             "domain": domain,
             "data": data or {},
+            "system_options": system_options,
             "options": options,
             "version": version,
             "title": title,
@@ -908,6 +910,11 @@ class MockEntity(entity.Entity):
         """Info how it links to a device."""
         return self._handle("device_info")
 
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._handle("entity_registry_enabled_default")
+
     def _handle(self, attr):
         """Return attribute value."""
         if attr in self._values:
@@ -971,6 +978,8 @@ async def flush_store(store):
     if store._data is None:
         return
 
+    store._async_cleanup_stop_listener()
+    store._async_cleanup_delay_listener()
     await store._async_handle_write_data()
 
 
