@@ -27,29 +27,27 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass, config):
-    """Set up Linky sensor from legacy config file."""
+    """Set up Linky sensors from legacy config file."""
 
-    conf = config[DOMAIN]
-    if conf is not None:
-        for linky_account_conf in conf:
+    conf = config.get(DOMAIN)
+    if conf is None:
+        return True
 
-            if (
-                linky_account_conf is not None
-                and not hass.config_entries.async_entries(DOMAIN)
-            ):
-                hass.async_create_task(
-                    hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={"source": SOURCE_IMPORT},
-                        data=linky_account_conf,
-                    )
-                )
+    _LOGGER.error(hass.config_entries.async_entries(DOMAIN))
+    for linky_account_conf in conf:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=linky_account_conf.copy(),
+            )
+        )
 
     return True
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
-    """Load the saved entities."""
+    """Set up Linky sensors."""
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "sensor")

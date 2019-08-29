@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class LinkyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a Linky config flow."""
+    """Handle a config flow."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
@@ -112,11 +112,7 @@ class LinkyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         Only host was required in the yaml file all other fields are optional
         """
-        username = user_input[CONF_USERNAME]
-        password = user_input[CONF_PASSWORD]
-        timeout = user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
-        if self._configuration_exists(username):
+        if self._configuration_exists(user_input[CONF_USERNAME]):
             return self.async_abort(reason="username_exists")
-        return await self.async_step_user(
-            {CONF_USERNAME: username, CONF_PASSWORD: password, CONF_TIMEOUT: timeout}
-        )
+
+        return await self.async_step_user(user_input)
