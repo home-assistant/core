@@ -224,11 +224,6 @@ class Entity:
         """Return if the entity should be enabled when first added to the entity registry."""
         return True
 
-    @property
-    def enabled(self):
-        """Return if the entity is enabled in the entity registry."""
-        return self.registry_entry is None or not self.registry_entry.disabled
-
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
     # are used to perform a very specific function. Overwriting these may
