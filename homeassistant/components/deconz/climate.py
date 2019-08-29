@@ -1,4 +1,5 @@
 """Support for deCONZ climate devices."""
+import logging
 from pydeconz.sensor import Thermostat
 
 from homeassistant.components.climate import ClimateDevice
@@ -16,6 +17,8 @@ from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
 SUPPORT_HVAC = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+_LOGGER = logging.getLogger(__name__)
+
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

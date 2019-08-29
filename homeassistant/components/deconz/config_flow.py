@@ -1,4 +1,5 @@
 """Config flow to configure deCONZ component."""
+import logging
 import asyncio
 from copy import copy
 
@@ -20,6 +21,8 @@ from .const import (
     DEFAULT_PORT,
     DOMAIN,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 DECONZ_MANUFACTURERURL = "http://www.dresden-elektronik.de"
 CONF_SERIAL = "serial"

@@ -1,4 +1,5 @@
 """Support for deCONZ binary sensors."""
+import logging
 from pydeconz.sensor import Presence, Vibration
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
@@ -9,6 +10,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import ATTR_DARK, ATTR_ON, NEW_SENSOR
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
+
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_ORIENTATION = "orientation"
 ATTR_TILTANGLE = "tiltangle"

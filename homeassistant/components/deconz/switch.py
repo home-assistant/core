@@ -1,4 +1,5 @@
 """Support for deCONZ switches."""
+import logging
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -7,6 +8,7 @@ from .const import NEW_LIGHT, POWER_PLUGS, SIRENS
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
+_LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up deCONZ platforms."""

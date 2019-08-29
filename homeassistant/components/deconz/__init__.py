@@ -1,4 +1,5 @@
 """Support for deCONZ devices."""
+import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -19,9 +20,10 @@ from .const import (
     CONF_MASTER_GATEWAY,
     DEFAULT_PORT,
     DOMAIN,
-    _LOGGER,
 )
 from .gateway import DeconzGateway
+
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {

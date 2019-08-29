@@ -1,4 +1,5 @@
 """Representation of a deCONZ gateway."""
+import logging
 import asyncio
 import async_timeout
 
@@ -17,7 +18,6 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.util import slugify
 
 from .const import (
-    _LOGGER,
     CONF_ALLOW_CLIP_SENSOR,
     CONF_ALLOW_DECONZ_GROUPS,
     CONF_BRIDGEID,
@@ -29,6 +29,7 @@ from .const import (
 )
 from .errors import AuthenticationRequired, CannotConnect
 
+_LOGGER = logging.getLogger(__name__)
 
 @callback
 def get_gateway_from_config_entry(hass, config_entry):
