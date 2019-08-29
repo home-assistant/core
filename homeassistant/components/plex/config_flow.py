@@ -87,31 +87,34 @@ class PlexFlowHandler(config_entries.ConfigFlow):
             except Exception as error:  # pylint: disable=broad-except
                 _LOGGER.error("Unknown error connecting to Plex server: %s", error)
                 return self.async_abort(reason="unknown")
+            finally:
+                server_id = plex_server.machineIdentifier
 
-            server_id = plex_server.machineIdentifier
-            for entry in self._async_current_entries():
-                if entry.data[CONF_SERVER_IDENTIFIER] == server_id:
-                    return self.async_abort(reason="already_configured")
+                for entry in self._async_current_entries():
+                    if entry.data[CONF_SERVER_IDENTIFIER] == server_id:
+                        return self.async_abort(  # pylint: disable=lost-exception
+                            reason="already_configured"
+                        )
 
-            url = plex_server._baseurl  # pylint: disable=W0212
-            token = user_input.get(CONF_TOKEN)
+                url = plex_server._baseurl  # pylint: disable=W0212
+                token = user_input.get(CONF_TOKEN)
 
-            server_config = {CONF_URL: url}
-            if token:
-                server_config[CONF_TOKEN] = token
-            if url.startswith("https"):
-                server_config[CONF_VERIFY_SSL] = user_input.get(
-                    CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL
+                server_config = {CONF_URL: url}
+                if token:
+                    server_config[CONF_TOKEN] = token
+                if url.startswith("https"):
+                    server_config[CONF_VERIFY_SSL] = user_input.get(
+                        CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL
+                    )
+
+                return self.async_create_entry(  # pylint: disable=lost-exception
+                    title=plex_server.friendlyName,
+                    data={
+                        CONF_SERVER: plex_server.friendlyName,
+                        CONF_SERVER_IDENTIFIER: server_id,
+                        PLEX_SERVER_CONFIG: server_config,
+                    },
                 )
-
-            return self.async_create_entry(
-                title=plex_server.friendlyName,
-                data={
-                    CONF_SERVER: plex_server.friendlyName,
-                    CONF_SERVER_IDENTIFIER: server_id,
-                    PLEX_SERVER_CONFIG: server_config,
-                },
-            )
 
         data_schema = vol.Schema(
             {
