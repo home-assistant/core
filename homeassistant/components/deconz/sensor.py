@@ -1,5 +1,4 @@
 """Support for deCONZ sensors."""
-import logging
 from pydeconz.sensor import Consumption, Daylight, LightLevel, Power, Switch
 
 from homeassistant.const import (
@@ -20,8 +19,6 @@ ATTR_CURRENT = "current"
 ATTR_POWER = "power"
 ATTR_DAYLIGHT = "daylight"
 ATTR_EVENT_ID = "event_id"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

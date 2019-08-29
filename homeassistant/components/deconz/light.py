@@ -1,5 +1,4 @@
 """Support for deCONZ lights."""
-import logging
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -31,8 +30,6 @@ from .const import (
 )
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

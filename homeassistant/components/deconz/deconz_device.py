@@ -1,13 +1,10 @@
 """Base class for deCONZ devices."""
-import logging
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as DECONZ_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class DeconzDevice(Entity):

@@ -1,5 +1,4 @@
 """Support for deCONZ covers."""
-import logging
 from homeassistant.components.cover import (
     ATTR_POSITION,
     CoverDevice,
@@ -14,8 +13,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import COVER_TYPES, DAMPERS, NEW_LIGHT, WINDOW_COVERS
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

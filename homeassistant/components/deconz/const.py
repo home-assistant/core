@@ -1,4 +1,8 @@
 """Constants for the deCONZ component."""
+import logging
+
+_LOGGER = logging.getLogger(__package__)
+
 DOMAIN = "deconz"
 
 DEFAULT_PORT = 80
