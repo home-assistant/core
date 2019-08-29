@@ -31,7 +31,7 @@ async def test_jewish_calendar_hebrew(hass):
     assert hass.states.get("sensor.jewish_calendar_date") is not None
 
 
-test_params = [
+TEST_PARAMS = [
     (dt(2018, 9, 3), "UTC", 31.778, 35.235, "english", "date", False, "23 Elul 5778"),
     (
         dt(2018, 9, 3),
@@ -126,7 +126,7 @@ test_params = [
     ),
 ]
 
-test_ids = [
+TEST_IDS = [
     "date_output",
     "date_output_hebrew",
     "holiday_name",
@@ -152,8 +152,8 @@ test_ids = [
         "diaspora",
         "result",
     ],
-    test_params,
-    ids=test_ids,
+    TEST_PARAMS,
+    ids=TEST_IDS,
 )
 async def test_jewish_calendar_sensor(
     hass, now, tzname, latitude, longitude, language, sensor, diaspora, result
@@ -187,7 +187,7 @@ async def test_jewish_calendar_sensor(
     assert hass.states.get(f"sensor.test_{sensor}").state == str(result)
 
 
-shabbat_params = [
+SHABBAT_PARAMS = [
     make_nyc_test_params(
         dt(2018, 9, 1, 16, 0),
         {
@@ -437,7 +437,7 @@ shabbat_params = [
     ),
 ]
 
-shabbat_test_ids = [
+SHABBAT_TEST_IDS = [
     "currently_first_shabbat",
     "currently_first_shabbat_with_havdalah_offset",
     "currently_first_shabbat_bein_hashmashot_lagging_date",
@@ -475,8 +475,8 @@ shabbat_test_ids = [
         "longitude",
         "result",
     ],
-    shabbat_params,
-    ids=shabbat_test_ids,
+    SHABBAT_PARAMS,
+    ids=SHABBAT_TEST_IDS,
 )
 async def test_shabbat_times_sensor(
     hass,
@@ -530,7 +530,7 @@ async def test_shabbat_times_sensor(
         ), f"Value for {sensor_type}"
 
 
-omer_params = [
+OMER_PARAMS = [
     make_nyc_test_params(dt(2019, 4, 21, 0, 0), "1"),
     make_jerusalem_test_params(dt(2019, 4, 21, 0, 0), "1"),
     make_nyc_test_params(dt(2019, 4, 21, 23, 0), "2"),
@@ -544,7 +544,7 @@ omer_params = [
     make_nyc_test_params(dt(2019, 1, 1, 0, 0), "0"),
     make_jerusalem_test_params(dt(2019, 1, 1, 0, 0), "0"),
 ]
-omer_test_ids = [
+OMER_TEST_IDS = [
     "nyc_first_day_of_omer",
     "israel_first_day_of_omer",
     "nyc_first_day_of_omer_after_tzeit",
@@ -571,8 +571,8 @@ omer_test_ids = [
         "longitude",
         "result",
     ],
-    omer_params,
-    ids=omer_test_ids,
+    OMER_PARAMS,
+    ids=OMER_TEST_IDS,
 )
 async def test_omer_sensor(
     hass, now, candle_lighting, havdalah, diaspora, tzname, latitude, longitude, result
