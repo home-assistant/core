@@ -45,7 +45,6 @@ class JewishCalendarSensor(Entity):
         self._havdalah_offset = data["havdalah_offset"]
         self._diaspora = data["diaspora"]
         self._state = None
-        _LOGGER.debug("Sensor %s initialized", self._type)
 
     @property
     def name(self):

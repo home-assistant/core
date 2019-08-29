@@ -92,8 +92,6 @@ async def async_setup(hass, config):
         diaspora=diaspora,
     )
 
-    _LOGGER.debug("Location created: %r", location)
-
     hass.data[DOMAIN] = {
         "location": location,
         "name": name,
@@ -102,8 +100,6 @@ async def async_setup(hass, config):
         "havdalah_offset": havdalah_offset,
         "diaspora": diaspora,
     }
-
-    _LOGGER.debug("Loading platform with data %s", hass.data[DOMAIN])
 
     hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
 
