@@ -8,7 +8,7 @@ set_mode:
       description: Operation mode. Valid values are 'last', 'normal', 'rgb', 'hsv', 'color_flow', 'moonlight'.
       example: 'moonlight'
 set_color_scene:
-  description: Changes the light to the specified RGB color and brightness. If the light is off, Set a color scene, if light is off, it will be turned on.
+  description: Changes the light to the specified RGB color and brightness. If the light is off, it will be turned on.
   fields:
     entity_id:
       description: Name of the light entity.
@@ -20,7 +20,7 @@ set_color_scene:
       description: The brightness value to set (1-100).
       example: 50
 set_hsv_scene:
-  description: Changes the light to the specified HSV color and brightness. If the light is off, Set a color scene, if light is off, it will be turned on.
+  description: Changes the light to the specified HSV color and brightness. If the light is off, it will be turned on.
   fields:
     entity_id:
       description: Name of the light entity.
@@ -32,7 +32,7 @@ set_hsv_scene:
       description: The brightness value to set (1-100).
       example: 50
 set_color_temp_scene:
-  description: Changes the light to the specified color temperature. If the light is off, Set a color scene, if light is off, it will be turned on.
+  description: Changes the light to the specified color temperature. If the light is off, it will be turned on.
   fields:
     entity_id:
       description: Name of the light entity.
@@ -44,7 +44,7 @@ set_color_temp_scene:
       description: The brightness value to set (1-100).
       example: 50
 set_color_flow_scene:
-  description: starts a color flow. If the light is off, Set a color scene, if light is off, it will be turned on.
+  description: starts a color flow. If the light is off, it will be turned on.
   fields:
     entity_id:
       description: Name of the light entity.
