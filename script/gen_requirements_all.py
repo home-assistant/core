@@ -55,6 +55,7 @@ TEST_REQUIREMENTS = (
     "aiounifi",
     "aioswitcher",
     "aiowwlln",
+    "androidtv",
     "apns2",
     "aprslib",
     "av",
