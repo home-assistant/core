@@ -296,7 +296,7 @@ class ZHAGateway:
         if zha_device is None:
             zha_device = ZHADevice(self._hass, zigpy_device, self)
             self._devices[zigpy_device.ieee] = zha_device
-            entry = self.ha_device_registry.async_get_or_create(
+            self.ha_device_registry.async_get_or_create(
                 config_entry_id=self._config_entry.entry_id,
                 connections={(CONNECTION_ZIGBEE, str(zha_device.ieee))},
                 identifiers={(DOMAIN, str(zha_device.ieee))},
