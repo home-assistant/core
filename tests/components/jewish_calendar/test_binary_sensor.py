@@ -11,14 +11,6 @@ from homeassistant.components import jewish_calendar
 
 from . import make_nyc_test_params, make_jerusalem_test_params
 
-ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
-
-
-def tearDown():
-    """Reset time zone."""
-    dt_util.set_default_time_zone(ORIG_TIME_ZONE)
-
-
 melacha_params = [
     make_nyc_test_params(dt(2018, 9, 1, 16, 0), STATE_ON),
     make_nyc_test_params(dt(2018, 9, 1, 20, 21), STATE_OFF),
@@ -73,7 +65,7 @@ async def test_issur_melacha_sensor(
     time_zone = dt_util.get_time_zone(tzname)
     test_time = time_zone.localize(now)
 
-    hass.config.set_time_zone(tzname)
+    hass.config.time_zone = time_zone
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 

@@ -11,13 +11,6 @@ from homeassistant.components import jewish_calendar
 
 from . import make_nyc_test_params, make_jerusalem_test_params
 
-ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
-
-
-def tearDown():
-    """Reset time zone."""
-    dt_util.set_default_time_zone(ORIG_TIME_ZONE)
-
 
 async def test_jewish_calendar_min_config(hass):
     """Test minimum jewish calendar configuration."""
@@ -168,7 +161,7 @@ async def test_jewish_calendar_sensor(
     time_zone = dt_util.get_time_zone(tzname)
     test_time = time_zone.localize(now)
 
-    hass.config.set_time_zone(tzname)
+    hass.config.time_zone = time_zone
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
@@ -498,7 +491,7 @@ async def test_shabbat_times_sensor(
     time_zone = dt_util.get_time_zone(tzname)
     test_time = time_zone.localize(now)
 
-    hass.config.set_time_zone(tzname)
+    hass.config.time_zone = time_zone
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
@@ -585,7 +578,7 @@ async def test_omer_sensor(
     time_zone = dt_util.get_time_zone(tzname)
     test_time = time_zone.localize(now)
 
-    hass.config.set_time_zone(tzname)
+    hass.config.time_zone = time_zone
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
