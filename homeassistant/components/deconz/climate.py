@@ -8,7 +8,12 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import _LOGGER, ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import (
+    _LOGGER,
+    ATTR_BATTERY_LEVEL,
+    ATTR_TEMPERATURE,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
