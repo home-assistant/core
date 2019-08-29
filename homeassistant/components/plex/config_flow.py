@@ -81,6 +81,7 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                     errors={},
                 )
             except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized):
+                _LOGGER.error("Invalid credentials provided, config not created")
                 errors["base"] = "faulty_credentials"
             except (plexapi.exceptions.NotFound, requests.exceptions.ConnectionError):
                 errors["base"] = "not_found"
