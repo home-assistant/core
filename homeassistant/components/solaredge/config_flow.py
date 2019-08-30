@@ -31,7 +31,7 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._errors = {}
 
     def _site_in_configuration_exists(self, site_id) -> bool:
-        """Return True if host, port combination exists in configuration."""
+        """Return True if site_id exists in configuration."""
         if site_id in solaredge_entries(self.hass):
             return True
         return False
@@ -57,14 +57,16 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._errors = {}
         if user_input is not None:
             name = slugify(user_input.get(CONF_NAME, DEFAULT_NAME))
-            if not self._site_in_configuration_exists(user_input[CONF_SITE_ID]):
+            if self._site_in_configuration_exists(user_input[CONF_SITE_ID]):
+                self._errors[CONF_SITE_ID] = "site_exists"
+            else:
                 site = user_input[CONF_SITE_ID]
                 api = user_input[CONF_API_KEY]
                 if self._check_site(site, api):
                     return self.async_create_entry(
                         title=name, data={CONF_SITE_ID: site, CONF_API_KEY: api}
                     )
-            self._errors[CONF_SITE_ID] = "site_exists"
+
         else:
             user_input = {}
             user_input[CONF_NAME] = DEFAULT_NAME
