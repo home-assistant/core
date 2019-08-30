@@ -51,7 +51,15 @@ class UniFiController:
         self.api = None
         self.progress = None
 
-        self._changed_options = {}
+        self.initial_options = {
+            CONF_BLOCK_CLIENT: self.option_block_clients,
+            CONF_TRACK_CLIENTS: self.option_track_clients,
+            CONF_TRACK_DEVICES: self.option_track_devices,
+            CONF_TRACK_WIRED_CLIENTS: self.option_track_wired_clients,
+            CONF_DETECTION_TIME: self.option_detection_time,
+            CONF_SSID_FILTER: self.option_ssid_filter,
+        }
+
         self._site_name = None
         self._site_role = None
 
@@ -86,15 +94,33 @@ class UniFiController:
         return self.config_entry.options.get(CONF_TRACK_CLIENTS, DEFAULT_TRACK_CLIENTS)
 
     @property
+    def option_changed_track_clients(self):
+        """Has options changed from start of HASS."""
+        return self.initial_options[CONF_TRACK_CLIENTS] != self.option_track_clients
+
+    @property
     def option_track_devices(self):
         """Config entry option to not track devices."""
         return self.config_entry.options.get(CONF_TRACK_DEVICES, DEFAULT_TRACK_DEVICES)
+
+    @property
+    def option_changed_track_devices(self):
+        """Has options changed from start of HASS."""
+        return self.initial_options[CONF_TRACK_DEVICES] != self.option_track_devices
 
     @property
     def option_track_wired_clients(self):
         """Config entry option to not track wired clients."""
         return self.config_entry.options.get(
             CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
+        )
+
+    @property
+    def option_changed_track_wired_clients(self):
+        """Has options changed from start of HASS."""
+        return (
+            self.initial_options[CONF_TRACK_WIRED_CLIENTS]
+            != self.option_track_wired_clients
         )
 
     @property
@@ -110,6 +136,11 @@ class UniFiController:
     def option_ssid_filter(self):
         """Config entry option listing what SSIDs are being used to track clients."""
         return self.config_entry.options.get(CONF_SSID_FILTER, DEFAULT_SSID_FILTER)
+
+    @property
+    def option_changed_ssid_filter(self):
+        """Has options changed from start of HASS."""
+        return self.initial_options[CONF_SSID_FILTER] != self.option_ssid_filter
 
     @property
     def mac(self):
@@ -212,16 +243,15 @@ class UniFiController:
         return True
 
     @staticmethod
-    async def async_options_updated(hass, entry, changes):
+    async def async_options_updated(hass, entry):
         """Triggered by config entry options updates."""
-        if "options" in changes:
-            controller_id = CONTROLLER_ID.format(
-                host=entry.data[CONF_CONTROLLER][CONF_HOST],
-                site=entry.data[CONF_CONTROLLER][CONF_SITE_ID],
-            )
-            controller = hass.data[DOMAIN][controller_id]
-            controller._changed_options = changes["options"]
-            async_dispatcher_send(hass, controller.signal_options_update)
+        controller_id = CONTROLLER_ID.format(
+            host=entry.data[CONF_CONTROLLER][CONF_HOST],
+            site=entry.data[CONF_CONTROLLER][CONF_SITE_ID],
+        )
+        controller = hass.data[DOMAIN][controller_id]
+
+        async_dispatcher_send(hass, controller.signal_options_update)
 
     def import_configuration(self):
         """Import configuration to config entry options."""
