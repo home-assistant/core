@@ -27,5 +27,10 @@
     "error": {
       "cannot_connect": "Unable to connect to the broker."
     }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "pressed": "{event} pressed"
+    }
   }
 }

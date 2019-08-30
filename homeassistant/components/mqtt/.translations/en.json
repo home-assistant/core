@@ -27,5 +27,10 @@
             }
         },
         "title": "MQTT"
+    },
+    "device_automation": {
+        "trigger_type": {
+            "pressed": "{event} pressed"
+        }
     }
 }

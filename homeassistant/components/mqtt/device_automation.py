@@ -6,7 +6,13 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt
 import homeassistant.components.automation.mqtt as automation_mqtt
-from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_NAME, CONF_PLATFORM
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    CONF_EVENT,
+    CONF_PLATFORM,
+    CONF_TYPE,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -49,7 +55,8 @@ TRIGGER_SCHEMA = vol.All(
             vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_PAYLOAD): cv.string,
             vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
-            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_TYPE): cv.string,
+            vol.Optional(CONF_EVENT): cv.string,
         }
     )
 )
@@ -61,7 +68,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
         vol.Optional(CONF_PAYLOAD, default=None): vol.Any(None, cv.string),
         vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_TYPE): cv.string,
+        vol.Optional(CONF_EVENT): cv.string,
     },
     mqtt.validate_device_has_at_least_one_identifier,  # Why here?
 )
@@ -96,7 +104,8 @@ class Automation:
 
     device_id = attr.ib(type=str)
     automation_type = attr.ib(type=str)
-    name = attr.ib(type=str)
+    type = attr.ib(type=str)
+    event = attr.ib(type=str)
     topic = attr.ib(type=str)
     payload = attr.ib(type=str)
     encoding = attr.ib(type=str)
@@ -110,7 +119,8 @@ def _update_automation(hass, discovery_hash, config):
             automations[discovery_hash] = Automation(
                 device_id=device_id,
                 automation_type=config[CONF_AUTOMATION_TYPE],
-                name=config[CONF_NAME],
+                type=config[CONF_TYPE],
+                event=config[CONF_EVENT],
                 topic=config[CONF_TOPIC],
                 payload=config[CONF_PAYLOAD],
                 encoding=config[CONF_ENCODING],
@@ -174,7 +184,8 @@ async def _async_setup_automation(
         hass.data[DEVICE_AUTOMATIONS][device.id][discovery_hash] = Automation(
             device_id=device.id,
             automation_type=config[CONF_AUTOMATION_TYPE],
-            name=config[CONF_NAME],
+            type=config[CONF_TYPE],
+            event=config[CONF_EVENT],
             topic=config[CONF_TOPIC],
             payload=config[CONF_PAYLOAD],
             encoding=config[CONF_ENCODING],
@@ -220,7 +231,8 @@ async def async_get_triggers(hass, device_id):
                 topic=auto.topic,
                 payload=auto.payload,
                 encoding=auto.encoding,
-                name=auto.name,
+                type=auto.type,
+                event=auto.event,
             )
             triggers.append(trigger)
 
