@@ -532,18 +532,24 @@ class ConfigEntries:
         self, entry, *, data=_UNDEF, options=_UNDEF, system_options=_UNDEF
     ):
         """Update a config entry."""
+        changes = {"data": {}, "options": {}, "system_options": {}}
+        print(entry.options)
         if data is not _UNDEF:
+            changes["data"] = dict(entry.data)
             entry.data = data
 
         if options is not _UNDEF:
+            changes["options"] = dict(entry.options)
             entry.options = options
 
         if system_options is not _UNDEF:
+            changes["system_options"] = dict(entry.system_options)
             entry.system_options.update(**system_options)
-
+        print(changes)
+        print(entry.options)
         for listener_ref in entry.update_listeners:
             listener = listener_ref()
-            self.hass.async_create_task(listener(self.hass, entry))
+            self.hass.async_create_task(listener(self.hass, entry, changes))
 
         self._async_schedule_save()
 

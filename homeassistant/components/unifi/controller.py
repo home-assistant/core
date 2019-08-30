@@ -51,6 +51,7 @@ class UniFiController:
         self.api = None
         self.progress = None
 
+        self._changed_options = {}
         self._site_name = None
         self._site_role = None
 
@@ -211,14 +212,16 @@ class UniFiController:
         return True
 
     @staticmethod
-    async def async_options_updated(hass, entry):
+    async def async_options_updated(hass, entry, changes):
         """Triggered by config entry options updates."""
-        controller_id = CONTROLLER_ID.format(
-            host=entry.data[CONF_CONTROLLER][CONF_HOST],
-            site=entry.data[CONF_CONTROLLER][CONF_SITE_ID],
-        )
-        controller = hass.data[DOMAIN][controller_id]
-        async_dispatcher_send(hass, controller.signal_options_update)
+        if "options" in changes:
+            controller_id = CONTROLLER_ID.format(
+                host=entry.data[CONF_CONTROLLER][CONF_HOST],
+                site=entry.data[CONF_CONTROLLER][CONF_SITE_ID],
+            )
+            controller = hass.data[DOMAIN][controller_id]
+            controller._changed_options = changes["options"]
+            async_dispatcher_send(hass, controller.signal_options_update)
 
     def import_configuration(self):
         """Import configuration to config entry options."""
