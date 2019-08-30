@@ -193,7 +193,7 @@ SENSOR_TYPES = {
         "%",
         "%",
         "%",
-        "mdi:weather-partlycloudy",
+        "mdi:weather-partly-cloudy",
         ["currently", "hourly", "daily"],
     ],
     "humidity": [
@@ -380,11 +380,11 @@ CONDITION_PICTURES = {
     "cloudy": ["/static/images/darksky/weather-cloudy.svg", "mdi:weather-cloudy"],
     "partly-cloudy-day": [
         "/static/images/darksky/weather-partlycloudy.svg",
-        "mdi:weather-partlycloudy",
+        "mdi:weather-partly-cloudy",
     ],
     "partly-cloudy-night": [
         "/static/images/darksky/weather-cloudy.svg",
-        "mdi:weather-partlycloudy",
+        "mdi:weather-partly-cloudy",
     ],
 }
 

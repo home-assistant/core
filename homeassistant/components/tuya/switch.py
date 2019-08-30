@@ -26,11 +26,12 @@ class TuyaSwitch(TuyaDevice, SwitchDevice):
         """Init Tuya switch device."""
         super().__init__(tuya)
         self.entity_id = ENTITY_ID_FORMAT.format(tuya.object_id())
+        self._is_on = False
 
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self.tuya.state()
+        return self._is_on
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
@@ -39,3 +40,7 @@ class TuyaSwitch(TuyaDevice, SwitchDevice):
     def turn_off(self, **kwargs):
         """Turn the device off."""
         self.tuya.turn_off()
+
+    def update(self):
+        """Update switch device."""
+        self._is_on = self.tuya.state()
