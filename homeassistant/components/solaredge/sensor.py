@@ -7,7 +7,7 @@ from requests.exceptions import HTTPError, ConnectTimeout
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -27,9 +27,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_SITE_ID): cv.string,
         vol.Optional(CONF_NAME, default="SolarEdge"): cv.string,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=["current_power"]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        ),
     }
 )
 
@@ -71,11 +68,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         if sensor is not None:
             entities.append(sensor)
     async_add_entities(entities)
-
-
-async def async_update_listener(hass, entry):
-    """Apply changes in the config entry."""
-    print("UUUUUUUUUUUUUUUUUUUUUUUUUUUUU")
 
 
 class SolarEdgeSensorFactory:
