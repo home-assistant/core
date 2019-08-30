@@ -19,7 +19,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.const import MINOR_VERSION, MAJOR_VERSION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +30,6 @@ CONF_SENSORS = "sensors"
 CONF_UNIT = "unit"
 
 GROUPS = ["user", "installer"]
-OLD_CONFIG_DEPRECATED = MAJOR_VERSION > 0 or MINOR_VERSION > 98
 
 
 def _check_sensor_schema(conf):
@@ -45,29 +43,6 @@ def _check_sensor_schema(conf):
 
     customs = list(conf[CONF_CUSTOM].keys())
 
-    if isinstance(conf[CONF_SENSORS], dict):
-        msg = '"sensors" should be a simple list from 0.99'
-        if OLD_CONFIG_DEPRECATED:
-            raise vol.Invalid(msg)
-        _LOGGER.warning(msg)
-        valid.extend(customs)
-
-        for sname, attrs in conf[CONF_SENSORS].items():
-            if sname not in valid:
-                raise vol.Invalid("{} does not exist".format(sname))
-            if attrs:
-                _LOGGER.warning(
-                    "Attributes on sensors will be deprecated in 0.99. Start using only individual sensors: %s: %s",
-                    sname,
-                    ", ".join(attrs),
-                )
-            for attr in attrs:
-                if attr in valid:
-                    continue
-                raise vol.Invalid("{} does not exist [{}]".format(attr, sname))
-        return conf
-
-    # Sensors is a list (only option from from 0.99)
     for sensor in conf[CONF_SENSORS]:
         if sensor in customs:
             _LOGGER.warning(
