@@ -335,9 +335,6 @@ pysmartapp==0.3.2
 # homeassistant.components.smartthings
 pysmartthings==0.6.9
 
-# homeassistant.components.solaredge
-solaredge==0.0.2
-
 # homeassistant.components.sonos
 pysonos==0.0.23
 
@@ -388,6 +385,9 @@ sleepyq==0.7
 
 # homeassistant.components.smhi
 smhi-pkg==1.0.10
+
+# homeassistant.components.solaredge
+solaredge==0.0.2
 
 # homeassistant.components.honeywell
 somecomfort==0.5.2
