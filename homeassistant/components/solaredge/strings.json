@@ -1,0 +1,47 @@
+{
+    "config": {
+        "title": "SolarEdge",
+        "step": {
+            "user": {
+                "title": "Define the API parameters for this installation",
+                "data": {
+                    "name": "The name of this installation",
+                    "site_id": "The SolarEdge site-id",
+                    "api_key": "The API key for this site"
+                }
+            }
+        },
+        "error": {
+            "site_exists": "This site_id is already configured"
+        },
+        "abort": {
+            "site_exists": "This site_id is already configured"
+        }
+    },
+    "options": {
+        "step": {
+            "solaredge_sensors": {
+		"title": "Enable/disable sensors",
+                "description": "Configure visibility of the SolarEdge sensors",
+                "data": {
+			"lifetime_energy":  "Lifetime energy",
+			"energy_this_year": "Energy this year",
+    			"energy_this_month": "Energy this month",
+    			"energy_today": "Energy today",
+    			"current_power": "Current Power",
+			"site_details": "Site details",
+		        "meters": "Meters",
+		        "sensors": "Sensors",
+			"gateways": "Gateways",
+			"batteries": "Batteries",
+			"inverters": "Inverters",
+			"power_consumption": "Power Consumption",
+			"solar_power": "Solar Power",
+			"grid_power": "Grid Power",
+			"storage_power": "Storage Power"
+                }
+            }
+        }
+    }
+
+}

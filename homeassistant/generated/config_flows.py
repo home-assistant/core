@@ -50,6 +50,7 @@ FLOWS = [
     "simplisafe",
     "smartthings",
     "smhi",
+    "solaredge",
     "somfy",
     "sonos",
     "tellduslive",
@@ -68,5 +69,5 @@ FLOWS = [
     "wwlln",
     "zha",
     "zone",
-    "zwave"
+    "zwave",
 ]
