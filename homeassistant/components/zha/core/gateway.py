@@ -304,6 +304,8 @@ class ZHAGateway:
                 manufacturer=zha_device.manufacturer,
                 model=zha_device.model,
             )
+        entry = self.zha_storage.async_get_or_create(zha_device)
+        zha_device.async_update_last_seen(entry.last_seen)
         return zha_device
 
     @callback
@@ -355,10 +357,6 @@ class ZHAGateway:
                 "0x{:04x}:{}".format(device.nwk, device.ieee),
             )
             await self._async_device_joined(device, zha_device)
-
-        # This is real traffic from a device so lets update last seen on the entry
-        entry = self.zha_storage.async_get_or_create(zha_device)
-        zha_device.async_update_last_seen(entry.last_seen)
 
         device_info = async_get_device_info(
             self._hass, zha_device, self.ha_device_registry

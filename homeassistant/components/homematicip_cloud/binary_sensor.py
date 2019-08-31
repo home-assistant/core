@@ -38,7 +38,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
-from .device import ATTR_GROUP_MEMBER_UNREACHABLE
+from .device import ATTR_GROUP_MEMBER_UNREACHABLE, ATTR_MODEL_TYPE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -309,7 +309,7 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice, BinarySensorD
     @property
     def device_state_attributes(self):
         """Return the state attributes of the security zone group."""
-        attr = super().device_state_attributes
+        attr = {ATTR_MODEL_TYPE: self._device.modelType}
 
         if self._device.motionDetected:
             attr[ATTR_MOTIONDETECTED] = True

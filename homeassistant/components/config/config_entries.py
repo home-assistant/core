@@ -1,4 +1,5 @@
 """Http views to control the config manager."""
+import aiohttp.web_exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
@@ -28,6 +29,7 @@ async def async_setup(hass):
         OptionManagerFlowResourceView(hass.config_entries.options.flow)
     )
 
+    hass.components.websocket_api.async_register_command(config_entries_progress)
     hass.components.websocket_api.async_register_command(system_options_list)
     hass.components.websocket_api.async_register_command(system_options_update)
 
@@ -116,23 +118,8 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
     name = "api:config:config_entries:flow"
 
     async def get(self, request):
-        """List flows that are in progress but not started by a user.
-
-        Example of a non-user initiated flow is a discovered Hue hub that
-        requires user interaction to finish setup.
-        """
-        if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
-
-        hass = request.app["hass"]
-
-        return self.json(
-            [
-                flw
-                for flw in hass.config_entries.flow.async_progress()
-                if flw["context"]["source"] != config_entries.SOURCE_USER
-            ]
-        )
+        """Not implemented."""
+        raise aiohttp.web_exceptions.HTTPMethodNotAllowed("GET", ["POST"])
 
     # pylint: disable=arguments-differ
     async def post(self, request):
@@ -242,6 +229,24 @@ class OptionManagerFlowResourceView(FlowManagerResourceView):
 
 
 @websocket_api.require_admin
+@websocket_api.websocket_command({"type": "config_entries/flow/progress"})
+def config_entries_progress(hass, connection, msg):
+    """List flows that are in progress but not started by a user.
+
+    Example of a non-user initiated flow is a discovered Hue hub that
+    requires user interaction to finish setup.
+    """
+    connection.send_result(
+        msg["id"],
+        [
+            flw
+            for flw in hass.config_entries.flow.async_progress()
+            if flw["context"]["source"] != config_entries.SOURCE_USER
+        ],
+    )
+
+
+@websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
     {"type": "config_entries/system_options/list", "entry_id": str}
@@ -272,7 +277,11 @@ async def system_options_update(hass, connection, msg):
     entry_id = changes.pop("entry_id")
     entry = hass.config_entries.async_get_entry(entry_id)
 
-    if entry and changes:
-        entry.system_options.update(**changes)
+    if entry is None:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Config entry not found"
+        )
+        return
 
-        connection.send_result(msg["id"], entry.system_options.as_dict())
+    hass.config_entries.async_update_entry(entry, system_options=changes)
+    connection.send_result(msg["id"], entry.system_options.as_dict())

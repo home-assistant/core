@@ -17,8 +17,7 @@ def configured_instances(hass):
     )
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class MetFlowHandler(config_entries.ConfigFlow):
+class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for Met component."""
 
     VERSION = 1

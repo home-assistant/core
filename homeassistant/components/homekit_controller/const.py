@@ -25,4 +25,5 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     "humidity": "sensor",
     "light": "sensor",
     "temperature": "sensor",
+    "battery": "sensor",
 }

@@ -35,7 +35,7 @@ def save_json(filename: str, data: Union[List, Dict]):
 def find_strings_files():
     """Return the paths of the strings source files."""
     return itertools.chain(
-        glob.iglob("strings*.json"), glob.iglob("*{}strings*.json".format(os.sep))
+        glob.iglob("strings*.json"), glob.iglob(f"*{os.sep}strings*.json")
     )
 
 

@@ -276,7 +276,7 @@ class HomeAssistant:
         self.state = CoreState.running
         _async_create_timer(self)
 
-    def add_job(self, target: Callable[..., None], *args: Any) -> None:
+    def add_job(self, target: Callable[..., Any], *args: Any) -> None:
         """Add job to the executor pool.
 
         target: target to call.
@@ -1365,7 +1365,7 @@ class Config:
             self.time_zone = time_zone
             dt_util.set_default_time_zone(time_zone)
         else:
-            raise ValueError("Received invalid time zone {}".format(time_zone_str))
+            raise ValueError(f"Received invalid time zone {time_zone_str}")
 
     @callback
     def _update(

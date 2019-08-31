@@ -1,5 +1,6 @@
 """Support for exposing a templated binary sensor."""
 import logging
+from itertools import chain
 
 import voluptuous as vol
 
@@ -30,12 +31,14 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_DELAY_ON = "delay_on"
 CONF_DELAY_OFF = "delay_off"
+CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 
 SENSOR_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_ICON_TEMPLATE): cv.template,
         vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
+        vol.Optional(CONF_ATTRIBUTE_TEMPLATES): vol.Schema({cv.string: cv.template}),
         vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
@@ -59,14 +62,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         entity_picture_template = device_config.get(CONF_ENTITY_PICTURE_TEMPLATE)
         entity_ids = set()
         manual_entity_ids = device_config.get(ATTR_ENTITY_ID)
+        attribute_templates = device_config.get(CONF_ATTRIBUTE_TEMPLATES, {})
 
         invalid_templates = []
 
-        for tpl_name, template in (
-            (CONF_VALUE_TEMPLATE, value_template),
-            (CONF_ICON_TEMPLATE, icon_template),
-            (CONF_ENTITY_PICTURE_TEMPLATE, entity_picture_template),
-        ):
+        templates = {
+            CONF_VALUE_TEMPLATE: value_template,
+            CONF_ICON_TEMPLATE: icon_template,
+            CONF_ENTITY_PICTURE_TEMPLATE: entity_picture_template,
+        }
+
+        for tpl_name, template in chain(templates.items(), attribute_templates.items()):
             if template is None:
                 continue
             template.hass = hass
@@ -78,7 +84,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             if template_entity_ids == MATCH_ALL:
                 entity_ids = MATCH_ALL
                 # Cut off _template from name
-                invalid_templates.append(tpl_name[:-9])
+                invalid_templates.append(tpl_name.replace("_template", ""))
             elif entity_ids != MATCH_ALL:
                 entity_ids |= set(template_entity_ids)
 
@@ -114,6 +120,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 entity_ids,
                 delay_on,
                 delay_off,
+                attribute_templates,
             )
         )
     if not sensors:
@@ -139,6 +146,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         entity_ids,
         delay_on,
         delay_off,
+        attribute_templates,
     ):
         """Initialize the Template binary sensor."""
         self.hass = hass
@@ -154,6 +162,8 @@ class BinarySensorTemplate(BinarySensorDevice):
         self._entities = entity_ids
         self._delay_on = delay_on
         self._delay_off = delay_off
+        self._attribute_templates = attribute_templates
+        self._attributes = {}
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -204,6 +214,11 @@ class BinarySensorTemplate(BinarySensorDevice):
         return self._device_class
 
     @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return self._attributes
+
+    @property
     def should_poll(self):
         """No polling needed."""
         return False
@@ -225,10 +240,21 @@ class BinarySensorTemplate(BinarySensorDevice):
                 return
             _LOGGER.error("Could not render template %s: %s", self._name, ex)
 
-        for property_name, template in (
-            ("_icon", self._icon_template),
-            ("_entity_picture", self._entity_picture_template),
-        ):
+        templates = {
+            "_icon": self._icon_template,
+            "_entity_picture": self._entity_picture_template,
+        }
+
+        attrs = {}
+        if self._attribute_templates is not None:
+            for key, value in self._attribute_templates.items():
+                try:
+                    attrs[key] = value.async_render()
+                except TemplateError as err:
+                    _LOGGER.error("Error rendering attribute %s: %s", key, err)
+            self._attributes = attrs
+
+        for property_name, template in templates.items():
             if template is None:
                 continue
 

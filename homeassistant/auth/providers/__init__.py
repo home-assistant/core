@@ -144,14 +144,10 @@ async def load_auth_provider_module(
 ) -> types.ModuleType:
     """Load an auth provider."""
     try:
-        module = importlib.import_module(
-            "homeassistant.auth.providers.{}".format(provider)
-        )
+        module = importlib.import_module(f"homeassistant.auth.providers.{provider}")
     except ImportError as err:
         _LOGGER.error("Unable to load auth provider %s: %s", provider, err)
-        raise HomeAssistantError(
-            "Unable to load auth provider {}: {}".format(provider, err)
-        )
+        raise HomeAssistantError(f"Unable to load auth provider {provider}: {err}")
 
     if hass.config.skip_pip or not hasattr(module, "REQUIREMENTS"):
         return module
@@ -166,7 +162,7 @@ async def load_auth_provider_module(
     # https://github.com/python/mypy/issues/1424
     reqs = module.REQUIREMENTS  # type: ignore
     await requirements.async_process_requirements(
-        hass, "auth provider {}".format(provider), reqs
+        hass, f"auth provider {provider}", reqs
     )
 
     processed.add(provider)

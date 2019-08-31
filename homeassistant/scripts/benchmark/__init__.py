@@ -39,7 +39,7 @@ def run(args):
             hass = core.HomeAssistant(loop)
             hass.async_stop_track_tasks()
             runtime = loop.run_until_complete(bench(hass))
-            print("Benchmark {} done in {}s".format(bench.__name__, runtime))
+            print(f"Benchmark {bench.__name__} done in {runtime}s")
             loop.run_until_complete(hass.async_stop())
             loop.close()
 

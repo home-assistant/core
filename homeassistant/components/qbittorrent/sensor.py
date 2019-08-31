@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the qBittorrent sensors."""
     from qbittorrent.client import Client, LoginRequired
 
@@ -62,7 +62,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         sensor = QBittorrentSensor(sensor_type, client, name, LoginRequired)
         dev.append(sensor)
 
-    async_add_entities(dev, True)
+    add_entities(dev, True)
 
 
 def format_speed(speed):
@@ -105,7 +105,7 @@ class QBittorrentSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
-    async def async_update(self):
+    def update(self):
         """Get the latest data from qBittorrent and updates the state."""
         try:
             data = self.client.sync()
@@ -113,7 +113,6 @@ class QBittorrentSensor(Entity):
         except RequestException:
             _LOGGER.error("Connection lost")
             self._available = False
-            return
         except self._exception:
             _LOGGER.error("Invalid authentication")
             return

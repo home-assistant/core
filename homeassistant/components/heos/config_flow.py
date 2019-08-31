@@ -1,7 +1,5 @@
 """Config flow to configure Heos."""
-import asyncio
-
-from pyheos import Heos
+from pyheos import Heos, HeosError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -59,7 +57,7 @@ class HeosFlowHandler(config_entries.ConfigFlow):
                 await heos.connect()
                 self.hass.data.pop(DATA_DISCOVERED_HOSTS)
                 return await self.async_step_import({CONF_HOST: host})
-            except (asyncio.TimeoutError, ConnectionError):
+            except HeosError:
                 errors[CONF_HOST] = "connection_failure"
             finally:
                 await heos.disconnect()

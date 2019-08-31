@@ -273,10 +273,10 @@ class EvoBroker:
         else:
             self.timers["statusUpdated"] = utcnow()
 
-        _LOGGER.debug("Status = %s", status)
+            _LOGGER.debug("Status = %s", status)
 
-        # inform the evohome devices that state data has been updated
-        async_dispatcher_send(self.hass, DOMAIN, {"signal": "refresh"})
+            # inform the evohome devices that state data has been updated
+            async_dispatcher_send(self.hass, DOMAIN, {"signal": "refresh"})
 
 
 class EvoDevice(Entity):
