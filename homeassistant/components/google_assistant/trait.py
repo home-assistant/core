@@ -42,6 +42,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
     ATTR_CODE,
     STATE_UNKNOWN,
@@ -56,6 +57,8 @@ from .const import (
     CHALLENGE_ACK_NEEDED,
     CHALLENGE_PIN_NEEDED,
     CHALLENGE_FAILED_PIN_NEEDED,
+    ERR_ALREADY_DISARMED,
+    ERR_ALREADY_ARMED,
 )
 from .error import SmartHomeError, ChallengeNeeded
 
@@ -956,8 +959,12 @@ class ArmDisArmTrait(_Trait):
         if params["arm"] and self.state.attributes["code_arm_required"]:
             _verify_pin_challenge(data, self.state, challenge)
         elif params["arm"] and not params.get("cancel"):
+            if self.state.state == params["armLevel"]:
+                raise SmartHomeError(ERR_ALREADY_ARMED, "System is already armed")
             service = self.state_to_service[params["armLevel"]]
         else:
+            if self.state.state == STATE_ALARM_DISARMED:
+                raise SmartHomeError(ERR_ALREADY_DISARMED, "System is already disarmed")
             _verify_pin_challenge(data, self.state, challenge)
             service = SERVICE_ALARM_DISARM
 

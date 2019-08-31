@@ -84,6 +84,9 @@ ERR_PROTOCOL_ERROR = "protocolError"
 ERR_UNKNOWN_ERROR = "unknownError"
 ERR_FUNCTION_NOT_SUPPORTED = "functionNotSupported"
 
+ERR_ALREADY_DISARMED = "alreadyDisarmed"
+ERR_ALREADY_ARMED = "alreadyArmed"
+
 ERR_CHALLENGE_NEEDED = "challengeNeeded"
 ERR_CHALLENGE_NOT_SETUP = "challengeFailedNotSetup"
 ERR_TOO_MANY_FAILED_ATTEMPTS = "tooManyFailedAttempts"
