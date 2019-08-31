@@ -31,19 +31,23 @@ ATTR_LAT = "lat"
 ATTR_ENTITY_ID = "entity_id"
 
 
-CONFIG_SENSOR_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
-    vol.Optional(ATTR_ON): cv.boolean,
-    vol.Optional(ATTR_SENSITIVITY): cv.positive_int,
-    vol.Optional(ATTR_THOLDOFFSET): cv.positive_int,
-    vol.Optional(ATTR_THOLDDARK): cv.positive_int,
-    vol.Optional(ATTR_SUNRISEOFFSET):
-        vol.All(vol.Coerce(int), vol.Range(min=-120, max=120)),
-    vol.Optional(ATTR_SUNSETOFFSET):
-        vol.All(vol.Coerce(int), vol.Range(min=-120, max=120)),
-    vol.Optional(ATTR_LONG): cv.longitude,
-    vol.Optional(ATTR_LAT): cv.latitude,
-})
+CONFIG_SENSOR_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
+        vol.Optional(ATTR_ON): cv.boolean,
+        vol.Optional(ATTR_SENSITIVITY): cv.positive_int,
+        vol.Optional(ATTR_THOLDOFFSET): cv.positive_int,
+        vol.Optional(ATTR_THOLDDARK): cv.positive_int,
+        vol.Optional(ATTR_SUNRISEOFFSET): vol.All(
+            vol.Coerce(int), vol.Range(min=-120, max=120)
+        ),
+        vol.Optional(ATTR_SUNSETOFFSET): vol.All(
+            vol.Coerce(int), vol.Range(min=-120, max=120)
+        ),
+        vol.Optional(ATTR_LONG): cv.longitude,
+        vol.Optional(ATTR_LAT): cv.latitude,
+    }
+)
 
 
 class HueBridge:
@@ -112,7 +116,7 @@ class HueBridge:
             DOMAIN,
             SERVICE_HUE_CONFIG,
             self.hue_config_sensor,
-            schema=CONFIG_SENSOR_SCHEMA
+            schema=CONFIG_SENSOR_SCHEMA,
         )
 
         return True
@@ -193,13 +197,12 @@ class HueBridge:
         """Service to call directly into bridge to set config."""
 
         entity_ids = service.data.get(ATTR_ENTITY_ID)
-        data_dict = 
-            {k: v for k, v in service.data.items() if ATTR_ENTITY_ID not in k}
+        data_dict = {k: v for k, v in service.data.items() if ATTR_ENTITY_ID not in k}
 
-        current_sensors = self.hass.data[hue.DOMAIN]["current_sensors"]
+        current_sensors = self.hass.data[DOMAIN]["current_sensors"]
         for entry in current_sensors.values():
             if entry.entity_id in entity_ids:
-                await entry.sensor.set_config( ** data_dict)
+                await entry.sensor.set_config(**data_dict)
         return
 
 
