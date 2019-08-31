@@ -5,14 +5,13 @@ import homeassistant.components.automation.state as state
 from homeassistant.core import split_entity_id
 from homeassistant.const import (
     CONF_CONDITION,
-    CONF_DEVICE,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_PLATFORM,
     CONF_TYPE,
 )
-from homeassistant.helpers import condition, config_validation as cv, service
+from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from . import DOMAIN
 

@@ -24,7 +24,6 @@ from homeassistant.const import (
     CONF_ALIAS,
     CONF_BELOW,
     CONF_CONDITION,
-    CONF_DEVICE,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_ENTITY_NAMESPACE,

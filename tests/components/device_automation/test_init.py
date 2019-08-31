@@ -116,4 +116,4 @@ async def test_websocket_get_triggers(hass, hass_ws_client, device_reg, entity_r
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     triggers = msg["result"]["triggers"]
-    assert _same_triggers(triggers, expected_triggers)
+    assert _same_dicts(triggers, expected_triggers)
