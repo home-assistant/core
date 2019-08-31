@@ -28,6 +28,7 @@ ATTR_SUNRISEOFFSET = "sunriseoffset"
 ATTR_SUNSETOFFSET = "sunsetoffset"
 ATTR_LONG = "long"
 ATTR_LAT = "lat"
+ATTR_ENTITY_ID = "entity_id"
 
 
 CONFIG_SENSOR_SCHEMA = vol.Schema({
@@ -39,10 +40,11 @@ CONFIG_SENSOR_SCHEMA = vol.Schema({
     vol.Optional(ATTR_SUNRISEOFFSET):
         vol.All(vol.Coerce(int), vol.Range(min=-120, max=120)),
     vol.Optional(ATTR_SUNSETOFFSET):
-        vol.All(vol.Coerce(int), vol.Range(min=-120,max=120)),
+        vol.All(vol.Coerce(int), vol.Range(min=-120, max=120)),
     vol.Optional(ATTR_LONG): cv.longitude,
     vol.Optional(ATTR_LAT): cv.latitude,
 })
+
 
 class HueBridge:
     """Manages a single Hue bridge."""
@@ -187,14 +189,14 @@ class HueBridge:
 
         await group.set_action(scene=scene.id)
 
-    async def hue_config_sensor(self,service):
+    async def hue_config_sensor(self, service):
         """Service to call directly into bridge to set config."""
 
         entity_ids = service.data.get(ATTR_ENTITY_ID)
-        data_dict = { k:v for k,v in service.data.items()
-                if ATTR_ENTITY_ID not in k}
+        data_dict = 
+            {k: v for k, v in service.data.items() if ATTR_ENTITY_ID not in k}
 
-        current_sensors = self.hass.data[hue_custom.DOMAIN]["current_sensors"]
+        current_sensors = self.hass.data[hue.DOMAIN]["current_sensors"]
         for entry in current_sensors.values():
             if entry.entity_id in entity_ids:
                 await entry.sensor.set_config( ** data_dict)
