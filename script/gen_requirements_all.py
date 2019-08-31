@@ -102,6 +102,7 @@ TEST_REQUIREMENTS = (
     "mficlient",
     "minio",
     "netdisco",
+    "nokia",
     "numpy",
     "oauth2client",
     "paho-mqtt",
