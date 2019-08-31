@@ -1,4 +1,4 @@
-"""constants for the pi_hole intergration."""
+"""Constants for the pi_hole intergration."""
 from datetime import timedelta
 
 DOMAIN = "pi_hole"
@@ -40,4 +40,4 @@ SENSOR_DICT = {
     "unique_domains": ["DNS Unique Domains", "domains", "mdi:domain"],
 }
 
-SENSOR_LIST = list(SENSOR_DICT.keys())
+SENSOR_LIST = list(SENSOR_DICT)

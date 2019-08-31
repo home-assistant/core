@@ -1,7 +1,9 @@
 """The pi_hole component."""
 import logging
+
 import voluptuous as vol
 
+from hole import Hole
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.helpers import config_validation as cv
@@ -40,14 +42,13 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the pi_hole integration."""
-    from hole import Hole
 
     conf = config[DOMAIN]
-    name = conf.get(CONF_NAME)
-    host = conf.get(CONF_HOST)
-    use_tls = conf.get(CONF_SSL)
-    verify_tls = conf.get(CONF_VERIFY_SSL)
-    location = conf.get(CONF_LOCATION)
+    name = conf[CONF_NAME]
+    host = conf[CONF_HOST]
+    use_tls = conf[CONF_SSL]
+    verify_tls = conf[CONF_VERIFY_SSL]
+    location = conf[CONF_LOCATION]
 
     LOGGER.debug("Setting up %s integration with host %s", DOMAIN, host)
 
@@ -69,8 +70,6 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = pi_hole
 
     hass.async_create_task(async_load_platform(hass, SENSOR_DOMAIN, DOMAIN, {}, config))
-
-    LOGGER.debug("%s integration setup complete", DOMAIN)
 
     return True
 

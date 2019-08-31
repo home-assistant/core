@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 
 def test_sensor_class_init(hass):
-    """Test that a sensot is constructed correctly."""
+    """Test that a sensor is constructed correctly."""
     data = PiHoleData(None, "Test Pi-Hole")
     with patch.dict(SENSOR_DICT, {"test": ["Test", "widgets", "mdi:test"]}):
         sensor = PiHoleSensor(data, "test")
