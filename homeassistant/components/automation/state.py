@@ -9,6 +9,9 @@ from homeassistant.const import MATCH_ALL, CONF_PLATFORM, CONF_FOR
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.event import async_track_state_change, async_track_same_state
 
+
+# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ENTITY_ID = "entity_id"

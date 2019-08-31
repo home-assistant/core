@@ -163,7 +163,7 @@ def async_enable_logging(
             # ensure that the handlers it sets up wraps the correct streams.
             logging.basicConfig(level=logging.INFO)
 
-            colorfmt = "%(log_color)s{}%(reset)s".format(fmt)
+            colorfmt = f"%(log_color)s{fmt}%(reset)s"
             logging.getLogger().handlers[0].setFormatter(
                 ColoredFormatter(
                     colorfmt,

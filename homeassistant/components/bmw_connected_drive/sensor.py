@@ -51,14 +51,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for account in accounts:
         for vehicle in account.account.vehicles:
             for attribute_name in vehicle.drive_train_attributes:
-                device = BMWConnectedDriveSensor(
-                    account, vehicle, attribute_name, attribute_info
-                )
-                devices.append(device)
-            device = BMWConnectedDriveSensor(
-                account, vehicle, "mileage", attribute_info
-            )
-            devices.append(device)
+                if attribute_name in vehicle.available_attributes:
+                    device = BMWConnectedDriveSensor(
+                        account, vehicle, attribute_name, attribute_info
+                    )
+                    devices.append(device)
     add_entities(devices, True)
 
 

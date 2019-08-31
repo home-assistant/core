@@ -45,12 +45,12 @@ def _cv_input_text(cfg):
     maximum = cfg.get(CONF_MAX)
     if minimum > maximum:
         raise vol.Invalid(
-            "Max len ({}) is not greater than min len ({})".format(minimum, maximum)
+            f"Max len ({minimum}) is not greater than min len ({maximum})"
         )
     state = cfg.get(CONF_INITIAL)
     if state is not None and (len(state) < minimum or len(state) > maximum):
         raise vol.Invalid(
-            "Initial value {} length not in range {}-{}".format(state, minimum, maximum)
+            f"Initial value {state} length not in range {minimum}-{maximum}"
         )
     return cfg
 

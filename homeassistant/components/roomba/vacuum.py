@@ -199,7 +199,7 @@ class RoombaVacuum(VacuumDevice):
         await self.hass.async_add_job(self.vacuum.send_command, "resume")
         self._is_on = True
 
-    async def async_pause(self, **kwargs):
+    async def async_pause(self):
         """Pause the cleaning cycle."""
         await self.hass.async_add_job(self.vacuum.send_command, "pause")
         self._is_on = False

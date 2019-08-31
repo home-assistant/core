@@ -28,7 +28,7 @@ MOCKS = {
 }  # type: Dict[str, Tuple[str, Callable]]
 SILENCE = ("homeassistant.scripts.check_config.yaml_loader.clear_secret_cache",)
 
-PATCHES = {}
+PATCHES: Dict[str, Any] = {}
 
 C_HEAD = "bold"
 ERROR_STR = "General Errors"

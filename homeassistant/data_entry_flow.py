@@ -126,7 +126,7 @@ class FlowManager:
         self, flow: Any, step_id: str, user_input: Optional[Dict]
     ) -> Dict:
         """Handle a step of a flow."""
-        method = "async_step_{}".format(step_id)
+        method = f"async_step_{step_id}"
 
         if not hasattr(flow, method):
             self._progress.pop(flow.flow_id)
@@ -175,11 +175,11 @@ class FlowHandler:
     """Handle the configuration flow of a component."""
 
     # Set by flow manager
-    flow_id = None
-    hass = None
+    flow_id: Optional[str] = None
+    hass: Optional[HomeAssistant] = None
     handler = None
-    cur_step = None
-    context = None  # type: Optional[Dict]
+    cur_step: Optional[Dict[str, str]] = None
+    context: Dict
 
     # Set by _async_create_flow callback
     init_step = "init"

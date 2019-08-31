@@ -2,6 +2,7 @@
 from datetime import timedelta
 import functools as ft
 import logging
+from typing import Optional
 
 import voluptuous as vol
 
@@ -74,7 +75,7 @@ FAN_SET_DIRECTION_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
 
 
 @bind_hass
-def is_on(hass, entity_id: str = None) -> bool:
+def is_on(hass, entity_id: Optional[str] = None) -> bool:
     """Return if the fans are on based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_FANS
     state = hass.states.get(entity_id)
@@ -149,12 +150,12 @@ class FanEntity(ToggleEntity):
         return self.hass.async_add_job(self.set_direction, direction)
 
     # pylint: disable=arguments-differ
-    def turn_on(self, speed: str = None, **kwargs) -> None:
+    def turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
         """Turn on the fan."""
         raise NotImplementedError()
 
     # pylint: disable=arguments-differ
-    def async_turn_on(self, speed: str = None, **kwargs):
+    def async_turn_on(self, speed: Optional[str] = None, **kwargs):
         """Turn on the fan.
 
         This method must be run in the event loop and returns a coroutine.
@@ -180,7 +181,7 @@ class FanEntity(ToggleEntity):
         return self.speed not in [SPEED_OFF, None]
 
     @property
-    def speed(self) -> str:
+    def speed(self) -> Optional[str]:
         """Return the current speed."""
         return None
 
@@ -190,7 +191,7 @@ class FanEntity(ToggleEntity):
         return []
 
     @property
-    def current_direction(self) -> str:
+    def current_direction(self) -> Optional[str]:
         """Return the current direction of the fan."""
         return None
 

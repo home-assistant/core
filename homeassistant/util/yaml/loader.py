@@ -207,7 +207,7 @@ def _ordered_dict(loader: SafeLineLoader, node: yaml.nodes.MappingNode) -> Order
         except TypeError:
             fname = getattr(loader.stream, "name", "")
             raise yaml.MarkedYAMLError(
-                context='invalid key: "{}"'.format(key),
+                context=f'invalid key: "{key}"',
                 context_mark=yaml.Mark(fname, 0, line, -1, None, None),
             )
 
@@ -314,7 +314,7 @@ def secret_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
             # Catch if package installed and no config
             credstash = None
 
-    raise HomeAssistantError("Secret {} not defined".format(node.value))
+    raise HomeAssistantError(f"Secret {node.value} not defined")
 
 
 yaml.SafeLoader.add_constructor("!include", _include_yaml)

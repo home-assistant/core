@@ -1,6 +1,9 @@
 """Support for Homekit device discovery."""
 import logging
 
+import homekit
+from homekit.model.characteristics import CharacteristicsTypes
+
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -63,9 +66,6 @@ class HomeKitEntity(Entity):
 
     def setup(self):
         """Configure an entity baed on its HomeKit characterstics metadata."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
-
         accessories = self._accessory.accessories
 
         get_uuid = CharacteristicsTypes.get_uuid
@@ -95,9 +95,6 @@ class HomeKitEntity(Entity):
 
     def _setup_characteristic(self, char):
         """Configure an entity based on a HomeKit characteristics metadata."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
-
         # Build up a list of (aid, iid) tuples to poll on update()
         self.pollable_characteristics.append((self._aid, char["iid"]))
 
@@ -211,9 +208,6 @@ async def async_setup_entry(hass, entry):
 
 async def async_setup(hass, config):
     """Set up for Homekit devices."""
-    # pylint: disable=import-error
-    import homekit
-
     map_storage = hass.data[ENTITY_MAP] = EntityMapStorage(hass)
     await map_storage.async_initialize()
 

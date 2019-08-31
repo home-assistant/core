@@ -99,10 +99,14 @@ class WebhookView(HomeAssistantView):
     name = "api:webhook"
     requires_auth = False
 
-    async def post(self, request, webhook_id):
+    async def _handle(self, request, webhook_id):
         """Handle webhook call."""
         hass = request.app["hass"]
         return await async_handle_webhook(hass, webhook_id, request)
+
+    head = _handle
+    post = _handle
+    put = _handle
 
 
 @callback

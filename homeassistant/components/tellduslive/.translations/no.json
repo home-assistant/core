@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "all_configured": "TelldusLive er allerede konfigurert",
             "already_setup": "TelldusLive er allerede konfigurert",
             "authorize_url_fail": "Ukjent feil ved generering av autoriseringsadresse.",
             "authorize_url_timeout": "Tidsavbrudd ved generering av autoriseringsadresse.",
