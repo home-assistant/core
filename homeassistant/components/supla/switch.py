@@ -5,8 +5,6 @@ from pprint import pformat
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.supla import SuplaChannel
 
-DEPENDENCIES = ["supla"]
-
 _LOGGER = logging.getLogger(__name__)
 
 
