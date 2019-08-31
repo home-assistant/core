@@ -1,7 +1,10 @@
 """Support for the DOODS service."""
+import io
 import logging
 import time
 import voluptuous as vol
+
+from PIL import Image, ImageDraw
 from pydoods import PyDOODS
 
 from homeassistant.components.image_processing import (
@@ -132,11 +135,15 @@ class Doods(ImageProcessingEntity):
         if name:
             self._name = name
         else:
-            self._name = "Doods {0}".format(split_entity_id(camera_entity)[1])
+            name = split_entity_id(camera_entity)[1]
+            self._name = f"Doods {name}"
         self._doods = doods
         self._file_out = config.get(CONF_FILE_OUT)
 
         # detector config and aspect ratio
+        self._width = None
+        self._height = None
+        self._aspect = None
         if detector["width"] and detector["height"]:
             self._width = detector["width"]
             self._height = detector["height"]
@@ -145,8 +152,6 @@ class Doods(ImageProcessingEntity):
         # the base confidence
         dconfig = {}
         confidence = config.get(CONF_CONFIDENCE)
-        if not confidence:
-            confidence = 0
 
         # handle labels and specific detection areas
         labels = config.get(CONF_LABELS)
@@ -231,9 +236,6 @@ class Doods(ImageProcessingEntity):
         }
 
     def _save_image(self, image, matches, paths):
-        from PIL import Image, ImageDraw
-        import io
-
         img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
         img_width, img_height = img.size
         draw = ImageDraw.Draw(img)
@@ -285,7 +287,7 @@ class Doods(ImageProcessingEntity):
         img_width, img_height = img.size
 
         if self._aspect and abs((img_width / img_height) - self._aspect) > 0.1:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "The image aspect: %s and the detector aspect: %s differ by more than 0.1",
                 (img_width / img_height),
                 self._aspect,
@@ -345,7 +347,7 @@ class Doods(ImageProcessingEntity):
                 ):
                     continue
 
-                if label not in matches.keys():
+                if label not in matches:
                     matches[label] = []
                 matches[label].append({"score": float(score), "box": boxes})
                 total_matches += 1
