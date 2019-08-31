@@ -62,7 +62,7 @@ async def test_websocket_get_conditions(hass, hass_ws_client, device_reg, entity
     await client.send_json(
         {
             "id": 1,
-            "type": "device_automation/list_conditions",
+            "type": "device_automation/condition/list",
             "device_id": device_entry.id,
         }
     )
