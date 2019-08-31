@@ -324,19 +324,19 @@ class Doods(ImageProcessingEntity):
 
                     # Exclude matches outside global area definition
                     if (
-                        boxes[0] < self._area[0] * img_height
-                        or boxes[1] < self._area[1] * img_width
-                        or boxes[2] > self._area[2] * img_height
-                        or boxes[3] > self._area[3] * img_width
+                        boxes[0] < self._area[0]
+                        or boxes[1] < self._area[1]
+                        or boxes[2] > self._area[2]
+                        or boxes[3] > self._area[3]
                     ):
                         continue
 
                     # Exclude matches outside label specific area definition
                     if self._label_areas and (
-                        boxes[0] < self._label_areas[label][0] * img_height
-                        or boxes[1] < self._label_areas[label][1] * img_width
-                        or boxes[2] > self._label_areas[label][2] * img_height
-                        or boxes[3] > self._label_areas[label][3] * img_width
+                        boxes[0] < self._label_areas[label][0]
+                        or boxes[1] < self._label_areas[label][1]
+                        or boxes[2] > self._label_areas[label][2]
+                        or boxes[3] > self._label_areas[label][3]
                     ):
                         continue
 
