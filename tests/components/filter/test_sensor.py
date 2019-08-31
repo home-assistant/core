@@ -144,7 +144,9 @@ class TestFilterSensor(unittest.TestCase):
         """Test if range filter works."""
         lower = 10
         upper = 20
-        filt = RangeFilter(entity=None, lower_bound=lower, upper_bound=upper)
+        filt = RangeFilter(
+            entity=None, precision=2, lower_bound=lower, upper_bound=upper
+        )
         for unf_state in self.values:
             unf = float(unf_state.state)
             filtered = filt.filter_state(unf_state)
@@ -159,7 +161,9 @@ class TestFilterSensor(unittest.TestCase):
         """Test if range filter works with zeroes as bounds."""
         lower = 0
         upper = 0
-        filt = RangeFilter(entity=None, lower_bound=lower, upper_bound=upper)
+        filt = RangeFilter(
+            entity=None, precision=2, lower_bound=lower, upper_bound=upper
+        )
         for unf_state in self.values:
             unf = float(unf_state.state)
             filtered = filt.filter_state(unf_state)
