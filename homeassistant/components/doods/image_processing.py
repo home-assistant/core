@@ -248,7 +248,7 @@ class Doods(ImageProcessingEntity):
 
             # Draw custom label regions/areas
             if label in self._label_areas and self._label_areas[label] != [0, 0, 1, 1]:
-                box_label = "{} Detection Area".format(label.capitalize())
+                box_label = f"{label.capitalize()} Detection Area"
                 draw_box(
                     draw,
                     self._label_areas[label],
@@ -260,7 +260,7 @@ class Doods(ImageProcessingEntity):
 
             # Draw detected objects
             for instance in values:
-                box_label = "{0} {1:.1f}%".format(label, instance["score"])
+                box_label = f'{label} {instance["score"]:.1f}%'
                 # Already scaled, use 1 for width and height
                 draw_box(
                     draw,
@@ -345,19 +345,17 @@ class Doods(ImageProcessingEntity):
                     matches[label].append({"score": float(score), "box": boxes})
                     total_matches += 1
 
-                    # Save Images
-                    if total_matches and self._file_out:
-                        paths = []
-                        for path_template in self._file_out:
-                            if isinstance(path_template, template.Template):
-                                paths.append(
-                                    path_template.render(
-                                        camera_entity=self._camera_entity
-                                    )
-                                )
-                            else:
-                                paths.append(path_template)
-                        self._save_image(image, matches, paths)
+                # Save Images
+                if total_matches and self._file_out:
+                    paths = []
+                    for path_template in self._file_out:
+                        if isinstance(path_template, template.Template):
+                            paths.append(
+                                path_template.render(camera_entity=self._camera_entity)
+                            )
+                        else:
+                            paths.append(path_template)
+                    self._save_image(image, matches, paths)
 
         self._matches = matches
         self._total_matches = total_matches
