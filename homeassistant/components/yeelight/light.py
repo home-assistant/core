@@ -180,8 +180,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     custom_effects = _parse_custom_effects(discovery_info[CONF_CUSTOM_EFFECTS])
     nl_switch_light = (
-        discovery_info.get(CONF_NIGHTLIGHT_SWITCH_TYPE, None)
-        == NIGHTLIGHT_SWITCH_TYPE_LIGHT
+        discovery_info.get(CONF_NIGHTLIGHT_SWITCH_TYPE) == NIGHTLIGHT_SWITCH_TYPE_LIGHT
     )
 
     lights = []
@@ -699,7 +698,7 @@ class YeelightNightLightMode(YeelightGenericLight):
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
-        return "{} nightlight".format(self.device.name)
+        return f"{self.device.name} nightlight"
 
     @property
     def icon(self):
