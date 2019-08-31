@@ -9,12 +9,14 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def get_scanner(hass, config):
     """Validate the configuration and return a Livebox scanner."""
 
     scanner = LiveboxDeviceScanner(hass.data[DOMAIN])
 
     return scanner if scanner.success_init else None
+
 
 Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])
 
@@ -26,7 +28,7 @@ class LiveboxDeviceScanner(DeviceScanner):
         """Initialize the scanner."""
 
         self._box = box
-        self.last_results = [] 
+        self.last_results = []
         self.success_init = self.async_update_info()
 
     async def async_scan_devices(self):

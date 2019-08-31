@@ -1,3 +1,4 @@
+"""Orange Livebox """
 import ipaddress
 import logging
 
@@ -14,17 +15,15 @@ from .const import DOMAIN, DEFAULT_USERNAME, DEFAULT_HOST, DEFAULT_PORT
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-  {DOMAIN: vol.Schema({
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
         # Validate as IP address and then convert back to a string.
         vol.Required(CONF_HOST, default=DEFAULT_HOST):
                 vol.All(ipaddress.ip_address, cv.string),
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string
-      })
-  },
-  extra=vol.ALLOW_EXTRA,
+        vol.Required(CONF_PASSWORD): cv.string})},
+    extra=vol.ALLOW_EXTRA,
 )
 
 
@@ -32,6 +31,7 @@ async def async_setup(hass, config):
     """Load configuration for Livebox component.
     Discovery has loaded the component if DOMAIN is not present in config.
     """
+
     if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
         livebox_config = config[DOMAIN]
         hass.async_create_task(
@@ -82,9 +82,9 @@ async def async_setup_entry(hass, entry):
         hass.config_entries.async_forward_entry_setup(entry, "sensor")
     )
     if options['allow_tracker']:
-      hass.async_create_task(
+        hass.async_create_task(
             async_load_platform(hass, "device_tracker", DOMAIN, {}, entry)
-      )
+        )
 
     return True
 

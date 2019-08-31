@@ -16,13 +16,15 @@ from .const import (
     DEFAULT_USERNAME, DEFAULT_HOST, DEFAULT_PORT,
     TEMPLATE_SENSOR)
 from .errors import AuthenticationRequired, CannotConnect
-# Add 2 lines
+
+
 @callback
 def configured_hosts(hass):
     """Return a set of the configured hosts."""
     return set(entry.data['host'] for entry
                in hass.config_entries.async_entries(DOMAIN))
-# Add 2 lines
+
+
 @config_entries.HANDLERS.register(DOMAIN)
 class LiveboxFlowHandler(config_entries.ConfigFlow):
     """Handle a Livebox config flow."""
@@ -69,11 +71,12 @@ class LiveboxFlowHandler(config_entries.ConfigFlow):
             return await self.async_step_link()
 
         return self.async_show_form(
-            step_id = 'init',
-            data_schema = vol.Schema(data_schema),
+            step_id='init',
+            data_schema=vol.Schema(data_schema),
         )
 
     async def async_step_link(self, user_input=None):
+        """ Step for link router"""
         errors = {}
 
         from aiosysbus import Sysbus
@@ -133,6 +136,7 @@ class LiveboxFlowHandler(config_entries.ConfigFlow):
                 'password': self.password
             }
         )
+
 
 class LiveboxOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Livebox options."""
