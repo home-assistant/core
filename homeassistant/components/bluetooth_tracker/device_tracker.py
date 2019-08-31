@@ -1,27 +1,29 @@
 """Tracking for bluetooth devices."""
 import logging
-from typing import Set, Tuple, List
+from typing import List, Set, Tuple
 
+import bluetooth
+from bt_proximity import BluetoothRSSI
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
+from homeassistant.components.device_tracker.const import (
+    CONF_SCAN_INTERVAL,
+    CONF_TRACK_NEW,
+    DEFAULT_TRACK_NEW,
+    DOMAIN,
+    SCAN_INTERVAL,
+    SOURCE_TYPE_BLUETOOTH,
+)
 from homeassistant.components.device_tracker.legacy import (
     YAML_DEVICES,
     async_load_config,
 )
-from homeassistant.components.device_tracker.const import (
-    CONF_TRACK_NEW,
-    CONF_SCAN_INTERVAL,
-    SCAN_INTERVAL,
-    DEFAULT_TRACK_NEW,
-    SOURCE_TYPE_BLUETOOTH,
-    DOMAIN,
-)
-import homeassistant.util.dt as dt_util
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.async_ import run_coroutine_threadsafe
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,9 +105,6 @@ def get_tracking_devices(hass: HomeAssistantType) -> Tuple[Set[str], Set[str]]:
 
 def setup_scanner(hass: HomeAssistantType, config: dict, see, discovery_info=None):
     """Set up the Bluetooth Scanner."""
-    # pylint: disable=import-error
-    import bluetooth
-
     device_id: int = config.get(CONF_DEVICE_ID)
     devices_to_track, devices_to_not_track = get_tracking_devices(hass)
 
@@ -114,8 +113,7 @@ def setup_scanner(hass: HomeAssistantType, config: dict, see, discovery_info=Non
     _LOGGER.debug("Tracking new devices = %s", track_new)
 
     if not devices_to_track and not track_new:
-        _LOGGER.warning("No Bluetooth devices to track and not tracking new devices")
-        return False
+        _LOGGER.debug("No Bluetooth devices to track and not tracking new devices")
 
     if track_new:
         for mac, device_name in discover_devices(bluetooth, device_id):
@@ -128,7 +126,6 @@ def setup_scanner(hass: HomeAssistantType, config: dict, see, discovery_info=Non
     request_rssi = config.get(CONF_REQUEST_RSSI, False)
     if request_rssi:
         _LOGGER.debug("Detecting RSSI for devices")
-        from bt_proximity import BluetoothRSSI
 
     def update_bluetooth(_):
         """Update Bluetooth and set timer for the next update."""
