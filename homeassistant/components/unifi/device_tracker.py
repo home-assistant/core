@@ -194,25 +194,17 @@ class UniFiClientTracker(ScannerEntity):
     @property
     def entity_registry_enabled_default(self):
         """Return if the entity should be enabled when first added to the entity registry."""
-        if (
-            self.controller.option_changed_track_clients
-            and not self.controller.option_track_clients
-        ):
+        if not self.controller.option_track_clients:
             return False
 
         if (
             not self.client.is_wired
-            and self.controller.option_changed_ssid_filter
             and self.controller.option_ssid_filter
             and self.client.essid not in self.controller.option_ssid_filter
         ):
             return False
 
-        if (
-            self.controller.option_changed_track_wired_clients
-            and not self.controller.option_track_wired_clients
-            and self.client.is_wired
-        ):
+        if not self.controller.option_track_wired_clients and self.client.is_wired:
             return False
 
         return True
@@ -286,10 +278,7 @@ class UniFiDeviceTracker(ScannerEntity):
     @property
     def entity_registry_enabled_default(self):
         """Return if the entity should be enabled when first added to the entity registry."""
-        if (
-            self.controller.option_changed_track_devices
-            and not self.controller.option_track_devices
-        ):
+        if not self.controller.option_track_devices:
             return False
 
         return True
