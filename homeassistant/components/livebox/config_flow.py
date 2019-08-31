@@ -2,6 +2,7 @@
 import asyncio
 import json
 import os
+from copy import copy
 
 import async_timeout
 import voluptuous as vol
@@ -9,6 +10,9 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
+from homeassistant.const import (
+    CONF_HOST, CONF_PORT,
+    CONF_USERNAME, CONF_PASSWORD)
 
 from .const import (
     DOMAIN, LOGGER, 
@@ -27,7 +31,13 @@ class LiveboxFlowHandler(config_entries.ConfigFlow):
     """Handle a Livebox config flow."""
 
     VERSION = 1
-    # CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return LiveboxOptionsFlowHandler(config_entry)
 
     def __init__(self):
         """Initialize the Livebox flow."""
@@ -42,10 +52,10 @@ class LiveboxFlowHandler(config_entries.ConfigFlow):
         from collections import OrderedDict 
         
         data_schema = OrderedDict()
-        data_schema[vol.Optional('host',default=DEFAULT_HOST)] = str
-        data_schema[vol.Optional('port', default=DEFAULT_PORT)] = str
-        data_schema[vol.Optional('username', default=DEFAULT_USERNAME)] = str
-        data_schema[vol.Required('password')] = str
+        data_schema[vol.Optional(CONF_HOST,default=DEFAULT_HOST)] = str
+        data_schema[vol.Optional(CONF_PORT, default=DEFAULT_PORT)] = str
+        data_schema[vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME)] = str
+        data_schema[vol.Required(CONF_PASSWORD)] = str
 
         return self.async_show_form(
             step_id='init',
@@ -56,10 +66,10 @@ class LiveboxFlowHandler(config_entries.ConfigFlow):
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
         if user_input is not None:
-            self.host = user_input['host']
-            self.port = user_input['port']
-            self.username = user_input['username']
-            self.password = user_input['password']
+            self.host = user_input[CONF_HOST]
+            self.port = user_input[CONF_PORT]
+            self.username = user_input[CONF_USERNAME]
+            self.password = user_input[CONF_PASSWORD]
             return await self.async_step_link()
 
         return self.async_show_form(
@@ -126,4 +136,27 @@ class LiveboxFlowHandler(config_entries.ConfigFlow):
                 'username': self.username,
                 'password': self.password
             }
+        )
+
+class LiveboxOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle Livebox options."""
+
+    def __init__(self, config_entry):
+        """Initialize Livebox options flow."""
+        self.config_entry = config_entry
+        self.options = copy(config_entry.options)
+
+    async def async_step_init(self, user_input=None):
+        """Manage the Livebox options."""
+
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional('allow_tracker',default=True,): bool,
+                }
+            ),
         )

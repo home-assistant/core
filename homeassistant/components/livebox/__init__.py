@@ -16,26 +16,39 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
   {
-    DOMAIN: vol.Schema(
-      {
+    DOMAIN: vol.Schema({
         # Validate as IP address and then convert back to a string.
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): 
-            vol.All(ipaddress.ip_address, cv.string),
+        vol.Required(CONF_HOST, default=DEFAULT_HOST):
+                vol.All(ipaddress.ip_address, cv.string),
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-      }
-    )
+        vol.Required(CONF_PASSWORD): cv.string
+      })
   },
   extra=vol.ALLOW_EXTRA,
 )
 
+
 async def async_setup(hass, config):
-    """Set up configured Livebox."""
+    """Load configuration for Livebox component.
+
+    Discovery has loaded the component if DOMAIN is not present in config.
+    """
+    if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
+        livebox_config = config[DOMAIN]
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data=livebox_config,
+            )
+        )
     return True
 
 async def async_setup_entry(hass, entry):
     """Set up Livebox as config entry."""
+    options = entry.options
+
     from aiosysbus import Sysbus
     from aiosysbus.exceptions import HttpRequestError
     box = Sysbus()
@@ -70,10 +83,11 @@ async def async_setup_entry(hass, entry):
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "sensor")
     )
-    hass.async_create_task(
-        async_load_platform(hass, "device_tracker", DOMAIN, {}, entry)
-    )
-        
+    if options['allow_tracker']:
+      hass.async_create_task(
+          async_load_platform(hass, "device_tracker", DOMAIN, {}, entry)
+      )
+
     return True
 
 async def async_unload_entry(hass, entry):

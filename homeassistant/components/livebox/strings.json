@@ -24,5 +24,15 @@
       "unknown": "Unknown error occurred",
       "cannot_connect": "Unable to connect to the livebox"
     }
-  }
+  },
+  "options": {
+    "step": {
+      "init": {
+                "description": "Configure visibility of device tracker",
+                "data": {
+                    "allow_tracker": "Allow devices tracker"
+                }
+            }
+        }
+    }
 }
