@@ -13,11 +13,9 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-from . import DATA_AD, SIGNAL_PANEL_MESSAGE
+from . import DATA_AD, DOMAIN as DOMAIN_ALARMDECODER, SIGNAL_PANEL_MESSAGE
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "alarmdecoder"
 
 SERVICE_ALARM_TOGGLE_CHIME = "alarmdecoder_alarm_toggle_chime"
 ALARM_TOGGLE_CHIME_SCHEMA = vol.Schema({vol.Required(ATTR_CODE): cv.string})
@@ -50,7 +48,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         device.alarm_keypress(keypress)
 
     hass.services.register(
-        DOMAIN,
+        DOMAIN_ALARMDECODER,
         SERVICE_ALARM_KEYPRESS,
         alarm_keypress_handler,
         schema=ALARM_KEYPRESS_SCHEMA,
