@@ -198,14 +198,14 @@ class HomeKitBatterySensor(HomeKitEntity):
         icon = "mdi:battery"
         if self._charging and self.state > 10:
             percentage = int(round(self.state / 20 - 0.01)) * 20
-            icon += "-charging-{}".format(percentage)
+            icon += f"-charging-{percentage}"
         elif self._charging:
             icon += "-outline"
         elif self._low_battery:
             icon += "-alert"
         elif self.state < 95:
             percentage = max(int(round(self.state / 10 - 0.01)) * 10, 10)
-            icon += "-{}".format(percentage)
+            icon += f"-{percentage}"
 
         return icon
 
