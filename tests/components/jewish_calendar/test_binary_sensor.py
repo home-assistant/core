@@ -1,7 +1,6 @@
 """The tests for the Jewish calendar binary sensors."""
 from datetime import timedelta
 from datetime import datetime as dt
-from unittest.mock import patch
 
 import pytest
 
@@ -11,8 +10,15 @@ from homeassistant.setup import async_setup_component
 from homeassistant.components import jewish_calendar
 
 from tests.common import async_fire_time_changed
+from . import alter_time, make_nyc_test_params, make_jerusalem_test_params
 
-from . import make_nyc_test_params, make_jerusalem_test_params
+ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
+
+
+def tearDown():
+    """Reset time zone."""
+    dt_util.set_default_time_zone(ORIG_TIME_ZONE)
+
 
 MELACHA_PARAMS = [
     make_nyc_test_params(dt(2018, 9, 1, 16, 0), STATE_ON),
@@ -87,7 +93,7 @@ async def test_issur_melacha_sensor(
     )
     await hass.async_block_till_done()
 
-    with patch("homeassistant.util.dt.now", return_value=test_time):
+    with alter_time(test_time):
         future = dt_util.utcnow() + timedelta(seconds=30)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()

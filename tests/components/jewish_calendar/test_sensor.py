@@ -1,7 +1,6 @@
 """The tests for the Jewish calendar sensors."""
 from datetime import time, timedelta
 from datetime import datetime as dt
-from unittest.mock import patch
 
 import pytest
 
@@ -10,7 +9,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.components import jewish_calendar
 from tests.common import async_fire_time_changed
 
-from . import make_nyc_test_params, make_jerusalem_test_params
+from . import alter_time, make_nyc_test_params, make_jerusalem_test_params
 
 
 async def test_jewish_calendar_min_config(hass):
@@ -179,7 +178,7 @@ async def test_jewish_calendar_sensor(
     )
     await hass.async_block_till_done()
 
-    with patch("homeassistant.util.dt.now", return_value=test_time):
+    with alter_time(test_time):
         future = dt_util.utcnow() + timedelta(seconds=30)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -520,7 +519,7 @@ async def test_shabbat_times_sensor(
 
         sensor_type = sensor_type.replace(f"{language}_", "")
 
-        with patch("homeassistant.util.dt.now", return_value=test_time):
+        with alter_time(test_time):
             future = dt_util.utcnow() + timedelta(seconds=30)
             async_fire_time_changed(hass, future)
             await hass.async_block_till_done()
@@ -600,7 +599,7 @@ async def test_omer_sensor(
     )
     await hass.async_block_till_done()
 
-    with patch("homeassistant.util.dt.now", return_value=test_time):
+    with alter_time(test_time):
         future = dt_util.utcnow() + timedelta(seconds=30)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
