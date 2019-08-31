@@ -230,7 +230,6 @@ class ONVIFHassCamera(Camera):
         """Set the input uri for the camera."""
         from onvif import exceptions
 
-        _LOGGER.debug("Obtaining input uri")
         _LOGGER.debug(
             "Connecting with ONVIF Camera: %s on port %s", self._host, self._port
         )
