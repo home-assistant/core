@@ -1,6 +1,6 @@
 """Test Alexa config."""
 import contextlib
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from homeassistant.components.cloud import ALEXA_SCHEMA, alexa_config
 from homeassistant.util.dt import utcnow
@@ -41,6 +41,42 @@ async def test_alexa_config_report_state(hass, cloud_prefs):
     assert cloud_prefs.alexa_report_state is False
     assert conf.should_report_state is False
     assert conf.is_reporting_states is False
+
+
+async def test_alexa_config_invalidate_token(hass, cloud_prefs, aioclient_mock):
+    """Test Alexa config should expose using prefs."""
+    aioclient_mock.post(
+        "http://example/alexa_token",
+        json={
+            "access_token": "mock-token",
+            "event_endpoint": "http://example.com/alexa_endpoint",
+            "expires_in": 30,
+        },
+    )
+    conf = alexa_config.AlexaConfig(
+        hass,
+        ALEXA_SCHEMA({}),
+        cloud_prefs,
+        Mock(
+            alexa_access_token_url="http://example/alexa_token",
+            run_executor=Mock(side_effect=mock_coro),
+            websession=hass.helpers.aiohttp_client.async_get_clientsession(),
+        ),
+    )
+
+    token = await conf.async_get_access_token()
+    assert token == "mock-token"
+    assert len(aioclient_mock.mock_calls) == 1
+
+    token = await conf.async_get_access_token()
+    assert token == "mock-token"
+    assert len(aioclient_mock.mock_calls) == 1
+    assert conf._token_valid is not None
+    conf.async_invalidate_access_token()
+    assert conf._token_valid is None
+    token = await conf.async_get_access_token()
+    assert token == "mock-token"
+    assert len(aioclient_mock.mock_calls) == 2
 
 
 @contextlib.contextmanager
