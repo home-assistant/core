@@ -200,7 +200,10 @@ class HueOneLightStateView(HomeAssistantView):
         hass_entity_id = self.config.number_to_entity_id(entity_id)
 
         if hass_entity_id is None:
-            _LOGGER.error("Entity not found: %s", entity_id)
+            _LOGGER.error(
+                "Unknown entity number: %s not found in emulated_hue_ids.json",
+                entity_id,
+            )
             return web.Response(text="Entity not found", status=404)
 
         entity = hass.states.get(hass_entity_id)
