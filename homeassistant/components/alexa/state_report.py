@@ -51,7 +51,9 @@ async def async_enable_proactive_mode(hass, smart_home_config):
     )
 
 
-async def async_send_changereport_message(hass, config, alexa_entity):
+async def async_send_changereport_message(
+    hass, config, alexa_entity, *, invalidate_access_token=True
+):
     """Send a ChangeReport message for an Alexa entity.
 
     https://developer.amazon.com/docs/smarthome/state-reporting-for-a-smart-home-skill.html#report-state-with-changereport-events
@@ -88,20 +90,29 @@ async def async_send_changereport_message(hass, config, alexa_entity):
 
     except (asyncio.TimeoutError, aiohttp.ClientError):
         _LOGGER.error("Timeout sending report to Alexa.")
-        return None
+        return
 
     response_text = await response.text()
 
     _LOGGER.debug("Sent: %s", json.dumps(message_serialized))
     _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
-    if response.status != 202:
-        response_json = json.loads(response_text)
-        _LOGGER.error(
-            "Error when sending ChangeReport to Alexa: %s: %s",
-            response_json["payload"]["code"],
-            response_json["payload"]["description"],
+    if response.status == 202 and not invalidate_access_token:
+        return
+
+    response_json = json.loads(response_text)
+
+    if response_json["payload"]["code"] == "INVALID_ACCESS_TOKEN_EXCEPTION":
+        config.async_invalidate_access_token()
+        return await async_send_changereport_message(
+            hass, config, alexa_entity, invalidate_access_token=False
         )
+
+    _LOGGER.error(
+        "Error when sending ChangeReport to Alexa: %s: %s",
+        response_json["payload"]["code"],
+        response_json["payload"]["description"],
+    )
 
 
 async def async_send_add_or_update_message(hass, config, entity_ids):
