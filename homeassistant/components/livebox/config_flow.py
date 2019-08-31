@@ -1,31 +1,28 @@
 """Config flow to configure Livebox."""
 import asyncio
-import json
-import os
 from copy import copy
 
-import async_timeout
+
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client
 from homeassistant.const import (
     CONF_HOST, CONF_PORT,
     CONF_USERNAME, CONF_PASSWORD)
 
 from .const import (
-    DOMAIN, LOGGER, 
+    DOMAIN, LOGGER,
     DEFAULT_USERNAME, DEFAULT_HOST, DEFAULT_PORT,
     TEMPLATE_SENSOR)
 from .errors import AuthenticationRequired, CannotConnect
-
+# Add 2 lines
 @callback
 def configured_hosts(hass):
     """Return a set of the configured hosts."""
     return set(entry.data['host'] for entry
                in hass.config_entries.async_entries(DOMAIN))
-
+# Add 2 lines
 @config_entries.HANDLERS.register(DOMAIN)
 class LiveboxFlowHandler(config_entries.ConfigFlow):
     """Handle a Livebox config flow."""
@@ -43,16 +40,16 @@ class LiveboxFlowHandler(config_entries.ConfigFlow):
         """Initialize the Livebox flow."""
         self.host = None
         self.port = None
-        self.username = None 
+        self.username = None
         self.password = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         # Use OrderedDict to guarantee order of the form shown to the user
-        from collections import OrderedDict 
-        
+        from collections import OrderedDict
+
         data_schema = OrderedDict()
-        data_schema[vol.Optional(CONF_HOST,default=DEFAULT_HOST)] = str
+        data_schema[vol.Optional(CONF_HOST, default=DEFAULT_HOST)] = str
         data_schema[vol.Optional(CONF_PORT, default=DEFAULT_PORT)] = str
         data_schema[vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME)] = str
         data_schema[vol.Required(CONF_PASSWORD)] = str
@@ -61,7 +58,6 @@ class LiveboxFlowHandler(config_entries.ConfigFlow):
             step_id='init',
             data_schema=vol.Schema(data_schema)
         )
-
 
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
@@ -73,15 +69,15 @@ class LiveboxFlowHandler(config_entries.ConfigFlow):
             return await self.async_step_link()
 
         return self.async_show_form(
-            step_id='init',
-            data_schema=vol.Schema(data_schema),
+            step_id = 'init',
+            data_schema = vol.Schema(data_schema),
         )
 
     async def async_step_link(self, user_input=None):
         errors = {}
 
         from aiosysbus import Sysbus
-        
+
         try:
             box = Sysbus()
             await box.open(
@@ -111,7 +107,7 @@ class LiveboxFlowHandler(config_entries.ConfigFlow):
         return self.async_show_form(
             step_id='link',
             errors=errors,
-        )    
+        )
 
     async def _entry_from_box(self, box):
         """Return a config entry from an initialized box."""
@@ -156,7 +152,7 @@ class LiveboxOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Optional('allow_tracker',default=True,): bool,
+                    vol.Optional('allow_tracker', default=True): bool,
                 }
             ),
         )

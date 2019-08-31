@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, 
+    CONF_HOST, CONF_PORT,
     CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.helpers import (
     config_validation as cv, device_registry as dr)
@@ -15,8 +15,7 @@ from .const import DOMAIN, DEFAULT_USERNAME, DEFAULT_HOST, DEFAULT_PORT
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
-  {
-    DOMAIN: vol.Schema({
+  {DOMAIN: vol.Schema({
         # Validate as IP address and then convert back to a string.
         vol.Required(CONF_HOST, default=DEFAULT_HOST):
                 vol.All(ipaddress.ip_address, cv.string),
@@ -31,7 +30,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Load configuration for Livebox component.
-
     Discovery has loaded the component if DOMAIN is not present in config.
     """
     if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
@@ -39,7 +37,7 @@ async def async_setup(hass, config):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
+                context={"source": config.SOURCE_IMPORT},
                 data=livebox_config,
             )
         )
@@ -47,8 +45,8 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up Livebox as config entry."""
-    options = entry.options
 
+    options = entry.options
     from aiosysbus import Sysbus
     from aiosysbus.exceptions import HttpRequestError
     box = Sysbus()
@@ -56,7 +54,7 @@ async def async_setup_entry(hass, entry):
         await box.open(
             host=entry.data['host'],
             port=entry.data['port'],
-            username=entry.data['username'], 
+            username=entry.data['username'],
             password=entry.data['password'])
     except HttpRequestError:
         _LOGGER.exception('Http Request error to Livebox')
@@ -74,26 +72,27 @@ async def async_setup_entry(hass, entry):
         identifiers={
             (DOMAIN, config['SerialNumber'])
         },
-        manufacturer = config['Manufacturer'],
-        name = config['ProductClass'],
-        model = config['ModelName'],
-        sw_version = config['SoftwareVersion'],
+        manufacturer=config['Manufacturer'],
+        name=config['ProductClass'],
+        model=config['ModelName'],
+        sw_version=config['SoftwareVersion'],
     )
-        
+
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "sensor")
     )
     if options['allow_tracker']:
       hass.async_create_task(
-          async_load_platform(hass, "device_tracker", DOMAIN, {}, entry)
+            async_load_platform(hass, "device_tracker", DOMAIN, {}, entry)
       )
 
     return True
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
+
     await hass.config_entries.async_forward_entry_unload(entry, "sensor")
     box = hass.data[DOMAIN]
     await box.close()
-    
+
     return True

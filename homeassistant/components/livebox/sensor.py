@@ -10,23 +10,20 @@ from . import DOMAIN
 from .const import TEMPLATE_SENSOR
 
 _LOGGER = logging.getLogger(__name__)
-
 SCAN_INTERVAL = timedelta(minutes=5)
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the sensors."""
     box = hass.data[DOMAIN]
-    async_add_entities(
-        [
+    async_add_entities([
             RXSensor(box, config_entry),
-            TXSensor(box,config_entry),
-            InfoSensor(box, config_entry)
-            ],
+            TXSensor(box, config_entry),
+            InfoSensor(box, config_entry)],
         True)
 
 class LiveboxSensor(Entity):
     """Representation of a livebox sensor."""
-
     _name = "generic"
 
     def __init__(self, box, config_entry):
@@ -39,21 +36,22 @@ class LiveboxSensor(Entity):
 
 class InfoSensor(LiveboxSensor, BinarySensorDevice):
     """ Update Wan Status sensor """
-    
     device_class = DEVICE_CLASS_CONNECTIVITY
-    
+
     @property
     def name(self):
+        """ Return name sensor """
         return TEMPLATE_SENSOR.format('Wan status')
-    
+
     def is_on(self):
         """Return true if the binary sensor is on."""
         if self._dsl['WanState'] == 'up':
             return True
         return False
-    
+
     @property
     def unique_id(self):
+        """Return unique_id"""
         return '{}_connectivity'.format(self._box_id)
 
     @property
@@ -64,7 +62,7 @@ class InfoSensor(LiveboxSensor, BinarySensorDevice):
                 (DOMAIN, self.unique_id)
             },
             'manufacturer': 'Orange',
-            'via_device':(DOMAIN,self._box_id)
+            'via_device': (DOMAIN, self._box_id)
         }
 
     @property
@@ -73,9 +71,9 @@ class InfoSensor(LiveboxSensor, BinarySensorDevice):
         return {
             "link_type": self._dsl['LinkType'],
             "link_state": self._dsl['LinkState'],
-            "last_connection_error":self._dsl['LastConnectionError'],
-            "wan_ipaddress":self._dsl['IPAddress'],
-            "wan_ipv6address":self._dsl['IPv6Address']
+            "last_connection_error": self._dsl['LastConnectionError'],
+            "wan_ipaddress": self._dsl['IPAddress'],
+            "wan_ipv6address": self._dsl['IPv6Address']
         }
 
     @Throttle(SCAN_INTERVAL)
@@ -86,14 +84,13 @@ class InfoSensor(LiveboxSensor, BinarySensorDevice):
 
 class RXSensor(LiveboxSensor):
     """Update the Livebox RxSensor."""
-
     unit_of_measurement = "Mb/s"
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return TEMPLATE_SENSOR.format('download speed')
-    
+
     @property
     def state(self):
         """Return the state of the device."""
@@ -103,6 +100,7 @@ class RXSensor(LiveboxSensor):
 
     @property
     def unique_id(self):
+        """ Return unique_id"""
         return '{}_downstream'.format(self._box_id)
 
     @property
@@ -113,7 +111,7 @@ class RXSensor(LiveboxSensor):
                 (DOMAIN, self.unique_id)
             },
             'manufacturer': 'Orange',
-            'via_device':(DOMAIN,self._box_id)
+            'via_device': (DOMAIN, self._box_id)
         }
 
     @property
@@ -122,21 +120,19 @@ class RXSensor(LiveboxSensor):
         return {
             "downstream_maxrate": self._dsl['DownstreamMaxRate'],
             "downstream_lineattenuation": self._dsl['DownstreamLineAttenuation'],
-            "downstream_noisemargin":self._dsl['DownstreamNoiseMargin'],
-            "downstream_power":self._dsl['DownstreamPower']
+            "downstream_noisemargin": self._dsl['DownstreamNoiseMargin'],
+            "downstream_power": self._dsl['DownstreamPower']
         }
 
     @Throttle(SCAN_INTERVAL)
     async def async_update(self):
         """Get the value from fetched datas."""
-        parameters = {"parameters":{"mibs":"dsl","flag":"","traverse":"down"}}
+        parameters = {"parameters":{"mibs":"dsl", "flag":"", "traverse":"down"}}
         self._datas = await self._box.connection.get_data_MIBS(parameters)
         self._dsl = self._datas["status"]["dsl"]["dsl0"]
-        
 
 class TXSensor(LiveboxSensor):
     """Update the Livebox TxSensor."""
-
     unit_of_measurement = "Mb/s"
 
     @property
@@ -150,7 +146,7 @@ class TXSensor(LiveboxSensor):
         if self._dsl['UpstreamCurrRate'] is None:
             return None
         return round(self._dsl['UpstreamCurrRate'] / 1000, 2)
-    
+
     @property
     def unique_id(self):
         return '{}_upstream'.format(self._box_id)
@@ -159,12 +155,12 @@ class TXSensor(LiveboxSensor):
     def device_info(self):
         """Return the device info."""
         return {
-            'name':self.name,
+            'name': self.name,
             "identifiers": {
                 (DOMAIN, self.unique_id)
             },
             'manufacturer': 'Orange',
-            'via_device':(DOMAIN,self._box_id)
+            'via_device': (DOMAIN, self._box_id)
         }
 
     @property
@@ -173,14 +169,13 @@ class TXSensor(LiveboxSensor):
         return {
             "upstream_maxrate": self._dsl['UpstreamMaxRate'],
             "upstream_lineattenuation": self._dsl['UpstreamLineAttenuation'],
-            "upstream_noisemargin":self._dsl['UpstreamNoiseMargin'],
-            "upstream_power":self._dsl['UpstreamPower']
+            "upstream_noisemargin": self._dsl['UpstreamNoiseMargin'],
+            "upstream_power": self._dsl['UpstreamPower']
         }
 
     @Throttle(SCAN_INTERVAL)
     async def async_update(self):
         """Get the value from fetched datas."""
-        parameters = {"parameters":{"mibs":"dsl","flag":"","traverse":"down"}}
+        parameters = {"parameters":{"mibs":"dsl", "flag":"", "traverse":"down"}}
         self._datas = await self._box.connection.get_data_MIBS(parameters)
         self._dsl = self._datas["status"]["dsl"]["dsl0"]
-
