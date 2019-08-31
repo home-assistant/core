@@ -2,8 +2,8 @@
 import io
 import logging
 import time
-import voluptuous as vol
 
+import voluptuous as vol
 from PIL import Image, ImageDraw
 from pydoods import PyDOODS
 
@@ -49,7 +49,7 @@ LABEL_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_AREA): AREA_SCHEMA,
-        vol.Optional(CONF_CONFIDENCE): vol.Range(min=0, max=100),
+        vol.Optional(CONF_CONFIDENCE, default=0.0): vol.Range(min=0, max=100),
     }
 )
 
@@ -138,7 +138,7 @@ class Doods(ImageProcessingEntity):
             name = split_entity_id(camera_entity)[1]
             self._name = f"Doods {name}"
         self._doods = doods
-        self._file_out = config.get(CONF_FILE_OUT)
+        self._file_out = config[CONF_FILE_OUT]
 
         # detector config and aspect ratio
         self._width = None
@@ -151,20 +151,20 @@ class Doods(ImageProcessingEntity):
 
         # the base confidence
         dconfig = {}
-        confidence = config.get(CONF_CONFIDENCE)
+        confidence = config[CONF_CONFIDENCE]
 
         # handle labels and specific detection areas
-        labels = config.get(CONF_LABELS)
+        labels = config[CONF_LABELS]
         self._label_areas = {}
         for label in labels:
             if isinstance(label, dict):
-                label_name = label.get(CONF_NAME)
+                label_name = label[CONF_NAME]
                 if label_name not in detector["labels"] and label_name != "*":
                     _LOGGER.warning("Detector does not support label %s", label_name)
                     continue
 
                 # Label Confidence
-                label_confidence = label.get(CONF_CONFIDENCE)
+                label_confidence = label[CONF_CONFIDENCE]
                 if label_name not in dconfig or dconfig[label_name] > label_confidence:
                     dconfig[label_name] = label_confidence
 
@@ -173,10 +173,10 @@ class Doods(ImageProcessingEntity):
                 self._label_areas[label_name] = [0, 0, 1, 1]
                 if label_area:
                     self._label_areas[label_name] = [
-                        label_area.get(CONF_TOP),
-                        label_area.get(CONF_LEFT),
-                        label_area.get(CONF_BOTTOM),
-                        label_area.get(CONF_RIGHT),
+                        label_area[CONF_TOP],
+                        label_area[CONF_LEFT],
+                        label_area[CONF_BOTTOM],
+                        label_area[CONF_RIGHT],
                     ]
             else:
                 if label not in detector["labels"] and label != "*":
@@ -194,10 +194,10 @@ class Doods(ImageProcessingEntity):
         area_config = config.get(CONF_AREA)
         if area_config:
             self._area = [
-                area_config.get(CONF_TOP),
-                area_config.get(CONF_LEFT),
-                area_config.get(CONF_BOTTOM),
-                area_config.get(CONF_RIGHT),
+                area_config[CONF_TOP],
+                area_config[CONF_LEFT],
+                area_config[CONF_BOTTOM],
+                area_config[CONF_RIGHT],
             ]
 
         template.attach(hass, self._file_out)
