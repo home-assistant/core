@@ -11,6 +11,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNLOCKED,
+    STATE_UNKNOWN,
 )
 import homeassistant.components.climate.const as climate
 from homeassistant.components import light, fan, cover
@@ -443,7 +444,17 @@ class AlexaTemperatureSensor(AlexaCapibility):
         if self.entity.domain == climate.DOMAIN:
             unit = self.hass.config.units.temperature_unit
             temp = self.entity.attributes.get(climate.ATTR_CURRENT_TEMPERATURE)
-        return {"value": float(temp), "scale": API_TEMP_UNITS[unit]}
+
+        if temp in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return None
+
+        try:
+            temp = float(temp)
+        except ValueError:
+            _LOGGER.warning("Invalid temp value %s for %s", temp, self.entity.entity_id)
+            return None
+
+        return {"value": temp, "scale": API_TEMP_UNITS[unit]}
 
 
 class AlexaContactSensor(AlexaCapibility):
@@ -591,4 +602,12 @@ class AlexaThermostatController(AlexaCapibility):
         if temp is None:
             return None
 
-        return {"value": float(temp), "scale": API_TEMP_UNITS[unit]}
+        try:
+            temp = float(temp)
+        except ValueError:
+            _LOGGER.warning(
+                "Invalid temp value %s for %s in %s", temp, name, self.entity.entity_id
+            )
+            return None
+
+        return {"value": temp, "scale": API_TEMP_UNITS[unit]}
