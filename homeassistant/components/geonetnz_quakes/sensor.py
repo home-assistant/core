@@ -2,11 +2,11 @@
 import logging
 from typing import Optional
 
-from homeassistant.components.geonetnz_quakes import DOMAIN, FEED
-from homeassistant.components.geonetnz_quakes.geo_location import SIGNAL_STATUS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+
+from .const import DOMAIN, FEED, SIGNAL_STATUS
 
 _LOGGER = logging.getLogger(__name__)
 

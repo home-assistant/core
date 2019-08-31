@@ -1,11 +1,9 @@
 """Geolocation support for GeoNet NZ Quakes Feeds."""
-from datetime import timedelta
 import logging
 from typing import Optional
 
-from aio_geojson_geonetnz_quakes import GeonetnzQuakesFeedManager
-
 from homeassistant.components.geo_location import GeolocationEvent
+from homeassistant.components.geonetnz_quakes import GeonetnzQuakesFeedEntityManager
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
@@ -19,15 +17,17 @@ from homeassistant.const import (
     ATTR_TIME,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
-from .const import CONF_MINIMUM_MAGNITUDE, CONF_MMI, DOMAIN, FEED
+from .const import (
+    CONF_MINIMUM_MAGNITUDE,
+    CONF_MMI,
+    DOMAIN,
+    FEED,
+    SIGNAL_DELETE_ENTITY,
+    SIGNAL_UPDATE_ENTITY,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,12 +38,6 @@ ATTR_MAGNITUDE = "magnitude"
 ATTR_MMI = "mmi"
 ATTR_PUBLICATION_DATE = "publication_date"
 ATTR_QUALITY = "quality"
-
-DEFAULT_FILTER_TIME_INTERVAL = timedelta(days=7)
-
-SIGNAL_DELETE_ENTITY = "geonetnz_quakes_delete_{}"
-SIGNAL_UPDATE_ENTITY = "geonetnz_quakes_update_{}"
-SIGNAL_STATUS = "geonetnz_quakes_status_{}"
 
 SOURCE = "geonetnz_quakes"
 
@@ -68,98 +62,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
     hass.data[DOMAIN][FEED][entry.entry_id] = manager
     await manager.async_init()
-
-
-class GeonetnzQuakesFeedEntityManager:
-    """Feed Entity Manager for GeoNet NZ Quakes feed."""
-
-    def __init__(
-        self,
-        hass,
-        async_add_entities,
-        config_entry_id,
-        scan_interval,
-        latitude,
-        longitude,
-        mmi,
-        radius_in_km,
-        unit_system,
-        minimum_magnitude,
-    ):
-        """Initialize the Feed Entity Manager."""
-        self._hass = hass
-        coordinates = (latitude, longitude)
-        websession = aiohttp_client.async_get_clientsession(hass)
-        self._feed_manager = GeonetnzQuakesFeedManager(
-            websession,
-            self._generate_entity,
-            self._update_entity,
-            self._remove_entity,
-            coordinates,
-            mmi=mmi,
-            filter_radius=radius_in_km,
-            filter_minimum_magnitude=minimum_magnitude,
-            filter_time=DEFAULT_FILTER_TIME_INTERVAL,
-            status_callback=self._status_update,
-        )
-        self._async_add_entities = async_add_entities
-        self._config_entry_id = config_entry_id
-        self._scan_interval = timedelta(seconds=scan_interval)
-        self._unit_system = unit_system
-        self._track_time_remove_callback = None
-        self._status_info = None
-
-    async def async_init(self):
-        """Schedule regular updates based on configured time interval."""
-
-        async def update(event_time):
-            """Update."""
-            await self.async_update()
-
-        await self.async_update()
-        self._track_time_remove_callback = async_track_time_interval(
-            self._hass, update, self._scan_interval
-        )
-        _LOGGER.debug("Feed entity manager initialized")
-
-    async def async_update(self):
-        """Refresh data."""
-        await self._feed_manager.update()
-        _LOGGER.debug("Feed entity manager updated")
-
-    async def async_stop(self):
-        """Stop this feed entity manager from refreshing."""
-        if self._track_time_remove_callback:
-            self._track_time_remove_callback()
-        _LOGGER.debug("Feed entity manager stopped")
-
-    def get_entry(self, external_id):
-        """Get feed entry by external id."""
-        return self._feed_manager.feed_entries.get(external_id)
-
-    def status_info(self):
-        """Return latest status update info received."""
-        return self._status_info
-
-    async def _generate_entity(self, external_id):
-        """Generate new entity."""
-        new_entity = GeonetnzQuakesEvent(self, external_id, self._unit_system)
-        # Add new entities to HA.
-        self._async_add_entities([new_entity], True)
-
-    async def _update_entity(self, external_id):
-        """Update entity."""
-        async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY.format(external_id))
-
-    async def _remove_entity(self, external_id):
-        """Remove entity."""
-        async_dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
-
-    async def _status_update(self, status_info):
-        """Propagate status update."""
-        _LOGGER.debug("Status update received: %s", status_info)
-        self._status_info = status_info
-        async_dispatcher_send(self._hass, SIGNAL_STATUS.format(self._config_entry_id))
 
 
 class GeonetnzQuakesEvent(GeolocationEvent):
