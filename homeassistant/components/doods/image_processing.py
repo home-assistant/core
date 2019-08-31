@@ -300,58 +300,61 @@ class Doods(ImageProcessingEntity):
         matches = {}
         total_matches = 0
 
-        if response:
+        if not response or "error" in response:
             if "error" in response:
                 _LOGGER.error(response["error"])
-            else:
-                for detection in response["detections"]:
-                    score = detection["confidence"]
-                    boxes = [
-                        detection["top"],
-                        detection["left"],
-                        detection["bottom"],
-                        detection["right"],
-                    ]
-                    label = detection["label"]
+            self._matches = matches
+            self._total_matches = total_matches
+            return
 
-                    # Exclude unlisted labels
-                    if "*" not in self._dconfig and label not in self._dconfig:
-                        continue
+        for detection in response["detections"]:
+            score = detection["confidence"]
+            boxes = [
+                detection["top"],
+                detection["left"],
+                detection["bottom"],
+                detection["right"],
+            ]
+            label = detection["label"]
 
-                    # Exclude matches outside global area definition
-                    if (
-                        boxes[0] < self._area[0]
-                        or boxes[1] < self._area[1]
-                        or boxes[2] > self._area[2]
-                        or boxes[3] > self._area[3]
-                    ):
-                        continue
+            # Exclude unlisted labels
+            if "*" not in self._dconfig and label not in self._dconfig:
+                continue
 
-                    # Exclude matches outside label specific area definition
-                    if self._label_areas and (
-                        boxes[0] < self._label_areas[label][0]
-                        or boxes[1] < self._label_areas[label][1]
-                        or boxes[2] > self._label_areas[label][2]
-                        or boxes[3] > self._label_areas[label][3]
-                    ):
-                        continue
+            # Exclude matches outside global area definition
+            if (
+                boxes[0] < self._area[0]
+                or boxes[1] < self._area[1]
+                or boxes[2] > self._area[2]
+                or boxes[3] > self._area[3]
+            ):
+                continue
 
-                    if label not in matches:
-                        matches[label] = []
-                    matches[label].append({"score": float(score), "box": boxes})
-                    total_matches += 1
+            # Exclude matches outside label specific area definition
+            if self._label_areas and (
+                boxes[0] < self._label_areas[label][0]
+                or boxes[1] < self._label_areas[label][1]
+                or boxes[2] > self._label_areas[label][2]
+                or boxes[3] > self._label_areas[label][3]
+            ):
+                continue
 
-                # Save Images
-                if total_matches and self._file_out:
-                    paths = []
-                    for path_template in self._file_out:
-                        if isinstance(path_template, template.Template):
-                            paths.append(
-                                path_template.render(camera_entity=self._camera_entity)
-                            )
-                        else:
-                            paths.append(path_template)
-                    self._save_image(image, matches, paths)
+            if label not in matches:
+                matches[label] = []
+            matches[label].append({"score": float(score), "box": boxes})
+            total_matches += 1
+
+        # Save Images
+        if total_matches and self._file_out:
+            paths = []
+            for path_template in self._file_out:
+                if isinstance(path_template, template.Template):
+                    paths.append(
+                        path_template.render(camera_entity=self._camera_entity)
+                    )
+                else:
+                    paths.append(path_template)
+            self._save_image(image, matches, paths)
 
         self._matches = matches
         self._total_matches = total_matches
