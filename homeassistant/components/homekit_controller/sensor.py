@@ -30,7 +30,7 @@ class HomeKitHumiditySensor(HomeKitEntity):
     @property
     def name(self):
         """Return the name of the device."""
-        return "{} {}".format(super().name, "Humidity")
+        return f"{super().name} Humidity"
 
     @property
     def icon(self):
@@ -66,7 +66,7 @@ class HomeKitTemperatureSensor(HomeKitEntity):
     @property
     def name(self):
         """Return the name of the device."""
-        return "{} {}".format(super().name, "Temperature")
+        return f"{super().name} Temperature"
 
     @property
     def icon(self):
@@ -102,7 +102,7 @@ class HomeKitLightSensor(HomeKitEntity):
     @property
     def name(self):
         """Return the name of the device."""
-        return "{} {}".format(super().name, "Light Level")
+        return f"{super().name} Light Level"
 
     @property
     def icon(self):
@@ -138,7 +138,7 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity):
     @property
     def name(self):
         """Return the name of the device."""
-        return "{} {}".format(super().name, "CO2")
+        return f"{super().name} CO2"
 
     @property
     def icon(self):
@@ -185,7 +185,7 @@ class HomeKitBatterySensor(HomeKitEntity):
     @property
     def name(self):
         """Return the name of the device."""
-        return "{} {}".format(super().name, "Battery")
+        return f"{super().name} Battery"
 
     @property
     def icon(self):
