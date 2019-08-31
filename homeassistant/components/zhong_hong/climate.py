@@ -56,6 +56,14 @@ SUPPORT_HVAC = [
 ]
 
 
+MODE_TO_STATE = {
+    HVAC_MODE_COOL: HVAC_MODE_COOL,
+    HVAC_MODE_HEAT: HVAC_MODE_HEAT,
+    HVAC_MODE_DRY: HVAC_MODE_DRY,
+    HVAC_MODE_FAN_ONLY: HVAC_MODE_FAN_ONLY,
+}
+
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZhongHong HVAC platform."""
     from zhong_hong_hvac.hub import ZhongHongGateway
@@ -124,7 +132,9 @@ class ZhongHongClimate(ClimateDevice):
         """Handle state update."""
         _LOGGER.debug("async update ha state")
         if self._device.current_operation:
-            self._current_operation = self._device.current_operation.lower()
+            self._current_operation = MODE_TO_STATE[
+                self._device.current_operation.lower()
+            ]
         if self._device.current_temperature:
             self._current_temperature = self._device.current_temperature
         if self._device.current_fan_mode:
