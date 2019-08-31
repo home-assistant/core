@@ -277,10 +277,6 @@ class Doods(ImageProcessingEntity):
 
     def process_image(self, image):
         """Process the image."""
-
-        from PIL import Image
-        import io
-
         img = Image.open(io.BytesIO(bytearray(image)))
         img_width, img_height = img.size
 
