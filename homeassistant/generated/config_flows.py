@@ -62,6 +62,7 @@ FLOWS = [
     "velbus",
     "vesync",
     "wemo",
+    "withings",
     "wwlln",
     "zha",
     "zone",
