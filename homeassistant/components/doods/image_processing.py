@@ -165,8 +165,6 @@ class Doods(ImageProcessingEntity):
 
                 # Label Confidence
                 label_confidence = label.get(CONF_CONFIDENCE)
-                if not label_confidence:
-                    label_confidence = confidence
                 if label_name not in dconfig or dconfig[label_name] > label_confidence:
                     dconfig[label_name] = label_confidence
 
