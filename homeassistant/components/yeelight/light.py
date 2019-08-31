@@ -69,8 +69,8 @@ SERVICE_SET_MODE = "set_mode"
 SERVICE_START_FLOW = "start_flow"
 SERVICE_SET_COLOR_SCENE = "set_color_scene"
 SERVICE_SET_HSV_SCENE = "set_hsv_scene"
-SERVICE_SET_CT_SCENE = "set_color_temp_scene"
-SERVICE_SET_CF_SCENE = "set_color_flow_scene"
+SERVICE_SET_COLOR_TEMP_SCENE = "set_color_temp_scene"
+SERVICE_SET_COLOR_FLOW_SCENE = "set_color_flow_scene"
 SERVICE_SET_AUTO_DELAY_OFF_SCENE = "set_auto_delay_off_scene"
 
 EFFECT_DISCO = "Disco"
@@ -166,7 +166,7 @@ SERVICE_SCHEMA_SET_HSV_SCENE = YEELIGHT_SERVICE_SCHEMA.extend(
     }
 )
 
-SERVICE_SCHEMA_SET_CT_SCENE = YEELIGHT_SERVICE_SCHEMA.extend(
+SERVICE_SCHEMA_SET_COLOR_TEMP_SCENE = YEELIGHT_SERVICE_SCHEMA.extend(
     {
         vol.Required(ATTR_KELVIN): vol.All(
             vol.Coerce(int), vol.Range(min=1700, max=6500)
@@ -175,7 +175,7 @@ SERVICE_SCHEMA_SET_CT_SCENE = YEELIGHT_SERVICE_SCHEMA.extend(
     }
 )
 
-SERVICE_SCHEMA_SET_CF_SCENE = YEELIGHT_SERVICE_SCHEMA.extend(
+SERVICE_SCHEMA_SET_COLOR_FLOW_SCENE = YEELIGHT_SERVICE_SCHEMA.extend(
     YEELIGHT_FLOW_TRANSITION_SCHEMA
 )
 
@@ -368,15 +368,15 @@ def setup_services(hass):
     )
     hass.services.register(
         DOMAIN,
-        SERVICE_SET_CT_SCENE,
+        SERVICE_SET_COLOR_TEMP_SCENE,
         service_set_color_temp_scene,
-        schema=SERVICE_SCHEMA_SET_CT_SCENE,
+        schema=SERVICE_SCHEMA_SET_COLOR_TEMP_SCENE,
     )
     hass.services.register(
         DOMAIN,
-        SERVICE_SET_CF_SCENE,
+        SERVICE_SET_COLOR_FLOW_SCENE,
         service_set_color_flow_scene,
-        schema=SERVICE_SCHEMA_SET_CF_SCENE,
+        schema=SERVICE_SCHEMA_SET_COLOR_FLOW_SCENE,
     )
     hass.services.register(
         DOMAIN,
