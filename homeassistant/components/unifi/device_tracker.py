@@ -20,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_registry import DISABLED_CONFIG_ENTRY
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
@@ -136,7 +137,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Update the values of the controller."""
         update_items(controller, async_add_entities, tracked)
 
-    async_dispatcher_connect(hass, controller.event_update, update_controller)
+    async_dispatcher_connect(hass, controller.signal_update, update_controller)
+
+    @callback
+    def update_disable_on_entities():
+        """Update the values of the controller."""
+        for entity in tracked.values():
+
+            disabled_by = None
+            if not entity.entity_registry_enabled_default and entity.enabled:
+                disabled_by = DISABLED_CONFIG_ENTRY
+
+            registry.async_update_entity(
+                entity.registry_entry.entity_id, disabled_by=disabled_by
+            )
+
+    async_dispatcher_connect(
+        hass, controller.signal_options_update, update_disable_on_entities
+    )
 
     update_controller()
 
@@ -146,65 +164,20 @@ def update_items(controller, async_add_entities, tracked):
     """Update tracked device state from the controller."""
     new_tracked = []
 
-    if controller.option_track_clients:
+    for items, tracker_class in (
+        (controller.api.clients, UniFiClientTracker),
+        (controller.api.devices, UniFiDeviceTracker),
+    ):
 
-        for client_id in controller.api.clients:
+        for item_id in items:
 
-            if client_id in tracked:
-                if not tracked[client_id].enabled:
-                    continue
-                LOGGER.debug(
-                    "Updating UniFi tracked client %s (%s)",
-                    tracked[client_id].entity_id,
-                    tracked[client_id].client.mac,
-                )
-                tracked[client_id].async_schedule_update_ha_state()
+            if item_id in tracked:
+                if tracked[item_id].enabled:
+                    tracked[item_id].async_schedule_update_ha_state()
                 continue
 
-            client = controller.api.clients[client_id]
-
-            if (
-                not client.is_wired
-                and controller.option_ssid_filter
-                and client.essid not in controller.option_ssid_filter
-            ):
-                continue
-
-            if not controller.option_track_wired_clients and client.is_wired:
-                continue
-
-            tracked[client_id] = UniFiClientTracker(client, controller)
-            new_tracked.append(tracked[client_id])
-            LOGGER.debug(
-                "New UniFi client tracker %s (%s)",
-                client.name or client.hostname,
-                client.mac,
-            )
-
-    if controller.option_track_devices:
-
-        for device_id in controller.api.devices:
-
-            if device_id in tracked:
-                if not tracked[device_id].enabled:
-                    continue
-                LOGGER.debug(
-                    "Updating UniFi tracked device %s (%s)",
-                    tracked[device_id].entity_id,
-                    tracked[device_id].device.mac,
-                )
-                tracked[device_id].async_schedule_update_ha_state()
-                continue
-
-            device = controller.api.devices[device_id]
-
-            tracked[device_id] = UniFiDeviceTracker(device, controller)
-            new_tracked.append(tracked[device_id])
-            LOGGER.debug(
-                "New UniFi device tracker %s (%s)",
-                device.name or device.model,
-                device.mac,
-            )
+            tracked[item_id] = tracker_class(items[item_id], controller)
+            new_tracked.append(tracked[item_id])
 
     if new_tracked:
         async_add_entities(new_tracked)
@@ -218,8 +191,33 @@ class UniFiClientTracker(ScannerEntity):
         self.client = client
         self.controller = controller
 
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        if not self.controller.option_track_clients:
+            return False
+
+        if (
+            not self.client.is_wired
+            and self.controller.option_ssid_filter
+            and self.client.essid not in self.controller.option_ssid_filter
+        ):
+            return False
+
+        if not self.controller.option_track_wired_clients and self.client.is_wired:
+            return False
+
+        return True
+
+    async def async_added_to_hass(self):
+        """Client entity created."""
+        LOGGER.debug("New UniFi client tracker %s (%s)", self.name, self.client.mac)
+
     async def async_update(self):
         """Synchronize state with controller."""
+        LOGGER.debug(
+            "Updating UniFi tracked client %s (%s)", self.entity_id, self.client.mac
+        )
         await self.controller.request_update()
 
     @property
@@ -277,8 +275,23 @@ class UniFiDeviceTracker(ScannerEntity):
         self.device = device
         self.controller = controller
 
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        if not self.controller.option_track_devices:
+            return False
+
+        return True
+
+    async def async_added_to_hass(self):
+        """Subscribe to device events."""
+        LOGGER.debug("New UniFi device tracker %s (%s)", self.name, self.device.mac)
+
     async def async_update(self):
         """Synchronize state with controller."""
+        LOGGER.debug(
+            "Updating UniFi tracked device %s (%s)", self.entity_id, self.device.mac
+        )
         await self.controller.request_update()
 
     @property

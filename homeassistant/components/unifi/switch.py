@@ -61,7 +61,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Update the values of the controller."""
         update_items(controller, async_add_entities, switches, switches_off)
 
-    async_dispatcher_connect(hass, controller.event_update, update_controller)
+    async_dispatcher_connect(hass, controller.signal_update, update_controller)
 
     update_controller()
     switches_off.clear()
@@ -220,7 +220,7 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchDevice, RestoreEntity):
             or self.client.sw_mac
             and (
                 self.controller.available
-                or self.client.sw_mac in self.controller.api.devices
+                and self.client.sw_mac in self.controller.api.devices
             )
         )
 
