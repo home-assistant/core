@@ -47,7 +47,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-SUPPORT_HVAC = [HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY, HVAC_MODE_OFF]
+SUPPORT_HVAC = [
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_DRY,
+    HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_OFF,
+]
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
