@@ -37,6 +37,40 @@ async def test_setup_no_config(hass):
 
     await hass.async_block_till_done()
 
+    assert (
+        hass.states.get("sensor.pi_hole_ads_blocked_today").name
+        == "Pi-Hole Ads Blocked Today"
+    )
+    assert (
+        hass.states.get("sensor.pi_hole_ads_percentage_blocked_today").name
+        == "Pi-Hole Ads Percentage Blocked Today"
+    )
+    assert (
+        hass.states.get("sensor.pi_hole_dns_queries_cached").name
+        == "Pi-Hole DNS Queries Cached"
+    )
+    assert (
+        hass.states.get("sensor.pi_hole_dns_queries_forwarded").name
+        == "Pi-Hole DNS Queries Forwarded"
+    )
+    assert (
+        hass.states.get("sensor.pi_hole_dns_queries_today").name
+        == "Pi-Hole DNS Queries Today"
+    )
+    assert (
+        hass.states.get("sensor.pi_hole_dns_unique_clients").name
+        == "Pi-Hole DNS Unique Clients"
+    )
+    assert (
+        hass.states.get("sensor.pi_hole_dns_unique_domains").name
+        == "Pi-Hole DNS Unique Domains"
+    )
+    assert (
+        hass.states.get("sensor.pi_hole_domains_blocked").name
+        == "Pi-Hole Domains Blocked"
+    )
+    assert hass.states.get("sensor.pi_hole_seen_clients").name == "Pi-Hole Seen Clients"
+
     assert hass.states.get("sensor.pi_hole_ads_blocked_today").state == "0"
     assert hass.states.get("sensor.pi_hole_ads_percentage_blocked_today").state == "0"
     assert hass.states.get("sensor.pi_hole_dns_queries_cached").state == "0"
@@ -46,3 +80,20 @@ async def test_setup_no_config(hass):
     assert hass.states.get("sensor.pi_hole_dns_unique_domains").state == "0"
     assert hass.states.get("sensor.pi_hole_domains_blocked").state == "0"
     assert hass.states.get("sensor.pi_hole_seen_clients").state == "0"
+
+
+async def test_setup_custom_config(hass):
+    """Tests component setup with custom config."""
+    with patch.object(
+        Hole, "get_data", new=CoroutineMock(side_effect=mock_pihole_data_call(Hole))
+    ):
+        assert await async_setup_component(
+            hass, pi_hole.DOMAIN, {pi_hole.DOMAIN: {"name": "Custom"}}
+        )
+
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.custom_ads_blocked_today").name
+        == "Custom Ads Blocked Today"
+    )
