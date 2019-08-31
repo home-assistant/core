@@ -2,7 +2,11 @@
   "domain": "moscow_yandex_transport",
   "name": "Moscow Yandex transport",
   "documentation": "https://www.home-assistant.io/components/moscow_yandex_transport",
-  "requirements": [],
+  "requirements": [
+    "moscow_yandex_transport==0.2.0"
+  ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@rishatik92"
+  ]
 }

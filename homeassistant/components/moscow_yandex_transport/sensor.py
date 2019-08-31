@@ -4,22 +4,12 @@ Service for obtaining information about closer bus from Transport Yandex Service
 @author: rishatik92@gmail.com
 '''
 
-RESOURCE = 'https://yandex.ru/maps/api/masstransit/getStopInfo'
-CONFIG = {
-    'init_url': 'https://maps.yandex.ru',
-    'uri': RESOURCE,
-    'params': {'ajax': 1, 'lang': 'en', 'locale': 'en_EN', 'mode': 'prognosis'},
-    'headers': {'User-Agent': "Home Assistant"}}
-SESSION_KEY = "sessionId"
-CSRF_TOKEN_KEY = "csrfToken"
 import logging
-import re
 from datetime import timedelta
-from json import loads
 from time import time
 
-import requests
 import voluptuous as vol
+from moscow_yandex_transport import YandexMapsRequester
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -29,7 +19,7 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 
 STOP_NAME = "Stop name"
-
+USER_AGENT = "Home Assistant"
 ATTRIBUTION = "Data provided by maps.yandex.ru"
 
 CONF_STOP_ID = "stop_id"
@@ -68,7 +58,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config.get(CONF_NAME)
     routes = config.get(CONF_ROUTE)
 
-    data = YandexMapsRequester(CONFIG)
+    data = YandexMapsRequester(user_agent=USER_AGENT)
     add_entities([DiscoverMoscowYandexTransport(data, stop_id, routes, name)], True)
 
 
@@ -151,28 +141,3 @@ class DiscoverMoscowYandexTransport(Entity):
     def icon(self):
         """Icon to use in the frontend, if any."""
         return ICON
-
-
-class YandexMapsRequester(object):
-    def __init__(self, config):
-        self._config = config
-        self.set_new_session()
-
-    def get_stop_info(self, stop_id):
-        """"
-        get transport data for stop_id in json
-        """
-        self._config["params"]["id"] = f"stop__{stop_id}"
-        req = requests.get(self._config["uri"], params=self._config["params"], cookies=self._config["cookies"],
-                           headers=self._config["headers"])
-        return loads(req.content.decode('utf8'))
-
-    def set_new_session(self):
-        """
-        Create new http session to Yandex, with valid csrf_token and session_id
-        """
-        ya_request = requests.get(url=self._config["init_url"], headers=self._config["headers"])
-        reply = ya_request.content.decode('utf8')
-        self._config["params"][CSRF_TOKEN_KEY] = re.search(f'"{CSRF_TOKEN_KEY}":"(\w+.\w+)"', reply).group(1)
-        self._config["cookies"] = dict(ya_request.cookies)
-        self._config["params"][SESSION_KEY] = re.search(f'"{SESSION_KEY}":"(\d+.\d+)"', reply).group(1)
