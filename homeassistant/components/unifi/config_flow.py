@@ -11,7 +11,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
-from .const import (
+from .const import (  # pylint: disable=unused-import
     CONF_CONTROLLER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
