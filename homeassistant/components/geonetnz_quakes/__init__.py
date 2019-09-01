@@ -98,8 +98,10 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up the GeoNet NZ Quakes component as config entry."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][FEED] = {}
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+    if FEED not in hass.data[DOMAIN]:
+        hass.data[DOMAIN][FEED] = {}
 
     for domain in COMPONENTS:
         hass.async_create_task(
