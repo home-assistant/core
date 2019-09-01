@@ -13,12 +13,16 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-from . import DATA_AD, SIGNAL_PANEL_MESSAGE
+from . import DATA_AD, DOMAIN as DOMAIN_ALARMDECODER, SIGNAL_PANEL_MESSAGE
 
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_ALARM_TOGGLE_CHIME = "alarmdecoder_alarm_toggle_chime"
 ALARM_TOGGLE_CHIME_SCHEMA = vol.Schema({vol.Required(ATTR_CODE): cv.string})
+
+SERVICE_ALARM_KEYPRESS = "alarm_keypress"
+ATTR_KEYPRESS = "keypress"
+ALARM_KEYPRESS_SCHEMA = vol.Schema({vol.Required(ATTR_KEYPRESS): cv.string})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -36,6 +40,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         SERVICE_ALARM_TOGGLE_CHIME,
         alarm_toggle_chime_handler,
         schema=ALARM_TOGGLE_CHIME_SCHEMA,
+    )
+
+    def alarm_keypress_handler(service):
+        """Register keypress handler."""
+        keypress = service.data[ATTR_KEYPRESS]
+        device.alarm_keypress(keypress)
+
+    hass.services.register(
+        DOMAIN_ALARMDECODER,
+        SERVICE_ALARM_KEYPRESS,
+        alarm_keypress_handler,
+        schema=ALARM_KEYPRESS_SCHEMA,
     )
 
 
@@ -145,3 +161,8 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
         """Send toggle chime command."""
         if code:
             self.hass.data[DATA_AD].send("{!s}9".format(code))
+
+    def alarm_keypress(self, keypress):
+        """Send custom keypresses."""
+        if keypress:
+            self.hass.data[DATA_AD].send(keypress)
