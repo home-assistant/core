@@ -10,12 +10,7 @@ import threading
 from typing import List, Dict, Any, TYPE_CHECKING  # noqa pylint: disable=unused-import
 
 from homeassistant import monkey_patch
-from homeassistant.const import (
-    __version__,
-    EVENT_HOMEASSISTANT_START,
-    REQUIRED_PYTHON_VER,
-    RESTART_EXIT_CODE,
-)
+from homeassistant.const import __version__, REQUIRED_PYTHON_VER, RESTART_EXIT_CODE
 
 if TYPE_CHECKING:
     from homeassistant import core
@@ -173,7 +168,7 @@ def get_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--runner",
         action="store_true",
-        help="On restart exit with code {}".format(RESTART_EXIT_CODE),
+        help=f"On restart exit with code {RESTART_EXIT_CODE}",
     )
     parser.add_argument(
         "--script", nargs=argparse.REMAINDER, help="Run one of the embedded scripts"
@@ -245,7 +240,7 @@ def write_pid(pid_file: str) -> None:
         with open(pid_file, "w") as file:
             file.write(str(pid))
     except IOError:
-        print("Fatal Error: Unable to write pid file {}".format(pid_file))
+        print(f"Fatal Error: Unable to write pid file {pid_file}")
         sys.exit(1)
 
 
@@ -309,23 +304,10 @@ async def setup_and_run_hass(config_dir: str, args: argparse.Namespace) -> int:
             log_no_color=args.log_no_color,
         )
 
-    if args.open_ui:
-        # Imported here to avoid importing asyncio before monkey patch
-        from homeassistant.util.async_ import run_callback_threadsafe
+    if args.open_ui and hass.config.api is not None:
+        import webbrowser
 
-        def open_browser(_: Any) -> None:
-            """Open the web interface in a browser."""
-            if hass.config.api is not None:
-                import webbrowser
-
-                webbrowser.open(hass.config.api.base_url)
-
-        run_callback_threadsafe(
-            hass.loop,
-            hass.bus.async_listen_once,
-            EVENT_HOMEASSISTANT_START,
-            open_browser,
-        )
+        hass.add_job(webbrowser.open, hass.config.api.base_url)
 
     return await hass.async_run()
 
@@ -344,7 +326,7 @@ def try_to_restart() -> None:
             thread.is_alive() and not thread.daemon for thread in threading.enumerate()
         )
         if nthreads > 1:
-            sys.stderr.write("Found {} non-daemonic threads.\n".format(nthreads))
+            sys.stderr.write(f"Found {nthreads} non-daemonic threads.\n")
 
     # Somehow we sometimes seem to trigger an assertion in the python threading
     # module. It seems we find threads that have no associated OS level thread

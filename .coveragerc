@@ -31,7 +31,6 @@ omit =
     homeassistant/components/amcrest/*
     homeassistant/components/ampio/*
     homeassistant/components/android_ip_webcam/*
-    homeassistant/components/androidtv/*
     homeassistant/components/anel_pwrctrl/switch.py
     homeassistant/components/anthemav/media_player.py
     homeassistant/components/apache_kafka/*
@@ -58,6 +57,7 @@ omit =
     homeassistant/components/avion/light.py
     homeassistant/components/azure_event_hub/*
     homeassistant/components/baidu/tts.py
+    homeassistant/components/beewi_smartclim/sensor.py
     homeassistant/components/bbb_gpio/*
     homeassistant/components/bbox/device_tracker.py
     homeassistant/components/bbox/sensor.py
@@ -93,6 +93,7 @@ omit =
     homeassistant/components/canary/camera.py
     homeassistant/components/cast/*
     homeassistant/components/cert_expiry/sensor.py
+    homeassistant/components/cert_expiry/helper.py
     homeassistant/components/channels/media_player.py
     homeassistant/components/cisco_ios/device_tracker.py
     homeassistant/components/cisco_mobility_express/device_tracker.py
@@ -241,7 +242,6 @@ omit =
     homeassistant/components/google_cloud/tts.py
     homeassistant/components/google_maps/device_tracker.py
     homeassistant/components/google_travel_time/sensor.py
-    homeassistant/components/googlehome/*
     homeassistant/components/gpmdp/media_player.py
     homeassistant/components/gpsd/sensor.py
     homeassistant/components/greeneye_monitor/*
@@ -308,6 +308,7 @@ omit =
     homeassistant/components/joaoapps_join/*
     homeassistant/components/juicenet/*
     homeassistant/components/kankun/switch.py
+    homeassistant/components/keba/*
     homeassistant/components/keenetic_ndms2/device_tracker.py
     homeassistant/components/keyboard/*
     homeassistant/components/keyboard_remote/*
@@ -377,6 +378,7 @@ omit =
     homeassistant/components/miflora/sensor.py
     homeassistant/components/mikrotik/*
     homeassistant/components/mill/climate.py
+    homeassistant/components/minio/*
     homeassistant/components/mitemp_bt/sensor.py
     homeassistant/components/mjpeg/camera.py
     homeassistant/components/mobile_app/*

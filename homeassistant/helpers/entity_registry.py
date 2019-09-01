@@ -166,9 +166,7 @@ class EntityRegistry:
             )
 
         entity_id = self.async_generate_entity_id(
-            domain,
-            suggested_object_id or "{}_{}".format(platform, unique_id),
-            known_object_ids,
+            domain, suggested_object_id or f"{platform}_{unique_id}", known_object_ids
         )
 
         if (
@@ -302,7 +300,7 @@ class EntityRegistry:
 
         self.async_schedule_save()
 
-        data = {"action": "update", "entity_id": entity_id}
+        data = {"action": "update", "entity_id": entity_id, "changes": list(changes)}
 
         if old.entity_id != entity_id:
             data["old_entity_id"] = old.entity_id

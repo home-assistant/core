@@ -7,7 +7,6 @@ from datetime import timedelta
 import logging
 import hashlib
 from random import SystemRandom
-from typing import Deque
 
 import attr
 from aiohttp import web
@@ -315,7 +314,7 @@ class Camera(Entity):
         """Initialize a camera."""
         self.is_streaming = False
         self.content_type = DEFAULT_CONTENT_TYPE
-        self.access_tokens: Deque[str] = collections.deque([], 2)
+        self.access_tokens: collections.deque = collections.deque([], 2)
         self.async_update_token()
 
     @property

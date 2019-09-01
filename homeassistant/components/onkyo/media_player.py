@@ -85,7 +85,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 TIMEOUT_MESSAGE = "Timeout waiting for response."
 
+
 ATTR_HDMI_OUTPUT = "hdmi_output"
+ATTR_PRESET = "preset"
+
 ACCEPTED_VALUES = [
     "no",
     "analog",
@@ -177,7 +180,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                         "2",
                         receiver,
                         config.get(CONF_SOURCES),
-                        name="{} Zone 2".format(config[CONF_NAME]),
+                        name=f"{config[CONF_NAME]} Zone 2",
                     )
                 )
             # Add Zone3 if available
@@ -188,7 +191,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                         "3",
                         receiver,
                         config.get(CONF_SOURCES),
-                        name="{} Zone 3".format(config[CONF_NAME]),
+                        name=f"{config[CONF_NAME]} Zone 3",
                     )
                 )
         except OSError:
@@ -210,8 +213,8 @@ class OnkyoDevice(MediaPlayerDevice):
         self._muted = False
         self._volume = 0
         self._pwstate = STATE_OFF
-        self._name = name or "{}_{}".format(
-            receiver.info["model_name"], receiver.info["identifier"]
+        self._name = (
+            name or f"{receiver.info['model_name']}_{receiver.info['identifier']}"
         )
         self._max_volume = max_volume
         self._current_source = None
@@ -249,7 +252,7 @@ class OnkyoDevice(MediaPlayerDevice):
         mute_raw = self.command("audio-muting query")
         current_source_raw = self.command("input-selector query")
         hdmi_out_raw = self.command("hdmi-output-selector query")
-
+        preset_raw = self.command("preset query")
         if not (volume_raw and mute_raw and current_source_raw):
             return
 
@@ -265,6 +268,11 @@ class OnkyoDevice(MediaPlayerDevice):
                 break
             else:
                 self._current_source = "_".join([i for i in current_source_tuples[1]])
+        if preset_raw and self._current_source.lower() == "radio":
+            self._attributes[ATTR_PRESET] = preset_raw[1]
+        elif ATTR_PRESET in self._attributes:
+            del self._attributes[ATTR_PRESET]
+
         self._muted = bool(mute_raw[1] == "on")
         self._volume = volume_raw[1] / self._max_volume
 
@@ -323,7 +331,7 @@ class OnkyoDevice(MediaPlayerDevice):
         Onkyo ranges from 1-80 however 80 is usually far too loud
         so allow the user to specify the upper range with CONF_MAX_VOLUME
         """
-        self.command("volume {}".format(int(volume * self._max_volume)))
+        self.command(f"volume {int(volume * self._max_volume)}")
 
     def volume_up(self):
         """Increase volume by 1 step."""
@@ -348,17 +356,17 @@ class OnkyoDevice(MediaPlayerDevice):
         """Set the input source."""
         if source in self._source_list:
             source = self._reverse_mapping[source]
-        self.command("input-selector {}".format(source))
+        self.command(f"input-selector {source}")
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play radio station by preset number."""
         source = self._reverse_mapping[self._current_source]
         if media_type.lower() == "radio" and source in DEFAULT_PLAYABLE_SOURCES:
-            self.command("preset {}".format(media_id))
+            self.command(f"preset {media_id}")
 
     def select_output(self, output):
         """Set hdmi-out."""
-        self.command("hdmi-output-selector={}".format(output))
+        self.command(f"hdmi-output-selector={output}")
 
 
 class OnkyoDeviceZone(OnkyoDevice):
@@ -372,7 +380,7 @@ class OnkyoDeviceZone(OnkyoDevice):
 
     def update(self):
         """Get the latest state from the device."""
-        status = self.command("zone{}.power=query".format(self._zone))
+        status = self.command(f"zone{self._zone}.power=query")
 
         if not status:
             return
@@ -382,10 +390,10 @@ class OnkyoDeviceZone(OnkyoDevice):
             self._pwstate = STATE_OFF
             return
 
-        volume_raw = self.command("zone{}.volume=query".format(self._zone))
-        mute_raw = self.command("zone{}.muting=query".format(self._zone))
-        current_source_raw = self.command("zone{}.selector=query".format(self._zone))
-
+        volume_raw = self.command(f"zone{self._zone}.volume=query")
+        mute_raw = self.command(f"zone{self._zone}.muting=query")
+        current_source_raw = self.command(f"zone{self._zone}.selector=query")
+        preset_raw = self.command(f"zone{self._zone}.preset=query")
         # If we received a source value, but not a volume value
         # it's likely this zone permanently does not support volume.
         if current_source_raw and not volume_raw:
@@ -411,7 +419,10 @@ class OnkyoDeviceZone(OnkyoDevice):
             else:
                 self._current_source = "_".join([i for i in current_source_tuples[1]])
         self._muted = bool(mute_raw[1] == "on")
-
+        if preset_raw and self._current_source.lower() == "radio":
+            self._attributes[ATTR_PRESET] = preset_raw[1]
+        elif ATTR_PRESET in self._attributes:
+            del self._attributes[ATTR_PRESET]
         if self._supports_volume:
             self._volume = volume_raw[1] / 80.0
 
@@ -424,33 +435,33 @@ class OnkyoDeviceZone(OnkyoDevice):
 
     def turn_off(self):
         """Turn the media player off."""
-        self.command("zone{}.power=standby".format(self._zone))
+        self.command(f"zone{self._zone}.power=standby")
 
     def set_volume_level(self, volume):
         """Set volume level, input is range 0..1. Onkyo ranges from 1-80."""
-        self.command("zone{}.volume={}".format(self._zone, int(volume * 80)))
+        self.command(f"zone{self._zone}.volume={int(volume * 80)}")
 
     def volume_up(self):
         """Increase volume by 1 step."""
-        self.command("zone{}.volume=level-up".format(self._zone))
+        self.command(f"zone{self._zone}.volume=level-up")
 
     def volume_down(self):
         """Decrease volume by 1 step."""
-        self.command("zone{}.volume=level-down".format(self._zone))
+        self.command(f"zone{self._zone}.volume=level-down")
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         if mute:
-            self.command("zone{}.muting=on".format(self._zone))
+            self.command(f"zone{self._zone}.muting=on")
         else:
-            self.command("zone{}.muting=off".format(self._zone))
+            self.command(f"zone{self._zone}.muting=off")
 
     def turn_on(self):
         """Turn the media player on."""
-        self.command("zone{}.power=on".format(self._zone))
+        self.command(f"zone{self._zone}.power=on")
 
     def select_source(self, source):
         """Set the input source."""
         if source in self._source_list:
             source = self._reverse_mapping[source]
-        self.command("zone{}.selector={}".format(self._zone, source))
+        self.command(f"zone{self._zone}.selector={source}")

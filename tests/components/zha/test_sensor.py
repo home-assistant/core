@@ -160,8 +160,8 @@ async def async_test_illuminance(hass, device_info):
 
 async def async_test_metering(hass, device_info):
     """Test metering sensor."""
-    await send_attribute_report(hass, device_info["cluster"], 1024, 10)
-    assert_state(hass, device_info, "10", "W")
+    await send_attribute_report(hass, device_info["cluster"], 1024, 12345)
+    assert_state(hass, device_info, "12345.0", "unknown")
 
 
 async def async_test_electrical_measurement(hass, device_info):

@@ -49,13 +49,11 @@ def _cv_input_number(cfg):
     maximum = cfg.get(CONF_MAX)
     if minimum >= maximum:
         raise vol.Invalid(
-            "Maximum ({}) is not greater than minimum ({})".format(minimum, maximum)
+            f"Maximum ({minimum}) is not greater than minimum ({maximum})"
         )
     state = cfg.get(CONF_INITIAL)
     if state is not None and (state < minimum or state > maximum):
-        raise vol.Invalid(
-            "Initial value {} not in range {}-{}".format(state, minimum, maximum)
-        )
+        raise vol.Invalid(f"Initial value {state} not in range {minimum}-{maximum}")
     return cfg
 
 

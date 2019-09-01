@@ -193,8 +193,8 @@ def get_age(date: dt.datetime) -> str:
     def formatn(number: int, unit: str) -> str:
         """Add "unit" if it's plural."""
         if number == 1:
-            return "1 {}".format(unit)
-        return "{:d} {}s".format(number, unit)
+            return f"1 {unit}"
+        return f"{number:d} {unit}s"
 
     def q_n_r(first: int, second: int) -> Tuple[int, int]:
         """Return quotient and remaining."""

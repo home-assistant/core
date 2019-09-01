@@ -1,11 +1,14 @@
 """Test UniFi setup process."""
-from datetime import timedelta
 from unittest.mock import Mock, patch
 
 from homeassistant.components import unifi
 from homeassistant.components.unifi import config_flow
 from homeassistant.setup import async_setup_component
-from homeassistant.components.unifi.const import CONF_CONTROLLER, CONF_SITE_ID
+from homeassistant.components.unifi.const import (
+    CONF_CONTROLLER,
+    CONF_SITE_ID,
+    CONTROLLER_ID as CONF_CONTROLLER_ID,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -44,7 +47,7 @@ async def test_setup_with_config(hass):
             unifi.CONF_HOST: "1.2.3.4",
             unifi.CONF_SITE_ID: "My site",
             unifi.CONF_BLOCK_CLIENT: ["12:34:56:78:90:AB"],
-            unifi.CONF_DETECTION_TIME: timedelta(seconds=3),
+            unifi.CONF_DETECTION_TIME: 3,
             unifi.CONF_SSID_FILTER: ["ssid"],
         }
     ]
@@ -114,7 +117,7 @@ async def test_controller_fail_setup(hass):
         mock_cntrlr.return_value.async_setup.return_value = mock_coro(False)
         assert await unifi.async_setup_entry(hass, entry) is False
 
-    controller_id = unifi.CONTROLLER_ID.format(host="0.0.0.0", site="default")
+    controller_id = CONF_CONTROLLER_ID.format(host="0.0.0.0", site="default")
     assert controller_id in hass.data[unifi.DOMAIN]
 
 
