@@ -50,17 +50,15 @@ class LiveboxDeviceScanner(DeviceScanner):
     async def async_update_info(self):
         """Ensure the information from the Livebox router is up to date."""
 
-        result = (await self._box.system.get_devices())['status']
+        result = (await self._box.system.get_devices())["status"]
         now = dt_util.now()
         last_results = []
         for device in result:
-            if device["Active"] and 'IPAddress' in device:
+            if device["Active"] and "IPAddress" in device:
                 last_results.append(
                     Device(
-                        device["PhysAddress"],
-                        device["Name"],
-                        device["IPAddress"],
-                        now)
+                        device["PhysAddress"], device["Name"], device["IPAddress"], now
+                    )
                 )
         self.last_results = last_results
         return True
