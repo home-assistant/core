@@ -11,7 +11,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
-from .const import (
+from .const import (  # pylint: disable=unused-import
     CONF_CONTROLLER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
@@ -33,8 +33,7 @@ DEFAULT_SITE_ID = "default"
 DEFAULT_VERIFY_SSL = False
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class UnifiFlowHandler(config_entries.ConfigFlow):
+class UnifiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a UniFi config flow."""
 
     VERSION = 1

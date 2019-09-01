@@ -56,8 +56,7 @@ def configured_devices(hass):
     }
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class AxisFlowHandler(config_entries.ConfigFlow):
+class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Axis config flow."""
 
     VERSION = 1

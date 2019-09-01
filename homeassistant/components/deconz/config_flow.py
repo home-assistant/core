@@ -43,8 +43,7 @@ def get_master_gateway(hass):
             return gateway
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class DeconzFlowHandler(config_entries.ConfigFlow):
+class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a deCONZ config flow."""
 
     VERSION = 1
