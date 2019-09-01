@@ -125,7 +125,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         )
 
     hass.helpers.event.async_track_time_interval(
-        hass, broker.update, config[DOMAIN][CONF_SCAN_INTERVAL]
+        broker.update, config[DOMAIN][CONF_SCAN_INTERVAL]
     )
 
     return True
@@ -241,7 +241,6 @@ class EvoBroker:
         await store.async_save(self._app_storage)
 
         self.hass.helpers.event.async_track_point_in_utc_time(
-            self.hass,
             self._save_auth_tokens,
             access_token_expires + self.params[CONF_SCAN_INTERVAL],
         )
@@ -262,7 +261,7 @@ class EvoBroker:
         else:
             # inform the evohome devices that state data has been updated
             self.hass.helpers.dispatcher.async_dispatcher_send(
-                self.hass, DOMAIN, {"signal": "refresh"}
+                DOMAIN, {"signal": "refresh"}
             )
 
             _LOGGER.debug("Status = %s", status[GWS][0][TCS][0])
@@ -377,9 +376,7 @@ class EvoDevice(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            self.hass, DOMAIN, self._refresh
-        )
+        self.hass.helpers.dispatcher.async_dispatcher_connect(DOMAIN, self._refresh)
 
     @property
     def precision(self) -> float:
@@ -400,7 +397,7 @@ class EvoDevice(Entity):
         point_in_time = utcnow() + timedelta(seconds=2)
 
         self.hass.helpers.event.async_track_point_in_utc_time(
-            self.hass, self._evo_broker.update(point_in_time), point_in_time
+            self._evo_broker.update(point_in_time), point_in_time
         )
 
     async def _update_schedule(self) -> None:
