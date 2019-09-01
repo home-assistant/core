@@ -111,23 +111,20 @@ async def async_from_config(
 from_config = _threaded_factory(async_from_config)
 
 
-def async_and_from_config(
-    config: ConfigType, config_validation: bool = True
+async def async_and_from_config(
+    hass: HomeAssistant, config: ConfigType, config_validation: bool = True
 ) -> Callable[..., bool]:
     """Create multi condition matcher using 'AND'."""
     if config_validation:
         config = cv.AND_CONDITION_SCHEMA(config)
-    checks = None
+    checks = [
+        await async_from_config(hass, entry, False) for entry in config["conditions"]
+    ]
 
     def if_and_condition(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
         """Test and condition."""
-        nonlocal checks
-
-        if checks is None:
-            checks = [async_from_config(entry, False) for entry in config["conditions"]]
-
         try:
             for check in checks:
                 if not check(hass, variables):
@@ -144,23 +141,20 @@ def async_and_from_config(
 and_from_config = _threaded_factory(async_and_from_config)
 
 
-def async_or_from_config(
-    config: ConfigType, config_validation: bool = True
+async def async_or_from_config(
+    hass: HomeAssistant, config: ConfigType, config_validation: bool = True
 ) -> Callable[..., bool]:
     """Create multi condition matcher using 'OR'."""
     if config_validation:
         config = cv.OR_CONDITION_SCHEMA(config)
-    checks = None
+    checks = [
+        await async_from_config(hass, entry, False) for entry in config["conditions"]
+    ]
 
     def if_or_condition(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
         """Test and condition."""
-        nonlocal checks
-
-        if checks is None:
-            checks = [async_from_config(entry, False) for entry in config["conditions"]]
-
         try:
             for check in checks:
                 if check(hass, variables):
