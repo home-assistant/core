@@ -11,13 +11,14 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
-from .const import (  # pylint: disable=unused-import
+from .const import (
     CONF_CONTROLLER,
+    CONF_DETECTION_TIME,
+    CONF_SITE_ID,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
-    CONF_DETECTION_TIME,
-    CONF_SITE_ID,
+    CONTROLLER_ID,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
@@ -31,6 +32,21 @@ from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
 DEFAULT_PORT = 8443
 DEFAULT_SITE_ID = "default"
 DEFAULT_VERIFY_SSL = False
+
+
+@callback
+def get_controller_id_from_config_entry(config_entry):
+    """Return controller with a matching bridge id."""
+    return CONTROLLER_ID.format(
+        host=config_entry.data[CONF_CONTROLLER][CONF_HOST],
+        site=config_entry.data[CONF_CONTROLLER][CONF_SITE_ID],
+    )
+
+
+@callback
+def get_controller_from_config_entry(hass, config_entry):
+    """Return controller with a matching bridge id."""
+    return hass.data[DOMAIN][get_controller_id_from_config_entry(config_entry)]
 
 
 class UnifiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
