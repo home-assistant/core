@@ -2,6 +2,7 @@
 import logging
 from typing import List, Set, Tuple
 
+# pylint: disable=import-error
 import bluetooth
 from bt_proximity import BluetoothRSSI
 import voluptuous as vol
