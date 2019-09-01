@@ -1,30 +1,16 @@
 """Viessmann ViCare water_heater device."""
 import logging
 
-import voluptuous as vol
-from PyViCare.PyViCareDevice import Device
-
 from homeassistant.components.water_heater import (
     SUPPORT_TARGET_TEMPERATURE,
     WaterHeaterDevice,
 )
+from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE, PRECISION_WHOLE
 
-from homeassistant.const import (
-    TEMP_CELSIUS,
-    ATTR_TEMPERATURE,
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_NAME,
-    PRECISION_WHOLE,
-)
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from . import DOMAIN as VICARE_DOMAIN
+from . import DOMAIN_NAME as VICARE_DOMAIN_NAME
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ["PyViCare==0.1.0"]
-
-CONF_CIRCUIT = "circuit"
 
 VICARE_MODE_DHW = "dhw"
 VICARE_MODE_DHWANDHEATING = "dhwAndHeating"
@@ -53,30 +39,13 @@ HA_TO_VICARE_HVAC_DHW = {
     OPERATION_MODE_ON: VICARE_MODE_DHW,
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_CIRCUIT): int,
-        vol.Optional(CONF_NAME, default="ViCare"): cv.string,
-    }
-)
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the ViCare water_heater devices."""
-    if config.get(CONF_CIRCUIT) is None:
-        vicare_api = Device(
-            config[CONF_USERNAME], config[CONF_PASSWORD], "/tmp/vicare_token.save"
-        )
-    else:
-        vicare_api = Device(
-            config[CONF_USERNAME],
-            config[CONF_PASSWORD],
-            "/tmp/vicare_token.save",
-            config[CONF_CIRCUIT],
-        )
-    add_entities([ViCareWater(f"{config[CONF_NAME]} Water", vicare_api)])
+    if discovery_info is None:
+        return
+    vicare_api = hass.data[VICARE_DOMAIN]
+    add_entities([ViCareWater(f"{hass.data[VICARE_DOMAIN_NAME]} Water", vicare_api)])
 
 
 class ViCareWater(WaterHeaterDevice):
@@ -97,7 +66,7 @@ class ViCareWater(WaterHeaterDevice):
         if current_temperature is not None and current_temperature != "error":
             self._current_temperature = current_temperature
         else:
-            self._current_temperature = -1
+            self._current_temperature = None
 
         self._target_temperature = self._api.getDomesticHotWaterConfiguredTemperature()
 
@@ -132,7 +101,6 @@ class ViCareWater(WaterHeaterDevice):
         """Set new target temperatures."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
-            self._target_temperature = temp
             self._api.setDomesticHotWaterTemperature(self._target_temperature)
 
     @property
@@ -155,14 +123,7 @@ class ViCareWater(WaterHeaterDevice):
         """Return current operation ie. heat, cool, idle."""
         return VICARE_TO_HA_HVAC_DHW.get(self._current_mode)
 
-    def set_operation_mode(self, operation_mode):
-        """Set new operation mode."""
-        _LOGGER.error(
-            "The DHW water_heater device does not support setting modes."
-            "The current mode is only informative since. Setting it might conflict with the heating water_heater device"
-        )
-
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        return list(HA_TO_VICARE_HVAC_DHW.keys())
+        return list(HA_TO_VICARE_HVAC_DHW)

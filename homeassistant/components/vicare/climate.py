@@ -1,10 +1,6 @@
 """Viessmann ViCare climate device."""
 import logging
 
-import voluptuous as vol
-from PyViCare.PyViCareDevice import Device
-
-
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
@@ -15,22 +11,12 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_AUTO,
 )
-from homeassistant.const import (
-    TEMP_CELSIUS,
-    ATTR_TEMPERATURE,
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_NAME,
-    PRECISION_WHOLE,
-)
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE, PRECISION_WHOLE
+
+from . import DOMAIN as VICARE_DOMAIN
+from . import DOMAIN_NAME as VICARE_DOMAIN_NAME
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ["PyViCare==0.1.0"]
-
-CONF_CIRCUIT = "circuit"
 
 VICARE_MODE_DHW = "dhw"
 VICARE_MODE_DHWANDHEATING = "dhwAndHeating"
@@ -85,30 +71,14 @@ VALUE_UNKNOWN = "unknown"
 PYVICARE_ERROR = "error"
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_CIRCUIT): int,
-        vol.Optional(CONF_NAME, default="ViCare"): cv.string,
-    }
-)
-
-
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the ViCare climate devices."""
-    if config.get(CONF_CIRCUIT) is None:
-        vicare_api = Device(
-            config[CONF_USERNAME], config[CONF_PASSWORD], "/tmp/vicare_token.save"
-        )
-    else:
-        vicare_api = Device(
-            config[CONF_USERNAME],
-            config[CONF_PASSWORD],
-            "/tmp/vicare_token.save",
-            config[CONF_CIRCUIT],
-        )
-    add_entities([ViCareClimate(f"{config[CONF_NAME]}  Heating", vicare_api)])
+    if discovery_info is None:
+        return
+    vicare_api = hass.data[VICARE_DOMAIN]
+    add_entities(
+        [ViCareClimate(f"{hass.data[VICARE_DOMAIN_NAME]}  Heating", vicare_api)]
+    )
 
 
 class ViCareClimate(ClimateDevice):
@@ -207,7 +177,6 @@ class ViCareClimate(ClimateDevice):
         """Set new target temperatures."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
-            self._target_temperature = temp
             self._api.setProgramTemperature(
                 self._current_program, self._target_temperature
             )
