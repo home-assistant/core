@@ -262,6 +262,9 @@ batinfo==0.4.2
 # homeassistant.components.sytadin
 beautifulsoup4==4.8.0
 
+# homeassistant.components.beewi_smartclim
+beewi_smartclim==0.0.7
+
 # homeassistant.components.zha
 bellows-homeassistant==0.9.1
 
@@ -313,9 +316,6 @@ bt_proximity==0.2
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
-
-# homeassistant.components.beewi_smartclim
-beewi_smartclim==0.0.6
 
 # homeassistant.components.bt_smarthub
 btsmarthub_devicelist==0.1.3

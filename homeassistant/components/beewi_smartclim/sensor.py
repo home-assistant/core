@@ -89,7 +89,7 @@ class BeewiSmartclimSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return f"{self._name}_{self._mac}"
+        return f"{self._mac}_{self._device}"
 
     @property
     def unit_of_measurement(self):

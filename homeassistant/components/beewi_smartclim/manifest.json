@@ -3,7 +3,7 @@
   "name": "BeeWi SmartClim BLE sensor",
   "documentation": "https://www.home-assistant.io/components/beewi_smartclim",
   "requirements": [
-    "beewi_smartclim==0.0.6"
+    "beewi_smartclim==0.0.7"
   ],
   "dependencies": [],
   "codeowners": [
