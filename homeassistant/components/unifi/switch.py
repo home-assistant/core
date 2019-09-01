@@ -1,16 +1,13 @@
 """Support for devices connected to UniFi POE."""
 import logging
 
-from homeassistant.components import unifi
+from homeassistant.components.unifi.config_flow import get_controller_from_config_entry
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
-
-from .const import CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID
 
 LOGGER = logging.getLogger(__name__)
 
@@ -25,11 +22,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     Switches are controlling network switch ports with Poe.
     """
-    controller_id = CONTROLLER_ID.format(
-        host=config_entry.data[CONF_CONTROLLER][CONF_HOST],
-        site=config_entry.data[CONF_CONTROLLER][CONF_SITE_ID],
-    )
-    controller = hass.data[unifi.DOMAIN][controller_id]
+    controller = get_controller_from_config_entry(hass, config_entry)
 
     if controller.site_role != "admin":
         return
