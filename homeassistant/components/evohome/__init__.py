@@ -23,15 +23,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import (
-    async_track_point_in_utc_time,
-    async_track_time_interval,
-)
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.dt import parse_datetime, utcnow
 
@@ -132,7 +124,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
             async_load_platform(hass, "water_heater", DOMAIN, {}, config)
         )
 
-    async_track_time_interval(hass, broker.update, config[DOMAIN][CONF_SCAN_INTERVAL])
+    hass.helpers.event.async_track_time_interval(
+        hass, broker.update, config[DOMAIN][CONF_SCAN_INTERVAL]
+    )
 
     return True
 
@@ -246,7 +240,7 @@ class EvoBroker:
         store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         await store.async_save(self._app_storage)
 
-        async_track_point_in_utc_time(
+        self.hass.helpers.event.async_track_point_in_utc_time(
             self.hass,
             self._save_auth_tokens,
             access_token_expires + self.params[CONF_SCAN_INTERVAL],
@@ -267,7 +261,9 @@ class EvoBroker:
             _handle_exception(err)
         else:
             # inform the evohome devices that state data has been updated
-            async_dispatcher_send(self.hass, DOMAIN, {"signal": "refresh"})
+            self.hass.helpers.dispatcher.async_dispatcher_send(
+                self.hass, DOMAIN, {"signal": "refresh"}
+            )
 
             _LOGGER.debug("Status = %s", status[GWS][0][TCS][0])
 
@@ -381,7 +377,9 @@ class EvoDevice(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
+        self.hass.helpers.dispatcher.async_dispatcher_connect(
+            self.hass, DOMAIN, self._refresh
+        )
 
     @property
     def precision(self) -> float:
@@ -401,7 +399,7 @@ class EvoDevice(Entity):
 
         point_in_time = utcnow() + timedelta(seconds=2)
 
-        async_track_point_in_utc_time(
+        self.hass.helpers.event.async_track_point_in_utc_time(
             self.hass, self._evo_broker.update(point_in_time), point_in_time
         )
 
