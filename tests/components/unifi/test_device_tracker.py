@@ -17,6 +17,7 @@ from homeassistant.components.unifi.const import (
     CONF_SSID_FILTER,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
+    CONTROLLER_ID as CONF_CONTROLLER_ID,
     UNIFI_CONFIG,
 )
 from homeassistant.const import (
@@ -101,7 +102,7 @@ CONTROLLER_DATA = {
 
 ENTRY_CONFIG = {CONF_CONTROLLER: CONTROLLER_DATA}
 
-CONTROLLER_ID = unifi.CONTROLLER_ID.format(host="mock-host", site="mock-site")
+CONTROLLER_ID = CONF_CONTROLLER_ID.format(host="mock-host", site="mock-site")
 
 
 @pytest.fixture
