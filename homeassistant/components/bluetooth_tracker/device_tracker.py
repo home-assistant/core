@@ -51,7 +51,7 @@ def is_bluetooth_device(device) -> bool:
     return device.mac and device.mac[:3].upper() == BT_PREFIX
 
 
-def discover_devices(bluetooth, device_id: int) -> List[Tuple[str, str]]:
+def discover_devices(device_id: int) -> List[Tuple[str, str]]:
     """Discover Bluetooth devices."""
     result = bluetooth.discover_devices(
         duration=8,
@@ -116,7 +116,7 @@ def setup_scanner(hass: HomeAssistantType, config: dict, see, discovery_info=Non
         _LOGGER.debug("No Bluetooth devices to track and not tracking new devices")
 
     if track_new:
-        for mac, device_name in discover_devices(bluetooth, device_id):
+        for mac, device_name in discover_devices(device_id):
             if mac not in devices_to_track and mac not in devices_to_not_track:
                 devices_to_track.add(mac)
                 see_device(see, mac, device_name)
@@ -136,7 +136,7 @@ def setup_scanner(hass: HomeAssistantType, config: dict, see, discovery_info=Non
         """Lookup Bluetooth device and update status."""
         try:
             if track_new:
-                for mac, device_name in discover_devices(bluetooth, device_id):
+                for mac, device_name in discover_devices(device_id):
                     if mac not in devices_to_track and mac not in devices_to_not_track:
                         devices_to_track.add(mac)
 
