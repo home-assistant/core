@@ -104,11 +104,8 @@ async def async_from_config(
         check_factory = check_factory.func
 
     if asyncio.iscoroutinefunction(check_factory):
-        return await cast(Callable[..., bool], factory(hass, config, config_validation))
+        return cast(Callable[..., bool], await factory(hass, config, config_validation))
     return cast(Callable[..., bool], factory(config, config_validation))
-
-
-from_config = _threaded_factory(async_from_config)
 
 
 async def async_and_from_config(
@@ -138,9 +135,6 @@ async def async_and_from_config(
     return if_and_condition
 
 
-and_from_config = _threaded_factory(async_and_from_config)
-
-
 async def async_or_from_config(
     hass: HomeAssistant, config: ConfigType, config_validation: bool = True
 ) -> Callable[..., bool]:
@@ -167,9 +161,6 @@ async def async_or_from_config(
     return if_or_condition
 
 
-or_from_config = _threaded_factory(async_or_from_config)
-
-
 async def async_device_from_config(
     hass: HomeAssistant, config: ConfigType, config_validation: bool = True
 ) -> Callable[..., bool]:
@@ -178,7 +169,10 @@ async def async_device_from_config(
         config = cv.DEVICE_CONDITION_SCHEMA(config)
     integration = await async_get_integration(hass, config[CONF_DOMAIN])
     platform = integration.get_platform("device_automation")
-    return platform.async_condition_from_config(config, config_validation)
+    return cast(
+        Callable[..., bool],
+        platform.async_condition_from_config(config, config_validation),
+    )  # type: ignore
 
 
 def numeric_state(
