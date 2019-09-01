@@ -30,6 +30,7 @@ FLOWS = [
     "iqvia",
     "life360",
     "lifx",
+    "livebox",
     "locative",
     "logi_circle",
     "luftdaten",
@@ -66,5 +67,5 @@ FLOWS = [
     "wwlln",
     "zha",
     "zone",
-    "zwave"
+    "zwave",
 ]
