@@ -76,7 +76,10 @@ aiounifi==11
 aiowwlln==1.0.0
 
 # homeassistant.components.ambiclimate
-ambiclimate==0.2.0
+ambiclimate==0.2.1
+
+# homeassistant.components.androidtv
+androidtv==0.0.25
 
 # homeassistant.components.apns
 apns2==0.3.0
@@ -173,7 +176,7 @@ hdate==0.9.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190821.0
+home-assistant-frontend==20190828.0
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.15.0
@@ -186,7 +189,7 @@ homematicip==0.10.10
 httplib2==0.10.3
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.2.0
+huawei-lte-api==1.3.0
 
 # homeassistant.components.influxdb
 influxdb==5.2.0
@@ -215,6 +218,9 @@ minio==4.0.9
 # homeassistant.components.discovery
 # homeassistant.components.ssdp
 netdisco==2.6.0
+
+# homeassistant.components.withings
+nokia==1.2.0
 
 # homeassistant.components.iqvia
 # homeassistant.components.opencv
@@ -274,7 +280,7 @@ pydeconz==62
 pydispatcher==2.0.5
 
 # homeassistant.components.heos
-pyheos==0.5.2
+pyheos==0.6.0
 
 # homeassistant.components.homematic
 pyhomematic==0.1.60
@@ -290,6 +296,9 @@ pymfy==0.5.2
 
 # homeassistant.components.monoprice
 pymonoprice==0.3
+
+# homeassistant.components.nws
+pynws==0.7.4
 
 # homeassistant.components.nx584
 pynx584==0.4

@@ -144,15 +144,13 @@ async def auth_mfa_module_from_config(
 
 async def _load_mfa_module(hass: HomeAssistant, module_name: str) -> types.ModuleType:
     """Load an mfa auth module."""
-    module_path = "homeassistant.auth.mfa_modules.{}".format(module_name)
+    module_path = f"homeassistant.auth.mfa_modules.{module_name}"
 
     try:
         module = importlib.import_module(module_path)
     except ImportError as err:
         _LOGGER.error("Unable to load mfa module %s: %s", module_name, err)
-        raise HomeAssistantError(
-            "Unable to load mfa module {}: {}".format(module_name, err)
-        )
+        raise HomeAssistantError(f"Unable to load mfa module {module_name}: {err}")
 
     if hass.config.skip_pip or not hasattr(module, "REQUIREMENTS"):
         return module

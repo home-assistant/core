@@ -3,6 +3,7 @@
 import argparse
 import re
 import subprocess
+from datetime import datetime
 
 from packaging.version import Version
 
@@ -80,8 +81,18 @@ def bump_version(version, bump_type):
             to_change["release"] = _bump_release(version.release, "patch")
             to_change["pre"] = ("b", 0)
 
+    elif bump_type == "nightly":
+        # Convert 0.70.0d0 to 0.70.0d20190424, fails when run on non dev release
+        if not version.is_devrelease:
+            raise ValueError("Can only be run on dev release")
+
+        to_change["dev"] = (
+            "dev",
+            datetime.utcnow().date().isoformat().replace("-", ""),
+        )
+
     else:
-        assert False, "Unsupported type: {}".format(bump_type)
+        assert False, f"Unsupported type: {bump_type}"
 
     temp = Version("0")
     temp._version = version._version._replace(**to_change)
@@ -95,15 +106,9 @@ def write_version(version):
 
     major, minor, patch = str(version).split(".", 2)
 
-    content = re.sub(
-        "MAJOR_VERSION = .*\n", "MAJOR_VERSION = {}\n".format(major), content
-    )
-    content = re.sub(
-        "MINOR_VERSION = .*\n", "MINOR_VERSION = {}\n".format(minor), content
-    )
-    content = re.sub(
-        "PATCH_VERSION = .*\n", "PATCH_VERSION = '{}'\n".format(patch), content
-    )
+    content = re.sub("MAJOR_VERSION = .*\n", f"MAJOR_VERSION = {major}\n", content)
+    content = re.sub("MINOR_VERSION = .*\n", f"MINOR_VERSION = {minor}\n", content)
+    content = re.sub("PATCH_VERSION = .*\n", f"PATCH_VERSION = '{patch}'\n", content)
 
     with open("homeassistant/const.py", "wt") as fil:
         content = fil.write(content)
@@ -115,7 +120,7 @@ def main():
     parser.add_argument(
         "type",
         help="The type of the bump the version to.",
-        choices=["beta", "dev", "patch", "minor"],
+        choices=["beta", "dev", "patch", "minor", "nightly"],
     )
     parser.add_argument(
         "--commit", action="store_true", help="Create a version bump commit."
@@ -129,11 +134,13 @@ def main():
     if not arguments.commit:
         return
 
-    subprocess.run(["git", "commit", "-am", "Bumped version to {}".format(bumped)])
+    subprocess.run(["git", "commit", "-am", f"Bumped version to {bumped}"])
 
 
 def test_bump_version():
     """Make sure it all works."""
+    import pytest
+
     assert bump_version(Version("0.56.0"), "beta") == Version("0.56.1b0")
     assert bump_version(Version("0.56.0b3"), "beta") == Version("0.56.0b4")
     assert bump_version(Version("0.56.0.dev0"), "beta") == Version("0.56.0b0")
@@ -152,6 +159,13 @@ def test_bump_version():
     assert bump_version(Version("0.56.3.b3"), "minor") == Version("0.57.0")
     assert bump_version(Version("0.56.0.dev0"), "minor") == Version("0.56.0")
     assert bump_version(Version("0.56.2.dev0"), "minor") == Version("0.57.0")
+
+    today = datetime.utcnow().date().isoformat().replace("-", "")
+    assert bump_version(Version("0.56.0.dev0"), "nightly") == Version(
+        f"0.56.0.dev{today}"
+    )
+    with pytest.raises(ValueError):
+        assert bump_version(Version("0.56.0"), "nightly")
 
 
 if __name__ == "__main__":

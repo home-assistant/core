@@ -46,6 +46,7 @@ homeassistant/components/broadlink/* @danielhiversen
 homeassistant/components/brunt/* @eavanvalkenburg
 homeassistant/components/bt_smarthub/* @jxwolstenholme
 homeassistant/components/buienradar/* @mjj4791 @ties
+homeassistant/components/cert_expiry/* @cereal2nd
 homeassistant/components/cisco_ios/* @fbradyirl
 homeassistant/components/cisco_mobility_express/* @fbradyirl
 homeassistant/components/cisco_webex_teams/* @fbradyirl
@@ -119,6 +120,7 @@ homeassistant/components/hive/* @Rendili @KJonline
 homeassistant/components/homeassistant/* @home-assistant/core
 homeassistant/components/homekit_controller/* @Jc2k
 homeassistant/components/homematic/* @pvizeli @danielperna84
+homeassistant/components/homematicip_cloud/* @SukramJ
 homeassistant/components/honeywell/* @zxdavb
 homeassistant/components/html5/* @robbiet480
 homeassistant/components/http/* @home-assistant/core
@@ -189,6 +191,7 @@ homeassistant/components/notify/* @home-assistant/core
 homeassistant/components/notion/* @bachya
 homeassistant/components/nsw_fuel_station/* @nickw444
 homeassistant/components/nuki/* @pschmitt
+homeassistant/components/nws/* @MatthewFlamm
 homeassistant/components/ohmconnect/* @robbiet480
 homeassistant/components/onboarding/* @home-assistant/core
 homeassistant/components/opentherm_gw/* @mvn23
@@ -298,6 +301,7 @@ homeassistant/components/weather/* @fabaff
 homeassistant/components/weblink/* @home-assistant/core
 homeassistant/components/websocket_api/* @home-assistant/core
 homeassistant/components/wemo/* @sqldiablo
+homeassistant/components/withings/* @vangorra
 homeassistant/components/worldclock/* @fabaff
 homeassistant/components/wwlln/* @bachya
 homeassistant/components/xfinity/* @cisasteelersfan

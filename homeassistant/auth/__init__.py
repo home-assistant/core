@@ -278,9 +278,7 @@ class AuthManager:
 
         module = self.get_auth_mfa_module(mfa_module_id)
         if module is None:
-            raise ValueError(
-                "Unable find multi-factor auth module: {}".format(mfa_module_id)
-            )
+            raise ValueError(f"Unable find multi-factor auth module: {mfa_module_id}")
 
         await module.async_setup_user(user.id, data)
 
@@ -295,9 +293,7 @@ class AuthManager:
 
         module = self.get_auth_mfa_module(mfa_module_id)
         if module is None:
-            raise ValueError(
-                "Unable find multi-factor auth module: {}".format(mfa_module_id)
-            )
+            raise ValueError(f"Unable find multi-factor auth module: {mfa_module_id}")
 
         await module.async_depose_user(user.id)
 
@@ -356,7 +352,7 @@ class AuthManager:
                 ):
                     # Each client_name can only have one
                     # long_lived_access_token type of refresh token
-                    raise ValueError("{} already exists".format(client_name))
+                    raise ValueError(f"{client_name} already exists")
 
         return await self._store.async_create_refresh_token(
             user,

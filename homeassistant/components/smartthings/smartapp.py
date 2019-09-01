@@ -77,8 +77,7 @@ async def validate_installed_app(api, installed_app_id: str):
     installed_app = await api.installed_app(installed_app_id)
     if installed_app.installed_app_status != InstalledAppStatus.AUTHORIZED:
         raise RuntimeWarning(
-            "Installed SmartApp instance '{}' ({}) is not "
-            "AUTHORIZED but instead {}".format(
+            "Installed SmartApp instance '{}' ({}) is not AUTHORIZED but instead {}".format(
                 installed_app.display_name,
                 installed_app.installed_app_id,
                 installed_app.installed_app_status,
@@ -321,7 +320,7 @@ async def smartapp_sync_subscriptions(
             )
         except Exception as error:  # pylint:disable=broad-except
             _LOGGER.error(
-                "Failed to create subscription for '%s' under app " "'%s': %s",
+                "Failed to create subscription for '%s' under app '%s': %s",
                 target,
                 installed_app_id,
                 error,
@@ -331,8 +330,7 @@ async def smartapp_sync_subscriptions(
         try:
             await api.delete_subscription(installed_app_id, sub.subscription_id)
             _LOGGER.debug(
-                "Removed subscription for '%s' under app '%s' "
-                "because it was no longer needed",
+                "Removed subscription for '%s' under app '%s' because it was no longer needed",
                 sub.capability,
                 installed_app_id,
             )

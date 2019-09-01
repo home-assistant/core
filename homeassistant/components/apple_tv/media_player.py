@@ -127,6 +127,7 @@ class AppleTvDevice(MediaPlayerDevice):
                 const.PLAY_STATE_PAUSED,
                 const.PLAY_STATE_FAST_FORWARD,
                 const.PLAY_STATE_FAST_BACKWARD,
+                const.PLAY_STATE_STOPPED,
             ):
                 # Catch fast forward/backward here so "play" is default action
                 return STATE_PAUSED
