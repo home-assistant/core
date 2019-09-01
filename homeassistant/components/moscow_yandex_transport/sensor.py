@@ -69,7 +69,7 @@ class DiscoverMoscowYandexTransport(Entity):
             stop_metadata = data["properties"]["StopMetaData"]
         except KeyError as e:
             _LOGGER.warning(
-                "Exception KeyError was captured, missing key is %s. Yandex returned: %s" % (e, yandex_reply))
+                "Exception KeyError was captured, missing key is %s. Yandex returned: %s" % e, yandex_reply)
             self.requester.set_new_session()
             data = self.requester.get_stop_info(self._stop_id)["data"]
             stop_metadata = data["properties"]["StopMetaData"]
@@ -77,7 +77,7 @@ class DiscoverMoscowYandexTransport(Entity):
         transport_list = stop_metadata["Transport"]
         for transport in transport_list:
             route = transport["name"]
-            if route not in self._routes:
+            if self._routes and route not in self._routes:
                 # skip unnecessary route info
                 continue
             if "Events" in transport["BriefSchedule"]:
@@ -94,13 +94,18 @@ class DiscoverMoscowYandexTransport(Entity):
         if closer_time is None:
             self._state = None
         else:
-            self._state = datetime.utcfromtimestamp(closer_time)
+            self._state = datetime.utcfromtimestamp(closer_time).isoformat(timespec='minutes')
         self._attrs = attrs
 
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def device_class(self):
+        """Return type of the sensor."""
+        return "timestamp"
 
     @property
     def name(self):
