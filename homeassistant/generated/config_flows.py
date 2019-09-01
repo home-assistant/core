@@ -35,6 +35,7 @@ FLOWS = [
     "luftdaten",
     "mailgun",
     "met",
+    "met_lightning",
     "mobile_app",
     "mqtt",
     "nest",
@@ -66,5 +67,5 @@ FLOWS = [
     "wwlln",
     "zha",
     "zone",
-    "zwave"
+    "zwave",
 ]
