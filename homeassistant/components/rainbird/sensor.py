@@ -56,11 +56,7 @@ class RainBirdSensor(Entity):
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating sensor: %s", self._name)
         if self._sensor_type == "rainsensor":
-            result = self._controller.get_rain_sensor_state()
-            if result and result["type"] == "CurrentRainSensorStateResponse":
-                self._state = result["sensorState"]
-            else:
-                self._state = None
+            return self._controller.get_rain_sensor_state()
 
     @property
     def name(self):
