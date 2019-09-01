@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.const import ATTR_ENTITY_ID
 
 from .const import DOMAIN, LOGGER
 from .errors import AuthenticationRequired, CannotConnect
@@ -28,7 +29,6 @@ ATTR_SUNRISEOFFSET = "sunriseoffset"
 ATTR_SUNSETOFFSET = "sunsetoffset"
 ATTR_LONG = "long"
 ATTR_LAT = "lat"
-ATTR_ENTITY_ID = "entity_id"
 
 
 CONFIG_SENSOR_SCHEMA = vol.Schema(
