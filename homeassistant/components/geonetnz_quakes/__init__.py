@@ -117,7 +117,9 @@ async def async_unload_entry(hass, config_entry):
     await manager.async_stop()
 
     for domain in COMPONENTS:
-        await hass.config_entries.async_forward_entry_unload(config_entry, domain)
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_unload(config_entry, domain)
+        )
 
     return True
 
