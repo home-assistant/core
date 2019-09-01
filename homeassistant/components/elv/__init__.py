@@ -27,12 +27,8 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up the PCA switch platform."""
 
-    # hass.data[DOMAIN] = {
-    #     'serial_device': config[DOMAIN].get(CONF_DEVICE)
-    #     # usb_device = config.get(CONF_DEVICE)
-    # }
-    print(config)
     for platform in ELV_PLATFORMS:
-        discovery.load_platform(hass, platform, DOMAIN, {}, config)
+        discovery.load_platform(hass, platform, DOMAIN, {
+                                'device': config[DOMAIN].get(CONF_DEVICE)}, config)
 
     return True

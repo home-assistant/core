@@ -18,7 +18,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     import pypca
     from serial import SerialException
 
-    serial_device = hass.data[DOMAIN]['serial_device']
+    serial_device = discovery_info['device']
 
     try:
         pca = pypca.PCA(serial_device)
