@@ -67,14 +67,14 @@ class DeconzGateway:
         return self.config_entry.options[CONF_MASTER_GATEWAY]
 
     @property
-    def allow_clip_sensor(self) -> bool:
+    def option_allow_clip_sensor(self) -> bool:
         """Allow loading clip sensor from gateway."""
         return self.config_entry.options.get(
             CONF_ALLOW_CLIP_SENSOR, DEFAULT_ALLOW_CLIP_SENSOR
         )
 
     @property
-    def allow_deconz_groups(self) -> bool:
+    def option_allow_deconz_groups(self) -> bool:
         """Allow loading deCONZ groups from gateway."""
         return self.config_entry.options.get(
             CONF_ALLOW_DECONZ_GROUPS, DEFAULT_ALLOW_DECONZ_GROUPS
@@ -190,7 +190,7 @@ class DeconzGateway:
         """Set up remote from deCONZ."""
         for sensor in sensors:
             if sensor.type in Switch.ZHATYPE and not (
-                not self.allow_clip_sensor and sensor.type.startswith("CLIP")
+                not self.option_allow_clip_sensor and sensor.type.startswith("CLIP")
             ):
                 self.events.append(DeconzEvent(self.hass, sensor))
 

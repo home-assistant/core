@@ -19,10 +19,15 @@ class DeconzDevice(Entity):
     @property
     def entity_registry_enabled_default(self):
         """Return if the entity should be enabled when first added to the entity registry."""
-        if not self.gateway.allow_clip_sensor and self._device.type.startswith("CLIP"):
+        if not self.gateway.option_allow_clip_sensor and self._device.type.startswith(
+            "CLIP"
+        ):
             return False
 
-        if not self.gateway.allow_deconz_groups and self._device.type == "LightGroup":
+        if (
+            not self.gateway.option_allow_deconz_groups
+            and self._device.type == "LightGroup"
+        ):
             return False
 
         return True
