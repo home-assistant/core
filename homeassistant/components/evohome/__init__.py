@@ -394,11 +394,9 @@ class EvoDevice(Entity):
         except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
             _handle_exception(err)
 
-        point_in_time = utcnow() + timedelta(seconds=2)
-
-        self.hass.helpers.event.async_track_point_in_utc_time(
-            self._evo_broker.update(point_in_time), point_in_time
-        )
+        self.hass.helpers.event.async_call_later(
+            2, self._evo_broker.update()
+        )  # call update() in 2 seconds
 
     async def _update_schedule(self) -> None:
         """Get the latest state data."""
