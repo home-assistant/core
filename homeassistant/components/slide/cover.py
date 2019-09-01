@@ -5,8 +5,6 @@ import logging
 from homeassistant.const import ATTR_ID, ATTR_FRIENDLY_NAME
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    ENTITY_ID_FORMAT,
-    STATE_OPEN,
     STATE_CLOSED,
     STATE_OPENING,
     STATE_CLOSING,
