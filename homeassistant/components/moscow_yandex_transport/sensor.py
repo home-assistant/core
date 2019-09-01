@@ -4,7 +4,7 @@ Service for obtaining information about closer bus from Transport Yandex Service
 """
 
 import logging
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 import voluptuous as vol
 from moscow_yandex_transport import YandexMapsRequester
@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-STOP_NAME = "Stop name"
+STOP_NAME = "stop_name"
 USER_AGENT = "Home Assistant"
 ATTRIBUTION = "Data provided by maps.yandex.ru"
 
@@ -27,7 +27,6 @@ DEFAULT_NAME = "Yandex Transport"
 ICON = "mdi:bus"
 
 SCAN_INTERVAL = timedelta(minutes=1)
-TIME_STR_FORMAT = "%H:%M"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -70,7 +69,7 @@ class DiscoverMoscowYandexTransport(Entity):
             stop_metadata = data["properties"]["StopMetaData"]
         except KeyError as e:
             _LOGGER.warning(
-                "Exception KeyError was captured, missing key is " + str(e) + ". Yandex returned: " + str(yandex_reply))
+                "Exception KeyError was captured, missing key is %s. Yandex returned: %s" % (e, yandex_reply))
             self.requester.set_new_session()
             data = self.requester.get_stop_info(self._stop_id)["data"]
             stop_metadata = data["properties"]["StopMetaData"]
@@ -95,7 +94,7 @@ class DiscoverMoscowYandexTransport(Entity):
         if closer_time is None:
             self._state = None
         else:
-            self._state = closer_time
+            self._state = datetime.utcfromtimestamp(closer_time)
         self._attrs = attrs
 
     @property
@@ -112,11 +111,6 @@ class DiscoverMoscowYandexTransport(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return self._attrs
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return "timestamp"
 
     @property
     def icon(self):
