@@ -2,13 +2,58 @@
 import logging
 import unittest
 
+from homeassistant.setup import async_setup_component
 from homeassistant.components.androidtv.media_player import (
     AndroidTVDevice,
+    ANDROIDTV_DOMAIN,
     FireTVDevice,
-    setup,
+    setup as androidtv_setup,
 )
+from homeassistant.components.media_player.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PLATFORM, STATE_UNAVAILABLE
 
 from . import patchers
+
+CONFIG_ANDROIDTV_PYTHON_ADB = {
+    DOMAIN: {
+        CONF_PLATFORM: ANDROIDTV_DOMAIN,
+        CONF_HOST: "127.0.0.1",
+        CONF_NAME: "Android TV",
+    }
+}
+
+
+async def test_reconnect_python_adb(hass):
+    """Test that the error and reconnection attempts are logged correctly.
+
+    "Handles device/service unavailable. Log a warning once when
+    unavailable, log once when reconnected."
+
+    https://developers.home-assistant.io/docs/en/integration_quality_scale_index.html
+    """
+    with patchers.PATCH_PYTHON_ADB_CONNECT_SUCCESS, patchers.PATCH_PYTHON_ADB_COMMAND_SUCCESS:
+        assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_PYTHON_ADB)
+
+    entity_id = "media_player.android_tv"
+
+    with patchers.PATCH_PYTHON_ADB_CONNECT_FAIL, patchers.PATCH_PYTHON_ADB_COMMAND_FAIL:
+        for _ in range(5):
+            await hass.helpers.entity_component.async_update_entity(entity_id)
+            state = hass.states.get(entity_id)
+            assert state.state == STATE_UNAVAILABLE
+            # assert not state.attributes["available"]
+
+    with patchers.PATCH_PYTHON_ADB_CONNECT_SUCCESS, patchers.PATCH_PYTHON_ADB_COMMAND_SUCCESS:
+        # Update 1 will reconnect
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        # state = hass.states.get(entity_id)
+        # assert state.attributes["available"]
+
+        # Update 2 will update the state
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        state = hass.states.get(entity_id)
+        assert state.state != STATE_UNAVAILABLE
+        # assert state.attributes["available"]
 
 
 class TestAndroidTVPythonImplementation(unittest.TestCase):
@@ -17,7 +62,7 @@ class TestAndroidTVPythonImplementation(unittest.TestCase):
     def setUp(self):
         """Set up an `AndroidTVDevice` media player."""
         with patchers.PATCH_PYTHON_ADB_CONNECT_SUCCESS, patchers.PATCH_PYTHON_ADB_COMMAND_SUCCESS:
-            aftv = setup("IP:PORT", device_class="androidtv")
+            aftv = androidtv_setup("IP:PORT", device_class="androidtv")
             self.aftv = AndroidTVDevice(aftv, "Fake Android TV", {}, None, None)
 
     def test_reconnect(self):
@@ -82,7 +127,7 @@ class TestAndroidTVServerImplementation(unittest.TestCase):
     def setUp(self):
         """Set up an `AndroidTVDevice` media player."""
         with patchers.PATCH_ADB_SERVER_CONNECT_SUCCESS, patchers.PATCH_ADB_SERVER_AVAILABLE:
-            aftv = setup(
+            aftv = androidtv_setup(
                 "IP:PORT", adb_server_ip="ADB_SERVER_IP", device_class="androidtv"
             )
             self.aftv = AndroidTVDevice(aftv, "Fake Android TV", {}, None, None)
@@ -143,7 +188,7 @@ class TestFireTVPythonImplementation(TestAndroidTVPythonImplementation):
     def setUp(self):
         """Set up a `FireTVDevice` media player."""
         with patchers.PATCH_PYTHON_ADB_CONNECT_SUCCESS, patchers.PATCH_PYTHON_ADB_COMMAND_SUCCESS:
-            aftv = setup("IP:PORT", device_class="firetv")
+            aftv = androidtv_setup("IP:PORT", device_class="firetv")
             self.aftv = FireTVDevice(aftv, "Fake Fire TV", {}, True, None, None)
 
 
@@ -153,7 +198,7 @@ class TestFireTVServerImplementation(TestAndroidTVServerImplementation):
     def setUp(self):
         """Set up a `FireTVDevice` media player."""
         with patchers.PATCH_ADB_SERVER_CONNECT_SUCCESS, patchers.PATCH_ADB_SERVER_AVAILABLE:
-            aftv = setup(
+            aftv = androidtv_setup(
                 "IP:PORT", adb_server_ip="ADB_SERVER_IP", device_class="firetv"
             )
             self.aftv = FireTVDevice(aftv, "Fake Fire TV", {}, True, None, None)
