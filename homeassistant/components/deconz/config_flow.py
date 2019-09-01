@@ -1,6 +1,5 @@
 """Config flow to configure deCONZ component."""
 import asyncio
-from copy import copy
 
 import async_timeout
 import voluptuous as vol
@@ -258,7 +257,7 @@ class DeconzOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry):
         """Initialize deCONZ options flow."""
         self.config_entry = config_entry
-        self.options = copy(config_entry.options)
+        self.options = dict(config_entry.options)
 
     async def async_step_init(self, user_input=None):
         """Manage the deCONZ options."""
