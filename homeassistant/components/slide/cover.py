@@ -2,16 +2,14 @@
 
 import logging
 
-from homeassistant.util import slugify
+from homeassistant.const import ATTR_ID, ATTR_FRIENDLY_NAME
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ENTITY_ID_FORMAT,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
     STATE_OPEN,
     STATE_CLOSED,
+    STATE_OPENING,
+    STATE_CLOSING,
     DEVICE_CLASS_CURTAIN,
     CoverDevice,
 )
@@ -20,14 +18,17 @@ from .const import API, DOMAIN, SLIDES
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=unused-argument
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up cover(s) for Go Slide platform."""
+
+    if discovery_info is None:
+        return
+
     entities = []
 
-    for key in hass.data[DOMAIN][SLIDES]:
-        _LOGGER.debug("Setting up Slide entity: %s", hass.data[DOMAIN][SLIDES][key])
-        entities.append(SlideCover(hass, hass.data[DOMAIN][SLIDES][key]))
+    for slide in hass.data[DOMAIN][SLIDES].values():
+        _LOGGER.debug("Setting up Slide entity: %s", slide)
+        entities.append(SlideCover(hass.data[DOMAIN][API], slide))
 
     async_add_entities(entities)
 
@@ -35,47 +36,45 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class SlideCover(CoverDevice):
     """Representation of a Go Slide cover."""
 
-    def __init__(self, hass, slide):
+    def __init__(self, api, slide):
         """Initialize the cover."""
-        self._hass = hass
-        self._mac = slide["mac"]
+        self._api = api
+        self._slide = slide
         self._id = slide["id"]
-        self._name = slide["name"]
-        self._entity_id = ENTITY_ID_FORMAT.format(slugify("slide_" + self._mac))
-        self._is_closed = None
+        self._unique_id = slide["mac"]
+        self._friendly_name = slide["name"]
 
     @property
-    def entity_id(self):
-        """Return the entity id of the cover."""
-        return self._entity_id
+    def unique_id(self):
+        """Return the device unique id."""
+        return self._unique_id
 
     @property
-    def name(self):
-        """Return the name of the cover."""
-        return self._name
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        return {ATTR_ID: self._id, ATTR_FRIENDLY_NAME: self._friendly_name}
 
     @property
-    def state(self):
-        """Return the state of the cover."""
-        value = None
+    def is_opening(self):
+        """Return if the cover is opening or not."""
+        return self._slide["state"] == STATE_OPENING
 
-        if self._hass.data[DOMAIN][SLIDES][self._mac]["pos"] is not None:
-            pos = int(self._hass.data[DOMAIN][SLIDES][self._mac]["pos"] * 100)
-            if pos > 95:
-                value = STATE_CLOSED
-                if self._is_closed is None:
-                    self._is_closed = True
-            else:
-                value = STATE_OPEN
-                if self._is_closed is None:
-                    self._is_closed = False
-
-        return value
+    @property
+    def is_closing(self):
+        """Return if the cover is closing or not."""
+        return self._slide["state"] == STATE_CLOSING
 
     @property
     def is_closed(self):
-        """Return if the cover is closed. Used by cover.toggle."""
-        return self._is_closed
+        """Return None if status is unknown, True if closed, else False."""
+        if self._slide["state"] is None:
+            return None
+        return self._slide["state"] == STATE_CLOSED
+
+    @property
+    def available(self):
+        """Return False if state is not available."""
+        return self._slide["online"]
 
     @property
     def assumed_state(self):
@@ -88,41 +87,37 @@ class SlideCover(CoverDevice):
         return DEVICE_CLASS_CURTAIN
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION | SUPPORT_STOP
-
-    @property
     def current_cover_position(self):
         """Return the current position of cover shutter."""
-        if self._hass.data[DOMAIN][SLIDES][self._mac]["pos"] is None:
+        if self._slide["pos"] is None:
             pos = None
         else:
-            pos = int(self._hass.data[DOMAIN][SLIDES][self._mac]["pos"] * 100)
+            pos = int(self._slide["pos"] * 100)
 
         return pos
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        self._is_closed = False
-        await self._hass.data[DOMAIN][API].slideopen(self._id)
+        self._slide["state"] = STATE_OPENING
+        await self._api.slideopen(self._id)
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
-        self._is_closed = True
-        await self._hass.data[DOMAIN][API].slideclose(self._id)
+        self._slide["state"] = STATE_CLOSING
+        await self._api.slideclose(self._id)
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
-        await self._hass.data[DOMAIN][API].slidestop(self._id)
+        await self._api.slidestop(self._id)
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION] / 100
 
-        if self._hass.data[DOMAIN][SLIDES][self._mac]["pos"] is not None:
-            self._is_closed = (
-                position > self._hass.data[DOMAIN][SLIDES][self._mac]["pos"]
-            )
+        if self._slide["pos"] is not None:
+            if position > self._slide["pos"]:
+                self._slide["state"] = STATE_CLOSING
+            else:
+                self._slide["state"] = STATE_OPENING
 
-        await self._hass.data[DOMAIN][API].slidesetposition(self._id, position)
+        await self._api.slidesetposition(self._id, position)
