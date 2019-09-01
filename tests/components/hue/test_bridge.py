@@ -90,4 +90,4 @@ async def test_reset_unloads_entry_if_setup():
     assert await hue_bridge.async_reset()
 
     assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 3
-    assert len(hass.services.async_remove.mock_calls) == 1
+    assert len(hass.services.async_remove.mock_calls) == 2
