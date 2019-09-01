@@ -3,14 +3,8 @@ import logging
 from typing import Optional
 
 from homeassistant.components.geo_location import GeolocationEvent
-from homeassistant.components.geonetnz_quakes import GeonetnzQuakesFeedEntityManager
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_RADIUS,
-    CONF_SCAN_INTERVAL,
-    CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
@@ -18,16 +12,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
-from .const import (
-    CONF_MINIMUM_MAGNITUDE,
-    CONF_MMI,
-    DOMAIN,
-    FEED,
-    SIGNAL_DELETE_ENTITY,
-    SIGNAL_UPDATE_ENTITY,
-)
+from .const import DOMAIN, FEED, SIGNAL_DELETE_ENTITY, SIGNAL_UPDATE_ENTITY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,24 +31,20 @@ SOURCE = "geonetnz_quakes"
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the GeoNet NZ Quakes Feed platform."""
-    radius = entry.data[CONF_RADIUS]
-    unit_system = entry.data[CONF_UNIT_SYSTEM]
-    if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
-        radius = METRIC_SYSTEM.length(radius, LENGTH_MILES)
-    manager = GeonetnzQuakesFeedEntityManager(
-        hass,
-        async_add_entities,
-        entry.entry_id,
-        entry.data[CONF_SCAN_INTERVAL],
-        entry.data[CONF_LATITUDE],
-        entry.data[CONF_LONGITUDE],
-        entry.data[CONF_MMI],
-        radius,
-        unit_system,
-        entry.data[CONF_MINIMUM_MAGNITUDE],
+    manager = hass.data[DOMAIN][FEED][entry.entry_id]
+
+    @callback
+    def async_add_geolocation(entity):
+        """Add gelocation entity from feed."""
+        _LOGGER.debug("Adding geolocation %s", entity)
+        async_add_entities([entity], True)
+
+    manager.listeners.append(
+        async_dispatcher_connect(
+            hass, manager.async_event_new_entity(), async_add_geolocation
+        )
     )
-    hass.data[DOMAIN][FEED][entry.entry_id] = manager
-    await manager.async_init()
+    _LOGGER.debug("Geolocation setup done")
 
 
 class GeonetnzQuakesEvent(GeolocationEvent):

@@ -24,17 +24,20 @@ DEFAULT_UNIT_OF_MEASUREMENT = "quakes"
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the GeoNet NZ Quakes Feed platform."""
-    sensor = GeonetnzQuakesSensor(entry.entry_id, entry.title)
+    manager = hass.data[DOMAIN][FEED][entry.entry_id]
+    sensor = GeonetnzQuakesSensor(entry.entry_id, entry.title, manager)
     async_add_entities([sensor])
+    _LOGGER.debug("Sensor setup done")
 
 
 class GeonetnzQuakesSensor(Entity):
     """This is a status sensor for the GeoNet NZ Quakes integration."""
 
-    def __init__(self, config_entry_id, config_title):
+    def __init__(self, config_entry_id, config_title, manager):
         """Initialize entity."""
         self._config_entry_id = config_entry_id
         self._config_title = config_title
+        self._manager = manager
         self._status = None
         self._last_update = None
         self._last_update_successful = None
@@ -75,9 +78,8 @@ class GeonetnzQuakesSensor(Entity):
     async def async_update(self):
         """Update this entity from the data held in the feed manager."""
         _LOGGER.debug("Updating %s", self._config_entry_id)
-        manager = self.hass.data[DOMAIN][FEED][self._config_entry_id]
-        if manager:
-            status_info = manager.status_info()
+        if self._manager:
+            status_info = self._manager.status_info()
             if status_info:
                 self._update_from_status_info(status_info)
 

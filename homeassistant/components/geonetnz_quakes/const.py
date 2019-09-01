@@ -19,3 +19,5 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
 SIGNAL_DELETE_ENTITY = "geonetnz_quakes_delete_{}"
 SIGNAL_UPDATE_ENTITY = "geonetnz_quakes_update_{}"
 SIGNAL_STATUS = "geonetnz_quakes_status_{}"
+
+SIGNAL_NEW_GEOLOCATION = "geonetnz_quakes_new_geolocation_{}"
