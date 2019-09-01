@@ -33,8 +33,8 @@ def setup(hass, config):
 
     _LOGGER.debug("Rain Bird Controller set to: %s", server)
 
-    initial_status = controller.currentIrrigation()
-    if initial_status and initial_status["type"] != "CurrentStationsActiveResponse":
+    initial_status = controller.command("ModelAndVersion")
+    if initial_status and initial_status["type"] != "ModelAndVersionResponse":
         _LOGGER.error("Error getting state. Possible configuration issues")
         return False
 
