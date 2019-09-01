@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_ZONE,
 )
 from homeassistant.helpers import config_validation as cv
+from pyrainbird import RainbirdController
 
 from . import DATA_RAINBIRD
 
@@ -48,7 +49,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class RainBirdSwitch(SwitchDevice):
     """Representation of a Rain Bird switch."""
 
-    def __init__(self, rb, dev, dev_id):
+    def __init__(self, rb: RainbirdController, dev, dev_id):
         """Initialize a Rain Bird Switch Device."""
         self._rainbird = rb
         self._devid = dev_id
@@ -70,23 +71,19 @@ class RainBirdSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        response = self._rainbird.startIrrigation(int(self._zone), int(self._duration))
+        response = self._rainbird.irrigate_zone(int(self._zone), int(self._duration))
         if response and response["type"] == "AcknowledgeResponse":
             self._state = True
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        response = self._rainbird.stopIrrigation()
+        response = self._rainbird.stop_irrigation()
         if response and response["type"] == "AcknowledgeResponse":
             self._state = False
 
     def get_device_status(self):
         """Get the status of the switch from Rain Bird Controller."""
-        response = self._rainbird.currentIrrigation()
-        if response is None:
-            return None
-        if isinstance(response, dict) and "sprinklers" in response:
-            return response["sprinklers"][self._zone]
+        return self._rainbird.zone_state(self._devid)
 
     def update(self):
         """Update switch status."""

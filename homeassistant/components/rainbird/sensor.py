@@ -3,11 +3,11 @@ import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_MONITORED_CONDITIONS
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
+from pyrainbird import RainbirdController
 from . import DATA_RAINBIRD
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class RainBirdSensor(Entity):
     """A sensor implementation for Rain Bird device."""
 
-    def __init__(self, controller, sensor_type):
+    def __init__(self, controller: RainbirdController, sensor_type):
         """Initialize the Rain Bird sensor."""
         self._sensor_type = sensor_type
         self._controller = controller
@@ -56,7 +56,7 @@ class RainBirdSensor(Entity):
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating sensor: %s", self._name)
         if self._sensor_type == "rainsensor":
-            result = self._controller.currentRainSensorState()
+            result = self._controller.get_rain_sensor_state()
             if result and result["type"] == "CurrentRainSensorStateResponse":
                 self._state = result["sensorState"]
             else:
