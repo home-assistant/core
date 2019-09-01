@@ -1,24 +1,8 @@
 """Test the condition helper."""
-import asyncio
-
 from unittest.mock import patch
 
 from homeassistant.helpers import condition
 from homeassistant.util import dt
-
-from tests.common import get_test_home_assistant
-
-
-class TestConditionHelper:
-    """Test condition helpers."""
-
-    def setup_method(self, method):
-        """Set up things to be run when tests are started."""
-        hass = get_test_home_assistant()
-
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        hass.stop()
 
 
 async def test_and_condition(hass):
