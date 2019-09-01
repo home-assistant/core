@@ -46,6 +46,7 @@ homeassistant/components/broadlink/* @danielhiversen
 homeassistant/components/brunt/* @eavanvalkenburg
 homeassistant/components/bt_smarthub/* @jxwolstenholme
 homeassistant/components/buienradar/* @mjj4791 @ties
+homeassistant/components/cert_expiry/* @cereal2nd
 homeassistant/components/cisco_ios/* @fbradyirl
 homeassistant/components/cisco_mobility_express/* @fbradyirl
 homeassistant/components/cisco_webex_teams/* @fbradyirl
@@ -301,6 +302,7 @@ homeassistant/components/weather/* @fabaff
 homeassistant/components/weblink/* @home-assistant/core
 homeassistant/components/websocket_api/* @home-assistant/core
 homeassistant/components/wemo/* @sqldiablo
+homeassistant/components/withings/* @vangorra
 homeassistant/components/worldclock/* @fabaff
 homeassistant/components/wwlln/* @bachya
 homeassistant/components/xfinity/* @cisasteelersfan

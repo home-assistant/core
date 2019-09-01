@@ -18,6 +18,10 @@ CONF_TRACK_DEVICES = "track_devices"
 CONF_TRACK_WIRED_CLIENTS = "track_wired_clients"
 CONF_SSID_FILTER = "ssid_filter"
 
+CONF_DONT_TRACK_CLIENTS = "dont_track_clients"
+CONF_DONT_TRACK_DEVICES = "dont_track_devices"
+CONF_DONT_TRACK_WIRED_CLIENTS = "dont_track_wired_clients"
+
 DEFAULT_BLOCK_CLIENTS = []
 DEFAULT_TRACK_CLIENTS = True
 DEFAULT_TRACK_DEVICES = True

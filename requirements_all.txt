@@ -197,7 +197,7 @@ ambiclimate==0.2.1
 amcrest==1.5.3
 
 # homeassistant.components.androidtv
-androidtv==0.0.24
+androidtv==0.0.25
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -464,7 +464,7 @@ eternalegypt==0.0.10
 # evdev==0.6.1
 
 # homeassistant.components.evohome
-evohomeclient==0.3.3
+evohome-async==0.3.3b4
 
 # homeassistant.components.dlib_face_detect
 # homeassistant.components.dlib_face_identify
@@ -627,7 +627,7 @@ hole==0.5.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190822.0
+home-assistant-frontend==20190828.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.4
@@ -646,7 +646,7 @@ horimote==0.4.1
 httplib2==0.10.3
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.2.0
+huawei-lte-api==1.3.0
 
 # homeassistant.components.hydrawise
 hydrawiser==0.1.1
@@ -846,6 +846,9 @@ niko-home-control==0.2.1
 # homeassistant.components.nilu
 niluclient==0.1.2
 
+# homeassistant.components.withings
+nokia==1.2.0
+
 # homeassistant.components.nederlandse_spoorwegen
 nsapi==2.7.4
 
@@ -896,6 +899,9 @@ openwrt-luci-rpc==1.1.0
 
 # homeassistant.components.orvibo
 orvibo==1.1.1
+
+# homeassistant.components.luci
+packaging==19.1
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
@@ -1059,7 +1065,7 @@ pyarlo==0.2.3
 pyatmo==2.2.1
 
 # homeassistant.components.apple_tv
-pyatv==0.3.12
+pyatv==0.3.13
 
 # homeassistant.components.bbox
 pybbox==0.0.5-alpha
@@ -1189,7 +1195,7 @@ pygtt==1.1.2
 pyhaversion==3.0.2
 
 # homeassistant.components.heos
-pyheos==0.5.2
+pyheos==0.6.0
 
 # homeassistant.components.hikvision
 pyhik==0.2.3
@@ -1771,7 +1777,7 @@ spotipy-homeassistant==2.4.4.dev1
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.3.7
+sqlalchemy==1.3.8
 
 # homeassistant.components.srp_energy
 srpenergy==1.0.6
@@ -1860,7 +1866,7 @@ tplink==0.2.1
 transmissionrpc==0.11
 
 # homeassistant.components.tuya
-tuyaha==0.0.3
+tuyaha==0.0.4
 
 # homeassistant.components.twentemilieu
 twentemilieu==0.1.0
@@ -1968,7 +1974,7 @@ yeelight==0.5.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2019.08.13
+youtube_dl==2019.09.01
 
 # homeassistant.components.zengge
 zengge==0.2
@@ -1977,7 +1983,7 @@ zengge==0.2
 zeroconf==0.23.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.21
+zha-quirks==0.0.22
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9

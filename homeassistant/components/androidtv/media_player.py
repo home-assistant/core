@@ -431,8 +431,10 @@ class AndroidTVDevice(ADBDevice):
             # Try to connect
             self._available = self.aftv.connect(always_log_errors=False)
 
-            # To be safe, wait until the next update to run ADB commands.
-            return
+            # To be safe, wait until the next update to run ADB commands if
+            # using the Python ADB implementation.
+            if not self.aftv.adb_server_ip:
+                return
 
         # If the ADB connection is not intact, don't update.
         if not self._available:
@@ -443,7 +445,9 @@ class AndroidTVDevice(ADBDevice):
             self.aftv.update()
         )
 
-        self._state = ANDROIDTV_STATES[state]
+        self._state = ANDROIDTV_STATES.get(state)
+        if self._state is None:
+            self._available = False
 
     @property
     def is_volume_muted(self):
@@ -506,8 +510,10 @@ class FireTVDevice(ADBDevice):
             # Try to connect
             self._available = self.aftv.connect(always_log_errors=False)
 
-            # To be safe, wait until the next update to run ADB commands.
-            return
+            # To be safe, wait until the next update to run ADB commands if
+            # using the Python ADB implementation.
+            if not self.aftv.adb_server_ip:
+                return
 
         # If the ADB connection is not intact, don't update.
         if not self._available:
@@ -518,7 +524,9 @@ class FireTVDevice(ADBDevice):
             self._get_sources
         )
 
-        self._state = ANDROIDTV_STATES[state]
+        self._state = ANDROIDTV_STATES.get(state)
+        if self._state is None:
+            self._available = False
 
     @property
     def source(self):
