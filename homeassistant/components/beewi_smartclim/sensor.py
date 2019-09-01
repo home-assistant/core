@@ -1,7 +1,7 @@
 """Platform for beewi_smartclim integration."""
 import logging
-from beewi_smartclim import BeewiSmartClimPoller
 
+from beewi_smartclim import BeewiSmartClimPoller
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -85,6 +85,11 @@ class BeewiSmartclimSensor(Entity):
     def device_class(self):
         """Device class of this entity."""
         return self._device
+
+    @property
+    def unique_id(self):
+        """Return a unique, HASS-friendly identifier for this entity."""
+        return f"{self._name}_{self._mac}"
 
     @property
     def unit_of_measurement(self):
