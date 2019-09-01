@@ -123,9 +123,6 @@ enocean==0.50
 # homeassistant.components.season
 ephem==3.7.6.0
 
-# homeassistant.components.evohome
-evohomeclient==0.3.3
-
 # homeassistant.components.feedreader
 feedparser-homeassistant==5.2.2.dev1
 
@@ -385,7 +382,7 @@ somecomfort==0.5.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.3.7
+sqlalchemy==1.3.8
 
 # homeassistant.components.srp_energy
 srpenergy==1.0.6

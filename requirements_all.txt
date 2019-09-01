@@ -461,7 +461,7 @@ eternalegypt==0.0.10
 # evdev==0.6.1
 
 # homeassistant.components.evohome
-evohomeclient==0.3.3
+evohome-async==0.3.3b4
 
 # homeassistant.components.dlib_face_detect
 # homeassistant.components.dlib_face_identify
@@ -1029,7 +1029,7 @@ pyRFXtrx==0.23
 # pySwitchmate==0.4.6
 
 # homeassistant.components.tibber
-pyTibber==0.11.6
+pyTibber==0.11.7
 
 # homeassistant.components.dlink
 pyW215==0.6.0
@@ -1774,7 +1774,7 @@ spotipy-homeassistant==2.4.4.dev1
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.3.7
+sqlalchemy==1.3.8
 
 # homeassistant.components.srp_energy
 srpenergy==1.0.6
@@ -1971,7 +1971,7 @@ yeelight==0.5.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2019.08.13
+youtube_dl==2019.09.01
 
 # homeassistant.components.zengge
 zengge==0.2
