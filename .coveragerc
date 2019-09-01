@@ -57,6 +57,7 @@ omit =
     homeassistant/components/avion/light.py
     homeassistant/components/azure_event_hub/*
     homeassistant/components/baidu/tts.py
+    homeassistant/components/beewi_smartclim/sensor.py
     homeassistant/components/bbb_gpio/*
     homeassistant/components/bbox/device_tracker.py
     homeassistant/components/bbox/sensor.py
