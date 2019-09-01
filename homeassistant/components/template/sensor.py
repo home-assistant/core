@@ -39,7 +39,7 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_ICON_TEMPLATE): cv.template,
         vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
         vol.Optional(CONF_FRIENDLY_NAME_TEMPLATE): cv.template,
-        vol.Optional(CONF_ATTRIBUTE_TEMPLATES): vol.Schema({cv.string: cv.template}),
+        vol.Optional(CONF_ATTRIBUTE_TEMPLATES, default={}): vol.Schema({cv.string: cv.template}),
         vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
         vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
@@ -64,7 +64,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         friendly_name_template = device_config.get(CONF_FRIENDLY_NAME_TEMPLATE)
         unit_of_measurement = device_config.get(ATTR_UNIT_OF_MEASUREMENT)
         device_class = device_config.get(CONF_DEVICE_CLASS)
-        attribute_templates = device_config.get(CONF_ATTRIBUTE_TEMPLATES, {})
+        attribute_templates = device_config.get(CONF_ATTRIBUTE_TEMPLATES)
 
         entity_ids = set()
         manual_entity_ids = device_config.get(ATTR_ENTITY_ID)
