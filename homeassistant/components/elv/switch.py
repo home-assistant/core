@@ -4,11 +4,11 @@ import logging
 from homeassistant.components.switch import (
     SwitchDevice, ATTR_CURRENT_POWER_W)
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from . import DOMAIN as ELV_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_TOTAL_ENERGY_KWH = 'total_energy_kwh'
-DOMAIN = 'elv'
 
 DEFAULT_NAME = 'PCA 301'
 
