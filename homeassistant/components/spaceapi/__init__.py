@@ -24,6 +24,8 @@ import homeassistant.util.dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ADDRESS = "address"
+ATTR_SPACEFED = "spacefed"
+ATTR_CAM = "cam"
 ATTR_LATITUDE = "lat"
 ATTR_LONGITUDE = "lon"
 ATTR_API = "api"
@@ -49,6 +51,11 @@ CONF_ICONS = "icons"
 CONF_IRC = "irc"
 CONF_ISSUE_REPORT_CHANNELS = "issue_report_channels"
 CONF_LOCATION = "location"
+CONF_SPACEFED = "spacefed"
+CONF_SPACENET = "spacenet"
+CONF_SPACESAML = "spacesaml"
+CONF_SPACEPHONE = "spacephone"
+CONF_CAM = "cam"
 CONF_LOGO = "logo"
 CONF_MAILING_LIST = "mailing_list"
 CONF_PHONE = "phone"
@@ -67,6 +74,14 @@ SPACEAPI_VERSION = "0.13"
 URL_API_SPACEAPI = "/api/spaceapi"
 
 LOCATION_SCHEMA = vol.Schema({vol.Optional(CONF_ADDRESS): cv.string}, required=True)
+
+SPACEFED_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_SPACENET): cv.boolean,
+        vol.Optional(CONF_SPACESAML): cv.boolean,
+        vol.Optional(CONF_SPACEPHONE): cv.boolean,
+    }
+)
 
 CONTACT_SCHEMA = vol.Schema(
     {
@@ -101,6 +116,10 @@ CONFIG_SCHEMA = vol.Schema(
                     cv.ensure_list, [vol.In(ISSUE_REPORT_CHANNELS)]
                 ),
                 vol.Required(CONF_LOCATION): LOCATION_SCHEMA,
+                vol.Optional(CONF_SPACEFED): SPACEFED_SCHEMA,
+                vol.Optional(CONF_CAM): vol.All(
+                    cv.ensure_list, [cv.url], vol.Length(min=1)
+                ),
                 vol.Required(CONF_LOGO): cv.url,
                 vol.Required(CONF_SPACE): cv.string,
                 vol.Required(CONF_STATE): STATE_SCHEMA,
@@ -185,6 +204,16 @@ class APISpaceApiView(HomeAssistantView):
             ATTR_STATE: state,
             ATTR_URL: spaceapi[CONF_URL],
         }
+
+        try:
+            data[ATTR_CAM] = spaceapi[CONF_CAM]
+        except KeyError:
+            pass
+
+        try:
+            data[ATTR_SPACEFED]: spaceapi[CONF_SPACEFED]
+        except KeyError:
+            pass
 
         if is_sensors is not None:
             sensors = {}
