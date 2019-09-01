@@ -63,12 +63,12 @@ HA_PRESET_TO_EVO = {v: k for k, v in EVO_PRESET_TO_HA.items()}
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType,
-    hass_config: ConfigType,
-    async_add_entities,
-    discovery_info=None,
+    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ) -> None:
     """Create the evohome Controller, and its Zones, if any."""
+    if discovery_info is None:
+        return
+
     broker = hass.data[DOMAIN]["broker"]
     loc_idx = broker.params[CONF_LOCATION_IDX]
 

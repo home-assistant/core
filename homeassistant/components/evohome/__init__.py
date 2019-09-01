@@ -120,19 +120,19 @@ def _handle_exception(err) -> bool:
         raise  # we don't expect/handle any other ClientResponseError
 
 
-async def async_setup(hass: HomeAssistantType, hass_config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Create a (EMEA/EU-based) Honeywell evohome system."""
-    broker = EvoBroker(hass, hass_config[DOMAIN])
+    broker = EvoBroker(hass, config[DOMAIN])
     if not await broker.init_client():
         return False
 
-    await async_load_platform(hass, "climate", DOMAIN, {}, hass_config)
+    hass.async_create_task(async_load_platform(hass, "climate", DOMAIN, {}, config))
     if broker.tcs.hotwater:
-        await async_load_platform(hass, "water_heater", DOMAIN, {}, hass_config)
+        hass.async_create_task(
+            async_load_platform(hass, "water_heater", DOMAIN, {}, config)
+        )
 
-    async_track_time_interval(
-        hass, broker.update, hass_config[DOMAIN][CONF_SCAN_INTERVAL]
-    )
+    async_track_time_interval(hass, broker.update, config[DOMAIN][CONF_SCAN_INTERVAL])
 
     return True
 

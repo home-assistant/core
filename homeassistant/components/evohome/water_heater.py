@@ -21,9 +21,12 @@ HA_OPMODE_TO_DHW = {STATE_ON: EVO_FOLLOW, STATE_OFF: EVO_PERMOVER}
 
 
 async def async_setup_platform(
-    hass, hass_config, async_add_entities, discovery_info=None
+    hass, config, async_add_entities, discovery_info=None
 ) -> None:
     """Create the DHW controller."""
+    if discovery_info is None:
+        return
+
     broker = hass.data[DOMAIN]["broker"]
 
     _LOGGER.debug(
