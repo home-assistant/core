@@ -171,8 +171,8 @@ async def async_device_from_config(
     platform = integration.get_platform("device_automation")
     return cast(
         Callable[..., bool],
-        platform.async_condition_from_config(config, config_validation),
-    )  # type: ignore
+        platform.async_condition_from_config(config, config_validation),  # type: ignore
+    )
 
 
 def numeric_state(
