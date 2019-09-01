@@ -1,0 +1,28 @@
+{
+  "config": {
+    "title": "Orange Livebox",
+    "step": {
+      "init": {
+        "title": "Check your livebox",
+        "data": {
+          "host": "IP Address",
+          "port": "Port",
+          "username": "Username",
+          "password": "Password"
+        }
+      },
+      "link": {
+          "title": "Orange Livebox detection",
+          "description": "Search and check you livebox, please click to Finish button"
+      }
+    },
+    "error": {
+      "register_failed": "Failed to register, please try again",
+      "linking": "Unknown linking error occurred."
+    },
+    "abort": {
+      "unknown": "Unknown error occurred",
+      "cannot_connect": "Unable to connect to the livebox"
+    }
+  }
+}
