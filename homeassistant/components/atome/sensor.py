@@ -23,8 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "atome"
 
-SESSION_RENEW_INTERVAL = timedelta(minutes=55)
-
 LIVE_SCAN_INTERVAL = timedelta(seconds=30)
 DAILY_SCAN_INTERVAL = timedelta(seconds=150)
 WEEKLY_SCAN_INTERVAL = timedelta(hours=1)
@@ -128,7 +126,6 @@ class AtomeData:
 
         except KeyError as error:
             _LOGGER.error("Missing last value in values: %s: %s", values, error)
-            return None
 
     @property
     def day_usage(self):
@@ -151,7 +148,6 @@ class AtomeData:
 
         except KeyError as error:
             _LOGGER.error("Missing last value in values: %s: %s", values, error)
-            return None
 
     @property
     def week_usage(self):
@@ -174,7 +170,6 @@ class AtomeData:
 
         except KeyError as error:
             _LOGGER.error("Missing last value in values: %s: %s", values, error)
-            return None
 
     @property
     def month_usage(self):
@@ -197,7 +192,6 @@ class AtomeData:
 
         except KeyError as error:
             _LOGGER.error("Missing last value in values: %s: %s", values, error)
-            return None
 
     @property
     def year_usage(self):
@@ -220,7 +214,6 @@ class AtomeData:
 
         except KeyError as error:
             _LOGGER.error("Missing last value in values: %s: %s", values, error)
-            return None
 
 
 class AtomeSensor(Entity):
