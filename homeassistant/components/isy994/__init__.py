@@ -114,7 +114,7 @@ NODE_FILTERS = {
         "insteon_type": ["1."],
     },
     "switch": {
-        "uom": ["2", "78"],
+        "uom": ["2", "78", "100"],
         "states": ["on", "off"],
         "node_def_id": [
             "OnOffControl",
@@ -138,7 +138,7 @@ NODE_FILTERS = {
             "Siren",
             "Siren_ADV",
         ],
-        "insteon_type": ["2.", "9.10.", "9.11."],
+        "insteon_type": ["2.", "9.10.", "9.11.", "113."],
     },
 }
 
