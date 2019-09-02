@@ -3,10 +3,8 @@
 import logging
 from datetime import timedelta
 
-from asyncio import TimeoutError
-from aiohttp.client_exceptions import ClientConnectionError, ClientConnectorError
 import voluptuous as vol
-from goslideapi import GoSlideCloud
+from goslideapi import GoSlideCloud, goslideapi
 
 from homeassistant.const import (
     CONF_USERNAME,
@@ -120,6 +118,10 @@ async def async_setup(hass, config):
 
             _LOGGER.debug("Updated entry=%s", slidenew)
 
+    async def retry_setup(now):
+        """Retry setup if a connection/timeout happens on Slide API."""
+        await async_setup(hass, config)
+
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][SLIDES] = {}
 
@@ -129,16 +131,15 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN][API] = GoSlideCloud(username, password)
 
-    # pylint: disable=broad-except
     try:
         result = await hass.data[DOMAIN][API].login()
-    except (ClientConnectionError, ClientConnectorError, TimeoutError) as err:
+    except (goslideapi.ClientConnectionError, goslideapi.ClientTimeoutError) as err:
         _LOGGER.error(
             "Error connecting to Slide Cloud: %s, going to retry in %s seconds",
             str(err),
             DEFAULT_RETRY,
         )
-        async_call_later(hass, DEFAULT_RETRY, async_setup(hass, config))
+        async_call_later(hass, DEFAULT_RETRY, retry_setup)
         return True
 
     if result:
