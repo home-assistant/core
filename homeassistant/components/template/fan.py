@@ -243,7 +243,7 @@ class TemplateFan(FanEntity):
         return self._oscillating
 
     @property
-    def direction(self):
+    def current_direction(self):
         """Return the oscillation state."""
         return self._direction
 
