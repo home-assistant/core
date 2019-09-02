@@ -120,10 +120,10 @@ def patch_shell(response=None, error=False):
 
     if not error:
         return {
-            "python": patch("{}.AdbCommandsFake.Shell".format(__name__), shell_success),
-            "server": patch("{}.DeviceFake.shell".format(__name__), shell_success),
+            "python": patch(f"{__name__}.AdbCommandsFake.Shell", shell_success),
+            "server": patch(f"{__name__}.DeviceFake.shell", shell_success),
         }
     return {
-        "python": patch("{}.AdbCommandsFake.Shell".format(__name__), shell_fail_python),
-        "server": patch("{}.DeviceFake.shell".format(__name__), shell_fail_server),
+        "python": patch(f"{__name__}.AdbCommandsFake.Shell", shell_fail_python),
+        "server": patch(f"{__name__}.DeviceFake.shell", shell_fail_server),
     }
