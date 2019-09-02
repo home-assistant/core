@@ -5,7 +5,9 @@ from homeassistant.components.switch import (
     SwitchDevice, ATTR_CURRENT_POWER_W)
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from . import DOMAIN as ELV_DOMAIN
+
 import pypca
+from serial import SerialException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,7 +18,6 @@ DEFAULT_NAME = 'PCA 301'
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the PCA switch platform."""
-    from serial import SerialException
 
     if discovery_info is None:
         _LOGGER.warning("Please update your config for elv")
