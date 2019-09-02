@@ -244,6 +244,11 @@ class UsgsEarthquakesEvent(GeolocationEvent):
         self._alert = feed_entry.alert
 
     @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        return "mdi:pulse"
+
+    @property
     def source(self) -> str:
         """Return source value of this external event."""
         return SOURCE

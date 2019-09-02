@@ -289,6 +289,7 @@ homeassistant/components/upcloud/* @scop
 homeassistant/components/updater/* @home-assistant/core
 homeassistant/components/upnp/* @robbiet480
 homeassistant/components/uptimerobot/* @ludeeus
+homeassistant/components/usgs_earthquakes_feed/* @exxamalte
 homeassistant/components/utility_meter/* @dgomes
 homeassistant/components/velbus/* @cereal2nd
 homeassistant/components/velux/* @Julius2342
