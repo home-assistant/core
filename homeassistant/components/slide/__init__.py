@@ -3,8 +3,9 @@
 import logging
 from datetime import timedelta
 
+from asyncio import TimeoutError
+from aiohttp.client_exceptions import ClientConnectionError, ClientConnectorError
 import voluptuous as vol
-
 from goslideapi import GoSlideCloud
 
 from homeassistant.const import (
@@ -46,7 +47,7 @@ async def async_setup(hass, config):
 
     async def update_slides(now=None):
         """Update slide information."""
-        result = await hass.data[DOMAIN][API].slidesoverview()
+        result = await hass.data[DOMAIN][API].slides_overview()
 
         if result is None:
             _LOGGER.error("Slide API does not work or returned an error")
@@ -60,31 +61,31 @@ async def async_setup(hass, config):
         for slide in result:
             if "device_id" not in slide:
                 _LOGGER.error(
-                    "Found invalid Slide entry, 'device_id' is " "missing. Entry=%s",
+                    "Found invalid Slide entry, device_id is " "missing. Entry=%s",
                     slide,
                 )
                 continue
 
             uid = slide["device_id"].replace("slide_", "")
-            slidenew = hass.data[DOMAIN][SLIDES].get(uid, {})
+            slidenew = hass.data[DOMAIN][SLIDES].setdefault(uid, {})
             slidenew["mac"] = uid
             slidenew["id"] = slide["id"]
             slidenew["name"] = slide["device_name"]
             slidenew["state"] = None
-            oldpos = slidenew.get("pos", None)
+            oldpos = slidenew.get("pos")
             slidenew["pos"] = None
             slidenew["online"] = False
 
             if "device_info" not in slide:
                 _LOGGER.error(
-                    "Slide %s (%s) has no 'device_info' Entry=%s",
+                    "Slide %s (%s) has no device_info Entry=%s",
                     slide["id"],
                     slidenew["mac"],
                     slide,
                 )
                 continue
 
-            # Check if we have 'pos' (OK) or 'code' (NOK)
+            # Check if we have pos (OK) or code (NOK)
             if "pos" in slide["device_info"]:
                 slidenew["online"] = True
                 slidenew["pos"] = slide["device_info"]["pos"]
@@ -111,14 +112,12 @@ async def async_setup(hass, config):
                 )
             else:
                 _LOGGER.error(
-                    "Slide %s (%s) has invalid 'device_info'" " %s",
+                    "Slide %s (%s) has invalid device_info %s",
                     slide["id"],
                     slidenew["mac"],
                     slide["device_info"],
                 )
 
-            old_slide = hass.data[DOMAIN][SLIDES].setdefault(uid, {})
-            old_slide.update(slidenew)
             _LOGGER.debug("Updated entry=%s", slidenew)
 
     hass.data[DOMAIN] = {}
@@ -133,20 +132,19 @@ async def async_setup(hass, config):
     # pylint: disable=broad-except
     try:
         result = await hass.data[DOMAIN][API].login()
-    except Exception as err:
+    except (ClientConnectionError, ClientConnectorError, TimeoutError) as err:
         _LOGGER.error(
-            "Error connecting to Slide Cloud: %s, Going to retry in %s seconds",
+            "Error connecting to Slide Cloud: %s, going to retry in %s seconds",
             str(err),
             DEFAULT_RETRY,
         )
         async_call_later(hass, DEFAULT_RETRY, async_setup(hass, config))
         return True
 
-    if result is None:
-        _LOGGER.error("Slide API returned unknown error during " "authentication")
-        return False
-    if result is False:
-        _LOGGER.error("Slide authentication failed, check " "username/password")
+    if result:
+        _LOGGER.debug("Slide API successfully authenticated")
+    else:
+        _LOGGER.error("Slide API returned unknown error during authentication")
         return False
 
     await update_slides()

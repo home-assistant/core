@@ -2,7 +2,7 @@
 
 import logging
 
-from homeassistant.const import ATTR_ID, ATTR_FRIENDLY_NAME
+from homeassistant.const import ATTR_ID
 from homeassistant.components.cover import (
     ATTR_POSITION,
     STATE_CLOSED,
@@ -40,7 +40,7 @@ class SlideCover(CoverDevice):
         self._slide = slide
         self._id = slide["id"]
         self._unique_id = slide["mac"]
-        self._friendly_name = slide["name"]
+        self._name = slide["name"]
 
     @property
     def unique_id(self):
@@ -48,9 +48,14 @@ class SlideCover(CoverDevice):
         return self._unique_id
 
     @property
+    def name(self):
+        """Return the device name."""
+        return self._name
+
+    @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        return {ATTR_ID: self._id, ATTR_FRIENDLY_NAME: self._friendly_name}
+        return {ATTR_ID: self._id}
 
     @property
     def is_opening(self):
@@ -87,26 +92,24 @@ class SlideCover(CoverDevice):
     @property
     def current_cover_position(self):
         """Return the current position of cover shutter."""
-        if self._slide["pos"] is None:
-            pos = None
-        else:
-            pos = int(self._slide["pos"] * 100)
-
+        pos = self._slide["pos"]
+        if pos is not None:
+            pos = int(pos * 100)
         return pos
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
         self._slide["state"] = STATE_OPENING
-        await self._api.slideopen(self._id)
+        await self._api.slide_open(self._id)
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
         self._slide["state"] = STATE_CLOSING
-        await self._api.slideclose(self._id)
+        await self._api.slide_close(self._id)
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
-        await self._api.slidestop(self._id)
+        await self._api.slide_stop(self._id)
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
@@ -118,4 +121,4 @@ class SlideCover(CoverDevice):
             else:
                 self._slide["state"] = STATE_OPENING
 
-        await self._api.slidesetposition(self._id, position)
+        await self._api.slide_set_position(self._id, position)
