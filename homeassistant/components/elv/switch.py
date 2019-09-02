@@ -19,7 +19,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     from serial import SerialException
 
     if discovery_info is None:
-        _LOGGER.warning("No serial interface defined for pyPCA")
+        _LOGGER.warning("Please update your config for elv")
         return
 
     serial_device = discovery_info['device']
