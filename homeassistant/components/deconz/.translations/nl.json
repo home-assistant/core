@@ -40,5 +40,16 @@
             }
         },
         "title": "deCONZ Zigbee gateway"
+    },
+    "options": {
+        "step": {
+            "async_step_deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "DeCONZ CLIP sensoren toestaan",
+                    "allow_deconz_groups": "DeCONZ-lichtgroepen toestaan"
+                },
+                "description": "De zichtbaarheid van deCONZ-apparaattypen configureren"
+            }
+        }
     }
 }
