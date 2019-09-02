@@ -22,5 +22,17 @@
             }
         },
         "title": "UniFi-controller"
+    },
+    "options": {
+        "step": {
+            "device_tracker": {
+                "data": {
+                    "detection_time": "Tijd in seconden vanaf laatst gezien tot beschouwd als weg",
+                    "track_clients": "Volg netwerkclients",
+                    "track_devices": "Netwerkapparaten volgen (Ubiquiti-apparaten)",
+                    "track_wired_clients": "Inclusief bedrade netwerkcli\u00ebnten"
+                }
+            }
+        }
     }
 }
