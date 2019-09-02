@@ -336,6 +336,24 @@ async def test_hassio_update_instance(hass):
     assert entry.data[config_flow.CONF_HOST] == "mock-deconz"
 
 
+async def test_hassio_dont_update_instance(hass):
+    """Test we can update an existing config entry."""
+    entry = MockConfigEntry(
+        domain=config_flow.DOMAIN,
+        data={config_flow.CONF_BRIDGEID: "id", config_flow.CONF_HOST: "1.2.3.4"},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        data={config_flow.CONF_HOST: "1.2.3.4", config_flow.CONF_SERIAL: "id"},
+        context={"source": "hassio"},
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+
 async def test_hassio_confirm(hass):
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
