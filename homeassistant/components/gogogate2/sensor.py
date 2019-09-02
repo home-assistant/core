@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "gogogate2_temp"
+DEFAULT_NAME = "gogogate2"
 
 NOTIFICATION_ID = "gogogate2_temperature"
 NOTIFICATION_TITLE = "Gogogate2 Temperature"
