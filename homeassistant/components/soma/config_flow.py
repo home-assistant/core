@@ -4,25 +4,16 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import callback
 from homeassistant.const import (
     CONF_HOST, CONF_PORT)
-from .const import DOMAIN, HOST, PORT
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PORT = 3000
 
 
-@callback
-def register_flow_implementation(hass, host, port):
-    """Register a flow implementation."""
-    hass.data[DOMAIN][HOST] = host
-    hass.data[DOMAIN][PORT] = port
-
-
-@config_entries.HANDLERS.register('soma')
-class SomaFlowHandler(config_entries.ConfigFlow):
+class SomaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
@@ -30,12 +21,9 @@ class SomaFlowHandler(config_entries.ConfigFlow):
 
     def __init__(self):
         """Instantiate config flow."""
-        self.device_config = {}
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
-        _LOGGER.info('Soma setup flow started...')
-
         if user_input is None:
             data = {vol.Required(CONF_HOST): str,
                     vol.Required(CONF_PORT, default=DEFAULT_PORT): int
@@ -43,7 +31,6 @@ class SomaFlowHandler(config_entries.ConfigFlow):
 
             return self.async_show_form(
                 step_id='user',
-                description_placeholders=self.device_config,
                 data_schema=vol.Schema(data)
             )
 
@@ -63,3 +50,9 @@ class SomaFlowHandler(config_entries.ConfigFlow):
                 'port': user_input['port']
             },
         )
+
+    async def async_step_import(self, user_input=None):
+        """Handle flow start from existing config section."""
+        if self.hass.config_entries.async_entries(DOMAIN):
+            return self.async_abort(reason="already_setup")
+        return await self.async_step_creation(user_input)

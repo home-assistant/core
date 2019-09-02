@@ -1,12 +1,11 @@
 """Support for Soma Smartshades."""
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
+from api.soma_api import SomaApi
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
-from homeassistant.components.soma import config_flow
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
@@ -16,11 +15,10 @@ from homeassistant.const import (
 
 from .const import DOMAIN, HOST, API
 
+
 DEVICES = 'devices'
 
 _LOGGER = logging.getLogger(__name__)
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -37,12 +35,6 @@ async def async_setup(hass, config):
     if DOMAIN not in config:
         return True
 
-    hass.data[DOMAIN] = {}
-
-    config_flow.register_flow_implementation(
-        hass, config[DOMAIN][CONF_HOST],
-        config[DOMAIN][CONF_PORT])
-
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
@@ -54,12 +46,11 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Soma from a config entry."""
-    from api.soma_api import SomaApi
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][API] = SomaApi(entry.data[HOST])
-    ret = await hass.async_add_executor_job(
+    devices = await hass.async_add_executor_job(
         hass.data[DOMAIN][API].list_devices)
-    hass.data[DOMAIN][DEVICES] = ret['shades']
+    hass.data[DOMAIN][DEVICES] = devices['shades']
 
     for component in SOMA_COMPONENTS:
         hass.async_create_task(
@@ -109,8 +100,3 @@ class SomaEntity(Entity):
         ret = await self.hass.async_add_executor_job(
             self.api.get_shade_state, self.device['mac'])
         self.current_position = ret['position']
-
-    def has_capability(self, capability):
-        """Test if device has a capability."""
-        capabilities = self.device.capabilities
-        return bool([c for c in capabilities if c.name == capability])

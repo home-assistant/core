@@ -1,14 +1,9 @@
-"""
-Support for Soma Covers.
-
-For more details about this platform, please refer to the documentation at
-"""
+"""Support for Soma Covers."""
 
 import logging
 
 from homeassistant.components.cover import CoverDevice, ATTR_POSITION
 from homeassistant.components.soma import DOMAIN, SomaEntity, DEVICES, API
-from homeassistant.exceptions import PlatformNotReady
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,14 +11,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Soma cover platform."""
-    def get_covers():
-        """Retrieve covers."""
-        devices = hass.data[DOMAIN][DEVICES]
 
-        return [SomaCover(cover, hass.data[DOMAIN][API]) for cover in
-                devices]
+    devices = hass.data[DOMAIN][DEVICES]
 
-    async_add_entities(await hass.async_add_executor_job(get_covers), True)
+    async_add_entities(
+        [SomaCover(cover, hass.data[DOMAIN][API]) for cover in devices],
+        True)
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -45,27 +38,35 @@ class SomaCover(SomaEntity, CoverDevice):
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        if self.api.close_shade(self.device['mac'])['result'] != 'success':
-            raise PlatformNotReady()
+        response = self.api.close_shade(self.device['mac'])
+        if response['result'] != 'success':
+            _LOGGER.error("Unable to reach device %s (%s)",
+                          self.device['name'], response['msg'])
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        if self.api.open_shade(self.device['mac'])['result'] != 'success':
-            raise PlatformNotReady()
+        response = self.api.open_shade(self.device['mac'])
+        if response['result'] != 'success':
+            _LOGGER.error("Unable to reach device %s (%s)",
+                          self.device['name'], response['msg'])
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
         # Set cover position to some value where up/down are both enabled
         self.current_position = 50
-        if self.api.stop_shade(self.device['mac'])['result'] != 'success':
-            raise PlatformNotReady()
+        response = self.api.stop_shade(self.device['mac'])
+        if response['result'] != 'success':
+            _LOGGER.error("Unable to reach device %s (%s)",
+                          self.device['name'], response['msg'])
 
     def set_cover_position(self, **kwargs):
         """Move the cover shutter to a specific position."""
         self.current_position = kwargs[ATTR_POSITION]
-        if self.api.set_shade_position(
-                self.device['mac'], kwargs[ATTR_POSITION])['result'] != 'success':
-            raise PlatformNotReady()
+        response = self.api.set_shade_position(
+            self.device['mac'], kwargs[ATTR_POSITION])
+        if response['result'] != 'success':
+            _LOGGER.error("Unable to reach device %s (%s)",
+                          self.device['name'], response['msg'])
 
     @property
     def current_cover_position(self):
@@ -76,6 +77,6 @@ class SomaCover(SomaEntity, CoverDevice):
     def is_closed(self):
         """Return if the cover is closed."""
         is_closed = False
-        if self.current_position == 100:
+        if self.current_position == 0:
             is_closed = True
         return is_closed
