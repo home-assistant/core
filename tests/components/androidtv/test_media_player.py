@@ -92,8 +92,7 @@ async def _test_reconnect(hass, caplog, config):
     ]:
         for _ in range(5):
             await hass.helpers.entity_component.async_update_entity(entity_id)
-            state = hass.states.get(entity_id)
-            assert state.state == STATE_UNAVAILABLE
+            assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     assert len(caplog.record_tuples) == 2
 
