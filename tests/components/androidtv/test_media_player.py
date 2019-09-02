@@ -1,232 +1,249 @@
 """The tests for the androidtv platform."""
 import logging
-from socket import error as socket_error
-import unittest
-from unittest.mock import patch
 
+from homeassistant.setup import async_setup_component
 from homeassistant.components.androidtv.media_player import (
-    AndroidTVDevice,
-    FireTVDevice,
-    setup,
+    ANDROIDTV_DOMAIN,
+    CONF_ADB_SERVER_IP,
+)
+from homeassistant.components.media_player.const import DOMAIN
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PLATFORM,
+    STATE_IDLE,
+    STATE_OFF,
+    STATE_UNAVAILABLE,
 )
 
-
-def connect_device_success(self, *args, **kwargs):
-    """Return `self`, which will result in the ADB connection being interpreted as available."""
-    return self
+from . import patchers
 
 
-def connect_device_fail(self, *args, **kwargs):
-    """Raise a socket error."""
-    raise socket_error
+# Android TV device with Python ADB implementation
+CONFIG_ANDROIDTV_PYTHON_ADB = {
+    DOMAIN: {
+        CONF_PLATFORM: ANDROIDTV_DOMAIN,
+        CONF_HOST: "127.0.0.1",
+        CONF_NAME: "Android TV",
+    }
+}
+
+# Android TV device with ADB server
+CONFIG_ANDROIDTV_ADB_SERVER = {
+    DOMAIN: {
+        CONF_PLATFORM: ANDROIDTV_DOMAIN,
+        CONF_HOST: "127.0.0.1",
+        CONF_NAME: "Android TV",
+        CONF_ADB_SERVER_IP: "127.0.0.1",
+    }
+}
+
+# Fire TV device with Python ADB implementation
+CONFIG_FIRETV_PYTHON_ADB = {
+    DOMAIN: {
+        CONF_PLATFORM: ANDROIDTV_DOMAIN,
+        CONF_HOST: "127.0.0.1",
+        CONF_NAME: "Fire TV",
+        CONF_DEVICE_CLASS: "firetv",
+    }
+}
+
+# Fire TV device with ADB server
+CONFIG_FIRETV_ADB_SERVER = {
+    DOMAIN: {
+        CONF_PLATFORM: ANDROIDTV_DOMAIN,
+        CONF_HOST: "127.0.0.1",
+        CONF_NAME: "Fire TV",
+        CONF_DEVICE_CLASS: "firetv",
+        CONF_ADB_SERVER_IP: "127.0.0.1",
+    }
+}
 
 
-def adb_shell_python_adb_error(self, cmd):
-    """Raise an error that is among those caught for the Python ADB implementation."""
-    raise AttributeError
+async def _test_reconnect(hass, caplog, config):
+    """Test that the error and reconnection attempts are logged correctly.
 
+    "Handles device/service unavailable. Log a warning once when
+    unavailable, log once when reconnected."
 
-def adb_shell_adb_server_error(self, cmd):
-    """Raise an error that is among those caught for the ADB server implementation."""
-    raise ConnectionResetError
+    https://developers.home-assistant.io/docs/en/integration_quality_scale_index.html
+    """
+    if CONF_ADB_SERVER_IP not in config[DOMAIN]:
+        patch_key = "python"
+    else:
+        patch_key = "server"
 
+    if config[DOMAIN].get(CONF_DEVICE_CLASS) != "firetv":
+        entity_id = "media_player.android_tv"
+    else:
+        entity_id = "media_player.fire_tv"
 
-class AdbAvailable:
-    """A class that indicates the ADB connection is available."""
+    with patchers.patch_connect(True)[patch_key], patchers.patch_shell("")[patch_key]:
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_OFF
 
-    def shell(self, cmd):
-        """Send an ADB shell command (ADB server implementation)."""
-        return ""
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
 
+    with patchers.patch_connect(False)[patch_key], patchers.patch_shell(error=True)[
+        patch_key
+    ]:
+        for _ in range(5):
+            await hass.helpers.entity_component.async_update_entity(entity_id)
+            state = hass.states.get(entity_id)
+            assert state is not None
+            assert state.state == STATE_UNAVAILABLE
 
-class AdbUnavailable:
-    """A class with ADB shell methods that raise errors."""
+    assert len(caplog.record_tuples) == 2
+    assert caplog.record_tuples[0][1] == logging.ERROR
+    assert caplog.record_tuples[1][1] == logging.WARNING
 
-    def __bool__(self):
-        """Return `False` to indicate that the ADB connection is unavailable."""
-        return False
+    caplog.set_level(logging.DEBUG)
+    with patchers.patch_connect(True)[patch_key], patchers.patch_shell("1")[patch_key]:
+        # Update 1 will reconnect
+        await hass.helpers.entity_component.async_update_entity(entity_id)
 
-    def shell(self, cmd):
-        """Raise an error that pertains to the Python ADB implementation."""
-        raise ConnectionResetError
+        # If using an ADB server, the state will get updated; otherwise, the
+        # state will be the last known state
+        state = hass.states.get(entity_id)
+        if patch_key == "server":
+            assert state.state == STATE_IDLE
+        else:
+            assert state.state == STATE_OFF
 
+        # Update 2 will update the state, regardless of which ADB connection
+        # method is used
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_IDLE
 
-PATCH_PYTHON_ADB_CONNECT_SUCCESS = patch(
-    "adb.adb_commands.AdbCommands.ConnectDevice", connect_device_success
-)
-PATCH_PYTHON_ADB_COMMAND_SUCCESS = patch(
-    "adb.adb_commands.AdbCommands.Shell", return_value=""
-)
-PATCH_PYTHON_ADB_CONNECT_FAIL = patch(
-    "adb.adb_commands.AdbCommands.ConnectDevice", connect_device_fail
-)
-PATCH_PYTHON_ADB_COMMAND_FAIL = patch(
-    "adb.adb_commands.AdbCommands.Shell", adb_shell_python_adb_error
-)
-PATCH_PYTHON_ADB_COMMAND_NONE = patch(
-    "adb.adb_commands.AdbCommands.Shell", return_value=None
-)
-
-PATCH_ADB_SERVER_CONNECT_SUCCESS = patch(
-    "adb_messenger.client.Client.device", return_value=AdbAvailable()
-)
-PATCH_ADB_SERVER_AVAILABLE = patch(
-    "androidtv.basetv.BaseTV.available", return_value=True
-)
-PATCH_ADB_SERVER_CONNECT_FAIL = patch(
-    "adb_messenger.client.Client.device", return_value=AdbUnavailable()
-)
-PATCH_ADB_SERVER_COMMAND_FAIL = patch(
-    "{}.AdbAvailable.shell".format(__name__), adb_shell_adb_server_error
-)
-PATCH_ADB_SERVER_COMMAND_NONE = patch(
-    "{}.AdbAvailable.shell".format(__name__), return_value=None
-)
-
-
-class TestAndroidTVPythonImplementation(unittest.TestCase):
-    """Test the androidtv media player for an Android TV device."""
-
-    def setUp(self):
-        """Set up an `AndroidTVDevice` media player."""
-        with PATCH_PYTHON_ADB_CONNECT_SUCCESS, PATCH_PYTHON_ADB_COMMAND_SUCCESS:
-            aftv = setup("IP:PORT", device_class="androidtv")
-            self.aftv = AndroidTVDevice(aftv, "Fake Android TV", {}, None, None)
-
-    def test_reconnect(self):
-        """Test that the error and reconnection attempts are logged correctly.
-
-        "Handles device/service unavailable. Log a warning once when
-        unavailable, log once when reconnected."
-
-        https://developers.home-assistant.io/docs/en/integration_quality_scale_index.html
-        """
-        with self.assertLogs(level=logging.WARNING) as logs:
-            with PATCH_PYTHON_ADB_CONNECT_FAIL, PATCH_PYTHON_ADB_COMMAND_FAIL:
-                for _ in range(5):
-                    self.aftv.update()
-                    self.assertFalse(self.aftv.available)
-                    self.assertIsNone(self.aftv.state)
-
-        assert len(logs.output) == 2
-        assert logs.output[0].startswith("ERROR")
-        assert logs.output[1].startswith("WARNING")
-
-        with self.assertLogs(level=logging.DEBUG) as logs:
-            with PATCH_PYTHON_ADB_CONNECT_SUCCESS, PATCH_PYTHON_ADB_COMMAND_SUCCESS:
-                # Update 1 will reconnect
-                self.aftv.update()
-                self.assertTrue(self.aftv.available)
-
-                # Update 2 will update the state
-                self.aftv.update()
-                self.assertTrue(self.aftv.available)
-                self.assertIsNotNone(self.aftv.state)
-
+    if patch_key == "python":
         assert (
-            "ADB connection to {} successfully established".format(self.aftv.aftv.host)
-            in logs.output[0]
+            "ADB connection to 127.0.0.1:5555 successfully established"
+            in caplog.record_tuples[2]
+        )
+    else:
+        assert (
+            "ADB connection to 127.0.0.1:5555 via ADB server 127.0.0.1:5037 successfully established"
+            in caplog.record_tuples[2]
         )
 
-    def test_adb_shell_returns_none(self):
-        """Test the case that the ADB shell command returns `None`.
-
-        The state should be `None` and the device should be unavailable.
-        """
-        with PATCH_PYTHON_ADB_COMMAND_NONE:
-            self.aftv.update()
-            self.assertFalse(self.aftv.available)
-            self.assertIsNone(self.aftv.state)
-
-        with PATCH_PYTHON_ADB_CONNECT_SUCCESS, PATCH_PYTHON_ADB_COMMAND_SUCCESS:
-            # Update 1 will reconnect
-            self.aftv.update()
-            self.assertTrue(self.aftv.available)
-
-            # Update 2 will update the state
-            self.aftv.update()
-            self.assertTrue(self.aftv.available)
-            self.assertIsNotNone(self.aftv.state)
+    return True
 
 
-class TestAndroidTVServerImplementation(unittest.TestCase):
-    """Test the androidtv media player for an Android TV device."""
+async def _test_adb_shell_returns_none(hass, config):
+    """Test the case that the ADB shell command returns `None`.
 
-    def setUp(self):
-        """Set up an `AndroidTVDevice` media player."""
-        with PATCH_ADB_SERVER_CONNECT_SUCCESS, PATCH_ADB_SERVER_AVAILABLE:
-            aftv = setup(
-                "IP:PORT", adb_server_ip="ADB_SERVER_IP", device_class="androidtv"
-            )
-            self.aftv = AndroidTVDevice(aftv, "Fake Android TV", {}, None, None)
+    The state should be `None` and the device should be unavailable.
+    """
+    if CONF_ADB_SERVER_IP not in config[DOMAIN]:
+        patch_key = "python"
+    else:
+        patch_key = "server"
 
-    def test_reconnect(self):
-        """Test that the error and reconnection attempts are logged correctly.
+    if config[DOMAIN].get(CONF_DEVICE_CLASS) != "firetv":
+        entity_id = "media_player.android_tv"
+    else:
+        entity_id = "media_player.fire_tv"
 
-        "Handles device/service unavailable. Log a warning once when
-        unavailable, log once when reconnected."
+    with patchers.patch_connect(True)[patch_key], patchers.patch_shell("")[patch_key]:
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state != STATE_UNAVAILABLE
 
-        https://developers.home-assistant.io/docs/en/integration_quality_scale_index.html
-        """
-        with self.assertLogs(level=logging.WARNING) as logs:
-            with PATCH_ADB_SERVER_CONNECT_FAIL, PATCH_ADB_SERVER_COMMAND_FAIL:
-                for _ in range(5):
-                    self.aftv.update()
-                    self.assertFalse(self.aftv.available)
-                    self.assertIsNone(self.aftv.state)
+    with patchers.patch_shell(None)[patch_key], patchers.patch_shell(error=True)[
+        patch_key
+    ]:
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE
 
-        assert len(logs.output) == 2
-        assert logs.output[0].startswith("ERROR")
-        assert logs.output[1].startswith("WARNING")
-
-        with self.assertLogs(level=logging.DEBUG) as logs:
-            with PATCH_ADB_SERVER_CONNECT_SUCCESS:
-                self.aftv.update()
-                self.assertTrue(self.aftv.available)
-                self.assertIsNotNone(self.aftv.state)
-
-        assert (
-            "ADB connection to {} via ADB server {}:{} successfully established".format(
-                self.aftv.aftv.host,
-                self.aftv.aftv.adb_server_ip,
-                self.aftv.aftv.adb_server_port,
-            )
-            in logs.output[0]
-        )
-
-    def test_adb_shell_returns_none(self):
-        """Test the case that the ADB shell command returns `None`.
-
-        The state should be `None` and the device should be unavailable.
-        """
-        with PATCH_ADB_SERVER_COMMAND_NONE:
-            self.aftv.update()
-            self.assertFalse(self.aftv.available)
-            self.assertIsNone(self.aftv.state)
-
-        with PATCH_ADB_SERVER_CONNECT_SUCCESS:
-            self.aftv.update()
-            self.assertTrue(self.aftv.available)
-            self.assertIsNotNone(self.aftv.state)
+    return True
 
 
-class TestFireTVPythonImplementation(TestAndroidTVPythonImplementation):
-    """Test the androidtv media player for a Fire TV device."""
+async def test_reconnect_androidtv_python_adb(hass, caplog):
+    """Test that the error and reconnection attempts are logged correctly.
 
-    def setUp(self):
-        """Set up a `FireTVDevice` media player."""
-        with PATCH_PYTHON_ADB_CONNECT_SUCCESS, PATCH_PYTHON_ADB_COMMAND_SUCCESS:
-            aftv = setup("IP:PORT", device_class="firetv")
-            self.aftv = FireTVDevice(aftv, "Fake Fire TV", {}, True, None, None)
+    * Device type: Android TV
+    * ADB connection method: Python ADB implementation
+
+    """
+    assert await _test_reconnect(hass, caplog, CONFIG_ANDROIDTV_PYTHON_ADB)
 
 
-class TestFireTVServerImplementation(TestAndroidTVServerImplementation):
-    """Test the androidtv media player for a Fire TV device."""
+async def test_adb_shell_returns_none_androidtv_python_adb(hass):
+    """Test the case that the ADB shell command returns `None`.
 
-    def setUp(self):
-        """Set up a `FireTVDevice` media player."""
-        with PATCH_ADB_SERVER_CONNECT_SUCCESS, PATCH_ADB_SERVER_AVAILABLE:
-            aftv = setup(
-                "IP:PORT", adb_server_ip="ADB_SERVER_IP", device_class="firetv"
-            )
-            self.aftv = FireTVDevice(aftv, "Fake Fire TV", {}, True, None, None)
+    * Device type: Android TV
+    * ADB connection method: Python ADB implementation
+
+    """
+    assert await _test_adb_shell_returns_none(hass, CONFIG_ANDROIDTV_PYTHON_ADB)
+
+
+async def test_reconnect_firetv_python_adb(hass, caplog):
+    """Test that the error and reconnection attempts are logged correctly.
+
+    * Device type: Fire TV
+    * ADB connection method: Python ADB implementation
+
+    """
+    assert await _test_reconnect(hass, caplog, CONFIG_FIRETV_PYTHON_ADB)
+
+
+async def test_adb_shell_returns_none_firetv_python_adb(hass):
+    """Test the case that the ADB shell command returns `None`.
+
+    * Device type: Fire TV
+    * ADB connection method: Python ADB implementation
+
+    """
+    assert await _test_adb_shell_returns_none(hass, CONFIG_FIRETV_PYTHON_ADB)
+
+
+async def test_reconnect_androidtv_adb_server(hass, caplog):
+    """Test that the error and reconnection attempts are logged correctly.
+
+    * Device type: Android TV
+    * ADB connection method: ADB server
+
+    """
+    assert await _test_reconnect(hass, caplog, CONFIG_ANDROIDTV_ADB_SERVER)
+
+
+async def test_adb_shell_returns_none_androidtv_adb_server(hass):
+    """Test the case that the ADB shell command returns `None`.
+
+    * Device type: Android TV
+    * ADB connection method: ADB server
+
+    """
+    assert await _test_adb_shell_returns_none(hass, CONFIG_ANDROIDTV_ADB_SERVER)
+
+
+async def test_reconnect_firetv_adb_server(hass, caplog):
+    """Test that the error and reconnection attempts are logged correctly.
+
+    * Device type: Fire TV
+    * ADB connection method: ADB server
+
+    """
+    assert await _test_reconnect(hass, caplog, CONFIG_FIRETV_ADB_SERVER)
+
+
+async def test_adb_shell_returns_none_firetv_adb_server(hass):
+    """Test the case that the ADB shell command returns `None`.
+
+    * Device type: Fire TV
+    * ADB connection method: ADB server
+
+    """
+    assert await _test_adb_shell_returns_none(hass, CONFIG_FIRETV_ADB_SERVER)
