@@ -36,8 +36,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                     {
                         vol.Required(CONF_ID): cv.positive_int,
                         vol.Required(CONF_NAME): cv.string,
-                        vol.Optional(CONF_PROTOCOL, default=""): cv.string,
-                        vol.Optional(CONF_MODEL, default=""): cv.string,
+                        vol.Optional(CONF_PROTOCOL): cv.string,
+                        vol.Optional(CONF_MODEL): cv.string,
                     }
                 )
             ],
@@ -80,11 +80,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         named_sensors = {}
         for named_sensor in config[CONF_ONLY_NAMED]:
             name = named_sensor[CONF_NAME]
-            proto = named_sensor[CONF_PROTOCOL]
-            model = named_sensor[CONF_MODEL]
+            proto = named_sensor.get(CONF_PROTOCOL)
+            model = named_sensor.get(CONF_MODEL)
             id_ = named_sensor[CONF_ID]
-            if proto != "":
-                if model != "":
+            if proto != None:
+                if model != None:
                     named_sensors["{}{}{}".format(proto, model, id_)] = name
                 else:
                     named_sensors["{}{}".format(proto, id_)] = name
