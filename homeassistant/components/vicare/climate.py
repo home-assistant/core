@@ -146,10 +146,10 @@ class ViCareClimate(ClimateDevice):
         vicare_mode = HA_TO_VICARE_HVAC_HEATING.get(hvac_mode)
         if vicare_mode is None:
             _LOGGER.error(
-                "cannot set invalid vicare mode: %s / %s", hvac_mode, vicare_mode
+                "Cannot set invalid vicare mode: %s / %s", hvac_mode, vicare_mode
             )
         else:
-            _LOGGER.debug(f"setting hvac mode to %s / %s", hvac_mode, vicare_mode)
+            _LOGGER.debug("Setting hvac mode to %s / %s", hvac_mode, vicare_mode)
             self._api.setMode(vicare_mode)
 
     @property
@@ -195,9 +195,11 @@ class ViCareClimate(ClimateDevice):
         vicare_program = HA_TO_VICARE_PRESET_HEATING.get(preset_mode)
         if vicare_program is None:
             _LOGGER.error(
-                f"cannot set invalid vicare program: {preset_mode} / {vicare_program}"
+                "Cannot set invalid vicare program: %s / %s",
+                preset_mode,
+                vicare_program,
             )
         else:
-            _LOGGER.debug(f"setting preset to {preset_mode} / {vicare_program}")
+            _LOGGER.debug("Setting preset to %s / %s", preset_mode, vicare_program)
             self._api.deactivateProgram(self._current_program)
             self._api.activateProgram(vicare_program)
