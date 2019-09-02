@@ -7,6 +7,7 @@ from aio_geojson_geonetnz_quakes import GeonetnzQuakesFeedManager
 
 from homeassistant.components.geonetnz_quakes.geo_location import GeonetnzQuakesEvent
 from homeassistant.core import callback
+from homeassistant.setup import ATTR_COMPONENT
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from .const import (
     SIGNAL_DELETE_ENTITY,
@@ -114,9 +115,10 @@ async def async_setup_entry(hass, config_entry):
     unit_system = config_entry.data[CONF_UNIT_SYSTEM]
     if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
         radius = METRIC_SYSTEM.length(radius, LENGTH_MILES)
+    # Create feed entity manager for all platforms.
     manager = GeonetnzQuakesFeedEntityManager(hass, config_entry, radius, unit_system)
     hass.data[DOMAIN][FEED][config_entry.entry_id] = manager
-    _LOGGER.debug("Manager added for %s", config_entry.entry_id)
+    _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
     await manager.async_init()
     return True
 
@@ -185,10 +187,11 @@ class GeonetnzQuakesFeedEntityManager:
 
         async def component_loaded(event):
             """Handle a new component loaded."""
-            _LOGGER.debug("Geonet NZ Quakes component loaded - updating now")
-            await self.async_update()
+            component = event.data.get(ATTR_COMPONENT)
+            if component == DOMAIN:
+                await self.async_update()
 
-        self._hass.bus.async_listen_once(EVENT_COMPONENT_LOADED, component_loaded)
+        self._hass.bus.async_listen(EVENT_COMPONENT_LOADED, component_loaded)
 
         _LOGGER.debug("Feed entity manager initialized")
 
