@@ -4,7 +4,6 @@ import logging
 from homeassistant.components.switch import (
     SwitchDevice, ATTR_CURRENT_POWER_W)
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from . import DOMAIN as ELV_DOMAIN
 
 import pypca
 from serial import SerialException

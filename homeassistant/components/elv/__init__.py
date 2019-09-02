@@ -5,8 +5,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.helpers import discovery
-from homeassistant.const import (
-    CONF_NAME, CONF_DEVICE)
+from homeassistant.const import CONF_DEVICE
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
