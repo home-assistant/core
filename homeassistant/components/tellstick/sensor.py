@@ -83,8 +83,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             proto = named_sensor.get(CONF_PROTOCOL)
             model = named_sensor.get(CONF_MODEL)
             id_ = named_sensor[CONF_ID]
-            if proto != None:
-                if model != None:
+            if proto is not None:
+                if model is not None:
                     named_sensors["{}{}{}".format(proto, model, id_)] = name
                 else:
                     named_sensors["{}{}".format(proto, id_)] = name
