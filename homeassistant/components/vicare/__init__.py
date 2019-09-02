@@ -40,7 +40,13 @@ def setup(hass, config):
     if conf.get(CONF_CIRCUIT) is not None:
         params["circuit"] = conf[CONF_CIRCUIT]
 
-    vicare_api = Device(conf[CONF_USERNAME], conf[CONF_PASSWORD], **params)
+    try:
+        vicare_api = Device(conf[CONF_USERNAME], conf[CONF_PASSWORD], **params)
+    except AttributeError:
+        _LOGGER.error(
+            "Failed to create PyViCare API client. Please check your credentials."
+        )
+        return False
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][VICARE_API] = vicare_api
