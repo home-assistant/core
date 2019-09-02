@@ -61,8 +61,8 @@ async def test_spaceapi_get(hass, mock_client):
     assert data["space"] == "Home"
     assert data["contact"]["email"] == "hello@home-assistant.io"
     assert data["location"]["address"] == "In your Home"
-    assert data["location"]["latitude"] == 32.87336
-    assert data["location"]["longitude"] == -117.22743
+    assert data["location"]["lat"] == 32.87336
+    assert data["location"]["lon"] == -117.22743
     assert data["state"]["open"] == "null"
     assert data["state"]["icon"]["open"] == "https://home-assistant.io/open.png"
     assert data["state"]["icon"]["close"] == "https://home-assistant.io/close.png"
