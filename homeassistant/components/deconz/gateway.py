@@ -6,19 +6,22 @@ from pydeconz import DeconzSession, errors
 from pydeconz.sensor import Switch
 
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.const import CONF_EVENT, CONF_HOST, CONF_ID
-from homeassistant.core import EventOrigin, callback
+from homeassistant.const import CONF_HOST
+from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+<<<<<<< HEAD
 from homeassistant.helpers.entity_registry import (
     async_get_registry,
     DISABLED_CONFIG_ENTRY,
 )
 from homeassistant.util import slugify
+=======
+>>>>>>> Early draft
 
 from .const import (
     _LOGGER,
@@ -33,6 +36,7 @@ from .const import (
     NEW_SENSOR,
     SUPPORTED_PLATFORMS,
 )
+from .deconz_event import DeconzEvent
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -192,7 +196,7 @@ class DeconzGateway:
             if sensor.type in Switch.ZHATYPE and not (
                 not self.option_allow_clip_sensor and sensor.type.startswith("CLIP")
             ):
-                self.events.append(DeconzEvent(self.hass, sensor))
+                self.events.append(DeconzEvent(sensor, self))
 
     @callback
     def shutdown(self, event):
@@ -253,6 +257,7 @@ async def get_gateway(
     except (asyncio.TimeoutError, errors.RequestError):
         _LOGGER.error("Error connecting to deCONZ gateway at %s", config[CONF_HOST])
         raise CannotConnect
+<<<<<<< HEAD
 
 
 class DeconzEntityHandler:
@@ -318,3 +323,5 @@ class DeconzEvent:
         if "state" in self._device.changed_keys:
             data = {CONF_ID: self._id, CONF_EVENT: self._device.state}
             self._hass.bus.async_fire(self._event, data, EventOrigin.remote)
+=======
+>>>>>>> Early draft
