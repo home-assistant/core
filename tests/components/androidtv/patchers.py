@@ -4,30 +4,34 @@ from socket import error as socket_error
 from unittest.mock import patch
 
 
-class AdbCommandsFakeSuccess:
-    """A fake of the `adb.adb_commands.AdbCommands` class when the connection and shell commands succeed."""
+class AdbCommandsFake:
+    """A fake of the `adb.adb_commands.AdbCommands` class."""
 
     def ConnectDevice(self, *args, **kwargs):  # pylint: disable=invalid-name
-        """Successfully connect to a device."""
-        return self
+        """Try to connect to a device."""
+        raise NotImplementedError
 
     def Shell(self, cmd):  # pylint: disable=invalid-name
         """Send an ADB shell command."""
         raise NotImplementedError
 
 
-class AdbCommandsFakeFail:
-    """A fake of the `adb.adb_commands.AdbCommands` class when the connection and shell commands fail."""
+class AdbCommandsFakeSuccess(AdbCommandsFake):
+    """A fake of the `adb.adb_commands.AdbCommands` class when the connection attempt succeeds."""
+
+    def ConnectDevice(self, *args, **kwargs):  # pylint: disable=invalid-name
+        """Successfully connect to a device."""
+        return self
+
+
+class AdbCommandsFakeFail(AdbCommandsFake):
+    """A fake of the `adb.adb_commands.AdbCommands` class when the connection attempt fails."""
 
     def ConnectDevice(
         self, *args, **kwargs
     ):  # pylint: disable=invalid-name, no-self-use
         """Fail to connect to a device."""
         raise socket_error
-
-    def Shell(self, cmd):  # pylint: disable=invalid-name
-        """Fail to send an ADB shell command."""
-        raise NotImplementedError
 
 
 class ClientFakeSuccess:
@@ -97,7 +101,7 @@ def patch_connect(success):
 
 
 def patch_shell(response=None, error=False):
-    """Mock the `AdbCommandsFakeSuccess.Shell` / `AdbCommandsFakeFail.Shell` and `DeviceFake.shell` methods."""
+    """Mock the `AdbCommandsFake.Shell` and `DeviceFake.shell` methods."""
 
     def shell_success(self, cmd):
         """Mock the `AdbCommandsFake.Shell` and `DeviceFake.shell` methods when they are successful."""
@@ -116,14 +120,10 @@ def patch_shell(response=None, error=False):
 
     if not error:
         return {
-            "python": patch(
-                "{}.AdbCommandsFakeSuccess.Shell".format(__name__), shell_success
-            ),
+            "python": patch("{}.AdbCommandsFake.Shell".format(__name__), shell_success),
             "server": patch("{}.DeviceFake.shell".format(__name__), shell_success),
         }
     return {
-        "python": patch(
-            "{}.AdbCommandsFakeSuccess.Shell".format(__name__), shell_fail_python
-        ),
+        "python": patch("{}.AdbCommandsFake.Shell".format(__name__), shell_fail_python),
         "server": patch("{}.DeviceFake.shell".format(__name__), shell_fail_server),
     }
