@@ -20,9 +20,6 @@ from homeassistant.const import (
 from . import patchers
 
 
-ENTITY_ID_ANDROIDTV = "media_player.android_tv"
-ENTITY_ID_FIRETV = "media_player.fire_tv"
-
 # Android TV device with Python ADB implementation
 CONFIG_ANDROIDTV_PYTHON_ADB = {
     DOMAIN: {
