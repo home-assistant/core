@@ -25,6 +25,13 @@ CONFIG = {
             "temperature": ["test.temp1", "test.temp2"],
             "humidity": ["test.hum1"],
         },
+        "spacefed": {"spacenet": True, "spacesaml": False, "spacephone": True},
+        "cam": ["https://home-assistant.io/cam1", "https://home-assistant.io/cam2"],
+        "stream": {
+            "m4": "https://home-assistant.io/m4",
+            "mjpeg": "https://home-assistant.io/mjpeg",
+            "ustream": "https://home-assistant.io/ustream",
+        },
     }
 }
 
@@ -66,6 +73,14 @@ async def test_spaceapi_get(hass, mock_client):
     assert data["state"]["open"] == "null"
     assert data["state"]["icon"]["open"] == "https://home-assistant.io/open.png"
     assert data["state"]["icon"]["close"] == "https://home-assistant.io/close.png"
+    assert data["spacefed"]["spacenet"] == bool(1)
+    assert data["spacefed"]["spacesaml"] == bool(0)
+    assert data["spacefed"]["spacephone"] == bool(1)
+    assert data["cam"][0] == "https://home-assistant.io/cam1"
+    assert data["cam"][1] == "https://home-assistant.io/cam2"
+    assert data["stream"]["m4"] == "https://home-assistant.io/m4"
+    assert data["stream"]["mjpeg"] == "https://home-assistant.io/mjpeg"
+    assert data["stream"]["ustream"] == "https://home-assistant.io/ustream"
 
 
 async def test_spaceapi_state_get(hass, mock_client):

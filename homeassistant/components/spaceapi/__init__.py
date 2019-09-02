@@ -26,6 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_ADDRESS = "address"
 ATTR_SPACEFED = "spacefed"
 ATTR_CAM = "cam"
+ATTR_STREAM = "stream"
 ATTR_LATITUDE = "lat"
 ATTR_LONGITUDE = "lon"
 ATTR_API = "api"
@@ -56,6 +57,10 @@ CONF_SPACENET = "spacenet"
 CONF_SPACESAML = "spacesaml"
 CONF_SPACEPHONE = "spacephone"
 CONF_CAM = "cam"
+CONF_STREAM = "stream"
+CONF_M4 = "m4"
+CONF_MJPEG = "mjpeg"
+CONF_USTREAM = "ustream"
 CONF_LOGO = "logo"
 CONF_MAILING_LIST = "mailing_list"
 CONF_PHONE = "phone"
@@ -82,6 +87,15 @@ SPACEFED_SCHEMA = vol.Schema(
         vol.Optional(CONF_SPACEPHONE): cv.boolean,
     }
 )
+
+STREAM_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_M4): cv.url,
+        vol.Optional(CONF_MJPEG): cv.url,
+        vol.Optional(CONF_USTREAM): cv.url,
+    }
+)
+
 
 CONTACT_SCHEMA = vol.Schema(
     {
@@ -120,6 +134,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_CAM): vol.All(
                     cv.ensure_list, [cv.url], vol.Length(min=1)
                 ),
+                vol.Optional(CONF_STREAM): STREAM_SCHEMA,
                 vol.Required(CONF_LOGO): cv.url,
                 vol.Required(CONF_SPACE): cv.string,
                 vol.Required(CONF_STATE): STATE_SCHEMA,
@@ -211,7 +226,12 @@ class APISpaceApiView(HomeAssistantView):
             pass
 
         try:
-            data[ATTR_SPACEFED]: spaceapi[CONF_SPACEFED]
+            data[ATTR_SPACEFED] = spaceapi[CONF_SPACEFED]
+        except KeyError:
+            pass
+
+        try:
+            data[ATTR_STREAM] = spaceapi[CONF_STREAM]
         except KeyError:
             pass
 
