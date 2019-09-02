@@ -4,6 +4,7 @@
   "documentation": "https://www.home-assistant.io/components/automation",
   "requirements": [],
   "dependencies": [
+    "device_automation",
     "group",
     "webhook"
   ],
