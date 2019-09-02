@@ -1,0 +1,12 @@
+{
+  "domain": "tmb",
+  "name": "Transports Metropolitans de Barcelona",
+  "documentation": "https://www.home-assistant.io/components/tmb",
+  "requirements": [
+    "tmb==0.0.3"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@alemuro"
+  ]
+}

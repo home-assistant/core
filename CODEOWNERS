@@ -271,6 +271,7 @@ homeassistant/components/threshold/* @fabaff
 homeassistant/components/tibber/* @danielhiversen
 homeassistant/components/tile/* @bachya
 homeassistant/components/time_date/* @fabaff
+homeassistant/components/tmb/* @alemuro
 homeassistant/components/toon/* @frenck
 homeassistant/components/tplink/* @rytilahti
 homeassistant/components/traccar/* @ludeeus
