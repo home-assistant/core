@@ -29,6 +29,6 @@ def setup(hass, config):
 
     for platform in ELV_PLATFORMS:
         discovery.load_platform(hass, platform, DOMAIN, {
-                                'device': config[DOMAIN].get(CONF_DEVICE)}, config)
+                                'device': config[DOMAIN][CONF_DEVICE]}, config)
 
     return True
