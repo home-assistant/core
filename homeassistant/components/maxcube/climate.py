@@ -2,24 +2,28 @@
 import logging
 import socket
 
-from maxcube.device import \
-    MAX_DEVICE_MODE_AUTOMATIC, \
-    MAX_DEVICE_MODE_MANUAL, \
-    MAX_DEVICE_MODE_VACATION, \
-    MAX_DEVICE_MODE_BOOST
+from maxcube.device import (
+    MAX_DEVICE_MODE_AUTOMATIC,
+    MAX_DEVICE_MODE_MANUAL,
+    MAX_DEVICE_MODE_VACATION,
+    MAX_DEVICE_MODE_BOOST,
+)
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO, SUPPORT_TARGET_TEMPERATURE, SUPPORT_PRESET_MODE)
+    HVAC_MODE_AUTO,
+    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_PRESET_MODE,
+)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import DATA_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
-PRESET_MANUAL = 'manual'
-PRESET_BOOST = 'boost'
-PRESET_VACATION = 'vacation'
+PRESET_MANUAL = "manual"
+PRESET_BOOST = "boost"
+PRESET_VACATION = "vacation"
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
@@ -30,12 +34,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for handler in hass.data[DATA_KEY].values():
         cube = handler.cube
         for device in cube.devices:
-            name = '{} {}'.format(
-                cube.room_by_id(device.room_id).name, device.name)
+            name = "{} {}".format(cube.room_by_id(device.room_id).name, device.name)
 
             if cube.is_thermostat(device) or cube.is_wallthermostat(device):
-                devices.append(
-                    MaxCubeClimate(handler, name, device.rf_address))
+                devices.append(MaxCubeClimate(handler, name, device.rf_address))
 
     if devices:
         add_entities(devices)
@@ -133,11 +135,7 @@ class MaxCubeClimate(ClimateDevice):
     @property
     def preset_modes(self):
         """Return available preset modes."""
-        return [
-            PRESET_BOOST,
-            PRESET_MANUAL,
-            PRESET_VACATION,
-        ]
+        return [PRESET_BOOST, PRESET_MANUAL, PRESET_VACATION]
 
     def set_preset_mode(self, preset_mode):
         """Set new operation mode."""

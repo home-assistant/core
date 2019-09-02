@@ -16,20 +16,25 @@ HEATER_SUPPORT_FLAGS = 0
 HEATER_MAX_TEMP = 80.0
 HEATER_MIN_TEMP = 30.0
 
-HEATER_NAME = 'Boiler'
+HEATER_NAME = "Boiler"
 HEATER_ATTRS = [
-    'display_code', 'display_text', 'is_burning',
-    'rf_message_rssi', 'nodenr', 'rfstatus_cntr']
+    "display_code",
+    "display_text",
+    "is_burning",
+    "rf_message_rssi",
+    "nodenr",
+    "rfstatus_cntr",
+]
 
 
-async def async_setup_platform(hass, hass_config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+    hass, hass_config, async_add_entities, discovery_info=None
+):
     """Set up an InComfort/Intouch water_heater device."""
-    client = hass.data[DOMAIN]['client']
-    heater = hass.data[DOMAIN]['heater']
+    client = hass.data[DOMAIN]["client"]
+    heater = hass.data[DOMAIN]["heater"]
 
-    async_add_entities([
-        IncomfortWaterHeater(client, heater)], update_before_add=True)
+    async_add_entities([IncomfortWaterHeater(client, heater)], update_before_add=True)
 
 
 class IncomfortWaterHeater(WaterHeaterDevice):
@@ -53,8 +58,9 @@ class IncomfortWaterHeater(WaterHeaterDevice):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        state = {k: self._heater.status[k]
-                 for k in self._heater.status if k in HEATER_ATTRS}
+        state = {
+            k: self._heater.status[k] for k in self._heater.status if k in HEATER_ATTRS
+        }
         return state
 
     @property

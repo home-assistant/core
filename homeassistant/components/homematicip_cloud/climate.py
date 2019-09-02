@@ -2,15 +2,23 @@
 import logging
 from typing import Awaitable
 
-from homematicip.aio.device import (
-    AsyncHeatingThermostat, AsyncHeatingThermostatCompact)
+from homematicip.aio.device import AsyncHeatingThermostat, AsyncHeatingThermostatCompact
 from homematicip.aio.group import AsyncHeatingGroup
 from homematicip.aio.home import AsyncHome
+from homematicip.base.enums import AbsenceType
+from homematicip.functionalHomes import IndoorClimateHome
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO, HVAC_MODE_HEAT, PRESET_BOOST, PRESET_ECO,
-    SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE, PRESET_NONE)
+    HVAC_MODE_AUTO,
+    HVAC_MODE_HEAT,
+    PRESET_AWAY,
+    PRESET_BOOST,
+    PRESET_ECO,
+    PRESET_NONE,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
@@ -19,19 +27,19 @@ from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-HMIP_AUTOMATIC_CM = 'AUTOMATIC'
-HMIP_MANUAL_CM = 'MANUAL'
-HMIP_ECO_CM = 'ECO'
+HMIP_AUTOMATIC_CM = "AUTOMATIC"
+HMIP_MANUAL_CM = "MANUAL"
+HMIP_ECO_CM = "ECO"
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the HomematicIP Cloud climate devices."""
     pass
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
-                            async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+) -> None:
     """Set up the HomematicIP climate from a config entry."""
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
@@ -48,7 +56,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
 
     def __init__(self, home: AsyncHome, device) -> None:
         """Initialize heating group."""
-        device.modelType = 'Group-Heating'
+        device.modelType = "Group-Heating"
         self._simple_heating = None
         if device.actualTemperature is None:
             self._simple_heating = _get_first_heating_thermostat(device)
@@ -111,9 +119,17 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         if self._device.boostMode:
             return PRESET_BOOST
         if self._device.controlMode == HMIP_ECO_CM:
-            return PRESET_ECO
+            absence_type = self._home.get_functionalHome(IndoorClimateHome).absenceType
+            if absence_type == AbsenceType.VACATION:
+                return PRESET_AWAY
+            if absence_type in [
+                AbsenceType.PERIOD,
+                AbsenceType.PERMANENT,
+                AbsenceType.PARTY,
+            ]:
+                return PRESET_ECO
 
-        return None
+        return PRESET_NONE
 
     @property
     def preset_modes(self):
@@ -158,7 +174,6 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
 def _get_first_heating_thermostat(heating_group: AsyncHeatingGroup):
     """Return the first HeatingThermostat from a HeatingGroup."""
     for device in heating_group.devices:
-        if isinstance(device, (AsyncHeatingThermostat,
-                               AsyncHeatingThermostatCompact)):
+        if isinstance(device, (AsyncHeatingThermostat, AsyncHeatingThermostatCompact)):
             return device
     return None

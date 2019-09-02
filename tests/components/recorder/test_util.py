@@ -31,10 +31,11 @@ def test_recorder_bad_commit(hass_recorder):
 
     def work(session):
         """Bad work."""
-        session.execute('select * from notthere')
+        session.execute("select * from notthere")
 
-    with patch('homeassistant.components.recorder.time.sleep') as e_mock, \
-            util.session_scope(hass=hass) as session:
+    with patch(
+        "homeassistant.components.recorder.time.sleep"
+    ) as e_mock, util.session_scope(hass=hass) as session:
         res = util.commit(session, work)
     assert res is False
     assert e_mock.call_count == 3
@@ -43,6 +44,7 @@ def test_recorder_bad_commit(hass_recorder):
 def test_recorder_bad_execute(hass_recorder):
     """Bad execute, retry 3 times."""
     from sqlalchemy.exc import SQLAlchemyError
+
     hass_recorder()
 
     def to_native():
@@ -52,8 +54,9 @@ def test_recorder_bad_execute(hass_recorder):
     mck1 = MagicMock()
     mck1.to_native = to_native
 
-    with pytest.raises(SQLAlchemyError), \
-            patch('homeassistant.components.recorder.time.sleep') as e_mock:
+    with pytest.raises(SQLAlchemyError), patch(
+        "homeassistant.components.recorder.time.sleep"
+    ) as e_mock:
         util.execute((mck1,))
 
     assert e_mock.call_count == 2

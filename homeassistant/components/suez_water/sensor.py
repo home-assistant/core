@@ -13,18 +13,20 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-CONF_COUNTER_ID = 'counter_id'
+CONF_COUNTER_ID = "counter_id"
 
 SCAN_INTERVAL = timedelta(hours=12)
 
-COMPONENT_ICON = 'mdi:water-pump'
+COMPONENT_ICON = "mdi:water-pump"
 COMPONENT_NAME = "Suez Water Client"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_COUNTER_ID): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_COUNTER_ID): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -33,8 +35,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     password = config[CONF_PASSWORD]
     counter_id = config[CONF_COUNTER_ID]
     try:
-        client = SuezClient(
-            username, password, counter_id)
+        client = SuezClient(username, password, counter_id)
 
         if not client.check_credentials():
             _LOGGER.warning("Wrong username and/or password")
@@ -89,33 +90,31 @@ class SuezSensor(Entity):
             # _state holds the volume of consumed water during previous day
             self._state = self.client.state
             self._available = True
-            self._attributes[
-                'attribution'] = self.client.attributes[
-                    'attribution']
-            self._attributes['this_month_consumption'] = {}
-            for item in self.client.attributes['thisMonthConsumption']:
-                self._attributes['this_month_consumption'][
-                    item] = self.client.attributes[
-                        'thisMonthConsumption'][item]
-            self._attributes['previous_month_consumption'] = {}
-            for item in self.client.attributes['previousMonthConsumption']:
-                self._attributes['previous_month_consumption'][
-                    item] = self.client.attributes[
-                        'previousMonthConsumption'][item]
-            self._attributes[
-                'highest_monthly_consumption'] = self.client.attributes[
-                    'highestMonthlyConsumption']
-            self._attributes[
-                'last_year_overall'] = self.client.attributes[
-                    'lastYearOverAll']
-            self._attributes[
-                'this_year_overall'] = self.client.attributes[
-                    'thisYearOverAll']
-            self._attributes['history'] = {}
-            for item in self.client.attributes['history']:
-                self._attributes[
-                    'history'][item] = self.client.attributes[
-                        'history'][item]
+            self._attributes["attribution"] = self.client.attributes["attribution"]
+            self._attributes["this_month_consumption"] = {}
+            for item in self.client.attributes["thisMonthConsumption"]:
+                self._attributes["this_month_consumption"][
+                    item
+                ] = self.client.attributes["thisMonthConsumption"][item]
+            self._attributes["previous_month_consumption"] = {}
+            for item in self.client.attributes["previousMonthConsumption"]:
+                self._attributes["previous_month_consumption"][
+                    item
+                ] = self.client.attributes["previousMonthConsumption"][item]
+            self._attributes["highest_monthly_consumption"] = self.client.attributes[
+                "highestMonthlyConsumption"
+            ]
+            self._attributes["last_year_overall"] = self.client.attributes[
+                "lastYearOverAll"
+            ]
+            self._attributes["this_year_overall"] = self.client.attributes[
+                "thisYearOverAll"
+            ]
+            self._attributes["history"] = {}
+            for item in self.client.attributes["history"]:
+                self._attributes["history"][item] = self.client.attributes["history"][
+                    item
+                ]
 
         except PySuezError:
             self._available = False
@@ -124,5 +123,4 @@ class SuezSensor(Entity):
     def update(self):
         """Return the latest collected data from Linky."""
         self._fetch_data()
-        _LOGGER.debug(
-            "Suez data state is: %s.", self._state)
+        _LOGGER.debug("Suez data state is: %s.", self._state)

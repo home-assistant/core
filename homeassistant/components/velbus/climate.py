@@ -1,29 +1,35 @@
 """Support for Velbus thermostat."""
 import logging
 
+from velbus.util import VelbusException
+
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT, SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_HEAT,
+    SUPPORT_TARGET_TEMPERATURE,
+)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
-from . import DOMAIN as VELBUS_DOMAIN, VelbusEntity
+from .const import DOMAIN
+from . import VelbusEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
-    """Set up the Velbus thermostat platform."""
-    if discovery_info is None:
-        return
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up Velbus binary sensors."""
+    pass
 
-    sensors = []
-    for sensor in discovery_info:
-        module = hass.data[VELBUS_DOMAIN].get_module(sensor[0])
-        channel = sensor[1]
-        sensors.append(VelbusClimate(module, channel))
 
-    async_add_entities(sensors)
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Velbus binary sensor based on config_entry."""
+    cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
+    modules_data = hass.data[DOMAIN][entry.entry_id]["climate"]
+    entities = []
+    for address, channel in modules_data:
+        module = cntrl.get_module(address)
+        entities.append(VelbusClimate(module, channel))
+    async_add_entities(entities)
 
 
 class VelbusClimate(VelbusEntity, ClimateDevice):
@@ -37,7 +43,7 @@ class VelbusClimate(VelbusEntity, ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit this state is expressed in."""
-        if self._module.get_unit(self._channel) == '°C':
+        if self._module.get_unit(self._channel) == "°C":
             return TEMP_CELSIUS
         return TEMP_FAHRENHEIT
 
@@ -72,7 +78,11 @@ class VelbusClimate(VelbusEntity, ClimateDevice):
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is None:
             return
-        self._module.set_temp(temp)
+        try:
+            self._module.set_temp(temp)
+        except VelbusException as err:
+            _LOGGER.error("A Velbus error occurred: %s", err)
+            return
         self.schedule_update_ha_state()
 
     def set_hvac_mode(self, hvac_mode):

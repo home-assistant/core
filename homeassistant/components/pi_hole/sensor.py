@@ -6,7 +6,12 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_SSL, CONF_VERIFY_SSL)
+    CONF_HOST,
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -15,56 +20,60 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_BLOCKED_DOMAINS = 'domains_blocked'
-ATTR_PERCENTAGE_TODAY = 'percentage_today'
-ATTR_QUERIES_TODAY = 'queries_today'
+ATTR_BLOCKED_DOMAINS = "domains_blocked"
+ATTR_PERCENTAGE_TODAY = "percentage_today"
+ATTR_QUERIES_TODAY = "queries_today"
 
-CONF_LOCATION = 'location'
-DEFAULT_HOST = 'localhost'
+CONF_LOCATION = "location"
+DEFAULT_HOST = "localhost"
 
-DEFAULT_LOCATION = 'admin'
-DEFAULT_METHOD = 'GET'
-DEFAULT_NAME = 'Pi-Hole'
+DEFAULT_LOCATION = "admin"
+DEFAULT_METHOD = "GET"
+DEFAULT_NAME = "Pi-Hole"
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 MONITORED_CONDITIONS = {
-    'ads_blocked_today':
-        ['Ads Blocked Today', 'ads', 'mdi:close-octagon-outline'],
-    'ads_percentage_today':
-        ['Ads Percentage Blocked Today', '%', 'mdi:close-octagon-outline'],
-    'clients_ever_seen':
-        ['Seen Clients', 'clients', 'mdi:account-outline'],
-    'dns_queries_today':
-        ['DNS Queries Today', 'queries', 'mdi:comment-question-outline'],
-    'domains_being_blocked':
-        ['Domains Blocked', 'domains', 'mdi:block-helper'],
-    'queries_cached':
-        ['DNS Queries Cached', 'queries', 'mdi:comment-question-outline'],
-    'queries_forwarded':
-        ['DNS Queries Forwarded', 'queries', 'mdi:comment-question-outline'],
-    'unique_clients':
-        ['DNS Unique Clients', 'clients', 'mdi:account-outline'],
-    'unique_domains':
-        ['DNS Unique Domains', 'domains', 'mdi:domain'],
+    "ads_blocked_today": ["Ads Blocked Today", "ads", "mdi:close-octagon-outline"],
+    "ads_percentage_today": [
+        "Ads Percentage Blocked Today",
+        "%",
+        "mdi:close-octagon-outline",
+    ],
+    "clients_ever_seen": ["Seen Clients", "clients", "mdi:account-outline"],
+    "dns_queries_today": [
+        "DNS Queries Today",
+        "queries",
+        "mdi:comment-question-outline",
+    ],
+    "domains_being_blocked": ["Domains Blocked", "domains", "mdi:block-helper"],
+    "queries_cached": ["DNS Queries Cached", "queries", "mdi:comment-question-outline"],
+    "queries_forwarded": [
+        "DNS Queries Forwarded",
+        "queries",
+        "mdi:comment-question-outline",
+    ],
+    "unique_clients": ["DNS Unique Clients", "clients", "mdi:account-outline"],
+    "unique_domains": ["DNS Unique Domains", "domains", "mdi:domain"],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-    vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION): cv.string,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    vol.Optional(CONF_MONITORED_CONDITIONS,
-                 default=['ads_blocked_today']):
-    vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION): cv.string,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=["ads_blocked_today"]): vol.All(
+            cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]
+        ),
+    }
+)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Pi-hole sensor."""
     from hole import Hole
 
@@ -75,16 +84,17 @@ async def async_setup_platform(
     verify_tls = config.get(CONF_VERIFY_SSL)
 
     session = async_get_clientsession(hass, verify_tls)
-    pi_hole = PiHoleData(Hole(
-        host, hass.loop, session, location=location, tls=use_tls))
+    pi_hole = PiHoleData(Hole(host, hass.loop, session, location=location, tls=use_tls))
 
     await pi_hole.async_update()
 
     if pi_hole.api.data is None:
         raise PlatformNotReady
 
-    sensors = [PiHoleSensor(pi_hole, name, condition)
-               for condition in config[CONF_MONITORED_CONDITIONS]]
+    sensors = [
+        PiHoleSensor(pi_hole, name, condition)
+        for condition in config[CONF_MONITORED_CONDITIONS]
+    ]
 
     async_add_entities(sensors, True)
 
@@ -130,9 +140,7 @@ class PiHoleSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the Pi-Hole."""
-        return {
-            ATTR_BLOCKED_DOMAINS: self.data['domains_being_blocked'],
-        }
+        return {ATTR_BLOCKED_DOMAINS: self.data["domains_being_blocked"]}
 
     @property
     def available(self):

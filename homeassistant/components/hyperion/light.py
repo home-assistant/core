@@ -6,51 +6,83 @@ import socket
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_EFFECT, ATTR_HS_COLOR, PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_EFFECT, Light)
+    ATTR_BRIGHTNESS,
+    ATTR_EFFECT,
+    ATTR_HS_COLOR,
+    PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_EFFECT,
+    Light,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DEFAULT_COLOR = 'default_color'
-CONF_PRIORITY = 'priority'
-CONF_HDMI_PRIORITY = 'hdmi_priority'
-CONF_EFFECT_LIST = 'effect_list'
+CONF_DEFAULT_COLOR = "default_color"
+CONF_PRIORITY = "priority"
+CONF_HDMI_PRIORITY = "hdmi_priority"
+CONF_EFFECT_LIST = "effect_list"
 
 DEFAULT_COLOR = [255, 255, 255]
-DEFAULT_NAME = 'Hyperion'
+DEFAULT_NAME = "Hyperion"
 DEFAULT_PORT = 19444
 DEFAULT_PRIORITY = 128
 DEFAULT_HDMI_PRIORITY = 880
-DEFAULT_EFFECT_LIST = ['HDMI', 'Cinema brighten lights', 'Cinema dim lights',
-                       'Knight rider', 'Blue mood blobs', 'Cold mood blobs',
-                       'Full color mood blobs', 'Green mood blobs',
-                       'Red mood blobs', 'Warm mood blobs',
-                       'Police Lights Single', 'Police Lights Solid',
-                       'Rainbow mood', 'Rainbow swirl fast',
-                       'Rainbow swirl', 'Random', 'Running dots',
-                       'System Shutdown', 'Snake', 'Sparks Color', 'Sparks',
-                       'Strobe blue', 'Strobe Raspbmc', 'Strobe white',
-                       'Color traces', 'UDP multicast listener',
-                       'UDP listener', 'X-Mas']
+DEFAULT_EFFECT_LIST = [
+    "HDMI",
+    "Cinema brighten lights",
+    "Cinema dim lights",
+    "Knight rider",
+    "Blue mood blobs",
+    "Cold mood blobs",
+    "Full color mood blobs",
+    "Green mood blobs",
+    "Red mood blobs",
+    "Warm mood blobs",
+    "Police Lights Single",
+    "Police Lights Solid",
+    "Rainbow mood",
+    "Rainbow swirl fast",
+    "Rainbow swirl",
+    "Random",
+    "Running dots",
+    "System Shutdown",
+    "Snake",
+    "Sparks Color",
+    "Sparks",
+    "Strobe blue",
+    "Strobe Raspbmc",
+    "Strobe white",
+    "Color traces",
+    "UDP multicast listener",
+    "UDP listener",
+    "X-Mas",
+]
 
-SUPPORT_HYPERION = (SUPPORT_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_EFFECT)
+SUPPORT_HYPERION = SUPPORT_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_EFFECT
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_DEFAULT_COLOR, default=DEFAULT_COLOR):
-        vol.All(list, vol.Length(min=3, max=3),
-                [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PRIORITY, default=DEFAULT_PRIORITY): cv.positive_int,
-    vol.Optional(CONF_HDMI_PRIORITY, default=DEFAULT_HDMI_PRIORITY):
-        cv.positive_int,
-    vol.Optional(CONF_EFFECT_LIST, default=DEFAULT_EFFECT_LIST):
-        vol.All(cv.ensure_list, [cv.string]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_DEFAULT_COLOR, default=DEFAULT_COLOR): vol.All(
+            list,
+            vol.Length(min=3, max=3),
+            [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))],
+        ),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PRIORITY, default=DEFAULT_PRIORITY): cv.positive_int,
+        vol.Optional(
+            CONF_HDMI_PRIORITY, default=DEFAULT_HDMI_PRIORITY
+        ): cv.positive_int,
+        vol.Optional(CONF_EFFECT_LIST, default=DEFAULT_EFFECT_LIST): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -64,7 +96,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     effect_list = config[CONF_EFFECT_LIST]
 
     device = Hyperion(
-        name, host, port, priority, default_color, hdmi_priority, effect_list)
+        name, host, port, priority, default_color, hdmi_priority, effect_list
+    )
 
     if device.setup():
         add_entities([device])
@@ -73,8 +106,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class Hyperion(Light):
     """Representation of a Hyperion remote."""
 
-    def __init__(self, name, host, port, priority, default_color,
-                 hdmi_priority, effect_list):
+    def __init__(
+        self, name, host, port, priority, default_color, hdmi_priority, effect_list
+    ):
         """Initialize the light."""
         self._host = host
         self._port = port
@@ -85,7 +119,7 @@ class Hyperion(Light):
         self._rgb_color = [0, 0, 0]
         self._rgb_mem = [0, 0, 0]
         self._brightness = 255
-        self._icon = 'mdi:lightbulb'
+        self._icon = "mdi:lightbulb"
         self._effect_list = effect_list
         self._effect = None
         self._skip_update = False
@@ -144,37 +178,34 @@ class Hyperion(Light):
         if ATTR_EFFECT in kwargs:
             self._skip_update = True
             self._effect = kwargs[ATTR_EFFECT]
-            if self._effect == 'HDMI':
-                self.json_request({'command': 'clearall'})
-                self._icon = 'mdi:video-input-hdmi'
+            if self._effect == "HDMI":
+                self.json_request({"command": "clearall"})
+                self._icon = "mdi:video-input-hdmi"
                 self._brightness = 255
                 self._rgb_color = [125, 125, 125]
             else:
-                self.json_request({
-                    'command': 'effect',
-                    'priority': self._priority,
-                    'effect': {'name': self._effect}
-                })
-                self._icon = 'mdi:lava-lamp'
+                self.json_request(
+                    {
+                        "command": "effect",
+                        "priority": self._priority,
+                        "effect": {"name": self._effect},
+                    }
+                )
+                self._icon = "mdi:lava-lamp"
                 self._rgb_color = [175, 0, 255]
             return
 
-        cal_color = [int(round(x*float(brightness)/255))
-                     for x in rgb_color]
-        self.json_request({
-            'command': 'color',
-            'priority': self._priority,
-            'color': cal_color
-        })
+        cal_color = [int(round(x * float(brightness) / 255)) for x in rgb_color]
+        self.json_request(
+            {"command": "color", "priority": self._priority, "color": cal_color}
+        )
 
     def turn_off(self, **kwargs):
         """Disconnect all remotes."""
-        self.json_request({'command': 'clearall'})
-        self.json_request({
-            'command': 'color',
-            'priority': self._priority,
-            'color': [0, 0, 0]
-        })
+        self.json_request({"command": "clearall"})
+        self.json_request(
+            {"command": "color", "priority": self._priority, "color": [0, 0, 0]}
+        )
 
     def update(self):
         """Get the lights status."""
@@ -182,61 +213,64 @@ class Hyperion(Light):
         if self._skip_update:
             self._skip_update = False
             return
-        response = self.json_request({'command': 'serverinfo'})
+        response = self.json_request({"command": "serverinfo"})
         if response:
             # workaround for outdated Hyperion
-            if 'activeLedColor' not in response['info']:
+            if "activeLedColor" not in response["info"]:
                 self._rgb_color = self._default_color
                 self._rgb_mem = self._default_color
                 self._brightness = 255
-                self._icon = 'mdi:lightbulb'
+                self._icon = "mdi:lightbulb"
                 self._effect = None
                 return
             # Check if Hyperion is in ambilight mode trough an HDMI grabber
             try:
-                active_priority = response['info']['priorities'][0]['priority']
+                active_priority = response["info"]["priorities"][0]["priority"]
                 if active_priority == self._hdmi_priority:
                     self._brightness = 255
                     self._rgb_color = [125, 125, 125]
-                    self._icon = 'mdi:video-input-hdmi'
-                    self._effect = 'HDMI'
+                    self._icon = "mdi:video-input-hdmi"
+                    self._effect = "HDMI"
                     return
             except (KeyError, IndexError):
                 pass
 
-            led_color = response['info']['activeLedColor']
-            if not led_color or led_color[0]['RGB Value'] == [0, 0, 0]:
+            led_color = response["info"]["activeLedColor"]
+            if not led_color or led_color[0]["RGB Value"] == [0, 0, 0]:
                 # Get the active effect
-                if response['info'].get('activeEffects'):
+                if response["info"].get("activeEffects"):
                     self._rgb_color = [175, 0, 255]
-                    self._icon = 'mdi:lava-lamp'
+                    self._icon = "mdi:lava-lamp"
                     try:
-                        s_name = response['info']['activeEffects'][0]["script"]
-                        s_name = s_name.split('/')[-1][:-3].split("-")[0]
-                        self._effect = [x for x in self._effect_list
-                                        if s_name.lower() in x.lower()][0]
+                        s_name = response["info"]["activeEffects"][0]["script"]
+                        s_name = s_name.split("/")[-1][:-3].split("-")[0]
+                        self._effect = [
+                            x for x in self._effect_list if s_name.lower() in x.lower()
+                        ][0]
                     except (KeyError, IndexError):
                         self._effect = None
                 # Bulb off state
                 else:
                     self._rgb_color = [0, 0, 0]
-                    self._icon = 'mdi:lightbulb'
+                    self._icon = "mdi:lightbulb"
                     self._effect = None
             else:
                 # Get the RGB color
-                self._rgb_color = led_color[0]['RGB Value']
+                self._rgb_color = led_color[0]["RGB Value"]
                 self._brightness = max(self._rgb_color)
-                self._rgb_mem = [int(round(float(x)*255/self._brightness))
-                                 for x in self._rgb_color]
-                self._icon = 'mdi:lightbulb'
+                self._rgb_mem = [
+                    int(round(float(x) * 255 / self._brightness))
+                    for x in self._rgb_color
+                ]
+                self._icon = "mdi:lightbulb"
                 self._effect = None
 
     def setup(self):
         """Get the hostname of the remote."""
-        response = self.json_request({'command': 'serverinfo'})
+        response = self.json_request({"command": "serverinfo"})
         if response:
             if self._name == self._host:
-                self._name = response['info']['hostname']
+                self._name = response["info"]["hostname"]
             return True
         return False
 
@@ -251,7 +285,7 @@ class Hyperion(Light):
             sock.close()
             return False
 
-        sock.send(bytearray(json.dumps(request) + '\n', 'utf-8'))
+        sock.send(bytearray(json.dumps(request) + "\n", "utf-8"))
         try:
             buf = sock.recv(4096)
         except socket.timeout:
@@ -262,8 +296,8 @@ class Hyperion(Light):
         # Read until a newline or timeout
         buffering = True
         while buffering:
-            if '\n' in str(buf, 'utf-8'):
-                response = str(buf, 'utf-8').split('\n')[0]
+            if "\n" in str(buf, "utf-8"):
+                response = str(buf, "utf-8").split("\n")[0]
                 buffering = False
             else:
                 try:
@@ -272,7 +306,7 @@ class Hyperion(Light):
                     more = None
                 if not more:
                     buffering = False
-                    response = str(buf, 'utf-8')
+                    response = str(buf, "utf-8")
                 else:
                     buf += more
 

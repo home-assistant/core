@@ -1,7 +1,7 @@
 """Support for SleepIQ sensors."""
 from homeassistant.components import sleepiq
 
-ICON = 'mdi:hotel'
+ICON = "mdi:hotel"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

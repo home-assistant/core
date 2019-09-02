@@ -13,8 +13,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is None:
         return
 
-    devices = [SpiderPowerPlug(hass.data[SPIDER_DOMAIN]['controller'], device)
-               for device in hass.data[SPIDER_DOMAIN]['power_plugs']]
+    devices = [
+        SpiderPowerPlug(hass.data[SPIDER_DOMAIN]["controller"], device)
+        for device in hass.data[SPIDER_DOMAIN]["power_plugs"]
+    ]
 
     add_entities(devices, True)
 

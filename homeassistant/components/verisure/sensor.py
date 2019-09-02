@@ -15,22 +15,34 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hub.update_overview()
 
     if int(hub.config.get(CONF_THERMOMETERS, 1)):
-        sensors.extend([
-            VerisureThermometer(device_label)
-            for device_label in hub.get(
-                '$.climateValues[?(@.temperature)].deviceLabel')])
+        sensors.extend(
+            [
+                VerisureThermometer(device_label)
+                for device_label in hub.get(
+                    "$.climateValues[?(@.temperature)].deviceLabel"
+                )
+            ]
+        )
 
     if int(hub.config.get(CONF_HYDROMETERS, 1)):
-        sensors.extend([
-            VerisureHygrometer(device_label)
-            for device_label in hub.get(
-                '$.climateValues[?(@.humidity)].deviceLabel')])
+        sensors.extend(
+            [
+                VerisureHygrometer(device_label)
+                for device_label in hub.get(
+                    "$.climateValues[?(@.humidity)].deviceLabel"
+                )
+            ]
+        )
 
     if int(hub.config.get(CONF_MOUSE, 1)):
-        sensors.extend([
-            VerisureMouseDetection(device_label)
-            for device_label in hub.get(
-                "$.eventCounts[?(@.deviceType=='MOUSE1')].deviceLabel")])
+        sensors.extend(
+            [
+                VerisureMouseDetection(device_label)
+                for device_label in hub.get(
+                    "$.eventCounts[?(@.deviceType=='MOUSE1')].deviceLabel"
+                )
+            ]
+        )
 
     add_entities(sensors)
 
@@ -45,23 +57,30 @@ class VerisureThermometer(Entity):
     @property
     def name(self):
         """Return the name of the device."""
-        return hub.get_first(
-            "$.climateValues[?(@.deviceLabel=='%s')].deviceArea",
-            self._device_label) + " temperature"
+        return (
+            hub.get_first(
+                "$.climateValues[?(@.deviceLabel=='%s')].deviceArea", self._device_label
+            )
+            + " temperature"
+        )
 
     @property
     def state(self):
         """Return the state of the device."""
         return hub.get_first(
-            "$.climateValues[?(@.deviceLabel=='%s')].temperature",
-            self._device_label)
+            "$.climateValues[?(@.deviceLabel=='%s')].temperature", self._device_label
+        )
 
     @property
     def available(self):
         """Return True if entity is available."""
-        return hub.get_first(
-            "$.climateValues[?(@.deviceLabel=='%s')].temperature",
-            self._device_label) is not None
+        return (
+            hub.get_first(
+                "$.climateValues[?(@.deviceLabel=='%s')].temperature",
+                self._device_label,
+            )
+            is not None
+        )
 
     @property
     def unit_of_measurement(self):
@@ -84,28 +103,34 @@ class VerisureHygrometer(Entity):
     @property
     def name(self):
         """Return the name of the device."""
-        return hub.get_first(
-            "$.climateValues[?(@.deviceLabel=='%s')].deviceArea",
-            self._device_label) + " humidity"
+        return (
+            hub.get_first(
+                "$.climateValues[?(@.deviceLabel=='%s')].deviceArea", self._device_label
+            )
+            + " humidity"
+        )
 
     @property
     def state(self):
         """Return the state of the device."""
         return hub.get_first(
-            "$.climateValues[?(@.deviceLabel=='%s')].humidity",
-            self._device_label)
+            "$.climateValues[?(@.deviceLabel=='%s')].humidity", self._device_label
+        )
 
     @property
     def available(self):
         """Return True if entity is available."""
-        return hub.get_first(
-            "$.climateValues[?(@.deviceLabel=='%s')].humidity",
-            self._device_label) is not None
+        return (
+            hub.get_first(
+                "$.climateValues[?(@.deviceLabel=='%s')].humidity", self._device_label
+            )
+            is not None
+        )
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return '%'
+        return "%"
 
     # pylint: disable=no-self-use
     def update(self):
@@ -123,28 +148,32 @@ class VerisureMouseDetection(Entity):
     @property
     def name(self):
         """Return the name of the device."""
-        return hub.get_first(
-            "$.eventCounts[?(@.deviceLabel=='%s')].area",
-            self._device_label) + " mouse"
+        return (
+            hub.get_first(
+                "$.eventCounts[?(@.deviceLabel=='%s')].area", self._device_label
+            )
+            + " mouse"
+        )
 
     @property
     def state(self):
         """Return the state of the device."""
         return hub.get_first(
-            "$.eventCounts[?(@.deviceLabel=='%s')].detections",
-            self._device_label)
+            "$.eventCounts[?(@.deviceLabel=='%s')].detections", self._device_label
+        )
 
     @property
     def available(self):
         """Return True if entity is available."""
-        return hub.get_first(
-            "$.eventCounts[?(@.deviceLabel=='%s')]",
-            self._device_label) is not None
+        return (
+            hub.get_first("$.eventCounts[?(@.deviceLabel=='%s')]", self._device_label)
+            is not None
+        )
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return 'Mice'
+        return "Mice"
 
     # pylint: disable=no-self-use
     def update(self):

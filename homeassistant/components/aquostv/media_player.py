@@ -3,52 +3,76 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP)
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
+)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_TIMEOUT,
-    CONF_USERNAME, STATE_OFF, STATE_ON)
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_TIMEOUT,
+    CONF_USERNAME,
+    STATE_OFF,
+    STATE_ON,
+)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Sharp Aquos TV'
+DEFAULT_NAME = "Sharp Aquos TV"
 DEFAULT_PORT = 10002
-DEFAULT_USERNAME = 'admin'
-DEFAULT_PASSWORD = 'password'
+DEFAULT_USERNAME = "admin"
+DEFAULT_PASSWORD = "password"
 DEFAULT_TIMEOUT = 0.5
 DEFAULT_RETRIES = 2
 
-SUPPORT_SHARPTV = SUPPORT_TURN_OFF | \
-    SUPPORT_NEXT_TRACK | SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | \
-    SUPPORT_SELECT_SOURCE | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP | \
-    SUPPORT_VOLUME_SET | SUPPORT_PLAY
+SUPPORT_SHARPTV = (
+    SUPPORT_TURN_OFF
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_PAUSE
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_SELECT_SOURCE
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_VOLUME_STEP
+    | SUPPORT_VOLUME_SET
+    | SUPPORT_PLAY
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.string,
-    vol.Optional('retries', default=DEFAULT_RETRIES): cv.string,
-    vol.Optional('power_on_enabled', default=False): cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.string,
+        vol.Optional("retries", default=DEFAULT_RETRIES): cv.string,
+        vol.Optional("power_on_enabled", default=False): cv.boolean,
+    }
+)
 
-SOURCES = {0: 'TV / Antenna',
-           1: 'HDMI_IN_1',
-           2: 'HDMI_IN_2',
-           3: 'HDMI_IN_3',
-           4: 'HDMI_IN_4',
-           5: 'COMPONENT IN',
-           6: 'VIDEO_IN_1',
-           7: 'VIDEO_IN_2',
-           8: 'PC_IN'}
+SOURCES = {
+    0: "TV / Antenna",
+    1: "HDMI_IN_1",
+    2: "HDMI_IN_2",
+    3: "HDMI_IN_3",
+    4: "HDMI_IN_4",
+    5: "COMPONENT IN",
+    6: "VIDEO_IN_1",
+    7: "VIDEO_IN_2",
+    8: "PC_IN",
+}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -59,11 +83,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     port = config.get(CONF_PORT)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    power_on_enabled = config.get('power_on_enabled')
+    power_on_enabled = config.get("power_on_enabled")
 
     if discovery_info:
-        _LOGGER.debug('%s', discovery_info)
-        vals = discovery_info.split(':')
+        _LOGGER.debug("%s", discovery_info)
+        vals = discovery_info.split(":")
         if len(vals) > 1:
             port = vals[1]
 
@@ -81,6 +105,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 def _retry(func):
     """Handle query retries."""
+
     def wrapper(obj, *args, **kwargs):
         """Wrap all query functions."""
         update_retries = 5
@@ -92,6 +117,7 @@ def _retry(func):
                 update_retries -= 1
                 if update_retries == 0:
                     obj.set_state(STATE_OFF)
+
     return wrapper
 
 

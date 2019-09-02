@@ -3,7 +3,9 @@ from typing import Any, Dict, Optional, List
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT, SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_HEAT,
+    SUPPORT_TARGET_TEMPERATURE,
+)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -11,11 +13,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import DOMAIN
 
 
-async def async_setup_platform(hass, hass_config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+    hass, hass_config, async_add_entities, discovery_info=None
+):
     """Set up an InComfort/InTouch climate device."""
-    client = hass.data[DOMAIN]['client']
-    heater = hass.data[DOMAIN]['heater']
+    client = hass.data[DOMAIN]["client"]
+    heater = hass.data[DOMAIN]["heater"]
 
     async_add_entities([InComfortClimate(client, r) for r in heater.rooms])
 
@@ -27,7 +30,7 @@ class InComfortClimate(ClimateDevice):
         """Initialize the climate device."""
         self._client = client
         self._room = room
-        self._name = 'Room {}'.format(room.room_no)
+        self._name = "Room {}".format(room.room_no)
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
@@ -50,7 +53,7 @@ class InComfortClimate(ClimateDevice):
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
         """Return the device state attributes."""
-        return {'status': self._room.status}
+        return {"status": self._room.status}
 
     @property
     def temperature_unit(self) -> str:

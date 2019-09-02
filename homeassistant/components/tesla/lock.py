@@ -11,8 +11,10 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tesla lock platform."""
-    devices = [TeslaLock(device, hass.data[TESLA_DOMAIN]['controller'])
-               for device in hass.data[TESLA_DOMAIN]['devices']['lock']]
+    devices = [
+        TeslaLock(device, hass.data[TESLA_DOMAIN]["controller"])
+        for device in hass.data[TESLA_DOMAIN]["devices"]["lock"]
+    ]
     add_entities(devices, True)
 
 
@@ -43,5 +45,4 @@ class TeslaLock(TeslaDevice, LockDevice):
         """Update state of the lock."""
         _LOGGER.debug("Updating state for: %s", self._name)
         self.tesla_device.update()
-        self._state = STATE_LOCKED if self.tesla_device.is_locked() \
-            else STATE_UNLOCKED
+        self._state = STATE_LOCKED if self.tesla_device.is_locked() else STATE_UNLOCKED

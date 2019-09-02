@@ -8,7 +8,10 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    DeviceScanner,
+)
 from homeassistant.const import CONF_HOST, HTTP_HEADER_X_REQUESTED_WITH
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -17,11 +20,11 @@ _LOGGER = logging.getLogger(__name__)
 
 CMD_DEVICES = 123
 
-DEFAULT_IP = '192.168.0.1'
+DEFAULT_IP = "192.168.0.1"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string}
+)
 
 
 async def async_get_scanner(hass, config):
@@ -44,11 +47,13 @@ class UPCDeviceScanner(DeviceScanner):
         self.token = None
 
         self.headers = {
-            HTTP_HEADER_X_REQUESTED_WITH: 'XMLHttpRequest',
+            HTTP_HEADER_X_REQUESTED_WITH: "XMLHttpRequest",
             REFERER: "http://{}/index.html".format(self.host),
-            USER_AGENT: ("Mozilla/5.0 (Windows NT 10.0; WOW64) "
-                         "AppleWebKit/537.36 (KHTML, like Gecko) "
-                         "Chrome/47.0.2526.106 Safari/537.36")
+            USER_AGENT: (
+                "Mozilla/5.0 (Windows NT 10.0; WOW64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/47.0.2526.106 Safari/537.36"
+            ),
         }
 
         self.websession = async_get_clientsession(hass)
@@ -67,7 +72,7 @@ class UPCDeviceScanner(DeviceScanner):
 
         try:
             xml_root = ET.fromstring(raw)
-            return [mac.text for mac in xml_root.iter('MACAddr')]
+            return [mac.text for mac in xml_root.iter("MACAddr")]
         except (ET.ParseError, TypeError):
             _LOGGER.warning("Can't read device from %s", self.host)
             self.token = None
@@ -84,11 +89,12 @@ class UPCDeviceScanner(DeviceScanner):
             with async_timeout.timeout(10):
                 response = await self.websession.get(
                     "http://{}/common_page/login.html".format(self.host),
-                    headers=self.headers)
+                    headers=self.headers,
+                )
 
                 await response.text()
 
-            self.token = response.cookies['sessionToken'].value
+            self.token = response.cookies["sessionToken"].value
 
             return True
 
@@ -105,7 +111,9 @@ class UPCDeviceScanner(DeviceScanner):
                 response = await self.websession.post(
                     "http://{}/xml/getter.xml".format(self.host),
                     data="token={}&fun={}".format(self.token, function),
-                    headers=self.headers, allow_redirects=False)
+                    headers=self.headers,
+                    allow_redirects=False,
+                )
 
                 # Error?
                 if response.status != 200:
@@ -114,7 +122,7 @@ class UPCDeviceScanner(DeviceScanner):
                     return
 
                 # Load data, store token for next request
-                self.token = response.cookies['sessionToken'].value
+                self.token = response.cookies["sessionToken"].value
                 return await response.text()
 
         except (asyncio.TimeoutError, aiohttp.ClientError):

@@ -7,83 +7,88 @@ import voluptuous as vol
 
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import (STATE_ON, STATE_OFF)
+from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.helpers.config_validation import (  # noqa
-    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
+    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA_BASE,
+)
 
-DOMAIN = 'binary_sensor'
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
+DOMAIN = "binary_sensor"
 SCAN_INTERVAL = timedelta(seconds=30)
 
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 # On means low, Off means normal
-DEVICE_CLASS_BATTERY = 'battery'
+DEVICE_CLASS_BATTERY = "battery"
 
 # On means cold, Off means normal
-DEVICE_CLASS_COLD = 'cold'
+DEVICE_CLASS_COLD = "cold"
 
 # On means connected, Off means disconnected
-DEVICE_CLASS_CONNECTIVITY = 'connectivity'
+DEVICE_CLASS_CONNECTIVITY = "connectivity"
 
 # On means open, Off means closed
-DEVICE_CLASS_DOOR = 'door'
+DEVICE_CLASS_DOOR = "door"
 
 # On means open, Off means closed
-DEVICE_CLASS_GARAGE_DOOR = 'garage_door'
+DEVICE_CLASS_GARAGE_DOOR = "garage_door"
 
 # On means gas detected, Off means no gas (clear)
-DEVICE_CLASS_GAS = 'gas'
+DEVICE_CLASS_GAS = "gas"
 
 # On means hot, Off means normal
-DEVICE_CLASS_HEAT = 'heat'
+DEVICE_CLASS_HEAT = "heat"
 
 # On means light detected, Off means no light
-DEVICE_CLASS_LIGHT = 'light'
+DEVICE_CLASS_LIGHT = "light"
 
 # On means open (unlocked), Off means closed (locked)
-DEVICE_CLASS_LOCK = 'lock'
+DEVICE_CLASS_LOCK = "lock"
 
 # On means wet, Off means dry
-DEVICE_CLASS_MOISTURE = 'moisture'
+DEVICE_CLASS_MOISTURE = "moisture"
 
 # On means motion detected, Off means no motion (clear)
-DEVICE_CLASS_MOTION = 'motion'
+DEVICE_CLASS_MOTION = "motion"
 
 # On means moving, Off means not moving (stopped)
-DEVICE_CLASS_MOVING = 'moving'
+DEVICE_CLASS_MOVING = "moving"
 
 # On means occupied, Off means not occupied (clear)
-DEVICE_CLASS_OCCUPANCY = 'occupancy'
+DEVICE_CLASS_OCCUPANCY = "occupancy"
 
 # On means open, Off means closed
-DEVICE_CLASS_OPENING = 'opening'
+DEVICE_CLASS_OPENING = "opening"
 
 # On means plugged in, Off means unplugged
-DEVICE_CLASS_PLUG = 'plug'
+DEVICE_CLASS_PLUG = "plug"
 
 # On means power detected, Off means no power
-DEVICE_CLASS_POWER = 'power'
+DEVICE_CLASS_POWER = "power"
 
 # On means home, Off means away
-DEVICE_CLASS_PRESENCE = 'presence'
+DEVICE_CLASS_PRESENCE = "presence"
 
 # On means problem detected, Off means no problem (OK)
-DEVICE_CLASS_PROBLEM = 'problem'
+DEVICE_CLASS_PROBLEM = "problem"
 
 # On means unsafe, Off means safe
-DEVICE_CLASS_SAFETY = 'safety'
+DEVICE_CLASS_SAFETY = "safety"
 
 # On means smoke detected, Off means no smoke (clear)
-DEVICE_CLASS_SMOKE = 'smoke'
+DEVICE_CLASS_SMOKE = "smoke"
 
 # On means sound detected, Off means no sound (clear)
-DEVICE_CLASS_SOUND = 'sound'
+DEVICE_CLASS_SOUND = "sound"
 
 # On means vibration detected, Off means no vibration
-DEVICE_CLASS_VIBRATION = 'vibration'
+DEVICE_CLASS_VIBRATION = "vibration"
 
 # On means open, Off means closed
-DEVICE_CLASS_WINDOW = 'window'
+DEVICE_CLASS_WINDOW = "window"
 
 DEVICE_CLASSES = [
     DEVICE_CLASS_BATTERY,
@@ -117,7 +122,8 @@ DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 async def async_setup(hass, config):
     """Track states and offer events for binary sensors."""
     component = hass.data[DOMAIN] = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
+        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
+    )
 
     await component.async_setup(config)
     return True

@@ -1,9 +1,11 @@
-
 """Support for HomematicIP Cloud weather devices."""
 import logging
 
 from homematicip.aio.device import (
-    AsyncWeatherSensor, AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
+    AsyncWeatherSensor,
+    AsyncWeatherSensorPlus,
+    AsyncWeatherSensorPro,
+)
 from homematicip.aio.home import AsyncHome
 
 from homeassistant.components.weather import WeatherEntity
@@ -16,14 +18,14 @@ from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the HomematicIP Cloud weather sensor."""
     pass
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
-                            async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+) -> None:
     """Set up the HomematicIP weather sensor from a config entry."""
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
@@ -78,12 +80,12 @@ class HomematicipWeatherSensor(HomematicipGenericDevice, WeatherEntity):
     def condition(self) -> str:
         """Return the current condition."""
         if hasattr(self._device, "raining") and self._device.raining:
-            return 'rainy'
+            return "rainy"
         if self._device.storm:
-            return 'windy'
+            return "windy"
         if self._device.sunshine:
-            return 'sunny'
-        return ''
+            return "sunny"
+        return ""
 
 
 class HomematicipWeatherSensorPro(HomematicipWeatherSensor):

@@ -10,8 +10,12 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_COMMAND, CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE,
-    STATE_UNKNOWN)
+    CONF_COMMAND,
+    CONF_NAME,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_VALUE_TEMPLATE,
+    STATE_UNKNOWN,
+)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
@@ -19,23 +23,24 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_COMMAND_TIMEOUT = 'command_timeout'
-CONF_JSON_ATTRIBUTES = 'json_attributes'
+CONF_COMMAND_TIMEOUT = "command_timeout"
+CONF_JSON_ATTRIBUTES = "json_attributes"
 
-DEFAULT_NAME = 'Command Sensor'
+DEFAULT_NAME = "Command Sensor"
 DEFAULT_TIMEOUT = 15
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COMMAND): cv.string,
-    vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT):
-        cv.positive_int,
-    vol.Optional(CONF_JSON_ATTRIBUTES): cv.ensure_list_csv,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_COMMAND): cv.string,
+        vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        vol.Optional(CONF_JSON_ATTRIBUTES): cv.ensure_list_csv,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -50,15 +55,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     json_attributes = config.get(CONF_JSON_ATTRIBUTES)
     data = CommandSensorData(hass, command, command_timeout)
 
-    add_entities([CommandSensor(
-        hass, data, name, unit, value_template, json_attributes)], True)
+    add_entities(
+        [CommandSensor(hass, data, name, unit, value_template, json_attributes)], True
+    )
 
 
 class CommandSensor(Entity):
     """Representation of a sensor that is using shell commands."""
 
-    def __init__(self, hass, data, name, unit_of_measurement, value_template,
-                 json_attributes):
+    def __init__(
+        self, hass, data, name, unit_of_measurement, value_template, json_attributes
+    ):
         """Initialize the sensor."""
         self._hass = hass
         self.data = data
@@ -100,14 +107,15 @@ class CommandSensor(Entity):
                 try:
                     json_dict = json.loads(value)
                     if isinstance(json_dict, collections.Mapping):
-                        self._attributes = {k: json_dict[k] for k in
-                                            self._json_attributes
-                                            if k in json_dict}
+                        self._attributes = {
+                            k: json_dict[k]
+                            for k in self._json_attributes
+                            if k in json_dict
+                        }
                     else:
                         _LOGGER.warning("JSON result was not a dictionary")
                 except ValueError:
-                    _LOGGER.warning(
-                        "Unable to parse output as JSON: %s", value)
+                    _LOGGER.warning("Unable to parse output as JSON: %s", value)
             else:
                 _LOGGER.warning("Empty reply found when expecting JSON data")
 
@@ -115,7 +123,8 @@ class CommandSensor(Entity):
             value = STATE_UNKNOWN
         elif self._value_template is not None:
             self._state = self._value_template.render_with_possible_json_value(
-                value, STATE_UNKNOWN)
+                value, STATE_UNKNOWN
+            )
         else:
             self._state = value
 
@@ -137,13 +146,13 @@ class CommandSensorData:
 
         if command in cache:
             prog, args, args_compiled = cache[command]
-        elif ' ' not in command:
+        elif " " not in command:
             prog = command
             args = None
             args_compiled = None
             cache[command] = (prog, args, args_compiled)
         else:
-            prog, args = command.split(' ', 1)
+            prog, args = command.split(" ", 1)
             args_compiled = template.Template(args, self.hass)
             cache[command] = (prog, args, args_compiled)
 
@@ -162,13 +171,14 @@ class CommandSensorData:
             shell = True
         else:
             # Template used. Construct the string used in the shell
-            command = str(' '.join([prog] + shlex.split(rendered_args)))
+            command = str(" ".join([prog] + shlex.split(rendered_args)))
             shell = True
         try:
             _LOGGER.debug("Running command: %s", command)
             return_value = subprocess.check_output(
-                command, shell=shell, timeout=self.timeout)
-            self.value = return_value.strip().decode('utf-8')
+                command, shell=shell, timeout=self.timeout
+            )
+            self.value = return_value.strip().decode("utf-8")
         except subprocess.CalledProcessError:
             _LOGGER.error("Command failed: %s", command)
         except subprocess.TimeoutExpired:

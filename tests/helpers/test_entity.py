@@ -7,31 +7,37 @@ from unittest.mock import MagicMock, patch, PropertyMock
 
 import pytest
 
-import homeassistant.helpers.entity as entity
+from homeassistant.helpers import entity, entity_registry
 from homeassistant.core import Context
 from homeassistant.const import ATTR_HIDDEN, ATTR_DEVICE_CLASS
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.helpers.entity_values import EntityValues
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_registry
 
 
 def test_generate_entity_id_requires_hass_or_ids():
     """Ensure we require at least hass or current ids."""
-    fmt = 'test.{}'
+    fmt = "test.{}"
     with pytest.raises(ValueError):
-        entity.generate_entity_id(fmt, 'hello world')
+        entity.generate_entity_id(fmt, "hello world")
 
 
 def test_generate_entity_id_given_keys():
     """Test generating an entity id given current ids."""
-    fmt = 'test.{}'
-    assert entity.generate_entity_id(
-        fmt, 'overwrite hidden true', current_ids=[
-            'test.overwrite_hidden_true']) == 'test.overwrite_hidden_true_2'
-    assert entity.generate_entity_id(
-        fmt, 'overwrite hidden true', current_ids=[
-            'test.another_entity']) == 'test.overwrite_hidden_true'
+    fmt = "test.{}"
+    assert (
+        entity.generate_entity_id(
+            fmt, "overwrite hidden true", current_ids=["test.overwrite_hidden_true"]
+        )
+        == "test.overwrite_hidden_true_2"
+    )
+    assert (
+        entity.generate_entity_id(
+            fmt, "overwrite hidden true", current_ids=["test.another_entity"]
+        )
+        == "test.overwrite_hidden_true"
+    )
 
 
 def test_async_update_support(hass):
@@ -40,7 +46,7 @@ def test_async_update_support(hass):
     async_update = []
 
     class AsyncEntity(entity.Entity):
-        entity_id = 'sensor.test'
+        entity_id = "sensor.test"
 
         def update(self):
             sync_update.append([1])
@@ -72,7 +78,7 @@ class TestHelpersEntity:
     def setup_method(self, method):
         """Set up things to be run when tests are started."""
         self.entity = entity.Entity()
-        self.entity.entity_id = 'test.overwrite_hidden_true'
+        self.entity.entity_id = "test.overwrite_hidden_true"
         self.hass = self.entity.hass = get_test_home_assistant()
         self.entity.schedule_update_ha_state()
         self.hass.block_till_done()
@@ -83,13 +89,13 @@ class TestHelpersEntity:
 
     def test_default_hidden_not_in_attributes(self):
         """Test that the default hidden property is set to False."""
-        assert ATTR_HIDDEN not in self.hass.states.get(
-            self.entity.entity_id).attributes
+        assert ATTR_HIDDEN not in self.hass.states.get(self.entity.entity_id).attributes
 
     def test_overwriting_hidden_property_to_true(self):
         """Test we can overwrite hidden property to True."""
-        self.hass.data[DATA_CUSTOMIZE] = EntityValues({
-            self.entity.entity_id: {ATTR_HIDDEN: True}})
+        self.hass.data[DATA_CUSTOMIZE] = EntityValues(
+            {self.entity.entity_id: {ATTR_HIDDEN: True}}
+        )
         self.entity.schedule_update_ha_state()
         self.hass.block_till_done()
 
@@ -98,21 +104,23 @@ class TestHelpersEntity:
 
     def test_generate_entity_id_given_hass(self):
         """Test generating an entity id given hass object."""
-        fmt = 'test.{}'
-        assert entity.generate_entity_id(
-            fmt, 'overwrite hidden true',
-            hass=self.hass) == 'test.overwrite_hidden_true_2'
+        fmt = "test.{}"
+        assert (
+            entity.generate_entity_id(fmt, "overwrite hidden true", hass=self.hass)
+            == "test.overwrite_hidden_true_2"
+        )
 
     def test_device_class(self):
         """Test device class attribute."""
         state = self.hass.states.get(self.entity.entity_id)
         assert state.attributes.get(ATTR_DEVICE_CLASS) is None
-        with patch('homeassistant.helpers.entity.Entity.device_class',
-                   new='test_class'):
+        with patch(
+            "homeassistant.helpers.entity.Entity.device_class", new="test_class"
+        ):
             self.entity.schedule_update_ha_state()
             self.hass.block_till_done()
         state = self.hass.states.get(self.entity.entity_id)
-        assert state.attributes.get(ATTR_DEVICE_CLASS) == 'test_class'
+        assert state.attributes.get(ATTR_DEVICE_CLASS) == "test_class"
 
 
 @asyncio.coroutine
@@ -128,11 +136,10 @@ def test_warn_slow_update(hass):
 
     mock_entity = entity.Entity()
     mock_entity.hass = hass
-    mock_entity.entity_id = 'comp_test.test_entity'
+    mock_entity.entity_id = "comp_test.test_entity"
     mock_entity.async_update = async_update
 
-    with patch.object(hass.loop, 'call_later', MagicMock()) \
-            as mock_call:
+    with patch.object(hass.loop, "call_later", MagicMock()) as mock_call:
         yield from mock_entity.async_update_ha_state(True)
         assert mock_call.called
         assert len(mock_call.mock_calls) == 2
@@ -161,11 +168,10 @@ def test_warn_slow_update_with_exception(hass):
 
     mock_entity = entity.Entity()
     mock_entity.hass = hass
-    mock_entity.entity_id = 'comp_test.test_entity'
+    mock_entity.entity_id = "comp_test.test_entity"
     mock_entity.async_update = async_update
 
-    with patch.object(hass.loop, 'call_later', MagicMock()) \
-            as mock_call:
+    with patch.object(hass.loop, "call_later", MagicMock()) as mock_call:
         yield from mock_entity.async_update_ha_state(True)
         assert mock_call.called
         assert len(mock_call.mock_calls) == 2
@@ -193,11 +199,10 @@ def test_warn_slow_device_update_disabled(hass):
 
     mock_entity = entity.Entity()
     mock_entity.hass = hass
-    mock_entity.entity_id = 'comp_test.test_entity'
+    mock_entity.entity_id = "comp_test.test_entity"
     mock_entity.async_update = async_update
 
-    with patch.object(hass.loop, 'call_later', MagicMock()) \
-            as mock_call:
+    with patch.object(hass.loop, "call_later", MagicMock()) as mock_call:
         yield from mock_entity.async_device_update(warning=False)
 
         assert not mock_call.called
@@ -217,7 +222,7 @@ def test_async_schedule_update_ha_state(hass):
 
     mock_entity = entity.Entity()
     mock_entity.hass = hass
-    mock_entity.entity_id = 'comp_test.test_entity'
+    mock_entity.entity_id = "comp_test.test_entity"
     mock_entity.async_update = async_update
 
     mock_entity.async_schedule_update_ha_state(True)
@@ -232,7 +237,6 @@ async def test_async_parallel_updates_with_zero(hass):
     test_lock = asyncio.Event()
 
     class AsyncEntity(entity.Entity):
-
         def __init__(self, entity_id, count):
             """Initialize Async test entity."""
             self.entity_id = entity_id
@@ -268,7 +272,6 @@ async def test_async_parallel_updates_with_zero_on_sync_update(hass):
     test_lock = threading.Event()
 
     class AsyncEntity(entity.Entity):
-
         def __init__(self, entity_id, count):
             """Initialize Async test entity."""
             self.entity_id = entity_id
@@ -308,7 +311,6 @@ async def test_async_parallel_updates_with_one(hass):
     test_semaphore = asyncio.Semaphore(1)
 
     class AsyncEntity(entity.Entity):
-
         def __init__(self, entity_id, count):
             """Initialize Async test entity."""
             self.entity_id = entity_id
@@ -383,7 +385,6 @@ async def test_async_parallel_updates_with_two(hass):
     test_semaphore = asyncio.Semaphore(2)
 
     class AsyncEntity(entity.Entity):
-
         def __init__(self, entity_id, count):
             """Initialize Async test entity."""
             self.entity_id = entity_id
@@ -451,7 +452,7 @@ def test_async_remove_no_platform(hass):
     """Test async_remove method when no platform set."""
     ent = entity.Entity()
     ent.hass = hass
-    ent.entity_id = 'test.test'
+    ent.entity_id = "test.test"
     yield from ent.async_update_ha_state()
     assert len(hass.states.async_entity_ids()) == 1
     yield from ent.async_remove()
@@ -464,7 +465,7 @@ async def test_async_remove_runs_callbacks(hass):
 
     ent = entity.Entity()
     ent.hass = hass
-    ent.entity_id = 'test.test'
+    ent.entity_id = "test.test"
     ent.async_on_remove(lambda: result.append(1))
     await ent.async_remove()
     assert len(result) == 1
@@ -475,25 +476,86 @@ async def test_set_context(hass):
     context = Context()
     ent = entity.Entity()
     ent.hass = hass
-    ent.entity_id = 'hello.world'
+    ent.entity_id = "hello.world"
     ent.async_set_context(context)
     await ent.async_update_ha_state()
-    assert hass.states.get('hello.world').context == context
+    assert hass.states.get("hello.world").context == context
 
 
 async def test_set_context_expired(hass):
     """Test setting context."""
     context = Context()
 
-    with patch.object(entity.Entity, 'context_recent_time',
-                      new_callable=PropertyMock) as recent:
+    with patch.object(
+        entity.Entity, "context_recent_time", new_callable=PropertyMock
+    ) as recent:
         recent.return_value = timedelta(seconds=-5)
         ent = entity.Entity()
         ent.hass = hass
-        ent.entity_id = 'hello.world'
+        ent.entity_id = "hello.world"
         ent.async_set_context(context)
         await ent.async_update_ha_state()
 
-    assert hass.states.get('hello.world').context != context
+    assert hass.states.get("hello.world").context != context
     assert ent._context is None
     assert ent._context_set is None
+
+
+async def test_warn_disabled(hass, caplog):
+    """Test we warn once if we write to a disabled entity."""
+    entry = entity_registry.RegistryEntry(
+        entity_id="hello.world",
+        unique_id="test-unique-id",
+        platform="test-platform",
+        disabled_by="user",
+    )
+    mock_registry(hass, {"hello.world": entry})
+
+    ent = entity.Entity()
+    ent.hass = hass
+    ent.entity_id = "hello.world"
+    ent.registry_entry = entry
+    ent.platform = MagicMock(platform_name="test-platform")
+
+    caplog.clear()
+    ent.async_write_ha_state()
+    assert hass.states.get("hello.world") is None
+    assert "Entity hello.world is incorrectly being triggered" in caplog.text
+
+    caplog.clear()
+    ent.async_write_ha_state()
+    assert hass.states.get("hello.world") is None
+    assert caplog.text == ""
+
+
+async def test_disabled_in_entity_registry(hass):
+    """Test entity is removed if we disable entity registry entry."""
+    entry = entity_registry.RegistryEntry(
+        entity_id="hello.world",
+        unique_id="test-unique-id",
+        platform="test-platform",
+        disabled_by="user",
+    )
+    registry = mock_registry(hass, {"hello.world": entry})
+
+    ent = entity.Entity()
+    ent.hass = hass
+    ent.entity_id = "hello.world"
+    ent.registry_entry = entry
+    ent.platform = MagicMock(platform_name="test-platform")
+
+    await ent.async_internal_added_to_hass()
+    ent.async_write_ha_state()
+    assert hass.states.get("hello.world") is None
+
+    entry2 = registry.async_update_entity("hello.world", disabled_by=None)
+    await hass.async_block_till_done()
+    assert entry2 != entry
+    assert ent.registry_entry == entry2
+    assert ent.enabled is True
+
+    entry3 = registry.async_update_entity("hello.world", disabled_by="user")
+    await hass.async_block_till_done()
+    assert entry3 != entry2
+    assert ent.registry_entry == entry3
+    assert ent.enabled is False

@@ -6,22 +6,12 @@ from functools import partial
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    CONF_SCAN_INTERVAL,
-)
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_SCAN_INTERVAL
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.dispatcher import (
-    dispatcher_send,
-    async_dispatcher_connect,
-)
+from homeassistant.helpers.dispatcher import dispatcher_send, async_dispatcher_connect
 
 from . import config_flow  # noqa  pylint_disable=unused-import
 from .const import (
@@ -55,9 +45,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_DISPLAY): cv.string}
-)
+SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_DISPLAY): cv.string})
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
@@ -73,9 +61,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(
-        hass: HomeAssistantType, entry: ConfigType
-) -> bool:
+async def async_setup_entry(hass: HomeAssistantType, entry: ConfigType) -> bool:
     """Set up Toon from a config entry."""
     from toonapilib import Toon
 
@@ -102,8 +88,8 @@ async def async_setup_entry(
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, toon.agreement.id, 'meter_adapter')},
-        manufacturer='Eneco',
+        identifiers={(DOMAIN, toon.agreement.id, "meter_adapter")},
+        manufacturer="Eneco",
         name="Meter Adapter",
         via_device=(DOMAIN, toon.agreement.id),
     )
@@ -112,15 +98,14 @@ async def async_setup_entry(
         """Service call to manually update the data."""
         called_display = call.data.get(CONF_DISPLAY, None)
         for toon_data in hass.data[DATA_TOON].values():
-            if (called_display and called_display == toon_data.display_name) \
-                    or not called_display:
+            if (
+                called_display and called_display == toon_data.display_name
+            ) or not called_display:
                 toon_data.update()
 
-    hass.services.async_register(
-        DOMAIN, "update", update, schema=SERVICE_SCHEMA
-    )
+    hass.services.async_register(DOMAIN, "update", update, schema=SERVICE_SCHEMA)
 
-    for component in 'binary_sensor', 'climate', 'sensor':
+    for component in "binary_sensor", "climate", "sensor":
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
@@ -131,12 +116,7 @@ async def async_setup_entry(
 class ToonData:
     """Communication class for interacting with toonapilib."""
 
-    def __init__(
-            self,
-            hass: HomeAssistantType,
-            entry: ConfigType,
-            toon
-    ):
+    def __init__(self, hass: HomeAssistantType, entry: ConfigType, toon):
         """Initialize the Toon data object."""
         self._hass = hass
         self._toon = toon
@@ -171,9 +151,7 @@ class ToonData:
         self.thermostat_state = self._toon.thermostat_state
 
         # Notify all entities
-        dispatcher_send(
-            self._hass, DATA_TOON_UPDATED, self._entry.data[CONF_DISPLAY]
-        )
+        dispatcher_send(self._hass, DATA_TOON_UPDATED, self._entry.data[CONF_DISPLAY])
 
 
 class ToonEntity(Entity):
@@ -226,14 +204,14 @@ class ToonDisplayDeviceEntity(ToonEntity):
     def device_info(self) -> Dict[str, Any]:
         """Return device information about this thermostat."""
         agreement = self.toon.agreement
-        model = agreement.display_hardware_version.rpartition('/')[0]
-        sw_version = agreement.display_software_version.rpartition('/')[-1]
+        model = agreement.display_hardware_version.rpartition("/")[0]
+        sw_version = agreement.display_software_version.rpartition("/")[-1]
         return {
-            'identifiers': {(DOMAIN, agreement.id)},
-            'name': 'Toon Display',
-            'manufacturer': 'Eneco',
-            'model': model,
-            'sw_version': sw_version,
+            "identifiers": {(DOMAIN, agreement.id)},
+            "name": "Toon Display",
+            "manufacturer": "Eneco",
+            "model": model,
+            "sw_version": sw_version,
         }
 
 
@@ -244,11 +222,9 @@ class ToonElectricityMeterDeviceEntity(ToonEntity):
     def device_info(self) -> Dict[str, Any]:
         """Return device information about this entity."""
         return {
-            'name': 'Electricity Meter',
-            'identifiers': {
-                (DOMAIN, self.toon.agreement.id, 'electricity'),
-            },
-            'via_device': (DOMAIN, self.toon.agreement.id, 'meter_adapter'),
+            "name": "Electricity Meter",
+            "identifiers": {(DOMAIN, self.toon.agreement.id, "electricity")},
+            "via_device": (DOMAIN, self.toon.agreement.id, "meter_adapter"),
         }
 
 
@@ -258,16 +234,14 @@ class ToonGasMeterDeviceEntity(ToonEntity):
     @property
     def device_info(self) -> Dict[str, Any]:
         """Return device information about this entity."""
-        via_device = 'meter_adapter'
+        via_device = "meter_adapter"
         if self.toon.gas.is_smart:
-            via_device = 'electricity'
+            via_device = "electricity"
 
         return {
-            'name': 'Gas Meter',
-            'identifiers': {
-                (DOMAIN, self.toon.agreement.id, 'gas'),
-            },
-            'via_device': (DOMAIN, self.toon.agreement.id, via_device),
+            "name": "Gas Meter",
+            "identifiers": {(DOMAIN, self.toon.agreement.id, "gas")},
+            "via_device": (DOMAIN, self.toon.agreement.id, via_device),
         }
 
 
@@ -278,11 +252,9 @@ class ToonSolarDeviceEntity(ToonEntity):
     def device_info(self) -> Dict[str, Any]:
         """Return device information about this entity."""
         return {
-            'name': 'Solar Panels',
-            'identifiers': {
-                (DOMAIN, self.toon.agreement.id, 'solar'),
-            },
-            'via_device': (DOMAIN, self.toon.agreement.id, 'meter_adapter'),
+            "name": "Solar Panels",
+            "identifiers": {(DOMAIN, self.toon.agreement.id, "solar")},
+            "via_device": (DOMAIN, self.toon.agreement.id, "meter_adapter"),
         }
 
 
@@ -293,12 +265,10 @@ class ToonBoilerModuleDeviceEntity(ToonEntity):
     def device_info(self) -> Dict[str, Any]:
         """Return device information about this entity."""
         return {
-            'name': 'Boiler Module',
-            'manufacturer': 'Eneco',
-            'identifiers': {
-                (DOMAIN, self.toon.agreement.id, 'boiler_module'),
-            },
-            'via_device': (DOMAIN, self.toon.agreement.id),
+            "name": "Boiler Module",
+            "manufacturer": "Eneco",
+            "identifiers": {(DOMAIN, self.toon.agreement.id, "boiler_module")},
+            "via_device": (DOMAIN, self.toon.agreement.id),
         }
 
 
@@ -309,9 +279,7 @@ class ToonBoilerDeviceEntity(ToonEntity):
     def device_info(self) -> Dict[str, Any]:
         """Return device information about this entity."""
         return {
-            'name': 'Boiler',
-            'identifiers': {
-                (DOMAIN, self.toon.agreement.id, 'boiler'),
-            },
-            'via_device': (DOMAIN, self.toon.agreement.id, 'boiler_module'),
+            "name": "Boiler",
+            "identifiers": {(DOMAIN, self.toon.agreement.id, "boiler")},
+            "via_device": (DOMAIN, self.toon.agreement.id, "boiler_module"),
         }

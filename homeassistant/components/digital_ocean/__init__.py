@@ -10,31 +10,30 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CREATED_AT = 'created_at'
-ATTR_DROPLET_ID = 'droplet_id'
-ATTR_DROPLET_NAME = 'droplet_name'
-ATTR_FEATURES = 'features'
-ATTR_IPV4_ADDRESS = 'ipv4_address'
-ATTR_IPV6_ADDRESS = 'ipv6_address'
-ATTR_MEMORY = 'memory'
-ATTR_REGION = 'region'
-ATTR_VCPUS = 'vcpus'
+ATTR_CREATED_AT = "created_at"
+ATTR_DROPLET_ID = "droplet_id"
+ATTR_DROPLET_NAME = "droplet_name"
+ATTR_FEATURES = "features"
+ATTR_IPV4_ADDRESS = "ipv4_address"
+ATTR_IPV6_ADDRESS = "ipv6_address"
+ATTR_MEMORY = "memory"
+ATTR_REGION = "region"
+ATTR_VCPUS = "vcpus"
 
-ATTRIBUTION = 'Data provided by Digital Ocean'
+ATTRIBUTION = "Data provided by Digital Ocean"
 
-CONF_DROPLETS = 'droplets'
+CONF_DROPLETS = "droplets"
 
-DATA_DIGITAL_OCEAN = 'data_do'
-DIGITAL_OCEAN_PLATFORMS = ['switch', 'binary_sensor']
-DOMAIN = 'digital_ocean'
+DATA_DIGITAL_OCEAN = "data_do"
+DIGITAL_OCEAN_PLATFORMS = ["switch", "binary_sensor"]
+DOMAIN = "digital_ocean"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_ACCESS_TOKEN): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Schema({vol.Required(CONF_ACCESS_TOKEN): cv.string})},
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):

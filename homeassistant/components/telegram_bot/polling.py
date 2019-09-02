@@ -1,11 +1,10 @@
 """Support for Telegram bot using polling."""
 import logging
 
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 
-from . import (CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity, initialize_bot)
+from . import CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity, initialize_bot
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,8 +32,7 @@ async def async_setup_platform(hass, config):
 
 def process_error(bot, update, error):
     """Telegram bot error handler."""
-    from telegram.error import (
-        TelegramError, TimedOut, NetworkError, RetryAfter)
+    from telegram.error import TelegramError, TimedOut, NetworkError, RetryAfter
 
     try:
         raise error

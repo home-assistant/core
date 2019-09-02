@@ -4,40 +4,74 @@ import telnetlib
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_STOP,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_STOP,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Music station'
+DEFAULT_NAME = "Music station"
 
-SUPPORT_DENON = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE \
+SUPPORT_DENON = (
+    SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+    | SUPPORT_SELECT_SOURCE
+)
+SUPPORT_MEDIA_MODES = (
+    SUPPORT_PAUSE
+    | SUPPORT_STOP
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_PLAY
+)
 
-SUPPORT_MEDIA_MODES = SUPPORT_PAUSE | SUPPORT_STOP | \
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_PLAY
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+NORMAL_INPUTS = {
+    "Cd": "CD",
+    "Dvd": "DVD",
+    "Blue ray": "BD",
+    "TV": "TV",
+    "Satellite / Cable": "SAT/CBL",
+    "Game": "GAME",
+    "Game2": "GAME2",
+    "Video Aux": "V.AUX",
+    "Dock": "DOCK",
+}
 
-NORMAL_INPUTS = {'Cd': 'CD', 'Dvd': 'DVD', 'Blue ray': 'BD', 'TV': 'TV',
-                 'Satelite / Cable': 'SAT/CBL', 'Game': 'GAME',
-                 'Game2': 'GAME2', 'Video Aux': 'V.AUX', 'Dock': 'DOCK'}
-
-MEDIA_MODES = {'Tuner': 'TUNER', 'Media server': 'SERVER',
-               'Ipod dock': 'IPOD', 'Net/USB': 'NET/USB',
-               'Rapsody': 'RHAPSODY', 'Napster': 'NAPSTER',
-               'Pandora': 'PANDORA', 'LastFM': 'LASTFM',
-               'Flickr': 'FLICKR', 'Favorites': 'FAVORITES',
-               'Internet Radio': 'IRADIO', 'USB/IPOD': 'USB/IPOD'}
+MEDIA_MODES = {
+    "Tuner": "TUNER",
+    "Media server": "SERVER",
+    "Ipod dock": "IPOD",
+    "Net/USB": "NET/USB",
+    "Rapsody": "RHAPSODY",
+    "Napster": "NAPSTER",
+    "Pandora": "PANDORA",
+    "LastFM": "LASTFM",
+    "Flickr": "FLICKR",
+    "Favorites": "FAVORITES",
+    "Internet Radio": "IRADIO",
+    "USB/IPOD": "USB/IPOD",
+}
 
 # Sub-modes of 'NET/USB'
 # {'USB': 'USB', 'iPod Direct': 'IPD', 'Internet Radio': 'IRP',
@@ -59,34 +93,34 @@ class DenonDevice(MediaPlayerDevice):
         """Initialize the Denon device."""
         self._name = name
         self._host = host
-        self._pwstate = 'PWSTANDBY'
+        self._pwstate = "PWSTANDBY"
         self._volume = 0
         # Initial value 60dB, changed if we get a MVMAX
         self._volume_max = 60
         self._source_list = NORMAL_INPUTS.copy()
         self._source_list.update(MEDIA_MODES)
         self._muted = False
-        self._mediasource = ''
-        self._mediainfo = ''
+        self._mediasource = ""
+        self._mediainfo = ""
 
         self._should_setup_sources = True
 
     def _setup_sources(self, telnet):
         # NSFRN - Network name
-        nsfrn = self.telnet_request(telnet, 'NSFRN ?')[len('NSFRN '):]
+        nsfrn = self.telnet_request(telnet, "NSFRN ?")[len("NSFRN ") :]
         if nsfrn:
             self._name = nsfrn
 
         # SSFUN - Configured sources with names
         self._source_list = {}
-        for line in self.telnet_request(telnet, 'SSFUN ?', all_lines=True):
-            source, configured_name = line[len('SSFUN'):].split(" ", 1)
+        for line in self.telnet_request(telnet, "SSFUN ?", all_lines=True):
+            source, configured_name = line[len("SSFUN") :].split(" ", 1)
             self._source_list[configured_name] = source
 
         # SSSOD - Deleted sources
-        for line in self.telnet_request(telnet, 'SSSOD ?', all_lines=True):
-            source, status = line[len('SSSOD'):].split(" ", 1)
-            if status == 'DEL':
+        for line in self.telnet_request(telnet, "SSSOD ?", all_lines=True):
+            source, status = line[len("SSSOD") :].split(" ", 1)
+            if status == "DEL":
                 for pretty_name, name in self._source_list.items():
                     if source == name:
                         del self._source_list[pretty_name]
@@ -96,24 +130,24 @@ class DenonDevice(MediaPlayerDevice):
     def telnet_request(cls, telnet, command, all_lines=False):
         """Execute `command` and return the response."""
         _LOGGER.debug("Sending: %s", command)
-        telnet.write(command.encode('ASCII') + b'\r')
+        telnet.write(command.encode("ASCII") + b"\r")
         lines = []
         while True:
-            line = telnet.read_until(b'\r', timeout=0.2)
+            line = telnet.read_until(b"\r", timeout=0.2)
             if not line:
                 break
-            lines.append(line.decode('ASCII').strip())
+            lines.append(line.decode("ASCII").strip())
             _LOGGER.debug("Received: %s", line)
 
         if all_lines:
             return lines
-        return lines[0] if lines else ''
+        return lines[0] if lines else ""
 
     def telnet_command(self, command):
         """Establish a telnet connection and sends `command`."""
         telnet = telnetlib.Telnet(self._host)
         _LOGGER.debug("Sending: %s", command)
-        telnet.write(command.encode('ASCII') + b'\r')
+        telnet.write(command.encode("ASCII") + b"\r")
         telnet.read_very_eager()  # skip response
         telnet.close()
 
@@ -128,23 +162,32 @@ class DenonDevice(MediaPlayerDevice):
             self._setup_sources(telnet)
             self._should_setup_sources = False
 
-        self._pwstate = self.telnet_request(telnet, 'PW?')
-        for line in self.telnet_request(telnet, 'MV?', all_lines=True):
-            if line.startswith('MVMAX '):
+        self._pwstate = self.telnet_request(telnet, "PW?")
+        for line in self.telnet_request(telnet, "MV?", all_lines=True):
+            if line.startswith("MVMAX "):
                 # only grab two digit max, don't care about any half digit
-                self._volume_max = int(line[len('MVMAX '):len('MVMAX XX')])
+                self._volume_max = int(line[len("MVMAX ") : len("MVMAX XX")])
                 continue
-            if line.startswith('MV'):
-                self._volume = int(line[len('MV'):])
-        self._muted = (self.telnet_request(telnet, 'MU?') == 'MUON')
-        self._mediasource = self.telnet_request(telnet, 'SI?')[len('SI'):]
+            if line.startswith("MV"):
+                self._volume = int(line[len("MV") :])
+        self._muted = self.telnet_request(telnet, "MU?") == "MUON"
+        self._mediasource = self.telnet_request(telnet, "SI?")[len("SI") :]
 
         if self._mediasource in MEDIA_MODES.values():
             self._mediainfo = ""
-            answer_codes = ["NSE0", "NSE1X", "NSE2X", "NSE3X", "NSE4", "NSE5",
-                            "NSE6", "NSE7", "NSE8"]
-            for line in self.telnet_request(telnet, 'NSE', all_lines=True):
-                self._mediainfo += line[len(answer_codes.pop(0)):] + '\n'
+            answer_codes = [
+                "NSE0",
+                "NSE1X",
+                "NSE2X",
+                "NSE3X",
+                "NSE4",
+                "NSE5",
+                "NSE6",
+                "NSE7",
+                "NSE8",
+            ]
+            for line in self.telnet_request(telnet, "NSE", all_lines=True):
+                self._mediainfo += line[len(answer_codes.pop(0)) :] + "\n"
         else:
             self._mediainfo = self.source
 
@@ -159,9 +202,9 @@ class DenonDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._pwstate == 'PWSTANDBY':
+        if self._pwstate == "PWSTANDBY":
             return STATE_OFF
-        if self._pwstate == 'PWON':
+        if self._pwstate == "PWON":
             return STATE_ON
 
         return None
@@ -202,49 +245,48 @@ class DenonDevice(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn off media player."""
-        self.telnet_command('PWSTANDBY')
+        self.telnet_command("PWSTANDBY")
 
     def volume_up(self):
         """Volume up media player."""
-        self.telnet_command('MVUP')
+        self.telnet_command("MVUP")
 
     def volume_down(self):
         """Volume down media player."""
-        self.telnet_command('MVDOWN')
+        self.telnet_command("MVDOWN")
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        self.telnet_command('MV' +
-                            str(round(volume * self._volume_max)).zfill(2))
+        self.telnet_command("MV" + str(round(volume * self._volume_max)).zfill(2))
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
-        self.telnet_command('MU' + ('ON' if mute else 'OFF'))
+        self.telnet_command("MU" + ("ON" if mute else "OFF"))
 
     def media_play(self):
         """Play media player."""
-        self.telnet_command('NS9A')
+        self.telnet_command("NS9A")
 
     def media_pause(self):
         """Pause media player."""
-        self.telnet_command('NS9B')
+        self.telnet_command("NS9B")
 
     def media_stop(self):
         """Pause media player."""
-        self.telnet_command('NS9C')
+        self.telnet_command("NS9C")
 
     def media_next_track(self):
         """Send the next track command."""
-        self.telnet_command('NS9D')
+        self.telnet_command("NS9D")
 
     def media_previous_track(self):
         """Send the previous track command."""
-        self.telnet_command('NS9E')
+        self.telnet_command("NS9E")
 
     def turn_on(self):
         """Turn the media player on."""
-        self.telnet_command('PWON')
+        self.telnet_command("PWON")
 
     def select_source(self, source):
         """Select input source."""
-        self.telnet_command('SI' + self._source_list.get(source))
+        self.telnet_command("SI" + self._source_list.get(source))

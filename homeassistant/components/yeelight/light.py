@@ -2,45 +2,65 @@
 import logging
 
 import voluptuous as vol
-from yeelight import (RGBTransition, SleepTransition, Flow, BulbException)
+from yeelight import RGBTransition, SleepTransition, Flow, BulbException
 from yeelight.enums import PowerMode, LightType, BulbType
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service import extract_entity_ids
 from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
-    color_temperature_kelvin_to_mired as kelvin_to_mired)
+    color_temperature_kelvin_to_mired as kelvin_to_mired,
+)
 from homeassistant.const import CONF_HOST, ATTR_ENTITY_ID, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_TRANSITION, ATTR_COLOR_TEMP,
-    ATTR_FLASH, FLASH_SHORT, FLASH_LONG, ATTR_EFFECT, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR, SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP, SUPPORT_FLASH,
-    SUPPORT_EFFECT, Light)
+    ATTR_BRIGHTNESS,
+    ATTR_HS_COLOR,
+    ATTR_TRANSITION,
+    ATTR_COLOR_TEMP,
+    ATTR_FLASH,
+    FLASH_SHORT,
+    FLASH_LONG,
+    ATTR_EFFECT,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_TRANSITION,
+    SUPPORT_COLOR_TEMP,
+    SUPPORT_FLASH,
+    SUPPORT_EFFECT,
+    Light,
+)
 import homeassistant.util.color as color_util
 from . import (
-    CONF_TRANSITION, DATA_YEELIGHT, CONF_MODE_MUSIC,
-    CONF_SAVE_ON_CHANGE, CONF_CUSTOM_EFFECTS, DATA_UPDATED,
-    YEELIGHT_SERVICE_SCHEMA, DOMAIN, ATTR_TRANSITIONS,
-    YEELIGHT_FLOW_TRANSITION_SCHEMA, ACTION_RECOVER, CONF_FLOW_PARAMS,
-    ATTR_ACTION, ATTR_COUNT)
+    CONF_TRANSITION,
+    DATA_YEELIGHT,
+    CONF_MODE_MUSIC,
+    CONF_SAVE_ON_CHANGE,
+    CONF_CUSTOM_EFFECTS,
+    DATA_UPDATED,
+    YEELIGHT_SERVICE_SCHEMA,
+    DOMAIN,
+    ATTR_TRANSITIONS,
+    YEELIGHT_FLOW_TRANSITION_SCHEMA,
+    ACTION_RECOVER,
+    CONF_FLOW_PARAMS,
+    ATTR_ACTION,
+    ATTR_COUNT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS |
-                    SUPPORT_TRANSITION |
-                    SUPPORT_FLASH |
-                    SUPPORT_EFFECT)
+SUPPORT_YEELIGHT = (
+    SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION | SUPPORT_FLASH | SUPPORT_EFFECT
+)
 
-SUPPORT_YEELIGHT_WHITE_TEMP = (SUPPORT_YEELIGHT |
-                               SUPPORT_COLOR_TEMP)
+SUPPORT_YEELIGHT_WHITE_TEMP = SUPPORT_YEELIGHT | SUPPORT_COLOR_TEMP
 
-SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT_WHITE_TEMP |
-                        SUPPORT_COLOR)
+SUPPORT_YEELIGHT_RGB = SUPPORT_YEELIGHT_WHITE_TEMP | SUPPORT_COLOR
 
-ATTR_MODE = 'mode'
+ATTR_MODE = "mode"
 
-SERVICE_SET_MODE = 'set_mode'
-SERVICE_START_FLOW = 'start_flow'
+SERVICE_SET_MODE = "set_mode"
+SERVICE_START_FLOW = "start_flow"
 
 EFFECT_DISCO = "Disco"
 EFFECT_TEMP = "Slow Temp"
@@ -60,10 +80,7 @@ EFFECT_FACEBOOK = "Facebook"
 EFFECT_TWITTER = "Twitter"
 EFFECT_STOP = "Stop"
 
-YEELIGHT_TEMP_ONLY_EFFECT_LIST = [
-    EFFECT_TEMP,
-    EFFECT_STOP,
-]
+YEELIGHT_TEMP_ONLY_EFFECT_LIST = [EFFECT_TEMP, EFFECT_STOP]
 
 YEELIGHT_MONO_EFFECT_LIST = [
     EFFECT_DISCO,
@@ -73,7 +90,7 @@ YEELIGHT_MONO_EFFECT_LIST = [
     EFFECT_WHATSAPP,
     EFFECT_FACEBOOK,
     EFFECT_TWITTER,
-    *YEELIGHT_TEMP_ONLY_EFFECT_LIST
+    *YEELIGHT_TEMP_ONLY_EFFECT_LIST,
 ]
 
 YEELIGHT_COLOR_EFFECT_LIST = [
@@ -85,23 +102,24 @@ YEELIGHT_COLOR_EFFECT_LIST = [
     EFFECT_FAST_RANDOM_LOOP,
     EFFECT_LSD,
     EFFECT_SLOWDOWN,
-    *YEELIGHT_MONO_EFFECT_LIST
+    *YEELIGHT_MONO_EFFECT_LIST,
 ]
 
 MODEL_TO_DEVICE_TYPE = {
-    'mono': BulbType.White,
-    'mono1': BulbType.White,
-    'color': BulbType.Color,
-    'color1': BulbType.Color,
-    'color2': BulbType.Color,
-    'strip1': BulbType.Color,
-    'bslamp1': BulbType.Color,
-    'RGBW': BulbType.Color,
-    'lamp1': BulbType.WhiteTemp,
-    'ceiling1': BulbType.WhiteTemp,
-    'ceiling2': BulbType.WhiteTemp,
-    'ceiling3': BulbType.WhiteTemp,
-    'ceiling4': BulbType.WhiteTempMood}
+    "mono": BulbType.White,
+    "mono1": BulbType.White,
+    "color": BulbType.Color,
+    "color1": BulbType.Color,
+    "color2": BulbType.Color,
+    "strip1": BulbType.Color,
+    "bslamp1": BulbType.Color,
+    "RGBW": BulbType.Color,
+    "lamp1": BulbType.WhiteTemp,
+    "ceiling1": BulbType.WhiteTemp,
+    "ceiling2": BulbType.WhiteTemp,
+    "ceiling3": BulbType.WhiteTemp,
+    "ceiling4": BulbType.WhiteTempMood,
+}
 
 
 def _transitions_config_parser(transitions):
@@ -121,13 +139,12 @@ def _parse_custom_effects(effects_config):
     for config in effects_config:
         params = config[CONF_FLOW_PARAMS]
         action = Flow.actions[params[ATTR_ACTION]]
-        transitions = _transitions_config_parser(
-            params[ATTR_TRANSITIONS])
+        transitions = _transitions_config_parser(params[ATTR_TRANSITIONS])
 
         effects[config[CONF_NAME]] = {
             ATTR_COUNT: params[ATTR_COUNT],
             ATTR_ACTION: action,
-            ATTR_TRANSITIONS: transitions
+            ATTR_TRANSITIONS: transitions,
         }
 
     return effects
@@ -135,6 +152,7 @@ def _parse_custom_effects(effects_config):
 
 def _cmd(func):
     """Define a wrapper to catch exceptions from the bulb."""
+
     def _wrap(self, *args, **kwargs):
         try:
             _LOGGER.debug("Calling %s with %s %s", func, args, kwargs)
@@ -147,7 +165,7 @@ def _cmd(func):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yeelight bulbs."""
-    data_key = '{}_lights'.format(DATA_YEELIGHT)
+    data_key = "{}_lights".format(DATA_YEELIGHT)
 
     if not discovery_info:
         return
@@ -181,44 +199,48 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _lights_setup_helper(YeelightAmbientLight)
     else:
         _lights_setup_helper(YeelightGenericLight)
-        _LOGGER.warning("Cannot determine device type for %s, %s. "
-                        "Falling back to white only", device.ipaddr,
-                        device.name)
+        _LOGGER.warning(
+            "Cannot determine device type for %s, %s. " "Falling back to white only",
+            device.ipaddr,
+            device.name,
+        )
 
     hass.data[data_key] += lights
     add_entities(lights, True)
 
     def service_handler(service):
         """Dispatch service calls to target entities."""
-        params = {key: value for key, value in service.data.items()
-                  if key != ATTR_ENTITY_ID}
+        params = {
+            key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
+        }
 
         entity_ids = extract_entity_ids(hass, service)
-        target_devices = [light for light in hass.data[data_key]
-                          if light.entity_id in entity_ids]
+        target_devices = [
+            light for light in hass.data[data_key] if light.entity_id in entity_ids
+        ]
 
         for target_device in target_devices:
             if service.service == SERVICE_SET_MODE:
                 target_device.set_mode(**params)
             elif service.service == SERVICE_START_FLOW:
-                params[ATTR_TRANSITIONS] = \
-                    _transitions_config_parser(params[ATTR_TRANSITIONS])
+                params[ATTR_TRANSITIONS] = _transitions_config_parser(
+                    params[ATTR_TRANSITIONS]
+                )
                 target_device.start_flow(**params)
 
-    service_schema_set_mode = YEELIGHT_SERVICE_SCHEMA.extend({
-        vol.Required(ATTR_MODE):
-            vol.In([mode.name.lower() for mode in PowerMode])
-    })
+    service_schema_set_mode = YEELIGHT_SERVICE_SCHEMA.extend(
+        {vol.Required(ATTR_MODE): vol.In([mode.name.lower() for mode in PowerMode])}
+    )
     hass.services.register(
-        DOMAIN, SERVICE_SET_MODE, service_handler,
-        schema=service_schema_set_mode)
+        DOMAIN, SERVICE_SET_MODE, service_handler, schema=service_schema_set_mode
+    )
 
     service_schema_start_flow = YEELIGHT_SERVICE_SCHEMA.extend(
         YEELIGHT_FLOW_TRANSITION_SCHEMA
     )
     hass.services.register(
-        DOMAIN, SERVICE_START_FLOW, service_handler,
-        schema=service_schema_start_flow)
+        DOMAIN, SERVICE_START_FLOW, service_handler, schema=service_schema_start_flow
+    )
 
 
 class YeelightGenericLight(Light):
@@ -234,8 +256,8 @@ class YeelightGenericLight(Light):
         self._hs = None
 
         model_specs = self._bulb.get_model_specs()
-        self._min_mireds = kelvin_to_mired(model_specs['color_temp']['max'])
-        self._max_mireds = kelvin_to_mired(model_specs['color_temp']['min'])
+        self._min_mireds = kelvin_to_mired(model_specs["color_temp"]["max"])
+        self._max_mireds = kelvin_to_mired(model_specs["color_temp"]["min"])
 
         self._light_type = LightType.Main
 
@@ -253,7 +275,7 @@ class YeelightGenericLight(Light):
         async_dispatcher_connect(
             self.hass,
             DATA_UPDATED.format(self._device.ipaddr),
-            self._schedule_immediate_update
+            self._schedule_immediate_update,
         )
 
     @property
@@ -279,7 +301,7 @@ class YeelightGenericLight(Light):
     @property
     def color_temp(self) -> int:
         """Return the color temperature."""
-        temp_in_k = self._get_property('ct')
+        temp_in_k = self._get_property("ct")
         if temp_in_k:
             self._color_temp = kelvin_to_mired(int(temp_in_k))
         return self._color_temp
@@ -292,7 +314,7 @@ class YeelightGenericLight(Light):
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        return self._get_property(self._power_property) == 'on'
+        return self._get_property(self._power_property) == "on"
 
     @property
     def brightness(self) -> int:
@@ -334,7 +356,7 @@ class YeelightGenericLight(Light):
 
     # F821: https://github.com/PyCQA/pyflakes/issues/373
     @property
-    def _bulb(self) -> 'Bulb':  # noqa: F821
+    def _bulb(self) -> "Bulb":  # noqa: F821
         return self.device.bulb
 
     @property
@@ -348,11 +370,11 @@ class YeelightGenericLight(Light):
 
     @property
     def _brightness_property(self):
-        return 'bright'
+        return "bright"
 
     @property
     def _power_property(self):
-        return 'power'
+        return "power"
 
     @property
     def _predefined_effects(self):
@@ -368,8 +390,8 @@ class YeelightGenericLight(Light):
         self._hs = self._get_hs_from_properties()
 
     def _get_hs_from_properties(self):
-        rgb = self._get_property('rgb')
-        color_mode = self._get_property('color_mode')
+        rgb = self._get_property("rgb")
+        color_mode = self._get_property("color_mode")
 
         if not rgb or not color_mode:
             return None
@@ -379,15 +401,15 @@ class YeelightGenericLight(Light):
             temp_in_k = mired_to_kelvin(self.color_temp)
             return color_util.color_temperature_to_hs(temp_in_k)
         if color_mode == 3:  # hsv
-            hue = int(self._get_property('hue'))
-            sat = int(self._get_property('sat'))
+            hue = int(self._get_property("hue"))
+            sat = int(self._get_property("sat"))
 
             return (hue / 360 * 65536, sat / 100 * 255)
 
         rgb = int(rgb)
-        blue = rgb & 0xff
-        green = (rgb >> 8) & 0xff
-        red = (rgb >> 16) & 0xff
+        blue = rgb & 0xFF
+        green = (rgb >> 8) & 0xFF
+        red = (rgb >> 16) & 0xFF
 
         return color_util.color_RGB_to_hs(red, green, blue)
 
@@ -403,17 +425,18 @@ class YeelightGenericLight(Light):
         """Set bulb brightness."""
         if brightness:
             _LOGGER.debug("Setting brightness: %s", brightness)
-            self._bulb.set_brightness(brightness / 255 * 100,
-                                      duration=duration,
-                                      light_type=self.light_type)
+            self._bulb.set_brightness(
+                brightness / 255 * 100, duration=duration, light_type=self.light_type
+            )
 
     @_cmd
     def set_rgb(self, rgb, duration) -> None:
         """Set bulb's color."""
         if rgb and self.supported_features & SUPPORT_COLOR:
             _LOGGER.debug("Setting RGB: %s", rgb)
-            self._bulb.set_rgb(rgb[0], rgb[1], rgb[2], duration=duration,
-                               light_type=self.light_type)
+            self._bulb.set_rgb(
+                rgb[0], rgb[1], rgb[2], duration=duration, light_type=self.light_type
+            )
 
     @_cmd
     def set_colortemp(self, colortemp, duration) -> None:
@@ -422,8 +445,9 @@ class YeelightGenericLight(Light):
             temp_in_k = mired_to_kelvin(colortemp)
             _LOGGER.debug("Setting color temp: %s K", temp_in_k)
 
-            self._bulb.set_color_temp(temp_in_k, duration=duration,
-                                      light_type=self.light_type)
+            self._bulb.set_color_temp(
+                temp_in_k, duration=duration, light_type=self.light_type
+            )
 
     @_cmd
     def set_default(self) -> None:
@@ -450,12 +474,14 @@ class YeelightGenericLight(Light):
 
             transitions = list()
             transitions.append(
-                RGBTransition(255, 0, 0, brightness=10, duration=duration))
-            transitions.append(SleepTransition(
-                duration=transition))
+                RGBTransition(255, 0, 0, brightness=10, duration=duration)
+            )
+            transitions.append(SleepTransition(duration=transition))
             transitions.append(
-                RGBTransition(red, green, blue, brightness=self.brightness,
-                              duration=duration))
+                RGBTransition(
+                    red, green, blue, brightness=self.brightness, duration=duration
+                )
+            )
 
             flow = Flow(count=count, transitions=transitions)
             try:
@@ -467,10 +493,22 @@ class YeelightGenericLight(Light):
     def set_effect(self, effect) -> None:
         """Activate effect."""
         if effect:
-            from yeelight.transitions import (disco, temp, strobe, pulse,
-                                              strobe_color, alarm, police,
-                                              police2, christmas, rgb,
-                                              randomloop, lsd, slowdown)
+            from yeelight.transitions import (
+                disco,
+                temp,
+                strobe,
+                pulse,
+                strobe_color,
+                alarm,
+                police,
+                police2,
+                christmas,
+                rgb,
+                randomloop,
+                lsd,
+                slowdown,
+            )
+
             if effect == EFFECT_STOP:
                 self._bulb.stop_flow(light_type=self.light_type)
                 return
@@ -527,8 +565,9 @@ class YeelightGenericLight(Light):
             try:
                 self.set_music_mode(self.config[CONF_MODE_MUSIC])
             except BulbException as ex:
-                _LOGGER.error("Unable to turn on music mode,"
-                              "consider disabling it: %s", ex)
+                _LOGGER.error(
+                    "Unable to turn on music mode," "consider disabling it: %s", ex
+                )
 
         try:
             # values checked for none in methods
@@ -542,9 +581,7 @@ class YeelightGenericLight(Light):
             return
 
         # save the current state if we had a manual change.
-        if self.config[CONF_SAVE_ON_CHANGE] and (brightness
-                                                 or colortemp
-                                                 or rgb):
+        if self.config[CONF_SAVE_ON_CHANGE] and (brightness or colortemp or rgb):
             try:
                 self.set_default()
             except BulbException as ex:
@@ -573,9 +610,8 @@ class YeelightGenericLight(Light):
         """Start flow."""
         try:
             flow = Flow(
-                count=count,
-                action=Flow.actions[action],
-                transitions=transitions)
+                count=count, action=Flow.actions[action], transitions=transitions
+            )
 
             self._bulb.start_flow(flow, light_type=self.light_type)
             self.device.update()
@@ -606,7 +642,7 @@ class YeelightWhiteTempLight(YeelightGenericLight):
 
     @property
     def _brightness_property(self):
-        return 'current_brightness'
+        return "current_brightness"
 
     @property
     def _predefined_effects(self):
@@ -616,17 +652,15 @@ class YeelightWhiteTempLight(YeelightGenericLight):
 class YeelightWithAmbientLight(YeelightWhiteTempLight):
     """Representation of a Yeelight which has ambilight support."""
 
-    @ property
+    @property
     def _power_property(self):
-        return 'main_power'
+        return "main_power"
 
 
 class YeelightAmbientLight(YeelightColorLight):
     """Representation of a Yeelight ambient light."""
 
-    PROPERTIES_MAPPING = {
-        "color_mode": "bg_lmode",
-    }
+    PROPERTIES_MAPPING = {"color_mode": "bg_lmode"}
 
     def __init__(self, *args, **kwargs):
         """Initialize the Yeelight Ambient light."""

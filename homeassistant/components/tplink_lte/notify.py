@@ -3,8 +3,7 @@ import logging
 
 import attr
 
-from homeassistant.components.notify import (
-    ATTR_TARGET, BaseNotificationService)
+from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
 from homeassistant.const import CONF_RECIPIENT
 
 from . import DATA_KEY
@@ -29,6 +28,7 @@ class TplinkNotifyService(BaseNotificationService):
     async def async_send_message(self, message="", **kwargs):
         """Send a message to a user."""
         import tp_connected
+
         modem_data = self.hass.data[DATA_KEY].get_modem_data(self.config)
         if not modem_data:
             _LOGGER.error("No modem available")

@@ -1,13 +1,24 @@
 """Support for Homekit climate devices."""
 import logging
 
+from homekit.model.characteristics import CharacteristicsTypes
+
 from homeassistant.components.climate import (
-    ClimateDevice, DEFAULT_MIN_HUMIDITY, DEFAULT_MAX_HUMIDITY,
+    ClimateDevice,
+    DEFAULT_MIN_HUMIDITY,
+    DEFAULT_MAX_HUMIDITY,
 )
 from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT_COOL, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF,
-    CURRENT_HVAC_OFF, CURRENT_HVAC_HEAT, CURRENT_HVAC_COOL,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY)
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    CURRENT_HVAC_OFF,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_COOL,
+    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_HUMIDITY,
+)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import KNOWN_DEVICES, HomeKitEntity
@@ -34,21 +45,20 @@ CURRENT_MODE_HOMEKIT_TO_HASS = {
 }
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Legacy set up platform."""
     pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Homekit climate."""
-    hkid = config_entry.data['AccessoryPairingID']
+    hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     def async_add_service(aid, service):
-        if service['stype'] != 'thermostat':
+        if service["stype"] != "thermostat":
             return False
-        info = {'aid': aid, 'iid': service['iid']}
+        info = {"aid": aid, "iid": service["iid"]}
         async_add_entities([HomeKitClimateDevice(conn, info)], True)
         return True
 
@@ -76,8 +86,6 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
         return [
             CharacteristicsTypes.HEATING_COOLING_CURRENT,
             CharacteristicsTypes.HEATING_COOLING_TARGET,
@@ -88,45 +96,42 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
         ]
 
     def _setup_heating_cooling_target(self, characteristic):
-        if 'valid-values' in characteristic:
+        if "valid-values" in characteristic:
             valid_values = [
-                val for val in DEFAULT_VALID_MODES
-                if val in characteristic['valid-values']
+                val
+                for val in DEFAULT_VALID_MODES
+                if val in characteristic["valid-values"]
             ]
         else:
             valid_values = DEFAULT_VALID_MODES
-            if 'minValue' in characteristic:
+            if "minValue" in characteristic:
                 valid_values = [
-                    val for val in valid_values
-                    if val >= characteristic['minValue']
+                    val for val in valid_values if val >= characteristic["minValue"]
                 ]
-            if 'maxValue' in characteristic:
+            if "maxValue" in characteristic:
                 valid_values = [
-                    val for val in valid_values
-                    if val <= characteristic['maxValue']
+                    val for val in valid_values if val <= characteristic["maxValue"]
                 ]
 
-        self._valid_modes = [
-            MODE_HOMEKIT_TO_HASS[mode] for mode in valid_values
-        ]
+        self._valid_modes = [MODE_HOMEKIT_TO_HASS[mode] for mode in valid_values]
 
     def _setup_temperature_target(self, characteristic):
         self._features |= SUPPORT_TARGET_TEMPERATURE
 
-        if 'minValue' in characteristic:
-            self._min_target_temp = characteristic['minValue']
+        if "minValue" in characteristic:
+            self._min_target_temp = characteristic["minValue"]
 
-        if 'maxValue' in characteristic:
-            self._max_target_temp = characteristic['maxValue']
+        if "maxValue" in characteristic:
+            self._max_target_temp = characteristic["maxValue"]
 
     def _setup_relative_humidity_target(self, characteristic):
         self._features |= SUPPORT_TARGET_HUMIDITY
 
-        if 'minValue' in characteristic:
-            self._min_target_humidity = characteristic['minValue']
+        if "minValue" in characteristic:
+            self._min_target_humidity = characteristic["minValue"]
 
-        if 'maxValue' in characteristic:
-            self._max_target_humidity = characteristic['maxValue']
+        if "maxValue" in characteristic:
+            self._max_target_humidity = characteristic["maxValue"]
 
     def _update_heating_cooling_current(self, value):
         # This characteristic describes the current mode of a device,
@@ -157,23 +162,31 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
 
-        characteristics = [{'aid': self._aid,
-                            'iid': self._chars['temperature.target'],
-                            'value': temp}]
+        characteristics = [
+            {"aid": self._aid, "iid": self._chars["temperature.target"], "value": temp}
+        ]
         await self._accessory.put_characteristics(characteristics)
 
     async def async_set_humidity(self, humidity):
         """Set new target humidity."""
-        characteristics = [{'aid': self._aid,
-                            'iid': self._chars['relative-humidity.target'],
-                            'value': humidity}]
+        characteristics = [
+            {
+                "aid": self._aid,
+                "iid": self._chars["relative-humidity.target"],
+                "value": humidity,
+            }
+        ]
         await self._accessory.put_characteristics(characteristics)
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
-        characteristics = [{'aid': self._aid,
-                            'iid': self._chars['heating-cooling.target'],
-                            'value': MODE_HASS_TO_HOMEKIT[hvac_mode]}]
+        characteristics = [
+            {
+                "aid": self._aid,
+                "iid": self._chars["heating-cooling.target"],
+                "value": MODE_HASS_TO_HOMEKIT[hvac_mode],
+            }
+        ]
         await self._accessory.put_characteristics(characteristics)
 
     @property

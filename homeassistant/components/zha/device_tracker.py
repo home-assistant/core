@@ -1,17 +1,18 @@
 """Support for the ZHA platform."""
 import logging
 import time
-from homeassistant.components.device_tracker import (
-    SOURCE_TYPE_ROUTER, DOMAIN
-)
-from homeassistant.components.device_tracker.config_entry import (
-    ScannerEntity
-)
+
+from homeassistant.components.device_tracker import DOMAIN, SOURCE_TYPE_ROUTER
+from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
 from .core.const import (
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW,
-    POWER_CONFIGURATION_CHANNEL, SIGNAL_ATTR_UPDATED
+    CHANNEL_POWER_CONFIGURATION,
+    DATA_ZHA,
+    DATA_ZHA_DISPATCHERS,
+    SIGNAL_ATTR_UPDATED,
+    ZHA_DISCOVERY_NEW,
 )
 from .entity import ZhaEntity
 from .sensor import battery_percentage_remaining_formatter
@@ -21,23 +22,28 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation device tracker from config entry."""
+
     async def async_discover(discovery_info):
-        await _async_setup_entities(hass, config_entry, async_add_entities,
-                                    [discovery_info])
+        await _async_setup_entities(
+            hass, config_entry, async_add_entities, [discovery_info]
+        )
 
     unsub = async_dispatcher_connect(
-        hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover)
+        hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover
+    )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
     device_trackers = hass.data.get(DATA_ZHA, {}).get(DOMAIN)
     if device_trackers is not None:
-        await _async_setup_entities(hass, config_entry, async_add_entities,
-                                    device_trackers.values())
+        await _async_setup_entities(
+            hass, config_entry, async_add_entities, device_trackers.values()
+        )
         del hass.data[DATA_ZHA][DOMAIN]
 
 
-async def _async_setup_entities(hass, config_entry, async_add_entities,
-                                discovery_infos):
+async def _async_setup_entities(
+    hass, config_entry, async_add_entities, discovery_infos
+):
     """Set up the ZHA device trackers."""
     entities = []
     for discovery_info in discovery_infos:
@@ -52,8 +58,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
     def __init__(self, **kwargs):
         """Initialize the ZHA device tracker."""
         super().__init__(**kwargs)
-        self._battery_channel = self.cluster_channels.get(
-            POWER_CONFIGURATION_CHANNEL)
+        self._battery_channel = self.cluster_channels.get(CHANNEL_POWER_CONFIGURATION)
         self._connected = False
         self._keepalive_interval = 60
         self._should_poll = True
@@ -64,8 +69,10 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
         await super().async_added_to_hass()
         if self._battery_channel:
             await self.async_accept_signal(
-                self._battery_channel, SIGNAL_ATTR_UPDATED,
-                self.async_battery_percentage_remaining_updated)
+                self._battery_channel,
+                SIGNAL_ATTR_UPDATED,
+                self.async_battery_percentage_remaining_updated,
+            )
 
     async def async_update(self):
         """Handle polling."""
@@ -91,7 +98,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
     @callback
     def async_battery_percentage_remaining_updated(self, value):
         """Handle tracking."""
-        _LOGGER.debug('battery_percentage_remaining updated: %s', value)
+        self.debug("battery_percentage_remaining updated: %s", value)
         self._connected = True
         self._battery_level = battery_percentage_remaining_formatter(value)
         self.async_schedule_update_ha_state()

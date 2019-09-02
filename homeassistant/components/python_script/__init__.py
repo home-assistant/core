@@ -9,32 +9,44 @@ import voluptuous as vol
 
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.loader import bind_hass
 from homeassistant.util import sanitize_filename
+from homeassistant.util.yaml.loader import load_yaml
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'python_script'
+DOMAIN = "python_script"
 
-FOLDER = 'python_scripts'
+FOLDER = "python_scripts"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema(dict)
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema(dict)}, extra=vol.ALLOW_EXTRA)
 
-ALLOWED_HASS = set(['bus', 'services', 'states'])
-ALLOWED_EVENTBUS = set(['fire'])
-ALLOWED_STATEMACHINE = set(['entity_ids', 'all', 'get', 'is_state',
-                            'is_state_attr', 'remove', 'set'])
-ALLOWED_SERVICEREGISTRY = set(['services', 'has_service', 'call'])
-ALLOWED_TIME = set(['sleep', 'strftime', 'strptime', 'gmtime', 'localtime',
-                    'ctime', 'time', 'mktime'])
-ALLOWED_DATETIME = set(['date', 'time', 'datetime', 'timedelta', 'tzinfo'])
-ALLOWED_DT_UTIL = set([
-    'utcnow', 'now', 'as_utc', 'as_timestamp', 'as_local',
-    'utc_from_timestamp', 'start_of_local_day', 'parse_datetime', 'parse_date',
-    'get_age'])
+ALLOWED_HASS = set(["bus", "services", "states"])
+ALLOWED_EVENTBUS = set(["fire"])
+ALLOWED_STATEMACHINE = set(
+    ["entity_ids", "all", "get", "is_state", "is_state_attr", "remove", "set"]
+)
+ALLOWED_SERVICEREGISTRY = set(["services", "has_service", "call"])
+ALLOWED_TIME = set(
+    ["sleep", "strftime", "strptime", "gmtime", "localtime", "ctime", "time", "mktime"]
+)
+ALLOWED_DATETIME = set(["date", "time", "datetime", "timedelta", "tzinfo"])
+ALLOWED_DT_UTIL = set(
+    [
+        "utcnow",
+        "now",
+        "as_utc",
+        "as_timestamp",
+        "as_local",
+        "utc_from_timestamp",
+        "start_of_local_day",
+        "parse_datetime",
+        "parse_date",
+        "get_age",
+    ]
+)
 
 
 class ScriptError(HomeAssistantError):
@@ -56,6 +68,7 @@ def setup(hass, config):
     def reload_scripts_handler(call):
         """Handle reload service calls."""
         discover_scripts(hass)
+
     hass.services.register(DOMAIN, SERVICE_RELOAD, reload_scripts_handler)
 
     return True
@@ -79,15 +92,28 @@ def discover_scripts(hass):
             continue
         hass.services.remove(DOMAIN, existing_service)
 
-    for fil in glob.iglob(os.path.join(path, '*.py')):
+    # Load user-provided service descriptions from python_scripts/services.yaml
+    services_yaml = os.path.join(path, "services.yaml")
+    if os.path.exists(services_yaml):
+        services_dict = load_yaml(services_yaml)
+    else:
+        services_dict = {}
+
+    for fil in glob.iglob(os.path.join(path, "*.py")):
         name = os.path.splitext(os.path.basename(fil))[0]
         hass.services.register(DOMAIN, name, python_script_service_handler)
+
+        service_desc = {
+            "description": services_dict.get(name, {}).get("description", ""),
+            "fields": services_dict.get(name, {}).get("fields", {}),
+        }
+        async_set_service_schema(hass, DOMAIN, name, service_desc)
 
 
 @bind_hass
 def execute_script(hass, name, data=None):
     """Execute a script."""
-    filename = '{}.py'.format(name)
+    filename = f"{name}.py"
     with open(hass.config.path(FOLDER, sanitize_filename(filename))) as fil:
         source = fil.read()
     execute(hass, filename, source, data)
@@ -97,61 +123,71 @@ def execute_script(hass, name, data=None):
 def execute(hass, filename, source, data=None):
     """Execute Python source."""
     from RestrictedPython import compile_restricted_exec
-    from RestrictedPython.Guards import safe_builtins, full_write_guard, \
-        guarded_iter_unpack_sequence, guarded_unpack_sequence
+    from RestrictedPython.Guards import (
+        safe_builtins,
+        full_write_guard,
+        guarded_iter_unpack_sequence,
+        guarded_unpack_sequence,
+    )
     from RestrictedPython.Utilities import utility_builtins
     from RestrictedPython.Eval import default_guarded_getitem
 
     compiled = compile_restricted_exec(source, filename=filename)
 
     if compiled.errors:
-        _LOGGER.error("Error loading script %s: %s", filename,
-                      ", ".join(compiled.errors))
+        _LOGGER.error(
+            "Error loading script %s: %s", filename, ", ".join(compiled.errors)
+        )
         return
 
     if compiled.warnings:
-        _LOGGER.warning("Warning loading script %s: %s", filename,
-                        ", ".join(compiled.warnings))
+        _LOGGER.warning(
+            "Warning loading script %s: %s", filename, ", ".join(compiled.warnings)
+        )
 
     def protected_getattr(obj, name, default=None):
         """Restricted method to get attributes."""
         # pylint: disable=too-many-boolean-expressions
-        if name.startswith('async_'):
+        if name.startswith("async_"):
             raise ScriptError("Not allowed to access async methods")
-        if (obj is hass and name not in ALLOWED_HASS or
-                obj is hass.bus and name not in ALLOWED_EVENTBUS or
-                obj is hass.states and name not in ALLOWED_STATEMACHINE or
-                obj is hass.services and name not in ALLOWED_SERVICEREGISTRY or
-                obj is dt_util and name not in ALLOWED_DT_UTIL or
-                obj is datetime and name not in ALLOWED_DATETIME or
-                isinstance(obj, TimeWrapper) and name not in ALLOWED_TIME):
-            raise ScriptError("Not allowed to access {}.{}".format(
-                obj.__class__.__name__, name))
+        if (
+            obj is hass
+            and name not in ALLOWED_HASS
+            or obj is hass.bus
+            and name not in ALLOWED_EVENTBUS
+            or obj is hass.states
+            and name not in ALLOWED_STATEMACHINE
+            or obj is hass.services
+            and name not in ALLOWED_SERVICEREGISTRY
+            or obj is dt_util
+            and name not in ALLOWED_DT_UTIL
+            or obj is datetime
+            and name not in ALLOWED_DATETIME
+            or isinstance(obj, TimeWrapper)
+            and name not in ALLOWED_TIME
+        ):
+            raise ScriptError(f"Not allowed to access {obj.__class__.__name__}.{name}")
 
         return getattr(obj, name, default)
 
     builtins = safe_builtins.copy()
     builtins.update(utility_builtins)
-    builtins['datetime'] = datetime
-    builtins['sorted'] = sorted
-    builtins['time'] = TimeWrapper()
-    builtins['dt_util'] = dt_util
+    builtins["datetime"] = datetime
+    builtins["sorted"] = sorted
+    builtins["time"] = TimeWrapper()
+    builtins["dt_util"] = dt_util
     restricted_globals = {
-        '__builtins__': builtins,
-        '_print_': StubPrinter,
-        '_getattr_': protected_getattr,
-        '_write_': full_write_guard,
-        '_getiter_': iter,
-        '_getitem_': default_guarded_getitem,
-        '_iter_unpack_sequence_': guarded_iter_unpack_sequence,
-        '_unpack_sequence_': guarded_unpack_sequence,
+        "__builtins__": builtins,
+        "_print_": StubPrinter,
+        "_getattr_": protected_getattr,
+        "_write_": full_write_guard,
+        "_getiter_": iter,
+        "_getitem_": default_guarded_getitem,
+        "_iter_unpack_sequence_": guarded_iter_unpack_sequence,
+        "_unpack_sequence_": guarded_unpack_sequence,
     }
-    logger = logging.getLogger('{}.{}'.format(__name__, filename))
-    local = {
-        'hass': hass,
-        'data': data or {},
-        'logger': logger
-    }
+    logger = logging.getLogger(f"{__name__}.{filename}")
+    local = {"hass": hass, "data": data or {}, "logger": logger}
 
     try:
         _LOGGER.info("Executing %s: %s", filename, data)
@@ -173,8 +209,7 @@ class StubPrinter:
     def _call_print(self, *objects, **kwargs):
         """Print text."""
         # pylint: disable=no-self-use
-        _LOGGER.warning(
-            "Don't use print() inside scripts. Use logger.info() instead")
+        _LOGGER.warning("Don't use print() inside scripts. Use logger.info() instead")
 
 
 class TimeWrapper:
@@ -188,8 +223,9 @@ class TimeWrapper:
         """Sleep method that warns once."""
         if not TimeWrapper.warned:
             TimeWrapper.warned = True
-            _LOGGER.warning("Using time.sleep can reduce the performance of "
-                            "Home Assistant")
+            _LOGGER.warning(
+                "Using time.sleep can reduce the performance of " "Home Assistant"
+            )
 
         time.sleep(*args, **kwargs)
 
@@ -197,8 +233,10 @@ class TimeWrapper:
         """Fetch an attribute from Time module."""
         attribute = getattr(time, attr)
         if callable(attribute):
+
             def wrapper(*args, **kw):
                 """Wrap to return callable method if callable."""
                 return attribute(*args, **kw)
+
             return wrapper
         return attribute

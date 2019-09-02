@@ -4,32 +4,45 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.climate.const import (
-    ATTR_AUX_HEAT, ATTR_CURRENT_HUMIDITY, ATTR_CURRENT_TEMPERATURE,
-    ATTR_FAN_MODE, ATTR_HUMIDITY, ATTR_HVAC_ACTIONS, ATTR_HVAC_MODES,
-    ATTR_MAX_HUMIDITY, ATTR_MAX_TEMP, ATTR_MIN_HUMIDITY, ATTR_MIN_TEMP,
-    ATTR_PRESET_MODE, ATTR_SWING_MODE, ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW, CURRENT_HVAC_COOL, DOMAIN, HVAC_MODE_COOL,
-    HVAC_MODE_HEAT, HVAC_MODE_OFF, PRESET_AWAY, PRESET_ECO)
+    ATTR_AUX_HEAT,
+    ATTR_CURRENT_HUMIDITY,
+    ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE,
+    ATTR_HUMIDITY,
+    ATTR_HVAC_ACTIONS,
+    ATTR_HVAC_MODES,
+    ATTR_MAX_HUMIDITY,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_HUMIDITY,
+    ATTR_MIN_TEMP,
+    ATTR_PRESET_MODE,
+    ATTR_SWING_MODE,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
+    CURRENT_HVAC_COOL,
+    DOMAIN,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    PRESET_AWAY,
+    PRESET_ECO,
+)
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from tests.components.climate import common
 
-ENTITY_CLIMATE = 'climate.hvac'
-ENTITY_ECOBEE = 'climate.ecobee'
-ENTITY_HEATPUMP = 'climate.heatpump'
+ENTITY_CLIMATE = "climate.hvac"
+ENTITY_ECOBEE = "climate.ecobee"
+ENTITY_HEATPUMP = "climate.heatpump"
 
 
 @pytest.fixture(autouse=True)
 async def setup_demo_climate(hass):
     """Initialize setup demo climate."""
     hass.config.units = METRIC_SYSTEM
-    assert await async_setup_component(hass, DOMAIN, {
-        'climate': {
-            'platform': 'demo',
-        }
-    })
+    assert await async_setup_component(hass, DOMAIN, {"climate": {"platform": "demo"}})
 
 
 def test_setup_params(hass):
@@ -43,8 +56,14 @@ def test_setup_params(hass):
     assert 54 == state.attributes.get(ATTR_CURRENT_HUMIDITY)
     assert "Off" == state.attributes.get(ATTR_SWING_MODE)
     assert STATE_OFF == state.attributes.get(ATTR_AUX_HEAT)
-    assert state.attributes.get(ATTR_HVAC_MODES) == \
-        ['off', 'heat', 'cool', 'auto', 'dry', 'fan_only']
+    assert state.attributes.get(ATTR_HVAC_MODES) == [
+        "off",
+        "heat",
+        "cool",
+        "auto",
+        "dry",
+        "fan_only",
+    ]
 
 
 def test_default_setup_params(hass):
@@ -100,7 +119,8 @@ async def test_set_target_temp_range(hass):
     assert 24.0 == state.attributes.get(ATTR_TARGET_TEMP_HIGH)
 
     await common.async_set_temperature(
-        hass, target_temp_high=25, target_temp_low=20, entity_id=ENTITY_ECOBEE)
+        hass, target_temp_high=25, target_temp_low=20, entity_id=ENTITY_ECOBEE
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ECOBEE)
@@ -118,8 +138,12 @@ async def test_set_target_temp_range_bad_attr(hass):
 
     with pytest.raises(vol.Invalid):
         await common.async_set_temperature(
-            hass, temperature=None, entity_id=ENTITY_ECOBEE,
-            target_temp_low=None, target_temp_high=None)
+            hass,
+            temperature=None,
+            entity_id=ENTITY_ECOBEE,
+            target_temp_low=None,
+            target_temp_high=None,
+        )
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ECOBEE)

@@ -1,8 +1,5 @@
 {
     "config": {
-        "title": "Arcam FMJ",
-        "step": {},
-        "error": {},
-        "abort": {}
+        "title": "Arcam FMJ"
     }
 }

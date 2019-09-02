@@ -44,14 +44,16 @@ class Integration:
         assert path.is_dir()
         integrations = {}
         for fil in path.iterdir():
-            if fil.is_file() or fil.name == '__pycache__':
+            if fil.is_file() or fil.name == "__pycache__":
                 continue
 
-            init = fil / '__init__.py'
+            init = fil / "__init__.py"
             if not init.exists():
-                print("Warning: {} missing, skipping directory. "
-                      "If this is your development environment, "
-                      "you can safely delete this folder.".format(init))
+                print(
+                    "Warning: {} missing, skipping directory. "
+                    "If this is your development environment, "
+                    "you can safely delete this folder.".format(init)
+                )
                 continue
 
             integration = cls(fil)
@@ -75,28 +77,22 @@ class Integration:
 
     def load_manifest(self) -> None:
         """Load manifest."""
-        manifest_path = self.path / 'manifest.json'
+        manifest_path = self.path / "manifest.json"
         if not manifest_path.is_file():
-            self.add_error(
-                'model',
-                "Manifest file {} not found".format(manifest_path)
-            )
+            self.add_error("model", f"Manifest file {manifest_path} not found")
             return
 
         try:
             manifest = json.loads(manifest_path.read_text())
         except ValueError as err:
-            self.add_error(
-                'model',
-                "Manifest contains invalid JSON: {}".format(err)
-            )
+            self.add_error("model", f"Manifest contains invalid JSON: {err}")
             return
 
         self.manifest = manifest
 
     def import_pkg(self, platform=None):
         """Import the Python file."""
-        pkg = "homeassistant.components.{}".format(self.domain)
+        pkg = f"homeassistant.components.{self.domain}"
         if platform is not None:
-            pkg += ".{}".format(platform)
+            pkg += f".{platform}"
         return importlib.import_module(pkg)

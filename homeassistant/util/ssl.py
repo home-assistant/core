@@ -7,8 +7,7 @@ import certifi
 def client_context() -> ssl.SSLContext:
     """Return an SSL context for making requests."""
     context = ssl.create_default_context(
-        purpose=ssl.Purpose.SERVER_AUTH,
-        cafile=certifi.where()
+        purpose=ssl.Purpose.SERVER_AUTH, cafile=certifi.where()
     )
     return context
 
@@ -23,11 +22,13 @@ def server_context_modern() -> ssl.SSLContext:
     context = ssl.SSLContext(ssl.PROTOCOL_TLS)  # pylint: disable=no-member
 
     context.options |= (
-        ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 |
-        ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1 |
-        ssl.OP_CIPHER_SERVER_PREFERENCE
+        ssl.OP_NO_SSLv2
+        | ssl.OP_NO_SSLv3
+        | ssl.OP_NO_TLSv1
+        | ssl.OP_NO_TLSv1_1
+        | ssl.OP_CIPHER_SERVER_PREFERENCE
     )
-    if hasattr(ssl, 'OP_NO_COMPRESSION'):
+    if hasattr(ssl, "OP_NO_COMPRESSION"):
         context.options |= ssl.OP_NO_COMPRESSION
 
     context.set_ciphers(
@@ -51,10 +52,9 @@ def server_context_intermediate() -> ssl.SSLContext:
     context = ssl.SSLContext(ssl.PROTOCOL_TLS)  # pylint: disable=no-member
 
     context.options |= (
-        ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 |
-        ssl.OP_CIPHER_SERVER_PREFERENCE
+        ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_CIPHER_SERVER_PREFERENCE
     )
-    if hasattr(ssl, 'OP_NO_COMPRESSION'):
+    if hasattr(ssl, "OP_NO_COMPRESSION"):
         context.options |= ssl.OP_NO_COMPRESSION
 
     context.set_ciphers(

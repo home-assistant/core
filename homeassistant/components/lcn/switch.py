@@ -9,8 +9,9 @@ from .const import CONF_CONNECTIONS, CONF_OUTPUT, DATA_LCN, OUTPUT_PORTS
 from .helpers import get_connection
 
 
-async def async_setup_platform(hass, hass_config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+    hass, hass_config, async_add_entities, discovery_info=None
+):
     """Set up the LCN switch platform."""
     if discovery_info is None:
         return
@@ -47,8 +48,7 @@ class LcnOutputSwitch(LcnDevice, SwitchDevice):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        await self.address_connection.activate_status_request_handler(
-            self.output)
+        await self.address_connection.activate_status_request_handler(self.output)
 
     @property
     def is_on(self):
@@ -69,8 +69,10 @@ class LcnOutputSwitch(LcnDevice, SwitchDevice):
 
     def input_received(self, input_obj):
         """Set switch state when LCN input object (command) is received."""
-        if not isinstance(input_obj, pypck.inputs.ModStatusOutput) or \
-                input_obj.get_output_id() != self.output.value:
+        if (
+            not isinstance(input_obj, pypck.inputs.ModStatusOutput)
+            or input_obj.get_output_id() != self.output.value
+        ):
             return
 
         self._is_on = input_obj.get_percent() > 0
@@ -91,8 +93,7 @@ class LcnRelaySwitch(LcnDevice, SwitchDevice):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        await self.address_connection.activate_status_request_handler(
-            self.output)
+        await self.address_connection.activate_status_request_handler(self.output)
 
     @property
     def is_on(self):

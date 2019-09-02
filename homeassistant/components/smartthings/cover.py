@@ -4,27 +4,36 @@ from typing import Optional, Sequence
 from pysmartthings import Attribute, Capability
 
 from homeassistant.components.cover import (
-    ATTR_POSITION, DEVICE_CLASS_DOOR, DEVICE_CLASS_GARAGE, DEVICE_CLASS_SHADE,
-    DOMAIN as COVER_DOMAIN, STATE_CLOSED, STATE_CLOSING, STATE_OPEN,
-    STATE_OPENING, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION,
-    CoverDevice)
+    ATTR_POSITION,
+    DEVICE_CLASS_DOOR,
+    DEVICE_CLASS_GARAGE,
+    DEVICE_CLASS_SHADE,
+    DOMAIN as COVER_DOMAIN,
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
+    SUPPORT_CLOSE,
+    SUPPORT_OPEN,
+    SUPPORT_SET_POSITION,
+    CoverDevice,
+)
 from homeassistant.const import ATTR_BATTERY_LEVEL
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
 VALUE_TO_STATE = {
-    'closed': STATE_CLOSED,
-    'closing': STATE_CLOSING,
-    'open': STATE_OPEN,
-    'opening': STATE_OPENING,
-    'partially open': STATE_OPEN,
-    'unknown': None
+    "closed": STATE_CLOSED,
+    "closing": STATE_CLOSING,
+    "open": STATE_OPEN,
+    "opening": STATE_OPENING,
+    "partially open": STATE_OPEN,
+    "unknown": None,
 }
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Platform uses config entry setup."""
     pass
 
@@ -33,8 +42,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add covers for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(
-        [SmartThingsCover(device) for device in broker.devices.values()
-         if broker.any_assigned(device.device_id, COVER_DOMAIN)], True)
+        [
+            SmartThingsCover(device)
+            for device in broker.devices.values()
+            if broker.any_assigned(device.device_id, COVER_DOMAIN)
+        ],
+        True,
+    )
 
 
 def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
@@ -42,11 +56,10 @@ def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
     min_required = [
         Capability.door_control,
         Capability.garage_door_control,
-        Capability.window_shade
+        Capability.window_shade,
     ]
     # Must have one of the min_required
-    if any(capability in capabilities
-           for capability in min_required):
+    if any(capability in capabilities for capability in min_required):
         # Return all capabilities supported/consumed
         return min_required + [Capability.battery, Capability.switch_level]
 

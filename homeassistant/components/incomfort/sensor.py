@@ -1,33 +1,33 @@
 """Support for an Intergas boiler via an InComfort/InTouch Lan2RF gateway."""
-from homeassistant.const import (
-    PRESSURE_BAR, TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE)
+from homeassistant.const import PRESSURE_BAR, TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN
 
-INTOUCH_HEATER_TEMP = 'CV Temp'
-INTOUCH_PRESSURE = 'CV Pressure'
-INTOUCH_TAP_TEMP = 'Tap Temp'
+INTOUCH_HEATER_TEMP = "CV Temp"
+INTOUCH_PRESSURE = "CV Pressure"
+INTOUCH_TAP_TEMP = "Tap Temp"
 
 INTOUCH_MAP_ATTRS = {
-    INTOUCH_HEATER_TEMP: ['heater_temp', 'is_pumping'],
-    INTOUCH_TAP_TEMP: ['tap_temp', 'is_tapping'],
+    INTOUCH_HEATER_TEMP: ["heater_temp", "is_pumping"],
+    INTOUCH_TAP_TEMP: ["tap_temp", "is_tapping"],
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up an InComfort/InTouch sensor device."""
-    client = hass.data[DOMAIN]['client']
-    heater = hass.data[DOMAIN]['heater']
+    client = hass.data[DOMAIN]["client"]
+    heater = hass.data[DOMAIN]["heater"]
 
-    async_add_entities([
-        IncomfortPressure(client, heater, INTOUCH_PRESSURE),
-        IncomfortTemperature(client, heater, INTOUCH_HEATER_TEMP),
-        IncomfortTemperature(client, heater, INTOUCH_TAP_TEMP)
-    ])
+    async_add_entities(
+        [
+            IncomfortPressure(client, heater, INTOUCH_PRESSURE),
+            IncomfortTemperature(client, heater, INTOUCH_HEATER_TEMP),
+            IncomfortTemperature(client, heater, INTOUCH_TAP_TEMP),
+        ]
+    )
 
 
 class IncomfortSensor(Entity):
@@ -84,7 +84,7 @@ class IncomfortPressure(IncomfortSensor):
     @property
     def state(self):
         """Return the state/value of the sensor."""
-        return self._boiler.status['pressure']
+        return self._boiler.status["pressure"]
 
 
 class IncomfortTemperature(IncomfortSensor):

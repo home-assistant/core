@@ -12,20 +12,30 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_TRANSITION,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR,
-    SUPPORT_TRANSITION, Light, PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
+    ATTR_TRANSITION,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR_TEMP,
+    SUPPORT_COLOR,
+    SUPPORT_TRANSITION,
+    Light,
+    PLATFORM_SCHEMA,
+)
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util.color import (
-    color_temperature_mired_to_kelvin, color_temperature_kelvin_to_mired)
+    color_temperature_mired_to_kelvin,
+    color_temperature_kelvin_to_mired,
+)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 BYTE_MAX = 255
 
-CONF_BROADCAST = 'broadcast'
-CONF_SERVER = 'server'
+CONF_BROADCAST = "broadcast"
+CONF_SERVER = "server"
 
 SHORT_MAX = 65535
 
@@ -34,13 +44,13 @@ TEMP_MAX_HASS = 500
 TEMP_MIN = 2500
 TEMP_MIN_HASS = 154
 
-SUPPORT_LIFX = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR |
-                SUPPORT_TRANSITION)
+SUPPORT_LIFX = (
+    SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR | SUPPORT_TRANSITION
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SERVER): cv.string,
-    vol.Optional(CONF_BROADCAST): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_SERVER): cv.string, vol.Optional(CONF_BROADCAST): cv.string}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -59,8 +69,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class LIFX:
     """Representation of a LIFX light."""
 
-    def __init__(self, add_entities_callback, server_addr=None,
-                 broadcast_addr=None):
+    def __init__(self, add_entities_callback, server_addr=None, broadcast_addr=None):
         """Initialize the light."""
         import liffylights
 
@@ -69,8 +78,8 @@ class LIFX:
         self._add_entities_callback = add_entities_callback
 
         self._liffylights = liffylights.LiffyLights(
-            self.on_device, self.on_power, self.on_color, server_addr,
-            broadcast_addr)
+            self.on_device, self.on_power, self.on_color, server_addr, broadcast_addr
+        )
 
     def find_bulb(self, ipaddr):
         """Search for bulbs."""
@@ -86,15 +95,23 @@ class LIFX:
         bulb = self.find_bulb(ipaddr)
 
         if bulb is None:
-            _LOGGER.debug("new bulb %s %s %d %d %d %d %d",
-                          ipaddr, name, power, hue, sat, bri, kel)
-            bulb = LIFXLight(
-                self._liffylights, ipaddr, name, power, hue, sat, bri, kel)
+            _LOGGER.debug(
+                "new bulb %s %s %d %d %d %d %d", ipaddr, name, power, hue, sat, bri, kel
+            )
+            bulb = LIFXLight(self._liffylights, ipaddr, name, power, hue, sat, bri, kel)
             self._devices.append(bulb)
             self._add_entities_callback([bulb])
         else:
-            _LOGGER.debug("update bulb %s %s %d %d %d %d %d",
-                          ipaddr, name, power, hue, sat, bri, kel)
+            _LOGGER.debug(
+                "update bulb %s %s %d %d %d %d %d",
+                ipaddr,
+                name,
+                power,
+                hue,
+                sat,
+                bri,
+                kel,
+            )
             bulb.set_power(power)
             bulb.set_color(hue, sat, bri, kel)
             bulb.schedule_update_ha_state()
@@ -127,8 +144,7 @@ class LIFX:
 class LIFXLight(Light):
     """Representation of a LIFX light."""
 
-    def __init__(self, liffy, ipaddr, name, power, hue, saturation, brightness,
-                 kelvin):
+    def __init__(self, liffy, ipaddr, name, power, hue, saturation, brightness, kelvin):
         """Initialize the light."""
         _LOGGER.debug("LIFXLight: %s %s", ipaddr, name)
 
@@ -205,22 +221,30 @@ class LIFXLight(Light):
             brightness = self._bri
 
         if ATTR_COLOR_TEMP in kwargs:
-            kelvin = int(color_temperature_mired_to_kelvin(
-                kwargs[ATTR_COLOR_TEMP]))
+            kelvin = int(color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP]))
         else:
             kelvin = self._kel
 
-        _LOGGER.debug("turn_on: %s (%d) %d %d %d %d %d",
-                      self._ip, self._power,
-                      hue, saturation, brightness, kelvin, fade)
+        _LOGGER.debug(
+            "turn_on: %s (%d) %d %d %d %d %d",
+            self._ip,
+            self._power,
+            hue,
+            saturation,
+            brightness,
+            kelvin,
+            fade,
+        )
 
         if self._power == 0:
-            self._liffylights.set_color(self._ip, hue, saturation,
-                                        brightness, kelvin, 0)
+            self._liffylights.set_color(
+                self._ip, hue, saturation, brightness, kelvin, 0
+            )
             self._liffylights.set_power(self._ip, 65535, fade)
         else:
-            self._liffylights.set_color(self._ip, hue, saturation,
-                                        brightness, kelvin, fade)
+            self._liffylights.set_color(
+                self._ip, hue, saturation, brightness, kelvin, fade
+            )
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
@@ -239,7 +263,7 @@ class LIFXLight(Light):
     def set_power(self, power):
         """Set power state value."""
         _LOGGER.debug("set_power: %d", power)
-        self._power = (power != 0)
+        self._power = power != 0
 
     def set_color(self, hue, sat, bri, kel):
         """Set color state values."""

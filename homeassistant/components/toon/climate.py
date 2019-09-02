@@ -5,9 +5,16 @@ from typing import Any, Dict, List, Optional
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT, PRESET_AWAY, PRESET_COMFORT, PRESET_HOME, PRESET_SLEEP,
-    SUPPORT_PRESET_MODE, SUPPORT_TARGET_TEMPERATURE, CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE)
+    HVAC_MODE_HEAT,
+    PRESET_AWAY,
+    PRESET_COMFORT,
+    PRESET_HOME,
+    PRESET_SLEEP,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
@@ -28,7 +35,7 @@ SUPPORT_PRESET = [PRESET_AWAY, PRESET_COMFORT, PRESET_HOME, PRESET_SLEEP]
 
 
 async def async_setup_entry(
-        hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up a Toon binary sensors based on a config entry."""
     toon_client = hass.data[DATA_TOON_CLIENT][entry.entry_id]
@@ -51,12 +58,12 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
 
         self._heating_type = None
 
-        super().__init__(toon_data, "Toon Thermostat", 'mdi:thermostat')
+        super().__init__(toon_data, "Toon Thermostat", "mdi:thermostat")
 
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this thermostat."""
-        return '_'.join([DOMAIN, self.toon.agreement.id, 'climate'])
+        return "_".join([DOMAIN, self.toon.agreement.id, "climate"])
 
     @property
     def supported_features(self) -> int:
@@ -120,7 +127,7 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
         """Return the current state of the burner."""
-        return {'heating_type': self._heating_type}
+        return {"heating_type": self._heating_type}
 
     def set_temperature(self, **kwargs) -> None:
         """Change the setpoint of the thermostat."""

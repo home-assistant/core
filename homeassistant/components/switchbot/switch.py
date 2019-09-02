@@ -11,7 +11,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Switchbot'
+DEFAULT_NAME = "Switchbot"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -48,7 +48,7 @@ class SwitchBot(SwitchDevice, RestoreEntity):
         state = await self.async_get_last_state()
         if not state:
             return
-        self._state = state.state == 'on'
+        self._state = state.state == "on"
 
     def turn_on(self, **kwargs) -> None:
         """Turn device on."""
@@ -79,7 +79,7 @@ class SwitchBot(SwitchDevice, RestoreEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
-        return self._mac.replace(':', '')
+        return self._mac.replace(":", "")
 
     @property
     def name(self) -> str:
@@ -89,4 +89,4 @@ class SwitchBot(SwitchDevice, RestoreEntity):
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
-        return {'last_run_success': self._last_run_success}
+        return {"last_run_success": self._last_run_success}
