@@ -82,7 +82,9 @@ async def _test_reconnect(hass, caplog, config):
     with patchers.patch_connect(True)[patch_key], patchers.patch_shell("")[patch_key]:
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.helpers.entity_component.async_update_entity(entity_id)
-        assert hass.states.get(entity_id).state == STATE_OFF
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_OFF
 
     caplog.clear()
     caplog.set_level(logging.WARNING)
@@ -92,7 +94,9 @@ async def _test_reconnect(hass, caplog, config):
     ]:
         for _ in range(5):
             await hass.helpers.entity_component.async_update_entity(entity_id)
-            assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+            state = hass.states.get(entity_id)
+            assert state is not None
+            assert state.state == STATE_UNAVAILABLE
 
     assert len(caplog.record_tuples) == 2
     assert caplog.record_tuples[0][1] == logging.ERROR
@@ -105,15 +109,18 @@ async def _test_reconnect(hass, caplog, config):
 
         # If using an ADB server, the state will get updated; otherwise, the
         # state will be the last known state
+        state = hass.states.get(entity_id)
         if patch_key == "server":
-            assert hass.states.get(entity_id).state == STATE_IDLE
+            assert state.state == STATE_IDLE
         else:
-            assert hass.states.get(entity_id).state == STATE_OFF
+            assert state.state == STATE_OFF
 
         # Update 2 will update the state, regardless of which ADB connection
         # method is used
         await hass.helpers.entity_component.async_update_entity(entity_id)
-        assert hass.states.get(entity_id).state == STATE_IDLE
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_IDLE
 
     if patch_key == "python":
         assert (
@@ -147,60 +154,96 @@ async def _test_adb_shell_returns_none(hass, config):
     with patchers.patch_connect(True)[patch_key], patchers.patch_shell("")[patch_key]:
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.helpers.entity_component.async_update_entity(entity_id)
-        assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state != STATE_UNAVAILABLE
 
     with patchers.patch_shell(None)[patch_key], patchers.patch_shell(error=True)[
         patch_key
     ]:
         await hass.helpers.entity_component.async_update_entity(entity_id)
-        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE
 
     return True
 
 
 async def test_reconnect_androidtv_python_adb(hass, caplog):
-    """Test that the error and reconnection attempts are logged correctly."""
+    """Test that the error and reconnection attempts are logged correctly.
 
+    * Device type: Android TV
+    * ADB connection method: Python ADB implementation
+
+    """
     assert await _test_reconnect(hass, caplog, CONFIG_ANDROIDTV_PYTHON_ADB)
 
 
 async def test_adb_shell_returns_none_androidtv_python_adb(hass):
-    """Test the case that the ADB shell command returns `None`."""
+    """Test the case that the ADB shell command returns `None`.
 
+    * Device type: Android TV
+    * ADB connection method: Python ADB implementation
+
+    """
     assert await _test_adb_shell_returns_none(hass, CONFIG_ANDROIDTV_PYTHON_ADB)
 
 
 async def test_reconnect_firetv_python_adb(hass, caplog):
-    """Test that the error and reconnection attempts are logged correctly."""
+    """Test that the error and reconnection attempts are logged correctly.
 
+    * Device type: Fire TV
+    * ADB connection method: Python ADB implementation
+
+    """
     assert await _test_reconnect(hass, caplog, CONFIG_FIRETV_PYTHON_ADB)
 
 
 async def test_adb_shell_returns_none_firetv_python_adb(hass):
-    """Test the case that the ADB shell command returns `None`."""
+    """Test the case that the ADB shell command returns `None`.
 
+    * Device type: Fire TV
+    * ADB connection method: Python ADB implementation
+
+    """
     assert await _test_adb_shell_returns_none(hass, CONFIG_FIRETV_PYTHON_ADB)
 
 
 async def test_reconnect_androidtv_adb_server(hass, caplog):
-    """Test that the error and reconnection attempts are logged correctly."""
+    """Test that the error and reconnection attempts are logged correctly.
 
+    * Device type: Android TV
+    * ADB connection method: ADB server
+
+    """
     assert await _test_reconnect(hass, caplog, CONFIG_ANDROIDTV_ADB_SERVER)
 
 
 async def test_adb_shell_returns_none_androidtv_adb_server(hass):
-    """Test the case that the ADB shell command returns `None`."""
+    """Test the case that the ADB shell command returns `None`.
 
+    * Device type: Android TV
+    * ADB connection method: ADB server
+
+    """
     assert await _test_adb_shell_returns_none(hass, CONFIG_ANDROIDTV_ADB_SERVER)
 
 
 async def test_reconnect_firetv_adb_server(hass, caplog):
-    """Test that the error and reconnection attempts are logged correctly."""
+    """Test that the error and reconnection attempts are logged correctly.
 
+    * Device type: Fire TV
+    * ADB connection method: ADB server
+
+    """
     assert await _test_reconnect(hass, caplog, CONFIG_FIRETV_ADB_SERVER)
 
 
 async def test_adb_shell_returns_none_firetv_adb_server(hass):
-    """Test the case that the ADB shell command returns `None`."""
+    """Test the case that the ADB shell command returns `None`.
 
+    * Device type: Fire TV
+    * ADB connection method: ADB server
+
+    """
     assert await _test_adb_shell_returns_none(hass, CONFIG_FIRETV_ADB_SERVER)
