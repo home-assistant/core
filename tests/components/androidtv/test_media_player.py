@@ -6,14 +6,26 @@ from homeassistant.setup import async_setup_component
 from homeassistant.components.androidtv.media_player import (
     AndroidTVDevice,
     ANDROIDTV_DOMAIN,
+    CONF_ADB_SERVER_IP,
     FireTVDevice,
     setup as androidtv_setup,
 )
 from homeassistant.components.media_player.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PLATFORM, STATE_UNAVAILABLE
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PLATFORM,
+    STATE_UNAVAILABLE,
+)
 
 from . import patchers
 
+
+ENTITY_ID_ANDROID_TV = "media_player.android_tv"
+ENTITY_ID_FIRE_TV = "media_player.fire_tv"
+
+# Android TV device with Python ADB implementation
 CONFIG_ANDROIDTV_PYTHON_ADB = {
     DOMAIN: {
         CONF_PLATFORM: ANDROIDTV_DOMAIN,
@@ -22,8 +34,48 @@ CONFIG_ANDROIDTV_PYTHON_ADB = {
     }
 }
 
+# Android TV device with ADB server
+CONFIG_ANDROIDTV_ADB_SERVER = {
+    DOMAIN: {
+        CONF_PLATFORM: ANDROIDTV_DOMAIN,
+        CONF_HOST: "127.0.0.1",
+        CONF_NAME: "Android TV",
+        CONF_ADB_SERVER_IP: "127.0.0.1",
+    }
+}
 
-async def test_reconnect_python_adb(hass):
+# Fire TV device with Python ADB implementation
+CONFIG_FIRETV_PYTHON_ADB = {
+    DOMAIN: {
+        CONF_PLATFORM: ANDROIDTV_DOMAIN,
+        CONF_HOST: "127.0.0.1",
+        CONF_NAME: "Fire TV",
+        CONF_DEVICE_CLASS: "firetv",
+    }
+}
+
+# Fire TV device with ADB server
+CONFIG_FIRETV_ADB_SERVER = {
+    DOMAIN: {
+        CONF_PLATFORM: ANDROIDTV_DOMAIN,
+        CONF_HOST: "127.0.0.1",
+        CONF_NAME: "Fire TV",
+        CONF_DEVICE_CLASS: "firetv",
+        CONF_ADB_SERVER_IP: "127.0.0.1",
+    }
+}
+
+
+async def _test_reconnect(
+    hass,
+    caplog,
+    config,
+    entity_id,
+    patch_connect_success,
+    patch_command_success,
+    patch_connnect_fail,
+    patch_command_fail,
+):
     """Test that the error and reconnection attempts are logged correctly.
 
     "Handles device/service unavailable. Log a warning once when
@@ -31,29 +83,104 @@ async def test_reconnect_python_adb(hass):
 
     https://developers.home-assistant.io/docs/en/integration_quality_scale_index.html
     """
-    with patchers.PATCH_PYTHON_ADB_CONNECT_SUCCESS, patchers.PATCH_PYTHON_ADB_COMMAND_SUCCESS:
-        assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_PYTHON_ADB)
+    with patch_connect_success, patch_command_success:
+        assert await async_setup_component(hass, DOMAIN, config)
 
-    entity_id = "media_player.android_tv"
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
 
-    with patchers.PATCH_PYTHON_ADB_CONNECT_FAIL, patchers.PATCH_PYTHON_ADB_COMMAND_FAIL:
+    with patch_connnect_fail, patch_command_fail:
         for _ in range(5):
             await hass.helpers.entity_component.async_update_entity(entity_id)
             state = hass.states.get(entity_id)
             assert state.state == STATE_UNAVAILABLE
             # assert not state.attributes["available"]
 
-    with patchers.PATCH_PYTHON_ADB_CONNECT_SUCCESS, patchers.PATCH_PYTHON_ADB_COMMAND_SUCCESS:
+    assert len(caplog.record_tuples) == 2
+
+    caplog.set_level(logging.DEBUG)
+    with patch_connect_success, patch_command_success:
         # Update 1 will reconnect
         await hass.helpers.entity_component.async_update_entity(entity_id)
         # state = hass.states.get(entity_id)
-        # assert state.attributes["available"]
+        assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
         # Update 2 will update the state
         await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)
         assert state.state != STATE_UNAVAILABLE
         # assert state.attributes["available"]
+
+    assert (
+        "ADB connection to 127.0.0.1:5555 successfully established"
+        in caplog.record_tuples[2]
+    )
+
+    return True
+
+
+async def test_reconnect_androidtv_python_adb(hass, caplog):
+    """Test that the error and reconnection attempts are logged correctly.
+
+    "Handles device/service unavailable. Log a warning once when
+    unavailable, log once when reconnected."
+
+    https://developers.home-assistant.io/docs/en/integration_quality_scale_index.html
+    """
+    assert await _test_reconnect(
+        hass,
+        caplog,
+        CONFIG_ANDROIDTV_PYTHON_ADB,
+        ENTITY_ID_ANDROID_TV,
+        patchers.PATCH_PYTHON_ADB_CONNECT_SUCCESS,
+        patchers.PATCH_PYTHON_ADB_COMMAND_SUCCESS,
+        patchers.PATCH_PYTHON_ADB_CONNECT_FAIL,
+        patchers.PATCH_PYTHON_ADB_COMMAND_FAIL,
+    )
+    """with patchers.PATCH_PYTHON_ADB_CONNECT_SUCCESS, patchers.PATCH_PYTHON_ADB_COMMAND_SUCCESS:
+        assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_PYTHON_ADB)
+
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
+    with patchers.PATCH_PYTHON_ADB_CONNECT_FAIL, patchers.PATCH_PYTHON_ADB_COMMAND_FAIL:
+        for _ in range(5):
+            await hass.helpers.entity_component.async_update_entity(ENTITY_ID_ANDROID_TV)
+            state = hass.states.get(ENTITY_ID_ANDROID_TV)
+            assert state.state == STATE_UNAVAILABLE
+            # assert not state.attributes["available"]
+
+    assert len(caplog.record_tuples) == 2
+
+    caplog.set_level(logging.DEBUG)
+    with patchers.PATCH_PYTHON_ADB_CONNECT_SUCCESS, patchers.PATCH_PYTHON_ADB_COMMAND_SUCCESS:
+        # Update 1 will reconnect
+        await hass.helpers.entity_component.async_update_entity(ENTITY_ID_ANDROID_TV)
+        # state = hass.states.get(entity_id)
+        assert hass.states.get(ENTITY_ID_ANDROID_TV).state != STATE_UNAVAILABLE
+
+        # Update 2 will update the state
+        await hass.helpers.entity_component.async_update_entity(ENTITY_ID_ANDROID_TV)
+        state = hass.states.get(ENTITY_ID_ANDROID_TV)
+        assert state.state != STATE_UNAVAILABLE
+        # assert state.attributes["available"]
+
+    assert "ADB connection to 127.0.0.1:5555 successfully established" in caplog.record_tuples[2]"""
+
+
+async def test_adb_shell_returns_none_androidtv_python_adb(hass):
+    """Test the case that the ADB shell command returns `None`.
+
+    The state should be `None` and the device should be unavailable.
+    """
+    with patchers.PATCH_PYTHON_ADB_CONNECT_SUCCESS, patchers.PATCH_PYTHON_ADB_COMMAND_SUCCESS:
+        assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_PYTHON_ADB)
+        await hass.helpers.entity_component.async_update_entity(ENTITY_ID_ANDROID_TV)
+        assert hass.states.get(ENTITY_ID_ANDROID_TV).state != STATE_UNAVAILABLE
+
+    with patchers.PATCH_PYTHON_ADB_COMMAND_NONE:
+        await hass.helpers.entity_component.async_update_entity(ENTITY_ID_ANDROID_TV)
+        assert hass.states.get(ENTITY_ID_ANDROID_TV).state == STATE_UNAVAILABLE
 
 
 class TestAndroidTVPythonImplementation(unittest.TestCase):
