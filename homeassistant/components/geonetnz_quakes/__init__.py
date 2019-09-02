@@ -9,14 +9,6 @@ from homeassistant.components.geonetnz_quakes.geo_location import GeonetnzQuakes
 from homeassistant.core import callback
 from homeassistant.setup import ATTR_COMPONENT
 from homeassistant.util.unit_system import METRIC_SYSTEM
-from .const import (
-    SIGNAL_DELETE_ENTITY,
-    SIGNAL_UPDATE_ENTITY,
-    SIGNAL_STATUS,
-    DEFAULT_FILTER_TIME_INTERVAL,
-    SIGNAL_NEW_GEOLOCATION,
-)
-
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_LATITUDE,
@@ -34,15 +26,20 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .config_flow import configured_instances
 from .const import (
+    COMPONENTS,
     CONF_MINIMUM_MAGNITUDE,
     CONF_MMI,
+    DEFAULT_FILTER_TIME_INTERVAL,
     DEFAULT_MINIMUM_MAGNITUDE,
     DEFAULT_MMI,
     DEFAULT_RADIUS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    COMPONENTS,
     FEED,
+    SIGNAL_DELETE_ENTITY,
+    SIGNAL_NEW_GEOLOCATION,
+    SIGNAL_STATUS,
+    SIGNAL_UPDATE_ENTITY,
 )
 
 _LOGGER = logging.getLogger(__name__)
