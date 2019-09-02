@@ -95,6 +95,8 @@ async def _test_reconnect(hass, caplog, config):
             assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     assert len(caplog.record_tuples) == 2
+    assert caplog.record_tuples[0][1] == logging.ERROR
+    assert caplog.record_tuples[1][1] == logging.WARNING
 
     caplog.set_level(logging.DEBUG)
     with patchers.patch_connect(True)[patch_key], patchers.patch_shell("1")[patch_key]:
