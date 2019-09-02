@@ -14,7 +14,8 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE, PRECISION_WHOLE
 
 from . import DOMAIN as VICARE_DOMAIN
-from . import DOMAIN_NAME as VICARE_DOMAIN_NAME
+from . import VICARE_API
+from . import VICARE_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,8 +67,6 @@ HA_TO_VICARE_PRESET_HEATING = {
     PRESET_ECO: VICARE_PROGRAM_ECO,
 }
 
-VALUE_UNKNOWN = "unknown"
-
 PYVICARE_ERROR = "error"
 
 
@@ -75,9 +74,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the ViCare climate devices."""
     if discovery_info is None:
         return
-    vicare_api = hass.data[VICARE_DOMAIN]
+    vicare_api = hass.data[VICARE_DOMAIN][VICARE_API]
     add_entities(
-        [ViCareClimate(f"{hass.data[VICARE_DOMAIN_NAME]}  Heating", vicare_api)]
+        [ViCareClimate(f"{hass.data[VICARE_DOMAIN][VICARE_NAME]}  Heating", vicare_api)]
     )
 
 
@@ -90,9 +89,9 @@ class ViCareClimate(ClimateDevice):
         self._state = None
         self._api = api
         self._target_temperature = None
-        self._current_mode = VALUE_UNKNOWN
+        self._current_mode = None
         self._current_temperature = None
-        self._current_program = VALUE_UNKNOWN
+        self._current_program = None
 
     def update(self):
         """Let HA know there has been an update from the ViCare API."""
@@ -147,10 +146,10 @@ class ViCareClimate(ClimateDevice):
         vicare_mode = HA_TO_VICARE_HVAC_HEATING.get(hvac_mode)
         if vicare_mode is None:
             _LOGGER.error(
-                f"cannot set invalid vicare mode: {hvac_mode} / {vicare_mode}"
+                "cannot set invalid vicare mode: %s / %s", hvac_mode, vicare_mode
             )
         else:
-            _LOGGER.debug(f"setting hvac mode to {hvac_mode} / {vicare_mode}")
+            _LOGGER.debug(f"setting hvac mode to %s / %s", hvac_mode, vicare_mode)
             self._api.setMode(vicare_mode)
 
     @property

@@ -1,5 +1,6 @@
 """The ViCare integration."""
 import logging
+
 import voluptuous as vol
 from PyViCare.PyViCareDevice import Device
 
@@ -10,8 +11,11 @@ from homeassistant.helpers import discovery
 _LOGGER = logging.getLogger(__name__)
 
 VICARE_PLATFORMS = ["climate", "water_heater"]
+
 DOMAIN = "vicare"
-DOMAIN_NAME = "vicare_name"
+VICARE_API = "api"
+VICARE_NAME = "name"
+
 CONF_CIRCUIT = "circuit"
 
 CONFIG_SCHEMA = vol.Schema(
@@ -38,8 +42,9 @@ def setup(hass, config):
 
     vicare_api = Device(conf[CONF_USERNAME], conf[CONF_PASSWORD], **params)
 
-    hass.data[DOMAIN] = vicare_api
-    hass.data[DOMAIN_NAME] = conf[CONF_NAME]
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][VICARE_API] = vicare_api
+    hass.data[DOMAIN][VICARE_NAME] = conf[CONF_NAME]
 
     for platform in VICARE_PLATFORMS:
         discovery.load_platform(hass, platform, DOMAIN, {}, config)
