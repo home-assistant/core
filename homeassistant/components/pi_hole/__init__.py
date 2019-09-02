@@ -2,8 +2,9 @@
 import logging
 
 import voluptuous as vol
-
 from hole import Hole
+from hole.exceptions import HoleError
+
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.helpers import config_validation as cv
@@ -86,7 +87,6 @@ class PiHoleData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest data from the Pi-hole."""
-        from hole.exceptions import HoleError
 
         try:
             await self.api.get_data()
