@@ -5,6 +5,7 @@ from typing import Optional
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import dt
 
 from .const import DOMAIN, FEED, SIGNAL_STATUS
 
@@ -86,8 +87,14 @@ class GeonetnzQuakesSensor(Entity):
     def _update_from_status_info(self, status_info):
         """Update the internal state from the provided information."""
         self._status = status_info.status
-        self._last_update = status_info.last_update
-        self._last_update_successful = status_info.last_update_successful
+        self._last_update = (
+            dt.as_utc(status_info.last_update) if status_info.last_update else None
+        )
+        self._last_update_successful = (
+            dt.as_utc(status_info.last_update_successful)
+            if status_info.last_update_successful
+            else None
+        )
         self._last_timestamp = status_info.last_timestamp
         self._total = status_info.total
         self._created = status_info.created

@@ -78,6 +78,8 @@ async def test_setup(hass):
         attributes = state.attributes
         assert attributes[ATTR_STATUS] == "OK"
         assert attributes[ATTR_CREATED] == 3
+        assert attributes[ATTR_LAST_UPDATE].tzinfo == dt_util.UTC
+        assert attributes[ATTR_LAST_UPDATE_SUCCESSFUL].tzinfo == dt_util.UTC
         assert attributes[ATTR_LAST_UPDATE] == attributes[ATTR_LAST_UPDATE_SUCCESSFUL]
         assert attributes[ATTR_UNIT_OF_MEASUREMENT] == "quakes"
         assert attributes[ATTR_ICON] == "mdi:pulse"
