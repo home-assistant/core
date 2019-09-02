@@ -748,7 +748,7 @@ liveboxplaytv==2.0.2
 lmnotify==0.0.4
 
 # homeassistant.components.google_maps
-locationsharinglib==4.0.2
+locationsharinglib==4.1.0
 
 # homeassistant.components.logi_circle
 logi_circle==0.2.2
