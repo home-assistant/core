@@ -16,18 +16,14 @@ addons:
 matrix:
   fast_finish: true
   include:
-    - python: "3.6.0"
+    - python: "3.6.1"
       env: TOXENV=lint
-      dist: trusty
-    - python: "3.6.0"
+    - python: "3.6.1"
       env: TOXENV=pylint
-      dist: trusty
-    - python: "3.6.0"
+    - python: "3.6.1"
       env: TOXENV=typing
-      dist: trusty
-    - python: "3.6.0"
+    - python: "3.6.1"
       env: TOXENV=py36
-      dist: trusty
     - python: "3.7"
       env: TOXENV=py37
 
