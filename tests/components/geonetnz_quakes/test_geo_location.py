@@ -24,8 +24,9 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_TIME,
     ATTR_ICON,
+    EVENT_COMPONENT_LOADED,
 )
-from homeassistant.setup import async_setup_component
+from homeassistant.setup import async_setup_component, ATTR_COMPONENT
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 from tests.common import async_fire_time_changed
 import homeassistant.util.dt as dt_util
@@ -65,9 +66,12 @@ async def test_setup(hass):
     ) as mock_feed_update:
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
         assert await async_setup_component(hass, geonetnz_quakes.DOMAIN, CONFIG)
-        # Artificially trigger update.
+        # Artificially trigger update and collect events.
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-        # Collect events.
+        await hass.async_block_till_done()
+        hass.bus.async_fire(
+            EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: geonetnz_quakes.DOMAIN}
+        )
         await hass.async_block_till_done()
 
         all_states = hass.states.async_all()
@@ -170,9 +174,12 @@ async def test_setup_imperial(hass):
     ) as mock_feed_init:
         mock_feed_update.return_value = "OK", [mock_entry_1]
         assert await async_setup_component(hass, geonetnz_quakes.DOMAIN, CONFIG)
-        # Artificially trigger update.
+        # Artificially trigger update and collect events.
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-        # Collect events.
+        await hass.async_block_till_done()
+        hass.bus.async_fire(
+            EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: geonetnz_quakes.DOMAIN}
+        )
         await hass.async_block_till_done()
 
         all_states = hass.states.async_all()
