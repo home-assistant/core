@@ -23,8 +23,8 @@ async def verify_redirect_uri(hass, client_id, redirect_uri):
 
     # Verify redirect url and client url have same scheme and domain.
     is_valid = (
-        client_id_parts.scheme == redirect_parts.scheme and
-        client_id_parts.netloc == redirect_parts.netloc
+        client_id_parts.scheme == redirect_parts.scheme
+        and client_id_parts.netloc == redirect_parts.netloc
     )
 
     if is_valid:
@@ -47,13 +47,13 @@ class LinkTagParser(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         """Handle finding a start tag."""
-        if tag != 'link':
+        if tag != "link":
             return
 
         attrs = dict(attrs)
 
-        if attrs.get('rel') == self.rel:
-            self.found.append(attrs.get('href'))
+        if attrs.get("rel") == self.rel:
+            self.found.append(attrs.get("href"))
 
 
 async def fetch_redirect_uris(hass, url):
@@ -68,7 +68,7 @@ async def fetch_redirect_uris(hass, url):
 
     We do not implement extracting redirect uris from headers.
     """
-    parser = LinkTagParser('redirect_uri')
+    parser = LinkTagParser("redirect_uri")
     chunks = 0
     try:
         async with aiohttp.ClientSession() as session:
@@ -87,12 +87,12 @@ async def fetch_redirect_uris(hass, url):
         _LOGGER.error("SSL error while looking up redirect_uri %s", url)
         pass
     except aiohttp.client_exceptions.ClientOSError as ex:
-        _LOGGER.error("OS error while looking up redirect_uri %s: %s", url,
-                      ex.strerror)
+        _LOGGER.error("OS error while looking up redirect_uri %s: %s", url, ex.strerror)
         pass
     except aiohttp.client_exceptions.ClientConnectionError:
-        _LOGGER.error(("Low level connection error while looking up "
-                       "redirect_uri %s"), url)
+        _LOGGER.error(
+            ("Low level connection error while looking up " "redirect_uri %s"), url
+        )
         pass
     except aiohttp.client_exceptions.ClientError:
         _LOGGER.error("Unknown error while looking up redirect_uri %s", url)
@@ -125,8 +125,8 @@ def _parse_url(url):
 
     # If a URL with no path component is ever encountered,
     # it MUST be treated as if it had the path /.
-    if parts.path == '':
-        parts = parts._replace(path='/')
+    if parts.path == "":
+        parts = parts._replace(path="/")
 
     return parts
 
@@ -140,34 +140,35 @@ def _parse_client_id(client_id):
 
     # Client identifier URLs
     # MUST have either an https or http scheme
-    if parts.scheme not in ('http', 'https'):
+    if parts.scheme not in ("http", "https"):
         raise ValueError()
 
     # MUST contain a path component
     # Handled by url canonicalization.
 
     # MUST NOT contain single-dot or double-dot path segments
-    if any(segment in ('.', '..') for segment in parts.path.split('/')):
+    if any(segment in (".", "..") for segment in parts.path.split("/")):
         raise ValueError(
-            'Client ID cannot contain single-dot or double-dot path segments')
+            "Client ID cannot contain single-dot or double-dot path segments"
+        )
 
     # MUST NOT contain a fragment component
-    if parts.fragment != '':
-        raise ValueError('Client ID cannot contain a fragment')
+    if parts.fragment != "":
+        raise ValueError("Client ID cannot contain a fragment")
 
     # MUST NOT contain a username or password component
     if parts.username is not None:
-        raise ValueError('Client ID cannot contain username')
+        raise ValueError("Client ID cannot contain username")
 
     if parts.password is not None:
-        raise ValueError('Client ID cannot contain password')
+        raise ValueError("Client ID cannot contain password")
 
     # MAY contain a port
     try:
         # parts raises ValueError when port cannot be parsed as int
         parts.port
     except ValueError:
-        raise ValueError('Client ID contains invalid port')
+        raise ValueError("Client ID contains invalid port")
 
     # Additionally, hostnames
     # MUST be domain names or a loopback interface and
@@ -183,7 +184,7 @@ def _parse_client_id(client_id):
         netloc = parts.netloc
 
         # Strip the [, ] from ipv6 addresses before parsing
-        if netloc[0] == '[' and netloc[-1] == ']':
+        if netloc[0] == "[" and netloc[-1] == "]":
             netloc = netloc[1:-1]
 
         address = ip_address(netloc)
@@ -194,4 +195,4 @@ def _parse_client_id(client_id):
     if address is None or is_local(address):
         return parts
 
-    raise ValueError('Hostname should be a domain name or local IP address')
+    raise ValueError("Hostname should be a domain name or local IP address")

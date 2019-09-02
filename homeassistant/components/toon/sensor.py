@@ -13,79 +13,67 @@ from . import (
     ToonSolarDeviceEntity,
     ToonBoilerDeviceEntity,
 )
-from .const import (
-    CURRENCY_EUR,
-    DATA_TOON,
-    DOMAIN,
-    VOLUME_CM3,
-    VOLUME_M3,
-    RATIO_PERCENT,
-)
+from .const import CURRENCY_EUR, DATA_TOON, DOMAIN, VOLUME_CM3, VOLUME_M3, RATIO_PERCENT
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-        hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up Toon sensors based on a config entry."""
     toon = hass.data[DATA_TOON][entry.entry_id]
 
     sensors = [
         ToonElectricityMeterDeviceSensor(
-            toon,
-            'power',
-            'value',
-            "Current Power Usage",
-            'mdi:power-plug',
-            POWER_WATT,
+            toon, "power", "value", "Current Power Usage", "mdi:power-plug", POWER_WATT
         ),
         ToonElectricityMeterDeviceSensor(
             toon,
-            'power',
-            'average',
+            "power",
+            "average",
             "Average Power Usage",
-            'mdi:power-plug',
+            "mdi:power-plug",
             POWER_WATT,
         ),
         ToonElectricityMeterDeviceSensor(
             toon,
-            'power',
-            'daily_value',
+            "power",
+            "daily_value",
             "Power Usage Today",
-            'mdi:power-plug',
+            "mdi:power-plug",
             ENERGY_KILO_WATT_HOUR,
         ),
         ToonElectricityMeterDeviceSensor(
             toon,
-            'power',
-            'daily_cost',
+            "power",
+            "daily_cost",
             "Power Cost Today",
-            'mdi:power-plug',
+            "mdi:power-plug",
             CURRENCY_EUR,
         ),
         ToonElectricityMeterDeviceSensor(
             toon,
-            'power',
-            'average_daily',
+            "power",
+            "average_daily",
             "Average Daily Power Usage",
-            'mdi:power-plug',
+            "mdi:power-plug",
             ENERGY_KILO_WATT_HOUR,
         ),
         ToonElectricityMeterDeviceSensor(
             toon,
-            'power',
-            'meter_reading',
+            "power",
+            "meter_reading",
             "Power Meter Feed IN Tariff 1",
-            'mdi:power-plug',
+            "mdi:power-plug",
             ENERGY_KILO_WATT_HOUR,
         ),
         ToonElectricityMeterDeviceSensor(
             toon,
-            'power',
-            'meter_reading_low',
+            "power",
+            "meter_reading_low",
             "Power Meter Feed IN Tariff 2",
-            'mdi:power-plug',
+            "mdi:power-plug",
             ENERGY_KILO_WATT_HOUR,
         ),
     ]
@@ -95,50 +83,50 @@ async def async_setup_entry(
             [
                 ToonGasMeterDeviceSensor(
                     toon,
-                    'gas',
-                    'value',
+                    "gas",
+                    "value",
                     "Current Gas Usage",
-                    'mdi:gas-cylinder',
+                    "mdi:gas-cylinder",
                     VOLUME_CM3,
                 ),
                 ToonGasMeterDeviceSensor(
                     toon,
-                    'gas',
-                    'average',
+                    "gas",
+                    "average",
                     "Average Gas Usage",
-                    'mdi:gas-cylinder',
+                    "mdi:gas-cylinder",
                     VOLUME_CM3,
                 ),
                 ToonGasMeterDeviceSensor(
                     toon,
-                    'gas',
-                    'daily_usage',
+                    "gas",
+                    "daily_usage",
                     "Gas Usage Today",
-                    'mdi:gas-cylinder',
+                    "mdi:gas-cylinder",
                     VOLUME_M3,
                 ),
                 ToonGasMeterDeviceSensor(
                     toon,
-                    'gas',
-                    'average_daily',
+                    "gas",
+                    "average_daily",
                     "Average Daily Gas Usage",
-                    'mdi:gas-cylinder',
+                    "mdi:gas-cylinder",
                     VOLUME_M3,
                 ),
                 ToonGasMeterDeviceSensor(
                     toon,
-                    'gas',
-                    'meter_reading',
+                    "gas",
+                    "meter_reading",
                     "Gas Meter",
-                    'mdi:gas-cylinder',
+                    "mdi:gas-cylinder",
                     VOLUME_M3,
                 ),
                 ToonGasMeterDeviceSensor(
                     toon,
-                    'gas',
-                    'daily_cost',
+                    "gas",
+                    "daily_cost",
                     "Gas Cost Today",
-                    'mdi:gas-cylinder',
+                    "mdi:gas-cylinder",
                     CURRENCY_EUR,
                 ),
             ]
@@ -149,50 +137,50 @@ async def async_setup_entry(
             [
                 ToonSolarDeviceSensor(
                     toon,
-                    'solar',
-                    'value',
+                    "solar",
+                    "value",
                     "Current Solar Production",
-                    'mdi:solar-power',
+                    "mdi:solar-power",
                     POWER_WATT,
                 ),
                 ToonSolarDeviceSensor(
                     toon,
-                    'solar',
-                    'maximum',
+                    "solar",
+                    "maximum",
                     "Max Solar Production",
-                    'mdi:solar-power',
+                    "mdi:solar-power",
                     POWER_WATT,
                 ),
                 ToonSolarDeviceSensor(
                     toon,
-                    'solar',
-                    'produced',
+                    "solar",
+                    "produced",
                     "Solar Production to Grid",
-                    'mdi:solar-power',
+                    "mdi:solar-power",
                     POWER_WATT,
                 ),
                 ToonSolarDeviceSensor(
                     toon,
-                    'solar',
-                    'average_produced',
+                    "solar",
+                    "average_produced",
                     "Average Solar Production to Grid",
-                    'mdi:solar-power',
+                    "mdi:solar-power",
                     POWER_WATT,
                 ),
                 ToonElectricityMeterDeviceSensor(
                     toon,
-                    'solar',
-                    'meter_reading_produced',
+                    "solar",
+                    "meter_reading_produced",
                     "Power Meter Feed OUT Tariff 1",
-                    'mdi:solar-power',
+                    "mdi:solar-power",
                     ENERGY_KILO_WATT_HOUR,
                 ),
                 ToonElectricityMeterDeviceSensor(
                     toon,
-                    'solar',
-                    'meter_reading_low_produced',
+                    "solar",
+                    "meter_reading_low_produced",
                     "Power Meter Feed OUT Tariff 2",
-                    'mdi:solar-power',
+                    "mdi:solar-power",
                     ENERGY_KILO_WATT_HOUR,
                 ),
             ]
@@ -203,10 +191,10 @@ async def async_setup_entry(
             [
                 ToonBoilerDeviceSensor(
                     toon,
-                    'thermostat_info',
-                    'current_modulation_level',
+                    "thermostat_info",
+                    "current_modulation_level",
                     "Boiler Modulation Level",
-                    'mdi:percent',
+                    "mdi:percent",
                     RATIO_PERCENT,
                 )
             ]
@@ -219,13 +207,13 @@ class ToonSensor(ToonEntity):
     """Defines a Toon sensor."""
 
     def __init__(
-            self,
-            toon: ToonData,
-            section: str,
-            measurement: str,
-            name: str,
-            icon: str,
-            unit_of_measurement: str,
+        self,
+        toon: ToonData,
+        section: str,
+        measurement: str,
+        name: str,
+        icon: str,
+        unit_of_measurement: str,
     ) -> None:
         """Initialize the Toon sensor."""
         self._state = None
@@ -238,14 +226,8 @@ class ToonSensor(ToonEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this sensor."""
-        return '_'.join(
-            [
-                DOMAIN,
-                self.toon.agreement.id,
-                'sensor',
-                self.section,
-                self.measurement,
-            ]
+        return "_".join(
+            [DOMAIN, self.toon.agreement.id, "sensor", self.section, self.measurement]
         )
 
     @property
@@ -266,42 +248,39 @@ class ToonSensor(ToonEntity):
         if not section:
             return
 
-        if self.section == 'power' and self.measurement == 'daily_value':
+        if self.section == "power" and self.measurement == "daily_value":
             value = round(
-                (float(section.daily_usage) + float(section.daily_usage_low))
-                / 1000.0,
+                (float(section.daily_usage) + float(section.daily_usage_low)) / 1000.0,
                 2,
             )
 
         if value is None:
             value = getattr(section, self.measurement)
 
-        if self.section == 'power' and self.measurement in [
-                'meter_reading',
-                'meter_reading_low',
-                'average_daily',
+        if self.section == "power" and self.measurement in [
+            "meter_reading",
+            "meter_reading_low",
+            "average_daily",
         ]:
             value = round(float(value) / 1000.0, 2)
 
-        if self.section == 'solar' and self.measurement in [
-                'meter_reading_produced',
-                'meter_reading_low_produced',
+        if self.section == "solar" and self.measurement in [
+            "meter_reading_produced",
+            "meter_reading_low_produced",
         ]:
             value = float(value) / 1000.0
 
-        if self.section == 'gas' and self.measurement in [
-                'average_daily',
-                'daily_usage',
-                'meter_reading',
+        if self.section == "gas" and self.measurement in [
+            "average_daily",
+            "daily_usage",
+            "meter_reading",
         ]:
             value = round(float(value) / 1000.0, 2)
 
         self._state = max(0, value)
 
 
-class ToonElectricityMeterDeviceSensor(
-        ToonSensor, ToonElectricityMeterDeviceEntity
-):
+class ToonElectricityMeterDeviceSensor(ToonSensor, ToonElectricityMeterDeviceEntity):
     """Defines a Electricity Meter sensor."""
 
     pass

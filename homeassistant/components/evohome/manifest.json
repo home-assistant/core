@@ -3,7 +3,7 @@
   "name": "Evohome",
   "documentation": "https://www.home-assistant.io/components/evohome",
   "requirements": [
-    "evohomeclient==0.3.3"
+    "evohome-async==0.3.3b4"
   ],
   "dependencies": [],
   "codeowners": ["@zxdavb"]

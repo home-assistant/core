@@ -2,11 +2,12 @@
 {
 	"name": "Home Assistant Dev",
 	"context": "..",
-	"dockerFile": "Dockerfile",
+	"dockerFile": "../Dockerfile.dev",
 	"postCreateCommand": "pip3 install -e .",
 	"appPort": 8123,
 	"runArgs": [
-		"-e", "GIT_EDTIOR='code --wait'"
+		"-e",
+		"GIT_EDITOR=\"code --wait\""
 	],
 	"extensions": [
 		"ms-python.python",
@@ -17,8 +18,11 @@
 		"python.pythonPath": "/usr/local/bin/python",
 		"python.linting.pylintEnabled": true,
 		"python.linting.enabled": true,
+		"python.formatting.provider": "black",
+		"editor.formatOnPaste": false,
+		"editor.formatOnSave": true,
+		"editor.formatOnType": true,
 		"files.trimTrailingWhitespace": true,
-		"editor.rulers": [80],
 		"terminal.integrated.shell.linux": "/bin/bash",
 		"yaml.customTags": [
 			"!secret scalar",

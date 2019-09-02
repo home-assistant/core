@@ -11,31 +11,34 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'input_select'
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
+DOMAIN = "input_select"
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-CONF_INITIAL = 'initial'
-CONF_OPTIONS = 'options'
+CONF_INITIAL = "initial"
+CONF_OPTIONS = "options"
 
-ATTR_OPTION = 'option'
-ATTR_OPTIONS = 'options'
+ATTR_OPTION = "option"
+ATTR_OPTIONS = "options"
 
-SERVICE_SELECT_OPTION = 'select_option'
+SERVICE_SELECT_OPTION = "select_option"
 
-SERVICE_SELECT_OPTION_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_OPTION): cv.string,
-})
+SERVICE_SELECT_OPTION_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+    {vol.Required(ATTR_OPTION): cv.string}
+)
 
-SERVICE_SELECT_NEXT = 'select_next'
+SERVICE_SELECT_NEXT = "select_next"
 
-SERVICE_SELECT_PREVIOUS = 'select_previous'
+SERVICE_SELECT_PREVIOUS = "select_previous"
 
-SERVICE_SET_OPTIONS = 'set_options'
+SERVICE_SET_OPTIONS = "set_options"
 
-SERVICE_SET_OPTIONS_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_OPTIONS):
-        vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
-})
+SERVICE_SET_OPTIONS_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+    {
+        vol.Required(ATTR_OPTIONS): vol.All(
+            cv.ensure_list, vol.Length(min=1), [cv.string]
+        )
+    }
+)
 
 
 def _cv_input_select(cfg):
@@ -43,22 +46,33 @@ def _cv_input_select(cfg):
     options = cfg[CONF_OPTIONS]
     initial = cfg.get(CONF_INITIAL)
     if initial is not None and initial not in options:
-        raise vol.Invalid('initial state "{}" is not part of the options: {}'
-                          .format(initial, ','.join(options)))
+        raise vol.Invalid(
+            'initial state "{}" is not part of the options: {}'.format(
+                initial, ",".join(options)
+            )
+        )
     return cfg
 
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: cv.schema_with_slug_keys(
-        vol.All({
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Required(CONF_OPTIONS):
-                vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
-            vol.Optional(CONF_INITIAL): cv.string,
-            vol.Optional(CONF_ICON): cv.icon,
-        }, _cv_input_select)
-    )
-}, required=True, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: cv.schema_with_slug_keys(
+            vol.All(
+                {
+                    vol.Optional(CONF_NAME): cv.string,
+                    vol.Required(CONF_OPTIONS): vol.All(
+                        cv.ensure_list, vol.Length(min=1), [cv.string]
+                    ),
+                    vol.Optional(CONF_INITIAL): cv.string,
+                    vol.Optional(CONF_ICON): cv.icon,
+                },
+                _cv_input_select,
+            )
+        )
+    },
+    required=True,
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):
@@ -78,23 +92,23 @@ async def async_setup(hass, config):
         return False
 
     component.async_register_entity_service(
-        SERVICE_SELECT_OPTION, SERVICE_SELECT_OPTION_SCHEMA,
-        'async_select_option'
+        SERVICE_SELECT_OPTION, SERVICE_SELECT_OPTION_SCHEMA, "async_select_option"
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_NEXT, ENTITY_SERVICE_SCHEMA,
-        lambda entity, call: entity.async_offset_index(1)
+        SERVICE_SELECT_NEXT,
+        ENTITY_SERVICE_SCHEMA,
+        lambda entity, call: entity.async_offset_index(1),
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_PREVIOUS, ENTITY_SERVICE_SCHEMA,
-        lambda entity, call: entity.async_offset_index(-1)
+        SERVICE_SELECT_PREVIOUS,
+        ENTITY_SERVICE_SCHEMA,
+        lambda entity, call: entity.async_offset_index(-1),
     )
 
     component.async_register_entity_service(
-        SERVICE_SET_OPTIONS, SERVICE_SET_OPTIONS_SCHEMA,
-        'async_set_options'
+        SERVICE_SET_OPTIONS, SERVICE_SET_OPTIONS_SCHEMA, "async_set_options"
     )
 
     await component.async_add_entities(entities)
@@ -147,15 +161,16 @@ class InputSelect(RestoreEntity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        return {
-            ATTR_OPTIONS: self._options,
-        }
+        return {ATTR_OPTIONS: self._options}
 
     async def async_select_option(self, option):
         """Select new option."""
         if option not in self._options:
-            _LOGGER.warning('Invalid option: %s (possible options: %s)',
-                            option, ', '.join(self._options))
+            _LOGGER.warning(
+                "Invalid option: %s (possible options: %s)",
+                option,
+                ", ".join(self._options),
+            )
             return
         self._current_option = option
         await self.async_update_ha_state()

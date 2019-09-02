@@ -7,4 +7,4 @@ set -e
 cd "$(dirname "$0")/.."
 
 echo "Installing test dependencies..."
-python3 -m pip install tox colorlog
+python3 -m pip install tox colorlog pre-commit

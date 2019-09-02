@@ -4,24 +4,22 @@ from typing import Optional, Sequence
 from pysmartthings import Capability
 
 from homeassistant.components.fan import (
-    SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF, SUPPORT_SET_SPEED,
-    FanEntity)
+    SPEED_HIGH,
+    SPEED_LOW,
+    SPEED_MEDIUM,
+    SPEED_OFF,
+    SUPPORT_SET_SPEED,
+    FanEntity,
+)
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
-VALUE_TO_SPEED = {
-    0: SPEED_OFF,
-    1: SPEED_LOW,
-    2: SPEED_MEDIUM,
-    3: SPEED_HIGH,
-}
-SPEED_TO_VALUE = {
-    v: k for k, v in VALUE_TO_SPEED.items()}
+VALUE_TO_SPEED = {0: SPEED_OFF, 1: SPEED_LOW, 2: SPEED_MEDIUM, 3: SPEED_HIGH}
+SPEED_TO_VALUE = {v: k for k, v in VALUE_TO_SPEED.items()}
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Platform uses config entry setup."""
     pass
 
@@ -30,8 +28,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add fans for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(
-        [SmartThingsFan(device) for device in broker.devices.values()
-         if broker.any_assigned(device.device_id, 'fan')])
+        [
+            SmartThingsFan(device)
+            for device in broker.devices.values()
+            if broker.any_assigned(device.device_id, "fan")
+        ]
+    )
 
 
 def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:

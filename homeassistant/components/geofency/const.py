@@ -1,3 +1,3 @@
 """Const for Geofency."""
 
-DOMAIN = 'geofency'
+DOMAIN = "geofency"

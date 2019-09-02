@@ -7,26 +7,36 @@ from aiokafka import AIOKafkaProducer
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_IP_ADDRESS, CONF_PORT, EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
-    STATE_UNAVAILABLE, STATE_UNKNOWN)
+    CONF_IP_ADDRESS,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+    EVENT_STATE_CHANGED,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'apache_kafka'
+DOMAIN = "apache_kafka"
 
-CONF_FILTER = 'filter'
-CONF_TOPIC = 'topic'
+CONF_FILTER = "filter"
+CONF_TOPIC = "topic"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Required(CONF_PORT): cv.port,
-        vol.Required(CONF_TOPIC): cv.string,
-        vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_IP_ADDRESS): cv.string,
+                vol.Required(CONF_PORT): cv.port,
+                vol.Required(CONF_TOPIC): cv.string,
+                vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):
@@ -38,7 +48,8 @@ async def async_setup(hass, config):
         conf[CONF_IP_ADDRESS],
         conf[CONF_PORT],
         conf[CONF_TOPIC],
-        conf[CONF_FILTER])
+        conf[CONF_FILTER],
+    )
 
     hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, kafka.shutdown())
 
@@ -63,13 +74,7 @@ class DateTimeJSONEncoder(json.JSONEncoder):
 class KafkaManager:
     """Define a manager to buffer events to Kafka."""
 
-    def __init__(
-            self,
-            hass,
-            ip_address,
-            port,
-            topic,
-            entities_filter):
+    def __init__(self, hass, ip_address, port, topic, entities_filter):
         """Initialize."""
         self._encoder = DateTimeJSONEncoder()
         self._entities_filter = entities_filter
@@ -83,16 +88,17 @@ class KafkaManager:
 
     def _encode_event(self, event):
         """Translate events into a binary JSON payload."""
-        state = event.data.get('new_state')
-        if (state is None
-                or state.state in (STATE_UNKNOWN, '', STATE_UNAVAILABLE)
-                or not self._entities_filter(state.entity_id)):
+        state = event.data.get("new_state")
+        if (
+            state is None
+            or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE)
+            or not self._entities_filter(state.entity_id)
+        ):
             return
 
-        return json.dumps(
-            obj=state.as_dict(),
-            default=self._encoder.encode
-        ).encode('utf-8')
+        return json.dumps(obj=state.as_dict(), default=self._encoder.encode).encode(
+            "utf-8"
+        )
 
     async def start(self):
         """Start the Kafka manager."""

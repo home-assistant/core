@@ -1,6 +1,5 @@
 """Merging of policies."""
-from typing import (  # noqa: F401
-    cast, Dict, List, Set)
+from typing import cast, Dict, List, Set  # noqa: F401
 
 from .types import PolicyType, CategoryType
 
@@ -14,8 +13,9 @@ def merge_policies(policies: List[PolicyType]) -> PolicyType:
             if category in seen:
                 continue
             seen.add(category)
-            new_policy[category] = _merge_policies([
-                policy.get(category) for policy in policies])
+            new_policy[category] = _merge_policies(
+                [policy.get(category) for policy in policies]
+            )
     cast(PolicyType, new_policy)
     return new_policy
 

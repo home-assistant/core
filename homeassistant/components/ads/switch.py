@@ -11,12 +11,11 @@ from . import CONF_ADS_VAR, DATA_ADS, AdsEntity, STATE_KEY_STATE
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'ADS Switch'
+DEFAULT_NAME = "ADS Switch"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ADS_VAR): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_ADS_VAR): cv.string, vol.Optional(CONF_NAME): cv.string}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -34,8 +33,7 @@ class AdsSwitch(AdsEntity, SwitchDevice):
 
     async def async_added_to_hass(self):
         """Register device notification."""
-        await self.async_initialize_device(self._ads_var,
-                                           self._ads_hub.PLCTYPE_BOOL)
+        await self.async_initialize_device(self._ads_var, self._ads_hub.PLCTYPE_BOOL)
 
     @property
     def is_on(self):
@@ -44,10 +42,8 @@ class AdsSwitch(AdsEntity, SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        self._ads_hub.write_by_name(
-            self._ads_var, True, self._ads_hub.PLCTYPE_BOOL)
+        self._ads_hub.write_by_name(self._ads_var, True, self._ads_hub.PLCTYPE_BOOL)
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        self._ads_hub.write_by_name(
-            self._ads_var, False, self._ads_hub.PLCTYPE_BOOL)
+        self._ads_hub.write_by_name(self._ads_var, False, self._ads_hub.PLCTYPE_BOOL)

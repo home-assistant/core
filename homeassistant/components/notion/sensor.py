@@ -13,23 +13,24 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     sensor_list = []
     for task_id, task in notion.tasks.items():
-        if task['task_type'] not in SENSOR_TYPES:
+        if task["task_type"] not in SENSOR_TYPES:
             continue
 
-        name, device_class, unit = SENSOR_TYPES[task['task_type']]
-        sensor = notion.sensors[task['sensor_id']]
+        name, device_class, unit = SENSOR_TYPES[task["task_type"]]
+        sensor = notion.sensors[task["sensor_id"]]
 
         sensor_list.append(
             NotionSensor(
                 notion,
                 task_id,
-                sensor['id'],
-                sensor['bridge']['id'],
-                sensor['system_id'],
+                sensor["id"],
+                sensor["bridge"]["id"],
+                sensor["system_id"],
                 name,
                 device_class,
-                unit
-            ))
+                unit,
+            )
+        )
 
     async_add_entities(sensor_list, True)
 
@@ -38,24 +39,12 @@ class NotionSensor(NotionEntity):
     """Define a Notion sensor."""
 
     def __init__(
-            self,
-            notion,
-            task_id,
-            sensor_id,
-            bridge_id,
-            system_id,
-            name,
-            device_class,
-            unit):
+        self, notion, task_id, sensor_id, bridge_id, system_id, name, device_class, unit
+    ):
         """Initialize the entity."""
         super().__init__(
-            notion,
-            task_id,
-            sensor_id,
-            bridge_id,
-            system_id,
-            name,
-            device_class)
+            notion, task_id, sensor_id, bridge_id, system_id, name, device_class
+        )
 
         self._unit = unit
 
@@ -73,9 +62,11 @@ class NotionSensor(NotionEntity):
         """Fetch new state data for the sensor."""
         task = self._notion.tasks[self._task_id]
 
-        if task['task_type'] == SENSOR_TEMPERATURE:
-            self._state = round(float(task['status']['value']), 1)
+        if task["task_type"] == SENSOR_TEMPERATURE:
+            self._state = round(float(task["status"]["value"]), 1)
         else:
             _LOGGER.error(
-                'Unknown task type: %s: %s',
-                self._notion.sensors[self._sensor_id], task['task_type'])
+                "Unknown task type: %s: %s",
+                self._notion.sensors[self._sensor_id],
+                task["task_type"],
+            )

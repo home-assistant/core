@@ -11,9 +11,9 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tesla binary sensor."""
     devices = [
-        TeslaBinarySensor(
-            device, hass.data[TESLA_DOMAIN]['controller'], 'connectivity')
-        for device in hass.data[TESLA_DOMAIN]['devices']['binary_sensor']]
+        TeslaBinarySensor(device, hass.data[TESLA_DOMAIN]["controller"], "connectivity")
+        for device in hass.data[TESLA_DOMAIN]["devices"]["binary_sensor"]
+    ]
     add_entities(devices, True)
 
 

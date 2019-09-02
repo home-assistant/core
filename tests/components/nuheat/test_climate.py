@@ -3,8 +3,11 @@ import unittest
 from unittest.mock import Mock, patch
 
 from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+)
 import homeassistant.components.nuheat.climate as nuheat
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 
@@ -39,7 +42,8 @@ class TestNuHeat(unittest.TestCase):
             min_fahrenheit=41,
             schedule_mode=SCHEDULE_RUN,
             target_celsius=22,
-            target_fahrenheit=72)
+            target_fahrenheit=72,
+        )
 
         thermostat.get_data = Mock()
         thermostat.resume_schedule = Mock()
@@ -49,7 +53,8 @@ class TestNuHeat(unittest.TestCase):
 
         self.hass = get_test_home_assistant()
         self.thermostat = nuheat.NuHeatThermostat(
-            self.api, serial_number, temperature_unit)
+            self.api, serial_number, temperature_unit
+        )
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop hass."""
@@ -85,8 +90,11 @@ class TestNuHeat(unittest.TestCase):
 
         # Explicit entity
         self.hass.services.call(
-            nuheat.NUHEAT_DOMAIN, nuheat.SERVICE_RESUME_PROGRAM,
-            {"entity_id": "climate.master_bathroom"}, True)
+            nuheat.NUHEAT_DOMAIN,
+            nuheat.SERVICE_RESUME_PROGRAM,
+            {"entity_id": "climate.master_bathroom"},
+            True,
+        )
 
         thermostat.resume_program.assert_called_with()
         thermostat.schedule_update_ha_state.assert_called_with(True)
@@ -96,7 +104,8 @@ class TestNuHeat(unittest.TestCase):
 
         # All entities
         self.hass.services.call(
-            nuheat.NUHEAT_DOMAIN, nuheat.SERVICE_RESUME_PROGRAM, {}, True)
+            nuheat.NUHEAT_DOMAIN, nuheat.SERVICE_RESUME_PROGRAM, {}, True
+        )
 
         thermostat.resume_program.assert_called_with()
         thermostat.schedule_update_ha_state.assert_called_with(True)
@@ -107,7 +116,7 @@ class TestNuHeat(unittest.TestCase):
 
     def test_supported_features(self):
         """Test name property."""
-        features = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE)
+        features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
         assert self.thermostat.supported_features == features
 
     def test_temperature_unit(self):

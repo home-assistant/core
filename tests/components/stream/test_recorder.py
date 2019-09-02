@@ -10,8 +10,7 @@ from homeassistant.components.stream.recorder import recorder_save_worker
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
-from tests.components.stream.common import (
-    generate_h264_video, preload_stream)
+from tests.components.stream.common import generate_h264_video, preload_stream
 
 
 @pytest.mark.skip("Flaky in CI")
@@ -22,16 +21,13 @@ async def test_record_stream(hass, hass_client):
     Purposefully not mocking anything here to test full
     integration with the stream component.
     """
-    await async_setup_component(hass, 'stream', {
-        'stream': {}
-    })
+    await async_setup_component(hass, "stream", {"stream": {}})
 
-    with patch(
-            'homeassistant.components.stream.recorder.recorder_save_worker'):
+    with patch("homeassistant.components.stream.recorder.recorder_save_worker"):
         # Setup demo track
         source = generate_h264_video()
         stream = preload_stream(hass, source)
-        recorder = stream.add_provider('recorder')
+        recorder = stream.add_provider("recorder")
         stream.start()
 
         segments = 0
@@ -49,17 +45,15 @@ async def test_record_stream(hass, hass_client):
 @pytest.mark.skip("Flaky in CI")
 async def test_recorder_timeout(hass, hass_client):
     """Test recorder timeout."""
-    await async_setup_component(hass, 'stream', {
-        'stream': {}
-    })
+    await async_setup_component(hass, "stream", {"stream": {}})
 
     with patch(
-            'homeassistant.components.stream.recorder.RecorderOutput.cleanup'
-            ) as mock_cleanup:
+        "homeassistant.components.stream.recorder.RecorderOutput.cleanup"
+    ) as mock_cleanup:
         # Setup demo track
         source = generate_h264_video()
         stream = preload_stream(hass, source)
-        recorder = stream.add_provider('recorder')
+        recorder = stream.add_provider("recorder")
         stream.start()
 
         await recorder.recv()
@@ -78,7 +72,7 @@ async def test_recorder_save():
     # Setup
     source = generate_h264_video()
     output = BytesIO()
-    output.name = 'test.mp4'
+    output.name = "test.mp4"
 
     # Run
     recorder_save_worker(output, [Segment(1, source, 4)])

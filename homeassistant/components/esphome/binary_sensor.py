@@ -14,10 +14,13 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up ESPHome binary sensors based on a config entry."""
     await platform_async_setup_entry(
-        hass, entry, async_add_entities,
-        component_key='binary_sensor',
-        info_type=BinarySensorInfo, entity_type=EsphomeBinarySensor,
-        state_type=BinarySensorState
+        hass,
+        entry,
+        async_add_entities,
+        component_key="binary_sensor",
+        info_type=BinarySensorInfo,
+        entity_type=EsphomeBinarySensor,
+        state_type=BinarySensorState,
     )
 
 

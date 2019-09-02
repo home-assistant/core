@@ -40,7 +40,7 @@ class FritzboxBinarySensor(BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return 'window'
+        return "window"
 
     @property
     def is_on(self):

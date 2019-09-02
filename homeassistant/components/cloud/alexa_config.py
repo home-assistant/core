@@ -7,6 +7,7 @@ import aiohttp
 import async_timeout
 from hass_nabucasa import cloud_api
 
+from homeassistant.core import callback
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.event import async_call_later
@@ -20,8 +21,11 @@ from homeassistant.components.alexa import (
 
 
 from .const import (
-    CONF_ENTITY_CONFIG, CONF_FILTER, PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE,
-    RequireRelink
+    CONF_ENTITY_CONFIG,
+    CONF_FILTER,
+    PREF_SHOULD_EXPOSE,
+    DEFAULT_SHOULD_EXPOSE,
+    RequireRelink,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +53,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
         prefs.async_listen_updates(self._async_prefs_updated)
         hass.bus.async_listen(
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
-            self._handle_entity_registry_updated
+            self._handle_entity_registry_updated,
         )
 
     @property
@@ -90,25 +94,29 @@ class AlexaConfig(alexa_config.AbstractConfig):
 
         entity_configs = self._prefs.alexa_entity_configs
         entity_config = entity_configs.get(entity_id, {})
-        return entity_config.get(
-            PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE)
+        return entity_config.get(PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE)
+
+    @callback
+    def async_invalidate_access_token(self):
+        """Invalidate access token."""
+        self._token_valid = None
 
     async def async_get_access_token(self):
         """Get an access token."""
-        if self._token_valid is not None and self._token_valid < utcnow():
+        if self._token_valid is not None and self._token_valid > utcnow():
             return self._token
 
         resp = await cloud_api.async_alexa_access_token(self._cloud)
         body = await resp.json()
 
         if resp.status == 400:
-            if body['reason'] in ('RefreshTokenNotFound', 'UnknownRegion'):
+            if body["reason"] in ("RefreshTokenNotFound", "UnknownRegion"):
                 if self.should_report_state:
                     await self._prefs.async_update(alexa_report_state=False)
                     self.hass.components.persistent_notification.async_create(
                         "There was an error reporting state to Alexa ({}). "
                         "Please re-link your Alexa skill via the Alexa app to "
-                        "continue using it.".format(body['reason']),
+                        "continue using it.".format(body["reason"]),
                         "Alexa state reporting disabled",
                         "cloud_alexa_report",
                     )
@@ -116,9 +124,9 @@ class AlexaConfig(alexa_config.AbstractConfig):
 
             raise alexa_errors.NoTokenAvailable
 
-        self._token = body['access_token']
-        self._endpoint = body['event_endpoint']
-        self._token_valid = utcnow() + timedelta(seconds=body['expires_in'])
+        self._token = body["access_token"]
+        self._endpoint = body["event_endpoint"]
+        self._token_valid = utcnow() + timedelta(seconds=body["expires_in"])
         return self._token
 
     async def _async_prefs_updated(self, prefs):
@@ -136,15 +144,18 @@ class AlexaConfig(alexa_config.AbstractConfig):
 
         # If entity prefs are the same or we have filter in config.yaml,
         # don't sync.
-        if (self._cur_entity_prefs is prefs.alexa_entity_configs or
-                not self._config[CONF_FILTER].empty_filter):
+        if (
+            self._cur_entity_prefs is prefs.alexa_entity_configs
+            or not self._config[CONF_FILTER].empty_filter
+        ):
             return
 
         if self._alexa_sync_unsub:
             self._alexa_sync_unsub()
 
         self._alexa_sync_unsub = async_call_later(
-            self.hass, SYNC_DELAY, self._sync_prefs)
+            self.hass, SYNC_DELAY, self._sync_prefs
+        )
 
     async def _sync_prefs(self, _now):
         """Sync the updated preferences to Alexa."""
@@ -225,14 +236,16 @@ class AlexaConfig(alexa_config.AbstractConfig):
         tasks = []
 
         if to_update:
-            tasks.append(alexa_state_report.async_send_add_or_update_message(
-                self.hass, self, to_update
-            ))
+            tasks.append(
+                alexa_state_report.async_send_add_or_update_message(
+                    self.hass, self, to_update
+                )
+            )
 
         if to_remove:
-            tasks.append(alexa_state_report.async_send_delete_message(
-                self.hass, self, to_remove
-            ))
+            tasks.append(
+                alexa_state_report.async_send_delete_message(self.hass, self, to_remove)
+            )
 
         try:
             with async_timeout.timeout(10):
@@ -253,14 +266,14 @@ class AlexaConfig(alexa_config.AbstractConfig):
         if not self.enabled or not self._cloud.is_logged_in:
             return
 
-        action = event.data['action']
-        entity_id = event.data['entity_id']
+        action = event.data["action"]
+        entity_id = event.data["entity_id"]
         to_update = []
         to_remove = []
 
-        if action == 'create' and self.should_expose(entity_id):
+        if action == "create" and self.should_expose(entity_id):
             to_update.append(entity_id)
-        elif action == 'remove' and self.should_expose(entity_id):
+        elif action == "remove" and self.should_expose(entity_id):
             to_remove.append(entity_id)
 
         try:

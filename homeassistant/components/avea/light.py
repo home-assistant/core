@@ -3,15 +3,19 @@ import logging
 import avea
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR, Light)
+    ATTR_BRIGHTNESS,
+    ATTR_HS_COLOR,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    Light,
+)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.util.color as color_util
 
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_AVEA = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR)
+SUPPORT_AVEA = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

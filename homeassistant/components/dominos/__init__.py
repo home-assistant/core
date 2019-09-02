@@ -14,42 +14,50 @@ from homeassistant.util import Throttle
 _LOGGER = logging.getLogger(__name__)
 
 # The domain of your component. Should be equal to the name of your component.
-DOMAIN = 'dominos'
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
+DOMAIN = "dominos"
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-ATTR_COUNTRY = 'country_code'
-ATTR_FIRST_NAME = 'first_name'
-ATTR_LAST_NAME = 'last_name'
-ATTR_EMAIL = 'email'
-ATTR_PHONE = 'phone'
-ATTR_ADDRESS = 'address'
-ATTR_ORDERS = 'orders'
-ATTR_SHOW_MENU = 'show_menu'
-ATTR_ORDER_ENTITY = 'order_entity_id'
-ATTR_ORDER_NAME = 'name'
-ATTR_ORDER_CODES = 'codes'
+ATTR_COUNTRY = "country_code"
+ATTR_FIRST_NAME = "first_name"
+ATTR_LAST_NAME = "last_name"
+ATTR_EMAIL = "email"
+ATTR_PHONE = "phone"
+ATTR_ADDRESS = "address"
+ATTR_ORDERS = "orders"
+ATTR_SHOW_MENU = "show_menu"
+ATTR_ORDER_ENTITY = "order_entity_id"
+ATTR_ORDER_NAME = "name"
+ATTR_ORDER_CODES = "codes"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 MIN_TIME_BETWEEN_STORE_UPDATES = timedelta(minutes=3330)
 
-_ORDERS_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ORDER_NAME): cv.string,
-    vol.Required(ATTR_ORDER_CODES): vol.All(cv.ensure_list, [cv.string]),
-})
+_ORDERS_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ORDER_NAME): cv.string,
+        vol.Required(ATTR_ORDER_CODES): vol.All(cv.ensure_list, [cv.string]),
+    }
+)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(ATTR_COUNTRY): cv.string,
-        vol.Required(ATTR_FIRST_NAME): cv.string,
-        vol.Required(ATTR_LAST_NAME): cv.string,
-        vol.Required(ATTR_EMAIL): cv.string,
-        vol.Required(ATTR_PHONE): cv.string,
-        vol.Required(ATTR_ADDRESS): cv.string,
-        vol.Optional(ATTR_SHOW_MENU): cv.boolean,
-        vol.Optional(ATTR_ORDERS, default=[]): vol.All(
-            cv.ensure_list, [_ORDERS_SCHEMA]),
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(ATTR_COUNTRY): cv.string,
+                vol.Required(ATTR_FIRST_NAME): cv.string,
+                vol.Required(ATTR_LAST_NAME): cv.string,
+                vol.Required(ATTR_EMAIL): cv.string,
+                vol.Required(ATTR_PHONE): cv.string,
+                vol.Required(ATTR_ADDRESS): cv.string,
+                vol.Optional(ATTR_SHOW_MENU): cv.boolean,
+                vol.Optional(ATTR_ORDERS, default=[]): vol.All(
+                    cv.ensure_list, [_ORDERS_SCHEMA]
+                ),
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
@@ -61,7 +69,7 @@ def setup(hass, config):
     entities = []
     conf = config[DOMAIN]
 
-    hass.services.register(DOMAIN, 'order', dominos.handle_order)
+    hass.services.register(DOMAIN, "order", dominos.handle_order)
 
     if conf.get(ATTR_SHOW_MENU):
         hass.http.register_view(DominosProductListView(dominos))
@@ -77,7 +85,7 @@ def setup(hass, config):
     return True
 
 
-class Dominos():
+class Dominos:
     """Main Dominos service."""
 
     def __init__(self, hass, config):
@@ -85,16 +93,18 @@ class Dominos():
         conf = config[DOMAIN]
         from pizzapi import Address, Customer
         from pizzapi.address import StoreException
+
         self.hass = hass
         self.customer = Customer(
             conf.get(ATTR_FIRST_NAME),
             conf.get(ATTR_LAST_NAME),
             conf.get(ATTR_EMAIL),
             conf.get(ATTR_PHONE),
-            conf.get(ATTR_ADDRESS))
+            conf.get(ATTR_ADDRESS),
+        )
         self.address = Address(
-            *self.customer.address.split(','),
-            country=conf.get(ATTR_COUNTRY))
+            *self.customer.address.split(","), country=conf.get(ATTR_COUNTRY)
+        )
         self.country = conf.get(ATTR_COUNTRY)
         try:
             self.closest_store = self.address.closest_store()
@@ -105,8 +115,11 @@ class Dominos():
         """Handle ordering pizza."""
         entity_ids = call.data.get(ATTR_ORDER_ENTITY, None)
 
-        target_orders = [order for order in self.hass.data[DOMAIN]['entities']
-                         if order.entity_id in entity_ids]
+        target_orders = [
+            order
+            for order in self.hass.data[DOMAIN]["entities"]
+            if order.entity_id in entity_ids
+        ]
 
         for order in target_orders:
             order.place()
@@ -115,6 +128,7 @@ class Dominos():
     def update_closest_store(self):
         """Update the shared closest store (if open)."""
         from pizzapi.address import StoreException
+
         try:
             self.closest_store = self.address.closest_store()
             return True
@@ -126,19 +140,19 @@ class Dominos():
         """Return the products from the closest stores menu."""
         self.update_closest_store()
         if self.closest_store is None:
-            _LOGGER.warning('Cannot get menu. Store may be closed')
+            _LOGGER.warning("Cannot get menu. Store may be closed")
             return []
         menu = self.closest_store.get_menu()
         product_entries = []
 
         for product in menu.products:
             item = {}
-            if isinstance(product.menu_data['Variants'], list):
-                variants = ', '.join(product.menu_data['Variants'])
+            if isinstance(product.menu_data["Variants"], list):
+                variants = ", ".join(product.menu_data["Variants"])
             else:
-                variants = product.menu_data['Variants']
-            item['name'] = product.name
-            item['variants'] = variants
+                variants = product.menu_data["Variants"]
+            item["name"] = product.name
+            item["variants"] = variants
             product_entries.append(item)
 
         return product_entries
@@ -147,7 +161,7 @@ class Dominos():
 class DominosProductListView(http.HomeAssistantView):
     """View to retrieve product list content."""
 
-    url = '/api/dominos'
+    url = "/api/dominos"
     name = "api:dominos"
 
     def __init__(self, dominos):
@@ -165,8 +179,8 @@ class DominosOrder(Entity):
 
     def __init__(self, order_info, dominos):
         """Set up the entity."""
-        self._name = order_info['name']
-        self._product_codes = order_info['codes']
+        self._name = order_info["name"]
+        self._product_codes = order_info["codes"]
         self._orderable = False
         self.dominos = dominos
 
@@ -189,13 +203,14 @@ class DominosOrder(Entity):
     def state(self):
         """Return the state either closed, orderable or unorderable."""
         if self.dominos.closest_store is None:
-            return 'closed'
-        return 'orderable' if self._orderable else 'unorderable'
+            return "closed"
+        return "orderable" if self._orderable else "unorderable"
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the order state and refreshes the store."""
         from pizzapi.address import StoreException
+
         try:
             self.dominos.update_closest_store()
         except StoreException:
@@ -221,7 +236,8 @@ class DominosOrder(Entity):
             self.dominos.closest_store,
             self.dominos.customer,
             self.dominos.address,
-            self.dominos.country)
+            self.dominos.country,
+        )
 
         for code in self._product_codes:
             order.add_item(code)
@@ -231,10 +247,12 @@ class DominosOrder(Entity):
     def place(self):
         """Place the order."""
         from pizzapi.address import StoreException
+
         try:
             order = self.order()
             order.place()
         except StoreException:
             self._orderable = False
             _LOGGER.warning(
-                'Attempted to order Dominos - Order invalid or store closed')
+                "Attempted to order Dominos - Order invalid or store closed"
+            )

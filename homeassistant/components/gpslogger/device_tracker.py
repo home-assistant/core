@@ -9,9 +9,7 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
 )
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
-from homeassistant.components.device_tracker.config_entry import (
-    TrackerEntity
-)
+from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -29,23 +27,22 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry,
-                            async_add_entities):
+async def async_setup_entry(hass: HomeAssistantType, entry, async_add_entities):
     """Configure a dispatcher connection based on a config entry."""
+
     @callback
     def _receive_data(device, gps, battery, accuracy, attrs):
         """Receive set location."""
-        if device in hass.data[GPL_DOMAIN]['devices']:
+        if device in hass.data[GPL_DOMAIN]["devices"]:
             return
 
-        hass.data[GPL_DOMAIN]['devices'].add(device)
+        hass.data[GPL_DOMAIN]["devices"].add(device)
 
-        async_add_entities([GPSLoggerEntity(
-            device, gps, battery, accuracy, attrs
-        )])
+        async_add_entities([GPSLoggerEntity(device, gps, battery, accuracy, attrs)])
 
-    hass.data[GPL_DOMAIN]['unsub_device_tracker'][entry.entry_id] = \
-        async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
+    hass.data[GPL_DOMAIN]["unsub_device_tracker"][
+        entry.entry_id
+    ] = async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
 
     # Restore previously loaded devices
     dev_reg = await device_registry.async_get_registry(hass)
@@ -60,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry,
 
     entities = []
     for dev_id in dev_ids:
-        hass.data[GPL_DOMAIN]['devices'].add(dev_id)
+        hass.data[GPL_DOMAIN]["devices"].add(dev_id)
         entity = GPSLoggerEntity(dev_id, None, None, None, None)
         entities.append(entity)
 
@@ -70,8 +67,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry,
 class GPSLoggerEntity(TrackerEntity, RestoreEntity):
     """Represent a tracked device."""
 
-    def __init__(
-            self, device, location, battery, accuracy, attributes):
+    def __init__(self, device, location, battery, accuracy, attributes):
         """Set up Geofency entity."""
         self._accuracy = accuracy
         self._attributes = attributes
@@ -124,10 +120,7 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
     @property
     def device_info(self):
         """Return the device info."""
-        return {
-            'name': self._name,
-            'identifiers': {(GPL_DOMAIN, self._unique_id)},
-        }
+        return {"name": self._name, "identifiers": {(GPL_DOMAIN, self._unique_id)}}
 
     @property
     def source_type(self):
@@ -138,7 +131,8 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
         """Register state update callback."""
         await super().async_added_to_hass()
         self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass, TRACKER_UPDATE, self._async_receive_data)
+            self.hass, TRACKER_UPDATE, self._async_receive_data
+        )
 
         # don't restore if we got created with data
         if self._location is not None:
@@ -159,10 +153,7 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
             return
 
         attr = state.attributes
-        self._location = (
-            attr.get(ATTR_LATITUDE),
-            attr.get(ATTR_LONGITUDE),
-        )
+        self._location = (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
         self._accuracy = attr.get(ATTR_GPS_ACCURACY)
         self._attributes = {
             ATTR_ALTITUDE: attr.get(ATTR_ALTITUDE),
@@ -179,8 +170,7 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
         self._unsub_dispatcher()
 
     @callback
-    def _async_receive_data(self, device, location, battery, accuracy,
-                            attributes):
+    def _async_receive_data(self, device, location, battery, accuracy, attributes):
         """Mark the device as seen."""
         if device != self.name:
             return

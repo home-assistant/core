@@ -20,30 +20,32 @@ from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-_RESOURCE = 'https://data.dublinked.ie/cgi-bin/rtpi/realtimebusinformation'
+_RESOURCE = "https://data.dublinked.ie/cgi-bin/rtpi/realtimebusinformation"
 
-ATTR_STOP_ID = 'Stop ID'
-ATTR_ROUTE = 'Route'
-ATTR_DUE_IN = 'Due in'
-ATTR_DUE_AT = 'Due at'
-ATTR_NEXT_UP = 'Later Bus'
+ATTR_STOP_ID = "Stop ID"
+ATTR_ROUTE = "Route"
+ATTR_DUE_IN = "Due in"
+ATTR_DUE_AT = "Due at"
+ATTR_NEXT_UP = "Later Bus"
 
 ATTRIBUTION = "Data provided by data.dublinked.ie"
 
-CONF_STOP_ID = 'stopid'
-CONF_ROUTE = 'route'
+CONF_STOP_ID = "stopid"
+CONF_ROUTE = "route"
 
-DEFAULT_NAME = 'Next Bus'
-ICON = 'mdi:bus'
+DEFAULT_NAME = "Next Bus"
+ICON = "mdi:bus"
 
 SCAN_INTERVAL = timedelta(minutes=1)
-TIME_STR_FORMAT = '%H:%M'
+TIME_STR_FORMAT = "%H:%M"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STOP_ID): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_ROUTE, default=""): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_STOP_ID): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_ROUTE, default=""): cv.string,
+    }
+)
 
 
 def due_in_minutes(timestamp):
@@ -51,8 +53,9 @@ def due_in_minutes(timestamp):
 
     The timestamp should be in the format day/month/year hour/minute/second
     """
-    diff = datetime.strptime(
-        timestamp, "%d/%m/%Y %H:%M:%S") - dt_util.now().replace(tzinfo=None)
+    diff = datetime.strptime(timestamp, "%d/%m/%Y %H:%M:%S") - dt_util.now().replace(
+        tzinfo=None
+    )
 
     return str(int(diff.total_seconds() / 60))
 
@@ -103,13 +106,13 @@ class DublinPublicTransportSensor(Entity):
                 ATTR_STOP_ID: self._stop,
                 ATTR_ROUTE: self._times[0][ATTR_ROUTE],
                 ATTR_ATTRIBUTION: ATTRIBUTION,
-                ATTR_NEXT_UP: next_up
+                ATTR_NEXT_UP: next_up,
             }
 
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return 'min'
+        return "min"
 
     @property
     def icon(self):
@@ -133,48 +136,48 @@ class PublicTransportData:
         """Initialize the data object."""
         self.stop = stop
         self.route = route
-        self.info = [{ATTR_DUE_AT: 'n/a',
-                      ATTR_ROUTE: self.route,
-                      ATTR_DUE_IN: 'n/a'}]
+        self.info = [{ATTR_DUE_AT: "n/a", ATTR_ROUTE: self.route, ATTR_DUE_IN: "n/a"}]
 
     def update(self):
         """Get the latest data from opendata.ch."""
         params = {}
-        params['stopid'] = self.stop
+        params["stopid"] = self.stop
 
         if self.route:
-            params['routeid'] = self.route
+            params["routeid"] = self.route
 
-        params['maxresults'] = 2
-        params['format'] = 'json'
+        params["maxresults"] = 2
+        params["format"] = "json"
 
         response = requests.get(_RESOURCE, params, timeout=10)
 
         if response.status_code != 200:
-            self.info = [{ATTR_DUE_AT: 'n/a',
-                          ATTR_ROUTE: self.route,
-                          ATTR_DUE_IN: 'n/a'}]
+            self.info = [
+                {ATTR_DUE_AT: "n/a", ATTR_ROUTE: self.route, ATTR_DUE_IN: "n/a"}
+            ]
             return
 
         result = response.json()
 
-        if str(result['errorcode']) != '0':
-            self.info = [{ATTR_DUE_AT: 'n/a',
-                          ATTR_ROUTE: self.route,
-                          ATTR_DUE_IN: 'n/a'}]
+        if str(result["errorcode"]) != "0":
+            self.info = [
+                {ATTR_DUE_AT: "n/a", ATTR_ROUTE: self.route, ATTR_DUE_IN: "n/a"}
+            ]
             return
 
         self.info = []
-        for item in result['results']:
-            due_at = item.get('departuredatetime')
-            route = item.get('route')
+        for item in result["results"]:
+            due_at = item.get("departuredatetime")
+            route = item.get("route")
             if due_at is not None and route is not None:
-                bus_data = {ATTR_DUE_AT: due_at,
-                            ATTR_ROUTE: route,
-                            ATTR_DUE_IN: due_in_minutes(due_at)}
+                bus_data = {
+                    ATTR_DUE_AT: due_at,
+                    ATTR_ROUTE: route,
+                    ATTR_DUE_IN: due_in_minutes(due_at),
+                }
                 self.info.append(bus_data)
 
         if not self.info:
-            self.info = [{ATTR_DUE_AT: 'n/a',
-                          ATTR_ROUTE: self.route,
-                          ATTR_DUE_IN: 'n/a'}]
+            self.info = [
+                {ATTR_DUE_AT: "n/a", ATTR_ROUTE: self.route, ATTR_DUE_IN: "n/a"}
+            ]

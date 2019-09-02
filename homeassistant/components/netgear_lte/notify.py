@@ -1,10 +1,9 @@
-"""Suport for Netgear LTE notifications."""
+"""Support for Netgear LTE notifications."""
 import logging
 
 import attr
 
-from homeassistant.components.notify import (
-    ATTR_TARGET, BaseNotificationService, DOMAIN)
+from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService, DOMAIN
 
 from . import CONF_RECIPIENT, DATA_KEY
 

@@ -6,8 +6,7 @@ import voluptuous as vol
 
 from homeassistant import core
 from homeassistant.components import http
-from homeassistant.components.cover import (
-    INTENT_CLOSE_COVER, INTENT_OPEN_COVER)
+from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import callback
@@ -19,31 +18,36 @@ from .util import create_matcher
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_TEXT = 'text'
+ATTR_TEXT = "text"
 
-DOMAIN = 'conversation'
+DOMAIN = "conversation"
 
-REGEX_TURN_COMMAND = re.compile(r'turn (?P<name>(?: |\w)+) (?P<command>\w+)')
-REGEX_TYPE = type(re.compile(''))
+REGEX_TURN_COMMAND = re.compile(r"turn (?P<name>(?: |\w)+) (?P<command>\w+)")
+REGEX_TYPE = type(re.compile(""))
 
 UTTERANCES = {
-    'cover': {
-        INTENT_OPEN_COVER: ['Open [the] [a] [an] {name}[s]'],
-        INTENT_CLOSE_COVER: ['Close [the] [a] [an] {name}[s]']
+    "cover": {
+        INTENT_OPEN_COVER: ["Open [the] [a] [an] {name}[s]"],
+        INTENT_CLOSE_COVER: ["Close [the] [a] [an] {name}[s]"],
     }
 }
 
-SERVICE_PROCESS = 'process'
+SERVICE_PROCESS = "process"
 
-SERVICE_PROCESS_SCHEMA = vol.Schema({
-    vol.Required(ATTR_TEXT): cv.string,
-})
+SERVICE_PROCESS_SCHEMA = vol.Schema({vol.Required(ATTR_TEXT): cv.string})
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({
-    vol.Optional('intents'): vol.Schema({
-        cv.string: vol.All(cv.ensure_list, [cv.string])
-    })
-})}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional("intents"): vol.Schema(
+                    {cv.string: vol.All(cv.ensure_list, [cv.string])}
+                )
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 @core.callback
@@ -79,7 +83,7 @@ async def async_setup(hass, config):
     if intents is None:
         intents = hass.data[DOMAIN] = {}
 
-    for intent_type, utterances in config.get('intents', {}).items():
+    for intent_type, utterances in config.get("intents", {}).items():
         conf = intents.get(intent_type)
 
         if conf is None:
@@ -90,14 +94,15 @@ async def async_setup(hass, config):
     async def process(service):
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
-        _LOGGER.debug('Processing: <%s>', text)
+        _LOGGER.debug("Processing: <%s>", text)
         try:
             await _process(hass, text)
         except intent.IntentHandleError as err:
-            _LOGGER.error('Error processing %s: %s', text, err)
+            _LOGGER.error("Error processing %s: %s", text, err)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_PROCESS, process, schema=SERVICE_PROCESS_SCHEMA)
+        DOMAIN, SERVICE_PROCESS, process, schema=SERVICE_PROCESS_SCHEMA
+    )
 
     hass.http.register_view(ConversationProcessView)
 
@@ -105,18 +110,21 @@ async def async_setup(hass, config):
     # if a letter is not there. By removing 's' we can match singular and
     # plural names.
 
-    async_register(hass, intent.INTENT_TURN_ON, [
-        'Turn [the] [a] {name}[s] on',
-        'Turn on [the] [a] [an] {name}[s]',
-    ])
-    async_register(hass, intent.INTENT_TURN_OFF, [
-        'Turn [the] [a] [an] {name}[s] off',
-        'Turn off [the] [a] [an] {name}[s]',
-    ])
-    async_register(hass, intent.INTENT_TOGGLE, [
-        'Toggle [the] [a] [an] {name}[s]',
-        '[the] [a] [an] {name}[s] toggle',
-    ])
+    async_register(
+        hass,
+        intent.INTENT_TURN_ON,
+        ["Turn [the] [a] {name}[s] on", "Turn on [the] [a] [an] {name}[s]"],
+    )
+    async_register(
+        hass,
+        intent.INTENT_TURN_OFF,
+        ["Turn [the] [a] [an] {name}[s] off", "Turn off [the] [a] [an] {name}[s]"],
+    )
+    async_register(
+        hass,
+        intent.INTENT_TOGGLE,
+        ["Toggle [the] [a] [an] {name}[s]", "[the] [a] [an] {name}[s] toggle"],
+    )
 
     @callback
     def register_utterances(component):
@@ -152,27 +160,27 @@ async def _process(hass, text):
                 continue
 
             response = await hass.helpers.intent.async_handle(
-                DOMAIN, intent_type,
-                {key: {'value': value} for key, value
-                 in match.groupdict().items()}, text)
+                DOMAIN,
+                intent_type,
+                {key: {"value": value} for key, value in match.groupdict().items()},
+                text,
+            )
             return response
 
 
 class ConversationProcessView(http.HomeAssistantView):
     """View to retrieve shopping list content."""
 
-    url = '/api/conversation/process'
+    url = "/api/conversation/process"
     name = "api:conversation:process"
 
-    @RequestDataValidator(vol.Schema({
-        vol.Required('text'): str,
-    }))
+    @RequestDataValidator(vol.Schema({vol.Required("text"): str}))
     async def post(self, request, data):
         """Send a request for processing."""
-        hass = request.app['hass']
+        hass = request.app["hass"]
 
         try:
-            intent_result = await _process(hass, data['text'])
+            intent_result = await _process(hass, data["text"])
         except intent.IntentHandleError as err:
             intent_result = intent.IntentResponse()
             intent_result.async_set_speech(str(err))

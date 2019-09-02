@@ -11,14 +11,18 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = conf or {}
 
     if conf is not None:
-        hass.async_create_task(hass.config_entries.flow.async_init(
-            DOMAIN, context={'source': config_entries.SOURCE_IMPORT}))
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
+            )
+        )
 
     return True
 
 
 async def async_setup_entry(hass, entry):
     """Set up Cast from a config entry."""
-    hass.async_create_task(hass.config_entries.async_forward_entry_setup(
-        entry, 'media_player'))
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry, "media_player")
+    )
     return True

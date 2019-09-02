@@ -13,7 +13,7 @@ from homeassistant.helpers.json import JSONEncoder
 @pytest.fixture(autouse=True)
 def mock_history(hass):
     """Mock history component loaded."""
-    hass.config.components.add('history')
+    hass.config.components.add("history")
 
 
 @pytest.fixture(autouse=True)
@@ -28,9 +28,7 @@ def demo_cleanup(hass):
 
 async def test_setting_up_demo(hass):
     """Test if we can set up the demo and dump it to JSON."""
-    assert await async_setup_component(hass, demo.DOMAIN, {
-        'demo': {}
-    })
+    assert await async_setup_component(hass, demo.DOMAIN, {"demo": {}})
     await hass.async_start()
 
     # This is done to make sure entity components don't accidentally store
@@ -38,5 +36,7 @@ async def test_setting_up_demo(hass):
     try:
         json.dumps(hass.states.async_all(), cls=JSONEncoder)
     except Exception:
-        pytest.fail('Unable to convert all demo entities to JSON. '
-                    'Wrong data in state machine!')
+        pytest.fail(
+            "Unable to convert all demo entities to JSON. "
+            "Wrong data in state machine!"
+        )

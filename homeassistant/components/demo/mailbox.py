@@ -3,13 +3,12 @@ from hashlib import sha1
 import logging
 import os
 
-from homeassistant.components.mailbox import (
-    CONTENT_TYPE_MPEG, Mailbox, StreamError)
+from homeassistant.components.mailbox import CONTENT_TYPE_MPEG, Mailbox, StreamError
 from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
 
-MAILBOX_NAME = 'DemoMailbox'
+MAILBOX_NAME = "DemoMailbox"
 
 
 async def async_get_handler(hass, config, discovery_info=None):
@@ -26,19 +25,17 @@ class DemoMailbox(Mailbox):
         self._messages = {}
         txt = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
         for idx in range(0, 10):
-            msgtime = int(dt.as_timestamp(
-                dt.utcnow()) - 3600 * 24 * (10 - idx))
-            msgtxt = "Message {}. {}".format(
-                idx + 1, txt * (1 + idx * (idx % 2)))
-            msgsha = sha1(msgtxt.encode('utf-8')).hexdigest()
+            msgtime = int(dt.as_timestamp(dt.utcnow()) - 3600 * 24 * (10 - idx))
+            msgtxt = "Message {}. {}".format(idx + 1, txt * (1 + idx * (idx % 2)))
+            msgsha = sha1(msgtxt.encode("utf-8")).hexdigest()
             msg = {
-                'info': {
-                    'origtime': msgtime,
-                    'callerid': 'John Doe <212-555-1212>',
-                    'duration': '10',
+                "info": {
+                    "origtime": msgtime,
+                    "callerid": "John Doe <212-555-1212>",
+                    "duration": "10",
                 },
-                'text': msgtxt,
-                'sha':  msgsha,
+                "text": msgtxt,
+                "sha": msgsha,
             }
             self._messages[msgsha] = msg
 
@@ -62,16 +59,17 @@ class DemoMailbox(Mailbox):
         if msgid not in self._messages:
             raise StreamError("Message not found")
 
-        audio_path = os.path.join(
-            os.path.dirname(__file__), 'tts.mp3')
-        with open(audio_path, 'rb') as file:
+        audio_path = os.path.join(os.path.dirname(__file__), "tts.mp3")
+        with open(audio_path, "rb") as file:
             return file.read()
 
     async def async_get_messages(self):
         """Return a list of the current messages."""
-        return sorted(self._messages.values(),
-                      key=lambda item: item['info']['origtime'],
-                      reverse=True)
+        return sorted(
+            self._messages.values(),
+            key=lambda item: item["info"]["origtime"],
+            reverse=True,
+        )
 
     def async_delete(self, msgid):
         """Delete the specified messages."""

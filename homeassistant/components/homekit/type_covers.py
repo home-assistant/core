@@ -4,23 +4,38 @@ import logging
 from pyhap.const import CATEGORY_GARAGE_DOOR_OPENER, CATEGORY_WINDOW_COVERING
 
 from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION, ATTR_POSITION, DOMAIN, SUPPORT_STOP)
+    ATTR_CURRENT_POSITION,
+    ATTR_POSITION,
+    DOMAIN,
+    SUPPORT_STOP,
+)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER, SERVICE_SET_COVER_POSITION, SERVICE_STOP_COVER,
-    STATE_CLOSED, STATE_OPEN)
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
+    SERVICE_SET_COVER_POSITION,
+    SERVICE_STOP_COVER,
+    STATE_CLOSED,
+    STATE_OPEN,
+)
 
 from . import TYPES
 from .accessories import HomeAccessory, debounce
 from .const import (
-    CHAR_CURRENT_DOOR_STATE, CHAR_CURRENT_POSITION, CHAR_POSITION_STATE,
-    CHAR_TARGET_DOOR_STATE, CHAR_TARGET_POSITION, SERV_GARAGE_DOOR_OPENER,
-    SERV_WINDOW_COVERING)
+    CHAR_CURRENT_DOOR_STATE,
+    CHAR_CURRENT_POSITION,
+    CHAR_POSITION_STATE,
+    CHAR_TARGET_DOOR_STATE,
+    CHAR_TARGET_POSITION,
+    SERV_GARAGE_DOOR_OPENER,
+    SERV_WINDOW_COVERING,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@TYPES.register('GarageDoorOpener')
+@TYPES.register("GarageDoorOpener")
 class GarageDoorOpener(HomeAccessory):
     """Generate a Garage Door Opener accessory for a cover entity.
 
@@ -35,13 +50,15 @@ class GarageDoorOpener(HomeAccessory):
 
         serv_garage_door = self.add_preload_service(SERV_GARAGE_DOOR_OPENER)
         self.char_current_state = serv_garage_door.configure_char(
-            CHAR_CURRENT_DOOR_STATE, value=0)
+            CHAR_CURRENT_DOOR_STATE, value=0
+        )
         self.char_target_state = serv_garage_door.configure_char(
-            CHAR_TARGET_DOOR_STATE, value=0, setter_callback=self.set_state)
+            CHAR_TARGET_DOOR_STATE, value=0, setter_callback=self.set_state
+        )
 
     def set_state(self, value):
         """Change garage state if call came from HomeKit."""
-        _LOGGER.debug('%s: Set state to %d', self.entity_id, value)
+        _LOGGER.debug("%s: Set state to %d", self.entity_id, value)
         self._flag_state = True
 
         params = {ATTR_ENTITY_ID: self.entity_id}
@@ -65,7 +82,7 @@ class GarageDoorOpener(HomeAccessory):
             self._flag_state = False
 
 
-@TYPES.register('WindowCovering')
+@TYPES.register("WindowCovering")
 class WindowCovering(HomeAccessory):
     """Generate a Window accessory for a cover entity.
 
@@ -79,14 +96,16 @@ class WindowCovering(HomeAccessory):
 
         serv_cover = self.add_preload_service(SERV_WINDOW_COVERING)
         self.char_current_position = serv_cover.configure_char(
-            CHAR_CURRENT_POSITION, value=0)
+            CHAR_CURRENT_POSITION, value=0
+        )
         self.char_target_position = serv_cover.configure_char(
-            CHAR_TARGET_POSITION, value=0, setter_callback=self.move_cover)
+            CHAR_TARGET_POSITION, value=0, setter_callback=self.move_cover
+        )
 
     @debounce
     def move_cover(self, value):
         """Move cover to value if call came from HomeKit."""
-        _LOGGER.debug('%s: Set position to %d', self.entity_id, value)
+        _LOGGER.debug("%s: Set position to %d", self.entity_id, value)
         self._homekit_target = value
 
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_POSITION: value}
@@ -97,13 +116,15 @@ class WindowCovering(HomeAccessory):
         current_position = new_state.attributes.get(ATTR_CURRENT_POSITION)
         if isinstance(current_position, int):
             self.char_current_position.set_value(current_position)
-            if self._homekit_target is None or \
-                    abs(current_position - self._homekit_target) < 6:
+            if (
+                self._homekit_target is None
+                or abs(current_position - self._homekit_target) < 6
+            ):
                 self.char_target_position.set_value(current_position)
                 self._homekit_target = None
 
 
-@TYPES.register('WindowCoveringBasic')
+@TYPES.register("WindowCoveringBasic")
 class WindowCoveringBasic(HomeAccessory):
     """Generate a Window accessory for a cover entity.
 
@@ -114,22 +135,26 @@ class WindowCoveringBasic(HomeAccessory):
     def __init__(self, *args):
         """Initialize a WindowCovering accessory object."""
         super().__init__(*args, category=CATEGORY_WINDOW_COVERING)
-        features = self.hass.states.get(self.entity_id) \
-            .attributes.get(ATTR_SUPPORTED_FEATURES)
+        features = self.hass.states.get(self.entity_id).attributes.get(
+            ATTR_SUPPORTED_FEATURES
+        )
         self._supports_stop = features & SUPPORT_STOP
 
         serv_cover = self.add_preload_service(SERV_WINDOW_COVERING)
         self.char_current_position = serv_cover.configure_char(
-            CHAR_CURRENT_POSITION, value=0)
+            CHAR_CURRENT_POSITION, value=0
+        )
         self.char_target_position = serv_cover.configure_char(
-            CHAR_TARGET_POSITION, value=0, setter_callback=self.move_cover)
+            CHAR_TARGET_POSITION, value=0, setter_callback=self.move_cover
+        )
         self.char_position_state = serv_cover.configure_char(
-            CHAR_POSITION_STATE, value=2)
+            CHAR_POSITION_STATE, value=2
+        )
 
     @debounce
     def move_cover(self, value):
         """Move cover to value if call came from HomeKit."""
-        _LOGGER.debug('%s: Set position to %d', self.entity_id, value)
+        _LOGGER.debug("%s: Set position to %d", self.entity_id, value)
 
         if self._supports_stop:
             if value > 70:

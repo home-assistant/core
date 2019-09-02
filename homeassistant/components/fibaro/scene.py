@@ -8,15 +8,14 @@ from . import FIBARO_DEVICES, FibaroDevice
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Perform the setup for Fibaro scenes."""
     if discovery_info is None:
         return
 
     async_add_entities(
-        [FibaroScene(scene)
-         for scene in hass.data[FIBARO_DEVICES]['scene']], True)
+        [FibaroScene(scene) for scene in hass.data[FIBARO_DEVICES]["scene"]], True
+    )
 
 
 class FibaroScene(FibaroDevice, Scene):

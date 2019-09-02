@@ -4,26 +4,36 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_DEVICES, CONF_HOST, CONF_API_KEY, CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP)
+    CONF_DEVICES,
+    CONF_HOST,
+    CONF_API_KEY,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'fortigate'
+DOMAIN = "fortigate"
 
 DATA_FGT = DOMAIN
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_DEVICES, default=[]):
-            vol.All(cv.ensure_list, [cv.string]),
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_HOST): cv.string,
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_API_KEY): cv.string,
+                vol.Optional(CONF_DEVICES, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):
@@ -35,9 +45,7 @@ async def async_setup(hass, config):
     api_key = conf[CONF_API_KEY]
     devices = conf[CONF_DEVICES]
 
-    is_success = await async_setup_fortigate(
-        hass, config, host, user, api_key, devices
-    )
+    is_success = await async_setup_fortigate(hass, config, host, user, api_key, devices)
 
     return is_success
 
@@ -54,13 +62,11 @@ async def async_setup_fortigate(hass, config, host, user, api_key, devices):
         _LOGGER.error("Failed to connect to Fortigate")
         return False
 
-    hass.data[DATA_FGT] = {
-        'fgt': fgt,
-        'devices': devices
-    }
+    hass.data[DATA_FGT] = {"fgt": fgt, "devices": devices}
 
-    hass.async_create_task(async_load_platform(
-        hass, 'device_tracker', DOMAIN, {}, config))
+    hass.async_create_task(
+        async_load_platform(hass, "device_tracker", DOMAIN, {}, config)
+    )
 
     async def close_fgt(event):
         """Close Fortigate connection on HA Stop."""

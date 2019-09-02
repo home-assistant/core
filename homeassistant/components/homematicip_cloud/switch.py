@@ -2,10 +2,15 @@
 import logging
 
 from homematicip.aio.device import (
-    AsyncBrandSwitchMeasuring, AsyncFullFlushSwitchMeasuring, AsyncMultiIOBox,
-    AsyncOpenCollector8Module, AsyncPlugableSwitch,
-    AsyncPlugableSwitchMeasuring, AsyncPrintedCircuitBoardSwitch2,
-    AsyncPrintedCircuitBoardSwitchBattery)
+    AsyncBrandSwitchMeasuring,
+    AsyncFullFlushSwitchMeasuring,
+    AsyncMultiIOBox,
+    AsyncOpenCollector8Module,
+    AsyncPlugableSwitch,
+    AsyncPlugableSwitchMeasuring,
+    AsyncPrintedCircuitBoardSwitch2,
+    AsyncPrintedCircuitBoardSwitchBattery,
+)
 from homematicip.aio.group import AsyncSwitchingGroup
 from homematicip.aio.home import AsyncHome
 
@@ -19,14 +24,14 @@ from .device import ATTR_GROUP_MEMBER_UNREACHABLE
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the HomematicIP Cloud switch devices."""
     pass
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
-                            async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+) -> None:
     """Set up the HomematicIP switch from a config entry."""
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
@@ -36,11 +41,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
             # This device is implemented in the light platform and will
             # not be added in the switch platform
             pass
-        elif isinstance(device, (AsyncPlugableSwitchMeasuring,
-                                 AsyncFullFlushSwitchMeasuring)):
+        elif isinstance(
+            device, (AsyncPlugableSwitchMeasuring, AsyncFullFlushSwitchMeasuring)
+        ):
             devices.append(HomematicipSwitchMeasuring(home, device))
-        elif isinstance(device, (AsyncPlugableSwitch,
-                                 AsyncPrintedCircuitBoardSwitchBattery)):
+        elif isinstance(
+            device, (AsyncPlugableSwitch, AsyncPrintedCircuitBoardSwitchBattery)
+        ):
             devices.append(HomematicipSwitch(home, device))
         elif isinstance(device, AsyncOpenCollector8Module):
             for channel in range(1, 9):
@@ -54,8 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry,
 
     for group in home.groups:
         if isinstance(group, AsyncSwitchingGroup):
-            devices.append(
-                HomematicipGroupSwitch(home, group))
+            devices.append(HomematicipGroupSwitch(home, group))
 
     if devices:
         async_add_entities(devices)
@@ -85,9 +91,9 @@ class HomematicipSwitch(HomematicipGenericDevice, SwitchDevice):
 class HomematicipGroupSwitch(HomematicipGenericDevice, SwitchDevice):
     """representation of a HomematicIP switching group."""
 
-    def __init__(self, home: AsyncHome, device, post: str = 'Group') -> None:
+    def __init__(self, home: AsyncHome, device, post: str = "Group") -> None:
         """Initialize switching group."""
-        device.modelType = 'HmIP-{}'.format(post)
+        device.modelType = "HmIP-{}".format(post)
         super().__init__(home, device, post)
 
     @property
@@ -143,13 +149,12 @@ class HomematicipMultiSwitch(HomematicipGenericDevice, SwitchDevice):
     def __init__(self, home: AsyncHome, device, channel: int):
         """Initialize the multi switch device."""
         self.channel = channel
-        super().__init__(home, device, 'Channel{}'.format(channel))
+        super().__init__(home, device, "Channel{}".format(channel))
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return "{}_{}_{}".format(self.__class__.__name__,
-                                 self.post, self._device.id)
+        return "{}_{}_{}".format(self.__class__.__name__, self.post, self._device.id)
 
     @property
     def is_on(self) -> bool:

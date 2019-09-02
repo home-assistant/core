@@ -1,4 +1,6 @@
 """UniFi Controller abstraction."""
+from datetime import timedelta
+
 import asyncio
 import ssl
 import async_timeout
@@ -13,8 +15,28 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
-    CONF_BLOCK_CLIENT, CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID, LOGGER,
-    UNIFI_CONFIG)
+    CONF_BLOCK_CLIENT,
+    CONF_CONTROLLER,
+    CONF_DETECTION_TIME,
+    CONF_DONT_TRACK_CLIENTS,
+    CONF_DONT_TRACK_DEVICES,
+    CONF_DONT_TRACK_WIRED_CLIENTS,
+    CONF_TRACK_CLIENTS,
+    CONF_TRACK_DEVICES,
+    CONF_TRACK_WIRED_CLIENTS,
+    CONF_SITE_ID,
+    CONF_SSID_FILTER,
+    CONTROLLER_ID,
+    DEFAULT_BLOCK_CLIENTS,
+    DEFAULT_TRACK_CLIENTS,
+    DEFAULT_TRACK_DEVICES,
+    DEFAULT_TRACK_WIRED_CLIENTS,
+    DEFAULT_DETECTION_TIME,
+    DEFAULT_SSID_FILTER,
+    DOMAIN,
+    LOGGER,
+    UNIFI_CONFIG,
+)
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -31,7 +53,6 @@ class UniFiController:
 
         self._site_name = None
         self._site_role = None
-        self.unifi_config = {}
 
     @property
     def host(self):
@@ -54,9 +75,40 @@ class UniFiController:
         return self._site_role
 
     @property
-    def block_clients(self):
-        """Return list of clients to block."""
-        return self.unifi_config.get(CONF_BLOCK_CLIENT, [])
+    def option_block_clients(self):
+        """Config entry option with list of clients to control network access."""
+        return self.config_entry.options.get(CONF_BLOCK_CLIENT, DEFAULT_BLOCK_CLIENTS)
+
+    @property
+    def option_track_clients(self):
+        """Config entry option to not track clients."""
+        return self.config_entry.options.get(CONF_TRACK_CLIENTS, DEFAULT_TRACK_CLIENTS)
+
+    @property
+    def option_track_devices(self):
+        """Config entry option to not track devices."""
+        return self.config_entry.options.get(CONF_TRACK_DEVICES, DEFAULT_TRACK_DEVICES)
+
+    @property
+    def option_track_wired_clients(self):
+        """Config entry option to not track wired clients."""
+        return self.config_entry.options.get(
+            CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
+        )
+
+    @property
+    def option_detection_time(self):
+        """Config entry option defining number of seconds from last seen to away."""
+        return timedelta(
+            seconds=self.config_entry.options.get(
+                CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
+            )
+        )
+
+    @property
+    def option_ssid_filter(self):
+        """Config entry option listing what SSIDs are being used to track clients."""
+        return self.config_entry.options.get(CONF_SSID_FILTER, DEFAULT_SSID_FILTER)
 
     @property
     def mac(self):
@@ -67,10 +119,14 @@ class UniFiController:
         return None
 
     @property
-    def event_update(self):
+    def signal_update(self):
         """Event specific per UniFi entry to signal new data."""
-        return 'unifi-update-{}'.format(
-            CONTROLLER_ID.format(host=self.host, site=self.site))
+        return f"unifi-update-{CONTROLLER_ID.format(host=self.host, site=self.site)}"
+
+    @property
+    def signal_options_update(self):
+        """Event specific per UniFi entry to signal new options."""
+        return f"unifi-options-{CONTROLLER_ID.format(host=self.host, site=self.site)}"
 
     async def request_update(self):
         """Request an update."""
@@ -90,7 +146,7 @@ class UniFiController:
             with async_timeout.timeout(10):
                 await self.api.clients.update()
                 await self.api.devices.update()
-                if self.block_clients:
+                if self.option_block_clients:
                     await self.api.clients_all.update()
 
         except aiounifi.LoginRequired:
@@ -101,20 +157,20 @@ class UniFiController:
             except (asyncio.TimeoutError, aiounifi.AiounifiException):
                 failed = True
                 if self.available:
-                    LOGGER.error('Unable to reach controller %s', self.host)
+                    LOGGER.error("Unable to reach controller %s", self.host)
                     self.available = False
 
         except (asyncio.TimeoutError, aiounifi.AiounifiException):
             failed = True
             if self.available:
-                LOGGER.error('Unable to reach controller %s', self.host)
+                LOGGER.error("Unable to reach controller %s", self.host)
                 self.available = False
 
         if not failed and not self.available:
-            LOGGER.info('Reconnected to controller %s', self.host)
+            LOGGER.info("Reconnected to controller %s", self.host)
             self.available = True
 
-        async_dispatcher_send(self.hass, self.event_update)
+        async_dispatcher_send(self.hass, self.signal_update)
 
     async def async_setup(self):
         """Set up a UniFi controller."""
@@ -122,37 +178,87 @@ class UniFiController:
 
         try:
             self.api = await get_controller(
-                self.hass, **self.config_entry.data[CONF_CONTROLLER])
+                self.hass, **self.config_entry.data[CONF_CONTROLLER]
+            )
             await self.api.initialize()
 
             sites = await self.api.sites()
 
             for site in sites.values():
-                if self.site == site['name']:
-                    self._site_name = site['desc']
-                    self._site_role = site['role']
+                if self.site == site["name"]:
+                    self._site_name = site["desc"]
+                    self._site_role = site["role"]
                     break
 
         except CannotConnect:
             raise ConfigEntryNotReady
 
         except Exception as err:  # pylint: disable=broad-except
-            LOGGER.error(
-                'Unknown error connecting with UniFi controller: %s', err)
+            LOGGER.error("Unknown error connecting with UniFi controller: %s", err)
             return False
 
-        for unifi_config in hass.data[UNIFI_CONFIG]:
-            if self.host == unifi_config[CONF_HOST] and \
-                    self.site_name == unifi_config[CONF_SITE_ID]:
-                self.unifi_config = unifi_config
-                break
+        self.import_configuration()
 
-        for platform in ['device_tracker', 'switch']:
+        self.config_entry.add_update_listener(self.async_options_updated)
+
+        for platform in ["device_tracker", "switch"]:
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, platform))
+                    self.config_entry, platform
+                )
+            )
 
         return True
+
+    @staticmethod
+    async def async_options_updated(hass, entry):
+        """Triggered by config entry options updates."""
+        controller_id = CONTROLLER_ID.format(
+            host=entry.data[CONF_CONTROLLER][CONF_HOST],
+            site=entry.data[CONF_CONTROLLER][CONF_SITE_ID],
+        )
+        controller = hass.data[DOMAIN][controller_id]
+
+        async_dispatcher_send(hass, controller.signal_options_update)
+
+    def import_configuration(self):
+        """Import configuration to config entry options."""
+        unifi_config = {}
+        for config in self.hass.data[UNIFI_CONFIG]:
+            if (
+                self.host == config[CONF_HOST]
+                and self.site_name == config[CONF_SITE_ID]
+            ):
+                unifi_config = config
+                break
+
+        old_options = dict(self.config_entry.options)
+        new_options = {}
+
+        for config, option in (
+            (CONF_BLOCK_CLIENT, CONF_BLOCK_CLIENT),
+            (CONF_DONT_TRACK_CLIENTS, CONF_TRACK_CLIENTS),
+            (CONF_DONT_TRACK_WIRED_CLIENTS, CONF_TRACK_WIRED_CLIENTS),
+            (CONF_DONT_TRACK_DEVICES, CONF_TRACK_DEVICES),
+            (CONF_DETECTION_TIME, CONF_DETECTION_TIME),
+            (CONF_SSID_FILTER, CONF_SSID_FILTER),
+        ):
+            if config in unifi_config:
+                if config == option and unifi_config[
+                    config
+                ] != self.config_entry.options.get(option):
+                    new_options[option] = unifi_config[config]
+                elif config != option and (
+                    option not in self.config_entry.options
+                    or unifi_config[config] == self.config_entry.options.get(option)
+                ):
+                    new_options[option] = not unifi_config[config]
+
+        if new_options:
+            options = {**old_options, **new_options}
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, options=options
+            )
 
     async def async_reset(self):
         """Reset this controller to default state.
@@ -164,15 +270,15 @@ class UniFiController:
         if self.api is None:
             return True
 
-        for platform in ['device_tracker', 'switch']:
+        for platform in ["device_tracker", "switch"]:
             await self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, platform)
+                self.config_entry, platform
+            )
 
         return True
 
 
-async def get_controller(
-        hass, host, username, password, port, site, verify_ssl):
+async def get_controller(hass, host, username, password, port, site, verify_ssl):
     """Create a controller object and verify authentication."""
     sslcontext = None
 
@@ -182,11 +288,17 @@ async def get_controller(
             sslcontext = ssl.create_default_context(cafile=verify_ssl)
     else:
         session = aiohttp_client.async_create_clientsession(
-            hass, verify_ssl=verify_ssl, cookie_jar=CookieJar(unsafe=True))
+            hass, verify_ssl=verify_ssl, cookie_jar=CookieJar(unsafe=True)
+        )
 
     controller = aiounifi.Controller(
-        host, username=username, password=password, port=port, site=site,
-        websession=session, sslcontext=sslcontext
+        host,
+        username=username,
+        password=password,
+        port=port,
+        site=site,
+        websession=session,
+        sslcontext=sslcontext,
     )
 
     try:
@@ -203,5 +315,5 @@ async def get_controller(
         raise CannotConnect
 
     except aiounifi.AiounifiException:
-        LOGGER.exception('Unknown UniFi communication error occurred')
+        LOGGER.exception("Unknown UniFi communication error occurred")
         raise AuthenticationRequired

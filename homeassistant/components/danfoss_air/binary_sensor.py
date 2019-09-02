@@ -7,6 +7,7 @@ from . import DOMAIN as DANFOSS_AIR_DOMAIN
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available Danfoss Air sensors etc."""
     from pydanfossair.commands import ReadCommand
+
     data = hass.data[DANFOSS_AIR_DOMAIN]
 
     sensors = [
@@ -17,8 +18,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     dev = []
 
     for sensor in sensors:
-        dev.append(DanfossAirBinarySensor(
-            data, sensor[0], sensor[1], sensor[2]))
+        dev.append(DanfossAirBinarySensor(data, sensor[0], sensor[1], sensor[2]))
 
     add_entities(dev, True)
 

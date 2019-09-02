@@ -3,7 +3,7 @@
   "name": "Prometheus",
   "documentation": "https://www.home-assistant.io/components/prometheus",
   "requirements": [
-    "prometheus_client==0.2.0"
+    "prometheus_client==0.7.1"
   ],
   "dependencies": [
     "http"

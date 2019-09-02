@@ -44,10 +44,8 @@ def _zone_name_validator(config):
     for zone, zone_config in config[CONF_ZONE].items():
         if CONF_NAME not in zone_config:
             zone_config[CONF_NAME] = "{} ({}:{}) - {}".format(
-                DEFAULT_NAME,
-                config[CONF_HOST],
-                config[CONF_PORT],
-                zone)
+                DEFAULT_NAME, config[CONF_HOST], config[CONF_PORT], zone
+            )
     return config
 
 
@@ -59,16 +57,19 @@ ZONE_SCHEMA = vol.Schema(
 )
 
 DEVICE_SCHEMA = vol.Schema(
-    vol.All({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.positive_int,
-        vol.Optional(
-            CONF_ZONE, default={1: _optional_zone(None)}
-        ): {vol.In([1, 2]): _optional_zone},
-        vol.Optional(
-            CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-        ): cv.positive_int,
-    }, _zone_name_validator)
+    vol.All(
+        {
+            vol.Required(CONF_HOST): cv.string,
+            vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.positive_int,
+            vol.Optional(CONF_ZONE, default={1: _optional_zone(None)}): {
+                vol.In([1, 2]): _optional_zone
+            },
+            vol.Optional(
+                CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+            ): cv.positive_int,
+        },
+        _zone_name_validator,
+    )
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -82,37 +83,27 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     hass.data[DOMAIN_DATA_CONFIG] = {}
 
     for device in config[DOMAIN]:
-        hass.data[DOMAIN_DATA_CONFIG][
-            (device[CONF_HOST], device[CONF_PORT])
-        ] = device
+        hass.data[DOMAIN_DATA_CONFIG][(device[CONF_HOST], device[CONF_PORT])] = device
 
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": config_entries.SOURCE_IMPORT},
-                data={
-                    CONF_HOST: device[CONF_HOST],
-                    CONF_PORT: device[CONF_PORT],
-                },
+                data={CONF_HOST: device[CONF_HOST], CONF_PORT: device[CONF_PORT]},
             )
         )
 
     return True
 
 
-async def async_setup_entry(
-        hass: HomeAssistantType, entry: config_entries.ConfigEntry
-):
+async def async_setup_entry(hass: HomeAssistantType, entry: config_entries.ConfigEntry):
     """Set up an access point from a config entry."""
     client = Client(entry.data[CONF_HOST], entry.data[CONF_PORT])
 
     config = hass.data[DOMAIN_DATA_CONFIG].get(
         (entry.data[CONF_HOST], entry.data[CONF_PORT]),
         DEVICE_SCHEMA(
-            {
-                CONF_HOST: entry.data[CONF_HOST],
-                CONF_PORT: entry.data[CONF_PORT],
-            }
+            {CONF_HOST: entry.data[CONF_HOST], CONF_PORT: entry.data[CONF_PORT]}
         ),
     )
 
@@ -121,9 +112,7 @@ async def async_setup_entry(
         "config": config,
     }
 
-    asyncio.ensure_future(
-        _run_client(hass, client, config[CONF_SCAN_INTERVAL])
-    )
+    asyncio.ensure_future(_run_client(hass, client, config[CONF_SCAN_INTERVAL]))
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "media_player")
@@ -145,9 +134,7 @@ async def _run_client(hass, client, interval):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop)
 
     def _listen(_):
-        hass.helpers.dispatcher.async_dispatcher_send(
-            SIGNAL_CLIENT_DATA, client.host
-        )
+        hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_CLIENT_DATA, client.host)
 
     while run:
         try:

@@ -2,8 +2,14 @@
 from homeassistant.const import STATE_OFF
 
 from homeassistant.components.fan import (
-    SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SUPPORT_DIRECTION, SUPPORT_OSCILLATE,
-    SUPPORT_SET_SPEED, FanEntity)
+    SPEED_HIGH,
+    SPEED_LOW,
+    SPEED_MEDIUM,
+    SUPPORT_DIRECTION,
+    SUPPORT_OSCILLATE,
+    SUPPORT_SET_SPEED,
+    FanEntity,
+)
 
 FULL_SUPPORT = SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION
 LIMITED_SUPPORT = SUPPORT_SET_SPEED
@@ -11,10 +17,12 @@ LIMITED_SUPPORT = SUPPORT_SET_SPEED
 
 def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up the demo fan platform."""
-    add_entities_callback([
-        DemoFan(hass, "Living Room Fan", FULL_SUPPORT),
-        DemoFan(hass, "Ceiling Fan", LIMITED_SUPPORT),
-    ])
+    add_entities_callback(
+        [
+            DemoFan(hass, "Living Room Fan", FULL_SUPPORT),
+            DemoFan(hass, "Ceiling Fan", LIMITED_SUPPORT),
+        ]
+    )
 
 
 class DemoFan(FanEntity):
@@ -26,13 +34,13 @@ class DemoFan(FanEntity):
         self._supported_features = supported_features
         self._speed = STATE_OFF
         self.oscillating = None
-        self.direction = None
+        self._direction = None
         self._name = name
 
         if supported_features & SUPPORT_OSCILLATE:
             self.oscillating = False
         if supported_features & SUPPORT_DIRECTION:
-            self.direction = "forward"
+            self._direction = "forward"
 
     @property
     def name(self) -> str:
@@ -72,7 +80,7 @@ class DemoFan(FanEntity):
 
     def set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
-        self.direction = direction
+        self._direction = direction
         self.schedule_update_ha_state()
 
     def oscillate(self, oscillating: bool) -> None:
@@ -83,7 +91,7 @@ class DemoFan(FanEntity):
     @property
     def current_direction(self) -> str:
         """Fan direction."""
-        return self.direction
+        return self._direction
 
     @property
     def supported_features(self) -> int:

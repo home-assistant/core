@@ -3,38 +3,61 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_URL, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
-    SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP)
+    MEDIA_TYPE_URL,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_STOP,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
+)
 from homeassistant.const import (
-    CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON)
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_PORT,
+    STATE_OFF,
+    STATE_ON,
+)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_APP_POWER = 'app_power'
+CONF_APP_POWER = "app_power"
 
-DEFAULT_NAME = 'Panasonic Viera TV'
+DEFAULT_NAME = "Panasonic Viera TV"
 DEFAULT_PORT = 55000
 DEFAULT_APP_POWER = False
 
-SUPPORT_VIERATV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
-    SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_TURN_OFF | SUPPORT_PLAY | \
-    SUPPORT_PLAY_MEDIA | SUPPORT_STOP
+SUPPORT_VIERATV = (
+    SUPPORT_PAUSE
+    | SUPPORT_VOLUME_STEP
+    | SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_TURN_OFF
+    | SUPPORT_PLAY
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_STOP
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_MAC): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_APP_POWER, default=DEFAULT_APP_POWER): cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_MAC): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_APP_POWER, default=DEFAULT_APP_POWER): cv.boolean,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -47,18 +70,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     app_power = config.get(CONF_APP_POWER)
 
     if discovery_info:
-        _LOGGER.debug('%s', discovery_info)
-        name = discovery_info.get('name')
-        host = discovery_info.get('host')
-        port = discovery_info.get('port')
-        udn = discovery_info.get('udn')
-        if udn and udn.startswith('uuid:'):
-            uuid = udn[len('uuid:'):]
+        _LOGGER.debug("%s", discovery_info)
+        name = discovery_info.get("name")
+        host = discovery_info.get("host")
+        port = discovery_info.get("port")
+        udn = discovery_info.get("udn")
+        if udn and udn.startswith("uuid:"):
+            uuid = udn[len("uuid:") :]
         else:
             uuid = None
         remote = RemoteControl(host, port)
-        add_entities([PanasonicVieraTVDevice(
-            mac, name, remote, host, app_power, uuid)])
+        add_entities([PanasonicVieraTVDevice(mac, name, remote, host, app_power, uuid)])
         return True
 
     host = config.get(CONF_HOST)
@@ -74,6 +96,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
     def __init__(self, mac, name, remote, host, app_power, uuid=None):
         """Initialize the Panasonic device."""
         import wakeonlan
+
         # Save a reference to the imported class
         self._wol = wakeonlan
         self._mac = mac
@@ -213,4 +236,4 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
 
     def media_stop(self):
         """Stop playback."""
-        self.send_key('NRC_CANCEL-ONOFF')
+        self.send_key("NRC_CANCEL-ONOFF")

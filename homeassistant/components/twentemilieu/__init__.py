@@ -31,8 +31,7 @@ SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_ID): cv.string})
 
 
 async def _update_twentemilieu(
-        hass: HomeAssistantType,
-        unique_id: Optional[str]
+    hass: HomeAssistantType, unique_id: Optional[str]
 ) -> None:
     """Update Twente Milieu."""
     if unique_id is not None:
@@ -52,21 +51,18 @@ async def _update_twentemilieu(
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the Twente Milieu components."""
+
     async def update(call) -> None:
         """Service call to manually update the data."""
         unique_id = call.data.get(CONF_ID)
         await _update_twentemilieu(hass, unique_id)
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_UPDATE, update, schema=SERVICE_SCHEMA
-    )
+    hass.services.async_register(DOMAIN, SERVICE_UPDATE, update, schema=SERVICE_SCHEMA)
 
     return True
 
 
-async def async_setup_entry(
-        hass: HomeAssistantType, entry: ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up Twente Milieu from a config entry."""
     session = async_get_clientsession(hass)
     twentemilieu = TwenteMilieu(
@@ -92,9 +88,7 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(
-        hass: HomeAssistantType, entry: ConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Unload Twente Milieu config entry."""
     await hass.config_entries.async_forward_entry_unload(entry, "sensor")
 

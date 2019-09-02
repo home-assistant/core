@@ -21,7 +21,7 @@ class HideSensitiveDataFilter(logging.Filter):
 
     def filter(self, record: logging.LogRecord) -> bool:
         """Hide sensitive data in messages."""
-        record.msg = record.msg.replace(self.text, '*******')
+        record.msg = record.msg.replace(self.text, "*******")
 
         return True
 
@@ -30,8 +30,7 @@ class HideSensitiveDataFilter(logging.Filter):
 class AsyncHandler:
     """Logging handler wrapper to add an async layer."""
 
-    def __init__(
-            self, loop: AbstractEventLoop, handler: logging.Handler) -> None:
+    def __init__(self, loop: AbstractEventLoop, handler: logging.Handler) -> None:
         """Initialize async logging handler wrapper."""
         self.handler = handler
         self.loop = loop
@@ -84,8 +83,7 @@ class AsyncHandler:
     def _process(self) -> None:
         """Process log in a thread."""
         while True:
-            record = run_coroutine_threadsafe(
-                self._queue.get(), self.loop).result()
+            record = run_coroutine_threadsafe(self._queue.get(), self.loop).result()
 
             if record is None:
                 self.handler.close()
@@ -127,17 +125,17 @@ class AsyncHandler:
 
 
 def catch_log_exception(
-        func: Callable[..., Any],
-        format_err: Callable[..., Any],
-        *args: Any) -> Callable[[], None]:
+    func: Callable[..., Any], format_err: Callable[..., Any], *args: Any
+) -> Callable[[], None]:
     """Decorate a callback to catch and log exceptions."""
+
     def log_exception(*args: Any) -> None:
         module_name = inspect.getmodule(inspect.trace()[1][0]).__name__
         # Do not print the wrapper in the traceback
         frames = len(inspect.trace()) - 1
         exc_msg = traceback.format_exc(-frames)
         friendly_msg = format_err(*args)
-        logging.getLogger(module_name).error('%s\n%s', friendly_msg, exc_msg)
+        logging.getLogger(module_name).error("%s\n%s", friendly_msg, exc_msg)
 
     # Check for partials to properly determine if coroutine function
     check_func = func
@@ -146,6 +144,7 @@ def catch_log_exception(
 
     wrapper_func = None
     if asyncio.iscoroutinefunction(check_func):
+
         @wraps(func)
         async def async_wrapper(*args: Any) -> None:
             """Catch and log exception."""
@@ -153,8 +152,10 @@ def catch_log_exception(
                 await func(*args)
             except Exception:  # pylint: disable=broad-except
                 log_exception(*args)
+
         wrapper_func = async_wrapper
     else:
+
         @wraps(func)
         def wrapper(*args: Any) -> None:
             """Catch and log exception."""
@@ -162,15 +163,16 @@ def catch_log_exception(
                 func(*args)
             except Exception:  # pylint: disable=broad-except
                 log_exception(*args)
+
         wrapper_func = wrapper
     return wrapper_func
 
 
 def catch_log_coro_exception(
-        target: Coroutine[Any, Any, Any],
-        format_err: Callable[..., Any],
-        *args: Any) -> Coroutine[Any, Any, Any]:
+    target: Coroutine[Any, Any, Any], format_err: Callable[..., Any], *args: Any
+) -> Coroutine[Any, Any, Any]:
     """Decorate a coroutine to catch and log exceptions."""
+
     async def coro_wrapper(*args: Any) -> Any:
         """Catch and log exception."""
         try:
@@ -181,14 +183,13 @@ def catch_log_coro_exception(
             frames = len(inspect.trace()) - 1
             exc_msg = traceback.format_exc(-frames)
             friendly_msg = format_err(*args)
-            logging.getLogger(module_name).error('%s\n%s',
-                                                 friendly_msg, exc_msg)
+            logging.getLogger(module_name).error("%s\n%s", friendly_msg, exc_msg)
             return None
+
     return coro_wrapper()
 
 
-def async_create_catching_coro(
-        target: Coroutine) -> Coroutine:
+def async_create_catching_coro(target: Coroutine) -> Coroutine:
     """Wrap a coroutine to catch and log exceptions.
 
     The exception will be logged together with a stacktrace of where the
@@ -198,9 +199,11 @@ def async_create_catching_coro(
     """
     trace = traceback.extract_stack()
     wrapped_target = catch_log_coro_exception(
-        target, lambda *args:
-        "Exception in {} called from\n {}".format(
+        target,
+        lambda *args: "Exception in {} called from\n {}".format(
             target.__name__,  # type: ignore
-            "".join(traceback.format_list(trace[:-1]))))
+            "".join(traceback.format_list(trace[:-1])),
+        ),
+    )
 
     return wrapped_target

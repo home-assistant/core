@@ -10,9 +10,9 @@ from serial import SerialException
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_TOTAL_ENERGY_KWH = 'total_energy_kwh'
+ATTR_TOTAL_ENERGY_KWH = "total_energy_kwh"
 
-DEFAULT_NAME = 'PCA 301'
+DEFAULT_NAME = "PCA 301"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -27,6 +27,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         pca = pypca.PCA(serial_device)
         pca.open()
+
         entities = [SmartPlugSwitch(pca, device)
                     for device in pca.get_devices()]
         add_entities(entities, True)
@@ -84,15 +85,16 @@ class SmartPlugSwitch(SwitchDevice):
         """Update the PCA switch's state."""
         try:
             self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.1f}".format(
-                self._pca.get_current_power(self._device_id))
+                self._pca.get_current_power(self._device_id)
+            )
             self._emeter_params[ATTR_TOTAL_ENERGY_KWH] = "{:.2f}".format(
-                self._pca.get_total_consumption(self._device_id))
+                self._pca.get_total_consumption(self._device_id)
+            )
 
             self._available = True
             self._state = self._pca.get_state(self._device_id)
 
         except (OSError) as ex:
             if self._available:
-                _LOGGER.warning(
-                    "Could not read state for %s: %s", self.name, ex)
+                _LOGGER.warning("Could not read state for %s: %s", self.name, ex)
                 self._available = False

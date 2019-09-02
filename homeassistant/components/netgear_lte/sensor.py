@@ -5,14 +5,12 @@ from homeassistant.components.sensor import DOMAIN
 from homeassistant.exceptions import PlatformNotReady
 
 from . import CONF_MONITORED_CONDITIONS, DATA_KEY, LTEEntity
-from .sensor_types import (
-    SENSOR_SMS, SENSOR_SMS_TOTAL, SENSOR_USAGE, SENSOR_UNITS)
+from .sensor_types import SENSOR_SMS, SENSOR_SMS_TOTAL, SENSOR_USAGE, SENSOR_UNITS
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info):
     """Set up Netgear LTE sensor devices."""
     if discovery_info is None:
         return
@@ -72,7 +70,7 @@ class UsageSensor(LTESensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return round(self.modem_data.data.usage / 1024**2, 1)
+        return round(self.modem_data.data.usage / 1024 ** 2, 1)
 
 
 class GenericSensor(LTESensor):

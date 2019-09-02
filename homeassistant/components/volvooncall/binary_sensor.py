@@ -1,16 +1,14 @@
 """Support for VOC."""
 import logging
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES, BinarySensorDevice)
+from homeassistant.components.binary_sensor import DEVICE_CLASSES, BinarySensorDevice
 
 from . import DATA_KEY, VolvoEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Volvo sensors."""
     if discovery_info is None:
         return

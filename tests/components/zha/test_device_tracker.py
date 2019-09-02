@@ -2,17 +2,17 @@
 from datetime import timedelta
 import time
 from homeassistant.components.device_tracker import DOMAIN, SOURCE_TYPE_ROUTER
-from homeassistant.const import (
-    STATE_HOME,
-    STATE_NOT_HOME,
-    STATE_UNAVAILABLE
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
+from homeassistant.components.zha.core.registries import (
+    SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE,
 )
-from homeassistant.components.zha.core.registries import \
-    SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE
 import homeassistant.util.dt as dt_util
 from .common import (
-    async_init_zigpy_device, make_attribute, make_entity_id,
-    async_test_device_join, async_enable_traffic
+    async_init_zigpy_device,
+    make_attribute,
+    make_entity_id,
+    async_test_device_join,
+    async_enable_traffic,
 )
 from tests.common import async_fire_time_changed
 
@@ -20,7 +20,13 @@ from tests.common import async_fire_time_changed
 async def test_device_tracker(hass, config_entry, zha_gateway):
     """Test zha device tracker platform."""
     from zigpy.zcl.clusters.general import (
-        Basic, PowerConfiguration, BinaryInput, Identify, Ota, PollControl)
+        Basic,
+        PowerConfiguration,
+        BinaryInput,
+        Identify,
+        Ota,
+        PollControl,
+    )
 
     # create zigpy device
     zigpy_device = await async_init_zigpy_device(
@@ -30,19 +36,15 @@ async def test_device_tracker(hass, config_entry, zha_gateway):
             PowerConfiguration.cluster_id,
             Identify.cluster_id,
             PollControl.cluster_id,
-            BinaryInput.cluster_id
+            BinaryInput.cluster_id,
         ],
-        [
-            Identify.cluster_id,
-            Ota.cluster_id
-        ],
+        [Identify.cluster_id, Ota.cluster_id],
         SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE,
-        zha_gateway
+        zha_gateway,
     )
 
     # load up device tracker domain
-    await hass.config_entries.async_forward_entry_setup(
-        config_entry, DOMAIN)
+    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
     await hass.async_block_till_done()
 
     cluster = zigpy_device.endpoints.get(1).power
@@ -65,10 +67,10 @@ async def test_device_tracker(hass, config_entry, zha_gateway):
 
     # turn state flip
     attr = make_attribute(0x0020, 23)
-    cluster.handle_message(False, 1, 0x0a, [[attr]])
+    cluster.handle_message(False, 1, 0x0A, [[attr]])
 
     attr = make_attribute(0x0021, 200)
-    cluster.handle_message(False, 1, 0x0a, [[attr]])
+    cluster.handle_message(False, 1, 0x0A, [[attr]])
 
     zigpy_device.last_seen = time.time() + 10
     next_update = dt_util.utcnow() + timedelta(seconds=30)
@@ -85,5 +87,9 @@ async def test_device_tracker(hass, config_entry, zha_gateway):
 
     # test adding device tracker to the network and HA
     await async_test_device_join(
-        hass, zha_gateway, PowerConfiguration.cluster_id, DOMAIN,
-        SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE)
+        hass,
+        zha_gateway,
+        PowerConfiguration.cluster_id,
+        DOMAIN,
+        SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE,
+    )

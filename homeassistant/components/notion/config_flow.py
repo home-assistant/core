@@ -13,8 +13,8 @@ from .const import DOMAIN
 def configured_instances(hass):
     """Return a set of configured Notion instances."""
     return set(
-        entry.data[CONF_USERNAME]
-        for entry in hass.config_entries.async_entries(DOMAIN))
+        entry.data[CONF_USERNAME] for entry in hass.config_entries.async_entries(DOMAIN)
+    )
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -26,15 +26,12 @@ class NotionFlowHandler(config_entries.ConfigFlow):
 
     async def _show_form(self, errors=None):
         """Show the form to the user."""
-        data_schema = vol.Schema({
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
-        })
+        data_schema = vol.Schema(
+            {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+        )
 
         return self.async_show_form(
-            step_id='user',
-            data_schema=data_schema,
-            errors=errors or {},
+            step_id="user", data_schema=data_schema, errors=errors or {}
         )
 
     async def async_step_import(self, import_config):
@@ -50,15 +47,15 @@ class NotionFlowHandler(config_entries.ConfigFlow):
             return await self._show_form()
 
         if user_input[CONF_USERNAME] in configured_instances(self.hass):
-            return await self._show_form({CONF_USERNAME: 'identifier_exists'})
+            return await self._show_form({CONF_USERNAME: "identifier_exists"})
 
         session = aiohttp_client.async_get_clientsession(self.hass)
 
         try:
             await async_get_client(
-                user_input[CONF_USERNAME], user_input[CONF_PASSWORD], session)
+                user_input[CONF_USERNAME], user_input[CONF_PASSWORD], session
+            )
         except NotionError:
-            return await self._show_form({'base': 'invalid_credentials'})
+            return await self._show_form({"base": "invalid_credentials"})
 
-        return self.async_create_entry(
-            title=user_input[CONF_USERNAME], data=user_input)
+        return self.async_create_entry(title=user_input[CONF_USERNAME], data=user_input)

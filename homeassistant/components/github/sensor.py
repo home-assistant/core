@@ -5,39 +5,44 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_NAME, CONF_ACCESS_TOKEN, CONF_NAME, CONF_PATH, CONF_URL)
+    ATTR_NAME,
+    CONF_ACCESS_TOKEN,
+    CONF_NAME,
+    CONF_PATH,
+    CONF_URL,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_REPOS = 'repositories'
+CONF_REPOS = "repositories"
 
-ATTR_LATEST_COMMIT_MESSAGE = 'latest_commit_message'
-ATTR_LATEST_COMMIT_SHA = 'latest_commit_sha'
-ATTR_LATEST_RELEASE_URL = 'latest_release_url'
-ATTR_LATEST_OPEN_ISSUE_URL = 'latest_open_issue_url'
-ATTR_OPEN_ISSUES = 'open_issues'
-ATTR_LATEST_OPEN_PULL_REQUEST_URL = 'latest_open_pull_request_url'
-ATTR_OPEN_PULL_REQUESTS = 'open_pull_requests'
-ATTR_PATH = 'path'
-ATTR_STARGAZERS = 'stargazers'
+ATTR_LATEST_COMMIT_MESSAGE = "latest_commit_message"
+ATTR_LATEST_COMMIT_SHA = "latest_commit_sha"
+ATTR_LATEST_RELEASE_URL = "latest_release_url"
+ATTR_LATEST_OPEN_ISSUE_URL = "latest_open_issue_url"
+ATTR_OPEN_ISSUES = "open_issues"
+ATTR_LATEST_OPEN_PULL_REQUEST_URL = "latest_open_pull_request_url"
+ATTR_OPEN_PULL_REQUESTS = "open_pull_requests"
+ATTR_PATH = "path"
+ATTR_STARGAZERS = "stargazers"
 
-DEFAULT_NAME = 'GitHub'
+DEFAULT_NAME = "GitHub"
 
 SCAN_INTERVAL = timedelta(seconds=300)
 
-REPO_SCHEMA = vol.Schema({
-    vol.Required(CONF_PATH): cv.string,
-    vol.Optional(CONF_NAME): cv.string
-})
+REPO_SCHEMA = vol.Schema(
+    {vol.Required(CONF_PATH): cv.string, vol.Optional(CONF_NAME): cv.string}
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ACCESS_TOKEN): cv.string,
-    vol.Optional(CONF_URL): cv.url,
-    vol.Required(CONF_REPOS):
-        vol.All(cv.ensure_list, [REPO_SCHEMA])
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_ACCESS_TOKEN): cv.string,
+        vol.Optional(CONF_URL): cv.url,
+        vol.Required(CONF_REPOS): vol.All(cv.ensure_list, [REPO_SCHEMA]),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -47,11 +52,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         data = GitHubData(
             repository=repository,
             access_token=config.get(CONF_ACCESS_TOKEN),
-            server_url=config.get(CONF_URL)
+            server_url=config.get(CONF_URL),
         )
         if data.setup_error is True:
-            _LOGGER.error("Error setting up GitHub platform. %s",
-                          "Check previous errors for details")
+            _LOGGER.error(
+                "Error setting up GitHub platform. %s",
+                "Check previous errors for details",
+            )
             return
         sensors.append(GitHubSensor(data))
     add_entities(sensors, True)
@@ -110,13 +117,13 @@ class GitHubSensor(Entity):
             ATTR_OPEN_ISSUES: self._open_issue_count,
             ATTR_LATEST_OPEN_PULL_REQUEST_URL: self._latest_open_pr_url,
             ATTR_OPEN_PULL_REQUESTS: self._pull_request_count,
-            ATTR_STARGAZERS: self._stargazers
+            ATTR_STARGAZERS: self._stargazers,
         }
 
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        return 'mdi:github-circle'
+        return "mdi:github-circle"
 
     def update(self):
         """Collect updated data from GitHub API."""
@@ -136,7 +143,7 @@ class GitHubSensor(Entity):
         self._stargazers = self._github_data.stargazers
 
 
-class GitHubData():
+class GitHubData:
     """GitHub Data object."""
 
     def __init__(self, repository, access_token=None, server_url=None):
@@ -150,8 +157,7 @@ class GitHubData():
         try:
             if server_url is not None:
                 server_url += "/api/v3"
-                self._github_obj = github.Github(
-                    access_token, base_url=server_url)
+                self._github_obj = github.Github(access_token, base_url=server_url)
             else:
                 self._github_obj = github.Github(access_token)
 
@@ -182,13 +188,13 @@ class GitHubData():
 
             self.stargazers = repo.stargazers_count
 
-            open_issues = repo.get_issues(state='open', sort='created')
+            open_issues = repo.get_issues(state="open", sort="created")
             if open_issues is not None:
                 self.open_issue_count = open_issues.totalCount
                 if open_issues.totalCount > 0:
                     self.latest_open_issue_url = open_issues[0].html_url
 
-            open_pull_requests = repo.get_pulls(state='open', sort='created')
+            open_pull_requests = repo.get_pulls(state="open", sort="created")
             if open_pull_requests is not None:
                 self.pull_request_count = open_pull_requests.totalCount
                 if open_pull_requests.totalCount > 0:

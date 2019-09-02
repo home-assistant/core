@@ -6,16 +6,19 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
-    CONF_DEVICE_CODE, CONF_SWITCHABLE_OUTPUTS, CONF_ZONE_NAME,
-    SIGNAL_OUTPUTS_UPDATED, DATA_SATEL)
+    CONF_DEVICE_CODE,
+    CONF_SWITCHABLE_OUTPUTS,
+    CONF_ZONE_NAME,
+    SIGNAL_OUTPUTS_UPDATED,
+    DATA_SATEL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['satel_integra']
+DEPENDENCIES = ["satel_integra"]
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Satel Integra switch devices."""
     if not discovery_info:
         return
@@ -29,7 +32,8 @@ async def async_setup_platform(
         zone_name = device_config_data[CONF_ZONE_NAME]
 
         device = SatelIntegraSwitch(
-            controller, zone_num, zone_name, discovery_info[CONF_DEVICE_CODE])
+            controller, zone_num, zone_name, discovery_info[CONF_DEVICE_CODE]
+        )
         devices.append(device)
 
     async_add_entities(devices)
@@ -49,7 +53,8 @@ class SatelIntegraSwitch(SwitchDevice):
     async def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(
-            self.hass, SIGNAL_OUTPUTS_UPDATED, self._devices_updated)
+            self.hass, SIGNAL_OUTPUTS_UPDATED, self._devices_updated
+        )
 
     @callback
     def _devices_updated(self, zones):
@@ -64,15 +69,15 @@ class SatelIntegraSwitch(SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        _LOGGER.debug("Switch: %s status: %s,"
-                      " turning on", self._name, self._state)
+        _LOGGER.debug("Switch: %s status: %s," " turning on", self._name, self._state)
         await self._satel.set_output(self._code, self._device_number, True)
         self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        _LOGGER.debug("Switch name: %s status: %s,"
-                      " turning off", self._name, self._state)
+        _LOGGER.debug(
+            "Switch name: %s status: %s," " turning off", self._name, self._state
+        )
         await self._satel.set_output(self._code, self._device_number, False)
         self.async_schedule_update_ha_state()
 

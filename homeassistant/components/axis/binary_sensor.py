@@ -28,8 +28,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if event.CLASS != CLASS_OUTPUT:
             async_add_entities([AxisBinarySensor(event, device)], True)
 
-    device.listeners.append(async_dispatcher_connect(
-        hass, device.event_new_sensor, async_add_sensor))
+    device.listeners.append(
+        async_dispatcher_connect(hass, device.event_new_sensor, async_add_sensor)
+    )
 
 
 class AxisBinarySensor(AxisEventBase, BinarySensorDevice):
@@ -63,8 +64,8 @@ class AxisBinarySensor(AxisEventBase, BinarySensorDevice):
             self.remove_timer = None
 
         self.remove_timer = async_track_point_in_utc_time(
-            self.hass, _delay_update,
-            utcnow() + timedelta(seconds=delay))
+            self.hass, _delay_update, utcnow() + timedelta(seconds=delay)
+        )
 
     @property
     def is_on(self):
@@ -74,10 +75,13 @@ class AxisBinarySensor(AxisEventBase, BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the event."""
-        if self.event.CLASS == CLASS_INPUT and self.event.id and \
-                self.device.api.vapix.ports[self.event.id].name:
-            return '{} {}'.format(
-                self.device.name,
-                self.device.api.vapix.ports[self.event.id].name)
+        if (
+            self.event.CLASS == CLASS_INPUT
+            and self.event.id
+            and self.device.api.vapix.ports[self.event.id].name
+        ):
+            return "{} {}".format(
+                self.device.name, self.device.api.vapix.ports[self.event.id].name
+            )
 
         return super().name

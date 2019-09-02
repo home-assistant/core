@@ -1,7 +1,7 @@
 """Config flow to configure SMHI component."""
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
@@ -14,12 +14,14 @@ from .const import DOMAIN, HOME_LOCATION_NAME
 @callback
 def smhi_locations(hass: HomeAssistant):
     """Return configurations of SMHI component."""
-    return set((slugify(entry.data[CONF_NAME])) for
-               entry in hass.config_entries.async_entries(DOMAIN))
+    return set(
+        (slugify(entry.data[CONF_NAME]))
+        for entry in hass.config_entries.async_entries(DOMAIN)
+    )
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class SmhiFlowHandler(data_entry_flow.FlowHandler):
+class SmhiFlowHandler(config_entries.ConfigFlow):
     """Config flow for SMHI component."""
 
     VERSION = 1
@@ -35,18 +37,18 @@ class SmhiFlowHandler(data_entry_flow.FlowHandler):
 
         if user_input is not None:
             is_ok = await self._check_location(
-                user_input[CONF_LONGITUDE], user_input[CONF_LATITUDE])
+                user_input[CONF_LONGITUDE], user_input[CONF_LATITUDE]
+            )
             if is_ok:
                 name = slugify(user_input[CONF_NAME])
                 if not self._name_in_configuration_exists(name):
                     return self.async_create_entry(
-                        title=user_input[CONF_NAME],
-                        data=user_input,
+                        title=user_input[CONF_NAME], data=user_input
                     )
 
-                self._errors[CONF_NAME] = 'name_exists'
+                self._errors[CONF_NAME] = "name_exists"
             else:
-                self._errors['base'] = 'wrong_location'
+                self._errors["base"] = "wrong_location"
 
         # If hass config has the location set and is a valid coordinate the
         # default location is set as default values in the form
@@ -55,18 +57,18 @@ class SmhiFlowHandler(data_entry_flow.FlowHandler):
                 return await self._show_config_form(
                     name=HOME_LOCATION_NAME,
                     latitude=self.hass.config.latitude,
-                    longitude=self.hass.config.longitude
+                    longitude=self.hass.config.longitude,
                 )
 
         return await self._show_config_form()
 
     async def _homeassistant_location_exists(self) -> bool:
         """Return true if default location is set and is valid."""
-        if self.hass.config.latitude != 0.0 and \
-           self.hass.config.longitude != 0.0:
+        if self.hass.config.latitude != 0.0 and self.hass.config.longitude != 0.0:
             # Return true if valid location
             if await self._check_location(
-                    self.hass.config.longitude, self.hass.config.latitude):
+                self.hass.config.longitude, self.hass.config.latitude
+            ):
                 return True
         return False
 
@@ -76,22 +78,26 @@ class SmhiFlowHandler(data_entry_flow.FlowHandler):
             return True
         return False
 
-    async def _show_config_form(self, name: str = None, latitude: str = None,
-                                longitude: str = None):
+    async def _show_config_form(
+        self, name: str = None, latitude: str = None, longitude: str = None
+    ):
         """Show the configuration form to edit location data."""
         return self.async_show_form(
-            step_id='user',
-            data_schema=vol.Schema({
-                vol.Required(CONF_NAME, default=name): str,
-                vol.Required(CONF_LATITUDE, default=latitude): cv.latitude,
-                vol.Required(CONF_LONGITUDE, default=longitude): cv.longitude
-            }),
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_NAME, default=name): str,
+                    vol.Required(CONF_LATITUDE, default=latitude): cv.latitude,
+                    vol.Required(CONF_LONGITUDE, default=longitude): cv.longitude,
+                }
+            ),
             errors=self._errors,
         )
 
     async def _check_location(self, longitude: str, latitude: str) -> bool:
         """Return true if location is ok."""
         from smhi.smhi_lib import Smhi, SmhiForecastException
+
         try:
             session = aiohttp_client.async_get_clientsession(self.hass)
             smhi_api = Smhi(longitude, latitude, session=session)

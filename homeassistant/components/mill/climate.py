@@ -6,44 +6,55 @@ import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
-    DOMAIN, HVAC_MODE_HEAT, HVAC_MODE_OFF, SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE, FAN_ON)
+    DOMAIN,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    SUPPORT_FAN_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    FAN_ON,
+)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS)
+    ATTR_TEMPERATURE,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    TEMP_CELSIUS,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_AWAY_TEMP = 'away_temp'
-ATTR_COMFORT_TEMP = 'comfort_temp'
-ATTR_ROOM_NAME = 'room_name'
-ATTR_SLEEP_TEMP = 'sleep_temp'
+ATTR_AWAY_TEMP = "away_temp"
+ATTR_COMFORT_TEMP = "comfort_temp"
+ATTR_ROOM_NAME = "room_name"
+ATTR_SLEEP_TEMP = "sleep_temp"
 MAX_TEMP = 35
 MIN_TEMP = 5
-SERVICE_SET_ROOM_TEMP = 'mill_set_room_temperature'
+SERVICE_SET_ROOM_TEMP = "mill_set_room_temperature"
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
+)
 
-SET_ROOM_TEMP_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ROOM_NAME): cv.string,
-    vol.Optional(ATTR_AWAY_TEMP): cv.positive_int,
-    vol.Optional(ATTR_COMFORT_TEMP): cv.positive_int,
-    vol.Optional(ATTR_SLEEP_TEMP): cv.positive_int,
-})
+SET_ROOM_TEMP_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ROOM_NAME): cv.string,
+        vol.Optional(ATTR_AWAY_TEMP): cv.positive_int,
+        vol.Optional(ATTR_COMFORT_TEMP): cv.positive_int,
+        vol.Optional(ATTR_SLEEP_TEMP): cv.positive_int,
+    }
+)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Mill heater."""
-    mill_data_connection = Mill(config[CONF_USERNAME],
-                                config[CONF_PASSWORD],
-                                websession=async_get_clientsession(hass))
+    mill_data_connection = Mill(
+        config[CONF_USERNAME],
+        config[CONF_PASSWORD],
+        websession=async_get_clientsession(hass),
+    )
     if not await mill_data_connection.connect():
         _LOGGER.error("Failed to connect to Mill")
         return
@@ -61,13 +72,13 @@ async def async_setup_platform(hass, config, async_add_entities,
         sleep_temp = service.data.get(ATTR_SLEEP_TEMP)
         comfort_temp = service.data.get(ATTR_COMFORT_TEMP)
         away_temp = service.data.get(ATTR_AWAY_TEMP)
-        await mill_data_connection.set_room_temperatures_by_name(room_name,
-                                                                 sleep_temp,
-                                                                 comfort_temp,
-                                                                 away_temp)
+        await mill_data_connection.set_room_temperatures_by_name(
+            room_name, sleep_temp, comfort_temp, away_temp
+        )
 
-    hass.services.async_register(DOMAIN, SERVICE_SET_ROOM_TEMP,
-                                 set_room_temp, schema=SET_ROOM_TEMP_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_ROOM_TEMP, set_room_temp, schema=SET_ROOM_TEMP_SCHEMA
+    )
 
 
 class MillHeater(ClimateDevice):
@@ -108,10 +119,10 @@ class MillHeater(ClimateDevice):
             "heater_generation": 1 if self._heater.is_gen1 else 2,
         }
         if self._heater.room:
-            res['room'] = self._heater.room.name
-            res['avg_room_temp'] = self._heater.room.avg_temp
+            res["room"] = self._heater.room.name
+            res["avg_room_temp"] = self._heater.room.avg_temp
         else:
-            res['room'] = "Independent device"
+            res["room"] = "Independent device"
         return res
 
     @property
@@ -179,23 +190,19 @@ class MillHeater(ClimateDevice):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        await self._conn.set_heater_temp(
-            self._heater.device_id, int(temperature))
+        await self._conn.set_heater_temp(self._heater.device_id, int(temperature))
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
         fan_status = 1 if fan_mode == FAN_ON else 0
-        await self._conn.heater_control(
-            self._heater.device_id, fan_status=fan_status)
+        await self._conn.heater_control(self._heater.device_id, fan_status=fan_status)
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_HEAT:
-            await self._conn.heater_control(
-                self._heater.device_id, power_status=1)
+            await self._conn.heater_control(self._heater.device_id, power_status=1)
         elif hvac_mode == HVAC_MODE_OFF and not self._heater.is_gen1:
-            await self._conn.heater_control(
-                self._heater.device_id, power_status=0)
+            await self._conn.heater_control(self._heater.device_id, power_status=0)
 
     async def async_update(self):
         """Retrieve latest state."""

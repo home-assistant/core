@@ -12,22 +12,26 @@ _LOGGER = logging.getLogger(__name__)
 
 def _get_device_class(zone_type):
     from pyspcwebgw.const import ZoneType
+
     return {
-        ZoneType.ALARM: 'motion',
-        ZoneType.ENTRY_EXIT: 'opening',
-        ZoneType.FIRE: 'smoke',
+        ZoneType.ALARM: "motion",
+        ZoneType.ENTRY_EXIT: "opening",
+        ZoneType.FIRE: "smoke",
     }.get(zone_type)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the SPC binary sensor."""
     if discovery_info is None:
         return
     api = hass.data[DATA_API]
-    async_add_entities([SpcBinarySensor(zone)
-                        for zone in api.zones.values()
-                        if _get_device_class(zone.type)])
+    async_add_entities(
+        [
+            SpcBinarySensor(zone)
+            for zone in api.zones.values()
+            if _get_device_class(zone.type)
+        ]
+    )
 
 
 class SpcBinarySensor(BinarySensorDevice):
@@ -39,9 +43,9 @@ class SpcBinarySensor(BinarySensorDevice):
 
     async def async_added_to_hass(self):
         """Call for adding new entities."""
-        async_dispatcher_connect(self.hass,
-                                 SIGNAL_UPDATE_SENSOR.format(self._zone.id),
-                                 self._update_callback)
+        async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_SENSOR.format(self._zone.id), self._update_callback
+        )
 
     @callback
     def _update_callback(self):
@@ -57,6 +61,7 @@ class SpcBinarySensor(BinarySensorDevice):
     def is_on(self):
         """Whether the device is switched on."""
         from pyspcwebgw.const import ZoneInput
+
         return self._zone.input == ZoneInput.OPEN
 
     @property

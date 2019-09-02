@@ -9,8 +9,8 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import callback
 from .const import CLIENT_ID, CLIENT_SECRET, DOMAIN
 
-AUTH_CALLBACK_PATH = '/auth/somfy/callback'
-AUTH_CALLBACK_NAME = 'auth:somfy:callback'
+AUTH_CALLBACK_PATH = "/auth/somfy/callback"
+AUTH_CALLBACK_NAME = "auth:somfy:callback"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ def register_flow_implementation(hass, client_id, client_secret):
     hass.data[DOMAIN][CLIENT_SECRET] = client_secret
 
 
-@config_entries.HANDLERS.register('somfy')
+@config_entries.HANDLERS.register("somfy")
 class SomfyFlowHandler(config_entries.ConfigFlow):
     """Handle a config flow."""
 
@@ -40,16 +40,16 @@ class SomfyFlowHandler(config_entries.ConfigFlow):
     async def async_step_import(self, user_input=None):
         """Handle external yaml configuration."""
         if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason='already_setup')
+            return self.async_abort(reason="already_setup")
         return await self.async_step_auth()
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
         if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason='already_setup')
+            return self.async_abort(reason="already_setup")
 
         if DOMAIN not in self.hass.data:
-            return self.async_abort(reason='missing_configuration')
+            return self.async_abort(reason="missing_configuration")
 
         return await self.async_step_auth()
 
@@ -63,27 +63,25 @@ class SomfyFlowHandler(config_entries.ConfigFlow):
             with async_timeout.timeout(10):
                 url, _ = await self._get_authorization_url()
         except asyncio.TimeoutError:
-            return self.async_abort(reason='authorize_url_timeout')
+            return self.async_abort(reason="authorize_url_timeout")
 
-        return self.async_external_step(
-            step_id='auth',
-            url=url
-        )
+        return self.async_external_step(step_id="auth", url=url)
 
     async def _get_authorization_url(self):
         """Get Somfy authorization url."""
         from pymfy.api.somfy_api import SomfyApi
+
         client_id = self.hass.data[DOMAIN][CLIENT_ID]
         client_secret = self.hass.data[DOMAIN][CLIENT_SECRET]
-        redirect_uri = '{}{}'.format(
-            self.hass.config.api.base_url, AUTH_CALLBACK_PATH)
+        redirect_uri = "{}{}".format(self.hass.config.api.base_url, AUTH_CALLBACK_PATH)
         api = SomfyApi(client_id, client_secret, redirect_uri)
 
         self.hass.http.register_view(SomfyAuthCallbackView())
         # Thanks to the state, we can forward the flow id to Somfy that will
         # add it in the callback.
         return await self.hass.async_add_executor_job(
-            api.get_authorization_url, self.flow_id)
+            api.get_authorization_url, self.flow_id
+        )
 
     async def async_step_code(self, code):
         """Received code for authentication."""
@@ -96,20 +94,19 @@ class SomfyFlowHandler(config_entries.ConfigFlow):
         client_secret = self.hass.data[DOMAIN][CLIENT_SECRET]
         code = self.code
         from pymfy.api.somfy_api import SomfyApi
-        redirect_uri = '{}{}'.format(
-            self.hass.config.api.base_url, AUTH_CALLBACK_PATH)
+
+        redirect_uri = "{}{}".format(self.hass.config.api.base_url, AUTH_CALLBACK_PATH)
         api = SomfyApi(client_id, client_secret, redirect_uri)
-        token = await self.hass.async_add_executor_job(api.request_token, None,
-                                                       code)
-        _LOGGER.info('Successfully authenticated Somfy')
+        token = await self.hass.async_add_executor_job(api.request_token, None, code)
+        _LOGGER.info("Successfully authenticated Somfy")
         return self.async_create_entry(
-            title='Somfy',
+            title="Somfy",
             data={
-                'token': token,
-                'refresh_args': {
-                    'client_id': client_id,
-                    'client_secret': client_secret
-                }
+                "token": token,
+                "refresh_args": {
+                    "client_id": client_id,
+                    "client_secret": client_secret,
+                },
             },
         )
 
@@ -126,21 +123,19 @@ class SomfyAuthCallbackView(HomeAssistantView):
         """Receive authorization code."""
         from aiohttp import web_response
 
-        if 'code' not in request.query or 'state' not in request.query:
+        if "code" not in request.query or "state" not in request.query:
             return web_response.Response(
                 text="Missing code or state parameter in " + request.url
             )
 
-        hass = request.app['hass']
+        hass = request.app["hass"]
         hass.async_create_task(
             hass.config_entries.flow.async_configure(
-                flow_id=request.query['state'],
-                user_input=request.query['code'],
-            ))
+                flow_id=request.query["state"], user_input=request.query["code"]
+            )
+        )
 
         return web_response.Response(
-            headers={
-                'content-type': 'text/html'
-            },
-            text="<script>window.close()</script>"
+            headers={"content-type": "text/html"},
+            text="<script>window.close()</script>",
         )
