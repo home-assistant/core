@@ -34,10 +34,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
     manager = hass.data[DOMAIN][FEED][entry.entry_id]
 
     @callback
-    def async_add_geolocation(entity):
+    def async_add_geolocation(feed_manager, external_id, unit_system):
         """Add gelocation entity from feed."""
-        _LOGGER.debug("Adding geolocation %s", entity)
-        async_add_entities([entity], True)
+        new_entity = GeonetnzQuakesEvent(feed_manager, external_id, unit_system)
+        _LOGGER.debug("Adding geolocation %s", new_entity)
+        async_add_entities([new_entity], True)
 
     manager.listeners.append(
         async_dispatcher_connect(

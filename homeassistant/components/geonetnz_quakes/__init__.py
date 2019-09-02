@@ -5,7 +5,6 @@ from datetime import timedelta
 import voluptuous as vol
 from aio_geojson_geonetnz_quakes import GeonetnzQuakesFeedManager
 
-from homeassistant.components.geonetnz_quakes.geo_location import GeonetnzQuakesEvent
 from homeassistant.core import callback
 from homeassistant.setup import ATTR_COMPONENT
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -221,10 +220,13 @@ class GeonetnzQuakesFeedEntityManager:
 
     async def _generate_entity(self, external_id):
         """Generate new entity."""
-        new_entity = GeonetnzQuakesEvent(self, external_id, self._unit_system)
-        # Add new entities to HA.
-        _LOGGER.debug("Creating new entity %s", new_entity)
-        async_dispatcher_send(self._hass, self.async_event_new_entity(), new_entity)
+        async_dispatcher_send(
+            self._hass,
+            self.async_event_new_entity(),
+            self,
+            external_id,
+            self._unit_system,
+        )
 
     async def _update_entity(self, external_id):
         """Update entity."""
