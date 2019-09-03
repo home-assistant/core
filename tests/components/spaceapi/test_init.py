@@ -32,6 +32,12 @@ CONFIG = {
             "mjpeg": "https://home-assistant.io/mjpeg",
             "ustream": "https://home-assistant.io/ustream",
         },
+        "feeds": {
+            "blog": {"url": "https://home-assistant.io/blog"},
+            "wiki": {"type": "mediawiki", "url": "https://home-assistant.io/wiki"},
+            "calendar": {"type": "ical", "url": "https://home-assistant.io/calendar"},
+            "flicker": {"url": "https://www.flickr.com/photos/home-assistant"},
+        },
     }
 }
 
@@ -81,6 +87,15 @@ async def test_spaceapi_get(hass, mock_client):
     assert data["stream"]["m4"] == "https://home-assistant.io/m4"
     assert data["stream"]["mjpeg"] == "https://home-assistant.io/mjpeg"
     assert data["stream"]["ustream"] == "https://home-assistant.io/ustream"
+    assert data["feeds"]["blog"]["url"] == "https://home-assistant.io/blog"
+    assert data["feeds"]["wiki"]["type"] == "mediawiki"
+    assert data["feeds"]["wiki"]["url"] == "https://home-assistant.io/wiki"
+    assert data["feeds"]["calendar"]["type"] == "ical"
+    assert data["feeds"]["calendar"]["url"] == "https://home-assistant.io/calendar"
+    assert (
+        data["feeds"]["flicker"]["url"]
+        == "https://www.flickr.com/photos/home-assistant"
+    )
 
 
 async def test_spaceapi_state_get(hass, mock_client):
