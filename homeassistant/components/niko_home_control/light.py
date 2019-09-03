@@ -46,7 +46,7 @@ class NikoHomeControlLight(Light):
         """Set up the Niko Home Control light platform."""
         self._data = data
         self._light = light
-        self._unique_id = "light-{}".format(light.id)
+        self._unique_id = f"light-{light.id}"
         self._name = light.name
         self._state = light.is_on
         self._brightness = None
