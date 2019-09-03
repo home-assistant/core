@@ -71,7 +71,7 @@ def setup_proximity_component(hass, name, config):
         zone_id,
         unit_of_measurement,
     )
-    proximity.entity_id = "{}.{}".format(DOMAIN, proximity_zone)
+    proximity.entity_id = f"{DOMAIN}.{proximity_zone}"
 
     proximity.schedule_update_ha_state()
 

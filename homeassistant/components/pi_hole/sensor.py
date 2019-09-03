@@ -117,7 +117,7 @@ class PiHoleSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._name, self._condition_name)
+        return f"{self._name} {self._condition_name}"
 
     @property
     def icon(self):

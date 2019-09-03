@@ -260,7 +260,7 @@ def register_services(hass):
         gpio_id = call.data[ATTR_ID]
         gpio_mode = call.data[ATTR_MODE]
         mode = await gw_dev.gateway.set_gpio_mode(gpio_id, gpio_mode)
-        gpio_var = getattr(gw_vars, "OTGW_GPIO_{}".format(gpio_id))
+        gpio_var = getattr(gw_vars, f"OTGW_GPIO_{gpio_id}")
         gw_dev.status.update({gpio_var: mode})
         async_dispatcher_send(hass, gw_dev.update_signal, gw_dev.status)
 
@@ -274,7 +274,7 @@ def register_services(hass):
         led_id = call.data[ATTR_ID]
         led_mode = call.data[ATTR_MODE]
         mode = await gw_dev.gateway.set_led_mode(led_id, led_mode)
-        led_var = getattr(gw_vars, "OTGW_LED_{}".format(led_id))
+        led_var = getattr(gw_vars, f"OTGW_LED_{led_id}")
         gw_dev.status.update({led_var: mode})
         async_dispatcher_send(hass, gw_dev.update_signal, gw_dev.status)
 
@@ -333,7 +333,7 @@ class OpenThermGatewayDevice:
         self.name = config.get(CONF_NAME, gw_id)
         self.climate_config = config[CONF_CLIMATE]
         self.status = {}
-        self.update_signal = "{}_{}_update".format(DATA_OPENTHERM_GW, gw_id)
+        self.update_signal = f"{DATA_OPENTHERM_GW}_{gw_id}_update"
         self.gateway = pyotgw.pyotgw()
 
     async def connect_and_subscribe(self, device_path):
