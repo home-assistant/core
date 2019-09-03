@@ -172,6 +172,9 @@ hbmqtt==0.9.4
 # homeassistant.components.jewish_calendar
 hdate==0.9.0
 
+# homeassistant.components.pi_hole
+hole==0.5.0
+
 # homeassistant.components.workday
 holidays==0.9.11
 
