@@ -34,6 +34,7 @@ class RainBirdSensor(BinarySensorDevice):
 
     @property
     def is_on(self):
+        """Return true if the binary sensor is on."""
         return None if self._state is None else bool(self._state)
 
     def update(self):
