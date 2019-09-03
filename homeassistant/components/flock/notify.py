@@ -20,7 +20,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_ACCESS_TOKEN): cv.st
 async def get_service(hass, config, discovery_info=None):
     """Get the Flock notification service."""
     access_token = config.get(CONF_ACCESS_TOKEN)
-    url = "{}{}".format(_RESOURCE, access_token)
+    url = f"{_RESOURCE}{access_token}"
     session = async_get_clientsession(hass)
 
     return FlockNotificationService(url, session)
