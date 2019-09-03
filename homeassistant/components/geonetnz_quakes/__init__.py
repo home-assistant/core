@@ -6,7 +6,6 @@ import voluptuous as vol
 from aio_geojson_geonetnz_quakes import GeonetnzQuakesFeedManager
 
 from homeassistant.core import callback
-from homeassistant.setup import ATTR_COMPONENT
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
@@ -17,7 +16,6 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM,
     LENGTH_MILES,
-    EVENT_COMPONENT_LOADED,
 )
 from homeassistant.helpers import config_validation as cv, aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -177,17 +175,10 @@ class GeonetnzQuakesFeedEntityManager:
             """Update."""
             await self.async_update()
 
+        # Trigger updates at regular intervals.
         self._track_time_remove_callback = async_track_time_interval(
             self._hass, update, self._scan_interval
         )
-
-        async def component_loaded(event):
-            """Handle a new component loaded."""
-            component = event.data.get(ATTR_COMPONENT)
-            if component == DOMAIN:
-                await self.async_update()
-
-        self._hass.bus.async_listen(EVENT_COMPONENT_LOADED, component_loaded)
 
         _LOGGER.debug("Feed entity manager initialized")
 

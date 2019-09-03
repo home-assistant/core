@@ -1,12 +1,10 @@
 """Define tests for the GeoNet NZ Quakes config flow."""
 from datetime import timedelta
-from unittest.mock import Mock
 
 import pytest
 from asynctest import patch, CoroutineMock
 
 from homeassistant import data_entry_flow
-from homeassistant.components import geonetnz_quakes
 from homeassistant.components.geonetnz_quakes import (
     async_setup_entry,
     config_flow,
@@ -22,9 +20,7 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_UNIT_SYSTEM,
     CONF_SCAN_INTERVAL,
-    EVENT_COMPONENT_LOADED,
 )
-from homeassistant.setup import ATTR_COMPONENT
 from tests.common import MockConfigEntry
 
 
@@ -121,32 +117,19 @@ async def test_step_user(hass):
     }
 
 
-async def test_component_unload_config_entry(hass):
+async def test_component_unload_config_entry(hass, config_entry):
     """Test that loading and unloading of a config entry works."""
+    config_entry.add_to_hass(hass)
     with patch(
         "aio_geojson_geonetnz_quakes.GeonetnzQuakesFeedManager.update",
         new_callable=CoroutineMock,
     ) as mock_feed_manager_update:
-        entry = Mock()
-        entry.data = {
-            CONF_LATITUDE: -41.2,
-            CONF_LONGITUDE: 174.7,
-            CONF_RADIUS: 25,
-            CONF_UNIT_SYSTEM: "metric",
-            CONF_SCAN_INTERVAL: 300.0,
-            CONF_MMI: 4,
-            CONF_MINIMUM_MAGNITUDE: 0.0,
-        }
         # Load config entry.
-        assert await async_setup_entry(hass, entry)
-        await hass.async_block_till_done()
-        hass.bus.async_fire(
-            EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: geonetnz_quakes.DOMAIN}
-        )
+        assert await async_setup_entry(hass, config_entry)
         await hass.async_block_till_done()
         assert mock_feed_manager_update.call_count == 1
-        assert len(hass.data[DOMAIN][FEED]) == 1
+        assert hass.data[DOMAIN][FEED][config_entry.entry_id] is not None
         # Unload config entry.
-        assert await async_unload_entry(hass, entry) is True
+        assert await async_unload_entry(hass, config_entry) is True
         await hass.async_block_till_done()
-        assert len(hass.data[DOMAIN][FEED]) == 0
+        assert hass.data[DOMAIN][FEED].get(config_entry.entry_id) is None
