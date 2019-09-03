@@ -8,6 +8,8 @@ import homeassistant.util.dt as dt_util
 
 from . import DOMAIN, SENSOR_TYPES
 
+import hdate
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -60,8 +62,6 @@ class JewishCalendarSensor(Entity):
 
     async def async_update(self):
         """Update the state of the sensor."""
-        import hdate
-
         now = dt_util.now()
         _LOGGER.debug("Now: %s Timezone = %s", now, now.tzinfo)
 

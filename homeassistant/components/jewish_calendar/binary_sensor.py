@@ -6,6 +6,8 @@ import homeassistant.util.dt as dt_util
 
 from . import DOMAIN, SENSOR_TYPES
 
+import hdate
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -53,8 +55,6 @@ class JewishCalendarBinarySensor(BinarySensorDevice):
 
     async def async_update(self):
         """Update the state of the sensor."""
-        import hdate
-
         zmanim = hdate.Zmanim(
             date=dt_util.now(),
             location=self._location,
