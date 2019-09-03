@@ -93,4 +93,4 @@ class AugustLock(LockDevice):
     @property
     def unique_id(self) -> str:
         """Get the unique id of the lock."""
-        return "{:s}_lock".format(self._lock.device_id)
+        return f"{self._lock.device_id:s}_lock"

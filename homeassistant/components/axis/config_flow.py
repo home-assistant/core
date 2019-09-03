@@ -137,9 +137,9 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 if entry.data[CONF_MODEL] == self.model
             ]
 
-            self.name = "{}".format(self.model)
+            self.name = f"{self.model}"
             for idx in range(len(same_model) + 1):
-                self.name = "{} {}".format(self.model, idx)
+                self.name = f"{self.model} {idx}"
                 if self.name not in same_model:
                     break
 
@@ -150,7 +150,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_MODEL: self.model,
         }
 
-        title = "{} - {}".format(self.model, self.serial_number)
+        title = f"{self.model} - {self.serial_number}"
         return self.async_create_entry(title=title, data=data)
 
     async def _update_entry(self, entry, host):
