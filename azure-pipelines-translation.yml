@@ -21,8 +21,8 @@ jobs:
     inputs:
       versionSpec: '3.7'
   - script: |
+      export LOKALISE_TOKEN="$(lokaliseToken)"
+      export AZURE_BRANCH="$(Build.SourceBranch)"
+
       ./script/translations_upload
     displayName: 'Upload Translation'
-    env:
-      LOKALISE_TOKEN: $(lokaliseToken)
-      AZURE_BRANCH: $(Build.SourceBranch)
