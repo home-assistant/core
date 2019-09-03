@@ -866,7 +866,7 @@ nuheat==0.3.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.17.0
+numpy==1.17.1
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
@@ -884,7 +884,7 @@ onkyo-eiscp==1.2.4
 onvif-zeep-async==0.2.0
 
 # homeassistant.components.opencv
-# opencv-python-headless==4.1.0.25
+# opencv-python-headless==4.1.1.26
 
 # homeassistant.components.openevse
 openevsewifi==0.4
