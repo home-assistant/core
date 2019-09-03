@@ -210,9 +210,9 @@ class IgnSismologiaLocationEvent(GeolocationEvent):
     def name(self) -> Optional[str]:
         """Return the name of the entity."""
         if self._magnitude and self._region:
-            return "M {:.1f} - {}".format(self._magnitude, self._region)
+            return f"M {self._magnitude:.1f} - {self._region}"
         if self._magnitude:
-            return "M {:.1f}".format(self._magnitude)
+            return f"M {self._magnitude:.1f}"
         if self._region:
             return self._region
         return self._title

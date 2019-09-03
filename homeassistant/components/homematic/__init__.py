@@ -711,15 +711,15 @@ def _create_ha_id(name, channel, param, count):
 
     # Has multiple elements/channels
     if count > 1 and param is None:
-        return "{} {}".format(name, channel)
+        return f"{name} {channel}"
 
     # With multiple parameters on first channel
     if count == 1 and param is not None:
-        return "{} {}".format(name, param)
+        return f"{name} {param}"
 
     # Multiple parameters with multiple channels
     if count > 1 and param is not None:
-        return "{} {} {}".format(name, channel, param)
+        return f"{name} {channel} {param}"
 
 
 def _hm_event_handler(hass, interface, device, caller, attribute, value):

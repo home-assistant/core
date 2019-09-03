@@ -112,7 +112,7 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
         """Return the name of the generic device."""
         name = CONST_ALARM_CONTROL_PANEL_NAME
         if self._home.name:
-            name = "{} {}".format(self._home.name, name)
+            name = f"{self._home.name} {name}"
         return name
 
     @property
@@ -131,7 +131,7 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return "{}_{}".format(self.__class__.__name__, self._home.id)
+        return f"{self.__class__.__name__}_{self._home.id}"
 
 
 def _get_zone_alarm_state(security_zone) -> bool:

@@ -323,7 +323,7 @@ class HangoutsBot:
             }
 
         self.hass.states.async_set(
-            "{}.conversations".format(DOMAIN),
+            f"{DOMAIN}.conversations",
             len(self._conversation_list.get_all()),
             attributes=conversations,
         )
