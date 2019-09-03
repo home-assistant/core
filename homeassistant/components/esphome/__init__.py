@@ -80,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         host,
         port,
         password,
-        client_info="Home Assistant {}".format(const.__version__),
+        client_info=f"Home Assistant {const.__version__}",
     )
 
     # Store client in per-config-entry hass.data
@@ -254,7 +254,7 @@ async def _async_setup_device_registry(
     """Set up device registry feature for a particular config entry."""
     sw_version = device_info.esphome_version
     if device_info.compilation_time:
-        sw_version += " ({})".format(device_info.compilation_time)
+        sw_version += f" ({device_info.compilation_time})"
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -269,7 +269,7 @@ async def _async_setup_device_registry(
 async def _register_service(
     hass: HomeAssistantType, entry_data: RuntimeEntryData, service: UserService
 ):
-    service_name = "{}_{}".format(entry_data.device_info.name, service.name)
+    service_name = f"{entry_data.device_info.name}_{service.name}"
     schema = {}
     for arg in service.args:
         schema[vol.Required(arg.name)] = {
@@ -315,7 +315,7 @@ async def _setup_services(
     entry_data.services = {serv.key: serv for serv in services}
 
     for service in to_unregister:
-        service_name = "{}_{}".format(entry_data.device_info.name, service.name)
+        service_name = f"{entry_data.device_info.name}_{service.name}"
         hass.services.async_remove(DOMAIN, service_name)
 
     for service in to_register:

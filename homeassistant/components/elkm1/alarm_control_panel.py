@@ -59,7 +59,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     def _dispatch(signal, entity_ids, *args):
         for entity_id in entity_ids:
-            async_dispatcher_send(hass, "{}_{}".format(signal, entity_id), *args)
+            async_dispatcher_send(hass, f"{signal}_{entity_id}", *args)
 
     def _arm_service(service):
         entity_ids = service.data.get(ATTR_ENTITY_ID, [])
@@ -117,13 +117,11 @@ class ElkArea(ElkEntity, alarm.AlarmControlPanel):
         for keypad in self._elk.keypads:
             keypad.add_callback(self._watch_keypad)
         async_dispatcher_connect(
-            self.hass,
-            "{}_{}".format(SIGNAL_ARM_ENTITY, self.entity_id),
-            self._arm_service,
+            self.hass, f"{SIGNAL_ARM_ENTITY}_{self.entity_id}", self._arm_service
         )
         async_dispatcher_connect(
             self.hass,
-            "{}_{}".format(SIGNAL_DISPLAY_MESSAGE, self.entity_id),
+            f"{SIGNAL_DISPLAY_MESSAGE}_{self.entity_id}",
             self._display_message,
         )
 

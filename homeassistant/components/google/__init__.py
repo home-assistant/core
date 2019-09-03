@@ -59,10 +59,10 @@ SERVICE_ADD_EVENT = "add_event"
 
 DATA_INDEX = "google_calendars"
 
-YAML_DEVICES = "{}_calendars.yaml".format(DOMAIN)
+YAML_DEVICES = f"{DOMAIN}_calendars.yaml"
 SCOPES = "https://www.googleapis.com/auth/calendar"
 
-TOKEN_FILE = ".{}.token".format(DOMAIN)
+TOKEN_FILE = f".{DOMAIN}.token"
 
 CONFIG_SCHEMA = vol.Schema(
     {
