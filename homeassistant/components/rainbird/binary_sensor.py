@@ -1,7 +1,7 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
 import logging
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.binary_sensor import BinarySensorDevice
 from pyrainbird import RainbirdController
 from . import DATA_RAINBIRD, SENSOR_TYPES
 
@@ -19,7 +19,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class RainBirdSensor(Entity):
+class RainBirdSensor(BinarySensorDevice):
     """A sensor implementation for Rain Bird device."""
 
     def __init__(self, controller: RainbirdController, sensor_type):
