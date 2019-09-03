@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_FRIENDLY_NAME,
     CONF_SCAN_INTERVAL,
     CONF_SWITCHES,
@@ -19,6 +20,12 @@ from . import DATA_RAINBIRD
 
 DOMAIN = "rainbird"
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_DURATION = "duration"
+
+SERVICE_START_IRRIGATION = "start_irrigation"
+
+SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -35,6 +42,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+SERVICE_SCHEMA_IRRIGATION = SERVICE_SCHEMA.extend(
+    {vol.Required(ATTR_DURATION): vol.All(vol.Coerce(float), vol.Range(min=0))}
+)
+
+SERVICE_TO_METHOD = {
+    SERVICE_START_IRRIGATION: {
+        "method": "start_irrigation",
+        "schema": SERVICE_SCHEMA_IRRIGATION,
+    }
+}
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Rain Bird switches over a Rain Bird controller."""
@@ -44,6 +62,31 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for dev_id, switch in config.get(CONF_SWITCHES).items():
         devices.append(RainBirdSwitch(controller, switch, dev_id))
     add_entities(devices, True)
+
+    def start_irrigation(service):
+        """Set IR code as device state attribute."""
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        duration = service.data.get(ATTR_DURATION)
+
+        if entity_ids:
+            _devices = [
+                device
+                for device in devices
+                if isinstance(device, RainBirdSwitch) and device.entity_id in entity_ids
+            ]
+        else:
+            _devices = [
+                device for device in devices if isinstance(device, RainBirdSwitch)
+            ]
+        for device in _devices:
+            device.start_irrigation(duration)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_START_IRRIGATION,
+        start_irrigation,
+        schema=SERVICE_SCHEMA_IRRIGATION,
+    )
 
 
 class RainBirdSwitch(SwitchDevice):
@@ -79,6 +122,23 @@ class RainBirdSwitch(SwitchDevice):
         if self._rainbird.stop_irrigation():
             self._state = False
 
+<<<<<<< HEAD
+=======
+    def start_irrigation(self, duration: int):
+        """Turn the irrigation on."""
+        response = self._rainbird.startIrrigation(int(self._zone), int(duration))
+        if response and response["type"] == "AcknowledgeResponse":
+            self._state = True
+
+    def get_device_status(self):
+        """Get the status of the switch from Rain Bird Controller."""
+        response = self._rainbird.currentIrrigation()
+        if response is None:
+            return None
+        if isinstance(response, dict) and "sprinklers" in response:
+            return response["sprinklers"][self._zone]
+
+>>>>>>> add irrigation service to rain bird, which allows you to set the duration
     def update(self):
         """Update switch status."""
         self._state = self._rainbird.zone_state(self._zone)
