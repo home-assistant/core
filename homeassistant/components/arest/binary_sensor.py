@@ -74,7 +74,7 @@ class ArestBinarySensor(BinarySensorDevice):
 
         if self._pin is not None:
             request = requests.get(
-                "{}/mode/{}/i".format(self._resource, self._pin), timeout=10
+                f"{self._resource}/mode/{self._pin}/i", timeout=10
             )
             if request.status_code != 200:
                 _LOGGER.error("Can't set mode of %s", self._resource)
@@ -113,7 +113,7 @@ class ArestData:
         """Get the latest data from aREST device."""
         try:
             response = requests.get(
-                "{}/digital/{}".format(self._resource, self._pin), timeout=10
+                f"{self._resource}/digital/{self._pin}", timeout=10
             )
             self.data = {"state": response.json()["return_value"]}
         except requests.exceptions.ConnectionError:

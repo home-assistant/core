@@ -114,7 +114,7 @@ class ArestSwitchFunction(ArestSwitchBase):
         super().__init__(resource, location, name)
         self._func = func
 
-        request = requests.get("{}/{}".format(self._resource, self._func), timeout=10)
+        request = requests.get(f"{self._resource}/{self._func}", timeout=10)
 
         if request.status_code != 200:
             _LOGGER.error("Can't find function")
@@ -130,7 +130,7 @@ class ArestSwitchFunction(ArestSwitchBase):
     def turn_on(self, **kwargs):
         """Turn the device on."""
         request = requests.get(
-            "{}/{}".format(self._resource, self._func),
+            f"{self._resource}/{self._func}",
             timeout=10,
             params={"params": "1"},
         )
@@ -143,7 +143,7 @@ class ArestSwitchFunction(ArestSwitchBase):
     def turn_off(self, **kwargs):
         """Turn the device off."""
         request = requests.get(
-            "{}/{}".format(self._resource, self._func),
+            f"{self._resource}/{self._func}",
             timeout=10,
             params={"params": "0"},
         )
@@ -159,7 +159,7 @@ class ArestSwitchFunction(ArestSwitchBase):
         """Get the latest data from aREST API and update the state."""
         try:
             request = requests.get(
-                "{}/{}".format(self._resource, self._func), timeout=10
+                f"{self._resource}/{self._func}", timeout=10
             )
             self._state = request.json()["return_value"] != 0
             self._available = True
@@ -178,7 +178,7 @@ class ArestSwitchPin(ArestSwitchBase):
         self.invert = invert
 
         request = requests.get(
-            "{}/mode/{}/o".format(self._resource, self._pin), timeout=10
+            f"{self._resource}/mode/{self._pin}/o", timeout=10
         )
         if request.status_code != 200:
             _LOGGER.error("Can't set mode")
@@ -188,7 +188,7 @@ class ArestSwitchPin(ArestSwitchBase):
         """Turn the device on."""
         turn_on_payload = int(not self.invert)
         request = requests.get(
-            "{}/digital/{}/{}".format(self._resource, self._pin, turn_on_payload),
+            f"{self._resource}/digital/{self._pin}/{turn_on_payload}",
             timeout=10,
         )
         if request.status_code == 200:
@@ -200,7 +200,7 @@ class ArestSwitchPin(ArestSwitchBase):
         """Turn the device off."""
         turn_off_payload = int(self.invert)
         request = requests.get(
-            "{}/digital/{}/{}".format(self._resource, self._pin, turn_off_payload),
+            f"{self._resource}/digital/{self._pin}/{turn_off_payload}",
             timeout=10,
         )
         if request.status_code == 200:
@@ -212,7 +212,7 @@ class ArestSwitchPin(ArestSwitchBase):
         """Get the latest data from aREST API and update the state."""
         try:
             request = requests.get(
-                "{}/digital/{}".format(self._resource, self._pin), timeout=10
+                f"{self._resource}/digital/{self._pin}", timeout=10
             )
             status_value = int(self.invert)
             self._state = request.json()["return_value"] != status_value
