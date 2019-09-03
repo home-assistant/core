@@ -3,13 +3,9 @@ import logging
 
 from homeassistant.helpers.entity import Entity
 from pyrainbird import RainbirdController
-from . import DATA_RAINBIRD
+from . import DATA_RAINBIRD, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
-
-# sensor_type [ description, unit, icon ]
-SENSOR_TYPES = {"rainsensor": ["Rainsensor", None, "mdi:water"],
-                "raindelay": ["Raindelay", None, "mdi:water-off"]}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -17,7 +13,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     controller = hass.data[DATA_RAINBIRD]
 
     sensors = []
-    for sensor_type in SENSOR_TYPES.keys():
+    for sensor_type in SENSOR_TYPES:
         sensors.append(RainBirdSensor(controller, sensor_type))
 
     add_entities(sensors, True)
