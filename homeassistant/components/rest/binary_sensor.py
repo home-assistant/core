@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(["POST", "GET"]),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PAYLOAD): cv.string,
+        vol.Optional(CONF_PAYLOAD): cv.template,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -72,7 +72,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
         value_template.hass = hass
-
+    if payload is not None:
+        payload.hass = hass
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
             auth = HTTPDigestAuth(username, password)
