@@ -50,7 +50,7 @@ class MochadLight(Light):
 
         self._controller = ctrl
         self._address = dev[CONF_ADDRESS]
-        self._name = dev.get(CONF_NAME, "x10_light_dev_{}".format(self._address))
+        self._name = dev.get(CONF_NAME, f"x10_light_dev_{self._address}")
         self._comm_type = dev.get(mochad.CONF_COMM_TYPE, "pl")
         self.light = device.Device(ctrl, self._address, comm_type=self._comm_type)
         self._brightness = 0
@@ -95,12 +95,12 @@ class MochadLight(Light):
         if self._brightness > brightness:
             bdelta = self._brightness - brightness
             mochad_brightness = self._calculate_brightness_value(bdelta)
-            self.light.send_cmd("dim {}".format(mochad_brightness))
+            self.light.send_cmd(f"dim {mochad_brightness}")
             self._controller.read_data()
         elif self._brightness < brightness:
             bdelta = brightness - self._brightness
             mochad_brightness = self._calculate_brightness_value(bdelta)
-            self.light.send_cmd("bright {}".format(mochad_brightness))
+            self.light.send_cmd(f"bright {mochad_brightness}")
             self._controller.read_data()
 
     def turn_on(self, **kwargs):
@@ -109,7 +109,7 @@ class MochadLight(Light):
         with mochad.REQ_LOCK:
             if self._brightness_levels > 32:
                 out_brightness = self._calculate_brightness_value(brightness)
-                self.light.send_cmd("xdim {}".format(out_brightness))
+                self.light.send_cmd(f"xdim {out_brightness}")
                 self._controller.read_data()
             else:
                 self.light.send_cmd("on")
