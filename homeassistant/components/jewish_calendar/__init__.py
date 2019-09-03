@@ -75,15 +75,15 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Jewish Calendar component."""
-    name = config[DOMAIN].get(CONF_NAME)
-    language = config[DOMAIN].get(CONF_LANGUAGE)
+    name = config[DOMAIN][CONF_NAME]
+    language = config[DOMAIN][CONF_LANGUAGE]
 
     latitude = config[DOMAIN].get(CONF_LATITUDE, hass.config.latitude)
     longitude = config[DOMAIN].get(CONF_LONGITUDE, hass.config.longitude)
-    diaspora = config[DOMAIN].get(CONF_DIASPORA)
+    diaspora = config[DOMAIN][CONF_DIASPORA]
 
-    candle_lighting_offset = config[DOMAIN].get(CONF_CANDLE_LIGHT_MINUTES)
-    havdalah_offset = config[DOMAIN].get(CONF_HAVDALAH_OFFSET_MINUTES)
+    candle_lighting_offset = config[DOMAIN][CONF_CANDLE_LIGHT_MINUTES]
+    havdalah_offset = config[DOMAIN][CONF_HAVDALAH_OFFSET_MINUTES]
 
     location = hdate.Location(
         latitude=latitude,
