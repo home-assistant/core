@@ -49,7 +49,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     # Check if api can be reached and site is active
     try:
-        response = api.get_details(entry.data[CONF_SITE_ID])
+        response = await hass.async_add_executor_job(
+            api.get_details, entry.data[CONF_SITE_ID]
+        )
         if response["details"]["status"].lower() != "active":
             _LOGGER.error("SolarEdge site is not active")
             return
