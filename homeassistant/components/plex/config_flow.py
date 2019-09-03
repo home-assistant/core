@@ -34,7 +34,7 @@ from .const import (
     PLEX_SERVER_CONFIG,
 )
 from .errors import NoServersFound, ServerNotSpecified
-from .server import setup_plex_server
+from .server import PlexServer
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -69,7 +69,7 @@ class PlexFlowHandler(config_entries.ConfigFlow):
             self.current_login = user_input
 
             try:
-                plex_server = setup_plex_server(user_input)
+                plex_server = PlexServer(user_input)
             except NoServersFound:
                 errors["base"] = "no_servers"
             except ServerNotSpecified as available_servers:
@@ -89,7 +89,7 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                 _LOGGER.error("Unknown error connecting to Plex server: %s", error)
                 return self.async_abort(reason="unknown")
             else:
-                server_id = plex_server.machineIdentifier
+                server_id = plex_server.machine_identifier
 
                 for entry in self._async_current_entries():
                     if entry.data[CONF_SERVER_IDENTIFIER] == server_id:
@@ -97,7 +97,7 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                             reason="already_configured"
                         )
 
-                url = plex_server._baseurl  # pylint: disable=W0212
+                url = plex_server.url_in_use
                 token = user_input.get(CONF_TOKEN)
 
                 server_config = {CONF_URL: url}
@@ -109,9 +109,9 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                     )
 
                 return self.async_create_entry(  # pylint: disable=lost-exception
-                    title=plex_server.friendlyName,
+                    title=plex_server.friendly_name,
                     data={
-                        CONF_SERVER: plex_server.friendlyName,
+                        CONF_SERVER: plex_server.friendly_name,
                         CONF_SERVER_IDENTIFIER: server_id,
                         PLEX_SERVER_CONFIG: server_config,
                     },

@@ -29,7 +29,7 @@ from .const import (
     DOMAIN as PLEX_DOMAIN,
     PLEX_SERVER_CONFIG,
 )
-from .server import setup_plex_server
+from .server import PlexServer
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,8 +92,6 @@ def _setup_platform(hass, config_entry, add_entities):
 
     add_entities([sensor], True)
 
-    _LOGGER.info("Connected to: %s (%s)", sensor.server_name, sensor.server_url)
-
 
 class PlexSensor(Entity):
     """Representation of a Plex now playing sensor."""
@@ -102,25 +100,13 @@ class PlexSensor(Entity):
         """Initialize the sensor."""
         self._state = 0
         self._now_playing = []
-        self._server = setup_plex_server(server_config)
-        self._server_url = self._server._baseurl  # pylint: disable=W0212
-        self._server_name = self._server.friendlyName
-        self._name = "Plex ({})".format(self._server_name)
+        self._server = PlexServer(server_config)
+        self._name = "Plex ({})".format(self._server.friendly_name)
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def server_name(self):
-        """Return the name of the sensor's Plex server."""
-        return self._server_name
-
-    @property
-    def server_url(self):
-        """Return the URL of the sensor's Plex server."""
-        return self._server_url
 
     @property
     def state(self):
@@ -147,7 +133,7 @@ class PlexSensor(Entity):
             return
         except requests.exceptions.RequestException as ex:
             _LOGGER.warning(
-                "Temporary error connecting to %s (%s)", self.server_name, ex
+                "Temporary error connecting to %s (%s)", self._server.friendly_name, ex
             )
             return
 

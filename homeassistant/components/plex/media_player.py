@@ -48,7 +48,7 @@ from .const import (
     PLEX_MEDIA_PLAYER_OPTIONS,
     PLEX_SERVER_CONFIG,
 )
-from .server import setup_plex_server
+from .server import PlexServer
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -144,7 +144,7 @@ def setup_plexserver(server_config, config, hass, add_entities_callback):
     import plexapi.exceptions
 
     try:
-        plexserver = setup_plex_server(server_config)
+        plexserver = PlexServer(server_config)
     except (
         plexapi.exceptions.BadRequest,
         plexapi.exceptions.Unauthorized,
@@ -152,11 +152,6 @@ def setup_plexserver(server_config, config, hass, add_entities_callback):
     ) as error:
         _LOGGER.error(error)
         return
-
-    server_name = plexserver.friendlyName
-    server_url = plexserver._baseurl  # pylint: disable=W0212
-
-    _LOGGER.info("Connected to: %s (%s)", server_name, server_url)
 
     plex_clients = hass.data[PLEX_CLIENTS]
     plex_sessions = {}
