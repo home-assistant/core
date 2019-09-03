@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         _LOGGER.debug("Initializing client")
-        client = concord232_client.Client("http://{}:{}".format(host, port))
+        client = concord232_client.Client(f"http://{host}:{port}")
         client.zones = client.list_zones()
         client.last_zone_update = datetime.datetime.now()
 

@@ -61,8 +61,8 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
         self._account = account
         self._vehicle = vehicle
         self._attribute = attribute
-        self._name = "{} {}".format(self._vehicle.name, self._attribute)
-        self._unique_id = "{}-{}".format(self._vehicle.vin, self._attribute)
+        self._name = f"{self._vehicle.name} {self._attribute}"
+        self._unique_id = f"{self._vehicle.vin}-{self._attribute}"
         self._sensor_name = sensor_name
         self._device_class = device_class
         self._icon = icon
@@ -177,16 +177,14 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
     def _format_cbs_report(self, report):
         result = {}
         service_type = report.service_type.lower().replace("_", " ")
-        result["{} status".format(service_type)] = report.state.value
+        result[f"{service_type} status"] = report.state.value
         if report.due_date is not None:
-            result["{} date".format(service_type)] = report.due_date.strftime(
-                "%Y-%m-%d"
-            )
+            result[f"{service_type} date"] = report.due_date.strftime("%Y-%m-%d")
         if report.due_distance is not None:
             distance = round(
                 self.hass.config.units.length(report.due_distance, LENGTH_KILOMETERS)
             )
-            result["{} distance".format(service_type)] = "{} {}".format(
+            result[f"{service_type} distance"] = "{} {}".format(
                 distance, self.hass.config.units.length_unit
             )
         return result
