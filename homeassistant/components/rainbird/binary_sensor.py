@@ -1,8 +1,10 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
 from pyrainbird import RainbirdController
+
+from homeassistant.components.binary_sensor import BinarySensorDevice
+
 from . import DATA_RAINBIRD, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
