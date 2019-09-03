@@ -68,8 +68,8 @@ class BMWConnectedDriveSensor(Entity):
         self._account = account
         self._attribute = attribute
         self._state = None
-        self._name = "{} {}".format(self._vehicle.name, self._attribute)
-        self._unique_id = "{}-{}".format(self._vehicle.vin, self._attribute)
+        self._name = f"{self._vehicle.name} {self._attribute}"
+        self._unique_id = f"{self._vehicle.vin}-{self._attribute}"
         self._attribute_info = attribute_info
 
     @property

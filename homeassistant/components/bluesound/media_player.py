@@ -336,7 +336,7 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         if method[0] == "/":
             method = method[1:]
-        url = "http://{}:{}/{}".format(self.host, self.port, method)
+        url = f"http://{self.host}:{self.port}/{method}"
 
         _LOGGER.debug("Calling URL: %s", url)
         response = None
@@ -380,8 +380,8 @@ class BluesoundPlayer(MediaPlayerDevice):
             etag = self._status.get("@etag", "")
 
         if etag != "":
-            url = "Status?etag={}&timeout=120.0".format(etag)
-        url = "http://{}:{}/{}".format(self.host, self.port, url)
+            url = f"Status?etag={etag}&timeout=120.0"
+        url = f"http://{self.host}:{self.port}/{url}"
 
         _LOGGER.debug("Calling URL: %s", url)
 
@@ -595,7 +595,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         if not url:
             return
         if url[0] == "/":
-            url = "http://{}:{}{}".format(self.host, self.port, url)
+            url = f"http://{self.host}:{self.port}{url}"
 
         return url
 
@@ -843,13 +843,13 @@ class BluesoundPlayer(MediaPlayerDevice):
     async def async_add_slave(self, slave_device):
         """Add slave to master."""
         return await self.send_bluesound_command(
-            "/AddSlave?slave={}&port={}".format(slave_device.host, slave_device.port)
+            f"/AddSlave?slave={slave_device.host}&port={slave_device.port}"
         )
 
     async def async_remove_slave(self, slave_device):
         """Remove slave to master."""
         return await self.send_bluesound_command(
-            "/RemoveSlave?slave={}&port={}".format(slave_device.host, slave_device.port)
+            f"/RemoveSlave?slave={slave_device.host}&port={slave_device.port}"
         )
 
     async def async_increase_timer(self):
@@ -870,7 +870,7 @@ class BluesoundPlayer(MediaPlayerDevice):
     async def async_set_shuffle(self, shuffle):
         """Enable or disable shuffle mode."""
         value = "1" if shuffle else "0"
-        return await self.send_bluesound_command("/Shuffle?state={}".format(value))
+        return await self.send_bluesound_command(f"/Shuffle?state={value}")
 
     async def async_select_source(self, source):
         """Select input source."""
@@ -967,7 +967,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         if self.is_grouped and not self.is_master:
             return
 
-        url = "Play?url={}".format(media_id)
+        url = f"Play?url={media_id}"
 
         if kwargs.get(ATTR_MEDIA_ENQUEUE):
             return await self.send_bluesound_command(url)

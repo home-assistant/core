@@ -73,7 +73,7 @@ class ClicksendNotificationService(BaseNotificationService):
                 }
             )
 
-        api_url = "{}/sms/send".format(BASE_API_URL)
+        api_url = f"{BASE_API_URL}/sms/send"
         resp = requests.post(
             api_url,
             data=json.dumps(data),
@@ -94,7 +94,7 @@ class ClicksendNotificationService(BaseNotificationService):
 
 def _authenticate(config):
     """Authenticate with ClickSend."""
-    api_url = "{}/account".format(BASE_API_URL)
+    api_url = f"{BASE_API_URL}/account"
     resp = requests.get(
         api_url,
         headers=HEADERS,
