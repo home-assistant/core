@@ -7,6 +7,7 @@ from . import DATA_RAINBIRD, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Rain Bird sensor."""
     controller = hass.data[DATA_RAINBIRD]
@@ -36,10 +37,12 @@ class RainBirdSensor(Entity):
     def update(self):
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating sensor: %s", self._name)
+        state = None
         if self._sensor_type == "rainsensor":
-            self._state = self._controller.get_rain_sensor_state()
+            state = self._controller.get_rain_sensor_state()
         elif self._sensor_type == "raindelay":
-            self._state = self._controller.get_rain_delay()
+            state = self._controller.get_rain_delay()
+        self._state = None if state is None else bool(state)
 
     @property
     def name(self):
