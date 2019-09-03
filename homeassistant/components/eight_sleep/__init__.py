@@ -141,8 +141,8 @@ async def async_setup(hass, config):
         for user in eight.users:
             obj = eight.users[user]
             for sensor in SENSORS:
-                sensors.append("{}_{}".format(obj.side, sensor))
-            binary_sensors.append("{}_presence".format(obj.side))
+                sensors.append(f"{obj.side}_{sensor}")
+            binary_sensors.append(f"{obj.side}_presence")
         sensors.append("room_temp")
     else:
         # No users, cannot continue
