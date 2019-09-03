@@ -47,7 +47,7 @@ async def async_setup(hass, config):
     latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
     longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
 
-    identifier = "{0}, {1}".format(latitude, longitude)
+    identifier = f"{latitude}, {longitude}"
     if identifier in configured_instances(hass):
         return True
 

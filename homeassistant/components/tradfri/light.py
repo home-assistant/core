@@ -57,7 +57,7 @@ class TradfriGroup(Light):
     def __init__(self, group, api, gateway_id):
         """Initialize a Group."""
         self._api = api
-        self._unique_id = "group-{}-{}".format(gateway_id, group.id)
+        self._unique_id = f"group-{gateway_id}-{group.id}"
         self._group = group
         self._name = group.name
 
@@ -152,7 +152,7 @@ class TradfriLight(Light):
     def __init__(self, light, api, gateway_id):
         """Initialize a Light."""
         self._api = api
-        self._unique_id = "light-{}-{}".format(gateway_id, light.id)
+        self._unique_id = f"light-{gateway_id}-{light.id}"
         self._light = None
         self._light_control = None
         self._light_data = None
