@@ -43,7 +43,7 @@
     },
     "options": {
         "step": {
-            "async_step_deconz_devices": {
+            "deconz_devices": {
                 "description": "Configure visibility of deCONZ device types",
                 "data": {
                     "allow_clip_sensor": "Allow deCONZ CLIP sensors",
