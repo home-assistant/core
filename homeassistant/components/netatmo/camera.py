@@ -88,11 +88,11 @@ class NetatmoCamera(Camera):
         try:
             if self._localurl:
                 response = requests.get(
-                    "{0}/live/snapshot_720.jpg".format(self._localurl), timeout=10
+                    f"{self._localurl}/live/snapshot_720.jpg", timeout=10
                 )
             elif self._vpnurl:
                 response = requests.get(
-                    "{0}/live/snapshot_720.jpg".format(self._vpnurl),
+                    f"{self._vpnurl}/live/snapshot_720.jpg",
                     timeout=10,
                     verify=self._verify_ssl,
                 )

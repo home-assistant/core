@@ -36,7 +36,7 @@ DEFAULT_ATTRIBUTION = "Data provided by OpenUV"
 NOTIFICATION_ID = "openuv_notification"
 NOTIFICATION_TITLE = "OpenUV Component Setup"
 
-TOPIC_UPDATE = "{0}_data_update".format(DOMAIN)
+TOPIC_UPDATE = f"{DOMAIN}_data_update"
 
 TYPE_CURRENT_OZONE_LEVEL = "current_ozone_level"
 TYPE_CURRENT_UV_INDEX = "current_uv_index"

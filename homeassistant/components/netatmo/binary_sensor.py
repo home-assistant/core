@@ -152,7 +152,7 @@ class NetatmoBinarySensor(BinarySensorDevice):
         self._home = home
         self._timeout = timeout
         if home:
-            self._name = "{} / {}".format(home, camera_name)
+            self._name = f"{home} / {camera_name}"
         else:
             self._name = camera_name
         if module_name:
