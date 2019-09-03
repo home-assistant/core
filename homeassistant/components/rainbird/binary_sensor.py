@@ -35,7 +35,6 @@ class RainBirdSensor(Entity):
 
     @property
     def is_on(self):
-        self._state = self._controller.get_rain_sensor_state()
         return None if self._state is None else bool(self._state)
 
     def update(self):
