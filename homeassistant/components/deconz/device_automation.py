@@ -9,7 +9,6 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TYPE,
 )
-import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN
 from .gateway import get_gateway_from_config_entry
@@ -18,24 +17,48 @@ from .gateway import get_gateway_from_config_entry
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 CONF_TURN_ON = "turn_on"
+CONF_TURN_ON_HOLD = "turn_on_hold"
+CONF_TURN_ON_LONG_RELEASE = "turn_on_long_release"
+
+CONF_DIM_UP = "dim_up"
+CONF_DIM_UP_HOLD = "dim_up_hold"
+CONF_DIM_UP_LONG_RELEASE = "dim_up_long_release"
+
+CONF_DIM_DOWN = "dim_down"
+CONF_DIM_DOWN_HOLD = "dim_down_hold"
+CONF_DIM_DOWN_LONG_RELEASE = "dim_down_long_release"
+
 CONF_TURN_OFF = "turn_off"
+CONF_TURN_OFF_HOLD = "turn_off_hold"
+CONF_TURN_OFF_LONG_RELEASE = "turn_off_long_release"
 
-HUE_DIMMER_REMOTE = {CONF_TURN_ON: 1002, CONF_TURN_OFF: 4002}
 
+HUE_DIMMER_REMOTE = {
+    CONF_TURN_ON: 1002,
+    CONF_TURN_ON_HOLD: 1001,
+    CONF_TURN_ON_LONG_RELEASE: 1003,
+    CONF_DIM_UP: 2002,
+    CONF_DIM_UP_HOLD: 2001,
+    CONF_DIM_UP_LONG_RELEASE: 2003,
+    CONF_DIM_DOWN: 3002,
+    CONF_DIM_DOWN_HOLD: 3001,
+    CONF_DIM_DOWN_LONG_RELEASE: 3003,
+    CONF_TURN_OFF: 4002,
+    CONF_TURN_OFF_HOLD: 4001,
+    CONF_TURN_OFF_LONG_RELEASE: 4003,
+}
 
-HUE_DIMMER_REMOTE_TRIGGERS = [
-    {CONF_PLATFORM: "device", CONF_DOMAIN: DOMAIN, CONF_TYPE: CONF_TURN_ON},
-    {CONF_PLATFORM: "device", CONF_DOMAIN: DOMAIN, CONF_TYPE: CONF_TURN_OFF},
-]
+REMOTES = {"RWL021": HUE_DIMMER_REMOTE}
 
 TRIGGER_SCHEMA = vol.All(
     vol.Schema(
         {
-            vol.Required(CONF_PLATFORM): "device",
             vol.Optional(CONF_DEVICE_ID): str,
             vol.Required(CONF_DOMAIN): DOMAIN,
-            vol.Required(CONF_EVENT): cv.entity_id,
+            vol.Required(CONF_EVENT): str,
+            vol.Required(CONF_PLATFORM): "device",
             vol.Required(CONF_TYPE): str,
+            vol.Required("model_id"): str,
         }
     )
 )
@@ -43,16 +66,15 @@ TRIGGER_SCHEMA = vol.All(
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
-    print("ATTACH", config, action, automation_info)
+    config = TRIGGER_SCHEMA(config)
 
-    trigger_type = config.get(CONF_TYPE)
-    event_id = config.get("event")
+    event_id = config[CONF_EVENT]
 
-    trigger = HUE_DIMMER_REMOTE[trigger_type]
+    trigger = REMOTES[config["model_id"]][config[CONF_TYPE]]
 
     state_config = {
         event.CONF_EVENT_TYPE: "deconz_event",
-        event.CONF_EVENT_DATA: {"id": event_id, "event": trigger},
+        event.CONF_EVENT_DATA: {"id": event_id, CONF_EVENT: trigger},
     }
 
     return await event.async_trigger(hass, state_config, action, automation_info)
@@ -60,7 +82,6 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
 async def async_trigger(hass, config, action, automation_info):
     """Temporary so existing automation framework can be used for testing."""
-    print("TRIGGER")
     return await async_attach_trigger(hass, config, action, automation_info)
 
 
@@ -77,14 +98,23 @@ async def async_get_triggers(hass, device_id):
         if next(iter(device.connections))[1] == item._device.uniqueid.split("-", 1)[0]:
             deconz_event = item
 
-    if deconz_event is not None:
-        triggers = []
+    if deconz_event is None or deconz_event._device.modelid not in REMOTES:
+        return
 
-        if deconz_event._device.modelid == "RWL021":
+    triggers = []
 
-            for trigger in HUE_DIMMER_REMOTE_TRIGGERS:
-                trigger = dict(trigger)
-                trigger.update(device_id=device_id, event=deconz_event.id)
-                triggers.append(trigger)
-            print("GET", triggers)
-            return triggers
+    remote = REMOTES[deconz_event._device.modelid]
+
+    for trigger in remote.keys():
+        triggers.append(
+            {
+                CONF_DEVICE_ID: device_id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_EVENT: deconz_event.id,
+                CONF_PLATFORM: "device",
+                CONF_TYPE: trigger,
+                "model_id": deconz_event._device.modelid,
+            }
+        )
+
+    return triggers
