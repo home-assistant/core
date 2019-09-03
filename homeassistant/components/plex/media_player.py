@@ -82,7 +82,7 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
         # Parse discovery data
         host = discovery_info.get("host")
         port = discovery_info.get("port")
-        host = "%s:%s" % (host, port)
+        host = f"{host}:{port}"
         _LOGGER.info("Discovered PLEX server: %s", host)
 
         if host in _CONFIGURING:
@@ -113,7 +113,7 @@ def setup_plexserver(
         cert_session.verify = False
     try:
         plexserver = plexapi.server.PlexServer(
-            "%s://%s" % (http_prefix, host), token, cert_session
+            f"{http_prefix}://{host}", token, cert_session
         )
         _LOGGER.info("Discovery configuration done (no token needed)")
     except (
@@ -847,7 +847,7 @@ class PlexClient(MediaPlayerDevice):
         show = self.device.server.library.section(library_name).get(show_name)
 
         if not season_number:
-            playlist_name = "{} - {} Episodes".format(self.entity_id, show_name)
+            playlist_name = f"{self.entity_id} - {show_name} Episodes"
             return self.device.server.createPlaylist(playlist_name, show.episodes())
 
         for season in show.seasons():

@@ -58,7 +58,7 @@ def setup(hass, config):
     device.update_properties()
 
     if not name:
-        name = "{}'s Owlet".format(device.baby_name)
+        name = f"{device.baby_name}'s Owlet"
 
     hass.data[DOMAIN] = OwletDevice(device, name, SENSOR_TYPES)
 
