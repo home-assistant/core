@@ -58,5 +58,11 @@
                 "description": "Configure visibility of deCONZ device types"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "{name} turn on button pressed",
+            "turn_off": "{name} turn off button pressed"
+        }
     }
 }

@@ -1,12 +1,10 @@
 """Provides device automations for deconz events."""
 import voluptuous as vol
 
-import homeassistant.components.automation.state as state
-from homeassistant.core import split_entity_id
+import homeassistant.components.automation.event as event
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
-    CONF_ENTITY_ID,
     CONF_EVENT,
     CONF_PLATFORM,
     CONF_TYPE,
@@ -19,37 +17,15 @@ from .gateway import get_gateway_from_config_entry
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
-CONF_TURN_OFF = "turn_off"
 CONF_TURN_ON = "turn_on"
+CONF_TURN_OFF = "turn_off"
 
-ENTITY_TRIGGERS = [
-    {
-        # Trigger when light is turned on
-        CONF_PLATFORM: "device",
-        CONF_DOMAIN: DOMAIN,
-        CONF_TYPE: CONF_TURN_OFF,
-    },
-    {
-        # Trigger when light is turned off
-        CONF_PLATFORM: "device",
-        CONF_DOMAIN: DOMAIN,
-        CONF_TYPE: CONF_TURN_ON,
-    },
-]
+HUE_DIMMER_REMOTE = {CONF_TURN_ON: 1002, CONF_TURN_OFF: 4002}
+
 
 HUE_DIMMER_REMOTE_TRIGGERS = [
-    {
-        # Trigger when remote button on is pressed
-        CONF_PLATFORM: "device",
-        CONF_DOMAIN: DOMAIN,
-        CONF_TYPE: 1002,
-    },
-    {
-        # Trigger when remote button off is pressed
-        CONF_PLATFORM: "device",
-        CONF_DOMAIN: DOMAIN,
-        CONF_TYPE: 4002,
-    },
+    {CONF_PLATFORM: "device", CONF_DOMAIN: DOMAIN, CONF_TYPE: CONF_TURN_ON},
+    {CONF_PLATFORM: "device", CONF_DOMAIN: DOMAIN, CONF_TYPE: CONF_TURN_OFF},
 ]
 
 TRIGGER_SCHEMA = vol.All(
@@ -65,30 +41,26 @@ TRIGGER_SCHEMA = vol.All(
 )
 
 
-def _is_domain(entity, domain):
-    return split_entity_id(entity.entity_id)[0] == domain
-
-
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
+    print("ATTACH", config, action, automation_info)
+
     trigger_type = config.get(CONF_TYPE)
-    if trigger_type == CONF_TURN_ON:
-        from_state = "off"
-        to_state = "on"
-    else:
-        from_state = "on"
-        to_state = "off"
+    event_id = config.get("event")
+
+    trigger = HUE_DIMMER_REMOTE[trigger_type]
+
     state_config = {
-        state.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        state.CONF_FROM: from_state,
-        state.CONF_TO: to_state,
+        event.CONF_EVENT_TYPE: "deconz_event",
+        event.CONF_EVENT_DATA: {"id": event_id, "event": trigger},
     }
 
-    return await state.async_trigger(hass, state_config, action, automation_info)
+    return await event.async_trigger(hass, state_config, action, automation_info)
 
 
 async def async_trigger(hass, config, action, automation_info):
     """Temporary so existing automation framework can be used for testing."""
+    print("TRIGGER")
     return await async_attach_trigger(hass, config, action, automation_info)
 
 
@@ -100,19 +72,19 @@ async def async_get_triggers(hass, device_id):
     entry = hass.config_entries.async_get_entry(next(iter(device.config_entries)))
     gateway = get_gateway_from_config_entry(hass, entry)
 
-    event_trigger = None
-    for event in gateway.events:
-        if next(iter(device.connections))[1] == event._device.uniqueid.split("-", 1)[0]:
-            event_trigger = event
+    deconz_event = None
+    for item in gateway.events:
+        if next(iter(device.connections))[1] == item._device.uniqueid.split("-", 1)[0]:
+            deconz_event = item
 
-    if event_trigger is not None:
-        print("NO EVENT")
+    if deconz_event is not None:
         triggers = []
-        if event_trigger._device.modelid == "RWL021":
+
+        if deconz_event._device.modelid == "RWL021":
+
             for trigger in HUE_DIMMER_REMOTE_TRIGGERS:
-                print(trigger)
                 trigger = dict(trigger)
-                trigger.update(device_id=device_id, event=event_trigger.id)
+                trigger.update(device_id=device_id, event=deconz_event.id)
                 triggers.append(trigger)
-            print("TRIGGERS", triggers)
+            print("GET", triggers)
             return triggers
