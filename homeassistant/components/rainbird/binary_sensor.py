@@ -44,7 +44,6 @@ class RainBirdSensor(Entity):
         self._controller = controller
         self._name = SENSOR_TYPES[self._sensor_type][0]
         self._icon = SENSOR_TYPES[self._sensor_type][2]
-        self._unit_of_measurement = SENSOR_TYPES[self._sensor_type][1]
         self._state = None
 
     @property
@@ -62,11 +61,6 @@ class RainBirdSensor(Entity):
     def name(self):
         """Return the name of this camera."""
         return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Return the units of measurement."""
-        return self._unit_of_measurement
 
     @property
     def icon(self):
