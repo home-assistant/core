@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     platform_name = config[CONF_NAME]
 
     # Create new SolarEdge object to retrieve data
-    api = SolarEdge("http://{}/".format(ip_address))
+    api = SolarEdge(f"http://{ip_address}/")
 
     # Check if api can be reached and site is active
     try:
