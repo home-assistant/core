@@ -30,6 +30,7 @@ ATTR_STREAM = "stream"
 ATTR_FEEDS = "feeds"
 ATTR_CACHE = "cache"
 ATTR_PROJECTS = "projects"
+ATTR_RADIO_SHOW = "radio_show"
 ATTR_LATITUDE = "lat"
 ATTR_LONGITUDE = "lon"
 ATTR_API = "api"
@@ -74,6 +75,12 @@ CONF_FEED_URL = "url"
 CONF_CACHE = "cache"
 CONF_CACHE_SCHEDULE = "schedule"
 CONF_PROJECTS = "projects"
+CONF_RADIO_SHOW = "radio_show"
+CONF_RADIO_SHOW_NAME = "name"
+CONF_RADIO_SHOW_URL = "url"
+CONF_RADIO_SHOW_TYPE = "type"
+CONF_RADIO_SHOW_START = "start"
+CONF_RADIO_SHOW_END = "end"
 CONF_LOGO = "logo"
 CONF_MAILING_LIST = "mailing_list"
 CONF_PHONE = "phone"
@@ -130,6 +137,16 @@ CACHE_SCHEMA = vol.Schema(
     }
 )
 
+RADIO_SHOW_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_RADIO_SHOW_NAME): cv.string,
+        vol.Required(CONF_RADIO_SHOW_URL): cv.url,
+        vol.Required(CONF_RADIO_SHOW_TYPE): cv.matches_regex(r"(mp3|ogg)"),
+        vol.Required(CONF_RADIO_SHOW_START): cv.string,
+        vol.Required(CONF_RADIO_SHOW_END): cv.string,
+    }
+)
+
 CONTACT_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_EMAIL): cv.string,
@@ -176,6 +193,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_FEEDS): FEEDS_SCHEMA,
                 vol.Optional(CONF_CACHE): CACHE_SCHEMA,
                 vol.Optional(CONF_PROJECTS): vol.All(cv.ensure_list, [cv.url]),
+                vol.Optional(CONF_RADIO_SHOW): vol.All(
+                    cv.ensure_list, [RADIO_SHOW_SCHEMA]
+                ),
             }
         )
     },
@@ -283,6 +303,11 @@ class APISpaceApiView(HomeAssistantView):
 
         try:
             data[ATTR_PROJECTS] = spaceapi[CONF_PROJECTS]
+        except KeyError:
+            pass
+
+        try:
+            data[ATTR_RADIO_SHOW] = spaceapi[CONF_RADIO_SHOW]
         except KeyError:
             pass
 
