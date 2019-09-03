@@ -237,16 +237,16 @@ class SetIntentHandler(intent.IntentHandler):
         response = intent_obj.create_response()
 
         if not speech_parts:  # No attributes changed
-            speech = "Turned on {}".format(state.name)
+            speech = f"Turned on {state.name}"
         else:
-            parts = ["Changed {} to".format(state.name)]
+            parts = [f"Changed {state.name} to"]
             for index, part in enumerate(speech_parts):
                 if index == 0:
-                    parts.append(" {}".format(part))
+                    parts.append(f" {part}")
                 elif index != len(speech_parts) - 1:
-                    parts.append(", {}".format(part))
+                    parts.append(f", {part}")
                 else:
-                    parts.append(" and {}".format(part))
+                    parts.append(f" and {part}")
             speech = "".join(parts)
 
         response.async_set_speech(speech)

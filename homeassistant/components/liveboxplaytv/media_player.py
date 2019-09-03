@@ -178,7 +178,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         """Title of current playing media."""
         if self._current_channel:
             if self._current_program:
-                return "{}: {}".format(self._current_channel, self._current_program)
+                return f"{self._current_channel}: {self._current_program}"
             return self._current_channel
 
     @property
