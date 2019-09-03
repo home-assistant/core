@@ -16,7 +16,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     controller = hass.data[DATA_RAINBIRD]
 
     sensors = []
-    for sensor_type in map(lambda k, v: k, SENSOR_TYPES):
+    for sensor_type in SENSOR_TYPES.keys():
         sensors.append(RainBirdSensor(controller, sensor_type))
 
     add_entities(sensors, True)
