@@ -97,6 +97,11 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                             reason="already_configured"
                         )
 
+                if DOMAIN not in self.hass.data:
+                    self.hass.data[DOMAIN] = {}
+
+                self.hass.data[DOMAIN][server_id] = plex_server
+
                 url = plex_server.url_in_use
                 token = user_input.get(CONF_TOKEN)
 

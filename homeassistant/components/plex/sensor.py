@@ -23,13 +23,12 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_SERVER,
+    CONF_SERVER_IDENTIFIER,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
     DOMAIN as PLEX_DOMAIN,
-    PLEX_SERVER_CONFIG,
 )
-from .server import PlexServer
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,29 +77,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 def _setup_platform(hass, config_entry, add_entities):
     """Set up the Plex sensor."""
-    server_config = config_entry.data.get(PLEX_SERVER_CONFIG, {})
-
-    try:
-        sensor = PlexSensor(server_config)
-    except (
-        plexapi.exceptions.BadRequest,
-        plexapi.exceptions.Unauthorized,
-        plexapi.exceptions.NotFound,
-    ) as error:
-        _LOGGER.error(error)
-        return
-
+    server_identifier = config_entry.data[CONF_SERVER_IDENTIFIER]
+    sensor = PlexSensor(hass.data[PLEX_DOMAIN][server_identifier])
     add_entities([sensor], True)
 
 
 class PlexSensor(Entity):
     """Representation of a Plex now playing sensor."""
 
-    def __init__(self, server_config):
+    def __init__(self, plex_server):
         """Initialize the sensor."""
         self._state = 0
         self._now_playing = []
-        self._server = PlexServer(server_config)
+        self._server = plex_server
         self._name = "Plex ({})".format(self._server.friendly_name)
 
     @property

@@ -41,13 +41,12 @@ from .const import (
     CONF_SHOW_ALL_CONTROLS,
     CONF_REMOVE_UNAVAILABLE_CLIENTS,
     CONF_CLIENT_REMOVE_INTERVAL,
+    CONF_SERVER_IDENTIFIER,
     DOMAIN as PLEX_DOMAIN,
     NAME_FORMAT,
     PLEX_CONFIG_FILE,
     PLEX_MEDIA_PLAYER_OPTIONS,
-    PLEX_SERVER_CONFIG,
 )
-from .server import PlexServer
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,29 +126,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.async_add_executor_job(_setup_platform, hass, config_entry, add_entities)
 
 
-def _setup_platform(hass, config_entry, add_entities):
+def _setup_platform(hass, config_entry, add_entities_callback):
     """Set up Plex media_player component."""
-
-    server_config = config_entry.data[PLEX_SERVER_CONFIG]
-    media_player_config = config_entry.options[MP_DOMAIN]
-
-    setup_plexserver(server_config, media_player_config, hass, add_entities)
-
-
-def setup_plexserver(server_config, config, hass, add_entities_callback):
-    """Set up a Plex server."""
     import plexapi.exceptions
 
-    try:
-        plexserver = PlexServer(server_config)
-    except (
-        plexapi.exceptions.BadRequest,
-        plexapi.exceptions.Unauthorized,
-        plexapi.exceptions.NotFound,
-    ) as error:
-        _LOGGER.error(error)
-        return
+    server_identifier = config_entry.data[CONF_SERVER_IDENTIFIER]
+    config = config_entry.options[MP_DOMAIN]
 
+    plexserver = hass.data[PLEX_DOMAIN][server_identifier]
     plex_clients = {}
     plex_sessions = {}
     track_time_interval(hass, lambda now: update_devices(), timedelta(seconds=10))
