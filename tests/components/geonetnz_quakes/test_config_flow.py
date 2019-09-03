@@ -130,6 +130,6 @@ async def test_component_unload_config_entry(hass, config_entry):
         assert mock_feed_manager_update.call_count == 1
         assert hass.data[DOMAIN][FEED][config_entry.entry_id] is not None
         # Unload config entry.
-        assert await async_unload_entry(hass, config_entry) is True
+        assert await async_unload_entry(hass, config_entry)
         await hass.async_block_till_done()
         assert hass.data[DOMAIN][FEED].get(config_entry.entry_id) is None
