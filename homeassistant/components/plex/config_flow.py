@@ -76,7 +76,7 @@ class PlexFlowHandler(config_entries.ConfigFlow):
                 return self.async_show_form(
                     step_id="select_server",
                     data_schema=vol.Schema(
-                        {vol.Required(CONF_SERVER): vol.In(available_servers[0])}
+                        {vol.Required(CONF_SERVER): vol.In(available_servers.args[0])}
                     ),
                     errors={},
                 )
