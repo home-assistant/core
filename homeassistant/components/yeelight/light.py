@@ -165,7 +165,7 @@ def _cmd(func):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yeelight bulbs."""
-    data_key = "{}_lights".format(DATA_YEELIGHT)
+    data_key = f"{DATA_YEELIGHT}_lights"
 
     if not discovery_info:
         return
@@ -673,7 +673,7 @@ class YeelightAmbientLight(YeelightColorLight):
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
-        return "{} ambilight".format(self.device.name)
+        return f"{self.device.name} ambilight"
 
     def _get_property(self, prop, default=None):
         bg_prop = self.PROPERTIES_MAPPING.get(prop)

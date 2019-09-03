@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "yeelight"
 DATA_YEELIGHT = DOMAIN
 DATA_UPDATED = "yeelight_{}_data_updated"
-DEVICE_INITIALIZED = "{}_device_initialized".format(DOMAIN)
+DEVICE_INITIALIZED = f"{DOMAIN}_device_initialized"
 
 DEFAULT_NAME = "Yeelight"
 DEFAULT_TRANSITION = 350
