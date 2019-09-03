@@ -60,7 +60,7 @@ async def async_send_changereport_message(
     """
     token = await config.async_get_access_token()
 
-    headers = {"Authorization": "Bearer {}".format(token)}
+    headers = {"Authorization": f"Bearer {token}"}
 
     endpoint = alexa_entity.alexa_id()
 
@@ -122,7 +122,7 @@ async def async_send_add_or_update_message(hass, config, entity_ids):
     """
     token = await config.async_get_access_token()
 
-    headers = {"Authorization": "Bearer {}".format(token)}
+    headers = {"Authorization": f"Bearer {token}"}
 
     endpoints = []
 
@@ -152,7 +152,7 @@ async def async_send_delete_message(hass, config, entity_ids):
     """
     token = await config.async_get_access_token()
 
-    headers = {"Authorization": "Bearer {}".format(token)}
+    headers = {"Authorization": f"Bearer {token}"}
 
     endpoints = []
 

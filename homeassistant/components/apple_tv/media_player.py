@@ -213,7 +213,7 @@ class AppleTvDevice(MediaPlayerDevice):
             title = self._playing.title
             return title if title else "No title"
 
-        return "Establishing a connection to {0}...".format(self._name)
+        return f"Establishing a connection to {self._name}..."
 
     @property
     def supported_features(self):
