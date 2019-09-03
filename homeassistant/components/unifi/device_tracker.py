@@ -238,7 +238,7 @@ class UniFiClientTracker(ScannerEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this client."""
-        return "{}-{}".format(self.client.mac, self.controller.site)
+        return f"{self.client.mac}-{self.controller.site}"
 
     @property
     def available(self) -> bool:
