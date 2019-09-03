@@ -39,6 +39,11 @@ CONFIG = {
             "flicker": {"url": "https://www.flickr.com/photos/home-assistant"},
         },
         "cache": {"schedule": "m.02"},
+        "projects": [
+            "https://home-assistant.io/projects/1",
+            "https://home-assistant.io/projects/2",
+            "https://home-assistant.io/projects/3",
+        ],
     }
 }
 
@@ -98,6 +103,9 @@ async def test_spaceapi_get(hass, mock_client):
         == "https://www.flickr.com/photos/home-assistant"
     )
     assert data["cache"]["schedule"] == "m.02"
+    assert data["projects"][0] == "https://home-assistant.io/projects/1"
+    assert data["projects"][1] == "https://home-assistant.io/projects/2"
+    assert data["projects"][2] == "https://home-assistant.io/projects/3"
 
 
 async def test_spaceapi_state_get(hass, mock_client):
