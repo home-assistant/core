@@ -182,7 +182,7 @@ class MailNotificationService(BaseNotificationService):
         msg["Subject"] = subject
         msg["To"] = ",".join(self.recipients)
         if self._sender_name:
-            msg["From"] = "{} <{}>".format(self._sender_name, self._sender)
+            msg["From"] = f"{self._sender_name} <{self._sender}>"
         else:
             msg["From"] = self._sender
         msg["X-Mailer"] = "HomeAssistant"
@@ -225,18 +225,18 @@ def _build_multipart_msg(message, images):
     msg.attach(msg_alt)
     body_txt = MIMEText(message)
     msg_alt.attach(body_txt)
-    body_text = ["<p>{}</p><br>".format(message)]
+    body_text = [f"<p>{message}</p><br>"]
 
     for atch_num, atch_name in enumerate(images):
-        cid = "image{}".format(atch_num)
-        body_text.append('<img src="cid:{}"><br>'.format(cid))
+        cid = f"image{atch_num}"
+        body_text.append(f'<img src="cid:{cid}"><br>')
         try:
             with open(atch_name, "rb") as attachment_file:
                 file_bytes = attachment_file.read()
                 try:
                     attachment = MIMEImage(file_bytes)
                     msg.attach(attachment)
-                    attachment.add_header("Content-ID", "<{}>".format(cid))
+                    attachment.add_header("Content-ID", f"<{cid}>")
                 except TypeError:
                     _LOGGER.warning(
                         "Attachment %s has an unknown MIME type. "
@@ -271,7 +271,7 @@ def _build_html_msg(text, html, images):
             with open(atch_name, "rb") as attachment_file:
                 attachment = MIMEImage(attachment_file.read(), filename=name)
             msg.attach(attachment)
-            attachment.add_header("Content-ID", "<{}>".format(name))
+            attachment.add_header("Content-ID", f"<{name}>")
         except FileNotFoundError:
             _LOGGER.warning(
                 "Attachment %s [#%s] not found. Skipping", atch_name, atch_num

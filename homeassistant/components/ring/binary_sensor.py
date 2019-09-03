@@ -73,7 +73,7 @@ class RingBinarySensor(BinarySensorDevice):
         )
         self._device_class = SENSOR_TYPES.get(self._sensor_type)[2]
         self._state = None
-        self._unique_id = "{}-{}".format(self._data.id, self._sensor_type)
+        self._unique_id = f"{self._data.id}-{self._sensor_type}"
 
     @property
     def name(self):
