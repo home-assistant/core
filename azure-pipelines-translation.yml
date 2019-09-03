@@ -1,0 +1,27 @@
+# https://dev.azure.com/home-assistant
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - dev
+pr: none
+variables:
+  - group: translation
+
+
+jobs:
+
+- job: 'Upload'
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - task: UsePythonVersion@0
+    displayName: 'Use Python 3.7'
+    inputs:
+      versionSpec: '3.7'
+  - script: |
+      ./script/translations_upload
+    displayName: 'Upload Translation'
+    env:
+      LOKALISE_TOKEN: $(lokaliseToken)
