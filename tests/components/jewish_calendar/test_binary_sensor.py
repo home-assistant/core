@@ -78,23 +78,23 @@ async def test_issur_melacha_sensor(
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
-    assert await async_setup_component(
-        hass,
-        jewish_calendar.DOMAIN,
-        {
-            "jewish_calendar": {
-                "name": "test",
-                "language": "english",
-                "diaspora": diaspora,
-                "candle_lighting_minutes_before_sunset": candle_lighting,
-                "havdalah_minutes_after_sunset": havdalah,
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
     with alter_time(test_time):
-        future = test_time + timedelta(seconds=30)
+        assert await async_setup_component(
+            hass,
+            jewish_calendar.DOMAIN,
+            {
+                "jewish_calendar": {
+                    "name": "test",
+                    "language": "english",
+                    "diaspora": diaspora,
+                    "candle_lighting_minutes_before_sunset": candle_lighting,
+                    "havdalah_minutes_after_sunset": havdalah,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+        future = dt_util.utcnow() + timedelta(seconds=30)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 

@@ -165,21 +165,21 @@ async def test_jewish_calendar_sensor(
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
-    assert await async_setup_component(
-        hass,
-        jewish_calendar.DOMAIN,
-        {
-            "jewish_calendar": {
-                "name": "test",
-                "language": language,
-                "diaspora": diaspora,
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
     with alter_time(test_time):
-        future = test_time + timedelta(seconds=30)
+        assert await async_setup_component(
+            hass,
+            jewish_calendar.DOMAIN,
+            {
+                "jewish_calendar": {
+                    "name": "test",
+                    "language": language,
+                    "diaspora": diaspora,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+        future = dt_util.utcnow() + timedelta(seconds=30)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
@@ -497,20 +497,25 @@ async def test_shabbat_times_sensor(
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
-    assert await async_setup_component(
-        hass,
-        jewish_calendar.DOMAIN,
-        {
-            "jewish_calendar": {
-                "name": "test",
-                "language": language,
-                "diaspora": diaspora,
-                "candle_lighting_minutes_before_sunset": candle_lighting,
-                "havdalah_minutes_after_sunset": havdalah,
-            }
-        },
-    )
-    await hass.async_block_till_done()
+    with alter_time(test_time):
+        assert await async_setup_component(
+            hass,
+            jewish_calendar.DOMAIN,
+            {
+                "jewish_calendar": {
+                    "name": "test",
+                    "language": language,
+                    "diaspora": diaspora,
+                    "candle_lighting_minutes_before_sunset": candle_lighting,
+                    "havdalah_minutes_after_sunset": havdalah,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+        future = dt_util.utcnow() + timedelta(seconds=30)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
 
     for sensor_type, result_value in result.items():
         if not sensor_type.startswith(language):
@@ -518,11 +523,6 @@ async def test_shabbat_times_sensor(
             continue
 
         sensor_type = sensor_type.replace(f"{language}_", "")
-
-        with alter_time(test_time):
-            future = test_time + timedelta(seconds=30)
-            async_fire_time_changed(hass, future)
-            await hass.async_block_till_done()
 
         assert hass.states.get(f"sensor.test_{sensor_type}").state == str(
             result_value
@@ -550,14 +550,15 @@ OMER_TEST_IDS = [
 @pytest.mark.parametrize(["test_time", "result"], OMER_PARAMS, ids=OMER_TEST_IDS)
 async def test_omer_sensor(hass, test_time, result):
     """Test Omer Count sensor output."""
-    assert await async_setup_component(
-        hass, jewish_calendar.DOMAIN, {"jewish_calendar": {"name": "test"}}
-    )
-    await hass.async_block_till_done()
     test_time = hass.config.time_zone.localize(test_time)
 
     with alter_time(test_time):
-        future = test_time + timedelta(seconds=30)
+        assert await async_setup_component(
+            hass, jewish_calendar.DOMAIN, {"jewish_calendar": {"name": "test"}}
+        )
+        await hass.async_block_till_done()
+
+        future = dt_util.utcnow() + timedelta(seconds=30)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
