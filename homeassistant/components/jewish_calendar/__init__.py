@@ -2,7 +2,6 @@
 import logging
 
 import voluptuous as vol
-
 import hdate
 
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME

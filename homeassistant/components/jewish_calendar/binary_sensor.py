@@ -1,12 +1,12 @@
 """Support for Jewish Calendar binary sensors."""
 import logging
 
+import hdate
+
 from homeassistant.components.binary_sensor import BinarySensorDevice
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN, SENSOR_TYPES
-
-import hdate
 
 _LOGGER = logging.getLogger(__name__)
 

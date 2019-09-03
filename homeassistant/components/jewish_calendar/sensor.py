@@ -1,14 +1,14 @@
 """Platform to retrieve Jewish calendar information for Home Assistant."""
 import logging
 
+import hdate
+
 from homeassistant.const import SUN_EVENT_SUNSET
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN, SENSOR_TYPES
-
-import hdate
 
 _LOGGER = logging.getLogger(__name__)
 
