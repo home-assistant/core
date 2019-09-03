@@ -57,6 +57,6 @@ jobs:
       ./script/translations_download
     displayName: 'Download Translation'
   - script: |
-      commit -am "[CI] Translation update"
-      commit push
+      git commit -am "[CI] Translation update"
+      git commit push
     displayName: 'Update translation'
