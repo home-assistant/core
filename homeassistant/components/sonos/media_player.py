@@ -345,7 +345,7 @@ class SonosEntity(MediaPlayerDevice):
             for entity in self.hass.data[DATA_SONOS].entities:
                 entity.update_groups()
 
-        self.hass.async_add_job(_rebuild_groups)
+        self.hass.async_add_executor_job(_rebuild_groups)
 
     @property
     def unique_id(self):
