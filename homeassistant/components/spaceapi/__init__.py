@@ -29,6 +29,7 @@ ATTR_CAM = "cam"
 ATTR_STREAM = "stream"
 ATTR_FEEDS = "feeds"
 ATTR_CACHE = "cache"
+ATTR_PROJECTS = "projects"
 ATTR_LATITUDE = "lat"
 ATTR_LONGITUDE = "lon"
 ATTR_API = "api"
@@ -72,6 +73,7 @@ CONF_FEED_TYPE = "type"
 CONF_FEED_URL = "url"
 CONF_CACHE = "cache"
 CONF_CACHE_SCHEDULE = "schedule"
+CONF_PROJECTS = "projects"
 CONF_LOGO = "logo"
 CONF_MAILING_LIST = "mailing_list"
 CONF_PHONE = "phone"
@@ -173,6 +175,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_STREAM): STREAM_SCHEMA,
                 vol.Optional(CONF_FEEDS): FEEDS_SCHEMA,
                 vol.Optional(CONF_CACHE): CACHE_SCHEMA,
+                vol.Optional(CONF_PROJECTS): vol.All(cv.ensure_list, [cv.url]),
             }
         )
     },
@@ -275,6 +278,11 @@ class APISpaceApiView(HomeAssistantView):
 
         try:
             data[ATTR_CACHE] = spaceapi[CONF_CACHE]
+        except KeyError:
+            pass
+
+        try:
+            data[ATTR_PROJECTS] = spaceapi[CONF_PROJECTS]
         except KeyError:
             pass
 
