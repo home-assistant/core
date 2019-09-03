@@ -64,7 +64,7 @@ def make_jerusalem_test_params(dtime, results, havdalah_offset=0):
 @contextmanager
 def alter_time(local_time):
     """Manage multiple time mocks."""
-    utc_time = dt_util.UTC.localize(local_time.replace(tzinfo=None))
+    utc_time = dt_util.as_utc(local_time)
     patch1 = patch("homeassistant.util.dt.utcnow", return_value=utc_time)
     patch2 = patch("homeassistant.util.dt.now", return_value=local_time)
 
