@@ -1,11 +1,6 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
 import logging
 
-import voluptuous as vol
-
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
 from pyrainbird import RainbirdController
 from . import DATA_RAINBIRD
@@ -15,21 +10,13 @@ _LOGGER = logging.getLogger(__name__)
 # sensor_type [ description, unit, icon ]
 SENSOR_TYPES = {"rainsensor": ["Rainsensor", None, "mdi:water"]}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        )
-    }
-)
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Rain Bird sensor."""
     controller = hass.data[DATA_RAINBIRD]
 
     sensors = []
-    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
+    for sensor_type in map(lambda k, v: k, SENSOR_TYPES):
         sensors.append(RainBirdSensor(controller, sensor_type))
 
     add_entities(sensors, True)
