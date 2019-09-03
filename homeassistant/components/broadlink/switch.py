@@ -103,9 +103,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     def _get_mp1_slot_name(switch_friendly_name, slot):
         """Get slot name."""
-        if not slots["slot_{}".format(slot)]:
-            return "{} slot {}".format(switch_friendly_name, slot)
-        return slots["slot_{}".format(slot)]
+        if not slots[f"slot_{slot}"]:
+            return f"{switch_friendly_name} slot {slot}"
+        return slots[f"slot_{slot}"]
 
     if switch_type in RM_TYPES:
         broadlink_device = broadlink.rm((ip_addr, 80), mac_addr, None)
@@ -371,7 +371,7 @@ class BroadlinkMP1Switch:
         """Get status of outlet from cached status list."""
         if self._states is None:
             return None
-        return self._states["s{}".format(slot)]
+        return self._states[f"s{slot}"]
 
     @Throttle(TIME_BETWEEN_UPDATES)
     def update(self):

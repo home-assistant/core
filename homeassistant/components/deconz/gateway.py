@@ -138,7 +138,7 @@ class DeconzGateway:
     @property
     def event_reachable(self):
         """Gateway specific event to signal a change in connection status."""
-        return "deconz_reachable_{}".format(self.bridgeid)
+        return f"deconz_reachable_{self.bridgeid}"
 
     @callback
     def async_connection_status_callback(self, available):
@@ -241,7 +241,7 @@ class DeconzEvent:
         self._hass = hass
         self._device = device
         self._device.register_async_callback(self.async_update_callback)
-        self._event = "deconz_{}".format(CONF_EVENT)
+        self._event = f"deconz_{CONF_EVENT}"
         self._id = slugify(self._device.name)
         _LOGGER.debug("deCONZ event created: %s", self._id)
 
