@@ -53,7 +53,7 @@ class CanarySensor(Entity):
         self._sensor_value = None
 
         sensor_type_name = sensor_type[0].replace("_", " ").title()
-        self._name = "{} {} {}".format(location.name, device.name, sensor_type_name)
+        self._name = f"{location.name} {device.name} {sensor_type_name}"
 
     @property
     def name(self):
