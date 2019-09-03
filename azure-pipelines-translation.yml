@@ -22,7 +22,7 @@ jobs:
       versionSpec: '3.7'
   - script: |
       export LOKALISE_TOKEN="$(lokaliseToken)"
-      export AZURE_BRANCH="$(Build.SourceBranch)"
+      export AZURE_BRANCH="$(Build.SourceBranchName)"
 
       ./script/translations_upload
     displayName: 'Upload Translation'
