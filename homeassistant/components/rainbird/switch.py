@@ -81,13 +81,9 @@ class RainBirdSwitch(SwitchDevice):
         if response and response["type"] == "AcknowledgeResponse":
             self._state = False
 
-    def get_device_status(self):
-        """Get the status of the switch from Rain Bird Controller."""
-        return self._rainbird.zone_state(self._zone)
-
     def update(self):
         """Update switch status."""
-        self._state = self.get_device_status()
+        self._state = self._rainbird.zone_state(self._zone)
 
     @property
     def is_on(self):
