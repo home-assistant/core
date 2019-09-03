@@ -1,4 +1,5 @@
 """The GeoNet NZ Quakes integration."""
+import asyncio
 import logging
 from datetime import timedelta
 
@@ -23,7 +24,7 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .config_flow import configured_instances
 from .const import (
-    COMPONENTS,
+    PLATFORMS,
     CONF_MINIMUM_MAGNITUDE,
     CONF_MMI,
     DEFAULT_FILTER_TIME_INTERVAL,
@@ -121,12 +122,12 @@ async def async_unload_entry(hass, config_entry):
     """Unload an GeoNet NZ Quakes component config entry."""
     manager = hass.data[DOMAIN][FEED].pop(config_entry.entry_id)
     await manager.async_stop()
-
-    for domain in COMPONENTS:
-        hass.async_create_task(
+    await asyncio.wait(
+        [
             hass.config_entries.async_forward_entry_unload(config_entry, domain)
-        )
-
+            for domain in PLATFORMS
+        ]
+    )
     return True
 
 
@@ -164,7 +165,7 @@ class GeonetnzQuakesFeedEntityManager:
     async def async_init(self):
         """Schedule initial and regular updates based on configured time interval."""
 
-        for domain in COMPONENTS:
+        for domain in PLATFORMS:
             self._hass.async_create_task(
                 self._hass.config_entries.async_forward_entry_setup(
                     self._config_entry, domain

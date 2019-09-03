@@ -3,7 +3,7 @@ from datetime import timedelta
 
 DOMAIN = "geonetnz_quakes"
 
-COMPONENTS = ("sensor", "geo_location")
+PLATFORMS = ("sensor", "geo_location")
 
 CONF_MINIMUM_MAGNITUDE = "minimum_magnitude"
 CONF_MMI = "mmi"
