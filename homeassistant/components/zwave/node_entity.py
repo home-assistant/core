@@ -348,5 +348,5 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
 
     def _compute_unique_id(self):
         if is_node_parsed(self.node) or self.node.is_ready:
-            return "node-{}".format(self.node_id)
+            return f"node-{self.node_id}"
         return None
