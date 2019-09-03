@@ -290,7 +290,7 @@ class Doods(ImageProcessingEntity):
         # Run detection
         start = time.time()
         response = self._doods.detect(image, self._dconfig)
-        _LOGGER.info(
+        _LOGGER.debug(
             "doods detect: %s response: %s duration: %s",
             self._dconfig,
             response,
