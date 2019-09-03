@@ -182,7 +182,7 @@ def _check_for_node_def(hass: HomeAssistant, node, single_domain: str = None) ->
             hass.data[ISY994_NODES][domain].append(node)
             return True
 
-    _LOGGER.warning("unsupported node: {node.name}, type: {node.type}")
+    _LOGGER.warning("Unsupported node: %s, type: %s", node.name, node.type)
     return False
 
 
