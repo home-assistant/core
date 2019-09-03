@@ -104,7 +104,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 HOST = "https://www.hydroquebec.com"
-HOME_URL = "{}/portail/web/clientele/authentification".format(HOST)
+HOME_URL = f"{HOST}/portail/web/clientele/authentification"
 PROFILE_URL = "{}/portail/fr/group/clientele/" "portrait-de-consommation".format(HOST)
 MONTHLY_MAP = (
     ("period_total_bill", "montantFacturePeriode"),
@@ -164,7 +164,7 @@ class HydroQuebecSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.client_name, self._name)
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
