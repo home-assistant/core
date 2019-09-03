@@ -136,17 +136,17 @@ async def async_setup(hass, config):
     except (goslideapi.ClientConnectionError, goslideapi.ClientTimeoutError) as err:
         _LOGGER.error(
             "Error connecting to Slide Cloud: %s, going to retry in %s seconds",
-            str(err),
+            err,
             DEFAULT_RETRY,
         )
         async_call_later(hass, DEFAULT_RETRY, retry_setup)
         return True
 
-    if result:
-        _LOGGER.debug("Slide API successfully authenticated")
-    else:
+    if not result:
         _LOGGER.error("Slide API returned unknown error during authentication")
         return False
+
+    _LOGGER.debug("Slide API successfully authenticated")
 
     await update_slides()
 
