@@ -8,7 +8,8 @@ from . import DATA_RAINBIRD
 _LOGGER = logging.getLogger(__name__)
 
 # sensor_type [ description, unit, icon ]
-SENSOR_TYPES = {"rainsensor": ["Rainsensor", None, "mdi:water"]}
+SENSOR_TYPES = {"rainsensor": ["Rainsensor", None, "mdi:water"],
+                "raindelay": ["Raindelay", None, "mdi:water-off"]}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -44,6 +45,8 @@ class RainBirdSensor(Entity):
         _LOGGER.debug("Updating sensor: %s", self._name)
         if self._sensor_type == "rainsensor":
             self._state = self._controller.get_rain_sensor_state()
+        elif self._sensor_type == "raindelay":
+            self._state = self._controller.get_rain_delay()
 
     @property
     def name(self):
