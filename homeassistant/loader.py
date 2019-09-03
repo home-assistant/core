@@ -127,7 +127,7 @@ async def async_get_config_flows(hass: "HomeAssistant") -> Set[str]:
     """Return cached list of config flows."""
     from homeassistant.generated.config_flows import FLOWS
 
-    flows = set()  # type: Set[str]
+    flows: Set[str] = set()
     flows.update(FLOWS)
 
     integrations = await async_get_custom_components(hass)
@@ -201,14 +201,14 @@ class Integration:
         self.hass = hass
         self.pkg_path = pkg_path
         self.file_path = file_path
-        self.name = manifest["name"]  # type: str
-        self.domain = manifest["domain"]  # type: str
-        self.dependencies = manifest["dependencies"]  # type: List[str]
-        self.after_dependencies = manifest.get(
+        self.name: str = manifest["name"]
+        self.domain: str = manifest["domain"]
+        self.dependencies: List[str] = manifest["dependencies"]
+        self.after_dependencies: Optional[List[str]] = manifest.get(
             "after_dependencies"
-        )  # type: Optional[List[str]]
-        self.requirements = manifest["requirements"]  # type: List[str]
-        self.config_flow = manifest.get("config_flow", False)  # type: bool
+        )
+        self.requirements: List[str] = manifest["requirements"]
+        self.config_flow: bool = manifest.get("config_flow", False)
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
 
     @property
@@ -246,9 +246,7 @@ async def async_get_integration(hass: "HomeAssistant", domain: str) -> Integrati
             raise IntegrationNotFound(domain)
         cache = hass.data[DATA_INTEGRATIONS] = {}
 
-    int_or_evt = cache.get(
-        domain, _UNDEF
-    )  # type: Union[Integration, asyncio.Event, None]
+    int_or_evt: Union[Integration, asyncio.Event, None] = cache.get(domain, _UNDEF)
 
     if isinstance(int_or_evt, asyncio.Event):
         await int_or_evt.wait()
@@ -428,7 +426,7 @@ class Components:
         integration = self._hass.data.get(DATA_INTEGRATIONS, {}).get(comp_name)
 
         if isinstance(integration, Integration):
-            component = integration.get_component()  # type: Optional[ModuleType]
+            component: Optional[ModuleType] = integration.get_component()
         else:
             # Fallback to importing old-school
             component = _load_file(self._hass, comp_name, LOOKUP_PATHS)
