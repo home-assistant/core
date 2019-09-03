@@ -84,7 +84,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for repo in repositories:
         if "/" not in repo:
-            repo = "{0}/{1}".format(user.login, repo)
+            repo = f"{user.login}/{repo}"
 
         for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
             sensors.append(TravisCISensor(travis, repo, user, branch, sensor_type))

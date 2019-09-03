@@ -43,13 +43,13 @@ class TeslaSensor(TeslaDevice, Entity):
         super().__init__(tesla_device, controller)
 
         if self.type:
-            self._name = "{} ({})".format(self.tesla_device.name, self.type)
+            self._name = f"{self.tesla_device.name} ({self.type})"
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
         if self.type:
-            return "{}_{}".format(self.tesla_id, self.type)
+            return f"{self.tesla_id}_{self.type}"
         return self.tesla_id
 
     @property

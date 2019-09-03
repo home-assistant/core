@@ -107,7 +107,7 @@ class TellstickSensor(Entity):
         self._unit_of_measurement = sensor_info.unit or None
         self._value = None
 
-        self._name = "{} {}".format(name, sensor_info.name)
+        self._name = f"{name} {sensor_info.name}"
 
     @property
     def name(self):

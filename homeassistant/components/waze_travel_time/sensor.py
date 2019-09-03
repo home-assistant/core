@@ -175,7 +175,7 @@ class WazeTravelTime(Entity):
             return _get_location_from_attributes(state)
 
         # Check if device is inside a zone.
-        zone_state = self.hass.states.get("zone.{}".format(state.state))
+        zone_state = self.hass.states.get(f"zone.{state.state}")
         if location.has_location(zone_state):
             _LOGGER.debug(
                 "%s is in %s, getting zone location", entity_id, zone_state.entity_id
