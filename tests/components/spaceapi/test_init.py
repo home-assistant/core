@@ -44,6 +44,15 @@ CONFIG = {
             "https://home-assistant.io/projects/2",
             "https://home-assistant.io/projects/3",
         ],
+        "radio_show": [
+            {
+                "name": "Radioshow",
+                "url": "https://home-assistant.io/radio",
+                "type": "ogg",
+                "start": "2019-09-02T10:00Z",
+                "end": "2019-09-02T12:00Z",
+            }
+        ],
     }
 }
 
@@ -106,6 +115,11 @@ async def test_spaceapi_get(hass, mock_client):
     assert data["projects"][0] == "https://home-assistant.io/projects/1"
     assert data["projects"][1] == "https://home-assistant.io/projects/2"
     assert data["projects"][2] == "https://home-assistant.io/projects/3"
+    assert data["radio_show"][0]["name"] == "Radioshow"
+    assert data["radio_show"][0]["url"] == "https://home-assistant.io/radio"
+    assert data["radio_show"][0]["type"] == "ogg"
+    assert data["radio_show"][0]["start"] == "2019-09-02T10:00Z"
+    assert data["radio_show"][0]["end"] == "2019-09-02T12:00Z"
 
 
 async def test_spaceapi_state_get(hass, mock_client):
