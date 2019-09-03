@@ -65,7 +65,7 @@ class SwitcherControl(SwitchDevice):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return "{}-{}".format(self._device_data.device_id, self._device_data.mac_addr)
+        return f"{self._device_data.device_id}-{self._device_data.mac_addr}"
 
     @property
     def is_on(self) -> bool:

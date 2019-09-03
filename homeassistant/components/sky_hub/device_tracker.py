@@ -34,7 +34,7 @@ class SkyHubDeviceScanner(DeviceScanner):
         _LOGGER.info("Initialising Sky Hub")
         self.host = config.get(CONF_HOST, "192.168.1.254")
         self.last_results = {}
-        self.url = "http://{}/".format(self.host)
+        self.url = f"http://{self.host}/"
 
         # Test the router is accessible
         data = _get_skyhub_data(self.url)
