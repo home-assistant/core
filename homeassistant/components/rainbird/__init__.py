@@ -3,8 +3,8 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,5 +43,3 @@ def setup(hass, config):
 
     hass.data[DATA_RAINBIRD] = controller
     return True
-
-

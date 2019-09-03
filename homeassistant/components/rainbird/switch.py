@@ -2,6 +2,7 @@
 
 import logging
 
+from pyrainbird import RainbirdController
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
@@ -13,7 +14,6 @@ from homeassistant.const import (
     CONF_ZONE,
 )
 from homeassistant.helpers import config_validation as cv
-from pyrainbird import RainbirdController
 
 from . import DATA_RAINBIRD
 
