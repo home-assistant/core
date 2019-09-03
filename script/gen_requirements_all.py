@@ -86,6 +86,7 @@ TEST_REQUIREMENTS = (
     "haversine",
     "hbmqtt",
     "hdate",
+    "hole",
     "holidays",
     "home-assistant-frontend",
     "homekit[IP]",
