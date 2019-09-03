@@ -38,6 +38,7 @@ CONFIG = {
             "calendar": {"type": "ical", "url": "https://home-assistant.io/calendar"},
             "flicker": {"url": "https://www.flickr.com/photos/home-assistant"},
         },
+        "cache": {"schedule": "m.02"},
     }
 }
 
@@ -96,6 +97,7 @@ async def test_spaceapi_get(hass, mock_client):
         data["feeds"]["flicker"]["url"]
         == "https://www.flickr.com/photos/home-assistant"
     )
+    assert data["cache"]["schedule"] == "m.02"
 
 
 async def test_spaceapi_state_get(hass, mock_client):
