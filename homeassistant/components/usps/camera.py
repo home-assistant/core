@@ -65,7 +65,7 @@ class USPSCamera(Camera):
     @property
     def name(self):
         """Return the name of this camera."""
-        return "{} mail".format(self._name)
+        return f"{self._name} mail"
 
     @property
     def model(self):

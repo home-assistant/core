@@ -108,7 +108,7 @@ async def async_setup_entry(hass, entry):
 
     def setup_url_for_device(device):
         """Determine setup.xml url for given device."""
-        return "http://{}:{}/setup.xml".format(device.host, device.port)
+        return f"http://{device.host}:{device.port}/setup.xml"
 
     def setup_url_for_address(host, port):
         """Determine setup.xml url for given host and port pair."""
@@ -118,7 +118,7 @@ async def async_setup_entry(hass, entry):
         if not port:
             return None
 
-        return "http://{}:{}/setup.xml".format(host, port)
+        return f"http://{host}:{port}/setup.xml"
 
     def discovery_dispatch(service, discovery_info):
         """Dispatcher for incoming WeMo discovery events."""
@@ -150,7 +150,7 @@ async def async_setup_entry(hass, entry):
             if not url:
                 _LOGGER.error(
                     "Unable to get description url for WeMo at: %s",
-                    "{}:{}".format(host, port) if port else host,
+                    f"{host}:{port}" if port else host,
                 )
                 continue
 
