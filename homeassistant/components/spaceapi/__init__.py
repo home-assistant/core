@@ -82,16 +82,28 @@ CONF_RADIO_SHOW_TYPE = "type"
 CONF_RADIO_SHOW_START = "start"
 CONF_RADIO_SHOW_END = "end"
 CONF_LOGO = "logo"
-CONF_MAILING_LIST = "mailing_list"
 CONF_PHONE = "phone"
+CONF_SIP = "sip"
+CONF_KEYMASTERS = "keymasters"
+CONF_KEYMASTER_NAME = "name"
+CONF_KEYMASTER_IRC_NICK = "irc_nick"
+CONF_KEYMASTER_PHONE = "phone"
+CONF_KEYMASTER_EMAIL = "email"
+CONF_KEYMASTER_TWITTER = "twitter"
+CONF_TWITTER = "twitter"
+CONF_FACEBOOK = "facebook"
+CONF_IDENTICA = "identica"
+CONF_FOURSQUARE = "foursquare"
+CONF_ML = "ml"
+CONF_JABBER = "jabber"
+CONF_ISSUE_MAIL = "issue_mail"
 CONF_SPACE = "space"
 CONF_TEMPERATURE = "temperature"
-CONF_TWITTER = "twitter"
 
 DATA_SPACEAPI = "data_spaceapi"
 DOMAIN = "spaceapi"
 
-ISSUE_REPORT_CHANNELS = [CONF_EMAIL, CONF_IRC, CONF_MAILING_LIST, CONF_TWITTER]
+ISSUE_REPORT_CHANNELS = [CONF_EMAIL, CONF_IRC, CONF_ML, CONF_TWITTER]
 
 SENSOR_TYPES = [CONF_HUMIDITY, CONF_TEMPERATURE]
 SPACEAPI_VERSION = "0.13"
@@ -147,13 +159,30 @@ RADIO_SHOW_SCHEMA = vol.Schema(
     }
 )
 
+KEYMASTER_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_KEYMASTER_NAME): cv.string,
+        vol.Optional(CONF_KEYMASTER_IRC_NICK): cv.string,
+        vol.Optional(CONF_KEYMASTER_PHONE): cv.string,
+        vol.Optional(CONF_KEYMASTER_EMAIL): cv.string,
+        vol.Optional(CONF_KEYMASTER_TWITTER): cv.string,
+    }
+)
+
 CONTACT_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_EMAIL): cv.string,
         vol.Optional(CONF_IRC): cv.string,
-        vol.Optional(CONF_MAILING_LIST): cv.string,
+        vol.Optional(CONF_ML): cv.string,
         vol.Optional(CONF_PHONE): cv.string,
         vol.Optional(CONF_TWITTER): cv.string,
+        vol.Optional(CONF_SIP): cv.string,
+        vol.Optional(CONF_FACEBOOK): cv.string,
+        vol.Optional(CONF_IDENTICA): cv.string,
+        vol.Optional(CONF_FOURSQUARE): cv.string,
+        vol.Optional(CONF_JABBER): cv.string,
+        vol.Optional(CONF_ISSUE_MAIL): cv.string,
+        vol.Optional(CONF_KEYMASTERS): vol.All(cv.ensure_list, [KEYMASTER_SCHEMA]),
     },
     required=False,
 )
