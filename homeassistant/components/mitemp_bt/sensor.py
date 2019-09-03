@@ -94,7 +94,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         prefix = config.get(CONF_NAME)
         if prefix:
-            name = "{} {}".format(prefix, name)
+            name = f"{prefix} {name}"
 
         devs.append(
             MiTempBtSensor(poller, parameter, device, name, unit, force_update, median)

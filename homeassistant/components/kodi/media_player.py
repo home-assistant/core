@@ -140,7 +140,7 @@ def _check_deprecated_turn_off(hass, turn_off_action):
         method = DEPRECATED_TURN_OFF_ACTIONS[turn_off_action]
         new_config = OrderedDict(
             [
-                ("service", "{}.{}".format(DOMAIN, SERVICE_CALL_METHOD)),
+                ("service", f"{DOMAIN}.{SERVICE_CALL_METHOD}"),
                 (
                     "data_template",
                     OrderedDict([("entity_id", "{{ entity_id }}"), ("method", method)]),
@@ -281,18 +281,18 @@ class KodiDevice(MediaPlayerDevice):
 
         if username is not None:
             kwargs["auth"] = aiohttp.BasicAuth(username, password)
-            image_auth_string = "{}:{}@".format(username, password)
+            image_auth_string = f"{username}:{password}@"
         else:
             image_auth_string = ""
 
         http_protocol = "https" if encryption else "http"
         ws_protocol = "wss" if encryption else "ws"
 
-        self._http_url = "{}://{}:{}/jsonrpc".format(http_protocol, host, port)
+        self._http_url = f"{http_protocol}://{host}:{port}/jsonrpc"
         self._image_url = "{}://{}{}:{}/image".format(
             http_protocol, image_auth_string, host, port
         )
-        self._ws_url = "{}://{}:{}/jsonrpc".format(ws_protocol, host, tcp_port)
+        self._ws_url = f"{ws_protocol}://{host}:{tcp_port}/jsonrpc"
 
         self._http_server = jsonrpc_async.Server(self._http_url, **kwargs)
         if websocket:
@@ -326,14 +326,14 @@ class KodiDevice(MediaPlayerDevice):
             turn_on_action = script.Script(
                 self.hass,
                 turn_on_action,
-                "{} turn ON script".format(self.name),
+                f"{self.name} turn ON script",
                 self.async_update_ha_state(True),
             )
         if turn_off_action is not None:
             turn_off_action = script.Script(
                 self.hass,
                 _check_deprecated_turn_off(hass, turn_off_action),
-                "{} turn OFF script".format(self.name),
+                f"{self.name} turn OFF script",
             )
         self._turn_on_action = turn_on_action
         self._turn_off_action = turn_off_action

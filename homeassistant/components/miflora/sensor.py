@@ -85,7 +85,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         prefix = config.get(CONF_NAME)
         if prefix:
-            name = "{} {}".format(prefix, name)
+            name = f"{prefix} {name}"
 
         devs.append(
             MiFloraSensor(poller, parameter, name, unit, icon, force_update, median)
