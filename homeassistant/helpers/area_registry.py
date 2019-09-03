@@ -119,7 +119,7 @@ class AreaRegistry:
         """Load the area registry."""
         data = await self._store.async_load()
 
-        areas: OrderedDict[str, AreaEntry] = OrderedDict()
+        areas: MutableMapping[str, AreaEntry] = OrderedDict()
 
         if data is not None:
             for area in data["areas"]:
