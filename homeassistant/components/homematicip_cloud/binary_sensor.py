@@ -291,7 +291,7 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice, BinarySensorD
 
     def __init__(self, home: AsyncHome, device, post: str = "SecurityZone") -> None:
         """Initialize security zone group."""
-        device.modelType = "HmIP-{}".format(post)
+        device.modelType = f"HmIP-{post}"
         super().__init__(home, device, post)
 
     @property

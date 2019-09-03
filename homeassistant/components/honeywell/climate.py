@@ -318,7 +318,7 @@ class HoneywellUSThermostat(ClimateDevice):
             # Get current mode
             mode = self._device.system_mode
             # Set hold if this is not the case
-            if getattr(self._device, "hold_{}".format(mode)) is False:
+            if getattr(self._device, f"hold_{mode}") is False:
                 # Get next period key
                 next_period_key = "{}NextPeriod".format(mode.capitalize())
                 # Get next period raw value
@@ -326,11 +326,9 @@ class HoneywellUSThermostat(ClimateDevice):
                 # Get next period time
                 hour, minute = divmod(next_period * 15, 60)
                 # Set hold time
-                setattr(
-                    self._device, "hold_{}".format(mode), datetime.time(hour, minute)
-                )
+                setattr(self._device, f"hold_{mode}", datetime.time(hour, minute))
             # Set temperature
-            setattr(self._device, "setpoint_{}".format(mode), temperature)
+            setattr(self._device, f"setpoint_{mode}", temperature)
         except somecomfort.SomeComfortError:
             _LOGGER.error("Temperature %.1f out of range", temperature)
 
@@ -375,17 +373,14 @@ class HoneywellUSThermostat(ClimateDevice):
         try:
 
             # Set permanent hold
-            setattr(self._device, "hold_{}".format(mode), True)
+            setattr(self._device, f"hold_{mode}", True)
             # Set temperature
             setattr(
-                self._device,
-                "setpoint_{}".format(mode),
-                getattr(self, "_{}_away_temp".format(mode)),
+                self._device, f"setpoint_{mode}", getattr(self, f"_{mode}_away_temp")
             )
         except somecomfort.SomeComfortError:
             _LOGGER.error(
-                "Temperature %.1f out of range",
-                getattr(self, "_{}_away_temp".format(mode)),
+                "Temperature %.1f out of range", getattr(self, f"_{mode}_away_temp")
             )
 
     def _turn_away_mode_off(self) -> None:

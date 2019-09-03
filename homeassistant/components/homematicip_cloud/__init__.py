@@ -234,7 +234,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_registry = await dr.async_get_registry(hass)
     home = hap.home
     # Add the HAP name from configuration if set.
-    hapname = home.label if not home.name else "{} {}".format(home.label, home.name)
+    hapname = home.label if not home.name else f"{home.label} {home.name}"
     device_registry.async_get_or_create(
         config_entry_id=home.id,
         identifiers={(DOMAIN, home.id)},
