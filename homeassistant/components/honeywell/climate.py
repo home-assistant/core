@@ -161,8 +161,8 @@ class HoneywellUSThermostat(ClimateDevice):
         self._password = password
 
         _LOGGER.debug(
-            "latestData = %s ", device._data
-        )  # pylint: disable=protected-access
+            "latestData = %s ", device._data  # pylint: disable=protected-access
+        )
 
         # not all honeywell HVACs support all modes
         mappings = [v for k, v in HVAC_MODE_TO_HW_MODE.items() if device.raw_ui_data[k]]
@@ -457,5 +457,5 @@ class HoneywellUSThermostat(ClimateDevice):
                 _LOGGER.error("SomeComfort update failed, Retrying - Error: %s", exp)
 
         _LOGGER.debug(
-            "latestData = %s ", self._device._data
-        )  # pylint: disable=protected-access
+            "latestData = %s ", self._device._data  # pylint: disable=protected-access
+        )
