@@ -47,7 +47,7 @@ class DeutscheBahnSensor(Entity):
 
     def __init__(self, start, goal, offset, only_direct):
         """Initialize the sensor."""
-        self._name = "{} to {}".format(start, goal)
+        self._name = f"{start} to {goal}"
         self.data = SchieneData(start, goal, offset, only_direct)
         self._state = None
 
