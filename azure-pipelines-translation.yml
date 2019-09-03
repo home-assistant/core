@@ -25,3 +25,4 @@ jobs:
     displayName: 'Upload Translation'
     env:
       LOKALISE_TOKEN: $(lokaliseToken)
+      AZURE_BRANCH: $(Build.SourceBranch)
