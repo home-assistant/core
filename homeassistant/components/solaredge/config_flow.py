@@ -63,7 +63,10 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 site = user_input[CONF_SITE_ID]
                 api = user_input[CONF_API_KEY]
-                if self._check_site(site, api):
+                can_connect = await self.hass.async_add_executor_job(
+                    self._check_site, site, api
+                )
+                if can_connect:
                     return self.async_create_entry(
                         title=name, data={CONF_SITE_ID: site, CONF_API_KEY: api}
                     )
