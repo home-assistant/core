@@ -236,6 +236,7 @@ homeassistant/components/shell_command/* @home-assistant/core
 homeassistant/components/shiftr/* @fabaff
 homeassistant/components/shodan/* @fabaff
 homeassistant/components/simplisafe/* @bachya
+homeassistant/components/slide/* @ualex73
 homeassistant/components/sma/* @kellerza
 homeassistant/components/smarthab/* @outadoc
 homeassistant/components/smartthings/* @andrewsayre
