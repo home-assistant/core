@@ -68,11 +68,11 @@ stages:
     - script: python setup.py sdist bdist_wheel
       displayName: 'Build package'
     - script: |
-        export TWINE_USERNAME="$(twineUser)"
-        export TWINE_PASSWORD="$(twinePassword)"
-
         twine upload dist/* --skip-existing
       displayName: 'Upload pypi'
+      env:
+        TWINE_USERNAME: '$(twineUser)'
+        TWINE_PASSWORD: '$(twinePassword)'
   - job: 'ReleaseDocker'
     timeoutInMinutes: 240
     pool:
