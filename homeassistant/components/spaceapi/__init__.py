@@ -28,6 +28,7 @@ ATTR_SPACEFED = "spacefed"
 ATTR_CAM = "cam"
 ATTR_STREAM = "stream"
 ATTR_FEEDS = "feeds"
+ATTR_CACHE = "cache"
 ATTR_LATITUDE = "lat"
 ATTR_LONGITUDE = "lon"
 ATTR_API = "api"
@@ -69,6 +70,8 @@ CONF_FEED_CALENDAR = "calendar"
 CONF_FEED_FLICKER = "flicker"
 CONF_FEED_TYPE = "type"
 CONF_FEED_URL = "url"
+CONF_CACHE = "cache"
+CONF_CACHE_SCHEDULE = "schedule"
 CONF_LOGO = "logo"
 CONF_MAILING_LIST = "mailing_list"
 CONF_PHONE = "phone"
@@ -117,6 +120,14 @@ FEEDS_SCHEMA = vol.Schema(
     }
 )
 
+CACHE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_CACHE_SCHEDULE): cv.matches_regex(
+            r"(m.02|m.05|m.10|m.15|m.30|h.01|h.02|h.04|h.08|h.12|d.01)"
+        )
+    }
+)
+
 CONTACT_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_EMAIL): cv.string,
@@ -161,6 +172,7 @@ CONFIG_SCHEMA = vol.Schema(
                 ),
                 vol.Optional(CONF_STREAM): STREAM_SCHEMA,
                 vol.Optional(CONF_FEEDS): FEEDS_SCHEMA,
+                vol.Optional(CONF_CACHE): CACHE_SCHEMA,
             }
         )
     },
@@ -255,8 +267,14 @@ class APISpaceApiView(HomeAssistantView):
             data[ATTR_STREAM] = spaceapi[CONF_STREAM]
         except KeyError:
             pass
+
         try:
             data[ATTR_FEEDS] = spaceapi[CONF_FEEDS]
+        except KeyError:
+            pass
+
+        try:
+            data[ATTR_CACHE] = spaceapi[CONF_CACHE]
         except KeyError:
             pass
 
