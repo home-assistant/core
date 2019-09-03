@@ -27,6 +27,7 @@ ATTR_ADDRESS = "address"
 ATTR_SPACEFED = "spacefed"
 ATTR_CAM = "cam"
 ATTR_STREAM = "stream"
+ATTR_FEEDS = "feeds"
 ATTR_LATITUDE = "lat"
 ATTR_LONGITUDE = "lon"
 ATTR_API = "api"
@@ -61,6 +62,13 @@ CONF_STREAM = "stream"
 CONF_M4 = "m4"
 CONF_MJPEG = "mjpeg"
 CONF_USTREAM = "ustream"
+CONF_FEEDS = "feeds"
+CONF_FEED_BLOG = "blog"
+CONF_FEED_WIKI = "wiki"
+CONF_FEED_CALENDAR = "calendar"
+CONF_FEED_FLICKER = "flicker"
+CONF_FEED_TYPE = "type"
+CONF_FEED_URL = "url"
 CONF_LOGO = "logo"
 CONF_MAILING_LIST = "mailing_list"
 CONF_PHONE = "phone"
@@ -96,6 +104,18 @@ STREAM_SCHEMA = vol.Schema(
     }
 )
 
+FEED_SCHEMA = vol.Schema(
+    {vol.Optional(CONF_FEED_TYPE): cv.string, vol.Required(CONF_FEED_URL): cv.url}
+)
+
+FEEDS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_FEED_BLOG): FEED_SCHEMA,
+        vol.Optional(CONF_FEED_WIKI): FEED_SCHEMA,
+        vol.Optional(CONF_FEED_CALENDAR): FEED_SCHEMA,
+        vol.Optional(CONF_FEED_FLICKER): FEED_SCHEMA,
+    }
+)
 
 CONTACT_SCHEMA = vol.Schema(
     {
@@ -130,16 +150,17 @@ CONFIG_SCHEMA = vol.Schema(
                     cv.ensure_list, [vol.In(ISSUE_REPORT_CHANNELS)]
                 ),
                 vol.Required(CONF_LOCATION): LOCATION_SCHEMA,
-                vol.Optional(CONF_SPACEFED): SPACEFED_SCHEMA,
-                vol.Optional(CONF_CAM): vol.All(
-                    cv.ensure_list, [cv.url], vol.Length(min=1)
-                ),
-                vol.Optional(CONF_STREAM): STREAM_SCHEMA,
                 vol.Required(CONF_LOGO): cv.url,
                 vol.Required(CONF_SPACE): cv.string,
                 vol.Required(CONF_STATE): STATE_SCHEMA,
                 vol.Required(CONF_URL): cv.string,
                 vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
+                vol.Optional(CONF_SPACEFED): SPACEFED_SCHEMA,
+                vol.Optional(CONF_CAM): vol.All(
+                    cv.ensure_list, [cv.url], vol.Length(min=1)
+                ),
+                vol.Optional(CONF_STREAM): STREAM_SCHEMA,
+                vol.Optional(CONF_FEEDS): FEEDS_SCHEMA,
             }
         )
     },
@@ -232,6 +253,10 @@ class APISpaceApiView(HomeAssistantView):
 
         try:
             data[ATTR_STREAM] = spaceapi[CONF_STREAM]
+        except KeyError:
+            pass
+        try:
+            data[ATTR_FEEDS] = spaceapi[CONF_FEEDS]
         except KeyError:
             pass
 
