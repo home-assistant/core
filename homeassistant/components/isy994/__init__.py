@@ -343,7 +343,7 @@ def _categorize_programs(hass: HomeAssistant, programs: dict) -> None:
     """Categorize the ISY994 programs."""
     for domain in SUPPORTED_PROGRAM_DOMAINS:
         try:
-            folder = programs[KEY_MY_PROGRAMS]["HA.{}".format(domain)]
+            folder = programs[KEY_MY_PROGRAMS][f"HA.{domain}"]
         except KeyError:
             pass
         else:
@@ -378,10 +378,10 @@ def _categorize_weather(hass: HomeAssistant, climate) -> None:
         WeatherNode(
             getattr(climate, attr),
             attr.replace("_", " "),
-            getattr(climate, "{}_units".format(attr)),
+            getattr(climate, f"{attr}_units"),
         )
         for attr in climate_attrs
-        if "{}_units".format(attr) in climate_attrs
+        if f"{attr}_units" in climate_attrs
     ]
     hass.data[ISY994_WEATHER].extend(weather_nodes)
 

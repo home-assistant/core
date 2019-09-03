@@ -205,7 +205,7 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return "{}_{}_{}".format(self.__class__.__name__, self.post, self._device.id)
+        return f"{self.__class__.__name__}_{self.post}_{self._device.id}"
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""

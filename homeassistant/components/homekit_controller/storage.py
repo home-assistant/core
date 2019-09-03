@@ -5,7 +5,7 @@ from homeassistant.core import callback
 
 from .const import DOMAIN
 
-ENTITY_MAP_STORAGE_KEY = "{}-entity-map".format(DOMAIN)
+ENTITY_MAP_STORAGE_KEY = f"{DOMAIN}-entity-map"
 ENTITY_MAP_STORAGE_VERSION = 1
 ENTITY_MAP_SAVE_DELAY = 10
 

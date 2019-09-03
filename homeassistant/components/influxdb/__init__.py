@@ -247,7 +247,7 @@ def setup(hass, config):
                 try:
                     json["fields"][key] = float(value)
                 except (ValueError, TypeError):
-                    new_key = "{}_str".format(key)
+                    new_key = f"{key}_str"
                     new_value = str(value)
                     json["fields"][new_key] = new_value
 

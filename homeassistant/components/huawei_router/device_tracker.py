@@ -119,12 +119,12 @@ class HuaweiDeviceScanner(DeviceScanner):
 
     def _get_devices_response(self):
         """Get the raw string with the devices from the router."""
-        cnt = requests.post("http://{}/asp/GetRandCount.asp".format(self.host))
+        cnt = requests.post(f"http://{self.host}/asp/GetRandCount.asp")
         cnt_str = str(cnt.content, cnt.apparent_encoding, errors="replace")
 
         _LOGGER.debug("Logging in")
         cookie = requests.post(
-            "http://{}/login.cgi".format(self.host),
+            f"http://{self.host}/login.cgi",
             data=[
                 ("UserName", self.username),
                 ("PassWord", self.password),
@@ -136,13 +136,13 @@ class HuaweiDeviceScanner(DeviceScanner):
         _LOGGER.debug("Requesting lan user info update")
         # this request is needed or else some devices' state won't be updated
         requests.get(
-            "http://{}/html/bbsp/common/lanuserinfo.asp".format(self.host),
+            f"http://{self.host}/html/bbsp/common/lanuserinfo.asp",
             cookies=cookie.cookies,
         )
 
         _LOGGER.debug("Requesting lan user info data")
         devices = requests.get(
-            "http://{}/html/bbsp/common/GetLanUserDevInfo.asp".format(self.host),
+            f"http://{self.host}/html/bbsp/common/GetLanUserDevInfo.asp",
             cookies=cookie.cookies,
         )
 
