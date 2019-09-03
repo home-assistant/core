@@ -43,7 +43,6 @@ from .const import (
     CONF_CLIENT_REMOVE_INTERVAL,
     DOMAIN as PLEX_DOMAIN,
     NAME_FORMAT,
-    PLEX_CLIENTS,
     PLEX_CONFIG_FILE,
     PLEX_MEDIA_PLAYER_OPTIONS,
     PLEX_SERVER_CONFIG,
@@ -130,8 +129,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 def _setup_platform(hass, config_entry, add_entities):
     """Set up Plex media_player component."""
-    if PLEX_CLIENTS not in hass.data:
-        hass.data[PLEX_CLIENTS] = {}
 
     server_config = config_entry.data[PLEX_SERVER_CONFIG]
     media_player_config = config_entry.options[MP_DOMAIN]
@@ -153,7 +150,7 @@ def setup_plexserver(server_config, config, hass, add_entities_callback):
         _LOGGER.error(error)
         return
 
-    plex_clients = hass.data[PLEX_CLIENTS]
+    plex_clients = {}
     plex_sessions = {}
     track_time_interval(hass, lambda now: update_devices(), timedelta(seconds=10))
 
