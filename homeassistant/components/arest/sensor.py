@@ -148,9 +148,7 @@ class ArestSensor(Entity):
         self._renderer = renderer
 
         if self._pin is not None:
-            request = requests.get(
-                f"{self._resource}/mode/{self._pin}/i", timeout=10
-            )
+            request = requests.get(f"{self._resource}/mode/{self._pin}/i", timeout=10)
             if request.status_code != 200:
                 _LOGGER.error("Can't set mode of %s", self._resource)
 

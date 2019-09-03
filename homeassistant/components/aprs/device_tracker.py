@@ -147,8 +147,7 @@ class AprsListenerThread(threading.Thread):
             )
             self.ais.connect()
             self.start_complete(
-                True,
-                f"Connected to {self.host} with callsign {self.callsign}.",
+                True, f"Connected to {self.host} with callsign {self.callsign}."
             )
             self.ais.consumer(callback=self.rx_msg, immortal=True)
         except (AprsConnectionError, LoginError) as err:

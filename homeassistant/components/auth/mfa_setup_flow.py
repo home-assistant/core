@@ -80,9 +80,7 @@ def websocket_setup_mfa(
         if mfa_module is None:
             connection.send_message(
                 websocket_api.error_message(
-                    msg["id"],
-                    "no_module",
-                    f"MFA module {mfa_module_id} is not found",
+                    msg["id"], "no_module", f"MFA module {mfa_module_id} is not found"
                 )
             )
             return
