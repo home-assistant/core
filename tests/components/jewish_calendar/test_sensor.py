@@ -530,74 +530,31 @@ async def test_shabbat_times_sensor(
 
 
 OMER_PARAMS = [
-    make_nyc_test_params(dt(2019, 4, 21, 0, 0), "1"),
-    make_jerusalem_test_params(dt(2019, 4, 21, 0, 0), "1"),
-    make_nyc_test_params(dt(2019, 4, 21, 23, 0), "2"),
-    make_jerusalem_test_params(dt(2019, 4, 21, 23, 0), "2"),
-    make_nyc_test_params(dt(2019, 5, 23, 0, 0), "33"),
-    make_jerusalem_test_params(dt(2019, 5, 23, 0, 0), "33"),
-    make_nyc_test_params(dt(2019, 6, 8, 0, 0), "49"),
-    make_jerusalem_test_params(dt(2019, 6, 8, 0, 0), "49"),
-    make_nyc_test_params(dt(2019, 6, 9, 0, 0), "0"),
-    make_jerusalem_test_params(dt(2019, 6, 9, 0, 0), "0"),
-    make_nyc_test_params(dt(2019, 1, 1, 0, 0), "0"),
-    make_jerusalem_test_params(dt(2019, 1, 1, 0, 0), "0"),
+    (dt(2019, 4, 21, 0), "1"),
+    (dt(2019, 4, 21, 23), "2"),
+    (dt(2019, 5, 23, 0), "33"),
+    (dt(2019, 6, 8, 0), "49"),
+    (dt(2019, 6, 9, 0), "0"),
+    (dt(2019, 1, 1, 0), "0"),
 ]
 OMER_TEST_IDS = [
-    "nyc_first_day_of_omer",
-    "israel_first_day_of_omer",
-    "nyc_first_day_of_omer_after_tzeit",
-    "israel_first_day_of_omer_after_tzeit",
-    "nyc_lag_baomer",
-    "israel_lag_baomer",
-    "nyc_last_day_of_omer",
-    "israel_last_day_of_omer",
-    "nyc_shavuot_no_omer",
-    "israel_shavuot_no_omer",
-    "nyc_jan_1st_no_omer",
-    "israel_jan_1st_no_omer",
+    "first_day_of_omer",
+    "first_day_of_omer_after_tzeit",
+    "lag_baomer",
+    "last_day_of_omer",
+    "shavuot_no_omer",
+    "jan_1st_no_omer",
 ]
 
 
-@pytest.mark.parametrize(
-    [
-        "now",
-        "candle_lighting",
-        "havdalah",
-        "diaspora",
-        "tzname",
-        "latitude",
-        "longitude",
-        "result",
-    ],
-    OMER_PARAMS,
-    ids=OMER_TEST_IDS,
-)
-async def test_omer_sensor(
-    hass, now, candle_lighting, havdalah, diaspora, tzname, latitude, longitude, result
-):
+@pytest.mark.parametrize(["test_time", "result"], OMER_PARAMS, ids=OMER_TEST_IDS)
+async def test_omer_sensor(hass, test_time, result):
     """Test Omer Count sensor output."""
-    time_zone = dt_util.get_time_zone(tzname)
-    test_time = time_zone.localize(now)
-
-    hass.config.time_zone = time_zone
-    hass.config.latitude = latitude
-    hass.config.longitude = longitude
-
     assert await async_setup_component(
-        hass,
-        jewish_calendar.DOMAIN,
-        {
-            "jewish_calendar": {
-                "name": "test",
-                "language": "english",
-                "diaspora": diaspora,
-                "candle_lighting_minutes_before_sunset": candle_lighting,
-                "havdalah_minutes_after_sunset": havdalah,
-            }
-        },
+        hass, jewish_calendar.DOMAIN, {"jewish_calendar": {"name": "test"}}
     )
     await hass.async_block_till_done()
+    test_time = hass.config.time_zone.localize(test_time)
 
     with alter_time(test_time):
         future = test_time + timedelta(seconds=30)
