@@ -106,7 +106,7 @@ def setup(hass, config):
             slugify(event.device.id_string.lower()),
             event.device.__class__.__name__,
             event.device.subtype,
-            "".join("{0:02x}".format(x) for x in event.data),
+            "".join(f"{x:02x}" for x in event.data),
         )
 
         # Callback to HA registered components.
@@ -270,7 +270,7 @@ def get_new_device(event, config, device):
     if not config[ATTR_AUTOMATIC_ADD]:
         return
 
-    pkt_id = "".join("{0:02x}".format(x) for x in event.data)
+    pkt_id = "".join(f"{x:02x}" for x in event.data)
     _LOGGER.debug(
         "Automatic add %s rfxtrx device (Class: %s Sub: %s Packet_id: %s)",
         device_id,

@@ -606,7 +606,7 @@ class SonosEntity(MediaPlayerDevice):
             #   media_artist = "Station - Artist - Title"
             # detect this case and trim from the front of
             # media_artist for cosmetics
-            trim = "{title} - ".format(title=self._media_title)
+            trim = f"{self._media_title} - "
             chars = min(len(self._media_artist), len(trim))
 
             if self._media_artist[:chars].upper() == trim[:chars].upper():
