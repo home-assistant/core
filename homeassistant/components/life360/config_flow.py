@@ -99,7 +99,7 @@ class Life360ConfigFlow(config_entries.ConfigFlow):
             )
             return self.async_abort(reason="unexpected")
         return self.async_create_entry(
-            title="{} (from configuration)".format(username),
+            title=f"{username} (from configuration)",
             data={
                 CONF_USERNAME: username,
                 CONF_PASSWORD: password,
