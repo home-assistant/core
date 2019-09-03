@@ -12,13 +12,6 @@ from homeassistant.components import jewish_calendar
 from tests.common import async_fire_time_changed
 from . import alter_time, make_nyc_test_params, make_jerusalem_test_params
 
-ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
-
-
-def tearDown():
-    """Reset time zone."""
-    dt_util.set_default_time_zone(ORIG_TIME_ZONE)
-
 
 MELACHA_PARAMS = [
     make_nyc_test_params(dt(2018, 9, 1, 16, 0), STATE_ON),
