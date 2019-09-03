@@ -17,31 +17,5 @@
         "abort": {
             "site_exists": "This site_id is already configured"
         }
-    },
-    "options": {
-        "step": {
-            "solaredge_sensors": {
-		"title": "Enable/disable sensors",
-                "description": "Configure visibility of the SolarEdge sensors",
-                "data": {
-			"lifetime_energy":  "Lifetime energy",
-			"energy_this_year": "Energy this year",
-    			"energy_this_month": "Energy this month",
-    			"energy_today": "Energy today",
-    			"current_power": "Current Power",
-			"site_details": "Site details",
-		        "meters": "Meters",
-		        "sensors": "Sensors",
-			"gateways": "Gateways",
-			"batteries": "Batteries",
-			"inverters": "Inverters",
-			"power_consumption": "Power Consumption",
-			"solar_power": "Solar Power",
-			"grid_power": "Grid Power",
-			"storage_power": "Storage Power"
-                }
-            }
-        }
     }
-
 }
