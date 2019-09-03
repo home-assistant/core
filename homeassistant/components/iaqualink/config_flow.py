@@ -1,8 +1,9 @@
 """Config flow to configure zone component."""
-
 from typing import Optional
 
 import voluptuous as vol
+
+from iaqualink import AqualinkClient, AqualinkLoginException
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -20,8 +21,6 @@ class AqualinkFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input: Optional[ConfigType] = None):
         """Handle a flow start."""
-        from iaqualink import AqualinkClient, AqualinkLoginException
-
         # Supporting a single account.
         entries = self.hass.config_entries.async_entries(DOMAIN)
         if entries:
@@ -50,4 +49,4 @@ class AqualinkFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_import(self, user_input: Optional[ConfigType] = None):
         """Occurs when an entry is setup through config."""
-        return self.async_step_user(user_input)
+        return await self.async_step_user(user_input)

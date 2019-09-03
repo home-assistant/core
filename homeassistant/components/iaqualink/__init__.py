@@ -5,7 +5,6 @@ import logging
 from aiohttp import CookieJar
 import voluptuous as vol
 
-
 from iaqualink import AqualinkClient, AqualinkLoginException, AqualinkThermostat
 
 from homeassistant import config_entries
@@ -42,7 +41,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> None:
     conf = config.get(DOMAIN)
 
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][ATTR_CONFIG] = conf
 
     if conf is not None:
         hass.async_create_task(
@@ -67,9 +65,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> None
     try:
         await aqualink.login()
     except AqualinkLoginException as login_exception:
-        _LOGGER.error(
-            "Exception raised while attempting to login: %s", str(login_exception)
-        )
+        _LOGGER.error("Exception raised while attempting to login: %s", login_exception)
         return False
 
     systems = await aqualink.get_systems()

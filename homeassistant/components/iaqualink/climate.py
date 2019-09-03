@@ -1,6 +1,20 @@
 """Support for Aqualink Thermostats."""
 import logging
-from typing import TYPE_CHECKING, List, Optional
+from typing import List, Optional
+
+from iaqualink import (
+    AqualinkState,
+    AqualinkHeater,
+    AqualinkPump,
+    AqualinkSensor,
+    AqualinkThermostat,
+)
+from iaqualink.const import (
+    AQUALINK_TEMP_CELSIUS_HIGH,
+    AQUALINK_TEMP_CELSIUS_LOW,
+    AQUALINK_TEMP_FAHRENHEIT_HIGH,
+    AQUALINK_TEMP_FAHRENHEIT_LOW,
+)
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -19,14 +33,6 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
-if TYPE_CHECKING:
-    from iaqualink import (
-        AqualinkHeater,
-        AqualinkPump,
-        AqualinkSensor,
-        AqualinkThermostat,
-    )
-
 
 async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
@@ -41,7 +47,7 @@ async def async_setup_entry(
 class HassAqualinkThermostat(ClimateDevice):
     """Representation of a thermostat."""
 
-    def __init__(self, dev: "AqualinkThermostat"):
+    def __init__(self, dev: AqualinkThermostat):
         """Initialize the thermostat."""
         self.dev = dev
 
@@ -72,16 +78,14 @@ class HassAqualinkThermostat(ClimateDevice):
         return CLIMATE_SUPPORTED_MODES
 
     @property
-    def pump(self) -> "AqualinkPump":
+    def pump(self) -> AqualinkPump:
         """Return the pump device for the current thermostat."""
-        pump = self.name.lower() + "_pump"
+        pump = f"{self.name.lower()}_pump"
         return self.dev.system.devices[pump]
 
     @property
     def hvac_mode(self) -> str:
         """Return the current HVAC mode."""
-        from iaqualink import AqualinkState
-
         state = AqualinkState(self.heater.state)
         if state == AqualinkState.ON:
             return HVAC_MODE_HEAT
@@ -106,11 +110,6 @@ class HassAqualinkThermostat(ClimateDevice):
     @property
     def min_temp(self) -> int:
         """Return the minimum temperature supported by the thermostat."""
-        from iaqualink.const import (
-            AQUALINK_TEMP_CELSIUS_LOW,
-            AQUALINK_TEMP_FAHRENHEIT_LOW,
-        )
-
         if self.temperature_unit == TEMP_FAHRENHEIT:
             return AQUALINK_TEMP_FAHRENHEIT_LOW
         return AQUALINK_TEMP_CELSIUS_LOW
@@ -118,11 +117,6 @@ class HassAqualinkThermostat(ClimateDevice):
     @property
     def max_temp(self) -> int:
         """Return the minimum temperature supported by the thermostat."""
-        from iaqualink.const import (
-            AQUALINK_TEMP_CELSIUS_HIGH,
-            AQUALINK_TEMP_FAHRENHEIT_HIGH,
-        )
-
         if self.temperature_unit == TEMP_FAHRENHEIT:
             return AQUALINK_TEMP_FAHRENHEIT_HIGH
         return AQUALINK_TEMP_CELSIUS_HIGH
@@ -137,9 +131,9 @@ class HassAqualinkThermostat(ClimateDevice):
         await self.dev.set_temperature(int(kwargs[ATTR_TEMPERATURE]))
 
     @property
-    def sensor(self) -> "AqualinkSensor":
+    def sensor(self) -> AqualinkSensor:
         """Return the sensor device for the current thermostat."""
-        sensor = self.name.lower() + "_temp"
+        sensor = f"{self.name.lower()}_temp"
         return self.dev.system.devices[sensor]
 
     @property
@@ -150,7 +144,7 @@ class HassAqualinkThermostat(ClimateDevice):
         return None
 
     @property
-    def heater(self) -> "AqualinkHeater":
+    def heater(self) -> AqualinkHeater:
         """Return the heater device for the current thermostat."""
-        heater = self.name.lower() + "_heater"
+        heater = f"{self.name.lower()}_heater"
         return self.dev.system.devices[heater]
