@@ -1,6 +1,12 @@
 """Tests for the Linky config flow."""
 import pytest
 from unittest.mock import patch
+from pylinky.exceptions import (
+    PyLinkyAccessException,
+    PyLinkyEnedisException,
+    PyLinkyException,
+    PyLinkyWrongLoginException,
+)
 
 from homeassistant import data_entry_flow
 from homeassistant.components.linky import config_flow
@@ -106,3 +112,56 @@ async def test_abort_if_already_setup(hass, login, fetch_data, close_session):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {CONF_USERNAME: "username_exists"}
+
+
+async def test_abort_on_login_failed(hass, close_session):
+    """Test when we have errors during login."""
+    flow = init_config_flow(hass)
+
+    with patch(
+        "pylinky.client.LinkyClient.login", side_effect=PyLinkyAccessException()
+    ):
+        result = await flow.async_step_user(
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {"base": "access"}
+
+    with patch(
+        "pylinky.client.LinkyClient.login", side_effect=PyLinkyWrongLoginException()
+    ):
+        result = await flow.async_step_user(
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {"base": "wrong_login"}
+
+
+async def test_abort_on_fetch_failed(hass, login, close_session):
+    """Test when we have errors during fetch."""
+    flow = init_config_flow(hass)
+
+    with patch(
+        "pylinky.client.LinkyClient.fetch_data", side_effect=PyLinkyAccessException()
+    ):
+        result = await flow.async_step_user(
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {"base": "access"}
+
+    with patch(
+        "pylinky.client.LinkyClient.fetch_data", side_effect=PyLinkyEnedisException()
+    ):
+        result = await flow.async_step_user(
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {"base": "enedis"}
+
+    with patch("pylinky.client.LinkyClient.fetch_data", side_effect=PyLinkyException()):
+        result = await flow.async_step_user(
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {"base": "unknown"}
