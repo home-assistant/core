@@ -10,8 +10,6 @@ from . import DATA_TRANSMISSION, DATA_UPDATED
 
 _LOGGING = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Transmission Turtle Mode"
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Import config from configuration.yaml."""

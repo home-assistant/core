@@ -1,19 +1,14 @@
 """Support for monitoring the Transmission BitTorrent client API."""
-from datetime import timedelta
 import logging
 
-from homeassistant.const import CONF_NAME, STATE_IDLE, CONF_MONITORED_CONDITIONS
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, STATE_IDLE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DATA_TRANSMISSION, DATA_UPDATED, CONF_SENSOR_TYPES
+from .const import CONF_SENSOR_TYPES, DATA_TRANSMISSION, DATA_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_NAME = "Transmission"
-
-SCAN_INTERVAL = timedelta(seconds=120)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

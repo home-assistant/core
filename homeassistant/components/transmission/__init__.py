@@ -2,10 +2,11 @@
 from datetime import timedelta
 import logging
 
-import voluptuous as vol
 import transmissionrpc
 from transmissionrpc.error import TransmissionError
+import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
@@ -15,24 +16,22 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
-
-from .const import (
-    DOMAIN,
-    CONF_TURTLE_MODE,
-    CONF_SENSOR_TYPES,
-    ATTR_TORRENT,
-    SERVICE_ADD_TORRENT,
-)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.config_entries import SOURCE_IMPORT
-
 from homeassistant.helpers.event import async_track_time_interval
+
+from .const import (
+    ATTR_TORRENT,
+    CONF_SENSOR_TYPES,
+    CONF_TURTLE_MODE,
+    DATA_TRANSMISSION,
+    DATA_UPDATED,
+    DOMAIN,
+    SERVICE_ADD_TORRENT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_UPDATED = "transmission_data_updated"
-DATA_TRANSMISSION = "data_transmission"
 
 DEFAULT_NAME = "Transmission"
 DEFAULT_PORT = 9091
