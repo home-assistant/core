@@ -113,6 +113,11 @@ class MeteoFranceSensor(Entity):
         """Return the unit of measurement."""
         return SENSOR_TYPES[self._condition][1]
 
+    @property
+    def icon(self):
+        """Return the icon."""
+        return SENSOR_TYPES[self._condition][2]
+
     def update(self):
         """Fetch new state data for the sensor."""
         try:

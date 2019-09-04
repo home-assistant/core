@@ -22,16 +22,16 @@ DOMAIN = "meteo_france"
 SCAN_INTERVAL = datetime.timedelta(minutes=5)
 
 SENSOR_TYPES = {
-    "rain_chance": ["Rain chance", "%"],
-    "freeze_chance": ["Freeze chance", "%"],
-    "thunder_chance": ["Thunder chance", "%"],
-    "snow_chance": ["Snow chance", "%"],
-    "weather": ["Weather", None],
-    "wind_speed": ["Wind Speed", "km/h"],
-    "next_rain": ["Next rain", "min"],
-    "temperature": ["Temperature", TEMP_CELSIUS],
-    "uv": ["UV", None],
-    "weather_alert": ["Weather Alert", None],
+    "rain_chance": ["Rain chance", "%", "mdi:weather-rainy"],
+    "freeze_chance": ["Freeze chance", "%", "mdi:snowflake"],
+    "thunder_chance": ["Thunder chance", "%", "mdi:weather-lightning"],
+    "snow_chance": ["Snow chance", "%", "mdi:weather-snowy"],
+    "weather": ["Weather", None, "mdi:weather-partly-cloudy"],
+    "wind_speed": ["Wind Speed", "km/h", "mdi:weather-windy"],
+    "next_rain": ["Next rain", "min", "mdi:weather-rainy"],
+    "temperature": ["Temperature", TEMP_CELSIUS, "mdi:thermometer"],
+    "uv": ["UV", None, "mdi:sunglasses"],
+    "weather_alert": ["Weather Alert", None, "mdi:weather-cloudy-alert"],
 }
 
 CONDITION_CLASSES = {
