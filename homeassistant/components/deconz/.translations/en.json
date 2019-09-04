@@ -61,8 +61,8 @@
     },
     "device_automation": {
         "trigger_type": {
-            "turn_on": "{name} turn on button pressed",
-            "turn_off": "{name} turn off button pressed"
+            "remote_button_turn_on_short_press": "{name} turn on button pressed",
+            "remote_button_turn_off_short_press": "{name} turn off button pressed"
         }
     }
 }

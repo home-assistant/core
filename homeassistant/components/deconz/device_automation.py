@@ -17,35 +17,43 @@ from .gateway import get_gateway_from_config_entry
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
-CONF_TURN_ON = "turn_on"
-CONF_TURN_ON_HOLD = "turn_on_hold"
-CONF_TURN_ON_LONG_RELEASE = "turn_on_long_release"
+CONF_TURN_ON_SHORT_PRESS = "remote_button_turn_on_short_press"
+CONF_TURN_ON_SHORT_RELEASE = "remote_button_turn_on_short_release"
+CONF_TURN_ON_LONG_PRESS = "remote_button_turn_on_long_press"
+CONF_TURN_ON_LONG_RELEASE = "remote_button_turn_on_long_release"
 
-CONF_DIM_UP = "dim_up"
-CONF_DIM_UP_HOLD = "dim_up_hold"
-CONF_DIM_UP_LONG_RELEASE = "dim_up_long_release"
+CONF_DIM_UP_SHORT_PRESS = "remote_button_dim_up_short_press"
+CONF_DIM_UP_SHORT_RELEASE = "remote_button_dim_up_short_release"
+CONF_DIM_UP_LONG_PRESS = "remote_button_dim_up_long_press"
+CONF_DIM_UP_LONG_RELEASE = "remote_button_dim_up_long_release"
 
-CONF_DIM_DOWN = "dim_down"
-CONF_DIM_DOWN_HOLD = "dim_down_hold"
-CONF_DIM_DOWN_LONG_RELEASE = "dim_down_long_release"
+CONF_DIM_DOWN_SHORT_PRESS = "remote_button_dim_down_short_press"
+CONF_DIM_DOWN_SHORT_RELEASE = "remote_button_dim_down_short_release"
+CONF_DIM_DOWN_LONG_PRESS = "remote_button_dim_down_long_press"
+CONF_DIM_DOWN_LONG_RELEASE = "remote_button_dim_down_long_release"
 
-CONF_TURN_OFF = "turn_off"
-CONF_TURN_OFF_HOLD = "turn_off_hold"
-CONF_TURN_OFF_LONG_RELEASE = "turn_off_long_release"
+CONF_TURN_OFF_SHORT_PRESS = "remote_button_turn_off_short_press"
+CONF_TURN_OFF_SHORT_RELEASE = "remote_button_turn_off_short_release"
+CONF_TURN_OFF_LONG_PRESS = "remote_button_turn_off_long_press"
+CONF_TURN_OFF_LONG_RELEASE = "remote_button_turn_off_long_release"
 
 
 HUE_DIMMER_REMOTE = {
-    CONF_TURN_ON: 1002,
-    CONF_TURN_ON_HOLD: 1001,
+    CONF_TURN_ON_SHORT_PRESS: 1000,
+    CONF_TURN_ON_SHORT_RELEASE: 1002,
+    CONF_TURN_ON_LONG_PRESS: 1001,
     CONF_TURN_ON_LONG_RELEASE: 1003,
-    CONF_DIM_UP: 2002,
-    CONF_DIM_UP_HOLD: 2001,
+    CONF_DIM_UP_SHORT_PRESS: 2000,
+    CONF_DIM_UP_SHORT_RELEASE: 2002,
+    CONF_DIM_UP_LONG_PRESS: 2001,
     CONF_DIM_UP_LONG_RELEASE: 2003,
-    CONF_DIM_DOWN: 3002,
-    CONF_DIM_DOWN_HOLD: 3001,
+    CONF_DIM_DOWN_SHORT_PRESS: 3000,
+    CONF_DIM_DOWN_SHORT_RELEASE: 3002,
+    CONF_DIM_DOWN_LONG_PRESS: 3001,
     CONF_DIM_DOWN_LONG_RELEASE: 3003,
-    CONF_TURN_OFF: 4002,
-    CONF_TURN_OFF_HOLD: 4001,
+    CONF_TURN_OFF_SHORT_PRESS: 4000,
+    CONF_TURN_OFF_SHORT_RELEASE: 4002,
+    CONF_TURN_OFF_LONG_PRESS: 4001,
     CONF_TURN_OFF_LONG_RELEASE: 4003,
 }
 
@@ -56,9 +64,9 @@ TRIGGER_SCHEMA = vol.All(
         {
             vol.Required(CONF_DEVICE_ID): str,
             vol.Required(CONF_DOMAIN): DOMAIN,
-            vol.Required(CONF_UNIQUE_ID): str,
             vol.Required(CONF_PLATFORM): "device",
             vol.Required(CONF_TYPE): str,
+            vol.Required(CONF_UNIQUE_ID): str,
         }
     )
 )
@@ -127,9 +135,9 @@ async def async_get_triggers(hass, device_id):
             {
                 CONF_DEVICE_ID: device_id,
                 CONF_DOMAIN: DOMAIN,
-                CONF_UNIQUE_ID: deconz_event.serial,
                 CONF_PLATFORM: "device",
                 CONF_TYPE: trigger,
+                CONF_UNIQUE_ID: deconz_event.serial,
             }
         )
 
