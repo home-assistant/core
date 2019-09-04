@@ -192,7 +192,7 @@ class PhilipsTV(MediaPlayerDevice):
 
     def turn_on(self):
         """Turn on the device."""
-        if self._on_script:
+        if self._on_script and not self._tv.on:
             self._on_script.run()
             self._update_soon(DELAY_ACTION_ON)
 
