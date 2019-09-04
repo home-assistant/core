@@ -154,8 +154,8 @@ class EntityRegistry:
         if entity_id:
             return self._async_update_entity(
                 entity_id,
-                config_entry_id=config_entry_id,
-                device_id=device_id,
+                config_entry_id=config_entry_id or _UNDEF,
+                device_id=device_id or _UNDEF,
                 # When we changed our slugify algorithm, we invalidated some
                 # stored entity IDs with either a __ or ending in _.
                 # Fix introduced in 0.86 (Jan 23, 2019). Next line can be
