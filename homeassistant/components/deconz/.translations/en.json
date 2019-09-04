@@ -43,7 +43,7 @@
     },
     "options": {
         "step": {
-            "async_step_deconz_devices": {
+            "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "Allow deCONZ CLIP sensors",
                     "allow_deconz_groups": "Allow deCONZ light groups"
