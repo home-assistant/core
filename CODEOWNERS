@@ -191,6 +191,7 @@ homeassistant/components/no_ip/* @fabaff
 homeassistant/components/notify/* @home-assistant/core
 homeassistant/components/notion/* @bachya
 homeassistant/components/nsw_fuel_station/* @nickw444
+homeassistant/components/nsw_rural_fire_service_feed/* @exxamalte
 homeassistant/components/nuki/* @pschmitt
 homeassistant/components/nws/* @MatthewFlamm
 homeassistant/components/ohmconnect/* @robbiet480
