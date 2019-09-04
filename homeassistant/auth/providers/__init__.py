@@ -16,7 +16,7 @@ from homeassistant.util.decorator import Registry
 
 from ..auth_store import AuthStore
 from ..const import MFA_SESSION_EXPIRATION
-from ..models import Credentials, User, UserMeta  # noqa: F401
+from ..models import Credentials, User, UserMeta
 
 _LOGGER = logging.getLogger(__name__)
 DATA_REQS = "auth_prov_reqs_processed"
@@ -175,12 +175,12 @@ class LoginFlow(data_entry_flow.FlowHandler):
     def __init__(self, auth_provider: AuthProvider) -> None:
         """Initialize the login flow."""
         self._auth_provider = auth_provider
-        self._auth_module_id = None  # type: Optional[str]
+        self._auth_module_id: Optional[str] = None
         self._auth_manager = auth_provider.hass.auth  # type: ignore
-        self.available_mfa_modules = {}  # type: Dict[str, str]
+        self.available_mfa_modules: Dict[str, str] = {}
         self.created_at = dt_util.utcnow()
         self.invalid_mfa_times = 0
-        self.user = None  # type: Optional[User]
+        self.user: Optional[User] = None
 
     async def async_step_init(
         self, user_input: Optional[Dict[str, str]] = None
@@ -255,10 +255,10 @@ class LoginFlow(data_entry_flow.FlowHandler):
             if not errors:
                 return await self.async_finish(self.user)
 
-        description_placeholders = {
+        description_placeholders: Dict[str, Optional[str]] = {
             "mfa_module_name": auth_module.name,
             "mfa_module_id": auth_module.id,
-        }  # type: Dict[str, Optional[str]]
+        }
 
         return self.async_show_form(
             step_id="mfa",
