@@ -181,6 +181,7 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
         {
             "platform": "mqtt",
             "name": "Test 1",
+            "topic": "test-topic",
             "device": {
                 "identifiers": ["helloworld"],
                 "connections": [["mac", "02:5b:26:a8:dc:12"]],
@@ -215,6 +216,7 @@ async def test_entity_device_info_update(hass, mqtt_mock):
     config = {
         "platform": "mqtt",
         "name": "Test 1",
+        "topic": "test-topic",
         "device": {
             "identifiers": ["helloworld"],
             "connections": [["mac", "02:5b:26:a8:dc:12"]],
