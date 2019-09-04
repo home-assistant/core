@@ -1,19 +1,13 @@
 """Support for SolarEdge Monitoring API."""
 import logging
 import solaredge
-import voluptuous as vol
 
 from requests.exceptions import HTTPError, ConnectTimeout
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_API_KEY, CONF_NAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 from .const import (
-    DOMAIN,
     CONF_SITE_ID,
     OVERVIEW_UPDATE_DELAY,
     DETAILS_UPDATE_DELAY,
@@ -22,24 +16,12 @@ from .const import (
     SENSOR_TYPES,
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_SITE_ID): cv.string,
-        vol.Optional(CONF_NAME, default="SolarEdge"): cv.string,
-    }
-)
-
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Import the SolarEdge sensor."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
-        )
-    )
+    return True
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
