@@ -2,12 +2,12 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.const import STATE_IDLE
+from homeassistant.const import CONF_NAME, STATE_IDLE, CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from . import DATA_TRANSMISSION, DATA_UPDATED, SENSOR_TYPES
+from .const import DATA_TRANSMISSION, DATA_UPDATED, CONF_SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,25 +17,28 @@ SCAN_INTERVAL = timedelta(seconds=120)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Import config from configuration.yaml."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Transmission sensors."""
-    if discovery_info is None:
-        return
 
     transmission_api = hass.data[DATA_TRANSMISSION]
-    monitored_variables = discovery_info["sensors"]
-    name = discovery_info["client_name"]
+    name = config_entry.data[CONF_NAME]
 
     dev = []
-    for sensor_type in monitored_variables:
-        dev.append(
-            TransmissionSensor(
-                sensor_type,
-                transmission_api,
-                name,
-                SENSOR_TYPES[sensor_type][0],
-                SENSOR_TYPES[sensor_type][1],
+    for sensor_type in CONF_SENSOR_TYPES:
+        if config_entry.options[CONF_MONITORED_CONDITIONS].get(sensor_type):
+            dev.append(
+                TransmissionSensor(
+                    sensor_type,
+                    transmission_api,
+                    name,
+                    CONF_SENSOR_TYPES[sensor_type][0],
+                    CONF_SENSOR_TYPES[sensor_type][1],
+                )
             )
-        )
 
     async_add_entities(dev, True)
 

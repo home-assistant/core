@@ -1,0 +1,57 @@
+{
+    "config": {
+        "title": "Transmission",
+        "step": {
+            "user": {
+                "title": "Set up Transmission Client",
+                "data": {
+                    "name": "Name",
+                    "host": "Host",
+                    "username": "User name",
+                    "password": "Password",
+                    "port": "Port"
+                }
+            },
+            "options": {
+                "title": "Configure Options",
+                "data": {
+                    "active_torrents": "Active Torrents",
+                    "current_status": "Current Status",
+                    "download_speed": "Download Speed [MB/s]",
+                    "paused_torrents": "Pause Torrents",
+                    "total_torrents": "Total Torrents",
+                    "upload_speed": "Upload Speed [MB/s]",
+                    "completed_torrents": "Completed torrents (seeding)",
+                    "started_torrents": "Started torrents (downloading)",
+                    "turtle_mode": "‘Turtle mode’ switch",
+                    "scan_interval": "Update frequency"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Unable to Connect to Client"
+        },
+        "abort": {
+            "one_instance_allowed": "Only a single instance is necessary."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "description": "Configure options for Transmission",
+                "data": {
+                    "active_torrents": "Active Torrents",
+                    "current_status": "Current Status",
+                    "download_speed": "Download Speed [MB/s]",
+                    "paused_torrents": "Pause Torrents",
+                    "total_torrents": "Total Torrents",
+                    "upload_speed": "Upload Speed [MB/s]",
+                    "completed_torrents": "Completed torrents (seeding)",
+                    "started_torrents": "Started torrents (downloading)",
+                    "turtle_mode": "‘Turtle mode’ switch",
+                    "scan_interval": "Update frequency"
+                }
+            }
+        }
+    }
+}
