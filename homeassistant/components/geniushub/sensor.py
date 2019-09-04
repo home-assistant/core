@@ -59,7 +59,7 @@ class GeniusBattery(GeniusEntity):
 
         icon = "mdi:battery"
         if battery_level <= 95:
-            icon += "-{}".format(int(round(battery_level / 10 - 0.01)) * 10)
+            icon += f"-{int(round(battery_level / 10 - 0.01)) * 10}"
 
         return icon
 
