@@ -2,6 +2,12 @@
 import voluptuous as vol
 
 import homeassistant.components.automation.state as state
+from homeassistant.components.device_automation.const import (
+    CONF_IS_OFF,
+    CONF_IS_ON,
+    CONF_TURN_OFF,
+    CONF_TURN_ON,
+)
 from homeassistant.core import split_entity_id
 from homeassistant.const import (
     CONF_CONDITION,
@@ -18,21 +24,18 @@ from . import DOMAIN
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
-CONF_TURN_OFF = "turn_off"
-CONF_TURN_ON = "turn_on"
-
 ENTITY_CONDITIONS = [
     {
         # True when light is turned off
         CONF_CONDITION: "device",
         CONF_DOMAIN: DOMAIN,
-        CONF_TYPE: CONF_TURN_OFF,
+        CONF_TYPE: CONF_IS_OFF,
     },
     {
         # True when light is turned on
         CONF_CONDITION: "device",
         CONF_DOMAIN: DOMAIN,
-        CONF_TYPE: CONF_TURN_ON,
+        CONF_TYPE: CONF_IS_ON,
     },
 ]
 

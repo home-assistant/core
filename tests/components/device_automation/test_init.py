@@ -21,7 +21,7 @@ def entity_reg(hass):
     return mock_registry(hass)
 
 
-def _same_dicts(a, b):
+def _same_lists(a, b):
     if len(a) != len(b):
         return False
 
@@ -45,14 +45,14 @@ async def test_websocket_get_conditions(hass, hass_ws_client, device_reg, entity
         {
             "condition": "device",
             "domain": "light",
-            "type": "turn_off",
+            "type": "is_off",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
         },
         {
             "condition": "device",
             "domain": "light",
-            "type": "turn_on",
+            "type": "is_on",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
         },
@@ -72,7 +72,7 @@ async def test_websocket_get_conditions(hass, hass_ws_client, device_reg, entity
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     conditions = msg["result"]["conditions"]
-    assert _same_dicts(conditions, expected_conditions)
+    assert _same_lists(conditions, expected_conditions)
 
 
 async def test_websocket_get_triggers(hass, hass_ws_client, device_reg, entity_reg):
@@ -116,4 +116,4 @@ async def test_websocket_get_triggers(hass, hass_ws_client, device_reg, entity_r
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     triggers = msg["result"]["triggers"]
-    assert _same_dicts(triggers, expected_triggers)
+    assert _same_lists(triggers, expected_triggers)

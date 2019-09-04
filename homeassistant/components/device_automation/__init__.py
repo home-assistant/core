@@ -1,12 +1,16 @@
 """Helpers for device automations."""
 import asyncio
 import logging
+from typing import Callable, cast
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.core import split_entity_id
+from homeassistant.const import CONF_DOMAIN
+from homeassistant.core import split_entity_id, HomeAssistant
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_registry import async_entries_for_device
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, IntegrationNotFound
 
 DOMAIN = "device_automation"
@@ -25,7 +29,21 @@ async def async_setup(hass, config):
     return True
 
 
-async def _async_get_device_automations(hass, domain, fname, device_id):
+async def async_device_condition_from_config(
+    hass: HomeAssistant, config: ConfigType, config_validation: bool = True
+) -> Callable[..., bool]:
+    """Wrap action method with state based condition."""
+    if config_validation:
+        config = cv.DEVICE_CONDITION_SCHEMA(config)
+    integration = await async_get_integration(hass, config[CONF_DOMAIN])
+    platform = integration.get_platform("device_automation")
+    return cast(
+        Callable[..., bool],
+        platform.async_condition_from_config(config, config_validation),  # type: ignore
+    )
+
+
+async def _async_get_device_automations_from_domain(hass, domain, fname, device_id):
     """List device automations."""
     integration = None
     try:
@@ -44,7 +62,7 @@ async def _async_get_device_automations(hass, domain, fname, device_id):
         return await getattr(platform, fname)(hass, device_id)
 
 
-async def async_get_device_automations(hass, fname, device_id):
+async def _async_get_device_automations(hass, fname, device_id):
     """List device automations."""
     device_registry, entity_registry = await asyncio.gather(
         hass.helpers.device_registry.async_get_registry(),
@@ -64,7 +82,7 @@ async def async_get_device_automations(hass, fname, device_id):
 
     device_automations = await asyncio.gather(
         *(
-            _async_get_device_automations(hass, domain, fname, device_id)
+            _async_get_device_automations_from_domain(hass, domain, fname, device_id)
             for domain in domains
         )
     )
@@ -85,7 +103,7 @@ async def async_get_device_automations(hass, fname, device_id):
 async def websocket_device_automation_list_conditions(hass, connection, msg):
     """Handle request for device conditions."""
     device_id = msg["device_id"]
-    conditions = await async_get_device_automations(
+    conditions = await _async_get_device_automations(
         hass, "async_get_conditions", device_id
     )
     connection.send_result(msg["id"], {"conditions": conditions})
@@ -101,5 +119,7 @@ async def websocket_device_automation_list_conditions(hass, connection, msg):
 async def websocket_device_automation_list_triggers(hass, connection, msg):
     """Handle request for device triggers."""
     device_id = msg["device_id"]
-    triggers = await async_get_device_automations(hass, "async_get_triggers", device_id)
+    triggers = await _async_get_device_automations(
+        hass, "async_get_triggers", device_id
+    )
     connection.send_result(msg["id"], {"triggers": triggers})

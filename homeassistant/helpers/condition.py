@@ -11,6 +11,9 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from homeassistant.core import HomeAssistant, State
 from homeassistant.components import zone as zone_cmp
+from homeassistant.components.device_automation import (  # noqa: F401 pylint: disable=unused-import
+    async_device_condition_from_config as async_device_from_config,
+)
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
@@ -18,7 +21,6 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_VALUE_TEMPLATE,
     CONF_CONDITION,
-    CONF_DOMAIN,
     WEEKDAYS,
     CONF_STATE,
     CONF_ZONE,
@@ -35,7 +37,6 @@ from homeassistant.const import (
 from homeassistant.exceptions import TemplateError, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.sun import get_astral_event_date
-from homeassistant.loader import async_get_integration
 import homeassistant.util.dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 
@@ -43,37 +44,6 @@ FROM_CONFIG_FORMAT = "{}_from_config"
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 
 _LOGGER = logging.getLogger(__name__)
-
-# PyLint does not like the use of _threaded_factory
-# pylint: disable=invalid-name
-
-
-def _threaded_factory(
-    async_factory: Callable[[ConfigType, bool], Callable[..., bool]]
-) -> Callable[[ConfigType, bool], Callable[..., bool]]:
-    """Create threaded versions of async factories."""
-
-    @ft.wraps(async_factory)
-    def factory(
-        config: ConfigType, config_validation: bool = True
-    ) -> Callable[..., bool]:
-        """Threaded factory."""
-        async_check = async_factory(config, config_validation)
-
-        def condition_if(
-            hass: HomeAssistant, variables: TemplateVarsType = None
-        ) -> bool:
-            """Validate condition."""
-            return cast(
-                bool,
-                run_callback_threadsafe(
-                    hass.loop, async_check, hass, variables
-                ).result(),
-            )
-
-        return condition_if
-
-    return factory
 
 
 async def async_from_config(
@@ -159,20 +129,6 @@ async def async_or_from_config(
         return False
 
     return if_or_condition
-
-
-async def async_device_from_config(
-    hass: HomeAssistant, config: ConfigType, config_validation: bool = True
-) -> Callable[..., bool]:
-    """Wrap action method with state based condition."""
-    if config_validation:
-        config = cv.DEVICE_CONDITION_SCHEMA(config)
-    integration = await async_get_integration(hass, config[CONF_DOMAIN])
-    platform = integration.get_platform("device_automation")
-    return cast(
-        Callable[..., bool],
-        platform.async_condition_from_config(config, config_validation),  # type: ignore
-    )
 
 
 def numeric_state(
@@ -270,9 +226,6 @@ def async_numeric_state_from_config(
         )
 
     return if_numeric_state
-
-
-numeric_state_from_config = _threaded_factory(async_numeric_state_from_config)
 
 
 def state(
@@ -430,9 +383,6 @@ def async_template_from_config(
         return async_template(hass, value_template, variables)
 
     return template_if
-
-
-template_from_config = _threaded_factory(async_template_from_config)
 
 
 def time(

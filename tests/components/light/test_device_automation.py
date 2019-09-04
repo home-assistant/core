@@ -5,9 +5,10 @@ from homeassistant.components import light
 from homeassistant.const import STATE_ON, STATE_OFF, CONF_PLATFORM
 from homeassistant.setup import async_setup_component
 import homeassistant.components.automation as automation
-from homeassistant.components.device_automation import async_get_device_automations
+from homeassistant.components.device_automation import (
+    _async_get_device_automations as async_get_device_automations,
+)
 from homeassistant.helpers import device_registry
-
 
 from tests.common import (
     MockConfigEntry,
@@ -35,7 +36,7 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-def _same_dicts(a, b):
+def _same_lists(a, b):
     if len(a) != len(b):
         return False
 
@@ -58,14 +59,14 @@ async def test_get_conditions(hass, device_reg, entity_reg):
         {
             "condition": "device",
             "domain": "light",
-            "type": "turn_off",
+            "type": "is_off",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
         },
         {
             "condition": "device",
             "domain": "light",
-            "type": "turn_on",
+            "type": "is_on",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
         },
@@ -73,7 +74,7 @@ async def test_get_conditions(hass, device_reg, entity_reg):
     conditions = await async_get_device_automations(
         hass, "async_get_conditions", device_entry.id
     )
-    assert _same_dicts(conditions, expected_conditions)
+    assert _same_lists(conditions, expected_conditions)
 
 
 async def test_get_triggers(hass, device_reg, entity_reg):
@@ -104,7 +105,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
     triggers = await async_get_device_automations(
         hass, "async_get_triggers", device_entry.id
     )
-    assert _same_dicts(triggers, expected_triggers)
+    assert _same_lists(triggers, expected_triggers)
 
 
 async def test_if_fires_on_state_change(hass, calls):
