@@ -2,7 +2,9 @@
 import logging
 
 from homeassistant.components.switch import (
-    SwitchDevice, ATTR_CURRENT_POWER_W)
+    SwitchDevice,
+    ATTR_CURRENT_POWER_W,
+)
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 import pypca
@@ -15,28 +17,36 @@ ATTR_TOTAL_ENERGY_KWH = "total_energy_kwh"
 DEFAULT_NAME = "PCA 301"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass, config, add_entities, discovery_info=None
+):
     """Set up the PCA switch platform."""
 
     if discovery_info is None:
         _LOGGER.warning("Please update your config for elv")
         return
 
-    serial_device = discovery_info['device']
+    serial_device = discovery_info["device"]
 
     try:
         pca = pypca.PCA(serial_device)
         pca.open()
 
-        entities = [SmartPlugSwitch(pca, device)
-                    for device in pca.get_devices()]
+        entities = [
+            SmartPlugSwitch(pca, device)
+            for device in pca.get_devices()
+        ]
         add_entities(entities, True)
 
     except SerialException as exc:
-        _LOGGER.warning("Unable to open serial port: %s", exc)
+        _LOGGER.warning(
+            "Unable to open serial port: %s", exc
+        )
         return
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, pca.close)
+    hass.bus.listen_once(
+        EVENT_HOMEASSISTANT_STOP, pca.close
+    )
 
     pca.start_scan()
 
@@ -47,7 +57,7 @@ class SmartPlugSwitch(SwitchDevice):
     def __init__(self, pca, device_id):
         """Initialize the switch."""
         self._device_id = device_id
-        self._name = 'PCA 301'
+        self._name = "PCA 301"
         self._state = None
         self._available = True
         self._emeter_params = {}
@@ -84,17 +94,29 @@ class SmartPlugSwitch(SwitchDevice):
     def update(self):
         """Update the PCA switch's state."""
         try:
-            self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.1f}".format(
+            self._emeter_params[
+                ATTR_CURRENT_POWER_W
+            ] = "{:.1f}".format(
                 self._pca.get_current_power(self._device_id)
             )
-            self._emeter_params[ATTR_TOTAL_ENERGY_KWH] = "{:.2f}".format(
-                self._pca.get_total_consumption(self._device_id)
+            self._emeter_params[
+                ATTR_TOTAL_ENERGY_KWH
+            ] = "{:.2f}".format(
+                self._pca.get_total_consumption(
+                    self._device_id
+                )
             )
 
             self._available = True
-            self._state = self._pca.get_state(self._device_id)
+            self._state = self._pca.get_state(
+                self._device_id
+            )
 
         except (OSError) as ex:
             if self._available:
-                _LOGGER.warning("Could not read state for %s: %s", self.name, ex)
+                _LOGGER.warning(
+                    "Could not read state for %s: %s",
+                    self.name,
+                    ex,
+                )
                 self._available = False
