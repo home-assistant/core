@@ -1,9 +1,9 @@
 {
-  "domain": "andex_transport",
+  "domain": "yandex_transport",
   "name": "Yandex transport",
   "documentation": "https://www.home-assistant.io/components/yandex_transport",
   "requirements": [
-    "ya_ma==0.2.0"
+    "ya_ma==0.3.1"
   ],
   "dependencies": [],
   "codeowners": [
