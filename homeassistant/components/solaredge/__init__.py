@@ -29,7 +29,7 @@ async def async_setup(hass, config):
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config[DOMAIN])
         )
     )
     return True
