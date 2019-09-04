@@ -50,7 +50,7 @@ PyEssent==0.13
 PyGithub==1.43.5
 
 # homeassistant.components.isy994
-PyISY==1.1.1
+PyISY==1.1.2
 
 # homeassistant.components.mvglive
 PyMVGLive==1.1.4
@@ -142,7 +142,7 @@ aiofreepybox==0.0.8
 aioftp==0.12.0
 
 # homeassistant.components.harmony
-aioharmony==0.1.11
+aioharmony==0.1.13
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -1186,7 +1186,7 @@ pygtfs==0.1.5
 pygtt==1.1.2
 
 # homeassistant.components.version
-pyhaversion==3.0.2
+pyhaversion==3.1.0
 
 # homeassistant.components.heos
 pyheos==0.6.0
