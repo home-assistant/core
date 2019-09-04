@@ -24,6 +24,9 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Platform setup, do nothing."""
+    if DOMAIN not in config:
+        return True
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
