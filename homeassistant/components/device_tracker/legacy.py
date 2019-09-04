@@ -532,7 +532,7 @@ class Device(RestoreEntity):
 class DeviceScanner:
     """Device scanner object."""
 
-    hass = None  # type: HomeAssistantType
+    hass: HomeAssistantType = None
 
     def scan_devices(self) -> List[str]:
         """Scan for devices."""

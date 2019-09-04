@@ -7,17 +7,7 @@ import logging
 import os
 import re
 import shutil
-from typing import (  # noqa: F401 pylint: disable=unused-import
-    Any,
-    Tuple,
-    Optional,
-    Dict,
-    List,
-    Union,
-    Callable,
-    Sequence,
-    Set,
-)
+from typing import Any, Tuple, Optional, Dict, Union, Callable, Sequence, Set
 from types import ModuleType
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -118,7 +108,7 @@ def _no_duplicate_auth_provider(
     Each type of auth provider can only have one config without optional id.
     Unique id is required if same type of auth provider used multiple times.
     """
-    config_keys = set()  # type: Set[Tuple[str, Optional[str]]]
+    config_keys: Set[Tuple[str, Optional[str]]] = set()
     for config in configs:
         key = (config[CONF_TYPE], config.get(CONF_ID))
         if key in config_keys:
@@ -142,7 +132,7 @@ def _no_duplicate_auth_mfa_module(
     times.
     Note: this is different than auth provider
     """
-    config_keys = set()  # type: Set[str]
+    config_keys: Set[str] = set()
     for config in configs:
         key = config.get(CONF_ID, config[CONF_TYPE])
         if key in config_keys:
@@ -623,7 +613,7 @@ def _identify_config_schema(module: ModuleType) -> Tuple[Optional[str], Optional
 
 def _recursive_merge(conf: Dict[str, Any], package: Dict[str, Any]) -> Union[bool, str]:
     """Merge package into conf, recursively."""
-    error = False  # type: Union[bool, str]
+    error: Union[bool, str] = False
     for key, pack_conf in package.items():
         if isinstance(pack_conf, dict):
             if not pack_conf:

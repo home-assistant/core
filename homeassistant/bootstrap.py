@@ -206,9 +206,9 @@ def async_enable_logging(
     ):
 
         if log_rotate_days:
-            err_handler = logging.handlers.TimedRotatingFileHandler(
+            err_handler: logging.FileHandler = logging.handlers.TimedRotatingFileHandler(
                 err_log_path, when="midnight", backupCount=log_rotate_days
-            )  # type: logging.FileHandler
+            )
         else:
             err_handler = logging.FileHandler(err_log_path, mode="w", delay=True)
 
@@ -335,7 +335,7 @@ async def _async_set_up_integrations(
         )
 
     # Load all integrations
-    after_dependencies = {}  # type: Dict[str, Set[str]]
+    after_dependencies: Dict[str, Set[str]] = {}
 
     for int_or_exc in await asyncio.gather(
         *(loader.async_get_integration(hass, domain) for domain in stage_2_domains),
