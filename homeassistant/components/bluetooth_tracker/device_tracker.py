@@ -71,7 +71,7 @@ def see_device(see, mac: str, device_name: str, rssi=None) -> None:
     if rssi is not None:
         attributes["rssi"] = rssi
     see(
-        mac="{}{}".format(BT_PREFIX, mac),
+        mac=f"{BT_PREFIX}{mac}",
         host_name=device_name,
         attributes=attributes,
         source_type=SOURCE_TYPE_BLUETOOTH,
