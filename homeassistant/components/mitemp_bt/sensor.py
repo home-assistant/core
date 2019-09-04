@@ -157,7 +157,7 @@ class MiTempBtSensor(Entity):
         try:
             _LOGGER.debug("Polling data for %s", self.name)
             data = self.poller.parameter_value(self.parameter)
-        except IOError as ioerr:
+        except OSError as ioerr:
             _LOGGER.warning("Polling error %s", ioerr)
             return
         except BluetoothBackendException as bterror:

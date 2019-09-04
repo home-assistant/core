@@ -216,7 +216,7 @@ def check_pid(pid_file: str) -> None:
     try:
         with open(pid_file, "r") as file:
             pid = int(file.readline())
-    except IOError:
+    except OSError:
         # PID File does not exist
         return
 
@@ -239,7 +239,7 @@ def write_pid(pid_file: str) -> None:
     try:
         with open(pid_file, "w") as file:
             file.write(str(pid))
-    except IOError:
+    except OSError:
         print(f"Fatal Error: Unable to write pid file {pid_file}")
         sys.exit(1)
 
@@ -258,7 +258,7 @@ def closefds_osx(min_fd: int, max_fd: int) -> None:
             val = fcntl(_fd, F_GETFD)
             if not val & FD_CLOEXEC:
                 fcntl(_fd, F_SETFD, val | FD_CLOEXEC)
-        except IOError:
+        except OSError:
             pass
 
 
