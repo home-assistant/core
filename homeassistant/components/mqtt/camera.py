@@ -99,6 +99,7 @@ class MqttCamera(MqttDiscoveryUpdate, MqttEntityDeviceInfo, Camera):
         """Handle updated discovery message."""
         config = PLATFORM_SCHEMA(discovery_payload)
         self._config = config
+        await self.device_info_discovery_update(config)
         await self._subscribe_topics()
         self.async_write_ha_state()
 
