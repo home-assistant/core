@@ -52,6 +52,11 @@ class VSensor(Entity):
         """Return the unit of measurement."""
         return self._unit
 
+    @property
+    def available(self):
+        """Return if the actuator is available"""
+        return self._available
+
     async def async_update(self):
         """Fetch new state data for the sensor."""
         samples = await self.consumer.fetchPeripheralSample(
@@ -64,4 +69,5 @@ class VSensor(Entity):
                     self._state = sample.value
         else:
             _LOGGER.error("Sample unavailable")
+            self._available = False
             self._state = None

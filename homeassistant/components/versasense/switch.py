@@ -28,6 +28,7 @@ class VActuator(SwitchDevice):
     def __init__(self, peripheral, parent_name, unit, measurement, consumer):
         """Initialize the sensor."""
         self._is_on = False
+        self._available = True
         self._name = "{} {}".format(parent_name, measurement)
         self._parent_mac = peripheral.parentMac
         self._identifier = peripheral.identifier
@@ -49,6 +50,11 @@ class VActuator(SwitchDevice):
     def is_on(self):
         """Return the state of the actuator."""
         return self._is_on
+
+    @property
+    def available(self):
+        """Return if the actuator is available"""
+        return self._available
 
     async def async_turn_off(self, **kwargs):
         """Turn off the actuator."""
@@ -81,4 +87,5 @@ class VActuator(SwitchDevice):
                         self._is_on = True
         else:
             _LOGGER.error("Sample unavailable")
+            self._available = False
             self._is_on = None
