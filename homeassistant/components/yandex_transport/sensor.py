@@ -4,14 +4,15 @@ Service for obtaining information about closer bus from Transport Yandex Service
 """
 
 import logging
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 import voluptuous as vol
 from ya_ma import YandexMapsRequester
 
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
+from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION, DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -94,7 +95,7 @@ class DiscoverMoscowYandexTransport(Entity):
         if closer_time is None:
             self._state = None
         else:
-            self._state = datetime.utcfromtimestamp(closer_time).isoformat(timespec='minutes')
+            self._state = dt_util.utc_from_timestamp(closer_time)
         self._attrs = attrs
 
     @property
@@ -104,8 +105,8 @@ class DiscoverMoscowYandexTransport(Entity):
 
     @property
     def device_class(self):
-        """Return type of the sensor."""
-        return "timestamp"
+        """Return the device class."""
+        return DEVICE_CLASS_TIMESTAMP
 
     @property
     def name(self):
