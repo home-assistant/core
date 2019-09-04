@@ -9,7 +9,8 @@
   "extensions": [
     "ms-python.python",
     "ms-azure-devops.azure-pipelines",
-    "redhat.vscode-yaml"
+    "redhat.vscode-yaml",
+    "esbenp.prettier-vscode"
   ],
   "settings": {
     "python.pythonPath": "/usr/local/bin/python",
