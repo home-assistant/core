@@ -291,6 +291,9 @@ pyhomematic==0.1.60
 # homeassistant.components.iqvia
 pyiqvia==0.2.1
 
+# homeassistant.components.linky
+pylinky==0.4.0
+
 # homeassistant.components.litejet
 pylitejet==0.1
 
