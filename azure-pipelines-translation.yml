@@ -41,7 +41,7 @@ jobs:
     displayName: 'Upload Translation'
 
 - job: 'Download'
-  condition: eq(variables['Build.Reason'], 'Schedule')
+  condition: or(eq(variables['Build.Reason'], 'Schedule'), eq(variables['Build.Reason'], 'Manual'))
   pool:
     vmImage: 'ubuntu-latest'
   steps:
@@ -58,5 +58,5 @@ jobs:
     displayName: 'Download Translation'
   - script: |
       git commit -am "[CI] Translation update"
-      git commit push
+      git push
     displayName: 'Update translation'
