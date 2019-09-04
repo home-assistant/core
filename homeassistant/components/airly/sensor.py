@@ -1,15 +1,15 @@
 """Support for the Airly service."""
-
 import asyncio
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
+import async_timeout
 from airly import Airly
 from airly.exceptions import AirlyError
-import async_timeout
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    ATTR_DEVICE_CLASS,
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -56,50 +56,51 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
 HUMI_PERCENT = "%"
 VOLUME_MICROGRAMS_PER_CUBIC_METER = "µg/m³"
 
-AVAILABLE_CONDITIONS = [
-    ATTR_CAQI,
-    ATTR_CAQI_DESCRIPTION,
-    ATTR_PM1,
-    ATTR_PM10,
-    ATTR_PM25,
-    ATTR_HUMIDITY,
-    ATTR_PRESSURE,
-    ATTR_TEMPERATURE,
-]
-
 SENSOR_TYPES = {
-    ATTR_CAQI: {ATTR_ICON: None, ATTR_LABEL: ATTR_CAQI, ATTR_UNIT: None},
+    ATTR_CAQI: {
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: None,
+        ATTR_LABEL: ATTR_CAQI,
+        ATTR_UNIT: None,
+    },
     ATTR_CAQI_DESCRIPTION: {
+        ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:card-text-outline",
         ATTR_LABEL: ATTR_CAQI_DESCRIPTION.capitalize(),
         ATTR_UNIT: None,
     },
     ATTR_PM1: {
+        ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:blur",
         ATTR_LABEL: ATTR_PM1,
         ATTR_UNIT: VOLUME_MICROGRAMS_PER_CUBIC_METER,
     },
     ATTR_PM10: {
+        ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:blur",
         ATTR_LABEL: ATTR_PM10,
         ATTR_UNIT: VOLUME_MICROGRAMS_PER_CUBIC_METER,
     },
     ATTR_PM25: {
+        ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:blur",
         ATTR_LABEL: "PM2.5",
         ATTR_UNIT: VOLUME_MICROGRAMS_PER_CUBIC_METER,
     },
     ATTR_HUMIDITY: {
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
         ATTR_ICON: "mdi:water-percent",
         ATTR_LABEL: ATTR_HUMIDITY.capitalize(),
         ATTR_UNIT: HUMI_PERCENT,
     },
     ATTR_PRESSURE: {
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
         ATTR_ICON: "mdi:gauge",
         ATTR_LABEL: ATTR_PRESSURE.capitalize(),
         ATTR_UNIT: PRESSURE_HPA,
     },
     ATTR_TEMPERATURE: {
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ATTR_ICON: "mdi:thermometer",
         ATTR_LABEL: ATTR_TEMPERATURE.capitalize(),
         ATTR_UNIT: TEMP_CELSIUS,
@@ -126,8 +127,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await data.async_update()
 
     sensors = []
-    for condition in AVAILABLE_CONDITIONS:
-        sensors.append(AirlySensor(data, name, condition))
+    for sensor in SENSOR_TYPES:
+        sensors.append(AirlySensor(data, name, sensor))
     async_add_entities(sensors, True)
 
 
@@ -197,13 +198,7 @@ class AirlySensor(Entity):
     @property
     def device_class(self):
         """Return the device_class."""
-        if self.kind == ATTR_TEMPERATURE:
-            self._device_class = DEVICE_CLASS_TEMPERATURE
-        elif self.kind == ATTR_HUMIDITY:
-            self._device_class = DEVICE_CLASS_HUMIDITY
-        elif self.kind == ATTR_PRESSURE:
-            self._device_class = DEVICE_CLASS_PRESSURE
-        return self._device_class
+        return SENSOR_TYPES[self.kind][ATTR_DEVICE_CLASS]
 
     @property
     def unique_id(self):
