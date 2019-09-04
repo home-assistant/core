@@ -70,7 +70,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     try:
         device = LiveboxPlayTvDevice(host, port, name)
         livebox_devices.append(device)
-    except IOError:
+    except OSError:
         _LOGGER.error(
             "Failed to connect to Livebox Play TV at %s:%s. "
             "Please check your configuration",

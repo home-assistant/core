@@ -66,7 +66,7 @@ def _precheck_image(image, opts):
         raise ValueError()
     try:
         img = Image.open(io.BytesIO(image))
-    except IOError:
+    except OSError:
         _LOGGER.warning("Failed to open image")
         raise ValueError()
     imgfmt = str(img.format)
