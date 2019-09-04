@@ -1,11 +1,9 @@
 """Config flow for Transmission Bittorent Client."""
-import voluptuous as vol
-
 import transmissionrpc
 from transmissionrpc.error import TransmissionError
+import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import callback
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
@@ -15,13 +13,16 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
+from homeassistant.core import callback
 
-from .const import DOMAIN, CONF_TURTLE_MODE, CONF_SENSOR_TYPES
-
-DEFAULT_NAME = "Transmission"
-DEFAULT_PORT = 9091
-DEFAULT_SCAN_INTERVAL = 120
-DEFAULT_SENSOR = "current_status"
+from .const import (
+    CONF_SENSOR_TYPES,
+    CONF_TURTLE_MODE,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 
 
 class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

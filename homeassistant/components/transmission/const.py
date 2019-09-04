@@ -1,8 +1,5 @@
 """Constants for the Transmission Bittorent Client component."""
 DOMAIN = "transmission"
-DATA_UPDATED = "transmission_data_updated"
-DATA_TRANSMISSION = "data_transmission"
-
 
 CONF_TURTLE_MODE = "turtle_mode"
 CONF_SENSOR_TYPES = {
@@ -16,6 +13,13 @@ CONF_SENSOR_TYPES = {
     "started_torrents": ["Started Torrents", None, False],
 }
 
+DEFAULT_NAME = "Transmission"
+DEFAULT_PORT = 9091
+DEFAULT_SCAN_INTERVAL = 120
+
 ATTR_TORRENT = "torrent"
 
 SERVICE_ADD_TORRENT = "add_torrent"
+
+DATA_UPDATED = "transmission_data_updated"
+DATA_TRANSMISSION = "data_transmission"
