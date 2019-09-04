@@ -59,6 +59,7 @@ jobs:
       ./script/translations_download
     displayName: 'Download Translation'
   - script: |
+      git checkout dev
       git commit -am "[ci skip] Translation update"
-      git push origin HEAD:dev
+      git push
     displayName: 'Update translation'
