@@ -182,7 +182,9 @@ CONTACT_SCHEMA = vol.Schema(
         vol.Optional(CONF_FOURSQUARE): cv.string,
         vol.Optional(CONF_JABBER): cv.string,
         vol.Optional(CONF_ISSUE_MAIL): cv.string,
-        vol.Optional(CONF_KEYMASTERS): vol.All(cv.ensure_list, [KEYMASTER_SCHEMA]),
+        vol.Optional(CONF_KEYMASTERS): vol.All(
+            cv.ensure_list, [KEYMASTER_SCHEMA], vol.Length(min=1)
+        ),
     },
     required=False,
 )
