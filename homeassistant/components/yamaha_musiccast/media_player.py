@@ -128,7 +128,7 @@ class YamahaDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return "{} ({})".format(self._name, self._zone.zone_id)
+        return f"{self._name} ({self._zone.zone_id})"
 
     @property
     def state(self):

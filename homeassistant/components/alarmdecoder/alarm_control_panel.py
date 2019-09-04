@@ -140,27 +140,27 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         if code:
-            self.hass.data[DATA_AD].send("{!s}1".format(code))
+            self.hass.data[DATA_AD].send(f"{code!s}1")
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         if code:
-            self.hass.data[DATA_AD].send("{!s}2".format(code))
+            self.hass.data[DATA_AD].send(f"{code!s}2")
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
         if code:
-            self.hass.data[DATA_AD].send("{!s}3".format(code))
+            self.hass.data[DATA_AD].send(f"{code!s}3")
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
         if code:
-            self.hass.data[DATA_AD].send("{!s}33".format(code))
+            self.hass.data[DATA_AD].send(f"{code!s}33")
 
     def alarm_toggle_chime(self, code=None):
         """Send toggle chime command."""
         if code:
-            self.hass.data[DATA_AD].send("{!s}9".format(code))
+            self.hass.data[DATA_AD].send(f"{code!s}9")
 
     def alarm_keypress(self, keypress):
         """Send custom keypresses."""

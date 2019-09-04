@@ -161,9 +161,7 @@ class HoneywellUSThermostat(ClimateDevice):
         self._password = password
 
         _LOGGER.debug(
-            # noqa; pylint: disable=protected-access
-            "latestData = %s ",
-            device._data,
+            "latestData = %s ", device._data  # pylint: disable=protected-access
         )
 
         # not all honeywell HVACs support all modes
@@ -176,8 +174,7 @@ class HoneywellUSThermostat(ClimateDevice):
             | SUPPORT_TARGET_TEMPERATURE_RANGE
         )
 
-        # noqa; pylint: disable=protected-access
-        if device._data["canControlHumidification"]:
+        if device._data["canControlHumidification"]:  # pylint: disable=protected-access
             self._supported_features |= SUPPORT_TARGET_HUMIDITY
 
         if device.raw_ui_data["SwitchEmergencyHeatAllowed"]:
@@ -318,19 +315,17 @@ class HoneywellUSThermostat(ClimateDevice):
             # Get current mode
             mode = self._device.system_mode
             # Set hold if this is not the case
-            if getattr(self._device, "hold_{}".format(mode)) is False:
+            if getattr(self._device, f"hold_{mode}") is False:
                 # Get next period key
-                next_period_key = "{}NextPeriod".format(mode.capitalize())
+                next_period_key = f"{mode.capitalize()}NextPeriod"
                 # Get next period raw value
                 next_period = self._device.raw_ui_data.get(next_period_key)
                 # Get next period time
                 hour, minute = divmod(next_period * 15, 60)
                 # Set hold time
-                setattr(
-                    self._device, "hold_{}".format(mode), datetime.time(hour, minute)
-                )
+                setattr(self._device, f"hold_{mode}", datetime.time(hour, minute))
             # Set temperature
-            setattr(self._device, "setpoint_{}".format(mode), temperature)
+            setattr(self._device, f"setpoint_{mode}", temperature)
         except somecomfort.SomeComfortError:
             _LOGGER.error("Temperature %.1f out of range", temperature)
 
@@ -375,17 +370,14 @@ class HoneywellUSThermostat(ClimateDevice):
         try:
 
             # Set permanent hold
-            setattr(self._device, "hold_{}".format(mode), True)
+            setattr(self._device, f"hold_{mode}", True)
             # Set temperature
             setattr(
-                self._device,
-                "setpoint_{}".format(mode),
-                getattr(self, "_{}_away_temp".format(mode)),
+                self._device, f"setpoint_{mode}", getattr(self, f"_{mode}_away_temp")
             )
         except somecomfort.SomeComfortError:
             _LOGGER.error(
-                "Temperature %.1f out of range",
-                getattr(self, "_{}_away_temp".format(mode)),
+                "Temperature %.1f out of range", getattr(self, f"_{mode}_away_temp")
             )
 
     def _turn_away_mode_off(self) -> None:
@@ -465,7 +457,5 @@ class HoneywellUSThermostat(ClimateDevice):
                 _LOGGER.error("SomeComfort update failed, Retrying - Error: %s", exp)
 
         _LOGGER.debug(
-            # noqa; pylint: disable=protected-access
-            "latestData = %s ",
-            self._device._data,
+            "latestData = %s ", self._device._data  # pylint: disable=protected-access
         )

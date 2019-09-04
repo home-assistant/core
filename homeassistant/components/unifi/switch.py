@@ -69,7 +69,7 @@ def update_items(controller, async_add_entities, switches, switches_off):
     # block client
     for client_id in controller.option_block_clients:
 
-        block_client_id = "block-{}".format(client_id)
+        block_client_id = f"block-{client_id}"
 
         if block_client_id in switches:
             LOGGER.debug(
@@ -91,7 +91,7 @@ def update_items(controller, async_add_entities, switches, switches_off):
     # control poe
     for client_id in controller.api.clients:
 
-        poe_client_id = "poe-{}".format(client_id)
+        poe_client_id = f"poe-{client_id}"
 
         if poe_client_id in switches:
             LOGGER.debug(
@@ -194,7 +194,7 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchDevice, RestoreEntity):
     @property
     def unique_id(self):
         """Return a unique identifier for this switch."""
-        return "poe-{}".format(self.client.mac)
+        return f"poe-{self.client.mac}"
 
     @property
     def is_on(self):
@@ -255,7 +255,7 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchDevice):
     @property
     def unique_id(self):
         """Return a unique identifier for this switch."""
-        return "block-{}".format(self.client.mac)
+        return f"block-{self.client.mac}"
 
     @property
     def is_on(self):

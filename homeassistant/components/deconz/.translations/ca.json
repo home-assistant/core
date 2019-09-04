@@ -40,5 +40,16 @@
             }
         },
         "title": "Passarel\u00b7la d'enlla\u00e7 deCONZ Zigbee"
+    },
+    "options": {
+        "step": {
+            "async_step_deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "Permet sensors deCONZ CLIP",
+                    "allow_deconz_groups": "Permet grups de llums deCONZ"
+                },
+                "description": "Configura la visibilitat dels tipus de dispositius deCONZ"
+            }
+        }
     }
 }

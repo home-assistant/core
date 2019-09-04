@@ -339,7 +339,7 @@ class MqttVacuum(
             elif self._cleaning:
                 self._status = "Cleaning"
             elif self._error:
-                self._status = "Error: {}".format(self._error)
+                self._status = f"Error: {self._error}"
             else:
                 self._status = "Stopped"
 
@@ -360,7 +360,7 @@ class MqttVacuum(
             self.hass,
             self._sub_state,
             {
-                "topic{}".format(i): {
+                f"topic{i}": {
                     "topic": topic,
                     "msg_callback": message_received,
                     "qos": self._qos,
@@ -550,7 +550,7 @@ class MqttVacuum(
         mqtt.async_publish(
             self.hass, self._set_fan_speed_topic, fan_speed, self._qos, self._retain
         )
-        self._status = "Setting fan to {}...".format(fan_speed)
+        self._status = f"Setting fan to {fan_speed}..."
         self.async_write_ha_state()
 
     async def async_send_command(self, command, params=None, **kwargs):
@@ -566,5 +566,5 @@ class MqttVacuum(
         mqtt.async_publish(
             self.hass, self._send_command_topic, message, self._qos, self._retain
         )
-        self._status = "Sending command {}...".format(message)
+        self._status = f"Sending command {message}..."
         self.async_write_ha_state()

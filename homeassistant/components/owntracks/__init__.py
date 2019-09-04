@@ -169,7 +169,7 @@ async def handle_webhook(hass, webhook_id, request):
 
         if user:
             topic_base = re.sub("/#$", "", context.mqtt_topic)
-            message["topic"] = "{}/{}/{}".format(topic_base, user, device)
+            message["topic"] = f"{topic_base}/{user}/{device}"
 
         elif message["_type"] != "encrypted":
             _LOGGER.warning(
@@ -264,7 +264,7 @@ class OwnTracksContext:
         # Mobile beacons should always be set to the location of the
         # tracking device. I get the device state and make the necessary
         # changes to kwargs.
-        device_tracker_state = hass.states.get("device_tracker.{}".format(dev_id))
+        device_tracker_state = hass.states.get(f"device_tracker.{dev_id}")
 
         if device_tracker_state is not None:
             acc = device_tracker_state.attributes.get("gps_accuracy")
@@ -282,6 +282,6 @@ class OwnTracksContext:
         # kwargs location is the beacon's configured lat/lon
         kwargs.pop("battery", None)
         for beacon in self.mobile_beacons_active[dev_id]:
-            kwargs["dev_id"] = "{}_{}".format(BEACON_DEV_ID, beacon)
+            kwargs["dev_id"] = f"{BEACON_DEV_ID}_{beacon}"
             kwargs["host_name"] = beacon
             self.async_see(**kwargs)

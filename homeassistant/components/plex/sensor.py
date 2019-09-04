@@ -150,7 +150,7 @@ class PlexSensor(Entity):
         for sess in sessions:
             user = sess.usernames[0]
             device = sess.players[0].title
-            now_playing_user = "{0} - {1}".format(user, device)
+            now_playing_user = f"{user} - {device}"
             now_playing_title = ""
 
             if sess.TYPE == "episode":
@@ -161,7 +161,7 @@ class PlexSensor(Entity):
                     season_title += " ({0})".format(sess.show().year)
                 season_episode = "S{0}".format(sess.parentIndex)
                 if sess.index is not None:
-                    season_episode += " · E{0}".format(sess.index)
+                    season_episode += f" · E{sess.index}"
                 episode_title = sess.title
                 now_playing_title = "{0} - {1} - {2}".format(
                     season_title, season_episode, episode_title
@@ -181,7 +181,7 @@ class PlexSensor(Entity):
                 # "The Incredible Hulk (2008)"
                 now_playing_title = sess.title
                 if sess.year is not None:
-                    now_playing_title += " ({0})".format(sess.year)
+                    now_playing_title += f" ({sess.year})"
 
             now_playing.append((now_playing_user, now_playing_title))
         self._state = len(sessions)

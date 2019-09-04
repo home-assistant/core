@@ -139,9 +139,9 @@ def get_next_departure(
     if include_tomorrow:
         limit = int(limit / 2 * 3)
         tomorrow_name = tomorrow.strftime("%A").lower()
-        tomorrow_select = "calendar.{} AS tomorrow,".format(tomorrow_name)
-        tomorrow_where = "OR calendar.{} = 1".format(tomorrow_name)
-        tomorrow_order = "calendar.{} DESC,".format(tomorrow_name)
+        tomorrow_select = f"calendar.{tomorrow_name} AS tomorrow,"
+        tomorrow_where = f"OR calendar.{tomorrow_name} = 1"
+        tomorrow_order = f"calendar.{tomorrow_name} DESC,"
 
     sql_query = """
         SELECT trip.trip_id, trip.route_id,
@@ -357,7 +357,7 @@ def setup_platform(
 
     (gtfs_root, _) = os.path.splitext(data)
 
-    sqlite_file = "{}.sqlite?check_same_thread=False".format(gtfs_root)
+    sqlite_file = f"{gtfs_root}.sqlite?check_same_thread=False"
     joined_path = os.path.join(gtfs_dir, sqlite_file)
     gtfs = pygtfs.Schedule(joined_path)
 
@@ -673,7 +673,7 @@ class GTFSDepartureSensor(Entity):
                 continue
             key = attr
             if prefix and not key.startswith(prefix):
-                key = "{} {}".format(prefix, key)
+                key = f"{prefix} {key}"
             key = slugify(key)
             self._attributes[key] = val
 

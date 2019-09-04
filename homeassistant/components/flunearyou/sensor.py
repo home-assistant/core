@@ -143,7 +143,7 @@ class FluNearYouSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return "{0},{1}_{2}".format(self.fny.latitude, self.fny.longitude, self._kind)
+        return f"{self.fny.latitude},{self.fny.longitude}_{self._kind}"
 
     @property
     def unit_of_measurement(self):

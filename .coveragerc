@@ -50,6 +50,7 @@ omit =
     homeassistant/components/asterisk_cdr/mailbox.py
     homeassistant/components/asterisk_mbox/*
     homeassistant/components/asuswrt/device_tracker.py
+    homeassistant/components/atome/*
     homeassistant/components/august/*
     homeassistant/components/aurora_abb_powerone/sensor.py
     homeassistant/components/automatic/device_tracker.py
@@ -339,6 +340,7 @@ omit =
     homeassistant/components/limitlessled/light.py
     homeassistant/components/linksys_ap/device_tracker.py
     homeassistant/components/linksys_smart/device_tracker.py
+    homeassistant/components/linky/__init__.py
     homeassistant/components/linky/sensor.py
     homeassistant/components/linode/*
     homeassistant/components/linux_battery/sensor.py
@@ -564,6 +566,7 @@ omit =
     homeassistant/components/skybeacon/sensor.py
     homeassistant/components/skybell/*
     homeassistant/components/slack/notify.py
+    homeassistant/components/slide/*
     homeassistant/components/sma/sensor.py
     homeassistant/components/smappee/*
     homeassistant/components/smarty/*

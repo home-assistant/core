@@ -50,7 +50,7 @@ class SunflowerBulb(Light):
     @property
     def name(self):
         """Return the display name of this light."""
-        return "sunflower_{}".format(self._light.zid)
+        return f"sunflower_{self._light.zid}"
 
     @property
     def available(self):

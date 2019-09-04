@@ -108,7 +108,7 @@ class YahooWeatherSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._client, self._name)
+        return f"{self._client} {self._name}"
 
     @property
     def state(self):

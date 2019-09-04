@@ -19,7 +19,7 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
 
 DOMAIN = "mopar"
-DATA_UPDATED = "{}_data_updated".format(DOMAIN)
+DATA_UPDATED = f"{DOMAIN}_data_updated"
 
 _LOGGER = logging.getLogger(__name__)
 

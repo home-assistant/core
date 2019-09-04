@@ -112,7 +112,7 @@ class ExampleLoginFlow(LoginFlow):
                 user_input.pop("password")
                 return await self.async_finish(user_input)
 
-        schema = OrderedDict()  # type: Dict[str, type]
+        schema: Dict[str, type] = OrderedDict()
         schema["username"] = str
         schema["password"] = str
 

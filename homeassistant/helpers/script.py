@@ -102,15 +102,15 @@ class Script:
         self.name = name
         self._change_listener = change_listener
         self._cur = -1
-        self._exception_step = None  # type: Optional[int]
+        self._exception_step: Optional[int] = None
         self.last_action = None
-        self.last_triggered = None  # type: Optional[datetime]
+        self.last_triggered: Optional[datetime] = None
         self.can_cancel = any(
             CONF_DELAY in action or CONF_WAIT_TEMPLATE in action
             for action in self.sequence
         )
-        self._async_listener = []  # type: List[CALLBACK_TYPE]
-        self._config_cache = {}  # type: Dict[Set[Tuple], Callable[..., bool]]
+        self._async_listener: List[CALLBACK_TYPE] = []
+        self._config_cache: Dict[Set[Tuple], Callable[..., bool]] = {}
         self._actions = {
             ACTION_DELAY: self._async_delay,
             ACTION_WAIT_TEMPLATE: self._async_wait_template,

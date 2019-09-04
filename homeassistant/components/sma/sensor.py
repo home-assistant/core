@@ -50,7 +50,7 @@ def _check_sensor_schema(conf):
                 sensor,
             )
         elif sensor not in valid:
-            raise vol.Invalid("{} does not exist".format(sensor))
+            raise vol.Invalid(f"{sensor} does not exist")
     return conf
 
 
@@ -217,7 +217,7 @@ class SMAsensor(Entity):
         update = False
 
         for sens in self._sub_sensors:  # Can be remove from 0.99
-            newval = "{} {}".format(sens.value, sens.unit)
+            newval = f"{sens.value} {sens.unit}"
             if self._attr[sens.name] != newval:
                 update = True
                 self._attr[sens.name] = newval
@@ -231,4 +231,4 @@ class SMAsensor(Entity):
     @property
     def unique_id(self):
         """Return a unique identifier for this sensor."""
-        return "sma-{}-{}".format(self._sensor.key, self._sensor.name)
+        return f"sma-{self._sensor.key}-{self._sensor.name}"

@@ -149,7 +149,7 @@ class TibberSensorRT(Entity):
         self._device_state_attributes = {}
         self._unit_of_measurement = "W"
         nickname = tibber_home.info["viewer"]["home"]["appNickname"]
-        self._name = "Real time consumption {}".format(nickname)
+        self._name = f"Real time consumption {nickname}"
 
     async def async_added_to_hass(self):
         """Start unavailability tracking."""
@@ -215,4 +215,4 @@ class TibberSensorRT(Entity):
         """Return a unique ID."""
         home = self._tibber_home.info["viewer"]["home"]
         _id = home["meteringPointData"]["consumptionEan"]
-        return "{}_rt_consumption".format(_id)
+        return f"{_id}_rt_consumption"

@@ -75,7 +75,7 @@ async def async_get_device_automation_triggers(hass, device_id):
 @websocket_api.async_response
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "device_automation/list_triggers",
+        vol.Required("type"): "device_automation/trigger/list",
         vol.Required("device_id"): str,
     }
 )

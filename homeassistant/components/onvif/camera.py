@@ -267,7 +267,7 @@ class ONVIFHassCamera(Camera):
             uri_no_auth = stream_uri.Uri
             uri_for_log = uri_no_auth.replace("rtsp://", "rtsp://<user>:<password>@", 1)
             self._input = uri_no_auth.replace(
-                "rtsp://", "rtsp://{}:{}@".format(self._username, self._password), 1
+                "rtsp://", f"rtsp://{self._username}:{self._password}@", 1
             )
 
             _LOGGER.debug(

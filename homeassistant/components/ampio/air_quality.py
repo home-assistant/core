@@ -57,7 +57,7 @@ class AmpioSmogQuality(AirQualityEntity):
     @property
     def unique_id(self):
         """Return unique_name."""
-        return "ampio_smog_{}".format(self._station_id)
+        return f"ampio_smog_{self._station_id}"
 
     @property
     def particulate_matter_2_5(self):

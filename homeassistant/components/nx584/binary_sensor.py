@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     zone_types = config.get(CONF_ZONE_TYPES)
 
     try:
-        client = nx584_client.Client("http://{}:{}".format(host, port))
+        client = nx584_client.Client(f"http://{host}:{port}")
         zones = client.list_zones()
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error("Unable to connect to NX584: %s", str(ex))

@@ -28,6 +28,7 @@ homeassistant/components/arcam_fmj/* @elupus
 homeassistant/components/arduino/* @fabaff
 homeassistant/components/arest/* @fabaff
 homeassistant/components/asuswrt/* @kennedyshead
+homeassistant/components/atome/* @baqs
 homeassistant/components/aurora_abb_powerone/* @davet2001
 homeassistant/components/auth/* @home-assistant/core
 homeassistant/components/automatic/* @armills
@@ -153,7 +154,7 @@ homeassistant/components/life360/* @pnbruckner
 homeassistant/components/lifx/* @amelchio
 homeassistant/components/lifx_cloud/* @amelchio
 homeassistant/components/lifx_legacy/* @amelchio
-homeassistant/components/linky/* @tiste @Quentame
+homeassistant/components/linky/* @Quentame
 homeassistant/components/linux_battery/* @fabaff
 homeassistant/components/liveboxplaytv/* @pschmitt
 homeassistant/components/logger/* @home-assistant/core
@@ -191,6 +192,7 @@ homeassistant/components/no_ip/* @fabaff
 homeassistant/components/notify/* @home-assistant/core
 homeassistant/components/notion/* @bachya
 homeassistant/components/nsw_fuel_station/* @nickw444
+homeassistant/components/nsw_rural_fire_service_feed/* @exxamalte
 homeassistant/components/nuki/* @pschmitt
 homeassistant/components/nws/* @MatthewFlamm
 homeassistant/components/ohmconnect/* @robbiet480
@@ -236,6 +238,7 @@ homeassistant/components/shell_command/* @home-assistant/core
 homeassistant/components/shiftr/* @fabaff
 homeassistant/components/shodan/* @fabaff
 homeassistant/components/simplisafe/* @bachya
+homeassistant/components/slide/* @ualex73
 homeassistant/components/sma/* @kellerza
 homeassistant/components/smarthab/* @outadoc
 homeassistant/components/smartthings/* @andrewsayre
@@ -289,6 +292,7 @@ homeassistant/components/upcloud/* @scop
 homeassistant/components/updater/* @home-assistant/core
 homeassistant/components/upnp/* @robbiet480
 homeassistant/components/uptimerobot/* @ludeeus
+homeassistant/components/usgs_earthquakes_feed/* @exxamalte
 homeassistant/components/utility_meter/* @dgomes
 homeassistant/components/velbus/* @cereal2nd
 homeassistant/components/velux/* @Julius2342
