@@ -95,7 +95,7 @@ class DiscoverMoscowYandexTransport(Entity):
         if closer_time is None:
             self._state = None
         else:
-            self._state = dt_util.utc_from_timestamp(closer_time)
+            self._state = dt_util.utc_from_timestamp(closer_time).isoformat(timespec="seconds")
         self._attrs = attrs
 
     @property
