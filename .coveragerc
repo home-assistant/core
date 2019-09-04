@@ -50,6 +50,7 @@ omit =
     homeassistant/components/asterisk_cdr/mailbox.py
     homeassistant/components/asterisk_mbox/*
     homeassistant/components/asuswrt/device_tracker.py
+    homeassistant/components/atome/*
     homeassistant/components/august/*
     homeassistant/components/aurora_abb_powerone/sensor.py
     homeassistant/components/automatic/device_tracker.py
