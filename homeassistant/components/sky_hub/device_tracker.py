@@ -94,7 +94,7 @@ def _parse_skyhub_response(data_str):
     """Parse the Sky Hub data format."""
     pattmatch = re.search("attach_dev = '(.*)'", data_str)
     if pattmatch is None:
-        raise IOError(
+        raise OSError(
             "Error: Impossible to fetch data from"
             + " Sky Hub. Try to reboot the router."
         )
