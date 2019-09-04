@@ -289,7 +289,7 @@ def _write_default_config(config_dir: str) -> Optional[str]:
 
         return config_path
 
-    except IOError:
+    except OSError:
         print("Unable to create default configuration file", config_path)
         return None
 
@@ -393,7 +393,7 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
             try:
                 with open(config_path, "wt", encoding="utf-8") as config_file:
                     config_file.write(config_raw)
-            except IOError:
+            except OSError:
                 _LOGGER.exception("Migrating to google_translate tts failed")
                 pass
 
