@@ -49,6 +49,13 @@
                     "allow_deconz_groups": "Tillad deCONZ lys grupper"
                 },
                 "description": "Konfigurer synligheden af deCONZ-enhedstyper"
+            },
+            "deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "Tillad deCONZ CLIP sensorer",
+                    "allow_deconz_groups": "Tillad deCONZ lys grupper"
+                },
+                "description": "Konfigurer synligheden af deCONZ-enhedstyper"
             }
         }
     }
