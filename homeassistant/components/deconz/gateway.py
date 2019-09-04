@@ -196,7 +196,9 @@ class DeconzGateway:
             if sensor.type in Switch.ZHATYPE and not (
                 not self.option_allow_clip_sensor and sensor.type.startswith("CLIP")
             ):
-                self.events.append(DeconzEvent(sensor, self))
+                event = DeconzEvent(sensor, self)
+                self.hass.async_create_task(event.async_update_device_registry())
+                self.events.append(event)
 
     @callback
     def shutdown(self, event):

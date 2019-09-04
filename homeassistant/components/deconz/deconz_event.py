@@ -24,7 +24,6 @@ class DeconzEvent(DeconzBase):
         self._device.register_async_callback(self.async_update_callback)
 
         self.id = slugify(self._device.name)
-        self.gateway.hass.async_create_task(self.async_update_device_registry())
         _LOGGER.debug("deCONZ event created: %s", self.id)
 
     @callback
