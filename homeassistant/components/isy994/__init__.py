@@ -114,7 +114,7 @@ NODE_FILTERS = {
         "insteon_type": ["1."],
     },
     "switch": {
-        "uom": ["2", "78", "100"],
+        "uom": ["2", "78"],
         "states": ["on", "off"],
         "node_def_id": [
             "OnOffControl",
