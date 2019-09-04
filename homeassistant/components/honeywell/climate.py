@@ -161,9 +161,7 @@ class HoneywellUSThermostat(ClimateDevice):
         self._password = password
 
         _LOGGER.debug(
-            # noqa; pylint: disable=protected-access
-            "latestData = %s ",
-            device._data,
+            "latestData = %s ", device._data  # pylint: disable=protected-access
         )
 
         # not all honeywell HVACs support all modes
@@ -176,8 +174,7 @@ class HoneywellUSThermostat(ClimateDevice):
             | SUPPORT_TARGET_TEMPERATURE_RANGE
         )
 
-        # noqa; pylint: disable=protected-access
-        if device._data["canControlHumidification"]:
+        if device._data["canControlHumidification"]:  # pylint: disable=protected-access
             self._supported_features |= SUPPORT_TARGET_HUMIDITY
 
         if device.raw_ui_data["SwitchEmergencyHeatAllowed"]:
@@ -320,7 +317,7 @@ class HoneywellUSThermostat(ClimateDevice):
             # Set hold if this is not the case
             if getattr(self._device, f"hold_{mode}") is False:
                 # Get next period key
-                next_period_key = "{}NextPeriod".format(mode.capitalize())
+                next_period_key = f"{mode.capitalize()}NextPeriod"
                 # Get next period raw value
                 next_period = self._device.raw_ui_data.get(next_period_key)
                 # Get next period time
@@ -460,7 +457,5 @@ class HoneywellUSThermostat(ClimateDevice):
                 _LOGGER.error("SomeComfort update failed, Retrying - Error: %s", exp)
 
         _LOGGER.debug(
-            # noqa; pylint: disable=protected-access
-            "latestData = %s ",
-            self._device._data,
+            "latestData = %s ", self._device._data  # pylint: disable=protected-access
         )
