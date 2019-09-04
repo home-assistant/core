@@ -7,7 +7,7 @@ import logging
 from datetime import timedelta, datetime
 
 import voluptuous as vol
-from moscow_yandex_transport import YandexMapsRequester
+from ya_ma import YandexMapsRequester
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
