@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 import json
 
 from unittest.mock import ANY, patch
-import logging
 
 from homeassistant.components import binary_sensor, mqtt
 from homeassistant.components.mqtt.discovery import async_start
@@ -24,110 +23,6 @@ from tests.common import (
     async_mock_mqtt_component,
     mock_registry,
 )
-
-
-logging.basicConfig(level=logging.DEBUG)
-LOG = logging.getLogger()
-
-
-async def test_not_specifying_expire_at_setting(hass, mqtt_mock):
-    """Test when not setting an expire_after value."""
-    assert await async_setup_component(
-        hass,
-        binary_sensor.DOMAIN,
-        {
-            binary_sensor.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "test-topic",
-                "force_update": True,
-            }
-        },
-    )
-
-    # We still run through the time jumps to make sure the sensor doesn't expire.
-
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_OFF
-
-    now = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
-    with patch(("homeassistant.helpers.event." "dt_util.utcnow"), return_value=now):
-        async_fire_time_changed(hass, now)
-        async_fire_mqtt_message(hass, "test-topic", "ON")
-        await hass.async_block_till_done()
-
-    # Value was set correctly.
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_ON
-
-    # Time jump +3s
-    now = now + timedelta(seconds=3)
-    async_fire_time_changed(hass, now)
-    await hass.async_block_till_done()
-
-    # Value is not yet expired
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_ON
-
-    # Next message resets timer
-    with patch(("homeassistant.helpers.event." "dt_util.utcnow"), return_value=now):
-        async_fire_time_changed(hass, now)
-        async_fire_mqtt_message(hass, "test-topic", "OFF")
-        await hass.async_block_till_done()
-
-    # Value was updated correctly.
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_OFF
-
-    # Time jump +3s
-    now = now + timedelta(seconds=3)
-    async_fire_time_changed(hass, now)
-    await hass.async_block_till_done()
-
-    # Value is not yet expired
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_OFF
-
-    # Time jump +2s
-    now = now + timedelta(seconds=2)
-    async_fire_time_changed(hass, now)
-    await hass.async_block_till_done()
-
-    # Value is still off, because it shouldn't expire
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_OFF
-
-
-async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
-    """Test the setting of the value via MQTT."""
-    assert await async_setup_component(
-        hass,
-        binary_sensor.DOMAIN,
-        {
-            binary_sensor.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "test-topic",
-                "payload_on": "ON",
-                "payload_off": "OFF",
-            }
-        },
-    )
-
-    state = hass.states.get("binary_sensor.test")
-
-    LOG.debug("This is my logger!")
-    LOG.debug(state)
-
-    assert state.state == STATE_OFF
-
-    async_fire_mqtt_message(hass, "test-topic", "ON")
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_ON
-
-    async_fire_mqtt_message(hass, "test-topic", "OFF")
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_OFF
 
 
 async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
@@ -195,6 +90,35 @@ async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
     # Value is expired now
     state = hass.states.get("binary_sensor.test")
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
+    """Test the setting of the value via MQTT."""
+    assert await async_setup_component(
+        hass,
+        binary_sensor.DOMAIN,
+        {
+            binary_sensor.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "test-topic",
+                "payload_on": "ON",
+                "payload_off": "OFF",
+            }
+        },
+    )
+
+    state = hass.states.get("binary_sensor.test")
+
+    assert state.state == STATE_OFF
+
+    async_fire_mqtt_message(hass, "test-topic", "ON")
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_ON
+
+    async_fire_mqtt_message(hass, "test-topic", "OFF")
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_OFF
 
 
 async def test_setting_sensor_value_via_mqtt_message_and_template(hass, mqtt_mock):

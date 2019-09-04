@@ -31,6 +31,7 @@ from homeassistant.util import dt as dt_util
 
 from . import (
     ATTR_DISCOVERY_HASH,
+    CONF_AVAILABILITY_TOPIC,
     CONF_QOS,
     CONF_STATE_TOPIC,
     CONF_UNIQUE_ID,
@@ -49,7 +50,6 @@ CONF_OFF_DELAY = "off_delay"
 DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_FORCE_UPDATE = False
-CONF_AVAILABILITY_TOPIC = "availability_topic"
 CONF_EXPIRE_AFTER = "expire_after"
 
 PLATFORM_SCHEMA = (
@@ -174,14 +174,6 @@ class MqttBinarySensor(
             payload = msg.payload
             # auto-expire enabled?
             expire_after = self._config.get(CONF_EXPIRE_AFTER)
-            self._available = True
-
-            _LOGGER.debug(
-                "Expire after set to %s for entity: %s with state_topic: %s",
-                expire_after,
-                self._config[CONF_NAME],
-                self._config[CONF_STATE_TOPIC],
-            )
 
             if expire_after is not None and expire_after > 0:
                 # Reset old trigger
