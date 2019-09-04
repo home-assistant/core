@@ -106,7 +106,7 @@ async def websocket_device_automation_list_conditions(hass, connection, msg):
     conditions = await _async_get_device_automations(
         hass, "async_get_conditions", device_id
     )
-    connection.send_result(msg["id"], {"conditions": conditions})
+    connection.send_result(msg["id"], conditions)
 
 
 @websocket_api.async_response
@@ -122,4 +122,4 @@ async def websocket_device_automation_list_triggers(hass, connection, msg):
     triggers = await _async_get_device_automations(
         hass, "async_get_triggers", device_id
     )
-    connection.send_result(msg["id"], {"triggers": triggers})
+    connection.send_result(msg["id"], triggers)

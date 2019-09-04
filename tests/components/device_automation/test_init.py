@@ -71,7 +71,7 @@ async def test_websocket_get_conditions(hass, hass_ws_client, device_reg, entity
     assert msg["id"] == 1
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
-    conditions = msg["result"]["conditions"]
+    conditions = msg["result"]
     assert _same_lists(conditions, expected_conditions)
 
 
@@ -115,5 +115,5 @@ async def test_websocket_get_triggers(hass, hass_ws_client, device_reg, entity_r
     assert msg["id"] == 1
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
-    triggers = msg["result"]["triggers"]
+    triggers = msg["result"]
     assert _same_lists(triggers, expected_triggers)
