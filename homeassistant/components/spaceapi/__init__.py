@@ -110,7 +110,7 @@ SPACEAPI_VERSION = "0.13"
 
 URL_API_SPACEAPI = "/api/spaceapi"
 
-LOCATION_SCHEMA = vol.Schema({vol.Optional(CONF_ADDRESS): cv.string}, required=True)
+LOCATION_SCHEMA = vol.Schema({vol.Optional(CONF_ADDRESS): cv.string})
 
 SPACEFED_SCHEMA = vol.Schema(
     {
@@ -210,7 +210,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_ISSUE_REPORT_CHANNELS): vol.All(
                     cv.ensure_list, [vol.In(ISSUE_REPORT_CHANNELS)]
                 ),
-                vol.Required(CONF_LOCATION): LOCATION_SCHEMA,
+                vol.Optional(CONF_LOCATION): LOCATION_SCHEMA,
                 vol.Required(CONF_LOGO): cv.url,
                 vol.Required(CONF_SPACE): cv.string,
                 vol.Required(CONF_STATE): STATE_SCHEMA,
@@ -272,10 +272,16 @@ class APISpaceApiView(HomeAssistantView):
         is_sensors = spaceapi.get("sensors")
 
         location = {
-            ATTR_ADDRESS: spaceapi[ATTR_LOCATION][CONF_ADDRESS],
             ATTR_LATITUDE: hass.config.latitude,
             ATTR_LONGITUDE: hass.config.longitude,
         }
+
+        try:
+            location[ATTR_ADDRESS] = spaceapi[ATTR_LOCATION][CONF_ADDRESS]
+        except KeyError:
+            pass
+        except TypeError:
+            pass
 
         state_entity = spaceapi["state"][ATTR_ENTITY_ID]
         space_state = hass.states.get(state_entity)
