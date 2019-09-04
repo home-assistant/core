@@ -138,7 +138,7 @@ NODE_FILTERS = {
             "Siren",
             "Siren_ADV",
         ],
-        "insteon_type": ["2.", "9.10.", "9.11."],
+        "insteon_type": ["2.", "9.10.", "9.11.", "113."],
     },
 }
 
@@ -182,6 +182,7 @@ def _check_for_node_def(hass: HomeAssistant, node, single_domain: str = None) ->
             hass.data[ISY994_NODES][domain].append(node)
             return True
 
+    _LOGGER.warning("Unsupported node: %s, type: %s", node.name, node.type)
     return False
 
 
