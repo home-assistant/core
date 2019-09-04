@@ -1,7 +1,7 @@
 """Support for setting the Transmission BitTorrent client Turtle Mode."""
 import logging
 
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import ToggleEntity
@@ -14,13 +14,15 @@ DEFAULT_NAME = "Transmission Turtle Mode"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Transmission switch."""
-    if discovery_info is None:
-        return
+    """Import config from configuration.yaml."""
+    pass
 
-    component_name = DATA_TRANSMISSION
-    transmission_api = hass.data[component_name]
-    name = discovery_info["client_name"]
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Transmission switch."""
+
+    transmission_api = hass.data[DATA_TRANSMISSION]
+    name = config_entry.data[CONF_NAME]
 
     async_add_entities([TransmissionSwitch(transmission_api, name)], True)
 
@@ -74,7 +76,7 @@ class TransmissionSwitch(ToggleEntity):
     def _schedule_immediate_update(self):
         self.async_schedule_update_ha_state(True)
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data from Transmission and updates the state."""
         active = self.transmission_client.get_alt_speed_enabled()
 

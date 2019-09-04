@@ -56,6 +56,7 @@ FLOWS = [
     "tplink",
     "traccar",
     "tradfri",
+    "transmission",
     "twentemilieu",
     "twilio",
     "unifi",
@@ -67,5 +68,5 @@ FLOWS = [
     "wwlln",
     "zha",
     "zone",
-    "zwave"
+    "zwave",
 ]
