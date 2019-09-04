@@ -55,7 +55,7 @@ async def async_handle(
     text_input: Optional[str] = None,
 ) -> "IntentResponse":
     """Handle an intent."""
-    handler = hass.data.get(DATA_KEY, {}).get(intent_type)  # type: IntentHandler
+    handler: IntentHandler = hass.data.get(DATA_KEY, {}).get(intent_type)
 
     if handler is None:
         raise UnknownIntent(f"Unknown intent {intent_type}")
@@ -122,10 +122,10 @@ def async_test_feature(state: State, feature: int, feature_name: str) -> None:
 class IntentHandler:
     """Intent handler registration."""
 
-    intent_type = None  # type: Optional[str]
-    slot_schema = None  # type: Optional[vol.Schema]
+    intent_type: Optional[str] = None
+    slot_schema: Optional[vol.Schema] = None
     _slot_schema = None
-    platforms = []  # type: Optional[Iterable[str]]
+    platforms: Optional[Iterable[str]] = []
 
     @callback
     def async_can_handle(self, intent_obj: "Intent") -> bool:
@@ -236,8 +236,8 @@ class IntentResponse:
     def __init__(self, intent: Optional[Intent] = None) -> None:
         """Initialize an IntentResponse."""
         self.intent = intent
-        self.speech = {}  # type: Dict[str, Dict[str, Any]]
-        self.card = {}  # type: Dict[str, Dict[str, str]]
+        self.speech: Dict[str, Dict[str, Any]] = {}
+        self.card: Dict[str, Dict[str, str]] = {}
 
     @callback
     def async_set_speech(

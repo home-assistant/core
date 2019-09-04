@@ -7,7 +7,7 @@ import platform
 import subprocess
 import sys
 import threading
-from typing import List, Dict, Any, TYPE_CHECKING  # noqa pylint: disable=unused-import
+from typing import List, Dict, Any, TYPE_CHECKING
 
 from homeassistant import monkey_patch
 from homeassistant.const import __version__, REQUIRED_PYTHON_VER, RESTART_EXIT_CODE
@@ -280,7 +280,7 @@ async def setup_and_run_hass(config_dir: str, args: argparse.Namespace) -> int:
     hass = core.HomeAssistant()
 
     if args.demo_mode:
-        config = {"frontend": {}, "demo": {}}  # type: Dict[str, Any]
+        config: Dict[str, Any] = {"frontend": {}, "demo": {}}
         bootstrap.async_from_config_dict(
             config,
             hass,
