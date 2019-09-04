@@ -43,4 +43,5 @@ class TuyaSwitch(TuyaDevice, SwitchDevice):
 
     def update(self):
         """Update switch device."""
+        super().update()
         self._is_on = self.tuya.state()
