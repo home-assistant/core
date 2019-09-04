@@ -37,6 +37,16 @@ CONF_TURN_OFF_SHORT_RELEASE = "remote_button_turn_off_short_release"
 CONF_TURN_OFF_LONG_PRESS = "remote_button_turn_off_long_press"
 CONF_TURN_OFF_LONG_RELEASE = "remote_button_turn_off_long_release"
 
+CONF_LEFT_SHORT_PRESS = "remote_button_left_short_press"
+CONF_LEFT_SHORT_RELEASE = "remote_button_left_short_release"
+CONF_LEFT_LONG_PRESS = "remote_button_left_long_press"
+CONF_LEFT_LONG_RELEASE = "remote_button_left_long_release"
+
+CONF_RIGHT_SHORT_PRESS = "remote_button_left_short_press"
+CONF_RIGHT_SHORT_RELEASE = "remote_button_left_short_release"
+CONF_RIGHT_LONG_PRESS = "remote_button_left_long_press"
+CONF_RIGHT_LONG_RELEASE = "remote_button_left_long_release"
+
 
 HUE_DIMMER_REMOTE = {
     CONF_TURN_ON_SHORT_PRESS: 1000,
@@ -57,7 +67,24 @@ HUE_DIMMER_REMOTE = {
     CONF_TURN_OFF_LONG_RELEASE: 4003,
 }
 
-REMOTES = {"RWL021": HUE_DIMMER_REMOTE}
+TRADFRI_REMOTE = {
+    CONF_TURN_ON_SHORT_PRESS: 1002,
+    CONF_TURN_ON_LONG_PRESS: 1001,
+    CONF_DIM_UP_SHORT_RELEASE: 2002,
+    CONF_DIM_UP_LONG_PRESS: 2001,
+    CONF_DIM_UP_LONG_RELEASE: 2003,
+    CONF_DIM_DOWN_SHORT_RELEASE: 3002,
+    CONF_DIM_DOWN_LONG_PRESS: 3001,
+    CONF_DIM_DOWN_LONG_RELEASE: 3003,
+    CONF_LEFT_SHORT_RELEASE: 4002,
+    CONF_LEFT_LONG_PRESS: 4001,
+    CONF_LEFT_LONG_RELEASE: 4003,
+    CONF_RIGHT_SHORT_RELEASE: 5002,
+    CONF_RIGHT_LONG_PRESS: 5001,
+    CONF_RIGHT_LONG_RELEASE: 5003,
+}
+
+REMOTES = {"RWL021": HUE_DIMMER_REMOTE, "TRADFRI remote control": TRADFRI_REMOTE}
 
 TRIGGER_SCHEMA = vol.All(
     vol.Schema(
