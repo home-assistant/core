@@ -1,13 +1,16 @@
 """Representation of a deCONZ remote."""
 from homeassistant.const import CONF_EVENT, CONF_ID
-from homeassistant.core import EventOrigin, callback
-from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
+from homeassistant.core import callback
 from homeassistant.util import slugify
 
-from .const import _LOGGER, DOMAIN
+from .const import _LOGGER
+from .deconz_device import DeconzBase
+
+CONF_DECONZ_EVENT = "deconz_event"
+CONF_UNIQUE_ID = "unique_id"
 
 
-class DeconzEvent:
+class DeconzEvent(DeconzBase):
     """When you want signals instead of entities.
 
     Stateless sensors such as remotes are expected to generate an event
@@ -16,12 +19,10 @@ class DeconzEvent:
 
     def __init__(self, device, gateway):
         """Register callback that will be used for signals."""
-        self._device = device
-        self.gateway = gateway
+        super().__init__(device, gateway)
 
         self._device.register_async_callback(self.async_update_callback)
 
-        self.event = f"deconz_{CONF_EVENT}"
         self.id = slugify(self._device.name)
         self.gateway.hass.async_create_task(self.async_update_device_registry())
         _LOGGER.debug("deCONZ event created: %s", self.id)
@@ -36,8 +37,12 @@ class DeconzEvent:
     def async_update_callback(self, force_update=False):
         """Fire the event if reason is that state is updated."""
         if "state" in self._device.changed_keys:
-            data = {CONF_ID: self.id, CONF_EVENT: self._device.state}
-            self.gateway.hass.bus.async_fire(self.event, data, EventOrigin.remote)
+            data = {
+                CONF_ID: self.id,
+                CONF_UNIQUE_ID: self.serial,
+                CONF_EVENT: self._device.state,
+            }
+            self.gateway.hass.bus.async_fire(CONF_DECONZ_EVENT, data)
 
     async def async_update_device_registry(self):
         """Update device registry."""
@@ -45,16 +50,6 @@ class DeconzEvent:
             await self.gateway.hass.helpers.device_registry.async_get_registry()
         )
 
-        serial = self._device.uniqueid.split("-", 1)[0]
-        bridgeid = self.gateway.api.config.bridgeid
-
         device_registry.async_get_or_create(
-            config_entry_id=self.gateway.config_entry.entry_id,
-            connections={(CONNECTION_ZIGBEE, serial)},
-            identifiers={(DOMAIN, serial)},
-            manufacturer=self._device.manufacturer,
-            model=self._device.modelid,
-            name=self._device.name,
-            sw_version=self._device.swversion,
-            via_device=bridgeid,
+            config_entry_id=self.gateway.config_entry.entry_id, **self.device_info
         )

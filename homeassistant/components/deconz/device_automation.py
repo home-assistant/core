@@ -11,6 +11,7 @@ from homeassistant.const import (
 )
 
 from . import DOMAIN
+from .deconz_event import CONF_DECONZ_EVENT, CONF_UNIQUE_ID
 from .gateway import get_gateway_from_config_entry
 
 
@@ -53,12 +54,11 @@ REMOTES = {"RWL021": HUE_DIMMER_REMOTE}
 TRIGGER_SCHEMA = vol.All(
     vol.Schema(
         {
-            vol.Optional(CONF_DEVICE_ID): str,
+            vol.Required(CONF_DEVICE_ID): str,
             vol.Required(CONF_DOMAIN): DOMAIN,
-            vol.Required(CONF_EVENT): str,
+            vol.Required(CONF_UNIQUE_ID): str,
             vol.Required(CONF_PLATFORM): "device",
             vol.Required(CONF_TYPE): str,
-            vol.Required("model_id"): str,
         }
     )
 )
@@ -68,13 +68,16 @@ async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     config = TRIGGER_SCHEMA(config)
 
-    event_id = config[CONF_EVENT]
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device = device_registry.async_get(config[CONF_DEVICE_ID])
 
-    trigger = REMOTES[config["model_id"]][config[CONF_TYPE]]
+    trigger = REMOTES[device.model][config[CONF_TYPE]]
+
+    event_id = config[CONF_UNIQUE_ID]
 
     state_config = {
-        event.CONF_EVENT_TYPE: "deconz_event",
-        event.CONF_EVENT_DATA: {"id": event_id, CONF_EVENT: trigger},
+        event.CONF_EVENT_TYPE: CONF_DECONZ_EVENT,
+        event.CONF_EVENT_DATA: {CONF_UNIQUE_ID: event_id, CONF_EVENT: trigger},
     }
 
     return await event.async_trigger(hass, state_config, action, automation_info)
@@ -86,34 +89,47 @@ async def async_trigger(hass, config, action, automation_info):
 
 
 async def async_get_triggers(hass, device_id):
-    """List device triggers."""
+    """List device triggers.
+
+    Make sure device is a supported remote model.
+    Retrieve the deconz event object matching device entry.
+    Generate device trigger list.
+    """
     device_registry = await hass.helpers.device_registry.async_get_registry()
     device = device_registry.async_get(device_id)
+
+    if device.model not in REMOTES:
+        return
 
     entry = hass.config_entries.async_get_entry(next(iter(device.config_entries)))
     gateway = get_gateway_from_config_entry(hass, entry)
 
     deconz_event = None
     for item in gateway.events:
-        if next(iter(device.connections))[1] == item._device.uniqueid.split("-", 1)[0]:
-            deconz_event = item
 
-    if deconz_event is None or deconz_event._device.modelid not in REMOTES:
+        try:
+            if next(val for _, val in device.connections if val == item.serial):
+                deconz_event = item
+                break
+
+        except StopIteration:
+            continue
+
+    if deconz_event is None:
         return
 
     triggers = []
 
-    remote = REMOTES[deconz_event._device.modelid]
+    remote = REMOTES[device.model]
 
     for trigger in remote.keys():
         triggers.append(
             {
                 CONF_DEVICE_ID: device_id,
                 CONF_DOMAIN: DOMAIN,
-                CONF_EVENT: deconz_event.id,
+                CONF_UNIQUE_ID: deconz_event.serial,
                 CONF_PLATFORM: "device",
                 CONF_TYPE: trigger,
-                "model_id": deconz_event._device.modelid,
             }
         )
 
