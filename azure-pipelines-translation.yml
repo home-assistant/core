@@ -60,6 +60,7 @@ jobs:
     displayName: 'Download Translation'
   - script: |
       git checkout dev
+      git add homeassistant
       git commit -am "[ci skip] Translation update"
       git push
     displayName: 'Update translation'
