@@ -19,10 +19,9 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-from .const import DEFAULT_PORT, DEFAULT_SSL, DEFAULT_VERIFY_SSL
+from .const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SSL, DEFAULT_VERIFY_SSL
 from .server import PlexServer
 
-DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "Plex"
 _LOGGER = logging.getLogger(__name__)
 
