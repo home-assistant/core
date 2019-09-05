@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_ALIAS,
     CONF_BELOW,
     CONF_CONDITION,
+    CONF_DEVICE,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_ENTITY_NAMESPACE,
@@ -861,6 +862,11 @@ _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema(
     }
 )
 
+DEVICE_ACTION_SCHEMA = vol.Schema(
+    {vol.Required(CONF_DEVICE): None, vol.Required(CONF_DOMAIN): str},
+    extra=vol.ALLOW_EXTRA,
+)
+
 SCRIPT_SCHEMA = vol.All(
     ensure_list,
     [
@@ -870,6 +876,7 @@ SCRIPT_SCHEMA = vol.All(
             _SCRIPT_WAIT_TEMPLATE_SCHEMA,
             EVENT_SCHEMA,
             CONDITION_SCHEMA,
+            DEVICE_ACTION_SCHEMA,
         )
     ],
 )
