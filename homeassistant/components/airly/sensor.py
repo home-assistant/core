@@ -116,7 +116,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     longitude = config_entry.data[CONF_LONGITUDE]
     language = config_entry.data[CONF_LANGUAGE]
     scan_interval = DEFAULT_SCAN_INTERVAL
-    _LOGGER.debug("Using latitude and longitude: %s, %s", latitude, longitude)
 
     websession = async_get_clientsession(hass)
 
