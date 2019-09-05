@@ -25,10 +25,10 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-KILOBITS = "Kb"  # type: str
-PRICE = "CAD"  # type: str
-MESSAGES = "messages"  # type: str
-MINUTES = "minutes"  # type: str
+KILOBITS: str = "Kb"
+PRICE: str = "CAD"
+MESSAGES: str = "messages"
+MINUTES: str = "minutes"
 
 DEFAULT_NAME = "Fido"
 

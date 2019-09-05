@@ -143,7 +143,7 @@ class SwitcherControl(SwitchDevice):
             STATE_ON as SWITCHER_STATE_ON,
         )
 
-        response = None  # type: SwitcherV2ControlResponseMSG
+        response: "SwitcherV2ControlResponseMSG" = None
         async with SwitcherV2Api(
             self.hass.loop,
             self._device_data.ip_addr,

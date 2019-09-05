@@ -28,9 +28,9 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 KILOWATT_HOUR = ENERGY_KILO_WATT_HOUR
-PRICE = "CAD"  # type: str
-DAYS = "days"  # type: str
-CONF_CONTRACT = "contract"  # type: str
+PRICE: str = "CAD"
+DAYS: str = "days"
+CONF_CONTRACT: str = "contract"
 
 DEFAULT_NAME = "HydroQuebec"
 

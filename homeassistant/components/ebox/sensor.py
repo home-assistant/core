@@ -26,10 +26,10 @@ from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
-GIGABITS = "Gb"  # type: str
-PRICE = "CAD"  # type: str
-DAYS = "days"  # type: str
-PERCENT = "%"  # type: str
+GIGABITS: str = "Gb"
+PRICE: str = "CAD"
+DAYS: str = "days"
+PERCENT: str = "%"
 
 DEFAULT_NAME = "EBox"
 
