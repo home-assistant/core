@@ -382,3 +382,29 @@ async def test_hassio_confirm(hass):
         config_flow.CONF_BRIDGEID: "id",
         config_flow.CONF_API_KEY: "1234567890ABCDEF",
     }
+
+
+async def test_option_flow(hass):
+    """Test config flow selection of one of two bridges."""
+    entry = MockConfigEntry(domain=config_flow.DOMAIN, data={}, options=None)
+    hass.config_entries._entries.append(entry)
+
+    flow = await hass.config_entries.options._async_create_flow(
+        entry.entry_id, context={"source": "test"}, data=None
+    )
+
+    result = await flow.async_step_init()
+    assert result["type"] == "form"
+    assert result["step_id"] == "deconz_devices"
+
+    result = await flow.async_step_deconz_devices(
+        user_input={
+            config_flow.CONF_ALLOW_CLIP_SENSOR: False,
+            config_flow.CONF_ALLOW_DECONZ_GROUPS: False,
+        }
+    )
+    assert result["type"] == "create_entry"
+    assert result["data"] == {
+        config_flow.CONF_ALLOW_CLIP_SENSOR: False,
+        config_flow.CONF_ALLOW_DECONZ_GROUPS: False,
+    }
