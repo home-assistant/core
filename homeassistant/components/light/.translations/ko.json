@@ -1,0 +1,8 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "{name} \uc774(\uac00) \uaebc\uc84c\uc2b5\ub2c8\ub2e4",
+            "turn_on": "{name} \uc774(\uac00) \ucf1c\uc84c\uc2b5\ub2c8\ub2e4"
+        }
+    }
+}
