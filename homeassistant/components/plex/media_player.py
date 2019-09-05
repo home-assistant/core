@@ -111,12 +111,12 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
         has_ssl = False
         verify_ssl = True
     else:
-        host = config.get(CONF_HOST)
-        port = config.get(CONF_PORT)
+        host = config[CONF_HOST]
+        port = config[CONF_PORT]
         host = f"{host}:{port}"
         token = config.get(CONF_TOKEN)
-        has_ssl = config.get(CONF_SSL)
-        verify_ssl = config.get(CONF_VERIFY_SSL)
+        has_ssl = config[CONF_SSL]
+        verify_ssl = config[CONF_VERIFY_SSL]
 
     setup_plexserver(
         host, token, has_ssl, verify_ssl, hass, config, add_entities_callback
