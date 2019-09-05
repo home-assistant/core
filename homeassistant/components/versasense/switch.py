@@ -29,7 +29,7 @@ class VActuator(SwitchDevice):
         """Initialize the sensor."""
         self._is_on = False
         self._available = True
-        self._name = "{} {}".format(parent_name, measurement)
+        self._name = f"{parent_name} {measurement}"
         self._parent_mac = peripheral.parentMac
         self._identifier = peripheral.identifier
         self._unit = unit
@@ -39,7 +39,7 @@ class VActuator(SwitchDevice):
     @property
     def unique_id(self):
         """Return the unique id of the actuator."""
-        return "{}/{}/{}".format(self._parent_mac, self._identifier, self._measurement)
+        return f"{self._parent_mac}/{self._identifier}/{self._measurement}"
 
     @property
     def name(self):

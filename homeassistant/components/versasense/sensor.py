@@ -25,6 +25,7 @@ class VSensor(Entity):
     def __init__(self, peripheral, parent_name, unit, measurement, consumer):
         """Initialize the sensor."""
         self._state = None
+        self._available = True
         self._name = "{} {}".format(parent_name, measurement)
         self._parent_mac = peripheral.parentMac
         self._identifier = peripheral.identifier
@@ -35,7 +36,7 @@ class VSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return "{}/{}/{}".format(self._parent_mac, self._identifier, self._measurement)
+        return f"{self._parent_mac}/{self._identifier}/{self._measurement}"
 
     @property
     def name(self):
