@@ -1,11 +1,9 @@
 {
-    "domain": "airly",
-    "name": "Airly",
-    "documentation": "https://www.home-assistant.io/components/airly",
-    "dependencies": [],
-    "codeowners": [
-        "@bieniu"
-    ],
-    "requirements": ["airly==0.0.2"],
-    "config_flow": true
+  "domain": "airly",
+  "name": "Airly",
+  "documentation": "https://www.home-assistant.io/components/airly",
+  "dependencies": [],
+  "codeowners": ["@bieniu"],
+  "requirements": ["airly==0.0.2"],
+  "config_flow": true
 }
