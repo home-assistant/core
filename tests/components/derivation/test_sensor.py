@@ -1,4 +1,4 @@
-"""The tests for the integration sensor platform."""
+"""The tests for the derivation sensor platform."""
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -7,13 +7,13 @@ import homeassistant.util.dt as dt_util
 
 
 async def test_state(hass):
-    """Test integration sensor state."""
+    """Test derivation sensor state."""
     config = {
         "sensor": {
-            "platform": "integration",
-            "name": "integration",
-            "source": "sensor.power",
-            "unit": "kWh",
+            "platform": "derivation",
+            "name": "derivation",
+            "source": "sensor.energy",
+            "unit": "kW",
             "round": 2,
         }
     }
@@ -29,23 +29,23 @@ async def test_state(hass):
         hass.states.async_set(entity_id, 1, {}, force_update=True)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.integration")
+    state = hass.states.get("sensor.derivation")
     assert state is not None
 
-    # Testing a power sensor at 1 KiloWatts for 1hour = 1kWh
+    # Testing a enery sensor at 1 kWh for 1hour = 0kW
     assert round(float(state.state), config["sensor"]["round"]) == 1.0
 
-    assert state.attributes.get("unit_of_measurement") == "kWh"
+    assert state.attributes.get("unit_of_measurement") == "kW"
 
 
 async def test_trapezoidal(hass):
-    """Test integration sensor state."""
+    """Test derivation sensor state."""
     config = {
         "sensor": {
-            "platform": "integration",
-            "name": "integration",
-            "source": "sensor.power",
-            "unit": "kWh",
+            "platform": "derivation",
+            "name": "power",
+            "source": "sensor.energy",
+            "unit": "kW",
             "round": 2,
         }
     }
@@ -56,87 +56,19 @@ async def test_trapezoidal(hass):
     hass.states.async_set(entity_id, 0, {})
     await hass.async_block_till_done()
 
-    # Testing a power sensor with non-monotonic intervals and values
+    # Testing a energy sensor with non-monotonic intervals and values
     for time, value in [(20, 10), (30, 30), (40, 5), (50, 0)]:
         now = dt_util.utcnow() + timedelta(minutes=time)
         with patch("homeassistant.util.dt.utcnow", return_value=now):
             hass.states.async_set(entity_id, value, {}, force_update=True)
             await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.integration")
+    state = hass.states.get("sensor.energy")
     assert state is not None
 
-    assert round(float(state.state), config["sensor"]["round"]) == 8.33
+    assert round(float(state.state), config["sensor"]["round"]) == -0.5
 
-    assert state.attributes.get("unit_of_measurement") == "kWh"
-
-
-async def test_left(hass):
-    """Test integration sensor state with left reimann method."""
-    config = {
-        "sensor": {
-            "platform": "integration",
-            "name": "integration",
-            "method": "left",
-            "source": "sensor.power",
-            "unit": "kWh",
-            "round": 2,
-        }
-    }
-
-    assert await async_setup_component(hass, "sensor", config)
-
-    entity_id = config["sensor"]["source"]
-    hass.states.async_set(entity_id, 0, {})
-    await hass.async_block_till_done()
-
-    # Testing a power sensor with non-monotonic intervals and values
-    for time, value in [(20, 10), (30, 30), (40, 5), (50, 0)]:
-        now = dt_util.utcnow() + timedelta(minutes=time)
-        with patch("homeassistant.util.dt.utcnow", return_value=now):
-            hass.states.async_set(entity_id, value, {}, force_update=True)
-            await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.integration")
-    assert state is not None
-
-    assert round(float(state.state), config["sensor"]["round"]) == 7.5
-
-    assert state.attributes.get("unit_of_measurement") == "kWh"
-
-
-async def test_right(hass):
-    """Test integration sensor state with left reimann method."""
-    config = {
-        "sensor": {
-            "platform": "integration",
-            "name": "integration",
-            "method": "right",
-            "source": "sensor.power",
-            "unit": "kWh",
-            "round": 2,
-        }
-    }
-
-    assert await async_setup_component(hass, "sensor", config)
-
-    entity_id = config["sensor"]["source"]
-    hass.states.async_set(entity_id, 0, {})
-    await hass.async_block_till_done()
-
-    # Testing a power sensor with non-monotonic intervals and values
-    for time, value in [(20, 10), (30, 30), (40, 5), (50, 0)]:
-        now = dt_util.utcnow() + timedelta(minutes=time)
-        with patch("homeassistant.util.dt.utcnow", return_value=now):
-            hass.states.async_set(entity_id, value, {}, force_update=True)
-            await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.integration")
-    assert state is not None
-
-    assert round(float(state.state), config["sensor"]["round"]) == 9.17
-
-    assert state.attributes.get("unit_of_measurement") == "kWh"
+    assert state.attributes.get("unit_of_measurement") == "kW"
 
 
 async def test_prefix(hass):
