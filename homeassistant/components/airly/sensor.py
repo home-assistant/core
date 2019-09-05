@@ -218,9 +218,6 @@ class AirlySensor(Entity):
         """Get the data from Airly."""
         await self.airly.async_update()
 
-        if not self.airly.data:
-            return
-
 
 class AirlyData:
     """Define an object to hold sensor data."""
