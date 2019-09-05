@@ -31,6 +31,53 @@ def _same_lists(a, b):
     return True
 
 
+async def test_websocket_get_actions(hass, hass_ws_client, device_reg, entity_reg):
+    """Test we get the expected conditions from a light through websocket."""
+    await async_setup_component(hass, "device_automation", {})
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
+    expected_actions = [
+        {
+            "device": None,
+            "domain": "light",
+            "type": "turn_off",
+            "device_id": device_entry.id,
+            "entity_id": "light.test_5678",
+        },
+        {
+            "device": None,
+            "domain": "light",
+            "type": "turn_on",
+            "device_id": device_entry.id,
+            "entity_id": "light.test_5678",
+        },
+        {
+            "device": None,
+            "domain": "light",
+            "type": "toggle",
+            "device_id": device_entry.id,
+            "entity_id": "light.test_5678",
+        },
+    ]
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 1, "type": "device_automation/action/list", "device_id": device_entry.id}
+    )
+    msg = await client.receive_json()
+
+    assert msg["id"] == 1
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    actions = msg["result"]
+    assert _same_lists(actions, expected_actions)
+
+
 async def test_websocket_get_conditions(hass, hass_ws_client, device_reg, entity_reg):
     """Test we get the expected conditions from a light through websocket."""
     await async_setup_component(hass, "device_automation", {})

@@ -5,24 +5,47 @@ import homeassistant.components.automation.state as state
 from homeassistant.components.device_automation.const import (
     CONF_IS_OFF,
     CONF_IS_ON,
+    CONF_TOGGLE,
     CONF_TURN_OFF,
     CONF_TURN_ON,
 )
 from homeassistant.core import split_entity_id
 from homeassistant.const import (
     CONF_CONDITION,
+    CONF_DEVICE,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_PLATFORM,
     CONF_TYPE,
 )
-from homeassistant.helpers import condition, config_validation as cv
+from homeassistant.helpers import condition, config_validation as cv, service
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from . import DOMAIN
 
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
+
+ENTITY_ACTIONS = [
+    {
+        # Turn light off
+        CONF_DEVICE: None,
+        CONF_DOMAIN: DOMAIN,
+        CONF_TYPE: CONF_TURN_OFF,
+    },
+    {
+        # Turn light on
+        CONF_DEVICE: None,
+        CONF_DOMAIN: DOMAIN,
+        CONF_TYPE: CONF_TURN_ON,
+    },
+    {
+        # Toggle light
+        CONF_DEVICE: None,
+        CONF_DOMAIN: DOMAIN,
+        CONF_TYPE: CONF_TOGGLE,
+    },
+]
 
 ENTITY_CONDITIONS = [
     {
@@ -54,6 +77,18 @@ ENTITY_TRIGGERS = [
     },
 ]
 
+ACTION_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required(CONF_DEVICE): None,
+            vol.Optional(CONF_DEVICE_ID): str,
+            vol.Required(CONF_DOMAIN): DOMAIN,
+            vol.Required(CONF_ENTITY_ID): cv.entity_id,
+            vol.Required(CONF_TYPE): vol.In([CONF_TOGGLE, CONF_TURN_OFF, CONF_TURN_ON]),
+        }
+    )
+)
+
 CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {
@@ -81,6 +116,31 @@ TRIGGER_SCHEMA = vol.All(
 
 def _is_domain(entity, domain):
     return split_entity_id(entity.entity_id)[0] == domain
+
+
+async def async_action_from_config(hass, config, variables, context):
+    """Change state based on configuration."""
+    config = ACTION_SCHEMA(config)
+    action_type = config[CONF_TYPE]
+    if action_type == CONF_TURN_ON:
+        action = "turn_on"
+    elif action_type == CONF_TURN_OFF:
+        action = "turn_off"
+    else:
+        action = "toggle"
+    service_action = {
+        service.CONF_SERVICE: "light.{}".format(action),
+        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+    }
+
+    await service.async_call_from_config(
+        hass,
+        service_action,
+        blocking=True,
+        variables=variables,
+        # validate_config=False,
+        context=context,
+    )
 
 
 def async_condition_from_config(config, config_validation):
@@ -138,6 +198,11 @@ async def _async_get_automations(hass, device_id, automation_templates):
             automations.append(automation)
 
     return automations
+
+
+async def async_get_actions(hass, device_id):
+    """List device actions."""
+    return await _async_get_automations(hass, device_id, ENTITY_ACTIONS)
 
 
 async def async_get_conditions(hass, device_id):

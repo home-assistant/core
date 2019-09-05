@@ -21,6 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass, config):
     """Set up device automation."""
     hass.components.websocket_api.async_register_command(
+        websocket_device_automation_list_actions
+    )
+    hass.components.websocket_api.async_register_command(
         websocket_device_automation_list_conditions
     )
     hass.components.websocket_api.async_register_command(
@@ -91,6 +94,20 @@ async def _async_get_device_automations(hass, fname, device_id):
             automations.extend(device_automation)
 
     return automations
+
+
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "device_automation/action/list",
+        vol.Required("device_id"): str,
+    }
+)
+async def websocket_device_automation_list_actions(hass, connection, msg):
+    """Handle request for device actions."""
+    device_id = msg["device_id"]
+    actions = await _async_get_device_automations(hass, "async_get_actions", device_id)
+    connection.send_result(msg["id"], actions)
 
 
 @websocket_api.async_response
