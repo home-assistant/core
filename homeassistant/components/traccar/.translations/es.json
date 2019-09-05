@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Su instancia de Home Assistant debe ser accesible desde Internet para recibir mensajes de Traccar."
+        }
+    }
+}

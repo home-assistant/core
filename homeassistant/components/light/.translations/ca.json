@@ -1,0 +1,8 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "{name} apagat",
+            "turn_on": "{name} enc\u00e8s"
+        }
+    }
+}

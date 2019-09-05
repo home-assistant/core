@@ -1,0 +1,8 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "\u7531 {name} \u95dc\u9589",
+            "turn_on": "\u7531 {name} \u958b\u555f"
+        }
+    }
+}

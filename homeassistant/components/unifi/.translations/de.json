@@ -32,6 +32,12 @@
                     "track_devices": "Verfolgen von Netzwerkger\u00e4ten (Ubiquiti-Ger\u00e4te)",
                     "track_wired_clients": "Einbinden von kabelgebundenen Netzwerk-Clients"
                 }
+            },
+            "init": {
+                "data": {
+                    "one": "eins",
+                    "other": "andere"
+                }
             }
         }
     }
