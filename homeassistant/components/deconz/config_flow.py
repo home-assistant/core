@@ -1,6 +1,5 @@
 """Config flow to configure deCONZ component."""
 import asyncio
-from copy import copy
 
 import async_timeout
 import voluptuous as vol
@@ -17,6 +16,8 @@ from .const import (
     CONF_ALLOW_CLIP_SENSOR,
     CONF_ALLOW_DECONZ_GROUPS,
     CONF_BRIDGEID,
+    DEFAULT_ALLOW_CLIP_SENSOR,
+    DEFAULT_ALLOW_DECONZ_GROUPS,
     DEFAULT_PORT,
     DOMAIN,
 )
@@ -256,7 +257,7 @@ class DeconzOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry):
         """Initialize deCONZ options flow."""
         self.config_entry = config_entry
-        self.options = copy(config_entry.options)
+        self.options = dict(config_entry.options)
 
     async def async_step_init(self, user_input=None):
         """Manage the deCONZ options."""
@@ -277,11 +278,15 @@ class DeconzOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_ALLOW_CLIP_SENSOR,
-                        default=self.config_entry.options[CONF_ALLOW_CLIP_SENSOR],
+                        default=self.config_entry.options.get(
+                            CONF_ALLOW_CLIP_SENSOR, DEFAULT_ALLOW_CLIP_SENSOR
+                        ),
                     ): bool,
                     vol.Optional(
                         CONF_ALLOW_DECONZ_GROUPS,
-                        default=self.config_entry.options[CONF_ALLOW_DECONZ_GROUPS],
+                        default=self.config_entry.options.get(
+                            CONF_ALLOW_DECONZ_GROUPS, DEFAULT_ALLOW_DECONZ_GROUPS
+                        ),
                     ): bool,
                 }
             ),
