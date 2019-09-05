@@ -121,7 +121,8 @@ def setup_plexserver(
     }
 
     try:
-        plexserver = PlexServer(server_config).connect()
+        plexserver = PlexServer(server_config)
+        plexserver.connect()
     except (
         plexapi.exceptions.BadRequest,
         plexapi.exceptions.Unauthorized,

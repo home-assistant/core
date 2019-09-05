@@ -81,7 +81,8 @@ class PlexSensor(Entity):
         self._now_playing = []
         self._server = PlexServer(
             {CONF_URL: plex_url, CONF_TOKEN: plex_token, CONF_VERIFY_SSL: verify_ssl}
-        ).connect()
+        )
+        self._server.connect()
 
     @property
     def name(self):
