@@ -48,20 +48,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     plex_host = config.get(CONF_HOST)
     plex_port = config.get(CONF_PORT)
     plex_token = config.get(CONF_TOKEN)
+    verify_ssl = config.get(CONF_VERIFY_SSL)
 
     plex_url = "{}://{}:{}".format(
         "https" if config.get(CONF_SSL) else "http", plex_host, plex_port
     )
 
     try:
-        add_entities(
-            [
-                PlexSensor(
-                    name, plex_url, plex_server, plex_token, config.get(CONF_VERIFY_SSL)
-                )
-            ],
-            True,
+        plex_server = PlexServer(
+            {CONF_URL: plex_url, CONF_TOKEN: plex_token, CONF_VERIFY_SSL: verify_ssl}
         )
+        plex_server.connect()
     except (
         plexapi.exceptions.BadRequest,
         plexapi.exceptions.Unauthorized,
@@ -70,19 +67,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error(error)
         return
 
+    add_entities([PlexSensor(name, plex_server)], True)
+
 
 class PlexSensor(Entity):
     """Representation of a Plex now playing sensor."""
 
-    def __init__(self, name, plex_url, plex_server, plex_token, verify_ssl):
+    def __init__(self, name, plex_server):
         """Initialize the sensor."""
         self._name = name
         self._state = 0
         self._now_playing = []
-        self._server = PlexServer(
-            {CONF_URL: plex_url, CONF_TOKEN: plex_token, CONF_VERIFY_SSL: verify_ssl}
-        )
-        self._server.connect()
+        self._server = plex_server
 
     @property
     def name(self):
