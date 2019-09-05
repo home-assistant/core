@@ -1,4 +1,5 @@
 """Offer reusable conditions."""
+import asyncio
 from datetime import datetime, timedelta
 import functools as ft
 import logging
@@ -10,6 +11,9 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from homeassistant.core import HomeAssistant, State
 from homeassistant.components import zone as zone_cmp
+from homeassistant.components.device_automation import (  # noqa: F401 pylint: disable=unused-import
+    async_device_condition_from_config as async_device_from_config,
+)
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
@@ -41,40 +45,9 @@ ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 
 _LOGGER = logging.getLogger(__name__)
 
-# PyLint does not like the use of _threaded_factory
-# pylint: disable=invalid-name
 
-
-def _threaded_factory(
-    async_factory: Callable[[ConfigType, bool], Callable[..., bool]]
-) -> Callable[[ConfigType, bool], Callable[..., bool]]:
-    """Create threaded versions of async factories."""
-
-    @ft.wraps(async_factory)
-    def factory(
-        config: ConfigType, config_validation: bool = True
-    ) -> Callable[..., bool]:
-        """Threaded factory."""
-        async_check = async_factory(config, config_validation)
-
-        def condition_if(
-            hass: HomeAssistant, variables: TemplateVarsType = None
-        ) -> bool:
-            """Validate condition."""
-            return cast(
-                bool,
-                run_callback_threadsafe(
-                    hass.loop, async_check, hass, variables
-                ).result(),
-            )
-
-        return condition_if
-
-    return factory
-
-
-def async_from_config(
-    config: ConfigType, config_validation: bool = True
+async def async_from_config(
+    hass: HomeAssistant, config: ConfigType, config_validation: bool = True
 ) -> Callable[..., bool]:
     """Turn a condition configuration into a method.
 
@@ -95,29 +68,30 @@ def async_from_config(
             )
         )
 
+    # Check for partials to properly determine if coroutine function
+    check_factory = factory
+    while isinstance(check_factory, ft.partial):
+        check_factory = check_factory.func
+
+    if asyncio.iscoroutinefunction(check_factory):
+        return cast(Callable[..., bool], await factory(hass, config, config_validation))
     return cast(Callable[..., bool], factory(config, config_validation))
 
 
-from_config = _threaded_factory(async_from_config)
-
-
-def async_and_from_config(
-    config: ConfigType, config_validation: bool = True
+async def async_and_from_config(
+    hass: HomeAssistant, config: ConfigType, config_validation: bool = True
 ) -> Callable[..., bool]:
     """Create multi condition matcher using 'AND'."""
     if config_validation:
         config = cv.AND_CONDITION_SCHEMA(config)
-    checks = None
+    checks = [
+        await async_from_config(hass, entry, False) for entry in config["conditions"]
+    ]
 
     def if_and_condition(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
         """Test and condition."""
-        nonlocal checks
-
-        if checks is None:
-            checks = [async_from_config(entry, False) for entry in config["conditions"]]
-
         try:
             for check in checks:
                 if not check(hass, variables):
@@ -131,26 +105,20 @@ def async_and_from_config(
     return if_and_condition
 
 
-and_from_config = _threaded_factory(async_and_from_config)
-
-
-def async_or_from_config(
-    config: ConfigType, config_validation: bool = True
+async def async_or_from_config(
+    hass: HomeAssistant, config: ConfigType, config_validation: bool = True
 ) -> Callable[..., bool]:
     """Create multi condition matcher using 'OR'."""
     if config_validation:
         config = cv.OR_CONDITION_SCHEMA(config)
-    checks = None
+    checks = [
+        await async_from_config(hass, entry, False) for entry in config["conditions"]
+    ]
 
     def if_or_condition(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
         """Test and condition."""
-        nonlocal checks
-
-        if checks is None:
-            checks = [async_from_config(entry, False) for entry in config["conditions"]]
-
         try:
             for check in checks:
                 if check(hass, variables):
@@ -161,9 +129,6 @@ def async_or_from_config(
         return False
 
     return if_or_condition
-
-
-or_from_config = _threaded_factory(async_or_from_config)
 
 
 def numeric_state(
@@ -261,9 +226,6 @@ def async_numeric_state_from_config(
         )
 
     return if_numeric_state
-
-
-numeric_state_from_config = _threaded_factory(async_numeric_state_from_config)
 
 
 def state(
@@ -421,9 +383,6 @@ def async_template_from_config(
         return async_template(hass, value_template, variables)
 
     return template_if
-
-
-template_from_config = _threaded_factory(async_template_from_config)
 
 
 def time(

@@ -6,10 +6,9 @@ from homeassistant.const import STATE_ON, STATE_OFF, CONF_PLATFORM
 from homeassistant.setup import async_setup_component
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import (
-    async_get_device_automation_triggers,
+    _async_get_device_automations as async_get_device_automations,
 )
 from homeassistant.helpers import device_registry
-
 
 from tests.common import (
     MockConfigEntry,
@@ -37,7 +36,7 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-def _same_triggers(a, b):
+def _same_lists(a, b):
     if len(a) != len(b):
         return False
 
@@ -45,6 +44,37 @@ def _same_triggers(a, b):
         if d not in b:
             return False
     return True
+
+
+async def test_get_conditions(hass, device_reg, entity_reg):
+    """Test we get the expected conditions from a light."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
+    expected_conditions = [
+        {
+            "condition": "device",
+            "domain": "light",
+            "type": "is_off",
+            "device_id": device_entry.id,
+            "entity_id": "light.test_5678",
+        },
+        {
+            "condition": "device",
+            "domain": "light",
+            "type": "is_on",
+            "device_id": device_entry.id,
+            "entity_id": "light.test_5678",
+        },
+    ]
+    conditions = await async_get_device_automations(
+        hass, "async_get_conditions", device_entry.id
+    )
+    assert _same_lists(conditions, expected_conditions)
 
 
 async def test_get_triggers(hass, device_reg, entity_reg):
@@ -72,8 +102,10 @@ async def test_get_triggers(hass, device_reg, entity_reg):
             "entity_id": "light.test_5678",
         },
     ]
-    triggers = await async_get_device_automation_triggers(hass, device_entry.id)
-    assert _same_triggers(triggers, expected_triggers)
+    triggers = await async_get_device_automations(
+        hass, "async_get_triggers", device_entry.id
+    )
+    assert _same_lists(triggers, expected_triggers)
 
 
 async def test_if_fires_on_state_change(hass, calls):
@@ -158,3 +190,76 @@ async def test_if_fires_on_state_change(hass, calls):
     assert calls[1].data["some"] == "turn_on state - {} - off - on - None".format(
         dev1.entity_id
     )
+
+
+async def test_if_state(hass, calls):
+    """Test for turn_on and turn_off conditions."""
+    platform = getattr(hass.components, "test.light")
+
+    platform.init()
+    assert await async_setup_component(
+        hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
+    )
+
+    dev1, dev2, dev3 = platform.DEVICES
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event1"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": "light",
+                            "entity_id": dev1.entity_id,
+                            "type": "is_on",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "is_on {{ trigger.%s }}"
+                            % "}} - {{ trigger.".join(("platform", "event.event_type"))
+                        },
+                    },
+                },
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event2"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": "light",
+                            "entity_id": dev1.entity_id,
+                            "type": "is_off",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "is_off {{ trigger.%s }}"
+                            % "}} - {{ trigger.".join(("platform", "event.event_type"))
+                        },
+                    },
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(dev1.entity_id).state == STATE_ON
+    assert len(calls) == 0
+
+    hass.bus.async_fire("test_event1")
+    hass.bus.async_fire("test_event2")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "is_on event - test_event1"
+
+    hass.states.async_set(dev1.entity_id, STATE_OFF)
+    hass.bus.async_fire("test_event1")
+    hass.bus.async_fire("test_event2")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[1].data["some"] == "is_off event - test_event2"
