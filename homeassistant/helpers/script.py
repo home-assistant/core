@@ -338,7 +338,7 @@ class Script:
         config_cache_key = frozenset((k, str(v)) for k, v in action.items())
         config = self._config_cache.get(config_cache_key)
         if not config:
-            config = condition.async_from_config(action, False)
+            config = await condition.async_from_config(self.hass, action, False)
             self._config_cache[config_cache_key] = config
 
         self.last_action = action.get(CONF_ALIAS, action[CONF_CONDITION])

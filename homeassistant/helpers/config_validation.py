@@ -24,10 +24,13 @@ from homeassistant.const import (
     CONF_ALIAS,
     CONF_BELOW,
     CONF_CONDITION,
+    CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_ENTITY_NAMESPACE,
+    CONF_FOR,
     CONF_PLATFORM,
     CONF_SCAN_INTERVAL,
+    CONF_STATE,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
     CONF_VALUE_TEMPLATE,
@@ -746,8 +749,8 @@ STATE_CONDITION_SCHEMA = vol.All(
         {
             vol.Required(CONF_CONDITION): "state",
             vol.Required(CONF_ENTITY_ID): entity_id,
-            vol.Required("state"): str,
-            vol.Optional("for"): vol.All(time_period, positive_timedelta),
+            vol.Required(CONF_STATE): str,
+            vol.Optional(CONF_FOR): vol.All(time_period, positive_timedelta),
             # To support use_trigger_value in automation
             # Deprecated 2016/04/25
             vol.Optional("from"): str,
@@ -823,6 +826,11 @@ OR_CONDITION_SCHEMA = vol.Schema(
     }
 )
 
+DEVICE_CONDITION_SCHEMA = vol.Schema(
+    {vol.Required(CONF_CONDITION): "device", vol.Required(CONF_DOMAIN): str},
+    extra=vol.ALLOW_EXTRA,
+)
+
 CONDITION_SCHEMA: vol.Schema = vol.Any(
     NUMERIC_STATE_CONDITION_SCHEMA,
     STATE_CONDITION_SCHEMA,
@@ -832,6 +840,7 @@ CONDITION_SCHEMA: vol.Schema = vol.Any(
     ZONE_CONDITION_SCHEMA,
     AND_CONDITION_SCHEMA,
     OR_CONDITION_SCHEMA,
+    DEVICE_CONDITION_SCHEMA,
 )
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(
