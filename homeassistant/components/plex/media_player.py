@@ -138,8 +138,6 @@ def setup_plexserver(
         {host: {"token": token, "ssl": has_ssl, "verify": verify_ssl}},
     )
 
-    _LOGGER.info("Connected to: %s://%s", http_prefix, host)
-
     plex_clients = {}
     plex_sessions = {}
     track_time_interval(hass, lambda now: update_devices(), timedelta(seconds=10))
