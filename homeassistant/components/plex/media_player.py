@@ -62,7 +62,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up the Plex platform."""
-    if PLEX_DOMAIN not in hass.data:
+    plex_data = hass.data.setdefault(PLEX_DOMAIN, {})
+    server_setup = plex_data.setdefault(SERVER_SETUP, False)
+    if server_setup:
+        return
         hass.data[PLEX_DOMAIN] = False
 
     # Check if already configured
@@ -132,7 +135,7 @@ def setup_plexserver(
         request_configuration(host, hass, config, add_entities_callback)
         return
     else:
-        hass.data[PLEX_DOMAIN] = True
+        hass.data[PLEX_DOMAIN][SERVER_SETUP] = True
 
     # If we came here and configuring this host, mark as done
     if host in _CONFIGURING:
