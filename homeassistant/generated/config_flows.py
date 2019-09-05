@@ -25,6 +25,7 @@ FLOWS = [
     "geofency",
     "geonetnz_quakes",
     "glances",
+    "geonetnz_volcano",
     "gpslogger",
     "hangouts",
     "heos",
@@ -85,5 +86,5 @@ FLOWS = [
     "wwlln",
     "zha",
     "zone",
-    "zwave"
+    "zwave",
 ]
