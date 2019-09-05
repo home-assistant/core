@@ -12,21 +12,20 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TOKEN,
     CONF_SSL,
+    CONF_URL,
     CONF_VERIFY_SSL,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
-
-CONF_SERVER = "server"
+from .const import CONF_SERVER, DEFAULT_PORT, DEFAULT_SSL, DEFAULT_VERIFY_SSL
+from .errors import PlexException
+from .server import PlexServer
 
 DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "Plex"
-DEFAULT_PORT = 32400
-DEFAULT_SSL = False
-DEFAULT_VERIFY_SSL = True
+_LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
@@ -80,6 +79,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         plexapi.exceptions.BadRequest,
         plexapi.exceptions.Unauthorized,
         plexapi.exceptions.NotFound,
+        PlexException,
     ) as error:
         _LOGGER.error(error)
         return
@@ -99,28 +99,16 @@ class PlexSensor(Entity):
         verify_ssl,
     ):
         """Initialize the sensor."""
-        from plexapi.myplex import MyPlexAccount
-        from plexapi.server import PlexServer
-        from requests import Session
+        if plex_user or plex_password:
+            _LOGGER.error("Username and password no longer supported")
+            raise PlexException
 
         self._name = name
         self._state = 0
         self._now_playing = []
-
-        cert_session = None
-        if not verify_ssl:
-            _LOGGER.info("Ignoring SSL verification")
-            cert_session = Session()
-            cert_session.verify = False
-
-        if plex_token:
-            self._server = PlexServer(plex_url, plex_token, cert_session)
-        elif plex_user and plex_password:
-            user = MyPlexAccount(plex_user, plex_password)
-            server = plex_server if plex_server else user.resources()[0].name
-            self._server = user.resource(server).connect()
-        else:
-            self._server = PlexServer(plex_url, None, cert_session)
+        self._server = PlexServer(
+            {CONF_URL: plex_url, CONF_TOKEN: plex_token, CONF_VERIFY_SSL: verify_ssl}
+        )
 
     @property
     def name(self):
@@ -150,7 +138,7 @@ class PlexSensor(Entity):
         for sess in sessions:
             user = sess.usernames[0]
             device = sess.players[0].title
-            now_playing_user = "{0} - {1}".format(user, device)
+            now_playing_user = f"{user} - {device}"
             now_playing_title = ""
 
             if sess.TYPE == "episode":
@@ -161,7 +149,7 @@ class PlexSensor(Entity):
                     season_title += " ({0})".format(sess.show().year)
                 season_episode = "S{0}".format(sess.parentIndex)
                 if sess.index is not None:
-                    season_episode += " · E{0}".format(sess.index)
+                    season_episode += f" · E{sess.index}"
                 episode_title = sess.title
                 now_playing_title = "{0} - {1} - {2}".format(
                     season_title, season_episode, episode_title
@@ -181,7 +169,7 @@ class PlexSensor(Entity):
                 # "The Incredible Hulk (2008)"
                 now_playing_title = sess.title
                 if sess.year is not None:
-                    now_playing_title += " ({0})".format(sess.year)
+                    now_playing_title += f" ({sess.year})"
 
             now_playing.append((now_playing_user, now_playing_title))
         self._state = len(sessions)

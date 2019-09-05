@@ -2,8 +2,7 @@
 from datetime import timedelta
 import json
 import logging
-
-import requests
+import requests.exceptions
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
@@ -32,17 +31,21 @@ from homeassistant.helpers.event import track_time_interval
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import load_json, save_json
 
+from .const import (
+    CONF_URL,
+    CONF_TOKEN,
+    CONF_SSL_VERIFY,
+    CONF_USE_EPISODE_ART,
+    CONF_SHOW_ALL_CONTROLS,
+    CONF_REMOVE_UNAVAILABLE_CLIENTS,
+    CONF_CLIENT_REMOVE_INTERVAL,
+    NAME_FORMAT,
+    PLEX_CONFIG_FILE,
+)
+from .server import PlexServer
+
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
-
-NAME_FORMAT = "Plex {}"
-PLEX_CONFIG_FILE = "plex.conf"
-PLEX_DATA = "plex"
-
-CONF_USE_EPISODE_ART = "use_episode_art"
-CONF_SHOW_ALL_CONTROLS = "show_all_controls"
-CONF_REMOVE_UNAVAILABLE_CLIENTS = "remove_unavailable_clients"
-CONF_CLIENT_REMOVE_INTERVAL = "client_remove_interval"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -58,8 +61,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up the Plex platform."""
-    if PLEX_DATA not in hass.data:
-        hass.data[PLEX_DATA] = {}
 
     # get config from plex.conf
     file_config = load_json(hass.config.path(PLEX_CONFIG_FILE))
@@ -102,20 +103,18 @@ def setup_plexserver(
     host, token, has_ssl, verify_ssl, hass, config, add_entities_callback
 ):
     """Set up a plexserver based on host parameter."""
-    import plexapi.server
     import plexapi.exceptions
 
-    cert_session = None
     http_prefix = "https" if has_ssl else "http"
-    if has_ssl and (verify_ssl is False):
-        _LOGGER.info("Ignoring SSL verification")
-        cert_session = requests.Session()
-        cert_session.verify = False
+
+    server_config = {
+        CONF_URL: f"{http_prefix}://{host}",
+        CONF_TOKEN: token,
+        CONF_SSL_VERIFY: verify_ssl,
+    }
+
     try:
-        plexserver = plexapi.server.PlexServer(
-            "%s://%s" % (http_prefix, host), token, cert_session
-        )
-        _LOGGER.info("Discovery configuration done (no token needed)")
+        plexserver = PlexServer(server_config)
     except (
         plexapi.exceptions.BadRequest,
         plexapi.exceptions.Unauthorized,
@@ -141,7 +140,7 @@ def setup_plexserver(
 
     _LOGGER.info("Connected to: %s://%s", http_prefix, host)
 
-    plex_clients = hass.data[PLEX_DATA]
+    plex_clients = {}
     plex_sessions = {}
     track_time_interval(hass, lambda now: update_devices(), timedelta(seconds=10))
 
@@ -847,7 +846,7 @@ class PlexClient(MediaPlayerDevice):
         show = self.device.server.library.section(library_name).get(show_name)
 
         if not season_number:
-            playlist_name = "{} - {} Episodes".format(self.entity_id, show_name)
+            playlist_name = f"{self.entity_id} - {show_name} Episodes"
             return self.device.server.createPlaylist(playlist_name, show.episodes())
 
         for season in show.seasons():
