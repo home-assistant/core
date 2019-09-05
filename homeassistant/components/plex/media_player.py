@@ -51,6 +51,7 @@ from .const import (
 )
 from .server import PlexServer
 
+DEFAULT_HOST = "localhost"
 SERVER_SETUP = "server_setup"
 
 _CONFIGURING = {}
@@ -58,7 +59,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HOST): cv.string,
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_TOKEN): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
