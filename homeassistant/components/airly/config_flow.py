@@ -68,7 +68,7 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 self._errors["base"] = "auth"
 
-        return await self._show_config_form(
+        return self._show_config_form(
             name=DEFAULT_NAME,
             api_key="",
             latitude=self.hass.config.latitude,
@@ -76,7 +76,7 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             language=DEFAULT_LANGUAGE,
         )
 
-    async def _show_config_form(
+    def _show_config_form(
         self, name=None, api_key=None, latitude=None, longitude=None, language=None
     ):
         """Show the configuration form to edit data."""
