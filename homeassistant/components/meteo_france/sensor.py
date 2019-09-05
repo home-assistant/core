@@ -4,7 +4,16 @@ import logging
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
 
-from . import ATTRIBUTION, CONF_CITY, DATA_METEO_FRANCE, SENSOR_TYPES
+from .const import (
+    ATTRIBUTION,
+    CONF_CITY,
+    DATA_METEO_FRANCE,
+    SENSOR_TYPES,
+    SENSOR_TYPE_ICON,
+    SENSOR_TYPE_NAME,
+    SENSOR_TYPE_UNIT,
+    SENSOR_TYPE_CLASS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +88,9 @@ class MeteoFranceSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._data["name"], SENSOR_TYPES[self._condition][0])
+        return "{} {}".format(
+            self._data["name"], SENSOR_TYPES[self._condition][SENSOR_TYPE_NAME]
+        )
 
     @property
     def state(self):
@@ -111,12 +122,17 @@ class MeteoFranceSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return SENSOR_TYPES[self._condition][1]
+        return SENSOR_TYPES[self._condition][SENSOR_TYPE_UNIT]
 
     @property
     def icon(self):
         """Return the icon."""
-        return SENSOR_TYPES[self._condition][2]
+        return SENSOR_TYPES[self._condition][SENSOR_TYPE_ICON]
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return SENSOR_TYPES[self._condition][SENSOR_TYPE_CLASS]
 
     def update(self):
         """Fetch new state data for the sensor."""
