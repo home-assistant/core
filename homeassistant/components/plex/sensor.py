@@ -6,8 +6,6 @@ import voluptuous as vol
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME,
-    CONF_USERNAME,
-    CONF_PASSWORD,
     CONF_HOST,
     CONF_PORT,
     CONF_TOKEN,
@@ -20,7 +18,6 @@ from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_SERVER, DEFAULT_PORT, DEFAULT_SSL, DEFAULT_VERIFY_SSL
-from .errors import PlexException
 from .server import PlexServer
 
 DEFAULT_HOST = "localhost"
@@ -33,11 +30,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_TOKEN): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_SERVER): cv.string,
-        vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
@@ -47,8 +42,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Plex sensor."""
     name = config.get(CONF_NAME)
-    plex_user = config.get(CONF_USERNAME)
-    plex_password = config.get(CONF_PASSWORD)
     plex_server = config.get(CONF_SERVER)
     plex_host = config.get(CONF_HOST)
     plex_port = config.get(CONF_PORT)
@@ -64,13 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities(
             [
                 PlexSensor(
-                    name,
-                    plex_url,
-                    plex_user,
-                    plex_password,
-                    plex_server,
-                    plex_token,
-                    config.get(CONF_VERIFY_SSL),
+                    name, plex_url, plex_server, plex_token, config.get(CONF_VERIFY_SSL)
                 )
             ],
             True,
@@ -79,7 +66,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         plexapi.exceptions.BadRequest,
         plexapi.exceptions.Unauthorized,
         plexapi.exceptions.NotFound,
-        PlexException,
     ) as error:
         _LOGGER.error(error)
         return
@@ -88,21 +74,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class PlexSensor(Entity):
     """Representation of a Plex now playing sensor."""
 
-    def __init__(
-        self,
-        name,
-        plex_url,
-        plex_user,
-        plex_password,
-        plex_server,
-        plex_token,
-        verify_ssl,
-    ):
+    def __init__(self, name, plex_url, plex_server, plex_token, verify_ssl):
         """Initialize the sensor."""
-        if plex_user or plex_password:
-            _LOGGER.error("Username and password no longer supported")
-            raise PlexException
-
         self._name = name
         self._state = 0
         self._now_playing = []
