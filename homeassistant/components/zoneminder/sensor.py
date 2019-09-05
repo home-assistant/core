@@ -68,7 +68,7 @@ class ZMSensorMonitors(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} Status".format(self._monitor.name)
+        return f"{self._monitor.name} Status"
 
     @property
     def state(self):
@@ -105,7 +105,7 @@ class ZMSensorEvents(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._monitor.name, self.time_period.title)
+        return f"{self._monitor.name} {self.time_period.title}"
 
     @property
     def unit_of_measurement(self):

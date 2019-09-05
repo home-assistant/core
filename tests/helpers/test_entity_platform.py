@@ -491,7 +491,7 @@ async def test_registry_respect_entity_disabled(hass):
     platform = MockEntityPlatform(hass)
     entity = MockEntity(unique_id="1234")
     await platform.async_add_entities([entity])
-    assert entity.entity_id is None
+    assert entity.entity_id == "test_domain.world"
     assert hass.states.async_entity_ids() == []
 
 

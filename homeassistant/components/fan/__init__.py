@@ -54,7 +54,7 @@ PROP_TO_ATTR = {
     "speed": ATTR_SPEED,
     "speed_list": ATTR_SPEED_LIST,
     "oscillating": ATTR_OSCILLATING,
-    "direction": ATTR_DIRECTION,
+    "current_direction": ATTR_DIRECTION,
 }  # type: dict
 
 FAN_SET_SPEED_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(

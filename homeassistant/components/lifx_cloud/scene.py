@@ -31,7 +31,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     token = config.get(CONF_TOKEN)
     timeout = config.get(CONF_TIMEOUT)
 
-    headers = {AUTHORIZATION: "Bearer {}".format(token)}
+    headers = {AUTHORIZATION: f"Bearer {token}"}
 
     url = LIFX_API_URL.format("scenes")
 

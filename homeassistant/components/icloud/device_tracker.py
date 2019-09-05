@@ -281,10 +281,10 @@ class Icloud(DeviceScanner):
             devicename = device.get(
                 "deviceName", "SMS to %s" % device.get("phoneNumber")
             )
-            devicesstring += "{}: {};".format(i, devicename)
+            devicesstring += f"{i}: {devicename};"
 
         _CONFIGURING[self.accountname] = configurator.request_config(
-            "iCloud {}".format(self.accountname),
+            f"iCloud {self.accountname}",
             self.icloud_trusted_device_callback,
             description=(
                 "Please choose your trusted device by entering"
@@ -327,7 +327,7 @@ class Icloud(DeviceScanner):
             return
 
         _CONFIGURING[self.accountname] = configurator.request_config(
-            "iCloud {}".format(self.accountname),
+            f"iCloud {self.accountname}",
             self.icloud_verification_callback,
             description=("Please enter the validation code:"),
             entity_picture="/static/images/config_icloud.png",
@@ -528,7 +528,7 @@ class Icloud(DeviceScanner):
         """Set the interval of the given devices."""
         devs = [devicename] if devicename else self.devices
         for device in devs:
-            devid = "{}.{}".format(DOMAIN, device)
+            devid = f"{DOMAIN}.{device}"
             devicestate = self.hass.states.get(devid)
             if interval is not None:
                 if devicestate is not None:

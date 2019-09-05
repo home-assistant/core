@@ -14,8 +14,6 @@ from .const import COVER_TYPES, DAMPERS, NEW_LIGHT, WINDOW_COVERS
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
-ZIGBEE_SPEC = ["lumi.curtain"]
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up deCONZ platforms."""
@@ -35,13 +33,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities = []
 
         for light in lights:
-
             if light.type in COVER_TYPES:
-                if light.modelid in ZIGBEE_SPEC:
-                    entities.append(DeconzCoverZigbeeSpec(light, gateway))
-
-                else:
-                    entities.append(DeconzCover(light, gateway))
+                entities.append(DeconzCover(light, gateway))
 
         async_add_entities(entities, True)
 
@@ -69,14 +62,12 @@ class DeconzCover(DeconzDevice, CoverDevice):
     @property
     def current_cover_position(self):
         """Return the current position of the cover."""
-        if self.is_closed:
-            return 0
-        return int(self._device.brightness / 255 * 100)
+        return 100 - int(self._device.brightness / 255 * 100)
 
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        return not self._device.state
+        return self._device.state
 
     @property
     def device_class(self):
@@ -96,9 +87,9 @@ class DeconzCover(DeconzDevice, CoverDevice):
         position = kwargs[ATTR_POSITION]
         data = {"on": False}
 
-        if position > 0:
+        if position < 100:
             data["on"] = True
-            data["bri"] = int(position / 100 * 255)
+            data["bri"] = 255 - int(position / 100 * 255)
 
         await self._device.async_set_state(data)
 
@@ -115,29 +106,4 @@ class DeconzCover(DeconzDevice, CoverDevice):
     async def async_stop_cover(self, **kwargs):
         """Stop cover."""
         data = {"bri_inc": 0}
-        await self._device.async_set_state(data)
-
-
-class DeconzCoverZigbeeSpec(DeconzCover):
-    """Zigbee spec is the inverse of how deCONZ normally reports attributes."""
-
-    @property
-    def current_cover_position(self):
-        """Return the current position of the cover."""
-        return 100 - int(self._device.brightness / 255 * 100)
-
-    @property
-    def is_closed(self):
-        """Return if the cover is closed."""
-        return self._device.state
-
-    async def async_set_cover_position(self, **kwargs):
-        """Move the cover to a specific position."""
-        position = kwargs[ATTR_POSITION]
-        data = {"on": False}
-
-        if position < 100:
-            data["on"] = True
-            data["bri"] = 255 - int(position / 100 * 255)
-
         await self._device.async_set_state(data)

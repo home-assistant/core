@@ -154,7 +154,7 @@ class NetatmoThermostat(ClimateDevice):
         self._state = None
         self._room_id = room_id
         self._room_name = self._data.homedata.rooms[self._data.home_id][room_id]["name"]
-        self._name = "netatmo_{}".format(self._room_name)
+        self._name = f"netatmo_{self._room_name}"
         self._current_temperature = None
         self._target_temperature = None
         self._preset = None

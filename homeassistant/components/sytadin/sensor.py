@@ -86,7 +86,7 @@ class SytadinSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._name, self._option)
+        return f"{self._name} {self._option}"
 
     @property
     def state(self):

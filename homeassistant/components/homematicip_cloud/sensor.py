@@ -34,6 +34,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
+from .device import ATTR_MODEL_TYPE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -141,6 +142,11 @@ class HomematicipAccesspointStatus(HomematicipGenericDevice):
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
         return "%"
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the security zone group."""
+        return {ATTR_MODEL_TYPE: self._device.modelType}
 
 
 class HomematicipHeatingThermostat(HomematicipGenericDevice):

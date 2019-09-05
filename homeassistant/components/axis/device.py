@@ -65,7 +65,7 @@ class AxisNetworkDevice:
             connections={(CONNECTION_NETWORK_MAC, self.serial)},
             identifiers={(DOMAIN, self.serial)},
             manufacturer="Axis Communications AB",
-            model="{} {}".format(self.model, self.product_type),
+            model=f"{self.model} {self.product_type}",
             name=self.name,
             sw_version=self.fw_version,
         )
@@ -115,7 +115,7 @@ class AxisNetworkDevice:
     @property
     def event_new_address(self):
         """Device specific event to signal new device address."""
-        return "axis_new_address_{}".format(self.serial)
+        return f"axis_new_address_{self.serial}"
 
     @staticmethod
     async def async_new_address_callback(hass, entry):
@@ -131,7 +131,7 @@ class AxisNetworkDevice:
     @property
     def event_reachable(self):
         """Device specific event to signal a change in connection status."""
-        return "axis_reachable_{}".format(self.serial)
+        return f"axis_reachable_{self.serial}"
 
     @callback
     def async_connection_status_callback(self, status):
@@ -149,7 +149,7 @@ class AxisNetworkDevice:
     @property
     def event_new_sensor(self):
         """Device specific event to signal new sensor available."""
-        return "axis_add_sensor_{}".format(self.serial)
+        return f"axis_add_sensor_{self.serial}"
 
     @callback
     def async_event_callback(self, action, event_id):

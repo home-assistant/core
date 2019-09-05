@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Nazwa u\u017cytkownika jest ju\u017c zarejestrowana",
+            "identifier_exists": "Nazwa u\u017cytkownika ju\u017c zarejestrowana",
             "invalid_credentials": "Nieprawid\u0142owa nazwa u\u017cytkownika lub has\u0142o",
             "no_devices": "Nie znaleziono urz\u0105dze\u0144 na koncie"
         },
@@ -14,6 +14,6 @@
                 "title": "Wprowad\u017a swoje dane"
             }
         },
-        "title": "Notion"
+        "title": "Poj\u0119cie"
     }
 }

@@ -16,7 +16,7 @@ SUPPORTED_COVERS = {
         "id": "Cover 1 id",
         "name": "Cover 1 name",
         "type": "Level controllable output",
-        "state": {"bri": 255, "reachable": True},
+        "state": {"bri": 255, "on": False, "reachable": True},
         "modelid": "Not zigbee spec",
         "uniqueid": "00:00:00:00:00:00:00:00-00",
     },
@@ -24,7 +24,7 @@ SUPPORTED_COVERS = {
         "id": "Cover 2 id",
         "name": "Cover 2 name",
         "type": "Window covering device",
-        "state": {"bri": 255, "reachable": True},
+        "state": {"bri": 255, "on": True, "reachable": True},
         "modelid": "lumi.curtain",
     },
 }
@@ -107,7 +107,7 @@ async def test_cover(hass):
 
     cover_1 = hass.states.get("cover.cover_1_name")
     assert cover_1 is not None
-    assert cover_1.state == "closed"
+    assert cover_1.state == "open"
 
     gateway.api.lights["1"].async_update({})
 

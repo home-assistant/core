@@ -118,11 +118,21 @@ async def test_climate_devices(hass):
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
-        {"entity_id": "climate.climate_1_name", "hvac_mode": "heat"},
+        {"entity_id": "climate.climate_1_name", "hvac_mode": "auto"},
         blocking=True,
     )
     gateway.api.session.put.assert_called_with(
         "http://1.2.3.4:80/api/ABCDEF/sensors/1/config", data='{"mode": "auto"}'
+    )
+
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {"entity_id": "climate.climate_1_name", "hvac_mode": "heat"},
+        blocking=True,
+    )
+    gateway.api.session.put.assert_called_with(
+        "http://1.2.3.4:80/api/ABCDEF/sensors/1/config", data='{"mode": "heat"}'
     )
 
     await hass.services.async_call(
@@ -145,7 +155,7 @@ async def test_climate_devices(hass):
         "http://1.2.3.4:80/api/ABCDEF/sensors/1/config", data='{"heatsetpoint": 2000.0}'
     )
 
-    assert len(gateway.api.session.put.mock_calls) == 3
+    assert len(gateway.api.session.put.mock_calls) == 4
 
 
 async def test_verify_state_update(hass):
@@ -154,7 +164,7 @@ async def test_verify_state_update(hass):
     assert "climate.climate_1_name" in gateway.deconz_ids
 
     thermostat = hass.states.get("climate.climate_1_name")
-    assert thermostat.state == "off"
+    assert thermostat.state == "auto"
 
     state_update = {
         "t": "event",
@@ -169,7 +179,7 @@ async def test_verify_state_update(hass):
     assert len(hass.states.async_all()) == 1
 
     thermostat = hass.states.get("climate.climate_1_name")
-    assert thermostat.state == "off"
+    assert thermostat.state == "auto"
     assert gateway.api.sensors["1"].changed_keys == {"state", "r", "t", "on", "e", "id"}
 
 

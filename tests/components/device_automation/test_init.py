@@ -62,7 +62,7 @@ async def test_websocket_get_triggers(hass, hass_ws_client, device_reg, entity_r
     await client.send_json(
         {
             "id": 1,
-            "type": "device_automation/list_triggers",
+            "type": "device_automation/trigger/list",
             "device_id": device_entry.id,
         }
     )

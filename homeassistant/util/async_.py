@@ -103,11 +103,11 @@ def _chain_future(
         raise TypeError("A future is required for destination argument")
     # pylint: disable=protected-access
     if isinstance(source, Future):
-        source_loop = source._loop  # type: Optional[AbstractEventLoop]
+        source_loop: Optional[AbstractEventLoop] = source._loop
     else:
         source_loop = None
     if isinstance(destination, Future):
-        dest_loop = destination._loop  # type: Optional[AbstractEventLoop]
+        dest_loop: Optional[AbstractEventLoop] = destination._loop
     else:
         dest_loop = None
 
@@ -152,7 +152,7 @@ def run_coroutine_threadsafe(
 
     if not coroutines.iscoroutine(coro):
         raise TypeError("A coroutine object is required")
-    future = concurrent.futures.Future()  # type: concurrent.futures.Future
+    future: concurrent.futures.Future = concurrent.futures.Future()
 
     def callback() -> None:
         """Handle the call to the coroutine."""
@@ -200,7 +200,7 @@ def run_callback_threadsafe(
     if ident is not None and ident == threading.get_ident():
         raise RuntimeError("Cannot be called from within the event loop")
 
-    future = concurrent.futures.Future()  # type: concurrent.futures.Future
+    future: concurrent.futures.Future = concurrent.futures.Future()
 
     def run_callback() -> None:
         """Run callback and store result."""

@@ -193,7 +193,7 @@ SENSOR_TYPES = {
         "%",
         "%",
         "%",
-        "mdi:weather-partlycloudy",
+        "mdi:weather-partly-cloudy",
         ["currently", "hourly", "daily"],
     ],
     "humidity": [
@@ -380,11 +380,11 @@ CONDITION_PICTURES = {
     "cloudy": ["/static/images/darksky/weather-cloudy.svg", "mdi:weather-cloudy"],
     "partly-cloudy-day": [
         "/static/images/darksky/weather-partlycloudy.svg",
-        "mdi:weather-partlycloudy",
+        "mdi:weather-partly-cloudy",
     ],
     "partly-cloudy-night": [
         "/static/images/darksky/weather-cloudy.svg",
-        "mdi:weather-partlycloudy",
+        "mdi:weather-partly-cloudy",
     ],
 }
 
@@ -553,10 +553,10 @@ class DarkSkySensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         if self.forecast_day is not None:
-            return "{} {} {}d".format(self.client_name, self._name, self.forecast_day)
+            return f"{self.client_name} {self._name} {self.forecast_day}d"
         if self.forecast_hour is not None:
-            return "{} {} {}h".format(self.client_name, self._name, self.forecast_hour)
-        return "{} {}".format(self.client_name, self._name)
+            return f"{self.client_name} {self._name} {self.forecast_hour}h"
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
@@ -704,7 +704,7 @@ class DarkSkyAlertSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.client_name, self._name)
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):

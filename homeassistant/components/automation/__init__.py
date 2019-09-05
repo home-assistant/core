@@ -143,7 +143,7 @@ async def async_setup(hass, config):
     async def turn_onoff_service_handler(service_call):
         """Handle automation turn on/off service calls."""
         tasks = []
-        method = "async_{}".format(service_call.service)
+        method = f"async_{service_call.service}"
         for entity in await component.async_extract_from_service(service_call):
             tasks.append(getattr(entity, method)())
 
@@ -378,7 +378,7 @@ async def _async_process_config(hass, config, component):
 
         for list_no, config_block in enumerate(conf):
             automation_id = config_block.get(CONF_ID)
-            name = config_block.get(CONF_ALIAS) or "{} {}".format(config_key, list_no)
+            name = config_block.get(CONF_ALIAS) or f"{config_key} {list_no}"
 
             hidden = config_block[CONF_HIDE_ENTITY]
             initial_state = config_block.get(CONF_INITIAL_STATE)
@@ -431,7 +431,7 @@ def _async_get_action(hass, config, name):
             await script_obj.async_run(variables, context)
         except Exception as err:  # pylint: disable=broad-except
             script_obj.async_log_exception(
-                _LOGGER, "Error while executing automation {}".format(entity_id), err
+                _LOGGER, f"Error while executing automation {entity_id}", err
             )
 
     return action

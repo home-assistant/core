@@ -127,6 +127,7 @@ class AppleTvDevice(MediaPlayerDevice):
                 const.PLAY_STATE_PAUSED,
                 const.PLAY_STATE_FAST_FORWARD,
                 const.PLAY_STATE_FAST_BACKWARD,
+                const.PLAY_STATE_STOPPED,
             ):
                 # Catch fast forward/backward here so "play" is default action
                 return STATE_PAUSED
@@ -212,7 +213,7 @@ class AppleTvDevice(MediaPlayerDevice):
             title = self._playing.title
             return title if title else "No title"
 
-        return "Establishing a connection to {0}...".format(self._name)
+        return f"Establishing a connection to {self._name}..."
 
     @property
     def supported_features(self):

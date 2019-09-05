@@ -40,7 +40,7 @@ class AlexaInvalidEndpointError(AlexaError):
 
     def __init__(self, endpoint_id):
         """Initialize invalid endpoint error."""
-        msg = "The endpoint {} does not exist".format(endpoint_id)
+        msg = f"The endpoint {endpoint_id} does not exist"
         AlexaError.__init__(self, msg)
         self.endpoint_id = endpoint_id
 
@@ -73,7 +73,7 @@ class AlexaTempRangeError(AlexaError):
             "maximumValue": {"value": max_temp, "scale": API_TEMP_UNITS[unit]},
         }
         payload = {"validRange": temp_range}
-        msg = "The requested temperature {} is out of range".format(temp)
+        msg = f"The requested temperature {temp} is out of range"
 
         AlexaError.__init__(self, msg, payload)
 

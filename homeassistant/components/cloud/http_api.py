@@ -157,7 +157,7 @@ def _process_cloud_exception(exc, where):
     err_info = _CLOUD_ERRORS.get(exc.__class__)
     if err_info is None:
         _LOGGER.exception("Unexpected error processing request for %s", where)
-        err_info = (502, "Unexpected error: {}".format(exc))
+        err_info = (502, f"Unexpected error: {exc}")
     return err_info
 
 

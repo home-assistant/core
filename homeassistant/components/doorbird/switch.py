@@ -45,9 +45,9 @@ class DoorBirdSwitch(SwitchDevice):
     def name(self):
         """Return the name of the switch."""
         if self._relay == IR_RELAY:
-            return "{} IR".format(self._doorstation.name)
+            return f"{self._doorstation.name} IR"
 
-        return "{} Relay {}".format(self._doorstation.name, self._relay)
+        return f"{self._doorstation.name} Relay {self._relay}"
 
     @property
     def icon(self):
