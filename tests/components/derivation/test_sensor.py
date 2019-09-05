@@ -38,7 +38,7 @@ async def test_state(hass):
     assert state.attributes.get("unit_of_measurement") == "kW"
 
 
-async def test_trapezoidal(hass):
+async def test_dataSet1(hass):
     """Test derivation sensor state."""
     config = {
         "sensor": {
@@ -71,12 +71,144 @@ async def test_trapezoidal(hass):
     assert state.attributes.get("unit_of_measurement") == "kW"
 
 
-async def test_prefix(hass):
-    """Test integration sensor state using a power source."""
+async def test_dataSet2(hass):
+    """Test derivation sensor state."""
     config = {
         "sensor": {
-            "platform": "integration",
-            "name": "integration",
+            "platform": "derivation",
+            "name": "power",
+            "source": "sensor.energy",
+            "unit": "kW",
+            "round": 2,
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+
+    entity_id = config["sensor"]["source"]
+    hass.states.async_set(entity_id, 0, {})
+    await hass.async_block_till_done()
+
+    # Testing a energy sensor with non-monotonic intervals and values
+    for time, value in [(20, 5), (30, 0)]:
+        now = dt_util.utcnow() + timedelta(minutes=time)
+        with patch("homeassistant.util.dt.utcnow", return_value=now):
+            hass.states.async_set(entity_id, value, {}, force_update=True)
+            await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy")
+    assert state is not None
+
+    assert round(float(state.state), config["sensor"]["round"]) == -0.5
+
+    assert state.attributes.get("unit_of_measurement") == "kW"
+
+
+async def test_dataSet3(hass):
+    """Test derivation sensor state."""
+    config = {
+        "sensor": {
+            "platform": "derivation",
+            "name": "power",
+            "source": "sensor.energy",
+            "unit": "kW",
+            "round": 2,
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+
+    entity_id = config["sensor"]["source"]
+    hass.states.async_set(entity_id, 0, {})
+    await hass.async_block_till_done()
+
+    # Testing a energy sensor with non-monotonic intervals and values
+    for time, value in [(20, 5), (30, 10)]:
+        now = dt_util.utcnow() + timedelta(minutes=time)
+        with patch("homeassistant.util.dt.utcnow", return_value=now):
+            hass.states.async_set(entity_id, value, {}, force_update=True)
+            await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy")
+    assert state is not None
+
+    assert round(float(state.state), config["sensor"]["round"]) == 0.5
+
+    assert state.attributes.get("unit_of_measurement") == "kW"
+
+
+async def test_dataSet4(hass):
+    """Test derivation sensor state."""
+    config = {
+        "sensor": {
+            "platform": "derivation",
+            "name": "power",
+            "source": "sensor.energy",
+            "unit": "kW",
+            "round": 2,
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+
+    entity_id = config["sensor"]["source"]
+    hass.states.async_set(entity_id, 0, {})
+    await hass.async_block_till_done()
+
+    # Testing a energy sensor with non-monotonic intervals and values
+    for time, value in [(20, 5), (30, 5)]:
+        now = dt_util.utcnow() + timedelta(minutes=time)
+        with patch("homeassistant.util.dt.utcnow", return_value=now):
+            hass.states.async_set(entity_id, value, {}, force_update=True)
+            await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy")
+    assert state is not None
+
+    assert round(float(state.state), config["sensor"]["round"]) == 0
+
+    assert state.attributes.get("unit_of_measurement") == "kW"
+
+
+async def test_dataSet5(hass):
+    """Test derivation sensor state."""
+    config = {
+        "sensor": {
+            "platform": "derivation",
+            "name": "power",
+            "source": "sensor.energy",
+            "unit": "kW",
+            "round": 2,
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+
+    entity_id = config["sensor"]["source"]
+    hass.states.async_set(entity_id, 0, {})
+    await hass.async_block_till_done()
+
+    # Testing a energy sensor with non-monotonic intervals and values
+    for time, value in [(20, 10), (30, -10)]:
+        now = dt_util.utcnow() + timedelta(minutes=time)
+        with patch("homeassistant.util.dt.utcnow", return_value=now):
+            hass.states.async_set(entity_id, value, {}, force_update=True)
+            await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy")
+    assert state is not None
+
+    assert round(float(state.state), config["sensor"]["round"]) == -20
+
+    assert state.attributes.get("unit_of_measurement") == "kW"
+
+
+async def test_prefix(hass):
+    """Test derivation sensor state using a power source."""
+    config = {
+        "sensor": {
+            "platform": "derivation",
+            "name": "derivation",
             "source": "sensor.power",
             "round": 2,
             "unit_prefix": "k",
@@ -96,20 +228,20 @@ async def test_prefix(hass):
         )
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.integration")
+    state = hass.states.get("sensor.derivation")
     assert state is not None
 
-    # Testing a power sensor at 1000 Watts for 1hour = 1kWh
-    assert round(float(state.state), config["sensor"]["round"]) == 1.0
-    assert state.attributes.get("unit_of_measurement") == "kWh"
+    # Testing a power sensor at 1000 Watts for 1hour = 0kWh
+    assert round(float(state.state), config["sensor"]["round"]) == 0.0
+    assert state.attributes.get("unit_of_measurement") == "kW/h"
 
 
 async def test_suffix(hass):
-    """Test integration sensor state using a network counter source."""
+    """Test derivation sensor state using a network counter source."""
     config = {
         "sensor": {
-            "platform": "integration",
-            "name": "integration",
+            "platform": "derivation",
+            "name": "derivation",
             "source": "sensor.bytes_per_second",
             "round": 2,
             "unit_prefix": "k",
@@ -128,8 +260,8 @@ async def test_suffix(hass):
         hass.states.async_set(entity_id, 1000, {}, force_update=True)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.integration")
+    state = hass.states.get("sensor.derivation")
     assert state is not None
 
-    # Testing a network speed sensor at 1000 bytes/s over 10s  = 10kbytes
-    assert round(float(state.state), config["sensor"]["round"]) == 10.0
+    # Testing a network speed sensor at 1000 bytes/s over 10s  = 10kbytes/s2
+    assert round(float(state.state), config["sensor"]["round"]) == 0.0
