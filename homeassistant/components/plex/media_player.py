@@ -20,6 +20,9 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import (
+    CONF_URL,
+    CONF_TOKEN,
+    CONF_VERIFY_SSL,
     DEVICE_DEFAULT_NAME,
     STATE_IDLE,
     STATE_OFF,
@@ -32,9 +35,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import load_json, save_json
 
 from .const import (
-    CONF_URL,
-    CONF_TOKEN,
-    CONF_SSL_VERIFY,
     CONF_USE_EPISODE_ART,
     CONF_SHOW_ALL_CONTROLS,
     CONF_REMOVE_UNAVAILABLE_CLIENTS,
@@ -110,7 +110,7 @@ def setup_plexserver(
     server_config = {
         CONF_URL: f"{http_prefix}://{host}",
         CONF_TOKEN: token,
-        CONF_SSL_VERIFY: verify_ssl,
+        CONF_VERIFY_SSL: verify_ssl,
     }
 
     try:
