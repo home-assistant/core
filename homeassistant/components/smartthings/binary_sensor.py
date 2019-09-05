@@ -66,12 +66,12 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorDevice):
     @property
     def name(self) -> str:
         """Return the name of the binary sensor."""
-        return "{} {}".format(self._device.label, self._attribute)
+        return f"{self._device.label} {self._attribute}"
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return "{}.{}".format(self._device.device_id, self._attribute)
+        return f"{self._device.device_id}.{self._attribute}"
 
     @property
     def is_on(self):

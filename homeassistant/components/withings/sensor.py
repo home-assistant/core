@@ -325,7 +325,7 @@ class WithingsHealthSensor(Entity):
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return "Withings {} {}".format(self._attribute.measurement, self._slug)
+        return f"Withings {self._attribute.measurement} {self._slug}"
 
     @property
     def unique_id(self) -> str:

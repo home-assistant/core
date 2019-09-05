@@ -79,7 +79,7 @@ aiowwlln==1.0.0
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv==0.0.25
+androidtv==0.0.26
 
 # homeassistant.components.apns
 apns2==0.3.0
@@ -172,11 +172,14 @@ hbmqtt==0.9.4
 # homeassistant.components.jewish_calendar
 hdate==0.9.0
 
+# homeassistant.components.pi_hole
+hole==0.5.0
+
 # homeassistant.components.workday
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190828.0
+home-assistant-frontend==20190904.0
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.15.0
@@ -226,7 +229,7 @@ nokia==1.2.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.17.0
+numpy==1.17.1
 
 # homeassistant.components.google
 oauth2client==4.0.0
@@ -287,6 +290,9 @@ pyhomematic==0.1.60
 
 # homeassistant.components.iqvia
 pyiqvia==0.2.1
+
+# homeassistant.components.linky
+pylinky==0.4.0
 
 # homeassistant.components.litejet
 pylitejet==0.1

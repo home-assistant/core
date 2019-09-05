@@ -67,10 +67,7 @@ class GoogleMapsScanner:
 
         except InvalidCookies:
             _LOGGER.error(
-                "You have specified invalid login credentials. "
-                "Please make sure you have saved your credentials"
-                " in the following file: %s",
-                credfile,
+                "The cookie file provided does not provide a valid session. Please create another one and try again."
             )
             self.success_init = False
 

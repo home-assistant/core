@@ -405,7 +405,7 @@ class NestSensorDevice(Entity):
     @property
     def unique_id(self):
         """Return unique id based on device serial and variable."""
-        return "{}-{}".format(self.device.serial, self.variable)
+        return f"{self.device.serial}-{self.variable}"
 
     @property
     def device_info(self):

@@ -5,7 +5,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import unifi
+from homeassistant.components.unifi.config_flow import get_controller_from_config_entry
 from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
@@ -29,7 +29,6 @@ from .const import (
     ATTR_MANUFACTURER,
     CONF_CONTROLLER,
     CONF_SITE_ID,
-    CONTROLLER_ID,
     DOMAIN as UNIFI_DOMAIN,
 )
 
@@ -106,11 +105,7 @@ async def async_setup_scanner(hass, config, sync_see, discovery_info):
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up device tracker for UniFi component."""
-    controller_id = CONTROLLER_ID.format(
-        host=config_entry.data[CONF_CONTROLLER][CONF_HOST],
-        site=config_entry.data[CONF_CONTROLLER][CONF_SITE_ID],
-    )
-    controller = hass.data[unifi.DOMAIN][controller_id]
+    controller = get_controller_from_config_entry(hass, config_entry)
     tracked = {}
 
     registry = await entity_registry.async_get_registry(hass)
@@ -243,7 +238,7 @@ class UniFiClientTracker(ScannerEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this client."""
-        return "{}-{}".format(self.client.mac, self.controller.site)
+        return f"{self.client.mac}-{self.controller.site}"
 
     @property
     def available(self) -> bool:

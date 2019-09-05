@@ -24,7 +24,7 @@ def setup(hass, config):
     """Set up the Logentries component."""
     conf = config[DOMAIN]
     token = conf.get(CONF_TOKEN)
-    le_wh = "{}{}".format(DEFAULT_HOST, token)
+    le_wh = f"{DEFAULT_HOST}{token}"
 
     def logentries_event_listener(event):
         """Listen for new messages on the bus and sends them to Logentries."""

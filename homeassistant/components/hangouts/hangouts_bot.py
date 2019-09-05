@@ -293,7 +293,7 @@ class HangoutsBot:
                 if self.hass.config.is_allowed_path(uri):
                     try:
                         image_file = open(uri, "rb")
-                    except IOError as error:
+                    except OSError as error:
                         _LOGGER.error(
                             "Image file I/O error(%s): %s", error.errno, error.strerror
                         )
@@ -323,7 +323,7 @@ class HangoutsBot:
             }
 
         self.hass.states.async_set(
-            "{}.conversations".format(DOMAIN),
+            f"{DOMAIN}.conversations",
             len(self._conversation_list.get_all()),
             attributes=conversations,
         )

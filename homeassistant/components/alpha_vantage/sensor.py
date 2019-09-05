@@ -168,7 +168,7 @@ class AlphaVantageForeignExchange(Entity):
         if CONF_NAME in config:
             self._name = config.get(CONF_NAME)
         else:
-            self._name = "{}/{}".format(self._to_currency, self._from_currency)
+            self._name = f"{self._to_currency}/{self._from_currency}"
         self._unit_of_measurement = self._to_currency
         self._icon = ICONS.get(self._from_currency, "USD")
         self.values = None

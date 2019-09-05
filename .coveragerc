@@ -50,6 +50,7 @@ omit =
     homeassistant/components/asterisk_cdr/mailbox.py
     homeassistant/components/asterisk_mbox/*
     homeassistant/components/asuswrt/device_tracker.py
+    homeassistant/components/atome/*
     homeassistant/components/august/*
     homeassistant/components/aurora_abb_powerone/sensor.py
     homeassistant/components/automatic/device_tracker.py
@@ -57,6 +58,7 @@ omit =
     homeassistant/components/avion/light.py
     homeassistant/components/azure_event_hub/*
     homeassistant/components/baidu/tts.py
+    homeassistant/components/beewi_smartclim/sensor.py
     homeassistant/components/bbb_gpio/*
     homeassistant/components/bbox/device_tracker.py
     homeassistant/components/bbox/sensor.py
@@ -338,6 +340,7 @@ omit =
     homeassistant/components/limitlessled/light.py
     homeassistant/components/linksys_ap/device_tracker.py
     homeassistant/components/linksys_smart/device_tracker.py
+    homeassistant/components/linky/__init__.py
     homeassistant/components/linky/sensor.py
     homeassistant/components/linode/*
     homeassistant/components/linux_battery/sensor.py
@@ -467,8 +470,7 @@ omit =
     homeassistant/components/pioneer/media_player.py
     homeassistant/components/pjlink/media_player.py
     homeassistant/components/plaato/*
-    homeassistant/components/plex/media_player.py
-    homeassistant/components/plex/sensor.py
+    homeassistant/components/plex/*
     homeassistant/components/plugwise/*
     homeassistant/components/plum_lightpad/*
     homeassistant/components/pocketcasts/sensor.py
@@ -563,6 +565,7 @@ omit =
     homeassistant/components/skybeacon/sensor.py
     homeassistant/components/skybell/*
     homeassistant/components/slack/notify.py
+    homeassistant/components/slide/*
     homeassistant/components/sma/sensor.py
     homeassistant/components/smappee/*
     homeassistant/components/smarty/*

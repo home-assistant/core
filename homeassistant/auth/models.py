@@ -1,6 +1,6 @@
 """Auth models."""
 from datetime import datetime, timedelta
-from typing import Dict, List, NamedTuple, Optional  # noqa: F401
+from typing import Dict, List, NamedTuple, Optional
 import uuid
 
 import attr
@@ -31,9 +31,7 @@ class User:
     """A user."""
 
     name = attr.ib(type=str)  # type: Optional[str]
-    perm_lookup = attr.ib(
-        type=perm_mdl.PermissionLookup, cmp=False
-    )  # type: perm_mdl.PermissionLookup
+    perm_lookup = attr.ib(type=perm_mdl.PermissionLookup, cmp=False)
     id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
     is_owner = attr.ib(type=bool, default=False)
     is_active = attr.ib(type=bool, default=False)

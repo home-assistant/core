@@ -2,7 +2,7 @@
 import asyncio
 import logging
 from datetime import timedelta, datetime
-from typing import Any, Dict, List, Set, Optional  # noqa  pylint_disable=unused-import
+from typing import Any, Dict, List, Set, Optional
 
 from homeassistant.core import (
     HomeAssistant,
@@ -17,7 +17,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.helpers.storage import Store  # noqa  pylint_disable=unused-import
+from homeassistant.helpers.storage import Store
 
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
@@ -108,12 +108,12 @@ class RestoreStateData:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the restore state data class."""
-        self.hass = hass  # type: HomeAssistant
-        self.store = Store(
+        self.hass: HomeAssistant = hass
+        self.store: Store = Store(
             hass, STORAGE_VERSION, STORAGE_KEY, encoder=JSONEncoder
-        )  # type: Store
-        self.last_states = {}  # type: Dict[str, StoredState]
-        self.entity_ids = set()  # type: Set[str]
+        )
+        self.last_states: Dict[str, StoredState] = {}
+        self.entity_ids: Set[str] = set()
 
     def async_get_stored_states(self) -> List[StoredState]:
         """Get the set of states which should be stored.
