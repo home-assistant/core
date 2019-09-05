@@ -1,5 +1,5 @@
 """Helpers for listening to events."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 import functools as ft
 from typing import Callable
 
@@ -21,8 +21,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 
 
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
-# mypy: no-check-untyped-defs, no-warn-return-any
+# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 # PyLint does not like the use of threaded_listener_factory
 # pylint: disable=invalid-name
 
@@ -187,7 +186,9 @@ track_same_state = threaded_listener_factory(async_track_same_state)
 
 @callback
 @bind_hass
-def async_track_point_in_time(hass, action, point_in_time) -> CALLBACK_TYPE:
+def async_track_point_in_time(
+    hass: HomeAssistant, action: Callable[..., None], point_in_time: datetime
+) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in time."""
     utc_point_in_time = dt_util.as_utc(point_in_time)
 
@@ -204,7 +205,9 @@ track_point_in_time = threaded_listener_factory(async_track_point_in_time)
 
 @callback
 @bind_hass
-def async_track_point_in_utc_time(hass, action, point_in_time) -> CALLBACK_TYPE:
+def async_track_point_in_utc_time(
+    hass: HomeAssistant, action: Callable[..., None], point_in_time: datetime
+) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in UTC time."""
     # Ensure point_in_time is UTC
     point_in_time = dt_util.as_utc(point_in_time)
@@ -284,8 +287,8 @@ class SunListener:
     action = attr.ib(type=Callable)
     event = attr.ib(type=str)
     offset = attr.ib(type=timedelta)
-    _unsub_sun = attr.ib(default=None)
-    _unsub_config = attr.ib(default=None)
+    _unsub_sun: CALLBACK_TYPE = attr.ib(default=None)
+    _unsub_config: CALLBACK_TYPE = attr.ib(default=None)
 
     @callback
     def async_attach(self):
