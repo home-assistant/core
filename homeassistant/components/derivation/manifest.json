@@ -1,0 +1,10 @@
+{
+  "domain": "derivation",
+  "name": "Derivation",
+  "documentation": "https://www.home-assistant.io/components/derivation",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@afaucogney"
+  ]
+}
