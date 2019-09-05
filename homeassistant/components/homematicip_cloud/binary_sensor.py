@@ -130,8 +130,6 @@ class HomematicipContactInterface(HomematicipGenericDevice, BinarySensorDevice):
     @property
     def is_on(self) -> bool:
         """Return true if the contact interface is on/open."""
-        if hasattr(self._device, "sabotage") and self._device.sabotage:
-            return True
         if self._device.windowState is None:
             return None
         return self._device.windowState != WindowState.CLOSED
@@ -148,8 +146,6 @@ class HomematicipShutterContact(HomematicipGenericDevice, BinarySensorDevice):
     @property
     def is_on(self) -> bool:
         """Return true if the shutter contact is on/open."""
-        if hasattr(self._device, "sabotage") and self._device.sabotage:
-            return True
         if self._device.windowState is None:
             return None
         return self._device.windowState != WindowState.CLOSED
@@ -166,8 +162,6 @@ class HomematicipMotionDetector(HomematicipGenericDevice, BinarySensorDevice):
     @property
     def is_on(self) -> bool:
         """Return true if motion is detected."""
-        if hasattr(self._device, "sabotage") and self._device.sabotage:
-            return True
         return self._device.motionDetected
 
 
@@ -182,8 +176,6 @@ class HomematicipPresenceDetector(HomematicipGenericDevice, BinarySensorDevice):
     @property
     def is_on(self) -> bool:
         """Return true if presence is detected."""
-        if hasattr(self._device, "sabotage") and self._device.sabotage:
-            return True
         return self._device.presenceDetected
 
 
