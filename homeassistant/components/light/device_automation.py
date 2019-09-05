@@ -61,7 +61,7 @@ CONDITION_SCHEMA = vol.All(
             vol.Optional(CONF_DEVICE_ID): str,
             vol.Required(CONF_DOMAIN): DOMAIN,
             vol.Required(CONF_ENTITY_ID): cv.entity_id,
-            vol.Required(CONF_TYPE): vol.In([CONF_TURN_OFF, CONF_TURN_ON]),
+            vol.Required(CONF_TYPE): vol.In([CONF_IS_OFF, CONF_IS_ON]),
         }
     )
 )
@@ -87,7 +87,7 @@ def async_condition_from_config(config, config_validation):
     """Evaluate state based on configuration."""
     config = CONDITION_SCHEMA(config)
     condition_type = config[CONF_TYPE]
-    if condition_type == CONF_TURN_ON:
+    if condition_type == CONF_IS_ON:
         stat = "on"
     else:
         stat = "off"

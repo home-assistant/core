@@ -215,13 +215,13 @@ async def test_if_state(hass, calls):
                             "condition": "device",
                             "domain": "light",
                             "entity_id": dev1.entity_id,
-                            "type": "turn_on",
+                            "type": "is_on",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_on {{ trigger.%s }}"
+                            "some": "is_on {{ trigger.%s }}"
                             % "}} - {{ trigger.".join(("platform", "event.event_type"))
                         },
                     },
@@ -233,13 +233,13 @@ async def test_if_state(hass, calls):
                             "condition": "device",
                             "domain": "light",
                             "entity_id": dev1.entity_id,
-                            "type": "turn_off",
+                            "type": "is_off",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_off {{ trigger.%s }}"
+                            "some": "is_off {{ trigger.%s }}"
                             % "}} - {{ trigger.".join(("platform", "event.event_type"))
                         },
                     },
@@ -255,11 +255,11 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0].data["some"] == "turn_on event - test_event1"
+    assert calls[0].data["some"] == "is_on event - test_event1"
 
     hass.states.async_set(dev1.entity_id, STATE_OFF)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[1].data["some"] == "turn_off event - test_event2"
+    assert calls[1].data["some"] == "is_off event - test_event2"
