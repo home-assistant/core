@@ -74,7 +74,7 @@ async def test_websocket_get_actions(hass, hass_ws_client, device_reg, entity_re
     assert msg["id"] == 1
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
-    actions = msg["result"]["actions"]
+    actions = msg["result"]
     assert _same_lists(actions, expected_actions)
 
 

@@ -107,7 +107,7 @@ async def websocket_device_automation_list_actions(hass, connection, msg):
     """Handle request for device actions."""
     device_id = msg["device_id"]
     actions = await _async_get_device_automations(hass, "async_get_actions", device_id)
-    connection.send_result(msg["id"], {"actions": actions})
+    connection.send_result(msg["id"], actions)
 
 
 @websocket_api.async_response
