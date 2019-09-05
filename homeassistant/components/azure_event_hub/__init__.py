@@ -32,21 +32,27 @@ CONF_FILTER = "filter"
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Any(
-            vol.Schema({
-                vol.Required(CONF_IOT_HUB_CON_STRING): cv.string,
-                vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
-            }),
-            vol.Schema({
-                vol.Required(CONF_EVENT_HUB_CON_STRING): cv.string,
-                vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
-            }),
-            vol.Schema({
-                vol.Required(CONF_EVENT_HUB_NAMESPACE): cv.string, 
-                vol.Required(CONF_EVENT_HUB_INSTANCE_NAME): cv.string,
-                vol.Required(CONF_EVENT_HUB_SAS_POLICY): cv.string,
-                vol.Required(CONF_EVENT_HUB_SAS_KEY): cv.string,
-                vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
-            }),
+            vol.Schema(
+                {
+                    vol.Required(CONF_IOT_HUB_CON_STRING): cv.string,
+                    vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
+                }
+            ),
+            vol.Schema(
+                {
+                    vol.Required(CONF_EVENT_HUB_CON_STRING): cv.string,
+                    vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
+                }
+            ),
+            vol.Schema(
+                {
+                    vol.Required(CONF_EVENT_HUB_NAMESPACE): cv.string,
+                    vol.Required(CONF_EVENT_HUB_INSTANCE_NAME): cv.string,
+                    vol.Required(CONF_EVENT_HUB_SAS_POLICY): cv.string,
+                    vol.Required(CONF_EVENT_HUB_SAS_KEY): cv.string,
+                    vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
+                }
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -59,9 +65,13 @@ async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
 
     entities_filter = config[CONF_FILTER]
     if config[CONF_IOT_HUB_CON_STRING]:
-        client = EventHubClientAsync.from_iot_connection_string(config[CONF_IOT_HUB_CON_STRING])
+        client = EventHubClientAsync.from_iot_connection_string(
+            config[CONF_IOT_HUB_CON_STRING]
+        )
     elif config[CONF_EVENT_HUB_CON_STRING]:
-        client = EventHubClientAsync.from_connection_string(config[CONF_EVENT_HUB_CON_STRING])
+        client = EventHubClientAsync.from_connection_string(
+            config[CONF_EVENT_HUB_CON_STRING]
+        )
     else:
         event_hub_address = "amqps://{}.servicebus.windows.net/{}".format(
             config[CONF_EVENT_HUB_NAMESPACE], config[CONF_EVENT_HUB_INSTANCE_NAME]
@@ -75,7 +85,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     async_sender = client.add_async_sender()
     await client.run_async()
 
-    encoder = JSONEncoder()
+    # encoder = JSONEncoder()
 
     async def async_send_to_event_hub(event: Event):
         """Send states to Event Hub."""
@@ -88,9 +98,14 @@ async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
             return
 
         event_data = EventData(
-            json.dumps(obj=state.as_dict(), default=encoder.encode).encode("utf-8")
+            json.dumps(obj=state, cls=JSONEncoder).encode("utf-8")
+            # json.dumps(obj=state.as_dict(), default=encoder.default).encode("utf-8")
         )
-        await async_sender.send(event_data)
+        try:
+            await async_sender.send(event_data)
+        except AttributeError:
+            await async_sender.reconnect_async()
+            await async_sender.send(event_data)
 
     async def async_shutdown(event: Event):
         """Shut down the client."""
