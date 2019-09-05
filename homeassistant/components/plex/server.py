@@ -19,9 +19,8 @@ class PlexServer:
         self._url = server_config.get(CONF_URL)
         self._token = server_config.get(CONF_TOKEN)
         self._verify_ssl = server_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
-        self._connect()
 
-    def _connect(self):
+    def connect(self):
         """Connect to a Plex server directly, obtaining direct URL if necessary."""
 
         def _connect_with_url():
