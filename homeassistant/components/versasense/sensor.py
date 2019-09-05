@@ -54,7 +54,7 @@ class VSensor(Entity):
 
     @property
     def available(self):
-        """Return if the actuator is available"""
+        """Return if the sensor is available"""
         return self._available
 
     async def async_update(self):
@@ -66,6 +66,7 @@ class VSensor(Entity):
         if samples is not None:
             for sample in samples:
                 if sample.measurement == self._measurement:
+                    self._available = True
                     self._state = sample.value
         else:
             _LOGGER.error("Sample unavailable")

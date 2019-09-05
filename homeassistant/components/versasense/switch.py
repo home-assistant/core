@@ -81,6 +81,7 @@ class VActuator(SwitchDevice):
         if samples is not None:
             for sample in samples:
                 if sample.measurement == self._measurement:
+                    self._available = True
                     if sample.value == PERIPHERAL_STATE_OFF:
                         self._is_on = False
                     elif sample.value == PERIPHERAL_STATE_ON:
