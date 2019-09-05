@@ -33,8 +33,7 @@ class PlexServer:
             )
             _LOGGER.debug("Connected to: %s (%s)", self.friendly_name, self.url_in_use)
 
-        if self._url:
-            _connect_with_url()
+        _connect_with_url()
 
     def clients(self):
         """Pass through clients call to plexapi."""
