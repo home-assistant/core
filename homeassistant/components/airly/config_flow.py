@@ -46,27 +46,27 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         websession = async_get_clientsession(self.hass)
 
         if user_input is not None:
+            if user_input[CONF_NAME] in configured_instances(self.hass):
+                self._errors[CONF_NAME] = "name_exists"
+            if not user_input[CONF_LANGUAGE] in LANGUAGE_CODES:
+                self._errors["base"] = "wrong_lang"
             api_key_valid = await self._test_api_key(websession, user_input["api_key"])
-            if api_key_valid:
+            if not api_key_valid:
+                self._errors["base"] = "auth"
+            else:
                 location_valid = await self._test_location(
                     websession,
                     user_input["api_key"],
                     user_input["latitude"],
                     user_input["longitude"],
                 )
-                if location_valid:
-                    if user_input[CONF_LANGUAGE] in LANGUAGE_CODES:
-                        if user_input[CONF_NAME] not in configured_instances(self.hass):
-                            return self.async_create_entry(
-                                title=user_input[CONF_NAME], data=user_input
-                            )
-                        self._errors[CONF_NAME] = "name_exists"
-                    else:
-                        self._errors["base"] = "wrong_lang"
-                else:
+                if not location_valid:
                     self._errors["base"] = "wrong_location"
-            else:
-                self._errors["base"] = "auth"
+
+            if not self._errors:
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME], data=user_input
+                )
 
         return self._show_config_form(
             name=DEFAULT_NAME,
