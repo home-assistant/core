@@ -44,3 +44,18 @@ class PlexServer:
     def sessions(self):
         """Pass through sessions call to plexapi."""
         return self._plex_server.sessions()
+
+    @property
+    def friendly_name(self):
+        """Return name of connected Plex server."""
+        return self._plex_server.friendlyName
+
+    @property
+    def machine_identifier(self):
+        """Return unique identifier of connected Plex server."""
+        return self._plex_server.machineIdentifier
+
+    @property
+    def url_in_use(self):
+        """Return URL used for connected Plex server."""
+        return self._plex_server._baseurl  # pylint: disable=W0212
