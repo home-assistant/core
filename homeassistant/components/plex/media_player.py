@@ -42,6 +42,7 @@ from .const import (
     CONF_SHOW_ALL_CONTROLS,
     CONF_REMOVE_UNAVAILABLE_CLIENTS,
     CONF_CLIENT_REMOVE_INTERVAL,
+    DEFAULT_HOST,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
@@ -51,7 +52,6 @@ from .const import (
 )
 from .server import PlexServer
 
-DEFAULT_HOST = "localhost"
 SERVER_SETUP = "server_setup"
 
 _CONFIGURING = {}
