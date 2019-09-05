@@ -39,6 +39,7 @@ from .const import (
     CONF_SHOW_ALL_CONTROLS,
     CONF_REMOVE_UNAVAILABLE_CLIENTS,
     CONF_CLIENT_REMOVE_INTERVAL,
+    DOMAIN as PLEX_DOMAIN,
     NAME_FORMAT,
     PLEX_CONFIG_FILE,
 )
@@ -61,11 +62,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up the Plex platform."""
+    if PLEX_DOMAIN not in hass.data:
+        hass.data[PLEX_DOMAIN] = False
+
+    # Check if already configured
+    if hass.data[PLEX_DOMAIN]:
+        return
 
     # get config from plex.conf
     file_config = load_json(hass.config.path(PLEX_CONFIG_FILE))
 
-    if file_config:
+    if file_config and config:
         # Setup a configured PlexServer
         host, host_config = file_config.popitem()
         token = host_config["token"]
@@ -124,6 +131,8 @@ def setup_plexserver(
         # No token or wrong token
         request_configuration(host, hass, config, add_entities_callback)
         return
+    else:
+        hass.data[PLEX_DOMAIN] = True
 
     # If we came here and configuring this host, mark as done
     if host in _CONFIGURING:
