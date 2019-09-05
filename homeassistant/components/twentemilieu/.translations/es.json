@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "No se conect\u00f3."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "house_letter": "Letra de la casa/adicional",
+                    "house_number": "N\u00famero de casa",
+                    "post_code": "C\u00f3digo postal"
+                }
+            }
+        }
+    }
+}
