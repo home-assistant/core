@@ -226,9 +226,9 @@ class AirlySensor(Entity):
 class AirlyData:
     """Define an object to hold sensor data."""
 
-    def __init__(self, client, api_key, latitude, longitude, language, **kwargs):
+    def __init__(self, session, api_key, latitude, longitude, language, **kwargs):
         """Initialize."""
-        self.client = client
+        self.session = session
         self.latitude = latitude
         self.longitude = longitude
         self.language = language
