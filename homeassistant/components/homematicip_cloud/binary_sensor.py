@@ -59,7 +59,6 @@ GROUP_ATTRIBUTES = {
     "motionDetected": ATTR_MOTIONDETECTED,
     "powerMainsFailure": ATTR_POWERMAINSFAILURE,
     "presenceDetected": ATTR_PRESENCEDETECTED,
-    "todaySunshineDuration": ATTR_TODAY_SUNSHINE_DURATION,
     "unreach": ATTR_GROUP_MEMBER_UNREACHABLE,
     "waterlevelDetected": ATTR_WATERLEVELDETECTED,
 }
