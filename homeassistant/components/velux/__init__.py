@@ -1,7 +1,8 @@
 """Support for VELUX KLF 200 devices."""
 import logging
-
 import voluptuous as vol
+from pyvlx import PyVLX
+from pyvlx import PyVLXException
 
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
@@ -23,9 +24,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass, config):
-    """Set up the velux component."""
-    from pyvlx import PyVLXException
-
+    """Set up the velux component."""    
     try:
         hass.data[DATA_VELUX] = VeluxModule(hass, config)
         hass.data[DATA_VELUX].setup()
@@ -47,29 +46,26 @@ class VeluxModule:
 
     def __init__(self, hass, config):
         """Initialize for velux component."""
-        self._hass = hass
-        self._config = config
+        self.pyvlx = None
+        self._hass = hass        
+        self._domain_config = config[DOMAIN]
         
 
     def setup(self):
         async def on_hass_stop(event):
             """Close connection when hass stops."""
-            _LOGGER.info("Velux interface terminated")
+            _LOGGER.debug("Velux interface terminated")
             await self.pyvlx.disconnect()
             
-        self._hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)     
-        from pyvlx import PyVLX
-        host = self._config[DOMAIN].get(CONF_HOST)
-        password = self._config[DOMAIN].get(CONF_PASSWORD)
+        self._hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)             
+        host = self._domain_config.get(CONF_HOST)
+        password = self._domain_config.get(CONF_PASSWORD)
         self.pyvlx = PyVLX(host=host, password=password)
 
 
     async def async_start(self):
         """Start velux component."""
-        _LOGGER.info("Velux interface started")        
+        _LOGGER.debug("Velux interface started")        
         await self.pyvlx.load_scenes()
         await self.pyvlx.load_nodes()
-                        
-        for node in self.pyvlx.nodes:
-          _LOGGER.info("Stopping node: " + str(node))
-          await node.stop(wait_for_completion=False)
+        
