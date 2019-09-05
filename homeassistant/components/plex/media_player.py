@@ -72,7 +72,7 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     # get config from plex.conf
     file_config = load_json(hass.config.path(PLEX_CONFIG_FILE))
 
-    if file_config and config:
+    if file_config:
         # Setup a configured PlexServer
         host, host_config = file_config.popitem()
         token = host_config["token"]
