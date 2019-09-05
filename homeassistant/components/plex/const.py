@@ -2,6 +2,7 @@
 DOMAIN = "plex"
 NAME_FORMAT = "Plex {}"
 
+DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 32400
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True

@@ -20,6 +20,9 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    CONF_SSL,
     CONF_URL,
     CONF_TOKEN,
     CONF_VERIFY_SSL,
@@ -39,6 +42,10 @@ from .const import (
     CONF_SHOW_ALL_CONTROLS,
     CONF_REMOVE_UNAVAILABLE_CLIENTS,
     CONF_CLIENT_REMOVE_INTERVAL,
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+    DEFAULT_SSL,
+    DEFAULT_VERIFY_SSL,
     DOMAIN as PLEX_DOMAIN,
     NAME_FORMAT,
     PLEX_CONFIG_FILE,
@@ -52,6 +59,11 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_TOKEN): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         vol.Optional(CONF_USE_EPISODE_ART, default=False): cv.boolean,
         vol.Optional(CONF_SHOW_ALL_CONTROLS, default=False): cv.boolean,
         vol.Optional(CONF_REMOVE_UNAVAILABLE_CLIENTS, default=True): cv.boolean,
@@ -99,7 +111,12 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
         has_ssl = False
         verify_ssl = True
     else:
-        return
+        host = config[CONF_HOST]
+        port = config[CONF_PORT]
+        host = f"{host}:{port}"
+        token = config.get(CONF_TOKEN)
+        has_ssl = config[CONF_SSL]
+        verify_ssl = config[CONF_VERIFY_SSL]
 
     setup_plexserver(
         host, token, has_ssl, verify_ssl, hass, config, add_entities_callback
