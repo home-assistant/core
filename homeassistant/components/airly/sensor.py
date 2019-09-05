@@ -163,7 +163,7 @@ class AirlySensor(Entity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes."""
         if self.kind == ATTR_CAQI_DESCRIPTION:
             self._attrs.update({ATTR_CAQI_ADVICE: self.data[ATTR_CAQI_ADVICE]})
