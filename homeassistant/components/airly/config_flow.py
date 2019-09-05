@@ -97,18 +97,16 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _test_api_key(self, client, api_key):
         """Return true if api_key is valid."""
 
-        try:
-            with async_timeout.timeout(10):
-                airly = Airly(api_key, client)
-                measurements = airly.create_measurements_session_point(
-                    latitude=52.24131, longitude=20.99101
-                )
-
+        with async_timeout.timeout(10):
+            airly = Airly(api_key, client)
+            measurements = airly.create_measurements_session_point(
+                latitude=52.24131, longitude=20.99101
+            )
+            try:
                 await measurements.update()
+            except AirlyError:
+                return False
             return True
-        except AirlyError:
-            pass
-        return False
 
     async def _test_location(self, client, api_key, latitude, longitude):
         """Return true if location is valid."""
