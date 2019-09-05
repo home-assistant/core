@@ -32,7 +32,7 @@ class PlexServer:
             self._plex_server = plexapi.server.PlexServer(
                 self._url, self._token, session
             )
-            _LOGGER.info("Connected to: %s (%s)", self.friendly_name, self.url_in_use)
+            _LOGGER.debug("Connected to: %s (%s)", self.friendly_name, self.url_in_use)
 
         if self._url:
             _connect_with_url()
