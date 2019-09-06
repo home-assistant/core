@@ -6,14 +6,12 @@ import voluptuous as vol
 from libpyvivotek import VivotekCamera
 
 from homeassistant.const import (
-    CONF_NAME,
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_AUTHENTICATION,
-    HTTP_BASIC_AUTHENTICATION,
-    HTTP_DIGEST_AUTHENTICATION,
-    CONF_VERIFY_SSL,
     CONF_IP_ADDRESS,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.helpers import config_validation as cv
@@ -30,13 +28,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_IP_ADDRESS): cv.string,
         vol.Optional(CONF_STREAM_SOURCE, default=None): vol.Any(None, cv.string),
-        vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.In(
-            [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
-        ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_FRAMERATE, default=2): cv.positive_int,
+        vol.Optional(CONF_SSL, default=False): cv.boolean,
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )
@@ -59,7 +55,6 @@ class VivotekCam(Camera):
 
         self._name = config[CONF_NAME]
         self._frame_interval = 1 / config[CONF_FRAMERATE]
-        self.verify_ssl = config[CONF_VERIFY_SSL]
         self._motion_detection_enabled = False
         self._event_0_key = DEFAULT_EVENT_0_KEY
 
@@ -81,7 +76,7 @@ class VivotekCam(Camera):
 
         self._cam = VivotekCamera(
             host=config[CONF_IP_ADDRESS],
-            port=443,
+            port=(443 if config[CONF_SSL] else 80),
             verify_ssl=config[CONF_VERIFY_SSL],
             usr=username,
             pwd=password,
