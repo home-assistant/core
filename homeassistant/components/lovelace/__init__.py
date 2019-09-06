@@ -114,6 +114,10 @@ class LovelaceStorage:
         if config is None:
             raise ConfigNotFound
 
+        # TODO ais dom part
+        _LOGGER.warning(config["resources"])
+        _LOGGER.warning(str(type(config)))
+
         return config
 
     async def async_save(self, config):

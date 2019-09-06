@@ -800,12 +800,16 @@ class DarkSkyData:
         if self._api_key == "use_ais_dom_api_key":
             try:
                 from homeassistant.components import ais_cloud
+
                 aiscloud = ais_cloud.AisCloudWS()
                 ws_resp = aiscloud.key("darksky_sensor")
                 json_ws_resp = ws_resp.json()
                 self._api_key = json_ws_resp["key"]
             except Exception as error:
-                _LOGGER.error("Unable to get the API Key to OpenWeatherMap from AIS dom. %s", error)
+                _LOGGER.error(
+                    "Unable to get the API Key to OpenWeatherMap from AIS dom. %s",
+                    error,
+                )
 
     def _update(self):
         self.ais_dom_api()
