@@ -20,6 +20,7 @@ ATTR_NO = "nitrogen_monoxide"
 ATTR_NO2 = "nitrogen_dioxide"
 ATTR_OZONE = "ozone"
 ATTR_PM_0_1 = "particulate_matter_0_1"
+ATTR_PM_1_0 = "particulate_matter_1_0"
 ATTR_PM_10 = "particulate_matter_10"
 ATTR_PM_2_5 = "particulate_matter_2_5"
 ATTR_SO2 = "sulphur_dioxide"
@@ -40,6 +41,7 @@ PROP_TO_ATTR = {
     "nitrogen_dioxide": ATTR_NO2,
     "ozone": ATTR_OZONE,
     "particulate_matter_0_1": ATTR_PM_0_1,
+    "particulate_matter_1_0": ATTR_PM_1_0,
     "particulate_matter_10": ATTR_PM_10,
     "particulate_matter_2_5": ATTR_PM_2_5,
     "sulphur_dioxide": ATTR_SO2,
@@ -76,6 +78,11 @@ class AirQualityEntity(Entity):
     @property
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
+        return None
+    
+    @property
+    def particulate_matter_1_0(self):
+        """Return the particulate matter 1.0 level."""
         return None
 
     @property
