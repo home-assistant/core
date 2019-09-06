@@ -25,7 +25,7 @@ def is_virtual_env() -> bool:
 
 def is_docker_env() -> bool:
     """Return True if we run in a docker env."""
-    return Path("/.dockerenv").exists()
+    return Path("/.dockerenv").exists() and os.geteuid() == 0
 
 
 def is_installed(package: str) -> bool:
