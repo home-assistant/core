@@ -93,13 +93,15 @@ class HomematicipLightMeasuring(HomematicipLight):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the generic device."""
-        attr = super().device_state_attributes
-        if self._device.currentPowerConsumption > 0.05:
-            attr[ATTR_POWER_CONSUMPTION] = round(
-                self._device.currentPowerConsumption, 2
-            )
-        attr[ATTR_ENERGY_COUNTER] = round(self._device.energyCounter, 2)
-        return attr
+        state_attr = super().device_state_attributes
+
+        current_power_consumption = self._device.currentPowerConsumption
+        if current_power_consumption > 0.05:
+            state_attr[ATTR_POWER_CONSUMPTION] = round(current_power_consumption, 2)
+
+        state_attr[ATTR_ENERGY_COUNTER] = round(self._device.energyCounter, 2)
+
+        return state_attr
 
 
 class HomematicipDimmer(HomematicipGenericDevice, Light):
@@ -187,15 +189,17 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the generic device."""
-        attr = super().device_state_attributes
+        state_attr = super().device_state_attributes
+
         if self.is_on:
-            attr[ATTR_COLOR_NAME] = self._func_channel.simpleRGBColorState
-        return attr
+            state_attr[ATTR_COLOR_NAME] = self._func_channel.simpleRGBColorState
+
+        return state_attr
 
     @property
     def name(self) -> str:
         """Return the name of the generic device."""
-        return "{} {}".format(super().name, "Notification")
+        return f"{super().name} Notification"
 
     @property
     def supported_features(self) -> int:

@@ -113,10 +113,10 @@ class HomematicipGroupSwitch(HomematicipGenericDevice, SwitchDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the switch-group."""
-        attr = {}
+        state_attr = {}
         if self._device.unreach:
-            attr[ATTR_GROUP_MEMBER_UNREACHABLE] = True
-        return attr
+            state_attr[ATTR_GROUP_MEMBER_UNREACHABLE] = True
+        return state_attr
 
     async def async_turn_on(self, **kwargs):
         """Turn the group on."""

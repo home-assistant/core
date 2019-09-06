@@ -229,13 +229,13 @@ class HomematicipTemperatureSensor(HomematicipGenericDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the windspeed sensor."""
-        attr = super().device_state_attributes
-        if (
-            hasattr(self._device, "temperatureOffset")
-            and self._device.temperatureOffset
-        ):
-            attr[ATTR_TEMPERATURE_OFFSET] = self._device.temperatureOffset
-        return attr
+        state_attr = super().device_state_attributes
+
+        temperature_offset = getattr(self._device, "temperatureOffset", None)
+        if temperature_offset:
+            state_attr[ATTR_TEMPERATURE_OFFSET] = temperature_offset
+
+        return state_attr
 
 
 class HomematicipIlluminanceSensor(HomematicipGenericDevice):
@@ -307,15 +307,17 @@ class HomematicipWindspeedSensor(HomematicipGenericDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the wind speed sensor."""
-        attr = super().device_state_attributes
-        if hasattr(self._device, "windDirection") and self._device.windDirection:
-            attr[ATTR_WIND_DIRECTION] = _get_wind_direction(self._device.windDirection)
-        if (
-            hasattr(self._device, "windDirectionVariation")
-            and self._device.windDirectionVariation
-        ):
-            attr[ATTR_WIND_DIRECTION_VARIATION] = self._device.windDirectionVariation
-        return attr
+        state_attr = super().device_state_attributes
+
+        wind_direction = getattr(self._device, "windDirection", None)
+        if wind_direction:
+            state_attr[ATTR_WIND_DIRECTION] = _get_wind_direction(wind_direction)
+
+        wind_direction_variation = getattr(self._device, "windDirectionVariation", None)
+        if wind_direction_variation:
+            state_attr[ATTR_WIND_DIRECTION_VARIATION] = wind_direction_variation
+
+        return state_attr
 
 
 class HomematicipTodayRainSensor(HomematicipGenericDevice):
