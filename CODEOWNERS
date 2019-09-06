@@ -298,6 +298,7 @@ homeassistant/components/velbus/* @cereal2nd
 homeassistant/components/velux/* @Julius2342
 homeassistant/components/version/* @fabaff
 homeassistant/components/vesync/* @markperdue @webdjoe
+homeassistant/components/vicare/* @oischinger
 homeassistant/components/vizio/* @raman325
 homeassistant/components/vlc_telnet/* @rodripf
 homeassistant/components/waqi/* @andrey-git
