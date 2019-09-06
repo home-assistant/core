@@ -1,20 +1,9 @@
 """Monitor the NZBGet API."""
 import logging
 
-import pynzbgetapi
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_SSL,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    CONF_MONITORED_VARIABLES,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from . import DATA_NZBGET, DATA_UPDATED, SENSOR_TYPES
@@ -25,21 +14,15 @@ DEFAULT_NAME = "NZBGet"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the NZBGet sensors."""
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    ssl = config.get(CONF_SSL)
-    name = config.get(CONF_NAME)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    monitored_types = config.get(CONF_MONITORED_VARIABLES)
+    """Create NZBGet sensors."""
+    _LOGGER.info("Setting up NZBGet sensor platform")
 
-    try:
-        nzbgetapi = NZBGetAPICache(host, port, ssl, username, password)
-        nzbgetapi.update()
-    except pynzbgetapi.NZBGetAPIException as conn_err:
-        _LOGGER.error("Error setting up NZBGet API: %s", conn_err)
-        return False
+    if discovery_info is None:
+        return
+
+    nzbget_api = hass.data[DATA_NZBGET]
+    monitored_variables = discovery_info["sensors"]
+    name = discovery_info["client_name"]
 
     devices = []
     for ng_type in monitored_variables:
@@ -96,11 +79,6 @@ class NZBGetSensor(Entity):
 
     def update(self):
         """Update state of sensor."""
-        try:
-            self.api.update()
-        except pynzbgetapi.NZBGetAPIException:
-            # Error calling the API, already logged in api.update()
-            return
 
         if self.api.status is None:
             _LOGGER.debug(
@@ -121,20 +99,3 @@ class NZBGetSensor(Entity):
             self._state = round(value / 60, 2)
         else:
             self._state = value
-
-
-class NZBGetAPICache:
-    """Rate-limit calls to the NZBGetAPI."""
-
-    def __init__(self, host, port, ssl, username=None, password=None):
-        """Initialize NZBGet API and set headers needed later."""
-
-        self.status = None
-
-        self.ng_api = pynzbgetapi.NZBGetAPI(host, username, password, ssl, ssl, port)
-        self.update()
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Update cached response."""
-        self.status = self.ng_api.status()

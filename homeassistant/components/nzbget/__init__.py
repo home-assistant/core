@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from aiohttp.hdrs import CONTENT_TYPE
+import pynzbgetapi
 import requests
 import voluptuous as vol
 
