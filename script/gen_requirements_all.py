@@ -93,6 +93,7 @@ TEST_REQUIREMENTS = (
     "homematicip",
     "httplib2",
     "huawei-lte-api",
+    "iaqualink",
     "influxdb",
     "jsonpath",
     "libpurecool",
