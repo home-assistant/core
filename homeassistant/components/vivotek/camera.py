@@ -35,9 +35,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-STATE_DETECTING_MOTION = "detecting motion"
-STATE_IDLE = "idle"
-
 
 def setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up a Vivotek IP Camera."""
