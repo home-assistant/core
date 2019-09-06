@@ -1,0 +1,8 @@
+{
+        "domain": "2n_entrycom",
+        "name": "2n_entrycom component for handling doorbell events",
+        "documentation": "https://www.home-assistant.io/components/2n_entrycom",
+        "requirements": [],
+        "dependencies": [],
+        "codeowners": ["@kayr7"]
+}
