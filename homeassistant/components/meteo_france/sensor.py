@@ -88,9 +88,7 @@ class MeteoFranceSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(
-            self._data["name"], SENSOR_TYPES[self._condition][SENSOR_TYPE_NAME]
-        )
+        return f"{self._data['name']} {SENSOR_TYPES[self._condition][SENSOR_TYPE_NAME]}"
 
     @property
     def state(self):
