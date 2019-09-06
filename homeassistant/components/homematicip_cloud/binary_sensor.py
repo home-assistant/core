@@ -43,14 +43,25 @@ from .device import ATTR_GROUP_MEMBER_UNREACHABLE, ATTR_MODEL_TYPE
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_LOW_BATTERY = "low_battery"
-ATTR_MOTIONDETECTED = "motion detected"
-ATTR_PRESENCEDETECTED = "presence detected"
-ATTR_POWERMAINSFAILURE = "power mains failure"
-ATTR_WINDOWSTATE = "window state"
-ATTR_MOISTUREDETECTED = "moisture detected"
-ATTR_WATERLEVELDETECTED = "water level detected"
-ATTR_SMOKEDETECTORALARM = "smoke detector alarm"
+ATTR_MOISTURE_DETECTED = "moisture_detected"
+ATTR_MOTION_DETECTED = "motion_detected"
+ATTR_POWER_MAINS_FAILURE = "power_mains_failure"
+ATTR_PRESENCE_DETECTED = "presence_detected"
+ATTR_SMOKE_DETECTOR_ALARM = "smoke_detector_alarm"
 ATTR_TODAY_SUNSHINE_DURATION = "today_sunshine_duration_in_minutes"
+ATTR_WATER_LEVEL_DETECTED = "water_level_detected"
+ATTR_WINDOW_STATE = "window_state"
+
+GROUP_ATTRIBUTES = {
+    "lowBat": ATTR_LOW_BATTERY,
+    "modelType": ATTR_MODEL_TYPE,
+    "moistureDetected": ATTR_MOISTURE_DETECTED,
+    "motionDetected": ATTR_MOTION_DETECTED,
+    "powerMainsFailure": ATTR_POWER_MAINS_FAILURE,
+    "presenceDetected": ATTR_PRESENCE_DETECTED,
+    "unreach": ATTR_GROUP_MEMBER_UNREACHABLE,
+    "waterlevelDetected": ATTR_WATER_LEVEL_DETECTED,
+}
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -118,8 +129,6 @@ class HomematicipContactInterface(HomematicipGenericDevice, BinarySensorDevice):
     @property
     def is_on(self) -> bool:
         """Return true if the contact interface is on/open."""
-        if hasattr(self._device, "sabotage") and self._device.sabotage:
-            return True
         if self._device.windowState is None:
             return None
         return self._device.windowState != WindowState.CLOSED
@@ -136,8 +145,6 @@ class HomematicipShutterContact(HomematicipGenericDevice, BinarySensorDevice):
     @property
     def is_on(self) -> bool:
         """Return true if the shutter contact is on/open."""
-        if hasattr(self._device, "sabotage") and self._device.sabotage:
-            return True
         if self._device.windowState is None:
             return None
         return self._device.windowState != WindowState.CLOSED
@@ -154,8 +161,6 @@ class HomematicipMotionDetector(HomematicipGenericDevice, BinarySensorDevice):
     @property
     def is_on(self) -> bool:
         """Return true if motion is detected."""
-        if hasattr(self._device, "sabotage") and self._device.sabotage:
-            return True
         return self._device.motionDetected
 
 
@@ -170,8 +175,6 @@ class HomematicipPresenceDetector(HomematicipGenericDevice, BinarySensorDevice):
     @property
     def is_on(self) -> bool:
         """Return true if presence is detected."""
-        if hasattr(self._device, "sabotage") and self._device.sabotage:
-            return True
         return self._device.presenceDetected
 
 
@@ -259,13 +262,13 @@ class HomematicipSunshineSensor(HomematicipGenericDevice, BinarySensorDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the illuminance sensor."""
-        attr = super().device_state_attributes
-        if (
-            hasattr(self._device, "todaySunshineDuration")
-            and self._device.todaySunshineDuration
-        ):
-            attr[ATTR_TODAY_SUNSHINE_DURATION] = self._device.todaySunshineDuration
-        return attr
+        state_attr = super().device_state_attributes
+
+        today_sunshine_duration = getattr(self._device, "todaySunshineDuration", None)
+        if today_sunshine_duration:
+            state_attr[ATTR_TODAY_SUNSHINE_DURATION] = today_sunshine_duration
+
+        return state_attr
 
 
 class HomematicipBatterySensor(HomematicipGenericDevice, BinarySensorDevice):
@@ -309,21 +312,18 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice, BinarySensorD
     @property
     def device_state_attributes(self):
         """Return the state attributes of the security zone group."""
-        attr = {ATTR_MODEL_TYPE: self._device.modelType}
+        state_attr = {ATTR_MODEL_TYPE: self._device.modelType}
 
-        if self._device.motionDetected:
-            attr[ATTR_MOTIONDETECTED] = True
-        if self._device.presenceDetected:
-            attr[ATTR_PRESENCEDETECTED] = True
+        for attr, attr_key in GROUP_ATTRIBUTES.items():
+            attr_value = getattr(self._device, attr, None)
+            if attr_value:
+                state_attr[attr_key] = attr_value
 
-        if (
-            self._device.windowState is not None
-            and self._device.windowState != WindowState.CLOSED
-        ):
-            attr[ATTR_WINDOWSTATE] = str(self._device.windowState)
-        if self._device.unreach:
-            attr[ATTR_GROUP_MEMBER_UNREACHABLE] = True
-        return attr
+        window_state = getattr(self._device, "windowState", None)
+        if window_state and window_state != WindowState.CLOSED:
+            state_attr[ATTR_WINDOW_STATE] = str(window_state)
+
+        return state_attr
 
     @property
     def is_on(self) -> bool:
@@ -356,23 +356,13 @@ class HomematicipSecuritySensorGroup(
     @property
     def device_state_attributes(self):
         """Return the state attributes of the security group."""
-        attr = super().device_state_attributes
+        state_attr = super().device_state_attributes
 
-        if self._device.powerMainsFailure:
-            attr[ATTR_POWERMAINSFAILURE] = True
-        if self._device.moistureDetected:
-            attr[ATTR_MOISTUREDETECTED] = True
-        if self._device.waterlevelDetected:
-            attr[ATTR_WATERLEVELDETECTED] = True
-        if self._device.lowBat:
-            attr[ATTR_LOW_BATTERY] = True
-        if (
-            self._device.smokeDetectorAlarmType is not None
-            and self._device.smokeDetectorAlarmType != SmokeDetectorAlarmType.IDLE_OFF
-        ):
-            attr[ATTR_SMOKEDETECTORALARM] = str(self._device.smokeDetectorAlarmType)
+        smoke_detector_at = getattr(self._device, "smokeDetectorAlarmType", None)
+        if smoke_detector_at and smoke_detector_at != SmokeDetectorAlarmType.IDLE_OFF:
+            state_attr[ATTR_SMOKE_DETECTOR_ALARM] = str(smoke_detector_at)
 
-        return attr
+        return state_attr
 
     @property
     def is_on(self) -> bool:
