@@ -86,8 +86,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         ["Voltage Phase L3", obis_ref.INSTANTANEOUS_VOLTAGE_L3],
     ]
 
-    # Generate device entities
-    devices = [DSMREntity(name, obis, config) for name, obis in obis_mapping]
+    # Generate device entities. Use the main EQUIPMENT_IDENTIFIER for these
+    devices = [
+        DSMREntity(name, obis, config, obis_ref.EQUIPMENT_IDENTIFIER)
+        for name, obis in obis_mapping
+    ]
 
     # Protocol version specific obis
     if dsmr_version in ("4", "5"):
@@ -95,10 +98,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     else:
         gas_obis = obis_ref.GAS_METER_READING
 
-    # Add gas meter reading and derivative for usage
+    # Add gas meter reading and derivative for usage. Use the EQUIPMENT_IDENTIFIER_GAS for these
     devices += [
-        DSMREntity("Gas Consumption", gas_obis, config),
-        DerivativeDSMREntity("Hourly Gas Consumption", gas_obis, config),
+        DSMREntity(
+            "Gas Consumption", gas_obis, config, obis_ref.EQUIPMENT_IDENTIFIER_GAS
+        ),
+        DerivativeDSMREntity(
+            "Hourly Gas Consumption",
+            gas_obis,
+            config,
+            obis_ref.EQUIPMENT_IDENTIFIER_GAS,
+        ),
     ]
 
     async_add_entities(devices)
@@ -175,11 +185,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class DSMREntity(Entity):
     """Entity reading values from DSMR telegram."""
 
-    def __init__(self, name, obis, config):
+    def __init__(self, name, obis, config, identifier):
         """Initialize entity."""
         self._name = name
         self._obis = obis
         self._config = config
+        self._identifier = identifier
         self.telegram = {}
 
     def get_dsmr_object_attr(self, attribute):
@@ -196,6 +207,15 @@ class DSMREntity(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of the smart meter."""
+        # Make sure telegram contains the identifier
+        if self._identifier not in self.telegram:
+            return None
+
+        return getattr(self.telegram[self._identifier], "value", None)
 
     @property
     def icon(self):
@@ -233,6 +253,20 @@ class DSMREntity(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self.get_dsmr_object_attr("unit")
+
+    @property
+    def device_state_attributes(self):
+        """Return the devices' state attributes."""
+        # Make sure telegram contains the identifier
+        if self._identifier not in self.telegram:
+            return None
+
+        attrs = {
+            "equipment_identifier": getattr(
+                self.telegram[self._identifier], "value", None
+            )
+        }
+        return attrs
 
     @staticmethod
     def translate_tariff(value):
