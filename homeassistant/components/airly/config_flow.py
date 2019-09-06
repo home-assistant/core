@@ -4,7 +4,6 @@ import voluptuous as vol
 from airly import Airly
 from airly.exceptions import AirlyError
 
-
 import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
