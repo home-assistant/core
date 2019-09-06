@@ -307,54 +307,12 @@ class LightTemplate(Light):
             self.async_schedule_update_ha_state()
 
     async def async_update(self):
-        """Update the state from the template."""
-        if self._template is not None:
-            try:
-                state = self._template.async_render().lower()
-            except TemplateError as ex:
-                _LOGGER.error(ex)
-                self._state = None
+        """Update from templates."""
+        await self.update_state()
 
-            if state in _VALID_STATES:
-                self._state = state in ("true", STATE_ON)
-            else:
-                _LOGGER.error(
-                    "Received invalid light is_on state: %s. Expected: %s",
-                    state,
-                    ", ".join(_VALID_STATES),
-                )
-                self._state = None
+        await self.update_brightness()
 
-        if self._level_template is not None:
-            try:
-                brightness = self._level_template.async_render()
-            except TemplateError as ex:
-                _LOGGER.error(ex)
-                self._state = None
-
-            if 0 <= int(brightness) <= 255:
-                self._brightness = int(brightness)
-            else:
-                _LOGGER.error(
-                    "Received invalid brightness : %s. Expected: 0-255", brightness
-                )
-                self._brightness = None
-
-        if self._temperature_template is not None:
-            try:
-                temperature = int(self._temperature_template.async_render())
-            except TemplateError as ex:
-                _LOGGER.error(ex)
-                self._temperature = None
-
-            if 0 <= temperature <= self.max_mireds:
-                self._temperature = temperature
-            else:
-                _LOGGER.error(
-                    f"Received invalid color temperature : {temperature}. "
-                    f"Expected: 0-{self.max_mireds}"
-                )
-                self._temperature = None
+        await self.update_temperature()
 
         for property_name, template in (
             ("_icon", self._icon_template),
@@ -376,9 +334,7 @@ class LightTemplate(Light):
                 ):
                     # Common during HA startup - so just a warning
                     _LOGGER.warning(
-                        "Could not render %s template %s," " the state is unknown.",
-                        friendly_property_name,
-                        self._name,
+                        f"Could not render {friendly_property_name} template {self._name}, the state is unknown."
                     )
                     return
 
@@ -386,8 +342,59 @@ class LightTemplate(Light):
                     setattr(self, property_name, getattr(super(), property_name))
                 except AttributeError:
                     _LOGGER.error(
-                        "Could not render %s template %s: %s",
-                        friendly_property_name,
-                        self._name,
-                        ex,
+                        f"Could not render {friendly_property_name} template {self._name}: {ex}"
                     )
+
+    async def update_temperature(self):
+        """Update the temperature from the template."""
+        if self._temperature_template is not None:
+            try:
+                temperature = int(self._temperature_template.async_render())
+            except TemplateError as ex:
+                _LOGGER.error(ex)
+                self._temperature = None
+
+            if 0 <= temperature <= self.max_mireds:
+                self._temperature = temperature
+            else:
+                _LOGGER.error(
+                    f"Received invalid color temperature : {temperature}. "
+                    f"Expected: 0-{self.max_mireds}"
+                )
+                self._temperature = None
+
+    async def update_brightness(self):
+        """Update the brightness from the template."""
+        if self._level_template is not None:
+            try:
+                brightness = self._level_template.async_render()
+            except TemplateError as ex:
+                _LOGGER.error(ex)
+                self._state = None
+
+            if 0 <= int(brightness) <= 255:
+                self._brightness = int(brightness)
+            else:
+                _LOGGER.error(
+                    "Received invalid brightness : %s. Expected: 0-255", brightness
+                )
+                self._brightness = None
+
+    async def update_state(self):
+        """Update the state from the template."""
+        if self._template is not None:
+            try:
+                state = self._template.async_render().lower()
+            except TemplateError as ex:
+                _LOGGER.error(ex)
+                self._state = None
+
+            if state in _VALID_STATES:
+                self._state = state in ("true", STATE_ON)
+            else:
+                _LOGGER.error(
+                    "Received invalid light is_on state: %s. Expected: %s",
+                    state,
+                    ", ".join(_VALID_STATES),
+                )
+                self._state = None
