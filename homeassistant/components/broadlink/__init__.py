@@ -2,6 +2,7 @@
 import asyncio
 from base64 import b64decode, b64encode
 import logging
+import re
 import socket
 
 from datetime import timedelta
@@ -25,6 +26,38 @@ def data_packet(value):
     if extra > 0:
         value = value + ("=" * (4 - extra))
     return b64decode(value)
+
+
+def hostname(value):
+    """Validate a hostname."""
+    host = str(value).lower()
+    if len(host) > 253:
+        raise vol.Invalid("Invalid host name: {}".format(value))
+    if host[-1] == ".":
+        host = host[:-1]
+    allowed = re.compile(r"(?!-)[a-z\d-]{1,63}(?<!-)$")
+    if not all(allowed.match(elem) for elem in host.split(".")):
+        raise vol.Invalid("Invalid host name: {}".format(value))
+    return host
+
+
+def mac_address(value):
+    """Validate and normalize a 48-bit MAC address."""
+    mac = str(value).upper()
+    # A1-0B-C3-D4-0E-F6 / A1:0B:C3:D4:0E:F6 / A1 0B C3 D4 0E F6
+    if re.match(r"[\dA-F]{2}([-:\s])[\dA-F]{2}(\1[\dA-F]{2}){4}$", mac):
+        octets = [octet.zfill(2) for octet in re.split(r":|-|\s", mac)]
+        return "-".join(octets)
+    # A10B-C3D4-0EF6 / A10B.C3D4.0EF6 / A10B C3D4 0EF6
+    if re.match(r"[\dA-F]{4}([-.\s])[\dA-F]{4}\1[\dA-F]{4}$", mac):
+        mac = re.sub(r"[-.\s]", "", mac)
+        octets = ["{}{}".format(mac[i], mac[i + 1]) for i in range(0, 12, 2)]
+        return "-".join(octets)
+    # A10BC3D40EF6
+    if re.match(r"[\dA-F]{12}$", mac):
+        octets = ["{}{}".format(mac[i], mac[i + 1]) for i in range(0, 12, 2)]
+        return "-".join(octets)
+    raise vol.Invalid("Invalid MAC address: {}".format(value))
 
 
 SERVICE_SEND_SCHEMA = vol.Schema(
