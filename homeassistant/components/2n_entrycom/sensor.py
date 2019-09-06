@@ -1,4 +1,4 @@
-"""Component for handling 2n Entrycom doorbell."""
+"""Handle 2n Entrycom doorbell."""
 
 import sys
 import asyncio
@@ -34,7 +34,7 @@ async def async_setup_platform(hass,
                                config,
                                async_add_devices,
                                discovery_info=None):
-    """Setup the sensor platform."""
+    """Setup platform."""
     uname = config.get(CONF_USERNAME)
     passw = config.get(CONF_PASSWORD)
     _LOGGER.info('2n setting up')
@@ -76,16 +76,19 @@ class TwoNSensor(Entity):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
+        """Start loop when added."""
         _LOGGER.info('starting loop for the state of the door')
         self._2n_loop_task = self._hass.loop.create_task(
             self.async_get_2n_state())
 
     @asyncio.coroutine
     def async_stop_2n_sensor(self):
+        """Stop 2n_loop"""
         if self._2n_loop_task:
             self._2n_loop_task.cancel()
 
     async def async_get_2n_state(self):
+        """Get state of doorbell"""
         while True:
             websession = async_get_clientsession(self._hass)
             _LOGGER.info('2n getting id')
@@ -129,9 +132,11 @@ class TwoNSensor(Entity):
 
                         if(resp.status == 200):
                             jData = json.loads(text)
-                            if ('success' in jData and
-                                    jData['success'] and
-                                    'result' in jData and len(jData['result']['events']) > 0):
+                            if (
+                                    'success' in jData
+                                    and jData['success']
+                                    and 'result' in jData
+                                    and len(jData['result']['events']) > 0):
                                 if jData['result']['events'][0]['event'] == 'CardEntered':
                                     if jData['result']['events'][0]['params']['valid']:
                                         self._state = 'ValidCardEntered'
@@ -190,6 +195,7 @@ class TwoNSensor(Entity):
 
     @property
     def state(self):
+        """Return the state."""
         return self._state
 
     @property
@@ -199,9 +205,11 @@ class TwoNSensor(Entity):
 
     @property
     def should_poll(self):
+        """Return if should poll."""
         _LOGGER.info("called 2n should_poll")
         return False
 
     @property
     def entity_id(self):
+        """Return entity_id"""
         return self._entity_id
