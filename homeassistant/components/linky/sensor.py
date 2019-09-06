@@ -30,17 +30,6 @@ INDEX_CURRENT = -1
 INDEX_LAST = -2
 ATTRIBUTION = "Data provided by Enedis"
 
-SENSORS = {
-    "yesterday": ("Linky yesterday", DAILY, INDEX_LAST),
-    "current_month": ("Linky current month", MONTHLY, INDEX_CURRENT),
-    "last_month": ("Linky last month", MONTHLY, INDEX_LAST),
-    "current_year": ("Linky current year", YEARLY, INDEX_CURRENT),
-    "last_year": ("Linky last year", YEARLY, INDEX_LAST),
-}
-SENSORS_INDEX_LABEL = 0
-SENSORS_INDEX_SCALE = 1
-SENSORS_INDEX_WHEN = 2
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up the Linky platform."""
