@@ -170,9 +170,6 @@ class TwoNSensor(Entity):
                     self._state = False
                     self.async_schedule_update_ha_state()
                     _LOGGER.info('unsubscribing from stream to reinitialize')
-                    unsubscribe_url = "{}log/unsubscribe?id={}".format(
-                        self._base_url, self._id)
-
                     try:
                         with async_timeout.timeout(10, loop=self._hass.loop):
                             resp = await websession.get(
