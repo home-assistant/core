@@ -14,13 +14,11 @@ from . import DOMAIN
 from .deconz_event import CONF_DECONZ_EVENT, CONF_UNIQUE_ID
 from .gateway import get_gateway_from_config_entry
 
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 CONF_TURN_ON_SHORT_PRESS = "remote_button_turn_on_short_press"
 CONF_TURN_ON_SHORT_RELEASE = "remote_button_turn_on_short_release"
 CONF_TURN_ON_LONG_PRESS = "remote_button_turn_on_long_press"
 CONF_TURN_ON_LONG_RELEASE = "remote_button_turn_on_long_release"
+CONF_TURN_ON_DOUBLE_PRESS = "remote_button_turn_on_double_press"
 
 CONF_DIM_UP_SHORT_PRESS = "remote_button_dim_up_short_press"
 CONF_DIM_UP_SHORT_RELEASE = "remote_button_dim_up_short_release"
@@ -47,7 +45,7 @@ CONF_RIGHT_SHORT_RELEASE = "remote_button_left_short_release"
 CONF_RIGHT_LONG_PRESS = "remote_button_left_long_press"
 CONF_RIGHT_LONG_RELEASE = "remote_button_left_long_release"
 
-
+HUE_DIMMER_REMOTE_MODEL = "RWL021"
 HUE_DIMMER_REMOTE = {
     CONF_TURN_ON_SHORT_PRESS: 1000,
     CONF_TURN_ON_SHORT_RELEASE: 1002,
@@ -67,6 +65,7 @@ HUE_DIMMER_REMOTE = {
     CONF_TURN_OFF_LONG_RELEASE: 4003,
 }
 
+TRADFRI_REMOTE_MODEL = "TRADFRI remote control"
 TRADFRI_REMOTE = {
     CONF_TURN_ON_SHORT_PRESS: 1002,
     CONF_TURN_ON_LONG_PRESS: 1001,
@@ -84,7 +83,29 @@ TRADFRI_REMOTE = {
     CONF_RIGHT_LONG_RELEASE: 5003,
 }
 
-REMOTES = {"RWL021": HUE_DIMMER_REMOTE, "TRADFRI remote control": TRADFRI_REMOTE}
+XIAOMI_AQARA_ROUND_SWITCH_MODEL = "lumi.sensor_switch"
+XIAOMI_AQARA_ROUND_SWITCH = {
+    CONF_TURN_ON_SHORT_PRESS: 1000,
+    CONF_TURN_ON_SHORT_RELEASE: 1002,
+    CONF_TURN_ON_DOUBLE_PRESS: 1004,
+    CONF_TURN_ON_LONG_PRESS: 1001,
+    CONF_TURN_ON_LONG_RELEASE: 1003,
+}
+
+XIAOMI_AQARA_SQUARE_SWITCH_MODEL = "lumi.sensor_switch.aq3"
+XIAOMI_AQARA_SQUARE_SWITCH = {
+    CONF_TURN_ON_SHORT_RELEASE: 1002,
+    CONF_TURN_ON_DOUBLE_PRESS: 1004,
+    CONF_TURN_ON_LONG_PRESS: 1001,
+    CONF_TURN_ON_LONG_RELEASE: 1003,
+}
+
+REMOTES = {
+    HUE_DIMMER_REMOTE_MODEL: HUE_DIMMER_REMOTE,
+    TRADFRI_REMOTE_MODEL: TRADFRI_REMOTE,
+    XIAOMI_AQARA_ROUND_SWITCH_MODEL: XIAOMI_AQARA_ROUND_SWITCH,
+    XIAOMI_AQARA_SQUARE_SWITCH_MODEL: XIAOMI_AQARA_SQUARE_SWITCH,
+}
 
 TRIGGER_SCHEMA = vol.All(
     vol.Schema(
