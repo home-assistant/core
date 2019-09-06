@@ -1,7 +1,9 @@
 """Support for Vivotek IP Cameras."""
 
 import logging
+
 import voluptuous as vol
+from libpyvivotek import VivotekCamera
 
 from homeassistant.const import (
     CONF_NAME,
@@ -13,19 +15,12 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     CONF_IP_ADDRESS,
 )
-from homeassistant.components.camera import (
-    PLATFORM_SCHEMA,
-    DEFAULT_CONTENT_TYPE,
-    SUPPORT_STREAM,
-    Camera,
-)
+from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.async_ import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CONTENT_TYPE = "content_type"
-CONF_LIMIT_REFETCH_TO_URL_CHANGE = "limit_refetch_to_url_change"
 CONF_STREAM_SOURCE = "stream_source"
 CONF_FRAMERATE = "framerate"
 
@@ -39,11 +34,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
-        vol.Optional(CONF_LIMIT_REFETCH_TO_URL_CHANGE, default=False): cv.boolean,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_CONTENT_TYPE, default=DEFAULT_CONTENT_TYPE): cv.string,
         vol.Optional(CONF_FRAMERATE, default=2): cv.positive_int,
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
@@ -53,59 +46,48 @@ STATE_DETECTING_MOTION = "detecting motion"
 STATE_IDLE = "idle"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up a generic IP Camera."""
-    async_add_entities([VivotekCamera(hass, config)])
+def setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up a Vivotek IP Camera."""
+    async_add_entities([VivotekCam(config)])
 
 
-class VivotekCamera(Camera):
+class VivotekCam(Camera):
     """A Vivotek IP camera."""
 
-    def __init__(self, hass, device_info):
-        """Initialize a generic camera."""
-        from libpyvivotek import VivotekCamera
+    def __init__(self, config):
+        """Initialize a Vivotek camera."""
 
         super().__init__()
 
-        self.hass = hass
-
-        self._name = device_info.get(CONF_NAME)
-        self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
-        self._frame_interval = 1 / device_info[CONF_FRAMERATE]
-        self.content_type = device_info[CONF_CONTENT_TYPE]
-        self.verify_ssl = device_info[CONF_VERIFY_SSL]
-        self._event_i0_status = None
+        self._name = config[CONF_NAME]
+        self._frame_interval = 1 / config[CONF_FRAMERATE]
+        self.verify_ssl = config[CONF_VERIFY_SSL]
+        self._motion_detection_enabled = False
         self._event_0_key = DEFAULT_EVENT_0_KEY
 
-        username = device_info.get(CONF_USERNAME)
-        password = device_info.get(CONF_PASSWORD)
+        username = config[CONF_USERNAME]
+        password = config[CONF_PASSWORD]
 
-        if device_info[CONF_STREAM_SOURCE]:
+        if config[CONF_STREAM_SOURCE]:
             self._stream_source = (
                 "rtsp://%s:%s@%s:554/live.sdp",
                 username,
                 password,
-                device_info[CONF_STREAM_SOURCE],
+                config[CONF_STREAM_SOURCE],
             )
         else:
             self._stream_source = None
 
         self._brand = "Vivotek"
-
         self._supported_features = SUPPORT_STREAM if self._stream_source else 0
 
-        self._last_url = None
-        self._last_image = None
-
         self._cam = VivotekCamera(
-            host=device_info.get(CONF_IP_ADDRESS),
+            host=config[CONF_IP_ADDRESS],
             port=443,
-            verify_ssl=device_info[CONF_VERIFY_SSL],
+            verify_ssl=config[CONF_VERIFY_SSL],
             usr=username,
             pwd=password,
         )
-
-        self._motion_detection_enabled = self.event_enabled(self._event_0_key)
 
     @property
     def supported_features(self):
@@ -117,19 +99,8 @@ class VivotekCamera(Camera):
         """Return the interval between frames of the mjpeg stream."""
         return self._frame_interval
 
-    def event_enabled(self, event_key):
-        """Return true if event for the provided key is enabled."""
-        response = self._cam.get_param(event_key)
-        return int(response.replace("'", "")) == 1
-
     def camera_image(self):
         """Return bytes of camera image."""
-        return run_coroutine_threadsafe(
-            self.async_camera_image(), self.hass.loop
-        ).result()
-
-    async def async_camera_image(self):
-        """Return a still image response from the camera."""
         return self._cam.snapshot()
 
     @property
@@ -146,12 +117,12 @@ class VivotekCamera(Camera):
         """Return the camera motion detection status."""
         return self._motion_detection_enabled
 
-    async def disable_motion_detection(self):
+    def disable_motion_detection(self):
         """Disable motion detection in camera."""
         response = self._cam.set_param(self._event_0_key, 0)
         self._motion_detection_enabled = int(response.replace("'", "")) == 1
 
-    async def enable_motion_detection(self):
+    def enable_motion_detection(self):
         """Enable motion detection in camera."""
         response = self._cam.set_param(self._event_0_key, 1)
         self._motion_detection_enabled = int(response.replace("'", "")) == 1
@@ -165,10 +136,3 @@ class VivotekCamera(Camera):
     def model(self):
         """Return the camera model."""
         return self._cam.model_name
-
-    @property
-    def state(self):
-        """Return the camera state."""
-        if self.motion_detection_enabled:
-            return STATE_DETECTING_MOTION
-        return STATE_IDLE
