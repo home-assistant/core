@@ -27,7 +27,7 @@ DATA_MICROSOFT_FACE = "microsoft_face"
 DEFAULT_TIMEOUT = 10
 DOMAIN = "microsoft_face"
 
-FACE_API_URL = "api.cognitive.microsoft.com/face/v1.0/{0}"
+FACE_API_URL = "cognitiveservices.azure.com/face/v1.0/{0}"
 
 SERVICE_CREATE_GROUP = "create_group"
 SERVICE_CREATE_PERSON = "create_person"
@@ -299,7 +299,8 @@ class MicrosoftFace:
                 response = await getattr(self.websession, method)(
                     url, data=payload, headers=headers, params=params
                 )
-
+                if response.status == 202:
+                    return None
                 answer = await response.json()
 
             _LOGGER.debug("Read from microsoft face api: %s", answer)
