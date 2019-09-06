@@ -1,12 +1,6 @@
 """Support for Vivotek IP Cameras."""
-import asyncio
-import logging
 
-import aiohttp
-import async_timeout
-import requests
-from requests.auth import HTTPBasicAuth
-from requests.auth import HTTPDigestAuth
+import logging
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -25,7 +19,6 @@ from homeassistant.components.camera import (
     SUPPORT_STREAM,
     Camera,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.async_ import run_coroutine_threadsafe
 
@@ -38,11 +31,6 @@ CONF_FRAMERATE = "framerate"
 
 DEFAULT_NAME = "Vivotek Camera"
 DEFAULT_EVENT_0_KEY = "event_i0_enable"
-DEFAULT_PATHS = {
-    "get": "/cgi-bin/admin/getparam.cgi",
-    "set": "/cgi-bin/admin/setparam.cgi",
-    "still": "/cgi-bin/viewer/video.jpg",
-}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -75,9 +63,12 @@ class VivotekCamera(Camera):
 
     def __init__(self, hass, device_info):
         """Initialize a generic camera."""
+        from libpyvivotek import VivotekCamera
+
         super().__init__()
+
         self.hass = hass
-        self._authentication = device_info.get(CONF_AUTHENTICATION)
+
         self._name = device_info.get(CONF_NAME)
         self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
         self._frame_interval = 1 / device_info[CONF_FRAMERATE]
@@ -85,23 +76,9 @@ class VivotekCamera(Camera):
         self.verify_ssl = device_info[CONF_VERIFY_SSL]
         self._event_i0_status = None
         self._event_0_key = DEFAULT_EVENT_0_KEY
-        self._ip = device_info.get(CONF_IP_ADDRESS)
-
-        self._get_param_url = "https://" + self._ip + DEFAULT_PATHS["get"]
-        self._set_param_url = "https://" + self._ip + DEFAULT_PATHS["set"]
-        self._still_image_url = "https://" + self._ip + DEFAULT_PATHS["still"]
 
         username = device_info.get(CONF_USERNAME)
         password = device_info.get(CONF_PASSWORD)
-
-        if username and password:
-            if self._authentication == HTTP_DIGEST_AUTHENTICATION:
-                self._auth = HTTPDigestAuth(username, password)
-            else:
-                self._auth = aiohttp.BasicAuth(username, password=password)
-                self._requests_auth = HTTPBasicAuth(username, password)
-        else:
-            self._auth = None
 
         if device_info[CONF_STREAM_SOURCE]:
             self._stream_source = (
@@ -114,12 +91,19 @@ class VivotekCamera(Camera):
             self._stream_source = None
 
         self._brand = "Vivotek"
-        self._model = self.get_param("system_info_modelname").replace("'", "")
 
         self._supported_features = SUPPORT_STREAM if self._stream_source else 0
 
         self._last_url = None
         self._last_image = None
+
+        self._cam = VivotekCamera(
+            host=device_info.get(CONF_IP_ADDRESS),
+            port=443,
+            verify_ssl=device_info[CONF_VERIFY_SSL],
+            usr=username,
+            pwd=password,
+        )
 
         self._motion_detection_enabled = self.event_enabled(self._event_0_key)
 
@@ -135,38 +119,8 @@ class VivotekCamera(Camera):
 
     def event_enabled(self, event_key):
         """Return true if event for the provided key is enabled."""
-        response = self.get_param(event_key)
+        response = self._cam.get_param(event_key)
         return int(response.replace("'", "")) == 1
-
-    async def async_set_param(self, param, value):
-        """Set the value of the provided key."""
-        try:
-            websession = async_get_clientsession(self.hass, verify_ssl=self.verify_ssl)
-            with async_timeout.timeout(10):
-                response = await websession.post(
-                    self._set_param_url, auth=self._auth, data={param: value}
-                )
-            text = await response.text()
-            _LOGGER.info("Vivotek camera SET response text: %s", text)
-            return text.strip().split("=")[1]
-        except asyncio.TimeoutError:
-            _LOGGER.error("Timeout setting Vivotek camera parameter: %s", self._name)
-        except aiohttp.ClientError as err:
-            _LOGGER.error("Error setting Vivotek camera parameter: %s", err)
-
-    def get_param(self, param):
-        """Return the value of the provided key."""
-        try:
-            response = requests.get(
-                self._get_param_url,
-                auth=self._requests_auth,
-                params=(param),
-                timeout=10,
-                verify=self.verify_ssl,
-            )
-            return response.content.decode("utf-8").strip().split("=")[1]
-        except requests.exceptions.RequestException as error:
-            _LOGGER.error("Error getting Vivotek camera parameter: %s", error)
 
     def camera_image(self):
         """Return bytes of camera image."""
@@ -176,44 +130,7 @@ class VivotekCamera(Camera):
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-        url = self._still_image_url
-
-        if url == self._last_url and self._limit_refetch:
-            return self._last_image
-
-        # aiohttp don't support DigestAuth yet
-        if self._authentication == HTTP_DIGEST_AUTHENTICATION:
-
-            def fetch():
-                """Read image from a URL."""
-                try:
-                    response = requests.get(
-                        url, timeout=10, auth=self._auth, verify=self.verify_ssl
-                    )
-                    return response.content
-                except requests.exceptions.RequestException as error:
-                    _LOGGER.error("Error getting camera image: %s", error)
-                    return self._last_image
-
-            self._last_image = await self.hass.async_add_job(fetch)
-        # async
-        else:
-            try:
-                websession = async_get_clientsession(
-                    self.hass, verify_ssl=self.verify_ssl
-                )
-                with async_timeout.timeout(10):
-                    response = await websession.get(url, auth=self._auth)
-                self._last_image = await response.read()
-            except asyncio.TimeoutError:
-                _LOGGER.error("Timeout getting image from: %s", self._name)
-                return self._last_image
-            except aiohttp.ClientError as err:
-                _LOGGER.error("Error getting new camera image: %s", err)
-                return self._last_image
-
-        self._last_url = url
-        return self._last_image
+        return self._cam.snapshot()
 
     @property
     def name(self):
@@ -231,12 +148,12 @@ class VivotekCamera(Camera):
 
     async def disable_motion_detection(self):
         """Disable motion detection in camera."""
-        response = await self.async_set_param(self._event_0_key, 0)
+        response = self._cam.set_param(self._event_0_key, 0)
         self._motion_detection_enabled = int(response.replace("'", "")) == 1
 
     async def enable_motion_detection(self):
         """Enable motion detection in camera."""
-        response = await self.async_set_param(self._event_0_key, 1)
+        response = self._cam.set_param(self._event_0_key, 1)
         self._motion_detection_enabled = int(response.replace("'", "")) == 1
 
     @property
@@ -247,7 +164,7 @@ class VivotekCamera(Camera):
     @property
     def model(self):
         """Return the camera model."""
-        return self._model
+        return self._cam.model_name
 
     @property
     def state(self):

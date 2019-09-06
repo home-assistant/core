@@ -716,6 +716,9 @@ libpurecool==0.5.0
 # homeassistant.components.foscam
 libpyfoscam==1.0
 
+# homeassistant.components.vivotek
+libpyvivotek==0.1
+
 # homeassistant.components.mikrotik
 librouteros==2.3.0
 
