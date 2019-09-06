@@ -43,14 +43,14 @@ from .device import ATTR_GROUP_MEMBER_UNREACHABLE, ATTR_MODEL_TYPE
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_LOW_BATTERY = "low_battery"
-ATTR_MOISTURE_DETECTED = "moisture detected"
-ATTR_MOTION_DETECTED = "motion detected"
-ATTR_POWER_MAINS_FAILURE = "power mains failure"
-ATTR_PRESENCE_DETECTED = "presence detected"
-ATTR_SMOKE_DETECTOR_ALARM = "smoke detector alarm"
+ATTR_MOISTURE_DETECTED = "moisture_detected"
+ATTR_MOTION_DETECTED = "motion_detected"
+ATTR_POWER_MAINS_FAILURE = "power_mains_failure"
+ATTR_PRESENCE_DETECTED = "presence_detected"
+ATTR_SMOKE_DETECTOR_ALARM = "smoke_detector_alarm"
 ATTR_TODAY_SUNSHINE_DURATION = "today_sunshine_duration_in_minutes"
-ATTR_WATER_LEVEL_DETECTED = "water level detected"
-ATTR_WINDOW_STATE = "window state"
+ATTR_WATER_LEVEL_DETECTED = "water_level_detected"
+ATTR_WINDOW_STATE = "window_state"
 
 GROUP_ATTRIBUTES = {
     "lowBat": ATTR_LOW_BATTERY,
