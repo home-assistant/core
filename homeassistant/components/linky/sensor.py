@@ -105,7 +105,7 @@ class LinkySensor(Entity):
         self._username = account.username
         self._time = None
         self._consumption = None
-        self._unique_id = f"{DOMAIN}_{self._username}_{scale}_{when}"
+        self._unique_id = f"{self._username}_{scale}_{when}"
 
     @property
     def unique_id(self):
