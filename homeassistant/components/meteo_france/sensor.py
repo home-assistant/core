@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 alert_watcher = None
             else:
                 _LOGGER.info(
-                    "Weather alert watcher added for %s" "in department %s",
+                    "Weather alert watcher added for %s in department %s",
                     city,
                     datas["dept"],
                 )
