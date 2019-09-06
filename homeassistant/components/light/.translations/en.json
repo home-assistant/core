@@ -1,5 +1,14 @@
 {
     "device_automation": {
+        "action_type": {
+            "toggle": "Toggle {name}",
+            "turn_off": "Turn off {name}",
+            "turn_on": "Turn on {name}"
+        },
+        "condition_type": {
+            "is_off": "{name} is off",
+            "is_on": "{name} is on"
+        },
         "trigger_type": {
             "turn_off": "{name} turned off",
             "turn_on": "{name} turned on"
