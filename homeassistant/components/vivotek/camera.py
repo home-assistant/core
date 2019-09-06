@@ -18,7 +18,6 @@ from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_STREAM_SOURCE = "stream_source"
 CONF_FRAMERATE = "framerate"
 
 DEFAULT_NAME = "Vivotek Camera"
@@ -27,13 +26,12 @@ DEFAULT_EVENT_0_KEY = "event_i0_enable"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Optional(CONF_STREAM_SOURCE, default=None): vol.Any(None, cv.string),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_FRAMERATE, default=2): cv.positive_int,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_SSL, default=False): cv.boolean,
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        vol.Optional(CONF_FRAMERATE, default=2): cv.positive_int,
     }
 )
 
@@ -53,26 +51,23 @@ class VivotekCam(Camera):
         """Initialize a Vivotek camera."""
         super().__init__()
 
-        self._name = config[CONF_NAME]
         self._frame_interval = 1 / config[CONF_FRAMERATE]
+        self._name = config[CONF_NAME]
         self._motion_detection_enabled = False
         self._event_0_key = DEFAULT_EVENT_0_KEY
 
         username = config[CONF_USERNAME]
         password = config[CONF_PASSWORD]
 
-        if config[CONF_STREAM_SOURCE]:
-            self._stream_source = (
-                "rtsp://%s:%s@%s:554/live.sdp",
-                username,
-                password,
-                config[CONF_STREAM_SOURCE],
-            )
-        else:
-            self._stream_source = None
+        self._stream_source = (
+            "rtsp://%s:%s@%s:554/live.sdp",
+            username,
+            password,
+            config[CONF_IP_ADDRESS],
+        )
 
         self._brand = "Vivotek"
-        self._supported_features = SUPPORT_STREAM if self._stream_source else 0
+        self._supported_features = SUPPORT_STREAM
 
         self._cam = VivotekCamera(
             host=config[CONF_IP_ADDRESS],
