@@ -43,24 +43,24 @@ from .device import ATTR_GROUP_MEMBER_UNREACHABLE, ATTR_MODEL_TYPE
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_LOW_BATTERY = "low_battery"
-ATTR_MOISTUREDETECTED = "moisture detected"
-ATTR_MOTIONDETECTED = "motion detected"
-ATTR_POWERMAINSFAILURE = "power mains failure"
-ATTR_PRESENCEDETECTED = "presence detected"
-ATTR_SMOKEDETECTORALARM = "smoke detector alarm"
+ATTR_MOISTURE_DETECTED = "moisture detected"
+ATTR_MOTION_DETECTED = "motion detected"
+ATTR_POWER_MAINS_FAILURE = "power mains failure"
+ATTR_PRESENCE_DETECTED = "presence detected"
+ATTR_SMOKE_DETECTOR_ALARM = "smoke detector alarm"
 ATTR_TODAY_SUNSHINE_DURATION = "today_sunshine_duration_in_minutes"
-ATTR_WATERLEVELDETECTED = "water level detected"
-ATTR_WINDOWSTATE = "window state"
+ATTR_WATER_LEVEL_DETECTED = "water level detected"
+ATTR_WINDOW_STATE = "window state"
 
 GROUP_ATTRIBUTES = {
     "lowBat": ATTR_LOW_BATTERY,
     "modelType": ATTR_MODEL_TYPE,
-    "moistureDetected": ATTR_MOISTUREDETECTED,
-    "motionDetected": ATTR_MOTIONDETECTED,
-    "powerMainsFailure": ATTR_POWERMAINSFAILURE,
-    "presenceDetected": ATTR_PRESENCEDETECTED,
+    "moistureDetected": ATTR_MOISTURE_DETECTED,
+    "motionDetected": ATTR_MOTION_DETECTED,
+    "powerMainsFailure": ATTR_POWER_MAINS_FAILURE,
+    "presenceDetected": ATTR_PRESENCE_DETECTED,
     "unreach": ATTR_GROUP_MEMBER_UNREACHABLE,
-    "waterlevelDetected": ATTR_WATERLEVELDETECTED,
+    "waterlevelDetected": ATTR_WATER_LEVEL_DETECTED,
 }
 
 
@@ -321,7 +321,7 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice, BinarySensorD
 
         window_state = getattr(self._device, "windowState", None)
         if window_state and window_state != WindowState.CLOSED:
-            state_attr[ATTR_WINDOWSTATE] = str(window_state)
+            state_attr[ATTR_WINDOW_STATE] = str(window_state)
 
         return state_attr
 
@@ -360,7 +360,7 @@ class HomematicipSecuritySensorGroup(
 
         smoke_detector_at = getattr(self._device, "smokeDetectorAlarmType", None)
         if smoke_detector_at and smoke_detector_at != SmokeDetectorAlarmType.IDLE_OFF:
-            state_attr[ATTR_SMOKEDETECTORALARM] = str(smoke_detector_at)
+            state_attr[ATTR_SMOKE_DETECTOR_ALARM] = str(smoke_detector_at)
 
         return state_attr
 
