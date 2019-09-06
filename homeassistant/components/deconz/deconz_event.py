@@ -23,6 +23,7 @@ class DeconzEvent(DeconzBase):
 
         self._device.register_async_callback(self.async_update_callback)
 
+        self.device_id = None
         self.id = slugify(self._device.name)
         _LOGGER.debug("deCONZ event created: %s", self.id)
 
@@ -49,6 +50,7 @@ class DeconzEvent(DeconzBase):
             await self.gateway.hass.helpers.device_registry.async_get_registry()
         )
 
-        device_registry.async_get_or_create(
+        entry = device_registry.async_get_or_create(
             config_entry_id=self.gateway.config_entry.entry_id, **self.device_info
         )
+        self.device_id = entry.id

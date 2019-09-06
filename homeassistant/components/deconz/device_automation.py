@@ -11,6 +11,7 @@ from homeassistant.const import (
 )
 
 from . import DOMAIN
+from .config_flow import configured_gateways
 from .deconz_event import CONF_DECONZ_EVENT, CONF_UNIQUE_ID
 from .gateway import get_gateway_from_config_entry
 
@@ -127,6 +128,9 @@ async def async_attach_trigger(hass, config, action, automation_info):
     device_registry = await hass.helpers.device_registry.async_get_registry()
     device = device_registry.async_get(config[CONF_DEVICE_ID])
 
+    if device.model not in REMOTES and config[CONF_TYPE] not in REMOTES[device.model]:
+        return
+
     trigger = REMOTES[device.model][config[CONF_TYPE]]
 
     event_id = config[CONF_UNIQUE_ID]
@@ -157,28 +161,26 @@ async def async_get_triggers(hass, device_id):
     if device.model not in REMOTES:
         return
 
-    entry = hass.config_entries.async_get_entry(next(iter(device.config_entries)))
-    gateway = get_gateway_from_config_entry(hass, entry)
+    deconz_config_entries = configured_gateways(hass)
 
     deconz_event = None
-    for item in gateway.events:
+    for config_entry in deconz_config_entries.values():
 
-        try:
-            if next(val for _, val in device.connections if val == item.serial):
+        if deconz_event:
+            break
+
+        gateway = get_gateway_from_config_entry(hass, config_entry)
+        for item in gateway.events:
+
+            if device_id == item.device_id:
                 deconz_event = item
                 break
-
-        except StopIteration:
-            continue
 
     if deconz_event is None:
         return
 
     triggers = []
-
-    remote = REMOTES[device.model]
-
-    for trigger in remote.keys():
+    for trigger in REMOTES[device.model].keys():
         triggers.append(
             {
                 CONF_DEVICE_ID: device_id,
