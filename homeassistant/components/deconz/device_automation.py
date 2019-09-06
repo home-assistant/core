@@ -152,10 +152,23 @@ TRIGGER_SCHEMA = vol.All(
             vol.Required(CONF_DOMAIN): DOMAIN,
             vol.Required(CONF_PLATFORM): "device",
             vol.Required(CONF_TYPE): str,
-            vol.Required(CONF_UNIQUE_ID): str,
         }
     )
 )
+
+
+def _get_deconz_event_from_device_id(hass, device_id):
+    """Resolve deconz event from device id."""
+    deconz_config_entries = configured_gateways(hass)
+    for config_entry in deconz_config_entries.values():
+
+        gateway = get_gateway_from_config_entry(hass, config_entry)
+        for deconz_event in gateway.events:
+
+            if device_id == deconz_event.device_id:
+                return deconz_event
+
+    return None
 
 
 async def async_attach_trigger(hass, config, action, automation_info):
@@ -170,7 +183,11 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
     trigger = REMOTES[device.model][config[CONF_TYPE]]
 
-    event_id = config[CONF_UNIQUE_ID]
+    deconz_event = _get_deconz_event_from_device_id(hass, device.id)
+    if deconz_event is None:
+        return
+
+    event_id = deconz_event.serial
 
     state_config = {
         event.CONF_EVENT_TYPE: CONF_DECONZ_EVENT,
@@ -198,24 +215,6 @@ async def async_get_triggers(hass, device_id):
     if device.model not in REMOTES:
         return
 
-    deconz_config_entries = configured_gateways(hass)
-
-    deconz_event = None
-    for config_entry in deconz_config_entries.values():
-
-        if deconz_event:
-            break
-
-        gateway = get_gateway_from_config_entry(hass, config_entry)
-        for item in gateway.events:
-
-            if device_id == item.device_id:
-                deconz_event = item
-                break
-
-    if deconz_event is None:
-        return
-
     triggers = []
     for trigger in REMOTES[device.model].keys():
         triggers.append(
@@ -224,7 +223,6 @@ async def async_get_triggers(hass, device_id):
                 CONF_DOMAIN: DOMAIN,
                 CONF_PLATFORM: "device",
                 CONF_TYPE: trigger,
-                CONF_UNIQUE_ID: deconz_event.serial,
             }
         )
 
