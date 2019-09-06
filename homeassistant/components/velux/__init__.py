@@ -26,7 +26,7 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Set up the velux component."""    
     try:
-        hass.data[DATA_VELUX] = VeluxModule(hass, config)
+        hass.data[DATA_VELUX] = VeluxModule(hass, config[DOMAIN])
         hass.data[DATA_VELUX].setup()
         await hass.data[DATA_VELUX].async_start()
 
@@ -44,11 +44,11 @@ async def async_setup(hass, config):
 class VeluxModule:
     """Abstraction for velux component."""
 
-    def __init__(self, hass, config):
+    def __init__(self, hass, domain_config):
         """Initialize for velux component."""
         self.pyvlx = None
         self._hass = hass        
-        self._domain_config = config[DOMAIN]
+        self._domain_config = domain_config
         
 
     def setup(self):
