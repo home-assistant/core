@@ -1,0 +1,8 @@
+{
+  "domain": "projector",
+  "name": "Projector",
+  "documentation": "https://www.home-assistant.io/components/projector",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}
