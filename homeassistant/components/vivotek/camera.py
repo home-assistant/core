@@ -17,7 +17,6 @@ from homeassistant.const import (
 )
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.helpers import config_validation as cv
-from homeassistant.util.async_ import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +55,6 @@ class VivotekCam(Camera):
 
     def __init__(self, config):
         """Initialize a Vivotek camera."""
-
         super().__init__()
 
         self._name = config[CONF_NAME]
