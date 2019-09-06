@@ -1,7 +1,6 @@
 """Monitor the NZBGet API."""
 import logging
 
-
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity

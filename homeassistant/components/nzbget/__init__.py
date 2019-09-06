@@ -7,15 +7,15 @@ import requests
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_SSL,
     CONF_HOST,
+    CONF_MONITORED_VARIABLES,
     CONF_NAME,
-    CONF_PORT,
     CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+    CONF_SSL,
     CONF_USERNAME,
     CONTENT_TYPE_JSON,
-    CONF_MONITORED_VARIABLES,
-    CONF_SCAN_INTERVAL,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
