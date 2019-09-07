@@ -107,7 +107,7 @@ class RainBirdSwitch(SwitchDevice):
 
     def start_irrigation(self, duration: int):
         """Turn the irrigation on."""
-        if self._rainbird.irrigate_zone(int(self._zone), duration):
+        if self._rainbird.irrigate_zone(int(self._zone), duration if duration else self._duration):
             self._state = True
 
     def update(self):
