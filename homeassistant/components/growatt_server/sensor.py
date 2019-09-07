@@ -117,12 +117,12 @@ class GrowattInverter(Entity):
         self._unique_id = unique_id
 
     @property
-    def unique_id(self):
+    def name(self):
         """Return the name of the sensor."""
         return f"{self._name} {SENSOR_TYPES[self.sensor][0]}"
 
     @property
-    def name(self):
+    def unique_id(self):
         """Return the unique id of the sensor."""
         return self._unique_id
 
