@@ -53,6 +53,10 @@ CONF_RIGHT_LONG_RELEASE = "remote_button_right_long_release"
 CONF_RIGHT_DOUBLE_PRESS = "remote_button_right_double_press"
 CONF_RIGHT_ROTATION = "remote_button_right_rotation"
 
+CONF_BOTH_BUTTONS_SHORT_PRESS = "remote_both_buttons_short_press"
+CONF_BOTH_BUTTONS_LONG_PRESS = "remote_both_buttons_long_press"
+CONF_BOTH_BUTTONS_DOUBLE_PRESS = "remote_both_buttons_double_press"
+
 CONF_BUTTON_1_PRESS = "remote_button_1_press"
 CONF_BUTTON_2_PRESS = "remote_button_2_press"
 CONF_BUTTON_3_PRESS = "remote_button_3_press"
@@ -91,7 +95,11 @@ HUE_TAP_REMOTE = {
 TRADFRI_ON_OFF_SWITCH_MODEL = "TRADFRI on/off switch"
 TRADFRI_ON_OFF_SWITCH = {
     CONF_TURN_ON_SHORT_PRESS: 1002,
+    CONF_TURN_ON_LONG_PRESS: 1001,
+    CONF_TURN_ON_LONG_RELEASE: 1003,
     CONF_TURN_OFF_SHORT_PRESS: 2002,
+    CONF_TURN_OFF_LONG_PRESS: 2001,
+    CONF_TURN_OFF_LONG_RELEASE: 2003,
 }
 
 TRADFRI_REMOTE_MODEL = "TRADFRI remote control"
@@ -123,6 +131,9 @@ AQARA_DOUBLE_WALL_SWITCH = {
     CONF_RIGHT_SHORT_PRESS: 2002,
     CONF_RIGHT_LONG_PRESS: 2001,
     CONF_RIGHT_DOUBLE_PRESS: 2004,
+    CONF_BOTH_BUTTONS_SHORT_PRESS: 3002,
+    CONF_BOTH_BUTTONS_LONG_PRESS: 3001,
+    CONF_BOTH_BUTTONS_DOUBLE_PRESS: 3004,
 }
 
 AQARA_MINI_SWITCH_MODEL = "lumi.remote.b1acn01"
