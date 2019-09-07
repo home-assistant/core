@@ -48,10 +48,10 @@ class LightSwitch(Light):
 
     def __init__(self, name: str, switch_entity_id: str) -> None:
         """Initialize Light Switch."""
-        self._name = name  # type: str
-        self._switch_entity_id = switch_entity_id  # type: str
-        self._is_on = False  # type: bool
-        self._available = False  # type: bool
+        self._name = name
+        self._switch_entity_id = switch_entity_id
+        self._is_on = False
+        self._available = False
         self._async_unsub_state_changed = None
 
     @property

@@ -203,7 +203,7 @@ async def _setup_auto_reconnect_logic(
             # When removing/disconnecting manually
             return
 
-        data = hass.data[DOMAIN][entry.entry_id]  # type: RuntimeEntryData
+        data: RuntimeEntryData = hass.data[DOMAIN][entry.entry_id]
         for disconnect_cb in data.disconnect_callbacks:
             disconnect_cb()
         data.disconnect_callbacks = []
@@ -326,7 +326,7 @@ async def _cleanup_instance(
     hass: HomeAssistantType, entry: ConfigEntry
 ) -> RuntimeEntryData:
     """Cleanup the esphome client if it exists."""
-    data = hass.data[DATA_KEY].pop(entry.entry_id)  # type: RuntimeEntryData
+    data: RuntimeEntryData = hass.data[DATA_KEY].pop(entry.entry_id)
     if data.reconnect_task is not None:
         data.reconnect_task.cancel()
     for disconnect_cb in data.disconnect_callbacks:
@@ -363,7 +363,7 @@ async def platform_async_setup_entry(
     This method is in charge of receiving, distributing and storing
     info and state updates.
     """
-    entry_data = hass.data[DOMAIN][entry.entry_id]  # type: RuntimeEntryData
+    entry_data: RuntimeEntryData = hass.data[DOMAIN][entry.entry_id]
     entry_data.info[component_key] = {}
     entry_data.state[component_key] = {}
 
@@ -468,7 +468,7 @@ class EsphomeEntity(Entity):
         self._entry_id = entry_id
         self._component_key = component_key
         self._key = key
-        self._remove_callbacks = []  # type: List[Callable[[], None]]
+        self._remove_callbacks: List[Callable[[], None]] = []
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
