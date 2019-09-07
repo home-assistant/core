@@ -13,6 +13,7 @@ from homeassistant.components.smartthings.const import (
     CONF_INSTALLED_APP_ID,
     CONF_INSTALLED_APPS,
     CONF_LOCATION_ID,
+    CONF_RAISE_EVENTS,
     CONF_REFRESH_TOKEN,
     DOMAIN,
 )
@@ -330,3 +331,22 @@ async def test_multiple_config_entry_created_when_installed(
     assert entries[0].data["client_secret"] == flow.oauth_client_secret
     assert entries[0].data["client_id"] == flow.oauth_client_id
     assert entries[0].title == locations[1].name
+
+
+async def test_options_step_init(hass, config_entry):
+    """Test the form is shown for the options init step."""
+    flow = SmartThingsFlowHandler.async_get_options_flow(config_entry)
+    result = await flow.async_step_init()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+
+async def test_options_step_init_creates_entry(hass, config_entry):
+    """Test the options flow creates an entry with the option data."""
+    uesr_input = {CONF_RAISE_EVENTS: True}
+    flow = SmartThingsFlowHandler.async_get_options_flow(config_entry)
+    result = await flow.async_step_init(uesr_input)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] == {CONF_RAISE_EVENTS: True}

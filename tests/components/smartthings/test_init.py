@@ -10,13 +10,16 @@ from homeassistant.components import cloud, smartthings
 from homeassistant.components.smartthings.const import (
     CONF_CLOUDHOOK_URL,
     CONF_INSTALLED_APP_ID,
+    CONF_RAISE_EVENTS,
     CONF_REFRESH_TOKEN,
     DATA_BROKERS,
     DOMAIN,
     EVENT_BUTTON,
+    EVENT_UPDATE,
     SIGNAL_SMARTTHINGS_UPDATE,
     SUPPORTED_PLATFORMS,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
@@ -410,12 +413,19 @@ async def test_event_handler_dispatches_updated_devices(
     config_entry.data[CONF_INSTALLED_APP_ID] = request.installed_app_id
     called = False
 
+    @callback
     def signal(ids):
         nonlocal called
         called = True
         assert device_ids == ids
 
     async_dispatcher_connect(hass, SIGNAL_SMARTTHINGS_UPDATE, signal)
+
+    @callback
+    def handler(evt):
+        pytest.fail("Event update should not have been raised.")
+
+    hass.bus.async_listen(EVENT_UPDATE, handler)
 
     broker = smartthings.DeviceBroker(hass, config_entry, Mock(), Mock(), devices, [])
     broker.connect()
@@ -431,6 +441,50 @@ async def test_event_handler_dispatches_updated_devices(
     assert devices[3].status.attributes["lock"].data == {"codeId": "1"}
 
 
+async def test_event_handler_dispatches_updated_devices_raises_events(
+    hass, config_entry, device_factory, event_request_factory, event_factory
+):
+    """Test the handler dispatches updated devices and raises events when configured."""
+    device = device_factory("Lock", ["lock"])
+    event = event_factory(
+        device.device_id,
+        capability="lock",
+        attribute="lock",
+        value="locked",
+        data={"codeId": "1"},
+    )
+    request = event_request_factory(device_ids=[device.device_id], events=[event])
+    config_entry.data[CONF_INSTALLED_APP_ID] = request.installed_app_id
+    config_entry.options[CONF_RAISE_EVENTS] = True
+
+    called = False
+
+    @callback
+    def handler(evt):
+        nonlocal called
+        called = True
+        assert evt.data == {
+            "location_id": event.location_id,
+            "device_id": device.device_id,
+            "component_id": "main",
+            "name": "Lock",
+            "capability": event.capability,
+            "attribute": event.attribute,
+            "value": event.value,
+            "data": event.data,
+        }
+
+    hass.bus.async_listen(EVENT_UPDATE, handler)
+    broker = smartthings.DeviceBroker(hass, config_entry, Mock(), Mock(), [device], [])
+    broker.connect()
+
+    # pylint:disable=protected-access
+    await broker._event_handler(request, None, None)
+    await hass.async_block_till_done()
+
+    assert called
+
+
 async def test_event_handler_ignores_other_installed_app(
     hass, config_entry, device_factory, event_request_factory
 ):
@@ -439,6 +493,7 @@ async def test_event_handler_ignores_other_installed_app(
     request = event_request_factory([device.device_id])
     called = False
 
+    @callback
     def signal(ids):
         nonlocal called
         called = True
@@ -466,16 +521,19 @@ async def test_event_handler_fires_button_events(
     config_entry.data[CONF_INSTALLED_APP_ID] = request.installed_app_id
     called = False
 
+    @callback
     def handler(evt):
         nonlocal called
         called = True
         assert evt.data == {
-            "component_id": "main",
-            "device_id": device.device_id,
             "location_id": event.location_id,
-            "value": "pushed",
-            "name": device.label,
-            "data": None,
+            "device_id": device.device_id,
+            "component_id": "main",
+            "name": "Lock",
+            "capability": event.capability,
+            "attribute": event.attribute,
+            "value": event.value,
+            "data": event.data,
         }
 
     hass.bus.async_listen(EVENT_BUTTON, handler)
