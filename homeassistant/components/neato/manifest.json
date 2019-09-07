@@ -1,6 +1,7 @@
 {
   "domain": "neato",
   "name": "Neato",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/neato",
   "requirements": [
     "pybotvac==0.0.15"

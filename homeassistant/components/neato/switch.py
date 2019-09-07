@@ -7,7 +7,7 @@ import requests
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import ToggleEntity
 
-from . import NEATO_LOGIN, NEATO_ROBOTS
+from .const import NEATO_LOGIN, NEATO_ROBOTS
 
 _LOGGER = logging.getLogger(__name__)
 

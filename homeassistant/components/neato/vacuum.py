@@ -31,7 +31,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import extract_entity_ids
 
-from . import (
+from .const import (
     ACTION,
     ALERTS,
     ERRORS,

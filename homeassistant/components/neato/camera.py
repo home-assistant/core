@@ -4,7 +4,7 @@ import logging
 
 from homeassistant.components.camera import Camera
 
-from . import NEATO_LOGIN, NEATO_MAP_DATA, NEATO_ROBOTS
+from .const import NEATO_LOGIN, NEATO_MAP_DATA, NEATO_ROBOTS
 
 _LOGGER = logging.getLogger(__name__)
 
