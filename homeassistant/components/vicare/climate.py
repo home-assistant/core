@@ -96,10 +96,13 @@ class ViCareClimate(ClimateDevice):
     def update(self):
         """Let HA know there has been an update from the ViCare API."""
         _room_temperature = self._api.getRoomTemperature()
-        if _room_temperature is not None and _room_temperature != "error":
+        _supply_temperature = self._api.getSupplyTemperature()
+        if _room_temperature is not None and _room_temperature != PYVICARE_ERROR:
             self._current_temperature = _room_temperature
+        elif _supply_temperature != PYVICARE_ERROR:
+            self._current_temperature = _supply_temperature
         else:
-            self._current_temperature = self._api.getSupplyTemperature()
+            self._current_temperature = None
         self._current_program = self._api.getActiveProgram()
 
         # The getCurrentDesiredTemperature call can yield 'error' (str) when the system is in standby
