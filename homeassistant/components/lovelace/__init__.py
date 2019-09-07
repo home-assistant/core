@@ -156,7 +156,6 @@ class LovelaceStorage:
 
         ais_dom_lovelace = str(os.path.dirname(__file__))
         ais_dom_lovelace += "/ais_dom_lovelace"
-        _LOGGER.error("ais_dom_lovelace file path {} ".format(ais_dom_lovelace))
         data = await self._hass.async_add_executor_job(
             json_util.load_json, ais_dom_lovelace
         )
