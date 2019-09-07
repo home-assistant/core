@@ -256,7 +256,7 @@ def get_next_departure(
 
     _LOGGER.debug("Timetable: %s", sorted(timetable.keys()))
 
-    item: dict = {}
+    item = {}
     for key in sorted(timetable.keys()):
         if dt_util.parse_datetime(key) > now:
             item = timetable[key]
@@ -394,10 +394,10 @@ class GTFSDepartureSensor(Entity):
         self._icon = ICON
         self._name = ""
         self._state: Optional[str] = None
-        self._attributes: dict = {}
+        self._attributes = {}
 
         self._agency = None
-        self._departure: dict = {}
+        self._departure = {}
         self._destination = None
         self._origin = None
         self._route = None

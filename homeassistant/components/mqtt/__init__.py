@@ -1077,7 +1077,7 @@ class MqttAvailability(Entity):
     def __init__(self, config: dict) -> None:
         """Initialize the availability mixin."""
         self._availability_sub_state = None
-        self._available: bool = False
+        self._available = False
 
         self._avail_config = config
 

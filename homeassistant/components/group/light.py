@@ -75,10 +75,10 @@ class LightGroup(light.Light):
 
     def __init__(self, name: str, entity_ids: List[str]) -> None:
         """Initialize a light group."""
-        self._name: str = name
-        self._entity_ids: List[str] = entity_ids
-        self._is_on: bool = False
-        self._available: bool = False
+        self._name = name
+        self._entity_ids = entity_ids
+        self._is_on = False
+        self._available = False
         self._brightness: Optional[int] = None
         self._hs_color: Optional[Tuple[float, float]] = None
         self._color_temp: Optional[int] = None

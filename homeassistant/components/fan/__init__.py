@@ -50,26 +50,24 @@ ATTR_SPEED_LIST = "speed_list"
 ATTR_OSCILLATING = "oscillating"
 ATTR_DIRECTION = "direction"
 
-PROP_TO_ATTR: dict = {
+PROP_TO_ATTR = {
     "speed": ATTR_SPEED,
     "speed_list": ATTR_SPEED_LIST,
     "oscillating": ATTR_OSCILLATING,
     "current_direction": ATTR_DIRECTION,
 }
 
-FAN_SET_SPEED_SCHEMA: dict = ENTITY_SERVICE_SCHEMA.extend(
+FAN_SET_SPEED_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
     {vol.Required(ATTR_SPEED): cv.string}
 )
 
-FAN_TURN_ON_SCHEMA: dict = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Optional(ATTR_SPEED): cv.string}
-)
+FAN_TURN_ON_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({vol.Optional(ATTR_SPEED): cv.string})
 
-FAN_OSCILLATE_SCHEMA: dict = ENTITY_SERVICE_SCHEMA.extend(
+FAN_OSCILLATE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
     {vol.Required(ATTR_OSCILLATING): cv.boolean}
 )
 
-FAN_SET_DIRECTION_SCHEMA: dict = ENTITY_SERVICE_SCHEMA.extend(
+FAN_SET_DIRECTION_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
     {vol.Optional(ATTR_DIRECTION): cv.string}
 )
 
@@ -198,7 +196,7 @@ class FanEntity(ToggleEntity):
     @property
     def state_attributes(self) -> dict:
         """Return optional state attributes."""
-        data: dict = {}
+        data = {}
 
         for prop, attr in PROP_TO_ATTR.items():
             if not hasattr(self, prop):

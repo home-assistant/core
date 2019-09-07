@@ -525,11 +525,11 @@ class CastDevice(MediaPlayerDevice):
     "elected leader" itself.
     """
 
-    def __init__(self, cast_info):
+    def __init__(self, cast_info: ChromecastInfo):
         """Initialize the cast device."""
         import pychromecast
 
-        self._cast_info: ChromecastInfo = cast_info
+        self._cast_info = cast_info
         self.services = None
         if cast_info.service:
             self.services = set()
@@ -545,8 +545,8 @@ class CastDevice(MediaPlayerDevice):
         self.mz_media_status = {}
         self.mz_media_status_received = {}
         self.mz_mgr = None
-        self._available: bool = False
-        self._dynamic_group_available: bool = False
+        self._available = False
+        self._dynamic_group_available = False
         self._status_listener: Optional[CastStatusListener] = None
         self._dynamic_group_status_listener: Optional[
             DynamicGroupCastStatusListener
