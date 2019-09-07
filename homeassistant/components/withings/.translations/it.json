@@ -1,0 +1,17 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Autenticazione completata con Withings per il profilo selezionato."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "profile": "Profilo"
+                },
+                "description": "Seleziona un profilo utente a cui desideri associare Home Assistant con un profilo Withings. Nella pagina Withings, assicurati di selezionare lo stesso utente o i dati non saranno etichettati correttamente.",
+                "title": "Profilo utente."
+            }
+        },
+        "title": "Withings"
+    }
+}

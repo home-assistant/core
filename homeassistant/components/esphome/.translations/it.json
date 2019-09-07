@@ -18,7 +18,7 @@
                 "title": "Inserisci la password"
             },
             "discovery_confirm": {
-                "description": "Vuoi aggiungere il nodo ESPHome ` {name} ` a Home Assistant?",
+                "description": "Vuoi aggiungere il nodo ESPHome `{name}` a Home Assistant?",
                 "title": "Trovato nodo ESPHome"
             },
             "user": {
