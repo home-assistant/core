@@ -92,6 +92,7 @@ class LovelaceStorage:
         """Initialize Lovelace config based on storage helper."""
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         self._data = None
+        self._ais_dom_data = None
         self._hass = hass
 
     async def async_get_info(self):
@@ -110,12 +111,32 @@ class LovelaceStorage:
             await self._load()
 
         config = self._data["config"]
-
+        ais_dom_config = self._ais_dom_data["config"]
         if config is None:
-            raise ConfigNotFound
+            if ais_dom_config is None:
+                raise ConfigNotFound
+            else:
+                config = ais_dom_config
+        # ais dom merge
         if "resources" not in config:
             config["resources"] = []
-        # TODO ais dom part
+        if "views" not in config:
+            config["views"] = []
+
+        for aisview in ais_dom_config["views"]:
+            _LOGGER.info("---------------------------------")
+            _LOGGER.info("Processing " + aisview["path"])
+            view_found = False
+            for idx, view in enumerate(config["views"]):
+                if aisview["path"] == view["path"]:
+                    _LOGGER.info(aisview["path"] + " -> COPY")
+                    config["views"][idx] = aisview
+                    view_found = True
+                    break
+            if not view_found:
+                _LOGGER.info(aisview["path"] + " -> ADD")
+                config["views"].append(aisview)
+            _LOGGER.info("---------------------------------")
         return config
 
     async def async_save(self, config):
@@ -130,6 +151,16 @@ class LovelaceStorage:
         """Load the config."""
         data = await self._store.async_load()
         self._data = data if data else {"config": None}
+        # data = await self._ais_dom_store.async_load()
+        from homeassistant.util import json as json_util
+
+        ais_dom_lovelace = str(os.path.dirname(__file__))
+        ais_dom_lovelace += "/ais_dom_lovelace"
+        _LOGGER.error("ais_dom_lovelace file path {} ".format(ais_dom_lovelace))
+        data = await self._hass.async_add_executor_job(
+            json_util.load_json, ais_dom_lovelace
+        )
+        self._ais_dom_data = data["data"] if data else {"config": None}
 
 
 class LovelaceYAML:
@@ -238,4 +269,5 @@ def _config_info(mode, config):
         "mode": mode,
         "resources": len(config.get("resources", [])),
         "views": len(config.get("views", [])),
+        "ais views": 3,
     }

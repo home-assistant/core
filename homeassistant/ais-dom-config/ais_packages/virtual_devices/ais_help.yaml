@@ -10,11 +10,6 @@ sensor:
   - platform: mqtt
     name: internal_ip_address
     state_topic: ais/internal_ip_address/sensor
-weblink:
-  entities:
-    - name: cloud
-      url: https://powiedz.co/ords/f?p=1000:101
-      icon: mdi:open-in-new
 
 input_text:
   ais_android_wifi_password:
