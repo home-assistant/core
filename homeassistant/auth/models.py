@@ -20,7 +20,7 @@ TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN = "long_lived_access_token"
 class Group:
     """A group."""
 
-    name = attr.ib(type=str)  # type: Optional[str]
+    name = attr.ib(type=Optional[str])
     policy = attr.ib(type=perm_mdl.PolicyType)
     id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
     system_generated = attr.ib(type=bool, default=False)
@@ -30,22 +30,20 @@ class Group:
 class User:
     """A user."""
 
-    name = attr.ib(type=str)  # type: Optional[str]
+    name = attr.ib(type=Optional[str])
     perm_lookup = attr.ib(type=perm_mdl.PermissionLookup, cmp=False)
     id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
     is_owner = attr.ib(type=bool, default=False)
     is_active = attr.ib(type=bool, default=False)
     system_generated = attr.ib(type=bool, default=False)
 
-    groups = attr.ib(type=List, factory=list, cmp=False)  # type: List[Group]
+    groups = attr.ib(type=List[Group], factory=list, cmp=False)
 
     # List of credentials of a user.
-    credentials = attr.ib(type=list, factory=list, cmp=False)  # type: List[Credentials]
+    credentials = attr.ib(type=List["Credentials"], factory=list, cmp=False)
 
     # Tokens associated with a user.
-    refresh_tokens = attr.ib(
-        type=dict, factory=dict, cmp=False
-    )  # type: Dict[str, RefreshToken]
+    refresh_tokens = attr.ib(type=Dict[str, "RefreshToken"], factory=dict, cmp=False)
 
     _permissions = attr.ib(
         type=Optional[perm_mdl.PolicyPermissions], init=False, cmp=False, default=None

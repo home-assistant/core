@@ -1,8 +1,6 @@
 """Support for Onkyo Receivers."""
 import logging
-
-# pylint: disable=unused-import
-from typing import List  # noqa: F401
+from typing import List
 
 import voluptuous as vol
 
@@ -54,7 +52,7 @@ SUPPORT_ONKYO_WO_VOLUME = (
     | SUPPORT_PLAY_MEDIA
 )
 
-KNOWN_HOSTS = []  # type: List[str]
+KNOWN_HOSTS: List[str] = []
 DEFAULT_SOURCES = {
     "tv": "TV",
     "bd": "Bluray",
