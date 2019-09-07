@@ -8,7 +8,10 @@ DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
 PLEX_CONFIG_FILE = "plex.conf"
+PLEX_MEDIA_PLAYER_OPTIONS = "plex_mp_options"
 PLEX_SERVER_CONFIG = "server_config"
+
+SHARED_SERVER = "shared_plex_server"
 
 CONF_USE_EPISODE_ART = "use_episode_art"
 CONF_SHOW_ALL_CONTROLS = "show_all_controls"
