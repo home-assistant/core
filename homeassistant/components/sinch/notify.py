@@ -16,11 +16,9 @@ from homeassistant.const import (
     CONF_SENDER,
 )
 
-
 DOMAIN = "sinch"
 
 CONF_SERVICE_PLAN_ID = "service_plan_id"
-CONF_SENDER = "sender"
 CONF_DEFAULT_RECIPIENTS = "default_recipients"
 
 ATTR_SENDER = CONF_SENDER
