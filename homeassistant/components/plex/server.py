@@ -1,5 +1,6 @@
 """Shared class to maintain Plex server instances."""
 import logging
+
 import plexapi.server
 from requests import Session
 

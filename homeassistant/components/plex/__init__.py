@@ -1,5 +1,6 @@
 """Support to embed Plex."""
 import logging
+
 import plexapi.exceptions
 import voluptuous as vol
 
