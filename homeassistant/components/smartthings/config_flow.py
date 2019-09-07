@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -17,6 +18,7 @@ from .const import (
     CONF_LOCATION_ID,
     CONF_OAUTH_CLIENT_ID,
     CONF_OAUTH_CLIENT_SECRET,
+    CONF_RAISE_EVENTS,
     DOMAIN,
     VAL_UID_MATCHER,
 )
@@ -32,8 +34,7 @@ from .smartapp import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class SmartThingsFlowHandler(config_entries.ConfigFlow):
+class SmartThingsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """
     Handle configuration of SmartThings integrations.
 
@@ -60,6 +61,12 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
         self.api = None
         self.oauth_client_secret = None
         self.oauth_client_id = None
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return SmartThingsOptionsFlowHandler(config_entry)
 
     async def async_step_import(self, user_input=None):
         """Occurs when a previously entry setup fails and is re-initiated."""
@@ -198,3 +205,32 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
 
         location = await self.api.location(data[CONF_LOCATION_ID])
         return self.async_create_entry(title=location.name, data=data)
+
+
+class SmartThingsOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle options of the SmartThings integration."""
+
+    def __init__(self, config_entry):
+        """Initialize the options flow."""
+        self._config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            options = dict(self._config_entry.options)
+            options[CONF_RAISE_EVENTS] = user_input[CONF_RAISE_EVENTS]
+            return self.async_create_entry(title="", data=options)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_RAISE_EVENTS,
+                        default=self._config_entry.options.get(
+                            CONF_RAISE_EVENTS, False
+                        ),
+                    ): bool
+                }
+            ),
+        )
