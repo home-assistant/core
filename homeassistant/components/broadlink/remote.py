@@ -13,8 +13,8 @@ import voluptuous as vol
 from homeassistant.components.remote import (
     ATTR_ALTERNATIVE,
     ATTR_COMMAND,
-    ATTR_DEVICE,
     ATTR_DELAY_SECS,
+    ATTR_DEVICE,
     ATTR_NUM_REPEATS,
     ATTR_TIMEOUT,
     DEFAULT_DELAY_SECS,
@@ -292,9 +292,10 @@ class BroadlinkRemote(RemoteDevice):
         """
         await self._async_attempt(self._api.enter_learning)
 
-        message = f"Press the '{command}' button."
         self.hass.components.persistent_notification.async_create(
-            message, title="Learn command", notification_id="learn_command"
+            f"Press the '{command}' button.",
+            title="Learn command",
+            notification_id="learn_command",
         )
 
         code = None
