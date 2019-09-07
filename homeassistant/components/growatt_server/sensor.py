@@ -1,16 +1,17 @@
 """Read status of growatt inverters."""
-import datetime
-import logging
+import re
 import json
+import logging
+import datetime
 
 import growattServer
 
 import voluptuous as vol
+from homeassistant.util import Throttle
+from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_USERNAME, CONF_PASSWORD
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,6 +19,41 @@ CONF_PLANT_ID = "plant_id"
 DEFAULT_PLANT_ID = "0"
 DEFAULT_NAME = "Growatt"
 SCAN_INTERVAL = datetime.timedelta(minutes=5)
+
+TOTAL_SENSOR_TYPES = {
+    "total_money_today": ("Total money today", "€", "plantMoneyText"),
+    "total_money_total": ("Money lifetime", "€", "totalMoneyText"),
+    "total_energy_today": ("Energy Today", "kWh", "todayEnergy"),
+    "total_output_power": ("Output Power", "W", "invTodayPpv"),
+    "total_energy_output": ("Lifetime energy output", "kWh", "totalEnergy"),
+    "total_maximum_output": ("Maximum power", "W", "nominalPower")
+}
+
+INVERTER_SENSOR_TYPES = {
+    "inverter_energy_today": ("Energy today", "kWh", "e_today"),
+    "inverter_energy_total": ("Lifetime energy output", "kWh", "e_total"),
+    "inverter_voltage_input_1": ("Input 1 voltage", "V", "vpv1"),
+    "inverter_amperage_input_1": ("Input 1 Amperage", "A", "ipv1"),
+    "inverter_wattage_input_1": ("Input 1 Wattage", "W", "ppv1"),
+
+    "inverter_voltage_input_2": ("Input 2 voltage", "V", "vpv2"),
+    "inverter_amperage_input_2": ("Input 2 Amperage", "A", "ipv2"),
+    "inverter_wattage_input_2": ("Input 2 Wattage", "W", "ppv2"),
+
+    "inverter_voltage_input_3": ("Input 3 voltage", "V", "vpv3"),
+    "inverter_amperage_input_3": ("Input 3 Amperage", "A", "ipv3"),
+    "inverter_wattage_input_3": ("Input 3 Wattage", "W", "ppv3"),
+
+    "inverter_internal_wattage": ("Internal wattage", "W", "ppv"),
+    "inverter_reactive_voltage": ("Reactive voltage", "V", "vacr"),
+    "inverter_inverter_reactive_amperage": ("Reactive amperage", "A", "iacr"),
+    "inverter_frequency": ("AC frequency", "Hz", "fac"),
+
+    "inverter_current_wattage": ("Output power", "W", "pac"),
+    "inverter_current_reactive_wattage": ("Reactive wattage", "W", "pacr")
+}
+
+SENSOR_TYPES = {**TOTAL_SENSOR_TYPES, **INVERTER_SENSOR_TYPES}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -33,8 +69,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Growatt sensor."""
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
-    plant_id = config.get(CONF_PLANT_ID)
-    name = config.get(CONF_NAME)
+    plant_id = config[CONF_PLANT_ID]
+    name = config[CONF_NAME]
 
     api = growattServer.GrowattApi()
 
@@ -50,20 +86,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Get a list of inverters for specified plant to add sensors for.
     inverters = api.inverter_list(plant_id)
-
-    entities = [GrowattInverter(api, f"{name}_Total", plant_id, username, password)]
+    entities = [];
+    probe = GrowattData(api, plant_id, True)
+    for sensor in TOTAL_SENSOR_TYPES:
+        entities.append(GrowattInverter(probe, f"{name} Total", sensor))
 
     # Add sensors for each inverter in the specified plant.
     for inverter in inverters:
-        entities.append(
-            GrowattInverter(
-                api,
-                f"{name}_{inverter['deviceAilas']}",
-                inverter["deviceSn"],
-                username,
-                password,
+        probe = GrowattData(api, inverter["deviceSn"], False)
+        for sensor in INVERTER_SENSOR_TYPES:
+            entities.append(
+                GrowattInverter(
+                    probe,
+                    f"{inverter['deviceAilas']}",
+                    sensor
+                )
             )
-        )
 
     add_entities(entities, True)
 
@@ -71,21 +109,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class GrowattInverter(Entity):
     """Representation of a Growatt Sensor."""
 
-    def __init__(self, api, name, inverter_id, username, password):
+    def __init__(self, probe, name, sensor):
         """Initialize a PVOutput sensor."""
-        self.api = api
+        self.sensor = sensor
+        self.probe = probe
         self._name = name
-        self.inverter_id = inverter_id
-        self.username = username
-        self.password = password
-        self.is_total = "Total" in name and inverter_id.isdigit()
         self._state = None
-        self.attributes = {}
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        return f"{self._name} {SENSOR_TYPES[self.sensor][0]}"
 
     @property
     def icon(self):
@@ -95,7 +129,7 @@ class GrowattInverter(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        return self.probe.get_data(SENSOR_TYPES[self.sensor][2])
 
     @property
     def device_class(self):
@@ -105,57 +139,39 @@ class GrowattInverter(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return "W"
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the monitored installation."""
-        attributes = self.attributes
-        return attributes
+        return SENSOR_TYPES[self.sensor][1]
 
     def update(self):
         """Get the latest data from the Growat API and updates the state."""
+        self.probe.update()
 
+class GrowattData:
+    """The class for handling data retrieval."""
+    def __init__(self, api, inverter_id, is_total = False):
+        """Initialize the probe."""
+        self.is_total = is_total
+        self.api = api
+        self.inverter_id = inverter_id
+        self.data = {}
+        _LOGGER.debug("Initialised probe for %s", self.inverter_id)
+
+    @Throttle(SCAN_INTERVAL)
+    def update(self):
+        """Update probe data."""
+        _LOGGER.debug("Updating data for %s", self.inverter_id)
         try:
-            self.api.login(self.username, self.password)
             if self.is_total:
                 total_info = self.api.plant_info(self.inverter_id)
                 del total_info["deviceList"]
-                self._state = total_info["invTodayPpv"]
-                self.attributes = {
-                    "money_today": total_info["plantMoneyText"],
-                    "money_total": total_info["totalMoneyText"],
-                    "energy_today": total_info["todayEnergy"],
-                    "current_wattage": total_info["invTodayPpv"],
-                    "current_voltage": total_info["totalEnergy"],
-                    "maximum_output": total_info["nominalPower"],
-                }
+                # PlantMoneyText comes in as "3.1/€" remove anything that isn't part of the number
+                total_info['plantMoneyText'] = re.sub("[^\d.,]", "", total_info['plantMoneyText'])
+                self.data = total_info
             else:
                 inverter_info = self.api.inverter_detail(self.inverter_id)
-
-                self._state = inverter_info["data"]["pac"]
-                self.attributes = {
-                    "energy_today": inverter_info["data"]["e_today"],
-                    "energy_total": inverter_info["data"]["e_total"],
-                    "voltage_input_1": inverter_info["data"]["vpv1"],
-                    "amperage_input_1": inverter_info["data"]["ipv1"],
-                    "wattage_input_1": inverter_info["data"]["ppv1"],
-                    "voltage_input_2": inverter_info["data"]["vpv2"],
-                    "amperage_input_2": inverter_info["data"]["ipv2"],
-                    "wattage_input_2": inverter_info["data"]["ppv2"],
-                    "voltage_input_3": inverter_info["data"]["vpv3"],
-                    "amperage_input_3": inverter_info["data"]["ipv3"],
-                    "wattage_input_3": inverter_info["data"]["ppv3"],
-                    "inverter_internal_wattage": inverter_info["data"]["ppv"],
-                    "inverter_reactive_voltage": inverter_info["data"]["vacr"],
-                    "inverter_reactive_amperage": inverter_info["data"]["iacr"],
-                    "frequency": inverter_info["data"]["fac"],
-                    "current_wattage": inverter_info["data"]["pac"],
-                    "current_reactive_wattage": inverter_info["data"]["pacr"],
-                    "fault": inverter_info["data"]["strfault"],
-                    "warning": inverter_info["data"]["strwarning"],
-                    "break": inverter_info["data"]["strbreak"],
-                    "warning_id": inverter_info["data"]["pidwarning"],
-                }
+                self.data = inverter_info['data']
         except json.decoder.JSONDecodeError:
             _LOGGER.error("Unable to fetch data from Growatt server")
+
+    def get_data(self, variable):
+        """Get the data."""
+        return self.data.get(variable)
