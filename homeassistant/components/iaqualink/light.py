@@ -24,7 +24,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
-    """Set up discovered switches."""
+    """Set up discovered lights."""
     devs = []
     for dev in hass.data[AQUALINK_DOMAIN][DOMAIN]:
         devs.append(HassAqualinkLight(dev))
@@ -36,7 +36,6 @@ class HassAqualinkLight(Light):
 
     def __init__(self, dev: AqualinkLight):
         """Initialize the light."""
-        Light.__init__(self)
         self.dev = dev
 
     @property
@@ -55,8 +54,8 @@ class HassAqualinkLight(Light):
         This handles brightness and light effects for lights that do support
         them.
         """
-        brightness = kwargs.get(ATTR_BRIGHTNESS, None)
-        effect = kwargs.get(ATTR_EFFECT, None)
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        effect = kwargs.get(ATTR_EFFECT)
 
         # For now I'm assuming lights support either effects or brightness.
         if effect:
@@ -89,7 +88,7 @@ class HassAqualinkLight(Light):
     @property
     def effect_list(self) -> list:
         """Return supported light effects."""
-        return list(AqualinkLightEffect.__members__.keys())
+        return list(AqualinkLightEffect.__members__)
 
     async def async_update(self) -> None:
         """Update the internal state of the light.
