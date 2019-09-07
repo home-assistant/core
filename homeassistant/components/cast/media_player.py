@@ -525,32 +525,33 @@ class CastDevice(MediaPlayerDevice):
     "elected leader" itself.
     """
 
-    def __init__(self, cast_info):
+    def __init__(self, cast_info: ChromecastInfo):
         """Initialize the cast device."""
-        import pychromecast  # noqa: pylint: disable=unused-import
+        import pychromecast
 
-        self._cast_info = cast_info  # type: ChromecastInfo
+        self._cast_info = cast_info
         self.services = None
         if cast_info.service:
             self.services = set()
             self.services.add(cast_info.service)
-        self._chromecast = None  # type: Optional[pychromecast.Chromecast]
+        self._chromecast: Optional[pychromecast.Chromecast] = None
         self.cast_status = None
         self.media_status = None
         self.media_status_received = None
-        self._dynamic_group_cast_info = None  # type: ChromecastInfo
-        self._dynamic_group_cast = None  # type: Optional[pychromecast.Chromecast]
+        self._dynamic_group_cast_info: ChromecastInfo = None
+        self._dynamic_group_cast: Optional[pychromecast.Chromecast] = None
         self.dynamic_group_media_status = None
         self.dynamic_group_media_status_received = None
         self.mz_media_status = {}
         self.mz_media_status_received = {}
         self.mz_mgr = None
-        self._available = False  # type: bool
-        self._dynamic_group_available = False  # type: bool
-        self._status_listener = None  # type: Optional[CastStatusListener]
-        self._dynamic_group_status_listener = (
-            None
-        )  # type: Optional[DynamicGroupCastStatusListener]
+        self._available = False
+        self._dynamic_group_available = False
+        self._status_listener: Optional[CastStatusListener] = None
+        self._dynamic_group_status_listener: Optional[
+            DynamicGroupCastStatusListener
+        ] = None
+
         self._add_remove_handler = None
         self._del_remove_handler = None
 

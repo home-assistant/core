@@ -459,7 +459,7 @@ class ISYDevice(Entity):
     """Representation of an ISY994 device."""
 
     _attrs = {}
-    _name = None  # type: str
+    _name: str = None
 
     def __init__(self, node) -> None:
         """Initialize the insteon device."""

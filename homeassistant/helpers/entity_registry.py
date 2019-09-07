@@ -53,7 +53,7 @@ class RegistryEntry:
     device_id = attr.ib(type=str, default=None)
     config_entry_id = attr.ib(type=str, default=None)
     disabled_by = attr.ib(
-        type=str,
+        type=Optional[str],
         default=None,
         validator=attr.validators.in_(
             (
@@ -64,7 +64,7 @@ class RegistryEntry:
                 None,
             )
         ),
-    )  # type: Optional[str]
+    )
     domain = attr.ib(type=str, init=False, repr=False)
 
     @domain.default

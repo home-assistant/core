@@ -55,23 +55,21 @@ PROP_TO_ATTR = {
     "speed_list": ATTR_SPEED_LIST,
     "oscillating": ATTR_OSCILLATING,
     "current_direction": ATTR_DIRECTION,
-}  # type: dict
+}
 
 FAN_SET_SPEED_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
     {vol.Required(ATTR_SPEED): cv.string}
-)  # type: dict
+)
 
-FAN_TURN_ON_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Optional(ATTR_SPEED): cv.string}
-)  # type: dict
+FAN_TURN_ON_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({vol.Optional(ATTR_SPEED): cv.string})
 
 FAN_OSCILLATE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
     {vol.Required(ATTR_OSCILLATING): cv.boolean}
-)  # type: dict
+)
 
 FAN_SET_DIRECTION_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
     {vol.Optional(ATTR_DIRECTION): cv.string}
-)  # type: dict
+)
 
 
 @bind_hass
@@ -198,7 +196,7 @@ class FanEntity(ToggleEntity):
     @property
     def state_attributes(self) -> dict:
         """Return optional state attributes."""
-        data = {}  # type: dict
+        data = {}
 
         for prop, attr in PROP_TO_ATTR.items():
             if not hasattr(self, prop):
