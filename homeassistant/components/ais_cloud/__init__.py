@@ -1309,7 +1309,6 @@ class AisColudData:
                     news_text = doc_s
             except Exception as e:
                 _LOGGER.error("Can not get article " + str(e))
-
         from bs4 import BeautifulSoup
 
         clear_text = BeautifulSoup(news_text, "lxml").text
