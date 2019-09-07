@@ -1,0 +1,17 @@
+{
+    "device_automation": {
+        "action_type": {
+            "toggle": "Commuta {nome}",
+            "turn_off": "Spegnere {nome}",
+            "turn_on": "Accendere {nome}"
+        },
+        "condition_type": {
+            "is_off": "{name} \u00e8 disattivato",
+            "is_on": "{name} \u00e8 attivo"
+        },
+        "trigger_type": {
+            "turn_off": "{name} disattivato",
+            "turn_on": "{name} attivato"
+        }
+    }
+}
