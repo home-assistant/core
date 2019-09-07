@@ -27,11 +27,13 @@ from .const import (
     CONF_LOCATION_ID,
     CONF_OAUTH_CLIENT_ID,
     CONF_OAUTH_CLIENT_SECRET,
+    CONF_RAISE_EVENTS,
     CONF_REFRESH_TOKEN,
     DATA_BROKERS,
     DATA_MANAGER,
     DOMAIN,
     EVENT_BUTTON,
+    EVENT_UPDATE,
     SIGNAL_SMARTTHINGS_UPDATE,
     SUPPORTED_PLATFORMS,
     TOKEN_REFRESH_INTERVAL,
@@ -357,31 +359,28 @@ class DeviceBroker:
                 data=evt.data,
             )
 
-            # Fire events for buttons
+            data = {
+                "location_id": evt.location_id,
+                "device_id": evt.device_id,
+                "component_id": evt.component_id,
+                "name": device.label,
+                "capability": evt.capability,
+                "attribute": evt.attribute,
+                "value": evt.value,
+                "data": evt.data,
+            }
             if (
                 evt.capability == Capability.button
                 and evt.attribute == Attribute.button
             ):
-                data = {
-                    "component_id": evt.component_id,
-                    "device_id": evt.device_id,
-                    "location_id": evt.location_id,
-                    "value": evt.value,
-                    "name": device.label,
-                    "data": evt.data,
-                }
+                # Fire events for buttons
                 self._hass.bus.async_fire(EVENT_BUTTON, data)
                 _LOGGER.debug("Fired button event: %s", data)
+            elif self._entry.options.get(CONF_RAISE_EVENTS):
+                # Fire events for other updates if configured.
+                self._hass.bus.async_fire(EVENT_UPDATE, data)
+                _LOGGER.debug("Fired update event: %s", data)
             else:
-                data = {
-                    "location_id": evt.location_id,
-                    "device_id": evt.device_id,
-                    "component_id": evt.component_id,
-                    "capability": evt.capability,
-                    "attribute": evt.attribute,
-                    "value": evt.value,
-                    "data": evt.data,
-                }
                 _LOGGER.debug("Push update received: %s", data)
 
             updated_devices.add(device.device_id)
