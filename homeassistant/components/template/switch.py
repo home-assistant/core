@@ -14,11 +14,13 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     CONF_ICON_TEMPLATE,
     CONF_ENTITY_PICTURE_TEMPLATE,
+    CONF_AVAILABILITY_TEMPLATE,
     STATE_OFF,
     STATE_ON,
     ATTR_ENTITY_ID,
     CONF_SWITCHES,
     EVENT_HOMEASSISTANT_START,
+    MATCH_ALL,
 )
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
@@ -37,6 +39,7 @@ SWITCH_SCHEMA = vol.Schema(
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_ICON_TEMPLATE): cv.template,
         vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
+        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
         vol.Required(ON_ACTION): cv.SCRIPT_SCHEMA,
         vol.Required(OFF_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
@@ -58,6 +61,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         state_template = device_config[CONF_VALUE_TEMPLATE]
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         entity_picture_template = device_config.get(CONF_ENTITY_PICTURE_TEMPLATE)
+        availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
         on_action = device_config[ON_ACTION]
         off_action = device_config[OFF_ACTION]
         entity_ids = (
@@ -72,6 +76,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         if entity_picture_template is not None:
             entity_picture_template.hass = hass
 
+        if availability_template is not None:
+            availability_template.hass = hass
+            temp_ids = state_template.extract_entities()
+            if str(temp_ids) != MATCH_ALL:
+                entity_ids |= set(temp_ids)
+
         switches.append(
             SwitchTemplate(
                 hass,
@@ -80,6 +90,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 state_template,
                 icon_template,
                 entity_picture_template,
+                availability_template,
                 on_action,
                 off_action,
                 entity_ids,
@@ -104,6 +115,7 @@ class SwitchTemplate(SwitchDevice):
         state_template,
         icon_template,
         entity_picture_template,
+        availability_template,
         on_action,
         off_action,
         entity_ids,
@@ -120,9 +132,11 @@ class SwitchTemplate(SwitchDevice):
         self._state = False
         self._icon_template = icon_template
         self._entity_picture_template = entity_picture_template
+        self._availability_template = availability_template
         self._icon = None
         self._entity_picture = None
         self._entities = entity_ids
+        self._available = True
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -161,11 +175,6 @@ class SwitchTemplate(SwitchDevice):
         return False
 
     @property
-    def available(self):
-        """If switch is available."""
-        return self._state is not None
-
-    @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return self._icon
@@ -174,6 +183,11 @@ class SwitchTemplate(SwitchDevice):
     def entity_picture(self):
         """Return the entity_picture to use in the frontend, if any."""
         return self._entity_picture
+
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return self._available
 
     async def async_turn_on(self, **kwargs):
         """Fire the on action."""
@@ -233,3 +247,10 @@ class SwitchTemplate(SwitchDevice):
                         self._name,
                         ex,
                     )
+        if self._availability_template is not None:
+            try:
+                result = self._availability_template.async_render()
+                self._available = result == "true"
+            except (TemplateError, ValueError) as err:
+                _LOGGER.error(err)
+                self._available = True
