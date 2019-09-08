@@ -99,7 +99,7 @@ def setup(hass, config):
 
     if hass.data[PLEX_DOMAIN][SERVERS]:
         _LOGGER.debug("Plex server already configured")
-        return
+        return False
 
     # Prefer configuration
     plex_config = config.get(PLEX_DOMAIN, {})
