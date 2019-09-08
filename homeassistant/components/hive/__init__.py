@@ -39,6 +39,7 @@ class HiveSession:
     """Initiate Hive Session Class."""
 
     entities = []
+    entity_lookup = {}
     core = None
     heating = None
     hotwater = None
