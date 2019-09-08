@@ -211,7 +211,6 @@ class TestTemplateSwitch:
                 },
             )
 
-
         self.hass.start()
         self.hass.block_till_done()
 
