@@ -29,9 +29,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 
-from .const import CONF_AVAILABLE_TEMPLATE
-
-CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
+from .const import CONF_ATTRIBUTE_TEMPLATES, CONF_AVAILABLE_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
 
