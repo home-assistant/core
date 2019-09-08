@@ -15,168 +15,143 @@ from .config_flow import configured_gateways
 from .deconz_event import CONF_DECONZ_EVENT, CONF_UNIQUE_ID
 from .gateway import get_gateway_from_config_entry
 
-CONF_TURN_ON_SHORT_PRESS = "remote_button_turn_on_short_press"
-CONF_TURN_ON_SHORT_RELEASE = "remote_button_turn_on_short_release"
-CONF_TURN_ON_LONG_PRESS = "remote_button_turn_on_long_press"
-CONF_TURN_ON_LONG_RELEASE = "remote_button_turn_on_long_release"
-CONF_TURN_ON_DOUBLE_PRESS = "remote_button_turn_on_double_press"
-CONF_TURN_ON_TRIPLE_PRESS = "remote_button_turn_on_triple_press"
-CONF_TURN_ON_QUADRUPLE_PRESS = "remote_button_turn_on_quadruple_press"
-CONF_TURN_ON_QUINTUPLE_PRESS = "remote_button_turn_on_quintuple_press"
+CONF_SUBTYPE = "subtype"
 
-CONF_DIM_UP_SHORT_PRESS = "remote_button_dim_up_short_press"
-CONF_DIM_UP_SHORT_RELEASE = "remote_button_dim_up_short_release"
-CONF_DIM_UP_LONG_PRESS = "remote_button_dim_up_long_press"
-CONF_DIM_UP_LONG_RELEASE = "remote_button_dim_up_long_release"
-
-CONF_DIM_DOWN_SHORT_PRESS = "remote_button_dim_down_short_press"
-CONF_DIM_DOWN_SHORT_RELEASE = "remote_button_dim_down_short_release"
-CONF_DIM_DOWN_LONG_PRESS = "remote_button_dim_down_long_press"
-CONF_DIM_DOWN_LONG_RELEASE = "remote_button_dim_down_long_release"
-
-CONF_TURN_OFF_SHORT_PRESS = "remote_button_turn_off_short_press"
-CONF_TURN_OFF_SHORT_RELEASE = "remote_button_turn_off_short_release"
-CONF_TURN_OFF_LONG_PRESS = "remote_button_turn_off_long_press"
-CONF_TURN_OFF_LONG_RELEASE = "remote_button_turn_off_long_release"
-
-CONF_LEFT_SHORT_PRESS = "remote_button_left_short_press"
-CONF_LEFT_SHORT_RELEASE = "remote_button_left_short_release"
-CONF_LEFT_LONG_PRESS = "remote_button_left_long_press"
-CONF_LEFT_LONG_RELEASE = "remote_button_left_long_release"
-CONF_LEFT_DOUBLE_PRESS = "remote_button_left_double_press"
-CONF_LEFT_ROTATION = "remote_button_left_rotation"
-
-CONF_RIGHT_SHORT_PRESS = "remote_button_right_short_press"
-CONF_RIGHT_SHORT_RELEASE = "remote_button_right_short_release"
-CONF_RIGHT_LONG_PRESS = "remote_button_right_long_press"
-CONF_RIGHT_LONG_RELEASE = "remote_button_right_long_release"
-CONF_RIGHT_DOUBLE_PRESS = "remote_button_right_double_press"
-CONF_RIGHT_ROTATION = "remote_button_right_rotation"
-
-CONF_OPEN_SHORT_PRESS = "remote_button_open_short_press"
-CONF_OPEN_LONG_PRESS = "remote_button_open_long_press"
-
-CONF_CLOSE_SHORT_PRESS = "remote_button_close_short_press"
-CONF_CLOSE_LONG_PRESS = "remote_button_close_long_press"
-
-CONF_BOTH_BUTTONS_SHORT_PRESS = "remote_both_buttons_short_press"
-CONF_BOTH_BUTTONS_LONG_PRESS = "remote_both_buttons_long_press"
-CONF_BOTH_BUTTONS_DOUBLE_PRESS = "remote_both_buttons_double_press"
-
-CONF_BUTTON_1_PRESS = "remote_button_1_press"
-CONF_BUTTON_2_PRESS = "remote_button_2_press"
-CONF_BUTTON_3_PRESS = "remote_button_3_press"
-CONF_BUTTON_4_PRESS = "remote_button_4_press"
-
+CONF_SHORT_PRESS = "remote_button_short_press"
+CONF_SHORT_RELEASE = "remote_button_short_release"
+CONF_LONG_PRESS = "remote_button_long_press"
+CONF_LONG_RELEASE = "remote_button_long_release"
+CONF_DOUBLE_PRESS = "remote_button_double_press"
+CONF_TRIPLE_PRESS = "remote_button_triple_press"
+CONF_QUADRUPLE_PRESS = "remote_button_quadruple_press"
+CONF_QUINTUPLE_PRESS = "remote_button_quintuple_press"
+CONF_ROTATED = "remote_button_rotated"
 CONF_SHAKE = "remote_gyro_activated"
+
+CONF_TURN_ON = "turn_on"
+CONF_TURN_OFF = "turn_off"
+CONF_DIM_UP = "dim_up"
+CONF_DIM_DOWN = "dim_down"
+CONF_LEFT = "left"
+CONF_RIGHT = "right"
+CONF_OPEN = "open"
+CONF_CLOSE = "close"
+CONF_BOTH_BUTTONS = "both_buttons"
+CONF_BUTTON_1 = "button_1"
+CONF_BUTTON_2 = "button_2"
+CONF_BUTTON_3 = "button_3"
+CONF_BUTTON_4 = "button_4"
 
 HUE_DIMMER_REMOTE_MODEL = "RWL021"
 HUE_DIMMER_REMOTE = {
-    CONF_TURN_ON_SHORT_PRESS: 1000,
-    CONF_TURN_ON_SHORT_RELEASE: 1002,
-    CONF_TURN_ON_LONG_PRESS: 1001,
-    CONF_TURN_ON_LONG_RELEASE: 1003,
-    CONF_DIM_UP_SHORT_PRESS: 2000,
-    CONF_DIM_UP_SHORT_RELEASE: 2002,
-    CONF_DIM_UP_LONG_PRESS: 2001,
-    CONF_DIM_UP_LONG_RELEASE: 2003,
-    CONF_DIM_DOWN_SHORT_PRESS: 3000,
-    CONF_DIM_DOWN_SHORT_RELEASE: 3002,
-    CONF_DIM_DOWN_LONG_PRESS: 3001,
-    CONF_DIM_DOWN_LONG_RELEASE: 3003,
-    CONF_TURN_OFF_SHORT_PRESS: 4000,
-    CONF_TURN_OFF_SHORT_RELEASE: 4002,
-    CONF_TURN_OFF_LONG_PRESS: 4001,
-    CONF_TURN_OFF_LONG_RELEASE: 4003,
+    (CONF_SHORT_PRESS, CONF_TURN_ON): 1000,
+    (CONF_SHORT_RELEASE, CONF_TURN_ON): 1002,
+    (CONF_LONG_PRESS, CONF_TURN_ON): 1001,
+    (CONF_LONG_RELEASE, CONF_TURN_ON): 1003,
+    (CONF_SHORT_PRESS, CONF_DIM_UP): 2000,
+    (CONF_SHORT_RELEASE, CONF_DIM_UP): 2002,
+    (CONF_LONG_PRESS, CONF_DIM_UP): 2001,
+    (CONF_LONG_RELEASE, CONF_DIM_UP): 2003,
+    (CONF_SHORT_PRESS, CONF_DIM_DOWN): 3000,
+    (CONF_SHORT_RELEASE, CONF_DIM_DOWN): 3002,
+    (CONF_LONG_PRESS, CONF_DIM_DOWN): 3001,
+    (CONF_LONG_RELEASE, CONF_DIM_DOWN): 3003,
+    (CONF_SHORT_PRESS, CONF_TURN_OFF): 4000,
+    (CONF_SHORT_RELEASE, CONF_TURN_OFF): 4002,
+    (CONF_LONG_PRESS, CONF_TURN_OFF): 4001,
+    (CONF_LONG_RELEASE, CONF_TURN_OFF): 4003,
 }
 
 HUE_TAP_REMOTE_MODEL = "ZGPSWITCH"
 HUE_TAP_REMOTE = {
-    CONF_BUTTON_1_PRESS: 34,
-    CONF_BUTTON_2_PRESS: 16,
-    CONF_BUTTON_3_PRESS: 17,
-    CONF_BUTTON_4_PRESS: 18,
+    (CONF_SHORT_PRESS, CONF_BUTTON_1): 34,
+    (CONF_SHORT_PRESS, CONF_BUTTON_2): 16,
+    (CONF_SHORT_PRESS, CONF_BUTTON_3): 17,
+    (CONF_SHORT_PRESS, CONF_BUTTON_4): 18,
 }
 
 TRADFRI_ON_OFF_SWITCH_MODEL = "TRADFRI on/off switch"
 TRADFRI_ON_OFF_SWITCH = {
-    CONF_TURN_ON_SHORT_PRESS: 1002,
-    CONF_TURN_ON_LONG_PRESS: 1001,
-    CONF_TURN_ON_LONG_RELEASE: 1003,
-    CONF_TURN_OFF_SHORT_PRESS: 2002,
-    CONF_TURN_OFF_LONG_PRESS: 2001,
-    CONF_TURN_OFF_LONG_RELEASE: 2003,
+    (CONF_SHORT_PRESS, CONF_TURN_ON): 1002,
+    (CONF_LONG_PRESS, CONF_TURN_ON): 1001,
+    (CONF_LONG_RELEASE, CONF_TURN_ON): 1003,
+    (CONF_SHORT_PRESS, CONF_TURN_OFF): 2002,
+    (CONF_LONG_PRESS, CONF_TURN_OFF): 2001,
+    (CONF_LONG_RELEASE, CONF_TURN_OFF): 2003,
 }
 
 TRADFRI_OPEN_CLOSE_REMOTE_MODEL = "TRADFRI open/close remote"
 TRADFRI_OPEN_CLOSE_REMOTE = {
-    CONF_OPEN_SHORT_PRESS: 1002,
-    CONF_OPEN_LONG_PRESS: 1003,
-    CONF_CLOSE_SHORT_PRESS: 2002,
-    CONF_CLOSE_LONG_PRESS: 2003,
+    (CONF_SHORT_PRESS, CONF_OPEN): 1002,
+    (CONF_LONG_PRESS, CONF_OPEN): 1003,
+    (CONF_SHORT_PRESS, CONF_CLOSE): 2002,
+    (CONF_LONG_PRESS, CONF_CLOSE): 2003,
 }
 
 TRADFRI_REMOTE_MODEL = "TRADFRI remote control"
 TRADFRI_REMOTE = {
-    CONF_TURN_ON_SHORT_PRESS: 1002,
-    CONF_TURN_ON_LONG_PRESS: 1001,
-    CONF_DIM_UP_SHORT_RELEASE: 2002,
-    CONF_DIM_UP_LONG_PRESS: 2001,
-    CONF_DIM_UP_LONG_RELEASE: 2003,
-    CONF_DIM_DOWN_SHORT_RELEASE: 3002,
-    CONF_DIM_DOWN_LONG_PRESS: 3001,
-    CONF_DIM_DOWN_LONG_RELEASE: 3003,
-    CONF_LEFT_SHORT_RELEASE: 4002,
-    CONF_LEFT_LONG_PRESS: 4001,
-    CONF_LEFT_LONG_RELEASE: 4003,
-    CONF_RIGHT_SHORT_RELEASE: 5002,
-    CONF_RIGHT_LONG_PRESS: 5001,
-    CONF_RIGHT_LONG_RELEASE: 5003,
+    (CONF_SHORT_PRESS, CONF_TURN_ON): 1002,
+    (CONF_LONG_PRESS, CONF_TURN_ON): 1001,
+    (CONF_SHORT_PRESS, CONF_DIM_UP): 2002,
+    (CONF_LONG_PRESS, CONF_DIM_UP): 2001,
+    (CONF_LONG_RELEASE, CONF_DIM_UP): 2003,
+    (CONF_SHORT_PRESS, CONF_DIM_DOWN): 3002,
+    (CONF_LONG_PRESS, CONF_DIM_DOWN): 3001,
+    (CONF_LONG_RELEASE, CONF_DIM_DOWN): 3003,
+    (CONF_SHORT_PRESS, CONF_LEFT): 4002,
+    (CONF_LONG_PRESS, CONF_LEFT): 4001,
+    (CONF_LONG_RELEASE, CONF_LEFT): 4003,
+    (CONF_SHORT_PRESS, CONF_RIGHT): 5002,
+    (CONF_LONG_PRESS, CONF_RIGHT): 5001,
+    (CONF_LONG_RELEASE, CONF_RIGHT): 5003,
 }
 
 TRADFRI_WIRELESS_DIMMER_MODEL = "TRADFRI wireless dimmer"
-TRADFRI_WIRELESS_DIMMER = {CONF_LEFT_ROTATION: 3002, CONF_RIGHT_ROTATION: 2002}
+TRADFRI_WIRELESS_DIMMER = {
+    (CONF_ROTATED, CONF_LEFT): 3002,
+    (CONF_ROTATED, CONF_RIGHT): 2002,
+}
 
 AQARA_DOUBLE_WALL_SWITCH_MODEL = "lumi.remote.b286acn01"
 AQARA_DOUBLE_WALL_SWITCH = {
-    CONF_LEFT_SHORT_PRESS: 1002,
-    CONF_LEFT_LONG_PRESS: 1001,
-    CONF_LEFT_DOUBLE_PRESS: 1004,
-    CONF_RIGHT_SHORT_PRESS: 2002,
-    CONF_RIGHT_LONG_PRESS: 2001,
-    CONF_RIGHT_DOUBLE_PRESS: 2004,
-    CONF_BOTH_BUTTONS_SHORT_PRESS: 3002,
-    CONF_BOTH_BUTTONS_LONG_PRESS: 3001,
-    CONF_BOTH_BUTTONS_DOUBLE_PRESS: 3004,
+    (CONF_SHORT_PRESS, CONF_LEFT): 1002,
+    (CONF_LONG_PRESS, CONF_LEFT): 1001,
+    (CONF_DOUBLE_PRESS, CONF_LEFT): 1004,
+    (CONF_SHORT_PRESS, CONF_RIGHT): 2002,
+    (CONF_LONG_PRESS, CONF_RIGHT): 2001,
+    (CONF_DOUBLE_PRESS, CONF_RIGHT): 2004,
+    (CONF_SHORT_PRESS, CONF_BOTH_BUTTONS): 3002,
+    (CONF_LONG_PRESS, CONF_BOTH_BUTTONS): 3001,
+    (CONF_DOUBLE_PRESS, CONF_BOTH_BUTTONS): 3004,
 }
 
 AQARA_MINI_SWITCH_MODEL = "lumi.remote.b1acn01"
 AQARA_MINI_SWITCH = {
-    CONF_TURN_ON_SHORT_PRESS: 1002,
-    CONF_TURN_ON_DOUBLE_PRESS: 1004,
-    CONF_TURN_ON_LONG_PRESS: 1001,
-    CONF_TURN_ON_LONG_RELEASE: 1003,
+    (CONF_SHORT_PRESS, CONF_TURN_ON): 1002,
+    (CONF_DOUBLE_PRESS, CONF_TURN_ON): 1004,
+    (CONF_LONG_PRESS, CONF_TURN_ON): 1001,
+    (CONF_LONG_RELEASE, CONF_TURN_ON): 1003,
 }
 
 AQARA_ROUND_SWITCH_MODEL = "lumi.sensor_switch"
 AQARA_ROUND_SWITCH = {
-    CONF_TURN_ON_SHORT_PRESS: 1000,
-    CONF_TURN_ON_SHORT_RELEASE: 1002,
-    CONF_TURN_ON_DOUBLE_PRESS: 1004,
-    CONF_TURN_ON_TRIPLE_PRESS: 1005,
-    CONF_TURN_ON_QUADRUPLE_PRESS: 1006,
-    CONF_TURN_ON_QUINTUPLE_PRESS: 1010,
-    CONF_TURN_ON_LONG_PRESS: 1001,
-    CONF_TURN_ON_LONG_RELEASE: 1003,
+    (CONF_SHORT_PRESS, CONF_TURN_ON): 1000,
+    (CONF_SHORT_RELEASE, CONF_TURN_ON): 1002,
+    (CONF_DOUBLE_PRESS, CONF_TURN_ON): 1004,
+    (CONF_TRIPLE_PRESS, CONF_TURN_ON): 1005,
+    (CONF_QUADRUPLE_PRESS, CONF_TURN_ON): 1006,
+    (CONF_QUINTUPLE_PRESS, CONF_TURN_ON): 1010,
+    (CONF_LONG_PRESS, CONF_TURN_ON): 1001,
+    (CONF_LONG_RELEASE, CONF_TURN_ON): 1003,
 }
 
 AQARA_SQUARE_SWITCH_MODEL = "lumi.sensor_switch.aq3"
 AQARA_SQUARE_SWITCH = {
-    CONF_TURN_ON_SHORT_PRESS: 1002,
-    CONF_TURN_ON_DOUBLE_PRESS: 1004,
-    CONF_TURN_ON_LONG_PRESS: 1001,
-    CONF_TURN_ON_LONG_RELEASE: 1003,
-    CONF_SHAKE: 1007,
+    (CONF_SHORT_PRESS, CONF_TURN_ON): 1002,
+    (CONF_DOUBLE_PRESS, CONF_TURN_ON): 1004,
+    (CONF_LONG_PRESS, CONF_TURN_ON): 1001,
+    (CONF_LONG_RELEASE, CONF_TURN_ON): 1003,
+    (CONF_SHAKE, ""): 1007,
 }
 
 REMOTES = {
@@ -199,6 +174,7 @@ TRIGGER_SCHEMA = vol.All(
             vol.Required(CONF_DOMAIN): DOMAIN,
             vol.Required(CONF_PLATFORM): "device",
             vol.Required(CONF_TYPE): str,
+            vol.Required(CONF_SUBTYPE): str,
         }
     )
 )
@@ -225,10 +201,12 @@ async def async_attach_trigger(hass, config, action, automation_info):
     device_registry = await hass.helpers.device_registry.async_get_registry()
     device = device_registry.async_get(config[CONF_DEVICE_ID])
 
-    if device.model not in REMOTES and config[CONF_TYPE] not in REMOTES[device.model]:
+    trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
+
+    if device.model not in REMOTES and trigger not in REMOTES[device.model]:
         return
 
-    trigger = REMOTES[device.model][config[CONF_TYPE]]
+    trigger = REMOTES[device.model][trigger]
 
     deconz_event = _get_deconz_event_from_device_id(hass, device.id)
     if deconz_event is None:
@@ -263,13 +241,14 @@ async def async_get_triggers(hass, device_id):
         return
 
     triggers = []
-    for trigger in REMOTES[device.model].keys():
+    for trigger, subtype in REMOTES[device.model].keys():
         triggers.append(
             {
                 CONF_DEVICE_ID: device_id,
                 CONF_DOMAIN: DOMAIN,
                 CONF_PLATFORM: "device",
                 CONF_TYPE: trigger,
+                CONF_SUBTYPE: subtype,
             }
         )
 
