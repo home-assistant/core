@@ -225,6 +225,39 @@ class TestTemplateLock:
 
         assert self.hass.states.all() == []
 
+    def test_invalid_availability_template_keeps_component_available(self, caplog):
+        """Test that an invalid availability keeps the device available"""
+        with assert_setup_component(1, "lock"):
+            assert setup.setup_component(
+                self.hass,
+                "lock",
+                {
+                    "lock": {
+                        "platform": "template",
+                        "value_template": "{{ 1 + 1 }}",
+                        "availability_template": "{{ x - 12 }}",
+                        "lock": {
+                            "service": "switch.turn_on",
+                            "entity_id": "switch.test_state",
+                        },
+                        "unlock": {
+                            "service": "switch.turn_off",
+                            "entity_id": "switch.test_state",
+                        },
+                    }
+                },
+            )
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("lock.template_lock")
+        assert state.state == lock.STATE_UNLOCKED
+        assert (
+            "UndefinedError: 'x' is undefined"
+        ) in caplog.text
+
+
     def test_no_template_match_all(self, caplog):
         """Test that we do not allow locks that match on all."""
         with assert_setup_component(1, "lock"):
