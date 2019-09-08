@@ -452,6 +452,32 @@ async def test_invalid_attribute_template(hass, caplog):
     assert ("Error rendering attribute test_attribute") in caplog.text
 
 
+async def test_invalid_availability_template_keeps_component_available(hass, caplog):
+    """Test that an invalid availability keeps the device available."""
+
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "my_sensor": {
+                        "value_template": "{{ states.sensor.test_state.state }}",
+                        "availability_template": "{{ x - 12 }}",
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.my_sensor") != STATE_UNAVAILABLE
+    assert ("UndefinedError: 'x' is undefined") in caplog.text
+
+
 async def test_no_template_match_all(hass, caplog):
     """Test that we do not allow sensors that match on all."""
     hass.states.async_set("sensor.test_sensor", "startup")
