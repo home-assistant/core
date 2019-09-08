@@ -44,7 +44,7 @@ CONF_OPERATION_MODE_COMFORT_ADDRESS = "operation_mode_comfort_address"
 CONF_OPERATION_MODES = "operation_modes"
 CONF_ON_OFF_ADDRESS = "on_off_address"
 CONF_ON_OFF_STATE_ADDRESS = "on_off_state_address"
-CONF_ON_OFF_INVERTED = "on_off_inverted"
+CONF_ON_OFF_INVERT = "on_off_invert"
 CONF_MIN_TEMP = "min_temp"
 CONF_MAX_TEMP = "max_temp"
 
@@ -103,7 +103,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): cv.string,
         vol.Optional(CONF_ON_OFF_ADDRESS): cv.string,
         vol.Optional(CONF_ON_OFF_STATE_ADDRESS): cv.string,
-        vol.Optional(CONF_ON_OFF_INVERTED, default=False): cv.boolean,
+        vol.Optional(CONF_ON_OFF_INVERT, default=False): cv.boolean,
         vol.Optional(CONF_OPERATION_MODES): vol.All(
             cv.ensure_list, [vol.In(OPERATION_MODES)]
         ),
@@ -184,20 +184,20 @@ def async_add_entities_config(hass, config, async_add_entities):
         min_temp=config.get(CONF_MIN_TEMP),
         max_temp=config.get(CONF_MAX_TEMP),
         mode=climate_mode,
+        on_off_invert=config.get(CONF_ON_OFF_INVERT),
     )
     hass.data[DATA_KNX].xknx.devices.add(climate)
 
-    async_add_entities([KNXClimate(climate, config.get(CONF_ON_OFF_INVERTED))])
+    async_add_entities([KNXClimate(climate)])
 
 
 class KNXClimate(ClimateDevice):
     """Representation of a KNX climate device."""
 
-    def __init__(self, device, on_off_inverted=False):
+    def __init__(self, device):
         """Initialize of a KNX climate device."""
         self.device = device
         self._unit_of_measurement = TEMP_CELSIUS
-        self._on_off_inverted = on_off_inverted
 
     @property
     def supported_features(self) -> int:
@@ -271,9 +271,9 @@ class KNXClimate(ClimateDevice):
     def hvac_mode(self) -> Optional[str]:
         """Return current operation ie. heat, cool, idle."""
         if self.device.supports_on_off and not self.device.is_on:
-            return HVAC_MODE_OFF if not self._on_off_inverted else HVAC_MODE_HEAT
+            return HVAC_MODE_OFF
         if self.device.supports_on_off and self.device.is_on:
-            return HVAC_MODE_HEAT if not self._on_off_inverted else HVAC_MODE_OFF
+            return HVAC_MODE_HEAT
         if self.device.mode.supports_operation_mode:
             return OPERATION_MODES.get(
                 self.device.mode.operation_mode.value, HVAC_MODE_HEAT
@@ -297,15 +297,9 @@ class KNXClimate(ClimateDevice):
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set operation mode."""
         if self.device.supports_on_off and hvac_mode == HVAC_MODE_OFF:
-            if not self._on_off_inverted:
-                await self.device.turn_off()
-            else:
-                await self.device.turn_on()
+            await self.device.turn_off()
         elif self.device.supports_on_off and hvac_mode == HVAC_MODE_HEAT:
-            if not self._on_off_inverted:
-                await self.device.turn_on()
-            else:
-                await self.device.turn_off()
+            await self.device.turn_on()
         elif self.device.mode.supports_operation_mode:
             from xknx.knx import HVACOperationMode
 
