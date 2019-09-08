@@ -5,7 +5,7 @@ from pyrainbird import RainbirdController
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
-from . import DATA_RAINBIRD, SENSOR_TYPES
+from . import DATA_RAINBIRD, SENSOR_TYPES, SENSOR_TYPE_RAINSENSOR, SENSOR_TYPE_RAINDELAY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,9 +41,9 @@ class RainBirdSensor(BinarySensorDevice):
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating sensor: %s", self._name)
         state = None
-        if self._sensor_type == "rainsensor":
+        if self._sensor_type == SENSOR_TYPE_RAINSENSOR:
             state = self._controller.get_rain_sensor_state()
-        elif self._sensor_type == "raindelay":
+        elif self._sensor_type == SENSOR_TYPE_RAINDELAY:
             state = self._controller.get_rain_delay()
         self._state = None if state is None else bool(state)
 

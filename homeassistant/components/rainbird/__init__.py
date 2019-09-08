@@ -10,10 +10,13 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_RAINBIRD = "rainbird"
 DOMAIN = "rainbird"
+
+SENSOR_TYPE_RAINDELAY = "raindelay"
+SENSOR_TYPE_RAINSENSOR = "rainsensor"
 # sensor_type [ description, unit, icon ]
 SENSOR_TYPES = {
-    "rainsensor": ["Rainsensor", None, "mdi:water"],
-    "raindelay": ["Raindelay", None, "mdi:water-off"],
+    SENSOR_TYPE_RAINSENSOR: ["Rainsensor", None, "mdi:water"],
+    SENSOR_TYPE_RAINDELAY: ["Raindelay", None, "mdi:water-off"],
 }
 
 CONFIG_SCHEMA = vol.Schema(

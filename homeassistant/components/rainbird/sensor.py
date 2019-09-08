@@ -5,7 +5,7 @@ from pyrainbird import RainbirdController
 
 from homeassistant.helpers.entity import Entity
 
-from . import DATA_RAINBIRD, SENSOR_TYPES
+from . import DATA_RAINBIRD, SENSOR_TYPES, SENSOR_TYPE_RAINDELAY, SENSOR_TYPE_RAINSENSOR
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,9 +41,9 @@ class RainBirdSensor(Entity):
     def update(self):
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating sensor: %s", self._name)
-        if self._sensor_type == "rainsensor":
+        if self._sensor_type == SENSOR_TYPE_RAINSENSOR:
             self._state = self._controller.get_rain_sensor_state()
-        elif self._sensor_type == "raindelay":
+        elif self._sensor_type == SENSOR_TYPE_RAINDELAY:
             self._state = self._controller.get_rain_delay()
 
     @property
