@@ -253,9 +253,7 @@ class TestTemplateLock:
 
         state = self.hass.states.get("lock.template_lock")
         assert state.state == lock.STATE_UNLOCKED
-        assert (
-            "UndefinedError: 'x' is undefined"
-        ) in caplog.text
+        assert ("UndefinedError: 'x' is undefined") in caplog.text
 
     def test_no_template_match_all(self, caplog):
         """Test that we do not allow locks that match on all."""
