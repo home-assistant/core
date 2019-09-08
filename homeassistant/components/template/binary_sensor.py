@@ -14,6 +14,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ENTITY_ID,
+    CONF_AVAILABILITY_TEMPLATE,
     CONF_VALUE_TEMPLATE,
     CONF_ICON_TEMPLATE,
     CONF_ENTITY_PICTURE_TEMPLATE,
@@ -38,6 +39,7 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_ICON_TEMPLATE): cv.template,
         vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
+        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
         vol.Optional(CONF_ATTRIBUTE_TEMPLATES): vol.Schema({cv.string: cv.template}),
         vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -60,6 +62,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         value_template = device_config[CONF_VALUE_TEMPLATE]
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         entity_picture_template = device_config.get(CONF_ENTITY_PICTURE_TEMPLATE)
+        availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
         entity_ids = set()
         manual_entity_ids = device_config.get(ATTR_ENTITY_ID)
         attribute_templates = device_config.get(CONF_ATTRIBUTE_TEMPLATES, {})
@@ -70,6 +73,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             CONF_VALUE_TEMPLATE: value_template,
             CONF_ICON_TEMPLATE: icon_template,
             CONF_ENTITY_PICTURE_TEMPLATE: entity_picture_template,
+            CONF_AVAILABILITY_TEMPLATE: availability_template,
         }
 
         for tpl_name, template in chain(templates.items(), attribute_templates.items()):
@@ -117,6 +121,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 value_template,
                 icon_template,
                 entity_picture_template,
+                availability_template,
                 entity_ids,
                 delay_on,
                 delay_off,
@@ -143,6 +148,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         value_template,
         icon_template,
         entity_picture_template,
+        availability_template,
         entity_ids,
         delay_on,
         delay_off,
@@ -156,12 +162,14 @@ class BinarySensorTemplate(BinarySensorDevice):
         self._template = value_template
         self._state = None
         self._icon_template = icon_template
+        self._availability_template = availability_template
         self._entity_picture_template = entity_picture_template
         self._icon = None
         self._entity_picture = None
         self._entities = entity_ids
         self._delay_on = delay_on
         self._delay_off = delay_off
+        self._available = True
         self._attribute_templates = attribute_templates
         self._attributes = {}
 
@@ -223,6 +231,11 @@ class BinarySensorTemplate(BinarySensorDevice):
         """No polling needed."""
         return False
 
+    @property
+    def available(self):
+        """Availability indicator."""
+        return self._available
+
     @callback
     def _async_render(self):
         """Get the state of template."""
@@ -240,10 +253,22 @@ class BinarySensorTemplate(BinarySensorDevice):
                 return
             _LOGGER.error("Could not render template %s: %s", self._name, ex)
 
-        templates = {
-            "_icon": self._icon_template,
-            "_entity_picture": self._entity_picture_template,
-        }
+        if self._availability_template is not None:
+            try:
+                self._available = (
+                    self._availability_template.async_render().lower() == "true"
+                )
+            except TemplateError as ex:
+                if ex.args and ex.args[0].startswith(
+                    "UndefinedError: 'None' has no attribute"
+                ):
+                    # Common during HA startup - so just a warning
+                    _LOGGER.warning(
+                        "Could not render template %s, " "the state is unknown",
+                        self._name,
+                    )
+                    return
+                _LOGGER.error("Could not render template %s: %s", self._name, ex)
 
         attrs = {}
         if self._attribute_templates is not None:
@@ -253,6 +278,11 @@ class BinarySensorTemplate(BinarySensorDevice):
                 except TemplateError as err:
                     _LOGGER.error("Error rendering attribute %s: %s", key, err)
             self._attributes = attrs
+
+        templates = {
+            "_icon": self._icon_template,
+            "_entity_picture": self._entity_picture_template,
+        }
 
         for property_name, template in templates.items():
             if template is None:
