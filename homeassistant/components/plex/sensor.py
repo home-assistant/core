@@ -32,11 +32,17 @@ class PlexSensor(Entity):
         self._state = None
         self._now_playing = []
         self._server = plex_server
+        self._unique_id = f"sensor-{plex_server.machine_identifier}"
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the id of this plex client."""
+        return self._unique_id
 
     @property
     def state(self):
