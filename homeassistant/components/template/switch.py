@@ -78,9 +78,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         if availability_template is not None:
             availability_template.hass = hass
-            temp_ids = state_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
-                entity_ids |= set(temp_ids)
+            temp_ids = availability_template.extract_entities()
+            if str(entity_ids) != MATCH_ALL:
+                if (temp_ids) == MATCH_ALL:
+                    entity_ids |= MATCH_ALL
+                else:
+                    entity_ids |= set(temp_ids)
 
         switches.append(
             SwitchTemplate(
