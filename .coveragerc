@@ -576,6 +576,7 @@ omit =
     homeassistant/components/snmp/*
     homeassistant/components/sochain/sensor.py
     homeassistant/components/socialblade/sensor.py
+    homeassistant/components/solaredge/__init__.py
     homeassistant/components/solaredge/sensor.py
     homeassistant/components/solaredge_local/sensor.py
     homeassistant/components/solax/sensor.py
