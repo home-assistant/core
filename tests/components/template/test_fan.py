@@ -325,6 +325,37 @@ async def test_templates_invalid_values(hass, calls):
     _verify(hass, STATE_OFF, None, None, None)
 
 
+async def test_invalid_availability_template_keeps_component_available(hass, caplog):
+    """Test that an invalid availability keeps the device available."""
+
+    with assert_setup_component(1, "fan"):
+        assert await setup.async_setup_component(
+            hass,
+            "fan",
+            {
+                "fan": {
+                    "platform": "template",
+                    "fans": {
+                        "test_fan": {
+                            "value_template": "{{ x - 12 }}",
+                            "speed_template": "{{ states('input_select.speed') }}",
+                            "oscillating_template": "{{ states('input_select.osc') }}",
+                            "direction_template": "{{ states('input_select.direction') }}",
+                            "turn_on": {"service": "script.fan_on"},
+                            "turn_off": {"service": "script.fan_off"},
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.my_sensor") != STATE_UNAVAILABLE
+    assert ("UndefinedError: 'x' is undefined") in caplog.text
+
+
 # End of template tests #
 
 
