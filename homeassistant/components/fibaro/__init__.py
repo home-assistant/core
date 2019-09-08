@@ -247,11 +247,11 @@ class FibaroController:
             else:
                 room_name = self._room_map[device.roomID].name
             device.room_name = room_name
-            device.friendly_name = "{} {}".format(room_name, device.name)
+            device.friendly_name = f"{room_name} {device.name}"
             device.ha_id = "scene_{}_{}_{}".format(
                 slugify(room_name), slugify(device.name), device.id
             )
-            device.unique_id_str = "{}.scene.{}".format(self.hub_serial, device.id)
+            device.unique_id_str = f"{self.hub_serial}.scene.{device.id}"
             self._scene_map[device.id] = device
             self.fibaro_devices["scene"].append(device)
 
@@ -287,7 +287,7 @@ class FibaroController:
                     device.mapped_type = None
                 dtype = device.mapped_type
                 if dtype:
-                    device.unique_id_str = "{}.{}".format(self.hub_serial, device.id)
+                    device.unique_id_str = f"{self.hub_serial}.{device.id}"
                     self._device_map[device.id] = device
                     if dtype != "climate":
                         self.fibaro_devices[dtype].append(device)
@@ -414,7 +414,7 @@ class FibaroDevice(Entity):
         green = int(max(0, min(255, green)))
         blue = int(max(0, min(255, blue)))
         white = int(max(0, min(255, white)))
-        color_str = "{},{},{},{}".format(red, green, blue, white)
+        color_str = f"{red},{green},{blue},{white}"
         self.fibaro_device.properties.color = color_str
         self.action("setColor", str(red), str(green), str(blue), str(white))
 

@@ -33,7 +33,7 @@ class OpenThermBinarySensor(BinarySensorDevice):
     def __init__(self, gw_dev, var, device_class, friendly_name_format):
         """Initialize the binary sensor."""
         self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, "{}_{}".format(var, gw_dev.gw_id), hass=gw_dev.hass
+            ENTITY_ID_FORMAT, f"{var}_{gw_dev.gw_id}", hass=gw_dev.hass
         )
         self._gateway = gw_dev
         self._var = var

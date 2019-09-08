@@ -50,7 +50,7 @@ def get_service(hass, config, discovery_info=None):
 
     service = ApnsNotificationService(hass, name, topic, sandbox, cert_file)
     hass.services.register(
-        DOMAIN, "apns_{}".format(name), service.register, schema=REGISTER_SERVICE_SCHEMA
+        DOMAIN, f"apns_{name}", service.register, schema=REGISTER_SERVICE_SCHEMA
     )
     return service
 
@@ -98,7 +98,7 @@ class ApnsDevice:
         The full id of a device that is tracked by the device
         tracking component.
         """
-        return "{}.{}".format(DEVICE_TRACKER_DOMAIN, self.tracking_id)
+        return f"{DEVICE_TRACKER_DOMAIN}.{self.tracking_id}"
 
     @property
     def disabled(self):
@@ -124,9 +124,9 @@ def _write_device(out, device):
     """Write a single device to file."""
     attributes = []
     if device.name is not None:
-        attributes.append("name: {}".format(device.name))
+        attributes.append(f"name: {device.name}")
     if device.tracking_device_id is not None:
-        attributes.append("tracking_device_id: {}".format(device.tracking_device_id))
+        attributes.append(f"tracking_device_id: {device.tracking_device_id}")
     if device.disabled:
         attributes.append("disabled: True")
 

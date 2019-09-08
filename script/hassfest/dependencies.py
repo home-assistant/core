@@ -67,5 +67,5 @@ def validate(integrations: Dict[str, Integration], config):
         for dep in integration.manifest["dependencies"]:
             if dep not in integrations:
                 integration.add_error(
-                    "dependencies", "Dependency {} does not exist".format(dep)
+                    "dependencies", f"Dependency {dep} does not exist"
                 )

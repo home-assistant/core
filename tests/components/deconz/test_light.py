@@ -90,7 +90,8 @@ async def setup_gateway(hass, data, allow_deconz_groups=True):
         ENTRY_CONFIG,
         "test",
         config_entries.CONN_CLASS_LOCAL_PUSH,
-        ENTRY_OPTIONS,
+        system_options={},
+        options=ENTRY_OPTIONS,
     )
     gateway = deconz.DeconzGateway(hass, config_entry)
     gateway.api = DeconzSession(loop, session, **config_entry.data)
@@ -190,8 +191,9 @@ async def test_add_new_light(hass):
     gateway = await setup_gateway(hass, {})
     light = Mock()
     light.name = "name"
+    light.uniqueid = "1"
     light.register_async_callback = Mock()
-    async_dispatcher_send(hass, gateway.async_event_new_device("light"), [light])
+    async_dispatcher_send(hass, gateway.async_signal_new_device("light"), [light])
     await hass.async_block_till_done()
     assert "light.name" in gateway.deconz_ids
 
@@ -202,7 +204,7 @@ async def test_add_new_group(hass):
     group = Mock()
     group.name = "name"
     group.register_async_callback = Mock()
-    async_dispatcher_send(hass, gateway.async_event_new_device("group"), [group])
+    async_dispatcher_send(hass, gateway.async_signal_new_device("group"), [group])
     await hass.async_block_till_done()
     assert "light.name" in gateway.deconz_ids
 
@@ -212,8 +214,9 @@ async def test_do_not_add_deconz_groups(hass):
     gateway = await setup_gateway(hass, {}, allow_deconz_groups=False)
     group = Mock()
     group.name = "name"
+    group.type = "LightGroup"
     group.register_async_callback = Mock()
-    async_dispatcher_send(hass, gateway.async_event_new_device("group"), [group])
+    async_dispatcher_send(hass, gateway.async_signal_new_device("group"), [group])
     await hass.async_block_till_done()
     assert len(gateway.deconz_ids) == 0
 

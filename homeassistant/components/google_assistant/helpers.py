@@ -212,7 +212,7 @@ class GoogleEntity:
         if not executed:
             raise SmartHomeError(
                 ERR_FUNCTION_NOT_SUPPORTED,
-                "Unable to execute {} for {}".format(command, self.state.entity_id),
+                f"Unable to execute {command} for {self.state.entity_id}",
             )
 
     @callback

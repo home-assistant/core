@@ -11,12 +11,35 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MODEL_TYPE = "model_type"
+ATTR_ID = "id"
 # RSSI HAP -> Device
 ATTR_RSSI_DEVICE = "rssi_device"
 # RSSI Device -> HAP
 ATTR_RSSI_PEER = "rssi_peer"
 ATTR_SABOTAGE = "sabotage"
 ATTR_GROUP_MEMBER_UNREACHABLE = "group_member_unreachable"
+ATTR_DEVICE_OVERHEATED = "device_overheated"
+ATTR_DEVICE_OVERLOADED = "device_overloaded"
+ATTR_DEVICE_UNTERVOLTAGE = "device_undervoltage"
+
+DEVICE_ATTRIBUTE_ICONS = {
+    "lowBat": "mdi:battery-outline",
+    "sabotage": "mdi:alert",
+    "deviceOverheated": "mdi:alert",
+    "deviceOverloaded": "mdi:alert",
+    "deviceUndervoltage": "mdi:alert",
+}
+
+DEVICE_ATTRIBUTES = {
+    "modelType": ATTR_MODEL_TYPE,
+    "id": ATTR_ID,
+    "sabotage": ATTR_SABOTAGE,
+    "rssiDeviceValue": ATTR_RSSI_DEVICE,
+    "rssiPeerValue": ATTR_RSSI_PEER,
+    "deviceOverheated": ATTR_DEVICE_OVERHEATED,
+    "deviceOverloaded": ATTR_DEVICE_OVERLOADED,
+    "deviceUndervoltage": ATTR_DEVICE_UNTERVOLTAGE,
+}
 
 
 class HomematicipGenericDevice(Entity):
@@ -53,17 +76,25 @@ class HomematicipGenericDevice(Entity):
 
     def _async_device_changed(self, *args, **kwargs):
         """Handle device state changes."""
-        _LOGGER.debug("Event %s (%s)", self.name, self._device.modelType)
-        self.async_schedule_update_ha_state()
+        # Don't update disabled entities
+        if self.enabled:
+            _LOGGER.debug("Event %s (%s)", self.name, self._device.modelType)
+            self.async_schedule_update_ha_state()
+        else:
+            _LOGGER.debug(
+                "Device Changed Event for %s (%s) not fired. Entity is disabled.",
+                self.name,
+                self._device.modelType,
+            )
 
     @property
     def name(self) -> str:
         """Return the name of the generic device."""
         name = self._device.label
         if self._home.name is not None and self._home.name != "":
-            name = "{} {}".format(self._home.name, name)
+            name = f"{self._home.name} {name}"
         if self.post is not None and self.post != "":
-            name = "{} {}".format(name, self.post)
+            name = f"{name} {self.post}"
         return name
 
     @property
@@ -79,25 +110,25 @@ class HomematicipGenericDevice(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return "{}_{}".format(self.__class__.__name__, self._device.id)
+        return f"{self.__class__.__name__}_{self._device.id}"
 
     @property
     def icon(self) -> Optional[str]:
         """Return the icon."""
-        if hasattr(self._device, "lowBat") and self._device.lowBat:
-            return "mdi:battery-outline"
-        if hasattr(self._device, "sabotage") and self._device.sabotage:
-            return "mdi:alert"
+        for attr, icon in DEVICE_ATTRIBUTE_ICONS.items():
+            if getattr(self._device, attr, None):
+                return icon
+
         return None
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the generic device."""
-        attr = {ATTR_MODEL_TYPE: self._device.modelType}
-        if hasattr(self._device, "sabotage") and self._device.sabotage:
-            attr[ATTR_SABOTAGE] = self._device.sabotage
-        if hasattr(self._device, "rssiDeviceValue") and self._device.rssiDeviceValue:
-            attr[ATTR_RSSI_DEVICE] = self._device.rssiDeviceValue
-        if hasattr(self._device, "rssiPeerValue") and self._device.rssiPeerValue:
-            attr[ATTR_RSSI_PEER] = self._device.rssiPeerValue
-        return attr
+        state_attr = {}
+        if isinstance(self._device, AsyncDevice):
+            for attr, attr_key in DEVICE_ATTRIBUTES.items():
+                attr_value = getattr(self._device, attr, None)
+                if attr_value:
+                    state_attr[attr_key] = attr_value
+
+        return state_attr

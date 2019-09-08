@@ -24,7 +24,7 @@ from homeassistant.util.yaml import load_yaml
 from .typing import HomeAssistantType
 
 
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
 
 PATH_REGISTRY = "entity_registry.yaml"
@@ -33,8 +33,10 @@ EVENT_ENTITY_REGISTRY_UPDATED = "entity_registry_updated"
 SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
 _UNDEF = object()
+DISABLED_CONFIG_ENTRY = "config_entry"
 DISABLED_HASS = "hass"
 DISABLED_USER = "user"
+DISABLED_INTEGRATION = "integration"
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "core.entity_registry"
@@ -51,10 +53,18 @@ class RegistryEntry:
     device_id = attr.ib(type=str, default=None)
     config_entry_id = attr.ib(type=str, default=None)
     disabled_by = attr.ib(
-        type=str,
+        type=Optional[str],
         default=None,
-        validator=attr.validators.in_((DISABLED_HASS, DISABLED_USER, None)),
-    )  # type: Optional[str]
+        validator=attr.validators.in_(
+            (
+                DISABLED_HASS,
+                DISABLED_USER,
+                DISABLED_INTEGRATION,
+                DISABLED_CONFIG_ENTRY,
+                None,
+            )
+        ),
+    )
     domain = attr.ib(type=str, init=False, repr=False)
 
     @domain.default
@@ -91,7 +101,9 @@ class EntityRegistry:
         return self.entities.get(entity_id)
 
     @callback
-    def async_get_entity_id(self, domain: str, platform: str, unique_id: str):
+    def async_get_entity_id(
+        self, domain: str, platform: str, unique_id: str
+    ) -> Optional[str]:
         """Check if an entity_id is currently registered."""
         for entity in self.entities.values():
             if (
@@ -127,17 +139,23 @@ class EntityRegistry:
         unique_id,
         *,
         suggested_object_id=None,
-        config_entry_id=None,
+        config_entry=None,
         device_id=None,
         known_object_ids=None,
+        disabled_by=None,
     ):
         """Get entity. Create if it doesn't exist."""
+        config_entry_id = None
+        if config_entry:
+            config_entry_id = config_entry.entry_id
+
         entity_id = self.async_get_entity_id(domain, platform, unique_id)
+
         if entity_id:
             return self._async_update_entity(
                 entity_id,
-                config_entry_id=config_entry_id,
-                device_id=device_id,
+                config_entry_id=config_entry_id or _UNDEF,
+                device_id=device_id or _UNDEF,
                 # When we changed our slugify algorithm, we invalidated some
                 # stored entity IDs with either a __ or ending in _.
                 # Fix introduced in 0.86 (Jan 23, 2019). Next line can be
@@ -148,10 +166,15 @@ class EntityRegistry:
             )
 
         entity_id = self.async_generate_entity_id(
-            domain,
-            suggested_object_id or "{}_{}".format(platform, unique_id),
-            known_object_ids,
+            domain, suggested_object_id or f"{platform}_{unique_id}", known_object_ids
         )
+
+        if (
+            disabled_by is None
+            and config_entry
+            and config_entry.system_options.disable_new_entities
+        ):
+            disabled_by = DISABLED_INTEGRATION
 
         entity = RegistryEntry(
             entity_id=entity_id,
@@ -159,6 +182,7 @@ class EntityRegistry:
             device_id=device_id,
             unique_id=unique_id,
             platform=platform,
+            disabled_by=disabled_by,
         )
         self.entities[entity_id] = entity
         _LOGGER.info("Registered new %s.%s entity: %s", domain, platform, entity_id)
@@ -194,7 +218,13 @@ class EntityRegistry:
 
     @callback
     def async_update_entity(
-        self, entity_id, *, name=_UNDEF, new_entity_id=_UNDEF, new_unique_id=_UNDEF
+        self,
+        entity_id,
+        *,
+        name=_UNDEF,
+        new_entity_id=_UNDEF,
+        new_unique_id=_UNDEF,
+        disabled_by=_UNDEF,
     ):
         """Update properties of an entity."""
         return self._async_update_entity(
@@ -202,6 +232,7 @@ class EntityRegistry:
             name=name,
             new_entity_id=new_entity_id,
             new_unique_id=new_unique_id,
+            disabled_by=disabled_by,
         )
 
     @callback
@@ -214,20 +245,21 @@ class EntityRegistry:
         new_entity_id=_UNDEF,
         device_id=_UNDEF,
         new_unique_id=_UNDEF,
+        disabled_by=_UNDEF,
     ):
         """Private facing update properties method."""
         old = self.entities[entity_id]
 
         changes = {}
 
-        if name is not _UNDEF and name != old.name:
-            changes["name"] = name
-
-        if config_entry_id is not _UNDEF and config_entry_id != old.config_entry_id:
-            changes["config_entry_id"] = config_entry_id
-
-        if device_id is not _UNDEF and device_id != old.device_id:
-            changes["device_id"] = device_id
+        for attr_name, value in (
+            ("name", name),
+            ("config_entry_id", config_entry_id),
+            ("device_id", device_id),
+            ("disabled_by", disabled_by),
+        ):
+            if value is not _UNDEF and value != getattr(old, attr_name):
+                changes[attr_name] = value
 
         if new_entity_id is not _UNDEF and new_entity_id != old.entity_id:
             if self.async_is_registered(new_entity_id):
@@ -268,7 +300,7 @@ class EntityRegistry:
 
         self.async_schedule_save()
 
-        data = {"action": "update", "entity_id": entity_id}
+        data = {"action": "update", "entity_id": entity_id, "changes": list(changes)}
 
         if old.entity_id != entity_id:
             data["old_entity_id"] = old.entity_id

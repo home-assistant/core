@@ -3,7 +3,7 @@
   "name": "Lacrosse",
   "documentation": "https://www.home-assistant.io/components/lacrosse",
   "requirements": [
-    "pylacrosse==0.3.1"
+    "pylacrosse==0.4.0"
   ],
   "dependencies": [],
   "codeowners": []

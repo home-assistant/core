@@ -2,7 +2,7 @@
 import asyncio
 import logging
 from io import BytesIO
-from typing import Any, Dict, Optional, Tuple  # noqa: F401
+from typing import Any, Dict, Optional, Tuple
 
 import voluptuous as vol
 
@@ -75,7 +75,7 @@ class TotpAuthModule(MultiFactorAuthModule):
     def __init__(self, hass: HomeAssistant, config: Dict[str, Any]) -> None:
         """Initialize the user data store."""
         super().__init__(hass, config)
-        self._users = None  # type: Optional[Dict[str, str]]
+        self._users: Optional[Dict[str, str]] = None
         self._user_store = hass.helpers.storage.Store(
             STORAGE_VERSION, STORAGE_KEY, private=True
         )
@@ -107,7 +107,7 @@ class TotpAuthModule(MultiFactorAuthModule):
         """Create a ota_secret for user."""
         import pyotp
 
-        ota_secret = secret or pyotp.random_base32()  # type: str
+        ota_secret: str = secret or pyotp.random_base32()
 
         self._users[user_id] = ota_secret  # type: ignore
         return ota_secret
@@ -181,9 +181,9 @@ class TotpSetupFlow(SetupFlow):
         """Initialize the setup flow."""
         super().__init__(auth_module, setup_schema, user.id)
         # to fix typing complaint
-        self._auth_module = auth_module  # type: TotpAuthModule
+        self._auth_module: TotpAuthModule = auth_module
         self._user = user
-        self._ota_secret = None  # type: Optional[str]
+        self._ota_secret: Optional[str] = None
         self._url = None  # type Optional[str]
         self._image = None  # type Optional[str]
 
@@ -197,7 +197,7 @@ class TotpSetupFlow(SetupFlow):
         """
         import pyotp
 
-        errors = {}  # type: Dict[str, str]
+        errors: Dict[str, str] = {}
 
         if user_input:
             verified = await self.hass.async_add_executor_job(  # type: ignore

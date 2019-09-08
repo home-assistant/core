@@ -244,7 +244,7 @@ class DemoVacuum(VacuumDevice):
         if self.supported_features & SUPPORT_SEND_COMMAND == 0:
             return
 
-        self._status = "Executing {}({})".format(command, params)
+        self._status = f"Executing {command}({params})"
         self._state = True
         self.schedule_update_ha_state()
 

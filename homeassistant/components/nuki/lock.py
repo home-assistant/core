@@ -144,10 +144,12 @@ class NukiLock(LockDevice):
             self._nuki_lock.update(aggressive=False)
         except requests.exceptions.RequestException:
             self._available = False
-        else:
-            self._name = self._nuki_lock.name
-            self._locked = self._nuki_lock.is_locked
-            self._battery_critical = self._nuki_lock.battery_critical
+            return
+
+        self._available = self._nuki_lock.state != 255
+        self._name = self._nuki_lock.name
+        self._locked = self._nuki_lock.is_locked
+        self._battery_critical = self._nuki_lock.battery_critical
 
     def lock(self, **kwargs):
         """Lock the device."""

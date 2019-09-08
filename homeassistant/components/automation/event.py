@@ -7,6 +7,9 @@ from homeassistant.core import callback
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.helpers import config_validation as cv
 
+
+# mypy: allow-untyped-defs
+
 CONF_EVENT_TYPE = "event_type"
 CONF_EVENT_DATA = "event_data"
 

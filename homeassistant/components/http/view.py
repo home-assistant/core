@@ -2,6 +2,7 @@
 import asyncio
 import json
 import logging
+from typing import List, Optional
 
 from aiohttp import web
 from aiohttp.web_exceptions import (
@@ -22,11 +23,14 @@ from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_REAL_IP
 _LOGGER = logging.getLogger(__name__)
 
 
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
+
 class HomeAssistantView:
     """Base view for all views."""
 
-    url = None
-    extra_urls = []
+    url: Optional[str] = None
+    extra_urls: List[str] = []
     # Views inheriting from this class can override this
     requires_auth = True
     cors_allowed = False

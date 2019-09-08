@@ -72,7 +72,7 @@ class AxisEventBase(AxisEntityBase):
     @property
     def name(self):
         """Return the name of the event."""
-        return "{} {} {}".format(self.device.name, self.event.TYPE, self.event.id)
+        return f"{self.device.name} {self.event.TYPE} {self.event.id}"
 
     @property
     def should_poll(self):
@@ -82,4 +82,4 @@ class AxisEventBase(AxisEntityBase):
     @property
     def unique_id(self):
         """Return a unique identifier for this device."""
-        return "{}-{}-{}".format(self.device.serial, self.event.topic, self.event.id)
+        return f"{self.device.serial}-{self.event.topic}-{self.event.id}"

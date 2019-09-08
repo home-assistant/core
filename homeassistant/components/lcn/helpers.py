@@ -38,7 +38,7 @@ def has_unique_connection_names(connections):
             if suffix == 0:
                 connection[CONF_NAME] = DEFAULT_NAME
             else:
-                connection[CONF_NAME] = "{}{:d}".format(DEFAULT_NAME, suffix)
+                connection[CONF_NAME] = f"{DEFAULT_NAME}{suffix:d}"
 
     schema = vol.Schema(vol.Unique())
     schema([connection.get(CONF_NAME) for connection in connections])

@@ -13,7 +13,7 @@ from homeassistant.loader import bind_hass
 from .typing import HomeAssistantType
 
 
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,7 +84,9 @@ class DeviceRegistry:
         return self.devices.get(device_id)
 
     @callback
-    def async_get_device(self, identifiers: set, connections: set):
+    def async_get_device(
+        self, identifiers: set, connections: set
+    ) -> Optional[DeviceEntry]:
         """Check if device is registered."""
         for device in self.devices.values():
             if any(iden in device.identifiers for iden in identifiers) or any(

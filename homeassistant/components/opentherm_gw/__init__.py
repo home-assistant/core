@@ -30,6 +30,7 @@ from .const import (
     ATTR_GW_ID,
     ATTR_MODE,
     ATTR_LEVEL,
+    ATTR_DHW_OVRD,
     CONF_CLIMATE,
     CONF_FLOOR_TEMP,
     CONF_PRECISION,
@@ -38,6 +39,7 @@ from .const import (
     SERVICE_RESET_GATEWAY,
     SERVICE_SET_CLOCK,
     SERVICE_SET_CONTROL_SETPOINT,
+    SERVICE_SET_HOT_WATER_OVRD,
     SERVICE_SET_GPIO_MODE,
     SERVICE_SET_LED_MODE,
     SERVICE_SET_MAX_MOD,
@@ -120,6 +122,16 @@ def register_services(hass):
             ),
             vol.Required(ATTR_TEMPERATURE): vol.All(
                 vol.Coerce(float), vol.Range(min=0, max=90)
+            ),
+        }
+    )
+    service_set_hot_water_ovrd_schema = vol.Schema(
+        {
+            vol.Required(ATTR_GW_ID): vol.All(
+                cv.string, vol.In(hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS])
+            ),
+            vol.Required(ATTR_DHW_OVRD): vol.Any(
+                vol.Equal("A"), vol.All(vol.Coerce(int), vol.Range(min=0, max=1))
             ),
         }
     )
@@ -216,6 +228,21 @@ def register_services(hass):
         service_set_control_setpoint_schema,
     )
 
+    async def set_dhw_ovrd(call):
+        """Set the domestic hot water override on the OpenTherm Gateway."""
+        gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]]
+        gw_var = gw_vars.OTGW_DHW_OVRD
+        value = await gw_dev.gateway.set_hot_water_ovrd(call.data[ATTR_DHW_OVRD])
+        gw_dev.status.update({gw_var: value})
+        async_dispatcher_send(hass, gw_dev.update_signal, gw_dev.status)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_HOT_WATER_OVRD,
+        set_dhw_ovrd,
+        service_set_hot_water_ovrd_schema,
+    )
+
     async def set_device_clock(call):
         """Set the clock on the OpenTherm Gateway."""
         gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]]
@@ -233,7 +260,7 @@ def register_services(hass):
         gpio_id = call.data[ATTR_ID]
         gpio_mode = call.data[ATTR_MODE]
         mode = await gw_dev.gateway.set_gpio_mode(gpio_id, gpio_mode)
-        gpio_var = getattr(gw_vars, "OTGW_GPIO_{}".format(gpio_id))
+        gpio_var = getattr(gw_vars, f"OTGW_GPIO_{gpio_id}")
         gw_dev.status.update({gpio_var: mode})
         async_dispatcher_send(hass, gw_dev.update_signal, gw_dev.status)
 
@@ -247,7 +274,7 @@ def register_services(hass):
         led_id = call.data[ATTR_ID]
         led_mode = call.data[ATTR_MODE]
         mode = await gw_dev.gateway.set_led_mode(led_id, led_mode)
-        led_var = getattr(gw_vars, "OTGW_LED_{}".format(led_id))
+        led_var = getattr(gw_vars, f"OTGW_LED_{led_id}")
         gw_dev.status.update({led_var: mode})
         async_dispatcher_send(hass, gw_dev.update_signal, gw_dev.status)
 
@@ -306,7 +333,7 @@ class OpenThermGatewayDevice:
         self.name = config.get(CONF_NAME, gw_id)
         self.climate_config = config[CONF_CLIMATE]
         self.status = {}
-        self.update_signal = "{}_{}_update".format(DATA_OPENTHERM_GW, gw_id)
+        self.update_signal = f"{DATA_OPENTHERM_GW}_{gw_id}_update"
         self.gateway = pyotgw.pyotgw()
 
     async def connect_and_subscribe(self, device_path):

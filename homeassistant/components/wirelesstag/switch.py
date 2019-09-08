@@ -79,5 +79,5 @@ class WirelessTagSwitch(WirelessTagBaseSensor, SwitchDevice):
     @property
     def principal_value(self):
         """Provide actual value of switch."""
-        attr_name = "is_{}_sensor_armed".format(self.sensor_type)
+        attr_name = f"is_{self.sensor_type}_sensor_armed"
         return getattr(self._tag, attr_name, False)

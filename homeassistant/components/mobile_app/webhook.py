@@ -220,13 +220,13 @@ async def handle_webhook(
 
         unique_id = data[ATTR_SENSOR_UNIQUE_ID]
 
-        unique_store_key = "{}_{}".format(webhook_id, unique_id)
+        unique_store_key = f"{webhook_id}_{unique_id}"
 
         if unique_store_key in hass.data[DOMAIN][entity_type]:
             _LOGGER.error("Refusing to re-register existing sensor %s!", unique_id)
             return error_response(
                 ERR_SENSOR_DUPLICATE_UNIQUE_ID,
-                "{} {} already exists!".format(entity_type, unique_id),
+                f"{entity_type} {unique_id} already exists!",
                 status=409,
             )
 
@@ -257,13 +257,13 @@ async def handle_webhook(
 
             unique_id = sensor[ATTR_SENSOR_UNIQUE_ID]
 
-            unique_store_key = "{}_{}".format(webhook_id, unique_id)
+            unique_store_key = f"{webhook_id}_{unique_id}"
 
             if unique_store_key not in hass.data[DOMAIN][entity_type]:
                 _LOGGER.error(
                     "Refusing to update non-registered sensor: %s", unique_store_key
                 )
-                err_msg = "{} {} is not registered".format(entity_type, unique_id)
+                err_msg = f"{entity_type} {unique_id} is not registered"
                 resp[unique_id] = {
                     "success": False,
                     "error": {"code": ERR_SENSOR_NOT_REGISTERED, "message": err_msg},

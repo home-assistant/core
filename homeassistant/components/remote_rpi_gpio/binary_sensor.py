@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             button = remote_rpi_gpio.setup_input(
                 address, port_num, pull_mode, bouncetime
             )
-        except (ValueError, IndexError, KeyError, IOError):
+        except (ValueError, IndexError, KeyError, OSError):
             return
         new_sensor = RemoteRPiGPIOBinarySensor(port_name, button, invert_logic)
         devices.append(new_sensor)
