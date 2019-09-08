@@ -3,7 +3,7 @@ from datetime import timedelta
 import unittest
 from unittest import mock
 
-from homeassistant.const import MATCH_ALL, EVENT_HOMEASSISTANT_START
+from homeassistant.const import MATCH_ALL, EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
 from homeassistant import setup
 from homeassistant.components.template import binary_sensor as template
 from homeassistant.exceptions import TemplateError
@@ -520,6 +520,32 @@ async def test_invalid_attribute_template(hass, caplog):
 
     assert ("Error rendering attribute test_attribute") in caplog.text
 
+async def test_invalid_availability_template_keeps_component_available(hass, caplog):
+    """Test that an invalid availability keeps the device available."""
+
+    await setup.async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "template",
+                "sensors": {
+                    "my_sensor": {
+                        "value_template": "{{ states.binary_sensor.test_sensor }}",
+                        "availability_template": "{{ x - 12 }}"
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.my_sensor") != STATE_UNAVAILABLE
+    assert (
+        "UndefinedError: 'x' is undefined"
+    ) in caplog.text
 
 async def test_no_update_template_match_all(hass, caplog):
     """Test that we do not update sensors that match on all."""
