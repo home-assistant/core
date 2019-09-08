@@ -139,19 +139,16 @@ class TestTemplateSensor:
 
         state = self.hass.states.get("sensor.test_template_sensor")
         assert not state.attributes.get("available")
-        assert state.state == STATE_UNAVAILABLE
 
         self.hass.states.set("sensor.test_state", "Works")
         self.hass.block_till_done()
         state = self.hass.states.get("sensor.test_template_sensor")
         assert state.attributes.get("available")
-        assert state.state == "Works"
 
         self.hass.states.set("sensor.test_state", "Other value")
         self.hass.block_till_done()
         state = self.hass.states.get("sensor.test_template_sensor")
         assert not state.attributes.get("available")
-        assert state.state == STATE_UNAVAILABLE
 
     def test_friendly_name_template(self):
         """Test friendly_name template."""
@@ -290,7 +287,7 @@ class TestTemplateSensor:
         self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test_template_sensor")
-        assert state.state == "unknown"
+        assert state.state == STATE_UNAVAILABLE
 
     def test_invalid_name_does_not_create(self):
         """Test invalid name."""
