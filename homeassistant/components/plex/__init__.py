@@ -66,7 +66,7 @@ def setup(hass, config):
 
     def server_discovered(service, info):
         """Pass back discovered Plex server details."""
-        _LOGGER.info("Discovered Plex server: %s:%s", info["host"], info["port"])
+        _LOGGER.debug("Discovered Plex server: %s:%s", info["host"], info["port"])
         info["discovered_plex"] = True
         setup(hass, info)
 
