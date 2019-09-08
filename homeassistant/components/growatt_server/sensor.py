@@ -83,7 +83,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # Get a list of inverters for specified plant to add sensors for.
     inverters = api.inverter_list(plant_id)
     entities = []
-    probe = GrowattData(api, plant_id, True)
+    probe = GrowattData(api, username, password, plant_id, True)
     for sensor in TOTAL_SENSOR_TYPES:
         entities.append(
             GrowattInverter(probe, f"{name} Total", sensor, f"{plant_id}-{sensor}")
@@ -91,7 +91,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Add sensors for each inverter in the specified plant.
     for inverter in inverters:
-        probe = GrowattData(api, inverter["deviceSn"], False)
+        probe = GrowattData(api, username, password, inverter["deviceSn"], False)
         for sensor in INVERTER_SENSOR_TYPES:
             entities.append(
                 GrowattInverter(
@@ -154,18 +154,20 @@ class GrowattInverter(Entity):
 class GrowattData:
     """The class for handling data retrieval."""
 
-    def __init__(self, api, inverter_id, is_total=False):
+    def __init__(self, api, username, password, inverter_id, is_total=False):
         """Initialize the probe."""
 
         self.is_total = is_total
         self.api = api
         self.inverter_id = inverter_id
         self.data = {}
+        self.username = username
+        self.password = password
 
     @Throttle(SCAN_INTERVAL)
     def update(self):
         """Update probe data."""
-
+        self.api.login(self.username, self.password)
         _LOGGER.debug("Updating data for %s", self.inverter_id)
         try:
             if self.is_total:
