@@ -12,18 +12,22 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, HTTP_HEADER_X_REQUESTED_WITH
+from homeassistant.const import CONF_HOST, HTTP_HEADER_X_REQUESTED_WITH, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+CMD_LOGIN = 15
 CMD_DEVICES = 123
 
 DEFAULT_IP = "192.168.0.1"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string}
+    {
+        vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+    }
 )
 
 
@@ -42,6 +46,7 @@ class UPCDeviceScanner(DeviceScanner):
         """Initialize the scanner."""
         self.hass = hass
         self.host = config[CONF_HOST]
+        self.password = config[CONF_PASSWORD]
 
         self.data = {}
         self.token = None
@@ -95,10 +100,36 @@ class UPCDeviceScanner(DeviceScanner):
 
             self.token = response.cookies["sessionToken"].value
 
-            return True
+            return await self._async_initialize_token_with_password(CMD_LOGIN)
 
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Can not load login page from %s", self.host)
+            return False
+
+    async def _async_initialize_token_with_password(self, function):
+        """Get token with password."""
+        try:
+            with async_timeout.timeout(10):
+                response = await self.websession.post(
+                    f"http://{self.host}/xml/setter.xml",
+                    data=f"token={self.token}&fun={function}&Username=NULL&Password={self.password}",
+                    headers=self.headers,
+                    allow_redirects=False,
+                )
+
+                await response.text()
+
+            if response.status != 200:
+                _LOGGER.warning("Receive http code %d", response.status)
+                self.token = None
+                return False
+
+            self.token = response.cookies["sessionToken"].value
+
+            return True
+
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Can not login to %s", self.host)
             return False
 
     async def _async_ws_function(self, function):

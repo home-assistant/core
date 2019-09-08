@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.device_tracker import DOMAIN
 import homeassistant.components.upc_connect.device_tracker as platform
-from homeassistant.const import CONF_HOST, CONF_PLATFORM
+from homeassistant.const import CONF_HOST, CONF_PLATFORM, CONF_PASSWORD
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, load_fixture, mock_component
@@ -32,10 +32,19 @@ async def test_setup_platform_timeout_loginpage(hass, caplog, aioclient_mock):
     aioclient_mock.get(
         "http://{}/common_page/login.html".format(HOST), exc=asyncio.TimeoutError()
     )
+    aioclient_mock.post("http://{}/xml/setter.xml".format(HOST), content=b"successful")
     aioclient_mock.post("http://{}/xml/getter.xml".format(HOST), content=b"successful")
 
     assert await async_setup_component(
-        hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "upc_connect", CONF_HOST: HOST}}
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_PLATFORM: "upc_connect",
+                CONF_HOST: HOST,
+                CONF_PASSWORD: "password",
+            }
+        },
     )
 
     assert len(aioclient_mock.mock_calls) == 1
@@ -53,7 +62,15 @@ async def test_setup_platform_timeout_webservice(hass, caplog, aioclient_mock):
     )
 
     assert await async_setup_component(
-        hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "upc_connect", CONF_HOST: HOST}}
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_PLATFORM: "upc_connect",
+                CONF_HOST: HOST,
+                CONF_PASSWORD: "password",
+            }
+        },
     )
 
     assert len(aioclient_mock.mock_calls) == 1
@@ -72,11 +89,20 @@ async def test_setup_platform(scan_mock, hass, aioclient_mock):
         "http://{}/common_page/login.html".format(HOST),
         cookies={"sessionToken": "654321"},
     )
+    aioclient_mock.psot("http://{}/xml/setter.xml".format(HOST), content=b"successful")
     aioclient_mock.post("http://{}/xml/getter.xml".format(HOST), content=b"successful")
 
     with assert_setup_component(1, DOMAIN):
         assert await async_setup_component(
-            hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "upc_connect", CONF_HOST: HOST}}
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: {
+                    CONF_PLATFORM: "upc_connect",
+                    CONF_HOST: HOST,
+                    CONF_PASSWORD: "password",
+                }
+            },
         )
 
     assert len(aioclient_mock.mock_calls) == 1
@@ -89,13 +115,25 @@ async def test_scan_devices(hass, aioclient_mock):
         cookies={"sessionToken": "654321"},
     )
     aioclient_mock.post(
+        "http://{}/xml/setter.xml".format(HOST),
+        content=b"successful",
+        cookies={"sessionToken": "654321"},
+    )
+    aioclient_mock.post(
         "http://{}/xml/getter.xml".format(HOST),
         content=b"successful",
         cookies={"sessionToken": "654321"},
     )
 
     scanner = await platform.async_get_scanner(
-        hass, {DOMAIN: {CONF_PLATFORM: "upc_connect", CONF_HOST: HOST}}
+        hass,
+        {
+            DOMAIN: {
+                CONF_PLATFORM: "upc_connect",
+                CONF_HOST: HOST,
+                CONF_PASSWORD: "password",
+            }
+        },
     )
 
     assert len(aioclient_mock.mock_calls) == 1
@@ -121,13 +159,25 @@ async def test_scan_devices_without_session(hass, aioclient_mock):
         cookies={"sessionToken": "654321"},
     )
     aioclient_mock.post(
+        "http://{}/xml/setter.xml".format(HOST),
+        content=b"successful",
+        cookies={"sessionToken": "654321"},
+    )
+    aioclient_mock.post(
         "http://{}/xml/getter.xml".format(HOST),
         content=b"successful",
         cookies={"sessionToken": "654321"},
     )
 
     scanner = await platform.async_get_scanner(
-        hass, {DOMAIN: {CONF_PLATFORM: "upc_connect", CONF_HOST: HOST}}
+        hass,
+        {
+            DOMAIN: {
+                CONF_PLATFORM: "upc_connect",
+                CONF_HOST: HOST,
+                CONF_PASSWORD: "password",
+            }
+        },
     )
 
     assert len(aioclient_mock.mock_calls) == 1
@@ -136,6 +186,9 @@ async def test_scan_devices_without_session(hass, aioclient_mock):
     aioclient_mock.get(
         "http://{}/common_page/login.html".format(HOST),
         cookies={"sessionToken": "654321"},
+    )
+    aioclient_mock.post(
+        "http://{}/xml/setter.xml".format(HOST), cookies={"sessionToken": "1235678"}
     )
     aioclient_mock.post(
         "http://{}/xml/getter.xml".format(HOST),
@@ -158,13 +211,25 @@ async def test_scan_devices_without_session_wrong_re(hass, aioclient_mock):
         cookies={"sessionToken": "654321"},
     )
     aioclient_mock.post(
+        "http://{}/xml/setter.xml".format(HOST),
+        content=b"successful",
+        cookies={"sessionToken": "654321"},
+    )
+    aioclient_mock.post(
         "http://{}/xml/getter.xml".format(HOST),
         content=b"successful",
         cookies={"sessionToken": "654321"},
     )
 
     scanner = await platform.async_get_scanner(
-        hass, {DOMAIN: {CONF_PLATFORM: "upc_connect", CONF_HOST: HOST}}
+        hass,
+        {
+            DOMAIN: {
+                CONF_PLATFORM: "upc_connect",
+                CONF_HOST: HOST,
+                CONF_PASSWORD: "password",
+            }
+        },
     )
 
     assert len(aioclient_mock.mock_calls) == 1
@@ -173,6 +238,11 @@ async def test_scan_devices_without_session_wrong_re(hass, aioclient_mock):
     aioclient_mock.get(
         "http://{}/common_page/login.html".format(HOST),
         cookies={"sessionToken": "654321"},
+    )
+    aioclient_mock.post(
+        "http://{}/xml/getter.xml".format(HOST),
+        status=200,
+        cookies={"sessionToken": "1235678"},
     )
     aioclient_mock.post(
         "http://{}/xml/getter.xml".format(HOST),
@@ -195,13 +265,25 @@ async def test_scan_devices_parse_error(hass, aioclient_mock):
         cookies={"sessionToken": "654321"},
     )
     aioclient_mock.post(
+        "http://{}/xml/setter.xml".format(HOST),
+        content=b"successful",
+        cookies={"sessionToken": "654321"},
+    )
+    aioclient_mock.post(
         "http://{}/xml/getter.xml".format(HOST),
         content=b"successful",
         cookies={"sessionToken": "654321"},
     )
 
     scanner = await platform.async_get_scanner(
-        hass, {DOMAIN: {CONF_PLATFORM: "upc_connect", CONF_HOST: HOST}}
+        hass,
+        {
+            DOMAIN: {
+                CONF_PLATFORM: "upc_connect",
+                CONF_HOST: HOST,
+                CONF_PASSWORD: "password",
+            }
+        },
     )
 
     assert len(aioclient_mock.mock_calls) == 1
