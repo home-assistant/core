@@ -2,7 +2,6 @@
 import asyncio
 from functools import wraps
 import logging
-from typing import Awaitable
 
 from aiohttp import CookieJar
 import voluptuous as vol
@@ -134,7 +133,7 @@ def refresh_system(func):
 class AqualinkEntity(Entity):
     """Abstract class for all Aqualink platforms."""
 
-    async def async_added_to_hass(self) -> Awaitable[None]:
+    async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
         async_dispatcher_connect(self.hass, DOMAIN, self._update_callback)
 
