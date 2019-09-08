@@ -65,7 +65,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             if isinstance(device, RainBirdSwitch) and device.entity_id == entity_id:
                 device.start_irrigation(duration)
 
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN,
         SERVICE_START_IRRIGATION,
         start_irrigation,
