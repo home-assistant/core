@@ -20,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_FRAMERATE = "framerate"
 
+DEFAULT_CAMERA_BRAND = "Vivotek"
 DEFAULT_NAME = "Vivotek Camera"
 DEFAULT_EVENT_0_KEY = "event_i0_enable"
 
@@ -64,15 +65,11 @@ class VivotekCam(Camera):
         """Initialize a Vivotek camera."""
         super().__init__()
 
-        self._frame_interval = 1 / config[CONF_FRAMERATE]
-        self._name = config[CONF_NAME]
-        self._motion_detection_enabled = False
-
-        self._stream_source = stream_source
-
-        self._brand = "Vivotek"
-        self._supported_features = SUPPORT_STREAM
         self._cam = cam
+        self._frame_interval = 1 / config[CONF_FRAMERATE]
+        self._motion_detection_enabled = False
+        self._name = config[CONF_NAME]
+        self._stream_source = stream_source
 
     @property
     def supported_features(self):
@@ -115,9 +112,13 @@ class VivotekCam(Camera):
     @property
     def brand(self):
         """Return the camera brand."""
-        return self._brand
+        return DEFAULT_CAMERA_BRAND
 
     @property
     def model(self):
         """Return the camera model."""
         return self._cam.model_name
+
+    @property
+    def _supported_features(self):
+        return SUPPORT_STREAM
