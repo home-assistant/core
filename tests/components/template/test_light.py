@@ -834,3 +834,42 @@ class TestTemplateLight:
         # device state should be unavailable
         state = self.hass.states.get("light.test_template_light")
         assert state.state == STATE_UNAVAILABLE
+
+    def test_invalid_availability_template_keeps_component_available(self, caplog):
+        """Test that an invalid availability keeps the device available."""
+        assert setup.setup_component(
+            self.hass,
+            "light",
+            {
+                "light": {
+                    "platform": "template",
+                    "lights": {
+                        "test_template_light": {
+                            "availability_template": "{{ x - 12 }}",
+                            "turn_on": {
+                                "service": "light.turn_on",
+                                "entity_id": "light.test_state",
+                            },
+                            "turn_off": {
+                                "service": "light.turn_off",
+                                "entity_id": "light.test_state",
+                            },
+                            "set_level": {
+                                "service": "light.turn_on",
+                                "data_template": {
+                                    "entity_id": "light.test_state",
+                                    "brightness": "{{brightness}}",
+                                },
+                            },
+                        }
+                    },
+                }
+            },
+        )
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("light.test_template_light")
+        assert state.state != STATE_UNAVAILABLE
+        assert ("UndefinedError: 'x' is undefined") in caplog.text
