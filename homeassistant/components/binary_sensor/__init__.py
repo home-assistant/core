@@ -18,6 +18,9 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
+# On means armed, Off means disarmed
+DEVICE_CLASS_ALARM = "alarm"
+
 # On means low, Off means normal
 DEVICE_CLASS_BATTERY = "battery"
 
@@ -88,6 +91,7 @@ DEVICE_CLASS_VIBRATION = "vibration"
 DEVICE_CLASS_WINDOW = "window"
 
 DEVICE_CLASSES = [
+    DEVICE_CLASS_ALARM,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_COLD,
     DEVICE_CLASS_CONNECTIVITY,
