@@ -386,6 +386,9 @@ sleepyq==0.7
 # homeassistant.components.smhi
 smhi-pkg==1.0.10
 
+# homeassistant.components.solaredge
+solaredge==0.0.2
+
 # homeassistant.components.honeywell
 somecomfort==0.5.2
 
