@@ -255,20 +255,11 @@ class BinarySensorTemplate(BinarySensorDevice):
 
         if self._availability_template is not None:
             try:
-                self._available = (
-                    self._availability_template.async_render().lower() == "true"
-                )
-            except TemplateError as ex:
-                if ex.args and ex.args[0].startswith(
-                    "UndefinedError: 'None' has no attribute"
-                ):
-                    # Common during HA startup - so just a warning
-                    _LOGGER.warning(
-                        "Could not render template %s, " "the state is unknown",
-                        self._name,
-                    )
-                    return
-                _LOGGER.error("Could not render template %s: %s", self._name, ex)
+                result = self._availability_template.async_render()
+                self._available = result == "true"
+            except (TemplateError, ValueError) as err:
+                _LOGGER.error(err)
+                self._available = True
 
         attrs = {}
         if self._attribute_templates is not None:
