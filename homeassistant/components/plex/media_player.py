@@ -38,7 +38,7 @@ from .const import (
     DOMAIN as PLEX_DOMAIN,
     NAME_FORMAT,
     PLEX_MEDIA_PLAYER_OPTIONS,
-    SHARED_SERVER,
+    SERVERS,
 )
 
 SERVER_SETUP = "server_setup"
@@ -49,8 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up the Plex platform."""
-    server_id = hass.data[PLEX_DOMAIN][SHARED_SERVER]
-    plexserver = hass.data[PLEX_DOMAIN][server_id]
+    plexserver = hass.data[PLEX_DOMAIN][SERVERS].values()[0]
     config = hass.data[PLEX_MEDIA_PLAYER_OPTIONS]
 
     plex_clients = {}

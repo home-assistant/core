@@ -31,7 +31,7 @@ from .const import (
     PLATFORMS,
     PLEX_CONFIG_FILE,
     PLEX_MEDIA_PLAYER_OPTIONS,
-    SHARED_SERVER,
+    SERVERS,
 )
 from .server import PlexServer
 
@@ -82,9 +82,9 @@ def setup(hass, config):
             _LOGGER.info(error)
             return False
         else:
-            server_id = plex_server.machine_identifier
-            hass.data[PLEX_DOMAIN][server_id] = plex_server
-            hass.data[PLEX_DOMAIN][SHARED_SERVER] = server_id
+            hass.data[PLEX_DOMAIN][SERVERS][
+                plex_server.machine_identifier
+            ] = plex_server
 
             host_and_port = plex_server.url_in_use.split("/")[-1]
             if host_and_port in _CONFIGURING:
@@ -95,10 +95,9 @@ def setup(hass, config):
 
             return True
 
-    if PLEX_DOMAIN not in hass.data:
-        hass.data[PLEX_DOMAIN] = {}
+    hass.data.setdefault(PLEX_DOMAIN, {SERVERS: {}})
 
-    if SHARED_SERVER in hass.data[PLEX_DOMAIN]:
+    if hass.data[PLEX_DOMAIN][SERVERS]:
         _LOGGER.debug("Plex server already configured")
         return
 
