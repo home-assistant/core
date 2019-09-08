@@ -18,6 +18,9 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Plex sensor."""
+    if discovery_info is None:
+        return
+
     plexserver = hass.data[PLEX_DOMAIN][SERVERS].values()[0]
     add_entities([PlexSensor(plexserver)], True)
 

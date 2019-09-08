@@ -51,6 +51,9 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up the Plex platform."""
+    if discovery_info is None:
+        return
+
     plexserver = hass.data[PLEX_DOMAIN][SERVERS].values()[0]
     config = hass.data[PLEX_MEDIA_PLAYER_OPTIONS]
 
