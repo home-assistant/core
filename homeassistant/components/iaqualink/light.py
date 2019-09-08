@@ -14,6 +14,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
+from . import AqualinkEntity, refresh_system
 from .const import DOMAIN as AQUALINK_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,7 +32,7 @@ async def async_setup_entry(
     async_add_entities(devs, True)
 
 
-class HassAqualinkLight(Light):
+class HassAqualinkLight(Light, AqualinkEntity):
     """Representation of a light."""
 
     def __init__(self, dev: AqualinkLight):
@@ -48,6 +49,7 @@ class HassAqualinkLight(Light):
         """Return whether the light is on or off."""
         return self.dev.is_on
 
+    @refresh_system
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on the light.
 
@@ -68,6 +70,7 @@ class HassAqualinkLight(Light):
         else:
             await self.dev.turn_on()
 
+    @refresh_system
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off the light."""
         await self.dev.turn_off()
@@ -89,14 +92,6 @@ class HassAqualinkLight(Light):
     def effect_list(self) -> list:
         """Return supported light effects."""
         return list(AqualinkLightEffect.__members__)
-
-    async def async_update(self) -> None:
-        """Update the internal state of the light.
-
-        This is currently a no-op since all devices get refreshed during the
-        main thermostat update.
-        """
-        return None
 
     @property
     def supported_features(self) -> int:
