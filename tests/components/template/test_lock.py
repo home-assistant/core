@@ -226,7 +226,7 @@ class TestTemplateLock:
         assert self.hass.states.all() == []
 
     def test_invalid_availability_template_keeps_component_available(self, caplog):
-        """Test that an invalid availability keeps the device available"""
+        """Test that an invalid availability keeps the device available."""
         with assert_setup_component(1, "lock"):
             assert setup.setup_component(
                 self.hass,
@@ -256,7 +256,6 @@ class TestTemplateLock:
         assert (
             "UndefinedError: 'x' is undefined"
         ) in caplog.text
-
 
     def test_no_template_match_all(self, caplog):
         """Test that we do not allow locks that match on all."""
