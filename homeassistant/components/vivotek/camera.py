@@ -74,7 +74,7 @@ class VivotekCam(Camera):
     @property
     def supported_features(self):
         """Return supported features for this camera."""
-        return self._supported_features
+        return SUPPORT_STREAM
 
     @property
     def frame_interval(self):
@@ -118,7 +118,3 @@ class VivotekCam(Camera):
     def model(self):
         """Return the camera model."""
         return self._cam.model_name
-
-    @property
-    def _supported_features(self):
-        return SUPPORT_STREAM
