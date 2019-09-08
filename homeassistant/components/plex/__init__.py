@@ -91,7 +91,7 @@ def setup(hass, config):
                 request_id = _CONFIGURING.pop(host_and_port)
                 configurator = hass.components.configurator
                 configurator.request_done(request_id)
-                _LOGGER.info("Discovery configuration done")
+                _LOGGER.debug("Discovery configuration done")
 
             return True
 
