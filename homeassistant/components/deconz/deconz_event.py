@@ -24,8 +24,8 @@ class DeconzEvent(DeconzBase):
         self._device.register_async_callback(self.async_update_callback)
 
         self.device_id = None
-        self.id = slugify(self._device.name)
-        _LOGGER.debug("deCONZ event created: %s", self.id)
+        self.event_id = slugify(self._device.name)
+        _LOGGER.debug("deCONZ event created: %s", self.event_id)
 
     @callback
     def async_will_remove_from_hass(self) -> None:
@@ -38,7 +38,7 @@ class DeconzEvent(DeconzBase):
         """Fire the event if reason is that state is updated."""
         if "state" in self._device.changed_keys:
             data = {
-                CONF_ID: self.id,
+                CONF_ID: self.event_id,
                 CONF_UNIQUE_ID: self.serial,
                 CONF_EVENT: self._device.state,
             }

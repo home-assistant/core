@@ -230,7 +230,7 @@ async def test_create_event(hass):
     event = gateway.DeconzEvent(mock_remote, mock_gateway)
     await hass.async_block_till_done()
 
-    assert event.id == "name"
+    assert event.event_id == "name"
 
 
 async def test_update_event(hass):
