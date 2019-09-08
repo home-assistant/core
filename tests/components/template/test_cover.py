@@ -920,6 +920,40 @@ async def test_availability_without_availability_template(hass, calls):
     assert state.state != STATE_UNAVAILABLE
 
 
+async def test_invalid_availability_template_keeps_component_available(hass, caplog):
+    """Test that an invalid availability keeps the device available."""
+    with assert_setup_component(1, "cover"):
+        assert await setup.async_setup_component(
+            hass,
+            "cover",
+            {
+                "cover": {
+                    "platform": "template",
+                    "covers": {
+                        "test_template_cover": {
+                            "availability_template": "{{ x - 12 }}",
+                            "value_template": "open",
+                            "open_cover": {
+                                "service": "cover.open_cover",
+                                "entity_id": "cover.test_state",
+                            },
+                            "close_cover": {
+                                "service": "cover.close_cover",
+                                "entity_id": "cover.test_state",
+                            },
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("cover.test_template_cover") != STATE_UNAVAILABLE
+    assert ("UndefinedError: 'x' is undefined") in caplog.text
+
+
 async def test_device_class(hass, calls):
     """Test device class."""
     with assert_setup_component(1, "cover"):
