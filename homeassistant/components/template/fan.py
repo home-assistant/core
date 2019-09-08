@@ -21,6 +21,7 @@ from homeassistant.components.fan import (
 )
 from homeassistant.const import (
     CONF_FRIENDLY_NAME,
+    CONF_AVAILABILITY_TEMPLATE,
     CONF_VALUE_TEMPLATE,
     CONF_ENTITY_ID,
     STATE_ON,
@@ -58,6 +59,7 @@ FAN_SCHEMA = vol.Schema(
         vol.Optional(CONF_SPEED_TEMPLATE): cv.template,
         vol.Optional(CONF_OSCILLATING_TEMPLATE): cv.template,
         vol.Optional(CONF_DIRECTION_TEMPLATE): cv.template,
+        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
         vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_SET_SPEED_ACTION): cv.SCRIPT_SCHEMA,
@@ -86,6 +88,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         speed_template = device_config.get(CONF_SPEED_TEMPLATE)
         oscillating_template = device_config.get(CONF_OSCILLATING_TEMPLATE)
         direction_template = device_config.get(CONF_DIRECTION_TEMPLATE)
+        availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
 
         on_action = device_config[CONF_ON_ACTION]
         off_action = device_config[CONF_OFF_ACTION]
@@ -103,6 +106,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             speed_template,
             oscillating_template,
             direction_template,
+            availability_template,
         ):
             if template is None:
                 continue
@@ -131,6 +135,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 speed_template,
                 oscillating_template,
                 direction_template,
+                availability_template,
                 on_action,
                 off_action,
                 set_speed_action,
@@ -156,6 +161,7 @@ class TemplateFan(FanEntity):
         speed_template,
         oscillating_template,
         direction_template,
+        availability_template,
         on_action,
         off_action,
         set_speed_action,
@@ -175,6 +181,8 @@ class TemplateFan(FanEntity):
         self._speed_template = speed_template
         self._oscillating_template = oscillating_template
         self._direction_template = direction_template
+        self._availability_template = availability_template
+        self._available = True
         self._supported_features = 0
 
         self._on_script = Script(hass, on_action)
@@ -207,6 +215,8 @@ class TemplateFan(FanEntity):
         if self._direction_template:
             self._direction_template.hass = self.hass
             self._supported_features |= SUPPORT_DIRECTION
+        if self._availability_template:
+            self._availability_template.hass = self.hass
 
         self._entities = entity_ids
         # List of valid speeds
@@ -251,6 +261,11 @@ class TemplateFan(FanEntity):
     def should_poll(self):
         """Return the polling state."""
         return False
+
+    @property
+    def available(self):
+        """Return availability of Device."""
+        return self._available
 
     # pylint: disable=arguments-differ
     async def async_turn_on(self, speed: str = None) -> None:
@@ -422,3 +437,12 @@ class TemplateFan(FanEntity):
                     ", ".join(_VALID_DIRECTIONS),
                 )
                 self._direction = None
+
+        # Update Availability if 'availability_template' is defined
+        if self._availability_template is not None:
+            try:
+                result = self._availability_template.async_render()
+                self._available = result == "true"
+            except (TemplateError, ValueError) as err:
+                _LOGGER.error(err)
+                self._available = True
