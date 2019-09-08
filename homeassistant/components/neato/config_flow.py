@@ -1,17 +1,18 @@
 """Config flow to configure Neato integration."""
-from collections import OrderedDict
-from typing import Optional
 
+from collections import OrderedDict
+import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.helpers import ConfigType
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN, CONF_VENDOR
 
 
 DOCS_URL = "https://www.home-assistant.io/components/neato"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -27,9 +28,7 @@ class NeatoConfigFlow(config_entries.ConfigFlow):
         self._password = vol.UNDEFINED
         self._vendor = vol.UNDEFINED
 
-    async def async_step_user(
-        self, user_input: Optional[ConfigType] = None, error: Optional[str] = None
-    ):
+    async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         errors = {}
 
@@ -38,7 +37,7 @@ class NeatoConfigFlow(config_entries.ConfigFlow):
             self._password = user_input["password"]
             self._vendor = user_input["vendor"]
 
-            error = self.try_login()
+            error = self.try_login(self._username, self._password, self._vendor)
             if error:
                 errors["base"] = error
             else:
@@ -55,7 +54,7 @@ class NeatoConfigFlow(config_entries.ConfigFlow):
         data_schema = OrderedDict()
         data_schema[vol.Required(CONF_USERNAME, default=self._username)] = str
         data_schema[vol.Required(CONF_PASSWORD, default=self._password)] = str
-        data_schema[vol.Required(CONF_VENDOR, default=self._vendor)] = str
+        data_schema[vol.Optional(CONF_VENDOR, default=self._vendor)] = str
 
         return self.async_show_form(
             step_id="user",
@@ -64,20 +63,40 @@ class NeatoConfigFlow(config_entries.ConfigFlow):
             description_placeholders={"docs_url": DOCS_URL},
         )
 
-    async def try_login(self):
+    async def async_step_import(self, user_input):
+        """Import a config flow from configuration."""
+        username = user_input[CONF_USERNAME]
+        password = user_input[CONF_PASSWORD]
+        vendor = user_input[CONF_VENDOR]
+
+        error = self.try_login(username, password, vendor)
+        if error is not None:
+            _LOGGER.error("Invalid credentials for %s", username)
+            return self.async_abort(reason="invalid_credentials")
+        return self.async_create_entry(
+            title=f"{username} (from configuration)",
+            data={
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
+                CONF_VENDOR: vendor,
+            },
+        )
+
+    @staticmethod
+    async def try_login(username, password, vendor):
         """Try logging in to device and return any errors."""
         from requests.exceptions import HTTPError
         from pybotvac import Account, Neato, Vorwerk
 
-        vendor = None
-        if self._vendor == "neato":
+        this_vendor = None
+        if vendor == "neato":
             vendor = Neato()
-        elif self._vendor == "vorwerk":
+        elif vendor == "vorwerk":
             vendor = Vorwerk()
 
         try:
             # vendor defaults to Neato()
-            Account(self._username, self._password, vendor)
+            Account(username, password, this_vendor)
         except HTTPError:
             return "invalid_credentials"
 
