@@ -127,7 +127,9 @@ class DarkSkyWeather(WeatherEntity):
     @property
     def humidity(self):
         """Return the humidity."""
-        return round(self._ds_currently.get("humidity") * 100.0, 2)
+        if "humidity" in self._ds_currently:
+            return round(self._ds_currently.get("humidity") * 100.0, 2)
+        return None
 
     @property
     def wind_speed(self):
@@ -176,7 +178,7 @@ class DarkSkyWeather(WeatherEntity):
 
         data = None
 
-        if self._mode == "daily":
+        if self._mode == "daily" and self._ds_daily:
             data = [
                 {
                     ATTR_FORECAST_TIME: utc_from_timestamp(
@@ -193,7 +195,7 @@ class DarkSkyWeather(WeatherEntity):
                 }
                 for entry in self._ds_daily.data
             ]
-        else:
+        elif self._ds_hourly:
             data = [
                 {
                     ATTR_FORECAST_TIME: utc_from_timestamp(
@@ -215,7 +217,8 @@ class DarkSkyWeather(WeatherEntity):
         self._dark_sky.update()
 
         self._ds_data = self._dark_sky.data
-        self._ds_currently = self._dark_sky.currently.d
+        currently = self._dark_sky.currently
+        self._ds_currently = currently.d if currently else {}
         self._ds_hourly = self._dark_sky.hourly
         self._ds_daily = self._dark_sky.daily
 
@@ -255,5 +258,5 @@ class DarkSkyData:
     def units(self):
         """Get the unit system of returned data."""
         if self.data is None:
-            return None
+            return {}
         return self.data.json.get("flags").get("units")
