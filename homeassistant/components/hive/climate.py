@@ -1,11 +1,6 @@
 """Support for the Hive climate devices."""
 
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    TEMP_CELSIUS,
-    ATTR_ENTITY_ID,
-    ATTR_TIME,
-)
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, ATTR_ENTITY_ID
 from homeassistant.components.climate import ClimateDevice
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate.const import (
@@ -32,15 +27,18 @@ HASS_TO_HIVE_STATE = {
     HVAC_MODE_OFF: "OFF",
 }
 
-BOOST_HEATING_SCHEMA = {
-    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-    vol.Required(ATTR_TIME): cv.time,
-    vol.Required(ATTR_TEMPERATURE): cv.positive_int,
-}
-
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 SUPPORT_HVAC = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
 SUPPORT_PRESET = [PRESET_NONE, PRESET_BOOST]
+SERVICE_BOOST_HEATING = "boost_heating"
+ATTR_BOOST_MINUTES = "minutes"
+BOOST_HEATING_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_BOOST_MINUTES): cv.positive_int,
+        vol.Required(ATTR_TEMPERATURE): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -58,16 +56,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     def heating_boost(service):
         """Handle the service call."""
         session = hass.data.get(DATA_HIVE)
-        entity_id = service.data.get(ATTR_ENTITY_ID)
-        node_id = session.entity_lookup[entity_id]
-        boost_time = time(service.data.get(ATTR_TIME))
-        total_time = boost_time.hour * 60 + boost_time.minute
-        temperature = service.data.get(ATTR_TEMPERATURE)
+        entity = session.entity_lookup[service.data.get(ATTR_ENTITY_ID)]
+        time = service.data.get(ATTR_BOOST_MINUTES)
+        temperature = float(service.data.get(ATTR_TEMPERATURE))
 
-        session.heating.turn_boost_on(self.node_id, 30, temperature)
+        session.heating.turn_boost_on(entity, time, temperature)
 
     hass.services.register(
-        DOMAIN, "boost_heating", heating_boost, schema=BOOST_HEATING_SCHEMA
+        DOMAIN, SERVICE_BOOST_HEATING, heating_boost, schema=BOOST_HEATING_SCHEMA
     )
 
 
