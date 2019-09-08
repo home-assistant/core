@@ -36,9 +36,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, async_add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Vivotek IP Camera."""
-    async_add_entities([VivotekCam(config)])
+    add_entities([VivotekCam(config)])
 
 
 class VivotekCam(Camera):
@@ -105,12 +105,12 @@ class VivotekCam(Camera):
     def disable_motion_detection(self):
         """Disable motion detection in camera."""
         response = self._cam.set_param(self._event_0_key, 0)
-        self._motion_detection_enabled = int(response.replace("'", "")) == 1
+        self._motion_detection_enabled = int(response) == 1
 
     def enable_motion_detection(self):
         """Enable motion detection in camera."""
         response = self._cam.set_param(self._event_0_key, 1)
-        self._motion_detection_enabled = int(response.replace("'", "")) == 1
+        self._motion_detection_enabled = int(response) == 1
 
     @property
     def brand(self):
