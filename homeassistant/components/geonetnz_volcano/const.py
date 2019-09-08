@@ -7,6 +7,7 @@ PLATFORMS = ("sensor", "geo_location")
 
 FEED = "feed"
 
+DEFAULT_ICON = "mdi:mountain"
 DEFAULT_RADIUS = 50.0
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
 

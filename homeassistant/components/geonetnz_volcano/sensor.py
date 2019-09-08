@@ -7,7 +7,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt
 
-from .const import DOMAIN, FEED, SIGNAL_STATUS
+from .const import DEFAULT_ICON, DOMAIN, FEED, SIGNAL_STATUS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +18,6 @@ ATTR_CREATED = "created"
 ATTR_UPDATED = "updated"
 ATTR_REMOVED = "removed"
 
-DEFAULT_ICON = "mdi:pulse"
 DEFAULT_UNIT_OF_MEASUREMENT = "volcanos"
 
 

@@ -13,7 +13,13 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
-from .const import DOMAIN, FEED, SIGNAL_DELETE_ENTITY, SIGNAL_UPDATE_ENTITY
+from .const import (
+    DEFAULT_ICON,
+    DOMAIN,
+    FEED,
+    SIGNAL_DELETE_ENTITY,
+    SIGNAL_UPDATE_ENTITY,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,7 +130,7 @@ class GeonetnzVolcanoEvent(GeolocationEvent):
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        return "mdi:mountain"
+        return DEFAULT_ICON
 
     @property
     def source(self) -> str:
