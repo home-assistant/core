@@ -38,41 +38,41 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Vivotek IP Camera."""
-    add_entities([VivotekCam(config)])
+    args = dict(
+        config=config,
+        cam=VivotekCamera(
+            host=config[CONF_IP_ADDRESS],
+            port=(443 if config[CONF_SSL] else 80),
+            verify_ssl=config[CONF_VERIFY_SSL],
+            usr=config[CONF_USERNAME],
+            pwd=config[CONF_PASSWORD],
+        ),
+        stream_source=(
+            "rtsp://%s:%s@%s:554/live.sdp",
+            config[CONF_USERNAME],
+            config[CONF_PASSWORD],
+            config[CONF_IP_ADDRESS],
+        ),
+    )
+    add_entities([VivotekCam(**args)])
 
 
 class VivotekCam(Camera):
     """A Vivotek IP camera."""
 
-    def __init__(self, config):
+    def __init__(self, config, cam, stream_source):
         """Initialize a Vivotek camera."""
         super().__init__()
 
         self._frame_interval = 1 / config[CONF_FRAMERATE]
         self._name = config[CONF_NAME]
         self._motion_detection_enabled = False
-        self._event_0_key = DEFAULT_EVENT_0_KEY
 
-        username = config[CONF_USERNAME]
-        password = config[CONF_PASSWORD]
-
-        self._stream_source = (
-            "rtsp://%s:%s@%s:554/live.sdp",
-            username,
-            password,
-            config[CONF_IP_ADDRESS],
-        )
+        self._stream_source = stream_source
 
         self._brand = "Vivotek"
         self._supported_features = SUPPORT_STREAM
-
-        self._cam = VivotekCamera(
-            host=config[CONF_IP_ADDRESS],
-            port=(443 if config[CONF_SSL] else 80),
-            verify_ssl=config[CONF_VERIFY_SSL],
-            usr=username,
-            pwd=password,
-        )
+        self._cam = cam
 
     @property
     def supported_features(self):
@@ -104,12 +104,12 @@ class VivotekCam(Camera):
 
     def disable_motion_detection(self):
         """Disable motion detection in camera."""
-        response = self._cam.set_param(self._event_0_key, 0)
+        response = self._cam.set_param(DEFAULT_EVENT_0_KEY, 0)
         self._motion_detection_enabled = int(response) == 1
 
     def enable_motion_detection(self):
         """Enable motion detection in camera."""
-        response = self._cam.set_param(self._event_0_key, 1)
+        response = self._cam.set_param(DEFAULT_EVENT_0_KEY, 1)
         self._motion_detection_enabled = int(response) == 1
 
     @property
