@@ -6,7 +6,6 @@ import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_PLEX
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -29,6 +28,7 @@ from .const import (
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
     DOMAIN as PLEX_DOMAIN,
+    PLATFORMS,
     PLEX_CONFIG_FILE,
     PLEX_MEDIA_PLAYER_OPTIONS,
     SHARED_SERVER,
@@ -156,8 +156,7 @@ def setup(hass, config):
                 },
             )
 
-        platforms = [MP_DOMAIN, SENSOR_DOMAIN]
-        for platform in platforms:
+        for platform in PLATFORMS:
             hass.helpers.discovery.load_platform(platform, PLEX_DOMAIN, {}, config)
     else:
         request_configuration(hass, f"{host}:{port}")
