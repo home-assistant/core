@@ -14,14 +14,10 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-<<<<<<< HEAD
 from homeassistant.helpers.entity_registry import (
     async_get_registry,
     DISABLED_CONFIG_ENTRY,
 )
-from homeassistant.util import slugify
-=======
->>>>>>> Early draft
 
 from .const import (
     _LOGGER,
@@ -259,7 +255,6 @@ async def get_gateway(
     except (asyncio.TimeoutError, errors.RequestError):
         _LOGGER.error("Error connecting to deCONZ gateway at %s", config[CONF_HOST])
         raise CannotConnect
-<<<<<<< HEAD
 
 
 class DeconzEntityHandler:
@@ -295,35 +290,3 @@ class DeconzEntityHandler:
                 entity_registry.async_update_entity(
                     entity.registry_entry.entity_id, disabled_by=disabled_by
                 )
-
-
-class DeconzEvent:
-    """When you want signals instead of entities.
-
-    Stateless sensors such as remotes are expected to generate an event
-    instead of a sensor entity in hass.
-    """
-
-    def __init__(self, hass, device):
-        """Register callback that will be used for signals."""
-        self._hass = hass
-        self._device = device
-        self._device.register_async_callback(self.async_update_callback)
-        self._event = f"deconz_{CONF_EVENT}"
-        self._id = slugify(self._device.name)
-        _LOGGER.debug("deCONZ event created: %s", self._id)
-
-    @callback
-    def async_will_remove_from_hass(self) -> None:
-        """Disconnect event object when removed."""
-        self._device.remove_callback(self.async_update_callback)
-        self._device = None
-
-    @callback
-    def async_update_callback(self, force_update=False):
-        """Fire the event if reason is that state is updated."""
-        if "state" in self._device.changed_keys:
-            data = {CONF_ID: self._id, CONF_EVENT: self._device.state}
-            self._hass.bus.async_fire(self._event, data, EventOrigin.remote)
-=======
->>>>>>> Early draft
