@@ -9,7 +9,7 @@
             "user": {
                 "data": {
                     "password": "Password",
-                    "username": "Nome utente / indirizzo Email"
+                    "username": "Nome utente / indirizzo E-mail"
                 },
                 "title": "Inserisci le tue informazioni"
             }

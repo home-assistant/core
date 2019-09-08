@@ -6,7 +6,7 @@
         "step": {
             "user": {
                 "data": {
-                    "mmi": "MMI",
+                    "mmi": "Intensit\u00e0 in Scala Mercalli Modificata",
                     "radius": "Raggio"
                 },
                 "title": "Inserisci i tuoi dettagli del filtro."
