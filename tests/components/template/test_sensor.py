@@ -3,6 +3,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.setup import setup_component, async_setup_component
 
 from tests.common import get_test_home_assistant, assert_setup_component
+from homeassistant.const import STATE_UNAVAILABLE
 
 
 class TestTemplateSensor:
@@ -375,6 +376,52 @@ class TestTemplateSensor:
         assert state.attributes["device_class"] == "temperature"
         state = self.hass.states.get("sensor.test2")
         assert "device_class" not in state.attributes
+
+    def test_available_template_with_entities(self):
+        """Test availability tempalates with values from other entities."""
+        availability_template = """
+            {% if is_state('availability_boolean.state', 'True') %}
+                {{ 'true' }}
+            {% else %}
+                {{ 'false' }}
+            {% endif %}
+        """
+
+        with assert_setup_component(1):
+            assert setup_component(
+                self.hass,
+                "sensor",
+                {
+                    "sensor": {
+                        "platform": "template",
+                        "sensors": {
+                            "test_template_sensor": {
+                                "value_template": "{{ states.sensor.test_state.state }}",
+                                "availability_template": availability_template,
+                            }
+                        },
+                    }
+                },
+            )
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        # When template returns true..
+        self.hass.states.set("availability_boolean.state", True)
+        self.hass.block_till_done()
+
+        # Device State should not be unavailable
+        state = self.hass.states.get("sensor.test_template_sensor")
+        assert state.state != STATE_UNAVAILABLE
+
+        # When Availability template returns false
+        self.hass.states.set("availability_boolean.state", False)
+        self.hass.block_till_done()
+
+        # device state should be unavailable
+        state = self.hass.states.get("sensor.test_template_sensor")
+        assert state.state == STATE_UNAVAILABLE
 
 
 async def test_invalid_attribute_template(hass, caplog):
