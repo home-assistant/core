@@ -83,7 +83,7 @@ class MetOfficeWeather(WeatherEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._name, self.site.name)
+        return f"{self._name} {self.site.name}"
 
     @property
     def condition(self):

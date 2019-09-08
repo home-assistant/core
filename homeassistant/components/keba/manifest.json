@@ -1,0 +1,10 @@
+{
+  "domain": "keba",
+  "name": "Keba Charging Station",
+  "documentation": "https://www.home-assistant.io/components/keba",
+  "requirements": ["keba-kecontact==0.2.0"],
+  "dependencies": [],
+  "codeowners": [
+    "@dannerph"
+  ]
+}

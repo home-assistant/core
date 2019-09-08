@@ -3,7 +3,7 @@
   "name": "Sma",
   "documentation": "https://www.home-assistant.io/components/sma",
   "requirements": [
-    "pysma==0.3.2"
+    "pysma==0.3.4"
   ],
   "dependencies": [],
   "codeowners": [

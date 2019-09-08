@@ -52,7 +52,7 @@ ATTR_HUB_NAME = "hub_name"
 WINK_AUTH_CALLBACK_PATH = "/auth/wink/callback"
 WINK_AUTH_START = "/auth/wink"
 WINK_CONFIG_FILE = ".wink.conf"
-USER_AGENT = "Manufacturer/Home-Assistant{} python/3 Wink/3".format(__version__)
+USER_AGENT = f"Manufacturer/Home-Assistant{__version__} python/3 Wink/3"
 
 DEFAULT_CONFIG = {"client_id": "CLIENT_ID_HERE", "client_secret": "CLIENT_SECRET_HERE"}
 
@@ -228,7 +228,7 @@ def _request_app_setup(hass, config):
         _configurator = hass.data[DOMAIN]["configuring"][DOMAIN]
         configurator.notify_errors(_configurator, error_msg)
 
-    start_url = "{}{}".format(hass.config.api.base_url, WINK_AUTH_CALLBACK_PATH)
+    start_url = f"{hass.config.api.base_url}{WINK_AUTH_CALLBACK_PATH}"
 
     description = """Please create a Wink developer app at
                      https://developer.wink.com.
@@ -268,9 +268,9 @@ def _request_oauth_completion(hass, config):
         """Call setup again."""
         setup(hass, config)
 
-    start_url = "{}{}".format(hass.config.api.base_url, WINK_AUTH_START)
+    start_url = f"{hass.config.api.base_url}{WINK_AUTH_START}"
 
-    description = "Please authorize Wink by visiting {}".format(start_url)
+    description = f"Please authorize Wink by visiting {start_url}"
 
     hass.data[DOMAIN]["configuring"][DOMAIN] = configurator.request_config(
         DOMAIN, wink_configuration_callback, description=description

@@ -32,6 +32,9 @@ from homeassistant.const import (
     STATE_CLOSING,
 )
 
+
+# mypy: allow-untyped-calls, allow-incomplete-defs, allow-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "cover"

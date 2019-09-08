@@ -1,6 +1,8 @@
 """Support for Homekit covers."""
 import logging
 
+from homekit.model.characteristics import CharacteristicsTypes
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -76,9 +78,6 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverDevice):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
-
         return [
             CharacteristicsTypes.DOOR_STATE_CURRENT,
             CharacteristicsTypes.DOOR_STATE_TARGET,
@@ -154,9 +153,6 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
-
         return [
             CharacteristicsTypes.POSITION_STATE,
             CharacteristicsTypes.POSITION_CURRENT,

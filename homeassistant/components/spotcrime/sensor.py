@@ -29,7 +29,7 @@ CONF_DAYS = "days"
 DEFAULT_DAYS = 1
 NAME = "spotcrime"
 
-EVENT_INCIDENT = "{}_incident".format(NAME)
+EVENT_INCIDENT = f"{NAME}_incident"
 
 SCAN_INTERVAL = timedelta(minutes=30)
 

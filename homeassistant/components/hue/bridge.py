@@ -166,7 +166,7 @@ async def get_bridge(hass, host, username=None):
         with async_timeout.timeout(10):
             # Create username if we don't have one
             if not username:
-                await bridge.create_user("home-assistant")
+                await bridge.create_user(f"home-assistant#{hass.config.location_name}")
             # Initialize bridge (and validate our username)
             await bridge.initialize()
 

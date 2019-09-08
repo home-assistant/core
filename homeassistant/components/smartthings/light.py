@@ -133,7 +133,9 @@ class SmartThingsLight(SmartThingsEntity, Light):
         """Update entity attributes when the device status has changed."""
         # Brightness and transition
         if self._supported_features & SUPPORT_BRIGHTNESS:
-            self._brightness = convert_scale(self._device.status.level, 100, 255)
+            self._brightness = int(
+                convert_scale(self._device.status.level, 100, 255, 0)
+            )
         # Color Temperature
         if self._supported_features & SUPPORT_COLOR_TEMP:
             self._color_temp = color_util.color_temperature_kelvin_to_mired(

@@ -131,6 +131,7 @@ class TestEcobee(unittest.TestCase):
         self.ecobee["equipmentStatus"] = "heatPump2"
         assert {
             "fan": "off",
+            "climate_mode": "Climate1",
             "fan_min_on_time": 10,
             "equipment_running": "heatPump2",
         } == self.thermostat.device_state_attributes
@@ -138,18 +139,21 @@ class TestEcobee(unittest.TestCase):
         self.ecobee["equipmentStatus"] = "auxHeat2"
         assert {
             "fan": "off",
+            "climate_mode": "Climate1",
             "fan_min_on_time": 10,
             "equipment_running": "auxHeat2",
         } == self.thermostat.device_state_attributes
         self.ecobee["equipmentStatus"] = "compCool1"
         assert {
             "fan": "off",
+            "climate_mode": "Climate1",
             "fan_min_on_time": 10,
             "equipment_running": "compCool1",
         } == self.thermostat.device_state_attributes
         self.ecobee["equipmentStatus"] = ""
         assert {
             "fan": "off",
+            "climate_mode": "Climate1",
             "fan_min_on_time": 10,
             "equipment_running": "",
         } == self.thermostat.device_state_attributes
@@ -157,6 +161,15 @@ class TestEcobee(unittest.TestCase):
         self.ecobee["equipmentStatus"] = "Unknown"
         assert {
             "fan": "off",
+            "climate_mode": "Climate1",
+            "fan_min_on_time": 10,
+            "equipment_running": "Unknown",
+        } == self.thermostat.device_state_attributes
+
+        self.ecobee["program"]["currentClimateRef"] = "c2"
+        assert {
+            "fan": "off",
+            "climate_mode": "Climate2",
             "fan_min_on_time": 10,
             "equipment_running": "Unknown",
         } == self.thermostat.device_state_attributes

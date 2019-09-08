@@ -73,7 +73,7 @@ class SomfyFlowHandler(config_entries.ConfigFlow):
 
         client_id = self.hass.data[DOMAIN][CLIENT_ID]
         client_secret = self.hass.data[DOMAIN][CLIENT_SECRET]
-        redirect_uri = "{}{}".format(self.hass.config.api.base_url, AUTH_CALLBACK_PATH)
+        redirect_uri = f"{self.hass.config.api.base_url}{AUTH_CALLBACK_PATH}"
         api = SomfyApi(client_id, client_secret, redirect_uri)
 
         self.hass.http.register_view(SomfyAuthCallbackView())
@@ -95,7 +95,7 @@ class SomfyFlowHandler(config_entries.ConfigFlow):
         code = self.code
         from pymfy.api.somfy_api import SomfyApi
 
-        redirect_uri = "{}{}".format(self.hass.config.api.base_url, AUTH_CALLBACK_PATH)
+        redirect_uri = f"{self.hass.config.api.base_url}{AUTH_CALLBACK_PATH}"
         api = SomfyApi(client_id, client_secret, redirect_uri)
         token = await self.hass.async_add_executor_job(api.request_token, None, code)
         _LOGGER.info("Successfully authenticated Somfy")

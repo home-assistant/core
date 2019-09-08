@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/unifi",
   "requirements": [
-    "aiounifi==10"
+    "aiounifi==11"
   ],
   "dependencies": [],
   "codeowners": [

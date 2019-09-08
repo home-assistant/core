@@ -1,0 +1,8 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "{nazwa} wy\u0142\u0105czone",
+            "turn_on": "{name} w\u0142\u0105czone"
+        }
+    }
+}

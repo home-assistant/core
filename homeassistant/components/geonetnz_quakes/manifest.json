@@ -1,0 +1,13 @@
+{
+  "domain": "geonetnz_quakes",
+  "name": "GeoNet NZ Quakes",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/components/geonetnz_quakes",
+  "requirements": [
+    "aio_geojson_geonetnz_quakes==0.9"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@exxamalte"
+  ]
+}

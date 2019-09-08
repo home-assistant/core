@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "all_configured": "TelldusLive ya est\u00e1 configurado",
             "already_setup": "TelldusLive ya est\u00e1 configurado",
             "unknown": "Se produjo un error desconocido"
         },

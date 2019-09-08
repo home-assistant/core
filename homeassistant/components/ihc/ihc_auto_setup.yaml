@@ -1,6 +1,6 @@
 # IHC auto setup configuration.
 # To customize this, copy this file to the home assistant configuration
-# folder and make your changes. 
+# folder and make your changes.
 
 binary_sensor:
     # Magnet contact

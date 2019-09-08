@@ -34,7 +34,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.util.async_ import run_coroutine_threadsafe
 
-from .reproduce_state import async_reproduce_states  # noqa
 
 DOMAIN = "group"
 

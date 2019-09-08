@@ -6,5 +6,7 @@
     "geojson_client==0.4"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@exxamalte"
+  ]
 }

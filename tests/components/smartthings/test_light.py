@@ -84,6 +84,7 @@ async def test_entity_state(hass, light_devices):
         state.attributes[ATTR_SUPPORTED_FEATURES]
         == SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
     )
+    assert isinstance(state.attributes[ATTR_BRIGHTNESS], int)
     assert state.attributes[ATTR_BRIGHTNESS] == 255
 
     # Color Dimmer 1
@@ -103,6 +104,7 @@ async def test_entity_state(hass, light_devices):
     )
     assert state.attributes[ATTR_BRIGHTNESS] == 255
     assert state.attributes[ATTR_HS_COLOR] == (273.6, 55.0)
+    assert isinstance(state.attributes[ATTR_COLOR_TEMP], int)
     assert state.attributes[ATTR_COLOR_TEMP] == 222
 
 
@@ -191,7 +193,7 @@ async def test_turn_on_with_brightness(hass, light_devices):
     assert state is not None
     assert state.state == "on"
     # round-trip rounding error (expected)
-    assert state.attributes[ATTR_BRIGHTNESS] == 73.95
+    assert state.attributes[ATTR_BRIGHTNESS] == 74
 
 
 async def test_turn_on_with_minimal_brightness(hass, light_devices):
@@ -216,7 +218,7 @@ async def test_turn_on_with_minimal_brightness(hass, light_devices):
     assert state is not None
     assert state.state == "on"
     # round-trip rounding error (expected)
-    assert state.attributes[ATTR_BRIGHTNESS] == 2.55
+    assert state.attributes[ATTR_BRIGHTNESS] == 3
 
 
 async def test_turn_on_with_color(hass, light_devices):

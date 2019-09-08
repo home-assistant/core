@@ -140,7 +140,10 @@ async def async_init_zigpy_device(
     device = make_device(
         in_cluster_ids, out_cluster_ids, device_type, ieee, manufacturer, model
     )
-    await gateway.async_device_initialized(device, is_new_join)
+    if is_new_join:
+        await gateway.async_device_initialized(device)
+    else:
+        await gateway.async_device_restored(device)
     await hass.async_block_till_done()
     return device
 

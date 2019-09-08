@@ -85,7 +85,7 @@ class AladdinDevice(CoverDevice):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return "{}-{}".format(self._device_id, self._number)
+        return f"{self._device_id}-{self._number}"
 
     @property
     def name(self):

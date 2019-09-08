@@ -31,12 +31,15 @@ SENSOR = {
 
 
 ENTRY_CONFIG = {
-    deconz.const.CONF_ALLOW_CLIP_SENSOR: True,
-    deconz.const.CONF_ALLOW_DECONZ_GROUPS: True,
     deconz.config_flow.CONF_API_KEY: "ABCDEF",
     deconz.config_flow.CONF_BRIDGEID: "0123456789",
     deconz.config_flow.CONF_HOST: "1.2.3.4",
     deconz.config_flow.CONF_PORT: 80,
+}
+
+ENTRY_OPTIONS = {
+    deconz.const.CONF_ALLOW_CLIP_SENSOR: True,
+    deconz.const.CONF_ALLOW_DECONZ_GROUPS: True,
 }
 
 
@@ -47,7 +50,7 @@ async def setup_gateway(hass, data, allow_clip_sensor=True):
     loop = Mock()
     session = Mock()
 
-    ENTRY_CONFIG[deconz.const.CONF_ALLOW_CLIP_SENSOR] = allow_clip_sensor
+    ENTRY_OPTIONS[deconz.const.CONF_ALLOW_CLIP_SENSOR] = allow_clip_sensor
 
     config_entry = config_entries.ConfigEntry(
         1,
@@ -56,6 +59,8 @@ async def setup_gateway(hass, data, allow_clip_sensor=True):
         ENTRY_CONFIG,
         "test",
         config_entries.CONN_CLASS_LOCAL_PUSH,
+        system_options={},
+        options=ENTRY_OPTIONS,
     )
     gateway = deconz.DeconzGateway(hass, config_entry)
     gateway.api = DeconzSession(loop, session, **config_entry.data)
@@ -111,8 +116,9 @@ async def test_add_new_sensor(hass):
     sensor.name = "name"
     sensor.type = "ZHAPresence"
     sensor.BINARY = True
+    sensor.uniqueid = "1"
     sensor.register_async_callback = Mock()
-    async_dispatcher_send(hass, gateway.async_event_new_device("sensor"), [sensor])
+    async_dispatcher_send(hass, gateway.async_signal_new_device("sensor"), [sensor])
     await hass.async_block_till_done()
     assert "binary_sensor.name" in gateway.deconz_ids
 
@@ -125,7 +131,7 @@ async def test_do_not_allow_clip_sensor(hass):
     sensor.name = "name"
     sensor.type = "CLIPPresence"
     sensor.register_async_callback = Mock()
-    async_dispatcher_send(hass, gateway.async_event_new_device("sensor"), [sensor])
+    async_dispatcher_send(hass, gateway.async_signal_new_device("sensor"), [sensor])
     await hass.async_block_till_done()
     assert len(gateway.deconz_ids) == 0
 

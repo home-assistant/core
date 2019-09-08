@@ -73,4 +73,4 @@ class AugustCamera(Camera):
     @property
     def unique_id(self) -> str:
         """Get the unique id of the camera."""
-        return "{:s}_camera".format(self._doorbell.device_id)
+        return f"{self._doorbell.device_id:s}_camera"

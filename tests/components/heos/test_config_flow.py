@@ -1,5 +1,5 @@
 """Tests for the Heos config flow module."""
-import asyncio
+from pyheos import HeosError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.heos.config_flow import HeosFlowHandler
@@ -31,18 +31,15 @@ async def test_cannot_connect_shows_error_form(hass, controller):
     """Test form is shown with error when cannot connect."""
     flow = HeosFlowHandler()
     flow.hass = hass
-
-    errors = [ConnectionError, asyncio.TimeoutError]
-    for error in errors:
-        controller.connect.side_effect = error
-        result = await flow.async_step_user({CONF_HOST: "127.0.0.1"})
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "user"
-        assert result["errors"][CONF_HOST] == "connection_failure"
-        assert controller.connect.call_count == 1
-        assert controller.disconnect.call_count == 1
-        controller.connect.reset_mock()
-        controller.disconnect.reset_mock()
+    controller.connect.side_effect = HeosError()
+    result = await flow.async_step_user({CONF_HOST: "127.0.0.1"})
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"][CONF_HOST] == "connection_failure"
+    assert controller.connect.call_count == 1
+    assert controller.disconnect.call_count == 1
+    controller.connect.reset_mock()
+    controller.disconnect.reset_mock()
 
 
 async def test_create_entry_when_host_valid(hass, controller):

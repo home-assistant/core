@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
-    HVAC_MODE_AUTO,
+    HVAC_MODE_HEAT_COOL,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
@@ -33,14 +33,14 @@ AVAILABLE_MODES = [
     HVAC_MODE_HEAT,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
-    HVAC_MODE_AUTO,
+    HVAC_MODE_HEAT_COOL,
     HVAC_MODE_FAN_ONLY,
 ]
 
 CM_TO_HA_STATE = {
     "heat": HVAC_MODE_HEAT,
     "cool": HVAC_MODE_COOL,
-    "auto": HVAC_MODE_AUTO,
+    "auto": HVAC_MODE_HEAT_COOL,
     "dry": HVAC_MODE_DRY,
     "fan": HVAC_MODE_FAN_ONLY,
 }
