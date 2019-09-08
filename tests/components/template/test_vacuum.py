@@ -255,6 +255,32 @@ async def test_available_template_with_entities(hass, calls):
     assert state.state == STATE_UNAVAILABLE
 
 
+async def test_invalid_availability_template_keeps_component_available(hass, caplog):
+    """Test that an invalid availability keeps the device available."""
+    with assert_setup_component(1, "vacuum"):
+        assert await setup.async_setup_component(
+            hass,
+            "vacuum",
+            {
+                "vacuum": {
+                    "platform": "template",
+                    "vacuums": {
+                        "test_template_vacuum": {
+                            "availability_template": "{{ x - 12 }}",
+                            "start": {"service": "script.vacuum_start"},
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("vacuum.test_template_vacuum") != STATE_UNAVAILABLE
+    assert ("UndefinedError: 'x' is undefined") in caplog.text
+
+
 # End of template tests #
 
 
