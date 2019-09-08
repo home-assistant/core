@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "crimereports"
 
-EVENT_INCIDENT = "{}_incident".format(DOMAIN)
+EVENT_INCIDENT = f"{DOMAIN}_incident"
 
 SCAN_INTERVAL = timedelta(minutes=30)
 

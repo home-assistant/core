@@ -44,7 +44,7 @@ class DukeEnergyMeter(Entity):
     @property
     def name(self):
         """Return the name."""
-        return "duke_energy_{}".format(self.duke_meter.id)
+        return f"duke_energy_{self.duke_meter.id}"
 
     @property
     def unique_id(self):

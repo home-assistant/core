@@ -93,7 +93,7 @@ class HomematicipGroupSwitch(HomematicipGenericDevice, SwitchDevice):
 
     def __init__(self, home: AsyncHome, device, post: str = "Group") -> None:
         """Initialize switching group."""
-        device.modelType = "HmIP-{}".format(post)
+        device.modelType = f"HmIP-{post}"
         super().__init__(home, device, post)
 
     @property
@@ -113,10 +113,10 @@ class HomematicipGroupSwitch(HomematicipGenericDevice, SwitchDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the switch-group."""
-        attr = {}
+        state_attr = {}
         if self._device.unreach:
-            attr[ATTR_GROUP_MEMBER_UNREACHABLE] = True
-        return attr
+            state_attr[ATTR_GROUP_MEMBER_UNREACHABLE] = True
+        return state_attr
 
     async def async_turn_on(self, **kwargs):
         """Turn the group on."""
@@ -149,12 +149,12 @@ class HomematicipMultiSwitch(HomematicipGenericDevice, SwitchDevice):
     def __init__(self, home: AsyncHome, device, channel: int):
         """Initialize the multi switch device."""
         self.channel = channel
-        super().__init__(home, device, "Channel{}".format(channel))
+        super().__init__(home, device, f"Channel{channel}")
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return "{}_{}_{}".format(self.__class__.__name__, self.post, self._device.id)
+        return f"{self.__class__.__name__}_{self.post}_{self._device.id}"
 
     @property
     def is_on(self) -> bool:

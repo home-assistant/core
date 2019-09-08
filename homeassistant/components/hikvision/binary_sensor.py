@@ -93,7 +93,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     else:
         protocol = "http"
 
-    url = "{}://{}".format(protocol, host)
+    url = f"{protocol}://{host}"
 
     data = HikvisionData(hass, url, port, name, username, password)
 
@@ -196,11 +196,11 @@ class HikvisionBinarySensor(BinarySensorDevice):
         self._channel = channel
 
         if self._cam.type == "NVR":
-            self._name = "{} {} {}".format(self._cam.name, sensor, channel)
+            self._name = f"{self._cam.name} {sensor} {channel}"
         else:
-            self._name = "{} {}".format(self._cam.name, sensor)
+            self._name = f"{self._cam.name} {sensor}"
 
-        self._id = "{}.{}.{}".format(self._cam.cam_id, sensor, channel)
+        self._id = f"{self._cam.cam_id}.{sensor}.{channel}"
 
         if delay is None:
             self._delay = 0

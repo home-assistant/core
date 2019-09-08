@@ -36,7 +36,7 @@ class USPSPackageSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} packages".format(self._name)
+        return f"{self._name} packages"
 
     @property
     def state(self):
@@ -85,7 +85,7 @@ class USPSMailSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} mail".format(self._name)
+        return f"{self._name} mail"
 
     @property
     def state(self):

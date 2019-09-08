@@ -86,7 +86,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         add_entities(dev, True)
     except HTTPError as error:
-        msg = "{}".format(error.strerror)
+        msg = f"{error.strerror}"
         if "EMAIL_NOT_FOUND" in msg or "INVALID_PASSWORD" in msg:
             _LOGGER.error("Invalid email and password combination")
         else:
@@ -105,7 +105,7 @@ class ThermoworksSmokeSensor(Entity):
         self._state = None
         self._attributes = {}
         self._unit_of_measurement = TEMP_FAHRENHEIT
-        self._unique_id = "{serial}-{type}".format(serial=serial, type=sensor_type)
+        self._unique_id = f"{serial}-{sensor_type}"
         self.serial = serial
         self.mgr = mgr
         self.update_unit()

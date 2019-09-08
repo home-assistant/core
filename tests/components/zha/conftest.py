@@ -14,7 +14,13 @@ from homeassistant.components.zha.core.store import async_get_registry
 def config_entry_fixture(hass):
     """Fixture representing a config entry."""
     config_entry = config_entries.ConfigEntry(
-        1, DOMAIN, "Mock Title", {}, "test", config_entries.CONN_CLASS_LOCAL_PUSH
+        1,
+        DOMAIN,
+        "Mock Title",
+        {},
+        "test",
+        config_entries.CONN_CLASS_LOCAL_PUSH,
+        system_options={},
     )
     return config_entry
 

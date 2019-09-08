@@ -570,8 +570,8 @@ def create_vapid_headers(vapid_email, subscription_info, vapid_private_key):
     if vapid_email and vapid_private_key and ATTR_ENDPOINT in subscription_info:
         url = urlparse(subscription_info.get(ATTR_ENDPOINT))
         vapid_claims = {
-            "sub": "mailto:{}".format(vapid_email),
-            "aud": "{}://{}".format(url.scheme, url.netloc),
+            "sub": f"mailto:{vapid_email}",
+            "aud": f"{url.scheme}://{url.netloc}",
         }
         vapid = Vapid.from_string(private_key=vapid_private_key)
         return vapid.sign(vapid_claims)

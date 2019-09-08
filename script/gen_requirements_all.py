@@ -38,6 +38,7 @@ COMMENT_REQUIREMENTS = (
     "rpi-rf",
     "RPi.GPIO",
     "smbus-cffi",
+    "tensorflow",
 )
 
 TEST_REQUIREMENTS = (
@@ -54,6 +55,7 @@ TEST_REQUIREMENTS = (
     "aiounifi",
     "aioswitcher",
     "aiowwlln",
+    "androidtv",
     "apns2",
     "aprslib",
     "av",
@@ -84,12 +86,14 @@ TEST_REQUIREMENTS = (
     "haversine",
     "hbmqtt",
     "hdate",
+    "hole",
     "holidays",
     "home-assistant-frontend",
     "homekit[IP]",
     "homematicip",
     "httplib2",
     "huawei-lte-api",
+    "iaqualink",
     "influxdb",
     "jsonpath",
     "libpurecool",
@@ -98,7 +102,9 @@ TEST_REQUIREMENTS = (
     "pyMetno",
     "mbddns",
     "mficlient",
+    "minio",
     "netdisco",
+    "nokia",
     "numpy",
     "oauth2client",
     "paho-mqtt",
@@ -115,13 +121,16 @@ TEST_REQUIREMENTS = (
     "pyheos",
     "pyhomematic",
     "pyiqvia",
+    "pylinky",
     "pylitejet",
     "pymfy",
     "pymonoprice",
+    "pynws",
     "pynx584",
     "pyopenuv",
     "pyotp",
     "pyps4-homeassistant",
+    "pysma",
     "pysmartapp",
     "pysmartthings",
     "pysonos",
@@ -226,9 +235,7 @@ def gather_recursive_requirements(domain, seen=None):
         seen = set()
 
     seen.add(domain)
-    integration = Integration(
-        pathlib.Path("homeassistant/components/{}".format(domain))
-    )
+    integration = Integration(pathlib.Path(f"homeassistant/components/{domain}"))
     integration.load_manifest()
     reqs = set(integration.manifest["requirements"])
     for dep_domain in integration.manifest["dependencies"]:
@@ -268,13 +275,13 @@ def gather_requirements_from_manifests(errors, reqs):
         integration = integrations[domain]
 
         if not integration.manifest:
-            errors.append("The manifest for integration {} is invalid.".format(domain))
+            errors.append(f"The manifest for integration {domain} is invalid.")
             continue
 
         process_requirements(
             errors,
             integration.manifest["requirements"],
-            "homeassistant.components.{}".format(domain),
+            f"homeassistant.components.{domain}",
             reqs,
         )
 
@@ -302,13 +309,9 @@ def process_requirements(errors, module_requirements, package, reqs):
         if req in IGNORE_REQ:
             continue
         if "://" in req:
-            errors.append(
-                "{}[Only pypi dependencies are allowed: {}]".format(package, req)
-            )
+            errors.append(f"{package}[Only pypi dependencies are allowed: {req}]")
         if req.partition("==")[1] == "" and req not in IGNORE_PIN:
-            errors.append(
-                "{}[Please pin requirement {}, see {}]".format(package, req, URL_PIN)
-            )
+            errors.append(f"{package}[Please pin requirement {req}, see {URL_PIN}]")
         reqs.setdefault(req, []).append(package)
 
 
@@ -317,12 +320,12 @@ def generate_requirements_list(reqs):
     output = []
     for pkg, requirements in sorted(reqs.items(), key=lambda item: item[0]):
         for req in sorted(requirements):
-            output.append("\n# {}".format(req))
+            output.append(f"\n# {req}")
 
         if comment_requirement(pkg):
-            output.append("\n# {}\n".format(pkg))
+            output.append(f"\n# {pkg}\n")
         else:
-            output.append("\n{}\n".format(pkg))
+            output.append(f"\n{pkg}\n")
     return "".join(output)
 
 

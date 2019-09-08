@@ -65,7 +65,7 @@ class TtnDataSensor(Entity):
         self._device_id = device_id
         self._unit_of_measurement = unit_of_measurement
         self._value = value
-        self._name = "{} {}".format(self._device_id, self._value)
+        self._name = f"{self._device_id} {self._value}"
 
     @property
     def name(self):
@@ -116,10 +116,7 @@ class TtnDataStorage:
         self._url = TTN_DATA_STORAGE_URL.format(
             app_id=app_id, endpoint="api/v2/query", device_id=device_id
         )
-        self._headers = {
-            ACCEPT: CONTENT_TYPE_JSON,
-            AUTHORIZATION: "key {}".format(access_key),
-        }
+        self._headers = {ACCEPT: CONTENT_TYPE_JSON, AUTHORIZATION: f"key {access_key}"}
 
     async def async_update(self):
         """Get the current state from The Things Network Data Storage."""

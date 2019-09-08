@@ -48,7 +48,7 @@ class UPCDeviceScanner(DeviceScanner):
 
         self.headers = {
             HTTP_HEADER_X_REQUESTED_WITH: "XMLHttpRequest",
-            REFERER: "http://{}/index.html".format(self.host),
+            REFERER: f"http://{self.host}/index.html",
             USER_AGENT: (
                 "Mozilla/5.0 (Windows NT 10.0; WOW64) "
                 "AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -88,8 +88,7 @@ class UPCDeviceScanner(DeviceScanner):
             # get first token
             with async_timeout.timeout(10):
                 response = await self.websession.get(
-                    "http://{}/common_page/login.html".format(self.host),
-                    headers=self.headers,
+                    f"http://{self.host}/common_page/login.html", headers=self.headers
                 )
 
                 await response.text()
@@ -109,8 +108,8 @@ class UPCDeviceScanner(DeviceScanner):
                 # The 'token' parameter has to be first, and 'fun' second
                 # or the UPC firmware will return an error
                 response = await self.websession.post(
-                    "http://{}/xml/getter.xml".format(self.host),
-                    data="token={}&fun={}".format(self.token, function),
+                    f"http://{self.host}/xml/getter.xml",
+                    data=f"token={self.token}&fun={function}",
                     headers=self.headers,
                     allow_redirects=False,
                 )

@@ -12,15 +12,7 @@ from homeassistant.helpers import config_validation as cv
 
 # Loading the config flow file will register the flow
 from .config_flow import get_master_gateway
-from .const import (
-    CONF_ALLOW_CLIP_SENSOR,
-    CONF_ALLOW_DECONZ_GROUPS,
-    CONF_BRIDGEID,
-    CONF_MASTER_GATEWAY,
-    DEFAULT_PORT,
-    DOMAIN,
-    _LOGGER,
-)
+from .const import CONF_BRIDGEID, CONF_MASTER_GATEWAY, DEFAULT_PORT, DOMAIN, _LOGGER
 from .gateway import DeconzGateway
 
 CONFIG_SCHEMA = vol.Schema(
@@ -86,7 +78,7 @@ async def async_setup_entry(hass, config_entry):
         hass.data[DOMAIN] = {}
 
     if not config_entry.options:
-        await async_populate_options(hass, config_entry)
+        await async_update_master_gateway(hass, config_entry)
 
     gateway = DeconzGateway(hass, config_entry)
 
@@ -203,25 +195,25 @@ async def async_unload_entry(hass, config_entry):
         hass.services.async_remove(DOMAIN, SERVICE_DEVICE_REFRESH)
 
     elif gateway.master:
-        await async_populate_options(hass, config_entry)
+        await async_update_master_gateway(hass, config_entry)
         new_master_gateway = next(iter(hass.data[DOMAIN].values()))
-        await async_populate_options(hass, new_master_gateway.config_entry)
+        await async_update_master_gateway(hass, new_master_gateway.config_entry)
 
     return await gateway.async_reset()
 
 
-async def async_populate_options(hass, config_entry):
-    """Populate default options for gateway.
+async def async_update_master_gateway(hass, config_entry):
+    """Update master gateway boolean.
 
     Called by setup_entry and unload_entry.
     Makes sure there is always one master available.
     """
     master = not get_master_gateway(hass)
 
-    options = {
-        CONF_MASTER_GATEWAY: master,
-        CONF_ALLOW_CLIP_SENSOR: config_entry.data.get(CONF_ALLOW_CLIP_SENSOR, False),
-        CONF_ALLOW_DECONZ_GROUPS: config_entry.data.get(CONF_ALLOW_DECONZ_GROUPS, True),
-    }
+    old_options = dict(config_entry.options)
+
+    new_options = {CONF_MASTER_GATEWAY: master}
+
+    options = {**old_options, **new_options}
 
     hass.config_entries.async_update_entry(config_entry, options=options)

@@ -44,7 +44,7 @@ def setup(hass, config):
     urls = config.get(DOMAIN)[CONF_URLS]
     scan_interval = config.get(DOMAIN).get(CONF_SCAN_INTERVAL)
     max_entries = config.get(DOMAIN).get(CONF_MAX_ENTRIES)
-    data_file = hass.config.path("{}.pickle".format(DOMAIN))
+    data_file = hass.config.path(f"{DOMAIN}.pickle")
     storage = StoredData(data_file)
     feeds = [
         FeedManager(url, scan_interval, max_entries, hass, storage) for url in urls

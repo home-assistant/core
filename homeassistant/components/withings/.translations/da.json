@@ -1,0 +1,16 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Godkendt med Withings for den valgte profil."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "profile": "Profil"
+                },
+                "title": "Brugerprofil."
+            }
+        },
+        "title": "Withings"
+    }
+}
