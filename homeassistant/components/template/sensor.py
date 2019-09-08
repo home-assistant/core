@@ -4,7 +4,6 @@ from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
@@ -21,12 +20,14 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     CONF_FRIENDLY_NAME_TEMPLATE,
     MATCH_ALL,
-    CONF_DEVICE_CLASS,
-    CONF_AVAILABLE_TEMPLATE)
+    CONF_DEVICE_CLASS)
+from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
+
+from .const import CONF_AVAILABLE_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -194,12 +195,12 @@ class SensorTemplate(Entity):
     @property
     def available(self) -> bool:
         """Return the entity availability status."""
-        return bool(self._available)
+        return self._available
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state if self.available else None
+        return self._state
 
     @property
     def icon(self):

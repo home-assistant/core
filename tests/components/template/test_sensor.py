@@ -1,5 +1,5 @@
 """The test for the Template sensor platform."""
-from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
 from homeassistant.setup import setup_component, async_setup_component
 
 from tests.common import get_test_home_assistant, assert_setup_component
@@ -139,7 +139,7 @@ class TestTemplateSensor:
 
         state = self.hass.states.get("sensor.test_template_sensor")
         assert not state.attributes.get("available")
-        assert state.state is None
+        assert state.state == STATE_UNAVAILABLE
 
         self.hass.states.set("sensor.test_state", "Works")
         self.hass.block_till_done()
@@ -151,7 +151,7 @@ class TestTemplateSensor:
         self.hass.block_till_done()
         state = self.hass.states.get("sensor.test_template_sensor")
         assert not state.attributes.get("available")
-        assert state.state is None
+        assert state.state == STATE_UNAVAILABLE
 
     def test_friendly_name_template(self):
         """Test friendly_name template."""
