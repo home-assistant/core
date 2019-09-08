@@ -1,8 +1,9 @@
 """Orange Livebox."""
-import ipaddress
 import logging
-
 import voluptuous as vol
+
+from aiosysbus import Sysbus
+from aiosysbus.exceptions import HttpRequestError
 
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -17,9 +18,7 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 # Validate as IP address and then convert back to a string.
-                vol.Required(CONF_HOST, default=DEFAULT_HOST): vol.All(
-                    ipaddress.ip_address, cv.string
-                ),
+                vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                 vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
@@ -47,8 +46,6 @@ async def async_setup_entry(hass, entry):
     """Set up Livebox as config entry."""
 
     options = entry.options
-    from aiosysbus import Sysbus
-    from aiosysbus.exceptions import HttpRequestError
 
     box = Sysbus()
     try:
@@ -59,7 +56,8 @@ async def async_setup_entry(hass, entry):
             password=entry.data["password"],
         )
     except HttpRequestError:
-        _LOGGER.exception("Http Request error to Livebox")
+        _LOGGER.error("Http Request error to Livebox")
+        return False
 
     hass.data[DOMAIN] = box
     config = (await box.system.get_deviceinfo())["status"]
@@ -89,6 +87,7 @@ async def async_unload_entry(hass, entry):
     """Unload a config entry."""
 
     await hass.config_entries.async_forward_entry_unload(entry, "sensor")
+    await hass.config_entries.async_forward_entry_unload(entry, "device_tracker")
     box = hass.data[DOMAIN]
     await box.close()
 

@@ -43,6 +43,21 @@ class LiveboxSensor(Entity):
         self._datas = None
         self._dsl = None
 
+    @property
+    def device_info(self):
+        """Return the device info."""
+
+        return {
+            "name": self.name,
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "manufacturer": "Orange",
+            "via_device": (DOMAIN, self._box_id),
+        }
+
+    @Throttle(SCAN_INTERVAL)
+    async def async_update(self):
+        """Return update entry."""
+
 
 class InfoSensor(LiveboxSensor, BinarySensorDevice):
     """Update Wan Status sensor."""
@@ -69,17 +84,6 @@ class InfoSensor(LiveboxSensor, BinarySensorDevice):
         return "{}_connectivity".format(self._box_id)
 
     @property
-    def device_info(self):
-        """Return the device info."""
-
-        return {
-            "name": self.name,
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "manufacturer": "Orange",
-            "via_device": (DOMAIN, self._box_id),
-        }
-
-    @property
     def device_state_attributes(self):
         """Return the device state attributes."""
 
@@ -91,7 +95,6 @@ class InfoSensor(LiveboxSensor, BinarySensorDevice):
             "wan_ipv6address": self._dsl["IPv6Address"],
         }
 
-    @Throttle(SCAN_INTERVAL)
     async def async_update(self):
         """Fetch status from livebox."""
 
@@ -125,17 +128,6 @@ class RXSensor(LiveboxSensor):
         return "{}_downstream".format(self._box_id)
 
     @property
-    def device_info(self):
-        """Return the device info."""
-
-        return {
-            "name": self.name,
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "manufacturer": "Orange",
-            "via_device": (DOMAIN, self._box_id),
-        }
-
-    @property
     def device_state_attributes(self):
         """Return the device state attributes."""
 
@@ -146,7 +138,6 @@ class RXSensor(LiveboxSensor):
             "downstream_power": self._dsl["DownstreamPower"],
         }
 
-    @Throttle(SCAN_INTERVAL)
     async def async_update(self):
         """Get the value from fetched datas."""
 
@@ -181,17 +172,6 @@ class TXSensor(LiveboxSensor):
         return "{}_upstream".format(self._box_id)
 
     @property
-    def device_info(self):
-        """Return the device info."""
-
-        return {
-            "name": self.name,
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "manufacturer": "Orange",
-            "via_device": (DOMAIN, self._box_id),
-        }
-
-    @property
     def device_state_attributes(self):
         """Return the device state attributes."""
 
@@ -202,7 +182,6 @@ class TXSensor(LiveboxSensor):
             "upstream_power": self._dsl["UpstreamPower"],
         }
 
-    @Throttle(SCAN_INTERVAL)
     async def async_update(self):
         """Get the value from fetched datas."""
         parameters = {"parameters": {"mibs": "dsl", "flag": "", "traverse": "down"}}

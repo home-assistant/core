@@ -2,34 +2,19 @@
 import asyncio
 from copy import copy
 
-
 import voluptuous as vol
+
+from aiosysbus import Sysbus
 
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD
 
-from .const import (
-    DOMAIN,
-    LOGGER,
-    DEFAULT_USERNAME,
-    DEFAULT_HOST,
-    DEFAULT_PORT,
-    TEMPLATE_SENSOR,
-)
+from .const import DOMAIN, LOGGER, DEFAULT_USERNAME, DEFAULT_HOST, DEFAULT_PORT
 from .errors import AuthenticationRequired, CannotConnect
 
 
-@callback
-def configured_hosts(hass):
-    """Return a set of the configured hosts."""
-    return set(
-        entry.data["host"] for entry in hass.config_entries.async_entries(DOMAIN)
-    )
-
-
-@config_entries.HANDLERS.register(DOMAIN)
-class LiveboxFlowHandler(config_entries.ConfigFlow):
+class LiveboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Livebox config flow."""
 
     VERSION = 1
@@ -47,25 +32,18 @@ class LiveboxFlowHandler(config_entries.ConfigFlow):
         self.port = None
         self.username = None
         self.password = None
-        self.data_schema = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        # Use OrderedDict to guarantee order of the form shown to the user
-        from collections import OrderedDict
 
-        self.data_schema = OrderedDict()
-        self.data_schema[vol.Optional(CONF_HOST, default=DEFAULT_HOST)] = str
-        self.data_schema[vol.Optional(CONF_PORT, default=DEFAULT_PORT)] = str
-        self.data_schema[vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME)] = str
-        self.data_schema[vol.Required(CONF_PASSWORD)] = str
-
-        return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(self.data_schema)
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
+                vol.Required(CONF_PORT, default=DEFAULT_PORT): str,
+                vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
+                vol.Required(CONF_PASSWORD): str,
+            }
         )
-
-    async def async_step_init(self, user_input=None):
-        """Handle a flow start."""
 
         if user_input is not None:
             self.host = user_input[CONF_HOST]
@@ -74,16 +52,12 @@ class LiveboxFlowHandler(config_entries.ConfigFlow):
             self.password = user_input[CONF_PASSWORD]
             return await self.async_step_link()
 
-        return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(self.data_schema)
-        )
+        return self.async_show_form(step_id="user", data_schema=data_schema)
 
     async def async_step_link(self, user_input=None):
         """Step for link router."""
 
         errors = {}
-
-        from aiosysbus import Sysbus
 
         try:
             box = Sysbus()
@@ -103,7 +77,7 @@ class LiveboxFlowHandler(config_entries.ConfigFlow):
             errors["base"] = "linking"
 
         except Exception:  # pylint: disable=broad-except
-            LOGGER.exception("Unknown error connecting with Livebox at %s", self.host)
+            LOGGER.error("Unknown error connecting with Livebox at %s", self.host)
             errors["base"] = "linking"
 
         # If there was no user input, do not show the errors.
@@ -133,7 +107,7 @@ class LiveboxFlowHandler(config_entries.ConfigFlow):
             )
 
         return self.async_create_entry(
-            title=TEMPLATE_SENSOR.format(""),
+            title="Orange Livebox",
             data={
                 "box_id": box_id,
                 "host": self.host,
