@@ -1,6 +1,6 @@
 """Support for hive water heaters."""
 import voluptuous as vol
-from homeassistant.const import (TEMP_CELSIUS, ATTR_ENTITY_ID, ATTR_TIME)
+from homeassistant.const import TEMP_CELSIUS, ATTR_ENTITY_ID, ATTR_TIME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.water_heater import (
     STATE_ECO,
@@ -11,6 +11,7 @@ from homeassistant.components.water_heater import (
 )
 from . import DATA_HIVE, DOMAIN
 from datetime import time
+
 SUPPORT_FLAGS_HEATER = SUPPORT_OPERATION_MODE
 
 HIVE_TO_HASS_STATE = {"SCHEDULE": STATE_ECO, "ON": STATE_ON, "OFF": STATE_OFF}
@@ -19,7 +20,7 @@ SUPPORT_WATER_HEATER = [STATE_ECO, STATE_ON, STATE_OFF]
 
 BOOST_ON_SCHEMA = {
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_TIME): cv.string
+    vol.Required(ATTR_TIME): cv.string,
 }
 
 
@@ -39,12 +40,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         """Handle the service call."""
         session = hass.data.get(DATA_HIVE)
         entity_id = call.data.get(ATTR_ENTITY_ID)
+        node_id = session.entity_lookup[entity_id]
         boost_time = time(call.data.get(ATTR_TIME))
         total_time = boost_time.hour * 60 + boost_time.minute
 
         session.hotwater.turn_boost_on(entity_id, total_time)
 
-    hass.services.register(DOMAIN, 'boost_on', boost_on, schema=BOOST_ON_SCHEMA)
+    hass.services.register(DOMAIN, "boost_on", boost_on, schema=BOOST_ON_SCHEMA)
 
 
 class HiveWaterHeater(WaterHeaterDevice):
@@ -106,6 +108,7 @@ class HiveWaterHeater(WaterHeaterDevice):
         """When entity is added to Home Assistant."""
         await super().async_added_to_hass()
         self.session.entities.append(self)
+        self.session.entity_lookup.update({self.entity_id: self.node_id})
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""

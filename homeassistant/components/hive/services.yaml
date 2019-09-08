@@ -1,10 +1,29 @@
-boost_on:
-  description: 'Set the home/away mode for a Nest structure. Set to away mode will
+boost_heating:
+  description: "Set the boost mode ON defining the period of time and the desired target temperature."
+  fields:
+    entity_id:
+      {
+        description: The Entity which the required boost is to be set.,
+        example: "water_heater.hotwater",
+      }
+    time:
+      { description: Set the time period for the boost., example: "01:30:00" }
+    temperature:
+      { description: Set the time period for the boost., example: "01:30:00" }
+boost_hotwater:
+  description:
+    "Set the home/away mode for a Nest structure. Set to away mode will
     also set Estimated Arrival Time if provided. Set ETA will cause the thermostat
     to begin warming or cooling the home before the user arrives. After ETA set other
-    Automation can read ETA sensor as a signal to prepare the home for the user''s
-    arrival.'
+    Automation can read ETA sensor as a signal to prepare the home for the user's
+    arrival."
   fields:
-    entity_id: {description: Optional Estimated Arrival Time from now., example: '0:10'}
-    time: {description: Optional ETA window. Default is 1 minute., example: '0:5'}
-    home_mode: {description: home or away, example: home}
+    entity_id:
+      {
+        description: The Entity which the required boost is to be set.,
+        example: "water_heater.hotwater",
+      }
+    time:
+      { description: Set the time period for the boost., example: "01:30:00" }
+    on_off:
+      { description: Set the time period for the boost., example: "01:30:00" }

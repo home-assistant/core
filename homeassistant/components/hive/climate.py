@@ -1,5 +1,13 @@
 """Support for the Hive climate devices."""
+
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    TEMP_CELSIUS,
+    ATTR_ENTITY_ID,
+    ATTR_TIME,
+)
 from homeassistant.components.climate import ClimateDevice
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
@@ -9,9 +17,8 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     PRESET_NONE,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
-
 from . import DATA_HIVE, DOMAIN
+import voluptuous as vol
 
 HIVE_TO_HASS_STATE = {
     "SCHEDULE": HVAC_MODE_AUTO,
@@ -23,6 +30,12 @@ HASS_TO_HIVE_STATE = {
     HVAC_MODE_AUTO: "SCHEDULE",
     HVAC_MODE_HEAT: "MANUAL",
     HVAC_MODE_OFF: "OFF",
+}
+
+BOOST_HEATING_SCHEMA = {
+    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+    vol.Required(ATTR_TIME): cv.time,
+    vol.Required(ATTR_TEMPERATURE): cv.positive_int,
 }
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
@@ -41,6 +54,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     climate = HiveClimateEntity(session, discovery_info)
 
     add_entities([climate])
+
+    def heating_boost(service):
+        """Handle the service call."""
+        session = hass.data.get(DATA_HIVE)
+        entity_id = service.data.get(ATTR_ENTITY_ID)
+        node_id = session.entity_lookup[entity_id]
+        boost_time = time(service.data.get(ATTR_TIME))
+        total_time = boost_time.hour * 60 + boost_time.minute
+        temperature = service.data.get(ATTR_TEMPERATURE)
+
+        session.heating.turn_boost_on(self.node_id, 30, temperature)
+
+    hass.services.register(
+        DOMAIN, "boost_heating", heating_boost, schema=BOOST_HEATING_SCHEMA
+    )
 
 
 class HiveClimateEntity(ClimateDevice):
@@ -147,6 +175,7 @@ class HiveClimateEntity(ClimateDevice):
         """When entity is added to Home Assistant."""
         await super().async_added_to_hass()
         self.session.entities.append(self)
+        self.session.entity_lookup.update({self.entity_id: self.node_id})
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
