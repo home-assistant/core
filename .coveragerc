@@ -694,6 +694,7 @@ omit =
     homeassistant/components/vesync/switch.py
     homeassistant/components/viaggiatreno/sensor.py
     homeassistant/components/vicare/*
+    homeassistant/components/vivotek/camera.py
     homeassistant/components/vizio/media_player.py
     homeassistant/components/vlc/media_player.py
     homeassistant/components/vlc_telnet/media_player.py
