@@ -1,17 +1,17 @@
 {
     "device_automation": {
         "action_type": {
-            "toggle": "Toggle {name}",
-            "turn_off": "Turn off {name}",
-            "turn_on": "Turn on {name}"
+            "toggle": "Toggle {entity_name}",
+            "turn_off": "Turn off {entity_name}",
+            "turn_on": "Turn on {entity_name}"
         },
         "condition_type": {
-            "is_off": "{name} is off",
-            "is_on": "{name} is on"
+            "is_off": "{entity_name} is off",
+            "is_on": "{entity_name} is on"
         },
         "trigger_type": {
-            "turn_off": "{name} turned off",
-            "turn_on": "{name} turned on"
+            "turn_off": "{entity_name} turned off",
+            "turn_on": "{entity_name} turned on"
         }
     }
 }
