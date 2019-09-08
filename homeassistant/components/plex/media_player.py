@@ -4,6 +4,8 @@ import json
 import logging
 
 import plexapi.exceptions
+import plexapi.playlist
+import plexapi.playqueue
 import requests.exceptions
 
 from homeassistant.components.media_player import MediaPlayerDevice
@@ -702,8 +704,6 @@ class PlexClient(MediaPlayerDevice):
                 src["video_name"]
             )
 
-        import plexapi.playlist
-
         if (
             media
             and media_type == "EPISODE"
@@ -768,8 +768,6 @@ class PlexClient(MediaPlayerDevice):
         if not (self.device and "playback" in self._device_protocol_capabilities):
             _LOGGER.error("Client cannot play media: %s", self.entity_id)
             return
-
-        import plexapi.playqueue
 
         playqueue = plexapi.playqueue.PlayQueue.create(
             self.device.server, media, **params
