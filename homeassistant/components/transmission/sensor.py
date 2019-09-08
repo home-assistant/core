@@ -1,12 +1,12 @@
 """Support for monitoring the Transmission BitTorrent client API."""
 import logging
 
-from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, STATE_IDLE
+from homeassistant.const import CONF_NAME, STATE_IDLE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import CONF_SENSOR_TYPES, DATA_TRANSMISSION, DATA_UPDATED
+from .const import DATA_TRANSMISSION, DATA_UPDATED, DOMAIN, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,21 +19,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Transmission sensors."""
 
-    transmission_api = hass.data[DATA_TRANSMISSION]
+    transmission_api = hass.data[DOMAIN][DATA_TRANSMISSION]
     name = config_entry.data[CONF_NAME]
 
     dev = []
-    for sensor_type in CONF_SENSOR_TYPES:
-        if config_entry.options[CONF_MONITORED_CONDITIONS].get(sensor_type):
-            dev.append(
-                TransmissionSensor(
-                    sensor_type,
-                    transmission_api,
-                    name,
-                    CONF_SENSOR_TYPES[sensor_type][0],
-                    CONF_SENSOR_TYPES[sensor_type][1],
-                )
+    for sensor_type in SENSOR_TYPES:
+        dev.append(
+            TransmissionSensor(
+                sensor_type,
+                transmission_api,
+                name,
+                SENSOR_TYPES[sensor_type][0],
+                SENSOR_TYPES[sensor_type][1],
             )
+        )
 
     async_add_entities(dev, True)
 

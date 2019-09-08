@@ -1,12 +1,9 @@
 """Config flow for Transmission Bittorent Client."""
-import transmissionrpc
-from transmissionrpc.error import TransmissionError
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
@@ -15,14 +12,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-from .const import (
-    CONF_SENSOR_TYPES,
-    CONF_TURTLE_MODE,
-    DEFAULT_NAME,
-    DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-)
+from . import get_api
+from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .errors import AuthenticationError, CannotConnect
 
 
 class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -39,7 +31,7 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the Transmission flow."""
-        self.config = None
+        self.config = {}
         self.errors = {}
 
     async def async_step_user(self, user_input=None):
@@ -48,10 +40,21 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="one_instance_allowed")
 
         if user_input is not None:
-            valid = await self.is_valid(user_input)
-            if valid:
-                self.config = user_input
-                return await self.async_step_options()
+
+            self.config[CONF_NAME] = user_input.pop(CONF_NAME)
+            try:
+                get_api(**user_input)
+                self.config.update(user_input)
+                if "options" not in self.config:
+                    self.config["options"] = {CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL}
+                return self.async_create_entry(
+                    title=self.config[CONF_NAME], data=self.config
+                )
+            except AuthenticationError:
+                self.errors[CONF_USERNAME] = "wrong_credentials"
+                self.errors[CONF_PASSWORD] = "wrong_credentials"
+            except CannotConnect:
+                self.errors[CONF_HOST] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
@@ -67,53 +70,15 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=self.errors,
         )
 
-    async def is_valid(self, user_input):
-        """Validate connection to the Transmission Client."""
-        try:
-            transmissionrpc.Client(
-                user_input[CONF_HOST],
-                port=user_input[CONF_PORT],
-                user=user_input.get(CONF_USERNAME),
-                password=user_input.get(CONF_PASSWORD),
-            )
-            return True
-
-        except TransmissionError as error:
-            if str(error).find("401: Unauthorized"):
-                self.errors["base"] = "cannot_connect"
-
-        return False
-
-    async def async_step_options(self, user_input=None):
-        """Set options for the Transmission Client."""
-        if user_input is not None:
-            self.config["options"] = user_input
-            return self.async_create_entry(
-                title=self.config[CONF_NAME], data=self.config
-            )
-
-        options = {
-            vol.Optional(CONF_TURTLE_MODE, default=False): bool,
-            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): int,
-        }
-        for sensor in CONF_SENSOR_TYPES:
-            options.update(
-                {vol.Optional(sensor, default=CONF_SENSOR_TYPES[sensor][2]): bool}
-            )
-
-        return self.async_show_form(step_id="options", data_schema=vol.Schema(options))
-
     async def async_step_import(self, import_config):
         """Import from Transmission client config."""
-        config = {
-            CONF_NAME: import_config.get(CONF_NAME, DEFAULT_NAME),
-            CONF_HOST: import_config[CONF_HOST],
-            CONF_USERNAME: import_config.get(CONF_USERNAME),
-            CONF_PASSWORD: import_config.get(CONF_PASSWORD),
-            CONF_PORT: import_config.get(CONF_PORT, DEFAULT_PORT),
+        self.config["options"] = {
+            CONF_SCAN_INTERVAL: import_config.pop(
+                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+            )
         }
 
-        return await self.async_step_user(user_input=config)
+        return await self.async_step_user(user_input=import_config)
 
 
 class TransmissionOptionsFlowHandler(config_entries.OptionsFlow):
@@ -126,40 +91,16 @@ class TransmissionOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Manage the Transmission options."""
         if user_input is not None:
-            options = {}
-            options[CONF_MONITORED_CONDITIONS] = {}
-            for sensor in CONF_SENSOR_TYPES:
-                options[CONF_MONITORED_CONDITIONS][sensor] = user_input[sensor]
-            options[CONF_TURTLE_MODE] = user_input[CONF_TURTLE_MODE]
-            options[CONF_SCAN_INTERVAL] = user_input[CONF_SCAN_INTERVAL]
-
-            return self.async_create_entry(title="", data=options)
+            return self.async_create_entry(title="", data=user_input)
 
         options = {
-            vol.Optional(
-                CONF_TURTLE_MODE,
-                default=self.config_entry.options.get(
-                    CONF_TURTLE_MODE,
-                    self.config_entry.data["options"][CONF_TURTLE_MODE],
-                ),
-            ): bool,
             vol.Optional(
                 CONF_SCAN_INTERVAL,
                 default=self.config_entry.options.get(
                     CONF_SCAN_INTERVAL,
                     self.config_entry.data["options"][CONF_SCAN_INTERVAL],
                 ),
-            ): int,
+            ): int
         }
-        for sensor in CONF_SENSOR_TYPES:
-            options.update(
-                {
-                    vol.Optional(
-                        sensor,
-                        default=self.config_entry.options[
-                            CONF_MONITORED_CONDITIONS
-                        ].get(sensor, self.config_entry.data["options"][sensor]),
-                    ): bool
-                }
-            )
+
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
