@@ -10,6 +10,7 @@ from homematicip.aio.device import (
     AsyncMotionDetectorIndoor,
     AsyncMotionDetectorOutdoor,
     AsyncMotionDetectorPushButton,
+    AsyncPassageDetector,
     AsyncPlugableSwitchMeasuring,
     AsyncPresenceDetectorIndoor,
     AsyncTemperatureHumiditySensorDisplay,
@@ -38,6 +39,8 @@ from .device import ATTR_MODEL_TYPE
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_LEFT_COUNTER = "left_counter"
+ATTR_RIGHT_COUNTER = "right_counter"
 ATTR_TEMPERATURE_OFFSET = "temperature_offset"
 ATTR_WIND_DIRECTION = "wind_direction"
 ATTR_WIND_DIRECTION_VARIATION = "wind_direction_variation_in_degree"
@@ -100,6 +103,8 @@ async def async_setup_entry(
             devices.append(HomematicipWindspeedSensor(home, device))
         if isinstance(device, (AsyncWeatherSensorPlus, AsyncWeatherSensorPro)):
             devices.append(HomematicipTodayRainSensor(home, device))
+        if isinstance(device, AsyncPassageDetector):
+            devices.append(HomematicipPassageDetectorDeltaCounter(home, device))
 
     if devices:
         async_add_entities(devices)
@@ -336,6 +341,29 @@ class HomematicipTodayRainSensor(HomematicipGenericDevice):
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
         return "mm"
+
+
+class HomematicipPassageDetectorDeltaCounter(HomematicipGenericDevice):
+    """Representation of a HomematicIP passage detector delta counter."""
+
+    def __init__(self, home: AsyncHome, device) -> None:
+        """Initialize the device."""
+        super().__init__(home, device)
+
+    @property
+    def state(self) -> int:
+        """Representation of the HomematicIP passage detector delta counter value."""
+        return self._device.leftRightCounterDelta
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the delta counter."""
+        state_attr = super().device_state_attributes
+
+        state_attr[ATTR_LEFT_COUNTER] = self._device.leftCounter
+        state_attr[ATTR_RIGHT_COUNTER] = self._device.rightCounter
+
+        return state_attr
 
 
 def _get_wind_direction(wind_direction_degree: float) -> str:
