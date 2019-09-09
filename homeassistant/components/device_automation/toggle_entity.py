@@ -101,7 +101,7 @@ def _is_domain(entity, domain):
     return split_entity_id(entity.entity_id)[0] == domain
 
 
-async def async_action_from_config(hass, config, variables, context, domain):
+async def async_call_action_from_config(hass, config, variables, context, domain):
     """Change state based on configuration."""
     config = ACTION_SCHEMA(config)
     action_type = config[CONF_TYPE]
@@ -111,18 +111,14 @@ async def async_action_from_config(hass, config, variables, context, domain):
         action = "turn_off"
     else:
         action = "toggle"
+
     service_action = {
         service.CONF_SERVICE: "{}.{}".format(domain, action),
         CONF_ENTITY_ID: config[CONF_ENTITY_ID],
     }
 
     await service.async_call_from_config(
-        hass,
-        service_action,
-        blocking=True,
-        variables=variables,
-        # validate_config=False,
-        context=context,
+        hass, service_action, blocking=True, variables=variables, context=context
     )
 
 

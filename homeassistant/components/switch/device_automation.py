@@ -19,10 +19,10 @@ TRIGGER_SCHEMA = toggle_entity.TRIGGER_SCHEMA.extend(
 )
 
 
-async def async_action_from_config(hass, config, variables, context):
+async def async_call_action_from_config(hass, config, variables, context):
     """Change state based on configuration."""
     config = ACTION_SCHEMA(config)
-    await toggle_entity.async_action_from_config(
+    await toggle_entity.async_call_action_from_config(
         hass, config, variables, context, DOMAIN
     )
 

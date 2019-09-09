@@ -1,7 +1,7 @@
 """The test for switch device automation."""
 import pytest
 
-from homeassistant.components.switch import DOMAIN as TESTED_DOMAIN
+from homeassistant.components.switch import DOMAIN
 from homeassistant.const import STATE_ON, STATE_OFF, CONF_PLATFORM
 from homeassistant.setup import async_setup_component
 import homeassistant.components.automation as automation
@@ -54,30 +54,28 @@ async def test_get_actions(hass, device_reg, entity_reg):
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
-        TESTED_DOMAIN, "test", "5678", device_id=device_entry.id
-    )
+    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
     expected_actions = [
         {
             "device": None,
-            "domain": TESTED_DOMAIN,
+            "domain": DOMAIN,
             "type": "turn_off",
             "device_id": device_entry.id,
-            "entity_id": f"{TESTED_DOMAIN}.test_5678",
+            "entity_id": f"{DOMAIN}.test_5678",
         },
         {
             "device": None,
-            "domain": TESTED_DOMAIN,
+            "domain": DOMAIN,
             "type": "turn_on",
             "device_id": device_entry.id,
-            "entity_id": f"{TESTED_DOMAIN}.test_5678",
+            "entity_id": f"{DOMAIN}.test_5678",
         },
         {
             "device": None,
-            "domain": TESTED_DOMAIN,
+            "domain": DOMAIN,
             "type": "toggle",
             "device_id": device_entry.id,
-            "entity_id": f"{TESTED_DOMAIN}.test_5678",
+            "entity_id": f"{DOMAIN}.test_5678",
         },
     ]
     actions = await async_get_device_automations(
@@ -94,23 +92,21 @@ async def test_get_conditions(hass, device_reg, entity_reg):
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
-        TESTED_DOMAIN, "test", "5678", device_id=device_entry.id
-    )
+    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
     expected_conditions = [
         {
             "condition": "device",
-            "domain": TESTED_DOMAIN,
+            "domain": DOMAIN,
             "type": "is_off",
             "device_id": device_entry.id,
-            "entity_id": f"{TESTED_DOMAIN}.test_5678",
+            "entity_id": f"{DOMAIN}.test_5678",
         },
         {
             "condition": "device",
-            "domain": TESTED_DOMAIN,
+            "domain": DOMAIN,
             "type": "is_on",
             "device_id": device_entry.id,
-            "entity_id": f"{TESTED_DOMAIN}.test_5678",
+            "entity_id": f"{DOMAIN}.test_5678",
         },
     ]
     conditions = await async_get_device_automations(
@@ -127,23 +123,21 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
-        TESTED_DOMAIN, "test", "5678", device_id=device_entry.id
-    )
+    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
     expected_triggers = [
         {
             "platform": "device",
-            "domain": TESTED_DOMAIN,
+            "domain": DOMAIN,
             "type": "turn_off",
             "device_id": device_entry.id,
-            "entity_id": f"{TESTED_DOMAIN}.test_5678",
+            "entity_id": f"{DOMAIN}.test_5678",
         },
         {
             "platform": "device",
-            "domain": TESTED_DOMAIN,
+            "domain": DOMAIN,
             "type": "turn_on",
             "device_id": device_entry.id,
-            "entity_id": f"{TESTED_DOMAIN}.test_5678",
+            "entity_id": f"{DOMAIN}.test_5678",
         },
     ]
     triggers = await async_get_device_automations(
@@ -154,12 +148,10 @@ async def test_get_triggers(hass, device_reg, entity_reg):
 
 async def test_if_fires_on_state_change(hass, calls):
     """Test for turn_on and turn_off triggers firing."""
-    platform = getattr(hass.components, f"test.{TESTED_DOMAIN}")
+    platform = getattr(hass.components, f"test.{DOMAIN}")
 
     platform.init()
-    assert await async_setup_component(
-        hass, TESTED_DOMAIN, {TESTED_DOMAIN: {CONF_PLATFORM: "test"}}
-    )
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
 
     dev1, dev2, dev3 = platform.DEVICES
 
@@ -171,7 +163,7 @@ async def test_if_fires_on_state_change(hass, calls):
                 {
                     "trigger": {
                         "platform": "device",
-                        "domain": TESTED_DOMAIN,
+                        "domain": DOMAIN,
                         "entity_id": dev1.entity_id,
                         "type": "turn_on",
                     },
@@ -194,7 +186,7 @@ async def test_if_fires_on_state_change(hass, calls):
                 {
                     "trigger": {
                         "platform": "device",
-                        "domain": TESTED_DOMAIN,
+                        "domain": DOMAIN,
                         "entity_id": dev1.entity_id,
                         "type": "turn_off",
                     },
@@ -238,12 +230,10 @@ async def test_if_fires_on_state_change(hass, calls):
 
 async def test_if_state(hass, calls):
     """Test for turn_on and turn_off conditions."""
-    platform = getattr(hass.components, f"test.{TESTED_DOMAIN}")
+    platform = getattr(hass.components, f"test.{DOMAIN}")
 
     platform.init()
-    assert await async_setup_component(
-        hass, TESTED_DOMAIN, {TESTED_DOMAIN: {CONF_PLATFORM: "test"}}
-    )
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
 
     dev1, dev2, dev3 = platform.DEVICES
 
@@ -257,7 +247,7 @@ async def test_if_state(hass, calls):
                     "condition": [
                         {
                             "condition": "device",
-                            "domain": TESTED_DOMAIN,
+                            "domain": DOMAIN,
                             "entity_id": dev1.entity_id,
                             "type": "is_on",
                         }
@@ -275,7 +265,7 @@ async def test_if_state(hass, calls):
                     "condition": [
                         {
                             "condition": "device",
-                            "domain": TESTED_DOMAIN,
+                            "domain": DOMAIN,
                             "entity_id": dev1.entity_id,
                             "type": "is_off",
                         }
@@ -311,12 +301,10 @@ async def test_if_state(hass, calls):
 
 async def test_action(hass, calls):
     """Test for turn_on and turn_off actions."""
-    platform = getattr(hass.components, f"test.{TESTED_DOMAIN}")
+    platform = getattr(hass.components, f"test.{DOMAIN}")
 
     platform.init()
-    assert await async_setup_component(
-        hass, TESTED_DOMAIN, {TESTED_DOMAIN: {CONF_PLATFORM: "test"}}
-    )
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
 
     dev1, dev2, dev3 = platform.DEVICES
 
@@ -329,7 +317,7 @@ async def test_action(hass, calls):
                     "trigger": {"platform": "event", "event_type": "test_event1"},
                     "action": {
                         "device": None,
-                        "domain": TESTED_DOMAIN,
+                        "domain": DOMAIN,
                         "entity_id": dev1.entity_id,
                         "type": "turn_off",
                     },
@@ -338,7 +326,7 @@ async def test_action(hass, calls):
                     "trigger": {"platform": "event", "event_type": "test_event2"},
                     "action": {
                         "device": None,
-                        "domain": TESTED_DOMAIN,
+                        "domain": DOMAIN,
                         "entity_id": dev1.entity_id,
                         "type": "turn_on",
                     },
@@ -347,7 +335,7 @@ async def test_action(hass, calls):
                     "trigger": {"platform": "event", "event_type": "test_event3"},
                     "action": {
                         "device": None,
-                        "domain": TESTED_DOMAIN,
+                        "domain": DOMAIN,
                         "entity_id": dev1.entity_id,
                         "type": "toggle",
                     },
