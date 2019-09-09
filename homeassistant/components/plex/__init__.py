@@ -137,12 +137,7 @@ def setup(hass, config):
                 )
 
             if not hass.data.get(PLEX_MEDIA_PLAYER_OPTIONS):
-                hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = {
-                    CONF_USE_EPISODE_ART: False,
-                    CONF_SHOW_ALL_CONTROLS: False,
-                    CONF_REMOVE_UNAVAILABLE_CLIENTS: True,
-                    CONF_CLIENT_REMOVE_INTERVAL: 600,
-                }
+                hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = MEDIA_PLAYER_SCHEMA({})
 
             for platform in PLATFORMS:
                 hass.helpers.discovery.load_platform(
