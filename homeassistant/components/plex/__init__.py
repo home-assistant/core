@@ -2,6 +2,7 @@
 import logging
 
 import plexapi.exceptions
+import requests.exceptions
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_PLEX
@@ -101,12 +102,21 @@ def setup(hass, config):
         plex_server = PlexServer(server_config)
         try:
             plex_server.connect()
+        except requests.exceptions.ConnectionError as error:
+            _LOGGER.error(
+                "Plex server could not be reached, please verify host and port: [%s]",
+                error,
+            )
+            return False
         except (
             plexapi.exceptions.BadRequest,
             plexapi.exceptions.Unauthorized,
             plexapi.exceptions.NotFound,
         ) as error:
-            _LOGGER.error(error)
+            _LOGGER.error(
+                "Connection to Plex server failed, please verify token and SSL settings: [%s]",
+                error,
+            )
             request_configuration(host_and_port)
             return False
         else:
