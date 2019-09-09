@@ -32,8 +32,8 @@ async def test_state(hass):
     state = hass.states.get("sensor.derivative")
     assert state is not None
 
-    # Testing a enery sensor at 1 kWh for 1hour = 0kW
-    assert round(float(state.state), config["sensor"]["round"]) == 1.0
+    # Testing a energy sensor at 1 kWh for 1hour = 0kW
+    assert round(float(state.state), config["sensor"]["round"]) == 0.0
 
     assert state.attributes.get("unit_of_measurement") == "kW"
 
@@ -63,7 +63,7 @@ async def test_dataSet1(hass):
             hass.states.async_set(entity_id, value, {}, force_update=True)
             await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.energy")
+    state = hass.states.get("sensor.power")
     assert state is not None
 
     assert round(float(state.state), config["sensor"]["round"]) == -0.5
@@ -96,7 +96,7 @@ async def test_dataSet2(hass):
             hass.states.async_set(entity_id, value, {}, force_update=True)
             await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.energy")
+    state = hass.states.get("sensor.power")
     assert state is not None
 
     assert round(float(state.state), config["sensor"]["round"]) == -0.5
@@ -129,7 +129,7 @@ async def test_dataSet3(hass):
             hass.states.async_set(entity_id, value, {}, force_update=True)
             await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.energy")
+    state = hass.states.get("sensor.power")
     assert state is not None
 
     assert round(float(state.state), config["sensor"]["round"]) == 0.5
@@ -162,7 +162,7 @@ async def test_dataSet4(hass):
             hass.states.async_set(entity_id, value, {}, force_update=True)
             await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.energy")
+    state = hass.states.get("sensor.power")
     assert state is not None
 
     assert round(float(state.state), config["sensor"]["round"]) == 0
@@ -195,10 +195,10 @@ async def test_dataSet5(hass):
             hass.states.async_set(entity_id, value, {}, force_update=True)
             await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.energy")
+    state = hass.states.get("sensor.power")
     assert state is not None
 
-    assert round(float(state.state), config["sensor"]["round"]) == -20
+    assert round(float(state.state), config["sensor"]["round"]) == -2
 
     assert state.attributes.get("unit_of_measurement") == "kW"
 
@@ -231,7 +231,7 @@ async def test_prefix(hass):
     state = hass.states.get("sensor.derivative")
     assert state is not None
 
-    # Testing a power sensor at 1000 Watts for 1hour = 0kWh
+    # Testing a power sensor at 1000 Watts for 1hour = 0kW/h
     assert round(float(state.state), config["sensor"]["round"]) == 0.0
     assert state.attributes.get("unit_of_measurement") == "kW/h"
 
