@@ -88,6 +88,7 @@ class ViCareClimate(ClimateDevice):
         self._name = name
         self._state = None
         self._api = api
+        self._attributes = {}
         self._target_temperature = None
         self._current_mode = None
         self._current_temperature = None
@@ -113,6 +114,25 @@ class ViCareClimate(ClimateDevice):
         self._target_temperature = desired_temperature
 
         self._current_mode = self._api.getActiveMode()
+
+        # Update the device attributes
+        self._attributes = {}
+        self._attributes["room_temperature"] = _room_temperature
+        self._attributes["supply_temperature"] = _supply_temperature
+        self._attributes["outside_temperature"] = self._api.getOutsideTemperature()
+        self._attributes["active_vicare_program"] = self._current_program
+        self._attributes["active_vicare_mode"] = self._current_mode
+        self._attributes["heating_curve_slope"] = self._api.getHeatingCurveSlope()
+        self._attributes["heating_curve_shift"] = self._api.getHeatingCurveShift()
+        self._attributes[
+            "month_since_last_service"
+        ] = self._api.getMonthSinceLastService()
+        self._attributes["date_last_service"] = self._api.getLastServiceDate()
+        self._attributes["error_history"] = self._api.getErrorHistory()
+        self._attributes["active_error"] = self._api.getActiveError()
+        self._attributes[
+            "circulationpump_active"
+        ] = self._api.getCirculationPumpActive()
 
     @property
     def supported_features(self):
@@ -208,3 +228,8 @@ class ViCareClimate(ClimateDevice):
         _LOGGER.debug("Setting preset to %s / %s", preset_mode, vicare_program)
         self._api.deactivateProgram(self._current_program)
         self._api.activateProgram(vicare_program)
+
+    @property
+    def device_state_attributes(self):
+        """Show Device Attributes."""
+        return self._attributes
