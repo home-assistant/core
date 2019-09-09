@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Rain Bird sensor."""
     if discovery_info is None:
-        return False
+        return
 
     controller = hass.data[DATA_RAINBIRD][discovery_info[RAINBIRD_CONTROLLER]]
     add_entities(

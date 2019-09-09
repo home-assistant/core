@@ -14,6 +14,8 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
+SUPPORTED_PLATFORMS = [switch.DOMAIN, sensor.DOMAIN, binary_sensor.DOMAIN]
+
 _LOGGER = logging.getLogger(__name__)
 
 RAINBIRD_CONTROLLER = "controller"
@@ -72,7 +74,7 @@ def _setup_controller(config, hass):
     position = len(hass.data[DATA_RAINBIRD])
     hass.data[DATA_RAINBIRD].append(controller)
     _LOGGER.debug("Rain Bird Controller %d set to: %s", position, server)
-    for platform in [switch.DOMAIN, sensor.DOMAIN, binary_sensor.DOMAIN]:
+    for platform in SUPPORTED_PLATFORMS:
         discovery.load_platform(
             hass,
             platform,
