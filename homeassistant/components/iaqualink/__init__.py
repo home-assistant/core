@@ -151,7 +151,8 @@ class AqualinkEntity(Entity):
     Any entity state change via the iaqualink library triggers an internal
     state refresh which is then propagated to all the entities in the system
     via the refresh_system decorator above to the _update_callback in this
-    class."""
+    class.
+    """
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
