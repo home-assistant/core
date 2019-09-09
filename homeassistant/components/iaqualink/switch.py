@@ -30,7 +30,6 @@ class HassAqualinkSwitch(SwitchDevice, AqualinkEntity):
 
     def __init__(self, dev: AqualinkToggle):
         """Initialize the switch."""
-        SwitchDevice.__init__(self)
         self.dev = dev
 
     @property
