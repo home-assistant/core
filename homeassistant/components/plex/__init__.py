@@ -21,8 +21,6 @@ from homeassistant.util.json import load_json, save_json
 from .const import (
     CONF_USE_EPISODE_ART,
     CONF_SHOW_ALL_CONTROLS,
-    CONF_REMOVE_UNAVAILABLE_CLIENTS,
-    CONF_CLIENT_REMOVE_INTERVAL,
     DEFAULT_HOST,
     DEFAULT_PORT,
     DEFAULT_SSL,
@@ -39,8 +37,6 @@ MEDIA_PLAYER_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_USE_EPISODE_ART, default=False): cv.boolean,
         vol.Optional(CONF_SHOW_ALL_CONTROLS, default=False): cv.boolean,
-        vol.Optional(CONF_REMOVE_UNAVAILABLE_CLIENTS, default=True): cv.boolean,
-        vol.Optional(CONF_CLIENT_REMOVE_INTERVAL, default=600): cv.positive_int,
     }
 )
 

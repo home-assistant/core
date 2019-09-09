@@ -35,8 +35,6 @@ from homeassistant.util import dt as dt_util
 from .const import (
     CONF_USE_EPISODE_ART,
     CONF_SHOW_ALL_CONTROLS,
-    CONF_REMOVE_UNAVAILABLE_CLIENTS,
-    CONF_CLIENT_REMOVE_INTERVAL,
     DOMAIN as PLEX_DOMAIN,
     NAME_FORMAT,
     PLEX_MEDIA_PLAYER_OPTIONS,
@@ -135,7 +133,6 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
                 _LOGGER.debug("Refreshing session: %s", machine_identifier)
                 plex_clients[machine_identifier].refresh(None, session)
 
-        clients_to_remove = []
         for client in plex_clients.values():
             # force devices to idle that do not have a valid session
             if client.session is None:
@@ -148,18 +145,6 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
 
             if client not in new_plex_clients:
                 client.schedule_update_ha_state()
-
-            if not config.get(CONF_REMOVE_UNAVAILABLE_CLIENTS) or client.available:
-                continue
-
-            if (dt_util.utcnow() - client.marked_unavailable) >= (
-                timedelta(seconds=config[CONF_CLIENT_REMOVE_INTERVAL])
-            ):
-                hass.add_job(client.async_remove())
-                clients_to_remove.append(client.machine_identifier)
-
-        while clients_to_remove:
-            del plex_clients[clients_to_remove.pop()]
 
         if new_plex_clients:
             add_entities_callback(new_plex_clients)
