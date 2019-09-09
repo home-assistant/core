@@ -1345,7 +1345,7 @@ pynws==0.7.4
 pynx584==0.4
 
 # homeassistant.components.obihai
-pyobihai==1.0
+pyobihai==1.0.1
 
 # homeassistant.components.openuv
 pyopenuv==1.0.9

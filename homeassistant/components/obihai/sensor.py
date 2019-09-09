@@ -46,10 +46,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     line_services = pyobihai.get_line_state(host, username, password)
 
-    for key, value in services.items():
+    for key in services:
         sensors.append(ObihaiServiceSensors(host, username, password, key))
 
-    for key, value in line_services.items():
+    for key in line_services:
         sensors.append(ObihaiServiceSensors(host, username, password, key))
 
     add_devices(sensors)
