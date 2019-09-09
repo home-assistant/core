@@ -3,16 +3,16 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components import sensor, binary_sensor
+from homeassistant.components import binary_sensor, sensor
 from homeassistant.components.rainbird.switch import (
-    SERVICE_START_IRRIGATION,
-    SERVICE_SCHEMA_IRRIGATION,
     ATTR_DURATION,
+    SERVICE_SCHEMA_IRRIGATION,
+    SERVICE_START_IRRIGATION,
     RainBirdSwitch,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
