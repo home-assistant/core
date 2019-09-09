@@ -25,6 +25,7 @@ from homeassistant.components.emulated_hue.hue_api import (
     HUE_API_STATE_BRI,
     HUE_API_STATE_HUE,
     HUE_API_STATE_SAT,
+    HUE_API_STATE_CT,
     HueUsernameView,
     HueOneLightStateView,
     HueAllLightsStateView,
@@ -205,20 +206,20 @@ def test_discover_lights(hue_client):
     devices = set(val["uniqueid"] for val in result_json.values())
 
     # Make sure the lights we added to the config are there
-    assert "light.ceiling_lights" in devices
-    assert "light.bed_light" not in devices
-    assert "script.set_kitchen_light" in devices
-    assert "light.kitchen_lights" not in devices
-    assert "media_player.living_room" in devices
-    assert "media_player.bedroom" in devices
-    assert "media_player.walkman" in devices
-    assert "media_player.lounge_room" in devices
-    assert "fan.living_room_fan" in devices
-    assert "fan.ceiling_fan" not in devices
-    assert "cover.living_room_window" in devices
-    assert "climate.hvac" in devices
-    assert "climate.heatpump" in devices
-    assert "climate.ecobee" not in devices
+    assert "2f:d2:31:ce:c5:55:cc:ee-2e" in devices  # light.ceiling_lights
+    assert "b6:14:77:34:b7:bb:06:e8-2b" not in devices  # light.bed_light
+    assert "95:b7:51:16:58:6c:c0:c5-68" in devices  # script.set_kitchen_light
+    assert "64:7b:e4:96:c3:fe:90:c3-24" not in devices  # light.kitchen_lights
+    assert "7e:8a:42:35:66:db:86:c5-18" in devices  # media_player.living_room
+    assert "05:44:c2:d6:0a:e5:17:b7-48" in devices  # media_player.bedroom
+    assert "f3:5f:fa:31:f3:32:21:a8-4f" in devices  # media_player.walkman
+    assert "b4:06:2e:91:95:23:97:fb-c3" in devices  # media_player.lounge_room
+    assert "b2:bd:f9:2c:ad:22:ae:58-ae" in devices  # fan.living_room_fan
+    assert "77:4c:8a:23:7d:27:4b:7f-1e" not in devices  # fan.ceiling_fan
+    assert "02:53:b9:d5:1a:b3:67:b2-14" in devices  # cover.living_room_window
+    assert "42:03:fe:97:58:2d:b1:50-1f" in devices  # climate.hvac
+    assert "7b:2a:c7:08:d6:66:bf:80-a6" in devices  # climate.heatpump
+    assert "57:77:a1:6a:8e:ef:b3:6c-7c" not in devices  # climate.ecobee
 
 
 @asyncio.coroutine
@@ -242,7 +243,7 @@ def test_get_light_state(hass_hue, hue_client):
         {
             const.ATTR_ENTITY_ID: "light.ceiling_lights",
             light.ATTR_BRIGHTNESS: 127,
-            light.ATTR_RGB_COLOR: (1, 2, 7),
+            light.ATTR_COLOR_TEMP: (400),
         },
         blocking=True,
     )
@@ -252,9 +253,9 @@ def test_get_light_state(hass_hue, hue_client):
     )
 
     assert office_json["state"][HUE_API_STATE_ON] is True
+    assert office_json["type"] == "Extended color light"
     assert office_json["state"][HUE_API_STATE_BRI] == 127
-    assert office_json["state"][HUE_API_STATE_HUE] == 41869
-    assert office_json["state"][HUE_API_STATE_SAT] == 217
+    assert office_json["state"][HUE_API_STATE_CT] == 400
 
     # Check all lights view
     result = yield from hue_client.get("/api/username/lights")
@@ -281,8 +282,7 @@ def test_get_light_state(hass_hue, hue_client):
 
     assert office_json["state"][HUE_API_STATE_ON] is False
     assert office_json["state"][HUE_API_STATE_BRI] == 0
-    assert office_json["state"][HUE_API_STATE_HUE] == 0
-    assert office_json["state"][HUE_API_STATE_SAT] == 0
+    assert office_json["state"][HUE_API_STATE_CT] == 0
 
     # Make sure bedroom light isn't accessible
     yield from perform_get_light_state(hue_client, "light.bed_light", 404)
@@ -324,8 +324,7 @@ def test_put_light_state(hass_hue, hue_client):
         hue_client, "light.ceiling_lights", 200
     )
     assert ceiling_json["state"][HUE_API_STATE_BRI] == 123
-    assert ceiling_json["state"][HUE_API_STATE_HUE] == 4369
-    assert ceiling_json["state"][HUE_API_STATE_SAT] == 127
+    assert ceiling_json["state"][HUE_API_STATE_CT] == 380
 
     # Go through the API to turn it off
     ceiling_result = yield from perform_put_light_state(
@@ -346,8 +345,7 @@ def test_put_light_state(hass_hue, hue_client):
         hue_client, "light.ceiling_lights", 200
     )
     assert ceiling_json["state"][HUE_API_STATE_BRI] == 0
-    assert ceiling_json["state"][HUE_API_STATE_HUE] == 0
-    assert ceiling_json["state"][HUE_API_STATE_SAT] == 0
+    assert ceiling_json["state"][HUE_API_STATE_CT] == 0
 
     # Make sure we can't change the bedroom light state
     bedroom_result = yield from perform_put_light_state(

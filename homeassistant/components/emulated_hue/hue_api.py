@@ -1,5 +1,6 @@
 """Support for a Hue API to control Home Assistant."""
 import logging
+import hashlib
 
 from aiohttp import web
 
@@ -36,8 +37,10 @@ from homeassistant.components.http.const import KEY_REAL_IP
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
+    ATTR_COLOR_TEMP,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
 )
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -65,6 +68,9 @@ HUE_API_STATE_ON = "on"
 HUE_API_STATE_BRI = "bri"
 HUE_API_STATE_HUE = "hue"
 HUE_API_STATE_SAT = "sat"
+HUE_API_STATE_COLORMODE = "colormode"
+HUE_API_STATE_CT = "ct"
+HUE_API_STATE_EFFECT = "effect"
 
 HUE_API_STATE_HUE_MAX = 65535.0
 HUE_API_STATE_SAT_MAX = 254.0
@@ -73,6 +79,7 @@ HUE_API_STATE_BRI_MAX = 255.0
 STATE_BRIGHTNESS = HUE_API_STATE_BRI
 STATE_HUE = HUE_API_STATE_HUE
 STATE_SATURATION = HUE_API_STATE_SAT
+STATE_COLOR_TEMP = HUE_API_STATE_CT
 
 
 class HueUsernameView(HomeAssistantView):
@@ -425,6 +432,7 @@ def parse_hue_api_put_light_body(request_json, entity):
         STATE_HUE: None,
         STATE_ON: False,
         STATE_SATURATION: None,
+        STATE_COLOR_TEMP: None,
     }
 
     # Make sure the entity actually supports brightness
@@ -491,6 +499,9 @@ def parse_hue_api_put_light_body(request_json, entity):
             data[STATE_BRIGHTNESS] = round(level)
             data[STATE_ON] = True
 
+    if HUE_API_STATE_CT in request_json:
+        data[STATE_COLOR_TEMP] = request_json[HUE_API_STATE_CT]
+
     return data
 
 
@@ -502,6 +513,7 @@ def get_entity_state(config, entity):
         STATE_HUE: None,
         STATE_ON: False,
         STATE_SATURATION: None,
+        STATE_COLOR_TEMP: None,
     }
 
     if cached_state is None:
@@ -515,10 +527,12 @@ def get_entity_state(config, entity):
                 # convert hass hs values back to hue hs values
                 data[STATE_HUE] = int((hue / 360.0) * HUE_API_STATE_HUE_MAX)
                 data[STATE_SATURATION] = int((sat / 100.0) * HUE_API_STATE_SAT_MAX)
+            data[STATE_COLOR_TEMP] = entity.attributes.get(ATTR_COLOR_TEMP, 0)
         else:
             data[STATE_BRIGHTNESS] = 0
             data[STATE_HUE] = 0
             data[STATE_SATURATION] = 0
+            data[STATE_COLOR_TEMP] = 0
 
         # Make sure the entity actually supports brightness
         entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
@@ -571,29 +585,81 @@ def get_entity_state(config, entity):
 def entity_to_json(config, entity, state):
     """Convert an entity to its Hue bridge JSON representation."""
     entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-    if (entity_features & SUPPORT_BRIGHTNESS) or entity.domain != light.DOMAIN:
-        return {
-            "state": {
-                HUE_API_STATE_ON: state[STATE_ON],
-                HUE_API_STATE_BRI: state[STATE_BRIGHTNESS],
-                HUE_API_STATE_HUE: state[STATE_HUE],
-                HUE_API_STATE_SAT: state[STATE_SATURATION],
-                "reachable": True,
-            },
-            "type": "Dimmable light",
-            "name": config.get_entity_name(entity),
-            "modelid": "HASS123",
-            "uniqueid": entity.entity_id,
-            "swversion": "123",
-        }
-    return {
-        "state": {HUE_API_STATE_ON: state[STATE_ON], "reachable": True},
-        "type": "On/off light",
+    unique_id = hashlib.md5(entity.entity_id.encode()).hexdigest()[:18]
+    unique_id = "%s:%s:%s:%s:%s:%s:%s:%s-%s" % (
+        unique_id[0:2],
+        unique_id[2:4],
+        unique_id[4:6],
+        unique_id[6:8],
+        unique_id[8:10],
+        unique_id[10:12],
+        unique_id[12:14],
+        unique_id[14:16],
+        unique_id[16:18],
+    )
+
+    retval = {
+        "state": {
+            HUE_API_STATE_ON: state[STATE_ON],
+            "reachable": True,
+            "mode": "homeautomation",
+        },
         "name": config.get_entity_name(entity),
-        "modelid": "HASS321",
-        "uniqueid": entity.entity_id,
+        "uniqueid": unique_id,
+        "manufacturername": "Home Assistant",
         "swversion": "123",
     }
+
+    if (entity_features & SUPPORT_BRIGHTNESS) and (
+        entity_features & SUPPORT_COLOR_TEMP
+    ):
+        retval["type"] = "Extended color light"
+        retval["modelid"] = "HAS231"
+        retval["state"].update(
+            {
+                HUE_API_STATE_BRI: state[STATE_BRIGHTNESS],
+                HUE_API_STATE_COLORMODE: "ct",
+                HUE_API_STATE_EFFECT: "none",
+                HUE_API_STATE_CT: state[STATE_COLOR_TEMP],
+            }
+        )
+    elif (entity_features & SUPPORT_BRIGHTNESS) and (entity_features & SUPPORT_COLOR):
+        retval["type"] = "Color light"
+        retval["modelid"] = "HASS213"
+        retval["state"].update(
+            {
+                HUE_API_STATE_BRI: state[STATE_BRIGHTNESS],
+                HUE_API_STATE_COLORMODE: "hs",
+                HUE_API_STATE_EFFECT: "none",
+                HUE_API_STATE_HUE: state[STATE_HUE],
+                HUE_API_STATE_SAT: state[STATE_SATURATION],
+            }
+        )
+    elif entity_features & SUPPORT_COLOR_TEMP:
+        retval["type"] = "Color temperature light"
+        retval["modelid"] = "HASS312"
+        retval["state"].update(
+            {HUE_API_STATE_COLORMODE: "ct", HUE_API_STATE_CT: state[STATE_COLOR_TEMP]}
+        )
+    elif (
+        entity_features
+        & (
+            SUPPORT_BRIGHTNESS
+            | SUPPORT_SET_POSITION
+            | SUPPORT_SET_SPEED
+            | SUPPORT_VOLUME_SET
+            | SUPPORT_TARGET_TEMPERATURE
+        )
+    ) or entity.domain == script.DOMAIN:
+
+        retval["type"] = "Dimmable light"
+        retval["modelid"] = "HASS123"
+        retval["state"].update({HUE_API_STATE_BRI: state[STATE_BRIGHTNESS]})
+    else:
+        retval["type"] = "On/off light"
+        retval["modelid"] = "HASS321"
+
+    return retval
 
 
 def create_hue_success_response(entity_id, attr, value):
