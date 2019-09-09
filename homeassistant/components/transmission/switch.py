@@ -23,12 +23,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     name = config_entry.data[CONF_NAME]
 
     dev = []
-    for switch_type in SWITCH_TYPES:
-        dev.append(
-            TransmissionSwitch(
-                switch_type, SWITCH_TYPES[switch_type], transmission_api, name
-            )
-        )
+    for switch_type, switch_name in SWITCH_TYPES.items():
+        dev.append(TransmissionSwitch(switch_type, switch_name, transmission_api, name))
 
     async_add_entities(dev, True)
 
@@ -73,7 +69,7 @@ class TransmissionSwitch(ToggleEntity):
         elif self.type == "turtle_mode":
             _LOGGING.debug("Turning Turtle Mode of Transmission on")
             self._transmission_api.set_alt_speed_enabled(True)
-        self._transmission_api.request_update()
+        self._transmission_api.update()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
@@ -83,7 +79,7 @@ class TransmissionSwitch(ToggleEntity):
         if self.type == "turtle_mode":
             _LOGGING.debug("Turning Turtle Mode of Transmission off")
             self._transmission_api.set_alt_speed_enabled(False)
-        self._transmission_api.request_update()
+        self._transmission_api.update()
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""

@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -48,7 +49,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): cv.positive_int,
+                ): cv.time_period,
             }
         )
     },
@@ -99,7 +100,7 @@ async def async_unload_entry(hass, entry):
     return True
 
 
-def get_api(host, port, username=None, password=None):
+async def get_api(host, port, username=None, password=None):
     """Get Transmission client."""
     try:
         api = transmissionrpc.Client(host, port=port, user=username, password=password)
@@ -142,7 +143,7 @@ class TransmissionClient:
             CONF_USERNAME: self.config_entry.data.get(CONF_USERNAME),
             CONF_PASSWORD: self.config_entry.data.get(CONF_PASSWORD),
         }
-        api = get_api(**config)
+        api = await get_api(**config)
         if not api:
             return False
 
@@ -150,7 +151,7 @@ class TransmissionClient:
             self.hass, self.config_entry, api
         )
 
-        self.tm_data.init_torrent_list()
+        self.hass.async_add_executor_job(self.tm_data.init_torrent_list)
         self.hass.async_add_executor_job(self.tm_data.update)
         self.set_scan_interval(self.scan_interval)
 
@@ -161,13 +162,13 @@ class TransmissionClient:
                 )
             )
 
-        def add_torrent(self, service):
+        def add_torrent(service):
             """Add new torrent to download."""
             torrent = service.data[ATTR_TORRENT]
             if torrent.startswith(
                 ("http", "ftp:", "magnet:")
             ) or self.hass.config.is_allowed_path(torrent):
-                self.api.add_torrent(torrent)
+                api.add_torrent(torrent)
             else:
                 _LOGGER.warning(
                     "Could not add torrent: unsupported type or no permission"
@@ -184,6 +185,7 @@ class TransmissionClient:
     def set_scan_interval(self, scan_interval):
         """Update scan interval."""
 
+        @callback
         def refresh(event_time):
             """Get the latest data from Transmission."""
             self.hass.async_add_executor_job(self.tm_data.update)
@@ -215,10 +217,6 @@ class TransmissionData:
         self._api = api
         self.completed_torrents = []
         self.started_torrents = []
-
-    def request_update(self):
-        """Request immeidate update."""
-        self.hass.async_add_executor_job(self.update)
 
     def update(self):
         """Get the latest data from Transmission instance."""

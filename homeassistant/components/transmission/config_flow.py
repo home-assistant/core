@@ -43,7 +43,7 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             self.config[CONF_NAME] = user_input.pop(CONF_NAME)
             try:
-                get_api(**user_input)
+                await get_api(**user_input)
                 self.config.update(user_input)
                 if "options" not in self.config:
                     self.config["options"] = {CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL}
@@ -73,9 +73,7 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config):
         """Import from Transmission client config."""
         self.config["options"] = {
-            CONF_SCAN_INTERVAL: import_config.pop(
-                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-            )
+            CONF_SCAN_INTERVAL: import_config.pop(CONF_SCAN_INTERVAL).seconds
         }
 
         return await self.async_step_user(user_input=import_config)
