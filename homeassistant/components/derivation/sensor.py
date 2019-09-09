@@ -1,4 +1,4 @@
-"""Numeric derivation of data coming from a source sensor over time."""
+"""Numeric derivative of data coming from a source sensor over time."""
 import logging
 
 from decimal import Decimal, DecimalException
@@ -52,8 +52,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the derivation sensor."""
-    derivative = DerivationSensor(
+    """Set up the derivative sensor."""
+    derivative = DerivativeSensor(
         config[CONF_SOURCE_SENSOR],
         config.get(CONF_NAME),
         config[CONF_ROUND_DIGITS],
@@ -65,8 +65,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([derivative])
 
 
-class DerivationSensor(RestoreEntity):
-    """Representation of an derivation sensor."""
+class DerivativeSensor(RestoreEntity):
+    """Representation of an derivative sensor."""
 
     def __init__(
         self,
@@ -77,7 +77,7 @@ class DerivationSensor(RestoreEntity):
         unit_time,
         unit_of_measurement,
     ):
-        """Initialize the derivation sensor."""
+        """Initialize the derivative sensor."""
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
         self._state = 0
@@ -107,7 +107,7 @@ class DerivationSensor(RestoreEntity):
                 _LOGGER.warning("Could not restore last state: %s", err)
 
         @callback
-        def calc_derivation(entity, old_state, new_state):
+        def calc_derivative(entity, old_state, new_state):
             """Handle the sensor state changes."""
             if (
                 old_state is None
@@ -123,7 +123,7 @@ class DerivationSensor(RestoreEntity):
                 )
 
             try:
-                # derivation as the derivative of previous measures.
+                # derivative of previous measures.
                 gradient = 0
                 elapsed_time = (
                     new_state.last_updated - old_state.last_updated
@@ -136,7 +136,7 @@ class DerivationSensor(RestoreEntity):
                 derivative = gradient / (self._unit_prefix * self._unit_time)
                 assert isinstance(derivative, Decimal)
             except ValueError as err:
-                _LOGGER.warning("While calculating derivation: %s", err)
+                _LOGGER.warning("While calculating derivative: %s", err)
             except DecimalException as err:
                 _LOGGER.warning(
                     "Invalid state (%s > %s): %s", old_state.state, new_state.state, err
@@ -147,7 +147,7 @@ class DerivationSensor(RestoreEntity):
                 self._state = derivative
                 self.async_schedule_update_ha_state()
 
-        async_track_state_change(self.hass, self._sensor_source_id, calc_derivation)
+        async_track_state_change(self.hass, self._sensor_source_id, calc_derivative)
 
     @property
     def name(self):
