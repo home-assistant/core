@@ -1,4 +1,4 @@
-"""The tests for the derivation sensor platform."""
+"""The tests for the derivative sensor platform."""
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -7,11 +7,11 @@ import homeassistant.util.dt as dt_util
 
 
 async def test_state(hass):
-    """Test derivation sensor state."""
+    """Test derivative sensor state."""
     config = {
         "sensor": {
-            "platform": "derivation",
-            "name": "derivation",
+            "platform": "derivative",
+            "name": "derivative",
             "source": "sensor.energy",
             "unit": "kW",
             "round": 2,
@@ -29,7 +29,7 @@ async def test_state(hass):
         hass.states.async_set(entity_id, 1, {}, force_update=True)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.derivation")
+    state = hass.states.get("sensor.derivative")
     assert state is not None
 
     # Testing a enery sensor at 1 kWh for 1hour = 0kW
@@ -39,10 +39,10 @@ async def test_state(hass):
 
 
 async def test_dataSet1(hass):
-    """Test derivation sensor state."""
+    """Test derivative sensor state."""
     config = {
         "sensor": {
-            "platform": "derivation",
+            "platform": "derivative",
             "name": "power",
             "source": "sensor.energy",
             "unit": "kW",
@@ -72,10 +72,10 @@ async def test_dataSet1(hass):
 
 
 async def test_dataSet2(hass):
-    """Test derivation sensor state."""
+    """Test derivative sensor state."""
     config = {
         "sensor": {
-            "platform": "derivation",
+            "platform": "derivative",
             "name": "power",
             "source": "sensor.energy",
             "unit": "kW",
@@ -105,10 +105,10 @@ async def test_dataSet2(hass):
 
 
 async def test_dataSet3(hass):
-    """Test derivation sensor state."""
+    """Test derivative sensor state."""
     config = {
         "sensor": {
-            "platform": "derivation",
+            "platform": "derivative",
             "name": "power",
             "source": "sensor.energy",
             "unit": "kW",
@@ -138,10 +138,10 @@ async def test_dataSet3(hass):
 
 
 async def test_dataSet4(hass):
-    """Test derivation sensor state."""
+    """Test derivative sensor state."""
     config = {
         "sensor": {
-            "platform": "derivation",
+            "platform": "derivative",
             "name": "power",
             "source": "sensor.energy",
             "unit": "kW",
@@ -171,10 +171,10 @@ async def test_dataSet4(hass):
 
 
 async def test_dataSet5(hass):
-    """Test derivation sensor state."""
+    """Test derivative sensor state."""
     config = {
         "sensor": {
-            "platform": "derivation",
+            "platform": "derivative",
             "name": "power",
             "source": "sensor.energy",
             "unit": "kW",
@@ -204,11 +204,11 @@ async def test_dataSet5(hass):
 
 
 async def test_prefix(hass):
-    """Test derivation sensor state using a power source."""
+    """Test derivative sensor state using a power source."""
     config = {
         "sensor": {
-            "platform": "derivation",
-            "name": "derivation",
+            "platform": "derivative",
+            "name": "derivative",
             "source": "sensor.power",
             "round": 2,
             "unit_prefix": "k",
@@ -228,7 +228,7 @@ async def test_prefix(hass):
         )
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.derivation")
+    state = hass.states.get("sensor.derivative")
     assert state is not None
 
     # Testing a power sensor at 1000 Watts for 1hour = 0kWh
@@ -237,11 +237,11 @@ async def test_prefix(hass):
 
 
 async def test_suffix(hass):
-    """Test derivation sensor state using a network counter source."""
+    """Test derivative sensor state using a network counter source."""
     config = {
         "sensor": {
-            "platform": "derivation",
-            "name": "derivation",
+            "platform": "derivative",
+            "name": "derivative",
             "source": "sensor.bytes_per_second",
             "round": 2,
             "unit_prefix": "k",
@@ -260,7 +260,7 @@ async def test_suffix(hass):
         hass.states.async_set(entity_id, 1000, {}, force_update=True)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.derivation")
+    state = hass.states.get("sensor.derivative")
     assert state is not None
 
     # Testing a network speed sensor at 1000 bytes/s over 10s  = 10kbytes/s2
