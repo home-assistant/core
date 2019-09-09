@@ -57,7 +57,7 @@ SERVER_CONFIG_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema({PLEX_DOMAIN: SERVER_CONFIG_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
-_CONFIGURING = {}
+CONFIGURING = "configuring"
 _LOGGER = logging.getLogger(__package__)
 
 
@@ -117,8 +117,8 @@ def setup(hass, config):
                 plex_server.machine_identifier
             ] = plex_server
 
-            if host_and_port in _CONFIGURING:
-                request_id = _CONFIGURING.pop(host_and_port)
+            if host_and_port in hass.data[PLEX_DOMAIN][CONFIGURING]:
+                request_id = hass.data[PLEX_DOMAIN][CONFIGURING].pop(host_and_port)
                 configurator = hass.components.configurator
                 configurator.request_done(request_id)
                 _LOGGER.debug("Discovery configuration done")
@@ -153,9 +153,10 @@ def setup(hass, config):
     def request_configuration(host_and_port):
         """Request configuration steps from the user."""
         configurator = hass.components.configurator
-        if host_and_port in _CONFIGURING:
+        if host_and_port in hass.data[PLEX_DOMAIN][CONFIGURING]:
             configurator.notify_errors(
-                _CONFIGURING[host_and_port], "Failed to register, please try again."
+                hass.data[PLEX_DOMAIN][CONFIGURING][host_and_port],
+                "Failed to register, please try again.",
             )
             return
 
@@ -169,7 +170,9 @@ def setup(hass, config):
             }
             setup_plex(configurator_info=config)
 
-        _CONFIGURING[host_and_port] = configurator.request_config(
+        hass.data[PLEX_DOMAIN][CONFIGURING][
+            host_and_port
+        ] = configurator.request_config(
             "Plex Media Server",
             plex_configuration_callback,
             description="Enter the X-Plex-Token",
@@ -186,7 +189,7 @@ def setup(hass, config):
 
     original_config = config
 
-    hass.data.setdefault(PLEX_DOMAIN, {SERVERS: {}})
+    hass.data.setdefault(PLEX_DOMAIN, {SERVERS: {}, CONFIGURING: {}})
 
     if hass.data[PLEX_DOMAIN][SERVERS]:
         _LOGGER.debug("Plex server already configured")
