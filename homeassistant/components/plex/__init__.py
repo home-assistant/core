@@ -85,7 +85,7 @@ def setup(hass, config):
             if MP_DOMAIN in server_config:
                 hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = server_config.pop(MP_DOMAIN)
         elif file_config:
-            _LOGGER.info("Loading config from %s", json_file)
+            _LOGGER.debug("Loading config from %s", json_file)
             host_and_port, server_config = file_config.popitem()
             server_config[CONF_VERIFY_SSL] = server_config.pop("verify")
         elif discovery_info:
@@ -109,7 +109,7 @@ def setup(hass, config):
             plexapi.exceptions.Unauthorized,
             plexapi.exceptions.NotFound,
         ) as error:
-            _LOGGER.info(error)
+            _LOGGER.error(error)
             request_configuration(host_and_port)
             return False
         else:
