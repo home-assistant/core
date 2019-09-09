@@ -9,7 +9,12 @@ from typing import Optional, Sequence, Callable, Dict, List, Set, Tuple
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, Context, callback, CALLBACK_TYPE
-from homeassistant.const import CONF_CONDITION, CONF_DEVICE, CONF_DOMAIN, CONF_TIMEOUT
+from homeassistant.const import (
+    CONF_CONDITION,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    CONF_TIMEOUT,
+)
 from homeassistant import exceptions
 from homeassistant.helpers import (
     service,
@@ -66,7 +71,7 @@ def _determine_action(action):
     if CONF_EVENT in action:
         return ACTION_FIRE_EVENT
 
-    if CONF_DEVICE in action:
+    if CONF_DEVICE_ID in action:
         return ACTION_DEVICE_AUTOMATION
 
     return ACTION_CALL_SERVICE
