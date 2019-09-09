@@ -64,26 +64,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
         on_action = device_config[ON_ACTION]
         off_action = device_config[OFF_ACTION]
-        entity_ids = (
+        entity_ids = set(
             device_config.get(ATTR_ENTITY_ID) or state_template.extract_entities()
         )
-
         state_template.hass = hass
 
-        if icon_template is not None:
-            icon_template.hass = hass
+        templates = [icon_template, entity_picture_template, availability_template]
 
-        if entity_picture_template is not None:
-            entity_picture_template.hass = hass
-
-        if availability_template is not None:
-            availability_template.hass = hass
-            temp_ids = availability_template.extract_entities()
-            if str(entity_ids) != MATCH_ALL:
-                if (temp_ids) == MATCH_ALL:
-                    entity_ids |= MATCH_ALL
-                else:
-                    entity_ids |= set(temp_ids)
+        for template in templates:
+            if template is not None:
+                template.hass = hass
+                temp_entities = template.extract_entities()
+                if temp_entities is not None:
+                    entity_ids |= set(temp_entities)
 
         switches.append(
             SwitchTemplate(
