@@ -20,7 +20,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_SWITCHES,
     EVENT_HOMEASSISTANT_START,
-    MATCH_ALL,
 )
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
