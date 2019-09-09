@@ -43,7 +43,7 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             self.config[CONF_NAME] = user_input.pop(CONF_NAME)
             try:
-                await get_api(**user_input)
+                await get_api(self.hass, **user_input)
                 self.config.update(user_input)
                 if "options" not in self.config:
                     self.config["options"] = {CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL}

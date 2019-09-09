@@ -15,7 +15,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -100,10 +99,12 @@ async def async_unload_entry(hass, entry):
     return True
 
 
-async def get_api(host, port, username=None, password=None):
+async def get_api(hass, host, port, username=None, password=None):
     """Get Transmission client."""
     try:
-        api = transmissionrpc.Client(host, port=port, user=username, password=password)
+        api = await hass.async_add_executor_job(
+            transmissionrpc.Client, host, port, username, password
+        )
         return api
 
     except TransmissionError as error:
@@ -143,7 +144,7 @@ class TransmissionClient:
             CONF_USERNAME: self.config_entry.data.get(CONF_USERNAME),
             CONF_PASSWORD: self.config_entry.data.get(CONF_PASSWORD),
         }
-        api = await get_api(**config)
+        api = await get_api(self.hass, **config)
         if not api:
             return False
 
@@ -151,8 +152,8 @@ class TransmissionClient:
             self.hass, self.config_entry, api
         )
 
-        self.hass.async_add_executor_job(self.tm_data.init_torrent_list)
-        self.hass.async_add_executor_job(self.tm_data.update)
+        await self.hass.async_add_executor_job(self.tm_data.init_torrent_list)
+        await self.hass.async_add_executor_job(self.tm_data.update)
         self.set_scan_interval(self.scan_interval)
 
         for platform in ["sensor", "switch"]:
@@ -185,10 +186,9 @@ class TransmissionClient:
     def set_scan_interval(self, scan_interval):
         """Update scan interval."""
 
-        @callback
         def refresh(event_time):
             """Get the latest data from Transmission."""
-            self.hass.async_add_executor_job(self.tm_data.update)
+            self.tm_data.update()
 
         if self.unsub_timer is not None:
             self.unsub_timer()
