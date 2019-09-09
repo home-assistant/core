@@ -17,9 +17,6 @@ from homeassistant.const import (
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
     CONF_VALUE_TEMPLATE,
-    STATE_UNAVAILABLE,
-    STATE_ON,
-    STATE_OFF,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -176,6 +173,10 @@ class MqttBinarySensor(
             expire_after = self._config.get(CONF_EXPIRE_AFTER)
 
             if expire_after is not None and expire_after > 0:
+
+                # When expire_after is set, and we receive a message, assume device is available since it has to be to receive the message
+                self._available = True
+
                 # Reset old trigger
                 if self._expiration_trigger:
                     self._expiration_trigger()
@@ -274,11 +275,3 @@ class MqttBinarySensor(
     def unique_id(self):
         """Return a unique ID."""
         return self._unique_id
-
-    @property
-    def state(self):
-        """Return the state of the binary sensor."""
-        if self._available:
-            return STATE_ON if self.is_on else STATE_OFF
-
-        return STATE_UNAVAILABLE

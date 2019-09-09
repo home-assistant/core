@@ -37,12 +37,13 @@ async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
                 "state_topic": "test-topic",
                 "expire_after": 4,
                 "force_update": True,
+                "availability_topic": "availability-topic",
             }
         },
     )
 
     state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNAVAILABLE
 
     now = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
     with patch(("homeassistant.helpers.event." "dt_util.utcnow"), return_value=now):
