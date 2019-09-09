@@ -47,7 +47,7 @@ CONTROLLER_SCHEMA = vol.Schema(
     }
 )
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema(vol.Any(cv.ensure_list(CONTROLLER_SCHEMA), CONTROLLER_SCHEMA))},
+    {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [CONTROLLER_SCHEMA]))},
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -55,12 +55,9 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Set up the Rain Bird component."""
 
-    hass.data[DATA_RAINBIRD] = list()
-    if isinstance(config[DOMAIN], list):
-        for controller_config in config[DOMAIN]:
-            _setup_controller(controller_config, hass)
-    else:
-        _setup_controller(config[DOMAIN], hass)
+    hass.data[DATA_RAINBIRD] = []
+    for controller_config in config[DOMAIN]:
+        _setup_controller(controller_config, hass)
 
     return True
 
