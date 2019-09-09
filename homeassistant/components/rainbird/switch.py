@@ -2,19 +2,12 @@
 
 import logging
 
-from pyrainbird import AvailableStations, RainbirdController
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_FRIENDLY_NAME,
-    CONF_SCAN_INTERVAL,
-    CONF_TRIGGER_TIME,
-    CONF_ZONE,
-)
+from homeassistant.components.switch import SwitchDevice
+from homeassistant.const import ATTR_ENTITY_ID, CONF_FRIENDLY_NAME, CONF_TRIGGER_TIME
 from homeassistant.helpers import config_validation as cv
-
+from pyrainbird import AvailableStations, RainbirdController
 from . import DATA_RAINBIRD, DOMAIN, RAINBIRD_CONTROLLER
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,16 +15,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_DURATION = "duration"
 
 SERVICE_START_IRRIGATION = "start_irrigation"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(RAINBIRD_CONTROLLER): cv.string,
-        vol.Required(CONF_ZONE): cv.string,
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-        vol.Optional(CONF_TRIGGER_TIME): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL): cv.string,
-    }
-)
 
 SERVICE_SCHEMA_IRRIGATION = vol.Schema(
     {
