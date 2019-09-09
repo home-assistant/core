@@ -67,11 +67,36 @@ def setup(hass, config):
     def server_discovered(service, info):
         """Pass back discovered Plex server details."""
         _LOGGER.debug("Discovered Plex server: %s:%s", info["host"], info["port"])
-        info["discovered_plex"] = True
-        setup(hass, info)
+        setup_plex(discovery_info=info)
 
-    def connect_plex_server(plex_server):
-        """Create shared PlexServer instance."""
+    def setup_plex(config=None, discovery_info=None, configurator_info=None):
+        """Return assembled server_config dict."""
+        json_file = hass.config.path(PLEX_CONFIG_FILE)
+        file_config = load_json(json_file)
+
+        if config:
+            server_config = config.get(PLEX_DOMAIN, {})
+            host_and_port = f"{server_config[CONF_HOST]}:{server_config[CONF_PORT]}"
+            if MP_DOMAIN in server_config:
+                hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = server_config.pop(MP_DOMAIN)
+        elif file_config:
+            _LOGGER.info("Loading config from %s", json_file)
+            host_and_port, server_config = file_config.popitem()
+            server_config[CONF_VERIFY_SSL] = server_config.pop("verify")
+        elif discovery_info:
+            server_config = {}
+            host_and_port = f"{discovery_info[CONF_HOST]}:{discovery_info[CONF_PORT]}"
+        elif configurator_info:
+            server_config = configurator_info
+            host_and_port = server_config["host_and_port"]
+        else:
+            return False
+
+        use_ssl = server_config.get(CONF_SSL, DEFAULT_SSL)
+        http_prefix = "https" if use_ssl else "http"
+        server_config[CONF_URL] = f"{http_prefix}://{host_and_port}"
+
+        plex_server = PlexServer(server_config)
         try:
             plex_server.connect()
         except (
@@ -80,20 +105,80 @@ def setup(hass, config):
             plexapi.exceptions.NotFound,
         ) as error:
             _LOGGER.info(error)
+            request_configuration(host_and_port)
             return False
         else:
             hass.data[PLEX_DOMAIN][SERVERS][
                 plex_server.machine_identifier
             ] = plex_server
 
-            host_and_port = plex_server.url_in_use.split("/")[-1]
             if host_and_port in _CONFIGURING:
                 request_id = _CONFIGURING.pop(host_and_port)
                 configurator = hass.components.configurator
                 configurator.request_done(request_id)
                 _LOGGER.debug("Discovery configuration done")
+            if configurator_info:
+                # Write plex.conf if created via discovery/configurator
+                save_json(
+                    hass.config.path(PLEX_CONFIG_FILE),
+                    {
+                        host_and_port: {
+                            CONF_TOKEN: server_config[CONF_TOKEN],
+                            CONF_SSL: use_ssl,
+                            "verify": server_config[CONF_VERIFY_SSL],
+                        }
+                    },
+                )
 
-            return True
+            if not hass.data.get(PLEX_MEDIA_PLAYER_OPTIONS):
+                hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = {
+                    CONF_USE_EPISODE_ART: False,
+                    CONF_SHOW_ALL_CONTROLS: False,
+                    CONF_REMOVE_UNAVAILABLE_CLIENTS: True,
+                    CONF_CLIENT_REMOVE_INTERVAL: 600,
+                }
+
+            for platform in PLATFORMS:
+                hass.helpers.discovery.load_platform(
+                    platform, PLEX_DOMAIN, {}, original_config
+                )
+
+    def request_configuration(host_and_port):
+        """Request configuration steps from the user."""
+        configurator = hass.components.configurator
+        if host_and_port in _CONFIGURING:
+            configurator.notify_errors(
+                _CONFIGURING[host_and_port], "Failed to register, please try again."
+            )
+            return
+
+        def plex_configuration_callback(data):
+            """Handle configuration changes."""
+            config = {
+                "host_and_port": host_and_port,
+                CONF_TOKEN: data.get("token"),
+                CONF_SSL: cv.boolean(data.get("ssl")),
+                CONF_VERIFY_SSL: cv.boolean(data.get("verify_ssl")),
+            }
+            setup_plex(configurator_info=config)
+
+        _CONFIGURING[host_and_port] = configurator.request_config(
+            "Plex Media Server",
+            plex_configuration_callback,
+            description="Enter the X-Plex-Token",
+            entity_picture="/static/images/logo_plex_mediaserver.png",
+            submit_caption="Confirm",
+            fields=[
+                {"id": "token", "name": "X-Plex-Token", "type": ""},
+                {"id": "ssl", "name": "Use SSL", "type": ""},
+                {"id": "verify_ssl", "name": "Verify SSL", "type": ""},
+            ],
+        )
+
+    # End of inner functions.
+
+    if config:
+        original_config = config
 
     hass.data.setdefault(PLEX_DOMAIN, {SERVERS: {}})
 
@@ -101,100 +186,10 @@ def setup(hass, config):
         _LOGGER.debug("Plex server already configured")
         return False
 
-    # Prefer configuration
-    plex_config = config.get(PLEX_DOMAIN, {})
-    # Otherwise use plex.conf
-    file_config = load_json(hass.config.path(PLEX_CONFIG_FILE))
-    # Fallback to discovery/configurator
-    discovered = config.pop("discovered_plex", False)
-    if not plex_config and discovered:
-        plex_config = config
-
-    if plex_config:
-        hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = plex_config.get(MP_DOMAIN)
-        host = plex_config[CONF_HOST]
-        port = plex_config[CONF_PORT]
-        token = plex_config.get(CONF_TOKEN)
-        has_ssl = plex_config.get(CONF_SSL)
-        verify_ssl = plex_config.get(CONF_VERIFY_SSL)
-    elif file_config:
-        host_and_port, host_config = file_config.popitem()
-        host, port = host_and_port.split(":")
-        token = host_config[CONF_TOKEN]
-        has_ssl = host_config[CONF_SSL]
-        verify_ssl = host_config["verify"]
-    else:
+    if PLEX_DOMAIN not in config:
         discovery.listen(hass, SERVICE_PLEX, server_discovered)
         return True
 
-    http_prefix = "https" if has_ssl else "http"
-    url = f"{http_prefix}://{host}:{port}"
-
-    server_config = {CONF_URL: url, CONF_TOKEN: token, CONF_VERIFY_SSL: verify_ssl}
-
-    if not hass.data.get(PLEX_MEDIA_PLAYER_OPTIONS):
-        hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = {
-            CONF_USE_EPISODE_ART: False,
-            CONF_SHOW_ALL_CONTROLS: False,
-            CONF_REMOVE_UNAVAILABLE_CLIENTS: True,
-            CONF_CLIENT_REMOVE_INTERVAL: 600,
-        }
-
-    plex_server = PlexServer(server_config)
-    if connect_plex_server(plex_server):
-        if discovered:
-            # Write plex.conf if created via discovery/configurator
-            save_json(
-                hass.config.path(PLEX_CONFIG_FILE),
-                {
-                    f"{host}:{port}": {
-                        "token": token,
-                        "ssl": has_ssl,
-                        "verify": verify_ssl,
-                    }
-                },
-            )
-
-        for platform in PLATFORMS:
-            hass.helpers.discovery.load_platform(platform, PLEX_DOMAIN, {}, config)
-    else:
-        request_configuration(hass, f"{host}:{port}")
+    setup_plex(config=config)
 
     return True
-
-
-def request_configuration(hass, host_and_port):
-    """Request configuration steps from the user."""
-    configurator = hass.components.configurator
-    if host_and_port in _CONFIGURING:
-        configurator.notify_errors(
-            _CONFIGURING[host_and_port], "Failed to register, please try again."
-        )
-
-        return
-
-    def plex_configuration_callback(data):
-        """Handle configuration changes."""
-        host, port = host_and_port.split(":")
-        callback_config = {
-            CONF_HOST: host,
-            CONF_PORT: port,
-            CONF_TOKEN: data.get("token"),
-            CONF_SSL: cv.boolean(data.get("has_ssl")),
-            CONF_VERIFY_SSL: cv.boolean(data.get("verify_ssl")),
-            "discovered_plex": True,
-        }
-        setup(hass, callback_config)
-
-    _CONFIGURING[host_and_port] = configurator.request_config(
-        "Plex Media Server",
-        plex_configuration_callback,
-        description="Enter the X-Plex-Token",
-        entity_picture="/static/images/logo_plex_mediaserver.png",
-        submit_caption="Confirm",
-        fields=[
-            {"id": "token", "name": "X-Plex-Token", "type": ""},
-            {"id": "has_ssl", "name": "Use SSL", "type": ""},
-            {"id": "verify_ssl", "name": "Verify SSL", "type": ""},
-        ],
-    )

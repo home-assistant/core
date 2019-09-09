@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     if discovery_info is None:
         return
 
-    plexserver = hass.data[PLEX_DOMAIN][SERVERS].values()[0]
+    plexserver = list(hass.data[PLEX_DOMAIN][SERVERS].values())[0]
     config = hass.data[PLEX_MEDIA_PLAYER_OPTIONS]
 
     plex_clients = {}
