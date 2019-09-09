@@ -66,6 +66,9 @@ def setup(hass, config):
 
     def server_discovered(service, info):
         """Pass back discovered Plex server details."""
+        if hass.data[PLEX_DOMAIN][SERVERS]:
+            _LOGGER.debug("Plex server already configured, ignoring discovery.")
+            return
         _LOGGER.debug("Discovered Plex server: %s:%s", info["host"], info["port"])
         setup_plex(discovery_info=info)
 
@@ -75,8 +78,10 @@ def setup(hass, config):
         file_config = load_json(json_file)
 
         if config:
-            server_config = config.get(PLEX_DOMAIN, {})
-            host_and_port = f"{server_config[CONF_HOST]}:{server_config[CONF_PORT]}"
+            server_config = config
+            host_and_port = (
+                f"{server_config.pop(CONF_HOST)}:{server_config.pop(CONF_PORT)}"
+            )
             if MP_DOMAIN in server_config:
                 hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = server_config.pop(MP_DOMAIN)
         elif file_config:
@@ -177,8 +182,7 @@ def setup(hass, config):
 
     # End of inner functions.
 
-    if config:
-        original_config = config
+    original_config = config
 
     hass.data.setdefault(PLEX_DOMAIN, {SERVERS: {}})
 
@@ -186,10 +190,9 @@ def setup(hass, config):
         _LOGGER.debug("Plex server already configured")
         return False
 
-    if PLEX_DOMAIN not in config:
-        discovery.listen(hass, SERVICE_PLEX, server_discovered)
-        return True
+    discovery.listen(hass, SERVICE_PLEX, server_discovered)
 
-    setup_plex(config=config)
+    plex_config = config.get(PLEX_DOMAIN, {})
+    setup_plex(config=plex_config)
 
     return True
