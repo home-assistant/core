@@ -1,7 +1,7 @@
-"""The test for light device automation."""
+"""The test for switch device automation."""
 import pytest
 
-from homeassistant.components.light import DOMAIN
+from homeassistant.components.switch import DOMAIN
 from homeassistant.const import STATE_ON, STATE_OFF, CONF_PLATFORM
 from homeassistant.setup import async_setup_component
 import homeassistant.components.automation as automation
@@ -47,7 +47,7 @@ def _same_lists(a, b):
 
 
 async def test_get_actions(hass, device_reg, entity_reg):
-    """Test we get the expected actions from a light."""
+    """Test we get the expected actions from a switch."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(
@@ -85,7 +85,7 @@ async def test_get_actions(hass, device_reg, entity_reg):
 
 
 async def test_get_conditions(hass, device_reg, entity_reg):
-    """Test we get the expected conditions from a light."""
+    """Test we get the expected conditions from a switch."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(
@@ -116,7 +116,7 @@ async def test_get_conditions(hass, device_reg, entity_reg):
 
 
 async def test_get_triggers(hass, device_reg, entity_reg):
-    """Test we get the expected triggers from a light."""
+    """Test we get the expected triggers from a switch."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(
