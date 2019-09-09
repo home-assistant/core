@@ -49,18 +49,11 @@ class HassAqualinkSensor(AqualinkEntity):
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
-        return int(self.dev.state) if self.dev.state else None
+        return int(self.dev.state) if self.dev.state != "" else None
 
     @property
     def device_class(self) -> Optional[str]:
         """Return the class of the sensor."""
         if self.dev.name.endswith("_temp"):
             return DEVICE_CLASS_TEMPERATURE
-        return None
-
-    @property
-    def icon(self) -> Optional[str]:
-        """Return an icon based on the type sensor."""
-        if self.dev.name.endswith("_temp"):
-            return "mdi:thermometer"
         return None
