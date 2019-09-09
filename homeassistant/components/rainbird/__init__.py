@@ -17,6 +17,7 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 RAINBIRD_CONTROLLER = "rainbird_controller"
+DATA_RAINBIRD = "rainbird"
 DOMAIN = "rainbird"
 
 SENSOR_TYPE_RAINDELAY = "raindelay"
@@ -50,6 +51,7 @@ def setup(hass, config):
     from pyrainbird import RainbirdController
 
     controller = RainbirdController(server, password)
+    hass.data[DATA_RAINBIRD] = controller
 
     _LOGGER.debug("Rain Bird Controller set to: %s", server)
 
