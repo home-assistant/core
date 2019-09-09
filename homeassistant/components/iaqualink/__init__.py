@@ -6,10 +6,16 @@ import logging
 from aiohttp import CookieJar
 import voluptuous as vol
 
-from iaqualink import AqualinkClient, AqualinkLoginException, AqualinkThermostat
+from iaqualink import (
+    AqualinkClient,
+    AqualinkLight,
+    AqualinkLoginException,
+    AqualinkThermostat,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
@@ -67,6 +73,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> None
 
     # These will contain the initialized devices
     climates = hass.data[DOMAIN][CLIMATE_DOMAIN] = []
+    lights = hass.data[DOMAIN][LIGHT_DOMAIN] = []
 
     session = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
     aqualink = AqualinkClient(username, password, session)
@@ -88,11 +95,16 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> None
     for dev in devices.values():
         if isinstance(dev, AqualinkThermostat):
             climates += [dev]
+        elif isinstance(dev, AqualinkLight):
+            lights += [dev]
 
     forward_setup = hass.config_entries.async_forward_entry_setup
     if climates:
         _LOGGER.debug("Got %s climates: %s", len(climates), climates)
         hass.async_create_task(forward_setup(entry, CLIMATE_DOMAIN))
+    if lights:
+        _LOGGER.debug("Got %s lights: %s", len(lights), lights)
+        hass.async_create_task(forward_setup(entry, LIGHT_DOMAIN))
 
     async def _async_systems_update(now):
         """Refresh internal state for all systems."""
@@ -112,6 +124,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
 
     if hass.data[DOMAIN][CLIMATE_DOMAIN]:
         tasks += [forward_unload(entry, CLIMATE_DOMAIN)]
+    if hass.data[DOMAIN][LIGHT_DOMAIN]:
+        tasks += [forward_unload(entry, LIGHT_DOMAIN)]
 
     hass.data[DOMAIN].clear()
 
