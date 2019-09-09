@@ -51,6 +51,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         discovery_info[RAINBIRD_CONTROLLER]
     ]
     available_stations: AvailableStations = controller.get_available_stations()
+    if not (available_stations and available_stations.stations):
+        return False
     devices = []
     for i in range(1, available_stations.stations.count + 1):
         if available_stations.stations.active(i):
