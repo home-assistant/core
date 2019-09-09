@@ -7,7 +7,6 @@ import voluptuous as vol
 from pyobihai import PyObihai
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from homeassistant.helpers.entity import Entity
@@ -18,25 +17,25 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
-DOMAIN = "Obihai"
+OBIHAI = "Obihai"
 DEFAULT_USERNAME = "admin"
 DEFAULT_PASSWORD = "admin"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HOST): cv.string,
+        vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
     }
 )
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Obihai sensor platform."""
 
-    username = config.get(CONF_USERNAME, None)
-    password = config.get(CONF_PASSWORD, None)
-    host = config.get(CONF_HOST, None)
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
+    host = config[CONF_HOST]
 
     sensors = []
 
@@ -47,26 +46,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     line_services = pyobihai.get_line_state(host, username, password)
 
     for key in services:
-        sensors.append(ObihaiServiceSensors(host, username, password, key))
+        sensors.append(ObihaiServiceSensors(pyobihai, host, username, password, key))
 
     for key in line_services:
-        sensors.append(ObihaiServiceSensors(host, username, password, key))
+        sensors.append(ObihaiServiceSensors(pyobihai, host, username, password, key))
 
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 class ObihaiServiceSensors(Entity):
     """Get the status of each Obihai Lines."""
 
-    def __init__(self, host, username, password, service_name):
+    def __init__(self, pyobihai, host, username, password, service_name):
         """Initialize monitor sensor."""
         self._host = host
         self._username = username
         self._password = password
         self._service_name = service_name
         self._state = None
-        self._name = "{} {}".format(DOMAIN, self._service_name)
-        self._pyobihai = PyObihai()
+        self._name = f"{OBIHAI} {self._service_name}"
+        self._pyobihai = pyobihai
 
     @property
     def name(self):
@@ -84,7 +83,7 @@ class ObihaiServiceSensors(Entity):
 
         if self._service_name in services:
             if services[self._service_name] is None:
-                self._state = STATE_UNKNOWN
+                self._state = None
             else:
                 self._state = services[self._service_name]
 
@@ -94,6 +93,6 @@ class ObihaiServiceSensors(Entity):
 
         if self._service_name in services:
             if services[self._service_name] is None:
-                self._state = STATE_UNKNOWN
+                self._state = None
             else:
                 self._state = services[self._service_name]
