@@ -22,7 +22,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return False
 
     controller = hass.data[DATA_RAINBIRD][discovery_info[RAINBIRD_CONTROLLER]]
-
     add_entities(
         [RainBirdSensor(controller, sensor_type) for sensor_type in SENSOR_TYPES], True
     )

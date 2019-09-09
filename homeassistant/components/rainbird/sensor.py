@@ -3,13 +3,10 @@ import logging
 
 from pyrainbird import RainbirdController
 
-from homeassistant.components import binary_sensor
-from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
 from . import (
     DATA_RAINBIRD,
-    DOMAIN,
     RAINBIRD_CONTROLLER,
     SENSOR_TYPE_RAINDELAY,
     SENSOR_TYPE_RAINSENSOR,
@@ -28,20 +25,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return False
 
     controller = hass.data[DATA_RAINBIRD][discovery_info[RAINBIRD_CONTROLLER]]
-    devices = []
-    for sensor_type in SENSOR_TYPES:
-        sensor = RainBirdSensor(controller, sensor_type)
-        devices += [sensor]
-
-        discovery.load_platform(
-            hass,
-            binary_sensor.DOMAIN,
-            DOMAIN,
-            discovered={PARENT_SENSOR: sensor},
-            hass_config=config,
-        )
-
-    add_entities(devices, True)
+    add_entities(
+        [RainBirdSensor(controller, sensor_type) for sensor_type in SENSOR_TYPES], True
+    )
 
 
 class RainBirdSensor(Entity):
