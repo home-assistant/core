@@ -43,21 +43,18 @@ async def test_websocket_get_actions(hass, hass_ws_client, device_reg, entity_re
     entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
     expected_actions = [
         {
-            "device": None,
             "domain": "light",
             "type": "turn_off",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
         },
         {
-            "device": None,
             "domain": "light",
             "type": "turn_on",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
         },
         {
-            "device": None,
             "domain": "light",
             "type": "toggle",
             "device_id": device_entry.id,

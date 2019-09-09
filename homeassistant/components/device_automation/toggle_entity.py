@@ -12,7 +12,6 @@ from homeassistant.components.device_automation.const import (
 from homeassistant.core import split_entity_id
 from homeassistant.const import (
     CONF_CONDITION,
-    CONF_DEVICE,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
@@ -25,18 +24,15 @@ from homeassistant.helpers import condition, config_validation as cv, service
 ENTITY_ACTIONS = [
     {
         # Turn entity off
-        CONF_DEVICE: None,
-        CONF_TYPE: CONF_TURN_OFF,
+        CONF_TYPE: CONF_TURN_OFF
     },
     {
         # Turn entity on
-        CONF_DEVICE: None,
-        CONF_TYPE: CONF_TURN_ON,
+        CONF_TYPE: CONF_TURN_ON
     },
     {
         # Toggle entity
-        CONF_DEVICE: None,
-        CONF_TYPE: CONF_TOGGLE,
+        CONF_TYPE: CONF_TOGGLE
     },
 ]
 
@@ -68,8 +64,7 @@ ENTITY_TRIGGERS = [
 
 ACTION_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_DEVICE): None,
-        vol.Optional(CONF_DEVICE_ID): str,
+        vol.Required(CONF_DEVICE_ID): str,
         vol.Required(CONF_DOMAIN): str,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In([CONF_TOGGLE, CONF_TURN_OFF, CONF_TURN_ON]),
@@ -79,7 +74,7 @@ ACTION_SCHEMA = vol.Schema(
 CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONDITION): "device",
-        vol.Optional(CONF_DEVICE_ID): str,
+        vol.Required(CONF_DEVICE_ID): str,
         vol.Required(CONF_DOMAIN): str,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In([CONF_IS_OFF, CONF_IS_ON]),
@@ -89,7 +84,7 @@ CONDITION_SCHEMA = vol.Schema(
 TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PLATFORM): "device",
-        vol.Optional(CONF_DEVICE_ID): str,
+        vol.Required(CONF_DEVICE_ID): str,
         vol.Required(CONF_DOMAIN): str,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In([CONF_TURN_OFF, CONF_TURN_ON]),
