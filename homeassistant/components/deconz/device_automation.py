@@ -2,6 +2,10 @@
 import voluptuous as vol
 
 import homeassistant.components.automation.event as event
+
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -194,7 +198,7 @@ def _get_deconz_event_from_device_id(hass, device_id):
     return None
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     config = TRIGGER_SCHEMA(config)
 
@@ -204,13 +208,13 @@ async def async_attach_trigger(hass, config, action, automation_info):
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
 
     if device.model not in REMOTES and trigger not in REMOTES[device.model]:
-        return
+        raise InvalidDeviceAutomationConfig
 
     trigger = REMOTES[device.model][trigger]
 
     deconz_event = _get_deconz_event_from_device_id(hass, device.id)
     if deconz_event is None:
-        return
+        raise InvalidDeviceAutomationConfig
 
     event_id = deconz_event.serial
 
@@ -220,11 +224,6 @@ async def async_attach_trigger(hass, config, action, automation_info):
     }
 
     return await event.async_trigger(hass, state_config, action, automation_info)
-
-
-async def async_trigger(hass, config, action, automation_info):
-    """Temporary so existing automation framework can be used for testing."""
-    return await async_attach_trigger(hass, config, action, automation_info)
 
 
 async def async_get_triggers(hass, device_id):
