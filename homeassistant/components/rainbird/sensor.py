@@ -8,6 +8,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
 from . import (
+    DATA_RAINBIRD,
     DOMAIN,
     RAINBIRD_CONTROLLER,
     SENSOR_TYPE_RAINDELAY,
@@ -23,14 +24,13 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Rain Bird sensor."""
 
-    if discovery_info is None or not RAINBIRD_CONTROLLER in discovery_info:
+    if discovery_info is None:
         return False
 
+    controller = hass.data[DATA_RAINBIRD][discovery_info[RAINBIRD_CONTROLLER]]
     devices = []
     for sensor_type in SENSOR_TYPES:
-        sensor = RainBirdSensor(
-            discovery_info[RAINBIRD_CONTROLLER], sensor_type
-        )
+        sensor = RainBirdSensor(controller, sensor_type)
         devices += [sensor]
 
         discovery.load_platform(
