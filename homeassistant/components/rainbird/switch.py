@@ -2,12 +2,13 @@
 
 import logging
 
+from pyrainbird import AvailableStations, RainbirdController
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import ATTR_ENTITY_ID, CONF_FRIENDLY_NAME, CONF_TRIGGER_TIME
 from homeassistant.helpers import config_validation as cv
-from pyrainbird import AvailableStations, RainbirdController
+
 from . import DATA_RAINBIRD, DOMAIN, RAINBIRD_CONTROLLER
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,14 +29,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Rain Bird switches over a Rain Bird controller."""
 
     if discovery_info is None:
-        return False
+        return
 
     controller: RainbirdController = hass.data[DATA_RAINBIRD][
         discovery_info[RAINBIRD_CONTROLLER]
     ]
     available_stations: AvailableStations = controller.get_available_stations()
     if not (available_stations and available_stations.stations):
-        return False
+        return
     devices = []
     for i in range(1, available_stations.stations.count + 1):
         if available_stations.stations.active(i):
@@ -44,7 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             )
             name = discovery_info.get("zones", {}).get(CONF_FRIENDLY_NAME)
             if time:
-                devices.append(RainBirdSwitch(controller, i, time, name=name))
+                devices.append(RainBirdSwitch(controller, i, time, name))
             else:
                 logging.warning(
                     "No delay configured for zone {0:d}, controller {1:s}. "
@@ -56,12 +57,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
     def _start_irrigation(service):
-        entity_id = service.data.get(ATTR_ENTITY_ID)
-        duration = service.data.get(ATTR_DURATION)
+        entity_id = service.data[ATTR_ENTITY_ID]
+        duration = service.data[ATTR_DURATION]
 
-        for d in devices:
-            if d.entity_id == entity_id:
-                d.turn_on(duration=duration)
+        for device in devices:
+            if device.entity_id == entity_id:
+                device.turn_on(duration=duration)
 
     hass.services.register(
         DOMAIN,
@@ -74,14 +75,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class RainBirdSwitch(SwitchDevice):
     """Representation of a Rain Bird switch."""
 
-    def __init__(self, controller: RainbirdController, zone, time, name=None):
+    def __init__(self, controller: RainbirdController, zone, time, name):
         """Initialize a Rain Bird Switch Device."""
         self._rainbird = rb
         self._zone = int(dev.get(CONF_ZONE))
         self._name = dev.get(CONF_FRIENDLY_NAME, f"Sprinkler {self._zone}")
         self._state = None
         self._duration = time
-        self._attributes = {"duration": self._duration, "zone": self._zone}
+        self._attributes = {ATTR_DURATION: self._duration, "zone": self._zone}
 
     @property
     def device_state_attributes(self):
@@ -97,7 +98,7 @@ class RainBirdSwitch(SwitchDevice):
         """Turn the switch on."""
         if self._rainbird.irrigate_zone(
             int(self._zone),
-            kwargs["duration"] if "duration" in kwargs else self._duration,
+            int(kwargs[ATTR_DURATION] if ATTR_DURATION in kwargs else self._duration),
         ):
             self._state = True
 
@@ -108,7 +109,7 @@ class RainBirdSwitch(SwitchDevice):
 
     def update(self):
         """Update switch status."""
-        self._state = self._rainbird.zone_state(self._zone)
+        self._state = self._rainbird.get_zone_state(self._zone)
 
     @property
     def is_on(self):

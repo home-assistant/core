@@ -45,7 +45,7 @@ CONTROLLER_SCHEMA = vol.Schema(
     }
 )
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema(vol.Any({cv.string: CONTROLLER_SCHEMA}, CONTROLLER_SCHEMA))},
+    {DOMAIN: vol.Schema(vol.Any(cv.ensure_list(CONTROLLER_SCHEMA), CONTROLLER_SCHEMA))},
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -53,29 +53,30 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Set up the Rain Bird component."""
 
-    hass.data[DATA_RAINBIRD] = dict()
-    if CONF_HOST in config[DOMAIN] and CONF_PASSWORD in config[DOMAIN]:
-        _setup_controller(config[DOMAIN], "rainbird", hass)
+    hass.data[DATA_RAINBIRD] = list()
+    if isinstance(config[DOMAIN], list):
+        for controller_config in config[DOMAIN]:
+            _setup_controller(controller_config, hass)
     else:
-        for controller_id in config[DOMAIN]:
-            _setup_controller(config[DOMAIN][controller_id], controller_id, hass)
+        _setup_controller(config[DOMAIN], hass)
 
     return True
 
 
-def _setup_controller(config, controller_id, hass):
+def _setup_controller(config, hass):
     from pyrainbird import RainbirdController
 
-    server = config.get(CONF_HOST)
-    password = config.get(CONF_PASSWORD)
+    server = config[CONF_HOST]
+    password = config[CONF_PASSWORD]
     controller = RainbirdController(server, password)
-    hass.data[DATA_RAINBIRD][controller_id] = controller
-    _LOGGER.debug("Rain Bird Controller %s set to: %s", controller_id, server)
+    position = len(hass.data[DATA_RAINBIRD])
+    hass.data[DATA_RAINBIRD].append(controller)
+    _LOGGER.debug("Rain Bird Controller %d set to: %s", position, server)
     for platform in [switch.DOMAIN, sensor.DOMAIN, binary_sensor.DOMAIN]:
         discovery.load_platform(
             hass,
             platform,
             DOMAIN,
-            discovered={**{RAINBIRD_CONTROLLER: controller_id}, **config},
+            discovered={**{RAINBIRD_CONTROLLER: position}, **config},
             hass_config=config,
         )
