@@ -444,5 +444,5 @@ class TemplateFan(FanEntity):
                 result = self._availability_template.async_render()
                 self._available = result == "true"
             except (TemplateError, ValueError) as err:
-                _LOGGER.error(err)
+                _LOGGER.error("Error rendering availability_template: %s", err)
                 self._available = True

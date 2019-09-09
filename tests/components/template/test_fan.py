@@ -337,7 +337,8 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
                     "platform": "template",
                     "fans": {
                         "test_fan": {
-                            "value_template": "{{ x - 12 }}",
+                            "value_template": "{{ 'on' }}",
+                            "availability_template": "{{ x - 12 }}",
                             "speed_template": "{{ states('input_select.speed') }}",
                             "oscillating_template": "{{ states('input_select.osc') }}",
                             "direction_template": "{{ states('input_select.direction') }}",
@@ -353,6 +354,7 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
     await hass.async_block_till_done()
 
     assert hass.states.get("fan.test_fan") != STATE_UNAVAILABLE
+    assert ("Error rendering availability_template") in caplog.text
     assert ("UndefinedError: 'x' is undefined") in caplog.text
 
 
