@@ -288,6 +288,7 @@ omit =
     homeassistant/components/hyperion/light.py
     homeassistant/components/ialarm/alarm_control_panel.py
     homeassistant/components/iaqualink/climate.py
+    homeassistant/components/iaqualink/light.py
     homeassistant/components/icloud/device_tracker.py
     homeassistant/components/idteck_prox/*
     homeassistant/components/ifttt/*
