@@ -148,6 +148,8 @@ def setup(hass, config):
                     platform, PLEX_DOMAIN, {}, original_config
                 )
 
+            return True
+
     def request_configuration(host_and_port):
         """Request configuration steps from the user."""
         configurator = hass.components.configurator
@@ -193,6 +195,4 @@ def setup(hass, config):
     discovery.listen(hass, SERVICE_PLEX, server_discovered)
 
     plex_config = config.get(PLEX_DOMAIN, {})
-    setup_plex(config=plex_config)
-
-    return True
+    return setup_plex(config=plex_config)
