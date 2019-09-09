@@ -90,8 +90,8 @@ class TorqueReceiveDataView(HomeAssistantView):
                 pid = convert_pid(is_unit.group(1))
 
                 temp_unit = data[key]
-                if '\\xC2\\xB0' in temp_unit:
-                    temp_unit = temp_unit.replace('\\xC2\\xB0', '°')
+                if "\\xC2\\xB0" in temp_unit:
+                    temp_unit = temp_unit.replace("\\xC2\\xB0", "°")
 
                 units[pid] = temp_unit
             elif is_value:
