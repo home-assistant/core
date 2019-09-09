@@ -95,7 +95,8 @@ def setup(hass, config):
             server_config = configurator_info
             host_and_port = server_config["host_and_port"]
         else:
-            return False
+            discovery.listen(hass, SERVICE_PLEX, server_discovered)
+            return True
 
         use_ssl = server_config.get(CONF_SSL, DEFAULT_SSL)
         http_prefix = "https" if use_ssl else "http"
@@ -194,8 +195,6 @@ def setup(hass, config):
     if hass.data[PLEX_DOMAIN][SERVERS]:
         _LOGGER.debug("Plex server already configured")
         return False
-
-    discovery.listen(hass, SERVICE_PLEX, server_discovered)
 
     plex_config = config.get(PLEX_DOMAIN, {})
     return setup_plex(config=plex_config)
