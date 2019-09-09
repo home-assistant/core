@@ -3,12 +3,20 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components import sensor, binary_sensor
+from homeassistant.components.rainbird.switch import (
+    SERVICE_START_IRRIGATION,
+    SERVICE_SCHEMA_IRRIGATION,
+    ATTR_DURATION,
+    RainBirdSwitch,
+)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.helpers import discovery
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_RAINBIRD = "rainbird"
+RAINBIRD_CONTROLLER = "rainbird_controller"
 DOMAIN = "rainbird"
 
 SENSOR_TYPE_RAINDELAY = "raindelay"
@@ -22,7 +30,10 @@ SENSOR_TYPES = {
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
-            {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_PASSWORD): cv.string}
+            {
+                vol.Required(CONF_HOST): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+            }
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -31,6 +42,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the Rain Bird component."""
+
     conf = config[DOMAIN]
     server = conf.get(CONF_HOST)
     password = conf.get(CONF_PASSWORD)
@@ -41,10 +53,13 @@ def setup(hass, config):
 
     _LOGGER.debug("Rain Bird Controller set to: %s", server)
 
-    initial_status = controller.command("ModelAndVersion")
-    if initial_status and initial_status["type"] != "ModelAndVersionResponse":
-        _LOGGER.error("Error getting state. Possible configuration issues")
-        return False
+    for platform in [switch.DOMAIN, sensor.DOMAIN, binary_sensor.DOMAIN]:
+        discovery.load_platform(
+            hass,
+            platform,
+            DOMAIN,
+            discovered={RAINBIRD_CONTROLLER: controller},
+            hass_config=config,
+        )
 
-    hass.data[DATA_RAINBIRD] = controller
     return True

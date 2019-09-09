@@ -1,24 +1,30 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
 import logging
 
-from pyrainbird import RainbirdController
-
 from homeassistant.components.binary_sensor import BinarySensorDevice
-
-from . import DATA_RAINBIRD, SENSOR_TYPES, SENSOR_TYPE_RAINSENSOR, SENSOR_TYPE_RAINDELAY
+from pyrainbird import RainbirdController
+from . import (
+    RAINBIRD_CONTROLLER,
+    SENSOR_TYPES,
+    SENSOR_TYPE_RAINSENSOR,
+    SENSOR_TYPE_RAINDELAY,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Rain Bird sensor."""
-    controller = hass.data[DATA_RAINBIRD]
+    if discovery_info is None or not RAINBIRD_CONTROLLER in discovery_info:
+        return False
 
-    sensors = []
-    for sensor_type in SENSOR_TYPES:
-        sensors.append(RainBirdSensor(controller, sensor_type))
-
-    add_entities(sensors, True)
+    add_entities(
+        [
+            RainBirdSensor(discovery_info[RAINBIRD_CONTROLLER], sensor_type)
+            for sensor_type in SENSOR_TYPES
+        ],
+        True,
+    )
 
 
 class RainBirdSensor(BinarySensorDevice):
