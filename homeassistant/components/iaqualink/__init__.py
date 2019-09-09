@@ -1,5 +1,6 @@
 """Component to embed Aqualink devices."""
 import asyncio
+from functools import wraps
 import logging
 
 from aiohttp import CookieJar
@@ -11,11 +12,18 @@ from homeassistant import config_entries
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .const import DOMAIN
+from .const import DOMAIN, UPDATE_INTERVAL
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -86,6 +94,13 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> None
         _LOGGER.debug("Got %s climates: %s", len(climates), climates)
         hass.async_create_task(forward_setup(entry, CLIMATE_DOMAIN))
 
+    async def _async_systems_update(now):
+        """Refresh internal state for all systems."""
+        await systems[0].update()
+        async_dispatcher_send(hass, DOMAIN)
+
+    async_track_time_interval(hass, _async_systems_update, UPDATE_INTERVAL)
+
     return True
 
 
@@ -101,3 +116,36 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     hass.data[DOMAIN].clear()
 
     return all(await asyncio.gather(*tasks))
+
+
+def refresh_system(func):
+    """Force update all entities after state change."""
+
+    @wraps(func)
+    async def wrapper(self, *args, **kwargs):
+        """Call decorated function and send update signal to all entities."""
+        await func(self, *args, **kwargs)
+        async_dispatcher_send(self.hass, DOMAIN)
+
+    return wrapper
+
+
+class AqualinkEntity(Entity):
+    """Abstract class for all Aqualink platforms."""
+
+    async def async_added_to_hass(self) -> None:
+        """Set up a listener when this entity is added to HA."""
+        async_dispatcher_connect(self.hass, DOMAIN, self._update_callback)
+
+    @callback
+    def _update_callback(self) -> None:
+        self.async_schedule_update_ha_state(force_refresh=True)
+
+    @property
+    def should_poll(self) -> bool:
+        """Return False as entities shouldn't be polled.
+
+        Entities are checked periodically as the integration runs periodic
+        updates on a timer.
+        """
+        return False
