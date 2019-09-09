@@ -333,7 +333,9 @@ class Script:
         self._log("Executing step %s" % self.last_action)
         integration = await async_get_integration(self.hass, action[CONF_DOMAIN])
         platform = integration.get_platform("device_automation")
-        await platform.async_action_from_config(self.hass, action, variables, context)
+        await platform.async_call_action_from_config(
+            self.hass, action, variables, context
+        )
 
     async def _async_fire_event(self, action, variables, context):
         """Fire an event."""
