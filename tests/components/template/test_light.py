@@ -4,12 +4,15 @@ import logging
 from homeassistant.core import callback
 from homeassistant import setup
 from homeassistant.components.light import ATTR_BRIGHTNESS
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNAVAILABLE
 
 from tests.common import get_test_home_assistant, assert_setup_component
 from tests.components.light import common
 
 _LOGGER = logging.getLogger(__name__)
+
+# Represent for light's availability
+_STATE_AVAILABILITY_BOOLEAN = "availability_boolean.state"
 
 
 class TestTemplateLight:
@@ -774,3 +777,99 @@ class TestTemplateLight:
         state = self.hass.states.get("light.test_template_light")
 
         assert state.attributes["entity_picture"] == "/local/light.png"
+
+    def test_available_template_with_entities(self):
+        """Test availability templates with values from other entities."""
+        availability_template = """
+            {% if is_state('availability_boolean.state', 'True') %}
+                {{ 'true' }}
+            {% else %}
+                {{ 'false' }}
+            {% endif %}
+        """
+        assert setup.setup_component(
+            self.hass,
+            "light",
+            {
+                "light": {
+                    "platform": "template",
+                    "lights": {
+                        "test_template_light": {
+                            "availability_template": availability_template,
+                            "turn_on": {
+                                "service": "light.turn_on",
+                                "entity_id": "light.test_state",
+                            },
+                            "turn_off": {
+                                "service": "light.turn_off",
+                                "entity_id": "light.test_state",
+                            },
+                            "set_level": {
+                                "service": "light.turn_on",
+                                "data_template": {
+                                    "entity_id": "light.test_state",
+                                    "brightness": "{{brightness}}",
+                                },
+                            },
+                        }
+                    },
+                }
+            },
+        )
+        self.hass.start()
+        self.hass.block_till_done()
+
+        # When template returns true..
+        self.hass.states.set(_STATE_AVAILABILITY_BOOLEAN, True)
+        self.hass.block_till_done()
+
+        # Device State should not be unavailable
+        state = self.hass.states.get("light.test_template_light")
+        assert state.state != STATE_UNAVAILABLE
+
+        # When Availability template returns false
+        self.hass.states.set(_STATE_AVAILABILITY_BOOLEAN, False)
+        self.hass.block_till_done()
+
+        # device state should be unavailable
+        state = self.hass.states.get("light.test_template_light")
+        assert state.state == STATE_UNAVAILABLE
+
+    def test_invalid_availability_template_keeps_component_available(self, caplog):
+        """Test that an invalid availability keeps the device available."""
+        assert setup.setup_component(
+            self.hass,
+            "light",
+            {
+                "light": {
+                    "platform": "template",
+                    "lights": {
+                        "test_template_light": {
+                            "availability_template": "{{ x - 12 }}",
+                            "turn_on": {
+                                "service": "light.turn_on",
+                                "entity_id": "light.test_state",
+                            },
+                            "turn_off": {
+                                "service": "light.turn_off",
+                                "entity_id": "light.test_state",
+                            },
+                            "set_level": {
+                                "service": "light.turn_on",
+                                "data_template": {
+                                    "entity_id": "light.test_state",
+                                    "brightness": "{{brightness}}",
+                                },
+                            },
+                        }
+                    },
+                }
+            },
+        )
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("light.test_template_light")
+        assert state.state != STATE_UNAVAILABLE
+        assert ("UndefinedError: 'x' is undefined") in caplog.text
