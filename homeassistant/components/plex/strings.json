@@ -29,11 +29,9 @@
             }
         },
         "error": {
-            "config_not_ready": "Configuration provided is incomplete",
             "faulty_credentials": "Authorization failed",
             "no_servers": "No servers linked to account",
-            "not_found": "Plex server not found",
-            "server_not_specified": "Multiple servers available, select one"
+            "not_found": "Plex server not found"
         },
         "abort": {
             "already_configured": "This Plex server is already configured",
