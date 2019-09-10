@@ -2,12 +2,13 @@
 
 import logging
 
+from pyrainbird import AvailableStations, RainbirdController
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import ATTR_ENTITY_ID, CONF_FRIENDLY_NAME, CONF_TRIGGER_TIME
 from homeassistant.helpers import config_validation as cv
-from pyrainbird import AvailableStations, RainbirdController
+
 from . import DATA_RAINBIRD, DOMAIN, RAINBIRD_CONTROLLER
 
 _LOGGER = logging.getLogger(__name__)
