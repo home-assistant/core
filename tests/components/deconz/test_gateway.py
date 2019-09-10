@@ -126,7 +126,7 @@ async def test_add_device(hass):
         assert len(mock_dispatch_send.mock_calls[0]) == 3
 
 
-@pytest.mark.skip
+@pytest.mark.skip(reason="fails for unkown reason, will refactor in a separate PR")
 async def test_add_remote(hass):
     """Successful add remote."""
     entry = Mock()
@@ -220,7 +220,7 @@ async def test_get_gateway_fails_cannot_connect(hass):
         assert await gateway.get_gateway(hass, ENTRY_CONFIG, Mock(), Mock()) is False
 
 
-@pytest.mark.skip
+@pytest.mark.skip(reason="fails for unkown reason, will refactor in a separate PR")
 async def test_create_event(hass):
     """Successfully created a deCONZ event."""
     mock_remote = Mock()
@@ -235,7 +235,7 @@ async def test_create_event(hass):
     assert event.event_id == "name"
 
 
-@pytest.mark.skip
+@pytest.mark.skip(reason="fails for unkown reason, will refactor in a separate PR")
 async def test_update_event(hass):
     """Successfully update a deCONZ event."""
     hass.bus.async_fire = Mock()
@@ -254,7 +254,7 @@ async def test_update_event(hass):
     assert len(hass.bus.async_fire.mock_calls) == 1
 
 
-@pytest.mark.skip
+@pytest.mark.skip(reason="fails for unkown reason, will refactor in a separate PR")
 async def test_remove_event(hass):
     """Successfully update a deCONZ event."""
     mock_remote = Mock()
