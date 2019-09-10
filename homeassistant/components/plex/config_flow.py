@@ -46,6 +46,15 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
 
+        data_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_TOKEN, default=self.current_login.get(CONF_TOKEN, "")
+                ): str,
+                vol.Optional("manual_setup"): bool,
+            }
+        )
+
         if user_input is not None:
             manual_setup = user_input.get("manual_setup")
             if manual_setup is True:
@@ -73,41 +82,36 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Unknown error connecting to Plex server: %s", error)
                 return self.async_abort(reason="unknown")
             else:
-                server_id = plex_server.machine_identifier
-                for entry in self._async_current_entries():
-                    if entry.data[CONF_SERVER_IDENTIFIER] == server_id:
-                        return self.async_abort(  # pylint: disable=lost-exception
-                            reason="already_configured"
-                        )
-
-                url = plex_server.url_in_use
-                token = user_input.get(CONF_TOKEN)
-
-                server_config = {CONF_URL: url}
-                if token:
-                    server_config[CONF_TOKEN] = token
-                if url.startswith("https"):
-                    server_config[CONF_VERIFY_SSL] = user_input.get(
-                        CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL
+                if errors:
+                    return self.async_show_form(
+                        step_id="user", data_schema=data_schema, errors=errors
                     )
 
-                return self.async_create_entry(  # pylint: disable=lost-exception
-                    title=plex_server.friendly_name,
-                    data={
-                        CONF_SERVER: plex_server.friendly_name,
-                        CONF_SERVER_IDENTIFIER: server_id,
-                        PLEX_SERVER_CONFIG: server_config,
-                    },
+            server_id = plex_server.machine_identifier
+
+            for entry in self._async_current_entries():
+                if entry.data[CONF_SERVER_IDENTIFIER] == server_id:
+                    return self.async_abort(reason="already_configured")
+
+            url = plex_server.url_in_use
+            token = user_input.get(CONF_TOKEN)
+
+            server_config = {CONF_URL: url}
+            if token:
+                server_config[CONF_TOKEN] = token
+            if url.startswith("https"):
+                server_config[CONF_VERIFY_SSL] = user_input.get(
+                    CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL
                 )
 
-        data_schema = vol.Schema(
-            {
-                vol.Optional(
-                    CONF_TOKEN, default=self.current_login.get(CONF_TOKEN, "")
-                ): str,
-                vol.Optional("manual_setup"): bool,
-            }
-        )
+            return self.async_create_entry(
+                title=plex_server.friendly_name,
+                data={
+                    CONF_SERVER: plex_server.friendly_name,
+                    CONF_SERVER_IDENTIFIER: server_id,
+                    PLEX_SERVER_CONFIG: server_config,
+                },
+            )
 
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
