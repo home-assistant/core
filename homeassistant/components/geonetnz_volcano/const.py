@@ -6,7 +6,6 @@ DOMAIN = "geonetnz_volcano"
 FEED = "feed"
 
 ATTR_ACTIVITY = "activity"
-ATTR_ALERT_LEVEL = "alert_level"
 ATTR_EXTERNAL_ID = "external_id"
 ATTR_HAZARDS = "hazards"
 
