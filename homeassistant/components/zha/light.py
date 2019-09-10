@@ -275,14 +275,14 @@ class Light(ZhaEntity, light.Light):
                 self._effect = "colorloop"
             elif self._effect == "colorloop":
                 result = await self._color_channel.color_loop_set(
-                    0x1, 0x0, 0x0, 0x0, 0x0  # update action only, action off, no dir,time,hue
+                    UPDATE_COLORLOOP_ACTION, 0x0, 0x0, 0x0, 0x0  # update action only, action off, no dir,time,hue
                 )
                 t_log["color_loop_set"] = result
                 self._effect = None
         else:
             if self.supported_features & light.SUPPORT_EFFECT and self._effect == "colorloop":
                 result = await self._color_channel.color_loop_set(
-                    0x1, 0x0, 0x0, 0x0, 0x0  # update action only, action off, no dir,time,hue
+                    UPDATE_COLORLOOP_ACTION, 0x0, 0x0, 0x0, 0x0  # update action only, action off, no dir,time,hue
                 )
                 t_log["color_loop_set"] = result
                 self._effect = None
