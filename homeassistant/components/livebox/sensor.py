@@ -67,7 +67,7 @@ class RXSensor(LiveboxSensor):
     def unique_id(self):
         """Return unique_id."""
 
-        return "%s_downstream" % (self._box_id)
+        return f"{self._box_id}_downstream"
 
     @property
     def device_state_attributes(self):
@@ -111,7 +111,7 @@ class TXSensor(LiveboxSensor):
     def unique_id(self):
         """Return unique_id."""
 
-        return "%s_upstream" % (self._box_id)
+        return f"{self._box_id}_upstream"
 
     @property
     def device_state_attributes(self):

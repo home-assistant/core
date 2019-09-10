@@ -46,7 +46,7 @@ class InfoSensor(BinarySensorDevice):
     def unique_id(self):
         """Return unique_id."""
 
-        return "%s_connectivity" % (self._box_id)
+        return f"{self._box_id}_connectivity"
 
     @property
     def device_info(self):
