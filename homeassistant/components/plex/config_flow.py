@@ -167,35 +167,13 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.discovery_info = discovery_info
         return await self.async_step_user()
 
-    async def async_step_import_plex_conf(self, import_config):
-        """Import from Plex media_player file config.
-
-        Legacy.
-        """
-        host_and_port, host_config = import_config.popitem()
-        prefix = "https" if host_config[CONF_SSL] else "http"
-        url = f"{prefix}://{host_and_port}"
-
-        config = {
-            CONF_URL: url,
-            CONF_TOKEN: host_config[CONF_TOKEN],
-            CONF_VERIFY_SSL: host_config["verify"],
-        }
-
-        _LOGGER.info("Imported configuration from legacy config file")
-        return await self.async_step_user(user_input=config)
-
     async def async_step_import(self, import_config):
         """Import from Plex configuration."""
-        host = import_config.get(CONF_HOST)
-        port = import_config[CONF_PORT]
+        url = import_config.get(CONF_URL)
         token = import_config.get(CONF_TOKEN)
         server = import_config.get(CONF_SERVER)
 
-        if host and port:
-            prefix = "https" if import_config[CONF_SSL] else "http"
-            url = f"{prefix}://{host}:{port}"
-
+        if url:
             config = {
                 CONF_URL: url,
                 CONF_TOKEN: token,
