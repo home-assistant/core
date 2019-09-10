@@ -145,7 +145,14 @@ def refresh_system(func):
 
 
 class AqualinkEntity(Entity):
-    """Abstract class for all Aqualink platforms."""
+    """Abstract class for all Aqualink platforms.
+
+    Entity state is updated via the interval timer within the integration.
+    Any entity state change via the iaqualink library triggers an internal
+    state refresh which is then propagated to all the entities in the system
+    via the refresh_system decorator above to the _update_callback in this
+    class.
+    """
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
@@ -153,7 +160,7 @@ class AqualinkEntity(Entity):
 
     @callback
     def _update_callback(self) -> None:
-        self.async_schedule_update_ha_state(force_refresh=True)
+        self.async_schedule_update_ha_state()
 
     @property
     def should_poll(self) -> bool:
