@@ -7,7 +7,11 @@ DEFAULT_PORT = 32400
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
+PLATFORMS = ["media_player", "sensor"]
+SERVERS = "servers"
+
 PLEX_CONFIG_FILE = "plex.conf"
+PLEX_MEDIA_PLAYER_OPTIONS = "plex_mp_options"
 PLEX_SERVER_CONFIG = "server_config"
 
 CONF_USE_EPISODE_ART = "use_episode_art"
