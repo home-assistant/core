@@ -1,38 +1,23 @@
 """Sensor for Livebox router."""
 import logging
-from datetime import timedelta
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice,
-    DEVICE_CLASS_CONNECTIVITY,
-)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from . import DOMAIN
+from . import DOMAIN, SCAN_INTERVAL
 from .const import TEMPLATE_SENSOR
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = timedelta(minutes=5)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the sensors."""
     box = hass.data[DOMAIN]
-    async_add_entities(
-        [
-            RXSensor(box, config_entry),
-            TXSensor(box, config_entry),
-            InfoSensor(box, config_entry),
-        ],
-        True,
-    )
+    async_add_entities([RXSensor(box, config_entry), TXSensor(box, config_entry)], True)
 
 
 class LiveboxSensor(Entity):
     """Representation of a livebox sensor."""
-
-    _name = "generic"
 
     def __init__(self, box, config_entry):
         """Initialize the sensor."""
@@ -57,49 +42,6 @@ class LiveboxSensor(Entity):
     @Throttle(SCAN_INTERVAL)
     async def async_update(self):
         """Return update entry."""
-
-
-class InfoSensor(LiveboxSensor, BinarySensorDevice):
-    """Update Wan Status sensor."""
-
-    device_class = DEVICE_CLASS_CONNECTIVITY
-
-    @property
-    def name(self):
-        """Return name sensor."""
-
-        return TEMPLATE_SENSOR.format("Wan status")
-
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-
-        if self._dsl["WanState"] == "up":
-            return True
-        return False
-
-    @property
-    def unique_id(self):
-        """Return unique_id."""
-
-        return "{}_connectivity".format(self._box_id)
-
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-
-        return {
-            "link_type": self._dsl["LinkType"],
-            "link_state": self._dsl["LinkState"],
-            "last_connection_error": self._dsl["LastConnectionError"],
-            "wan_ipaddress": self._dsl["IPAddress"],
-            "wan_ipv6address": self._dsl["IPv6Address"],
-        }
-
-    async def async_update(self):
-        """Fetch status from livebox."""
-
-        self._datas = await self._box.system.get_WANStatus()
-        self._dsl = self._datas["data"]
 
 
 class RXSensor(LiveboxSensor):

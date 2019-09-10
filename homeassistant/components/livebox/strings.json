@@ -11,6 +11,12 @@
           "password": "Password"
         }
       },
+      "options":{
+        "title": "Extra configuration options for Livebox",
+        "data": {
+          "allow_tracker": "Allow device tracker"
+        }
+      },
       "link": {
           "title": "Orange Livebox detection",
           "description": "Search and check you livebox, please click to Finish button"
@@ -18,6 +24,7 @@
     },
     "error": {
       "register_failed": "Failed to register, please try again",
+      "login_inccorect": "User or password inccorect",
       "linking": "Unknown linking error occurred."
     },
     "abort": {

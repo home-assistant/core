@@ -5,13 +5,22 @@ from copy import copy
 import voluptuous as vol
 
 from aiosysbus import Sysbus
+from aiosysbus.exceptions import AuthorizationError
 
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD
 
-from .const import DOMAIN, LOGGER, DEFAULT_USERNAME, DEFAULT_HOST, DEFAULT_PORT
-from .errors import AuthenticationRequired, CannotConnect
+from .const import (
+    DOMAIN,
+    LOGGER,
+    DEFAULT_USERNAME,
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+    TEMPLATE_SENSOR,
+    CONF_ALLOW_TRACKER,
+)
+from .errors import CannotConnect
 
 
 class LiveboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -32,6 +41,7 @@ class LiveboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.port = None
         self.username = None
         self.password = None
+        self.box_id = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -58,19 +68,18 @@ class LiveboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Step for link router."""
 
         errors = {}
+        box = Sysbus()
 
         try:
-            box = Sysbus()
             await box.open(
                 host=self.host,
                 port=self.port,
                 username=self.username,
                 password=self.password,
             )
-            return await self._entry_from_box(box)
 
-        except AuthenticationRequired:
-            errors["base"] = "register_failed"
+        except AuthorizationError:
+            errors["base"] = "login_inccorect"
 
         except CannotConnect:
             LOGGER.error("Error connecting to the Livebox at %s", self.host)
@@ -80,22 +89,54 @@ class LiveboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             LOGGER.error("Unknown error connecting with Livebox at %s", self.host)
             errors["base"] = "linking"
 
+        try:
+            config = await box.system.get_deviceinfo()
+            self.box_id = config["status"]["SerialNumber"]
+
+        except Exception:
+            LOGGER.error("Unique ID not found")
+            return False
+
+        await self._entry_from_box()
+        return await self.async_step_options()
+
         # If there was no user input, do not show the errors.
         if user_input is None:
             errors = {}
 
         return self.async_show_form(step_id="link", errors=errors)
 
-    async def _entry_from_box(self, box):
+    async def async_step_options(self, user_input=None):
+        """Step for link router."""
+
+        options = {}
+        if user_input is not None:
+            options = {CONF_ALLOW_TRACKER: user_input[CONF_ALLOW_TRACKER]}
+            return self.async_create_entry(
+                title=TEMPLATE_SENSOR.format(""),
+                data={
+                    "box_id": self.box_id,
+                    "host": self.host,
+                    "port": self.port,
+                    "username": self.username,
+                    "password": self.password,
+                    "options": options,
+                },
+            )
+
+        return self.async_show_form(
+            step_id="options",
+            data_schema=vol.Schema({vol.Optional(CONF_ALLOW_TRACKER): bool}),
+        )
+
+    async def _entry_from_box(self):
         """Return a config entry from an initialized box."""
-        config = await box.system.get_deviceinfo()
-        box_id = config["status"]["SerialNumber"]
 
         # Remove all other entries of hubs with same ID or host
         same_hub_entries = [
             entry.entry_id
             for entry in self.hass.config_entries.async_entries(DOMAIN)
-            if entry.data["box_id"] == box_id
+            if entry.data["box_id"] == self.box_id
         ]
 
         if same_hub_entries:
@@ -106,16 +147,7 @@ class LiveboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 ]
             )
 
-        return self.async_create_entry(
-            title="Orange Livebox",
-            data={
-                "box_id": box_id,
-                "host": self.host,
-                "port": self.port,
-                "username": self.username,
-                "password": self.password,
-            },
-        )
+        return True
 
 
 class LiveboxOptionsFlowHandler(config_entries.OptionsFlow):
@@ -130,9 +162,17 @@ class LiveboxOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the Livebox options."""
 
         if user_input is not None:
+            self.options[CONF_ALLOW_TRACKER] = user_input[CONF_ALLOW_TRACKER]
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema({vol.Optional("allow_tracker", default=True): bool}),
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_ALLOW_TRACKER,
+                        default=self.config_entry.options[CONF_ALLOW_TRACKER],
+                    ): bool
+                }
+            ),
         )

@@ -14,7 +14,6 @@ def get_scanner(hass, config):
     """Validate the configuration and return a Livebox scanner."""
 
     scanner = LiveboxDeviceScanner(hass.data[DOMAIN])
-
     return scanner if scanner.success_init else None
 
 
