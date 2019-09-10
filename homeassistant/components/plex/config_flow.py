@@ -31,8 +31,7 @@ from .server import PlexServer
 _LOGGER = logging.getLogger(__package__)
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class PlexFlowHandler(config_entries.ConfigFlow):
+class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Plex config flow."""
 
     VERSION = 1
@@ -54,7 +53,7 @@ class PlexFlowHandler(config_entries.ConfigFlow):
 
             self.current_login = user_input
 
-            plex_server = await self.hass.async_add_executor_job(PlexServer, user_input)
+            plex_server = PlexServer(user_input)
             try:
                 await self.hass.async_add_executor_job(plex_server.connect)
             except NoServersFound:

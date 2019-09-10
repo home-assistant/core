@@ -126,7 +126,7 @@ async def async_setup_entry(hass, entry):
     server_id = entry.data[CONF_SERVER_IDENTIFIER]
 
     if server_id not in hass.data[PLEX_DOMAIN][SERVERS]:
-        plex_server = await hass.async_add_executor_job(PlexServer, server_config)
+        plex_server = PlexServer(server_config)
         try:
             await hass.async_add_executor_job(plex_server.connect)
         except requests.exceptions.ConnectionError as error:
@@ -147,8 +147,8 @@ async def async_setup_entry(hass, entry):
                 error,
             )
             return False
-        else:
-            hass.data[PLEX_DOMAIN][SERVERS][server_id] = plex_server
+
+        hass.data[PLEX_DOMAIN][SERVERS][server_id] = plex_server
 
     if not hass.data.get(PLEX_MEDIA_PLAYER_OPTIONS):
         hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = MEDIA_PLAYER_SCHEMA({})

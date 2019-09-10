@@ -45,20 +45,20 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities_callback, discovery_info=None):
+def async_setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up the Plex media_player platform.
 
     Deprecated.
     """
-    return
+    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Plex media_player from a config entry."""
 
-    def add_entities(devices, update_before_add=False):
-        """Sync version of async add devices."""
-        hass.add_job(async_add_entities, devices, update_before_add)
+    def add_entities(entities, update_before_add=False):
+        """Sync version of async add entities."""
+        hass.add_job(async_add_entities, entities, update_before_add)
 
     hass.async_add_executor_job(_setup_platform, hass, config_entry, add_entities)
 

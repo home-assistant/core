@@ -15,29 +15,19 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Plex sensor platform.
 
     Deprecated.
     """
-    return
+    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Plex sensor from a config entry."""
-
-    def add_entities(devices, update_before_add=False):
-        """Sync version of async add devices."""
-        hass.add_job(async_add_entities, devices, update_before_add)
-
-    hass.async_add_executor_job(_setup_platform, hass, config_entry, add_entities)
-
-
-def _setup_platform(hass, config_entry, add_entities):
-    """Set up the Plex sensor platform."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
     sensor = PlexSensor(hass.data[PLEX_DOMAIN][SERVERS][server_id])
-    add_entities([sensor], True)
+    async_add_entities([sensor], True)
 
 
 class PlexSensor(Entity):
