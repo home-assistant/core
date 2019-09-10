@@ -113,7 +113,7 @@ class LiveboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             options = {CONF_ALLOW_TRACKER: user_input[CONF_ALLOW_TRACKER]}
             return self.async_create_entry(
-                title=TEMPLATE_SENSOR.format(""),
+                title=f"{TEMPLATE_SENSOR}",
                 data={
                     "box_id": self.box_id,
                     "host": self.host,

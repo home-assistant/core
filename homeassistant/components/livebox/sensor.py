@@ -53,7 +53,7 @@ class RXSensor(LiveboxSensor):
     def name(self):
         """Return the name of the sensor."""
 
-        return TEMPLATE_SENSOR.format("download speed")
+        return f"{TEMPLATE_SENSOR} download speed"
 
     @property
     def state(self):
@@ -67,7 +67,7 @@ class RXSensor(LiveboxSensor):
     def unique_id(self):
         """Return unique_id."""
 
-        return "{}_downstream".format(self._box_id)
+        return "%s_downstream" % (self._box_id)
 
     @property
     def device_state_attributes(self):
@@ -97,7 +97,7 @@ class TXSensor(LiveboxSensor):
     def name(self):
         """Return the name of the sensor."""
 
-        return TEMPLATE_SENSOR.format("upload speed")
+        return f"{TEMPLATE_SENSOR} upload speed"
 
     @property
     def state(self):
@@ -111,7 +111,7 @@ class TXSensor(LiveboxSensor):
     def unique_id(self):
         """Return unique_id."""
 
-        return "{}_upstream".format(self._box_id)
+        return "%s_upstream" % (self._box_id)
 
     @property
     def device_state_attributes(self):

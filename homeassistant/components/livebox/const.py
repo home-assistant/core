@@ -5,7 +5,7 @@ LOGGER = logging.getLogger(__package__)
 DOMAIN = "livebox"
 
 API_NUPNP = "http://livebox.home/ws"
-TEMPLATE_SENSOR = "Orange Livebox {}"
+TEMPLATE_SENSOR = "Orange Livebox"
 
 DEFAULT_USERNAME = "admin"
 DEFAULT_HOST = "192.168.1.1"

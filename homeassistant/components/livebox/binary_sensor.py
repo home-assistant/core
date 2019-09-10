@@ -33,7 +33,7 @@ class InfoSensor(BinarySensorDevice):
     def name(self):
         """Return name sensor."""
 
-        return TEMPLATE_SENSOR.format("Wan status")
+        return f"{TEMPLATE_SENSOR} Wan status"
 
     def is_on(self):
         """Return true if the binary sensor is on."""
@@ -46,7 +46,7 @@ class InfoSensor(BinarySensorDevice):
     def unique_id(self):
         """Return unique_id."""
 
-        return "{}_connectivity".format(self._box_id)
+        return "%s_connectivity" % (self._box_id)
 
     @property
     def device_info(self):
