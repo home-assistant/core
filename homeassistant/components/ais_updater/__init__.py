@@ -211,11 +211,10 @@ async def async_setup(hass, config):
                 "You are on the latest version (%s) of Assystent domowy", newest
             )
 
-    # Update daily, start 1 hour after startup
-
-    _dt = dt_util.utcnow() + timedelta(hours=1)
+    # Update daily, start at 9AM + some random minutes and seconds based on the system startup
+    _dt = dt_util.utcnow()
     event.async_track_utc_time_change(
-        hass, check_new_version, hour=_dt.hour, minute=_dt.minute, second=_dt.second
+        hass, check_new_version, hour=9, minute=_dt.minute, second=_dt.second
     )
 
     # register services

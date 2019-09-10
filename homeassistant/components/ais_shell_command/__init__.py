@@ -85,6 +85,18 @@ def async_setup(hass, config):
     def set_ais_secure_android_id_dom(service):
         yield from _set_ais_secure_android_id_dom(hass, service)
 
+    @asyncio.coroutine
+    def hdmi_control_disable(service):
+        yield from _hdmi_control_disable(hass, service)
+
+    @asyncio.coroutine
+    def hdmi_control_disable(service):
+        yield from _hdmi_control_disable(hass, service)
+
+    @asyncio.coroutine
+    def change_wm_overscan(service):
+        yield from _change_wm_overscan(hass, service)
+
     # register services
     hass.services.async_register(DOMAIN, "change_host_name", change_host_name)
     hass.services.async_register(DOMAIN, "execute_command", execute_command)
@@ -108,6 +120,8 @@ def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "flush_logs", flush_logs)
     hass.services.async_register(DOMAIN, "change_remote_access", change_remote_access)
     hass.services.async_register(DOMAIN, "ssh_remote_access", ssh_remote_access)
+    hass.services.async_register(DOMAIN, "hdmi_control_disable", hdmi_control_disable)
+    hass.services.async_register(DOMAIN, "change_wm_overscan", change_wm_overscan)
     return True
 
 
@@ -136,19 +150,164 @@ def _change_remote_access(hass, call):
     access = hass.states.get("input_boolean.ais_remote_access").state
     gate_id = hass.states.get("sensor.ais_secure_android_id_dom").state
     if access == "on":
+        text = "Aktywuje " + text
+    else:
+        text = "Zatrzymuje " + text
+
+    if ais_global.G_AIS_START_IS_DONE:
+        yield from hass.services.async_call("ais_ai_service", "say_it", {"text": text})
+
+    if access == "on":
         os.system("pm2 delete tunnel")
         os.system(
             "pm2 start lt --name tunnel --restart-delay=30000 -- -h http://paczka.pro -p 8180 -s "
             + gate_id
         )
         os.system("pm2 save")
-        text = "Aktywuje " + text
     else:
         os.system("pm2 delete tunnel")
         os.system("pm2 save")
-        text = "Zatrzymuje " + text
-    if ais_global.G_AIS_START_IS_DONE:
-        yield from hass.services.async_call("ais_ai_service", "say_it", {"text": text})
+
+
+@asyncio.coroutine
+def _hdmi_control_disable(hass, call):
+    comm = r'su -c "settings put global hdmi_control_enabled 0"'
+    os.system(comm)
+
+
+@asyncio.coroutine
+def _change_wm_overscan(hass, call):
+    if "value" not in call.data:
+        _LOGGER.error("No value for overscan provided")
+        return
+    new_value = call.data["value"]
+    cl = 0
+    ct = 0
+    cr = 0
+    cb = 0
+
+    try:
+        import subprocess
+
+        overscan = ""
+        overscan = subprocess.check_output(
+            "su -c \"dumpsys display  | grep -o 'overscan.*' | cut -d')' -f1 | rev | cut -d'(' -f1 | rev\"",
+            shell=True,
+            timeout=10,
+        )
+        overscan = overscan.decode("utf-8").replace("\n", "")
+        if "," in overscan:
+            cl = int(overscan.split(",")[0])
+            ct = int(overscan.split(",")[1])
+            cr = int(overscan.split(",")[2])
+            cb = int(overscan.split(",")[3])
+    except Exception:
+        _LOGGER.warning("Can't get current overscan {}".format(overscan))
+
+    # [reset|LEFT,TOP,RIGHT,BOTTOM]
+    if new_value == "reset":
+        comm = r'su -c "wm overscan reset"'
+    elif new_value == "left":
+        comm = (
+            r'su -c "wm overscan '
+            + str(int(cl) + 3)
+            + ","
+            + str(ct)
+            + ","
+            + str(cr)
+            + ","
+            + str(cb)
+            + '"'
+        )
+    elif new_value == "top":
+        comm = (
+            r'su -c "wm overscan '
+            + str(cl)
+            + ","
+            + str(int(ct) + 3)
+            + ","
+            + str(cr)
+            + ","
+            + str(cb)
+            + '"'
+        )
+    elif new_value == "right":
+        comm = (
+            r'su -c "wm overscan '
+            + str(cl)
+            + ","
+            + str(ct)
+            + ","
+            + str(int(cr) + 3)
+            + ","
+            + str(cb)
+            + '"'
+        )
+    elif new_value == "bottom":
+        comm = (
+            r'su -c "wm overscan '
+            + str(cl)
+            + ","
+            + str(ct)
+            + ","
+            + str(cr)
+            + ","
+            + str(int(cb) + 3)
+            + '"'
+        )
+    elif new_value == "-left":
+        comm = (
+            r'su -c "wm overscan '
+            + str(int(cl) - 3)
+            + ","
+            + str(ct)
+            + ","
+            + str(cr)
+            + ","
+            + str(cb)
+            + '"'
+        )
+    elif new_value == "-top":
+        comm = (
+            r'su -c "wm overscan '
+            + str(cl)
+            + ","
+            + str(int(ct) - 3)
+            + ","
+            + str(cr)
+            + ","
+            + str(cb)
+            + '"'
+        )
+    elif new_value == "-right":
+        comm = (
+            r'su -c "wm overscan '
+            + str(cl)
+            + ","
+            + str(ct)
+            + ","
+            + str(int(cr) - 3)
+            + ","
+            + str(cb)
+            + '"'
+        )
+    elif new_value == "-bottom":
+        comm = (
+            r'su -c "wm overscan '
+            + str(cl)
+            + ","
+            + str(ct)
+            + ","
+            + str(cr)
+            + ","
+            + str(int(cb) - 3)
+            + '"'
+        )
+    else:
+        _LOGGER.error("Value for overscan provided {}".format(new_value))
+        return
+    _LOGGER.info("comm: " + comm)
+    os.system(comm)
 
 
 @asyncio.coroutine
