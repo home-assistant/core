@@ -41,6 +41,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the Plex flow."""
         self.current_login = {}
         self.discovery_info = {}
+        self.available_servers = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -59,7 +60,8 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except NoServersFound:
                 errors["base"] = "no_servers"
             except ServerNotSpecified as available_servers:
-                return await self.async_step_select_server(available_servers.args[0])
+                self.available_servers = available_servers.args[0]
+                return await self.async_step_select_server()
             except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized):
                 _LOGGER.error("Invalid credentials provided, config not created")
                 errors["base"] = "faulty_credentials"
@@ -145,12 +147,11 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_select_server(self, user_input=None):
         """Use selected Plex server."""
         if user_input is None:
-            return await self.async_step_user()
-
-        if isinstance(user_input, list):
             return self.async_show_form(
                 step_id="select_server",
-                data_schema=vol.Schema({vol.Required(CONF_SERVER): vol.In(user_input)}),
+                data_schema=vol.Schema(
+                    {vol.Required(CONF_SERVER): vol.In(self.available_servers)}
+                ),
                 errors={},
             )
 
