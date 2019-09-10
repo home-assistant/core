@@ -138,7 +138,7 @@ async def test_add_remote(hass):
 
     deconz_gateway = gateway.DeconzGateway(hass, entry)
     deconz_gateway.async_add_remote([remote])
-    await hass.async_block_till_done()
+    # await hass.async_block_till_done()
 
     assert len(deconz_gateway.events) == 1
 
