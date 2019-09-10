@@ -1,7 +1,8 @@
 """The GeoNet NZ Volcano integration."""
 import asyncio
 import logging
-from datetime import timedelta
+from datetime import timedelta, datetime
+from typing import Optional
 
 import voluptuous as vol
 from aio_geojson_geonetnz_volcano import GeonetnzVolcanoFeedManager
@@ -24,14 +25,12 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .config_flow import configured_instances
 from .const import (
-    PLATFORMS,
     DEFAULT_RADIUS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     FEED,
     SIGNAL_DELETE_ENTITY,
-    SIGNAL_NEW_GEOLOCATION,
-    SIGNAL_STATUS,
+    SIGNAL_NEW_SENSOR,
     SIGNAL_UPDATE_ENTITY,
 )
 
@@ -109,10 +108,7 @@ async def async_unload_entry(hass, config_entry):
     manager = hass.data[DOMAIN][FEED].pop(config_entry.entry_id)
     await manager.async_stop()
     await asyncio.wait(
-        [
-            hass.config_entries.async_forward_entry_unload(config_entry, domain)
-            for domain in PLATFORMS
-        ]
+        [hass.config_entries.async_forward_entry_unload(config_entry, "sensor")]
     )
     return True
 
@@ -136,24 +132,21 @@ class GeonetnzVolcanoFeedEntityManager:
             self._remove_entity,
             coordinates,
             filter_radius=radius_in_km,
-            status_callback=self._status_update,
         )
         self._config_entry_id = config_entry.entry_id
         self._scan_interval = timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL])
         self._unit_system = unit_system
         self._track_time_remove_callback = None
-        self._status_info = None
         self.listeners = []
 
     async def async_init(self):
         """Schedule initial and regular updates based on configured time interval."""
 
-        for domain in PLATFORMS:
-            self._hass.async_create_task(
-                self._hass.config_entries.async_forward_entry_setup(
-                    self._config_entry, domain
-                )
+        self._hass.async_create_task(
+            self._hass.config_entries.async_forward_entry_setup(
+                self._config_entry, "sensor"
             )
+        )
 
         async def update(event_time):
             """Update."""
@@ -183,15 +176,19 @@ class GeonetnzVolcanoFeedEntityManager:
     @callback
     def async_event_new_entity(self):
         """Return manager specific event to signal new entity."""
-        return SIGNAL_NEW_GEOLOCATION.format(self._config_entry_id)
+        return SIGNAL_NEW_SENSOR.format(self._config_entry_id)
 
     def get_entry(self, external_id):
         """Get feed entry by external id."""
         return self._feed_manager.feed_entries.get(external_id)
 
-    def status_info(self):
-        """Return latest status update info received."""
-        return self._status_info
+    def last_update(self) -> Optional[datetime]:
+        """Return the last update of this feed."""
+        return self._feed_manager.last_update
+
+    def last_update_successful(self) -> Optional[datetime]:
+        """Return the last successful update of this feed."""
+        return self._feed_manager.last_update_successful
 
     async def _generate_entity(self, external_id):
         """Generate new entity."""
@@ -210,9 +207,3 @@ class GeonetnzVolcanoFeedEntityManager:
     async def _remove_entity(self, external_id):
         """Remove entity."""
         async_dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
-
-    async def _status_update(self, status_info):
-        """Propagate status update."""
-        _LOGGER.debug("Status update received: %s", status_info)
-        self._status_info = status_info
-        async_dispatcher_send(self._hass, SIGNAL_STATUS.format(self._config_entry_id))

@@ -2,110 +2,151 @@
 import logging
 from typing import Optional
 
+from homeassistant.components.geo_location import ATTR_DISTANCE
+from homeassistant.const import (
+    CONF_UNIT_SYSTEM_IMPERIAL,
+    LENGTH_KILOMETERS,
+    ATTR_ATTRIBUTION,
+    ATTR_LONGITUDE,
+    ATTR_LATITUDE,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
-from .const import DEFAULT_ICON, DOMAIN, FEED, SIGNAL_STATUS
+from .const import (
+    ATTR_EXTERNAL_ID,
+    ATTR_ACTIVITY,
+    ATTR_HAZARDS,
+    DEFAULT_ICON,
+    DOMAIN,
+    FEED,
+    SIGNAL_DELETE_ENTITY,
+    SIGNAL_UPDATE_ENTITY,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_STATUS = "status"
-ATTR_LAST_UPDATE = "last_update"
-ATTR_LAST_UPDATE_SUCCESSFUL = "last_update_successful"
-ATTR_CREATED = "created"
-ATTR_UPDATED = "updated"
-ATTR_REMOVED = "removed"
-
-DEFAULT_UNIT_OF_MEASUREMENT = "volcanos"
+ATTR_LAST_UPDATE = "feed_last_update"
+ATTR_LAST_UPDATE_SUCCESSFUL = "feed_last_update_successful"
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the GeoNet NZ Volcano Feed platform."""
     manager = hass.data[DOMAIN][FEED][entry.entry_id]
-    sensor = GeonetnzVolcanoSensor(entry.entry_id, entry.title, manager)
-    async_add_entities([sensor])
+
+    @callback
+    def async_add_sensor(feed_manager, external_id, unit_system):
+        """Add sensor entity from feed."""
+        new_entity = GeonetnzVolcanoSensor(
+            entry.entry_id, feed_manager, external_id, unit_system
+        )
+        _LOGGER.debug("Adding sensor %s", new_entity)
+        async_add_entities([new_entity], True)
+
+    manager.listeners.append(
+        async_dispatcher_connect(
+            hass, manager.async_event_new_entity(), async_add_sensor
+        )
+    )
+    hass.async_create_task(manager.async_update())
     _LOGGER.debug("Sensor setup done")
 
 
 class GeonetnzVolcanoSensor(Entity):
-    """This is a status sensor for the GeoNet NZ Volcano integration."""
+    """This represents an external event with GeoNet NZ Volcano feed data."""
 
-    def __init__(self, config_entry_id, config_title, manager):
-        """Initialize entity."""
+    def __init__(self, config_entry_id, feed_manager, external_id, unit_system):
+        """Initialize entity with data from feed entry."""
         self._config_entry_id = config_entry_id
-        self._config_title = config_title
-        self._manager = manager
-        self._status = None
-        self._last_update = None
-        self._last_update_successful = None
-        self._total = None
-        self._created = None
-        self._updated = None
-        self._removed = None
-        self._remove_signal_status = None
+        self._feed_manager = feed_manager
+        self._external_id = external_id
+        self._unit_system = unit_system
+        self._title = None
+        self._distance = None
+        self._latitude = None
+        self._longitude = None
+        self._attribution = None
+        self._alert_level = None
+        self._activity = None
+        self._hazards = None
+        self._feed_last_update = None
+        self._feed_last_update_successful = None
+        self._remove_signal_delete = None
+        self._remove_signal_update = None
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self._remove_signal_status = async_dispatcher_connect(
+        self._remove_signal_delete = async_dispatcher_connect(
             self.hass,
-            SIGNAL_STATUS.format(self._config_entry_id),
-            self._update_status_callback,
+            SIGNAL_DELETE_ENTITY.format(self._external_id),
+            self._delete_callback,
         )
-        _LOGGER.debug("Waiting for updates %s", self._config_entry_id)
-        # First update is manual because of how the feed entity manager is updated.
-        await self.async_update()
+        self._remove_signal_update = async_dispatcher_connect(
+            self.hass,
+            SIGNAL_UPDATE_ENTITY.format(self._external_id),
+            self._update_callback,
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed from hass."""
-        if self._remove_signal_status:
-            self._remove_signal_status()
+        if self._remove_signal_delete:
+            self._remove_signal_delete()
+        if self._remove_signal_update:
+            self._remove_signal_update()
 
     @callback
-    def _update_status_callback(self):
-        """Call status update method."""
-        _LOGGER.debug("Received status update for %s", self._config_entry_id)
+    def _delete_callback(self):
+        """Remove this entity."""
+        self.hass.async_create_task(self.async_remove())
+
+    @callback
+    def _update_callback(self):
+        """Call update method."""
         self.async_schedule_update_ha_state(True)
 
     @property
     def should_poll(self):
-        """No polling needed for GeoNet NZ Volcano status sensor."""
+        """No polling needed for GeoNet NZ Volcano feed location events."""
         return False
 
     async def async_update(self):
         """Update this entity from the data held in the feed manager."""
-        _LOGGER.debug("Updating %s", self._config_entry_id)
-        if self._manager:
-            status_info = self._manager.status_info()
-            if status_info:
-                self._update_from_status_info(status_info)
+        _LOGGER.debug("Updating %s", self._external_id)
+        feed_entry = self._feed_manager.get_entry(self._external_id)
+        last_update = self._feed_manager.last_update()
+        last_update_successful = self._feed_manager.last_update_successful()
+        if feed_entry:
+            self._update_from_feed(feed_entry, last_update, last_update_successful)
 
-    def _update_from_status_info(self, status_info):
-        """Update the internal state from the provided information."""
-        self._status = status_info.status
-        self._last_update = (
-            dt.as_utc(status_info.last_update) if status_info.last_update else None
+    def _update_from_feed(self, feed_entry, last_update, last_update_successful):
+        """Update the internal state from the provided feed entry."""
+        self._title = feed_entry.title
+        # Convert distance if not metric system.
+        if self._unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+            self._distance = round(
+                IMPERIAL_SYSTEM.length(feed_entry.distance_to_home, LENGTH_KILOMETERS),
+                1,
+            )
+        else:
+            self._distance = round(feed_entry.distance_to_home, 1)
+        self._latitude = round(feed_entry.coordinates[0], 5)
+        self._longitude = round(feed_entry.coordinates[1], 5)
+        self._attribution = feed_entry.attribution
+        self._alert_level = feed_entry.alert_level
+        self._activity = feed_entry.activity
+        self._hazards = feed_entry.hazards
+        self._feed_last_update = dt.as_utc(last_update) if last_update else None
+        self._feed_last_update_successful = (
+            dt.as_utc(last_update_successful) if last_update_successful else None
         )
-        self._last_update_successful = (
-            dt.as_utc(status_info.last_update_successful)
-            if status_info.last_update_successful
-            else None
-        )
-        self._total = status_info.total
-        self._created = status_info.created
-        self._updated = status_info.updated
-        self._removed = status_info.removed
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._total
-
-    @property
-    def name(self) -> Optional[str]:
-        """Return the name of the entity."""
-        return f"GeoNet NZ Volcano ({self._config_title})"
+        return self._alert_level
 
     @property
     def icon(self):
@@ -113,21 +154,29 @@ class GeonetnzVolcanoSensor(Entity):
         return DEFAULT_ICON
 
     @property
+    def name(self) -> Optional[str]:
+        """Return the name of the entity."""
+        return f"Volcano {self._title}"
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return DEFAULT_UNIT_OF_MEASUREMENT
+        return "alert level"
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         attributes = {}
         for key, value in (
-            (ATTR_STATUS, self._status),
-            (ATTR_LAST_UPDATE, self._last_update),
-            (ATTR_LAST_UPDATE_SUCCESSFUL, self._last_update_successful),
-            (ATTR_CREATED, self._created),
-            (ATTR_UPDATED, self._updated),
-            (ATTR_REMOVED, self._removed),
+            (ATTR_EXTERNAL_ID, self._external_id),
+            (ATTR_ATTRIBUTION, self._attribution),
+            (ATTR_ACTIVITY, self._activity),
+            (ATTR_HAZARDS, self._hazards),
+            (ATTR_LONGITUDE, self._longitude),
+            (ATTR_LATITUDE, self._latitude),
+            (ATTR_DISTANCE, self._distance),
+            (ATTR_LAST_UPDATE, self._feed_last_update),
+            (ATTR_LAST_UPDATE_SUCCESSFUL, self._feed_last_update_successful),
         ):
             if value or isinstance(value, bool):
                 attributes[key] = value
