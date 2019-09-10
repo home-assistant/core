@@ -9,7 +9,7 @@ import logging
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import AttributeListeningChannel
+from . import AttributeListeningChannel, ZigbeeChannel
 from .. import registries
 from ..const import (
     REPORT_CONFIG_ASAP,
@@ -32,6 +32,14 @@ class SmartThingsHumidity(AttributeListeningChannel):
             "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
         }
     ]
+
+
+@registries.CHANNEL_ONLY_CLUSTERS.register(0xFD00)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(0xFD00)
+class OsramButton(ZigbeeChannel):
+    """Osram button channel."""
+
+    REPORT_CONFIG = []
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
