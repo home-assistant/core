@@ -5,12 +5,12 @@
             "init": {
                 "title": "ecobee API key",
                 "description": "Please enter the API key obtained from ecobee.com.",
-                "data": {"api_key": "API Key"},
+                "data": {"api_key": "API Key"}
             },
             "authorize": {
                 "title": "Authorize app on ecobee.com",
                 "description": "Please authorize this app at https://www.ecobee.com/consumerportal/index.html with pin code:\n\n{pin}\n\nThen, press Submit.",
-            },
+            }
         },
         "error": {
             "pin_request_failed": "Error requesting PIN from ecobee; please verify API key is correct.",
@@ -20,7 +20,7 @@
             "credentials_not_found": "No valid credentials found in ecobee.conf; please re-start configuration.",
             "one_instance_only": "This integration currently supports only one ecobee instance.",
             "refresh_token_expired": "Your refresh token has expired; please re-start configuration.",
-        },
+        }
     },
     "options": {
         "step": {
@@ -28,8 +28,8 @@
                 "description": "ecobee Options",
                 "data": {
                     "hold_temp": "Hold changes indefinitely (checked) or until the next scheduled event (unchecked)."
-                },
+                }
             }
         }
-    },
+    }
 }

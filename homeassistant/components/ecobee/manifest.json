@@ -3,7 +3,5 @@
     "name": "Ecobee",
     "config_flow": true,
     "documentation": "https://www.home-assistant.io/components/ecobee",
-    "requirements": ["python-ecobee-api==0.0.21"],
-    "dependencies": [],
-    "codeowners": [],
+    "requirements": ["python-ecobee-api==0.0.21"]
 }
