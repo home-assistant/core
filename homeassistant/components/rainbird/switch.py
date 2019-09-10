@@ -2,13 +2,12 @@
 
 import logging
 
-from pyrainbird import AvailableStations, RainbirdController
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import ATTR_ENTITY_ID, CONF_FRIENDLY_NAME, CONF_TRIGGER_TIME
 from homeassistant.helpers import config_validation as cv
-
+from pyrainbird import AvailableStations, RainbirdController
 from . import DATA_RAINBIRD, DOMAIN, RAINBIRD_CONTROLLER
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,10 +39,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devices = []
     for i in range(1, available_stations.stations.count + 1):
         if available_stations.stations.active(i):
-            time = discovery_info.get("zones", {}).get(
+            zone_config = discovery_info.get("zones", {}).get(i, {})
+            time = zone_config.get(
                 CONF_TRIGGER_TIME, discovery_info.get(CONF_TRIGGER_TIME, 0)
             )
-            name = discovery_info.get("zones", {}).get(CONF_FRIENDLY_NAME)
+            name = zone_config.get(CONF_FRIENDLY_NAME)
             if time:
                 devices.append(RainBirdSwitch(controller, i, time, name))
             else:
