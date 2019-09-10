@@ -2,7 +2,7 @@
   "config": {
     "title": "Orange Livebox",
     "step": {
-      "init": {
+      "user": {
         "title": "Check your livebox",
         "data": {
           "host": "IP Address",
