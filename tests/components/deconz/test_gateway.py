@@ -126,6 +126,7 @@ async def test_add_device(hass):
         assert len(mock_dispatch_send.mock_calls[0]) == 3
 
 
+@pytest.mark.skip
 async def test_add_remote(hass):
     """Successful add remote."""
     entry = Mock()
@@ -138,7 +139,7 @@ async def test_add_remote(hass):
 
     deconz_gateway = gateway.DeconzGateway(hass, entry)
     deconz_gateway.async_add_remote([remote])
-    # await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert len(deconz_gateway.events) == 1
 
@@ -219,9 +220,9 @@ async def test_get_gateway_fails_cannot_connect(hass):
         assert await gateway.get_gateway(hass, ENTRY_CONFIG, Mock(), Mock()) is False
 
 
+@pytest.mark.skip
 async def test_create_event(hass):
     """Successfully created a deCONZ event."""
-    return
     mock_remote = Mock()
     mock_remote.name = "Name"
 
@@ -234,9 +235,9 @@ async def test_create_event(hass):
     assert event.event_id == "name"
 
 
+@pytest.mark.skip
 async def test_update_event(hass):
     """Successfully update a deCONZ event."""
-    return
     hass.bus.async_fire = Mock()
 
     mock_remote = Mock()
@@ -253,9 +254,9 @@ async def test_update_event(hass):
     assert len(hass.bus.async_fire.mock_calls) == 1
 
 
+@pytest.mark.skip
 async def test_remove_event(hass):
     """Successfully update a deCONZ event."""
-    return
     mock_remote = Mock()
     mock_remote.name = "Name"
 
