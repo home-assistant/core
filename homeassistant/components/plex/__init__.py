@@ -6,7 +6,6 @@ import requests.exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.discovery import SERVICE_PLEX
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -17,7 +16,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
 from homeassistant.util.json import load_json
 
 from .const import (
@@ -66,20 +64,6 @@ _LOGGER = logging.getLogger(__package__)
 def setup(hass, config):
     """Set up the Plex component."""
 
-    def server_discovered(service, info):
-        """Pass discovered Plex server details to a config flow."""
-        if hass.config_entries.async_entries(PLEX_DOMAIN):
-            _LOGGER.debug("Plex server already configured, ignoring discovery.")
-            return
-        _LOGGER.debug("Discovered Plex server: %s:%s", info["host"], info["port"])
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                PLEX_DOMAIN,
-                context={"source": config_entries.SOURCE_DISCOVERY},
-                data=info,
-            )
-        )
-
     def setup_plex(config):
         """Pass configuration to a config flow."""
         json_file = hass.config.path(PLEX_CONFIG_FILE)
@@ -107,8 +91,6 @@ def setup(hass, config):
                 }
             else:
                 _LOGGER.info("Legacy config file can be removed: %s", json_file)
-        else:
-            discovery.listen(hass, SERVICE_PLEX, server_discovered)
 
         if server_config:
             hass.async_create_task(
