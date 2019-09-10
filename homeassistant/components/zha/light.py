@@ -91,7 +91,7 @@ class Light(ZhaEntity, light.Light):
         self._color_temp = None
         self._hs_color = None
         self._brightness = None
-        self._effect_list = [ ]
+        self._effect_list = []
         self._effect = None
         self._on_off_channel = self.cluster_channels.get(CHANNEL_ON_OFF)
         self._level_channel = self.cluster_channels.get(CHANNEL_LEVEL)
@@ -155,7 +155,7 @@ class Light(ZhaEntity, light.Light):
 
     @property
     def effect_list(self):
-        """Return the list of supported effects"""
+        """Return the list of supported effects."""
         return self._effect_list
 
     @property
@@ -195,7 +195,7 @@ class Light(ZhaEntity, light.Light):
             self._color_temp = last_state.attributes["color_temp"]
         if "hs_color" in last_state.attributes:
             self._hs_color = last_state.attributes["hs_color"]
-        if "effect" in last_state_attributes:
+        if "effect" in last_state.attributes:
             self._effect = last_state.attributes["effect"]
 
     async def async_turn_on(self, **kwargs):
@@ -266,23 +266,23 @@ class Light(ZhaEntity, light.Light):
                 transition = kwargs.get(light.ATTR_TRANSITION)
                 result = await self._color_channel.color_loop_set(
                     UPDATE_COLORLOOP_ACTION | UPDATE_COLORLOOP_DIRECTION | UPDATE_COLORLOOP_TIME,
-                    0x2, # start from current hue
-                    0x1, # only support up
-                    transition if transition else 7, # transition
-                    0 # no hue
+                    0x2,  # start from current hue
+                    0x1,  # only support up
+                    transition if transition else 7,  # transition
+                    0  # no hue
                 )
                 t_log["color_loop_set"] = result
                 self._effect = "colorloop"
             elif self._effect == "colorloop":
                 result = await self._color_channel.color_loop_set(
-                    0x1, 0x0, 0x0, 0x0, 0x0 # update action only, action off, no dir,time,hue
+                    0x1, 0x0, 0x0, 0x0, 0x0  # update action only, action off, no dir,time,hue
                 )
                 t_log["color_loop_set"] = result
                 self._effect = None
         else:
             if self.supported_features & light.SUPPORT_EFFECT and self._effect == "colorloop":
                 result = await self._color_channel.color_loop_set(
-                    0x1, 0x0, 0x0, 0x0, 0x0 # update action only, action off, no dir,time,hue
+                    0x1, 0x0, 0x0, 0x0, 0x0  # update action only, action off, no dir,time,hue
                 )
                 t_log["color_loop_set"] = result
                 self._effect = None
