@@ -7,7 +7,12 @@ import voluptuous as vol
 from pyobihai import PyObihai
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    DEVICE_CLASS_TIMESTAMP,
+)
 
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
@@ -81,7 +86,7 @@ class ObihaiServiceSensors(Entity):
     def device_class(self):
         """Return the device class for uptime sensor."""
         if self._service_name == "Last Reboot":
-            return "timestamp"
+            return DEVICE_CLASS_TIMESTAMP
         return None
 
     def update(self):
