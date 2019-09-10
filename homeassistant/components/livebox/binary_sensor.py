@@ -12,7 +12,8 @@ from .const import TEMPLATE_SENSOR
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer binary sensor setup to the shared sensor module."""
     box = hass.data[DOMAIN]
-    async_add_entities([InfoSensor(box, config_entry)], True)
+    id = config_entry.data["box_id"]
+    async_add_entities([InfoSensor(box, id)], True)
 
 
 class InfoSensor(BinarySensorDevice):
@@ -20,11 +21,11 @@ class InfoSensor(BinarySensorDevice):
 
     device_class = DEVICE_CLASS_CONNECTIVITY
 
-    def __init__(self, box, config_entry):
+    def __init__(self, box, id):
         """Initialize the sensor."""
 
         self._box = box
-        self._box_id = config_entry.data["box_id"]
+        self._box_id = id
         self._state = None
         self._datas = None
         self._dsl = None

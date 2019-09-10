@@ -13,17 +13,18 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the sensors."""
     box = hass.data[DOMAIN]
-    async_add_entities([RXSensor(box, config_entry), TXSensor(box, config_entry)], True)
+    id = config_entry.data["box_id"]
+    async_add_entities([RXSensor(box, id), TXSensor(box, id)], True)
 
 
 class LiveboxSensor(Entity):
     """Representation of a livebox sensor."""
 
-    def __init__(self, box, config_entry):
+    def __init__(self, box, id):
         """Initialize the sensor."""
 
         self._box = box
-        self._box_id = config_entry.data["box_id"]
+        self._box_id = id
         self._state = None
         self._datas = None
         self._dsl = None
