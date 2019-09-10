@@ -145,6 +145,9 @@ async def async_setup_entry(hass, entry):
         )
         return False
 
+    _LOGGER.debug(
+        "Connected to: %s (%s)", plex_server.friendly_name, plex_server.url_in_use
+    )
     hass.data[PLEX_DOMAIN][SERVERS][plex_server.machine_identifier] = plex_server
 
     if not hass.data.get(PLEX_MEDIA_PLAYER_OPTIONS):

@@ -1,6 +1,4 @@
 """Shared class to maintain Plex server instances."""
-import logging
-
 import plexapi.myplex
 import plexapi.server
 from requests import Session
@@ -9,8 +7,6 @@ from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 
 from .const import CONF_SERVER, DEFAULT_VERIFY_SSL
 from .errors import NoServersFound, ServerNotSpecified
-
-_LOGGER = logging.getLogger(__package__)
 
 
 class PlexServer:
@@ -54,7 +50,6 @@ class PlexServer:
             self._plex_server = plexapi.server.PlexServer(
                 self._url, self._token, session
             )
-            _LOGGER.debug("Connected to: %s (%s)", self.friendly_name, self.url_in_use)
 
         if self._token and not self._url:
             _set_missing_url()

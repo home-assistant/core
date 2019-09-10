@@ -104,6 +104,8 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL
                 )
 
+            _LOGGER.debug("Valid config created for %s", plex_server.friendly_name)
+
             return self.async_create_entry(
                 title=plex_server.friendly_name,
                 data={
