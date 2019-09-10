@@ -12,15 +12,10 @@ from homeassistant.util import Throttle
 from homeassistant.util.json import save_json
 
 from . import config_flow  # noqa  pylint_disable=unused-import
+from .const import CONF_HOLD_TEMP, DOMAIN, ECOBEE_CONFIG_FILE
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
-
-CONF_HOLD_TEMP = "hold_temp"
-
-DOMAIN = "ecobee"
-
-ECOBEE_CONFIG_FILE = "ecobee.conf"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
 

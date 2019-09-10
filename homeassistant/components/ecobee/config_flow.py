@@ -6,7 +6,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
 
-from . import CONF_HOLD_TEMP, DOMAIN, ECOBEE_CONFIG_FILE
+from .const import CONF_HOLD_TEMP, DOMAIN, ECOBEE_CONFIG_FILE
 
 
 @config_entries.HANDLERS.register(DOMAIN)
