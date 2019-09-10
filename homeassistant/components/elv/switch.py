@@ -1,11 +1,11 @@
 """Support for PCA 301 smart switch."""
 import logging
 
-from homeassistant.components.switch import SwitchDevice, ATTR_CURRENT_POWER_W
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-
 import pypca
 from serial import SerialException
+
+from homeassistant.components.switch import SwitchDevice, ATTR_CURRENT_POWER_W
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 _LOGGER = logging.getLogger(__name__)
 
