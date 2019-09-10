@@ -11,6 +11,8 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.util import Throttle
 from homeassistant.util.json import save_json
 
+from . import config_flow  # noqa  pylint_disable=unused-import
+
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
