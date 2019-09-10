@@ -146,7 +146,7 @@ class NukiLock(LockDevice):
             self._available = False
             return
 
-        self._available = self._nuki_lock.state != 255
+        self._available = True
         self._name = self._nuki_lock.name
         self._locked = self._nuki_lock.is_locked
         self._battery_critical = self._nuki_lock.battery_critical
