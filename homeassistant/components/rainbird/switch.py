@@ -38,20 +38,27 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if not (available_stations and available_stations.stations):
         return
     devices = []
-    for i in range(1, available_stations.stations.count + 1):
-        if available_stations.stations.active(i):
-            zone_config = discovery_info.get("zones", {}).get(i, {})
+    for zone in range(1, available_stations.stations.count + 1):
+        if available_stations.stations.active(zone):
+            zone_config = discovery_info.get("zones", {}).get(zone, {})
             time = zone_config.get(
                 CONF_TRIGGER_TIME, discovery_info.get(CONF_TRIGGER_TIME, 0)
             )
             name = zone_config.get(CONF_FRIENDLY_NAME)
             if time:
-                devices.append(RainBirdSwitch(controller, i, time, name))
+                devices.append(
+                    RainBirdSwitch(
+                        controller,
+                        zone,
+                        time,
+                        name if name else "Sprinkler {}".format(zone),
+                    )
+                )
             else:
                 logging.warning(
                     "No delay configured for zone {0:d}, controller {1:s}. "
                     "Not adding sprinklers for zone {0:d}.".format(
-                        i, discovery_info[RAINBIRD_CONTROLLER]
+                        zone, discovery_info[RAINBIRD_CONTROLLER]
                     )
                 )
 
@@ -78,9 +85,9 @@ class RainBirdSwitch(SwitchDevice):
 
     def __init__(self, controller: RainbirdController, zone, time, name):
         """Initialize a Rain Bird Switch Device."""
-        self._rainbird = rb
-        self._zone = int(dev.get(CONF_ZONE))
-        self._name = dev.get(CONF_FRIENDLY_NAME, f"Sprinkler {self._zone}")
+        self._rainbird = controller
+        self._zone = zone
+        self._name = name
         self._state = None
         self._duration = time
         self._attributes = {ATTR_DURATION: self._duration, "zone": self._zone}
