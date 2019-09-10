@@ -8,6 +8,7 @@ from pychromecast.socket_client import (
     CONNECTION_STATUS_CONNECTED,
     CONNECTION_STATUS_DISCONNECTED,
 )
+from pychromecast.controllers.multizone import MultizoneManager
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
@@ -178,9 +179,9 @@ async def _async_setup_platform(
     if info is None or info.is_audio_group:
         # If we were a) explicitly told to enable discovery or
         # b) have an audio group cast device, we need internal discovery.
-        hass.async_add_job(setup_internal_discovery, hass)
+        hass.async_add_executor_job(setup_internal_discovery, hass)
     else:
-        info = await hass.async_add_job(info.fill_out_missing_chromecast_info)
+        info = await hass.async_add_executor_job(info.fill_out_missing_chromecast_info)
         if info.friendly_name is None:
             _LOGGER.debug(
                 "Cannot retrieve detail information for chromecast"
@@ -188,7 +189,7 @@ async def _async_setup_platform(
                 info,
             )
 
-        hass.async_add_job(discover_chromecast, hass, info)
+        hass.async_add_executor_job(discover_chromecast, hass, info)
 
 
 class CastDevice(MediaPlayerDevice):
@@ -333,9 +334,8 @@ class CastDevice(MediaPlayerDevice):
         self._chromecast = chromecast
 
         if CAST_MULTIZONE_MANAGER_KEY not in self.hass.data:
-            from pychromecast.controllers.multizone import MultizoneManager
-
             self.hass.data[CAST_MULTIZONE_MANAGER_KEY] = MultizoneManager()
+
         self.mz_mgr = self.hass.data[CAST_MULTIZONE_MANAGER_KEY]
 
         self._status_listener = CastStatusListener(self, chromecast, self.mz_mgr)
@@ -388,9 +388,8 @@ class CastDevice(MediaPlayerDevice):
         self._dynamic_group_cast = chromecast
 
         if CAST_MULTIZONE_MANAGER_KEY not in self.hass.data:
-            from pychromecast.controllers.multizone import MultizoneManager
-
             self.hass.data[CAST_MULTIZONE_MANAGER_KEY] = MultizoneManager()
+
         mz_mgr = self.hass.data[CAST_MULTIZONE_MANAGER_KEY]
 
         self._dynamic_group_status_listener = DynamicGroupCastStatusListener(

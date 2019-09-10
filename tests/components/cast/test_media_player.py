@@ -30,6 +30,8 @@ def cast_mock():
         "homeassistant.components.cast.discovery.pychromecast", pycast_mock
     ), patch(
         "homeassistant.components.cast.helpers.dial", MagicMock()
+    ), patch(
+        "homeassistant.components.cast.media_player.MultizoneManager", MagicMock()
     ):
         yield
 
@@ -107,7 +109,8 @@ async def async_setup_media_player_cast(hass: HomeAssistantType, info: Chromecas
     cast.CastStatusListener = MagicMock()
 
     with patch(
-        "pychromecast._get_chromecast_from_host", return_value=chromecast
+        "homeassistant.components.cast.discovery.pychromecast._get_chromecast_from_host",
+        return_value=chromecast,
     ) as get_chromecast:
         await async_setup_component(
             hass,
@@ -453,8 +456,7 @@ async def test_group_media_control(hass: HomeAssistantType):
         chromecast, entity = await async_setup_media_player_cast(hass, info)
 
     entity._available = True
-    entity.schedule_update_ha_state()
-    await hass.async_block_till_done()
+    entity.async_write_ha_state()
 
     state = hass.states.get("media_player.speaker")
     assert state is not None
