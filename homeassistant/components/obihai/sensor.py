@@ -82,23 +82,18 @@ class ObihaiServiceSensors(Entity):
         """Return the device class for uptime sensor."""
         if self._service_name == "Last Reboot":
             return "timestamp"
+        return None
 
     def update(self):
         """Update the sensor."""
         services = self._pyobihai.get_state(self._host, self._username, self._password)
 
         if self._service_name in services:
-            if services[self._service_name] is None:
-                self._state = None
-            else:
-                self._state = services[self._service_name]
+            self._state = services.get(self._service_name)
 
         services = self._pyobihai.get_line_state(
             self._host, self._username, self._password
         )
 
         if self._service_name in services:
-            if services[self._service_name] is None:
-                self._state = None
-            else:
-                self._state = services[self._service_name]
+            self._state = services.get(self._service_name)
