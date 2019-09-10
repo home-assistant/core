@@ -24,7 +24,6 @@ from .const import (
     CONF_USE_EPISODE_ART,
     CONF_SHOW_ALL_CONTROLS,
     CONF_SERVER,
-    CONF_SERVER_IDENTIFIER,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
@@ -123,32 +122,30 @@ async def async_setup_entry(hass, entry):
     hass.data.setdefault(PLEX_DOMAIN, {SERVERS: {}})
 
     server_config = entry.data[PLEX_SERVER_CONFIG]
-    server_id = entry.data[CONF_SERVER_IDENTIFIER]
 
-    if server_id not in hass.data[PLEX_DOMAIN][SERVERS]:
-        plex_server = PlexServer(server_config)
-        try:
-            await hass.async_add_executor_job(plex_server.connect)
-        except requests.exceptions.ConnectionError as error:
-            _LOGGER.error(
-                "Plex server (%s) could not be reached: [%s]",
-                server_config[CONF_URL],
-                error,
-            )
-            return False
-        except (
-            plexapi.exceptions.BadRequest,
-            plexapi.exceptions.Unauthorized,
-            plexapi.exceptions.NotFound,
-        ) as error:
-            _LOGGER.error(
-                "Login to %s failed, verify token and SSL settings: [%s]",
-                server_config[CONF_SERVER],
-                error,
-            )
-            return False
+    plex_server = PlexServer(server_config)
+    try:
+        await hass.async_add_executor_job(plex_server.connect)
+    except requests.exceptions.ConnectionError as error:
+        _LOGGER.error(
+            "Plex server (%s) could not be reached: [%s]",
+            server_config[CONF_URL],
+            error,
+        )
+        return False
+    except (
+        plexapi.exceptions.BadRequest,
+        plexapi.exceptions.Unauthorized,
+        plexapi.exceptions.NotFound,
+    ) as error:
+        _LOGGER.error(
+            "Login to %s failed, verify token and SSL settings: [%s]",
+            server_config[CONF_SERVER],
+            error,
+        )
+        return False
 
-        hass.data[PLEX_DOMAIN][SERVERS][server_id] = plex_server
+    hass.data[PLEX_DOMAIN][SERVERS][plex_server.machine_identifier] = plex_server
 
     if not hass.data.get(PLEX_MEDIA_PLAYER_OPTIONS):
         hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = MEDIA_PLAYER_SCHEMA({})

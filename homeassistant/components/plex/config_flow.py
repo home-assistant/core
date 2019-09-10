@@ -23,7 +23,6 @@ from .const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     PLEX_SERVER_CONFIG,
-    SERVERS,
 )
 from .errors import NoServersFound, ServerNotSpecified
 from .server import PlexServer
@@ -75,11 +74,6 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="unknown")
             else:
                 server_id = plex_server.machine_identifier
-
-                # Allow shared server creation from imports...
-                self.hass.data[DOMAIN][SERVERS][server_id] = plex_server
-
-                # ...but do not create a new config entry if it already exists.
                 for entry in self._async_current_entries():
                     if entry.data[CONF_SERVER_IDENTIFIER] == server_id:
                         return self.async_abort(  # pylint: disable=lost-exception
