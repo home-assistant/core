@@ -172,9 +172,6 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         Legacy.
         """
-        if self._async_in_progress():
-            return self.async_abort(reason="already_in_progress")
-
         host_and_port, host_config = import_config.popitem()
         prefix = "https" if host_config[CONF_SSL] else "http"
         url = f"{prefix}://{host_and_port}"
@@ -190,9 +187,6 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config):
         """Import from Plex configuration."""
-        if self._async_in_progress():
-            return self.async_abort(reason="already_in_progress")
-
         host = import_config.get(CONF_HOST)
         port = import_config[CONF_PORT]
         token = import_config.get(CONF_TOKEN)
