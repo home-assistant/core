@@ -13,7 +13,7 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-BANDWIDTH_MEGABITS_SECONDS = "Mb/s"  # type: str
+BANDWIDTH_MEGABITS_SECONDS = "Mb/s"
 
 ATTRIBUTION = "Powered by Bouygues Telecom"
 

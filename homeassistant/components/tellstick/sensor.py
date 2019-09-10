@@ -5,7 +5,7 @@ from collections import namedtuple
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import TEMP_CELSIUS, CONF_ID, CONF_NAME
+from homeassistant.const import TEMP_CELSIUS, CONF_ID, CONF_NAME, CONF_PROTOCOL
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -16,6 +16,7 @@ DatatypeDescription = namedtuple("DatatypeDescription", ["name", "unit"])
 CONF_DATATYPE_MASK = "datatype_mask"
 CONF_ONLY_NAMED = "only_named"
 CONF_TEMPERATURE_SCALE = "temperature_scale"
+CONF_MODEL = "model"
 
 DEFAULT_DATATYPE_MASK = 127
 DEFAULT_TEMPERATURE_SCALE = TEMP_CELSIUS
@@ -35,6 +36,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                     {
                         vol.Required(CONF_ID): cv.positive_int,
                         vol.Required(CONF_NAME): cv.string,
+                        vol.Optional(CONF_PROTOCOL): cv.string,
+                        vol.Optional(CONF_MODEL): cv.string,
                     }
                 )
             ],
@@ -74,18 +77,36 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     datatype_mask = config.get(CONF_DATATYPE_MASK)
 
     if config[CONF_ONLY_NAMED]:
-        named_sensors = {
-            named_sensor[CONF_ID]: named_sensor[CONF_NAME]
-            for named_sensor in config[CONF_ONLY_NAMED]
-        }
+        named_sensors = {}
+        for named_sensor in config[CONF_ONLY_NAMED]:
+            name = named_sensor[CONF_NAME]
+            proto = named_sensor.get(CONF_PROTOCOL)
+            model = named_sensor.get(CONF_MODEL)
+            id_ = named_sensor[CONF_ID]
+            if proto is not None:
+                if model is not None:
+                    named_sensors["{}{}{}".format(proto, model, id_)] = name
+                else:
+                    named_sensors["{}{}".format(proto, id_)] = name
+            else:
+                named_sensors[id_] = name
 
     for tellcore_sensor in tellcore_lib.sensors():
         if not config[CONF_ONLY_NAMED]:
             sensor_name = str(tellcore_sensor.id)
         else:
-            if tellcore_sensor.id not in named_sensors:
+            proto_id = "{}{}".format(tellcore_sensor.protocol, tellcore_sensor.id)
+            proto_model_id = "{}{}{}".format(
+                tellcore_sensor.protocol, tellcore_sensor.model, tellcore_sensor.id
+            )
+            if tellcore_sensor.id in named_sensors:
+                sensor_name = named_sensors[tellcore_sensor.id]
+            elif proto_id in named_sensors:
+                sensor_name = named_sensors[proto_id]
+            elif proto_model_id in named_sensors:
+                sensor_name = named_sensors[proto_model_id]
+            else:
                 continue
-            sensor_name = named_sensors[tellcore_sensor.id]
 
         for datatype in sensor_value_descriptions:
             if datatype & datatype_mask and tellcore_sensor.has_value(datatype):

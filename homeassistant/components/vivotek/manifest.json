@@ -1,0 +1,10 @@
+{
+  "domain": "vivotek",
+  "name": "Vivotek",
+  "documentation": "https://www.home-assistant.io/components/vivotek",
+  "requirements": [
+    "libpyvivotek==0.2.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

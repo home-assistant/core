@@ -249,6 +249,7 @@ omit =
     homeassistant/components/greeneye_monitor/sensor.py
     homeassistant/components/greenwave/light.py
     homeassistant/components/group/notify.py
+    homeassistant/components/growatt_server/sensor.py
     homeassistant/components/gstreamer/media_player.py
     homeassistant/components/gtfs/sensor.py
     homeassistant/components/gtt/sensor.py
@@ -287,6 +288,9 @@ omit =
     homeassistant/components/hydrawise/*
     homeassistant/components/hyperion/light.py
     homeassistant/components/ialarm/alarm_control_panel.py
+    homeassistant/components/iaqualink/climate.py
+    homeassistant/components/iaqualink/light.py
+    homeassistant/components/iaqualink/sensor.py
     homeassistant/components/icloud/device_tracker.py
     homeassistant/components/idteck_prox/*
     homeassistant/components/ifttt/*
@@ -470,8 +474,7 @@ omit =
     homeassistant/components/pioneer/media_player.py
     homeassistant/components/pjlink/media_player.py
     homeassistant/components/plaato/*
-    homeassistant/components/plex/media_player.py
-    homeassistant/components/plex/sensor.py
+    homeassistant/components/plex/*
     homeassistant/components/plugwise/*
     homeassistant/components/plum_lightpad/*
     homeassistant/components/pocketcasts/sensor.py
@@ -576,6 +579,7 @@ omit =
     homeassistant/components/snmp/*
     homeassistant/components/sochain/sensor.py
     homeassistant/components/socialblade/sensor.py
+    homeassistant/components/solaredge/__init__.py
     homeassistant/components/solaredge/sensor.py
     homeassistant/components/solaredge_local/sensor.py
     homeassistant/components/solax/sensor.py
@@ -693,6 +697,8 @@ omit =
     homeassistant/components/vesync/const.py
     homeassistant/components/vesync/switch.py
     homeassistant/components/viaggiatreno/sensor.py
+    homeassistant/components/vicare/*
+    homeassistant/components/vivotek/camera.py
     homeassistant/components/vizio/media_player.py
     homeassistant/components/vlc/media_player.py
     homeassistant/components/vlc_telnet/media_player.py

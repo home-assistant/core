@@ -63,12 +63,14 @@ async def async_setup(hass, config):
     device_tracker = hass.components.device_tracker
     group = hass.components.group
     light = hass.components.light
+    person = hass.components.person
     conf = config[DOMAIN]
     disable_turn_off = conf.get(CONF_DISABLE_TURN_OFF)
     light_group = conf.get(CONF_LIGHT_GROUP, light.ENTITY_ID_ALL_LIGHTS)
     light_profile = conf.get(CONF_LIGHT_PROFILE)
     device_group = conf.get(CONF_DEVICE_GROUP, device_tracker.ENTITY_ID_ALL_DEVICES)
     device_entity_ids = group.get_entity_ids(device_group, device_tracker.DOMAIN)
+    device_entity_ids.extend(group.get_entity_ids(device_group, person.DOMAIN))
 
     if not device_entity_ids:
         logger.error("No devices found to track")

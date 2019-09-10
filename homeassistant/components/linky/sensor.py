@@ -18,6 +18,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(hours=4)
@@ -27,17 +29,6 @@ TIME = "time"
 INDEX_CURRENT = -1
 INDEX_LAST = -2
 ATTRIBUTION = "Data provided by Enedis"
-
-SENSORS = {
-    "yesterday": ("Linky yesterday", DAILY, INDEX_LAST),
-    "current_month": ("Linky current month", MONTHLY, INDEX_CURRENT),
-    "last_month": ("Linky last month", MONTHLY, INDEX_LAST),
-    "current_year": ("Linky current year", YEARLY, INDEX_CURRENT),
-    "last_year": ("Linky last year", YEARLY, INDEX_LAST),
-}
-SENSORS_INDEX_LABEL = 0
-SENSORS_INDEX_SCALE = 1
-SENSORS_INDEX_WHEN = 2
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -114,6 +105,12 @@ class LinkySensor(Entity):
         self._username = account.username
         self._time = None
         self._consumption = None
+        self._unique_id = f"{self._username}_{scale}_{when}"
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def name(self):
@@ -142,6 +139,15 @@ class LinkySensor(Entity):
             ATTR_ATTRIBUTION: ATTRIBUTION,
             "time": self._time,
             CONF_USERNAME: self._username,
+        }
+
+    @property
+    def device_info(self):
+        """Return device information."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "Enedis",
         }
 
     async def async_update(self) -> None:
