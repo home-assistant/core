@@ -119,8 +119,6 @@ def setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up Plex from a config entry."""
-    hass.data.setdefault(PLEX_DOMAIN, {SERVERS: {}})
-
     server_config = entry.data[PLEX_SERVER_CONFIG]
 
     plex_server = PlexServer(server_config)
