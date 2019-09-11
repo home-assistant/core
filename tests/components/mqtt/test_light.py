@@ -365,6 +365,53 @@ async def test_brightness_controlling_scale(hass, mqtt_mock):
     assert light_state.attributes["brightness"] == 255
 
 
+async def test_brightness_min_controlling_scale(hass, mqtt_mock):
+    """Test the brightness controlling scale."""
+    with assert_setup_component(1, light.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            light.DOMAIN,
+            {
+                light.DOMAIN: {
+                    "platform": "mqtt",
+                    "name": "test",
+                    "state_topic": "test_scale/status",
+                    "command_topic": "test_scale/set",
+                    "brightness_state_topic": "test_scale/brightness/status",
+                    "brightness_command_topic": "test_scale/brightness/set",
+                    "brightness_scale": "99",
+                    "brightness_scale_min": "50",
+                    "qos": 0,
+                    "payload_on": "on",
+                    "payload_off": "off",
+                }
+            },
+        )
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get("brightness") is None
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(hass, "test_scale/status", "on")
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("brightness") == 255
+
+    async_fire_mqtt_message(hass, "test_scale/status", "off")
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+
+    async_fire_mqtt_message(hass, "test_scale/status", "on")
+
+    async_fire_mqtt_message(hass, "test_scale/brightness/status", "50")
+
+    light_state = hass.states.get("light.test")
+    assert light_state.attributes["brightness"] == 0
+
+
 async def test_brightness_from_rgb_controlling_scale(hass, mqtt_mock):
     """Test the brightness controlling scale."""
     with assert_setup_component(1, light.DOMAIN):

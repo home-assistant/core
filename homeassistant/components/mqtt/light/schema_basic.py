@@ -110,7 +110,7 @@ PLATFORM_SCHEMA_BASIC = (
             ): vol.All(vol.Coerce(int), vol.Range(min=1)),
             vol.Optional(
                 CONF_BRIGHTNESS_SCALE_MIN, default=DEFAULT_BRIGHTNESS_SCALE_MIN
-            ): vol.All(vol.Coerce(int), vol.Range(min=1)),
+            ): vol.All(vol.Coerce(int)),
             vol.Optional(CONF_BRIGHTNESS_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_BRIGHTNESS_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_COLOR_TEMP_COMMAND_TEMPLATE): cv.template,
@@ -154,13 +154,14 @@ PLATFORM_SCHEMA_BASIC = (
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
-def mapToNewRange(x,in_min,in_max,out_min,out_max):
-    x = float(x)
+def map_to_new_range(input_value,in_min,in_max,out_min,out_max):
+    """Map input value from the input rage to the output range"""
+    input_value = float(input_value)
     in_min = float(in_min)
     in_max = float(in_max)
     out_min = float(out_min)
     out_max = float(out_max)
-    return ((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
+    return ((input_value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
 
 async def async_setup_entity_basic(
     config, async_add_entities, config_entry, discovery_hash=None
@@ -341,7 +342,7 @@ class MqttLight(
                 return
 
             device_value = float(payload)
-            percent_bright = mapToNewRange(device_value, self._config[CONF_BRIGHTNESS_SCALE_MIN],self._config[CONF_BRIGHTNESS_SCALE], 0, 1)
+            percent_bright = map_to_new_range(device_value, self._config[CONF_BRIGHTNESS_SCALE_MIN],self._config[CONF_BRIGHTNESS_SCALE], 0, 1)
             self._brightness = percent_bright * 255
             self.async_write_ha_state()
 
@@ -743,7 +744,7 @@ class MqttLight(
             percent_bright = float(kwargs[ATTR_BRIGHTNESS]) / 255
             brightness_scale = self._config[CONF_BRIGHTNESS_SCALE]
             brightness_scale_min = self._config[CONF_BRIGHTNESS_SCALE_MIN]
-            device_brightness = mapToNewRange(percent_bright, 0,1,brightness_scale_min, brightness_scale)
+            device_brightness = map_to_new_range(percent_bright, 0,1,brightness_scale_min, brightness_scale)
             mqtt.async_publish(
                 self.hass,
                 self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC],
