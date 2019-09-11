@@ -249,6 +249,7 @@ omit =
     homeassistant/components/greeneye_monitor/sensor.py
     homeassistant/components/greenwave/light.py
     homeassistant/components/group/notify.py
+    homeassistant/components/growatt_server/sensor.py
     homeassistant/components/gstreamer/media_player.py
     homeassistant/components/gtfs/sensor.py
     homeassistant/components/gtt/sensor.py
@@ -288,6 +289,9 @@ omit =
     homeassistant/components/hyperion/light.py
     homeassistant/components/ialarm/alarm_control_panel.py
     homeassistant/components/iaqualink/climate.py
+    homeassistant/components/iaqualink/light.py
+    homeassistant/components/iaqualink/sensor.py
+    homeassistant/components/iaqualink/switch.py
     homeassistant/components/icloud/device_tracker.py
     homeassistant/components/idteck_prox/*
     homeassistant/components/ifttt/*
@@ -431,6 +435,7 @@ omit =
     homeassistant/components/nut/sensor.py
     homeassistant/components/nx584/alarm_control_panel.py
     homeassistant/components/nzbget/sensor.py
+    homeassistant/components/obihai/*
     homeassistant/components/octoprint/*
     homeassistant/components/oem/climate.py
     homeassistant/components/oasa_telematics/sensor.py
@@ -576,6 +581,7 @@ omit =
     homeassistant/components/snmp/*
     homeassistant/components/sochain/sensor.py
     homeassistant/components/socialblade/sensor.py
+    homeassistant/components/solaredge/__init__.py
     homeassistant/components/solaredge/sensor.py
     homeassistant/components/solaredge_local/sensor.py
     homeassistant/components/solax/sensor.py
@@ -671,6 +677,7 @@ omit =
     homeassistant/components/ue_smart_radio/media_player.py
     homeassistant/components/upcloud/*
     homeassistant/components/upnp/*
+    homeassistant/components/upc_connect/*
     homeassistant/components/ups/sensor.py
     homeassistant/components/uptimerobot/binary_sensor.py
     homeassistant/components/uscis/sensor.py
@@ -694,6 +701,7 @@ omit =
     homeassistant/components/vesync/switch.py
     homeassistant/components/viaggiatreno/sensor.py
     homeassistant/components/vicare/*
+    homeassistant/components/vivotek/camera.py
     homeassistant/components/vizio/media_player.py
     homeassistant/components/vlc/media_player.py
     homeassistant/components/vlc_telnet/media_player.py
