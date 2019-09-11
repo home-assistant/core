@@ -40,7 +40,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the Neato component."""
-    from pybotvac import Account, Neato, Vorwerk
 
     conf = config.get(DOMAIN, CONFIG_SCHEMA({}))
     hass.data[DOMAIN] = {"config": conf}
@@ -50,6 +49,7 @@ def setup(hass, config):
         return True
 
     # TODO: If everything is okay
+    # TODO: Skip if already configured
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
@@ -58,10 +58,17 @@ def setup(hass, config):
         )
     )
 
-    if config[DOMAIN][CONF_VENDOR] == "neato":
-        hass.data[NEATO_LOGIN] = NeatoHub(hass, config[DOMAIN], Account, Neato)
-    elif config[DOMAIN][CONF_VENDOR] == "vorwerk":
-        hass.data[NEATO_LOGIN] = NeatoHub(hass, config[DOMAIN], Account, Vorwerk)
+    return True
+
+
+async def async_setup_entry(hass, entry):
+    """Set up config entry."""
+    from pybotvac import Account, Neato, Vorwerk
+
+    if entry.data[CONF_VENDOR] == "neato":
+        hass.data[NEATO_LOGIN] = NeatoHub(hass, entry.data, Account, Neato)
+    elif entry.data[CONF_VENDOR] == "vorwerk":
+        hass.data[NEATO_LOGIN] = NeatoHub(hass, entry.data, Account, Vorwerk)
 
     hub = hass.data[NEATO_LOGIN]
     if not hub.login():
@@ -70,15 +77,8 @@ def setup(hass, config):
 
     hub.update_robots()
     for component in ("camera", "vacuum", "switch"):
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+        discovery.load_platform(hass, component, DOMAIN, {}, entry.data)
 
-    return True
-
-
-async def async_setup_entry(hass, entry):
-    """Set up config entry."""
-    # TODO: What is in entry? How to create an NeatoHub with that?
-    hass.data[NEATO_LOGIN] = None
     return True
 
 
