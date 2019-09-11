@@ -32,6 +32,12 @@
                     "track_devices": "Tracciare i dispositivi di rete (dispositivi Ubiquiti)",
                     "track_wired_clients": "Includi i client di rete cablata"
                 }
+            },
+            "init": {
+                "data": {
+                    "one": "uno",
+                    "other": "altro"
+                }
             }
         }
     }
