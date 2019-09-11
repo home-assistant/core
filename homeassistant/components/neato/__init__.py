@@ -5,9 +5,9 @@ from urllib.error import HTTPError
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
+from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import discovery
+from homeassistant.helpers import discovery, config_validation as cv
 from homeassistant.util import Throttle
 
 from .const import (
@@ -42,12 +42,21 @@ def setup(hass, config):
     """Set up the Neato component."""
     from pybotvac import Account, Neato, Vorwerk
 
+    conf = config.get(DOMAIN, CONFIG_SCHEMA({}))
+    hass.data[DOMAIN] = {"config": conf}
+
     if DOMAIN not in config:
-        #    # No config entry there
+        # No config entry there
         return True
 
-    # Find corresponding configuration.yaml entry and its password.
-    # Create config entries for accounts listed in configuration.
+    # TODO: If everything is okay
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=config[DOMAIN],
+        )
+    )
 
     if config[DOMAIN][CONF_VENDOR] == "neato":
         hass.data[NEATO_LOGIN] = NeatoHub(hass, config[DOMAIN], Account, Neato)
@@ -67,13 +76,19 @@ def setup(hass, config):
 
 
 async def async_setup_entry(hass, entry):
-    """Set up a config entry."""
-    return await hass.data[DOMAIN].async_setup_entry(entry)
+    """Set up config entry."""
+    # TODO: What is in entry? How to create an NeatoHub with that?
+    hass.data[NEATO_LOGIN] = None
+    return True
 
 
 async def async_unload_entry(hass, entry):
-    """Unload a config entry."""
-    return await hass.data[DOMAIN].async_unload_entry(entry)
+    """Unload config entry."""
+    try:
+        hass.data.pop(NEATO_LOGIN)
+        return True
+    except KeyError:
+        return False
 
 
 class NeatoHub:

@@ -11,6 +11,7 @@ from .const import DOMAIN, CONF_VENDOR
 
 
 DOCS_URL = "https://www.home-assistant.io/components/neato"
+DEFAULT_VENDOR = "neato"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +32,7 @@ class NeatoConfigFlow(config_entries.ConfigFlow):
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         errors = {}
+        self._vendor = DEFAULT_VENDOR
 
         if user_input is not None:
             self._username = user_input["username"]
@@ -56,13 +58,10 @@ class NeatoConfigFlow(config_entries.ConfigFlow):
         data_schema[vol.Required(CONF_PASSWORD, default=self._password)] = str
         data_schema[vol.Optional(CONF_VENDOR, default=self._vendor)] = str
 
-        return self.async_create_entry(
-            title=self._username,
-            data={
-                CONF_USERNAME: self._username,
-                CONF_PASSWORD: self._password,
-                CONF_VENDOR: self._vendor,
-            },
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(data_schema),
+            errors=errors,
             description_placeholders={"docs_url": DOCS_URL},
         )
 
@@ -74,8 +73,8 @@ class NeatoConfigFlow(config_entries.ConfigFlow):
 
         error = self.try_login(username, password, vendor)
         if error is not None:
-            _LOGGER.error("Invalid credentials for %s", username)
-            return self.async_abort(reason="invalid_credentials")
+            _LOGGER.error("Invalid config")
+            return self.async_abort(reason="invalid_config")
         return self.async_create_entry(
             title=f"{username} (from configuration)",
             data={
@@ -92,13 +91,15 @@ class NeatoConfigFlow(config_entries.ConfigFlow):
         from pybotvac import Account, Neato, Vorwerk
 
         this_vendor = None
-        if vendor == "neato":
-            vendor = Neato()
-        elif vendor == "vorwerk":
-            vendor = Vorwerk()
+        if vendor == "vorwerk":
+            this_vendor = Vorwerk()
+        elif vendor == "neato":
+            this_vendor = Neato()
+        else:
+            # You have to set a valid vendor
+            return "invalid_vendor"
 
         try:
-            # vendor defaults to Neato()
             Account(username, password, this_vendor)
         except HTTPError:
             return "invalid_credentials"

@@ -14,6 +14,7 @@
         },
         "error": {
             "invalid_credentials": "Invalid credentials",
+            "invalid_vendor": "Invalid vendor",
             "unexpected": "Unexpected error communicating with Neato server"
         },
         "create_entry": {
