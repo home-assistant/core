@@ -1,0 +1,11 @@
+{
+    "domain": "virtual_thermostat",
+    "name": "Virtual thermostat",
+    "documentation": "https://www.home-assistant.io/components/virtual_thermostat",
+    "requirements": [],
+    "dependencies": [
+        "sensor",
+        "switch"
+    ],
+    "codeowners": []
+}
