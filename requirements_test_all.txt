@@ -279,7 +279,7 @@ pyMetno==0.4.6
 pyblackbird==0.5
 
 # homeassistant.components.cast
-pychromecast==4.0.0
+pychromecast==4.0.1
 
 # homeassistant.components.deconz
 pydeconz==62
