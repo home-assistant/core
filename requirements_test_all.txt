@@ -428,4 +428,4 @@ wakeonlan==1.1.6
 zeroconf==0.23.0
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.7.2
+zigpy-homeassistant==0.8.0
