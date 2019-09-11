@@ -2,7 +2,7 @@
   "domain": "nzbget",
   "name": "Nzbget",
   "documentation": "https://www.home-assistant.io/components/nzbget",
-  "requirements": [ "pynzbgetapi>=0.1.0"],
+  "requirements": [ "pynzbgetapi==0.1.0"],
   "dependencies": [],
   "codeowners": []
 }
