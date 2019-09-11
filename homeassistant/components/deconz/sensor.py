@@ -1,12 +1,7 @@
 """Support for deCONZ sensors."""
 from pydeconz.sensor import Consumption, Daylight, LightLevel, Power, Switch
 
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    ATTR_TEMPERATURE,
-    ATTR_VOLTAGE,
-    DEVICE_CLASS_BATTERY,
-)
+from homeassistant.const import ATTR_TEMPERATURE, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import slugify
@@ -24,13 +19,13 @@ ATTR_EVENT_ID = "event_id"
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up deCONZ platforms."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ sensors."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
+    batteries = []
     entity_handler = DeconzEntityHandler(gateway)
 
     @callback
@@ -51,16 +46,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         hass.async_create_task(event.async_update_device_registry())
                         gateway.events.append(event)
 
-                    if sensor.battery:
-                        entities.append(DeconzBattery(sensor, gateway))
-
                 else:
                     new_sensor = DeconzSensor(sensor, gateway)
                     entity_handler.add_entity(new_sensor)
                     entities.append(new_sensor)
 
             if sensor.battery:
-                entities.append(DeconzBattery(sensor, gateway))
+                battery = DeconzBattery(sensor, gateway)
+                if battery.unique_id not in batteries:
+                    batteries.append(battery.unique_id)
+                    entities.append(battery)
 
         async_add_entities(entities, True)
 
@@ -80,7 +75,7 @@ class DeconzSensor(DeconzDevice):
     def async_update_callback(self, force_update=False):
         """Update the sensor's state."""
         changed = set(self._device.changed_keys)
-        keys = {"battery", "on", "reachable", "state"}
+        keys = {"on", "reachable", "state"}
         if force_update or any(key in changed for key in keys):
             self.async_schedule_update_ha_state()
 
@@ -108,8 +103,6 @@ class DeconzSensor(DeconzDevice):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         attr = {}
-        if self._device.battery:
-            attr[ATTR_BATTERY_LEVEL] = self._device.battery
 
         if self._device.on is not None:
             attr[ATTR_ON] = self._device.on
@@ -140,10 +133,7 @@ class DeconzBattery(DeconzDevice):
         """Register dispatcher callback for update of battery state."""
         super().__init__(device, gateway)
 
-        self._battery_unique_id = f"{self._device.uniqueid}-battery"
-        if self._device.type in Switch.ZHATYPE:
-            self._battery_unique_id = self._device.uniqueid
-
+        self._battery_unique_id = f"{self.serial}-battery"
         self._name = f"{self._device.name} Battery Level"
         self._unit_of_measurement = "%"
 
