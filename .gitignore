@@ -64,6 +64,7 @@ nosetests.xml
 htmlcov/
 test-reports/
 test-results.xml
+test-output.xml
 
 # Translations
 *.mo
