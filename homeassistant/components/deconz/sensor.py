@@ -4,7 +4,6 @@ from pydeconz.sensor import Consumption, Daylight, LightLevel, Power, Switch
 from homeassistant.const import ATTR_TEMPERATURE, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.util import slugify
 
 from .const import ATTR_DARK, ATTR_ON, NEW_SENSOR
 from .deconz_device import DeconzDevice
@@ -168,6 +167,8 @@ class DeconzBattery(DeconzDevice):
         attr = {}
 
         if self._device.type in Switch.ZHATYPE:
-            attr[ATTR_EVENT_ID] = slugify(self._device.name)
+            for event in self.gateway.events:
+                if self._device == event._device:
+                    attr[ATTR_EVENT_ID] = event.event_id
 
         return attr
