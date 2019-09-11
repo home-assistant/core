@@ -281,9 +281,8 @@ def _delta_mins(hhmm_time_str):
     now = dt_util.now()
     hhmm_time = datetime.strptime(hhmm_time_str, "%H:%M")
 
-    hhmm_datetime = datetime(
-        now.year, now.month, now.day, hour=hhmm_time.hour, minute=hhmm_time.minute
-    )
+    hhmm_datetime = now.replace(hour=hhmm_time.hour, minute=hhmm_time.minute)
+
     if hhmm_datetime < now:
         hhmm_datetime += timedelta(days=1)
 
