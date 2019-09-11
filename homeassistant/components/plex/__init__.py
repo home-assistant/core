@@ -41,16 +41,19 @@ MEDIA_PLAYER_SCHEMA = vol.Schema(
     }
 )
 
-SERVER_CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_TOKEN): cv.string,
-        vol.Optional(CONF_SERVER): cv.string,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-        vol.Optional(MP_DOMAIN, default={}): MEDIA_PLAYER_SCHEMA,
-    }
+SERVER_CONFIG_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Optional(CONF_HOST): cv.string,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            vol.Optional(CONF_TOKEN): cv.string,
+            vol.Optional(CONF_SERVER): cv.string,
+            vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+            vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+            vol.Optional(MP_DOMAIN, default={}): MEDIA_PLAYER_SCHEMA,
+        }
+    ),
+    cv.has_at_least_one_key(CONF_HOST, CONF_TOKEN),
 )
 
 CONFIG_SCHEMA = vol.Schema({PLEX_DOMAIN: SERVER_CONFIG_SCHEMA}, extra=vol.ALLOW_EXTRA)
