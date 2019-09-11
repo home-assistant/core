@@ -144,7 +144,7 @@ class DeconzBattery(DeconzDevice):
         if self._device.type in Switch.ZHATYPE:
             self._battery_unique_id = self._device.uniqueid
 
-        self._name = "{} {}".format(self._device.name, "Battery Level")
+        self._name = f"{self._device.name} Battery Level"
         self._unit_of_measurement = "%"
 
     @callback
