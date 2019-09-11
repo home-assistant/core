@@ -13,6 +13,7 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
@@ -240,7 +241,7 @@ class BOMCurrentData:
             # Never updated before, therefore an update should occur.
             return True
 
-        now = datetime.datetime.now()
+        now = dt_util.utcnow()
         update_due_at = self.last_updated + datetime.timedelta(minutes=35)
         return now > update_due_at
 
@@ -251,8 +252,8 @@ class BOMCurrentData:
             _LOGGER.debug(
                 "BOM was updated %s minutes ago, skipping update as"
                 " < 35 minutes, Now: %s, LastUpdate: %s",
-                (datetime.datetime.now() - self.last_updated),
-                datetime.datetime.now(),
+                (dt_util.utcnow() - self.last_updated),
+                dt_util.utcnow(),
                 self.last_updated,
             )
             return
