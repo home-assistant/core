@@ -59,6 +59,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     entity_handler.add_entity(new_sensor)
                     entities.append(new_sensor)
 
+            if sensor.battery:
+                entities.append(DeconzBattery(sensor, gateway))
+
         async_add_entities(entities, True)
 
     gateway.listeners.append(
@@ -137,6 +140,10 @@ class DeconzBattery(DeconzDevice):
         """Register dispatcher callback for update of battery state."""
         super().__init__(device, gateway)
 
+        self._battery_unique_id = f"{self._device.uniqueid}-battery"
+        if self._device.type in Switch.ZHATYPE:
+            self._battery_unique_id = self._device.uniqueid
+
         self._name = "{} {}".format(self._device.name, "Battery Level")
         self._unit_of_measurement = "%"
 
@@ -147,6 +154,11 @@ class DeconzBattery(DeconzDevice):
         keys = {"battery", "reachable"}
         if force_update or any(key in changed for key in keys):
             self.async_schedule_update_ha_state()
+
+    @property
+    def unique_id(self):
+        """Return a unique identifier for this device."""
+        return self._battery_unique_id
 
     @property
     def state(self):
@@ -171,5 +183,9 @@ class DeconzBattery(DeconzDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the battery."""
-        attr = {ATTR_EVENT_ID: slugify(self._device.name)}
+        attr = {}
+
+        if self._device.type in Switch.ZHATYPE:
+            attr[ATTR_EVENT_ID] = slugify(self._device.name)
+
         return attr
