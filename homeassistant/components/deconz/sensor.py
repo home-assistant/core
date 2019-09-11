@@ -129,14 +129,6 @@ class DeconzSensor(DeconzDevice):
 class DeconzBattery(DeconzDevice):
     """Battery class for when a device is only represented as an event."""
 
-    def __init__(self, device, gateway):
-        """Register dispatcher callback for update of battery state."""
-        super().__init__(device, gateway)
-
-        self._battery_unique_id = f"{self.serial}-battery"
-        self._name = f"{self._device.name} Battery Level"
-        self._unit_of_measurement = "%"
-
     @callback
     def async_update_callback(self, force_update=False):
         """Update the battery's state, if needed."""
@@ -148,7 +140,7 @@ class DeconzBattery(DeconzDevice):
     @property
     def unique_id(self):
         """Return a unique identifier for this device."""
-        return self._battery_unique_id
+        return f"{self.serial}-battery"
 
     @property
     def state(self):
@@ -158,7 +150,7 @@ class DeconzBattery(DeconzDevice):
     @property
     def name(self):
         """Return the name of the battery."""
-        return self._name
+        return f"{self._device.name} Battery Level"
 
     @property
     def device_class(self):
@@ -168,7 +160,7 @@ class DeconzBattery(DeconzDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return self._unit_of_measurement
+        return "%"
 
     @property
     def device_state_attributes(self):
