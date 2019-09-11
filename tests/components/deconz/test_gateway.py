@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.components.deconz import deconz_event, errors, gateway
+from homeassistant.components.deconz import errors, gateway
 
 from tests.common import mock_coro
 
@@ -200,47 +200,3 @@ async def test_get_gateway_fails_cannot_connect(hass):
         side_effect=pydeconz.errors.RequestError,
     ), pytest.raises(errors.CannotConnect):
         assert await gateway.get_gateway(hass, ENTRY_CONFIG, Mock(), Mock()) is False
-
-
-async def test_create_event(hass):
-    """Successfully created a deCONZ event."""
-    mock_remote = Mock()
-    mock_remote.name = "Name"
-
-    mock_gateway = Mock()
-    mock_gateway.hass = hass
-
-    event = deconz_event.DeconzEvent(mock_remote, mock_gateway)
-
-    assert event.event_id == "name"
-
-
-async def test_update_event(hass):
-    """Successfully update a deCONZ event."""
-    hass.bus.async_fire = Mock()
-
-    mock_remote = Mock()
-    mock_remote.name = "Name"
-
-    mock_gateway = Mock()
-    mock_gateway.hass = hass
-
-    event = deconz_event.DeconzEvent(mock_remote, mock_gateway)
-    mock_remote.changed_keys = {"state": True}
-    event.async_update_callback()
-
-    assert len(hass.bus.async_fire.mock_calls) == 1
-
-
-async def test_remove_event(hass):
-    """Successfully update a deCONZ event."""
-    mock_remote = Mock()
-    mock_remote.name = "Name"
-
-    mock_gateway = Mock()
-    mock_gateway.hass = hass
-
-    event = deconz_event.DeconzEvent(mock_remote, mock_gateway)
-    event.async_will_remove_from_hass()
-
-    assert event._device is None
