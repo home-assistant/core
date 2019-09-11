@@ -1,12 +1,16 @@
 """Support for UPC ConnectBox router."""
 import logging
-from typing import Optional, List
+from typing import List, Optional
 
-import voluptuous as vol
 from connect_box import ConnectBox
 from connect_box.exceptions import ConnectBoxError, ConnectBoxLoginError
+import voluptuous as vol
 
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA, DeviceScanner
+from homeassistant.components.device_tracker import (
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    DeviceScanner,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 
@@ -26,8 +30,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_get_scanner(hass, config):
     """Return the UPC device scanner."""
+    conf = config[DOMAIN]
     session = hass.helpers.aiohttp_client.async_get_clientsession()
-    connect_box = ConnectBox(session, config[CONF_PASSWORD], host=config[CONF_HOST])
+    connect_box = ConnectBox(session, conf[CONF_PASSWORD], host=conf[CONF_HOST])
 
     # Check login data
     try:
