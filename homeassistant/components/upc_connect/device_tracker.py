@@ -11,12 +11,10 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-
-CMD_DEVICES = 123
 
 DEFAULT_IP = "192.168.0.1"
 
@@ -42,6 +40,12 @@ async def async_get_scanner(hass, config):
         return None
     except ConnectBoxError:
         pass
+
+    async def _shutdown(event):
+        """Shutdown event."""
+        await connect_box.async_logout()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
     return UPCDeviceScanner(connect_box)
 
