@@ -1,0 +1,26 @@
+{
+    "config": {
+        "title": "Neato",
+        "step": {
+            "user": {
+                "title": "Neato Account Info",
+                "data": {
+                    "password": "Password",
+                    "username": "Username",
+                    "vendor": "Vendor"
+                },
+                "description": "See [Neato documentation]({docs_url})."
+            }
+        },
+        "error": {
+            "invalid_credentials": "Invalid credentials",
+            "unexpected": "Unexpected error communicating with Neato server"
+        },
+        "create_entry": {
+            "default": "See [Neato documentation]({docs_url})."
+        },
+        "abort": {
+            "invalid_credentials": "Invalid credentials"
+        }
+    }
+}

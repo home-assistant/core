@@ -1,0 +1,26 @@
+{
+    "config": {
+        "title": "Neato",
+        "step": {
+            "user": {
+                "title": "Neato Account Informationen",
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername",
+                    "vendor": "Hersteller"
+                },
+                "description": "Siehe [Neato Dokumentation]({docs_url})."
+            }
+        },
+        "error": {
+            "invalid_credentials": "Ungültige Anmeldeinformationen",
+            "unexpected": "Unerwarteter Fehler bei der Kommunikation mit den Neato Servern"
+        },
+        "create_entry": {
+            "default": "Siehe [Neato Dokumentation]({docs_url})."
+        },
+        "abort": {
+            "invalid_credentials": "Ungültige Anmeldeinformationen"
+        }
+    }
+}

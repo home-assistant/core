@@ -40,6 +40,7 @@ FLOWS = [
     "met",
     "mobile_app",
     "mqtt",
+    "neato",
     "nest",
     "notion",
     "openuv",
@@ -70,5 +71,5 @@ FLOWS = [
     "wwlln",
     "zha",
     "zone",
-    "zwave"
+    "zwave",
 ]

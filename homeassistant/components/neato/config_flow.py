@@ -56,10 +56,13 @@ class NeatoConfigFlow(config_entries.ConfigFlow):
         data_schema[vol.Required(CONF_PASSWORD, default=self._password)] = str
         data_schema[vol.Optional(CONF_VENDOR, default=self._vendor)] = str
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(data_schema),
-            errors=errors,
+        return self.async_create_entry(
+            title=self._username,
+            data={
+                CONF_USERNAME: self._username,
+                CONF_PASSWORD: self._password,
+                CONF_VENDOR: self._vendor,
+            },
             description_placeholders={"docs_url": DOCS_URL},
         )
 
@@ -83,7 +86,7 @@ class NeatoConfigFlow(config_entries.ConfigFlow):
         )
 
     @staticmethod
-    async def try_login(username, password, vendor):
+    def try_login(username, password, vendor):
         """Try logging in to device and return any errors."""
         from requests.exceptions import HTTPError
         from pybotvac import Account, Neato, Vorwerk
