@@ -6,20 +6,11 @@ import requests.exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_URL,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_TOKEN,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_URL, CONF_TOKEN, CONF_VERIFY_SSL
 
 from .const import (  # pylint: disable=unused-import
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
-    DEFAULT_PORT,
-    DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     PLEX_SERVER_CONFIG,
@@ -50,16 +41,11 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Optional(
                     CONF_TOKEN, default=self.current_login.get(CONF_TOKEN, "")
-                ): str,
-                vol.Optional("manual_setup"): bool,
+                ): str
             }
         )
 
         if user_input is not None:
-            manual_setup = user_input.get("manual_setup")
-            if manual_setup is True:
-                return await self.async_step_manual_setup()
-
             self.current_login = user_input
 
             plex_server = PlexServer(user_input)
@@ -118,31 +104,6 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
         )
-
-    async def async_step_manual_setup(self, user_input=None):
-        """Begin manual configuration."""
-        if user_input is None:
-            data_schema = vol.Schema(
-                {
-                    vol.Required(
-                        CONF_HOST, default=self.discovery_info.get(CONF_HOST)
-                    ): str,
-                    vol.Required(
-                        CONF_PORT,
-                        default=int(self.discovery_info.get(CONF_PORT, DEFAULT_PORT)),
-                    ): int,
-                    vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
-                    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
-                    vol.Optional(CONF_TOKEN): str,
-                }
-            )
-            return self.async_show_form(step_id="manual_setup", data_schema=data_schema)
-
-        host = user_input.pop(CONF_HOST)
-        port = user_input.pop(CONF_PORT)
-        prefix = "https" if user_input.get(CONF_SSL) else "http"
-        user_input[CONF_URL] = f"{prefix}://{host}:{port}"
-        return await self.async_step_user(user_input=user_input)
 
     async def async_step_select_server(self, user_input=None):
         """Use selected Plex server."""
