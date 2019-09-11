@@ -63,50 +63,50 @@ _LOGGER = logging.getLogger(__package__)
 
 def setup(hass, config):
     """Set up the Plex component."""
-
-    def setup_plex(config):
-        """Pass configuration to a config flow."""
-        json_file = hass.config.path(PLEX_CONFIG_FILE)
-        file_config = load_json(json_file)
-        server_config = None
-
-        if config:
-            server_config = dict(config)
-            if MP_DOMAIN in server_config:
-                hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = server_config.pop(MP_DOMAIN)
-            if CONF_HOST in server_config:
-                prefix = "https" if server_config.pop(CONF_SSL) else "http"
-                server_config[
-                    CONF_URL
-                ] = f"{prefix}://{server_config.pop(CONF_HOST)}:{server_config.pop(CONF_PORT)}"
-        elif file_config:
-            if not hass.config_entries.async_entries(PLEX_DOMAIN):
-                host_and_port, host_config = file_config.popitem()
-                prefix = "https" if host_config[CONF_SSL] else "http"
-
-                server_config = {
-                    CONF_URL: f"{prefix}://{host_and_port}",
-                    CONF_TOKEN: host_config[CONF_TOKEN],
-                    CONF_VERIFY_SSL: host_config["verify"],
-                }
-            else:
-                _LOGGER.info("Legacy config file can be removed: %s", json_file)
-
-        if server_config:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    PLEX_DOMAIN,
-                    context={"source": config_entries.SOURCE_IMPORT},
-                    data=server_config,
-                )
-            )
-
     hass.data.setdefault(PLEX_DOMAIN, {SERVERS: {}})
 
     plex_config = config.get(PLEX_DOMAIN, {})
-    setup_plex(config=plex_config)
+    _setup_plex(hass, plex_config)
 
     return True
+
+
+def _setup_plex(hass, config):
+    """Pass configuration to a config flow."""
+    json_file = hass.config.path(PLEX_CONFIG_FILE)
+    file_config = load_json(json_file)
+    server_config = None
+
+    if config:
+        server_config = dict(config)
+        if MP_DOMAIN in server_config:
+            hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = server_config.pop(MP_DOMAIN)
+        if CONF_HOST in server_config:
+            prefix = "https" if server_config.pop(CONF_SSL) else "http"
+            server_config[
+                CONF_URL
+            ] = f"{prefix}://{server_config.pop(CONF_HOST)}:{server_config.pop(CONF_PORT)}"
+    elif file_config:
+        if not hass.config_entries.async_entries(PLEX_DOMAIN):
+            host_and_port, host_config = file_config.popitem()
+            prefix = "https" if host_config[CONF_SSL] else "http"
+
+            server_config = {
+                CONF_URL: f"{prefix}://{host_and_port}",
+                CONF_TOKEN: host_config[CONF_TOKEN],
+                CONF_VERIFY_SSL: host_config["verify"],
+            }
+        else:
+            _LOGGER.info("Legacy config file can be removed: %s", json_file)
+
+    if server_config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                PLEX_DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data=server_config,
+            )
+        )
 
 
 async def async_setup_entry(hass, entry):
