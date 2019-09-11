@@ -20,9 +20,9 @@ from homeassistant.helpers import discovery
 from homeassistant.util.json import load_json, save_json
 
 from .const import (
+    CONF_SERVER,
     CONF_USE_EPISODE_ART,
     CONF_SHOW_ALL_CONTROLS,
-    DEFAULT_HOST,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
@@ -42,14 +42,18 @@ MEDIA_PLAYER_SCHEMA = vol.Schema(
 )
 
 SERVER_CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_TOKEN): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-        vol.Optional(MP_DOMAIN, default={}): MEDIA_PLAYER_SCHEMA,
-    }
+    vol.All(
+        {
+            vol.Optional(CONF_HOST): cv.string,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            vol.Optional(CONF_TOKEN): cv.string,
+            vol.Optional(CONF_SERVER): cv.string,
+            vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+            vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+            vol.Optional(MP_DOMAIN, default={}): MEDIA_PLAYER_SCHEMA,
+        },
+        cv.has_at_least_one_key(CONF_HOST, CONF_TOKEN),
+    )
 )
 
 CONFIG_SCHEMA = vol.Schema({PLEX_DOMAIN: SERVER_CONFIG_SCHEMA}, extra=vol.ALLOW_EXTRA)
@@ -73,12 +77,14 @@ def setup(hass, config):
         """Return assembled server_config dict."""
         json_file = hass.config.path(PLEX_CONFIG_FILE)
         file_config = load_json(json_file)
+        host_and_port = None
 
         if config:
             server_config = config
-            host_and_port = (
-                f"{server_config.pop(CONF_HOST)}:{server_config.pop(CONF_PORT)}"
-            )
+            if CONF_HOST in server_config:
+                host_and_port = (
+                    f"{server_config.pop(CONF_HOST)}:{server_config.pop(CONF_PORT)}"
+                )
             if MP_DOMAIN in server_config:
                 hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = server_config.pop(MP_DOMAIN)
         elif file_config:
@@ -95,9 +101,10 @@ def setup(hass, config):
             discovery.listen(hass, SERVICE_PLEX, server_discovered)
             return True
 
-        use_ssl = server_config.get(CONF_SSL, DEFAULT_SSL)
-        http_prefix = "https" if use_ssl else "http"
-        server_config[CONF_URL] = f"{http_prefix}://{host_and_port}"
+        if host_and_port:
+            use_ssl = server_config.get(CONF_SSL, DEFAULT_SSL)
+            http_prefix = "https" if use_ssl else "http"
+            server_config[CONF_URL] = f"{http_prefix}://{host_and_port}"
 
         plex_server = PlexServer(server_config)
         try:
