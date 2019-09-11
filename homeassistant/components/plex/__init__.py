@@ -41,8 +41,8 @@ MEDIA_PLAYER_SCHEMA = vol.Schema(
     }
 )
 
-SERVER_CONFIG_SCHEMA = vol.All(
-    vol.Schema(
+SERVER_CONFIG_SCHEMA = vol.Schema(
+    vol.All(
         {
             vol.Optional(CONF_HOST): cv.string,
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
