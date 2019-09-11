@@ -45,64 +45,62 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-        if user_input is not None:
-            self.current_login = user_input
-
-            plex_server = PlexServer(user_input)
-            try:
-                await self.hass.async_add_executor_job(plex_server.connect)
-            except NoServersFound:
-                errors["base"] = "no_servers"
-            except ServerNotSpecified as available_servers:
-                self.available_servers = available_servers.args[0]
-                return await self.async_step_select_server()
-            except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized):
-                _LOGGER.error("Invalid credentials provided, config not created")
-                errors["base"] = "faulty_credentials"
-            except (plexapi.exceptions.NotFound, requests.exceptions.ConnectionError):
-                _LOGGER.error(
-                    "Plex server could not be reached: %s", user_input[CONF_URL]
-                )
-                errors["base"] = "not_found"
-            except Exception as error:  # pylint: disable=broad-except
-                _LOGGER.error("Unknown error connecting to Plex server: %s", error)
-                return self.async_abort(reason="unknown")
-            else:
-                if errors:
-                    return self.async_show_form(
-                        step_id="user", data_schema=data_schema, errors=errors
-                    )
-
-            server_id = plex_server.machine_identifier
-
-            for entry in self._async_current_entries():
-                if entry.data[CONF_SERVER_IDENTIFIER] == server_id:
-                    return self.async_abort(reason="already_configured")
-
-            url = plex_server.url_in_use
-            token = user_input.get(CONF_TOKEN)
-
-            server_config = {CONF_URL: url}
-            if token:
-                server_config[CONF_TOKEN] = token
-            if url.startswith("https"):
-                server_config[CONF_VERIFY_SSL] = user_input.get(
-                    CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL
-                )
-
-            _LOGGER.debug("Valid config created for %s", plex_server.friendly_name)
-
-            return self.async_create_entry(
-                title=plex_server.friendly_name,
-                data={
-                    CONF_SERVER: plex_server.friendly_name,
-                    CONF_SERVER_IDENTIFIER: server_id,
-                    PLEX_SERVER_CONFIG: server_config,
-                },
+        if user_input is None:
+            return self.async_show_form(
+                step_id="user", data_schema=data_schema, errors=errors
             )
 
-        return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
+        self.current_login = user_input
+
+        plex_server = PlexServer(user_input)
+        try:
+            await self.hass.async_add_executor_job(plex_server.connect)
+        except NoServersFound:
+            errors["base"] = "no_servers"
+        except ServerNotSpecified as available_servers:
+            self.available_servers = available_servers.args[0]
+            return await self.async_step_select_server()
+        except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized):
+            _LOGGER.error("Invalid credentials provided, config not created")
+            errors["base"] = "faulty_credentials"
+        except (plexapi.exceptions.NotFound, requests.exceptions.ConnectionError):
+            _LOGGER.error("Plex server could not be reached: %s", user_input[CONF_URL])
+            errors["base"] = "not_found"
+        except Exception as error:  # pylint: disable=broad-except
+            _LOGGER.error("Unknown error connecting to Plex server: %s", error)
+            return self.async_abort(reason="unknown")
+        else:
+            if errors:
+                return self.async_show_form(
+                    step_id="user", data_schema=data_schema, errors=errors
+                )
+
+        server_id = plex_server.machine_identifier
+
+        for entry in self._async_current_entries():
+            if entry.data[CONF_SERVER_IDENTIFIER] == server_id:
+                return self.async_abort(reason="already_configured")
+
+        url = plex_server.url_in_use
+        token = user_input.get(CONF_TOKEN)
+
+        server_config = {CONF_URL: url}
+        if token:
+            server_config[CONF_TOKEN] = token
+        if url.startswith("https"):
+            server_config[CONF_VERIFY_SSL] = user_input.get(
+                CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL
+            )
+
+        _LOGGER.debug("Valid config created for %s", plex_server.friendly_name)
+
+        return self.async_create_entry(
+            title=plex_server.friendly_name,
+            data={
+                CONF_SERVER: plex_server.friendly_name,
+                CONF_SERVER_IDENTIFIER: server_id,
+                PLEX_SERVER_CONFIG: server_config,
+            },
         )
 
     async def async_step_select_server(self, user_input=None):
