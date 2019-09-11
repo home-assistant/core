@@ -43,7 +43,7 @@ async def async_get_scanner(hass, config):
 
     async def _shutdown(event):
         """Shutdown event."""
-        await connect_box.async_logout()
+        await connect_box.async_close_session()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
