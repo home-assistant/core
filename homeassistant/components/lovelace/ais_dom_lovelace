@@ -498,19 +498,6 @@
                                             },
                                             {
                                                 "card": {
-                                                    "columns": [
-                                                        {
-                                                            "field": "thumbnail",
-                                                            "type": "image"
-                                                        },
-                                                        {
-                                                            "field": "name"
-                                                        },
-                                                        {
-                                                            "field": "icon",
-                                                            "type": "icon"
-                                                        }
-                                                    ],
                                                     "entity": [
                                                         "sensor.rssnewslist"
                                                     ],
@@ -539,31 +526,12 @@
                                 },
                                 {
                                     "card": {
-                                        "columns": [
-                                            {
-                                                "field": "icon_remove",
-                                                "type": "icon_remove"
-                                            },
-                                            {
-                                                "field": "thumbnail",
-                                                "type": "image"
-                                            },
-                                            {
-                                                "field": "name"
-                                            },
-                                            {
-                                                "field": "media_position"
-                                            },
-                                            {
-                                                "field": "icon",
-                                                "type": "icon"
-                                            }
-                                        ],
                                         "entity": [
                                             "sensor.aisbookmarkslist"
                                         ],
                                         "media_source": "Bookmark",
                                         "title": "Lista zak\u0142adek",
+                                        "show_delete_icon": true,
                                         "type": "ais-list"
                                     },
                                     "conditions": [
@@ -576,32 +544,12 @@
                                 },
                                 {
                                     "card": {
-                                        "columns": [
-                                            {
-                                                "field": "icon_remove",
-                                                "type": "icon_remove"
-                                            },
-                                            {
-                                                "field": "thumbnail",
-                                                "type": "image"
-                                            },
-                                            {
-                                                "field": "name"
-                                            },
-                                            {
-                                                "field": "icon_type",
-                                                "type": "icon"
-                                            },
-                                            {
-                                                "field": "icon",
-                                                "type": "icon"
-                                            }
-                                        ],
                                         "entity": [
                                             "sensor.aisfavoriteslist"
                                         ],
                                         "media_source": "Favorite",
                                         "title": "Lista ulubionych audio",
+                                        "show_delete_icon": true,
                                         "type": "ais-list"
                                     },
                                     "conditions": [
@@ -614,19 +562,6 @@
                                 },
                                 {
                                     "card": {
-                                        "columns": [
-                                            {
-                                                "field": "thumbnail",
-                                                "type": "image"
-                                            },
-                                            {
-                                                "field": "name"
-                                            },
-                                            {
-                                                "field": "icon",
-                                                "type": "icon"
-                                            }
-                                        ],
                                         "entity": [
                                             "sensor.youtubelist"
                                         ],
@@ -648,19 +583,6 @@
                                 },
                                 {
                                     "card": {
-                                        "columns": [
-                                            {
-                                                "field": "thumbnail",
-                                                "type": "image"
-                                            },
-                                            {
-                                                "field": "name"
-                                            },
-                                            {
-                                                "field": "icon",
-                                                "type": "icon"
-                                            }
-                                        ],
                                         "entity": [
                                             "sensor.spotifysearchlist"
                                         ],
@@ -710,19 +632,6 @@
                                 },
                                 {
                                     "card": {
-                                        "columns": [
-                                            {
-                                                "field": "thumbnail",
-                                                "type": "image"
-                                            },
-                                            {
-                                                "field": "name"
-                                            },
-                                            {
-                                                "field": "icon",
-                                                "type": "icon"
-                                            }
-                                        ],
                                         "entity": [
                                             "sensor.podcastnamelist"
                                         ],
@@ -740,19 +649,6 @@
                                 },
                                 {
                                     "card": {
-                                        "columns": [
-                                            {
-                                                "field": "thumbnail",
-                                                "type": "image"
-                                            },
-                                            {
-                                                "field": "name"
-                                            },
-                                            {
-                                                "field": "icon",
-                                                "type": "icon"
-                                            }
-                                        ],
                                         "entity": [
                                             "sensor.audiobookslist"
                                         ],
@@ -775,19 +671,6 @@
                             "cards": [
                                 {
                                     "card": {
-                                        "columns": [
-                                            {
-                                                "field": "thumbnail",
-                                                "type": "image"
-                                            },
-                                            {
-                                                "field": "name"
-                                            },
-                                            {
-                                                "field": "icon",
-                                                "type": "icon"
-                                            }
-                                        ],
                                         "entity": [
                                             "sensor.spotifylist"
                                         ],
@@ -809,19 +692,6 @@
                                 },
                                 {
                                     "card": {
-                                        "columns": [
-                                            {
-                                                "field": "thumbnail",
-                                                "type": "image"
-                                            },
-                                            {
-                                                "field": "name"
-                                            },
-                                            {
-                                                "field": "icon",
-                                                "type": "icon"
-                                            }
-                                        ],
                                         "entity": [
                                             "sensor.radiolist"
                                         ],
@@ -839,19 +709,6 @@
                                 },
                                 {
                                     "card": {
-                                        "columns": [
-                                            {
-                                                "field": "thumbnail",
-                                                "type": "image"
-                                            },
-                                            {
-                                                "field": "name"
-                                            },
-                                            {
-                                                "field": "icon",
-                                                "type": "icon"
-                                            }
-                                        ],
                                         "entity": [
                                             "sensor.podcastlist"
                                         ],
@@ -869,19 +726,6 @@
                                 },
                                 {
                                     "card": {
-                                        "columns": [
-                                            {
-                                                "field": "thumbnail",
-                                                "type": "image"
-                                            },
-                                            {
-                                                "field": "name"
-                                            },
-                                            {
-                                                "field": "icon",
-                                                "type": "icon"
-                                            }
-                                        ],
                                         "entity": [
                                             "sensor.audiobookschapterslist"
                                         ],
