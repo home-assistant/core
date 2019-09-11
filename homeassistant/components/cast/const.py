@@ -21,3 +21,6 @@ SIGNAL_CAST_DISCOVERED = "cast_discovered"
 # Dispatcher signal fired with a ChromecastInfo every time a Chromecast is
 # removed
 SIGNAL_CAST_REMOVED = "cast_removed"
+
+# Dispatcher signal fired when a Chromecast should show a Home Assistant Cast view.
+SIGNAL_HASS_CAST_SHOW_VIEW = "cast_show_view"

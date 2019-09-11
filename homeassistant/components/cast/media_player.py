@@ -9,6 +9,7 @@ from pychromecast.socket_client import (
     CONNECTION_STATUS_DISCONNECTED,
 )
 from pychromecast.controllers.multizone import MultizoneManager
+from pychromecast.controllers.homeassistant import HomeAssistantController
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
@@ -52,6 +53,7 @@ from .const import (
     CAST_MULTIZONE_MANAGER_KEY,
     DEFAULT_PORT,
     SIGNAL_CAST_REMOVED,
+    SIGNAL_HASS_CAST_SHOW_VIEW,
 )
 from .helpers import (
     ChromecastInfo,
@@ -225,9 +227,11 @@ class CastDevice(MediaPlayerDevice):
         self._dynamic_group_status_listener: Optional[
             DynamicGroupCastStatusListener
         ] = None
+        self._hass_cast_controller: Optional[HomeAssistantController] = None
 
         self._add_remove_handler = None
         self._del_remove_handler = None
+        self._cast_view_remove_handler = None
 
     async def async_added_to_hass(self):
         """Create chromecast object when added to hass."""
@@ -256,6 +260,10 @@ class CastDevice(MediaPlayerDevice):
                 )
                 break
 
+        self._cast_view_remove_handler = async_dispatcher_connect(
+            self.hass, SIGNAL_HASS_CAST_SHOW_VIEW, self._handle_signal_show_view
+        )
+
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect Chromecast object when removed."""
         await self._async_disconnect()
@@ -265,8 +273,13 @@ class CastDevice(MediaPlayerDevice):
             self.hass.data[ADDED_CAST_DEVICES_KEY].remove(self._cast_info.uuid)
         if self._add_remove_handler:
             self._add_remove_handler()
+            self._add_remove_handler = None
         if self._del_remove_handler:
             self._del_remove_handler()
+            self._del_remove_handler = None
+        if self._cast_view_remove_handler:
+            self._cast_view_remove_handler()
+            self._cast_view_remove_handler = None
 
     async def async_set_cast_info(self, cast_info):
         """Set the cast information and set up the chromecast object."""
@@ -453,6 +466,7 @@ class CastDevice(MediaPlayerDevice):
         self.mz_media_status = {}
         self.mz_media_status_received = {}
         self.mz_mgr = None
+        self._hass_cast_controller = None
         if self._status_listener is not None:
             self._status_listener.invalidate()
             self._status_listener = None
@@ -932,3 +946,16 @@ class CastDevice(MediaPlayerDevice):
     async def _async_stop(self, event):
         """Disconnect socket on Home Assistant stop."""
         await self._async_disconnect()
+
+    def _handle_signal_show_view(
+        self, controller: HomeAssistantController, entity_id: str, view_path: str
+    ):
+        """Handle a show view signal."""
+        if entity_id != self.entity_id:
+            return
+
+        if self._hass_cast_controller is None:
+            self._hass_cast_controller = controller
+            self._chromecast.register_handler(controller)
+
+        self._hass_cast_controller.show_lovelace_view(view_path)
