@@ -143,6 +143,7 @@ omit =
     homeassistant/components/dlna_dmr/media_player.py
     homeassistant/components/dnsip/sensor.py
     homeassistant/components/dominos/*
+    homeassistant/components/doods/*
     homeassistant/components/doorbird/*
     homeassistant/components/dovado/*
     homeassistant/components/downloader/*
