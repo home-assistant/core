@@ -179,6 +179,7 @@ TEST_REQUIREMENTS = (
     "toonapilib",
     "transmissionrpc",
     "twentemilieu",
+    "url-normalize",
     "uvcclient",
     "vsure",
     "vultr",

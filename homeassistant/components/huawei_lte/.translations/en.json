@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "This device is already configured"
+        },
+        "error": {
+            "connection_failed": "Connection failed",
+            "incorrect_password": "Incorrect password",
+            "incorrect_username": "Incorrect username",
+            "incorrect_username_or_password": "Incorrect username or password",
+            "invalid_url": "Invalid URL",
+            "login_attempts_exceeded": "Maximum login attempts exceeded, please try again later",
+            "response_error": "Unknown error from device"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "url": "URL",
+                    "username": "User name"
+                },
+                "description": "Enter device access details.",
+                "title": "Configure Huawei LTE"
+            }
+        },
+        "title": "Huawei LTE"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "recipient": "SMS notification recipients"
+                }
+            }
+        }
+    }
+}

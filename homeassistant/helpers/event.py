@@ -252,16 +252,18 @@ call_later = threaded_listener_factory(async_call_later)
 
 @callback
 @bind_hass
-def async_track_time_interval(hass, action, interval):
+def async_track_time_interval(
+    hass: HomeAssistant, action: Callable[..., None], interval: timedelta
+) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively at every timedelta interval."""
     remove = None
 
-    def next_interval():
+    def next_interval() -> datetime:
         """Return the next interval."""
         return dt_util.utcnow() + interval
 
     @callback
-    def interval_listener(now):
+    def interval_listener(now: datetime) -> None:
         """Handle elapsed intervals."""
         nonlocal remove
         remove = async_track_point_in_utc_time(hass, interval_listener, next_interval())
@@ -269,7 +271,7 @@ def async_track_time_interval(hass, action, interval):
 
     remove = async_track_point_in_utc_time(hass, interval_listener, next_interval())
 
-    def remove_listener():
+    def remove_listener() -> None:
         """Remove interval listener."""
         remove()
 

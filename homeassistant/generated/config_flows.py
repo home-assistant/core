@@ -26,6 +26,7 @@ FLOWS = [
     "heos",
     "homekit_controller",
     "homematicip_cloud",
+    "huawei_lte",
     "hue",
     "iaqualink",
     "ifttt",

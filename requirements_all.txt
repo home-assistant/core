@@ -1920,6 +1920,9 @@ twilio==6.19.1
 # homeassistant.components.upcloud
 upcloud-api==0.4.3
 
+# homeassistant.components.huawei_lte
+url-normalize==1.4.1
+
 # homeassistant.components.uscis
 uscisstatus==0.1.1
 
