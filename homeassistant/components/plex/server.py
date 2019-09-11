@@ -26,7 +26,9 @@ class PlexServer:
         def _set_missing_url():
             account = plexapi.myplex.MyPlexAccount(token=self._token)
             available_servers = [
-                x.name for x in account.resources() if "server" in x.provides
+                (x.name, x.clientIdentifier)
+                for x in account.resources()
+                if "server" in x.provides
             ]
 
             if not available_servers:

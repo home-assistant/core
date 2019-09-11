@@ -146,17 +146,29 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_select_server(self, user_input=None):
         """Use selected Plex server."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="select_server",
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_SERVER): vol.In(self.available_servers)}
-                ),
-                errors={},
-            )
+        config = dict(self.current_login)
 
-        config = self.current_login
-        config[CONF_SERVER] = user_input.get(CONF_SERVER)
+        if user_input is None:
+            configured_servers = [
+                x.data[CONF_SERVER_IDENTIFIER] for x in self._async_current_entries()
+            ]
+            available_servers = [
+                name
+                for (name, server_id) in self.available_servers
+                if server_id not in configured_servers
+            ]
+            if len(available_servers) > 1:
+                return self.async_show_form(
+                    step_id="select_server",
+                    data_schema=vol.Schema(
+                        {vol.Required(CONF_SERVER): vol.In(available_servers)}
+                    ),
+                    errors={},
+                )
+            config[CONF_SERVER] = available_servers[0]
+        else:
+            config[CONF_SERVER] = user_input.get(CONF_SERVER)
+
         return await self.async_step_user(user_input=config)
 
     async def async_step_discovery(self, discovery_info):
