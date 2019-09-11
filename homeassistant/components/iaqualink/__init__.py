@@ -12,12 +12,14 @@ from iaqualink import (
     AqualinkLoginException,
     AqualinkSensor,
     AqualinkThermostat,
+    AqualinkToggle,
 )
 
 from homeassistant import config_entries
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
@@ -77,6 +79,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> None
     climates = hass.data[DOMAIN][CLIMATE_DOMAIN] = []
     lights = hass.data[DOMAIN][LIGHT_DOMAIN] = []
     sensors = hass.data[DOMAIN][SENSOR_DOMAIN] = []
+    switches = hass.data[DOMAIN][SWITCH_DOMAIN] = []
 
     session = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
     aqualink = AqualinkClient(username, password, session)
@@ -102,6 +105,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> None
             lights += [dev]
         elif isinstance(dev, AqualinkSensor):
             sensors += [dev]
+        elif isinstance(dev, AqualinkToggle):
+            switches += [dev]
 
     forward_setup = hass.config_entries.async_forward_entry_setup
     if climates:
@@ -113,6 +118,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> None
     if sensors:
         _LOGGER.debug("Got %s sensors: %s", len(sensors), sensors)
         hass.async_create_task(forward_setup(entry, SENSOR_DOMAIN))
+    if switches:
+        _LOGGER.debug("Got %s switches: %s", len(switches), switches)
+        hass.async_create_task(forward_setup(entry, SWITCH_DOMAIN))
 
     async def _async_systems_update(now):
         """Refresh internal state for all systems."""
@@ -136,6 +144,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
         tasks += [forward_unload(entry, LIGHT_DOMAIN)]
     if hass.data[DOMAIN][SENSOR_DOMAIN]:
         tasks += [forward_unload(entry, SENSOR_DOMAIN)]
+    if hass.data[DOMAIN][SWITCH_DOMAIN]:
+        tasks += [forward_unload(entry, SWITCH_DOMAIN)]
 
     hass.data[DOMAIN].clear()
 
