@@ -51,9 +51,9 @@ SERVER_CONFIG_SCHEMA = vol.Schema(
             vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
             vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
             vol.Optional(MP_DOMAIN, default={}): MEDIA_PLAYER_SCHEMA,
-        }
-    ),
-    cv.has_at_least_one_key(CONF_HOST, CONF_TOKEN),
+        },
+        cv.has_at_least_one_key(CONF_HOST, CONF_TOKEN),
+    )
 )
 
 CONFIG_SCHEMA = vol.Schema({PLEX_DOMAIN: SERVER_CONFIG_SCHEMA}, extra=vol.ALLOW_EXTRA)
