@@ -1,4 +1,4 @@
-"""Config flow for Unifi."""
+"""Config flow for UniFi."""
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -163,20 +163,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_SITE_ID): vol.In(sites)}),
             errors=errors,
         )
-
-    async def async_step_import(self, import_config):
-        """Import from UniFi device tracker config."""
-        config = {
-            CONF_HOST: import_config[CONF_HOST],
-            CONF_USERNAME: import_config[CONF_USERNAME],
-            CONF_PASSWORD: import_config[CONF_PASSWORD],
-            CONF_PORT: import_config.get(CONF_PORT),
-            CONF_VERIFY_SSL: import_config.get(CONF_VERIFY_SSL),
-        }
-
-        self.desc = import_config[CONF_SITE_ID]
-
-        return await self.async_step_user(user_input=config)
 
 
 class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
