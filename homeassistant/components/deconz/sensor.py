@@ -44,10 +44,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
                 if sensor.type in Switch.ZHATYPE:
 
-                    # if not (
-                    #     not gateway.option_allow_clip_sensor
-                    #     and sensor.type.startswith("CLIP")
-                    # ):
                     if gateway.option_allow_clip_sensor or not sensor.type.startswith(
                         "CLIP"
                     ):

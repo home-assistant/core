@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.components.deconz import errors, gateway
+from homeassistant.components.deconz import deconz_event, errors, gateway
 
 from tests.common import mock_coro
 
@@ -126,24 +126,6 @@ async def test_add_device(hass):
         assert len(mock_dispatch_send.mock_calls[0]) == 3
 
 
-@pytest.mark.skip(reason="fails for unkown reason, will refactor in a separate PR")
-async def test_add_remote(hass):
-    """Successful add remote."""
-    entry = Mock()
-    entry.data = ENTRY_CONFIG
-
-    remote = Mock()
-    remote.name = "name"
-    remote.type = "ZHASwitch"
-    remote.register_async_callback = Mock()
-
-    deconz_gateway = gateway.DeconzGateway(hass, entry)
-    deconz_gateway.async_add_remote([remote])
-    await hass.async_block_till_done()
-
-    assert len(deconz_gateway.events) == 1
-
-
 async def test_shutdown():
     """Successful shutdown."""
     hass = Mock()
@@ -220,7 +202,6 @@ async def test_get_gateway_fails_cannot_connect(hass):
         assert await gateway.get_gateway(hass, ENTRY_CONFIG, Mock(), Mock()) is False
 
 
-@pytest.mark.skip(reason="fails for unkown reason, will refactor in a separate PR")
 async def test_create_event(hass):
     """Successfully created a deCONZ event."""
     mock_remote = Mock()
@@ -229,13 +210,11 @@ async def test_create_event(hass):
     mock_gateway = Mock()
     mock_gateway.hass = hass
 
-    event = gateway.DeconzEvent(mock_remote, mock_gateway)
-    await hass.async_block_till_done()
+    event = deconz_event.DeconzEvent(mock_remote, mock_gateway)
 
     assert event.event_id == "name"
 
 
-@pytest.mark.skip(reason="fails for unkown reason, will refactor in a separate PR")
 async def test_update_event(hass):
     """Successfully update a deCONZ event."""
     hass.bus.async_fire = Mock()
@@ -246,15 +225,13 @@ async def test_update_event(hass):
     mock_gateway = Mock()
     mock_gateway.hass = hass
 
-    event = gateway.DeconzEvent(mock_remote, mock_gateway)
-    await hass.async_block_till_done()
+    event = deconz_event.DeconzEvent(mock_remote, mock_gateway)
     mock_remote.changed_keys = {"state": True}
     event.async_update_callback()
 
     assert len(hass.bus.async_fire.mock_calls) == 1
 
 
-@pytest.mark.skip(reason="fails for unkown reason, will refactor in a separate PR")
 async def test_remove_event(hass):
     """Successfully update a deCONZ event."""
     mock_remote = Mock()
@@ -263,8 +240,7 @@ async def test_remove_event(hass):
     mock_gateway = Mock()
     mock_gateway.hass = hass
 
-    event = gateway.DeconzEvent(mock_remote, mock_gateway)
-    await hass.async_block_till_done()
+    event = deconz_event.DeconzEvent(mock_remote, mock_gateway)
     event.async_will_remove_from_hass()
 
     assert event._device is None

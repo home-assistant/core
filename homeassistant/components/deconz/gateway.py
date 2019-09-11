@@ -4,8 +4,6 @@ import async_timeout
 
 from pydeconz import DeconzSession, errors
 
-# from pydeconz.sensor import Switch
-
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
@@ -33,21 +31,6 @@ from .const import (
     SUPPORTED_PLATFORMS,
 )
 
-# from .const import (
-#     _LOGGER,
-#     CONF_ALLOW_CLIP_SENSOR,
-#     CONF_ALLOW_DECONZ_GROUPS,
-#     CONF_BRIDGEID,
-#     CONF_MASTER_GATEWAY,
-#     DEFAULT_ALLOW_CLIP_SENSOR,
-#     DEFAULT_ALLOW_DECONZ_GROUPS,
-#     DOMAIN,
-#     NEW_DEVICE,
-#     NEW_SENSOR,
-#     SUPPORTED_PLATFORMS,
-# )
-
-# from .deconz_event import DeconzEvent
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -134,14 +117,6 @@ class DeconzGateway:
                 )
             )
 
-        # self.listeners.append(
-        #     async_dispatcher_connect(
-        #         hass, self.async_signal_new_device(NEW_SENSOR), self.async_add_remote
-        #     )
-        # )
-
-        # self.async_add_remote(self.api.sensors.values())
-
         self.api.start()
 
         self.config_entry.add_update_listener(self.async_new_address)
@@ -199,17 +174,6 @@ class DeconzGateway:
         async_dispatcher_send(
             self.hass, self.async_signal_new_device(device_type), device
         )
-
-    # @callback
-    # def async_add_remote(self, sensors):
-    #     """Set up remote from deCONZ."""
-    #     for sensor in sensors:
-    #         if sensor.type in Switch.ZHATYPE and not (
-    #             not self.option_allow_clip_sensor and sensor.type.startswith("CLIP")
-    #         ):
-    #             event = DeconzEvent(sensor, self)
-    #             self.hass.async_create_task(event.async_update_device_registry())
-    #             self.events.append(event)
 
     @callback
     def shutdown(self, event):
