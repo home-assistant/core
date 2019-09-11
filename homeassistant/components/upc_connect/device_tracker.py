@@ -17,8 +17,10 @@ CMD_DEVICES = 123
 DEFAULT_IP = "192.168.0.1"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_PASSWORD): cv.string},
-    {vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string},
+    {
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string,
+    }
 )
 
 
