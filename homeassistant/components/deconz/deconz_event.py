@@ -27,6 +27,11 @@ class DeconzEvent(DeconzBase):
         self.event_id = slugify(self._device.name)
         _LOGGER.debug("deCONZ event created: %s", self.event_id)
 
+    @property
+    def device(self):
+        """Return Event device."""
+        return self._device
+
     @callback
     def async_will_remove_from_hass(self) -> None:
         """Disconnect event object when removed."""

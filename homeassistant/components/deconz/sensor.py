@@ -168,7 +168,7 @@ class DeconzBattery(DeconzDevice):
 
         if self._device.type in Switch.ZHATYPE:
             for event in self.gateway.events:
-                if self._device == event._device:
+                if self._device == event.device:
                     attr[ATTR_EVENT_ID] = event.event_id
 
         return attr
