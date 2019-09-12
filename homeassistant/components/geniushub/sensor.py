@@ -7,8 +7,6 @@ from homeassistant.util.dt import utc_from_timestamp, utcnow
 
 from . import DOMAIN, GeniusEntity
 
-GH_HAS_BATTERY = ["Room Thermostat", "Genius Valve", "Room Sensor", "Radiator Valve"]
-
 GH_LEVEL_MAPPING = {
     "error": "Errors",
     "warning": "Warnings",
@@ -20,7 +18,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the Genius Hub sensor entities."""
     client = hass.data[DOMAIN]["client"]
 
-    sensors = [GeniusBattery(d) for d in client.device_objs if d.type in GH_HAS_BATTERY]
+    sensors = [
+        GeniusBattery(d)
+        for d in client.device_objs
+        if "batteryLevel" in d.data["state"]
+    ]
     issues = [GeniusIssue(client, i) for i in list(GH_LEVEL_MAPPING)]
 
     async_add_entities(sensors + issues, update_before_add=True)
@@ -84,6 +86,9 @@ class GeniusBattery(GeniusEntity):
         """Return the device state attributes."""
         attrs = {}
         attrs["assigned_zone"] = self._device.data["assignedZones"][0]["name"]
+
+        attrs["state"] = dict(self._device.data["state"])
+        attrs["state"].pop("batteryLevel")
 
         # pylint: disable=protected-access
         last_comms = self._device._raw["childValues"]["lastComms"]["val"]

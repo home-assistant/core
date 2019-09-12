@@ -6,15 +6,15 @@ from homeassistant.util.dt import utc_from_timestamp
 
 from . import DOMAIN, GeniusEntity
 
-GH_IS_SWITCH = ["Dual Channel Receiver", "Electric Switch", "Smart Plug"]
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Genius Hub sensor entities."""
     client = hass.data[DOMAIN]["client"]
 
     switches = [
-        GeniusBinarySensor(d) for d in client.device_objs if d.type[:21] in GH_IS_SWITCH
+        GeniusBinarySensor(d)
+        for d in client.device_objs
+        if "outputOnOff" in d.data["state"]
     ]
 
     async_add_entities(switches)
@@ -43,6 +43,9 @@ class GeniusBinarySensor(GeniusEntity, BinarySensorDevice):
         """Return the device state attributes."""
         attrs = {}
         attrs["assigned_zone"] = self._device.data["assignedZones"][0]["name"]
+
+        attrs["state"] = dict(self._device.data["state"])
+        attrs["state"].pop("outputOnOff")
 
         # pylint: disable=protected-access
         last_comms = self._device._raw["childValues"]["lastComms"]["val"]
