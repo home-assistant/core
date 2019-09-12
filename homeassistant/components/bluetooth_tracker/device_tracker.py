@@ -21,10 +21,9 @@ from homeassistant.components.device_tracker.legacy import (
     async_load_config,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.util.async_ import run_coroutine_threadsafe
-import homeassistant.util.dt as dt_util
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,53 +64,48 @@ def discover_devices(device_id: int) -> List[Tuple[str, str]]:
     return result
 
 
-def see_device(see, mac: str, device_name: str, rssi=None) -> None:
+def see_device(hass: HomeAssistantType, async_see, mac: str, device_name: str, rssi=None) -> None:
     """Mark a device as seen."""
     attributes = {}
     if rssi is not None:
         attributes["rssi"] = rssi
-    see(
+
+    hass.async_create_task(async_see(
         mac=f"{BT_PREFIX}{mac}",
         host_name=device_name,
         attributes=attributes,
         source_type=SOURCE_TYPE_BLUETOOTH,
-    )
+    ))
 
 
-def get_tracking_devices(hass: HomeAssistantType) -> Tuple[Set[str], Set[str]]:
+async def get_tracking_devices(hass: HomeAssistantType) -> Tuple[Set[str], Set[str]]:
     """
     Load all known devices.
 
     We just need the devices so set consider_home and home range to 0
     """
     yaml_path: str = hass.config.path(YAML_DEVICES)
-    devices_to_track: Set[str] = set()
-    devices_to_not_track: Set[str] = set()
 
-    for device in run_coroutine_threadsafe(
-        async_load_config(yaml_path, hass, 0), hass.loop
-    ).result():
-        # Check if device is a valid bluetooth device
-        if not is_bluetooth_device(device):
-            continue
-
-        normalized_mac: str = device.mac[3:]
-        if device.track:
-            devices_to_track.add(normalized_mac)
-        else:
-            devices_to_not_track.add(normalized_mac)
+    devices = await async_load_config(yaml_path, hass, 0)
+    bluetooth_devices = [device for device in devices if is_bluetooth_device(device)]
+    
+    devices_to_track: Set[str] = {device.mac[3:] for device in bluetooth_devices if device.track}
+    devices_to_not_track: Set[str] = {device.mac[3:] for device in bluetooth_devices if not device.track}
 
     return devices_to_track, devices_to_not_track
 
 
-def setup_scanner(hass: HomeAssistantType, config: dict, see, discovery_info=None):
+async def async_setup_scanner(hass: HomeAssistantType, config: dict, async_see, discovery_info=None):
     """Set up the Bluetooth Scanner."""
     device_id: int = config.get(CONF_DEVICE_ID)
-    devices_to_track, devices_to_not_track = get_tracking_devices(hass)
+    interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)    
+    request_rssi = config.get(CONF_REQUEST_RSSI, False)
 
     # If track new devices is true discover new devices on startup.
     track_new: bool = config.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
     _LOGGER.debug("Tracking new devices = %s", track_new)
+
+    devices_to_track, devices_to_not_track = await get_tracking_devices(hass)
 
     if not devices_to_track and not track_new:
         _LOGGER.debug("No Bluetooth devices to track and not tracking new devices")
@@ -120,21 +114,13 @@ def setup_scanner(hass: HomeAssistantType, config: dict, see, discovery_info=Non
         for mac, device_name in discover_devices(device_id):
             if mac not in devices_to_track and mac not in devices_to_not_track:
                 devices_to_track.add(mac)
-                see_device(see, mac, device_name)
+                see_device(hass, async_see, mac, device_name)
 
-    interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
-
-    request_rssi = config.get(CONF_REQUEST_RSSI, False)
     if request_rssi:
         _LOGGER.debug("Detecting RSSI for devices")
 
-    def update_bluetooth(_):
-        """Update Bluetooth and set timer for the next update."""
-        update_bluetooth_once()
-        track_point_in_utc_time(hass, update_bluetooth, dt_util.utcnow() + interval)
-
-    def update_bluetooth_once():
-        """Lookup Bluetooth device and update status."""
+    async def update_bluetooth():
+        """Lookup Bluetooth devices and update status."""
         try:
             if track_new:
                 for mac, device_name in discover_devices(device_id):
@@ -144,24 +130,28 @@ def setup_scanner(hass: HomeAssistantType, config: dict, see, discovery_info=Non
             for mac in devices_to_track:
                 _LOGGER.debug("Scanning %s", mac)
                 device_name = bluetooth.lookup_name(mac, timeout=5)
+                if device_name is None:
+                    # Could not lookup device name
+                    continue
+
                 rssi = None
                 if request_rssi:
                     client = BluetoothRSSI(mac)
                     rssi = client.request_rssi()
                     client.close()
-                if device_name is None:
-                    # Could not lookup device name
-                    continue
-                see_device(see, mac, device_name, rssi)
+                
+                see_device(hass, async_see, mac, device_name, rssi)
         except bluetooth.BluetoothError:
             _LOGGER.exception("Error looking up Bluetooth device")
 
-    def handle_update_bluetooth(call):
+    async def handle_update_bluetooth(call):
         """Update bluetooth devices on demand."""
-        update_bluetooth_once()
 
-    update_bluetooth(dt_util.utcnow())
+        await update_bluetooth()
+      
+    hass.async_create_task(update_bluetooth())
+    async_track_time_interval(hass, update_bluetooth, interval)
 
-    hass.services.register(DOMAIN, "bluetooth_tracker_update", handle_update_bluetooth)
+    hass.services.async_register(DOMAIN, "bluetooth_tracker_update", handle_update_bluetooth)
 
     return True
