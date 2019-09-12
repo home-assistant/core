@@ -8,7 +8,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_TYPE
 from homeassistant.helpers.entity import Entity
 from homeassistant import util
-import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,7 +104,7 @@ class Season(Entity):
         """Initialize the season."""
         self.hass = hass
         self.hemisphere = hemisphere
-        self.datetime = dt_util.utcnow().replace(tzinfo=None)
+        self.datetime = datetime.utcnow()
         self.type = season_tracking_type
         self.season = get_season(self.datetime, self.hemisphere, self.type)
 
@@ -126,5 +125,5 @@ class Season(Entity):
 
     def update(self):
         """Update season."""
-        self.datetime = dt_util.utcnow().replace(tzinfo=None)
+        self.datetime = datetime.utcnow()
         self.season = get_season(self.datetime, self.hemisphere, self.type)
