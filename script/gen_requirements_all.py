@@ -35,7 +35,6 @@ COMMENT_REQUIREMENTS = (
     "pyuserinput",
     "raspihats",
     "rpi-rf",
-    "RPi.GPIO",
     "smbus-cffi",
     "tensorflow",
     "VL53L1X2",

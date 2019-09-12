@@ -49,7 +49,6 @@ jobs:
           sed -i "s|# pybluez|pybluez|g" ${requirement_file}
           sed -i "s|# bluepy|bluepy|g" ${requirement_file}
           sed -i "s|# beacontools|beacontools|g" ${requirement_file}
-          sed -i "s|# RPi.GPIO|RPi.GPIO|g" ${requirement_file}
           sed -i "s|# raspihats|raspihats|g" ${requirement_file}
           sed -i "s|# rpi-rf|rpi-rf|g" ${requirement_file}
           sed -i "s|# blinkt|blinkt|g" ${requirement_file}
@@ -67,5 +66,6 @@ jobs:
           sed -i "s|# pySwitchmate|pySwitchmate|g" ${requirement_file}
           sed -i "s|# face_recognition|face_recognition|g" ${requirement_file}
           sed -i "s|# py_noaa|py_noaa|g" ${requirement_file}
+          sed -i "s|# VL53L1X|VL53L1X|g" ${requirement_file}
         done
       displayName: 'Prepare requirements files for Hass.io'
