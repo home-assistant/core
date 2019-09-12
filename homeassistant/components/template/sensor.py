@@ -308,6 +308,11 @@ class SensorTemplate(Entity):
             try:
                 result = self._availability_template.async_render()
                 self._available = result == "true"
-            except (TemplateError, ValueError) as err:
-                _LOGGER.error(err)
+            except (TemplateError, ValueError) as ex:
+                _LOGGER.error(
+                    "Could not render %s template %s: %s",
+                    friendly_property_name,
+                    self._name,
+                    ex,
+                )
                 self._available = True
