@@ -3,7 +3,7 @@
   "name": "AIS GM",
   "config_flow": false,
   "documentation": "https://www.ai-speaker.com",
-  "requirements": [],
+  "requirements": ["gmusicapi==12.0.0"],
   "dependencies": [],
   "codeowners": []
 }

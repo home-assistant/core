@@ -4,6 +4,7 @@ import logging
 import requests
 import json
 import os
+
 from homeassistant.ais_dom import ais_global
 from homeassistant.const import EVENT_PLATFORM_DISCOVERED, EVENT_STATE_CHANGED
 from homeassistant.helpers.discovery import async_load_platform
@@ -12,7 +13,6 @@ from homeassistant.util import slugify
 
 DOMAIN = "ais_cloud"
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ["feedparser==5.2.1", "readability-lxml", "bs4"]
 CLOUD_APP_URL = "https://powiedz.co/ords/f?p=100:1&x01=TOKEN:"
 CLOUD_WS_TOKEN = None
 CLOUD_WS_HEADER = {}
@@ -321,9 +321,15 @@ class AisCloudWS:
         ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
         return ws_resp
 
-    def extract_media(self, url):
+    def extract_media(self, url, local_extractor_version):
         self.setCloudToken()
-        rest_url = self.url + "extract_media?url=" + url
+        rest_url = (
+            self.url
+            + "extract_media?url="
+            + url
+            + "&extractor_version="
+            + local_extractor_version
+        )
         ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=10)
         return ws_resp
 

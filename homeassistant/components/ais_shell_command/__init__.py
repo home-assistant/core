@@ -10,7 +10,6 @@ import logging
 import os
 import homeassistant.ais_dom.ais_global as ais_global
 
-REQUIREMENTS = ["requests_futures"]
 DOMAIN = "ais_shell_command"
 GLOBAL_X = 0
 _LOGGER = logging.getLogger(__name__)

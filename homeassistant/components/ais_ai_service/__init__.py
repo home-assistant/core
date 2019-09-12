@@ -56,7 +56,6 @@ from homeassistant.components import ais_drives_service
 
 aisCloudWS = ais_cloud.AisCloudWS()
 
-REQUIREMENTS = ["fuzzywuzzy==0.15.1", "babel"]
 
 ATTR_TEXT = "text"
 DOMAIN = "ais_ai_service"

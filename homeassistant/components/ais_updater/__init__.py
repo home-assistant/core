@@ -6,18 +6,19 @@ https://home-assistant.io/components/updater/
 """
 # pylint: disable=no-name-in-module, import-error
 import asyncio
-from datetime import timedelta
 from distutils.version import StrictVersion
 import json
 import logging
 import os
 import platform
 import uuid
+import sys
 
 import aiohttp
 import async_timeout
 import voluptuous as vol
 
+from subprocess import PIPE, Popen
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.const import __version__ as current_version
 from homeassistant.helpers import event
@@ -25,8 +26,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.ais_dom import ais_global
+from homeassistant.components import ais_cloud
 
-REQUIREMENTS = ["distro==1.3.0"]
+aisCloud = ais_cloud.AisCloudWS()
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +40,7 @@ CONF_COMPONENT_REPORTING = "include_used_components"
 
 DOMAIN = "ais_updater"
 SERVICE_CHECK_VERSION = "check_version"
+SERVICE_UPGRADE_PACKAGE = "upgrade_package"
 ENTITY_ID = "sensor.version_info"
 
 UPDATER_URL = "https://powiedz.co/ords/dom/dom/updater"
@@ -219,6 +223,7 @@ async def async_setup(hass, config):
 
     # register services
     hass.services.async_register(DOMAIN, SERVICE_CHECK_VERSION, check_new_version)
+    hass.services.async_register(DOMAIN, SERVICE_UPGRADE_PACKAGE, upgrade_package)
 
     return True
 
@@ -348,3 +353,47 @@ async def get_newest_version(hass, huuid, include_components):
             },
         )
         return None
+
+
+def get_package_version(package) -> str:
+    # import pkg_resources
+    # from importlib_metadata import version, PackageNotFoundError
+    # req = pkg_resources.Requirement.parse(package)
+    #
+    # get version from manifest.json
+    if package == "youtube_dl":
+        path = (
+            str(
+                os.path.abspath(
+                    os.path.join(os.path.dirname(__file__), "..", "ais_yt_service")
+                )
+            )
+            + "/manifest.json"
+        )
+        with open(path, "r") as f:
+            manifest = json.load(f)
+        _LOGGER.error(str(manifest.requirements[0]))
+        return manifest.requirements[0]
+
+
+async def upgrade_package(call):
+    """ Ask AIS dom service if the package need to be upgraded,
+        if yes -> Install a package on PyPi
+    """
+    if "package" not in call.data:
+        _LOGGER.error("No package specified")
+        return
+    package = call.data["package"]
+    if "version" in call.data:
+        package = package + "==" + call.data["version"]
+    _LOGGER.info("Attempting install of %s", package)
+    env = os.environ.copy()
+    args = [sys.executable, "-m", "pip", "install", "--quiet", package, "--upgrade"]
+    process = Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
+    _, stderr = process.communicate()
+    if process.returncode != 0:
+        _LOGGER.error(
+            "Unable to install package %s: %s",
+            package,
+            stderr.decode("utf-8").lstrip().strip(),
+        )

@@ -3,7 +3,7 @@
   "name": "AIS AI",
   "config_flow": false,
   "documentation": "https://www.ai-speaker.com",
-  "requirements": [],
+  "requirements": ["fuzzywuzzy==0.15.1", "babel==2.7.0"],
   "dependencies": [],
   "codeowners": []
 }

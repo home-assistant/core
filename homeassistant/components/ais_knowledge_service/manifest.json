@@ -3,7 +3,7 @@
   "name": "AIS Knowledge service",
   "config_flow": false,
   "documentation": "https://www.ai-speaker.com",
-  "requirements": [],
+  "requirements": ["wikipedia==1.4.0"],
   "dependencies": [],
   "codeowners": []
 }
