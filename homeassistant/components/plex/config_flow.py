@@ -34,7 +34,6 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the Plex flow."""
         self.current_login = {}
-        self.discovery_info = {}
         self.available_servers = None
 
     async def async_step_user(self, user_input=None):
@@ -151,7 +150,6 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.info("Imported legacy config, file can be removed: %s", json_file)
             return await self.async_step_server_validate(server_config)
 
-        self.discovery_info = discovery_info
         return await self.async_step_user()
 
     async def async_step_import(self, import_config):
