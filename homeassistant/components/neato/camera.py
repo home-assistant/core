@@ -2,8 +2,6 @@
 from datetime import timedelta
 import logging
 
-from requests.exceptions import ConnectionError as ConnError, HTTPError
-
 from homeassistant.components.camera import Camera
 
 from .const import NEATO_DOMAIN, NEATO_MAP_DATA, NEATO_ROBOTS, NEATO_LOGIN
@@ -44,7 +42,6 @@ class NeatoCleaningMap(Camera):
         self.neato = hass.data[NEATO_LOGIN]
         self._image_url = None
         self._image = None
-        self._available = False
 
     def camera_image(self):
         """Return image response."""
@@ -60,17 +57,9 @@ class NeatoCleaningMap(Camera):
         if image_url == self._image_url:
             _LOGGER.debug("The map image_url is the same as old")
             return
-
-        try:
-            image = self.neato.download_map(image_url)
-            self._image = image.read()
-            self._image_url = image_url
-            self._available = True
-        except (ConnError, HTTPError) as ex:
-            _LOGGER.warning("Neato connection error: %s", ex)
-            self._image = None
-            self._image_url = None
-            self._available = False
+        image = self.neato.download_map(image_url)
+        self._image = image.read()
+        self._image_url = image_url
 
     @property
     def name(self):
@@ -81,11 +70,6 @@ class NeatoCleaningMap(Camera):
     def unique_id(self):
         """Return unique ID."""
         return self._robot_serial
-
-    @property
-    def available(self):
-        """Return if the robot is available."""
-        return self._available
 
     @property
     def device_info(self):

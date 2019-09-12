@@ -2,8 +2,7 @@
 from datetime import timedelta
 import logging
 
-from requests.exceptions import ConnectionError as ConnError, HTTPError
-
+import requests
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -161,7 +160,10 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         try:
             self._state = self.robot.state
             self._available = True
-        except (ConnError, HTTPError) as ex:
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.HTTPError,
+        ) as ex:
             _LOGGER.warning("Neato connection error: %s", ex)
             self._state = None
             self._available = False

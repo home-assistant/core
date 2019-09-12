@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from requests.exceptions import ConnectionError as ConnError, HTTPError
+import requests
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import ToggleEntity
@@ -46,7 +46,14 @@ class NeatoConnectedSwitch(ToggleEntity):
         self.robot = robot
         self.neato = hass.data[NEATO_LOGIN]
         self._robot_name = "{} {}".format(self.robot.name, SWITCH_TYPES[self.type][0])
-        self._state = False
+        try:
+            self._state = self.robot.state
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.HTTPError,
+        ) as ex:
+            _LOGGER.warning("Neato connection error: %s", ex)
+            self._state = None
         self._schedule_state = None
         self._clean_state = None
         self._robot_serial = self.robot.serial
@@ -57,7 +64,10 @@ class NeatoConnectedSwitch(ToggleEntity):
         self.neato.update_robots()
         try:
             self._state = self.robot.state
-        except (ConnError, HTTPError) as ex:
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.HTTPError,
+        ) as ex:
             _LOGGER.warning("Neato connection error: %s", ex)
             self._state = None
             return
