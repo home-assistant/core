@@ -41,19 +41,35 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Set up the Neato component."""
 
-    # TODO: Update the config entry, if configuration.yaml changed
-    if not hass.config_entries.async_entries(NEATO_DOMAIN) and NEATO_DOMAIN in config:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                NEATO_DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=config[NEATO_DOMAIN],
-            )
-        )
-    elif NEATO_DOMAIN not in config:
+    if NEATO_DOMAIN not in config:
+        # There is an entry and nothing in configuration.yaml
         return True
 
+    entries = hass.config_entries.async_entries(NEATO_DOMAIN)
     hass.data[NEATO_CONFIG] = config[NEATO_DOMAIN]
+
+    if entries:
+        # There is an entry and something in the configuration.yaml
+        entry = entries[0]
+        conf = config[NEATO_DOMAIN]
+        if (
+            entry.data[CONF_USERNAME] == conf[CONF_USERNAME]
+            and entry.data[CONF_PASSWORD] == conf[CONF_PASSWORD]
+            and entry.data[CONF_VENDOR] == conf[CONF_VENDOR]
+        ):
+            # The entry is not outdated
+            return True
+
+        # The entry is outdated
+        hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
+
+    # Create the new entry
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            NEATO_DOMAIN, context={"source": SOURCE_IMPORT}, data=config[NEATO_DOMAIN]
+        )
+    )
+
     return True
 
 
