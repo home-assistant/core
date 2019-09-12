@@ -124,6 +124,8 @@ async def async_setup_scanner(
         for mac, device_name in discover_devices(device_id):
             if mac not in devices_to_track and mac not in devices_to_not_track:
                 devices_to_track.add(mac)
+
+            if mac in devices_to_track:
                 see_device(hass, async_see, mac, device_name)
 
     if request_rssi:
