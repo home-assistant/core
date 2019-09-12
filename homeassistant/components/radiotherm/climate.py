@@ -1,5 +1,4 @@
 """Support for Radio Thermostat wifi-enabled home thermostats."""
-import datetime
 import logging
 
 import voluptuous as vol
@@ -26,6 +25,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     STATE_ON,
 )
+from homeassistant.util import dt as dt_util
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -310,7 +310,7 @@ class RadioThermostat(ClimateDevice):
         """Set device time."""
         # Calling this clears any local temperature override and
         # reverts to the scheduled temperature.
-        now = datetime.datetime.now()
+        now = dt_util.now()
         self.device.time = {
             "day": now.weekday(),
             "hour": now.hour,

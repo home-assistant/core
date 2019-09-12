@@ -27,6 +27,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers.typing import HomeAssistantType
 
+from . import AqualinkEntity, refresh_system
 from .const import DOMAIN as AQUALINK_DOMAIN, CLIMATE_SUPPORTED_MODES
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,7 +45,7 @@ async def async_setup_entry(
     async_add_entities(devs, True)
 
 
-class HassAqualinkThermostat(ClimateDevice):
+class HassAqualinkThermostat(ClimateDevice, AqualinkEntity):
     """Representation of a thermostat."""
 
     def __init__(self, dev: AqualinkThermostat):
@@ -55,17 +56,6 @@ class HassAqualinkThermostat(ClimateDevice):
     def name(self) -> str:
         """Return the name of the thermostat."""
         return self.dev.label.split(" ")[0]
-
-    async def async_update(self) -> None:
-        """Update the internal state of the thermostat.
-
-        The API update() command refreshes the state of all devices so we
-        only update if this is the main thermostat to avoid unnecessary
-        calls.
-        """
-        if self.name != "Pool":
-            return
-        await self.dev.system.update()
 
     @property
     def supported_features(self) -> int:
@@ -91,6 +81,7 @@ class HassAqualinkThermostat(ClimateDevice):
             return HVAC_MODE_HEAT
         return HVAC_MODE_OFF
 
+    @refresh_system
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Turn the underlying heater switch on or off."""
         if hvac_mode == HVAC_MODE_HEAT:
@@ -126,6 +117,7 @@ class HassAqualinkThermostat(ClimateDevice):
         """Return the current target temperature."""
         return float(self.dev.state)
 
+    @refresh_system
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         await self.dev.set_temperature(int(kwargs[ATTR_TEMPERATURE]))

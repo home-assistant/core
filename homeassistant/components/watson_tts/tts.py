@@ -99,6 +99,7 @@ def get_engine(hass, config):
     supported_languages = list({s[:5] for s in SUPPORTED_VOICES})
     default_voice = config[CONF_VOICE]
     output_format = config[CONF_OUTPUT_FORMAT]
+    service.set_default_headers({"x-watson-learning-opt-out": "true"})
 
     return WatsonTTSProvider(service, supported_languages, default_voice, output_format)
 
