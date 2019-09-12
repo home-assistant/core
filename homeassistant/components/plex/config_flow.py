@@ -71,11 +71,11 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception as error:  # pylint: disable=broad-except
             _LOGGER.error("Unknown error connecting to Plex server: %s", error)
             return self.async_abort(reason="unknown")
-        else:
-            if errors:
-                return self.async_show_form(
-                    step_id="user", data_schema=data_schema, errors=errors
-                )
+
+        if errors:
+            return self.async_show_form(
+                step_id="user", data_schema=self.USER_SCHEMA, errors=errors
+            )
 
         server_id = plex_server.machine_identifier
 
