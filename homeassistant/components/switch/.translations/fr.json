@@ -6,12 +6,12 @@
             "turn_on": "Allumer {entity_name}"
         },
         "condition_type": {
-            "is_off": "{entity_name} est \u00e9teint",
-            "is_on": "{entity_name} est allum\u00e9"
+            "turn_off": "{entity_name} \u00e9teint",
+            "turn_on": "{entity_name} allum\u00e9"
         },
         "trigger_type": {
-            "turn_off": "{name} d\u00e9sactiv\u00e9",
-            "turn_on": "{name} activ\u00e9"
+            "turn_off": "{entity_name} \u00e9teint",
+            "turn_on": "{entity_name} allum\u00e9"
         }
     }
 }
