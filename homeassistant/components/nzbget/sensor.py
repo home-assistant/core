@@ -5,32 +5,38 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from . import DATA_NZBGET, DATA_UPDATED, SENSOR_TYPES
+from . import DATA_NZBGET, DATA_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "NZBGet"
 
+SENSOR_TYPES = {
+    "article_cache": ["ArticleCacheMB", "Article Cache", "MB"],
+    "average_download_rate": ["AverageDownloadRate", "Average Speed", "MB/s"],
+    "download_paused": ["DownloadPaused", "Download Paused", None],
+    "download_rate": ["DownloadRate", "Speed", "MB/s"],
+    "download_size": ["DownloadedSizeMB", "Size", "MB"],
+    "free_disk_space": ["FreeDiskSpaceMB", "Disk Free", "MB"],
+    "post_paused": ["PostPaused", "Post Processing Paused", None],
+    "remaining_size": ["RemainingSizeMB", "Queue Size", "MB"],
+    "uptime": ["UpTimeSec", "Uptime", "min"],
+}
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create NZBGet sensors."""
-    _LOGGER.info("Setting up NZBGet sensor platform")
 
     if discovery_info is None:
         return
 
-    nzbget_api = hass.data[DATA_NZBGET]
-    monitored_variables = discovery_info["sensors"]
+    nzbget_data = hass.data[DATA_NZBGET]
     name = discovery_info["client_name"]
 
     devices = []
-    for ng_type in monitored_variables:
+    for sensor_type, sensor_config in SENSOR_TYPES.items():
         new_sensor = NZBGetSensor(
-            nzbget_api,
-            ng_type,
-            name,
-            SENSOR_TYPES[ng_type][0],
-            SENSOR_TYPES[ng_type][1],
+            nzbget_data, sensor_type, name, sensor_config[0], sensor_config[1]
         )
         devices.append(new_sensor)
 
@@ -40,16 +46,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class NZBGetSensor(Entity):
     """Representation of a NZBGet sensor."""
 
-    def __init__(self, api, sensor_type, client_name, sensor_name, unit_of_measurement):
+    def __init__(
+        self, nzbget_data, sensor_type, client_name, sensor_name, unit_of_measurement
+    ):
         """Initialize a new NZBGet sensor."""
-        self._name = "{} {}".format(client_name, sensor_type)
+        self._name = f"{client_name} {sensor_type}"
         self.type = sensor_name
         self.client_name = client_name
-        self.api = api
+        self.nzbget_data = nzbget_data
         self._state = None
         self._unit_of_measurement = unit_of_measurement
-        self.update()
-        _LOGGER.debug("Created NZBGet sensor: %s", self.type)
 
     @property
     def name(self):
@@ -66,6 +72,11 @@ class NZBGetSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
+    @property
+    def available(self):
+        """Return whether the sensor is available."""
+        return self.nzbget_data.available
+
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         async_dispatcher_connect(
@@ -79,13 +90,13 @@ class NZBGetSensor(Entity):
     def update(self):
         """Update state of sensor."""
 
-        if self.api.status is None:
+        if self.nzbget_data.status is None:
             _LOGGER.debug(
                 "Update of %s requested, but no status is available", self._name
             )
             return
 
-        value = self.api.status.get(self.type)
+        value = self.nzbget_data.status.get(self.type)
         if value is None:
             _LOGGER.warning("Unable to locate value for %s", self.type)
             return

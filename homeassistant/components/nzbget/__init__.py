@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_HOST,
-    CONF_MONITORED_VARIABLES,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
@@ -31,18 +30,6 @@ DEFAULT_PORT = 6789
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=5)
 
-SENSOR_TYPES = {
-    "article_cache": ["ArticleCacheMB", "Article Cache", "MB"],
-    "average_download_rate": ["AverageDownloadRate", "Average Speed", "MB/s"],
-    "download_paused": ["DownloadPaused", "Download Paused", None],
-    "download_rate": ["DownloadRate", "Speed", "MB/s"],
-    "download_size": ["DownloadedSizeMB", "Size", "MB"],
-    "free_disk_space": ["FreeDiskSpaceMB", "Disk Free", "MB"],
-    "post_paused": ["PostPaused", "Post Processing Paused", None],
-    "remaining_size": ["RemainingSizeMB", "Queue Size", "MB"],
-    "uptime": ["UpTimeSec", "Uptime", "min"],
-}
-
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -55,9 +42,6 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.time_period,
-                vol.Optional(
-                    CONF_MONITORED_VARIABLES, default=["download_rate"]
-                ): vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
                 vol.Optional(CONF_SSL, default=False): cv.boolean,
             }
         )
@@ -74,16 +58,16 @@ def setup(hass, config):
     name = config[DOMAIN][CONF_NAME]
     username = config[DOMAIN].get(CONF_USERNAME)
     password = config[DOMAIN].get(CONF_PASSWORD)
-    monitored_types = config[DOMAIN].get(CONF_MONITORED_VARIABLES)
-    scan_interval = config[DOMAIN].get(CONF_SCAN_INTERVAL)
+    scan_interval = config[DOMAIN][CONF_SCAN_INTERVAL]
 
     try:
         nzbget_api = pynzbgetapi.NZBGetAPI(host, username, password, ssl, ssl, port)
         nzbget_api.version()
-        _LOGGER.debug("Successfully validated NZBGet API connection.")
     except pynzbgetapi.NZBGetAPIException as conn_err:
         _LOGGER.error("Error setting up NZBGet API: %s", conn_err)
         return False
+
+    _LOGGER.debug("Successfully validated NZBGet API connection.")
 
     nzbget_data = hass.data[DATA_NZBGET] = NZBGetData(hass, nzbget_api)
     nzbget_data.update()
@@ -94,7 +78,7 @@ def setup(hass, config):
 
     track_time_interval(hass, refresh, scan_interval)
 
-    sensorconfig = {"sensors": monitored_types, "client_name": name}
+    sensorconfig = {"client_name": name}
 
     hass.helpers.discovery.load_platform("sensor", DOMAIN, sensorconfig, config)
 
@@ -115,6 +99,7 @@ class NZBGetData:
         """Get the latest data from NZBGet instance."""
         try:
             self.status = self._api.status()
+            self.available = True
             dispatcher_send(self.hass, DATA_UPDATED)
         except requests.exceptions.ConnectionError:
             self.available = False
