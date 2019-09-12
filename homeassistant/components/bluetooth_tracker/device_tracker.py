@@ -129,7 +129,7 @@ async def async_setup_scanner(
     if request_rssi:
         _LOGGER.debug("Detecting RSSI for devices")
 
-    async def update_bluetooth():
+    async def update_bluetooth(now=None):
         """Lookup Bluetooth devices and update status."""
         try:
             if track_new:
