@@ -93,11 +93,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             verify_ssl,
         )
 
-        req = await switch.get_device_state(hass)
-        if req.status >= 400:
-            _LOGGER.error("Got non-ok response from resource: %s", req.status)
-        else:
-            async_add_entities([switch])
+        async_add_entities([switch])
     except (TypeError, ValueError):
         _LOGGER.error(
             "Missing resource or schema in configuration. "
