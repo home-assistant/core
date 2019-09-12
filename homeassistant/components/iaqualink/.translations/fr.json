@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Vous ne pouvez configurer qu'une seule connexion iAqualink."
+        }
+    }
+}
