@@ -18,7 +18,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the PCA switch platform."""
 
     if discovery_info is None:
-        _LOGGER.warning("Please update your config for elv")
         return
 
     serial_device = discovery_info["device"]
