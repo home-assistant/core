@@ -1,8 +1,6 @@
 """Support for Onkyo Receivers."""
 import logging
-
-# pylint: disable=unused-import
-from typing import List  # noqa: F401
+from typing import List
 
 import voluptuous as vol
 
@@ -54,7 +52,7 @@ SUPPORT_ONKYO_WO_VOLUME = (
     | SUPPORT_PLAY_MEDIA
 )
 
-KNOWN_HOSTS = []  # type: List[str]
+KNOWN_HOSTS: List[str] = []
 DEFAULT_SOURCES = {
     "tv": "TV",
     "bd": "Bluray",
@@ -327,8 +325,7 @@ class OnkyoDevice(MediaPlayerDevice):
     def set_volume_level(self, volume):
         """
         Set volume level, input is range 0..1.
-
-        Onkyo ranges from 1-80 however 80 is usually far too loud
+        Onkyo ranges from 1-200 however 200 is usually far too loud
         so allow the user to specify the upper range with CONF_MAX_VOLUME
         """
         self.command(f"volume {int(volume * self._max_volume)}")
@@ -424,7 +421,7 @@ class OnkyoDeviceZone(OnkyoDevice):
         elif ATTR_PRESET in self._attributes:
             del self._attributes[ATTR_PRESET]
         if self._supports_volume:
-            self._volume = volume_raw[1] / 80.0
+            self._volume = volume_raw[1] / 200.0
 
     @property
     def supported_features(self):
@@ -438,8 +435,8 @@ class OnkyoDeviceZone(OnkyoDevice):
         self.command(f"zone{self._zone}.power=standby")
 
     def set_volume_level(self, volume):
-        """Set volume level, input is range 0..1. Onkyo ranges from 1-80."""
-        self.command(f"zone{self._zone}.volume={int(volume * 80)}")
+        """Set volume level, input is range 0..1. Onkyo ranges from 1-200."""
+        self.command(f"zone{self._zone}.volume={int(volume * 200)}")
 
     def volume_up(self):
         """Increase volume by 1 step."""
