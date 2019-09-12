@@ -1030,3 +1030,18 @@ def async_capture_events(hass, event_name):
     hass.bus.async_listen(event_name, capture_events)
 
     return events
+
+
+@ha.callback
+def async_mock_signal(hass, signal):
+    """Catch all dispatches to a signal."""
+    calls = []
+
+    @ha.callback
+    def mock_signal_handler(*args):
+        """Mock service call."""
+        calls.append(args)
+
+    hass.helpers.dispatcher.async_dispatcher_connect(signal, mock_signal_handler)
+
+    return calls
