@@ -15,6 +15,7 @@
         "error": {
             "invalid_credentials": "Ungültige Anmeldeinformationen",
             "invalid_vendor": "Ungültiger Hersteller",
+            "already_configured": "Bereits konfiguriert",
             "unexpected": "Unerwarteter Fehler bei der Kommunikation mit den Neato Servern"
         },
         "create_entry": {

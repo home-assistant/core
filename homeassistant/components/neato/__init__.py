@@ -5,7 +5,7 @@ from urllib.error import HTTPError
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import discovery, config_validation as cv
 from homeassistant.util import Throttle
@@ -13,6 +13,7 @@ from homeassistant.util import Throttle
 from .const import (
     DOMAIN,
     CONF_VENDOR,
+    NEATO_CONFIG,
     NEATO_LOGIN,
     NEATO_ROBOTS,
     NEATO_PERSISTENT_MAPS,
@@ -41,24 +42,18 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Set up the Neato component."""
 
-    conf = config.get(DOMAIN, CONFIG_SCHEMA({}))
-    hass.data[DOMAIN] = {"config": conf}
+    # TODO: What happend, when entries in configuration.yaml are not valid?
 
-    if DOMAIN not in config:
-        # No config entry there
+    if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
+            )
+        )
+    elif DOMAIN not in config:
         return True
 
-    # TODO: If everything is okay
-    # TODO: Skip if already configured
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=config[DOMAIN],
-        )
-    )
-
-    return True
+    hass.data[NEATO_CONFIG] = config[DOMAIN]
 
 
 async def async_setup_entry(hass, entry):
@@ -76,8 +71,15 @@ async def async_setup_entry(hass, entry):
         return False
 
     hub.update_robots()
+
     for component in ("camera", "vacuum", "switch"):
         discovery.load_platform(hass, component, DOMAIN, {}, entry.data)
+
+    # TODO: What's the difference here?
+    # for component in ("camera", "vacuum", "switch"):
+    #    hass.async_add_job(
+    #        hass.config_entries.async_forward_entry_setup(entry, component)
+    #    )
 
     return True
 

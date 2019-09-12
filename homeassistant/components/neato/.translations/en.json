@@ -15,6 +15,7 @@
         "error": {
             "invalid_credentials": "Invalid credentials",
             "invalid_vendor": "Invalid vendor",
+            "already_configured": "Already configured",
             "unexpected": "Unexpected error communicating with Neato server"
         },
         "create_entry": {
