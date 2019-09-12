@@ -71,7 +71,7 @@ class SinchNotificationService(BaseNotificationService):
             clx_args[ATTR_SENDER] = data[ATTR_SENDER]
 
         if not targets:
-            _LOGGER.info("At least 1 target is required")
+            _LOGGER.error("At least 1 target is required")
             return
 
         try:
