@@ -17,10 +17,10 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_TO_HA_METRIC = {
     "mileage": ["mdi:speedometer", LENGTH_KILOMETERS],
-    "remaining_range_total": ["mdi:ruler", LENGTH_KILOMETERS],
-    "remaining_range_electric": ["mdi:ruler", LENGTH_KILOMETERS],
-    "remaining_range_fuel": ["mdi:ruler", LENGTH_KILOMETERS],
-    "max_range_electric": ["mdi:ruler", LENGTH_KILOMETERS],
+    "remaining_range_total": ["mdi:map-marker-distance", LENGTH_KILOMETERS],
+    "remaining_range_electric": ["mdi:map-marker-distance", LENGTH_KILOMETERS],
+    "remaining_range_fuel": ["mdi:map-marker-distance", LENGTH_KILOMETERS],
+    "max_range_electric": ["mdi:map-marker-distance", LENGTH_KILOMETERS],
     "remaining_fuel": ["mdi:gas-station", VOLUME_LITERS],
     "charging_time_remaining": ["mdi:update", "h"],
     "charging_status": ["mdi:battery-charging", None],
@@ -28,10 +28,10 @@ ATTR_TO_HA_METRIC = {
 
 ATTR_TO_HA_IMPERIAL = {
     "mileage": ["mdi:speedometer", LENGTH_MILES],
-    "remaining_range_total": ["mdi:ruler", LENGTH_MILES],
-    "remaining_range_electric": ["mdi:ruler", LENGTH_MILES],
-    "remaining_range_fuel": ["mdi:ruler", LENGTH_MILES],
-    "max_range_electric": ["mdi:ruler", LENGTH_MILES],
+    "remaining_range_total": ["mdi:map-marker-distance", LENGTH_MILES],
+    "remaining_range_electric": ["mdi:map-marker-distance", LENGTH_MILES],
+    "remaining_range_fuel": ["mdi:map-marker-distance", LENGTH_MILES],
+    "max_range_electric": ["mdi:map-marker-distance", LENGTH_MILES],
     "remaining_fuel": ["mdi:gas-station", VOLUME_GALLONS],
     "charging_time_remaining": ["mdi:update", "h"],
     "charging_status": ["mdi:battery-charging", None],
