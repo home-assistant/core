@@ -325,7 +325,7 @@ class OnkyoDevice(MediaPlayerDevice):
     def set_volume_level(self, volume):
         """
         Set volume level, input is range 0..1.
-        
+
         Onkyo ranges from 1-200 however 200 is usually far too loud
         so allow the user to specify the upper range with CONF_MAX_VOLUME
         """
