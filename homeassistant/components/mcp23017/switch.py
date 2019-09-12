@@ -4,6 +4,7 @@ import logging
 import adafruit_mcp230xx
 import board
 import busio
+import digitalio
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA
