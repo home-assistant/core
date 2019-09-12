@@ -86,6 +86,11 @@ SERVICE_NEATO_CUSTOM_CLEANING_SCHEMA = vol.Schema(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Neato vacuum."""
+    pass
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Neato vacuum with config entry."""
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
         dev.append(NeatoConnectedVacuum(hass, robot))
@@ -94,7 +99,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     _LOGGER.debug("Adding vacuums %s", dev)
-    add_entities(dev, True)
+    async_add_entities(dev, True)
 
     def neato_custom_cleaning_service(call):
         """Zone cleaning service that allows user to change options."""
@@ -112,7 +117,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         entities = [entity for entity in dev if entity.entity_id in entity_ids]
         return entities
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN,
         SERVICE_NEATO_CUSTOM_CLEANING,
         neato_custom_cleaning_service,

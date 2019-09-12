@@ -20,12 +20,21 @@ SWITCH_TYPES = {SWITCH_TYPE_SCHEDULE: ["Schedule"]}
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Neato switches."""
+    pass
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Neato switch with config entry."""
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
         for type_name in SWITCH_TYPES:
             dev.append(NeatoConnectedSwitch(hass, robot, type_name))
+
+    if not dev:
+        return
+
     _LOGGER.debug("Adding switches %s", dev)
-    add_entities(dev)
+    async_add_entities(dev)
 
 
 class NeatoConnectedSwitch(ToggleEntity):

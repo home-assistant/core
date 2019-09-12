@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import discovery, config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
 
 from .const import (
@@ -41,6 +41,7 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Set up the Neato component."""
 
+    # TODO: Update the config entry, if configuration.yaml changed
     if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
@@ -71,13 +72,9 @@ async def async_setup_entry(hass, entry):
     hub.update_robots()
 
     for component in ("camera", "vacuum", "switch"):
-        discovery.load_platform(hass, component, DOMAIN, {}, entry.data)
-
-    # TODO: What's the difference here?
-    # for component in ("camera", "vacuum", "switch"):
-    #    hass.async_add_job(
-    #        hass.config_entries.async_forward_entry_setup(entry, component)
-    #    )
+        hass.async_add_job(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
 
     return True
 
