@@ -6,13 +6,15 @@ import requests.exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_URL, CONF_TOKEN, CONF_VERIFY_SSL
+from homeassistant.const import CONF_URL, CONF_TOKEN, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.util.json import load_json
 
 from .const import (  # pylint: disable=unused-import
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    PLEX_CONFIG_FILE,
     PLEX_SERVER_CONFIG,
 )
 from .errors import NoServersFound, ServerNotSpecified
@@ -135,6 +137,21 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries() or self._async_in_progress():
             # Skip discovery if a config already exists or is in progress.
             return self.async_abort(reason="already_configured")
+
+        json_file = self.hass.config.path(PLEX_CONFIG_FILE)
+        file_config = load_json(json_file)
+
+        if file_config:
+            host_and_port, host_config = file_config.popitem()
+            prefix = "https" if host_config[CONF_SSL] else "http"
+
+            server_config = {
+                CONF_URL: f"{prefix}://{host_and_port}",
+                CONF_TOKEN: host_config[CONF_TOKEN],
+                CONF_VERIFY_SSL: host_config["verify"],
+            }
+            _LOGGER.info("Imported legacy config, file can be removed: %s", json_file)
+        return await self.async_step_import(server_config)
 
         self.discovery_info = discovery_info
         return await self.async_step_user()
