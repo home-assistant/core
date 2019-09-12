@@ -9,7 +9,7 @@ from . import DOMAIN as BMW_DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    "lids": ["Doors", "opening", "mdi:car-door"],
+    "lids": ["Doors", "opening", "mdi:car-door-lock"],
     "windows": ["Windows", "opening", "mdi:car-door"],
     "door_lock_state": ["Door lock state", "safety", "mdi:car-key"],
     "lights_parking": ["Parking lights", "light", "mdi:car-parking-lights"],
@@ -122,8 +122,9 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             for report in vehicle_state.condition_based_services:
                 result.update(self._format_cbs_report(report))
         elif self._attribute == "check_control_messages":
-            check_control_messages = vehicle_state.has_check_control_messages
-            if check_control_messages:
+            check_control_messages = vehicle_state.check_control_messages
+            has_check_control_messages = vehicle_state.has_check_control_messages
+            if has_check_control_messages:
                 cbs_list = []
                 for message in check_control_messages:
                     cbs_list.append(message["ccmDescriptionShort"])
@@ -184,9 +185,9 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             distance = round(
                 self.hass.config.units.length(report.due_distance, LENGTH_KILOMETERS)
             )
-            result[f"{service_type} distance"] = "{} {}".format(
-                distance, self.hass.config.units.length_unit
-            )
+            result[
+                f"{service_type} distance"
+            ] = f"{distance} {self.hass.config.units.length_unit}"
         return result
 
     def update_callback(self):
