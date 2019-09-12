@@ -11,9 +11,9 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
 
 from .const import (
-    DOMAIN,
     CONF_VENDOR,
     NEATO_CONFIG,
+    NEATO_DOMAIN,
     NEATO_LOGIN,
     NEATO_ROBOTS,
     NEATO_PERSISTENT_MAPS,
@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
+        NEATO_DOMAIN: vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
@@ -42,16 +42,18 @@ def setup(hass, config):
     """Set up the Neato component."""
 
     # TODO: Update the config entry, if configuration.yaml changed
-    if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
+    if not hass.config_entries.async_entries(NEATO_DOMAIN) and NEATO_DOMAIN in config:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
+                NEATO_DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=config[NEATO_DOMAIN],
             )
         )
-    elif DOMAIN not in config:
+    elif NEATO_DOMAIN not in config:
         return True
 
-    hass.data[NEATO_CONFIG] = config[DOMAIN]
+    hass.data[NEATO_CONFIG] = config[NEATO_DOMAIN]
     return True
 
 

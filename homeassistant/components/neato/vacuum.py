@@ -2,7 +2,8 @@
 from datetime import timedelta
 import logging
 
-import requests
+from requests.exceptions import ConnectionError as ConnError, HTTPError
+
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -37,6 +38,7 @@ from .const import (
     ERRORS,
     MODE,
     NEATO_LOGIN,
+    NEATO_DOMAIN,
     NEATO_MAP_DATA,
     NEATO_PERSISTENT_MAPS,
     NEATO_ROBOTS,
@@ -150,6 +152,7 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         self._robot_maps = hass.data[NEATO_PERSISTENT_MAPS]
         self._robot_boundaries = {}
         self._robot_has_map = self.robot.has_persistent_maps
+        self._robot_stats = self.robot.get_robot_info().json()
 
     def update(self):
         """Update the states of Neato Vacuums."""
@@ -158,10 +161,7 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         try:
             self._state = self.robot.state
             self._available = True
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.HTTPError,
-        ) as ex:
+        except (ConnError, HTTPError) as ex:
             _LOGGER.warning("Neato connection error: %s", ex)
             self._state = None
             self._available = False
@@ -295,6 +295,17 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             data[ATTR_CLEAN_BATTERY_END] = self.clean_battery_end
 
         return data
+
+    @property
+    def device_info(self):
+        """Device info for neato robot."""
+        return {
+            "identifiers": {(NEATO_DOMAIN, self._robot_serial)},
+            "name": self._name,
+            "manufacturer": self._robot_stats["data"]["mfg_name"],
+            "model": self._robot_stats["data"]["modelName"],
+            "sw_version": self._state["meta"]["firmware"],
+        }
 
     def start(self):
         """Start cleaning or resume cleaning."""

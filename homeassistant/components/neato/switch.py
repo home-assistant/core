@@ -2,12 +2,12 @@
 from datetime import timedelta
 import logging
 
-import requests
+from requests.exceptions import ConnectionError as ConnError, HTTPError
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import ToggleEntity
 
-from .const import NEATO_LOGIN, NEATO_ROBOTS
+from .const import NEATO_DOMAIN, NEATO_LOGIN, NEATO_ROBOTS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,14 +46,7 @@ class NeatoConnectedSwitch(ToggleEntity):
         self.robot = robot
         self.neato = hass.data[NEATO_LOGIN]
         self._robot_name = "{} {}".format(self.robot.name, SWITCH_TYPES[self.type][0])
-        try:
-            self._state = self.robot.state
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.HTTPError,
-        ) as ex:
-            _LOGGER.warning("Neato connection error: %s", ex)
-            self._state = None
+        self._state = False
         self._schedule_state = None
         self._clean_state = None
         self._robot_serial = self.robot.serial
@@ -64,10 +57,7 @@ class NeatoConnectedSwitch(ToggleEntity):
         self.neato.update_robots()
         try:
             self._state = self.robot.state
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.HTTPError,
-        ) as ex:
+        except (ConnError, HTTPError) as ex:
             _LOGGER.warning("Neato connection error: %s", ex)
             self._state = None
             return
@@ -102,6 +92,11 @@ class NeatoConnectedSwitch(ToggleEntity):
             if self._schedule_state == STATE_ON:
                 return True
             return False
+
+    @property
+    def device_info(self):
+        """Device info for neato robot."""
+        return {"identifiers": {(NEATO_DOMAIN, self._robot_serial)}}
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""

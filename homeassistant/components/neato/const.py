@@ -1,6 +1,6 @@
 """Constants for Neato integration."""
 
-DOMAIN = "neato"
+NEATO_DOMAIN = "neato"
 
 CONF_VENDOR = "vendor"
 NEATO_ROBOTS = "neato_robots"
