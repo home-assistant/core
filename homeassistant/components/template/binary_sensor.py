@@ -257,9 +257,13 @@ class BinarySensorTemplate(BinarySensorDevice):
             try:
                 result = self._availability_template.async_render()
                 self._available = result == "true"
-            except (TemplateError, ValueError) as err:
-                _LOGGER.error(err)
-                self._available = True
+            except (TemplateError, ValueError) as ex:
+                _LOGGER.error(
+                    "Could not render %s template %s: %s",
+                    CONF_AVAILABILITY_TEMPLATE,
+                    self._name,
+                    ex,
+                )
 
         attrs = {}
         if self._attribute_templates is not None:
