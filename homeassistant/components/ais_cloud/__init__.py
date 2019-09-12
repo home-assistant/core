@@ -5,7 +5,7 @@ import requests
 import json
 import os
 
-from homeassistant.ais_dom import ais_global
+from homeassistant.components.ais_dom import ais_global
 from homeassistant.const import EVENT_PLATFORM_DISCOVERED, EVENT_STATE_CHANGED
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.const import CONF_NAME, CONF_IP_ADDRESS, CONF_MAC

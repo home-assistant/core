@@ -25,11 +25,10 @@ from homeassistant.helpers import event
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-from homeassistant.ais_dom import ais_global
+from homeassistant.components.ais_dom import ais_global
 from homeassistant.components import ais_cloud
 
 aisCloud = ais_cloud.AisCloudWS()
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -221,6 +220,59 @@ async def async_setup(hass, config):
         hass, check_new_version, hour=9, minute=_dt.minute, second=_dt.second
     )
 
+    def upgrade_package_task(package):
+        _LOGGER.info("upgrade_package_task " + str(package))
+        env = os.environ.copy()
+        args = [sys.executable, "-m", "pip", "install", "--quiet", package, "--upgrade"]
+        process = Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
+        _, stderr = process.communicate()
+        if process.returncode != 0:
+            _LOGGER.error(
+                "Unable to install package %s: %s",
+                package,
+                stderr.decode("utf-8").lstrip().strip(),
+            )
+        else:
+            if package.startswith("youtube_dl"):
+                path = (
+                    str(
+                        os.path.abspath(
+                            os.path.join(
+                                os.path.dirname(__file__), "..", "ais_yt_service"
+                            )
+                        )
+                    )
+                    + "/manifest.json"
+                )
+                manifest = {
+                    "domain": "ais_yt_service",
+                    "name": "AIS YouTube",
+                    "config_flow": False,
+                    "documentation": "https://ai-speaker.com",
+                    "requirements": [package],
+                    "dependencies": [],
+                    "codeowners": [],
+                }
+                with open(path, "w+") as jsonFile:
+                    json.dump(manifest, jsonFile)
+
+    def upgrade_package(call):
+        """ Ask AIS dom service if the package need to be upgraded,
+            if yes -> Install a package on PyPi
+        """
+        if "package" not in call.data:
+            _LOGGER.error("No package specified")
+            return
+        package = call.data["package"]
+        if "version" in call.data:
+            package = package + "==" + call.data["version"]
+        _LOGGER.info("Attempting install of %s", package)
+        # todo Starting the installation as independent task
+        import threading
+
+        update_thread = threading.Thread(target=upgrade_package_task, args=(package,))
+        update_thread.start()
+
     # register services
     hass.services.async_register(DOMAIN, SERVICE_CHECK_VERSION, check_new_version)
     hass.services.async_register(DOMAIN, SERVICE_UPGRADE_PACKAGE, upgrade_package)
@@ -372,28 +424,6 @@ def get_package_version(package) -> str:
         )
         with open(path, "r") as f:
             manifest = json.load(f)
-        _LOGGER.error(str(manifest.requirements[0]))
-        return manifest.requirements[0]
-
-
-async def upgrade_package(call):
-    """ Ask AIS dom service if the package need to be upgraded,
-        if yes -> Install a package on PyPi
-    """
-    if "package" not in call.data:
-        _LOGGER.error("No package specified")
-        return
-    package = call.data["package"]
-    if "version" in call.data:
-        package = package + "==" + call.data["version"]
-    _LOGGER.info("Attempting install of %s", package)
-    env = os.environ.copy()
-    args = [sys.executable, "-m", "pip", "install", "--quiet", package, "--upgrade"]
-    process = Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
-    _, stderr = process.communicate()
-    if process.returncode != 0:
-        _LOGGER.error(
-            "Unable to install package %s: %s",
-            package,
-            stderr.decode("utf-8").lstrip().strip(),
-        )
+        _LOGGER.info(str(manifest["requirements"][0]))
+        return manifest["requirements"][0]
+    return ""

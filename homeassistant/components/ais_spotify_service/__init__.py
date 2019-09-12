@@ -6,7 +6,7 @@ https://home-assistant.io/components/media_player.spotify/
 """
 import logging
 import asyncio
-from homeassistant.ais_dom import ais_global
+from homeassistant.components.ais_dom import ais_global
 from homeassistant.components import ais_cloud
 from .config_flow import configured_service, setUrl
 from homeassistant.util.async_ import run_coroutine_threadsafe

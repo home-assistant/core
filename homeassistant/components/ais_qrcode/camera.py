@@ -4,23 +4,28 @@ import voluptuous as vol
 from homeassistant.core import callback
 
 from homeassistant.const import (
-    CONF_NAME, CONF_VALUE_TEMPLATE, ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START)
-from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
+    CONF_NAME,
+    CONF_VALUE_TEMPLATE,
+    ATTR_ENTITY_ID,
+    EVENT_HOMEASSISTANT_START,
+)
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from datetime import timedelta
 
-REQUIREMENTS = ['pyqrcode==1.2.1', 'pypng==0.0.18']
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'qr_code'
+DEFAULT_NAME = "qr_code"
 
 SCAN_INTERVAL = timedelta(seconds=2000)
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    }
+)
 
 
 async def async_setup_platform(hass, config, add_devices, discovery_info=None):
@@ -30,8 +35,7 @@ async def async_setup_platform(hass, config, add_devices, discovery_info=None):
 
     if value_template is not None:
         value_template.hass = hass
-    entity_ids = (config.get(ATTR_ENTITY_ID)
-                  or value_template.extract_entities())
+    entity_ids = config.get(ATTR_ENTITY_ID) or value_template.extract_entities()
 
     add_devices([QRCodeCamera(hass, name, value_template, entity_ids)])
     return True
@@ -52,6 +56,7 @@ class QRCodeCamera(Camera):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
+
         @callback
         def qr_state_listener(entity, old_state, new_state):
             """Handle device state changes."""
@@ -60,11 +65,9 @@ class QRCodeCamera(Camera):
         @callback
         def qr_sensor_startup(event):
             """Update template on startup."""
-            async_track_state_change(
-                self.hass, self._entities, qr_state_listener)
+            async_track_state_change(self.hass, self._entities, qr_state_listener)
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, qr_sensor_startup)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, qr_sensor_startup)
 
     @property
     def name(self):
@@ -91,8 +94,11 @@ class QRCodeCamera(Camera):
     def _refresh_(self):
         import pyqrcode
         import png
+
         qr_code = pyqrcode.create(self._template.async_render())
         self._image.truncate(0)
         self._image.seek(0)
 
-        qr_code.png(self._image, scale=6, module_color=[0, 0, 0], background=[0xff, 0xff, 0xff])
+        qr_code.png(
+            self._image, scale=6, module_color=[0, 0, 0], background=[0xFF, 0xFF, 0xFF]
+        )

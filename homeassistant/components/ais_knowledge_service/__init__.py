@@ -8,7 +8,7 @@ https://ai-speaker.com
 import asyncio
 import logging
 import voluptuous as vol
-from homeassistant.ais_dom import ais_global
+from homeassistant.components.ais_dom import ais_global
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components import ais_cloud
 

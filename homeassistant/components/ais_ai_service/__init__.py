@@ -18,7 +18,6 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_OPEN_COVER,
-    SERVICE_CLOSE_COVER,
     STATE_ON,
     STATE_OFF,
     STATE_HOME,
@@ -37,7 +36,6 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_PENDING,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMING,
     STATE_ALARM_TRIGGERED,
@@ -51,7 +49,7 @@ from homeassistant.const import (
 from homeassistant.helpers import intent, config_validation as cv
 from homeassistant.components import ais_cloud
 import homeassistant.components.mqtt as mqtt
-import homeassistant.ais_dom.ais_global as ais_global
+import homeassistant.components.ais_dom.ais_global as ais_global
 from homeassistant.components import ais_drives_service
 
 aisCloudWS = ais_cloud.AisCloudWS()

@@ -1,0 +1,9 @@
+{
+  "domain": "ais_shell_command",
+  "name": "AIS QR code camera",
+  "config_flow": false,
+  "documentation": "https://www.ai-speaker.com",
+  "requirements": ["pyqrcode==1.2.1", "pypng==0.0.18"],
+  "dependencies": [],
+  "codeowners": []
+}

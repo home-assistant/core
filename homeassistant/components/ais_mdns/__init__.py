@@ -9,7 +9,7 @@ import socket
 import subprocess
 import voluptuous as vol
 
-from homeassistant.ais_dom import ais_global
+from homeassistant.components.ais_dom import ais_global
 from homeassistant import util
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, __version__
 

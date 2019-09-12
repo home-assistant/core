@@ -34,7 +34,7 @@ class OwnTracksFlow(config_entries.ConfigFlow):
 
         webhook_id, webhook_url, cloudhook = await self._get_webhook_id()
         #
-        from homeassistant.ais_dom import ais_global
+        from homeassistant.components.ais_dom import ais_global
 
         gate_id = ais_global.get_sercure_android_id_dom()
         webhook_url = webhook_url.replace("localhost:8180", gate_id + ".paczka.pro")

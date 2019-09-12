@@ -12,7 +12,7 @@ import os.path
 from operator import itemgetter
 
 from homeassistant.components import ais_cloud
-from homeassistant.ais_dom import ais_global
+from homeassistant.components.ais_dom import ais_global
 
 aisCloud = ais_cloud.AisCloudWS()
 

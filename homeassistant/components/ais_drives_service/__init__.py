@@ -14,7 +14,7 @@ import mimetypes
 import subprocess
 import time
 from homeassistant.components import ais_cloud
-from homeassistant.ais_dom import ais_global
+from homeassistant.components.ais_dom import ais_global
 from .config_flow import configured_drivers
 
 aisCloud = ais_cloud.AisCloudWS()

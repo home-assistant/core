@@ -7,7 +7,7 @@ https://ai-speaker.com
 import asyncio
 import os
 import logging
-import homeassistant.ais_dom.ais_global as ais_global
+import homeassistant.components.ais_dom.ais_global as ais_global
 
 DOMAIN = "ais_amplifier_service"
 _LOGGER = logging.getLogger(__name__)

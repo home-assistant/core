@@ -7,8 +7,7 @@ import requests
 import json
 from homeassistant.components import ais_cloud
 from homeassistant.components import ais_updater
-from homeassistant.ais_dom import ais_global
-
+from homeassistant.components.ais_dom import ais_global
 
 aisCloud = ais_cloud.AisCloudWS()
 URL_BASE = "https://www.googleapis.com/youtube/v3/search"
@@ -330,7 +329,7 @@ class YouTubeData:
             _LOGGER.info(str(json_ws_resp))
             #
             cloud_extractor_version = json_ws_resp["extractor_version"]
-            if cloud_extractor_version != local_extractor_version:
+            if "youtube_dl==" + cloud_extractor_version != local_extractor_version:
                 self.hass.services.call(
                     "ais_updater",
                     "upgrade_package",
@@ -338,7 +337,7 @@ class YouTubeData:
                 )
             media_url = json_ws_resp["url"]
         except Exception as e:
-            _LOGGER.error("extract_media error: " + str(e))
+            _LOGGER.info("extract_media error: " + str(e))
 
         all_ok = False
         if media_url is not None and len(media_url) > 0:

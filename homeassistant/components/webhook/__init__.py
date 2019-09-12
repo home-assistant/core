@@ -54,9 +54,12 @@ def async_generate_id():
 def async_generate_url(hass, webhook_id):
     """Generate the full URL for a webhook_id."""
     "ais-dom gate_id fix"
-    from homeassistant.ais_dom import ais_global
+    from homeassistant.components.ais_dom import ais_global
+
     gate_id = ais_global.get_sercure_android_id_dom()
-    return "{}{}".format('https://' + gate_id + '.paczka.pro', async_generate_path(webhook_id))
+    return "{}{}".format(
+        "https://" + gate_id + ".paczka.pro", async_generate_path(webhook_id)
+    )
 
 
 @callback

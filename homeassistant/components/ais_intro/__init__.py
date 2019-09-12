@@ -5,20 +5,15 @@ Component that will help guide the user taking its first steps.
 import asyncio
 import logging
 
-import voluptuous as vol
-
-DOMAIN = 'introduction'
-
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({}),
-}, extra=vol.ALLOW_EXTRA)
+DOMAIN = "ais_intro"
 
 
 @asyncio.coroutine
 def async_setup(hass, config=None):
     """Set up the introduction component."""
     log = logging.getLogger(__name__)
-    log.info("""
+    log.info(
+        """
 
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -39,9 +34,11 @@ def async_setup(hass, config=None):
 
 
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    """)
+    """
+    )
 
-    hass.components.persistent_notification.async_create("""
+    hass.components.persistent_notification.async_create(
+        """
 
 Mamy nadzieję, że spełnimy wszystkie twoje marzenia.
 
@@ -51,6 +48,8 @@ Oto kilka informacji, od których możesz zacząć:
  - [Źródła systemu](https://github.com/sviete)
  - [Strona projektu](https://ai-speaker.com)
 
-""", 'Cześć, witamy w systemie Asystent domowy!')  # noqa
+""",
+        "Cześć, witamy w systemie Asystent domowy!",
+    )  # noqa
 
     return True

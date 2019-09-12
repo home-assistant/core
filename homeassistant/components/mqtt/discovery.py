@@ -222,7 +222,7 @@ async def async_start(
             # AIS dom, we are doing this here to inform user about new device
             if "name" in payload and component != "sensor":
                 # 1. only if ais start is done
-                import homeassistant.ais_dom.ais_global as ais_global
+                import homeassistant.components.ais_dom.ais_global as ais_global
 
                 if ais_global.G_AIS_START_IS_DONE:
                     # 2. the device name is the same as the new added device

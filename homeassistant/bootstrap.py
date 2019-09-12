@@ -127,7 +127,7 @@ async def async_from_config_file(
 
     # ais config
     ais_config = str(os.path.dirname(__file__))
-    ais_config += '/ais-dom-config/configuration.yaml'
+    ais_config += "/ais-dom-config/configuration.yaml"
 
     try:
         config_dict = await hass.async_add_executor_job(
@@ -147,11 +147,11 @@ async def async_from_config_file(
         clear_secret_cache()
 
     try:
-        import homeassistant.ais_dom.ais_utils as ais_utils
+        import homeassistant.components.ais_dom.ais_utils as ais_utils
+
         ais_utils.dict_merge(config_dict, user_config_dict)
     except:
         _LOGGER.error("Error loading user customize")
-
 
     return await async_from_config_dict(
         config_dict, hass, enable_log=False, skip_pip=skip_pip

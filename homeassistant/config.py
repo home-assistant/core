@@ -12,7 +12,6 @@ from typing import (  # noqa: F401 pylint: disable=unused-import
     Tuple,
     Optional,
     Dict,
-    List,
     Union,
     Callable,
     Sequence,
@@ -340,7 +339,7 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
 
     # ais config
     try:
-        import homeassistant.ais_dom.ais_utils as ais_utils
+        import homeassistant.components.ais_dom.ais_utils as ais_utils
 
         ais_config = await hass.async_add_executor_job(_load_ais_yaml_config)
         ais_utils.dict_merge(ais_config, config)

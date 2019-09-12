@@ -11,13 +11,14 @@ import requests
 import json
 import os.path
 from homeassistant.components import ais_cloud
-from homeassistant.ais_dom import ais_global
+from homeassistant.components.ais_dom import ais_global
+
 aisCloud = ais_cloud.AisCloudWS()
 
-DOMAIN = 'ais_audiobooks_service'
-PERSISTENCE_AUDIOBOOKS = '/.dom/audiobboks.json'
+DOMAIN = "ais_audiobooks_service"
+PERSISTENCE_AUDIOBOOKS = "/.dom/audiobboks.json"
 _LOGGER = logging.getLogger(__name__)
-AUDIOBOOKS_WS_URL = 'https://wolnelektury.pl/api/audiobooks/?format=json'
+AUDIOBOOKS_WS_URL = "https://wolnelektury.pl/api/audiobooks/?format=json"
 
 
 @asyncio.coroutine
@@ -42,12 +43,9 @@ def async_setup(hass, config):
         _LOGGER.info("select_chapter")
         data.select_chapter(call)
 
-    hass.services.async_register(
-        DOMAIN, 'get_books', get_books)
-    hass.services.async_register(
-        DOMAIN, 'get_chapters', get_chapters)
-    hass.services.async_register(
-        DOMAIN, 'select_chapter', select_chapter)
+    hass.services.async_register(DOMAIN, "get_books", get_books)
+    hass.services.async_register(DOMAIN, "get_chapters", get_chapters)
+    hass.services.async_register(DOMAIN, "select_chapter", select_chapter)
 
     return True
 
@@ -78,7 +76,9 @@ class AudioBooksData:
             if item["author"] == call.data["author"]:
                 list_info[list_idx] = {}
                 try:
-                    list_info[list_idx]["thumbnail"] = "https://wolnelektury.pl/media/" + item["cover_thumb"]
+                    list_info[list_idx]["thumbnail"] = (
+                        "https://wolnelektury.pl/media/" + item["cover_thumb"]
+                    )
                 except Exception:
                     list_info[list_idx]["thumbnail"] = item["simple_thumb"]
                 list_info[list_idx]["title"] = item["title"]
@@ -93,10 +93,14 @@ class AudioBooksData:
 
         self.hass.states.async_set("sensor.audiobookslist", -1, list_info)
         import homeassistant.components.ais_ai_service as ais_ai
-        if ais_ai.CURR_ENTITIE == 'input_select.book_autor':
-            ais_ai.set_curr_entity(self.hass, 'sensor.audiobookslist')
+
+        if ais_ai.CURR_ENTITIE == "input_select.book_autor":
+            ais_ai.set_curr_entity(self.hass, "sensor.audiobookslist")
             self.hass.services.call(
-                'ais_ai_service', 'say_it', {"text": "Mamy " + str(len(list_info)) + " , wybierz książkę"})
+                "ais_ai_service",
+                "say_it",
+                {"text": "Mamy " + str(len(list_info)) + " , wybierz książkę"},
+            )
 
     def get_chapters(self, call):
         """Load chapters for the selected book."""
@@ -106,8 +110,8 @@ class AudioBooksData:
 
         state = self.hass.states.get("sensor.audiobookslist")
         attr = state.attributes
-        track = attr.get(int(call.data['id']))
-        self.hass.states.async_set("sensor.audiobookslist", call.data['id'], attr)
+        track = attr.get(int(call.data["id"]))
+        self.hass.states.async_set("sensor.audiobookslist", call.data["id"], attr)
 
         try:
             ws_resp = requests.get(track["lookup_url"] + "?format=json", timeout=10)
@@ -115,7 +119,9 @@ class AudioBooksData:
 
         except Exception as e:
             _LOGGER.error("Can't load chapters: " + str(e))
-            self.hass.services.call('ais_ai_service', 'say_it', {"text": "Nie można pobrać rozdziałów"})
+            self.hass.services.call(
+                "ais_ai_service", "say_it", {"text": "Nie można pobrać rozdziałów"}
+            )
             return
 
         list_info = {}
@@ -132,22 +138,29 @@ class AudioBooksData:
                 list_info[list_idx]["uri"] = item["url"]
                 list_info[list_idx]["media_source"] = ais_global.G_AN_AUDIOBOOK_CHAPTER
                 list_info[list_idx]["audio_type"] = ais_global.G_AN_AUDIOBOOK_CHAPTER
-                list_info[list_idx]["icon"] = 'mdi:play'
+                list_info[list_idx]["icon"] = "mdi:play"
                 list_idx = list_idx + 1
 
         self.hass.states.async_set("sensor.audiobookschapterslist", 0, list_info)
-        self.hass.services.call('ais_audiobooks_service', 'select_chapter', {"id": 0})
+        self.hass.services.call("ais_audiobooks_service", "select_chapter", {"id": 0})
 
         # check if the change was done form remote
         import homeassistant.components.ais_ai_service as ais_ai
-        if ais_ai.CURR_ENTITIE == 'sensor.audiobookslist':
-            ais_ai.set_curr_entity(self.hass, 'sensor.audiobookschapterslist')
+
+        if ais_ai.CURR_ENTITIE == "sensor.audiobookslist":
+            ais_ai.set_curr_entity(self.hass, "sensor.audiobookschapterslist")
             if len(list_info) > 0:
                 self.hass.services.call(
-                    'ais_ai_service', 'say_it', {"text": "Włączam pierwszy rozdział z " + str(len(list_info))})
+                    "ais_ai_service",
+                    "say_it",
+                    {"text": "Włączam pierwszy rozdział z " + str(len(list_info))},
+                )
             else:
                 self.hass.services.call(
-                    'ais_ai_service', 'say_it', {"text": "Odtwarzam " + str(len(list_info))})
+                    "ais_ai_service",
+                    "say_it",
+                    {"text": "Odtwarzam " + str(len(list_info))},
+                )
 
     def select_chapter(self, call):
         """Get chapter stream url for the selected name."""
@@ -157,17 +170,29 @@ class AudioBooksData:
 
         state = self.hass.states.get("sensor.audiobookschapterslist")
         attr = state.attributes
-        track = attr.get(int(call.data['id']))
-        self.hass.states.async_set("sensor.audiobookschapterslist", call.data['id'], attr)
+        track = attr.get(int(call.data["id"]))
+        self.hass.states.async_set(
+            "sensor.audiobookschapterslist", call.data["id"], attr
+        )
 
         # set stream uri, image and title
         _audio_info = json.dumps(
-            {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": ais_global.G_AN_AUDIOBOOK,
-             "media_content_id": track["uri"]})
-        self.hass.services.call('media_player', 'play_media',
-                                {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                                 "media_content_type": "ais_content_info",
-                                 "media_content_id": _audio_info})
+            {
+                "IMAGE_URL": track["thumbnail"],
+                "NAME": track["title"],
+                "MEDIA_SOURCE": ais_global.G_AN_AUDIOBOOK,
+                "media_content_id": track["uri"],
+            }
+        )
+        self.hass.services.call(
+            "media_player",
+            "play_media",
+            {
+                "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+                "media_content_type": "ais_content_info",
+                "media_content_id": _audio_info,
+            },
+        )
 
     @asyncio.coroutine
     def async_load_all_books(self):
@@ -176,13 +201,16 @@ class AudioBooksData:
         def load():
             """Load the items synchronously."""
             self.hass.services.call(
-                'ais_bookmarks', 'get_favorites', {"audio_source": ais_global.G_AN_AUDIOBOOK})
+                "ais_bookmarks",
+                "get_favorites",
+                {"audio_source": ais_global.G_AN_AUDIOBOOK},
+            )
 
             path = self.hass.config.path() + PERSISTENCE_AUDIOBOOKS
             try:
                 ws_resp = requests.get(AUDIOBOOKS_WS_URL, timeout=10)
                 data = ws_resp.json()
-                with open(path, 'w+') as my_file:
+                with open(path, "w+") as my_file:
                     json.dump(data, my_file)
             except Exception as e:
                 _LOGGER.info("Can't load books list: " + str(e))
@@ -204,9 +232,9 @@ class AudioBooksData:
                 if item["author"] not in authors:
                     authors.append(item["author"])
             self.hass.services.call(
-                'input_select',
-                'set_options', {
-                    "entity_id": "input_select.book_autor",
-                    "options": authors})
+                "input_select",
+                "set_options",
+                {"entity_id": "input_select.book_autor", "options": authors},
+            )
 
         yield from self.hass.async_add_job(load)

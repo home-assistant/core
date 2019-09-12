@@ -6,27 +6,56 @@ import asyncio
 import logging
 import json
 import homeassistant.util.dt as dt_util
-import homeassistant.ais_dom.ais_global as ais_global
+import homeassistant.components.ais_dom.ais_global as ais_global
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP, SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA, MediaPlayerDevice, SUPPORT_SEEK, SUPPORT_SHUFFLE_SET,
-    SUPPORT_SELECT_SOURCE, SUPPORT_SELECT_SOUND_MODE)
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_STOP,
+    SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
+    MediaPlayerDevice,
+    SUPPORT_SEEK,
+    SUPPORT_SHUFFLE_SET,
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_SELECT_SOUND_MODE,
+)
 from homeassistant.components.media_player.const import (
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
+)
 from typing import Optional
 from homeassistant.const import (
-    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
-    CONF_NAME, CONF_IP_ADDRESS, CONF_MAC)
+    STATE_IDLE,
+    STATE_OFF,
+    STATE_PAUSED,
+    STATE_PLAYING,
+    CONF_NAME,
+    CONF_IP_ADDRESS,
+    CONF_MAC,
+)
 
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_EXO = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_STOP | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_VOLUME_STEP | SUPPORT_SEEK | SUPPORT_SELECT_SOURCE | SUPPORT_SELECT_SOUND_MODE | SUPPORT_SHUFFLE_SET
+SUPPORT_EXO = (
+    SUPPORT_PAUSE
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_PLAY
+    | SUPPORT_STOP
+    | SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_VOLUME_STEP
+    | SUPPORT_SEEK
+    | SUPPORT_SELECT_SOURCE
+    | SUPPORT_SELECT_SOUND_MODE
+    | SUPPORT_SHUFFLE_SET
+)
 
-DEFAULT_NAME = 'AIS Dom Odtwarzacz'
+DEFAULT_NAME = "AIS Dom Odtwarzacz"
 
 
 @asyncio.coroutine
@@ -40,7 +69,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         name = config.get(CONF_NAME)
         _ip = config.get(CONF_IP_ADDRESS)
         # TODO get local mac address
-        _mac = '1111111111111111111'
+        _mac = "1111111111111111111"
 
     device = ExoPlayerDevice(_ip, _mac, name)
     _LOGGER.info("device: " + str(device))
@@ -60,16 +89,16 @@ class ExoPlayerDevice(MediaPlayerDevice):
         self._volume_level = volume
         vol = int(volume * 100)
         self.hass.services.call(
-            'ais_ai_service',
-            'publish_command_to_frame', {
-                "key": 'setVolume',
-                "val": vol
-            }
+            "ais_ai_service",
+            "publish_command_to_frame",
+            {"key": "setVolume", "val": vol},
         )
 
     def select_sound_mode(self, sound_mode):
         self._sound_mode = sound_mode
-        self.hass.services.call('ais_amplifier_service', 'change_sound_mode', {"mode": sound_mode})
+        self.hass.services.call(
+            "ais_amplifier_service", "change_sound_mode", {"mode": sound_mode}
+        )
 
     def clear_playlist(self):
         pass
@@ -87,15 +116,17 @@ class ExoPlayerDevice(MediaPlayerDevice):
         self._media_title = None
         self._media_source = None
         self._album_name = None
-        self._sound_mode = 'NORMAL'
-        self._playlists = [ais_global.G_AN_RADIO,
-                           ais_global.G_AN_PODCAST,
-                           ais_global.G_AN_MUSIC,
-                           ais_global.G_AN_AUDIOBOOK,
-                           ais_global.G_AN_NEWS,
-                           ais_global.G_AN_LOCAL,
-                           ais_global.G_AN_SPOTIFY,
-                           ais_global.G_AN_FAVORITE]
+        self._sound_mode = "NORMAL"
+        self._playlists = [
+            ais_global.G_AN_RADIO,
+            ais_global.G_AN_PODCAST,
+            ais_global.G_AN_MUSIC,
+            ais_global.G_AN_AUDIOBOOK,
+            ais_global.G_AN_NEWS,
+            ais_global.G_AN_LOCAL,
+            ais_global.G_AN_SPOTIFY,
+            ais_global.G_AN_FAVORITE,
+        ]
         self._currentplaylist = None
         self._media_status_received_time = None
         self._media_position = 0
@@ -106,7 +137,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-       pass
+        pass
 
     def _fetch_status(self):
         """Fetch status from ExoPlayer."""
@@ -147,34 +178,31 @@ class ExoPlayerDevice(MediaPlayerDevice):
     def set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
         self._shuffle = shuffle
-        self.hass.services.call('ais_ai_service', 'publish_command_to_frame',
-                                {"key": 'setPlayerShuffle', "val": self._shuffle})
+        self.hass.services.call(
+            "ais_ai_service",
+            "publish_command_to_frame",
+            {"key": "setPlayerShuffle", "val": self._shuffle},
+        )
 
     def media_seek(self, position):
         """Seek the media to a specific location."""
         if position == 0:
             self.hass.services.call(
-                'ais_ai_service',
-                'publish_command_to_frame', {
-                    "key": 'seekTo',
-                    "val": -5000
-                }
+                "ais_ai_service",
+                "publish_command_to_frame",
+                {"key": "seekTo", "val": -5000},
             )
         elif position == 1:
             self.hass.services.call(
-                'ais_ai_service',
-                'publish_command_to_frame', {
-                    "key": 'seekTo',
-                    "val": 5000
-                }
+                "ais_ai_service",
+                "publish_command_to_frame",
+                {"key": "seekTo", "val": 5000},
             )
         else:
             self.hass.services.call(
-                'ais_ai_service',
-                'publish_command_to_frame', {
-                    "key": 'skipTo',
-                    "val": position * 1000
-                }
+                "ais_ai_service",
+                "publish_command_to_frame",
+                {"key": "skipTo", "val": position * 1000},
             )
             self._media_status_received_time = dt_util.utcnow()
             self._media_position = position * 1000
@@ -183,23 +211,19 @@ class ExoPlayerDevice(MediaPlayerDevice):
         """Service to send the exo the command for volume up."""
         self._volume_level = min(self._volume_level + 0.1, 1)
         self.hass.services.call(
-            'ais_ai_service',
-            'publish_command_to_frame', {
-                "key": 'upVolume',
-                "val": True
-                }
-            )
+            "ais_ai_service",
+            "publish_command_to_frame",
+            {"key": "upVolume", "val": True},
+        )
 
     def volume_down(self):
         """Service to send the exo the command for volume down."""
         self._volume_level = max(self._volume_level - 0.1, 0)
         self.hass.services.call(
-            'ais_ai_service',
-            'publish_command_to_frame', {
-                "key": 'downVolume',
-                "val": True
-                }
-            )
+            "ais_ai_service",
+            "publish_command_to_frame",
+            {"key": "downVolume", "val": True},
+        )
 
     def mute_volume(self, mute):
         """Service to send the exo the command for mute."""
@@ -221,7 +245,17 @@ class ExoPlayerDevice(MediaPlayerDevice):
     @property
     def sound_mode_list(self):
         """Return a list of available sound modes."""
-        return ["NORMAL", "BOOST", "TREBLE", "POP", "ROCK", "CLASSIC", "JAZZ", "DANCE", "R&P"]
+        return [
+            "NORMAL",
+            "BOOST",
+            "TREBLE",
+            "POP",
+            "ROCK",
+            "CLASSIC",
+            "JAZZ",
+            "DANCE",
+            "R&P",
+        ]
 
     @property
     def available(self):
@@ -317,7 +351,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
     @property
     def device_state_attributes(self):
         """Return the specific state attributes of the player."""
-        attr = {'device_ip': self._device_ip}
+        attr = {"device_ip": self._device_ip}
         # attr['device_mac'] = self._device_mac
         return attr
 
@@ -336,13 +370,10 @@ class ExoPlayerDevice(MediaPlayerDevice):
     def media_play(self):
         """Service to send the ExoPlayer the command for play/pause."""
         self.hass.services.call(
-            'ais_ai_service',
-            'publish_command_to_frame', {
-                "key": 'pauseAudio',
-                "val": False,
-                "ip": self._device_ip
-                }
-            )
+            "ais_ai_service",
+            "publish_command_to_frame",
+            {"key": "pauseAudio", "val": False, "ip": self._device_ip},
+        )
         self._playing = True
         self._status = 3
 
@@ -351,44 +382,42 @@ class ExoPlayerDevice(MediaPlayerDevice):
         # to have more accurate media_position
         self._fetch_status()
         self.hass.services.call(
-            'ais_ai_service',
-            'publish_command_to_frame', {
-                "key": 'pauseAudio',
-                "val": True,
-                "ip": self._device_ip
-                }
-            )
+            "ais_ai_service",
+            "publish_command_to_frame",
+            {"key": "pauseAudio", "val": True, "ip": self._device_ip},
+        )
         self._playing = False
 
     def media_stop(self):
         """Service to send the ExoPlayer the command for stop."""
         self.hass.services.call(
-            'ais_ai_service',
-            'publish_command_to_frame', {
-                "key": 'pauseAudio',
-                "val": True,
-                "ip": self._device_ip
-                }
-            )
+            "ais_ai_service",
+            "publish_command_to_frame",
+            {"key": "pauseAudio", "val": True, "ip": self._device_ip},
+        )
         self._playing = False
 
     def media_next_track(self):
         """Service to send the ExoPlayer the command for next track."""
         if self._media_source == ais_global.G_AN_LOCAL:
-            self.hass.services.call('ais_drives_service', 'play_next')
+            self.hass.services.call("ais_drives_service", "play_next")
         else:
-            self.hass.services.call('ais_cloud', 'play_next', {"media_source": self._media_source})
+            self.hass.services.call(
+                "ais_cloud", "play_next", {"media_source": self._media_source}
+            )
 
     def media_previous_track(self):
         """Service to send the ExoPlayer the command for previous track."""
         if self._media_source == ais_global.G_AN_LOCAL:
-            self.hass.services.call('ais_drives_service', 'play_prev')
+            self.hass.services.call("ais_drives_service", "play_prev")
         else:
-            self.hass.services.call('ais_cloud', 'play_prev', {"media_source": self._media_source})
+            self.hass.services.call(
+                "ais_cloud", "play_prev", {"media_source": self._media_source}
+            )
 
     def play_media(self, media_type, media_content_id, **kwargs):
         """Send the media player the command for playing a media."""
-        if media_type == 'ais_content_info':
+        if media_type == "ais_content_info":
             j_info = json.loads(media_content_id)
             # set image and name and id on list to be able to set correct bookmark and favorites
             ais_global.G_CURR_MEDIA_CONTENT = j_info
@@ -413,29 +442,45 @@ class ExoPlayerDevice(MediaPlayerDevice):
             if "DURATION" in j_info:
                 self._duration = j_info["DURATION"]
 
-            j_media_info = {"media_title": self._media_title,
-                            "media_source": self._media_source,
-                            "media_stream_image": self._stream_image,
-                            "media_album_name": self._album_name,
-                            "media_content_id": self._media_content_id,
-                            "setPlayerShuffle": self._shuffle,
-                            "setMediaPosition": self._media_position}
+            j_media_info = {
+                "media_title": self._media_title,
+                "media_source": self._media_source,
+                "media_stream_image": self._stream_image,
+                "media_album_name": self._album_name,
+                "media_content_id": self._media_content_id,
+                "setPlayerShuffle": self._shuffle,
+                "setMediaPosition": self._media_position,
+            }
 
-            self.hass.services.call('ais_ai_service', 'publish_command_to_frame', {
-                    "key": 'playAudioFullInfo', "val": j_media_info, "ip": self._device_ip})
+            self.hass.services.call(
+                "ais_ai_service",
+                "publish_command_to_frame",
+                {
+                    "key": "playAudioFullInfo",
+                    "val": j_media_info,
+                    "ip": self._device_ip,
+                },
+            )
 
             # go to media player context on localhost
-            if self._device_ip == 'localhost':
+            if self._device_ip == "localhost":
                 # refresh state
                 self._playing = True
                 self._status = 3
-                old_state = self.hass.states.get('media_player.wbudowany_glosnik')
-                self.hass.states.set('media_player.wbudowany_glosnik', STATE_PLAYING,
-                                     old_state.attributes, force_update=True)
-                self.hass.services.call('ais_ai_service', 'process_command_from_frame',
-                                        {"topic": 'ais/go_to_player', "payload": ""})
+                old_state = self.hass.states.get("media_player.wbudowany_glosnik")
+                self.hass.states.set(
+                    "media_player.wbudowany_glosnik",
+                    STATE_PLAYING,
+                    old_state.attributes,
+                    force_update=True,
+                )
+                self.hass.services.call(
+                    "ais_ai_service",
+                    "process_command_from_frame",
+                    {"topic": "ais/go_to_player", "payload": ""},
+                )
 
-        elif media_type == 'ais_info':
+        elif media_type == "ais_info":
             # TODO remove this - it is only used in one case - for local media_extractor
             # set only the audio info
             j_info = json.loads(media_content_id)
@@ -455,30 +500,42 @@ class ExoPlayerDevice(MediaPlayerDevice):
                 self._duration = j_info["DURATION"]
 
             try:
-                j_media_info = {"media_title": self._media_title,
-                                "media_source": self._media_source,
-                                "media_stream_image": self._stream_image,
-                                "media_album_name": self._album_name}
-                self.hass.services.call('ais_ai_service', 'publish_command_to_frame', {
-                    "key": 'setAudioInfo', "val": j_media_info, "ip": self._device_ip})
+                j_media_info = {
+                    "media_title": self._media_title,
+                    "media_source": self._media_source,
+                    "media_stream_image": self._stream_image,
+                    "media_album_name": self._album_name,
+                }
+                self.hass.services.call(
+                    "ais_ai_service",
+                    "publish_command_to_frame",
+                    {"key": "setAudioInfo", "val": j_media_info, "ip": self._device_ip},
+                )
             except Exception as e:
                 _LOGGER.info("problem to publish setAudioInfo: " + str(e))
 
             # go to media player context on localhost
-            if self._device_ip == 'localhost':
+            if self._device_ip == "localhost":
                 # refresh state
                 self._playing = True
                 self._status = 3
-                old_state = self.hass.states.get('media_player.wbudowany_glosnik')
-                self.hass.states.set('media_player.wbudowany_glosnik', STATE_PLAYING,
-                                     old_state.attributes, force_update=True)
-                self.hass.services.call('ais_ai_service', 'process_command_from_frame',
-                                        {"topic": 'ais/go_to_player', "payload": ""})
+                old_state = self.hass.states.get("media_player.wbudowany_glosnik")
+                self.hass.states.set(
+                    "media_player.wbudowany_glosnik",
+                    STATE_PLAYING,
+                    old_state.attributes,
+                    force_update=True,
+                )
+                self.hass.services.call(
+                    "ais_ai_service",
+                    "process_command_from_frame",
+                    {"topic": "ais/go_to_player", "payload": ""},
+                )
 
-        elif media_type == 'exo_info':
+        elif media_type == "exo_info":
             self._media_status_received_time = dt_util.utcnow()
             try:
-                message = json.loads(media_content_id.decode('utf8').replace("'", '"'))
+                message = json.loads(media_content_id.decode("utf8").replace("'", '"'))
             except Exception as e:
                 message = json.loads(media_content_id)
             try:
@@ -506,12 +563,12 @@ class ExoPlayerDevice(MediaPlayerDevice):
                 # shuffle
                 self._shuffle = message.get("isShuffling", False)
                 # mark track on Spotify list
-                state = self.hass.states.get('sensor.spotifylist')
+                state = self.hass.states.get("sensor.spotifylist")
                 attr = state.attributes
                 for i in range(len(attr)):
                     track = attr.get(i)
                     if track["uri"] == message.get("media_content_id", ""):
-                        self.hass.states.async_set("sensor.spotifylist",  i, attr)
+                        self.hass.states.async_set("sensor.spotifylist", i, attr)
                         break
 
             if "giveMeNextOne" in message:
@@ -520,9 +577,10 @@ class ExoPlayerDevice(MediaPlayerDevice):
                     # TODO remove bookmark
                     self.hass.async_add_job(
                         self.hass.services.async_call(
-                            'media_player',
-                            'media_next_track', {
-                                "entity_id": "media_player.wbudowany_glosnik"})
+                            "media_player",
+                            "media_next_track",
+                            {"entity_id": "media_player.wbudowany_glosnik"},
+                        )
                     )
         else:
             # TODO remove this - it is only used in one case - for local media_extractor
@@ -531,13 +589,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
             self._media_position = 0
             self._media_status_received_time = dt_util.utcnow()
             self.hass.services.call(
-                'ais_ai_service',
-                'publish_command_to_frame', {
-                    "key": 'playAudio',
-                    "val": media_content_id,
-                    "ip": self._device_ip
-                    }
-                )
-
-
-
+                "ais_ai_service",
+                "publish_command_to_frame",
+                {"key": "playAudio", "val": media_content_id, "ip": self._device_ip},
+            )

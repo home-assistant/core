@@ -20,7 +20,6 @@ sun:
 
 # ais-dom cloud functionality
 ais_cloud:
-#ais_cloud_sync:
 ais_ai_service:
 ais_knowledge_service:
 ais_shell_command:
@@ -28,10 +27,10 @@ ais_yt_service:
 ais_updater:
   include_used_components: false
 ais_drives_service:
-conversation:
+ais_conversation:
 
 # Show links to resources in log and frontend
-introduction:
+ais_intro:
 
 # Enables a map showing the location of tracked devices
 map:

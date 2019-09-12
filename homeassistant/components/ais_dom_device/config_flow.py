@@ -4,7 +4,7 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 from .const import DOMAIN
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_TYPE
-from homeassistant.ais_dom import ais_global
+from homeassistant.components.ais_dom import ais_global
 import time
 import voluptuous as vol
 import logging

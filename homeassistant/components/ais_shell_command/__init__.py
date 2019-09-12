@@ -8,7 +8,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_MAC
 import asyncio
 import logging
 import os
-import homeassistant.ais_dom.ais_global as ais_global
+import homeassistant.components.ais_dom.ais_global as ais_global
 
 DOMAIN = "ais_shell_command"
 GLOBAL_X = 0
@@ -549,7 +549,7 @@ def _execute_stop(hass, call):
 
 @asyncio.coroutine
 def _show_network_devices_info(hass, call):
-    import homeassistant.ais_dom.ais_device_search_mqtt.sensor as dsm
+    import homeassistant.components.ais_device_search_mqtt.sensor as dsm
 
     info = dsm.get_text()
     hass.states.async_set("sensor.network_devices_info_value", "ok", {"text": info})
@@ -564,7 +564,7 @@ def _scan_device(hass, call):
     url_a = call.data["url_a"]
     from requests_futures.sessions import FuturesSession
     from urllib.parse import urlparse
-    import homeassistant.ais_dom.ais_device_search_mqtt.sensor as dsm
+    import homeassistant.components.ais_device_search_mqtt.sensor as dsm
 
     session = FuturesSession()
 
@@ -622,7 +622,7 @@ def _scan_device(hass, call):
 
 @asyncio.coroutine
 def _scan_network_for_devices(hass, call):
-    import homeassistant.ais_dom.ais_device_search_mqtt.sensor as dsm
+    import homeassistant.components.ais_device_search_mqtt.sensor as dsm
 
     global GLOBAL_X
     GLOBAL_MY_IP = ais_global.get_my_global_ip()

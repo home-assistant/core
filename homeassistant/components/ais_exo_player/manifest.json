@@ -1,0 +1,9 @@
+{
+  "domain": "ais_media_player",
+  "name": "AIS Media Player",
+  "config_flow": false,
+  "documentation": "https://www.ai-speaker.com",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,9 @@
+{
+  "domain": "ais_dom",
+  "name": "AIS dom",
+  "config_flow": false,
+  "documentation": "https://www.ai-speaker.com",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}
