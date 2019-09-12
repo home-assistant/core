@@ -154,7 +154,7 @@ async def async_setup_scanner(
         except bluetooth.BluetoothError:
             _LOGGER.exception("Error looking up Bluetooth device")
 
-    async def handle_update_bluetooth(call):
+    async def handle_manual_update_bluetooth(call):
         """Update bluetooth devices on demand."""
 
         await update_bluetooth()
@@ -163,7 +163,7 @@ async def async_setup_scanner(
     async_track_time_interval(hass, update_bluetooth, interval)
 
     hass.services.async_register(
-        DOMAIN, "bluetooth_tracker_update", handle_update_bluetooth
+        DOMAIN, "bluetooth_tracker_update", handle_manual_update_bluetooth
     )
 
     return True
