@@ -20,6 +20,8 @@ from .const import (  # pylint: disable=unused-import
 from .errors import NoServersFound, ServerNotSpecified
 from .server import PlexServer
 
+USER_SCHEMA = vol.Schema({vol.Required(CONF_TOKEN): str})
+
 _LOGGER = logging.getLogger(__package__)
 
 
@@ -37,24 +39,19 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        errors = {}
-
-        data_schema = vol.Schema(
-            {
-                vol.Optional(
-                    CONF_TOKEN, default=self.current_login.get(CONF_TOKEN, "")
-                ): str
-            }
-        )
-
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=data_schema, errors=errors
+                step_id="user", data_schema=USER_SCHEMA, errors={}
             )
 
-        self.current_login = user_input
+        return await self.async_step_server_validate(user_input)
 
-        plex_server = PlexServer(user_input)
+    async def async_step_server_validate(self, server_config):
+        """Validate a provided configuration."""
+        errors = {}
+        self.current_login = server_config
+
+        plex_server = PlexServer(server_config)
         try:
             await self.hass.async_add_executor_job(plex_server.connect)
         except NoServersFound:
@@ -66,7 +63,9 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Invalid credentials provided, config not created")
             errors["base"] = "faulty_credentials"
         except (plexapi.exceptions.NotFound, requests.exceptions.ConnectionError):
-            _LOGGER.error("Plex server could not be reached: %s", user_input[CONF_URL])
+            _LOGGER.error(
+                "Plex server could not be reached: %s", server_config[CONF_URL]
+            )
             errors["base"] = "not_found"
         except Exception as error:  # pylint: disable=broad-except
             _LOGGER.error("Unknown error connecting to Plex server: %s", error)
@@ -74,7 +73,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if errors:
             return self.async_show_form(
-                step_id="user", data_schema=self.USER_SCHEMA, errors=errors
+                step_id="user", data_schema=USER_SCHEMA, errors=errors
             )
 
         server_id = plex_server.machine_identifier
@@ -84,13 +83,13 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
 
         url = plex_server.url_in_use
-        token = user_input.get(CONF_TOKEN)
+        token = server_config.get(CONF_TOKEN)
 
-        server_config = {CONF_URL: url}
+        entry_config = {CONF_URL: url}
         if token:
-            server_config[CONF_TOKEN] = token
+            entry_config[CONF_TOKEN] = token
         if url.startswith("https"):
-            server_config[CONF_VERIFY_SSL] = user_input.get(
+            entry_config[CONF_VERIFY_SSL] = server_config.get(
                 CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL
             )
 
@@ -101,14 +100,13 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={
                 CONF_SERVER: plex_server.friendly_name,
                 CONF_SERVER_IDENTIFIER: server_id,
-                PLEX_SERVER_CONFIG: server_config,
+                PLEX_SERVER_CONFIG: entry_config,
             },
         )
 
     async def async_step_select_server(self, user_input=None):
         """Use selected Plex server."""
         config = dict(self.current_login)
-
         if user_input is None:
             configured_servers = [
                 x.data[CONF_SERVER_IDENTIFIER] for x in self._async_current_entries()
@@ -128,9 +126,9 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             config[CONF_SERVER] = available_servers[0]
         else:
-            config[CONF_SERVER] = user_input.get(CONF_SERVER)
+            config[CONF_SERVER] = user_input[CONF_SERVER]
 
-        return await self.async_step_user(user_input=config)
+        return await self.async_step_server_validate(config)
 
     async def async_step_discovery(self, discovery_info):
         """Set default host and port from discovery."""
@@ -151,27 +149,12 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_VERIFY_SSL: host_config["verify"],
             }
             _LOGGER.info("Imported legacy config, file can be removed: %s", json_file)
-        return await self.async_step_import(server_config)
+            return await self.async_step_server_validate(server_config)
 
         self.discovery_info = discovery_info
         return await self.async_step_user()
 
     async def async_step_import(self, import_config):
         """Import from Plex configuration."""
-        url = import_config.get(CONF_URL)
-        token = import_config.get(CONF_TOKEN)
-        server = import_config.get(CONF_SERVER)
-
-        if url:
-            config = {
-                CONF_URL: url,
-                CONF_TOKEN: token,
-                CONF_VERIFY_SSL: import_config[CONF_VERIFY_SSL],
-            }
-        elif token:
-            config = {CONF_TOKEN: token, CONF_SERVER: server}
-        else:
-            return self.async_abort(reason="invalid_import")
-
         _LOGGER.debug("Imported Plex configuration")
-        return await self.async_step_user(user_input=config)
+        return await self.async_step_server_validate(import_config)
