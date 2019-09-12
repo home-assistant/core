@@ -136,7 +136,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured")
 
         json_file = self.hass.config.path(PLEX_CONFIG_FILE)
-        file_config = load_json(json_file)
+        file_config = await self.hass.async_add_executor_job(load_json, json_file)
 
         if file_config:
             host_and_port, host_config = file_config.popitem()
