@@ -41,7 +41,7 @@ CONTROLLER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_TRIGGER_TIME): cv.string,
+        vol.Required(CONF_TRIGGER_TIME): cv.string,
         vol.Optional(CONF_SCAN_INTERVAL): cv.string,
         vol.Optional("zones"): vol.Schema({cv.positive_int: ZONE_SCHEMA}),
     }
