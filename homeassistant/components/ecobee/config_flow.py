@@ -6,7 +6,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
 
-from .const import CONF_HOLD_TEMP, DOMAIN, ECOBEE_CONFIG_FILE
+from .const import CONF_HOLD_TEMP, CONF_REFRESH_TOKEN, DOMAIN
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -40,20 +40,18 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             """Use the user-supplied API key to attempt to obtain a PIN from ecobee."""
-            from pyecobee import Ecobee
+            from pyecobee import Ecobee, ECOBEE_API_KEY
 
-            config = {CONF_API_KEY: user_input[CONF_API_KEY]}
+            config = {ECOBEE_API_KEY: user_input[CONF_API_KEY]}
 
             self._ecobee = Ecobee(config=config)
 
-            await self.hass.async_add_executor_job(self._ecobee.request_pin())
-
-            if self._ecobee.pin is None:
+            if await self.hass.async_add_executor_job(self._ecobee.request_pin):
+                """We have a PIN; move to the next step of the flow."""
+                return await self.async_step_authorize()
+            else:
                 """Obtaining the PIN failed. Maybe the wrong API key?"""
                 errors["base"] = "pin_request_failed"
-            else:
-                """Move to the next step of the flow."""
-                return await self.async_step_authorize()
 
         return self.async_show_form(
             step_id="init",
@@ -67,10 +65,13 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             """Attempt to obtain tokens from ecobee and finish the flow."""
-            await self.hass.async_add_executor_job(self._ecobee.request_tokens())
-            if len(self._ecobee.refresh_token) > 0:
+            if await self.hass.async_add_executor_job(self._ecobee.request_tokens):
                 """Refresh token obtained; create the config entry."""
-                return self.async_create_entry(title=DOMAIN, data=self._ecobee.config)
+                config = {
+                    CONF_API_KEY: self._ecobee.api_key,
+                    CONF_REFRESH_TOKEN: self._ecobee.refresh_token,
+                }
+                return self.async_create_entry(title=DOMAIN, data=config)
             else:
                 errors["base"] = "token_request_failed"
 
@@ -89,22 +90,41 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         We will attempt to validate the credentials found in ecobee.conf
         and create an entry if valid. Otherwise, we will abort and the user
-        will need to redo the authorization process via the config flow.
+        will need to redo the authorization process via a new config flow.
         """
-        config_file = self.hass.config.path(ECOBEE_CONFIG_FILE)
+        import aiofiles
+        import json
+        from pyecobee import (
+            Ecobee,
+            ECOBEE_CONFIG_FILENAME,
+            ECOBEE_API_KEY,
+            ECOBEE_REFRESH_TOKEN,
+        )
 
-        from pyecobee import Ecobee
+        config_file = self.hass.config.path(ECOBEE_CONFIG_FILENAME)
 
-        self._ecobee = Ecobee(config_filename=config_file)
+        async with aiofiles.open(config_file, "r") as f:
+            legacy_config = json.loads(await f.read())
 
-        if len(self._ecobee.refresh_token) > 0:
-            """Refresh token loaded from existing config, attempt refresh to validate it."""
-            await self.hass.async_add_executor_job(self._ecobee.refresh_tokens())
-            if self._ecobee.pin is None:
-                return self.async_create_entry(title=DOMAIN, data=self._ecobee.config)
+        try:
+            ecobee = Ecobee(
+                config={
+                    ECOBEE_API_KEY: legacy_config[ECOBEE_API_KEY],
+                    ECOBEE_REFRESH_TOKEN: legacy_config[ECOBEE_REFRESH_TOKEN],
+                }
+            )
+
+            if await self.hass.async_add_executor_job(ecobee.refresh_tokens):
+                return self.async_create_entry(
+                    title=DOMAIN,
+                    data={
+                        CONF_API_KEY: legacy_config[ECOBEE_API_KEY],
+                        CONF_REFRESH_TOKEN: legacy_config[ECOBEE_REFRESH_TOKEN],
+                    },
+                )
             else:
                 self.async_abort(reason="refresh_token_expired")
-        else:
+        except (KeyError, TypeError):
             self.async_abort(reason="credentials_not_found")
 
 
