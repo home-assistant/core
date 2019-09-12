@@ -67,7 +67,7 @@ def setup(hass, config):
         _LOGGER.error("Error setting up NZBGet API: %s", conn_err)
         return False
 
-    _LOGGER.debug("Successfully validated NZBGet API connection.")
+    _LOGGER.debug("Successfully validated NZBGet API connection")
 
     nzbget_data = hass.data[DATA_NZBGET] = NZBGetData(hass, nzbget_api)
     nzbget_data.update()
