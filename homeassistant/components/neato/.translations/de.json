@@ -5,8 +5,8 @@
             "user": {
                 "title": "Neato Account Informationen",
                 "data": {
-                    "password": "Passwort",
                     "username": "Benutzername",
+                    "password": "Passwort",
                     "vendor": "Hersteller"
                 },
                 "description": "Siehe [Neato Dokumentation]({docs_url})."
@@ -15,14 +15,16 @@
         "error": {
             "invalid_credentials": "Ungültige Anmeldeinformationen",
             "invalid_vendor": "Ungültiger Hersteller",
-            "already_configured": "Bereits konfiguriert",
             "unexpected": "Unerwarteter Fehler bei der Kommunikation mit den Neato Servern"
         },
         "create_entry": {
             "default": "Siehe [Neato Dokumentation]({docs_url})."
         },
         "abort": {
-            "invalid_credentials": "Ungültige Anmeldeinformationen"
+            "already_configured": "Bereits konfiguriert",
+            "invalid_credentials": "Ungültige Anmeldeinformationen",
+            "invalid_vendor": "Ungültiger Hersteller",
+            "unexpected": "Unerwarteter Fehler bei der Kommunikation mit den Neato Servern"
         }
     }
 }

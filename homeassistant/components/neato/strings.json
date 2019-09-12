@@ -15,14 +15,16 @@
         "error": {
             "invalid_credentials": "Invalid credentials",
             "invalid_vendor": "Invalid vendor",
-            "already_configured": "Already configured",
             "unexpected": "Unexpected error communicating with Neato server"
         },
         "create_entry": {
             "default": "See [Neato documentation]({docs_url})."
         },
         "abort": {
-            "invalid_credentials": "Invalid credentials"
+            "already_configured": "Already configured",
+            "invalid_credentials": "Invalid credentials",
+            "invalid_vendor": "Invalid vendor",
+            "unexpected": "Unexpected error communicating with Neato server"
         }
     }
 }

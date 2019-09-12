@@ -30,7 +30,6 @@ class NeatoConfigFlow(config_entries.ConfigFlow):
     """Neato integration config flow."""
 
     VERSION = 1
-    # TODO: What's the difference between CLOUD_POLL and LOCAL_PUSH?
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
@@ -46,32 +45,35 @@ class NeatoConfigFlow(config_entries.ConfigFlow):
         if configured_neato(self.hass) is not None:
             return self.async_abort(reason="already_configured")
 
-        if not user_input:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_USERNAME): str,
-                        vol.Required(CONF_PASSWORD): str,
-                        vol.Optional(CONF_VENDOR, default="neato"): vol.In(
-                            ["neato", "vorwerk"]
-                        ),
-                    }
-                ),
-            )
+        if user_input is not None:
+            self._username = user_input["username"]
+            self._password = user_input["password"]
+            self._vendor = user_input["vendor"]
 
-        self._username = user_input["username"]
-        self._password = user_input["password"]
-        self._vendor = user_input["vendor"]
-        error = self.try_login(self._username, self._password, self._vendor)
-        if error:
-            errors["base"] = error
-        else:
-            return self.async_create_entry(
-                title=user_input[CONF_USERNAME],
-                data=user_input,
-                description_placeholders={"docs_url": DOCS_URL},
-            )
+            error = self.try_login(self._username, self._password, self._vendor)
+            if error:
+                errors["base"] = error
+            else:
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME],
+                    data=user_input,
+                    description_placeholders={"docs_url": DOCS_URL},
+                )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_PASSWORD): str,
+                    vol.Optional(CONF_VENDOR, default="neato"): vol.In(
+                        ["neato", "vorwerk"]
+                    ),
+                }
+            ),
+            description_placeholders={"docs_url": DOCS_URL},
+            errors=errors,
+        )
 
     async def async_step_import(self, user_input):
         """Import a config flow from configuration."""
@@ -82,7 +84,6 @@ class NeatoConfigFlow(config_entries.ConfigFlow):
         error = self.try_login(username, password, vendor)
         if error is not None:
             _LOGGER.error(error)
-            # TODO: What's preferred? The error or "invalid_config"?
             return self.async_abort(reason=error)
 
         return self.async_create_entry(
@@ -97,7 +98,7 @@ class NeatoConfigFlow(config_entries.ConfigFlow):
     @staticmethod
     def try_login(username, password, vendor):
         """Try logging in to device and return any errors."""
-        from urllib.error import HTTPError
+        from requests.exceptions import HTTPError
         from pybotvac import Account, Neato, Vorwerk
 
         this_vendor = None
@@ -111,9 +112,7 @@ class NeatoConfigFlow(config_entries.ConfigFlow):
 
         try:
             Account(username, password, this_vendor)
-        except HTTPError as err:
-            if err.code in [401, 403]:
-                return "invalid_credentials"
-            return "unexpected"
+        except HTTPError:
+            return "invalid_credentials"
 
         return None

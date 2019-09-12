@@ -1,7 +1,7 @@
 """Support for Neato botvac connected vacuum cleaners."""
 import logging
 from datetime import timedelta
-from urllib.error import HTTPError
+from requests.exceptions import HTTPError
 
 import voluptuous as vol
 
@@ -42,8 +42,6 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Set up the Neato component."""
 
-    # TODO: What happend, when entries in configuration.yaml are not valid?
-
     if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
@@ -54,6 +52,7 @@ def setup(hass, config):
         return True
 
     hass.data[NEATO_CONFIG] = config[DOMAIN]
+    return True
 
 
 async def async_setup_entry(hass, entry):
@@ -66,7 +65,7 @@ async def async_setup_entry(hass, entry):
         hass.data[NEATO_LOGIN] = NeatoHub(hass, entry.data, Account, Vorwerk)
 
     hub = hass.data[NEATO_LOGIN]
-    if not hub.login():
+    if not hub.logged_in:
         _LOGGER.debug("Failed to login to Neato API")
         return False
 
@@ -103,12 +102,13 @@ class NeatoHub:
         self._hass = hass
         self._vendor = vendor
 
-        self.my_neato = neato(
-            domain_config[CONF_USERNAME], domain_config[CONF_PASSWORD], vendor
-        )
-        self._hass.data[NEATO_ROBOTS] = self.my_neato.robots
-        self._hass.data[NEATO_PERSISTENT_MAPS] = self.my_neato.persistent_maps
-        self._hass.data[NEATO_MAP_DATA] = self.my_neato.maps
+        self.my_neato = None
+        self.logged_in = self.login()
+
+        if self.logged_in:
+            self._hass.data[NEATO_ROBOTS] = self.my_neato.robots
+            self._hass.data[NEATO_PERSISTENT_MAPS] = self.my_neato.persistent_maps
+            self._hass.data[NEATO_MAP_DATA] = self.my_neato.maps
 
     def login(self):
         """Login to My Neato."""
