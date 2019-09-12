@@ -7,7 +7,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
-from .const import DOMAIN, CONF_VENDOR
+from .const import DOMAIN, CONF_VENDOR, VALID_VENDORS
 
 
 DOCS_URL = "https://www.home-assistant.io/components/neato"
@@ -66,9 +66,7 @@ class NeatoConfigFlow(config_entries.ConfigFlow):
                 {
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
-                    vol.Optional(CONF_VENDOR, default="neato"): vol.In(
-                        ["neato", "vorwerk"]
-                    ),
+                    vol.Optional(CONF_VENDOR, default="neato"): vol.In(VALID_VENDORS),
                 }
             ),
             description_placeholders={"docs_url": DOCS_URL},

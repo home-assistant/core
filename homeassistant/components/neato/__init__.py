@@ -18,6 +18,7 @@ from .const import (
     NEATO_ROBOTS,
     NEATO_PERSISTENT_MAPS,
     NEATO_MAP_DATA,
+    VALID_VENDORS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,9 +30,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_VENDOR, default="neato"): vol.In(
-                    ["neato", "vorwerk"]
-                ),
+                vol.Optional(CONF_VENDOR, default="neato"): vol.In(VALID_VENDORS),
             }
         )
     },
