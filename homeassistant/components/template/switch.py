@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_SWITCHES,
     EVENT_HOMEASSISTANT_START,
 )
+from . import extract_entities, initialise_templates
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -63,19 +64,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
         on_action = device_config[ON_ACTION]
         off_action = device_config[OFF_ACTION]
-        entity_ids = set(
-            device_config.get(ATTR_ENTITY_ID) or state_template.extract_entities()
+
+        templates = {
+            CONF_VALUE_TEMPLATE: state_template,
+            CONF_ICON_TEMPLATE: icon_template,
+            CONF_ENTITY_PICTURE_TEMPLATE: entity_picture_template,
+            CONF_AVAILABILITY_TEMPLATE: availability_template,
+        }
+
+        initialise_templates(hass, templates)
+        entity_ids = extract_entities(
+            device, "switch", device_config.get(ATTR_ENTITY_ID), templates
         )
-        state_template.hass = hass
-
-        templates = [icon_template, entity_picture_template, availability_template]
-
-        for template in templates:
-            if template is not None:
-                template.hass = hass
-                temp_entities = template.extract_entities()
-                if temp_entities is not None:
-                    entity_ids |= set(temp_entities)
 
         switches.append(
             SwitchTemplate(
@@ -91,6 +91,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 entity_ids,
             )
         )
+
     if not switches:
         _LOGGER.error("No switches added")
         return False

@@ -1,7 +1,6 @@
 """Allows the creation of a sensor that breaks out state_attributes."""
 import logging
 from typing import Optional
-from itertools import chain
 
 import voluptuous as vol
 
@@ -25,6 +24,7 @@ from homeassistant.const import (
     MATCH_ALL,
     CONF_DEVICE_CLASS,
 )
+from . import extract_entities, initialise_templates
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
@@ -71,10 +71,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         device_class = device_config.get(CONF_DEVICE_CLASS)
         attribute_templates = device_config[CONF_ATTRIBUTE_TEMPLATES]
 
-        entity_ids = set()
-        manual_entity_ids = device_config.get(ATTR_ENTITY_ID)
-        invalid_templates = []
-
         templates = {
             CONF_VALUE_TEMPLATE: state_template,
             CONF_ICON_TEMPLATE: icon_template,
@@ -83,36 +79,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             CONF_AVAILABILITY_TEMPLATE: availability_template,
         }
 
-        for tpl_name, template in chain(templates.items(), attribute_templates.items()):
-            if template is None:
-                continue
-            template.hass = hass
-
-            if manual_entity_ids is not None:
-                continue
-
-            template_entity_ids = template.extract_entities()
-            if template_entity_ids == MATCH_ALL:
-                entity_ids = MATCH_ALL
-                # Cut off _template from name
-                invalid_templates.append(tpl_name.replace("_template", ""))
-            elif entity_ids != MATCH_ALL:
-                entity_ids |= set(template_entity_ids)
-
-        if invalid_templates:
-            _LOGGER.warning(
-                "Template sensor %s has no entity ids configured to track nor"
-                " were we able to extract the entities to track from the %s "
-                "template(s). This entity will only be able to be updated "
-                "manually.",
-                device,
-                ", ".join(invalid_templates),
-            )
-
-        if manual_entity_ids is not None:
-            entity_ids = manual_entity_ids
-        elif entity_ids != MATCH_ALL:
-            entity_ids = list(entity_ids)
+        initialise_templates(hass, templates, attribute_templates)
+        entity_ids = extract_entities(
+            device,
+            "sensor",
+            device_config.get(ATTR_ENTITY_ID),
+            templates,
+            attribute_templates,
+        )
 
         sensors.append(
             SensorTemplate(
@@ -130,6 +104,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 attribute_templates,
             )
         )
+
     if not sensors:
         _LOGGER.error("No sensors added")
         return False
