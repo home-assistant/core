@@ -51,6 +51,7 @@ class VeluxModule:
         self._domain_config = domain_config
 
     def setup(self):
+        """Velux component setup"""
         async def on_hass_stop(event):
             """Close connection when hass stops."""
             _LOGGER.debug("Velux interface terminated")
