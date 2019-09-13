@@ -69,11 +69,8 @@ class GeniusWaterHeater(GeniusEntity, WaterHeaterDevice):
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
         """Return the device state attributes."""
-        return {
-            "status": {
-                k: v for k, v in self._boiler.data.items() if k in GH_STATE_ATTRS
-            }
-        }
+        tmp = self._boiler.data.items()
+        return {"status": {k: v for k, v in tmp if k in GH_STATE_ATTRS}}
 
     @property
     def current_temperature(self) -> Optional[float]:
