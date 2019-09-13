@@ -22,7 +22,7 @@ from homeassistant.components.air_quality import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
 
-from .const import CONF_LANGUAGE, NO_AIRLY_SENSORS
+from .const import CONF_LANGUAGE, DOMAIN, NO_AIRLY_SENSORS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,7 +131,7 @@ class AirlyAirQuality(AirQualityEntity):
     @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        return f"{self.airly.latitude}-{self.airly.longitude}"
+        return f"{DOMAIN}-{self.airly.latitude}-{self.airly.longitude}"
 
     @property
     def available(self):
