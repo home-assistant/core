@@ -161,6 +161,7 @@ TEST_REQUIREMENTS = (
     "srpenergy",
     "statsd",
     "toonapilib",
+    "transmissionrpc",
     "twentemilieu",
     "uvcclient",
     "vsure",
