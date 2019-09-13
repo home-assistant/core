@@ -9,6 +9,7 @@ import voluptuous as vol
 from iaqualink import (
     AqualinkBinarySensor,
     AqualinkClient,
+    AqualinkDevice,
     AqualinkLight,
     AqualinkLoginException,
     AqualinkSensor,
@@ -30,6 +31,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -173,7 +175,7 @@ def refresh_system(func):
     return wrapper
 
 
-class AqualinkEntityMixin:
+class AqualinkEntity(Entity):
     """Abstract class for all Aqualink platforms.
 
     Entity state is updated via the interval timer within the integration.
@@ -182,6 +184,10 @@ class AqualinkEntityMixin:
     via the refresh_system decorator above to the _update_callback in this
     class.
     """
+
+    def __init__(self, dev: AqualinkDevice):
+        """Initialize the entity."""
+        self.dev = dev
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
@@ -203,4 +209,4 @@ class AqualinkEntityMixin:
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
-        return "iaqualink_{0}_{1}".format(self.dev.system.serial, self.dev.name)
+        return "{0}_{1}".format(self.dev.system.serial, self.dev.name)
