@@ -67,7 +67,6 @@ jobs:
           sed -i "s|# pySwitchmate|pySwitchmate|g" ${requirement_file}
           sed -i "s|# face_recognition|face_recognition|g" ${requirement_file}
           sed -i "s|# py_noaa|py_noaa|g" ${requirement_file}
-          sed -i "s|# VL53L1X|VL53L1X|g" ${requirement_file}
           sed -i "s|# bme680|bme680|g" ${requirement_file}
         done
       displayName: 'Prepare requirements files for Hass.io'
