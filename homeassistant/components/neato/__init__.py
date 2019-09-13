@@ -38,7 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Neato component."""
 
     if NEATO_DOMAIN not in config:
