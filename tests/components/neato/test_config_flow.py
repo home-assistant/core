@@ -11,8 +11,9 @@ from tests.common import MockConfigEntry
 
 USERNAME = "myUsername"
 PASSWORD = "myPassword"
-VENDOR = "neato"
-INVALID_VENDOR = "invalid"
+VENDOR_NEATO = "neato"
+VENDOR_VORWERK = "vorwerk"
+VENDOR_INVALID = "invalid"
 
 
 @pytest.fixture(name="account")
@@ -38,14 +39,24 @@ async def test_user(hass, account):
     assert result["step_id"] == "user"
 
     result = await flow.async_step_user(
-        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_VENDOR: VENDOR}
+        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_VENDOR: VENDOR_NEATO}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_VENDOR] == VENDOR
+    assert result["data"][CONF_VENDOR] == VENDOR_NEATO
+
+    result = await flow.async_step_user(
+        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_VENDOR: VENDOR_VORWERK}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == USERNAME
+    assert result["data"][CONF_USERNAME] == USERNAME
+    assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_VENDOR] == VENDOR_VORWERK
 
 
 async def test_import(hass, account):
@@ -53,14 +64,14 @@ async def test_import(hass, account):
     flow = init_config_flow(hass)
 
     result = await flow.async_step_import(
-        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_VENDOR: VENDOR}
+        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_VENDOR: VENDOR_NEATO}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == f"{USERNAME} (from configuration)"
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_VENDOR] == VENDOR
+    assert result["data"][CONF_VENDOR] == VENDOR_NEATO
 
 
 async def test_abort_if_already_setup(hass, account):
@@ -68,19 +79,23 @@ async def test_abort_if_already_setup(hass, account):
     flow = init_config_flow(hass)
     MockConfigEntry(
         domain=NEATO_DOMAIN,
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_VENDOR: VENDOR},
+        data={
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+            CONF_VENDOR: VENDOR_NEATO,
+        },
     ).add_to_hass(hass)
 
     # Should fail, same USERNAME (import)
     result = await flow.async_step_import(
-        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_VENDOR: VENDOR}
+        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_VENDOR: VENDOR_NEATO}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
     # Should fail, same USERNAME (flow)
     result = await flow.async_step_user(
-        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_VENDOR: VENDOR}
+        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_VENDOR: VENDOR_NEATO}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
@@ -94,13 +109,21 @@ async def test_abort_on_invalid_credentials(hass):
 
     with patch("pybotvac.Account", side_effect=HTTPError()):
         result = await flow.async_step_user(
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_VENDOR: VENDOR}
+            {
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+                CONF_VENDOR: VENDOR_NEATO,
+            }
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {"base": "invalid_credentials"}
 
         result = await flow.async_step_import(
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_VENDOR: VENDOR}
+            {
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+                CONF_VENDOR: VENDOR_NEATO,
+            }
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "invalid_credentials"
@@ -111,7 +134,7 @@ async def test_abort_on_invalid_vendor(hass, account):
     flow = init_config_flow(hass)
 
     result = await flow.async_step_user(
-        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_VENDOR: INVALID_VENDOR}
+        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_VENDOR: VENDOR_INVALID}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "invalid_vendor"}
