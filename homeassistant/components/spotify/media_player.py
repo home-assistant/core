@@ -46,11 +46,13 @@ DOMAIN = "spotify"
 
 SERVICE_PLAY_PLAYLIST = "play_playlist"
 ATTR_RANDOM_SONG = "random_song"
+ATTR_DEVICE_ID = "device_id"
 
 PLAY_PLAYLIST_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
         vol.Optional(ATTR_RANDOM_SONG, default=False): cv.boolean,
+        vol.Optional(ATTR_DEVICE_ID, default=""): cv.string
     }
 )
 
@@ -126,7 +128,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     def play_playlist_service(service):
         media_content_id = service.data[ATTR_MEDIA_CONTENT_ID]
         random_song = service.data.get(ATTR_RANDOM_SONG)
-        player.play_playlist(media_content_id, random_song)
+        device_id = service.data.get(ATTR_DEVICE_ID)
+        player.play_playlist(media_content_id, random_song, device_id)
 
     hass.services.register(
         DOMAIN,
@@ -305,12 +308,14 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             return
         self._player.start_playback(**kwargs)
 
-    def play_playlist(self, media_id, random_song):
+    def play_playlist(self, media_id, random_song, device_id):
         """Play random music in a playlist."""
         if not media_id.startswith("spotify:playlist:"):
             _LOGGER.error("media id must be spotify playlist uri")
             return
         kwargs = {"context_uri": media_id}
+        if device_id:
+            kwargs["device_id"] = device_id
         if random_song:
             results = self._player.user_playlist_tracks("me", media_id)
             position = random.randint(0, results["total"] - 1)
