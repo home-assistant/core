@@ -41,8 +41,7 @@ DATA_INTEGRATIONS = "integrations"
 DATA_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_BUILTIN = "homeassistant.components"
-PACKAGE_AIS_DOM = "homeassistant.ais_dom"
-LOOKUP_PATHS = [PACKAGE_AIS_DOM, PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
+LOOKUP_PATHS = [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
 CUSTOM_WARNING = (
     "You are using a custom integration for %s which has not "
     "been tested by Home Assistant. This component might "
