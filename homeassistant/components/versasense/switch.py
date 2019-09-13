@@ -14,7 +14,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     consumer = hass.data[DOMAIN]["consumer"]
 
     for entity_info in discovery_info:
-        peripheral = hass.data[DOMAIN][entity_info["identifier"]]
+        peripheral = hass.data[DOMAIN][entity_info["parent_mac"]][
+            entity_info["identifier"]
+        ]
         parent_name = entity_info["parent_name"]
         unit = entity_info["unit"]
         measurement = entity_info["measurement"]

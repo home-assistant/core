@@ -44,9 +44,10 @@ async def _configure_entities(hass, config, consumer):
 
     for mac, device in devices.items():
         _LOGGER.info("Device connected: %s %s", device.name, mac)
+        hass.data[DOMAIN][mac] = {}
 
         for peripheral_id, peripheral in device.peripherals.items():
-            hass.data[DOMAIN][peripheral_id] = peripheral
+            hass.data[DOMAIN][mac][peripheral_id] = peripheral
 
             if peripheral.classification == PERIPHERAL_CLASS_SENSOR:
                 sensor_info_list = await _add_entity_info_to_list(
@@ -65,12 +66,14 @@ async def _configure_entities(hass, config, consumer):
 
 
 async def _add_entity_info_to_list(peripheral, device, entity_info_list):
+    """Add info from a peripheral to specified list."""
     for measurement in peripheral.measurements:
         entity_info = {
             "identifier": peripheral.identifier,
             "unit": measurement.unit,
             "measurement": measurement.name,
             "parent_name": device.name,
+            "parent_mac": device.mac,
         }
 
         entity_info_list.append(entity_info)
