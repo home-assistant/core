@@ -32,17 +32,14 @@ ATTR_CAQI = "CAQI"
 ATTR_CAQI_ADVICE = "advice"
 ATTR_CAQI_DESCRIPTION = "DESCRIPTION"
 ATTR_CAQI_LEVEL = "air quality index level"
-ATTR_PM1 = "PM1"
-ATTR_PM10 = "PM10"
-ATTR_PM10_LIMIT = "PM10_LIMIT"
-ATTR_PM10_PERCENT = "PM10_PERCENT"
-ATTR_PM25 = "PM25"
-ATTR_PM25_LIMIT = "PM25_LIMIT"
-ATTR_PM25_PERCENT = "PM25_PERCENT"
-LABEL_PM25_LIMIT = f"{ATTR_PM_2_5} limit"
-LABEL_PM25_PERCENT = f"{ATTR_PM_2_5} percent"
-LABEL_PM10_LIMIT = f"{ATTR_PM_10} limit"
-LABEL_PM10_PERCENT = f"{ATTR_PM_10} percent"
+ATTR_PM_10_LIMIT = "PM10_LIMIT"
+ATTR_PM_10_PERCENT = "PM10_PERCENT"
+ATTR_PM_2_5_LIMIT = "PM25_LIMIT"
+ATTR_PM_2_5_PERCENT = "PM25_PERCENT"
+LABEL_PM_2_5_LIMIT = f"{ATTR_PM_2_5} limit"
+LABEL_PM_2_5_PERCENT = f"{ATTR_PM_2_5} percent of limit"
+LABEL_PM_10_LIMIT = f"{ATTR_PM_10} limit"
+LABEL_PM_10_PERCENT = f"{ATTR_PM_10} percent of limit"
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
 
@@ -89,7 +86,6 @@ class AirlyAirQuality(AirQualityEntity):
         self._name = name
         self._pm_2_5 = None
         self._pm_10 = None
-        # self._pm_1_0 = None
         self._caqi = None
         self._icon = "mdi:blur"
         self._attrs = {}
@@ -122,12 +118,6 @@ class AirlyAirQuality(AirQualityEntity):
         """Return the particulate matter 10 level."""
         return self._pm_10
 
-    # @property
-    # @round_state
-    # def particulate_matter_1_0(self):
-    #     """Return the particulate matter 1 level."""
-    #     return self._pm_1_0
-
     @property
     def attribution(self):
         """Return the attribution."""
@@ -141,7 +131,7 @@ class AirlyAirQuality(AirQualityEntity):
     @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        return f"{self.airly.latitude}-{self.airly.longitude}-{'air_quality'}"
+        return f"{self.airly.latitude}-{self.airly.longitude}"
 
     @property
     def available(self):
@@ -153,19 +143,20 @@ class AirlyAirQuality(AirQualityEntity):
         """Return the state attributes."""
         self._attrs.update({ATTR_CAQI_ADVICE: self.data[ATTR_CAQI_ADVICE]})
         self._attrs.update({ATTR_CAQI_LEVEL: self.data[ATTR_CAQI_LEVEL]})
-        self._attrs.update({LABEL_PM25_LIMIT: self.data[ATTR_PM25_LIMIT]})
-        self._attrs.update({LABEL_PM25_PERCENT: round(self.data[ATTR_PM25_PERCENT])})
-        self._attrs.update({LABEL_PM10_LIMIT: self.data[ATTR_PM10_LIMIT]})
-        self._attrs.update({LABEL_PM10_PERCENT: round(self.data[ATTR_PM10_PERCENT])})
+        self._attrs.update({LABEL_PM_2_5_LIMIT: self.data[ATTR_PM_2_5_LIMIT]})
+        self._attrs.update(
+            {LABEL_PM_2_5_PERCENT: round(self.data[ATTR_PM_2_5_PERCENT])}
+        )
+        self._attrs.update({LABEL_PM_10_LIMIT: self.data[ATTR_PM_10_LIMIT]})
+        self._attrs.update({LABEL_PM_10_PERCENT: round(self.data[ATTR_PM_10_PERCENT])})
         return self._attrs
 
     async def async_update(self):
         """Get the data from Airly."""
         await self.airly.async_update()
 
-        # self._pm_1_0 = self.data[ATTR_PM1]
-        self._pm_10 = self.data[ATTR_PM10]
-        self._pm_2_5 = self.data[ATTR_PM25]
+        self._pm_10 = self.data["PM10"]
+        self._pm_2_5 = self.data["PM25"]
         self._caqi = self.data[ATTR_CAQI]
 
 
