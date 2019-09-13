@@ -65,7 +65,7 @@ def discover_devices(device_id: int) -> List[Tuple[str, str]]:
     return result
 
 
-def see_device(
+async def see_device(
     hass: HomeAssistantType, async_see, mac: str, device_name: str, rssi=None
 ) -> None:
     """Mark a device as seen."""
@@ -73,7 +73,7 @@ def see_device(
     if rssi is not None:
         attributes["rssi"] = rssi
 
-    hass.async_create_task(
+    await hass.async_create_task(
         async_see(
             mac=f"{BT_PREFIX}{mac}",
             host_name=device_name,
@@ -128,36 +128,42 @@ async def async_setup_scanner(
                 devices_to_track.add(mac)
 
             if mac in devices_to_track:
-                see_device(hass, async_see, mac, device_name)
+                await see_device(hass, async_see, mac, device_name)
 
     if request_rssi:
         _LOGGER.debug("Detecting RSSI for devices")
 
-    def perform_bluetooth_update():
+    async def perform_bluetooth_update():
         """Discover Bluetooth devices and update status."""
+        _LOGGER.debug("Performing Bluetooth devices discovery and update")
+        try:
+            if track_new:
+                for mac, device_name in discover_devices(device_id):
+                    if mac not in devices_to_track and mac not in devices_to_not_track:
+                        devices_to_track.add(mac)
 
-        if track_new:
-            for mac, device_name in discover_devices(device_id):
-                if mac not in devices_to_track and mac not in devices_to_not_track:
-                    devices_to_track.add(mac)
+            for mac in devices_to_track:
+                _LOGGER.debug("Scanning %s", mac)
+                device_name = bluetooth.lookup_name(mac, timeout=5)
+                if device_name is None:
+                    # Could not lookup device name
+                    continue
 
-        for mac in devices_to_track:
-            _LOGGER.debug("Scanning %s", mac)
-            device_name = bluetooth.lookup_name(mac, timeout=5)
-            if device_name is None:
-                # Could not lookup device name
-                continue
+                rssi = None
+                if request_rssi:
+                    client = BluetoothRSSI(mac)
+                    rssi = client.request_rssi()
+                    client.close()
 
-            rssi = None
-            if request_rssi:
-                client = BluetoothRSSI(mac)
-                rssi = client.request_rssi()
-                client.close()
+                await see_device(hass, async_see, mac, device_name, rssi)
 
-            see_device(hass, async_see, mac, device_name, rssi)
+        except bluetooth.BluetoothError:
+            _LOGGER.exception("Error looking up Bluetooth device")
 
     async def update_bluetooth(now=None):
         """Lookup Bluetooth devices and update status."""
+
+        _LOGGER.debug("Preparing to update Bluetooth devices")
 
         # If an update is in progress, we don't do anything
         if update_bluetooth_lock.locked():
@@ -169,10 +175,7 @@ async def async_setup_scanner(
             return
 
         async with update_bluetooth_lock:
-            try:
-                perform_bluetooth_update()
-            except bluetooth.BluetoothError:
-                _LOGGER.exception("Error looking up Bluetooth device")
+            await hass.async_add_executor_job(perform_bluetooth_update)
 
     async def handle_manual_update_bluetooth(call):
         """Update bluetooth devices on demand."""
