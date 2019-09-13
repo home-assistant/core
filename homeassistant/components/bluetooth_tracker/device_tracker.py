@@ -121,7 +121,7 @@ async def async_setup_scanner(
 
     # If track new devices is true discover new devices on startup.
     track_new: bool = config.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
-    _LOGGER.debug("Tracking new devices = %s", track_new)
+    _LOGGER.debug("Tracking new devices is set to %s", track_new)
 
     devices_to_track, devices_to_not_track = await get_tracking_devices(hass)
 
@@ -142,6 +142,7 @@ async def async_setup_scanner(
 
     async def perform_bluetooth_update():
         """Discover Bluetooth devices and update status."""
+
         _LOGGER.debug("Performing Bluetooth devices discovery and update")
         try:
             if track_new:
@@ -170,13 +171,10 @@ async def async_setup_scanner(
     async def update_bluetooth(now=None):
         """Lookup Bluetooth devices and update status."""
 
-        _LOGGER.debug("Preparing to update Bluetooth devices")
-
         # If an update is in progress, we don't do anything
         if update_bluetooth_lock.locked():
-            _LOGGER.warning(
-                "Updating %s took longer than the scheduled update of interval %s",
-                DOMAIN,
+            _LOGGER.info(
+                "Previous execution of update_bluetooth is taking longer than the scheduled update of interval %s",
                 interval,
             )
             return
