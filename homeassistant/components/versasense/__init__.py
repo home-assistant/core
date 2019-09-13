@@ -38,35 +38,48 @@ async def _configure_entities(hass, config, consumer):
     """Fetch all devices with their peripherals for representation."""
     devices = await consumer.fetchDevices()
     _LOGGER.debug(devices)
+
+    sensor_info_list = []
+    switch_info_list = []
+
     for mac, device in devices.items():
         _LOGGER.info("Device connected: %s %s", device.name, mac)
+
         for peripheral_id, peripheral in device.peripherals.items():
             hass.data[DOMAIN][peripheral_id] = peripheral
-            await _create_entity(hass, config, peripheral, device.name)
 
-
-async def _create_entity(hass, config, peripheral, parent_name):
-    """Create an entity based on a peripheral."""
-    for measurement in peripheral.measurements:
-        if peripheral.classification == PERIPHERAL_CLASS_SENSOR:
-            entity_type = "sensor"
-        elif peripheral.classification == PERIPHERAL_CLASS_SENSOR_ACTUATOR:
-            entity_type = "switch"
-        else:
-            entity_type = None
-
-        if entity_type is not None:
-            hass.async_create_task(
-                async_load_platform(
-                    hass,
-                    entity_type,
-                    DOMAIN,
-                    {
-                        "identifier": peripheral.identifier,
-                        "unit": measurement.unit,
-                        "measurement": measurement.name,
-                        "parent_name": parent_name,
-                    },
-                    config,
+            if peripheral.classification == PERIPHERAL_CLASS_SENSOR:
+                sensor_info_list = await _add_entity_info_to_list(
+                    peripheral, device, sensor_info_list
                 )
-            )
+            elif peripheral.classification == PERIPHERAL_CLASS_SENSOR_ACTUATOR:
+                switch_info_list = await _add_entity_info_to_list(
+                    peripheral, device, switch_info_list
+                )
+
+    if sensor_info_list:
+        await _load_platform(hass, config, "sensor", sensor_info_list)
+
+    if switch_info_list:
+        await _load_platform(hass, config, "switch", switch_info_list)
+
+
+async def _add_entity_info_to_list(peripheral, device, entity_info_list):
+    for measurement in peripheral.measurements:
+        entity_info = {
+            "identifier": peripheral.identifier,
+            "unit": measurement.unit,
+            "measurement": measurement.name,
+            "parent_name": device.name,
+        }
+
+        entity_info_list.append(entity_info)
+
+    return entity_info_list
+
+
+async def _load_platform(hass, config, entity_type, entity_info_list):
+    """Load platform with list of entity info."""
+    hass.async_create_task(
+        async_load_platform(hass, entity_type, DOMAIN, entity_info_list, config)
+    )

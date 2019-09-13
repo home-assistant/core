@@ -11,12 +11,16 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the sensor platform."""
     consumer = hass.data[DOMAIN]["consumer"]
-    peripheral = hass.data[DOMAIN][discovery_info["identifier"]]
-    parent_name = discovery_info["parent_name"]
-    unit = discovery_info["unit"]
-    measurement = discovery_info["measurement"]
 
-    async_add_entities([VSensor(peripheral, parent_name, unit, measurement, consumer)])
+    for entity_info in discovery_info:
+        parent_name = entity_info["parent_name"]
+        peripheral = hass.data[DOMAIN][entity_info["identifier"]]
+        unit = entity_info["unit"]
+        measurement = entity_info["measurement"]
+
+        async_add_entities(
+            [VSensor(peripheral, parent_name, unit, measurement, consumer)]
+        )
 
 
 class VSensor(Entity):
@@ -55,7 +59,7 @@ class VSensor(Entity):
 
     @property
     def available(self):
-        """Return if the sensor is available"""
+        """Return if the sensor is available."""
         return self._available
 
     async def async_update(self):

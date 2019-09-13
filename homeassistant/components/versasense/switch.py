@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.switch import SwitchDevice
 
 from . import DOMAIN
-from .const import PERIPHERAL_STATE_ON, PERIPHERAL_STATE_OFF
+from .const import PERIPHERAL_STATE_OFF, PERIPHERAL_STATE_ON
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -12,14 +12,16 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up actuator platform."""
     consumer = hass.data[DOMAIN]["consumer"]
-    peripheral = hass.data[DOMAIN][discovery_info["identifier"]]
-    parent_name = discovery_info["parent_name"]
-    unit = discovery_info["unit"]
-    measurement = discovery_info["measurement"]
 
-    async_add_entities(
-        [VActuator(peripheral, parent_name, unit, measurement, consumer)]
-    )
+    for entity_info in discovery_info:
+        peripheral = hass.data[DOMAIN][entity_info["identifier"]]
+        parent_name = entity_info["parent_name"]
+        unit = entity_info["unit"]
+        measurement = entity_info["measurement"]
+
+        async_add_entities(
+            [VActuator(peripheral, parent_name, unit, measurement, consumer)]
+        )
 
 
 class VActuator(SwitchDevice):
@@ -53,7 +55,7 @@ class VActuator(SwitchDevice):
 
     @property
     def available(self):
-        """Return if the actuator is available"""
+        """Return if the actuator is available."""
         return self._available
 
     async def async_turn_off(self, **kwargs):
