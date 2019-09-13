@@ -150,7 +150,7 @@ class HomematicipAccesspointStatus(HomematicipGenericDevice):
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes of the security zone group."""
+        """Return the state attributes of the access point."""
         return {ATTR_MODEL_TYPE: self._device.modelType, ATTR_IS_GROUP: False}
 
 
