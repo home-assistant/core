@@ -1,86 +1,50 @@
 """Support for Plex media server monitoring."""
 from datetime import timedelta
 import logging
+
 import plexapi.exceptions
 import requests.exceptions
-import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_TOKEN,
-    CONF_SSL,
-    CONF_URL,
-    CONF_VERIFY_SSL,
-)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
-from .const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SSL, DEFAULT_VERIFY_SSL
-from .server import PlexServer
+from .const import DOMAIN as PLEX_DOMAIN, SERVERS
 
 DEFAULT_NAME = "Plex"
 _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_TOKEN): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    }
-)
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Plex sensor."""
-    name = config.get(CONF_NAME)
-    plex_host = config.get(CONF_HOST)
-    plex_port = config.get(CONF_PORT)
-    plex_token = config.get(CONF_TOKEN)
-    verify_ssl = config.get(CONF_VERIFY_SSL)
-
-    plex_url = "{}://{}:{}".format(
-        "https" if config.get(CONF_SSL) else "http", plex_host, plex_port
-    )
-
-    try:
-        plex_server = PlexServer(
-            {CONF_URL: plex_url, CONF_TOKEN: plex_token, CONF_VERIFY_SSL: verify_ssl}
-        )
-        plex_server.connect()
-    except (
-        plexapi.exceptions.BadRequest,
-        plexapi.exceptions.Unauthorized,
-        plexapi.exceptions.NotFound,
-    ) as error:
-        _LOGGER.error(error)
+    if discovery_info is None:
         return
 
-    add_entities([PlexSensor(name, plex_server)], True)
+    plexserver = list(hass.data[PLEX_DOMAIN][SERVERS].values())[0]
+    add_entities([PlexSensor(plexserver)], True)
 
 
 class PlexSensor(Entity):
     """Representation of a Plex now playing sensor."""
 
-    def __init__(self, name, plex_server):
+    def __init__(self, plex_server):
         """Initialize the sensor."""
-        self._name = name
+        self._name = DEFAULT_NAME
         self._state = None
         self._now_playing = []
         self._server = plex_server
+        self._unique_id = f"sensor-{plex_server.machine_identifier}"
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the id of this plex client."""
+        return self._unique_id
 
     @property
     def state(self):

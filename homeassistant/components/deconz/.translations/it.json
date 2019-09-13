@@ -41,6 +41,35 @@
         },
         "title": "Gateway Zigbee deCONZ"
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "both_buttons": "Entrambi i pulsanti",
+            "button_1": "Primo pulsante",
+            "button_2": "Secondo pulsante",
+            "button_3": "Terzo pulsante",
+            "button_4": "Quarto pulsante",
+            "close": "Chiudere",
+            "dim_down": "Diminuire luminosit\u00e0",
+            "dim_up": "Aumentare luminosit\u00e0",
+            "left": "Sinistra",
+            "open": "Aperto",
+            "right": "Destra",
+            "turn_off": "Spegnere",
+            "turn_on": "Accendere"
+        },
+        "trigger_type": {
+            "remote_button_double_press": "Pulsante \"{subtype}\" cliccato due volte",
+            "remote_button_long_press": "Pulsante \"{subtype}\" premuto continuamente",
+            "remote_button_long_release": "Pulsante \"{subtype}\" rilasciato dopo una lunga pressione",
+            "remote_button_quadruple_press": "Pulsante \"{subtype}\" cliccato quattro volte",
+            "remote_button_quintuple_press": "Pulsante \"{subtype}\" cliccato cinque volte",
+            "remote_button_rotated": "Pulsante ruotato \"{subtype}\"",
+            "remote_button_short_press": "Pulsante \"{subtype}\" premuto",
+            "remote_button_short_release": "Pulsante \"{subtype}\" rilasciato",
+            "remote_button_triple_press": "Pulsante \"{subtype}\" cliccato tre volte",
+            "remote_gyro_activated": "Dispositivo in vibrazione"
+        }
+    },
     "options": {
         "step": {
             "async_step_deconz_devices": {
