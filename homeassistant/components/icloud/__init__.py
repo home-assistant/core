@@ -13,8 +13,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import slugify
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -22,7 +21,7 @@ from homeassistant.util.dt import utcnow
 from homeassistant.util.location import distance
 
 from .const import (
-    CONF_ACCOUNTNAME,
+    CONF_ACCOUNT_NAME,
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
     DEFAULT_GPS_ACCURACY_THRESHOLD,
@@ -92,8 +91,6 @@ DEVICE_STATUS_CODES = {
     "204": "unregistered",
 }
 
-_CONFIGURING = {}
-
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_ICLOUD_PLAY_SOUND = "play_sound"
@@ -101,19 +98,23 @@ SERVICE_ICLOUD_DISPLAY_MESSAGE = "display_message"
 SERVICE_ICLOUD_LOST_DEVICE = "lost_device"
 SERVICE_ICLOUD_UPDATE = "update"
 SERVICE_ICLOUD_RESET = "reset"
+SERVICE_ATTR_USERNAME = CONF_USERNAME
 SERVICE_ATTR_LOST_DEVICE_MESSAGE = "message"
 SERVICE_ATTR_LOST_DEVICE_NUMBER = "number"
 SERVICE_ATTR_LOST_DEVICE_SOUND = "sound"
 
-SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_USERNAME): cv.string})
+SERVICE_SCHEMA = vol.Schema({vol.Optional(SERVICE_ATTR_USERNAME): cv.string})
 
 SERVICE_SCHEMA_PLAY_SOUND = vol.Schema(
-    {vol.Required(CONF_USERNAME): cv.string, vol.Required(ATTR_DEVICENAME): cv.string}
+    {
+        vol.Required(SERVICE_ATTR_USERNAME): cv.string,
+        vol.Required(ATTR_DEVICENAME): cv.string,
+    }
 )
 
 SERVICE_SCHEMA_DISPLAY_MESSAGE = vol.Schema(
     {
-        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(SERVICE_ATTR_USERNAME): cv.string,
         vol.Required(ATTR_DEVICENAME): cv.string,
         vol.Required(SERVICE_ATTR_LOST_DEVICE_MESSAGE): cv.string,
         vol.Optional(SERVICE_ATTR_LOST_DEVICE_SOUND): cv.boolean,
@@ -122,7 +123,7 @@ SERVICE_SCHEMA_DISPLAY_MESSAGE = vol.Schema(
 
 SERVICE_SCHEMA_LOST_DEVICE = vol.Schema(
     {
-        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(SERVICE_ATTR_USERNAME): cv.string,
         vol.Required(ATTR_DEVICENAME): cv.string,
         vol.Required(SERVICE_ATTR_LOST_DEVICE_NUMBER): cv.string,
         vol.Required(SERVICE_ATTR_LOST_DEVICE_MESSAGE): cv.string,
@@ -133,7 +134,7 @@ ACCOUNT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_ACCOUNTNAME): cv.slugify,
+        vol.Optional(CONF_ACCOUNT_NAME): cv.slugify,
         vol.Optional(CONF_MAX_INTERVAL, default=DEFAULT_MAX_INTERVAL): cv.positive_int,
         vol.Optional(
             CONF_GPS_ACCURACY_THRESHOLD, default=DEFAULT_GPS_ACCURACY_THRESHOLD
@@ -171,7 +172,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
-    account_name = entry.data.get(CONF_ACCOUNTNAME, None)
+    account_name = entry.data.get(CONF_ACCOUNT_NAME)
     max_interval = entry.data[CONF_MAX_INTERVAL]
     gps_accuracy_threshold = entry.data[CONF_GPS_ACCURACY_THRESHOLD]
 
@@ -188,7 +189,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     def play_sound(service):
         """Play sound on the device."""
-        username = entry.data[CONF_USERNAME]
+        username = entry.data[SERVICE_ATTR_USERNAME]
         devicename = service.data.get(ATTR_DEVICENAME)
         devicename = slugify(devicename.replace(" ", "", 99))
 
@@ -196,7 +197,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     def display_message(service):
         """Display a message on the device."""
-        username = entry.data[CONF_USERNAME]
+        username = entry.data[SERVICE_ATTR_USERNAME]
         devicename = service.data.get(ATTR_DEVICENAME)
         devicename = slugify(devicename.replace(" ", "", 99))
         message = service.data.get(SERVICE_ATTR_LOST_DEVICE_MESSAGE)
@@ -206,7 +207,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     def lost_device(service):
         """Make the device in lost state."""
-        username = entry.data[CONF_USERNAME]
+        username = entry.data[SERVICE_ATTR_USERNAME]
         devicename = service.data.get(ATTR_DEVICENAME)
         devicename = slugify(devicename.replace(" ", "", 99))
         number = service.data.get(SERVICE_ATTR_LOST_DEVICE_NUMBER)
@@ -214,9 +215,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
         hass.data[DOMAIN][username].devices[devicename].lost_device(number, message)
 
-    def update(service):
+    def update_account(service):
         """Call the update function of an iCloud account."""
-        username = entry.data.get(CONF_USERNAME, None)
+        username = entry.data.get(SERVICE_ATTR_USERNAME)
 
         if username is None:
             for account in hass.data[DOMAIN].items():
@@ -226,7 +227,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     def reset_account(service):
         """Reset an iCloud account."""
-        username = entry.data.get(CONF_USERNAME, None)
+        username = entry.data.get(SERVICE_ATTR_USERNAME)
 
         if username is None:
             for account in hass.data[DOMAIN].items():
@@ -253,7 +254,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_ICLOUD_UPDATE, update, schema=SERVICE_SCHEMA
+        DOMAIN, SERVICE_ICLOUD_UPDATE, update_account, schema=SERVICE_SCHEMA
     )
 
     hass.services.async_register(
@@ -279,7 +280,7 @@ class IcloudAccount:
         self.hass = hass
         self.username = username
         self._password = password
-        self._accountname = accountname or slugify(username.partition("@")[0])
+        self._account_name = accountname or slugify(username.partition("@")[0])
         self._max_interval = max_interval
         self._gps_accuracy_threshold = gps_accuracy_threshold
 
@@ -303,75 +304,78 @@ class IcloudAccount:
             _LOGGER.error("Error logging into iCloud Service: %s", error)
             return
 
+        user_info = None
         try:
             # Gets device owners infos
             user_info = self.api.devices.response["userInfo"]
-            self.account_owner_fullname = (
-                user_info["firstName"] + " " + user_info["lastName"]
-            )
-
-            self.family_members_fullname = {}
-            for prs_id, member in user_info["membersInfo"].items():
-                self.family_members_fullname[prs_id] = (
-                    member["firstName"] + " " + member["lastName"]
-                )
-
-            self.devices = {}
-            self.update_devices()
-
         except PyiCloudNoDevicesException:
             _LOGGER.error("No iCloud Devices found")
+
+        self.account_owner_fullname = (
+            f"{user_info['firstName']} {user_info['lastName']}"
+        )
+
+        self.family_members_fullname = {}
+        for prs_id, member in user_info["membersInfo"].items():
+            self.family_members_fullname[
+                prs_id
+            ] = f"{member['firstName']} {member['lastName']}"
+
+        self.devices = {}
+        self.update_devices()
 
     def update_devices(self):
         """Update iCloud devices."""
         if self.api is None:
             return
 
+        api_devices = {}
         try:
-            # Gets devices infos
-            for device in self.api.devices:
-                status = device.status(DEVICE_STATUS_SET)
-                devicename = slugify(status["name"].replace(" ", "", 99))
-
-                if self.devices.get(devicename, None) is not None:
-                    # Seen device -> updating
-                    _LOGGER.info("Updating iCloud device: %s", devicename)
-                    self.devices[devicename].update(status)
-                else:
-                    # New device, should be unique
-                    if devicename in self.devices:
-                        _LOGGER.error("Multiple devices with name: %s", devicename)
-                        continue
-
-                    _LOGGER.debug("Adding iCloud device: %s", devicename)
-                    self.devices[devicename] = IcloudDevice(self, device)
-
+            api_devices = self.api.devices
         except PyiCloudNoDevicesException:
             _LOGGER.error("No iCloud Devices found")
 
+        # Gets devices infos
+        for device in api_devices:
+            status = device.status(DEVICE_STATUS_SET)
+            devicename = slugify(status["name"].replace(" ", "", 99))
+
+            if self.devices.get(devicename, None) is not None:
+                # Seen device -> updating
+                _LOGGER.debug("Updating iCloud device: %s", devicename)
+                self.devices[devicename].update(status)
+            else:
+                # New device, should be unique
+                if devicename in self.devices:
+                    _LOGGER.error("Multiple devices with name: %s", devicename)
+                    continue
+
+                _LOGGER.debug("Adding iCloud device: %s", devicename)
+                self.devices[devicename] = IcloudDevice(self, device, status)
+                self.devices[devicename].update(status)
+
+        async_dispatcher_send(self.hass, TRACKER_UPDATE)
         interval = self.determine_interval()
-        async_track_point_in_utc_time(
+        track_point_in_utc_time(
             self.hass, self.keep_alive, utcnow() + timedelta(minutes=interval)
         )
 
     def determine_interval(self) -> int:
-        """Calculate new interval between to API fetch (in minutes)."""
+        """Calculate new interval between two API fetch (in minutes)."""
         intervals = {}
         for device in self.devices.values():
             if device.location is None:
                 continue
 
-            currentzone = self.hass.async_add_executor_job(
-                run_callback_threadsafe(
-                    self.hass.loop,
-                    async_active_zone,
-                    self.hass,
-                    device.location["latitude"],
-                    device.location["longitude"],
-                ).result
-            )
+            current_zone = run_callback_threadsafe(
+                self.hass.loop,
+                async_active_zone,
+                self.hass,
+                device.location["latitude"],
+                device.location["longitude"],
+            ).result()
 
-            if currentzone is not None:
+            if current_zone is not None:
                 intervals[device.name] = self._max_interval
                 continue
 
@@ -392,10 +396,9 @@ class IcloudAccount:
                 )
                 distances.append(round(zone_distance / 1000, 1))
 
-            if distances:
-                mindistance = min(distances)
-            else:
+            if not distances:
                 continue
+            mindistance = min(distances)
 
             # Calculate out how long it would take for the device to drive
             # to the nearest zone at 120 km/h:
@@ -438,75 +441,64 @@ class IcloudAccount:
     @property
     def name(self):
         """Return the account name."""
-        return self._accountname
+        return self._account_name
 
 
-class IcloudDevice(Entity):
+class IcloudDevice:
     """Representation of a iCloud device."""
 
-    def __init__(self, account: IcloudAccount, device: AppleDevice):
+    def __init__(self, account: IcloudAccount, device: AppleDevice, status):
         """Initialize the iCloud device."""
         self.hass = account.hass
         self._account = account
-        self._accountname = account.name
-        self._accountname_slug = slugify(self._accountname.partition("@")[0])
+        account_name = account.name
+        account_name_slug = slugify(account_name.partition("@")[0])
 
         self._device = device
-        self._status = device.status(DEVICE_STATUS_SET)
-        _LOGGER.debug("Device Status is %s", self._status)
+        self._status = status
 
         self._name = self._status["name"]
         self._dev_id = slugify(self._name.replace(" ", "", 99))  # devicename
-        self._unique_id = f"{self._accountname_slug}_{self._dev_id}"
+        self._unique_id = f"{account_name_slug}_{self._dev_id}"
         self._device_class = self._status["deviceClass"]
-        self._device_name = self._status["deviceDisplayName"]
+        device_name = self._status["deviceDisplayName"]
+
         if self._status["prsId"]:
-            self._owner_fullname = account.family_members_fullname[
-                self._status["prsId"]
-            ]
+            owner_fullname = account.family_members_fullname[self._status["prsId"]]
         else:
-            self._owner_fullname = account.account_owner_fullname
+            owner_fullname = account.account_owner_fullname
 
         self._battery_level = None
         self._battery_status = None
-        self._low_power_mode = None
         self._location = None
 
-        self._seen = False
-
-        self.update(self._status)
+        self._attrs = {
+            CONF_ACCOUNT_NAME: account_name,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_DEVICENAME: device_name,
+            ATTR_DEVICESTATUS: None,
+            ATTR_OWNERNAME: owner_fullname,
+        }
 
     def update(self, status):
         """Update the iCloud device."""
         self._status = status
 
-        self._device_status = DEVICE_STATUS_CODES.get(
-            self._status["deviceStatus"], "error"
-        )
-
-        self._attrs = {
-            CONF_ACCOUNTNAME: self._accountname,
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_DEVICENAME: self._device_name,
-            ATTR_DEVICESTATUS: self._device_status,
-            ATTR_OWNERNAME: self._owner_fullname,
-        }
+        device_status = DEVICE_STATUS_CODES.get(self._status["deviceStatus"], "error")
+        self._attrs[ATTR_DEVICESTATUS] = device_status
 
         if self._status["batteryStatus"] != "Unknown":
             self._battery_level = round(self._status.get("batteryLevel", 0) * 100)
             self._battery_status = self._status["batteryStatus"]
-            self._low_power_mode = self._status["lowPowerMode"]
+            low_power_mode = self._status["lowPowerMode"]
 
             self._attrs[ATTR_BATTERY] = self._battery_level
             self._attrs[ATTR_BATTERYSTATUS] = self._battery_status
-            self._attrs[ATTR_LOWPOWERMODE] = self._low_power_mode
+            self._attrs[ATTR_LOWPOWERMODE] = low_power_mode
 
             if self._status["location"] and self._status["location"]["latitude"]:
                 location = self._status["location"]
                 self._location = location
-
-        # if self._account.unsub_device_tracker is not None:
-        async_dispatcher_send(self.hass, TRACKER_UPDATE, self)
 
     def play_sound(self):
         """Play sound on the device."""
@@ -514,7 +506,7 @@ class IcloudDevice(Entity):
             return
 
         self._account.api.authenticate()
-        _LOGGER.info("Playing Lost iPhone sound for %s", self.name)
+        _LOGGER.debug("Playing sound for %s", self.name)
         self.device.play_sound()
 
     def display_message(self, message: str, sound: bool = False):
@@ -523,7 +515,7 @@ class IcloudDevice(Entity):
             return
 
         self._account.api.authenticate()
-        _LOGGER.info("Displaying message for %s", self.name)
+        _LOGGER.debug("Displaying message for %s", self.name)
         self.device.display_message("Subject not working", message, sound)
 
     def lost_device(self, number: str, message: str):
@@ -533,7 +525,7 @@ class IcloudDevice(Entity):
 
         self._account.api.authenticate()
         if self._status["lostModeCapable"]:
-            _LOGGER.info("Make device lost for %s", self.name)
+            _LOGGER.debug("Make device lost for %s", self.name)
             self.device.lost_device(number, message, None)
         else:
             _LOGGER.error("Cannot make device lost for %s", self.name)
@@ -582,12 +574,3 @@ class IcloudDevice(Entity):
     def state_attributes(self):
         """Return the attributes."""
         return self._attrs
-
-    @property
-    def seen(self):
-        """Return the seen value."""
-        return self._seen
-
-    def set_seen(self, seen):
-        """Set the seen value."""
-        self._seen = seen

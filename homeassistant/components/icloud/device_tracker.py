@@ -4,7 +4,6 @@ import logging
 from homeassistant.core import callback
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.const import CONF_USERNAME
-from homeassistant.components.device_tracker.const import ENTITY_ID_FORMAT
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -24,13 +23,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
     username = entry.data[CONF_USERNAME]
 
     for device in hass.data[DOMAIN][username].devices.values():
-
-        # An entity will not be created by see() when track=false in
-        # 'known_devices.yaml', but we need to see() it at least once
-        entity = hass.states.get(ENTITY_ID_FORMAT.format(device.dev_id))
-        if entity is None and device.seen:
-            continue
-
         if device.location is None:
             _LOGGER.debug("No position found for device %s", device.name)
             continue
@@ -38,9 +30,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         _LOGGER.debug("Updating device_tracker for %s", device.name)
 
         async_add_entities([IcloudTrackerEntity(device)])
-        device.set_seen(True)
-
-    return True
 
 
 class IcloudTrackerEntity(TrackerEntity):
@@ -97,7 +86,7 @@ class IcloudTrackerEntity(TrackerEntity):
         return icon_for_icloud_device(self._device)
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the device state attributes."""
         return self._device.state_attributes
 
@@ -112,12 +101,8 @@ class IcloudTrackerEntity(TrackerEntity):
         self._unsub_dispatcher()
 
     @callback
-    def _async_receive_data(self, device: IcloudDevice):
+    def _async_receive_data(self):
         """Update device data."""
-        if device.unique_id != self._device.unique_id:
-            return
-
-        self._device = device
         self.async_write_ha_state()
 
 

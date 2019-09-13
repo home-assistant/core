@@ -3,7 +3,7 @@
 DOMAIN = "icloud"
 TRACKER_UPDATE = f"{DOMAIN}_tracker_update"
 
-CONF_ACCOUNTNAME = "account_name"
+CONF_ACCOUNT_NAME = "account_name"
 CONF_MAX_INTERVAL = "max_interval"
 CONF_GPS_ACCURACY_THRESHOLD = "gps_accuracy_threshold"
 

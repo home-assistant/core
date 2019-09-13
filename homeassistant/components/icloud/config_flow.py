@@ -11,7 +11,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import slugify
 
 from .const import (
-    CONF_ACCOUNTNAME,
+    CONF_ACCOUNT_NAME,
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
     DEFAULT_MAX_INTERVAL,
@@ -48,8 +48,8 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if (
                 entry.data[CONF_USERNAME] == username
-                or entry.data[CONF_ACCOUNTNAME] == accountname
-                or entry.data[CONF_ACCOUNTNAME] == slugify(username.partition("@")[0])
+                or entry.data[CONF_ACCOUNT_NAME] == accountname
+                or entry.data[CONF_ACCOUNT_NAME] == slugify(username.partition("@")[0])
             ):
                 return True
         return False
@@ -81,14 +81,14 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         icloud_dir = self.hass.config.path("icloud")
         if not os.path.exists(icloud_dir):
-            os.makedirs(icloud_dir)
+            self.hass.async_add_executor_job(os.makedirs, icloud_dir)
 
         if user_input is None:
             return await self._show_setup_form(user_input, errors)
 
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
-        self._accountname = user_input.get(CONF_ACCOUNTNAME, None)
+        self._accountname = user_input.get(CONF_ACCOUNT_NAME)
         self._max_interval = user_input.get(CONF_MAX_INTERVAL, DEFAULT_MAX_INTERVAL)
         self._gps_accuracy_threshold = user_input.get(
             CONF_GPS_ACCURACY_THRESHOLD, DEFAULT_GPS_ACCURACY_THRESHOLD
@@ -111,16 +111,13 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self.api.requires_2fa:
             try:
                 if self._trusted_device is None:
-                    _LOGGER.error("CONFIG_FLOW_ICLOUD:__trusted_device")
                     return await self.async_step_trusted_device()
 
                 if self._verification_code is None:
-                    _LOGGER.error("CONFIG_FLOW_ICLOUD:__verification_code")
                     return await self.async_step_verification_code()
 
                 self.api.authenticate()
                 if self.api.requires_2fa:
-                    _LOGGER.error("CONFIG_FLOW_ICLOUD:requires_2fa ERROR")
                     errors["base"] = "unknown"
                     return await self._show_setup_form(user_input, errors)
 
@@ -137,7 +134,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={
                 CONF_USERNAME: self._username,
                 CONF_PASSWORD: self._password,
-                CONF_ACCOUNTNAME: self._accountname,
+                CONF_ACCOUNT_NAME: self._accountname,
                 CONF_MAX_INTERVAL: self._max_interval,
                 CONF_GPS_ACCURACY_THRESHOLD: self._gps_accuracy_threshold,
             },
@@ -146,7 +143,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input):
         """Import a config entry."""
         if self._configuration_exists(
-            user_input[CONF_USERNAME], user_input.get(CONF_ACCOUNTNAME, None)
+            user_input[CONF_USERNAME], user_input.get(CONF_ACCOUNT_NAME)
         ):
             return self.async_abort(reason="username_exists")
 
@@ -160,10 +157,9 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         trusted_devices = {}
         devices = self.api.trusted_devices
         for i, device in enumerate(devices):
-            devicename = device.get(
-                "deviceName", "SMS to %s" % device.get("phoneNumber")
+            trusted_devices[i] = device.get(
+                "deviceName", f"SMS to {device.get('phoneNumber')}"
             )
-            trusted_devices[i] = devicename
 
         if user_input is None:
             return await self._show_trusted_device_form(
@@ -231,7 +227,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 CONF_USERNAME: self._username,
                 CONF_PASSWORD: self._password,
-                CONF_ACCOUNTNAME: self._accountname,
+                CONF_ACCOUNT_NAME: self._accountname,
                 CONF_MAX_INTERVAL: self._max_interval,
                 CONF_GPS_ACCURACY_THRESHOLD: self._gps_accuracy_threshold,
             }
