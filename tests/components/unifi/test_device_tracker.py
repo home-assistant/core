@@ -1,4 +1,4 @@
-"""The tests for the Unifi WAP device tracker platform."""
+"""The tests for the UniFi device tracker platform."""
 from collections import deque
 from copy import copy
 from unittest.mock import Mock
@@ -32,7 +32,6 @@ from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 
 import homeassistant.components.device_tracker as device_tracker
-import homeassistant.components.unifi.device_tracker as unifi_dt
 import homeassistant.util.dt as dt_util
 
 DEFAULT_DETECTION_TIME = timedelta(seconds=300)
@@ -275,14 +274,14 @@ async def test_restoring_client(hass, mock_controller):
     registry = await entity_registry.async_get_registry(hass)
     registry.async_get_or_create(
         device_tracker.DOMAIN,
-        unifi_dt.UNIFI_DOMAIN,
+        unifi.DOMAIN,
         "{}-mock-site".format(CLIENT_1["mac"]),
         suggested_object_id=CLIENT_1["hostname"],
         config_entry=config_entry,
     )
     registry.async_get_or_create(
         device_tracker.DOMAIN,
-        unifi_dt.UNIFI_DOMAIN,
+        unifi.DOMAIN,
         "{}-mock-site".format(CLIENT_2["mac"]),
         suggested_object_id=CLIENT_2["hostname"],
         config_entry=config_entry,
