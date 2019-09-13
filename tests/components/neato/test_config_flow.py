@@ -1,4 +1,4 @@
-"""Tests for the Linky config flow."""
+"""Tests for the Neato config flow."""
 import pytest
 from unittest.mock import patch
 
@@ -12,6 +12,7 @@ from tests.common import MockConfigEntry
 USERNAME = "myUsername"
 PASSWORD = "myPassword"
 VENDOR = "neato"
+INVALID_VENDOR = "invalid"
 
 
 @pytest.fixture(name="account")
@@ -85,10 +86,29 @@ async def test_abort_if_already_setup(hass, account):
     assert result["reason"] == "already_configured"
 
 
-async def test_abort_on_login_failed(hass, account):
-    """Test when we have errors during login."""
-    # flow = init_config_flow(hass)
-    pass
+async def test_abort_on_invalid_credentials(hass):
+    """Test when we have invalid credentials."""
+    from requests.exceptions import HTTPError
+
+    flow = init_config_flow(hass)
+
+    with patch("pybotvac.Account", side_effect=HTTPError()):
+        result = await flow.async_step_user(
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_VENDOR: VENDOR}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {"base": "invalid_credentials"}
+
+
+async def test_abort_on_invalid_vendor(hass, account):
+    """Test when we have an invalid vendor."""
+    flow = init_config_flow(hass)
+
+    result = await flow.async_step_user(
+        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_VENDOR: INVALID_VENDOR}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "invalid_vendor"}
 
 
 async def test_update_when_yaml_updated(hass, account):
