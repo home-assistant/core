@@ -41,6 +41,23 @@
         },
         "title": "Brama deCONZ Zigbee"
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "both_buttons": "Oba przyciski",
+            "button_1": "Pierwszy przycisk",
+            "button_2": "Drugi przycisk",
+            "button_3": "Trzeci przycisk",
+            "button_4": "Czwarty przycisk",
+            "close": "Zamknij",
+            "dim_down": "Przyciemnienie",
+            "dim_up": "Przyciemnienie",
+            "left": "Lewo",
+            "open": "Otw\u00f3rz",
+            "right": "Prawo",
+            "turn_off": "Wy\u0142\u0105cz",
+            "turn_on": "W\u0142\u0105cz"
+        }
+    },
     "options": {
         "step": {
             "async_step_deconz_devices": {
