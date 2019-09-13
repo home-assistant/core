@@ -126,20 +126,6 @@ async def async_setup_scanner(
     if not devices_to_track and not track_new:
         _LOGGER.debug("No Bluetooth devices to track and not tracking new devices")
 
-    if track_new:
-        devices = await hass.async_add_executor_job(discover_devices, device_id)
-
-        tasks = []
-        for mac, device_name in devices:
-            if mac not in devices_to_track and mac not in devices_to_not_track:
-                devices_to_track.add(mac)
-
-            if mac in devices_to_track:
-                tasks.append(see_device(hass, async_see, mac, device_name))
-
-        if tasks:
-            await asyncio.wait(tasks)
-
     if request_rssi:
         _LOGGER.debug("Detecting RSSI for devices")
 
