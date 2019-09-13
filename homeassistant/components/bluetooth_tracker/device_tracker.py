@@ -128,12 +128,17 @@ async def async_setup_scanner(
 
     if track_new:
         devices = await hass.async_add_executor_job(discover_devices, device_id)
+
+        tasks = []
         for mac, device_name in devices:
             if mac not in devices_to_track and mac not in devices_to_not_track:
                 devices_to_track.add(mac)
 
             if mac in devices_to_track:
-                await see_device(hass, async_see, mac, device_name)
+                tasks.append(see_device(hass, async_see, mac, device_name))
+
+        if tasks:
+            await asyncio.wait(tasks)
 
     if request_rssi:
         _LOGGER.debug("Detecting RSSI for devices")
@@ -142,6 +147,8 @@ async def async_setup_scanner(
         """Discover Bluetooth devices and update status."""
 
         _LOGGER.debug("Performing Bluetooth devices discovery and update")
+        tasks = []
+
         try:
             if track_new:
                 devices = await hass.async_add_executor_job(discover_devices, device_id)
@@ -161,7 +168,10 @@ async def async_setup_scanner(
                     rssi = await hass.async_add_executor_job(client.request_rssi)
                     client.close()
 
-                await see_device(hass, async_see, mac, device_name, rssi)
+                tasks.append(see_device(hass, async_see, mac, device_name, rssi))
+
+            if tasks:
+                await asyncio.wait(tasks)
 
         except bluetooth.BluetoothError:
             _LOGGER.exception("Error looking up Bluetooth device")
@@ -171,7 +181,7 @@ async def async_setup_scanner(
 
         # If an update is in progress, we don't do anything
         if update_bluetooth_lock.locked():
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Previous execution of update_bluetooth is taking longer than the scheduled update of interval %s",
                 interval,
             )
