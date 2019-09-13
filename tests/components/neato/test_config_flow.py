@@ -99,6 +99,12 @@ async def test_abort_on_invalid_credentials(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {"base": "invalid_credentials"}
 
+        result = await flow.async_step_import(
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_VENDOR: VENDOR}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "invalid_credentials"
+
 
 async def test_abort_on_invalid_vendor(hass, account):
     """Test when we have an invalid vendor."""
@@ -109,9 +115,3 @@ async def test_abort_on_invalid_vendor(hass, account):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "invalid_vendor"}
-
-
-async def test_update_when_yaml_updated(hass, account):
-    """Test when the configuration in yaml differs from the stored config."""
-    # flow = init_config_flow(hass)
-    pass
