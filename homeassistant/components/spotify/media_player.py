@@ -52,7 +52,7 @@ PLAY_PLAYLIST_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
         vol.Optional(ATTR_RANDOM_SONG, default=False): cv.boolean,
-        vol.Optional(ATTR_DEVICE_ID, default=""): cv.string
+        vol.Optional(ATTR_DEVICE_ID, default=""): cv.string,
     }
 )
 
