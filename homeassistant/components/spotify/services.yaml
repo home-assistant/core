@@ -7,3 +7,6 @@ play_playlist:
     random_song:
       description: True to select random song at start, False to start from beginning.
       example: true
+    device_id:
+      description: Spotify device id to start playback on.
+      example: 'abcdef123'
