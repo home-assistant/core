@@ -1,0 +1,97 @@
+"""Tests for the Linky config flow."""
+import pytest
+from unittest.mock import patch
+
+from homeassistant import data_entry_flow
+from homeassistant.components.neato import config_flow
+from homeassistant.components.neato.const import NEATO_DOMAIN, CONF_VENDOR
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+
+from tests.common import MockConfigEntry
+
+USERNAME = "myUsername"
+PASSWORD = "myPassword"
+VENDOR = "neato"
+
+
+@pytest.fixture(name="account")
+def mock_controller_login():
+    """Mock a successful login."""
+    with patch("pybotvac.Account", return_value=True):
+        yield
+
+
+def init_config_flow(hass):
+    """Init a configuration flow."""
+    flow = config_flow.NeatoConfigFlow()
+    flow.hass = hass
+    return flow
+
+
+async def test_user(hass, account):
+    """Test user config."""
+    flow = init_config_flow(hass)
+
+    result = await flow.async_step_user()
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    result = await flow.async_step_user(
+        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_VENDOR: VENDOR}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == USERNAME
+    assert result["data"][CONF_USERNAME] == USERNAME
+    assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_VENDOR] == VENDOR
+
+
+async def test_import(hass, account):
+    """Test import step."""
+    flow = init_config_flow(hass)
+
+    result = await flow.async_step_import(
+        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_VENDOR: VENDOR}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == f"{USERNAME} (from configuration)"
+    assert result["data"][CONF_USERNAME] == USERNAME
+    assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_VENDOR] == VENDOR
+
+
+async def test_abort_if_already_setup(hass, account):
+    """Test we abort if Neato is already setup."""
+    flow = init_config_flow(hass)
+    MockConfigEntry(
+        domain=NEATO_DOMAIN,
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_VENDOR: VENDOR},
+    ).add_to_hass(hass)
+
+    # Should fail, same USERNAME (import)
+    result = await flow.async_step_import(
+        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_VENDOR: VENDOR}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+    # Should fail, same USERNAME (flow)
+    result = await flow.async_step_user(
+        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_VENDOR: VENDOR}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_abort_on_login_failed(hass, account):
+    """Test when we have errors during login."""
+    # flow = init_config_flow(hass)
+    pass
+
+
+async def test_update_when_yaml_updated(hass, account):
+    """Test when the configuration in yaml differs from the stored config."""
+    # flow = init_config_flow(hass)
+    pass
