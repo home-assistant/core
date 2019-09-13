@@ -134,6 +134,8 @@ async def async_setup_scanner(
         _LOGGER.debug("Detecting RSSI for devices")
 
     def perform_bluetooth_update():
+        """Discover Bluetooth devices and update status."""
+
         if track_new:
             for mac, device_name in discover_devices(device_id):
                 if mac not in devices_to_track and mac not in devices_to_not_track:
