@@ -1,0 +1,11 @@
+{
+    "domain": "obihai",
+    "name": "Obihai",
+    "documentation": "https://www.home-assistant.io/components/obihai",
+    "requirements": [
+      "pyobihai==1.0.2"
+    ],
+    "dependencies": [],
+    "codeowners": ["@dshokouhi"]
+  }
+  

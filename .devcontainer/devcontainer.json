@@ -3,7 +3,7 @@
   "name": "Home Assistant Dev",
   "context": "..",
   "dockerFile": "../Dockerfile.dev",
-  "postCreateCommand": "pip3 install -e .",
+  "postCreateCommand": "mkdir -p config && pip3 install -e .",
   "appPort": 8123,
   "runArgs": ["-e", "GIT_EDITOR=\"code --wait\""],
   "extensions": [

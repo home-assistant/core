@@ -6,8 +6,8 @@ from pydeconz import DeconzSession, errors
 from pydeconz.sensor import Switch
 
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.const import CONF_EVENT, CONF_HOST, CONF_ID
-from homeassistant.core import EventOrigin, callback
+from homeassistant.const import CONF_HOST
+from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import (
@@ -18,7 +18,6 @@ from homeassistant.helpers.entity_registry import (
     async_get_registry,
     DISABLED_CONFIG_ENTRY,
 )
-from homeassistant.util import slugify
 
 from .const import (
     _LOGGER,
@@ -33,6 +32,7 @@ from .const import (
     NEW_SENSOR,
     SUPPORTED_PLATFORMS,
 )
+from .deconz_event import DeconzEvent
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -192,7 +192,9 @@ class DeconzGateway:
             if sensor.type in Switch.ZHATYPE and not (
                 not self.option_allow_clip_sensor and sensor.type.startswith("CLIP")
             ):
-                self.events.append(DeconzEvent(self.hass, sensor))
+                event = DeconzEvent(sensor, self)
+                self.hass.async_create_task(event.async_update_device_registry())
+                self.events.append(event)
 
     @callback
     def shutdown(self, event):
@@ -288,33 +290,3 @@ class DeconzEntityHandler:
                 entity_registry.async_update_entity(
                     entity.registry_entry.entity_id, disabled_by=disabled_by
                 )
-
-
-class DeconzEvent:
-    """When you want signals instead of entities.
-
-    Stateless sensors such as remotes are expected to generate an event
-    instead of a sensor entity in hass.
-    """
-
-    def __init__(self, hass, device):
-        """Register callback that will be used for signals."""
-        self._hass = hass
-        self._device = device
-        self._device.register_async_callback(self.async_update_callback)
-        self._event = f"deconz_{CONF_EVENT}"
-        self._id = slugify(self._device.name)
-        _LOGGER.debug("deCONZ event created: %s", self._id)
-
-    @callback
-    def async_will_remove_from_hass(self) -> None:
-        """Disconnect event object when removed."""
-        self._device.remove_callback(self.async_update_callback)
-        self._device = None
-
-    @callback
-    def async_update_callback(self, force_update=False):
-        """Fire the event if reason is that state is updated."""
-        if "state" in self._device.changed_keys:
-            data = {CONF_ID: self._id, CONF_EVENT: self._device.state}
-            self._hass.bus.async_fire(self._event, data, EventOrigin.remote)

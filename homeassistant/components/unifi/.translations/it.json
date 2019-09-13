@@ -35,8 +35,8 @@
             },
             "init": {
                 "data": {
-                    "one": "Vuoto",
-                    "other": "Vuoto"
+                    "one": "uno",
+                    "other": "altro"
                 }
             }
         }

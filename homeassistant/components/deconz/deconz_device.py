@@ -7,14 +7,55 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN as DECONZ_DOMAIN
 
 
-class DeconzDevice(Entity):
-    """Representation of a deCONZ device."""
+class DeconzBase:
+    """Common base for deconz entities and events."""
 
     def __init__(self, device, gateway):
         """Set up device and add update callback to get data from websocket."""
         self._device = device
         self.gateway = gateway
         self.listeners = []
+
+    @property
+    def unique_id(self):
+        """Return a unique identifier for this device."""
+        return self._device.uniqueid
+
+    @property
+    def serial(self):
+        """Return a serial number for this device."""
+        if self.unique_id is None or self.unique_id.count(":") != 7:
+            return None
+
+        return self.unique_id.split("-", 1)[0]
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        if self.serial is None:
+            return None
+
+        bridgeid = self.gateway.api.config.bridgeid
+
+        return {
+            "connections": {(CONNECTION_ZIGBEE, self.serial)},
+            "identifiers": {(DECONZ_DOMAIN, self.serial)},
+            "manufacturer": self._device.manufacturer,
+            "model": self._device.modelid,
+            "name": self._device.name,
+            "sw_version": self._device.swversion,
+            "via_device": (DECONZ_DOMAIN, bridgeid),
+        }
+
+
+class DeconzDevice(DeconzBase, Entity):
+    """Representation of a deCONZ device."""
+
+    def __init__(self, device, gateway):
+        """Set up device and add update callback to get data from websocket."""
+        super().__init__(device, gateway)
+
+        self.unsub_dispatcher = None
 
     @property
     def entity_registry_enabled_default(self):
@@ -55,40 +96,16 @@ class DeconzDevice(Entity):
         self.async_schedule_update_ha_state()
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._device.name
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this device."""
-        return self._device.uniqueid
-
-    @property
     def available(self):
         """Return True if device is available."""
         return self.gateway.available and self._device.reachable
 
     @property
+    def name(self):
+        """Return the name of the device."""
+        return self._device.name
+
+    @property
     def should_poll(self):
         """No polling needed."""
         return False
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        if self._device.uniqueid is None or self._device.uniqueid.count(":") != 7:
-            return None
-
-        serial = self._device.uniqueid.split("-", 1)[0]
-        bridgeid = self.gateway.api.config.bridgeid
-
-        return {
-            "connections": {(CONNECTION_ZIGBEE, serial)},
-            "identifiers": {(DECONZ_DOMAIN, serial)},
-            "manufacturer": self._device.manufacturer,
-            "model": self._device.modelid,
-            "name": self._device.name,
-            "sw_version": self._device.swversion,
-            "via_device": (DECONZ_DOMAIN, bridgeid),
-        }

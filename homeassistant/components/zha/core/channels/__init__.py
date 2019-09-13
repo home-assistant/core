@@ -202,7 +202,7 @@ class ZigbeeChannel(LogMixin):
         # Xiaomi devices don't need this and it disrupts pairing
         if self._zha_device.manufacturer != "LUMI":
             await self.bind()
-            if self.cluster.cluster_id in self.cluster.endpoint.in_clusters:
+            if self.cluster.is_server:
                 for report_config in self._report_config:
                     await self.configure_reporting(
                         report_config["attr"], report_config["config"]

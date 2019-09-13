@@ -11,6 +11,7 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_MODE
 from homeassistant.helpers.entity import Entity
@@ -277,12 +278,11 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
 
 def _delta_mins(hhmm_time_str):
     """Calculate time delta in minutes to a time in hh:mm format."""
-    now = datetime.now()
+    now = dt_util.now()
     hhmm_time = datetime.strptime(hhmm_time_str, "%H:%M")
 
-    hhmm_datetime = datetime(
-        now.year, now.month, now.day, hour=hhmm_time.hour, minute=hhmm_time.minute
-    )
+    hhmm_datetime = now.replace(hour=hhmm_time.hour, minute=hhmm_time.minute)
+
     if hhmm_datetime < now:
         hhmm_datetime += timedelta(days=1)
 
