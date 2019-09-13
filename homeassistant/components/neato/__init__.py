@@ -101,6 +101,12 @@ async def async_unload_entry(hass, entry):
     """Unload config entry."""
     try:
         hass.data.pop(NEATO_LOGIN)
+
+        for component in ("camera", "vacuum", "switch"):
+            hass.async_add_job(
+                hass.config_entries.async_forward_entry_unload(entry, component)
+            )
+
         return True
     except KeyError:
         return False

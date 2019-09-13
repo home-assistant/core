@@ -74,6 +74,10 @@ class NeatoConfigFlow(config_entries.ConfigFlow, domain=NEATO_DOMAIN):
 
     async def async_step_import(self, user_input):
         """Import a config flow from configuration."""
+
+        if configured_neato(self.hass) is not None:
+            return self.async_abort(reason="already_configured")
+
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
         vendor = user_input[CONF_VENDOR]
