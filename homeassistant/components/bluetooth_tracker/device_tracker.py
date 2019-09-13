@@ -1,7 +1,7 @@
 """Tracking for bluetooth devices."""
 import asyncio
 import logging
-from typing import List, Set, Tuple
+from typing import List, Set, Tuple, Optional
 
 # pylint: disable=import-error
 import bluetooth
@@ -104,6 +104,12 @@ async def get_tracking_devices(hass: HomeAssistantType) -> Tuple[Set[str], Set[s
     return devices_to_track, devices_to_not_track
 
 
+def lookup_name(mac: str) -> Optional[str]:
+    """Lookup a Bluetooth device name."""
+    _LOGGER.debug("Scanning %s", mac)
+    return bluetooth.lookup_name(mac, timeout=5)
+
+
 async def async_setup_scanner(
     hass: HomeAssistantType, config: dict, async_see, discovery_info=None
 ):
@@ -123,7 +129,8 @@ async def async_setup_scanner(
         _LOGGER.debug("No Bluetooth devices to track and not tracking new devices")
 
     if track_new:
-        for mac, device_name in discover_devices(device_id):
+        devices = await hass.async_add_executor_job(discover_devices, device_id)
+        for mac, device_name in devices:
             if mac not in devices_to_track and mac not in devices_to_not_track:
                 devices_to_track.add(mac)
 
@@ -138,13 +145,13 @@ async def async_setup_scanner(
         _LOGGER.debug("Performing Bluetooth devices discovery and update")
         try:
             if track_new:
-                for mac, device_name in discover_devices(device_id):
+                devices = await hass.async_add_executor_job(discover_devices, device_id)
+                for mac, device_name in devices:
                     if mac not in devices_to_track and mac not in devices_to_not_track:
                         devices_to_track.add(mac)
 
             for mac in devices_to_track:
-                _LOGGER.debug("Scanning %s", mac)
-                device_name = bluetooth.lookup_name(mac, timeout=5)
+                device_name = await hass.async_add_executor_job(lookup_name, mac)
                 if device_name is None:
                     # Could not lookup device name
                     continue
@@ -152,7 +159,7 @@ async def async_setup_scanner(
                 rssi = None
                 if request_rssi:
                     client = BluetoothRSSI(mac)
-                    rssi = client.request_rssi()
+                    rssi = await hass.async_add_executor_job(client.request_rssi)
                     client.close()
 
                 await see_device(hass, async_see, mac, device_name, rssi)
@@ -175,7 +182,7 @@ async def async_setup_scanner(
             return
 
         async with update_bluetooth_lock:
-            await hass.async_add_executor_job(perform_bluetooth_update)
+            await perform_bluetooth_update()
 
     async def handle_manual_update_bluetooth(call):
         """Update bluetooth devices on demand."""
