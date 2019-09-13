@@ -70,18 +70,18 @@ async def async_setup_entry(hass, entry):
     api_key = entry.data[CONF_API_KEY]
     refresh_token = entry.data[CONF_REFRESH_TOKEN]
 
-    ecobee = EcobeeData(hass, entry, api_key=api_key, refresh_token=refresh_token)
+    data = EcobeeData(hass, entry, api_key=api_key, refresh_token=refresh_token)
 
-    if not await ecobee.refresh():
+    if not await hass.async_add_executor_job(data.refresh):
         return False
 
-    await ecobee.update()
+    await hass.async_add_executor_job(data.update)
 
-    if ecobee.account.thermostats is None:
+    if data.ecobee.thermostats is None:
         _LOGGER.error("No ecobee devices found to set up.")
         return False
 
-    hass.data[DOMAIN] = ecobee
+    hass.data[DOMAIN] = data
 
     for component in ECOBEE_PLATFORMS:
         hass.async_create_task(
@@ -104,33 +104,33 @@ class EcobeeData:
 
         self._hass = hass
         self._entry = entry
-        self.account = Ecobee(
+        self.ecobee = Ecobee(
             config={ECOBEE_API_KEY: api_key, ECOBEE_REFRESH_TOKEN: refresh_token}
         )
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def update(self):
+    def update(self):
         """Get the latest data from ecobee.com."""
         from pyecobee import ExpiredTokenError
 
         try:
-            await self._hass.async_add_executor_job(self.account.update)
+            self.ecobee.update()
             _LOGGER.debug("Updating ecobee.")
         except ExpiredTokenError:
             _LOGGER.warn("ecobee update failed; attempting to refresh expired tokens.")
-            await self.refresh()
+            self.refresh()
 
-    async def refresh(self) -> bool:
+    def refresh(self) -> bool:
         """Refresh ecobee tokens and update config entry."""
         from pyecobee import ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN
 
         _LOGGER.debug("Refreshing ecobee tokens and updating config entry.")
-        if await self._hass.async_add_executor_job(self.account.refresh_tokens):
+        if self.ecobee.refresh_tokens():
             self._hass.config_entries.async_update_entry(
                 self._entry,
                 data={
-                    CONF_API_KEY: self.account.config[ECOBEE_API_KEY],
-                    CONF_REFRESH_TOKEN: self.account.config[ECOBEE_REFRESH_TOKEN],
+                    CONF_API_KEY: self.ecobee.config[ECOBEE_API_KEY],
+                    CONF_REFRESH_TOKEN: self.ecobee.config[ECOBEE_REFRESH_TOKEN],
                 },
             )
             return True
