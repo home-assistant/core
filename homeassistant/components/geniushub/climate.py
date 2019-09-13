@@ -29,10 +29,11 @@ HA_PRESET_TO_GH = {PRESET_ACTIVITY: "footprint", PRESET_BOOST: "override"}
 GH_PRESET_TO_HA = {v: k for k, v in HA_PRESET_TO_GH.items()}
 
 
-async def async_setup_platform(
-    hass, hass_config, async_add_entities, discovery_info=None
-):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Genius Hub climate entities."""
+    if discovery_info is None:
+        return
+
     client = hass.data[DOMAIN]["client"]
 
     entities = [

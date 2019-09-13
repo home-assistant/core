@@ -37,10 +37,11 @@ GH_STATE_TO_HA = {
 GH_STATE_ATTRS = ["type", "override"]
 
 
-async def async_setup_platform(
-    hass, hass_config, async_add_entities, discovery_info=None
-):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Genius Hub water_heater entities."""
+    if discovery_info is None:
+        return
+
     client = hass.data[DOMAIN]["client"]
 
     entities = [
