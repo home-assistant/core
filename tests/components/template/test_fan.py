@@ -354,7 +354,7 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
     await hass.async_block_till_done()
 
     assert hass.states.get("fan.test_fan") != STATE_UNAVAILABLE
-    assert ("Error rendering availability_template") in caplog.text
+    assert ("Could not render availability_template template") in caplog.text
     assert ("UndefinedError: 'x' is undefined") in caplog.text
 
 
