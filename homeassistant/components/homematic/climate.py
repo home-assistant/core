@@ -94,9 +94,13 @@ class HMThermostat(HMDevice, ClimateDevice):
         if self._data.get("BOOST_MODE", False):
             return "boost"
 
-        # Get the name of the mode
-        mode = HM_ATTRIBUTE_SUPPORT[HM_CONTROL_MODE][1][self._hm_control_mode]
-        mode = mode.lower()
+        try:
+            # Get the name of the mode
+            mode = HM_ATTRIBUTE_SUPPORT[HM_CONTROL_MODE][1][self._hm_control_mode]
+            mode = mode.lower()
+        except KeyError:
+            # In case that the device has no control mode
+            return None
 
         # Filter HVAC states
         if mode not in (HVAC_MODE_AUTO, HVAC_MODE_HEAT):
@@ -177,8 +181,13 @@ class HMThermostat(HMDevice, ClimateDevice):
         """Return Control mode."""
         if HMIP_CONTROL_MODE in self._data:
             return self._data[HMIP_CONTROL_MODE]
-        # Homematic
-        return self._data["CONTROL_MODE"]
+
+        try:
+            # Homematic
+            return self._data["CONTROL_MODE"]
+        except KeyError:
+            # In case that the device has no control mode
+            return None
 
     def _init_data_struct(self):
         """Generate a data dict (self._data) from the Homematic metadata."""
