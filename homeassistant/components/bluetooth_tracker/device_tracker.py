@@ -1,4 +1,5 @@
 """Tracking for bluetooth devices."""
+import asyncio
 import logging
 from typing import List, Set, Tuple
 
@@ -110,6 +111,7 @@ async def async_setup_scanner(
     device_id: int = config.get(CONF_DEVICE_ID)
     interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     request_rssi = config.get(CONF_REQUEST_RSSI, False)
+    update_bluetooth_lock = asyncio.Lock()
 
     # If track new devices is true discover new devices on startup.
     track_new: bool = config.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
@@ -131,30 +133,44 @@ async def async_setup_scanner(
     if request_rssi:
         _LOGGER.debug("Detecting RSSI for devices")
 
+    def perform_bluetooth_update():
+        if track_new:
+            for mac, device_name in discover_devices(device_id):
+                if mac not in devices_to_track and mac not in devices_to_not_track:
+                    devices_to_track.add(mac)
+
+        for mac in devices_to_track:
+            _LOGGER.debug("Scanning %s", mac)
+            device_name = bluetooth.lookup_name(mac, timeout=5)
+            if device_name is None:
+                # Could not lookup device name
+                continue
+
+            rssi = None
+            if request_rssi:
+                client = BluetoothRSSI(mac)
+                rssi = client.request_rssi()
+                client.close()
+
+            see_device(hass, async_see, mac, device_name, rssi)
+
     async def update_bluetooth(now=None):
         """Lookup Bluetooth devices and update status."""
-        try:
-            if track_new:
-                for mac, device_name in discover_devices(device_id):
-                    if mac not in devices_to_track and mac not in devices_to_not_track:
-                        devices_to_track.add(mac)
 
-            for mac in devices_to_track:
-                _LOGGER.debug("Scanning %s", mac)
-                device_name = bluetooth.lookup_name(mac, timeout=5)
-                if device_name is None:
-                    # Could not lookup device name
-                    continue
+        # If an update is in progress, we don't do anything
+        if update_bluetooth_lock.locked():
+            _LOGGER.warning(
+                "Updating %s took longer than the scheduled update of interval %s",
+                DOMAIN,
+                interval,
+            )
+            return
 
-                rssi = None
-                if request_rssi:
-                    client = BluetoothRSSI(mac)
-                    rssi = client.request_rssi()
-                    client.close()
-
-                see_device(hass, async_see, mac, device_name, rssi)
-        except bluetooth.BluetoothError:
-            _LOGGER.exception("Error looking up Bluetooth device")
+        async with update_bluetooth_lock:
+            try:
+                perform_bluetooth_update()
+            except bluetooth.BluetoothError:
+                _LOGGER.exception("Error looking up Bluetooth device")
 
     async def handle_manual_update_bluetooth(call):
         """Update bluetooth devices on demand."""
