@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_TIME_ZONE
+from homeassistant.const import CONF_NAME, CONF_TIME_ZONE, CONF_TIME_FORMAT
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
@@ -21,6 +21,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_TIME_ZONE): cv.time_zone,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_TIME_FORMAT, default=TIME_STR_FORMAT): cv.datetime
     }
 )
 
@@ -29,17 +30,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the World clock sensor."""
     name = config.get(CONF_NAME)
     time_zone = dt_util.get_time_zone(config.get(CONF_TIME_ZONE))
+    time_format = config.get(CONF_TIME_FORMAT)
 
-    async_add_entities([WorldClockSensor(time_zone, name)], True)
+    async_add_entities([WorldClockSensor(time_zone, name, time_format)], True)
 
 
 class WorldClockSensor(Entity):
     """Representation of a World clock sensor."""
 
-    def __init__(self, time_zone, name):
+    def __init__(self, time_zone, name, time_format):
         """Initialize the sensor."""
         self._name = name
         self._time_zone = time_zone
+        self._time_format = time_format
         self._state = None
 
     @property
@@ -59,4 +62,4 @@ class WorldClockSensor(Entity):
 
     async def async_update(self):
         """Get the time and updates the states."""
-        self._state = dt_util.now(time_zone=self._time_zone).strftime(TIME_STR_FORMAT)
+        self._state = dt_util.now(time_zone=self._time_zone).strftime(self._time_format)
