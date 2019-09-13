@@ -1,13 +1,13 @@
 """Support for Ecobee sensors."""
-from homeassistant.components import ecobee
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    STATE_UNKNOWN,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers.entity import Entity
 
-ECOBEE_CONFIG_FILE = "ecobee.conf"
+from .const import DOMAIN
 
 SENSOR_TYPES = {
     "temperature": ["Temperature", TEMP_FAHRENHEIT],
@@ -16,10 +16,13 @@ SENSOR_TYPES = {
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Ecobee sensors."""
-    if discovery_info is None:
-        return
-    data = ecobee.NETWORK
+    """Old way of setting up ecobee sensors."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up ecobee (temperature and humidity) sensors."""
+    data = hass.data[DOMAIN]
     dev = list()
     for index in range(len(data.ecobee.thermostats)):
         for sensor in data.ecobee.get_remote_sensors(index):
@@ -27,16 +30,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 if item["type"] not in ("temperature", "humidity"):
                     continue
 
-                dev.append(EcobeeSensor(sensor["name"], item["type"], index))
+                dev.append(EcobeeSensor(data, sensor["name"], item["type"], index))
 
-    add_entities(dev, True)
+    async_add_entities(dev, True)
 
 
 class EcobeeSensor(Entity):
     """Representation of an Ecobee sensor."""
 
-    def __init__(self, sensor_name, sensor_type, sensor_index):
+    def __init__(self, data, sensor_name, sensor_type, sensor_index):
         """Initialize the sensor."""
+        self.data = data
         self._name = "{} {}".format(sensor_name, SENSOR_TYPES[sensor_type][0])
         self.sensor_name = sensor_name
         self.type = sensor_type
@@ -59,7 +63,14 @@ class EcobeeSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        from pyecobee.const import ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN
+
+        if self._state in [ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN]:
+            return STATE_UNKNOWN
+        elif self.type == "temperature":
+            return float(self._state) / 10
+        else:
+            return self._state
 
     @property
     def unit_of_measurement(self):
@@ -68,12 +79,8 @@ class EcobeeSensor(Entity):
 
     def update(self):
         """Get the latest state of the sensor."""
-        data = ecobee.NETWORK
-        data.update()
-        for sensor in data.ecobee.get_remote_sensors(self.index):
+        self.data.update()
+        for sensor in self.data.ecobee.get_remote_sensors(self.index):
             for item in sensor["capability"]:
                 if item["type"] == self.type and self.sensor_name == sensor["name"]:
-                    if self.type == "temperature" and item["value"] != "unknown":
-                        self._state = float(item["value"]) / 10
-                    else:
-                        self._state = item["value"]
+                    self._state = item["value"]
