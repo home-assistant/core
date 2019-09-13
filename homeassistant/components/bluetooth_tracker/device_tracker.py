@@ -73,13 +73,11 @@ async def see_device(
     if rssi is not None:
         attributes["rssi"] = rssi
 
-    await hass.async_create_task(
-        async_see(
-            mac=f"{BT_PREFIX}{mac}",
-            host_name=device_name,
-            attributes=attributes,
-            source_type=SOURCE_TYPE_BLUETOOTH,
-        )
+    await async_see(
+        mac=f"{BT_PREFIX}{mac}",
+        host_name=device_name,
+        attributes=attributes,
+        source_type=SOURCE_TYPE_BLUETOOTH,
     )
 
 
