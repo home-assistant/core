@@ -209,4 +209,4 @@ class AqualinkEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
-        return "{0}_{1}".format(self.dev.system.serial, self.dev.name)
+        return f"{self.dev.system.serial}_{self.dev.name}"

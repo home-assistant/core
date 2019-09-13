@@ -1,8 +1,6 @@
 """Support for Aqualink temperature sensors."""
 import logging
 
-from iaqualink import AqualinkBinarySensor
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice,
     DEVICE_CLASS_COLD,
@@ -29,12 +27,8 @@ async def async_setup_entry(
     async_add_entities(devs, True)
 
 
-class HassAqualinkBinarySensor(BinarySensorDevice, AqualinkEntity):
+class HassAqualinkBinarySensor(AqualinkEntity, BinarySensorDevice):
     """Representation of a binary sensor."""
-
-    def __init__(self, dev: AqualinkBinarySensor):
-        """Initialize the binary sensor."""
-        AqualinkEntity.__init__(self, dev)
 
     @property
     def name(self) -> str:
