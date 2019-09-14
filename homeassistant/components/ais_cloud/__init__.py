@@ -741,6 +741,44 @@ class AisColudData:
             self.hass.services.call(
                 "ais_bookmarks", "delete_bookmark", {"id": call.data["id"]}
             )
+        elif media_source == ais_global.G_AN_MUSIC:
+            """Delete selected musoc"""
+            track_id = int(call.data.get("id"))
+            state = self.hass.states.get("sensor.youtubelist")
+            attr = state.attributes
+            state = state.state
+            new_attr = {}
+            list_idx = -1
+            for itm in attr:
+                if not itm == track_id:
+                    list_idx = list_idx + 1
+                    new_attr[list_idx] = attr[itm]
+            self.hass.states.async_set("sensor.youtubelist", state, new_attr)
+
+        elif media_source == ais_global.G_AN_SPOTIFY_SEARCH:
+            track_id = int(call.data.get("id"))
+            state = self.hass.states.get("sensor.spotifysearchlist")
+            attr = state.attributes
+            state = state.state
+            new_attr = {}
+            list_idx = -1
+            for itm in attr:
+                if not itm == track_id:
+                    list_idx = list_idx + 1
+                    new_attr[list_idx] = attr[itm]
+            self.hass.states.async_set("sensor.spotifysearchlist", state, new_attr)
+        elif media_source == ais_global.G_AN_SPOTIFY:
+            track_id = int(call.data.get("id"))
+            state = self.hass.states.get("sensor.spotifylist")
+            attr = state.attributes
+            state = state.state
+            new_attr = {}
+            list_idx = -1
+            for itm in attr:
+                if not itm == track_id:
+                    list_idx = list_idx + 1
+                    new_attr[list_idx] = attr[itm]
+            self.hass.states.async_set("sensor.spotifylist", state, new_attr)
 
     def process_play_audio(self, call):
         _LOGGER.info("process_play_audio")
