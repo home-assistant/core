@@ -1,14 +1,11 @@
 """Support for Ecobee Thermostats."""
 import collections
-import logging
 from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.components import ecobee
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    DOMAIN,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_AUTO,
@@ -38,8 +35,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-_CONFIGURING = {}
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_HOLD_TEMP, DOMAIN, _LOGGER
 
 ATTR_FAN_MIN_ON_TIME = "fan_min_on_time"
 ATTR_RESUME_ALL = "resume_all"
@@ -115,19 +111,26 @@ SUPPORT_FLAGS = (
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Ecobee Thermostat Platform."""
-    if discovery_info is None:
-        return
-    data = ecobee.NETWORK
-    hold_temp = discovery_info["hold_temp"]
+    """Old way of setting up ecobee thermostat."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the ecobee thermostat."""
+
+    data = hass.data[DOMAIN]
+    hold_temp = config_entry.options[CONF_HOLD_TEMP]
+
     _LOGGER.info(
         "Loading ecobee thermostat component with hold_temp set to %s", hold_temp
     )
+
     devices = [
         Thermostat(data, index, hold_temp)
         for index in range(len(data.ecobee.thermostats))
     ]
-    add_entities(devices)
+
+    async_add_entities(devices, True)
 
     def fan_min_on_time_set_service(service):
         """Set the minimum fan on time on the target thermostats."""
@@ -163,14 +166,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
             thermostat.schedule_update_ha_state(True)
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN,
         SERVICE_SET_FAN_MIN_ON_TIME,
         fan_min_on_time_set_service,
         schema=SET_FAN_MIN_ON_TIME_SCHEMA,
     )
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN,
         SERVICE_RESUME_PROGRAM,
         resume_program_set_service,
