@@ -34,7 +34,6 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import (
     CONF_FRIENDLY_NAME,
     CONF_VALUE_TEMPLATE,
-    CONF_AVAILABILITY_TEMPLATE,
     CONF_ENTITY_ID,
     MATCH_ALL,
     EVENT_HOMEASSISTANT_START,
@@ -44,6 +43,8 @@ from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.script import Script
+
+from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
 
