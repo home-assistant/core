@@ -16,10 +16,10 @@ from homeassistant.const import (
     STATE_LOCKED,
     MATCH_ALL,
 )
-from .const import CONF_AVAILABILITY_TEMPLATE
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
+from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
 
