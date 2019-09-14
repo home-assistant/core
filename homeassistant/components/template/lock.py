@@ -11,12 +11,12 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_VALUE_TEMPLATE,
-    CONF_AVAILABILITY_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
     STATE_ON,
     STATE_LOCKED,
     MATCH_ALL,
 )
+from .const import CONF_AVAILABILITY_TEMPLATE
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
