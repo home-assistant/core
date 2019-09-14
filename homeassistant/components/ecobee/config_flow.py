@@ -6,7 +6,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
 
-from .const import CONF_HOLD_TEMP, CONF_REFRESH_TOKEN, DOMAIN
+from .const import CONF_HOLD_TEMP, CONF_REFRESH_TOKEN, DATA_ECOBEE_CONFIG, DOMAIN
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -33,6 +33,11 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
         errors = {}
+        stored_api_key = (
+            self.hass.data[DATA_ECOBEE_CONFIG].get(CONF_API_KEY)
+            if DATA_ECOBEE_CONFIG in self.hass.data
+            else None
+        )
 
         if self._async_current_entries():
             """Config entry currently exists, only one allowed."""
@@ -55,7 +60,9 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=vol.Schema(
+                {vol.Required(CONF_API_KEY, default=stored_api_key): str}
+            ),
             errors=errors,
         )
 
