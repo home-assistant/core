@@ -10,10 +10,6 @@
             "authorize": {
                 "title": "Authorize app on ecobee.com",
                 "description": "Please authorize this app at https://www.ecobee.com/consumerportal/index.html with pin code:\n\n{pin}\n\nThen, press Submit."
-            },
-            "import": {
-                "title": "Import ecobee configuration",
-                "description": "Press Submit to import existing configuration data."
             }
         },
         "error": {
