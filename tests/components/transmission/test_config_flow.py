@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 NAME = "Transmission"
 HOST = "192.168.1.100"
@@ -35,7 +35,7 @@ SCAN_INTERVAL = 10
 @pytest.fixture(name="api")
 def mock_transmission_api():
     """Mock an api."""
-    with patch("transmissionrpc.Client", return_value=mock_coro(True)):
+    with patch("transmissionrpc.Client", return_value=True):
         yield
 
 
