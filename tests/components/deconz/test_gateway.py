@@ -126,23 +126,6 @@ async def test_add_device(hass):
         assert len(mock_dispatch_send.mock_calls[0]) == 3
 
 
-async def test_add_remote():
-    """Successful add remote."""
-    hass = Mock()
-    entry = Mock()
-    entry.data = ENTRY_CONFIG
-
-    remote = Mock()
-    remote.name = "name"
-    remote.type = "ZHASwitch"
-    remote.register_async_callback = Mock()
-
-    deconz_gateway = gateway.DeconzGateway(hass, entry)
-    deconz_gateway.async_add_remote([remote])
-
-    assert len(deconz_gateway.events) == 1
-
-
 async def test_shutdown():
     """Successful shutdown."""
     hass = Mock()
@@ -217,39 +200,3 @@ async def test_get_gateway_fails_cannot_connect(hass):
         side_effect=pydeconz.errors.RequestError,
     ), pytest.raises(errors.CannotConnect):
         assert await gateway.get_gateway(hass, ENTRY_CONFIG, Mock(), Mock()) is False
-
-
-async def test_create_event():
-    """Successfully created a deCONZ event."""
-    hass = Mock()
-    remote = Mock()
-    remote.name = "Name"
-
-    event = gateway.DeconzEvent(hass, remote)
-
-    assert event._id == "name"
-
-
-async def test_update_event():
-    """Successfully update a deCONZ event."""
-    hass = Mock()
-    remote = Mock()
-    remote.name = "Name"
-
-    event = gateway.DeconzEvent(hass, remote)
-    remote.changed_keys = {"state": True}
-    event.async_update_callback()
-
-    assert len(hass.bus.async_fire.mock_calls) == 1
-
-
-async def test_remove_event():
-    """Successfully update a deCONZ event."""
-    hass = Mock()
-    remote = Mock()
-    remote.name = "Name"
-
-    event = gateway.DeconzEvent(hass, remote)
-    event.async_will_remove_from_hass()
-
-    assert event._device is None

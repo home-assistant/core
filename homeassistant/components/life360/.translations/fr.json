@@ -10,6 +10,7 @@
         "error": {
             "invalid_credentials": "Informations d'identification invalides",
             "invalid_username": "Nom d'utilisateur invalide",
+            "unexpected": "Erreur inattendue lors de la communication avec le serveur Life360",
             "user_already_configured": "Le compte a d\u00e9j\u00e0 \u00e9t\u00e9 configur\u00e9"
         },
         "step": {

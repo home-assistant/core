@@ -197,6 +197,7 @@ homeassistant/components/nsw_fuel_station/* @nickw444
 homeassistant/components/nsw_rural_fire_service_feed/* @exxamalte
 homeassistant/components/nuki/* @pschmitt
 homeassistant/components/nws/* @MatthewFlamm
+homeassistant/components/obihai/* @dshokouhi
 homeassistant/components/ohmconnect/* @robbiet480
 homeassistant/components/onboarding/* @home-assistant/core
 homeassistant/components/opentherm_gw/* @mvn23
@@ -211,6 +212,7 @@ homeassistant/components/philips_js/* @elupus
 homeassistant/components/pi_hole/* @fabaff
 homeassistant/components/plaato/* @JohNan
 homeassistant/components/plant/* @ChristianKuehnel
+homeassistant/components/plex/* @jjlawren
 homeassistant/components/plugwise/* @laetificat @CoMPaTech
 homeassistant/components/point/* @fredrike
 homeassistant/components/ps4/* @ktnrg45
@@ -290,6 +292,7 @@ homeassistant/components/twentemilieu/* @frenck
 homeassistant/components/twilio_call/* @robbiet480
 homeassistant/components/twilio_sms/* @robbiet480
 homeassistant/components/unifi/* @kane610
+homeassistant/components/upc_connect/* @pvizeli
 homeassistant/components/upcloud/* @scop
 homeassistant/components/updater/* @home-assistant/core
 homeassistant/components/upnp/* @robbiet480

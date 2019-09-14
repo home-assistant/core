@@ -39,6 +39,17 @@
         },
         "title": "Pasarela Zigbee deCONZ"
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "close": "Cerrar",
+            "dim_down": "Bajar la intensidad",
+            "dim_up": "Subir la intensidad",
+            "left": "Izquierda",
+            "right": "Derecha",
+            "turn_off": "Apagar",
+            "turn_on": "Encender"
+        }
+    },
     "options": {
         "step": {
             "async_step_deconz_devices": {

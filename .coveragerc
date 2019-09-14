@@ -143,6 +143,7 @@ omit =
     homeassistant/components/dlna_dmr/media_player.py
     homeassistant/components/dnsip/sensor.py
     homeassistant/components/dominos/*
+    homeassistant/components/doods/*
     homeassistant/components/doorbird/*
     homeassistant/components/dovado/*
     homeassistant/components/downloader/*
@@ -288,8 +289,11 @@ omit =
     homeassistant/components/hydrawise/*
     homeassistant/components/hyperion/light.py
     homeassistant/components/ialarm/alarm_control_panel.py
+    homeassistant/components/iaqualink/binary_sensor.py
     homeassistant/components/iaqualink/climate.py
     homeassistant/components/iaqualink/light.py
+    homeassistant/components/iaqualink/sensor.py
+    homeassistant/components/iaqualink/switch.py
     homeassistant/components/icloud/device_tracker.py
     homeassistant/components/idteck_prox/*
     homeassistant/components/ifttt/*
@@ -433,6 +437,7 @@ omit =
     homeassistant/components/nut/sensor.py
     homeassistant/components/nx584/alarm_control_panel.py
     homeassistant/components/nzbget/sensor.py
+    homeassistant/components/obihai/*
     homeassistant/components/octoprint/*
     homeassistant/components/oem/climate.py
     homeassistant/components/oasa_telematics/sensor.py
@@ -674,6 +679,7 @@ omit =
     homeassistant/components/ue_smart_radio/media_player.py
     homeassistant/components/upcloud/*
     homeassistant/components/upnp/*
+    homeassistant/components/upc_connect/*
     homeassistant/components/ups/sensor.py
     homeassistant/components/uptimerobot/binary_sensor.py
     homeassistant/components/uscis/sensor.py
