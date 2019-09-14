@@ -88,7 +88,7 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"pin": self._ecobee.pin},
         )
 
-    async def async_step_import(self, import_data):
+    async def async_step_import(self, import_data, user_input=None):
         """Import ecobee config from an existing ecobee.conf file.
 
         This flow is triggered by `async_setup` if no existing entry exists
@@ -99,40 +99,43 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         and create an entry if valid. Otherwise, we will abort and the user
         will need to redo the authorization process via a new config flow.
         """
-        import aiofiles
-        import json
-        from pyecobee import (
-            Ecobee,
-            ECOBEE_CONFIG_FILENAME,
-            ECOBEE_API_KEY,
-            ECOBEE_REFRESH_TOKEN,
-        )
-
-        config_file = self.hass.config.path(ECOBEE_CONFIG_FILENAME)
-
-        async with aiofiles.open(config_file, "r") as f:
-            legacy_config = json.loads(await f.read())
-
-        try:
-            ecobee = Ecobee(
-                config={
-                    ECOBEE_API_KEY: legacy_config[ECOBEE_API_KEY],
-                    ECOBEE_REFRESH_TOKEN: legacy_config[ECOBEE_REFRESH_TOKEN],
-                }
+        if user_input is not None:
+            import aiofiles
+            import json
+            from pyecobee import (
+                Ecobee,
+                ECOBEE_CONFIG_FILENAME,
+                ECOBEE_API_KEY,
+                ECOBEE_REFRESH_TOKEN,
             )
 
-            if await self.hass.async_add_executor_job(ecobee.refresh_tokens):
-                return self.async_create_entry(
-                    title=DOMAIN,
-                    data={
-                        CONF_API_KEY: legacy_config[ECOBEE_API_KEY],
-                        CONF_REFRESH_TOKEN: legacy_config[ECOBEE_REFRESH_TOKEN],
-                    },
+            config_file = self.hass.config.path(ECOBEE_CONFIG_FILENAME)
+
+            async with aiofiles.open(config_file, "r") as f:
+                legacy_config = json.loads(await f.read())
+
+            try:
+                ecobee = Ecobee(
+                    config={
+                        ECOBEE_API_KEY: legacy_config[ECOBEE_API_KEY],
+                        ECOBEE_REFRESH_TOKEN: legacy_config[ECOBEE_REFRESH_TOKEN],
+                    }
                 )
-            else:
-                self.async_abort(reason="refresh_token_expired")
-        except (KeyError, TypeError):
-            self.async_abort(reason="credentials_not_found")
+
+                if await self.hass.async_add_executor_job(ecobee.refresh_tokens):
+                    return self.async_create_entry(
+                        title=DOMAIN,
+                        data={
+                            CONF_API_KEY: legacy_config[ECOBEE_API_KEY],
+                            CONF_REFRESH_TOKEN: legacy_config[ECOBEE_REFRESH_TOKEN],
+                        },
+                    )
+                else:
+                    self.async_abort(reason="refresh_token_expired")
+            except (KeyError, TypeError):
+                self.async_abort(reason="credentials_not_found")
+
+        return self.async_show_form(step_id="import")
 
 
 class EcobeeOptionsFlowHandler(config_entries.OptionsFlow):
