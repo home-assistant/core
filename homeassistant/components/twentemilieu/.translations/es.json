@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "address_exists": "Direcci\u00f3n ya configurada."
+        },
         "error": {
             "connection_error": "No se conect\u00f3."
         },

@@ -2,6 +2,19 @@
     "config": {
         "abort": {
             "existing_instance_updated": "Se ha actualizado la configuraci\u00f3n existente."
+        },
+        "error": {
+            "connection_error": "No se conect\u00f3."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto",
+                    "username": "Nombre de usuario"
+                }
+            }
         }
     }
 }

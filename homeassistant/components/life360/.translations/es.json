@@ -9,7 +9,8 @@
         },
         "error": {
             "invalid_credentials": "Credenciales no v\u00e1lidas",
-            "invalid_username": "Nombre de usuario no v\u00e1lido"
+            "invalid_username": "Nombre de usuario no v\u00e1lido",
+            "user_already_configured": "La cuenta ya ha sido configurada"
         },
         "step": {
             "user": {
