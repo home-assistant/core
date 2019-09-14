@@ -14,12 +14,13 @@ from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    HVAC_MODE_OFF,
-    HVAC_MODE_HEAT,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT_COOL,
-    SUPPORT_TARGET_TEMPERATURE,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
     SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -43,7 +44,9 @@ PRESET_PERMANENT_HOLD = "PermanentHold"
 PRESET_TEMPORARY_HOLD = "TemporaryHold"
 PRESET_VACATION_HOLD = "VacationHold"
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+SUPPORT_FLAGS = (
+    SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE_RANGE
+)
 
 HOLD_PERIOD_SCHEMA = vol.Schema(
     {
@@ -122,7 +125,7 @@ class LyricThermostat(LyricDeviceEntity, ClimateDevice):
         self._unit = temp_unit
 
         # Setup supported hvac modes
-        self._hvac_modes = [HVAC_MODE_OFF]
+        self._hvac_modes = []
 
         # Add supported lyric thermostat features
         if device.can_heat:
@@ -133,6 +136,8 @@ class LyricThermostat(LyricDeviceEntity, ClimateDevice):
 
         if device.can_heat and device.can_cool:
             self._hvac_modes.append(HVAC_MODE_HEAT_COOL)
+
+        self._hvac_modes.append(HVAC_MODE_OFF)
 
         # data attributes
         self._humidity = None
@@ -243,16 +248,16 @@ class LyricThermostat(LyricDeviceEntity, ClimateDevice):
         _LOGGER.debug("Set temperature: %s", temp)
         self.device.temperatureSetpoint = temp
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set hvac mode."""
         _LOGGER.debug("Set hvac mode: %s", hvac_mode)
         self.device.operationMode = LYRIC_HVAC_MODES[hvac_mode]
 
-    async def async_set_preset_mode(self, preset_mode: str) -> None:
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set preset (PermanentHold, HoldUntil, NoHold, VacationHold) mode."""
         self.device.thermostatSetpointStatus = preset_mode
 
-    async def async_set_preset_period(self, period: str) -> None:
+    def set_preset_period(self, period: str) -> None:
         """Set preset period (time)."""
         self.device.thermostatSetpointHoldUntil(period)
 

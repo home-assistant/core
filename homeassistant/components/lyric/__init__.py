@@ -94,25 +94,18 @@ class LyricClient:
     def __init__(self, lyric):
         """Init Lyric devices."""
         self.lyric = lyric
-
-        if not lyric.locations:
-            return
-
         self._location = [location.name for location in lyric.locations]
 
     def devices(self):
         """Generate a list of thermostats and their location."""
-        try:
-            for location in self.lyric.locations:
-                if location.name in self._location:
-                    for device in location.thermostats:
-                        yield (location, device)
-                else:
-                    _LOGGER.debug(
-                        "Ignoring location %s, not in %s", location.name, self._location
-                    )
-        except ConnectionError:
-            _LOGGER.error("Connection error logging into the Lyric web service.")
+        for location in self.lyric.locations:
+            if location.name in self._location:
+                for device in location.thermostats:
+                    yield (location, device)
+            else:
+                _LOGGER.debug(
+                    "Ignoring location %s, not in %s", location.name, self._location
+                )
 
 
 class LyricEntity(Entity):
