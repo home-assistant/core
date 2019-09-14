@@ -1,8 +1,15 @@
 """Support for ecobee."""
 import os
 from datetime import timedelta
-
 import voluptuous as vol
+
+from pyecobee import (
+    Ecobee,
+    ECOBEE_CONFIG_FILENAME,
+    ECOBEE_API_KEY,
+    ECOBEE_REFRESH_TOKEN,
+    ExpiredTokenError,
+)
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY
@@ -43,8 +50,6 @@ async def async_setup(hass, config):
     already exist to help users migrating from the old ecobee
     component.
     """
-    from pyecobee import ECOBEE_CONFIG_FILENAME
-
     if not hass.config_entries.async_entries(DOMAIN) and os.path.isfile(
         hass.config.path(ECOBEE_CONFIG_FILENAME)
     ):
@@ -100,8 +105,6 @@ class EcobeeData:
 
     def __init__(self, hass, entry, api_key, refresh_token):
         """Initialize the Ecobee data object."""
-        from pyecobee import Ecobee, ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN
-
         self._hass = hass
         self._entry = entry
         self.ecobee = Ecobee(
@@ -111,8 +114,6 @@ class EcobeeData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from ecobee.com."""
-        from pyecobee import ExpiredTokenError
-
         try:
             self.ecobee.update()
             _LOGGER.debug("Updating ecobee.")
@@ -122,8 +123,6 @@ class EcobeeData:
 
     def refresh(self) -> bool:
         """Refresh ecobee tokens and update config entry."""
-        from pyecobee import ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN
-
         _LOGGER.debug("Refreshing ecobee tokens and updating config entry.")
         if self.ecobee.refresh_tokens():
             self._hass.config_entries.async_update_entry(
