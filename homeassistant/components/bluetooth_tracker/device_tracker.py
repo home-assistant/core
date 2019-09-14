@@ -12,7 +12,6 @@ from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.components.device_tracker.const import (
     CONF_SCAN_INTERVAL,
     CONF_TRACK_NEW,
-    DEFAULT_TRACK_NEW,
     DOMAIN,
     SCAN_INTERVAL,
     SOURCE_TYPE_BLUETOOTH,
@@ -31,15 +30,20 @@ _LOGGER = logging.getLogger(__name__)
 BT_PREFIX = "BT_"
 
 CONF_REQUEST_RSSI = "request_rssi"
-
 CONF_DEVICE_ID = "device_id"
+CONF_DISCOVER_NEW_DEVICES = "discover_new_devices"
 
 DEFAULT_DEVICE_ID = -1
+DEFAULT_DISCOVER_NEW_DEVICES = True
+DEFAULT_REQUEST_RSSI = False
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_TRACK_NEW): cv.boolean,
-        vol.Optional(CONF_REQUEST_RSSI): cv.boolean,
+        vol.Optional(
+            CONF_DISCOVER_NEW_DEVICES, default=DEFAULT_DISCOVER_NEW_DEVICES
+        ): cv.boolean,
+        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
+        vol.Optional(CONF_REQUEST_RSSI, default=DEFAULT_REQUEST_RSSI): cv.boolean,
         vol.Optional(CONF_DEVICE_ID, default=DEFAULT_DEVICE_ID): vol.All(
             vol.Coerce(int), vol.Range(min=-1)
         ),
@@ -108,23 +112,34 @@ def lookup_name(mac: str) -> Optional[str]:
     return bluetooth.lookup_name(mac, timeout=5)
 
 
+def get_discover_new_devices_value(config: dict) -> bool:
+    """Get the configuration value of discovering new devices."""
+    legacy_value = config.get(CONF_TRACK_NEW)
+    if legacy_value is not None:
+        _LOGGER.warning(
+            "Using deprecated option '%s', switch to '%s'.",
+            CONF_TRACK_NEW,
+            CONF_DISCOVER_NEW_DEVICES,
+        )
+        return legacy_value
+
+    return config.get(CONF_DISCOVER_NEW_DEVICES)
+
+
 async def async_setup_scanner(
     hass: HomeAssistantType, config: dict, async_see, discovery_info=None
 ):
     """Set up the Bluetooth Scanner."""
     device_id: int = config.get(CONF_DEVICE_ID)
-    interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
-    request_rssi = config.get(CONF_REQUEST_RSSI, False)
+    interval = config.get(CONF_SCAN_INTERVAL)
+    request_rssi: bool = config.get(CONF_REQUEST_RSSI)
+    discover_new_devices = get_discover_new_devices_value(config)
+
     update_bluetooth_lock = asyncio.Lock()
-
-    # If track new devices is true discover new devices on startup.
-    track_new: bool = config.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
-    _LOGGER.debug("Tracking new devices is set to %s", track_new)
-
     devices_to_track, devices_to_not_track = await get_tracking_devices(hass)
 
-    if not devices_to_track and not track_new:
-        _LOGGER.debug("No Bluetooth devices to track and not tracking new devices")
+    if not devices_to_track and not discover_new_devices:
+        _LOGGER.debug("No Bluetooth devices to track and not discovering new devices")
 
     if request_rssi:
         _LOGGER.debug("Detecting RSSI for devices")
@@ -136,7 +151,7 @@ async def async_setup_scanner(
         tasks = []
 
         try:
-            if track_new:
+            if discover_new_devices:
                 devices = await hass.async_add_executor_job(discover_devices, device_id)
                 for mac, device_name in devices:
                     if mac not in devices_to_track and mac not in devices_to_not_track:
@@ -181,9 +196,13 @@ async def async_setup_scanner(
 
         await update_bluetooth()
 
+    # Launch initial discovery and update
     hass.async_create_task(update_bluetooth())
+
+    # Schedule interval for discovery and updates
     async_track_time_interval(hass, update_bluetooth, interval)
 
+    # Allow manual triggering of discovery and update
     hass.services.async_register(
         DOMAIN, "bluetooth_tracker_update", handle_manual_update_bluetooth
     )
