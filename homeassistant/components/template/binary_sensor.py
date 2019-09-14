@@ -14,7 +14,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ENTITY_ID,
-    CONF_AVAILABILITY_TEMPLATE,
     CONF_VALUE_TEMPLATE,
     CONF_ICON_TEMPLATE,
     CONF_ENTITY_PICTURE_TEMPLATE,
@@ -23,6 +22,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     MATCH_ALL,
 )
+from .const import CONF_AVAILABILITY_TEMPLATE
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
