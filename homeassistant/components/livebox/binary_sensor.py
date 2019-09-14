@@ -5,15 +5,15 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
 )
 
-from . import DOMAIN, SCAN_INTERVAL
+from . import DOMAIN, SCAN_INTERVAL, LiveboxData
 from .const import TEMPLATE_SENSOR
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer binary sensor setup to the shared sensor module."""
-    box = hass.data[DOMAIN]
-    id = config_entry.data["box_id"]
-    async_add_entities([InfoSensor(box, id)], True)
+    ld = LiveboxData(config_entry)
+    id = config_entry.data["id"]
+    async_add_entities([InfoSensor(ld, id)], True)
 
 
 class InfoSensor(BinarySensorDevice):
@@ -21,10 +21,10 @@ class InfoSensor(BinarySensorDevice):
 
     device_class = DEVICE_CLASS_CONNECTIVITY
 
-    def __init__(self, box, id):
+    def __init__(self, ld, id):
         """Initialize the sensor."""
 
-        self._box = box
+        self._ld = ld
         self._box_id = id
         self._state = None
         self._datas = None
@@ -76,5 +76,4 @@ class InfoSensor(BinarySensorDevice):
     async def async_update(self):
         """Fetch status from livebox."""
 
-        self._datas = await self._box.system.get_WANStatus()
-        self._dsl = self._datas["data"]
+        self._dsl = await self._ld.async_status()

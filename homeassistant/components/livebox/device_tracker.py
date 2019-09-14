@@ -1,63 +1,122 @@
-"""Support for Livebox devices."""
-from collections import namedtuple
+"""Support for the ZHA platform."""
 import logging
 
-from homeassistant.components.device_tracker import DeviceScanner
-import homeassistant.util.dt as dt_util
+from homeassistant.components.device_tracker import DOMAIN, SOURCE_TYPE_ROUTER
+from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DOMAIN
+from . import LiveboxData
 
 _LOGGER = logging.getLogger(__name__)
 
-
-def get_scanner(hass, config):
-    """Validate the configuration and return a Livebox scanner."""
-
-    scanner = LiveboxDeviceScanner(hass.data[DOMAIN])
-    return scanner if scanner.success_init else None
+DATA_LIVEBOX = "livebox"
+DATA_LIVEBOX_DISPATCHERS = "livebox_dispatchers"
+LIVEBOX_DISCOVERY_NEW = "livebox_discovery_new_{}"
 
 
-Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Zigbee Home Automation device tracker from config entry."""
+
+    async def async_discover(device):
+        await _async_setup_entities(hass, config_entry, async_add_entities, [device])
+
+    unsub = async_dispatcher_connect(
+        hass, LIVEBOX_DISCOVERY_NEW.format(DOMAIN), async_discover
+    )
+    hass.data[DOMAIN][DATA_LIVEBOX_DISPATCHERS] = []
+    hass.data[DOMAIN][DATA_LIVEBOX_DISPATCHERS].append(unsub)
+
+    ld = LiveboxData(config_entry)
+    device_trackers = await ld.async_devices()
+    if device_trackers is not None:
+        await _async_setup_entities(
+            hass, config_entry, async_add_entities, device_trackers
+        )
 
 
-class LiveboxDeviceScanner(DeviceScanner):
-    """Queries the Livebox device."""
+async def _async_setup_entities(
+    hass, config_entry, async_add_entities, device_trackers
+):
+    """Set up the ZHA device trackers."""
 
-    def __init__(self, box):
-        """Initialize the scanner."""
-
-        self._box = box
-        self.last_results = []
-        self.success_init = self.async_update_info()
-
-    async def async_scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-
-        await self.async_update_info()
-        return [device.mac for device in self.last_results]
-
-    def get_device_name(self, device):
-        """Return the name of the given device or None if we don't know."""
-
-        filter_named = [
-            result.name for result in self.last_results if result.mac == device
-        ]
-        if filter_named:
-            return filter_named[0]
-        return None
-
-    async def async_update_info(self):
-        """Ensure the information from the Livebox router is up to date."""
-
-        result = (await self._box.system.get_devices())["status"]
-        now = dt_util.now()
-        last_results = []
-        for device in result:
-            if device["Active"] and "IPAddress" in device:
-                last_results.append(
-                    Device(
-                        device["PhysAddress"], device["Name"], device["IPAddress"], now
-                    )
+    entities = []
+    for device in device_trackers:
+        if "IPAddress" in device:
+            entities.append(
+                LiveboxDeviceScannerEntity(
+                    config_entry.data["id"], LiveboxData(config_entry), **device
                 )
-        self.last_results = last_results
-        return True
+            )
+
+    async_add_entities(entities, update_before_add=True)
+
+
+class LiveboxDeviceScannerEntity(ScannerEntity):
+    """Represent a tracked device."""
+
+    def __init__(self, id, ld, **kwargs):
+        """Initialize the ZHA device tracker."""
+        self._device = kwargs
+        self._box_id = id
+        self._ld = ld
+        self._connected = False
+        self._should_poll = True
+        self._unsubs = []
+
+    @property
+    def name(self):
+        """Return Entity's default name."""
+        return self._device["Name"]
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._device["PhysAddress"]
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll state from device."""
+        return self._should_poll
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+
+        return {
+            "name": self.name,
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "manufacturer": "Orange",
+            "via_device": (DOMAIN, self._box_id),
+        }
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect entity object when removed."""
+
+        for unsub in self._unsubs[:]:
+            unsub()
+            self._unsubs.remove(unsub)
+
+    async def async_update(self):
+        """Handle polling."""
+
+        if await self._update_entity(self._ld, self._device):
+            self._connected = True
+        else:
+            self._connected = False
+
+    async def _update_entity(self, update_device, device):
+
+        device = await self._ld.async_devices(device)
+        return device[0]["Active"]
+
+    @property
+    def is_connected(self):
+        """Return true if the device is connected to the network."""
+
+        return self._connected
+
+    @property
+    def source_type(self):
+        """Return the source type, eg gps or router, of the device."""
+
+        return SOURCE_TYPE_ROUTER

@@ -1,29 +1,26 @@
 """Sensor for Livebox router."""
-import logging
-
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from . import DOMAIN, SCAN_INTERVAL
+from . import DOMAIN, SCAN_INTERVAL, LiveboxData
 from .const import TEMPLATE_SENSOR
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the sensors."""
-    box = hass.data[DOMAIN]
-    id = config_entry.data["box_id"]
-    async_add_entities([RXSensor(box, id), TXSensor(box, id)], True)
+
+    ld = LiveboxData(config_entry)
+    id = config_entry.data["id"]
+    async_add_entities([RXSensor(ld, id), TXSensor(ld, id)], True)
 
 
 class LiveboxSensor(Entity):
     """Representation of a livebox sensor."""
 
-    def __init__(self, box, id):
+    def __init__(self, ld, id):
         """Initialize the sensor."""
 
-        self._box = box
+        self._ld = ld
         self._box_id = id
         self._state = None
         self._datas = None
@@ -43,6 +40,8 @@ class LiveboxSensor(Entity):
     @Throttle(SCAN_INTERVAL)
     async def async_update(self):
         """Return update entry."""
+
+        self._dsl = await self._ld.async_dsl_status()
 
 
 class RXSensor(LiveboxSensor):
@@ -81,13 +80,6 @@ class RXSensor(LiveboxSensor):
             "downstream_power": self._dsl["DownstreamPower"],
         }
 
-    async def async_update(self):
-        """Get the value from fetched datas."""
-
-        parameters = {"parameters": {"mibs": "dsl", "flag": "", "traverse": "down"}}
-        self._datas = await self._box.connection.get_data_MIBS(parameters)
-        self._dsl = self._datas["status"]["dsl"]["dsl0"]
-
 
 class TXSensor(LiveboxSensor):
     """Update the Livebox TxSensor."""
@@ -124,9 +116,3 @@ class TXSensor(LiveboxSensor):
             "upstream_noisemargin": self._dsl["UpstreamNoiseMargin"],
             "upstream_power": self._dsl["UpstreamPower"],
         }
-
-    async def async_update(self):
-        """Get the value from fetched datas."""
-        parameters = {"parameters": {"mibs": "dsl", "flag": "", "traverse": "down"}}
-        self._datas = await self._box.connection.get_data_MIBS(parameters)
-        self._dsl = self._datas["status"]["dsl"]["dsl0"]

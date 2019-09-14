@@ -8,15 +8,8 @@ from aiosysbus.exceptions import HttpRequestError, AuthorizationError
 
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.discovery import async_load_platform
 
-from .const import (
-    DOMAIN,
-    DEFAULT_USERNAME,
-    DEFAULT_HOST,
-    DEFAULT_PORT,
-    CONF_ALLOW_TRACKER,
-)
+from .const import DOMAIN, DEFAULT_USERNAME, DEFAULT_HOST, DEFAULT_PORT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +28,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SCAN_INTERVAL = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 
 async def async_setup(hass, config):
@@ -51,17 +44,17 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass, config_entry):
     """Set up Livebox as config entry."""
 
-    box = await async_connect(entry)
-    hass.data[DOMAIN] = box
-    config = (await box.system.get_deviceinfo())["status"]
+    ld = LiveboxData(config_entry)
+    hass.data[DOMAIN] = {}
 
+    config = await ld.async_infos()
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, config["SerialNumber"])},
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, config_entry.data["id"])},
         manufacturer=config["Manufacturer"],
         name=config["ProductClass"],
         model=config["ModelName"],
@@ -69,58 +62,95 @@ async def async_setup_entry(hass, entry):
     )
 
     hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
+        hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
     )
     hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "binary_sensor")
+        hass.config_entries.async_forward_entry_setup(config_entry, "binary_sensor")
     )
-
     hass.async_create_task(
-        async_load_platform(hass, "device_tracker", DOMAIN, {}, config)
+        hass.config_entries.async_forward_entry_setup(config_entry, "device_tracker")
     )
-
-    if not entry.options:
-        options = {
-            CONF_ALLOW_TRACKER: entry.data["options"].get(CONF_ALLOW_TRACKER, True)
-        }
-        hass.config_entries.async_update_entry(entry, options=options)
-
-    if entry.options[CONF_ALLOW_TRACKER]:
-        hass.async_create_task(
-            async_load_platform(hass, "device_tracker", DOMAIN, {}, config)
-        )
 
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
 
-    await hass.config_entries.async_forward_entry_unload(entry, "sensor")
-    await hass.config_entries.async_forward_entry_unload(entry, "binary_sensor")
-    # ~ await hass.config_entries.async_forward_entry_unload(entry, "device_tracker")
-    box = hass.data[DOMAIN]
-    await box.close()
-
+    await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
+    await hass.config_entries.async_forward_entry_unload(config_entry, "binary_sensor")
+    await hass.config_entries.async_forward_entry_unload(config_entry, "device_tracker")
     return True
 
 
-async def async_connect(entry):
-    """Connect at box."""
+class LiveboxData:
+    """Collect datas information from livebox."""
 
-    box = Sysbus()
-    try:
-        await box.open(
-            host=entry.data["host"],
-            port=entry.data["port"],
-            username=entry.data["username"],
-            password=entry.data["password"],
-        )
-    except AuthorizationError:
-        _LOGGER.error("User or password incorrect")
-        return False
-    except HttpRequestError:
-        _LOGGER.error("Http Request error to Livebox")
-        return False
+    def __init__(self, config_entry):
+        """Init datas from router."""
 
-    return box
+        self._entry = config_entry
+
+    async def async_devices(self, device=None):
+        """Get devices datas."""
+
+        parameters = {"parameters": {"expression": {"wifi": "wifi"}}}
+        if device is not None:
+            parameters = {
+                "parameters": {
+                    "expression": {
+                        "wifi": 'wifi and .PhysAddress=="' + device["PhysAddress"] + '"'
+                    }
+                }
+            }
+        box = await self.async_conn()
+        devices = (await box.system.get_devices(parameters))["status"]["wifi"]
+
+        return devices
+
+    async def async_infos(self):
+        """Get infos."""
+
+        box = await self.async_conn()
+        infos = (await box.system.get_deviceinfo())["status"]
+
+        return infos
+
+    async def async_status(self):
+        """Get status."""
+
+        box = await self.async_conn()
+        status = (await box.system.get_WANStatus())["data"]
+
+        return status
+
+    async def async_dsl_status(self):
+        """Get dsl status."""
+
+        box = await self.async_conn()
+        parameters = {"parameters": {"mibs": "dsl", "flag": "", "traverse": "down"}}
+        dsl_status = (await box.connection.get_data_MIBS(parameters))["status"]["dsl"][
+            "dsl0"
+        ]
+
+        return dsl_status
+
+    async def async_conn(self):
+        """Connect at the livebox router."""
+
+        box = Sysbus()
+        try:
+            await box.open(
+                host=self._entry.data["host"],
+                port=self._entry.data["port"],
+                username=self._entry.data["username"],
+                password=self._entry.data["password"],
+            )
+            return box
+
+        except AuthorizationError:
+            _LOGGER.error("User or password incorrect")
+            return False
+        except HttpRequestError:
+            _LOGGER.error("Http Request error to Livebox")
+            return False
