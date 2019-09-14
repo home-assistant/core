@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "La clave de la API para este sitio",
+                    "name": "El nombre de esta instalaci\u00f3n"
+                },
+                "title": "Definir los par\u00e1metros de la API para esta instalaci\u00f3n"
+            }
+        }
+    }
+}

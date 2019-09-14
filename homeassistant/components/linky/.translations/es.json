@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "username_exists": "Cuenta ya configurada"
+        },
+        "error": {
+            "wrong_login": "Error de inicio de sesi\u00f3n: compruebe su direcci\u00f3n de correo electr\u00f3nico y contrase\u00f1a"
+        },
+        "step": {
+            "user": {
+                "description": "Introduzca sus credenciales"
+            }
+        }
+    }
+}
