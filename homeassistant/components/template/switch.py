@@ -20,12 +20,12 @@ from homeassistant.const import (
     CONF_SWITCHES,
     EVENT_HOMEASSISTANT_START,
 )
-from .const import CONF_AVAILABILITY_TEMPLATE
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
+from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [STATE_ON, STATE_OFF, "true", "false"]
