@@ -25,7 +25,6 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     EVENT_HOMEASSISTANT_START,
     MATCH_ALL,
-    CONF_AVAILABILITY_TEMPLATE,
     CONF_VALUE_TEMPLATE,
     CONF_ICON_TEMPLATE,
     CONF_DEVICE_CLASS,
@@ -34,6 +33,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_CLOSED,
 )
+from .const import CONF_AVAILABILITY_TEMPLATE
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
