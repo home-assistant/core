@@ -260,7 +260,7 @@ class Light(ZhaEntity, light.Light):
             self._hs_color = hs_color
 
         if (
-            light.EFFECT_COLORLOOP in effect
+            effect == light.EFFECT_COLORLOOP
             and self.supported_features & light.SUPPORT_EFFECT
         ):
             result = await self._color_channel.color_loop_set(
@@ -276,6 +276,7 @@ class Light(ZhaEntity, light.Light):
             self._effect = light.EFFECT_COLORLOOP
         elif (
             self._effect == light.EFFECT_COLORLOOP
+            and effect != light.EFFECT_COLORLOOP
             and self.supported_features & light.SUPPORT_EFFECT
         ):
             result = await self._color_channel.color_loop_set(
