@@ -83,7 +83,7 @@ async def async_setup_entry(hass, entry):
     await hass.async_add_executor_job(data.update)
 
     if data.ecobee.thermostats is None:
-        _LOGGER.error("No ecobee devices found to set up.")
+        _LOGGER.error("No ecobee devices found to set up")
         return False
 
     hass.data[DOMAIN] = data
@@ -116,14 +116,14 @@ class EcobeeData:
         """Get the latest data from ecobee.com."""
         try:
             self.ecobee.update()
-            _LOGGER.debug("Updating ecobee.")
+            _LOGGER.debug("Updating ecobee")
         except ExpiredTokenError:
-            _LOGGER.warn("ecobee update failed; attempting to refresh expired tokens.")
+            _LOGGER.warn("ecobee update failed; attempting to refresh expired tokens")
             self.refresh()
 
     def refresh(self) -> bool:
         """Refresh ecobee tokens and update config entry."""
-        _LOGGER.debug("Refreshing ecobee tokens and updating config entry.")
+        _LOGGER.debug("Refreshing ecobee tokens and updating config entry")
         if self.ecobee.refresh_tokens():
             self._hass.config_entries.async_update_entry(
                 self._entry,
@@ -134,7 +134,7 @@ class EcobeeData:
             )
             return True
         else:
-            _LOGGER.error("Error updating ecobee tokens.")
+            _LOGGER.error("Error updating ecobee tokens")
             return False
 
 
