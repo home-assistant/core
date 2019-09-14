@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     CONF_ICON_TEMPLATE,
     CONF_ENTITY_PICTURE_TEMPLATE,
-    CONF_AVAILABILITY_TEMPLATE,
     ATTR_ENTITY_ID,
     CONF_SENSORS,
     EVENT_HOMEASSISTANT_START,
@@ -25,6 +24,8 @@ from homeassistant.const import (
     MATCH_ALL,
     CONF_DEVICE_CLASS,
 )
+
+from .const import CONF_AVAILABILITY_TEMPLATE
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
@@ -130,10 +131,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 attribute_templates,
             )
         )
-    if not sensors:
-        _LOGGER.error("No sensors added")
-        return False
-
     async_add_entities(sensors)
     return True
 
@@ -309,10 +306,10 @@ class SensorTemplate(Entity):
                 result = self._availability_template.async_render()
                 self._available = result == "true"
             except (TemplateError, ValueError) as ex:
+                self._available = True
                 _LOGGER.error(
                     "Could not render %s template %s: %s",
-                    friendly_property_name,
+                    CONF_AVAILABILITY_TEMPLATE,
                     self._name,
                     ex,
                 )
-                self._available = True
