@@ -48,7 +48,7 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if user_input[CONF_NAME] in configured_instances(self.hass):
                 self._errors[CONF_NAME] = "name_exists"
             if not user_input[CONF_LANGUAGE] in LANGUAGE_CODES:
-                self._errors["base"] = "wrong_lang"
+                self._errors[CONF_LANGUAGE] = "wrong_lang"
             api_key_valid = await self._test_api_key(websession, user_input["api_key"])
             if not api_key_valid:
                 self._errors["base"] = "auth"
