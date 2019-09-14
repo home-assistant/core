@@ -8,6 +8,14 @@ from homeassistant.components.airly.const import CONF_LANGUAGE, DOMAIN
 
 from tests.common import MockConfigEntry, MockDependency
 
+CONFIG = {
+    CONF_NAME: "abcd",
+    CONF_API_KEY: "foo",
+    CONF_LATITUDE: 0,
+    CONF_LONGITUDE: 0,
+    CONF_LANGUAGE: "en",
+}
+
 
 @pytest.fixture
 def mock_airly():
@@ -29,18 +37,10 @@ async def test_show_form(hass):
 
 async def test_show_form_with_input(hass):
     """Test that the form is served with input."""
-    conf = {
-        CONF_NAME: "abcd",
-        CONF_API_KEY: "foo",
-        CONF_LATITUDE: 0,
-        CONF_LONGITUDE: 0,
-        CONF_LANGUAGE: "en",
-    }
-
     flow = config_flow.AirlyFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_user(user_input=conf)
+    result = await flow.async_step_user(user_input=CONFIG)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -48,18 +48,10 @@ async def test_show_form_with_input(hass):
 
 async def test_invalid_api_key(hass, mock_airly):
     """Test that an invalid API_KEY throws an error."""
-    conf = {
-        CONF_NAME: "abcd",
-        CONF_API_KEY: "foo",
-        CONF_LATITUDE: 0,
-        CONF_LONGITUDE: 0,
-        CONF_LANGUAGE: "en",
-    }
-
     flow = config_flow.AirlyFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_user(user_input=conf)
+    result = await flow.async_step_user(user_input=CONFIG)
     assert result["errors"] == {"base": "auth"}
 
 
@@ -82,17 +74,9 @@ async def test_invalid_language(hass, mock_airly):
 
 async def test_duplicate_error(hass, mock_airly):
     """Test that errors are shown when duplicates are added."""
-    conf = {
-        CONF_NAME: "abcd",
-        CONF_API_KEY: "foo",
-        CONF_LATITUDE: 0,
-        CONF_LONGITUDE: 0,
-        CONF_LANGUAGE: "en",
-    }
-
-    MockConfigEntry(domain=DOMAIN, data=conf).add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, data=CONFIG).add_to_hass(hass)
     flow = config_flow.AirlyFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_user(user_input=conf)
+    result = await flow.async_step_user(user_input=CONFIG)
     assert result["errors"] == {CONF_NAME: "name_exists", "base": "auth"}
