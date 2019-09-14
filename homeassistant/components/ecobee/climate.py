@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
+    DOMAIN as CLIMATE_DOMAIN,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_AUTO,
@@ -167,14 +168,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             thermostat.schedule_update_ha_state(True)
 
     hass.services.async_register(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_FAN_MIN_ON_TIME,
         fan_min_on_time_set_service,
         schema=SET_FAN_MIN_ON_TIME_SCHEMA,
     )
 
     hass.services.async_register(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_RESUME_PROGRAM,
         resume_program_set_service,
         schema=RESUME_PROGRAM_SCHEMA,
