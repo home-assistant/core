@@ -21,7 +21,6 @@ from homeassistant.components.fan import (
 )
 from homeassistant.const import (
     CONF_FRIENDLY_NAME,
-    CONF_AVAILABILITY_TEMPLATE,
     CONF_VALUE_TEMPLATE,
     CONF_ENTITY_ID,
     STATE_ON,
@@ -30,6 +29,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     STATE_UNKNOWN,
 )
+from .const import CONF_AVAILABILITY_TEMPLATE
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import async_generate_entity_id
