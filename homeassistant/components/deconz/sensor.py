@@ -29,32 +29,36 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     @callback
     def async_add_sensor(sensors):
-        """Add sensors from deCONZ."""
+        """Add sensors from deCONZ.
+
+        Create DeconzEvent if part of ZHAType list.
+        Create DeconzSensor if not a ZHAType and not a binary sensor.
+        Create DeconzBattery if sensor has a battery attribute.
+        """
         entities = []
 
         for sensor in sensors:
 
-            if not sensor.BINARY:
+            if sensor.type in Switch.ZHATYPE:
 
-                if sensor.type in Switch.ZHATYPE:
+                if gateway.option_allow_clip_sensor or not sensor.type.startswith(
+                    "CLIP"
+                ):
+                    new_event = DeconzEvent(sensor, gateway)
+                    hass.async_create_task(new_event.async_update_device_registry())
+                    gateway.events.append(new_event)
 
-                    if gateway.option_allow_clip_sensor or not sensor.type.startswith(
-                        "CLIP"
-                    ):
-                        event = DeconzEvent(sensor, gateway)
-                        hass.async_create_task(event.async_update_device_registry())
-                        gateway.events.append(event)
+            elif not sensor.BINARY:
 
-                else:
-                    new_sensor = DeconzSensor(sensor, gateway)
-                    entity_handler.add_entity(new_sensor)
-                    entities.append(new_sensor)
+                new_sensor = DeconzSensor(sensor, gateway)
+                entity_handler.add_entity(new_sensor)
+                entities.append(new_sensor)
 
             if sensor.battery:
-                battery = DeconzBattery(sensor, gateway)
-                if battery.unique_id not in batteries:
-                    batteries.append(battery.unique_id)
-                    entities.append(battery)
+                new_battery = DeconzBattery(sensor, gateway)
+                if new_battery.unique_id not in batteries:
+                    batteries.append(new_battery.unique_id)
+                    entities.append(new_battery)
 
         async_add_entities(entities, True)
 
