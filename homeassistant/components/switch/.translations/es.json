@@ -5,12 +5,12 @@
             "turn_on": "Encender {entity_name}"
         },
         "condition_type": {
-            "is_off": "{entity_name} est\u00e1 apagada",
-            "is_on": "{entity_name} est\u00e1 encendida"
+            "turn_off": "{entity_name} apagado",
+            "turn_on": "{entity_name} encendido"
         },
         "trigger_type": {
-            "turn_off": "{entity_name} apagada",
-            "turn_on": "{entity_name} encendida"
+            "turn_off": "{entity_name} apagado",
+            "turn_on": "{entity_name} encendido"
         }
     }
 }
