@@ -203,6 +203,7 @@ class Light(ZhaEntity, light.Light):
         transition = kwargs.get(light.ATTR_TRANSITION)
         duration = transition * 10 if transition else DEFAULT_DURATION
         brightness = kwargs.get(light.ATTR_BRIGHTNESS)
+        effect = kwargs.get(light.ATTR_EFFECT)
 
         t_log = {}
         if (
@@ -259,46 +260,33 @@ class Light(ZhaEntity, light.Light):
             self._hs_color = hs_color
 
         if (
-            light.ATTR_EFFECT in kwargs
+            light.EFFECT_COLORLOOP in effect
             and self.supported_features & light.SUPPORT_EFFECT
         ):
-            if "colorloop" in kwargs[light.ATTR_EFFECT]:
-                transition = kwargs.get(light.ATTR_TRANSITION)
-                result = await self._color_channel.color_loop_set(
-                    UPDATE_COLORLOOP_ACTION
-                    | UPDATE_COLORLOOP_DIRECTION
-                    | UPDATE_COLORLOOP_TIME,
-                    0x2,  # start from current hue
-                    0x1,  # only support up
-                    transition if transition else 7,  # transition
-                    0,  # no hue
-                )
-                t_log["color_loop_set"] = result
-                self._effect = "colorloop"
-            elif self._effect == "colorloop":
-                result = await self._color_channel.color_loop_set(
-                    UPDATE_COLORLOOP_ACTION,
-                    0x0,
-                    0x0,
-                    0x0,
-                    0x0,  # update action only, action off, no dir,time,hue
-                )
-                t_log["color_loop_set"] = result
-                self._effect = None
-        else:
-            if (
-                self.supported_features & light.SUPPORT_EFFECT
-                and self._effect == "colorloop"
-            ):
-                result = await self._color_channel.color_loop_set(
-                    UPDATE_COLORLOOP_ACTION,
-                    0x0,
-                    0x0,
-                    0x0,
-                    0x0,  # update action only, action off, no dir,time,hue
-                )
-                t_log["color_loop_set"] = result
-                self._effect = None
+            result = await self._color_channel.color_loop_set(
+                UPDATE_COLORLOOP_ACTION
+                | UPDATE_COLORLOOP_DIRECTION
+                | UPDATE_COLORLOOP_TIME,
+                0x2,  # start from current hue
+                0x1,  # only support up
+                transition if transition else 7,  # transition
+                0,  # no hue
+            )
+            t_log["color_loop_set"] = result
+            self._effect = light.EFFECT_COLORLOOP
+        elif (
+            self._effect == light.EFFECT_COLORLOOP
+            and self.supported_features & light.SUPPORT_EFFECT
+        ):
+            result = await self._color_channel.color_loop_set(
+                UPDATE_COLORLOOP_ACTION,
+                0x0,
+                0x0,
+                0x0,
+                0x0,  # update action only, action off, no dir,time,hue
+            )
+            t_log["color_loop_set"] = result
+            self._effect = None
 
         self.debug("turned on: %s", t_log)
         self.async_schedule_update_ha_state()
@@ -366,7 +354,7 @@ class Light(ZhaEntity, light.Light):
                     "color_loop_active", from_cache=from_cache
                 )
                 if color_loop_active is not None and color_loop_active == 1:
-                    self._effect = "colorloop"
+                    self._effect = light.EFFECT_COLORLOOP
 
     async def refresh(self, time):
         """Call async_get_state at an interval."""
