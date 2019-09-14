@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class LyricFlowHandler(ConfigFlow):
+class LyricFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Lyric config flow."""
 
     VERSION = 1
