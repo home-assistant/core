@@ -6,7 +6,6 @@ https://home-assistant.io/components/lyric
 """
 import logging
 from typing import List, Optional
-import asyncio
 
 import voluptuous as vol
 
@@ -107,7 +106,8 @@ async def async_setup_entry(
         _LOGGER.debug("target_thermostats: %s", target_thermostats)
 
         for thermostat in target_thermostats:
-            await asyncio.wait({thermostat.async_set_preset_period(time)})
+            # Not using asyncio.wait to avoid flooding the pool with jobs
+            await thermostat.async_set_preset_period(time)
 
     hass.services.async_register(
         DOMAIN, SERVICE_HOLD_TIME, hold_time_service, schema=HOLD_PERIOD_SCHEMA
