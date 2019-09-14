@@ -38,6 +38,7 @@ AVAILABLE_MODES = [
 ]
 
 CM_TO_HA_STATE = {
+    "off": HVAC_MODE_OFF,
     "heat": HVAC_MODE_HEAT,
     "cool": HVAC_MODE_COOL,
     "auto": HVAC_MODE_HEAT_COOL,
