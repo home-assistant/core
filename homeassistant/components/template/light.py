@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     CONF_ICON_TEMPLATE,
     CONF_ENTITY_PICTURE_TEMPLATE,
-    CONF_AVAILABILITY_TEMPLATE,
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
     STATE_ON,
@@ -23,6 +22,7 @@ from homeassistant.const import (
     MATCH_ALL,
     CONF_LIGHTS,
 )
+from .const import CONF_AVAILABILITY_TEMPLATE
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
