@@ -24,7 +24,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ sensors."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
-    batteries = []
+    batteries = set()
     entity_handler = DeconzEntityHandler(gateway)
 
     @callback
@@ -57,7 +57,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if sensor.battery:
                 new_battery = DeconzBattery(sensor, gateway)
                 if new_battery.unique_id not in batteries:
-                    batteries.append(new_battery.unique_id)
+                    batteries.add(new_battery.unique_id)
                     entities.append(new_battery)
 
         async_add_entities(entities, True)
