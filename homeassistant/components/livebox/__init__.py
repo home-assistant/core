@@ -34,13 +34,6 @@ SCAN_INTERVAL = timedelta(minutes=1)
 async def async_setup(hass, config):
     """Load configuration for Livebox component."""
 
-    if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
-        livebox_config = config[DOMAIN]
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config.SOURCE_IMPORT}, data=livebox_config
-            )
-        )
     return True
 
 
