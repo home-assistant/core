@@ -19,6 +19,7 @@ from .hue_api import (
     HueOneLightChangeView,
     HueGroupView,
     HueAllGroupsStateView,
+    HueFullStateView,
 )
 from .upnp import DescriptionXmlView, UPNPResponderThread
 
@@ -118,6 +119,7 @@ async def async_setup(hass, yaml_config):
     HueOneLightChangeView(config).register(app, app.router)
     HueAllGroupsStateView(config).register(app, app.router)
     HueGroupView(config).register(app, app.router)
+    HueFullStateView(config).register(app, app.router)
 
     upnp_listener = UPNPResponderThread(
         config.host_ip_addr,

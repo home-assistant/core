@@ -89,6 +89,8 @@ HUE_API_STATE_SAT_MAX = 254
 HUE_API_STATE_CT_MIN = 153  # Color temp
 HUE_API_STATE_CT_MAX = 500
 
+HUE_API_USERNAME = "12345678901234567890"
+
 
 class HueUsernameView(HomeAssistantView):
     """Handle requests to create a username for the emulated hue bridge."""
@@ -111,7 +113,8 @@ class HueUsernameView(HomeAssistantView):
         if "devicetype" not in data:
             return self.json_message("devicetype not specified", HTTP_BAD_REQUEST)
 
-        return self.json([{"success": {"username": "12345678901234567890"}}])
+
+        return self.json([{"success": {"username": HUE_API_USERNAME}}])
 
 
 class HueAllGroupsStateView(HomeAssistantView):
@@ -188,6 +191,57 @@ class HueAllLightsStateView(HomeAssistantView):
             if self.config.is_entity_exposed(entity):
                 number = self.config.entity_id_to_number(entity.entity_id)
                 json_response[number] = entity_to_json(self.config, entity)
+
+        return self.json(json_response)
+
+
+class HueFullStateView(HomeAssistantView):
+    """Return full state view of emulated hue."""
+
+    url = "/api/{username}"
+    name = "emulated_hue:username:lights:state"
+    requires_auth = False
+
+    def __init__(self, config):
+        """Initialize the instance of the view."""
+        self.config = config
+
+    @core.callback
+    def get(self, request, username):
+        """Process a request to get the list of available lights."""
+        if not is_local(request[KEY_REAL_IP]):
+            return self.json_message("only local IPs allowed", HTTP_BAD_REQUEST)
+        if username not in HUE_API_USERNAME:
+            json_response = [
+                {
+                    "error": {
+                        "address": "/",
+                        "description": "unauthorized user",
+                        "type": "1",
+                    }
+                }
+            ]
+        else:
+            hass = request.app["hass"]
+            json_response = {}
+
+            for entity in hass.states.async_all():
+                if self.config.is_entity_exposed(entity):
+                    state = get_entity_state(self.config, entity)
+                    number = self.config.entity_id_to_number(entity.entity_id)
+                    json_response[number] = entity_to_json(self.config, entity, state)
+
+            json_response = {
+                "lights": json_response,
+                "config": {
+                    "mac": "00:00:00:00:00:00",
+                    "swversion": "01003542",
+                    "whitelist": {HUE_API_USERNAME: {"name": "HASS BRIDGE"}},
+                    "ipaddress": str(self.config.advertise_ip)
+                    + ":"
+                    + str(self.config.advertise_port),
+                },
+            }
 
         return self.json(json_response)
 
