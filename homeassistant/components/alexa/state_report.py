@@ -60,7 +60,7 @@ async def async_send_changereport_message(
     """
     token = await config.async_get_access_token()
 
-    headers = {"Authorization": "Bearer {}".format(token)}
+    headers = {"Authorization": f"Bearer {token}"}
 
     endpoint = alexa_entity.alexa_id()
 
@@ -97,12 +97,15 @@ async def async_send_changereport_message(
     _LOGGER.debug("Sent: %s", json.dumps(message_serialized))
     _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
-    if response.status == 202 and not invalidate_access_token:
+    if response.status == 202:
         return
 
     response_json = json.loads(response_text)
 
-    if response_json["payload"]["code"] == "INVALID_ACCESS_TOKEN_EXCEPTION":
+    if (
+        response_json["payload"]["code"] == "INVALID_ACCESS_TOKEN_EXCEPTION"
+        and not invalidate_access_token
+    ):
         config.async_invalidate_access_token()
         return await async_send_changereport_message(
             hass, config, alexa_entity, invalidate_access_token=False
@@ -122,7 +125,7 @@ async def async_send_add_or_update_message(hass, config, entity_ids):
     """
     token = await config.async_get_access_token()
 
-    headers = {"Authorization": "Bearer {}".format(token)}
+    headers = {"Authorization": f"Bearer {token}"}
 
     endpoints = []
 
@@ -152,7 +155,7 @@ async def async_send_delete_message(hass, config, entity_ids):
     """
     token = await config.async_get_access_token()
 
-    headers = {"Authorization": "Bearer {}".format(token)}
+    headers = {"Authorization": f"Bearer {token}"}
 
     endpoints = []
 

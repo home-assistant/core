@@ -70,7 +70,7 @@ def gps_accuracy(gps, posambiguity: int) -> int:
 
         accuracy = round(dist_m)
     else:
-        message = "APRS position ambiguity must be 0-4, not '{0}'.".format(posambiguity)
+        message = f"APRS position ambiguity must be 0-4, not '{posambiguity}'."
         raise ValueError(message)
 
     return accuracy
@@ -147,8 +147,7 @@ class AprsListenerThread(threading.Thread):
             )
             self.ais.connect()
             self.start_complete(
-                True,
-                "Connected to {0} with callsign {1}.".format(self.host, self.callsign),
+                True, f"Connected to {self.host} with callsign {self.callsign}."
             )
             self.ais.consumer(callback=self.rx_msg, immortal=True)
         except (AprsConnectionError, LoginError) as err:

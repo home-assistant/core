@@ -330,7 +330,7 @@ class EvoDevice(Entity):
             switchpoint = day["Switchpoints"][idx]
 
             dt_naive = datetime.strptime(
-                "{}T{}".format(sp_date, switchpoint["TimeOfDay"]), "%Y-%m-%dT%H:%M:%S"
+                f"{sp_date}T{switchpoint['TimeOfDay']}", "%Y-%m-%dT%H:%M:%S"
             )
 
             spt["from"] = _local_dt_to_utc(dt_naive).isoformat()

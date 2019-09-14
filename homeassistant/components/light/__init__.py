@@ -128,9 +128,12 @@ LIGHT_TURN_ON_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
     }
 )
 
-LIGHT_TURN_OFF_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {ATTR_TRANSITION: VALID_TRANSITION, ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG])}
-)
+
+LIGHT_TURN_OFF_SCHEMA = {
+    ATTR_TRANSITION: VALID_TRANSITION,
+    ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
+}
+
 
 LIGHT_TOGGLE_SCHEMA = LIGHT_TURN_ON_SCHEMA
 
@@ -234,16 +237,16 @@ class SetIntentHandler(intent.IntentHandler):
         response = intent_obj.create_response()
 
         if not speech_parts:  # No attributes changed
-            speech = "Turned on {}".format(state.name)
+            speech = f"Turned on {state.name}"
         else:
-            parts = ["Changed {} to".format(state.name)]
+            parts = [f"Changed {state.name} to"]
             for index, part in enumerate(speech_parts):
                 if index == 0:
-                    parts.append(" {}".format(part))
+                    parts.append(f" {part}")
                 elif index != len(speech_parts) - 1:
-                    parts.append(", {}".format(part))
+                    parts.append(f", {part}")
                 else:
-                    parts.append(" and {}".format(part))
+                    parts.append(f" and {part}")
             speech = "".join(parts)
 
         response.async_set_speech(speech)

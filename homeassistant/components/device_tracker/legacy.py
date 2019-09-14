@@ -327,15 +327,15 @@ class DeviceTracker:
 class Device(RestoreEntity):
     """Represent a tracked device."""
 
-    host_name = None  # type: str
-    location_name = None  # type: str
-    gps = None  # type: GPSType
-    gps_accuracy = 0  # type: int
-    last_seen = None  # type: dt_util.dt.datetime
-    consider_home = None  # type: dt_util.dt.timedelta
-    battery = None  # type: int
-    attributes = None  # type: dict
-    icon = None  # type: str
+    host_name: str = None
+    location_name: str = None
+    gps: GPSType = None
+    gps_accuracy: int = 0
+    last_seen: dt_util.dt.datetime = None
+    consider_home: dt_util.dt.timedelta = None
+    battery: int = None
+    attributes: dict = None
+    icon: str = None
 
     # Track if the last update of this device was HOME.
     last_update_home = False
@@ -532,7 +532,7 @@ class Device(RestoreEntity):
 class DeviceScanner:
     """Device scanner object."""
 
-    hass = None  # type: HomeAssistantType
+    hass: HomeAssistantType = None
 
     def scan_devices(self) -> List[str]:
         """Scan for devices."""

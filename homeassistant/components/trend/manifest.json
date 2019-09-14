@@ -3,7 +3,7 @@
   "name": "Trend",
   "documentation": "https://www.home-assistant.io/components/trend",
   "requirements": [
-    "numpy==1.17.0"
+    "numpy==1.17.1"
   ],
   "dependencies": [],
   "codeowners": []

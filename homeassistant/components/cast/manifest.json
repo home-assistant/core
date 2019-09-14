@@ -3,9 +3,7 @@
   "name": "Cast",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/cast",
-  "requirements": [
-    "pychromecast==3.2.2"
-  ],
+  "requirements": ["pychromecast==4.0.1"],
   "dependencies": [],
   "zeroconf": ["_googlecast._tcp.local."],
   "codeowners": []

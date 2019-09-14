@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Ubicaci\u00f3n ya registrada"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radius": "Radio"
+                }
+            }
+        }
+    }
+}

@@ -121,7 +121,7 @@ class RingSensor(Entity):
         )
         self._state = None
         self._tz = str(hass.config.time_zone)
-        self._unique_id = "{}-{}".format(self._data.id, self._sensor_type)
+        self._unique_id = f"{self._data.id}-{self._sensor_type}"
 
     async def async_added_to_hass(self):
         """Register callbacks."""

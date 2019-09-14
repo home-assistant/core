@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if system == "android":
             os.listdir(os.path.join(DEFAULT_PATH, "battery"))
         else:
-            os.listdir(os.path.join(DEFAULT_PATH, "BAT{}".format(battery_id)))
+            os.listdir(os.path.join(DEFAULT_PATH, f"BAT{battery_id}"))
     except FileNotFoundError:
         _LOGGER.error("No battery found")
         return False
