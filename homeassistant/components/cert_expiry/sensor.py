@@ -82,6 +82,10 @@ class SSLCertificate(Entity):
         """Icon to use in the frontend, if any."""
         return self._available
 
+    async def async_added_to_hass(self):
+        """Once the entity is added we should update to get the initial data loaded."""
+        self.update()
+
     def update(self):
         """Fetch the certificate information."""
         try:
