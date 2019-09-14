@@ -22,11 +22,11 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     MATCH_ALL,
 )
-from .const import CONF_AVAILABILITY_TEMPLATE
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change, async_track_same_state
+from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
 
