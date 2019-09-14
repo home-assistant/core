@@ -48,7 +48,7 @@ async def async_setup(hass, config):
     if not hass.config_entries.async_entries(DOMAIN) and os.path.isfile(
         hass.config.path(ECOBEE_CONFIG_FILENAME)
     ):
-        """Store legacy config to later populate options."""
+        """Store legacy config."""
         hass.data[DATA_ECOBEE_CONFIG] = config[DOMAIN]
         """No config entry exists and ecobee.conf exists; trigger the import flow."""
         hass.async_create_task(
