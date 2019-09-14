@@ -1,15 +1,8 @@
 """Support for ecobee."""
-import os
 from datetime import timedelta
 import voluptuous as vol
 
-from pyecobee import (
-    Ecobee,
-    ECOBEE_CONFIG_FILENAME,
-    ECOBEE_API_KEY,
-    ECOBEE_REFRESH_TOKEN,
-    ExpiredTokenError,
-)
+from pyecobee import Ecobee, ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN, ExpiredTokenError
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY
@@ -43,19 +36,18 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """
-    Ecobee only uses config flow for configuration.
+    Ecobee uses config flow for configuration.
 
-    But, an existing configuration.yaml config and ecobee.conf
-    will trigger an import flow if a config entry doesn't
-    already exist to help users migrating from the old ecobee
-    component.
+    But, an existing configuration.yaml config will trigger
+    an import flow if a config entry doesn't already exist
+    to help users migrating from the old ecobee component,
+    and parameters specified in configuration.yaml will
+    overwrite options specified in the options flow.
     """
-    if not hass.config_entries.async_entries(DOMAIN) and os.path.isfile(
-        hass.config.path(ECOBEE_CONFIG_FILENAME)
-    ):
-        """Store legacy config."""
-        hass.data[DATA_ECOBEE_CONFIG] = config[DOMAIN]
-        """No config entry exists and ecobee.conf exists; trigger the import flow."""
+    hass.data[DATA_ECOBEE_CONFIG] = config[DOMAIN]
+
+    if not hass.config_entries.async_entries(DOMAIN):
+        """No config entry exists; trigger the import flow."""
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}
