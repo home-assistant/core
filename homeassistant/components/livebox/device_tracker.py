@@ -1,15 +1,14 @@
 """Support for the ZHA platform."""
 import logging
 
-from homeassistant.components.device_tracker import DOMAIN, SOURCE_TYPE_ROUTER
+from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import LiveboxData
+from . import DOMAIN, LiveboxData
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_LIVEBOX = "livebox"
 DATA_LIVEBOX_DISPATCHERS = "livebox_dispatchers"
 LIVEBOX_DISCOVERY_NEW = "livebox_discovery_new_{}"
 
