@@ -25,11 +25,11 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
 )
 
-from .const import CONF_AVAILABILITY_TEMPLATE
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
+from .const import CONF_AVAILABILITY_TEMPLATE
 
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 
