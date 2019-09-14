@@ -29,11 +29,11 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     STATE_UNKNOWN,
 )
-from .const import CONF_AVAILABILITY_TEMPLATE
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.script import Script
+from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
 
