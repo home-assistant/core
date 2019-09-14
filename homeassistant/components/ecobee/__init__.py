@@ -154,3 +154,14 @@ async def async_populate_options(hass, config_entry):
     options = {CONF_HOLD_TEMP: hold_temp}
 
     hass.config_entries.async_update_entry(config_entry, options=options)
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload the config entry, but store the ecobee API key for later."""
+    hass.data.pop(DOMAIN)
+    hass.data[DATA_ECOBEE_CONFIG] = {CONF_API_KEY: config_entry.data[CONF_API_KEY]}
+
+    for platform in ECOBEE_PLATFORMS:
+        await hass.config_entries.async_forward_entry_unload(config_entry, platform)
+
+    return True
