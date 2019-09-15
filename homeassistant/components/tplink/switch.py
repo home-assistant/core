@@ -138,7 +138,9 @@ class SmartPlugSwitch(SwitchDevice):
         """Update the TP-Link switch's state."""
         try:
             if not self._sysinfo:
-                _LOGGER.debug("tplink sysinfo for %s is %s", self, self.smartplug.sys_info)
+                _LOGGER.debug(
+                    "tplink sysinfo for %s is %s", self, self.smartplug.sys_info
+                )
                 self._sysinfo = self.smartplug.sys_info
                 self._mac = self.smartplug.mac
                 if self._child_num >= 0:
