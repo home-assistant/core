@@ -21,7 +21,7 @@ class TestSwitch(unittest.TestCase):
         platform = getattr(self.hass.components, "test.switch")
         platform.init()
         # Switch 1 is ON, switch 2 is OFF
-        self.switch_1, self.switch_2, self.switch_3 = platform.DEVICES
+        self.switch_1, self.switch_2, self.switch_3 = platform.ENTITIES
 
     # pylint: disable=invalid-name
     def tearDown(self):
