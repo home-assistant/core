@@ -69,7 +69,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                         Envoy(
                             ip_address,
                             condition,
-                            "{}{} {}".format(name, SENSORS[condition][0], inverter),
+                            f"{name}{SENSORS[condition][0]} {inverter}",
                             SENSORS[condition][1],
                         )
                     )
@@ -78,7 +78,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 Envoy(
                     ip_address,
                     condition,
-                    name + SENSORS[condition][0],
+                    f"{name}{SENSORS[condition][0]}",
                     SENSORS[condition][1],
                 )
             )
