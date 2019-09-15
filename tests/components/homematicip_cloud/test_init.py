@@ -68,7 +68,13 @@ async def test_setup_entry_successful(hass):
     )
     entry.add_to_hass(hass)
     with patch.object(hmipc, "HomematicipHAP") as mock_hap:
-        mock_hap.return_value.async_setup.return_value = mock_coro(True)
+        instance = mock_hap.return_value
+        instance.async_setup.return_value = mock_coro(True)
+        instance.home.id = "1"
+        instance.home.modelType = "mock-type"
+        instance.home.name = "mock-name"
+        instance.home.currentAPVersion = "mock-ap-version"
+
         assert (
             await async_setup_component(
                 hass,
@@ -129,7 +135,13 @@ async def test_unload_entry(hass):
     entry.add_to_hass(hass)
 
     with patch.object(hmipc, "HomematicipHAP") as mock_hap:
-        mock_hap.return_value.async_setup.return_value = mock_coro(True)
+        instance = mock_hap.return_value
+        instance.async_setup.return_value = mock_coro(True)
+        instance.home.id = "1"
+        instance.home.modelType = "mock-type"
+        instance.home.name = "mock-name"
+        instance.home.currentAPVersion = "mock-ap-version"
+
         assert await async_setup_component(hass, hmipc.DOMAIN, {}) is True
 
     assert len(mock_hap.return_value.mock_calls) >= 1

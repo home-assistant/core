@@ -56,7 +56,7 @@ class RingLight(Light):
     @property
     def name(self):
         """Name of the light."""
-        return "{} light".format(self._device.name)
+        return f"{self._device.name} light"
 
     @property
     def unique_id(self):

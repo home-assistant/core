@@ -1,0 +1,17 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Pomy\u015blnie uwierzytelniono z Withings dla wybranego profilu"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "profile": "Profil"
+                },
+                "description": "Wybierz profil u\u017cytkownika Withings, na kt\u00f3ry chcesz po\u0142\u0105czy\u0107 z Home Assistant'em. Na stronie Withings wybierz ten sam profil u\u017cytkownika by dane by\u0142y poprawnie oznaczone.",
+                "title": "Profil u\u017cytkownika"
+            }
+        },
+        "title": "Withings"
+    }
+}

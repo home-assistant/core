@@ -13,6 +13,9 @@ from homeassistant.helpers.config_validation import (  # noqa
     PLATFORM_SCHEMA_BASE,
 )
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 DOMAIN = "binary_sensor"
 SCAN_INTERVAL = timedelta(seconds=30)
 

@@ -17,7 +17,10 @@ DOMAIN = "supla"
 CONF_SERVER = "server"
 CONF_SERVERS = "servers"
 
-SUPLA_FUNCTION_HA_CMP_MAP = {"CONTROLLINGTHEROLLERSHUTTER": "cover"}
+SUPLA_FUNCTION_HA_CMP_MAP = {
+    "CONTROLLINGTHEROLLERSHUTTER": "cover",
+    "LIGHTSWITCH": "switch",
+}
 SUPLA_CHANNELS = "supla_channels"
 SUPLA_SERVERS = "supla_servers"
 
@@ -62,7 +65,7 @@ def setup(hass, base_config):
                     srv_info,
                 )
                 return False
-        except IOError:
+        except OSError:
             _LOGGER.exception(
                 "Server: %s not configured. Error on Supla API access: ", server_address
             )

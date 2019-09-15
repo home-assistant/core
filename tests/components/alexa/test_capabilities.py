@@ -1,7 +1,15 @@
 """Test Alexa capabilities."""
 import pytest
 
-from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    TEMP_CELSIUS,
+    STATE_LOCKED,
+    STATE_UNLOCKED,
+    STATE_UNKNOWN,
+    STATE_UNAVAILABLE,
+)
+from homeassistant.components import climate
 from homeassistant.components.alexa import smart_home
 from tests.common import async_mock_service
 
@@ -368,3 +376,47 @@ async def test_report_cover_percentage_state(hass):
 
     properties = await reported_properties(hass, "cover.closed")
     properties.assert_equal("Alexa.PercentageController", "percentage", 0)
+
+
+async def test_temperature_sensor_sensor(hass):
+    """Test TemperatureSensor reports sensor temperature correctly."""
+    for bad_value in (STATE_UNKNOWN, STATE_UNAVAILABLE, "not-number"):
+        hass.states.async_set(
+            "sensor.temp_living_room",
+            bad_value,
+            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+        )
+
+        properties = await reported_properties(hass, "sensor.temp_living_room")
+        properties.assert_not_has_property("Alexa.TemperatureSensor", "temperature")
+
+    hass.states.async_set(
+        "sensor.temp_living_room", "34", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
+    )
+    properties = await reported_properties(hass, "sensor.temp_living_room")
+    properties.assert_equal(
+        "Alexa.TemperatureSensor", "temperature", {"value": 34.0, "scale": "CELSIUS"}
+    )
+
+
+async def test_temperature_sensor_climate(hass):
+    """Test TemperatureSensor reports climate temperature correctly."""
+    for bad_value in (STATE_UNKNOWN, STATE_UNAVAILABLE, "not-number"):
+        hass.states.async_set(
+            "climate.downstairs",
+            climate.HVAC_MODE_HEAT,
+            {climate.ATTR_CURRENT_TEMPERATURE: bad_value},
+        )
+
+        properties = await reported_properties(hass, "climate.downstairs")
+        properties.assert_not_has_property("Alexa.TemperatureSensor", "temperature")
+
+    hass.states.async_set(
+        "climate.downstairs",
+        climate.HVAC_MODE_HEAT,
+        {climate.ATTR_CURRENT_TEMPERATURE: 34},
+    )
+    properties = await reported_properties(hass, "climate.downstairs")
+    properties.assert_equal(
+        "Alexa.TemperatureSensor", "temperature", {"value": 34.0, "scale": "CELSIUS"}
+    )

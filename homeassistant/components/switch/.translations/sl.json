@@ -1,0 +1,17 @@
+{
+    "device_automation": {
+        "action_type": {
+            "toggle": "Preklopite {entity_name}",
+            "turn_off": "Izklopite {entity_name}",
+            "turn_on": "Vklopite {entity_name}"
+        },
+        "condition_type": {
+            "turn_off": "{entity_name} izklopljen",
+            "turn_on": "{entity_name} vklopljen"
+        },
+        "trigger_type": {
+            "turn_off": "{entity_name} izklopljen",
+            "turn_on": "{entity_name} vklopljen"
+        }
+    }
+}

@@ -94,7 +94,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         prefix = config.get(CONF_NAME)
         if prefix:
-            name = "{} {}".format(prefix, name)
+            name = f"{prefix} {name}"
 
         devs.append(
             MiTempBtSensor(poller, parameter, device, name, unit, force_update, median)
@@ -157,7 +157,7 @@ class MiTempBtSensor(Entity):
         try:
             _LOGGER.debug("Polling data for %s", self.name)
             data = self.poller.parameter_value(self.parameter)
-        except IOError as ioerr:
+        except OSError as ioerr:
             _LOGGER.warning("Polling error %s", ioerr)
             return
         except BluetoothBackendException as bterror:

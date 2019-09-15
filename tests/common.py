@@ -602,40 +602,40 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
         )
 
 
-class MockToggleDevice(entity.ToggleEntity):
+class MockToggleEntity(entity.ToggleEntity):
     """Provide a mock toggle device."""
 
-    def __init__(self, name, state):
-        """Initialize the mock device."""
+    def __init__(self, name, state, unique_id=None):
+        """Initialize the mock entity."""
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = state
         self.calls = []
 
     @property
     def name(self):
-        """Return the name of the device if any."""
+        """Return the name of the entity if any."""
         self.calls.append(("name", {}))
         return self._name
 
     @property
     def state(self):
-        """Return the name of the device if any."""
+        """Return the state of the entity if any."""
         self.calls.append(("state", {}))
         return self._state
 
     @property
     def is_on(self):
-        """Return true if device is on."""
+        """Return true if entity is on."""
         self.calls.append(("is_on", {}))
         return self._state == STATE_ON
 
     def turn_on(self, **kwargs):
-        """Turn the device on."""
+        """Turn the entity on."""
         self.calls.append(("turn_on", kwargs))
         self._state = STATE_ON
 
     def turn_off(self, **kwargs):
-        """Turn the device off."""
+        """Turn the entity off."""
         self.calls.append(("turn_off", kwargs))
         self._state = STATE_OFF
 
@@ -665,6 +665,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         title="Mock Title",
         state=None,
         options={},
+        system_options={},
         connection_class=config_entries.CONN_CLASS_UNKNOWN,
     ):
         """Initialize a mock config entry."""
@@ -672,6 +673,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
             "entry_id": entry_id or uuid.uuid4().hex,
             "domain": domain,
             "data": data or {},
+            "system_options": system_options,
             "options": options,
             "version": version,
             "title": title,
@@ -908,6 +910,11 @@ class MockEntity(entity.Entity):
         """Info how it links to a device."""
         return self._handle("device_info")
 
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._handle("entity_registry_enabled_default")
+
     def _handle(self, attr):
         """Return attribute value."""
         if attr in self._values:
@@ -971,6 +978,8 @@ async def flush_store(store):
     if store._data is None:
         return
 
+    store._async_cleanup_stop_listener()
+    store._async_cleanup_delay_listener()
     await store._async_handle_write_data()
 
 
@@ -1021,3 +1030,18 @@ def async_capture_events(hass, event_name):
     hass.bus.async_listen(event_name, capture_events)
 
     return events
+
+
+@ha.callback
+def async_mock_signal(hass, signal):
+    """Catch all dispatches to a signal."""
+    calls = []
+
+    @ha.callback
+    def mock_signal_handler(*args):
+        """Mock service call."""
+        calls.append(args)
+
+    hass.helpers.dispatcher.async_dispatcher_connect(signal, mock_signal_handler)
+
+    return calls

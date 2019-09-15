@@ -11,6 +11,9 @@ import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN as AUTOMATION_DOMAIN
 
+
+# mypy: allow-untyped-defs
+
 DEPENDENCIES = ("webhook",)
 
 _LOGGER = logging.getLogger(__name__)

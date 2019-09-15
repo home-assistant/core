@@ -3,6 +3,7 @@
 To update, run python3 -m script.hassfest
 """
 
+# fmt: off
 
 FLOWS = [
     "adguard",
@@ -10,6 +11,7 @@ FLOWS = [
     "ambient_station",
     "axis",
     "cast",
+    "cert_expiry",
     "daikin",
     "deconz",
     "dialogflow",
@@ -23,12 +25,14 @@ FLOWS = [
     "homekit_controller",
     "homematicip_cloud",
     "hue",
+    "iaqualink",
     "ifttt",
     "ios",
     "ipma",
     "iqvia",
     "life360",
     "lifx",
+    "linky",
     "locative",
     "logi_circle",
     "luftdaten",
@@ -47,6 +51,7 @@ FLOWS = [
     "simplisafe",
     "smartthings",
     "smhi",
+    "solaredge",
     "somfy",
     "sonos",
     "tellduslive",
@@ -61,6 +66,7 @@ FLOWS = [
     "velbus",
     "vesync",
     "wemo",
+    "withings",
     "wwlln",
     "zha",
     "zone",

@@ -106,7 +106,7 @@ class YrSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.client_name, self._name)
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
@@ -168,7 +168,7 @@ class YrData:
             with async_timeout.timeout(10):
                 resp = await websession.get(self._url, params=self._urlparams)
             if resp.status != 200:
-                try_again("{} returned {}".format(resp.url, resp.status))
+                try_again(f"{resp.url} returned {resp.status}")
                 return
             text = await resp.text()
 

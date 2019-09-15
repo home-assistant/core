@@ -61,7 +61,7 @@ class HaveIBeenPwnedSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "Breaches {}".format(self._email)
+        return f"Breaches {self._email}"
 
     @property
     def unit_of_measurement(self):
@@ -151,7 +151,7 @@ class HaveIBeenPwnedData:
     def update(self, **kwargs):
         """Get the latest data for current email from REST service."""
         try:
-            url = "{}{}?truncateResponse=false".format(URL, self._email)
+            url = f"{URL}{self._email}?truncateResponse=false"
             header = {USER_AGENT: HA_USER_AGENT, "hibp-api-key": self._api_key}
             _LOGGER.debug("Checking for breaches for email: %s", self._email)
             req = requests.get(url, headers=header, allow_redirects=True, timeout=5)

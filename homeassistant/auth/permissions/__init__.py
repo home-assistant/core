@@ -7,6 +7,7 @@ from typing import (  # noqa: F401
     Dict,
     List,
     Mapping,
+    Optional,
     Set,
     Tuple,
     Union,
@@ -31,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 class AbstractPermissions:
     """Default permissions class."""
 
-    _cached_entity_func = None
+    _cached_entity_func: Optional[Callable[[str, str], bool]] = None
 
     def _entity_func(self) -> Callable[[str, str], bool]:
         """Return a function that can test entity access."""

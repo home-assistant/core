@@ -118,7 +118,7 @@ class RawUPnPIGDSensor(UpnpSensor):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        return "{}_{}".format(self._device.udn, self._type_name)
+        return f"{self._device.udn}_{self._type_name}"
 
     @property
     def state(self) -> str:
@@ -172,12 +172,12 @@ class PerSecondUPnPIGDSensor(UpnpSensor):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        return "{}_{}/sec_{}".format(self._device.udn, self.unit, self._direction)
+        return f"{self._device.udn}_{self.unit}/sec_{self._direction}"
 
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return "{} {}/sec {}".format(self._device.name, self.unit, self._direction)
+        return f"{self._device.name} {self.unit}/sec {self._direction}"
 
     @property
     def icon(self) -> str:
@@ -187,7 +187,7 @@ class PerSecondUPnPIGDSensor(UpnpSensor):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity, if any."""
-        return "{}/sec".format(self.unit)
+        return f"{self.unit}/sec"
 
     def _is_overflowed(self, new_value) -> bool:
         """Check if value has overflowed."""

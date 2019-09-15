@@ -24,14 +24,12 @@ DOMAIN = "nissan_leaf"
 DATA_LEAF = "nissan_leaf_data"
 
 DATA_BATTERY = "battery"
-DATA_LOCATION = "location"
 DATA_CHARGING = "charging"
 DATA_PLUGGED_IN = "plugged_in"
 DATA_CLIMATE = "climate"
 DATA_RANGE_AC = "range_ac_on"
 DATA_RANGE_AC_OFF = "range_ac_off"
 
-CONF_NCONNECT = "nissan_connect"
 CONF_INTERVAL = "update_interval"
 CONF_CHARGING_INTERVAL = "update_interval_charging"
 CONF_CLIMATE_INTERVAL = "update_interval_climate"
@@ -61,7 +59,6 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Required(CONF_USERNAME): cv.string,
                         vol.Required(CONF_PASSWORD): cv.string,
                         vol.Required(CONF_REGION): vol.In(CONF_VALID_REGIONS),
-                        vol.Optional(CONF_NCONNECT, default=True): cv.boolean,
                         vol.Optional(CONF_INTERVAL, default=DEFAULT_INTERVAL): (
                             vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))
                         ),
@@ -84,7 +81,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-LEAF_COMPONENTS = ["sensor", "switch", "binary_sensor", "device_tracker"]
+LEAF_COMPONENTS = ["sensor", "switch", "binary_sensor"]
 
 SIGNAL_UPDATE_LEAF = "nissan_leaf_update"
 
@@ -177,8 +174,7 @@ def setup(hass, config):
         hass.data[DATA_LEAF][leaf.vin] = data_store
 
         for component in LEAF_COMPONENTS:
-            if component != "device_tracker" or car_config[CONF_NCONNECT]:
-                load_platform(hass, component, DOMAIN, {}, car_config)
+            load_platform(hass, component, DOMAIN, {}, car_config)
 
         async_track_point_in_utc_time(
             hass, data_store.async_update_data, utcnow() + INITIAL_UPDATE
@@ -209,24 +205,20 @@ class LeafDataStore:
         self.hass = hass
         self.leaf = leaf
         self.car_config = car_config
-        self.nissan_connect = car_config[CONF_NCONNECT]
         self.force_miles = car_config[CONF_FORCE_MILES]
         self.data = {}
         self.data[DATA_CLIMATE] = False
         self.data[DATA_BATTERY] = 0
         self.data[DATA_CHARGING] = False
-        self.data[DATA_LOCATION] = False
         self.data[DATA_RANGE_AC] = 0
         self.data[DATA_RANGE_AC_OFF] = 0
         self.data[DATA_PLUGGED_IN] = False
         self.next_update = None
         self.last_check = None
         self.request_in_progress = False
-        # Timestamp of last successful response from battery,
-        # climate or location.
+        # Timestamp of last successful response from battery or climate.
         self.last_battery_response = None
         self.last_climate_response = None
-        self.last_location_response = None
         self._remove_listener = None
 
     async def async_update_data(self, now):
@@ -334,20 +326,6 @@ class LeafDataStore:
             except CarwingsError:
                 _LOGGER.error("Error fetching climate info")
 
-        if self.nissan_connect:
-            try:
-                location_response = await self.async_get_location()
-
-                if location_response is None:
-                    _LOGGER.debug("Empty Location Response Received")
-                    self.data[DATA_LOCATION] = None
-                else:
-                    _LOGGER.debug("Location Response: %s", location_response.__dict__)
-                    self.data[DATA_LOCATION] = location_response
-                    self.last_location_response = utcnow()
-            except CarwingsError:
-                _LOGGER.error("Error fetching location info")
-
         self.request_in_progress = False
         async_dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
 
@@ -364,19 +342,6 @@ class LeafDataStore:
         from pycarwings2 import CarwingsError
 
         try:
-            # First, check nissan servers for the latest data
-            start_server_info = await self.hass.async_add_executor_job(
-                self.leaf.get_latest_battery_status
-            )
-
-            # Store the date from the nissan servers
-            start_date = self._extract_start_date(start_server_info)
-            if start_date is None:
-                _LOGGER.info("No start date from servers. Aborting")
-                return None
-
-            _LOGGER.debug("Start server date=%s", start_date)
-
             # Request battery update from the car
             _LOGGER.debug("Requesting battery update, %s", self.leaf.vin)
             request = await self.hass.async_add_executor_job(self.leaf.request_update)
@@ -393,20 +358,29 @@ class LeafDataStore:
                 )
                 await asyncio.sleep(PYCARWINGS2_SLEEP)
 
-                # Note leaf.get_status_from_update is always returning 0, so
-                # don't try to use it anymore.
-                server_info = await self.hass.async_add_executor_job(
-                    self.leaf.get_latest_battery_status
+                # We don't use the response from get_status_from_update
+                # apart from knowing that the car has responded saying it
+                # has given the latest battery status to Nissan.
+                check_result_info = await self.hass.async_add_executor_job(
+                    self.leaf.get_status_from_update, request
                 )
 
-                latest_date = self._extract_start_date(server_info)
-                _LOGGER.debug("Latest server date=%s", latest_date)
-                if latest_date is not None and latest_date != start_date:
+                if check_result_info is not None:
+                    # Get the latest battery status from Nissan servers.
+                    # This has the SOC in it.
+                    server_info = await self.hass.async_add_executor_job(
+                        self.leaf.get_latest_battery_status
+                    )
                     return server_info
 
             _LOGGER.debug(
                 "%s attempts exceeded return latest data from server",
                 MAX_RESPONSE_ATTEMPTS,
+            )
+            # Get the latest data from the nissan servers, even though
+            # it may be out of date, it's better than nothing.
+            server_info = await self.hass.async_add_executor_job(
+                self.leaf.get_latest_battery_status
             )
             return server_info
         except CarwingsError:
@@ -464,29 +438,6 @@ class LeafDataStore:
 
         _LOGGER.debug("Climate result not returned by Nissan servers")
         return False
-
-    async def async_get_location(self):
-        """Get location from Nissan servers."""
-        request = await self.hass.async_add_executor_job(self.leaf.request_location)
-        for attempt in range(MAX_RESPONSE_ATTEMPTS):
-            if attempt > 0:
-                _LOGGER.debug(
-                    "Location data not in yet. (%s) (%s). " "Waiting %s seconds",
-                    self.leaf.vin,
-                    attempt,
-                    PYCARWINGS2_SLEEP,
-                )
-                await asyncio.sleep(PYCARWINGS2_SLEEP)
-
-            location_status = await self.hass.async_add_executor_job(
-                self.leaf.get_status_from_location, request
-            )
-
-            if location_status is not None:
-                _LOGGER.debug("Location_status=%s", location_status.__dict__)
-                break
-
-        return location_status
 
 
 class LeafEntity(Entity):

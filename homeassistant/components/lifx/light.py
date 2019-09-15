@@ -509,7 +509,7 @@ class LIFXLight(Light):
     @property
     def who(self):
         """Return a string identifying the bulb."""
-        return "%s (%s)" % (self.bulb.ip_addr, self.name)
+        return f"{self.bulb.ip_addr} ({self.name})"
 
     @property
     def min_mireds(self):

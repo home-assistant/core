@@ -1,7 +1,7 @@
 """Config flow to configure SMHI component."""
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
@@ -21,7 +21,7 @@ def smhi_locations(hass: HomeAssistant):
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class SmhiFlowHandler(data_entry_flow.FlowHandler):
+class SmhiFlowHandler(config_entries.ConfigFlow):
     """Config flow for SMHI component."""
 
     VERSION = 1

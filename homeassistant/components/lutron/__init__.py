@@ -40,7 +40,13 @@ def setup(hass, base_config):
 
     hass.data[LUTRON_BUTTONS] = []
     hass.data[LUTRON_CONTROLLER] = None
-    hass.data[LUTRON_DEVICES] = {"light": [], "cover": [], "switch": [], "scene": []}
+    hass.data[LUTRON_DEVICES] = {
+        "light": [],
+        "cover": [],
+        "switch": [],
+        "scene": [],
+        "binary_sensor": [],
+    }
 
     config = base_config.get(DOMAIN)
     hass.data[LUTRON_CONTROLLER] = Lutron(
@@ -76,9 +82,13 @@ def setup(hass, base_config):
                         )
 
                 hass.data[LUTRON_BUTTONS].append(LutronButton(hass, keypad, button))
+        if area.occupancy_group is not None:
+            hass.data[LUTRON_DEVICES]["binary_sensor"].append(
+                (area.name, area.occupancy_group)
+            )
 
-    for component in ("light", "cover", "switch", "scene"):
-        discovery.load_platform(hass, component, DOMAIN, None, base_config)
+    for component in ("light", "cover", "switch", "scene", "binary_sensor"):
+        discovery.load_platform(hass, component, DOMAIN, {}, base_config)
     return True
 
 
@@ -104,7 +114,7 @@ class LutronDevice(Entity):
     @property
     def name(self):
         """Return the name of the device."""
-        return "{} {}".format(self._area_name, self._lutron_device.name)
+        return f"{self._area_name} {self._lutron_device.name}"
 
     @property
     def should_poll(self):
@@ -122,7 +132,7 @@ class LutronButton:
 
     def __init__(self, hass, keypad, button):
         """Register callback for activity on the button."""
-        name = "{}: {}".format(keypad.name, button.name)
+        name = f"{keypad.name}: {button.name}"
         self._hass = hass
         self._has_release_event = (
             button.button_type is not None and "RaiseLower" in button.button_type

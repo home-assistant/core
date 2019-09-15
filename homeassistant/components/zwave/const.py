@@ -68,7 +68,6 @@ SERVICE_RENAME_VALUE = "rename_value"
 SERVICE_REFRESH_ENTITY = "refresh_entity"
 SERVICE_REFRESH_NODE = "refresh_node"
 SERVICE_RESET_NODE_METERS = "reset_node_meters"
-SERVICE_UPDATE_CONFIG = "update_config"
 
 EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
 EVENT_NODE_EVENT = "zwave.node_event"

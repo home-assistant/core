@@ -93,7 +93,7 @@ class GoogleAssistantView(HomeAssistantView):
 
     async def post(self, request: Request) -> Response:
         """Handle Google Assistant requests."""
-        message = await request.json()  # type: dict
+        message: dict = await request.json()
         result = await async_handle_message(
             request.app["hass"], self.config, request["hass_user"].id, message
         )

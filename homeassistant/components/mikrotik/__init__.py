@@ -18,6 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from .const import (
+    NAME,
     DOMAIN,
     HOSTS,
     MTK_LOGIN_PLAIN,
@@ -121,6 +122,7 @@ class MikrotikClient:
         self._password = password
         self._login_method = login_method
         self._encoding = encoding
+        self._ssl_wrapper = None
         self.hostname = None
         self._client = None
         self._connected = False
@@ -137,10 +139,12 @@ class MikrotikClient:
         }
 
         if self._use_ssl:
-            ssl_context = ssl.create_default_context()
-            ssl_context.check_hostname = False
-            ssl_context.verify_mode = ssl.CERT_NONE
-            kwargs["ssl_wrapper"] = ssl_context.wrap_socket
+            if self._ssl_wrapper is None:
+                ssl_context = ssl.create_default_context()
+                ssl_context.check_hostname = False
+                ssl_context.verify_mode = ssl.CERT_NONE
+                self._ssl_wrapper = ssl_context.wrap_socket
+            kwargs["ssl_wrapper"] = self._ssl_wrapper
 
         try:
             self._client = librouteros.connect(
@@ -163,7 +167,7 @@ class MikrotikClient:
     def get_hostname(self):
         """Return device host name."""
         data = self.command(MIKROTIK_SERVICES[IDENTITY])
-        return data[0]["name"] if data else None
+        return data[0][NAME] if data else None
 
     def connected(self):
         """Return connected boolean."""

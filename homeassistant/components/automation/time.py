@@ -8,6 +8,9 @@ from homeassistant.const import CONF_AT, CONF_PLATFORM
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_change
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 TRIGGER_SCHEMA = vol.Schema(

@@ -197,11 +197,19 @@ class HueOneLightStateView(HomeAssistantView):
             return self.json_message("only local IPs allowed", HTTP_BAD_REQUEST)
 
         hass = request.app["hass"]
-        entity_id = self.config.number_to_entity_id(entity_id)
-        entity = hass.states.get(entity_id)
+        hass_entity_id = self.config.number_to_entity_id(entity_id)
+
+        if hass_entity_id is None:
+            _LOGGER.error(
+                "Unknown entity number: %s not found in emulated_hue_ids.json",
+                entity_id,
+            )
+            return web.Response(text="Entity not found", status=404)
+
+        entity = hass.states.get(hass_entity_id)
 
         if entity is None:
-            _LOGGER.error("Entity not found: %s", entity_id)
+            _LOGGER.error("Entity not found: %s", hass_entity_id)
             return web.Response(text="Entity not found", status=404)
 
         if not self.config.is_entity_exposed(entity):
@@ -562,17 +570,27 @@ def get_entity_state(config, entity):
 
 def entity_to_json(config, entity, state):
     """Convert an entity to its Hue bridge JSON representation."""
+    entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    if (entity_features & SUPPORT_BRIGHTNESS) or entity.domain != light.DOMAIN:
+        return {
+            "state": {
+                HUE_API_STATE_ON: state[STATE_ON],
+                HUE_API_STATE_BRI: state[STATE_BRIGHTNESS],
+                HUE_API_STATE_HUE: state[STATE_HUE],
+                HUE_API_STATE_SAT: state[STATE_SATURATION],
+                "reachable": True,
+            },
+            "type": "Dimmable light",
+            "name": config.get_entity_name(entity),
+            "modelid": "HASS123",
+            "uniqueid": entity.entity_id,
+            "swversion": "123",
+        }
     return {
-        "state": {
-            HUE_API_STATE_ON: state[STATE_ON],
-            HUE_API_STATE_BRI: state[STATE_BRIGHTNESS],
-            HUE_API_STATE_HUE: state[STATE_HUE],
-            HUE_API_STATE_SAT: state[STATE_SATURATION],
-            "reachable": True,
-        },
-        "type": "Dimmable light",
+        "state": {HUE_API_STATE_ON: state[STATE_ON], "reachable": True},
+        "type": "On/off light",
         "name": config.get_entity_name(entity),
-        "modelid": "HASS123",
+        "modelid": "HASS321",
         "uniqueid": entity.entity_id,
         "swversion": "123",
     }
@@ -580,5 +598,5 @@ def entity_to_json(config, entity, state):
 
 def create_hue_success_response(entity_id, attr, value):
     """Create a success response for an attribute set on a light."""
-    success_key = "/lights/{}/state/{}".format(entity_id, attr)
+    success_key = f"/lights/{entity_id}/state/{attr}"
     return {"success": {success_key: value}}
