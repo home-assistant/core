@@ -85,6 +85,46 @@ async def setup_deconz_integration(hass, options):
     return hass.data[deconz.DOMAIN][BRIDGEID]
 
 
+async def test_service_setup(hass):
+    """Verify service setup works."""
+    with patch(
+        "homeassistant.core.ServiceRegistry.async_register", return_value=Mock(True)
+    ) as async_register:
+        await deconz.services.async_setup_services(hass)
+        assert async_register.call_count == 2
+
+
+async def test_service_setup_already_registered(hass):
+    """Make sure that services are only registered once."""
+    hass.data[deconz.services.DECONZ_SERVICES] = True
+    with patch(
+        "homeassistant.core.ServiceRegistry.async_register", return_value=Mock(True)
+    ) as async_register:
+        await deconz.services.async_setup_services(hass)
+        async_register.assert_not_called()
+
+
+async def test_service_unload(hass):
+    """Verify service unload works."""
+    hass.data[deconz.services.DECONZ_SERVICES] = True
+    with patch(
+        "homeassistant.core.ServiceRegistry.async_remove", return_value=Mock(True)
+    ) as async_remove:
+        await deconz.services.async_unload_services(hass)
+        assert hass.data[deconz.services.DECONZ_SERVICES] is False
+        assert async_remove.call_count == 2
+
+
+async def test_service_unload_not_registered(hass):
+    """Make sure that services can only be unloaded once."""
+    with patch(
+        "homeassistant.core.ServiceRegistry.async_remove", return_value=Mock(True)
+    ) as async_remove:
+        await deconz.services.async_unload_services(hass)
+        assert deconz.services.DECONZ_SERVICES not in hass.data
+        async_remove.assert_not_called()
+
+
 async def test_configure_service_with_field(hass):
     """Test that service invokes pydeconz with the correct path and data."""
     await setup_deconz_integration(hass, options={})
