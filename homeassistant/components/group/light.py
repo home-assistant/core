@@ -200,15 +200,14 @@ class LightGroup(light.Light):
                 state = self.hass.states.get(entity_id)
                 if not state:
                     continue
-                else:
-                    support = state.attributes.get(ATTR_SUPPORTED_FEATURES)
-                    # Only pass color temperature to supported entity_ids
-                    if bool(support & SUPPORT_COLOR) and not bool(
-                        support & SUPPORT_COLOR_TEMP
-                    ):
-                        emulate_color_temp_entity_ids.append(entity_id)
-                        updated_entities.remove(entity_id)
-                        data[ATTR_ENTITY_ID] = updated_entities
+                support = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+                # Only pass color temperature to supported entity_ids
+                if bool(support & SUPPORT_COLOR) and not bool(
+                    support & SUPPORT_COLOR_TEMP
+                ):
+                    emulate_color_temp_entity_ids.append(entity_id)
+                    updated_entities.remove(entity_id)
+                    data[ATTR_ENTITY_ID] = updated_entities
 
         if ATTR_WHITE_VALUE in kwargs:
             data[ATTR_WHITE_VALUE] = kwargs[ATTR_WHITE_VALUE]
