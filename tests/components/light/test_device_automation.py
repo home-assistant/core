@@ -150,7 +150,7 @@ async def test_if_fires_on_state_change(hass, calls):
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
 
-    dev1, dev2, dev3 = platform.DEVICES
+    ent1, ent2, ent3 = platform.ENTITIES
 
     assert await async_setup_component(
         hass,
@@ -162,7 +162,7 @@ async def test_if_fires_on_state_change(hass, calls):
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": "",
-                        "entity_id": dev1.entity_id,
+                        "entity_id": ent1.entity_id,
                         "type": "turn_on",
                     },
                     "action": {
@@ -186,7 +186,7 @@ async def test_if_fires_on_state_change(hass, calls):
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": "",
-                        "entity_id": dev1.entity_id,
+                        "entity_id": ent1.entity_id,
                         "type": "turn_off",
                     },
                     "action": {
@@ -209,21 +209,21 @@ async def test_if_fires_on_state_change(hass, calls):
         },
     )
     await hass.async_block_till_done()
-    assert hass.states.get(dev1.entity_id).state == STATE_ON
+    assert hass.states.get(ent1.entity_id).state == STATE_ON
     assert len(calls) == 0
 
-    hass.states.async_set(dev1.entity_id, STATE_OFF)
+    hass.states.async_set(ent1.entity_id, STATE_OFF)
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == "turn_off state - {} - on - off - None".format(
-        dev1.entity_id
+        ent1.entity_id
     )
 
-    hass.states.async_set(dev1.entity_id, STATE_ON)
+    hass.states.async_set(ent1.entity_id, STATE_ON)
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].data["some"] == "turn_on state - {} - off - on - None".format(
-        dev1.entity_id
+        ent1.entity_id
     )
 
 
@@ -234,7 +234,7 @@ async def test_if_state(hass, calls):
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
 
-    dev1, dev2, dev3 = platform.DEVICES
+    ent1, ent2, ent3 = platform.ENTITIES
 
     assert await async_setup_component(
         hass,
@@ -248,7 +248,7 @@ async def test_if_state(hass, calls):
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": dev1.entity_id,
+                            "entity_id": ent1.entity_id,
                             "type": "is_on",
                         }
                     ],
@@ -267,7 +267,7 @@ async def test_if_state(hass, calls):
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": dev1.entity_id,
+                            "entity_id": ent1.entity_id,
                             "type": "is_off",
                         }
                     ],
@@ -283,7 +283,7 @@ async def test_if_state(hass, calls):
         },
     )
     await hass.async_block_till_done()
-    assert hass.states.get(dev1.entity_id).state == STATE_ON
+    assert hass.states.get(ent1.entity_id).state == STATE_ON
     assert len(calls) == 0
 
     hass.bus.async_fire("test_event1")
@@ -292,7 +292,7 @@ async def test_if_state(hass, calls):
     assert len(calls) == 1
     assert calls[0].data["some"] == "is_on event - test_event1"
 
-    hass.states.async_set(dev1.entity_id, STATE_OFF)
+    hass.states.async_set(ent1.entity_id, STATE_OFF)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
@@ -307,7 +307,7 @@ async def test_action(hass, calls):
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
 
-    dev1, dev2, dev3 = platform.DEVICES
+    ent1, ent2, ent3 = platform.ENTITIES
 
     assert await async_setup_component(
         hass,
@@ -319,7 +319,7 @@ async def test_action(hass, calls):
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "",
-                        "entity_id": dev1.entity_id,
+                        "entity_id": ent1.entity_id,
                         "type": "turn_off",
                     },
                 },
@@ -328,7 +328,7 @@ async def test_action(hass, calls):
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "",
-                        "entity_id": dev1.entity_id,
+                        "entity_id": ent1.entity_id,
                         "type": "turn_on",
                     },
                 },
@@ -337,7 +337,7 @@ async def test_action(hass, calls):
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "",
-                        "entity_id": dev1.entity_id,
+                        "entity_id": ent1.entity_id,
                         "type": "toggle",
                     },
                 },
@@ -345,29 +345,29 @@ async def test_action(hass, calls):
         },
     )
     await hass.async_block_till_done()
-    assert hass.states.get(dev1.entity_id).state == STATE_ON
+    assert hass.states.get(ent1.entity_id).state == STATE_ON
     assert len(calls) == 0
 
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert hass.states.get(dev1.entity_id).state == STATE_OFF
+    assert hass.states.get(ent1.entity_id).state == STATE_OFF
 
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert hass.states.get(dev1.entity_id).state == STATE_OFF
+    assert hass.states.get(ent1.entity_id).state == STATE_OFF
 
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
-    assert hass.states.get(dev1.entity_id).state == STATE_ON
+    assert hass.states.get(ent1.entity_id).state == STATE_ON
 
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
-    assert hass.states.get(dev1.entity_id).state == STATE_ON
+    assert hass.states.get(ent1.entity_id).state == STATE_ON
 
     hass.bus.async_fire("test_event3")
     await hass.async_block_till_done()
-    assert hass.states.get(dev1.entity_id).state == STATE_OFF
+    assert hass.states.get(ent1.entity_id).state == STATE_OFF
 
     hass.bus.async_fire("test_event3")
     await hass.async_block_till_done()
-    assert hass.states.get(dev1.entity_id).state == STATE_ON
+    assert hass.states.get(ent1.entity_id).state == STATE_ON
