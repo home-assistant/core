@@ -178,7 +178,7 @@ hole==0.5.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190911.0
+home-assistant-frontend==20190911.1
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.15.0
@@ -279,7 +279,7 @@ pyMetno==0.4.6
 pyblackbird==0.5
 
 # homeassistant.components.cast
-pychromecast==3.2.2
+pychromecast==4.0.1
 
 # homeassistant.components.deconz
 pydeconz==62

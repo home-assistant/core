@@ -68,8 +68,8 @@ stages:
     - script: python setup.py sdist bdist_wheel
       displayName: 'Build package'
     - script: |
-        TWINE_USERNAME="$(twineUser)"
-        TWINE_PASSWORD="$(twinePassword)"
+        export TWINE_USERNAME="$(twineUser)"
+        export TWINE_PASSWORD="$(twinePassword)"
 
         twine upload dist/* --skip-existing
       displayName: 'Upload pypi'

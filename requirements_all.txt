@@ -446,7 +446,7 @@ enocean==0.50
 enturclient==0.2.0
 
 # homeassistant.components.environment_canada
-env_canada==0.0.24
+env_canada==0.0.25
 
 # homeassistant.components.envirophat
 # envirophat==0.0.6
@@ -639,7 +639,7 @@ hole==0.5.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190911.0
+home-assistant-frontend==20190911.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.4
@@ -1110,7 +1110,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==3.2.2
+pychromecast==4.0.1
 
 # homeassistant.components.cmus
 pycmus==0.1.1
@@ -1141,6 +1141,9 @@ pydelijn==0.5.1
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
+
+# homeassistant.components.doods
+pydoods==1.0.1
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==0.8
@@ -1343,6 +1346,9 @@ pynws==0.7.4
 
 # homeassistant.components.nx584
 pynx584==0.4
+
+# homeassistant.components.nzbget
+pynzbgetapi==0.2.0
 
 # homeassistant.components.obihai
 pyobihai==1.0.2
@@ -1998,7 +2004,7 @@ yeelight==0.5.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2019.09.01
+youtube_dl==2019.09.12.1
 
 # homeassistant.components.zengge
 zengge==0.2
@@ -2025,7 +2031,7 @@ zigpy-homeassistant==0.8.0
 zigpy-xbee-homeassistant==0.4.0
 
 # homeassistant.components.zha
-zigpy-zigate==0.2.0
+zigpy-zigate==0.3.1
 
 # homeassistant.components.zoneminder
 zm-py==0.3.3
