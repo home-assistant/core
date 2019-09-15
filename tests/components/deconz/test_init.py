@@ -167,31 +167,3 @@ async def test_unload_entry_multiple_gateways(hass):
 
     assert ENTRY2_BRIDGEID in hass.data[deconz.DOMAIN]
     assert hass.data[deconz.DOMAIN][ENTRY2_BRIDGEID].master
-
-
-async def test_service_refresh_devices(hass):
-    """Test that service can refresh devices."""
-    entry = MockConfigEntry(
-        domain=deconz.DOMAIN,
-        data={
-            deconz.config_flow.CONF_HOST: ENTRY1_HOST,
-            deconz.config_flow.CONF_PORT: ENTRY1_PORT,
-            deconz.config_flow.CONF_API_KEY: ENTRY1_API_KEY,
-            deconz.CONF_BRIDGEID: ENTRY1_BRIDGEID,
-        },
-    )
-    entry.add_to_hass(hass)
-
-    await setup_entry(hass, entry)
-
-    with patch(
-        "pydeconz.DeconzSession.async_load_parameters", return_value=mock_coro(True)
-    ):
-        await hass.services.async_call("deconz", "device_refresh", service_data={})
-        await hass.async_block_till_done()
-
-    with patch(
-        "pydeconz.DeconzSession.async_load_parameters", return_value=mock_coro(False)
-    ):
-        await hass.services.async_call("deconz", "device_refresh", service_data={})
-        await hass.async_block_till_done()
