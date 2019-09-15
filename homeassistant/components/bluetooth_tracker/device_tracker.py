@@ -1,6 +1,5 @@
 """Tracking for bluetooth devices."""
 import asyncio
-import datetime
 import logging
 from typing import Any, Callable, List, Optional, Set, Tuple
 
@@ -192,14 +191,6 @@ async def async_setup_entry(
 class BluetoothEntity(ScannerEntity):
     """Represent a tracked device that is on a scanned bluetooth network."""
 
-    mac: str
-
-    _attributes: dict
-    _config_entry: ConfigEntry
-    _last_seen: datetime.datetime
-    _name: str
-    _unsub_dispatcher: Optional[Callable]
-
     def __init__(
         self, config_entry: ConfigEntry, mac: str, device_name: str, attributes: dict
     ):
@@ -209,17 +200,7 @@ class BluetoothEntity(ScannerEntity):
         self._config_entry = config_entry
         self._last_seen = dt_util.utcnow()
         self._name = device_name
-        self._unsub_dispatcher = None
-
-    def __hash__(self):
-        """Return the hash for the entity."""
-        return hash(self.mac)
-
-    def __eq__(self, other):
-        """Check whether this entity is equal to another."""
-        if not isinstance(other, type(self)):
-            return NotImplemented
-        return self.mac == other.mac
+        self._unsub_dispatcher: Optional[Callable] = None
 
     @property
     def device_info(self):
