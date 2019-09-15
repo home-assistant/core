@@ -118,14 +118,14 @@ class SmartPlugSwitch(SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         if self._child_num >= 0:
-            self.smartplug.turn_on(index = self._child_num)
+            self.smartplug.turn_on(index=self._child_num)
         else:
             self.smartplug.turn_on()
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         if self._child_num >= 0:
-            self.smartplug.turn_off(index = self._child_num)
+            self.smartplug.turn_off(index=self._child_num)
         else:
             self.smartplug.turn_off()
 
