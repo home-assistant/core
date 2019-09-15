@@ -1,7 +1,7 @@
 """Tracking for bluetooth devices."""
 import asyncio
 import logging
-from typing import List, Set, Tuple, Optional
+from typing import Any, Callable, Iterable, List, Optional, Set, Tuple
 
 # pylint: disable=import-error
 import bluetooth
@@ -9,25 +9,33 @@ from bt_proximity import BluetoothRSSI
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
+from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import (
+    CONF_CONSIDER_HOME,
     CONF_SCAN_INTERVAL,
     CONF_TRACK_NEW,
-    DOMAIN,
     SCAN_INTERVAL,
     SOURCE_TYPE_BLUETOOTH,
 )
-from homeassistant.components.device_tracker.legacy import (
-    YAML_DEVICES,
-    async_load_config,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import callback
+from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util import dt as dt_util
 
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 BT_PREFIX = "BT_"
+
+TRACKER_UPDATE = "bluetooth_tracker_update"
 
 CONF_REQUEST_RSSI = "request_rssi"
 CONF_DEVICE_ID = "device_id"
@@ -51,11 +59,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def is_bluetooth_device(device) -> bool:
-    """Check whether a device is a bluetooth device by its mac."""
-    return device.mac and device.mac[:3].upper() == BT_PREFIX
-
-
 def discover_devices(device_id: int) -> List[Tuple[str, str]]:
     """Discover Bluetooth devices."""
     result = bluetooth.discover_devices(
@@ -69,110 +72,107 @@ def discover_devices(device_id: int) -> List[Tuple[str, str]]:
     return result
 
 
-async def see_device(
-    hass: HomeAssistantType, async_see, mac: str, device_name: str, rssi=None
-) -> None:
-    """Mark a device as seen."""
-    attributes = {}
-    if rssi is not None:
-        attributes["rssi"] = rssi
-
-    await async_see(
-        mac=f"{BT_PREFIX}{mac}",
-        host_name=device_name,
-        attributes=attributes,
-        source_type=SOURCE_TYPE_BLUETOOTH,
-    )
-
-
-async def get_tracking_devices(hass: HomeAssistantType) -> Tuple[Set[str], Set[str]]:
-    """
-    Load all known devices.
-
-    We just need the devices so set consider_home and home range to 0
-    """
-    yaml_path: str = hass.config.path(YAML_DEVICES)
-
-    devices = await async_load_config(yaml_path, hass, 0)
-    bluetooth_devices = [device for device in devices if is_bluetooth_device(device)]
-
-    devices_to_track: Set[str] = {
-        device.mac[3:] for device in bluetooth_devices if device.track
-    }
-    devices_to_not_track: Set[str] = {
-        device.mac[3:] for device in bluetooth_devices if not device.track
-    }
-
-    return devices_to_track, devices_to_not_track
-
-
 def lookup_name(mac: str) -> Optional[str]:
     """Lookup a Bluetooth device name."""
     _LOGGER.debug("Scanning %s", mac)
     return bluetooth.lookup_name(mac, timeout=5)
 
 
-def get_discover_new_devices_value(config: dict) -> bool:
-    """Get the configuration value of discovering new devices."""
-    legacy_value = config.get(CONF_TRACK_NEW)
-    if legacy_value is not None:
-        _LOGGER.warning(
-            "Using deprecated option '%s', switch to '%s'.",
-            CONF_TRACK_NEW,
-            CONF_DISCOVER_NEW_DEVICES,
-        )
-        return legacy_value
-
-    return config.get(CONF_DISCOVER_NEW_DEVICES)
-
-
-async def async_setup_scanner(
-    hass: HomeAssistantType, config: dict, async_see, discovery_info=None
+async def load_initial_entities(
+    hass: HomeAssistantType,
+    config_entry: ConfigEntry,
+    async_add_entities: Callable[List[Any]],
 ):
-    """Set up the Bluetooth Scanner."""
-    device_id: int = config.get(CONF_DEVICE_ID)
-    interval = config.get(CONF_SCAN_INTERVAL)
-    request_rssi: bool = config.get(CONF_REQUEST_RSSI)
-    discover_new_devices = get_discover_new_devices_value(config)
+    """Load tracked entities from device registry."""
+    device_registry_instance = await device_registry.async_get_registry(hass)
+    devices: Iterable[BluetoothEntity] = (
+        device
+        for device in device_registry_instance.devices.values()
+        for domain, mac in device.identifiers
+        if domain == DOMAIN
+    )
+
+    entities: Set[BluetoothEntity] = set()
+    for device in devices:
+        hass.data[DOMAIN]["devices"].add(device.mac)
+        entity = BluetoothEntity(config_entry, device.mac, device.name, {})
+        entities.add(entity)
+
+    async_add_entities(list(entities))
+
+    return entities
+
+
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    config_entry: ConfigEntry,
+    async_add_entities: Callable[List[Any]],
+):
+    """Set up a bluetooth device tracker."""
+    device_id: int = config_entry.data[CONF_DEVICE_ID]
+    interval = config_entry.options[CONF_SCAN_INTERVAL]
+    request_rssi: bool = config_entry.options[CONF_REQUEST_RSSI]
+    track_new: bool = config_entry.options[CONF_TRACK_NEW]
+    _LOGGER.debug("Tracking new devices is set to %s", track_new)
 
     update_bluetooth_lock = asyncio.Lock()
-    devices_to_track, devices_to_not_track = await get_tracking_devices(hass)
-
-    if not devices_to_track and not discover_new_devices:
-        _LOGGER.debug("No Bluetooth devices to track and not discovering new devices")
+    entities = load_initial_entities(hass, config_entry, async_add_entities)
 
     if request_rssi:
         _LOGGER.debug("Detecting RSSI for devices")
 
+    def see_device(mac: str, device_name: str, rssi=None) -> None:
+        """Mark a device as seen."""
+        attributes = {}
+        if rssi is not None:
+            attributes["rssi"] = rssi
+
+        device = BluetoothEntity(config_entry, mac, device_name, attributes)
+        if device in entities:
+            async_dispatcher_send(hass, TRACKER_UPDATE, mac, device_name, attributes)
+            return
+
+        entities.add(device)
+        async_add_entities([device])
+
     async def perform_bluetooth_update():
         """Discover Bluetooth devices and update status."""
-
         _LOGGER.debug("Performing Bluetooth devices discovery and update")
-        tasks = []
+
+        tracked_devices = set()
 
         try:
-            if discover_new_devices:
+            if track_new:
                 devices = await hass.async_add_executor_job(discover_devices, device_id)
                 for mac, device_name in devices:
-                    if mac not in devices_to_track and mac not in devices_to_not_track:
-                        devices_to_track.add(mac)
+                    device = next((d for d in entities if d.unique_id == mac), None)
+                    if not device:
+                        device = BluetoothEntity(config_entry, mac, device_name, {})
 
-            for mac in devices_to_track:
-                device_name = await hass.async_add_executor_job(lookup_name, mac)
+                    rssi = None
+                    if request_rssi:
+                        client = BluetoothRSSI(device.mac)
+                        rssi = await hass.async_add_executor_job(client.request_rssi)
+                        client.close()
+
+                    see_device(device.mac, device.device_name, rssi)
+                    tracked_devices.add(device)
+
+            # Only lookup names for un-checked devices
+            entities_to_update = entities - tracked_devices
+            for device in entities_to_update:
+                device_name = await hass.async_add_executor_job(lookup_name, device.mac)
                 if device_name is None:
                     # Could not lookup device name
                     continue
 
                 rssi = None
                 if request_rssi:
-                    client = BluetoothRSSI(mac)
+                    client = BluetoothRSSI(device.mac)
                     rssi = await hass.async_add_executor_job(client.request_rssi)
                     client.close()
 
-                tasks.append(see_device(hass, async_see, mac, device_name, rssi))
-
-            if tasks:
-                await asyncio.wait(tasks)
+                see_device(device.mac, device_name, rssi)
 
         except bluetooth.BluetoothError:
             _LOGGER.exception("Error looking up Bluetooth device")
@@ -183,7 +183,8 @@ async def async_setup_scanner(
         # If an update is in progress, we don't do anything
         if update_bluetooth_lock.locked():
             _LOGGER.debug(
-                "Previous execution of update_bluetooth is taking longer than the scheduled update of interval %s",
+                "Previous execution of update_bluetooth "
+                "is taking longer than the scheduled update of interval %s",
                 interval,
             )
             return
@@ -191,20 +192,93 @@ async def async_setup_scanner(
         async with update_bluetooth_lock:
             await perform_bluetooth_update()
 
-    async def handle_manual_update_bluetooth(call):
-        """Update bluetooth devices on demand."""
-
-        await update_bluetooth()
-
-    # Launch initial discovery and update
     hass.async_create_task(update_bluetooth())
-
-    # Schedule interval for discovery and updates
     async_track_time_interval(hass, update_bluetooth, interval)
 
-    # Allow manual triggering of discovery and update
-    hass.services.async_register(
-        DOMAIN, "bluetooth_tracker_update", handle_manual_update_bluetooth
-    )
 
-    return True
+class BluetoothEntity(ScannerEntity):
+    """Represent a tracked device that is on a scanned bluetooth network."""
+
+    def __init__(
+        self, config_entry: ConfigEntry, mac: str, device_name: str, attributes: dict
+    ):
+        """Set up bluetooth entity."""
+        self._attributes = attributes
+        self._config_entry = config_entry
+        self._last_seen = dt_util.utcnow()
+        self._mac = mac
+        self._name = device_name
+        self._unsub_dispatcher = None
+
+    def __hash__(self):
+        """Return the hash for the entity."""
+        return hash(self.mac)
+
+    def __eq__(self, other):
+        """Check whether this entity is equal to another."""
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return self.mac == other.mac
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {"name": self.name, "identifiers": {(DOMAIN, self.mac)}}
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific attributes."""
+        return self._attributes
+
+    @property
+    def is_connected(self):
+        """Return true if the device is connected to the network."""
+        if (
+            dt_util.utcnow() - self._last_seen
+            < self._config_entry.options[CONF_CONSIDER_HOME]
+        ):
+            return True
+
+        return False
+
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return self._name
+
+    @property
+    def mac(self):
+        """Return the mac address of the device."""
+        return self._mac
+
+    @property
+    def unique_id(self):
+        """Return the unique ID."""
+        return self._mac
+
+    @property
+    def source_type(self):
+        """Return the source type, eg gps or router, of the device."""
+        return SOURCE_TYPE_BLUETOOTH
+
+    async def async_added_to_hass(self):
+        """Register state update callback."""
+        _LOGGER.debug("New Bluetooth Device %s (%s)", self.name, self.mac)
+        self._unsub_dispatcher = async_dispatcher_connect(
+            self.hass, TRACKER_UPDATE, self._async_receive_data
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Clean up after entity before removal."""
+        self._unsub_dispatcher()
+
+    @callback
+    def _async_receive_data(self, mac: str, device_name: str, attributes: dict):
+        """Mark the device as seen."""
+        if mac != self.mac:
+            return
+
+        self._last_seen = dt_util.utcnow()
+        self._attributes.update(attributes)
+        self._name = device_name
+        self.async_write_ha_state()
