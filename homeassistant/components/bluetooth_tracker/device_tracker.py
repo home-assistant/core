@@ -1,7 +1,8 @@
 """Tracking for bluetooth devices."""
 import asyncio
+import datetime
 import logging
-from typing import Any, Callable, Iterable, List, Optional, Set, Tuple
+from typing import Any, Callable, List, Optional, Set, Tuple
 
 # pylint: disable=import-error
 import bluetooth
@@ -82,25 +83,25 @@ async def load_initial_entities(
     hass: HomeAssistantType,
     config_entry: ConfigEntry,
     async_add_entities: Callable[List[Any]],
-):
+) -> Set[str]:
     """Load tracked entities from device registry."""
     device_registry_instance = await device_registry.async_get_registry(hass)
-    devices: Iterable[BluetoothEntity] = (
-        device
+    macs: Set[str] = {
+        mac
         for device in device_registry_instance.devices.values()
         for domain, mac in device.identifiers
         if domain == DOMAIN
-    )
+    }
 
-    entities: Set[BluetoothEntity] = set()
-    for device in devices:
-        hass.data[DOMAIN]["devices"].add(device.mac)
-        entity = BluetoothEntity(config_entry, device.mac, device.name, {})
-        entities.add(entity)
+    entities = []
+    for mac in macs:
+        hass.data[DOMAIN]["devices"].add(mac)
+        entity = BluetoothEntity(config_entry, mac, None, {})
+        entities.append(entity)
 
-    async_add_entities(list(entities))
+    async_add_entities(entities)
 
-    return entities
+    return macs
 
 
 async def async_setup_entry(
@@ -112,11 +113,12 @@ async def async_setup_entry(
     device_id: int = config_entry.data[CONF_DEVICE_ID]
     interval = config_entry.options[CONF_SCAN_INTERVAL]
     request_rssi: bool = config_entry.options[CONF_REQUEST_RSSI]
-    track_new: bool = config_entry.options[CONF_TRACK_NEW]
-    _LOGGER.debug("Tracking new devices is set to %s", track_new)
+    discover_new_devices: bool = config_entry.options[CONF_TRACK_NEW]
+
+    _LOGGER.debug("Tracking new devices is set to %s", discover_new_devices)
 
     update_bluetooth_lock = asyncio.Lock()
-    entities = load_initial_entities(hass, config_entry, async_add_entities)
+    macs = load_initial_entities(hass, config_entry, async_add_entities)
 
     if request_rssi:
         _LOGGER.debug("Detecting RSSI for devices")
@@ -127,52 +129,43 @@ async def async_setup_entry(
         if rssi is not None:
             attributes["rssi"] = rssi
 
-        device = BluetoothEntity(config_entry, mac, device_name, attributes)
-        if device in entities:
+        if mac in macs:
             async_dispatcher_send(hass, TRACKER_UPDATE, mac, device_name, attributes)
             return
 
-        entities.add(device)
-        async_add_entities([device])
+        entity = BluetoothEntity(config_entry, mac, device_name, attributes)
+        macs.add(mac)
+        async_add_entities([entity])
+
+    async def retrieve_bluetooth_rssi(mac: str) -> Optional[int]:
+        if not request_rssi:
+            return None
+
+        client = BluetoothRSSI(mac)
+        rssi = await hass.async_add_executor_job(client.request_rssi)
+        client.close()
+
+        return rssi
 
     async def perform_bluetooth_update():
         """Discover Bluetooth devices and update status."""
         _LOGGER.debug("Performing Bluetooth devices discovery and update")
 
-        tracked_devices = set()
-
         try:
-            if track_new:
+            if discover_new_devices:
                 devices = await hass.async_add_executor_job(discover_devices, device_id)
                 for mac, device_name in devices:
-                    device = next((d for d in entities if d.unique_id == mac), None)
-                    if not device:
-                        device = BluetoothEntity(config_entry, mac, device_name, {})
+                    # macs is already a set, won't be added twice
+                    macs.add(mac)
 
-                    rssi = None
-                    if request_rssi:
-                        client = BluetoothRSSI(device.mac)
-                        rssi = await hass.async_add_executor_job(client.request_rssi)
-                        client.close()
-
-                    see_device(device.mac, device.device_name, rssi)
-                    tracked_devices.add(device)
-
-            # Only lookup names for un-checked devices
-            entities_to_update = entities - tracked_devices
-            for device in entities_to_update:
-                device_name = await hass.async_add_executor_job(lookup_name, device.mac)
+            for mac in macs:
+                device_name = await hass.async_add_executor_job(lookup_name, mac)
                 if device_name is None:
-                    # Could not lookup device name
+                    # Could not lookup device name, device probably away
                     continue
 
-                rssi = None
-                if request_rssi:
-                    client = BluetoothRSSI(device.mac)
-                    rssi = await hass.async_add_executor_job(client.request_rssi)
-                    client.close()
-
-                see_device(device.mac, device_name, rssi)
+                rssi = await retrieve_bluetooth_rssi(mac)
+                see_device(mac, device_name, rssi)
 
         except bluetooth.BluetoothError:
             _LOGGER.exception("Error looking up Bluetooth device")
@@ -199,14 +192,22 @@ async def async_setup_entry(
 class BluetoothEntity(ScannerEntity):
     """Represent a tracked device that is on a scanned bluetooth network."""
 
+    mac: str
+
+    _attributes: dict
+    _config_entry: ConfigEntry
+    _last_seen: datetime.datetime
+    _name: str
+    _unsub_dispatcher: Optional[Callable]
+
     def __init__(
         self, config_entry: ConfigEntry, mac: str, device_name: str, attributes: dict
     ):
         """Set up bluetooth entity."""
+        self.mac = mac
         self._attributes = attributes
         self._config_entry = config_entry
         self._last_seen = dt_util.utcnow()
-        self._mac = mac
         self._name = device_name
         self._unsub_dispatcher = None
 
@@ -247,14 +248,9 @@ class BluetoothEntity(ScannerEntity):
         return self._name
 
     @property
-    def mac(self):
-        """Return the mac address of the device."""
-        return self._mac
-
-    @property
     def unique_id(self):
         """Return the unique ID."""
-        return self._mac
+        return self.mac
 
     @property
     def source_type(self):
