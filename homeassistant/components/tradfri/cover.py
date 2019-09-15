@@ -1,14 +1,14 @@
 """Support for IKEA Tradfri covers."""
 import logging
 
+from pytradfri.error import PytradfriError
+
 from homeassistant.components.cover import CoverDevice, ATTR_POSITION
 from homeassistant.core import callback
 from . import DOMAIN as TRADFRI_DOMAIN, KEY_API, KEY_GATEWAY
 from .const import CONF_GATEWAY_ID
 
 _LOGGER = logging.getLogger(__name__)
-
-IKEA = "IKEA of Sweden"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -90,8 +90,7 @@ class TradfriCover(CoverDevice):
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        if ATTR_POSITION in kwargs:
-            self._cover_control.set_state(kwargs[ATTR_POSITION])
+        self._cover_control.set_state(kwargs[ATTR_POSITION])
 
     def open_cover(self, **kwargs):
         """Open the cover."""
@@ -104,8 +103,6 @@ class TradfriCover(CoverDevice):
     @callback
     def _async_start_observe(self, exc=None):
         """Start observation of cover."""
-        from pytradfri.error import PytradfriError
-
         if exc:
             self._available = False
             self.async_schedule_update_ha_state()
