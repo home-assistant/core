@@ -19,7 +19,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     devices_commands = await api(gateway.get_devices())
     devices = await api(devices_commands)
-    covers = [dev for dev in devices if dev.has_blink_control]
+    covers = [dev for dev in devices if dev.has_blind_control]
     if covers:
         async_add_entities(
             TraddfriCover(cover, api, gateway_id) for cover in covers
