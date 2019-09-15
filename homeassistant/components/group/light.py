@@ -250,7 +250,6 @@ class LightGroup(light.Light):
             ),
         )
 
-
     async def async_turn_off(self, **kwargs):
         """Forward the turn_off command to all lights in the light group."""
         data = {ATTR_ENTITY_ID: self._entity_ids}
@@ -261,7 +260,6 @@ class LightGroup(light.Light):
         await self.hass.services.async_call(
             light.DOMAIN, light.SERVICE_TURN_OFF, data, blocking=True
         )
-
 
     async def async_update(self):
         """Query all members and determine the light group state."""
