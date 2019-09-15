@@ -95,7 +95,8 @@ async def async_configure_service(hass, data):
 
     gateway = get_master_gateway(hass)
     if CONF_BRIDGEID in data:
-        gateway = hass.data[DOMAIN][data[CONF_BRIDGEID]]
+        bridgeid = data.pop(CONF_BRIDGEID)
+        gateway = hass.data[DOMAIN][bridgeid]
 
     if entity_id:
         try:
