@@ -141,14 +141,12 @@ class AirlyAirQuality(AirQualityEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        self._attrs.update({ATTR_CAQI_ADVICE: self.data[ATTR_CAQI_ADVICE]})
-        self._attrs.update({ATTR_CAQI_LEVEL: self.data[ATTR_CAQI_LEVEL]})
-        self._attrs.update({LABEL_PM_2_5_LIMIT: self.data[ATTR_PM_2_5_LIMIT]})
-        self._attrs.update(
-            {LABEL_PM_2_5_PERCENT: round(self.data[ATTR_PM_2_5_PERCENT])}
-        )
-        self._attrs.update({LABEL_PM_10_LIMIT: self.data[ATTR_PM_10_LIMIT]})
-        self._attrs.update({LABEL_PM_10_PERCENT: round(self.data[ATTR_PM_10_PERCENT])})
+        self._attrs[ATTR_CAQI_ADVICE] = self.data[ATTR_CAQI_ADVICE]
+        self._attrs[ATTR_CAQI_LEVEL] = self.data[ATTR_CAQI_LEVEL]
+        self._attrs[LABEL_PM_2_5_LIMIT] = self.data[ATTR_PM_2_5_LIMIT]
+        self._attrs[LABEL_PM_2_5_PERCENT] = round(self.data[ATTR_PM_2_5_PERCENT])
+        self._attrs[LABEL_PM_10_LIMIT] = self.data[ATTR_PM_10_LIMIT]
+        self._attrs[LABEL_PM_10_PERCENT] = round(self.data[ATTR_PM_10_PERCENT])
         return self._attrs
 
     async def async_update(self):
