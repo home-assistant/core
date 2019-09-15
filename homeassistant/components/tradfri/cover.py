@@ -22,11 +22,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     covers = [dev for dev in devices if dev.has_blind_control]
     if covers:
         async_add_entities(
-            TraddfriCover(cover, api, gateway_id) for cover in covers
+            TradfriCover(cover, api, gateway_id) for cover in covers
         )
 
 
-class TraddfriCover(CoverDevice):
+class TradfriCover(CoverDevice):
     """The platform class required by Home Assistant."""
 
     def __init__(self, cover, api, gateway_id):
@@ -34,7 +34,7 @@ class TraddfriCover(CoverDevice):
         self._api = api
         self._unique_id = f"{gateway_id}-{cover.id}"
         self._cover = None
-        self._switch_control = None
+        self._cover_control = None
         self._cover_data = None
         self._name = None
         self._available = True
