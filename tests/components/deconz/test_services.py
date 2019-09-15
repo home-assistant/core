@@ -87,10 +87,12 @@ async def setup_deconz_integration(hass, options):
 
 async def test_service_setup(hass):
     """Verify service setup works."""
+    assert deconz.services.DECONZ_SERVICES not in hass.data
     with patch(
         "homeassistant.core.ServiceRegistry.async_register", return_value=Mock(True)
     ) as async_register:
         await deconz.services.async_setup_services(hass)
+        assert hass.data[deconz.services.DECONZ_SERVICES] is True
         assert async_register.call_count == 2
 
 
