@@ -2,7 +2,7 @@
 import logging
 import time
 
-from pyHS100 import SmartDeviceException, SmartPlug
+from pyHS100 import SmartDeviceException, SmartPlug, SmartDevice
 
 from homeassistant.components.switch import (
     ATTR_CURRENT_POWER_W,
@@ -41,8 +41,15 @@ def add_entity(device: SmartPlug, async_add_entities):
     # exception that is caught by async_add_entities_retry which
     # will try again later.
     device.get_sysinfo()
+    children = device.sys_info.get("children")
+    ds = []
+    if children:
+        for i in range(len(children)):
+            ds.append(SmartPlugSwitch(device, i))
+    else:
+        ds.append(SmartPlugSwitch(device))
 
-    async_add_entities([SmartPlugSwitch(device)], update_before_add=True)
+    async_add_entities(ds, update_before_add=True)
 
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
@@ -57,23 +64,30 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_ent
 class SmartPlugSwitch(SwitchDevice):
     """Representation of a TPLink Smart Plug switch."""
 
-    def __init__(self, smartplug: SmartPlug):
+    def __init__(self, smartplug: SmartDevice, child_num=-1):
         """Initialize the switch."""
-        self.smartplug = smartplug
+        self.smartplug = smartplug  # this could be a smartstrip, too
         self._sysinfo = None
         self._state = None
         self._available = False
+        self._child_num = child_num
         # Set up emeter cache
         self._emeter_params = {}
 
         self._mac = None
         self._alias = None
         self._model = None
+        self._uid = None
 
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._mac
+        if self._uid is None:
+            if self._child_num >= 0:
+                self._uid = "%s_%d" % (self._mac, self._child_num)
+            else:
+                self._uid = self._mac
+        return self._uid
 
     @property
     def name(self):
@@ -103,11 +117,17 @@ class SmartPlugSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        self.smartplug.turn_on()
+        if self._child_num >= 0:
+            self.smartplug.turn_on(index = self._child_num)
+        else:
+            self.smartplug.turn_on()
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        self.smartplug.turn_off()
+        if self._child_num >= 0:
+            self.smartplug.turn_off(index = self._child_num)
+        else:
+            self.smartplug.turn_off()
 
     @property
     def device_state_attributes(self):
@@ -118,12 +138,19 @@ class SmartPlugSwitch(SwitchDevice):
         """Update the TP-Link switch's state."""
         try:
             if not self._sysinfo:
+                _LOGGER.debug("tplink sysinfo for %s is %s", self, self.smartplug.sys_info)
                 self._sysinfo = self.smartplug.sys_info
                 self._mac = self.smartplug.mac
-                self._alias = self.smartplug.alias
+                if self._child_num >= 0:
+                    self._alias = self._sysinfo["children"][self._child_num]["alias"]
+                else:
+                    self._alias = self.smartplug.alias
                 self._model = self.smartplug.model
 
-            self._state = self.smartplug.state == self.smartplug.SWITCH_STATE_ON
+            if self._child_num >= 0:
+                self._state = self.smartplug.is_on(index=self._child_num)
+            else:
+                self._state = self.smartplug.is_on
 
             if self.smartplug.has_emeter:
                 emeter_readings = self.smartplug.get_emeter_realtime()
