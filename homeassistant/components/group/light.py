@@ -198,7 +198,9 @@ class LightGroup(light.Light):
             # Walk through initial entity ids, split entity lists by support
             for entity_id in self._entity_ids:
                 state = self.hass.states.get(entity_id)
-                if state:
+                if not state:
+                    continue
+                else:
                     support = state.attributes.get(ATTR_SUPPORTED_FEATURES)
                     # Only pass color temperature to supported entity_ids
                     if bool(support & SUPPORT_COLOR) and not bool(
@@ -220,32 +222,34 @@ class LightGroup(light.Light):
         if ATTR_FLASH in kwargs:
             data[ATTR_FLASH] = kwargs[ATTR_FLASH]
 
-        if emulate_color_temp_entity_ids:
-            emulate_color_temp_data = data.copy()
-            temp_k = color_util.color_temperature_mired_to_kelvin(
-                emulate_color_temp_data[ATTR_COLOR_TEMP]
-            )
-            hs_color = color_util.color_temperature_to_hs(temp_k)
-            emulate_color_temp_data[ATTR_HS_COLOR] = hs_color
-            del emulate_color_temp_data[ATTR_COLOR_TEMP]
-
-            emulate_color_temp_data[ATTR_ENTITY_ID] = emulate_color_temp_entity_ids
-
-            await asyncio.gather(
-                self.hass.services.async_call(
-                    light.DOMAIN, light.SERVICE_TURN_ON, data, blocking=True
-                ),
-                self.hass.services.async_call(
-                    light.DOMAIN,
-                    light.SERVICE_TURN_ON,
-                    emulate_color_temp_data,
-                    blocking=True,
-                ),
-            )
-        else:
+        if not emulate_color_temp_entity_ids:
             await self.hass.services.async_call(
                 light.DOMAIN, light.SERVICE_TURN_ON, data, blocking=True
             )
+            return
+
+        emulate_color_temp_data = data.copy()
+        temp_k = color_util.color_temperature_mired_to_kelvin(
+            emulate_color_temp_data[ATTR_COLOR_TEMP]
+        )
+        hs_color = color_util.color_temperature_to_hs(temp_k)
+        emulate_color_temp_data[ATTR_HS_COLOR] = hs_color
+        del emulate_color_temp_data[ATTR_COLOR_TEMP]
+
+        emulate_color_temp_data[ATTR_ENTITY_ID] = emulate_color_temp_entity_ids
+
+        await asyncio.gather(
+            self.hass.services.async_call(
+                light.DOMAIN, light.SERVICE_TURN_ON, data, blocking=True
+            ),
+            self.hass.services.async_call(
+                light.DOMAIN,
+                light.SERVICE_TURN_ON,
+                emulate_color_temp_data,
+                blocking=True,
+            ),
+        )
+
 
     async def async_turn_off(self, **kwargs):
         """Forward the turn_off command to all lights in the light group."""
@@ -257,6 +261,7 @@ class LightGroup(light.Light):
         await self.hass.services.async_call(
             light.DOMAIN, light.SERVICE_TURN_OFF, data, blocking=True
         )
+
 
     async def async_update(self):
         """Query all members and determine the light group state."""
