@@ -60,9 +60,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up ecobee via a config entry."""
-    if DATA_ECOBEE_CONFIG not in hass.data:
-        hass.data[DATA_ECOBEE_CONFIG] = {}
-
     if not entry.options:
         """Loading via config entry for the first time, set up options."""
         await async_populate_options(hass, entry)
