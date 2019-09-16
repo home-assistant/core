@@ -42,14 +42,14 @@ def add_entity(device: SmartPlug, async_add_entities):
     # will try again later.
     device.get_sysinfo()
     children = device.sys_info.get("children")
-    ds = []
+    devices = []
     if children:
         for i in range(len(children)):
-            ds.append(SmartPlugSwitch(device, i))
+            devices.append(SmartPlugSwitch(device, i))
     else:
-        ds.append(SmartPlugSwitch(device))
+        devices.append(SmartPlugSwitch(device))
 
-    async_add_entities(ds, update_before_add=True)
+    async_add_entities(devices, update_before_add=True)
 
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
