@@ -209,7 +209,7 @@ def _change_wm_overscan(hass, call):
     elif new_value == "left":
         comm = (
             r'su -c "wm overscan '
-            + str(int(cl) + 3)
+            + str(int(cl) - 3)
             + ","
             + str(ct)
             + ","
@@ -223,7 +223,7 @@ def _change_wm_overscan(hass, call):
             r'su -c "wm overscan '
             + str(cl)
             + ","
-            + str(int(ct) + 3)
+            + str(int(ct) - 3)
             + ","
             + str(cr)
             + ","
@@ -237,7 +237,7 @@ def _change_wm_overscan(hass, call):
             + ","
             + str(ct)
             + ","
-            + str(int(cr) + 3)
+            + str(int(cr) - 3)
             + ","
             + str(cb)
             + '"'
@@ -251,13 +251,13 @@ def _change_wm_overscan(hass, call):
             + ","
             + str(cr)
             + ","
-            + str(int(cb) + 3)
+            + str(int(cb) - 3)
             + '"'
         )
     elif new_value == "-left":
         comm = (
             r'su -c "wm overscan '
-            + str(int(cl) - 3)
+            + str(int(cl) + 3)
             + ","
             + str(ct)
             + ","
@@ -271,7 +271,7 @@ def _change_wm_overscan(hass, call):
             r'su -c "wm overscan '
             + str(cl)
             + ","
-            + str(int(ct) - 3)
+            + str(int(ct) + 3)
             + ","
             + str(cr)
             + ","
@@ -285,7 +285,7 @@ def _change_wm_overscan(hass, call):
             + ","
             + str(ct)
             + ","
-            + str(int(cr) - 3)
+            + str(int(cr) + 3)
             + ","
             + str(cb)
             + '"'
@@ -299,7 +299,7 @@ def _change_wm_overscan(hass, call):
             + ","
             + str(cr)
             + ","
-            + str(int(cb) - 3)
+            + str(int(cb) + 3)
             + '"'
         )
     else:

@@ -566,6 +566,7 @@
                                             "sensor.youtubelist"
                                         ],
                                         "media_source": "Music",
+                                        "show_delete_icon": true,
                                         "title": "Lista utwor\u00f3w z YouTube",
                                         "type": "ais-list"
                                     },
@@ -588,6 +589,7 @@
                                         ],
                                         "media_source": "SpotifySearch",
                                         "title": "Wynik wyszukania na Spotify",
+                                        "show_delete_icon": true,
                                         "type": "ais-list"
                                     },
                                     "conditions": [
@@ -676,6 +678,7 @@
                                         ],
                                         "media_source": "Spotify",
                                         "title": "Lista utwor\u00f3w na Spotify",
+                                        "show_delete_icon": true,
                                         "type": "ais-list"
                                     },
                                     "conditions": [
