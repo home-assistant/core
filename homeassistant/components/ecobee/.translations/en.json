@@ -2,7 +2,7 @@
     "config": {
         "title": "ecobee",
         "step": {
-            "init": {
+            "user": {
                 "title": "ecobee API key",
                 "description": "Please enter the API key obtained from ecobee.com.",
                 "data": {"api_key": "API Key"}

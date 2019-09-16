@@ -58,7 +58,7 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "pin_request_failed"
 
         return self.async_show_form(
-            step_id="init",
+            step_id="user",
             data_schema=vol.Schema(
                 {vol.Required(CONF_API_KEY, default=stored_api_key): str}
             ),
