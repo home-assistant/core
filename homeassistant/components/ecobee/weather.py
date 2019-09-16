@@ -1,6 +1,8 @@
 """Support for displaying weather info from Ecobee API."""
 from datetime import datetime
 
+from pyecobee.const import ECOBEE_STATE_UNKNOWN
+
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_TEMP,
@@ -132,8 +134,6 @@ class EcobeeWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        from pyecobee.const import ECOBEE_STATE_UNKNOWN
-
         try:
             forecasts = []
             for day in self.weather["forecasts"]:

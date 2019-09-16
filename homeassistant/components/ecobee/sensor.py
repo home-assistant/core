@@ -1,8 +1,9 @@
 """Support for Ecobee sensors."""
+from pyecobee.const import ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN
+
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
-    STATE_UNKNOWN,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers.entity import Entity
@@ -63,10 +64,8 @@ class EcobeeSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        from pyecobee.const import ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN
-
         if self._state in [ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN]:
-            return STATE_UNKNOWN
+            return None
         elif self.type == "temperature":
             return float(self._state) / 10
         else:
