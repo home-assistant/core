@@ -38,11 +38,11 @@ async def async_setup(hass, config):
     """
     Ecobee uses config flow for configuration.
 
-    But, an existing configuration.yaml config will trigger
-    an import flow if a config entry doesn't already exist
-    to help users migrating from the old ecobee component,
-    and parameters specified in configuration.yaml will
-    overwrite options specified in the options flow.
+    But, an "ecobee:" entry in configuration.yaml will trigger an import flow
+    if a config entry doesn't already exist. If ecobee.conf exists, the import
+    flow will attempt to import it and create a config entry, to assist users
+    migrating from the old ecobee component. Otherwise, the user will have to
+    continue setting up the integration via the config flow.
     """
     hass.data[DATA_ECOBEE_CONFIG] = config[DOMAIN]
 
@@ -59,6 +59,8 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up ecobee via a config entry."""
+    if DATA_ECOBEE_CONFIG not in hass.data:
+        hass.data[DATA_ECOBEE_CONFIG] = {}
 
     if not entry.options:
         """Loading via config entry for the first time, set up options."""
@@ -137,12 +139,11 @@ async def async_populate_options(hass, config_entry):
     Options will be initially set to the values specified in
     configuration.yaml, if they exist, or, if not, the default.
     """
-    try:
-        hold_temp = hass.data[DATA_ECOBEE_CONFIG].get(CONF_HOLD_TEMP, DEFAULT_HOLD_TEMP)
-    except KeyError:
-        hold_temp = DEFAULT_HOLD_TEMP
-
-    options = {CONF_HOLD_TEMP: hold_temp}
+    options = {
+        CONF_HOLD_TEMP: hass.data[DATA_ECOBEE_CONFIG].get(
+            CONF_HOLD_TEMP, DEFAULT_HOLD_TEMP
+        )
+    }
 
     hass.config_entries.async_update_entry(config_entry, options=options)
 
@@ -150,7 +151,7 @@ async def async_populate_options(hass, config_entry):
 async def async_unload_entry(hass, config_entry):
     """Unload the config entry, but store the ecobee API key for later."""
     hass.data.pop(DOMAIN)
-    hass.data[DATA_ECOBEE_CONFIG] = {CONF_API_KEY: config_entry.data[CONF_API_KEY]}
+    hass.data[DATA_ECOBEE_CONFIG][CONF_API_KEY] = config_entry.data[CONF_API_KEY]
 
     for platform in ECOBEE_PLATFORMS:
         await hass.config_entries.async_forward_entry_unload(config_entry, platform)

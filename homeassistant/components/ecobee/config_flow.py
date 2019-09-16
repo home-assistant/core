@@ -2,9 +2,17 @@
 import voluptuous as vol
 from copy import copy
 
+from pyecobee import (
+    Ecobee,
+    ECOBEE_CONFIG_FILENAME,
+    ECOBEE_API_KEY,
+    ECOBEE_REFRESH_TOKEN,
+)
+
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
+from homeassistant.util.json import load_json
 
 from .const import (
     CONF_HOLD_TEMP,
@@ -15,7 +23,6 @@ from .const import (
 )
 
 
-@config_entries.HANDLERS.register(DOMAIN)
 class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle an ecobee config flow."""
 
@@ -33,11 +40,11 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._ecobee = None
 
     async def async_step_user(self, user_input=None):
-        """Handle a flow initialized by the user."""
-        return await self.async_step_init(user_input)
+        """Handle a flow initiated by the user."""
+        if self._async_current_entries():
+            """Config entry already exists, only one allowed."""
+            return self.async_abort(reason="one_instance_only")
 
-    async def async_step_init(self, user_input=None):
-        """Handle a flow start."""
         errors = {}
         stored_api_key = (
             self.hass.data[DATA_ECOBEE_CONFIG].get(CONF_API_KEY)
@@ -45,17 +52,9 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else None
         )
 
-        if self._async_current_entries():
-            """Config entry currently exists, only one allowed."""
-            return self.async_abort(reason="one_instance_only")
-
         if user_input is not None:
             """Use the user-supplied API key to attempt to obtain a PIN from ecobee."""
-            from pyecobee import Ecobee, ECOBEE_API_KEY
-
-            config = {ECOBEE_API_KEY: user_input[CONF_API_KEY]}
-
-            self._ecobee = Ecobee(config=config)
+            self._ecobee = Ecobee(config={ECOBEE_API_KEY: user_input[CONF_API_KEY]})
 
             if await self.hass.async_add_executor_job(self._ecobee.request_pin):
                 """We have a PIN; move to the next step of the flow."""
@@ -95,51 +94,42 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_import(self, import_data):
-        """Import ecobee config from an existing ecobee.conf file.
-
-        This flow is triggered by `async_setup` if no existing entry exists
-        and if ecobee.conf exists, allowing pre-config-flow ecobee component
-        users an easy migration path to using a config entry.
-
-        We will attempt to validate the credentials found in ecobee.conf
-        and create an entry if valid. Otherwise, we will abort and the user
-        will need to redo the authorization process via a new config flow.
         """
-        import aiofiles
-        import json
-        from pyecobee import (
-            Ecobee,
-            ECOBEE_CONFIG_FILENAME,
-            ECOBEE_API_KEY,
-            ECOBEE_REFRESH_TOKEN,
-        )
+        Import ecobee config from configuration.yaml.
 
-        config_file = self.hass.config.path(ECOBEE_CONFIG_FILENAME)
-
-        async with aiofiles.open(config_file, "r") as f:
-            legacy_config = json.loads(await f.read())
-
+        Triggered by async_setup only if a config entry doesn't already exist.
+        If ecobee.conf exists, we will attempt to validate the credentials
+        and create an entry if valid. Otherwise, we will delegate to the user
+        step so that the user can continue the config flow.
+        """
         try:
+            legacy_config = await self.hass.async_add_executor_job(
+                load_json, self.hass.config.path(ECOBEE_CONFIG_FILENAME)
+            )
             ecobee = Ecobee(
                 config={
                     ECOBEE_API_KEY: legacy_config[ECOBEE_API_KEY],
                     ECOBEE_REFRESH_TOKEN: legacy_config[ECOBEE_REFRESH_TOKEN],
                 }
             )
-
             if await self.hass.async_add_executor_job(ecobee.refresh_tokens):
+                """Credentials found and validated; create the entry."""
+                _LOGGER.debug(
+                    "Valid ecobee configuration found for import, creating config entry"
+                )
                 return self.async_create_entry(
                     title=DOMAIN,
                     data={
-                        CONF_API_KEY: legacy_config[ECOBEE_API_KEY],
-                        CONF_REFRESH_TOKEN: legacy_config[ECOBEE_REFRESH_TOKEN],
+                        CONF_API_KEY: ecobee.api_key,
+                        CONF_REFRESH_TOKEN: ecobee.refresh_token,
                     },
                 )
-            else:
-                _LOGGER.info("Bad ecobee tokens on import; requesting reauthorization.")
-                return await self.async_step_user()
-        except (KeyError, TypeError):
-            self.async_abort(reason="credentials_not_found")
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.debug(
+                "No valid ecobee.conf configuration found for import, delegating to user step"
+            )
+
+        return await self.async_step_user()
 
 
 class EcobeeOptionsFlowHandler(config_entries.OptionsFlow):
