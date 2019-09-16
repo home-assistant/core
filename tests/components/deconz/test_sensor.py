@@ -251,15 +251,3 @@ async def test_allow_clip_sensors(hass):
 
     clip_light_level_sensor = hass.states.get("sensor.clip_light_level_sensor")
     assert clip_light_level_sensor.state == "999.8"
-
-
-# async def test_do_not_allow_clipsensor(hass):
-#     """Test that clip sensors can be ignored."""
-#     gateway = await setup_gateway(hass, {}, allow_clip_sensor=False)
-#     sensor = Mock()
-#     sensor.name = "name"
-#     sensor.type = "CLIPTemperature"
-#     sensor.register_async_callback = Mock()
-#     async_dispatcher_send(hass, gateway.async_signal_new_device("sensor"), [sensor])
-#     await hass.async_block_till_done()
-#     assert len(gateway.deconz_ids) == 0
