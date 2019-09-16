@@ -1,9 +1,12 @@
 """Collection of useful functions for the HomeKit component."""
-from collections import OrderedDict, namedtuple
 import logging
+from collections import OrderedDict, namedtuple
+from pprint import pprint
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util.temperature as temp_util
 from homeassistant.components import fan, media_player, sensor
 from homeassistant.const import (
     ATTR_CODE,
@@ -13,9 +16,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import split_entity_id
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.temperature as temp_util
-
 from .const import (
     CONF_FEATURE,
     CONF_FEATURE_LIST,
@@ -28,7 +28,18 @@ from .const import (
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
     HOMEKIT_NOTIFY_ID,
-    MEDIA_PLAYER_KEY_NAMES,
+    MEDIA_PLAYER_KEY_ARROW_DOWN,
+    MEDIA_PLAYER_KEY_ARROW_LEFT,
+    MEDIA_PLAYER_KEY_ARROW_RIGHT,
+    MEDIA_PLAYER_KEY_ARROW_UP,
+    MEDIA_PLAYER_KEY_BACK,
+    MEDIA_PLAYER_KEY_EXIT,
+    MEDIA_PLAYER_KEY_FAST_FORWARD,
+    MEDIA_PLAYER_KEY_INFORMATION,
+    MEDIA_PLAYER_KEY_NEXT_TRACK,
+    MEDIA_PLAYER_KEY_PREVIOUS_TRACK,
+    MEDIA_PLAYER_KEY_REWIND,
+    MEDIA_PLAYER_KEY_SELECT,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -50,11 +61,27 @@ BASIC_INFO_SCHEMA = vol.Schema(
     }
 )
 
+KEY_ACTION_NAMES = [
+    FEATURE_PLAY_PAUSE,
+    MEDIA_PLAYER_KEY_ARROW_DOWN,
+    MEDIA_PLAYER_KEY_ARROW_LEFT,
+    MEDIA_PLAYER_KEY_ARROW_RIGHT,
+    MEDIA_PLAYER_KEY_ARROW_UP,
+    MEDIA_PLAYER_KEY_BACK,
+    MEDIA_PLAYER_KEY_EXIT,
+    MEDIA_PLAYER_KEY_FAST_FORWARD,
+    MEDIA_PLAYER_KEY_INFORMATION,
+    MEDIA_PLAYER_KEY_NEXT_TRACK,
+    MEDIA_PLAYER_KEY_PREVIOUS_TRACK,
+    MEDIA_PLAYER_KEY_REWIND,
+    MEDIA_PLAYER_KEY_SELECT,
+]
+
 MEDIA_PLAYER_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
-        vol.Optional(CONF_FEATURE_LIST, default=None): cv.ensure_list,
-        vol.Optional(CONF_KEY_ACTIONS, default=None): vol.Schema({
-            vol.In(MEDIA_PLAYER_KEY_NAMES.values()): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_FEATURE_LIST, default=[]): cv.ensure_list,
+        vol.Optional(CONF_KEY_ACTIONS, default={}): vol.Schema({
+            vol.In(KEY_ACTION_NAMES): cv.SCRIPT_SCHEMA,
         })
     },
 )
@@ -117,6 +144,7 @@ def validate_entity_config(values):
             config = CODE_SCHEMA(config)
 
         elif domain == media_player.const.DOMAIN:
+            pprint(config)
             config = MEDIA_PLAYER_SCHEMA(config)
             feature_list = {}
             for feature in config[CONF_FEATURE_LIST]:

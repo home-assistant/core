@@ -1,4 +1,5 @@
 """Test HomeKit util module."""
+
 import pytest
 import voluptuous as vol
 
@@ -16,7 +17,7 @@ from homeassistant.components.homekit.const import (
     TYPE_SPRINKLER,
     TYPE_SWITCH,
     TYPE_VALVE,
-)
+    CONF_KEY_ACTIONS, MEDIA_PLAYER_KEY_ARROW_LEFT)
 from homeassistant.components.homekit.util import (
     HomeKitSpeedMapping,
     SpeedRange,
@@ -29,6 +30,7 @@ from homeassistant.components.homekit.util import (
     validate_entity_config as vec,
     validate_media_player_features,
 )
+from homeassistant.components.notify import ATTR_DATA
 from homeassistant.components.persistent_notification import (
     ATTR_MESSAGE,
     ATTR_NOTIFICATION_ID,
@@ -42,13 +44,12 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-)
+    ATTR_SERVICE)
 from homeassistant.core import State
-
 from tests.common import async_mock_service
 
 
-def test_validate_entity_config():
+def test_validate_entity_config(MEDIA_PLAYER_KEY_LEFT=None):
     """Test validate entities."""
     configs = [
         None,
@@ -113,17 +114,35 @@ def test_validate_entity_config():
     }
 
     assert vec({"media_player.demo": {}}) == {
-        "media_player.demo": {CONF_FEATURE_LIST: {}, CONF_LOW_BATTERY_THRESHOLD: 20}
+        "media_player.demo": {
+            CONF_FEATURE_LIST: {},
+            CONF_KEY_ACTIONS: {},
+            CONF_LOW_BATTERY_THRESHOLD: 20,
+        },
     }
     config = {
         CONF_FEATURE_LIST: [
             {CONF_FEATURE: FEATURE_ON_OFF},
             {CONF_FEATURE: FEATURE_PLAY_PAUSE},
-        ]
+        ],
+        CONF_KEY_ACTIONS: {
+            MEDIA_PLAYER_KEY_ARROW_LEFT: {
+                ATTR_SERVICE: 'domain.service',
+                ATTR_DATA: {}
+            }
+        }
     }
     assert vec({"media_player.demo": config}) == {
         "media_player.demo": {
             CONF_FEATURE_LIST: {FEATURE_ON_OFF: {}, FEATURE_PLAY_PAUSE: {}},
+            CONF_KEY_ACTIONS: {
+                MEDIA_PLAYER_KEY_ARROW_LEFT: [
+                    {
+                        ATTR_SERVICE: 'domain.service',
+                        ATTR_DATA: {}
+                    }
+                ]
+            },
             CONF_LOW_BATTERY_THRESHOLD: 20,
         }
     }

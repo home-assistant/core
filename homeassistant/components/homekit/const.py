@@ -176,18 +176,16 @@ THRESHOLD_CO2 = 1000
 DEFAULT_MIN_TEMP_WATER_HEATER = 40  # °C
 DEFAULT_MAX_TEMP_WATER_HEATER = 60  # °C
 
-MEDIA_PLAYER_KEY_NAMES = {
-    0: "rewind",
-    1: "fast_forward",
-    2: "next_track",
-    3: "previous_track",
-    4: "arrow_up",
-    5: "arrow_down",
-    6: "arrow_left",
-    7: "arrow_right",
-    8: "select",
-    9: "back",
-    10: "exit",
-    11: "play_pause",
-    15: "information",
-}
+MEDIA_PLAYER_KEY_ARROW_DOWN = 'arrow_down'
+MEDIA_PLAYER_KEY_ARROW_LEFT = 'arrow_left'
+MEDIA_PLAYER_KEY_ARROW_RIGHT = 'arrow_right'
+MEDIA_PLAYER_KEY_ARROW_UP = 'arrow_up'
+MEDIA_PLAYER_KEY_BACK = 'back'
+MEDIA_PLAYER_KEY_EXIT = 'exit'
+MEDIA_PLAYER_KEY_FAST_FORWARD = 'fast_forward'
+MEDIA_PLAYER_KEY_INFORMATION = 'information'
+MEDIA_PLAYER_KEY_NEXT_TRACK = 'next_track'
+MEDIA_PLAYER_KEY_PLAY_PAUSE = 'play_pause'
+MEDIA_PLAYER_KEY_PREVIOUS_TRACK = 'previous_track'
+MEDIA_PLAYER_KEY_REWIND = 'rewind'
+MEDIA_PLAYER_KEY_SELECT = 'select'
