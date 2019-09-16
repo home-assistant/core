@@ -1,4 +1,5 @@
 """Support for ecobee."""
+import asyncio
 from datetime import timedelta
 import voluptuous as vol
 
@@ -152,7 +153,10 @@ async def async_unload_entry(hass, config_entry):
     """Unload the config entry and platforms."""
     hass.data.pop(DOMAIN)
 
+    tasks = []
     for platform in ECOBEE_PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(config_entry, platform)
+        tasks.append(
+            hass.config_entries.async_forward_entry_unload(config_entry, platform)
+        )
 
-    return True
+    return all(await asyncio.gather(*tasks))
