@@ -10,24 +10,25 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
-from homeassistant.const import (
-    CONF_HOST, CONF_PORT)
+from homeassistant.const import CONF_HOST, CONF_PORT
 
 from .const import DOMAIN, HOST, PORT, API
 
 
-DEVICES = 'devices'
+DEVICES = "devices"
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT): cv.string
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_PORT): cv.string}
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
-SOMA_COMPONENTS = ['cover']
+SOMA_COMPONENTS = ["cover"]
 
 
 async def async_setup(hass, config):
@@ -37,9 +38,11 @@ async def async_setup(hass, config):
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN, data=config[DOMAIN],
-            context={'source': config_entries.SOURCE_IMPORT},
-        ))
+            DOMAIN,
+            data=config[DOMAIN],
+            context={"source": config_entries.SOURCE_IMPORT},
+        )
+    )
 
     return True
 
@@ -48,13 +51,13 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Soma from a config entry."""
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][API] = SomaApi(entry.data[HOST], entry.data[PORT])
-    devices = await hass.async_add_executor_job(
-        hass.data[DOMAIN][API].list_devices)
-    hass.data[DOMAIN][DEVICES] = devices['shades']
+    devices = await hass.async_add_executor_job(hass.data[DOMAIN][API].list_devices)
+    hass.data[DOMAIN][DEVICES] = devices["shades"]
 
     for component in SOMA_COMPONENTS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component))
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
 
     return True
 
@@ -76,12 +79,12 @@ class SomaEntity(Entity):
     @property
     def unique_id(self):
         """Return the unique id base on the id returned by pysoma API."""
-        return self.device['mac']
+        return self.device["mac"]
 
     @property
     def name(self):
         """Return the name of the device."""
-        return self.device['name']
+        return self.device["name"]
 
     @property
     def device_info(self):
@@ -90,17 +93,19 @@ class SomaEntity(Entity):
         Implemented by platform classes.
         """
         return {
-            'identifiers': {(DOMAIN, self.unique_id)},
-            'name': self.name,
-            'manufacturer': 'Wazombi Labs'
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "Wazombi Labs",
         }
 
     async def async_update(self):
         """Update the device with the latest data."""
         response = await self.hass.async_add_executor_job(
-            self.api.get_shade_state, self.device['mac'])
-        if response['result'] != 'success':
-            _LOGGER.error("Unable to reach device %s (%s)",
-                          self.device['name'], response['msg'])
-        return
-        self.current_position = response['position']
+            self.api.get_shade_state, self.device["mac"]
+        )
+        if response["result"] != "success":
+            _LOGGER.error(
+                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
+            )
+            return
+        self.current_position = response["position"]
