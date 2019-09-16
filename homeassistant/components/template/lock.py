@@ -11,7 +11,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_VALUE_TEMPLATE,
-    CONF_AVAILABILITY_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
     STATE_ON,
     STATE_LOCKED,
@@ -21,6 +20,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
 from . import extract_entities, initialise_templates
+from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -162,9 +162,13 @@ class TemplateLock(LockDevice):
             try:
                 result = self._availability_template.async_render()
                 self._available = result == "true"
-            except (TemplateError, ValueError) as err:
-                _LOGGER.error(err)
-                self._available = True
+            except (TemplateError, ValueError) as ex:
+                _LOGGER.error(
+                    "Could not render %s template %s: %s",
+                    CONF_AVAILABILITY_TEMPLATE,
+                    self._name,
+                    ex,
+                )
 
     async def async_lock(self, **kwargs):
         """Lock the device."""
