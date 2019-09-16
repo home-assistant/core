@@ -280,6 +280,10 @@ class TelevisionMediaPlayer(HomeAccessory):
 
         self.sources = []
 
+        self._key_scripts = {}
+        for key_name, action in self.config.get(CONF_KEY_ACTIONS, {}).items():
+            self._key_scripts[key_name] = Script(self.hass, action)
+
         # Add additional characteristics if volume or input selection supported
         self.chars_tv = []
         self.chars_speaker = []
@@ -287,11 +291,7 @@ class TelevisionMediaPlayer(HomeAccessory):
             ATTR_SUPPORTED_FEATURES, 0
         )
 
-        self._key_scripts = {}
-        for key_name, action in self.config.get(CONF_KEY_ACTIONS, {}).items():
-            self._key_scripts[key_name] = Script(self.hass, action)
-
-        if features & (SUPPORT_PLAY | SUPPORT_PAUSE):
+        if features & (SUPPORT_PLAY | SUPPORT_PAUSE) or self._key_scripts:
             self.chars_tv.append(CHAR_REMOTE_KEY)
         if features & SUPPORT_VOLUME_MUTE or features & SUPPORT_VOLUME_STEP:
             self.chars_speaker.extend(
