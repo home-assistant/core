@@ -3,6 +3,7 @@ import logging
 
 import eq3bt as eq3  # pylint: disable=import-error
 import voluptuous as vol
+import threading
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
@@ -76,12 +77,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class EQ3BTSmartThermostat(ClimateDevice):
     """Representation of an eQ-3 Bluetooth Smart thermostat."""
+   
 
     def __init__(self, _mac, _name):
         """Initialize the thermostat."""
         # We want to avoid name clash with this module.
         self._name = _name
         self._thermostat = eq3.Thermostat(_mac)
+        self._BTUpdateLock = threading.Lock()
 
     @property
     def supported_features(self):
@@ -123,7 +126,12 @@ class EQ3BTSmartThermostat(ClimateDevice):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        self._thermostat.target_temperature = temperature
+        self._BTUpdateLock.acquire() 
+        try:
+            self._thermostat.target_temperature = temperature
+        finally:
+            self._BTUpdateLock.release()
+
 
     @property
     def hvac_mode(self):
@@ -141,8 +149,11 @@ class EQ3BTSmartThermostat(ClimateDevice):
         """Set operation mode."""
         if self.preset_mode:
             return
-        self._thermostat.mode = HA_TO_EQ_HVAC[hvac_mode]
-
+        self._BTUpdateLock.acquire()
+        try:
+            self._thermostat.mode = HA_TO_EQ_HVAC[hvac_mode]
+        finally:
+            self._BTUpdateLock.release()
     @property
     def min_temp(self):
         """Return the minimum temperature."""
@@ -186,14 +197,26 @@ class EQ3BTSmartThermostat(ClimateDevice):
         """Set new preset mode."""
         if preset_mode == PRESET_NONE:
             self.set_hvac_mode(HVAC_MODE_HEAT)
-        self._thermostat.mode = HA_TO_EQ_PRESET[preset_mode]
+
+        self._BTUpdateLock.acquire()
+
+        try:
+            self._thermostat.mode = HA_TO_EQ_PRESET[preset_mode]
+        finally:
+            self._BTUpdateLock.release()
 
     def update(self):
         """Update the data from the thermostat."""
         # pylint: disable=import-error,no-name-in-module
         from bluepy.btle import BTLEException
 
+
+        self._BTUpdateLock.acquire()
+
         try:
             self._thermostat.update()
         except BTLEException as ex:
             _LOGGER.warning("Updating the state failed: %s", ex)
+        finally:
+            self._BTUpdateLock.release()
+
