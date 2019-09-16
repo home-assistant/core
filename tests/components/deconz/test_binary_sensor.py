@@ -12,32 +12,32 @@ import homeassistant.components.binary_sensor as binary_sensor
 
 SENSORS = {
     "1": {
-        "id": "Sensor 1 id",
-        "name": "Sensor 1 name",
+        "id": "Presence sensor id",
+        "name": "Presence sensor",
         "type": "ZHAPresence",
         "state": {"dark": False, "presence": False},
         "config": {"on": True, "reachable": True, "temperature": 10},
         "uniqueid": "00:00:00:00:00:00:00:00-00",
     },
     "2": {
-        "id": "Sensor 2 id",
-        "name": "Sensor 2 name",
+        "id": "Temperature sensor id",
+        "name": "Temperature sensor",
         "type": "ZHATemperature",
         "state": {"temperature": False},
         "config": {},
         "uniqueid": "00:00:00:00:00:00:00:01-00",
     },
     "3": {
-        "id": "Sensor 3 id",
-        "name": "Sensor 3 name",
+        "id": "CLIP presence sensor id",
+        "name": "CLIP presence sensor",
         "type": "CLIPPresence",
         "state": {},
         "config": {},
         "uniqueid": "00:00:00:00:00:00:00:02-00",
     },
     "4": {
-        "id": "Sensor 4 id",
-        "name": "Sensor 4 name",
+        "id": "Vibration sensor id",
+        "name": "Vibration sensor",
         "type": "ZHAVibration",
         "state": {
             "orientation": [1, 2, 3],
@@ -123,31 +123,31 @@ async def test_binary_sensors(hass):
     gateway = await setup_deconz_integration(
         hass, ENTRY_CONFIG, options={}, get_state_response=data
     )
-    assert "binary_sensor.sensor_1_name" in gateway.deconz_ids
-    assert "binary_sensor.sensor_2_name" not in gateway.deconz_ids
-    assert "binary_sensor.sensor_3_name" not in gateway.deconz_ids
-    assert "binary_sensor.sensor_4_name" in gateway.deconz_ids
+    assert "binary_sensor.presence_sensor" in gateway.deconz_ids
+    assert "binary_sensor.temperature_sensor" not in gateway.deconz_ids
+    assert "binary_sensor.clip_presence_sensor" not in gateway.deconz_ids
+    assert "binary_sensor.vibration_sensor" in gateway.deconz_ids
     assert len(hass.states.async_all()) == 3
 
-    sensor_1 = hass.states.get("binary_sensor.sensor_1_name")
-    assert sensor_1.state == "off"
+    presence_sensor = hass.states.get("binary_sensor.presence_sensor")
+    assert presence_sensor.state == "off"
 
-    sensor_2 = hass.states.get("binary_sensor.sensor_2_name")
-    assert sensor_2 is None
+    temperature_sensor = hass.states.get("binary_sensor.temperature_sensor")
+    assert temperature_sensor is None
 
-    sensor_3 = hass.states.get("binary_sensor.sensor_3_name")
-    assert sensor_3 is None
+    clip_presence_sensor = hass.states.get("binary_sensor.clip_presence_sensor")
+    assert clip_presence_sensor is None
 
-    sensor_4 = hass.states.get("binary_sensor.sensor_4_name")
-    assert sensor_4.state == "on"
+    vibration_sensor = hass.states.get("binary_sensor.vibration_sensor")
+    assert vibration_sensor.state == "on"
 
     hass.data[deconz.DOMAIN][gateway.bridgeid].api.sensors["1"].async_update(
         {"state": {"presence": True}}
     )
     await hass.async_block_till_done()
 
-    sensor_1 = hass.states.get("binary_sensor.sensor_1_name")
-    assert sensor_1.state == "on"
+    presence_sensor = hass.states.get("binary_sensor.presence_sensor")
+    assert presence_sensor.state == "on"
 
 
 async def test_allow_clip_sensor(hass):
@@ -160,17 +160,20 @@ async def test_allow_clip_sensor(hass):
         options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: True},
         get_state_response=data,
     )
-    assert "binary_sensor.sensor_1_name" in gateway.deconz_ids
-    assert "binary_sensor.sensor_2_name" not in gateway.deconz_ids
-    assert "binary_sensor.sensor_3_name" in gateway.deconz_ids
-    assert "binary_sensor.sensor_4_name" in gateway.deconz_ids
+    assert "binary_sensor.presence_sensor" in gateway.deconz_ids
+    assert "binary_sensor.temperature_sensor" not in gateway.deconz_ids
+    assert "binary_sensor.clip_presence_sensor" in gateway.deconz_ids
+    assert "binary_sensor.vibration_sensor" in gateway.deconz_ids
     assert len(hass.states.async_all()) == 4
 
-    sensor_1 = hass.states.get("binary_sensor.sensor_1_name")
-    assert sensor_1.state == "off"
+    presence_sensor = hass.states.get("binary_sensor.presence_sensor")
+    assert presence_sensor.state == "off"
 
-    sensor_2 = hass.states.get("binary_sensor.sensor_2_name")
-    assert sensor_2 is None
+    temperature_sensor = hass.states.get("binary_sensor.temperature_sensor")
+    assert temperature_sensor is None
 
-    sensor_3 = hass.states.get("binary_sensor.sensor_3_name")
-    assert sensor_3 is not None
+    clip_presence_sensor = hass.states.get("binary_sensor.clip_presence_sensor")
+    assert clip_presence_sensor.state == "off"
+
+    vibration_sensor = hass.states.get("binary_sensor.vibration_sensor")
+    assert vibration_sensor.state == "on"
