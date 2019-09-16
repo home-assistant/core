@@ -23,7 +23,7 @@ from .core.const import (
     ATTR_MANUFACTURER,
     ATTR_NAME,
     ATTR_VALUE,
-    ATTR_WARNING_DEVICE_DURTION,
+    ATTR_WARNING_DEVICE_DURATION,
     ATTR_WARNING_DEVICE_MODE,
     ATTR_WARNING_DEVICE_STROBE,
     ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE,
@@ -120,7 +120,7 @@ SERVICE_SCHEMAS = {
             vol.Optional(
                 ATTR_LEVEL, default=WARNING_DEVICE_SOUND_HIGH
             ): cv.positive_int,
-            vol.Optional(ATTR_WARNING_DEVICE_DURTION, default=5): cv.positive_int,
+            vol.Optional(ATTR_WARNING_DEVICE_DURATION, default=5): cv.positive_int,
             vol.Optional(
                 ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE, default=0x00
             ): cv.positive_int,
@@ -692,7 +692,7 @@ def async_load_api(hass):
         mode = service.data.get(ATTR_WARNING_DEVICE_MODE)
         strobe = service.data.get(ATTR_WARNING_DEVICE_STROBE)
         level = service.data.get(ATTR_LEVEL)
-        duration = service.data.get(ATTR_WARNING_DEVICE_DURTION)
+        duration = service.data.get(ATTR_WARNING_DEVICE_DURATION)
         duty_mode = service.data.get(ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE)
         intensity = service.data.get(ATTR_WARNING_DEVICE_STROBE_INTENSITY)
 
