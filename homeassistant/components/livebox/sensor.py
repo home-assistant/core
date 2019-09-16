@@ -2,14 +2,14 @@
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from . import DOMAIN, SCAN_INTERVAL, LiveboxData
+from . import DOMAIN, SCAN_INTERVAL, DATA_LIVEBOX
 from .const import TEMPLATE_SENSOR
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the sensors."""
 
-    ld = LiveboxData(config_entry)
+    ld = hass.data[DOMAIN][DATA_LIVEBOX]
     id = config_entry.data["id"]
     async_add_entities([RXSensor(ld, id), TXSensor(ld, id)], True)
 

@@ -11,13 +11,13 @@
           "password": "Password"
         }
       },
-      "link": {
-          "title": "Orange Livebox detection",
-          "description": "Detect successful, please click to Finish button"
+      "register": {
+          "title": "Orange Livebox",
+	  "description":"Register livebox "
       }
     },
     "error": {
-      "register_failed": "Failed to register, please try again",
+      "register_failed": "Failed to register, Serial number not found",
       "login_inccorect": "User or password inccorect",
       "linking": "Unknown linking error occurred."
     },

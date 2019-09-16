@@ -2,11 +2,13 @@
 import logging
 import asyncio
 from collections import namedtuple
+from aiosysbus.exceptions import AuthorizationError
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD
+
 
 from . import LiveboxData
 from .const import (
@@ -30,9 +32,21 @@ class LiveboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the Livebox flow."""
 
+        self._box = None
+        self.host = None
+        self.port = None
+        self.username = None
+        self.password = None
+        self.box_id = None
+
+    async def async_step_import(self, import_config):
+        """Import a config entry from configuration.yaml."""
+        return await self.async_step_user(import_config)
+
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
 
+        errors = {}
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
@@ -43,44 +57,55 @@ class LiveboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         if user_input is not None:
-            return await self.async_step_link(user_input)
+            self.host = user_input["host"]
+            self.port = user_input["port"]
+            self.username = user_input["username"]
+            self.password = user_input["password"]
 
-        return self.async_show_form(step_id="user", data_schema=data_schema)
+            try:
+                user_entry = namedtuple("user_entry", "data")
+                entry = user_entry(user_input)
+                self._box = LiveboxData(entry)
 
-    async def async_step_link(self, user_input=None):
-        """Step for link router."""
+                if await self._box.async_conn():
+                    return await self.async_step_register()
+
+            except AuthorizationError:
+                errors["base"] = "login_inccorect"
+
+            except Exception:
+                errors["base"] = "linking"
+
+        # If there was no user input, do not show the errors.
+        if user_input is None:
+            errors = {}
+
+        return self.async_show_form(
+            step_id="user", data_schema=data_schema, errors=errors
+        )
+
+    async def async_step_register(self, user_input=None):
+        """Step for register component."""
 
         errors = {}
         try:
-            user_entry = namedtuple("user_entry", "data")
-            entry = user_entry(user_input)
-            ld = LiveboxData(entry)
-            await ld.async_conn()
-
-        except Exception:  # pylint: disable=broad-except
-            LOGGER.error("Unknown error connecting with Livebox at %s", self.host)
-            errors["base"] = "linking"
-
-        try:
-            id = (await ld.async_infos())["SerialNumber"]
-
+            self.box_id = (await self._box.async_infos())["SerialNumber"]
+            if await self._entry_from_box(self.box_id):
+                return self.async_create_entry(
+                    title=f"{TEMPLATE_SENSOR}",
+                    data={
+                        "id": self.box_id,
+                        "host": self.host,
+                        "port": self.port,
+                        "username": self.username,
+                        "password": self.password,
+                    },
+                )
         except Exception:
             LOGGER.error("Unique ID not found")
-            return False
+            errors["base"] = "register_failed"
 
-        if await self._entry_from_box(id):
-            return self.async_create_entry(
-                title=f"{TEMPLATE_SENSOR}",
-                data={
-                    "id": id,
-                    "host": user_input["host"],
-                    "port": user_input["port"],
-                    "username": user_input["username"],
-                    "password": user_input["password"],
-                },
-            )
-
-        return self.async_show_form(step_id="link", errors=errors)
+        return self.async_show_form(step_id="register", errors=errors)
 
     async def _entry_from_box(self, id):
         """Return a config entry from an initialized box."""

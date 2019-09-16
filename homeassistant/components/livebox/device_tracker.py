@@ -1,11 +1,11 @@
-"""Support for the ZHA platform."""
+"""Support for the Livebox platform."""
 import logging
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DOMAIN, LiveboxData
+from . import DOMAIN, DATA_LIVEBOX
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ LIVEBOX_DISCOVERY_NEW = "livebox_discovery_new_{}"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Zigbee Home Automation device tracker from config entry."""
+    """Set up device tracker from config entry."""
 
     async def async_discover(device):
         await _async_setup_entities(hass, config_entry, async_add_entities, [device])
@@ -25,7 +25,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data[DOMAIN][DATA_LIVEBOX_DISPATCHERS] = []
     hass.data[DOMAIN][DATA_LIVEBOX_DISPATCHERS].append(unsub)
 
-    ld = LiveboxData(config_entry)
+    ld = hass.data[DOMAIN][DATA_LIVEBOX]
     device_trackers = await ld.async_devices()
     if device_trackers is not None:
         await _async_setup_entities(
@@ -36,14 +36,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 async def _async_setup_entities(
     hass, config_entry, async_add_entities, device_trackers
 ):
-    """Set up the ZHA device trackers."""
+    """Set up the device trackers."""
 
     entities = []
     for device in device_trackers:
         if "IPAddress" in device:
             entities.append(
                 LiveboxDeviceScannerEntity(
-                    config_entry.data["id"], LiveboxData(config_entry), **device
+                    config_entry.data["id"], hass.data[DOMAIN][DATA_LIVEBOX], **device
                 )
             )
 
@@ -59,7 +59,6 @@ class LiveboxDeviceScannerEntity(ScannerEntity):
         self._box_id = id
         self._ld = ld
         self._connected = False
-        self._should_poll = True
         self._unsubs = []
 
     @property
@@ -71,11 +70,6 @@ class LiveboxDeviceScannerEntity(ScannerEntity):
     def unique_id(self) -> str:
         """Return a unique ID."""
         return self._device["PhysAddress"]
-
-    @property
-    def should_poll(self) -> bool:
-        """Poll state from device."""
-        return self._should_poll
 
     @property
     def device_info(self):
@@ -91,21 +85,21 @@ class LiveboxDeviceScannerEntity(ScannerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
 
-        for unsub in self._unsubs[:]:
+        for unsub in self._unsubs:
             unsub()
             self._unsubs.remove(unsub)
 
     async def async_update(self):
         """Handle polling."""
 
-        if await self._update_entity(self._ld, self._device):
+        if await self._update_entity():
             self._connected = True
         else:
             self._connected = False
 
-    async def _update_entity(self, update_device, device):
+    async def _update_entity(self):
 
-        device = await self._ld.async_devices(device)
+        device = await self._ld.async_devices(self._device)
         return device[0]["Active"]
 
     @property

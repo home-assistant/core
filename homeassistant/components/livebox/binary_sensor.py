@@ -5,13 +5,13 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
 )
 
-from . import DOMAIN, SCAN_INTERVAL, LiveboxData
+from . import DOMAIN, SCAN_INTERVAL, DATA_LIVEBOX
 from .const import TEMPLATE_SENSOR
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer binary sensor setup to the shared sensor module."""
-    ld = LiveboxData(config_entry)
+    ld = hass.data[DOMAIN][DATA_LIVEBOX]
     id = config_entry.data["id"]
     async_add_entities([InfoSensor(ld, id)], True)
 
