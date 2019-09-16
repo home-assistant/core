@@ -3,7 +3,6 @@ from datetime import timedelta
 import logging
 
 import pynzbgetapi
-import requests
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -101,6 +100,6 @@ class NZBGetData:
             self.status = self._api.status()
             self.available = True
             dispatcher_send(self.hass, DATA_UPDATED)
-        except requests.exceptions.ConnectionError:
+        except pynzbgetapi.NZBGetAPIException:
             self.available = False
             _LOGGER.error("Unable to refresh NZBGet data")
