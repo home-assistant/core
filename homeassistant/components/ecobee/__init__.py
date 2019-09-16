@@ -47,8 +47,8 @@ async def async_setup(hass, config):
     """
     hass.data[DATA_ECOBEE_CONFIG] = config.get(DOMAIN, {})
 
-    if not hass.config_entries.async_entries(DOMAIN):
-        """No config entry exists; trigger the import flow."""
+    if not hass.config_entries.async_entries(DOMAIN) and hass.data[DATA_ECOBEE_CONFIG]:
+        """No config entry exists and configuration.yaml config exists, trigger the import flow."""
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}
