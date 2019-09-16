@@ -59,9 +59,7 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if await self.hass.async_add_executor_job(self._ecobee.request_pin):
                 """We have a PIN; move to the next step of the flow."""
                 return await self.async_step_authorize()
-            else:
-                """Obtaining the PIN failed. Maybe the wrong API key?"""
-                errors["base"] = "pin_request_failed"
+            errors["base"] = "pin_request_failed"
 
         return self.async_show_form(
             step_id="init",
@@ -84,8 +82,7 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_REFRESH_TOKEN: self._ecobee.refresh_token,
                 }
                 return self.async_create_entry(title=DOMAIN, data=config)
-            else:
-                errors["base"] = "token_request_failed"
+            errors["base"] = "token_request_failed"
 
         return self.async_show_form(
             step_id="authorize",
