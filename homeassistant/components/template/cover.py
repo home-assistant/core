@@ -24,7 +24,6 @@ from homeassistant.const import (
     CONF_FRIENDLY_NAME,
     CONF_ENTITY_ID,
     EVENT_HOMEASSISTANT_START,
-    CONF_AVAILABILITY_TEMPLATE,
     CONF_VALUE_TEMPLATE,
     CONF_ICON_TEMPLATE,
     CONF_DEVICE_CLASS,
@@ -39,6 +38,7 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
 from . import extract_entities, initialise_templates
+from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [STATE_OPEN, STATE_CLOSED, "true", "false"]
@@ -448,9 +448,13 @@ class CoverTemplate(CoverDevice):
             try:
                 result = self._availability_template.async_render()
                 self._available = result == "true"
-            except (TemplateError, ValueError) as err:
-                _LOGGER.error(err)
-                self._available = True
+            except (TemplateError, ValueError) as ex:
+                _LOGGER.error(
+                    "Could not render %s template %s: %s",
+                    CONF_AVAILABILITY_TEMPLATE,
+                    self._name,
+                    ex,
+                )
 
         for property_name, template in (
             ("_icon", self._icon_template),
