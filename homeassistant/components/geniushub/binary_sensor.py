@@ -48,11 +48,12 @@ class GeniusBinarySensor(GeniusEntity, BinarySensorDevice):
         attrs["assigned_zone"] = self._device.data["assignedZones"][0]["name"]
 
         attrs["state"] = dict(self._device.data["state"])
+        attrs["state"].update(self._device.data["_state"])
         attrs["state"].pop("outputOnOff")
+        attrs["state"].pop("lastComms")
 
-        # pylint: disable=protected-access
-        last_comms = self._device._raw["childValues"]["lastComms"]["val"]
+        last_comms = self._device.data["_state"]["lastComms"]
         if last_comms != 0:
             attrs["last_comms"] = utc_from_timestamp(last_comms).isoformat()
 
-        return {**attrs}
+        return attrs
