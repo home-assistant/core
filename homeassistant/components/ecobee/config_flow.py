@@ -99,29 +99,29 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             legacy_config = await self.hass.async_add_executor_job(
                 load_json, self.hass.config.path(ECOBEE_CONFIG_FILENAME)
             )
-            ecobee = Ecobee(
-                config={
-                    ECOBEE_API_KEY: legacy_config[ECOBEE_API_KEY],
-                    ECOBEE_REFRESH_TOKEN: legacy_config[ECOBEE_REFRESH_TOKEN],
-                }
-            )
-            if await self.hass.async_add_executor_job(ecobee.refresh_tokens):
-                """Credentials found and validated; create the entry."""
-                _LOGGER.debug(
-                    "Valid ecobee configuration found for import, creating config entry"
-                )
-                return self.async_create_entry(
-                    title=DOMAIN,
-                    data={
-                        CONF_API_KEY: ecobee.api_key,
-                        CONF_REFRESH_TOKEN: ecobee.refresh_token,
-                    },
-                )
+            config = {
+                ECOBEE_API_KEY: legacy_config[ECOBEE_API_KEY],
+                ECOBEE_REFRESH_TOKEN: legacy_config[ECOBEE_REFRESH_TOKEN],
+            }
         except (HomeAssistantError, KeyError):
             _LOGGER.debug(
                 "No valid ecobee.conf configuration found for import, delegating to user step"
             )
+            return await self.async_step_user()
 
+        ecobee = Ecobee(config=config)
+        if await self.hass.async_add_executor_job(ecobee.refresh_tokens):
+            """Credentials found and validated; create the entry."""
+            _LOGGER.debug(
+                "Valid ecobee configuration found for import, creating config entry"
+            )
+            return self.async_create_entry(
+                title=DOMAIN,
+                data={
+                    CONF_API_KEY: ecobee.api_key,
+                    CONF_REFRESH_TOKEN: ecobee.refresh_token,
+                },
+            )
         return await self.async_step_user()
 
 
