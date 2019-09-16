@@ -27,7 +27,7 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_API_KEY): cv.string,
-                vol.Optional(CONF_HOLD_TEMP, DEFAULT_HOLD_TEMP): cv.boolean,
+                vol.Optional(CONF_HOLD_TEMP, default=DEFAULT_HOLD_TEMP): cv.boolean,
             }
         )
     },
