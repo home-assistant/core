@@ -69,10 +69,10 @@ async def async_setup_entry(hass, entry):
 
     data = EcobeeData(hass, entry, api_key=api_key, refresh_token=refresh_token)
 
-    if not await hass.async_add_executor_job(data.refresh):
+    if not await data.refresh():
         return False
 
-    await hass.async_add_executor_job(data.update)
+    await data.update()
 
     if data.ecobee.thermostats is None:
         _LOGGER.error("No ecobee devices found to set up")
