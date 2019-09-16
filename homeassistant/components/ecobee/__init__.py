@@ -104,19 +104,19 @@ class EcobeeData:
         )
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    async def update(self):
         """Get the latest data from ecobee.com."""
         try:
-            self.ecobee.update()
+            await self._hass.async_add_executor_job(self.ecobee.update)
             _LOGGER.debug("Updating ecobee")
         except ExpiredTokenError:
             _LOGGER.warn("ecobee update failed; attempting to refresh expired tokens")
-            self.refresh()
+            await self.refresh()
 
-    def refresh(self) -> bool:
+    async def refresh(self) -> bool:
         """Refresh ecobee tokens and update config entry."""
         _LOGGER.debug("Refreshing ecobee tokens and updating config entry")
-        if self.ecobee.refresh_tokens():
+        if await self._hass.async_add_executor_job(self.ecobee.refresh_tokens):
             self._hass.config_entries.async_update_entry(
                 self._entry,
                 data={

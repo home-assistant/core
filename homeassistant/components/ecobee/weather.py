@@ -162,8 +162,8 @@ class EcobeeWeather(WeatherEntity):
         except (ValueError, IndexError, KeyError):
             return None
 
-    def update(self):
+    async def async_update(self):
         """Get the latest weather data."""
-        self.data.update()
+        await self.data.update()
         thermostat = self.data.ecobee.get_thermostat(self._index)
         self.weather = thermostat.get("weather", None)

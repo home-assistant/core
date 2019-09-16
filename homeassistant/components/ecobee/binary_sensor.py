@@ -53,9 +53,9 @@ class EcobeeBinarySensor(BinarySensorDevice):
         """Return the class of this sensor, from DEVICE_CLASSES."""
         return DEVICE_CLASS_OCCUPANCY
 
-    def update(self):
+    async def async_update(self):
         """Get the latest state of the sensor."""
-        self.data.update()
+        await self.data.update()
         for sensor in self.data.ecobee.get_remote_sensors(self.index):
             for item in sensor["capability"]:
                 if item["type"] == "occupancy" and self.sensor_name == sensor["name"]:

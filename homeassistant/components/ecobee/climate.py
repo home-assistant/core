@@ -210,14 +210,13 @@ class Thermostat(ClimateDevice):
         self._fan_modes = [FAN_AUTO, FAN_ON]
         self.update_without_throttle = False
 
-    def update(self):
+    async def async_update(self):
         """Get the latest state from the thermostat."""
         if self.update_without_throttle:
-            self.data.update(no_throttle=True)
+            await self.data.update(no_throttle=True)
             self.update_without_throttle = False
         else:
-            self.data.update()
-
+            await self.data.update()
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
 
     @property

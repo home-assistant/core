@@ -76,9 +76,9 @@ class EcobeeSensor(Entity):
         """Return the unit of measurement this sensor expresses itself in."""
         return self._unit_of_measurement
 
-    def update(self):
+    async def async_update(self):
         """Get the latest state of the sensor."""
-        self.data.update()
+        await self.data.update()
         for sensor in self.data.ecobee.get_remote_sensors(self.index):
             for item in sensor["capability"]:
                 if item["type"] == self.type and self.sensor_name == sensor["name"]:
