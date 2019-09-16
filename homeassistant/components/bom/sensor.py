@@ -264,9 +264,9 @@ class BOMCurrentData:
 
             # set lastupdate using self._data[0] as the first element in the
             # array is the latest date in the json
-            self.last_updated = datetime.datetime.strptime(
+            self.last_updated = dt_util.as_utc(datetime.datetime.strptime(
                 str(self._data[0]["local_date_time_full"]), "%Y%m%d%H%M%S"
-            )
+            ))
             return
 
         except ValueError as err:
