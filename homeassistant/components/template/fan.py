@@ -21,7 +21,6 @@ from homeassistant.components.fan import (
 )
 from homeassistant.const import (
     CONF_FRIENDLY_NAME,
-    CONF_AVAILABILITY_TEMPLATE,
     CONF_VALUE_TEMPLATE,
     CONF_ENTITY_ID,
     STATE_ON,
@@ -34,6 +33,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.script import Script
 from . import extract_entities, initialise_templates
+from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -426,6 +426,10 @@ class TemplateFan(FanEntity):
             try:
                 result = self._availability_template.async_render()
                 self._available = result == "true"
-            except (TemplateError, ValueError) as err:
-                _LOGGER.error("Error rendering availability_template: %s", err)
-                self._available = True
+            except (TemplateError, ValueError) as ex:
+                _LOGGER.error(
+                    "Could not render %s template %s: %s",
+                    CONF_AVAILABILITY_TEMPLATE,
+                    self._name,
+                    ex,
+                )
