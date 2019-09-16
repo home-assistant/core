@@ -33,6 +33,7 @@ FLOWS = [
     "life360",
     "lifx",
     "linky",
+    "livebox",
     "locative",
     "logi_circle",
     "luftdaten",

@@ -158,6 +158,7 @@ homeassistant/components/lifx_cloud/* @amelchio
 homeassistant/components/lifx_legacy/* @amelchio
 homeassistant/components/linky/* @Quentame
 homeassistant/components/linux_battery/* @fabaff
+homeassistant/components/livebox/* @cyr-ius
 homeassistant/components/liveboxplaytv/* @pschmitt
 homeassistant/components/logger/* @home-assistant/core
 homeassistant/components/logi_circle/* @evanjd
