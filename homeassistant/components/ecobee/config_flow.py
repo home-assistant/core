@@ -11,7 +11,7 @@ from pyecobee import (
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import callback
+from homeassistant.core import callback, HomeAssistantError
 from homeassistant.util.json import load_json
 
 from .const import (
@@ -117,7 +117,7 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_REFRESH_TOKEN: ecobee.refresh_token,
                     },
                 )
-        except Exception:  # pylint: disable=broad-except
+        except (HomeAssistantError, KeyError):
             _LOGGER.debug(
                 "No valid ecobee.conf configuration found for import, delegating to user step"
             )
