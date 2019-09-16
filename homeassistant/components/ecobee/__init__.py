@@ -45,7 +45,7 @@ async def async_setup(hass, config):
     migrating from the old ecobee component. Otherwise, the user will have to
     continue setting up the integration via the config flow.
     """
-    hass.data[DATA_ECOBEE_CONFIG] = config[DOMAIN]
+    hass.data[DATA_ECOBEE_CONFIG] = config.get(DOMAIN, {})
 
     if not hass.config_entries.async_entries(DOMAIN):
         """No config entry exists; trigger the import flow."""
