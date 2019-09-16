@@ -195,6 +195,9 @@ aiopylgtv==0.2.4
 # homeassistant.components.switcher_kis
 aioswitcher==2019.4.26
 
+# homeassistant.components.livebox
+aiosysbus==0.1.2
+
 # homeassistant.components.unifi
 aiounifi==11
 

@@ -1,0 +1,5 @@
+# Livebox service entries description.
+
+reboot:
+  # Description of the service
+  description: Reboots the Livebox.
