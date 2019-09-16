@@ -41,6 +41,35 @@
         },
         "title": "deCONZ Zigbee \u9598\u9053\u5668"
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "both_buttons": "\u5169\u500b\u6309\u9215",
+            "button_1": "\u7b2c\u4e00\u500b\u6309\u9215",
+            "button_2": "\u7b2c\u4e8c\u500b\u6309\u9215",
+            "button_3": "\u7b2c\u4e09\u500b\u6309\u9215",
+            "button_4": "\u7b2c\u56db\u500b\u6309\u9215",
+            "close": "\u95dc\u9589",
+            "dim_down": "\u8abf\u6697",
+            "dim_up": "\u8abf\u4eae",
+            "left": "\u5de6",
+            "open": "\u958b\u555f",
+            "right": "\u53f3",
+            "turn_off": "\u95dc\u9589",
+            "turn_on": "\u958b\u555f"
+        },
+        "trigger_type": {
+            "remote_button_double_press": "\"{subtype}\" \u6309\u9215\u96d9\u64ca",
+            "remote_button_long_press": "\"{subtype}\" \u6309\u9215\u6301\u7e8c\u6309\u4e0b",
+            "remote_button_long_release": "\u9577\u6309\u5f8c\u91cb\u653e \"{subtype}\" \u6309\u9215",
+            "remote_button_quadruple_press": "\"{subtype}\" \u6309\u9215\u56db\u9023\u9ede\u64ca",
+            "remote_button_quintuple_press": "\"{subtype}\" \u6309\u9215\u4e94\u9023\u9ede\u64ca",
+            "remote_button_rotated": "\u65cb\u8f49 \"{subtype}\" \u6309\u9215",
+            "remote_button_short_press": "\"{subtype}\" \u6309\u9215\u5df2\u6309\u4e0b",
+            "remote_button_short_release": "\"{subtype}\" \u6309\u9215\u5df2\u91cb\u653e",
+            "remote_button_triple_press": "\"{subtype}\" \u6309\u9215\u4e09\u9023\u9ede\u64ca",
+            "remote_gyro_activated": "\u8a2d\u5099\u6416\u6643"
+        }
+    },
     "options": {
         "step": {
             "async_step_deconz_devices": {

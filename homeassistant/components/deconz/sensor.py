@@ -13,6 +13,7 @@ from homeassistant.util import slugify
 
 from .const import ATTR_DARK, ATTR_ON, NEW_SENSOR
 from .deconz_device import DeconzDevice
+from .deconz_event import DeconzEvent
 from .gateway import get_gateway_from_config_entry, DeconzEntityHandler
 
 ATTR_CURRENT = "current"
@@ -42,6 +43,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if not sensor.BINARY:
 
                 if sensor.type in Switch.ZHATYPE:
+
+                    if gateway.option_allow_clip_sensor or not sensor.type.startswith(
+                        "CLIP"
+                    ):
+                        event = DeconzEvent(sensor, gateway)
+                        hass.async_create_task(event.async_update_device_registry())
+                        gateway.events.append(event)
+
                     if sensor.battery:
                         entities.append(DeconzBattery(sensor, gateway))
 

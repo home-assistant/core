@@ -14,7 +14,7 @@
         "error": {
             "host_port_exists": "This host and port combination is already configured",
             "resolve_failed": "This host can not be resolved",
-            "connection_timeout": "Timeout whemn connecting to this host",
+            "connection_timeout": "Timeout when connecting to this host",
             "certificate_fetch_failed": "Can not fetch certificate from this host and port combination"
         },
         "abort": {
