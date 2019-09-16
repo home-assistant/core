@@ -39,7 +39,7 @@ class SomaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_creation(self, user_input=None):
         """Finish config flow."""
         from api.soma_api import SomaApi
-        api = SomaApi(user_input['host'])
+        api = SomaApi(user_input['host'], user_input['port'])
         await self.hass.async_add_executor_job(
             api.list_devices)
         _LOGGER.info('Successfully set up Soma Connect')

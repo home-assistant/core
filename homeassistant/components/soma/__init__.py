@@ -13,7 +13,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.const import (
     CONF_HOST, CONF_PORT)
 
-from .const import DOMAIN, HOST, API
+from .const import DOMAIN, HOST, PORT, API
 
 
 DEVICES = 'devices'
@@ -37,7 +37,7 @@ async def async_setup(hass, config):
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN,
+            DOMAIN, data=config[DOMAIN],
             context={'source': config_entries.SOURCE_IMPORT},
         ))
 
@@ -47,7 +47,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Soma from a config entry."""
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][API] = SomaApi(entry.data[HOST])
+    hass.data[DOMAIN][API] = SomaApi(entry.data[HOST], entry.data[PORT])
     devices = await hass.async_add_executor_job(
         hass.data[DOMAIN][API].list_devices)
     hass.data[DOMAIN][DEVICES] = devices['shades']
@@ -97,6 +97,10 @@ class SomaEntity(Entity):
 
     async def async_update(self):
         """Update the device with the latest data."""
-        ret = await self.hass.async_add_executor_job(
+        response = await self.hass.async_add_executor_job(
             self.api.get_shade_state, self.device['mac'])
-        self.current_position = ret['position']
+        if response['result'] != 'success':
+            _LOGGER.error("Unable to reach device %s (%s)",
+                          self.device['name'], response['msg'])
+        else:
+            self.current_position = response['position']

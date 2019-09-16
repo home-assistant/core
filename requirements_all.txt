@@ -1441,7 +1441,7 @@ pysmarty==0.8
 pysnmp==4.4.11
 
 # homeassistant.components.soma
-pysoma==0.0.7
+pysoma==0.0.10
 
 # homeassistant.components.sonos
 pysonos==0.0.23
