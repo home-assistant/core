@@ -68,6 +68,7 @@ FLOWS = [
     "lifx",
     "linky",
     "local_ip",
+    "livebox",
     "locative",
     "logi_circle",
     "luftdaten",
