@@ -79,7 +79,9 @@ async def test_user(
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
 
-async def test_import(hass, login, fetch_data, close_session):
+async def test_import(
+    hass, requires_2fa, send_verification_code, validate_verification_code
+):
     """Test import step."""
     flow = init_config_flow(hass)
 
@@ -114,7 +116,9 @@ async def test_import(hass, login, fetch_data, close_session):
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == GPS_ACCURACY_THRESHOLD
 
 
-async def test_abort_if_already_setup(hass, login, fetch_data, close_session):
+async def test_abort_if_already_setup(
+    hass, requires_2fa, send_verification_code, validate_verification_code
+):
     """Test we abort if Linky is already setup."""
     flow = init_config_flow(hass)
     MockConfigEntry(
@@ -158,7 +162,7 @@ async def test_abort_if_already_setup(hass, login, fetch_data, close_session):
     assert result["reason"] == {CONF_USERNAME: "username_exists"}
 
 
-async def test_abort_on_login_failed(hass, close_session):
+async def test_abort_on_login_failed(hass):
     """Test when we have errors during login."""
     flow = init_config_flow(hass)
 
@@ -173,7 +177,7 @@ async def test_abort_on_login_failed(hass, close_session):
         assert result["errors"] == {"base": "login"}
 
 
-async def test_abort_on_fetch_failed(hass, login, close_session):
+async def test_abort_on_fetch_failed(hass, requires_2fa):
     """Test when we have errors during fetch."""
     flow = init_config_flow(hass)
 
