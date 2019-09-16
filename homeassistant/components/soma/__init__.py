@@ -102,5 +102,5 @@ class SomaEntity(Entity):
         if response['result'] != 'success':
             _LOGGER.error("Unable to reach device %s (%s)",
                           self.device['name'], response['msg'])
-        else:
-            self.current_position = response['position']
+        return
+        self.current_position = response['position']
