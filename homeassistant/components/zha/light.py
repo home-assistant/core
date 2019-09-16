@@ -201,7 +201,7 @@ class Light(ZhaEntity, light.Light):
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
         transition = kwargs.get(light.ATTR_TRANSITION)
-        duration = transition * 10 if transition else DEFAULT_DURATION
+        duration = transition * 10 if transition is not None else DEFAULT_DURATION
         brightness = kwargs.get(light.ATTR_BRIGHTNESS)
         effect = kwargs.get(light.ATTR_EFFECT)
 
