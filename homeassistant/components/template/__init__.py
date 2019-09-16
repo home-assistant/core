@@ -2,27 +2,29 @@
 
 import logging
 
-from homeassistant.const import MATCH_ALL
 from itertools import chain
+from homeassistant.const import MATCH_ALL
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def initialise_templates(hass, templates, attribute_templates=dict()):
+def initialise_templates(hass, templates, attribute_templates=None):
     """Initialise templates and attribute templates."""
-    for template_name, template in chain(
-        templates.items(), attribute_templates.items()
-    ):
+    if attribute_templates is None:
+        attribute_templates = dict()
+    for template in chain(templates.values(), attribute_templates.values()):
         if template is None:
             continue
         template.hass = hass
 
 
 def extract_entities(
-    device_name, device_type, manual_entity_ids, templates, attribute_templates=dict()
+    device_name, device_type, manual_entity_ids, templates, attribute_templates=None
 ):
     """Extract entity ids from templates and attribute templates."""
+    if attribute_templates is None:
+        attribute_templates = dict()
     entity_ids = set()
     if manual_entity_ids is None:
         invalid_templates = []
