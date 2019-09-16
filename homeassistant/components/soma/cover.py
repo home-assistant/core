@@ -15,12 +15,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     devices = hass.data[DOMAIN][DEVICES]
 
     async_add_entities(
-        [SomaCover(cover, hass.data[DOMAIN][API]) for cover in devices],
-        True)
+        [SomaCover(cover, hass.data[DOMAIN][API]) for cover in devices], True
+    )
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up platform.
 
     Can only be called when a user accidentally mentions the platform in their
@@ -32,41 +31,42 @@ async def async_setup_platform(hass, config, async_add_entities,
 class SomaCover(SomaEntity, CoverDevice):
     """Representation of a Soma cover device."""
 
-    async def async_update(self):
-        """Update the device with the latest data."""
-        await super().async_update()
-
     def close_cover(self, **kwargs):
         """Close the cover."""
-        response = self.api.close_shade(self.device['mac'])
-        if response['result'] != 'success':
-            _LOGGER.error("Unable to reach device %s (%s)",
-                          self.device['name'], response['msg'])
+        response = self.api.close_shade(self.device["mac"])
+        if response["result"] != "success":
+            _LOGGER.error(
+                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
+            )
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        response = self.api.open_shade(self.device['mac'])
-        if response['result'] != 'success':
-            _LOGGER.error("Unable to reach device %s (%s)",
-                          self.device['name'], response['msg'])
+        response = self.api.open_shade(self.device["mac"])
+        if response["result"] != "success":
+            _LOGGER.error(
+                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
+            )
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
         # Set cover position to some value where up/down are both enabled
         self.current_position = 50
-        response = self.api.stop_shade(self.device['mac'])
-        if response['result'] != 'success':
-            _LOGGER.error("Unable to reach device %s (%s)",
-                          self.device['name'], response['msg'])
+        response = self.api.stop_shade(self.device["mac"])
+        if response["result"] != "success":
+            _LOGGER.error(
+                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
+            )
 
     def set_cover_position(self, **kwargs):
         """Move the cover shutter to a specific position."""
         self.current_position = kwargs[ATTR_POSITION]
         response = self.api.set_shade_position(
-            self.device['mac'], kwargs[ATTR_POSITION])
-        if response['result'] != 'success':
-            _LOGGER.error("Unable to reach device %s (%s)",
-                          self.device['name'], response['msg'])
+            self.device["mac"], kwargs[ATTR_POSITION]
+        )
+        if response["result"] != "success":
+            _LOGGER.error(
+                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
+            )
 
     @property
     def current_cover_position(self):
