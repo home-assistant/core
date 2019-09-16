@@ -35,7 +35,6 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import (
     CONF_FRIENDLY_NAME,
     CONF_VALUE_TEMPLATE,
-    CONF_AVAILABILITY_TEMPLATE,
     CONF_ENTITY_ID,
     MATCH_ALL,
     EVENT_HOMEASSISTANT_START,
@@ -45,6 +44,8 @@ from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.script import Script
+
+from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -410,6 +411,11 @@ class TemplateVacuum(StateVacuumDevice):
             try:
                 result = self._availability_template.async_render()
                 self._available = result == "true"
-            except (TemplateError, ValueError) as err:
-                _LOGGER.error(err)
+            except (TemplateError, ValueError) as ex:
+                _LOGGER.error(
+                    "Could not render %s template %s: %s",
+                    CONF_AVAILABILITY_TEMPLATE,
+                    self._name,
+                    ex,
+                )
                 self._available = True
