@@ -1,5 +1,6 @@
 """Class to hold all media player accessories."""
 import logging
+from pprint import pprint
 
 from pyhap.const import CATEGORY_SWITCH, CATEGORY_TELEVISION
 
@@ -35,7 +36,7 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_UNKNOWN,
 )
-
+from homeassistant.helpers.script import Script
 from . import TYPES
 from .accessories import HomeAccessory
 from .const import (
@@ -63,7 +64,8 @@ from .const import (
     SERV_TELEVISION,
     SERV_TELEVISION_SPEAKER,
     SERV_INPUT_SOURCE,
-)
+    CONF_KEY_ACTIONS,
+    MEDIA_PLAYER_KEY_NAMES)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -256,6 +258,10 @@ class TelevisionMediaPlayer(HomeAccessory):
             ATTR_SUPPORTED_FEATURES, 0
         )
 
+        self._key_scripts = {}
+        for key_name, action in self.config.get(CONF_KEY_ACTIONS, {}).items():
+            self._key_scripts[key_name] = Script(self.hass, action)
+
         if features & (SUPPORT_PLAY | SUPPORT_PAUSE):
             self.chars_tv.append(CHAR_REMOTE_KEY)
         if features & SUPPORT_VOLUME_MUTE or features & SUPPORT_VOLUME_STEP:
@@ -384,6 +390,13 @@ class TelevisionMediaPlayer(HomeAccessory):
                     )
             params = {ATTR_ENTITY_ID: self.entity_id}
             self.call_service(DOMAIN, service, params)
+
+        key_name = MEDIA_PLAYER_KEY_NAMES.get(value)
+        if key_name:
+            script = self._key_scripts.get(key_name)
+            if script:
+                pprint(script)
+                script.run()
 
     def update_state(self, new_state):
         """Update Television state after state changed."""

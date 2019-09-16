@@ -15,6 +15,7 @@ CONF_ENTITY_CONFIG = "entity_config"
 CONF_FEATURE = "feature"
 CONF_FEATURE_LIST = "feature_list"
 CONF_FILTER = "filter"
+CONF_KEY_ACTIONS = "key_actions"
 CONF_LINKED_BATTERY_SENSOR = "linked_battery_sensor"
 CONF_LOW_BATTERY_THRESHOLD = "low_battery_threshold"
 CONF_SAFE_MODE = "safe_mode"
@@ -174,3 +175,19 @@ THRESHOLD_CO2 = 1000
 # #### Default values ####
 DEFAULT_MIN_TEMP_WATER_HEATER = 40  # °C
 DEFAULT_MAX_TEMP_WATER_HEATER = 60  # °C
+
+MEDIA_PLAYER_KEY_NAMES = {
+    0: "rewind",
+    1: "fast_forward",
+    2: "next_track",
+    3: "previous_track",
+    4: "arrow_up",
+    5: "arrow_down",
+    6: "arrow_left",
+    7: "arrow_right",
+    8: "select",
+    9: "back",
+    10: "exit",
+    11: "play_pause",
+    15: "information",
+}

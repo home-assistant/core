@@ -19,6 +19,7 @@ import homeassistant.util.temperature as temp_util
 from .const import (
     CONF_FEATURE,
     CONF_FEATURE_LIST,
+    CONF_KEY_ACTIONS,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
     DEFAULT_LOW_BATTERY_THRESHOLD,
@@ -27,6 +28,7 @@ from .const import (
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
     HOMEKIT_NOTIFY_ID,
+    MEDIA_PLAYER_KEY_NAMES,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -48,15 +50,20 @@ BASIC_INFO_SCHEMA = vol.Schema(
     }
 )
 
-FEATURE_SCHEMA = BASIC_INFO_SCHEMA.extend(
-    {vol.Optional(CONF_FEATURE_LIST, default=None): cv.ensure_list}
+MEDIA_PLAYER_SCHEMA = BASIC_INFO_SCHEMA.extend(
+    {
+        vol.Optional(CONF_FEATURE_LIST, default=None): cv.ensure_list,
+        vol.Optional(CONF_KEY_ACTIONS, default=None): vol.Schema({
+            vol.In(MEDIA_PLAYER_KEY_NAMES.values()): cv.SCRIPT_SCHEMA,
+        })
+    },
 )
 
 CODE_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {vol.Optional(ATTR_CODE, default=None): vol.Any(None, cv.string)}
 )
 
-MEDIA_PLAYER_SCHEMA = vol.Schema(
+MEDIA_PLAYER_FEATURE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_FEATURE): vol.All(
             cv.string,
@@ -110,10 +117,10 @@ def validate_entity_config(values):
             config = CODE_SCHEMA(config)
 
         elif domain == media_player.const.DOMAIN:
-            config = FEATURE_SCHEMA(config)
+            config = MEDIA_PLAYER_SCHEMA(config)
             feature_list = {}
             for feature in config[CONF_FEATURE_LIST]:
-                params = MEDIA_PLAYER_SCHEMA(feature)
+                params = MEDIA_PLAYER_FEATURE_SCHEMA(feature)
                 key = params.pop(CONF_FEATURE)
                 if key in feature_list:
                     raise vol.Invalid(f"A feature can be added only once for {entity}")
