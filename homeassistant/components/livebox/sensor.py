@@ -9,18 +9,18 @@ from .const import TEMPLATE_SENSOR
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the sensors."""
 
-    ld = hass.data[DOMAIN][DATA_LIVEBOX]
+    box_data = hass.data[DOMAIN][DATA_LIVEBOX]
     id = config_entry.data["id"]
-    async_add_entities([RXSensor(ld, id), TXSensor(ld, id)], True)
+    async_add_entities([RXSensor(box_data, id), TXSensor(box_data, id)], True)
 
 
 class LiveboxSensor(Entity):
     """Representation of a livebox sensor."""
 
-    def __init__(self, ld, id):
+    def __init__(self, box_data, id):
         """Initialize the sensor."""
 
-        self._ld = ld
+        self._box_data = box_data
         self._box_id = id
         self._state = None
         self._datas = None
@@ -41,7 +41,7 @@ class LiveboxSensor(Entity):
     async def async_update(self):
         """Return update entry."""
 
-        self._dsl = await self._ld.async_dsl_status()
+        self._dsl = await self._box_data.async_dsl_status()
 
 
 class RXSensor(LiveboxSensor):
