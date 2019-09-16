@@ -169,7 +169,14 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
         },
     )
     await hass.async_block_till_done()
-    acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
+    acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, {
+        'key_actions': {
+            'arrow_right': [{
+                'service': 'fake.service',
+                'data': {'key': 'KEY_RIGHT'}
+            }]
+        }
+    })
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -213,6 +220,7 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
     call_volume_up = async_mock_service(hass, DOMAIN, "volume_up")
     call_volume_down = async_mock_service(hass, DOMAIN, "volume_down")
     call_volume_set = async_mock_service(hass, DOMAIN, "volume_set")
+    call_fake_service = async_mock_service(hass, "fake", "service")
 
     await hass.async_add_job(acc.char_active.client_update_value, 1)
     await hass.async_block_till_done()
@@ -303,6 +311,11 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
     assert call_volume_set[0].data[ATTR_MEDIA_VOLUME_LEVEL] == 20
     assert len(events) == 11
     assert events[-1].data[ATTR_VALUE] is None
+
+    await hass.async_add_job(acc.char_remote_key.client_update_value, 7)
+    await hass.async_block_till_done()
+    assert call_fake_service[0]
+    assert call_fake_service[0].data['key'] == 'KEY_RIGHT'
 
 
 async def test_media_player_television_basic(hass, hk_driver, events, caplog):
