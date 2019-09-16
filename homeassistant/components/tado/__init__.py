@@ -17,7 +17,7 @@ DOMAIN = "tado"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
-TADO_COMPONENTS = ["sensor", "climate"]
+TADO_COMPONENTS = ["sensor", "climate", "water_heater"]
 
 CONFIG_SCHEMA = vol.Schema(
     {
