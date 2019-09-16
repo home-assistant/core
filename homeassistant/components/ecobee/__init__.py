@@ -149,9 +149,8 @@ async def async_populate_options(hass, config_entry):
 
 
 async def async_unload_entry(hass, config_entry):
-    """Unload the config entry, but store the ecobee API key for later."""
+    """Unload the config entry and platforms."""
     hass.data.pop(DOMAIN)
-    hass.data[DATA_ECOBEE_CONFIG][CONF_API_KEY] = config_entry.data[CONF_API_KEY]
 
     for platform in ECOBEE_PLATFORMS:
         await hass.config_entries.async_forward_entry_unload(config_entry, platform)
