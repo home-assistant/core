@@ -17,16 +17,16 @@ input_text:
 
 input_boolean:
   ais_quiet_mode:
-    name: Tryb cichy
+    name: Tryb nocny
     icon: mdi:volume-off
 
 input_datetime:
-  quiet_mode_start:
-    name: Tryb cichy start
+  ais_quiet_mode_start:
+    name: Tryb nocny start
     has_date: false
     has_time: true
-  quiet_mode_stop:
-    name: Tryb cichy stop
+  ais_quiet_mode_stop:
+    name: Tryb nocny stop
     has_date: false
     has_time: true
 
@@ -67,6 +67,6 @@ group:
       - input_number.assistant_rate
       - input_number.assistant_tone
       - input_boolean.ais_quiet_mode
-      - input_dinput_booleanatetime.quiet_mode_start
-      - input_datetime.quiet_mode_stop
+      - input_datetime.ais_quiet_mode_start
+      - input_datetime.ais_quiet_mode_stop
 

@@ -51,6 +51,8 @@ from homeassistant.components import ais_cloud
 import homeassistant.components.mqtt as mqtt
 import homeassistant.components.ais_dom.ais_global as ais_global
 from homeassistant.components import ais_drives_service
+from homeassistant.util import dt as dt_util
+from homeassistant.helpers import event
 
 aisCloudWS = ais_cloud.AisCloudWS()
 
@@ -2394,6 +2396,14 @@ async def async_setup(hass, config):
         },
     )
 
+    async def ais_run_each_minute(now):
+        _LOGGER.info("XXXXXXXXXXXXXXXXXXXXXX")
+        _LOGGER.info("ais_run_each_minute!!!")
+        _LOGGER.info("XXXXXXXXXXXXXXXXXXXXXX")
+
+    #
+    _dt = dt_util.utcnow()
+    event.async_track_utc_time_change(hass, ais_run_each_minute, second=55)
     return True
 
 
