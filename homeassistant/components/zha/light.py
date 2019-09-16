@@ -25,8 +25,6 @@ from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_DURATION = 5
-
 CAPABILITIES_COLOR_LOOP = 0x4
 CAPABILITIES_COLOR_XY = 0x08
 CAPABILITIES_COLOR_TEMP = 0x10
@@ -201,7 +199,7 @@ class Light(ZhaEntity, light.Light):
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
         transition = kwargs.get(light.ATTR_TRANSITION)
-        duration = transition * 10 if transition is not None else DEFAULT_DURATION
+        duration = transition * 10 if transition else 0
         brightness = kwargs.get(light.ATTR_BRIGHTNESS)
         effect = kwargs.get(light.ATTR_EFFECT)
 
@@ -223,14 +221,23 @@ class Light(ZhaEntity, light.Light):
             self._state = bool(level)
             if level:
                 self._brightness = level
-
-        if brightness is None or brightness:
+        else:
             result = await self._on_off_channel.on()
             t_log["on_off"] = result
             if not isinstance(result, list) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
                 return
             self._state = True
+
+            level = await self._level_channel.get_attribute_value(
+                "on_level", from_cache=False
+            )
+            # 255 is a special value meaning "use current_level attribute"
+            if level == 255:
+                level = await self._level_channel.get_attribute_value(
+                    "current_level", from_cache=False
+                )
+            self._brightness = level
 
         if (
             light.ATTR_COLOR_TEMP in kwargs
@@ -296,6 +303,11 @@ class Light(ZhaEntity, light.Light):
         """Turn the entity off."""
         duration = kwargs.get(light.ATTR_TRANSITION)
         supports_level = self.supported_features & light.SUPPORT_BRIGHTNESS
+        # store current brightness so that the next turn_on uses it.
+        curr_level_result = await self._level_channel.cluster.write_attributes(
+            {"on_level": self._brightness}
+        )
+        self.debug("set: on_level attribute: %s", curr_level_result)
         if duration and supports_level:
             result = await self._level_channel.move_to_level_with_on_off(
                 0, duration * 10
