@@ -111,39 +111,35 @@ class LiveboxData:
                     }
                 }
             }
-        box = await self.async_conn()
-        devices = await box.system.get_devices(parameters)
-        if devices.get("status", {}).get("wifi", {}):
-            return devices["status"]["wifi"]
-        return None
+        await self.async_conn()
+        devices = await self._box.system.get_devices(parameters)
+
+        return devices.get("status", {}).get("wifi", {})
 
     async def async_infos(self):
         """Get infos."""
 
-        box = await self.async_conn()
-        infos = await box.system.get_deviceinfo()
-        if infos.get("status", {}):
-            return infos["status"]
-        return None
+        await self.async_conn()
+        infos = await self._box.system.get_deviceinfo()
+
+        return infos.get("status", {})
 
     async def async_status(self):
         """Get status."""
 
-        box = await self.async_conn()
-        status = await box.system.get_WANStatus()
-        if status.get("data", {}):
-            return status["data"]
-        return None
+        await self.async_conn()
+        status = await self._box.system.get_WANStatus()
+
+        return status.get("data", {})
 
     async def async_dsl_status(self):
         """Get dsl status."""
 
-        box = await self.async_conn()
+        await self.async_conn()
         parameters = {"parameters": {"mibs": "dsl", "flag": "", "traverse": "down"}}
-        dsl_status = await box.connection.get_data_MIBS(parameters)
-        if dsl_status.get("status", {}).get("dsl", {}).get("dsl0", {}):
-            return dsl_status["status"]["dsl"]["dsl0"]
-        return None
+        dsl_status = await self._box.connection.get_data_MIBS(parameters)
+
+        return dsl_status.get("status", {}).get("dsl", {}).get("dsl0", {})
 
     async def async_conn(self):
         """Connect at the livebox router."""
@@ -155,8 +151,7 @@ class LiveboxData:
                 username=self._entry.data["username"],
                 password=self._entry.data["password"],
             )
-            if await self._box.get_permissions():  # check connection successful
-                return self._box
+            return await self._box.get_permissions()
 
         except AuthorizationError:
             _LOGGER.error("User or password incorrect")

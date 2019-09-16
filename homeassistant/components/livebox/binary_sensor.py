@@ -4,7 +4,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice,
     DEVICE_CLASS_CONNECTIVITY,
 )
-
 from . import DOMAIN, SCAN_INTERVAL, DATA_LIVEBOX
 from .const import TEMPLATE_SENSOR
 

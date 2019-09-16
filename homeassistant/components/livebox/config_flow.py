@@ -2,6 +2,7 @@
 import logging
 import asyncio
 from collections import namedtuple
+
 from aiosysbus.exceptions import AuthorizationError
 
 import voluptuous as vol
