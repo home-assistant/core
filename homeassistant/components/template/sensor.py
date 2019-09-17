@@ -170,7 +170,7 @@ class SensorTemplate(Entity):
         self._entity_picture = None
         self._entities = entity_ids
         self._device_class = device_class
-        self._available = True
+        self._available = "true"
         self._attribute_templates = attribute_templates
         self._attributes = {}
 
@@ -230,7 +230,7 @@ class SensorTemplate(Entity):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self._available
+        return self._available is not None and self._available == "true"
 
     @property
     def device_state_attributes(self):
@@ -258,12 +258,6 @@ class SensorTemplate(Entity):
                 self._state = None
                 _LOGGER.error("Could not render template %s: %s", self._name, ex)
 
-        templates = {
-            "_icon": self._icon_template,
-            "_entity_picture": self._entity_picture_template,
-            "_name": self._friendly_name_template,
-        }
-
         attrs = {}
         for key, value in self._attribute_templates.items():
             try:
@@ -272,6 +266,13 @@ class SensorTemplate(Entity):
                 _LOGGER.error("Error rendering attribute %s: %s", key, err)
 
         self._attributes = attrs
+
+        templates = {
+            "_icon": self._icon_template,
+            "_entity_picture": self._entity_picture_template,
+            "_name": self._friendly_name_template,
+            "_available": self._availability_template,
+        }
 
         for property_name, template in templates.items():
             if template is None:
@@ -301,15 +302,3 @@ class SensorTemplate(Entity):
                         self._name,
                         ex,
                     )
-        if self._availability_template is not None:
-            try:
-                result = self._availability_template.async_render()
-                self._available = result == "true"
-            except (TemplateError, ValueError) as ex:
-                self._available = True
-                _LOGGER.error(
-                    "Could not render %s template %s: %s",
-                    CONF_AVAILABILITY_TEMPLATE,
-                    self._name,
-                    ex,
-                )
