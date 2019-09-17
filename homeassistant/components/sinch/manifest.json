@@ -3,7 +3,9 @@
   "name": "Sinch",
   "documentation": "https://www.home-assistant.io/components/sinch",
   "dependencies": [],
-  "codeowners": [],
+  "codeowners": [
+    "@bendikrb"
+  ],
   "requirements": [
     "clx-sdk-xms==1.0.0"
   ]
