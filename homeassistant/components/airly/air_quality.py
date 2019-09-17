@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.components.air_quality import (
     AirQualityEntity,
+    ATTR_AQI,
     ATTR_PM_10,
     ATTR_PM_2_5,
 )
@@ -28,18 +29,23 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by Airly"
 
-ATTR_CAQI = "CAQI"
-ATTR_CAQI_ADVICE = "advice"
-ATTR_CAQI_DESCRIPTION = "DESCRIPTION"
-ATTR_CAQI_LEVEL = "air quality index level"
-ATTR_PM_10_LIMIT = "PM10_LIMIT"
-ATTR_PM_10_PERCENT = "PM10_PERCENT"
-ATTR_PM_2_5_LIMIT = "PM25_LIMIT"
-ATTR_PM_2_5_PERCENT = "PM25_PERCENT"
-LABEL_PM_2_5_LIMIT = f"{ATTR_PM_2_5} limit"
-LABEL_PM_2_5_PERCENT = f"{ATTR_PM_2_5} percent of limit"
-LABEL_PM_10_LIMIT = f"{ATTR_PM_10} limit"
-LABEL_PM_10_PERCENT = f"{ATTR_PM_10} percent of limit"
+ATTR_API_ADVICE = "ADVICE"
+ATTR_API_CAQI = "CAQI"
+ATTR_API_CAQI_DESCRIPTION = "DESCRIPTION"
+ATTR_API_CAQI_LEVEL = "LEVEL"
+ATTR_API_PM10 = "PM10"
+ATTR_API_PM10_LIMIT = "PM10_LIMIT"
+ATTR_API_PM10_PERCENT = "PM10_PERCENT"
+ATTR_API_PM25 = "PM25"
+ATTR_API_PM25_LIMIT = "PM25_LIMIT"
+ATTR_API_PM25_PERCENT = "PM25_PERCENT"
+
+LABEL_ADVICE = "advice"
+LABEL_AQI_LEVEL = "air_quality_index_level"
+LABEL_PM_2_5_LIMIT = f"{ATTR_PM_2_5}_limit"
+LABEL_PM_2_5_PERCENT = f"{ATTR_PM_2_5}_percent_of_limit"
+LABEL_PM_10_LIMIT = f"{ATTR_PM_10}_limit"
+LABEL_PM_10_PERCENT = f"{ATTR_PM_10}_percent_of_limit"
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
 
@@ -86,7 +92,7 @@ class AirlyAirQuality(AirQualityEntity):
         self._name = name
         self._pm_2_5 = None
         self._pm_10 = None
-        self._caqi = None
+        self._aqi = None
         self._icon = "mdi:blur"
         self._attrs = {}
 
@@ -104,7 +110,7 @@ class AirlyAirQuality(AirQualityEntity):
     @round_state
     def air_quality_index(self):
         """Return the air quality index."""
-        return self._caqi
+        return self._aqi
 
     @property
     @round_state
@@ -126,7 +132,7 @@ class AirlyAirQuality(AirQualityEntity):
     @property
     def state(self):
         """Return the CAQI description."""
-        return self.data[ATTR_CAQI_DESCRIPTION]
+        return self.data[ATTR_API_CAQI_DESCRIPTION]
 
     @property
     def unique_id(self):
@@ -141,12 +147,12 @@ class AirlyAirQuality(AirQualityEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        self._attrs[ATTR_CAQI_ADVICE] = self.data[ATTR_CAQI_ADVICE]
-        self._attrs[ATTR_CAQI_LEVEL] = self.data[ATTR_CAQI_LEVEL]
-        self._attrs[LABEL_PM_2_5_LIMIT] = self.data[ATTR_PM_2_5_LIMIT]
-        self._attrs[LABEL_PM_2_5_PERCENT] = round(self.data[ATTR_PM_2_5_PERCENT])
-        self._attrs[LABEL_PM_10_LIMIT] = self.data[ATTR_PM_10_LIMIT]
-        self._attrs[LABEL_PM_10_PERCENT] = round(self.data[ATTR_PM_10_PERCENT])
+        self._attrs[LABEL_ADVICE] = self.data[ATTR_API_ADVICE]
+        self._attrs[LABEL_AQI_LEVEL] = self.data[ATTR_API_CAQI_LEVEL]
+        self._attrs[LABEL_PM_2_5_LIMIT] = self.data[ATTR_API_PM25_LIMIT]
+        self._attrs[LABEL_PM_2_5_PERCENT] = round(self.data[ATTR_API_PM25_PERCENT])
+        self._attrs[LABEL_PM_10_LIMIT] = self.data[ATTR_API_PM10_LIMIT]
+        self._attrs[LABEL_PM_10_PERCENT] = round(self.data[ATTR_API_PM10_PERCENT])
         return self._attrs
 
     async def async_update(self):
@@ -155,7 +161,7 @@ class AirlyAirQuality(AirQualityEntity):
 
         self._pm_10 = self.data["PM10"]
         self._pm_2_5 = self.data["PM25"]
-        self._caqi = self.data[ATTR_CAQI]
+        self._aqi = self.data[ATTR_AQI]
 
 
 class AirlyData:
@@ -193,10 +199,12 @@ class AirlyData:
                 for standard in standards:
                     self.data[f"{standard['pollutant']}_LIMIT"] = standard["limit"]
                     self.data[f"{standard['pollutant']}_PERCENT"] = standard["percent"]
-                self.data[ATTR_CAQI] = index["value"]
-                self.data[ATTR_CAQI_LEVEL] = index["level"].lower().replace("_", " ")
-                self.data[ATTR_CAQI_DESCRIPTION] = index["description"]
-                self.data[ATTR_CAQI_ADVICE] = index["advice"]
+                self.data[ATTR_API_CAQI] = index["value"]
+                self.data[ATTR_API_CAQI_LEVEL] = (
+                    index["level"].lower().replace("_", " ")
+                )
+                self.data[ATTR_API_CAQI_DESCRIPTION] = index["description"]
+                self.data[ATTR_API_ADVICE] = index["advice"]
                 _LOGGER.debug("Data retrieved from Airly")
             else:
                 _LOGGER.error("Can't retrieve data: no Airly sensors in this area")

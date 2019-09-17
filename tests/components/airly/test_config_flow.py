@@ -55,23 +55,6 @@ async def test_invalid_api_key(hass, mock_airly):
     assert result["errors"] == {"base": "auth"}
 
 
-async def test_invalid_language(hass, mock_airly):
-    """Test that errors are shown when language is invalid."""
-    conf = {
-        CONF_NAME: "abcd",
-        CONF_API_KEY: "foo",
-        CONF_LATITUDE: 0,
-        CONF_LONGITUDE: 0,
-        CONF_LANGUAGE: "invalid",
-    }
-
-    flow = config_flow.AirlyFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_user(user_input=conf)
-    assert result["errors"] == {CONF_LANGUAGE: "wrong_lang", "base": "auth"}
-
-
 async def test_duplicate_error(hass, mock_airly):
     """Test that errors are shown when duplicates are added."""
     MockConfigEntry(domain=DOMAIN, data=CONFIG).add_to_hass(hass)
