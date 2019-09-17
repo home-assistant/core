@@ -123,10 +123,12 @@ class NukiLock(LockDevice):
                 _LOGGER.warning("Network issues detect with %s", self.name)
                 self._available = False
                 return
-            else:
+
+            # If in error state, we force an update and repoll data
+            self._available = self._nuki_lock.state not in ERROR_STATES
+            if self._available:
                 break
 
-        self._available = self._nuki_lock.state not in ERROR_STATES
         self._name = self._nuki_lock.name
         self._locked = self._nuki_lock.is_locked
         self._battery_critical = self._nuki_lock.battery_critical
