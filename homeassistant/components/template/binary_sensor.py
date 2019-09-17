@@ -34,6 +34,8 @@ CONF_DELAY_ON = "delay_on"
 CONF_DELAY_OFF = "delay_off"
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 
+EXPECTED_AVAILABILITY_RENDER_RESULT = "true"
+
 SENSOR_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
@@ -169,7 +171,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         self._entities = entity_ids
         self._delay_on = delay_on
         self._delay_off = delay_off
-        self._available = "true"
+        self._available = EXPECTED_AVAILABILITY_RENDER_RESULT
         self._attribute_templates = attribute_templates
         self._attributes = {}
 
@@ -234,7 +236,10 @@ class BinarySensorTemplate(BinarySensorDevice):
     @property
     def available(self):
         """Availability indicator."""
-        return self._available is not None and self._available == "true"
+        return (
+            self._available is not None
+            and self._available == EXPECTED_AVAILABILITY_RENDER_RESULT
+        )
 
     @callback
     def _async_render(self):
