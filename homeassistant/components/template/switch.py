@@ -32,6 +32,7 @@ _VALID_STATES = [STATE_ON, STATE_OFF, "true", "false"]
 
 ON_ACTION = "turn_on"
 OFF_ACTION = "turn_off"
+EXPECTED_AVAILABILITY_RENDER_RESULT = "true"
 
 SWITCH_SCHEMA = vol.Schema(
     {
@@ -131,7 +132,7 @@ class SwitchTemplate(SwitchDevice):
         self._icon = None
         self._entity_picture = None
         self._entities = entity_ids
-        self._available = True
+        self._available = EXPECTED_AVAILABILITY_RENDER_RESULT
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -182,7 +183,10 @@ class SwitchTemplate(SwitchDevice):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self._available
+        return (
+            self._available is not None
+            and self._available == EXPECTED_AVAILABILITY_RENDER_RESULT
+        )
 
     async def async_turn_on(self, **kwargs):
         """Fire the on action."""
@@ -214,6 +218,7 @@ class SwitchTemplate(SwitchDevice):
         for property_name, template in (
             ("_icon", self._icon_template),
             ("_entity_picture", self._entity_picture_template),
+            ("_available", self._availability_template),
         ):
             if template is None:
                 continue
@@ -242,15 +247,3 @@ class SwitchTemplate(SwitchDevice):
                         self._name,
                         ex,
                     )
-        if self._availability_template is not None:
-            try:
-                result = self._availability_template.async_render()
-                self._available = result == "true"
-            except (TemplateError, ValueError) as ex:
-                _LOGGER.error(
-                    "Could not render %s template %s: %s",
-                    friendly_property_name,
-                    self._name,
-                    ex,
-                )
-                self._available = True
