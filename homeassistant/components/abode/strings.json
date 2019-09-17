@@ -1,0 +1,18 @@
+{
+  "config": {
+    "title": "Abode",
+    "step": {
+      "user": {
+        "title": "Fill in your login information",
+        "data": {
+          "username": "Email Address",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "identifier_exists": "Account already registered",
+      "invalid_credentials": "Invalid credentials"
+    }
+  }
+}
