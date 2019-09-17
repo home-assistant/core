@@ -5,8 +5,8 @@ import homeassistant.components.automation.state as state
 from homeassistant.components.device_automation.const import (
     CONF_IS_OFF,
     CONF_IS_ON,
-    CONF_TURN_OFF,  # Change to CONF_TURNED_OFF after merge of PR 26635
-    CONF_TURN_ON,  # Change to CONF_TURNED_ON after merge of PR 26635
+    CONF_TURNED_OFF,
+    CONF_TURNED_ON,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -204,7 +204,7 @@ TURNED_ON = [
     CONF_SOUND,
     CONF_UNSAFE,
     CONF_VIBRATION,
-    CONF_TURN_ON,
+    CONF_TURNED_ON,
 ]
 
 TURNED_OFF = [
@@ -228,7 +228,7 @@ TURNED_OFF = [
     CONF_NO_SMOKE,
     CONF_NO_SOUND,
     CONF_NO_VIBRATION,
-    CONF_TURN_OFF,
+    CONF_TURNED_OFF,
 ]
 
 ENTITY_CONDITIONS = {
@@ -318,7 +318,7 @@ ENTITY_TRIGGERS = {
         {CONF_TYPE: CONF_NO_VIBRATION},
     ],
     DEVICE_CLASS_WINDOW: [{CONF_TYPE: CONF_OPEN}, {CONF_TYPE: CONF_NOT_OPEN}],
-    DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_TURN_ON}, {CONF_TYPE: CONF_TURN_OFF}],
+    DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_TURNED_ON}, {CONF_TYPE: CONF_TURNED_OFF}],
 }
 
 CONDITION_SCHEMA = vol.Schema(
