@@ -35,7 +35,7 @@ SCAN_INTERVAL = 10
 @pytest.fixture(name="api")
 def mock_transmission_api():
     """Mock an api."""
-    with patch("transmissionrpc.Client", return_value=True):
+    with patch("transmissionrpc.Client"):
         yield
 
 
@@ -55,6 +55,13 @@ def mock_api_connection_error():
         "transmissionrpc.Client",
         side_effect=TransmissionError("111: Connection refused"),
     ):
+        yield
+
+
+@pytest.fixture(name="unknown_error")
+def mock_api_unknown_error():
+    """Mock an api."""
+    with patch("transmissionrpc.Client", side_effect=TransmissionError):
         yield
 
 
@@ -192,4 +199,21 @@ async def test_error_on_connection_failure(hass, conn_error):
         }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {CONF_HOST: "cannot_connect"}
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_error_on_unknwon_error(hass, unknown_error):
+    """Test when connection to host fails."""
+    flow = init_config_flow(hass)
+
+    result = await flow.async_step_user(
+        {
+            CONF_NAME: NAME,
+            CONF_HOST: HOST,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+            CONF_PORT: PORT,
+        }
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "cannot_connect"}

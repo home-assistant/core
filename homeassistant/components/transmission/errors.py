@@ -8,3 +8,7 @@ class AuthenticationError(HomeAssistantError):
 
 class CannotConnect(HomeAssistantError):
     """Unable to connect to client."""
+
+
+class UnknownError(HomeAssistantError):
+    """Unknown Error."""

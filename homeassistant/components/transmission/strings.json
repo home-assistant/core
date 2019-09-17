@@ -20,7 +20,7 @@
             }
         },
         "error": {
-            "wrong_cerdentials": "Wrong username or password",
+            "wrong_credentials": "Wrong username or password",
             "cannot_connect": "Unable to Connect to host"
         },
         "abort": {

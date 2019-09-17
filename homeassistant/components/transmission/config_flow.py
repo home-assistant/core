@@ -14,7 +14,7 @@ from homeassistant.core import callback
 
 from . import get_api
 from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
-from .errors import AuthenticationError, CannotConnect
+from .errors import AuthenticationError, CannotConnect, UnknownError
 
 
 class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -53,8 +53,8 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except AuthenticationError:
                 self.errors[CONF_USERNAME] = "wrong_credentials"
                 self.errors[CONF_PASSWORD] = "wrong_credentials"
-            except CannotConnect:
-                self.errors[CONF_HOST] = "cannot_connect"
+            except (CannotConnect, UnknownError):
+                self.errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",

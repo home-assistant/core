@@ -61,6 +61,11 @@ class TransmissionSwitch(ToggleEntity):
         """Return true if device is on."""
         return self._state == STATE_ON
 
+    @property
+    def available(self):
+        """Could the device be accessed during the last update call."""
+        return self._transmission_api.available
+
     def turn_on(self, **kwargs):
         """Turn the device on."""
         if self.type == "on_off":

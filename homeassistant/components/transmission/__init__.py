@@ -30,7 +30,7 @@ from .const import (
     DOMAIN,
     SERVICE_ADD_TORRENT,
 )
-from .errors import AuthenticationError, CannotConnect
+from .errors import AuthenticationError, CannotConnect, UnknownError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,7 +80,7 @@ async def async_setup_entry(hass, config_entry):
     client_id = config_entry.entry_id
     hass.data[DOMAIN][client_id] = client
     if not await client.async_setup():
-        raise ConfigEntryNotReady
+        return False
 
     return True
 
@@ -111,10 +111,12 @@ async def get_api(hass, host, port, username=None, password=None):
         if "401: Unauthorized" in str(error):
             _LOGGER.error("Credentials for Transmission client are not valid")
             raise AuthenticationError
-        if "111: Connection refused" in str(error):
+        elif "111: Connection refused" in str(error):
             _LOGGER.error("Connecting to the Transmission client failed")
             raise CannotConnect
-        return False
+        else:
+            _LOGGER.error(error)
+            raise UnknownError
 
 
 async def async_populate_options(hass, config_entry):
@@ -144,8 +146,11 @@ class TransmissionClient:
             CONF_USERNAME: self.config_entry.data.get(CONF_USERNAME),
             CONF_PASSWORD: self.config_entry.data.get(CONF_PASSWORD),
         }
-        api = await get_api(self.hass, **config)
-        if not api:
+        try:
+            api = await get_api(self.hass, **config)
+        except CannotConnect:
+            raise ConfigEntryNotReady
+        except (AuthenticationError, UnknownError):
             return False
 
         self.tm_data = self.hass.data[DOMAIN][DATA_TRANSMISSION] = TransmissionData(
@@ -227,14 +232,14 @@ class TransmissionData:
 
             self.check_completed_torrent()
             self.check_started_torrent()
+            _LOGGER.debug("Torrent Data Updated")
 
-            dispatcher_send(self.hass, DATA_UPDATED)
-
-            _LOGGER.debug("Torrent Data updated")
             self.available = True
         except TransmissionError:
             self.available = False
             _LOGGER.error("Unable to connect to Transmission client")
+
+        dispatcher_send(self.hass, DATA_UPDATED)
 
     def init_torrent_list(self):
         """Initialize torrent lists."""
