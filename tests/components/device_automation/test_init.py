@@ -133,14 +133,14 @@ async def test_websocket_get_triggers(hass, hass_ws_client, device_reg, entity_r
         {
             "platform": "device",
             "domain": "light",
-            "type": "turn_off",
+            "type": "turned_off",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
         },
         {
             "platform": "device",
             "domain": "light",
-            "type": "turn_on",
+            "type": "turned_on",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
         },
