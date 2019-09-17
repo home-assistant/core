@@ -6,6 +6,15 @@ import requests.exceptions
 from homeassistant.components.plex import config_flow
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, CONF_URL
 
+from tests.common import MockConfigEntry
+
+
+def init_config_flow(hass):
+    """Init a configuration flow."""
+    flow = config_flow.PlexFlowHandler()
+    flow.hass = hass
+    return flow
+
 
 class MockAvailableServer:
     """Mock avilable server objects."""
@@ -20,9 +29,10 @@ class MockAvailableServer:
 class MockConnection:
     """Mock a single account resource connection object."""
 
-    def __init__(self):
+    def __init__(self, ssl):
         """Initialize the object."""
-        self.httpuri = "http://1.2.3.4:32400"
+        prefix = "https" if ssl else "http"
+        self.httpuri = f"{prefix}://1.2.3.4:32400"
         self.uri = "http://4.3.2.1:32400"
         self.local = True
 
@@ -30,9 +40,9 @@ class MockConnection:
 class MockConnections:
     """Mock a list of resource connections."""
 
-    def __init__(self):
+    def __init__(self, ssl=False):
         """Initialize the object."""
-        self.connections = [MockConnection()]
+        self.connections = [MockConnection(ssl)]
 
 
 async def test_bad_credentials(hass):
@@ -109,6 +119,61 @@ async def test_discovery(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
+
+
+async def test_discovery_while_in_progress(hass):
+    """Test starting a flow from discovery."""
+
+    await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": "user"}
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": "discovery"},
+        data={CONF_HOST: "1.2.3.4", CONF_PORT: "32400"},
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+
+async def test_import_success(hass):
+    """Test a successful configuration import."""
+
+    mock_connections = MockConnections(ssl=True)
+    mock_servers = ["Server1"]
+    server1 = MockAvailableServer("Server1", "1")
+
+    mm_plex_account = MagicMock()
+    mm_plex_account.resources = Mock(return_value=[server1])
+    mm_plex_account.resource = Mock(return_value=mock_connections)
+
+    with patch("plexapi.server.PlexServer") as mock_plex_server:
+        type(mock_plex_server.return_value).machineIdentifier = PropertyMock(
+            return_value="unique_id_123"
+        )
+        type(mock_plex_server.return_value).friendlyName = PropertyMock(
+            return_value=mock_servers[0]
+        )
+        type(mock_plex_server.return_value)._baseurl = PropertyMock(
+            return_value=mock_connections.connections[0].httpuri
+        )
+
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": "import"},
+            data={CONF_TOKEN: "12345", CONF_URL: "https://1.2.3.4:32400"},
+        )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == mock_servers[0]
+    assert result["data"][config_flow.CONF_SERVER] == mock_servers[0]
+    assert result["data"][config_flow.CONF_SERVER_IDENTIFIER] == "unique_id_123"
+    assert (
+        result["data"][config_flow.PLEX_SERVER_CONFIG][CONF_URL]
+        == mock_connections.connections[0].httpuri
+    )
 
 
 async def test_import_bad_hostname(hass):
@@ -259,3 +324,88 @@ async def test_multiple_servers_with_selection(hass):
         assert result["title"] == mock_servers[0]
         assert result["data"][config_flow.CONF_SERVER] == mock_servers[0]
         assert result["data"][config_flow.CONF_SERVER_IDENTIFIER] == "unique_id_123"
+
+
+async def test_adding_last_unconfigured_server(hass):
+    """Test automatically adding last unconfigured server when multiple servers on account."""
+
+    MockConfigEntry(
+        domain=config_flow.DOMAIN,
+        data={
+            config_flow.CONF_SERVER_IDENTIFIER: "unique_id_456",
+            config_flow.CONF_SERVER: "Server2",
+        },
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": "user"}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    mock_connections = MockConnections()
+    mock_servers = ["Server1", "Server2"]
+    server1 = MockAvailableServer("Server1", "unique_id_123")
+    server2 = MockAvailableServer("Server2", "unique_id_456")
+
+    mm_plex_account = MagicMock()
+    mm_plex_account.resources = Mock(return_value=[server1, server2])
+    mm_plex_account.resource = Mock(return_value=mock_connections)
+
+    with patch("plexapi.myplex.MyPlexAccount", return_value=mm_plex_account), patch(
+        "plexapi.server.PlexServer"
+    ) as mock_plex_server:
+        type(mock_plex_server.return_value).machineIdentifier = PropertyMock(
+            return_value="unique_id_123"
+        )
+        type(mock_plex_server.return_value).friendlyName = PropertyMock(
+            return_value=mock_servers[0]
+        )
+        type(mock_plex_server.return_value)._baseurl = PropertyMock(
+            return_value=mock_connections.connections[0].httpuri
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_TOKEN: "12345"}
+        )
+
+        assert result["type"] == "create_entry"
+        assert result["title"] == mock_servers[0]
+        assert result["data"][config_flow.CONF_SERVER] == mock_servers[0]
+        assert result["data"][config_flow.CONF_SERVER_IDENTIFIER] == "unique_id_123"
+
+
+async def test_already_configured(hass):
+    """Test a duplicated successful flow."""
+
+    flow = init_config_flow(hass)
+    MockConfigEntry(
+        domain=config_flow.DOMAIN,
+        data={config_flow.CONF_SERVER_IDENTIFIER: "unique_id_123"},
+    ).add_to_hass(hass)
+
+    mock_connections = MockConnections()
+    mock_servers = ["Server1"]
+    server1 = MockAvailableServer("Server1", "1")
+
+    mm_plex_account = MagicMock()
+    mm_plex_account.resources = Mock(return_value=[server1])
+    mm_plex_account.resource = Mock(return_value=mock_connections)
+
+    with patch("plexapi.server.PlexServer") as mock_plex_server:
+        type(mock_plex_server.return_value).machineIdentifier = PropertyMock(
+            return_value="unique_id_123"
+        )
+        type(mock_plex_server.return_value).friendlyName = PropertyMock(
+            return_value=mock_servers[0]
+        )
+        type(mock_plex_server.return_value)._baseurl = PropertyMock(
+            return_value=mock_connections.connections[0].httpuri
+        )
+        result = await flow.async_step_import(
+            {CONF_TOKEN: "12345", CONF_URL: "http://1.2.3.4:32400"}
+        )
+
+        assert result["type"] == "abort"
+        assert result["reason"] == "already_configured"
