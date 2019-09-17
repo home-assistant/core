@@ -52,8 +52,6 @@ _VALID_STATES = [STATE_ON, STATE_OFF]
 _VALID_OSC = [True, False]
 _VALID_DIRECTIONS = [DIRECTION_FORWARD, DIRECTION_REVERSE]
 
-EXPECTED_AVAILABILITY_RENDER_RESULT = "true"
-
 FAN_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_FRIENDLY_NAME): cv.string,
@@ -184,7 +182,7 @@ class TemplateFan(FanEntity):
         self._oscillating_template = oscillating_template
         self._direction_template = direction_template
         self._availability_template = availability_template
-        self._available = True
+        self._available = "true"
         self._supported_features = 0
 
         self._on_script = Script(hass, on_action)
@@ -267,7 +265,7 @@ class TemplateFan(FanEntity):
     @property
     def available(self):
         """Return availability of Device."""
-        return self._available
+        return self._available is not None and self._available.lower() == "true"
 
     # pylint: disable=arguments-differ
     async def async_turn_on(self, speed: str = None) -> None:
@@ -443,8 +441,7 @@ class TemplateFan(FanEntity):
         # Update Availability if 'availability_template' is defined
         if self._availability_template is not None:
             try:
-                result = self._availability_template.async_render()
-                self._available = result == EXPECTED_AVAILABILITY_RENDER_RESULT
+                self._available = self._availability_template.async_render()
             except (TemplateError, ValueError) as ex:
                 _LOGGER.error(
                     "Could not render %s template %s: %s",
