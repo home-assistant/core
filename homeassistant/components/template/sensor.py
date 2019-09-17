@@ -32,6 +32,7 @@ from homeassistant.helpers.event import async_track_state_change
 from .const import CONF_AVAILABILITY_TEMPLATE
 
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
+EXPECTED_AVAILABILITY_RENDER_RESULT = "true"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,7 +171,7 @@ class SensorTemplate(Entity):
         self._entity_picture = None
         self._entities = entity_ids
         self._device_class = device_class
-        self._available = "true"
+        self._available = EXPECTED_AVAILABILITY_RENDER_RESULT
         self._attribute_templates = attribute_templates
         self._attributes = {}
 
@@ -230,7 +231,10 @@ class SensorTemplate(Entity):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self._available is not None and self._available == "true"
+        return (
+            self._available is not None
+            and self._available == EXPECTED_AVAILABILITY_RENDER_RESULT
+        )
 
     @property
     def device_state_attributes(self):
