@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "username_exists": "Kont ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "username_exists": "Kont ass scho konfigur\u00e9iert",
+            "wrong_login": "Feeler beim Login: iwwerpr\u00e9ift \u00e4r E-Mail & Passwuert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwuert",
+                    "username": "E-Mail"
+                },
+                "description": "F\u00ebllt \u00e4r Login Informatiounen aus",
+                "title": "Linky"
+            }
+        },
+        "title": "Linky"
+    }
+}
