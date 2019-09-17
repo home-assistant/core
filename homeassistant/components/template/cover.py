@@ -53,6 +53,7 @@ STOP_ACTION = "stop_cover"
 POSITION_ACTION = "set_cover_position"
 TILT_ACTION = "set_cover_tilt_position"
 CONF_TILT_OPTIMISTIC = "tilt_optimistic"
+EXPECTED_AVAILABILITY_RENDER_RESULT = "true"
 
 CONF_VALUE_OR_POSITION_TEMPLATE = "value_or_position"
 CONF_OPEN_OR_CLOSE = "open_or_close"
@@ -246,7 +247,7 @@ class CoverTemplate(CoverDevice):
         self._position = None
         self._tilt_value = None
         self._entities = entity_ids
-        self._available = "true"
+        self._available = EXPECTED_AVAILABILITY_RENDER_RESULT
 
         if self._template is not None:
             self._template.hass = self.hass
@@ -349,7 +350,10 @@ class CoverTemplate(CoverDevice):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self._available is not None and self._available == "true"
+        return (
+            self._available is not None
+            and self._available == EXPECTED_AVAILABILITY_RENDER_RESULT
+        )
 
     async def async_open_cover(self, **kwargs):
         """Move the cover up."""
@@ -466,17 +470,6 @@ class CoverTemplate(CoverDevice):
             except (TemplateError, ValueError) as err:
                 _LOGGER.error(err)
                 self._tilt_value = None
-        if self._availability_template is not None:
-            try:
-                result = self._availability_template.async_render()
-                self._available = result == "true"
-            except (TemplateError, ValueError) as ex:
-                _LOGGER.error(
-                    "Could not render %s template %s: %s",
-                    CONF_AVAILABILITY_TEMPLATE,
-                    self._name,
-                    ex,
-                )
 
         for property_name, template in (
             ("_icon", self._icon_template),
