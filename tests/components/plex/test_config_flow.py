@@ -6,8 +6,6 @@ import requests.exceptions
 from homeassistant.components.plex import config_flow
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, CONF_URL
 
-from tests.common import mock_coro
-
 
 class MockAvailableServer:
     """Mock avilable server objects."""
@@ -37,7 +35,7 @@ class MockConnections:
         self.connections = [MockConnection()]
 
 
-async def test_bad_credentials(hass, aioclient_mock):
+async def test_bad_credentials(hass):
     """Test when provided credentials are rejected."""
 
     result = await hass.config_entries.flow.async_init(
@@ -60,7 +58,7 @@ async def test_bad_credentials(hass, aioclient_mock):
         assert result["errors"]["base"] == "faulty_credentials"
 
 
-async def test_import_file_from_discovery(hass, aioclient_mock):
+async def test_import_file_from_discovery(hass):
     """Test importing a legacy file during discovery."""
 
     mock_file_contents = {
@@ -71,7 +69,7 @@ async def test_import_file_from_discovery(hass, aioclient_mock):
 
     with patch("plexapi.server.PlexServer") as mock_plex_server, patch(
         "homeassistant.components.plex.config_flow.load_json",
-        return_value=mock_coro(mock_file_contents),
+        return_value=mock_file_contents,
     ):
         type(mock_plex_server.return_value).machineIdentifier = PropertyMock(
             return_value="unique_id_123"
@@ -88,7 +86,6 @@ async def test_import_file_from_discovery(hass, aioclient_mock):
             context={"source": "discovery"},
             data={CONF_HOST: "1.2.3.4", CONF_PORT: "32400"},
         )
-        print(result)
 
         assert result["type"] == "create_entry"
         assert result["title"] == "Mock Server"
@@ -101,7 +98,7 @@ async def test_import_file_from_discovery(hass, aioclient_mock):
         )
 
 
-async def test_discovery(hass, aioclient_mock):
+async def test_discovery(hass):
     """Test starting a flow from discovery."""
 
     result = await hass.config_entries.flow.async_init(
@@ -114,7 +111,7 @@ async def test_discovery(hass, aioclient_mock):
     assert result["step_id"] == "user"
 
 
-async def test_import_bad_hostname(hass, aioclient_mock):
+async def test_import_bad_hostname(hass):
     """Test when an invalid address is provided."""
 
     with patch(
@@ -131,7 +128,7 @@ async def test_import_bad_hostname(hass, aioclient_mock):
         assert result["errors"]["base"] == "not_found"
 
 
-async def test_unknown_exception(hass, aioclient_mock):
+async def test_unknown_exception(hass):
     """Test when an unknown exception is encountered."""
 
     result = await hass.config_entries.flow.async_init(
@@ -145,13 +142,12 @@ async def test_unknown_exception(hass, aioclient_mock):
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN, context={"source": "user"}, data={CONF_TOKEN: "12345"}
         )
-        print(result)
 
         assert result["type"] == "abort"
         assert result["reason"] == "unknown"
 
 
-async def test_no_servers_found(hass, aioclient_mock):
+async def test_no_servers_found(hass):
     """Test when no servers are on an account."""
 
     result = await hass.config_entries.flow.async_init(
@@ -175,7 +171,7 @@ async def test_no_servers_found(hass, aioclient_mock):
         assert result["errors"]["base"] == "no_servers"
 
 
-async def test_single_available_server(hass, aioclient_mock):
+async def test_single_available_server(hass):
     """Test creating an entry with one server available."""
 
     result = await hass.config_entries.flow.async_init(
@@ -216,7 +212,7 @@ async def test_single_available_server(hass, aioclient_mock):
         assert result["data"][config_flow.CONF_SERVER_IDENTIFIER] == "unique_id_123"
 
 
-async def test_multiple_servers_with_selection(hass, aioclient_mock):
+async def test_multiple_servers_with_selection(hass):
     """Test creating an entry with multiple servers available."""
 
     result = await hass.config_entries.flow.async_init(
