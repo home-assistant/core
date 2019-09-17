@@ -246,7 +246,9 @@ class SensorTemplate(Entity):
         """Update the state from the template."""
         try:
             self._state = self._template.async_render()
+            self._available = "True"
         except TemplateError as ex:
+            self._available = "False"
             if ex.args and ex.args[0].startswith(
                 "UndefinedError: 'None' has no attribute"
             ):

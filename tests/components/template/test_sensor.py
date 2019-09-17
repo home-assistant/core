@@ -252,7 +252,7 @@ class TestTemplateSensor:
         self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test_template_sensor")
-        assert state.state == "unknown"
+        assert state.state == STATE_UNAVAILABLE
 
     def test_invalid_name_does_not_create(self):
         """Test invalid name."""
