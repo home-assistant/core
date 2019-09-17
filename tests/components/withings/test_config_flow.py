@@ -3,9 +3,7 @@ from aiohttp.web_request import BaseRequest
 from asynctest import CoroutineMock, MagicMock
 import pytest
 
-from homeassistant import setup, data_entry_flow
-import homeassistant.components.api as api
-import homeassistant.components.http as http
+from homeassistant import data_entry_flow
 from homeassistant.components.withings import const
 from homeassistant.components.withings.config_flow import (
     register_flow_implementation,
@@ -22,27 +20,6 @@ def flow_handler_fixture(hass: HomeAssistantType):
     flow_handler = WithingsFlowHandler()
     flow_handler.hass = hass
     return flow_handler
-
-
-@pytest.fixture(name="setup_hass")
-async def setup_hass_fixture(hass: HomeAssistantType):
-    """Provide hass instance."""
-    config = {
-        http.DOMAIN: {},
-        api.DOMAIN: {"base_url": "http://localhost/"},
-        const.DOMAIN: {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_secret",
-            const.PROFILES: ["Person 1", "Person 2"],
-        },
-    }
-
-    hass.data = {}
-
-    await setup.async_setup_component(hass, "http", config)
-    await setup.async_setup_component(hass, "api", config)
-
-    return hass
 
 
 def test_flow_handler_init(flow_handler: WithingsFlowHandler):
@@ -173,3 +150,13 @@ async def test_auth_callback_view_get(hass: HomeAssistantType):
         "my_flow_id", {const.PROFILE: "my_profile", const.CODE: "my_code"}
     )
     hass.config_entries.flow.async_configure.reset_mock()
+
+
+async def test_init_without_config(hass):
+    """Try initializin a configg flow without it being configured."""
+    result = await hass.config_entries.flow.async_init(
+        "withings", context={"source": "user"}
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "no_flows"
