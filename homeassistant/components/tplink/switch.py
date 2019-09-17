@@ -2,7 +2,7 @@
 import logging
 import time
 
-from pyHS100 import SmartDeviceException, SmartPlug, SmartDevice
+from pyHS100 import SmartDeviceException, SmartDevice
 
 from homeassistant.components.switch import (
     ATTR_CURRENT_POWER_W,
@@ -35,7 +35,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-def add_entity(device: SmartPlug, async_add_entities):
+def add_entity(device: SmartDevice, async_add_entities):
     """Check if device is online and add the entity."""
     # Attempt to get the sysinfo. If it fails, it will raise an
     # exception that is caught by async_add_entities_retry which
@@ -70,6 +70,8 @@ class SmartPlugSwitch(SwitchDevice):
         self._sysinfo = None
         self._state = None
         self._available = False
+        # beware the _child_num field is 0-indexed;
+        # the _sysinfo returned by the device is 1-indexed.
         self._child_num = child_num
         # Set up emeter cache
         self._emeter_params = {}
@@ -102,7 +104,7 @@ class SmartPlugSwitch(SwitchDevice):
             "model": self._model,
             "manufacturer": "TP-Link",
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
-            "sw_version": self._sysinfo["sw_ver"],
+            "sw_version": self.smartplug.sys_info["sw_ver"],
         }
 
     @property
@@ -157,27 +159,29 @@ class SmartPlugSwitch(SwitchDevice):
             if self.smartplug.has_emeter:
                 emeter_readings = self.smartplug.get_emeter_realtime()
 
-                self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.2f}".format(
-                    emeter_readings["power"]
-                )
-                self._emeter_params[ATTR_TOTAL_ENERGY_KWH] = "{:.3f}".format(
-                    emeter_readings["total"]
-                )
-                self._emeter_params[ATTR_VOLTAGE] = "{:.1f}".format(
-                    emeter_readings["voltage"]
-                )
-                self._emeter_params[ATTR_CURRENT_A] = "{:.2f}".format(
-                    emeter_readings["current"]
-                )
-
-                emeter_statics = self.smartplug.get_emeter_daily()
                 try:
+                    self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.2f}".format(
+                        emeter_readings["power"]
+                    )
+                    self._emeter_params[ATTR_TOTAL_ENERGY_KWH] = "{:.3f}".format(
+                        emeter_readings["total"]
+                    )
+                    self._emeter_params[ATTR_VOLTAGE] = "{:.1f}".format(
+                        emeter_readings["voltage"]
+                    )
+                    self._emeter_params[ATTR_CURRENT_A] = "{:.2f}".format(
+                        emeter_readings["current"]
+                    )
+
+                    emeter_statics = self.smartplug.get_emeter_daily()
                     self._emeter_params[ATTR_TODAY_ENERGY_KWH] = "{:.3f}".format(
                         emeter_statics[int(time.strftime("%e"))]
                     )
                 except KeyError:
                     # Device returned no daily history
-                    pass
+                    _LOGGER.warning(
+                        "smartplug has_emeter but cannot read energy values"
+                    )
 
             self._available = True
 
