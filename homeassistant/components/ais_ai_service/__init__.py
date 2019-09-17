@@ -2397,13 +2397,70 @@ async def async_setup(hass, config):
     )
 
     async def ais_run_each_minute(now):
-        _LOGGER.info("XXXXXXXXXXXXXXXXXXXXXX")
-        _LOGGER.info("ais_run_each_minute!!!")
-        _LOGGER.info("XXXXXXXXXXXXXXXXXXXXXX")
+        # check the night / quiet mode
+        quiet_mode = hass.states.get("input_boolean.ais_quiet_mode").state
+        if quiet_mode == "on":
+            quiet_mode_start_attr = hass.states.get(
+                "input_datetime.ais_quiet_mode_start"
+            ).attributes
+            quiet_mode_stop_attr = hass.states.get(
+                "input_datetime.ais_quiet_mode_stop"
+            ).attributes
+            if quiet_mode_start_attr["timestamp"] != quiet_mode_stop_attr["timestamp"]:
+                import datetime
 
-    #
+                h = datetime.datetime.now().hour
+                m = datetime.datetime.now().minute
+                if (
+                    quiet_mode_start_attr["hour"] == h
+                    and quiet_mode_start_attr["minute"] == m
+                ):
+                    _LOGGER.info("Start Night ")
+                    ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL = hass.states.get(
+                        "media_player.wbudowany_glosnik"
+                    ).attributes["volume_level"]
+                    # set volume as min from (0.2, curr_volume_level)
+                    await hass.services.async_call(
+                        "media_player",
+                        "volume_set",
+                        {
+                            "entity_id": "media_player.wbudowany_glosnik",
+                            "volume_level": min(
+                                0.2, ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL
+                            ),
+                        },
+                    )
+                    await hass.services.async_call(
+                        "frontend", "set_theme", {"name": "night"}
+                    )
+
+                if (
+                    quiet_mode_stop_attr["hour"] == h
+                    and quiet_mode_stop_attr["minute"] == m
+                ):
+                    _LOGGER.info("Stop Night ")
+                    curr_volume_level = hass.states.get(
+                        "media_player.wbudowany_glosnik"
+                    ).attributes["volume_level"]
+                    # set volume as max from (curr_volume_level, ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL)
+                    await hass.services.async_call(
+                        "media_player",
+                        "volume_set",
+                        {
+                            "entity_id": "media_player.wbudowany_glosnik",
+                            "volume_level": max(
+                                ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL,
+                                curr_volume_level,
+                            ),
+                        },
+                    )
+                    await hass.services.async_call(
+                        "frontend", "set_theme", {"name": "ais"}
+                    )
+
+    # run each minute at first second
     _dt = dt_util.utcnow()
-    event.async_track_utc_time_change(hass, ais_run_each_minute, second=55)
+    event.async_track_utc_time_change(hass, ais_run_each_minute, second=1)
     return True
 
 
