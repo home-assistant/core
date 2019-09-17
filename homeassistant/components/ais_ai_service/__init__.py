@@ -259,6 +259,8 @@ VIRTUAL_KEYBOARD_DELETE = ["-", "ostatni znak", "ostatni wyraz", "całe pole"]
 CURR_VIRTUAL_KEYBOARD_VALUE = None
 CURR_VIRTUAL_KEY = None
 # ais-dom virtual keyboard
+G_INPUT_CURRENT_HOUR = None
+G_INPUT_CURRENT_MINNUTE = None
 
 
 def isSwitch(entity_id):
@@ -643,6 +645,71 @@ def reset_virtual_keyboard(hass):
     )
 
 
+def get_hour_to_say(h, m):
+    import babel.dates
+    from datetime import time
+
+    t = time(h, m)
+    message = "godzina: " + babel.dates.format_time(t, format="short", locale="pl")
+    return message
+
+
+def set_time_hour_up(hass, entity_id):
+    global G_INPUT_CURRENT_HOUR
+    global G_INPUT_CURRENT_MINNUTE
+    if G_INPUT_CURRENT_HOUR is None:
+        time_attr = hass.states.get(entity_id).attributes
+        G_INPUT_CURRENT_HOUR = time_attr.get("hour", 0)
+        G_INPUT_CURRENT_MINNUTE = time_attr.get("minute", 0)
+    if G_INPUT_CURRENT_HOUR == 23:
+        G_INPUT_CURRENT_HOUR = 0
+    else:
+        G_INPUT_CURRENT_HOUR = G_INPUT_CURRENT_HOUR + 1
+    _say_it(hass, get_hour_to_say(G_INPUT_CURRENT_HOUR, G_INPUT_CURRENT_MINNUTE))
+
+
+def set_time_hour_down(hass, entity_id):
+    global G_INPUT_CURRENT_HOUR
+    global G_INPUT_CURRENT_MINNUTE
+    if G_INPUT_CURRENT_HOUR is None:
+        time_attr = hass.states.get(entity_id).attributes
+        G_INPUT_CURRENT_HOUR = time_attr.get("hour", 0)
+        G_INPUT_CURRENT_MINNUTE = time_attr.get("minute", 0)
+    if G_INPUT_CURRENT_HOUR == 0:
+        G_INPUT_CURRENT_HOUR = 23
+    else:
+        G_INPUT_CURRENT_HOUR = G_INPUT_CURRENT_HOUR - 1
+    _say_it(hass, get_hour_to_say(G_INPUT_CURRENT_HOUR, G_INPUT_CURRENT_MINNUTE))
+
+
+def set_time_minute_up(hass, entity_id):
+    global G_INPUT_CURRENT_HOUR
+    global G_INPUT_CURRENT_MINNUTE
+    if G_INPUT_CURRENT_HOUR is None:
+        time_attr = hass.states.get(entity_id).attributes
+        G_INPUT_CURRENT_HOUR = time_attr.get("hour", 0)
+        G_INPUT_CURRENT_MINNUTE = time_attr.get("minute", 0)
+    if G_INPUT_CURRENT_MINNUTE == 59:
+        G_INPUT_CURRENT_MINNUTE = 0
+    else:
+        G_INPUT_CURRENT_MINNUTE = G_INPUT_CURRENT_MINNUTE + 1
+    _say_it(hass, get_hour_to_say(G_INPUT_CURRENT_HOUR, G_INPUT_CURRENT_MINNUTE))
+
+
+def set_time_minute_down(hass, entity_id):
+    global G_INPUT_CURRENT_HOUR
+    global G_INPUT_CURRENT_MINNUTE
+    if G_INPUT_CURRENT_HOUR is None:
+        time_attr = hass.states.get(entity_id).attributes
+        G_INPUT_CURRENT_HOUR = time_attr.get("hour", 0)
+        G_INPUT_CURRENT_MINNUTE = time_attr.get("minute", 0)
+    if G_INPUT_CURRENT_MINNUTE == 0:
+        G_INPUT_CURRENT_MINNUTE = 59
+    else:
+        G_INPUT_CURRENT_MINNUTE = G_INPUT_CURRENT_MINNUTE - 1
+    _say_it(hass, get_hour_to_say(G_INPUT_CURRENT_HOUR, G_INPUT_CURRENT_MINNUTE))
+
+
 def remove_selected_action(key_code):
     global CURR_ENTITIE_SELECTED_ACTION
     if key_code not in (19, 20, 21, 22, 23):
@@ -931,6 +998,19 @@ def say_curr_entity(hass):
         )
         _say_it(hass, info)
         return
+    elif entity_id == "input_boolean.ais_quiet_mode":
+        state = hass.states.get("input_boolean.ais_quiet_mode").state
+        info_value = " wyłączony. Naciśnij OK by włączyć. "
+        if state == "on":
+            info_value = " włączony. Naciśnij OK by wyłączyć. "
+        _say_it(
+            hass,
+            info_name
+            + info_value
+            + " Gdy tryb nocny jest włączony to asystent w wybranych godzinach "
+            "automatycznie zredukuje głośność odtwarzania audio.",
+        )
+        return
     elif entity_id == "input_select.ais_bookmark_last_played":
         _say_it(hass, info_name + " " + info_data.replace("Local;", ""))
         return
@@ -945,6 +1025,17 @@ def say_curr_entity(hass):
         return
     elif entity_id.startswith("automation."):
         _say_it(hass, info_name + " Naciśnij OK by uruchomić.")
+        return
+    elif entity_id.startswith("input_datetime."):
+        state = hass.states.get(entity_id)
+        attr = state.attributes
+        info = (
+            ". Godzina "
+            + str(attr.get("hour", "00"))
+            + ":"
+            + str(attr.get("minute", "00"))
+        )
+        _say_it(hass, info_name + info + ". Naciśnij OK by zmienić godzinę.")
         return
     elif entity_id.startswith("input_text."):
         if CURR_BUTTON_CODE == 4:
@@ -1045,6 +1136,7 @@ def get_curent_position(hass):
 
 
 def commit_current_position(hass):
+    global CURR_ENTITIE_ENTERED
     if CURR_ENTITIE.startswith("input_select."):
         # force the change - to trigger the state change for automation
         position = get_curent_position(hass)
@@ -1081,6 +1173,18 @@ def commit_current_position(hass):
             "set_value",
             {"entity_id": CURR_ENTITIE, "value": get_curent_position(hass)},
         )
+    elif CURR_ENTITIE.startswith("input_datetime."):
+        hass.services.call(
+            "input_datetime",
+            "set_datetime",
+            {
+                "entity_id": CURR_ENTITIE,
+                "time": str(G_INPUT_CURRENT_HOUR) + ":" + str(G_INPUT_CURRENT_MINNUTE),
+            },
+        )
+        text = get_hour_to_say(G_INPUT_CURRENT_HOUR, G_INPUT_CURRENT_MINNUTE)
+        _say_it(hass, "wpisana " + text)
+        CURR_ENTITIE_ENTERED = False
     elif CURR_ENTITIE.startswith("sensor.") and CURR_ENTITIE.endswith("list"):
         # play/read selected source
         idx = hass.states.get(CURR_ENTITIE).state
@@ -1240,6 +1344,8 @@ def set_prev_position(hass):
 
 def select_entity(hass, long_press):
     global CURR_ENTITIE_SELECTED_ACTION
+    global G_INPUT_CURRENT_MINNUTE
+    global G_INPUT_CURRENT_HOUR
     # on remote OK, select group view, group or entity
     global CURR_ENTITIE_ENTERED
     # OK on remote
@@ -1299,6 +1405,14 @@ def select_entity(hass, long_press):
                 if CURR_ENTITIE.startswith("input_text."):
                     _say_it(hass, "Wpisywanie/dyktowanie tekstu włączone")
                     reset_virtual_keyboard(hass)
+                elif CURR_ENTITIE.startswith("input_datetime."):
+                    G_INPUT_CURRENT_MINNUTE = None
+                    G_INPUT_CURRENT_HOUR = None
+                    _say_it(
+                        hass,
+                        "OK, dostosuj godzinę strzałkami góra lub dół a minuty strzałkami lewo lub prawo."
+                        " By zatwierdzić naciśnij OK.",
+                    )
                 else:
                     set_next_position(hass)
                 return
@@ -1363,7 +1477,6 @@ def select_entity(hass, long_press):
                     hass.services.call(
                         "automation", "trigger", {"entity_id": CURR_ENTITIE}
                     )
-
         else:
             # do some special staff for some entries
             if CURR_ENTITIE == "sensor.version_info":
@@ -1445,6 +1558,8 @@ def select_entity(hass, long_press):
                     )
             elif CURR_ENTITIE.startswith("input_text."):
                 type_to_input_text_from_virtual_keyboard(hass)
+            elif CURR_ENTITIE.startswith("input_datetime."):
+                commit_current_position(hass)
         else:
             # eneter on unchanged item
             _say_it(hass, "Tej pozycji nie można zmieniać")
@@ -1463,6 +1578,7 @@ def can_entity_be_changed(hass, entity):
             "input_select.",
             "input_number.",
             "automation.",
+            "input_datetime.",
         )
     ):
         return True
@@ -1522,12 +1638,18 @@ def set_on_dpad_down(hass, long_press):
         elif CURR_ENTITIE.startswith("input_text.") and CURR_ENTITIE_ENTERED:
             set_prev_virtual_keyboard_mode()
             say_curr_virtual_keyboard_mode(hass)
+            return
+        elif CURR_ENTITIE.startswith("input_datetime.") and CURR_ENTITIE_ENTERED:
+            set_time_hour_down(hass, CURR_ENTITIE)
+            return
         elif CURR_ENTITIE_ENTERED and CURR_ENTITIE == "sensor.aisfavoriteslist":
             _say_it(hass, "Usuwanie. Naciśnij OK aby usunąć pozycję z ulubionych.")
             CURR_ENTITIE_SELECTED_ACTION = ais_global.G_ACTION_DELETE
+            return
         elif CURR_ENTITIE_ENTERED and CURR_ENTITIE == "sensor.aisbookmarkslist":
             _say_it(hass, "Usuwanie. Naciśnij OK aby usunąć tą zakładkę.")
             CURR_ENTITIE_SELECTED_ACTION = ais_global.G_ACTION_DELETE
+            return
         elif CURR_ENTITIE == "sensor.ais_drives":
             path = hass.states.get(CURR_ENTITIE).state
             if path.startswith("/dysk-wewnętrzny"):
@@ -1535,6 +1657,7 @@ def set_on_dpad_down(hass, long_press):
                 CURR_ENTITIE_SELECTED_ACTION = ais_global.G_ACTION_DELETE
             else:
                 _say_it(hass, "Wybrana pozycja nie ma dodatkowych opcji.")
+            return
         else:
             _say_it(hass, "Wybrana pozycja nie ma dodatkowych opcji.")
 
@@ -1569,6 +1692,9 @@ def set_on_dpad_up(hass, long_press):
         elif CURR_ENTITIE.startswith("input_text.") and CURR_ENTITIE_ENTERED:
             set_next_virtual_keyboard_mode()
             say_curr_virtual_keyboard_mode(hass)
+            return
+        elif CURR_ENTITIE.startswith("input_datetime.") and CURR_ENTITIE_ENTERED:
+            set_time_hour_up(hass, CURR_ENTITIE)
             return
         else:
             _say_it(hass, "Wybrana pozycja nie ma dodatkowych informacji.")
@@ -1628,9 +1754,14 @@ def set_focus_on_prev_entity(hass, long_press):
             hass.services.call(
                 "media_player", "media_previous_track", {"entity_id": CURR_ENTITIE}
             )
+            return
         elif CURR_ENTITIE.startswith("input_text.") and CURR_ENTITIE_ENTERED:
             set_prev_virtual_key()
             say_curr_virtual_key(hass)
+            return
+        elif CURR_ENTITIE.startswith("input_datetime.") and CURR_ENTITIE_ENTERED:
+            set_time_minute_down(hass, CURR_ENTITIE)
+            return
         else:
             set_prev_position(hass)
     else:
@@ -1638,8 +1769,10 @@ def set_focus_on_prev_entity(hass, long_press):
             hass.services.call(
                 "media_player", "media_previous_track", {"entity_id": CURR_ENTITIE}
             )
+            return
         elif CURR_ENTITIE == "sensor.ais_drives":
             hass.services.call("ais_drives_service", "remote_prev_item")
+            return
         else:
             # entity not selected or no way to change the entity, go to next one
             set_prev_entity(hass)
@@ -1701,6 +1834,9 @@ def set_focus_on_next_entity(hass, long_press):
         elif CURR_ENTITIE.startswith("input_text.") and CURR_ENTITIE_ENTERED:
             set_next_virtual_key()
             say_curr_virtual_key(hass)
+        elif CURR_ENTITIE.startswith("input_datetime.") and CURR_ENTITIE_ENTERED:
+            set_time_minute_up(hass, CURR_ENTITIE)
+            return
         else:
             set_next_position(hass)
     else:
@@ -2132,6 +2268,106 @@ async def async_setup(hass, config):
                         },
                     )
 
+    @asyncio.coroutine
+    def check_night_mode(service):
+        # check the night / quiet mode
+        timer = False
+        if "timer" in service.data:
+            timer = service.data["timer"]
+        quiet_mode = hass.states.get("input_boolean.ais_quiet_mode").state
+        _LOGGER.info(
+            "check_night_mode: timer " + str(timer) + " quiet_mode " + str(quiet_mode)
+        )
+
+        def apply_night_mode():
+            _LOGGER.info("Start Night ")
+            ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL = hass.states.get(
+                "media_player.wbudowany_glosnik"
+            ).attributes["volume_level"]
+            # set volume as min from (0.2, curr_volume_level)
+            hass.async_add_job(
+                hass.services.async_call(
+                    "media_player",
+                    "volume_set",
+                    {
+                        "entity_id": "media_player.wbudowany_glosnik",
+                        "volume_level": min(
+                            0.2, ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL
+                        ),
+                    },
+                )
+            )
+            hass.async_add_job(
+                hass.services.async_call("frontend", "set_theme", {"name": "night"})
+            )
+
+        def apply_day_mode():
+            _LOGGER.info("Stop Night ")
+            curr_volume_level = hass.states.get(
+                "media_player.wbudowany_glosnik"
+            ).attributes["volume_level"]
+            # set volume as max from (curr_volume_level, ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL)
+            hass.async_add_job(
+                hass.services.async_call(
+                    "media_player",
+                    "volume_set",
+                    {
+                        "entity_id": "media_player.wbudowany_glosnik",
+                        "volume_level": max(
+                            ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL, curr_volume_level
+                        ),
+                    },
+                )
+            )
+            hass.async_add_job(
+                hass.services.async_call("frontend", "set_theme", {"name": "ais"})
+            )
+
+        if not timer:
+            # call after change or on start
+            quiet_mode_start_attr = hass.states.get(
+                "input_datetime.ais_quiet_mode_start"
+            ).attributes
+            quiet_mode_stop_attr = hass.states.get(
+                "input_datetime.ais_quiet_mode_stop"
+            ).attributes
+            th = datetime.datetime.now().hour * 60 * 60
+            tm = datetime.datetime.now().minute * 60
+            ts = th + tm
+            qm_st = quiet_mode_start_attr["timestamp"]
+            qm_et = quiet_mode_stop_attr["timestamp"]
+            _LOGGER.info("qm_st: " + str(qm_st))
+            _LOGGER.info("ts: " + str(ts))
+            _LOGGER.info("qm_et: " + str(qm_et))
+            if (int(qm_st) < int(ts) < int(qm_et)) and quiet_mode == "on":
+                _LOGGER.info("-> apply_night_mode")
+                apply_night_mode()
+            else:
+                _LOGGER.info("-> apply_day_mode")
+                apply_day_mode()
+        if timer and quiet_mode == "on":
+            # call from timer
+            quiet_mode_start_attr = hass.states.get(
+                "input_datetime.ais_quiet_mode_start"
+            ).attributes
+            quiet_mode_stop_attr = hass.states.get(
+                "input_datetime.ais_quiet_mode_stop"
+            ).attributes
+            if quiet_mode_start_attr["timestamp"] != quiet_mode_stop_attr["timestamp"]:
+
+                h = datetime.datetime.now().hour
+                m = datetime.datetime.now().minute
+                if (
+                    quiet_mode_start_attr["hour"] == h
+                    and quiet_mode_start_attr["minute"] == m
+                ):
+                    apply_night_mode()
+                if (
+                    quiet_mode_stop_attr["hour"] == h
+                    and quiet_mode_stop_attr["minute"] == m
+                ):
+                    apply_day_mode()
+
     # register services
     hass.services.async_register(DOMAIN, "process", process)
     hass.services.async_register(DOMAIN, "process_code", process_code)
@@ -2151,6 +2387,7 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "set_context", set_context)
     hass.services.async_register(DOMAIN, "check_local_ip", check_local_ip)
     hass.services.async_register(DOMAIN, "switch_ui", switch_ui)
+    hass.services.async_register(DOMAIN, "check_night_mode", check_night_mode)
 
     # register intents
     hass.helpers.intent.async_register(GetTimeIntent())
@@ -2397,66 +2634,9 @@ async def async_setup(hass, config):
     )
 
     async def ais_run_each_minute(now):
-        # check the night / quiet mode
-        quiet_mode = hass.states.get("input_boolean.ais_quiet_mode").state
-        if quiet_mode == "on":
-            quiet_mode_start_attr = hass.states.get(
-                "input_datetime.ais_quiet_mode_start"
-            ).attributes
-            quiet_mode_stop_attr = hass.states.get(
-                "input_datetime.ais_quiet_mode_stop"
-            ).attributes
-            if quiet_mode_start_attr["timestamp"] != quiet_mode_stop_attr["timestamp"]:
-                import datetime
-
-                h = datetime.datetime.now().hour
-                m = datetime.datetime.now().minute
-                if (
-                    quiet_mode_start_attr["hour"] == h
-                    and quiet_mode_start_attr["minute"] == m
-                ):
-                    _LOGGER.info("Start Night ")
-                    ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL = hass.states.get(
-                        "media_player.wbudowany_glosnik"
-                    ).attributes["volume_level"]
-                    # set volume as min from (0.2, curr_volume_level)
-                    await hass.services.async_call(
-                        "media_player",
-                        "volume_set",
-                        {
-                            "entity_id": "media_player.wbudowany_glosnik",
-                            "volume_level": min(
-                                0.2, ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL
-                            ),
-                        },
-                    )
-                    await hass.services.async_call(
-                        "frontend", "set_theme", {"name": "night"}
-                    )
-
-                if (
-                    quiet_mode_stop_attr["hour"] == h
-                    and quiet_mode_stop_attr["minute"] == m
-                ):
-                    _LOGGER.info("Stop Night ")
-                    curr_volume_level = hass.states.get(
-                        "media_player.wbudowany_glosnik"
-                    ).attributes["volume_level"]
-                    # set volume as max from (curr_volume_level, ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL)
-                    await hass.services.async_call(
-                        "media_player",
-                        "volume_set",
-                        {
-                            "entity_id": "media_player.wbudowany_glosnik",
-                            "volume_level": max(
-                                ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL,
-                                curr_volume_level,
-                            ),
-                        },
-                    )
-                    await hass.services.async_call(
-                        "frontend", "set_theme", {"name": "ais"}
-                    )
+        await hass.services.async_call(
+            "ais_ai_service", "check_night_mode", {"timer": True}
+        )
 
     # run each minute at first second
     _dt = dt_util.utcnow()

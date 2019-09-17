@@ -260,6 +260,17 @@ def async_setup(hass, config):
                             "entity_id": "input_text.ais_iot_device_wifi_password",
                         },
                     )
+        elif entity_id in (
+            "input_boolean.ais_quiet_mode",
+            "input_datetime.ais_quiet_mode_start",
+            "input_datetime.ais_quiet_mode_stop",
+        ):
+            _LOGGER.info("quiet_mode changes")
+            hass.async_add_job(
+                hass.services.async_call(
+                    "ais_ai_service", "check_night_mode", {"timer": False}
+                )
+            )
 
     hass.bus.async_listen(EVENT_STATE_CHANGED, state_changed)
     return True

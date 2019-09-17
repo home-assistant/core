@@ -22,11 +22,11 @@ input_boolean:
 
 input_datetime:
   ais_quiet_mode_start:
-    name: Tryb nocny start
+    name: Start trybu nocnego
     has_date: false
     has_time: true
   ais_quiet_mode_stop:
-    name: Tryb nocny stop
+    name: Koniec trybu nocnego
     has_date: false
     has_time: true
 
@@ -57,6 +57,7 @@ input_number:
     max: 2
     step: 0.1
     initial: 1
+
 
 group:
   ais_tts_configuration:
