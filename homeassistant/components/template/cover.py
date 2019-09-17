@@ -246,7 +246,7 @@ class CoverTemplate(CoverDevice):
         self._position = None
         self._tilt_value = None
         self._entities = entity_ids
-        self._available = True
+        self._available = "true"
 
         if self._template is not None:
             self._template.hass = self.hass
@@ -349,7 +349,7 @@ class CoverTemplate(CoverDevice):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self._available
+        return self._available is not None and self._available == "true"
 
     async def async_open_cover(self, **kwargs):
         """Move the cover up."""
@@ -481,6 +481,7 @@ class CoverTemplate(CoverDevice):
         for property_name, template in (
             ("_icon", self._icon_template),
             ("_entity_picture", self._entity_picture_template),
+            ("_available", self._availability_template),
         ):
             if template is None:
                 continue
