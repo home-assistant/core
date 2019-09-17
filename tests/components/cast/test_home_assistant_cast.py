@@ -29,7 +29,7 @@ async def test_service_show_view(hass):
 
 
 async def test_use_cloud_url(hass):
-    """Test we don't set app id in prod."""
+    """Test that we fall back to cloud url."""
     hass.config.api = Mock(base_url="http://example.com")
     await home_assistant_cast.async_setup_ha_cast(hass, MockConfigEntry())
     calls = async_mock_signal(hass, home_assistant_cast.SIGNAL_HASS_CAST_SHOW_VIEW)
