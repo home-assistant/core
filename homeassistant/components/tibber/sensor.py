@@ -55,9 +55,12 @@ class TibberSensorElPrice(Entity):
         self._is_available = False
         self._device_state_attributes = {}
         self._unit_of_measurement = self._tibber_home.price_unit
-        self._name = "Electricity price {}".format(
-            tibber_home.info["viewer"]["home"]["appNickname"]
-        )
+        if tibber_home.info["viewer"]["home"]["appNickname"] is None:
+            name = tibber_home.info["viewer"]["home"]["address"].get("address1", "")
+        else:
+            name = tibber_home.info["viewer"]["home"]["appNickname"]
+
+        self._name = "Electricity price {}".format(name)
 
     async def async_update(self):
         """Get the latest data and updates the states."""
@@ -148,8 +151,12 @@ class TibberSensorRT(Entity):
         self._state = None
         self._device_state_attributes = {}
         self._unit_of_measurement = "W"
-        nickname = tibber_home.info["viewer"]["home"]["appNickname"]
-        self._name = f"Real time consumption {nickname}"
+        if tibber_home.info["viewer"]["home"]["appNickname"] is None:
+            name = tibber_home.info["viewer"]["home"]["address"].get("address1", "")
+        else:
+            name = tibber_home.info["viewer"]["home"]["appNickname"]
+
+        self._name = "Real time consumption {}".format(name)
 
     async def async_added_to_hass(self):
         """Start unavailability tracking."""
