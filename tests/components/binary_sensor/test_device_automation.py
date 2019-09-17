@@ -1,7 +1,11 @@
 """The test for binary_sensor device automation."""
 import pytest
 
-from homeassistant.components.binary_sensor import DOMAIN
+from homeassistant.components.binary_sensor import DOMAIN, DEVICE_CLASSES
+from homeassistant.components.binary_sensor.device_automation import (
+    ENTITY_CONDITIONS,
+    ENTITY_TRIGGERS,
+)
 from homeassistant.const import STATE_ON, STATE_OFF, CONF_PLATFORM
 from homeassistant.setup import async_setup_component
 import homeassistant.components.automation as automation
@@ -84,12 +88,13 @@ async def test_get_conditions(hass, device_reg, entity_reg):
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
-        DOMAIN,
-        "test",
-        platform.ENTITIES["battery"].unique_id,
-        device_id=device_entry.id,
-    )
+    for device_class in DEVICE_CLASSES:
+        entity_reg.async_get_or_create(
+            DOMAIN,
+            "test",
+            platform.ENTITIES[device_class].unique_id,
+            device_id=device_entry.id,
+        )
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
 
@@ -97,17 +102,12 @@ async def test_get_conditions(hass, device_reg, entity_reg):
         {
             "condition": "device",
             "domain": DOMAIN,
-            "type": "is_bat_low",
+            "type": condition["type"],
             "device_id": device_entry.id,
-            "entity_id": platform.ENTITIES["battery"].entity_id,
-        },
-        {
-            "condition": "device",
-            "domain": DOMAIN,
-            "type": "is_not_bat_low",
-            "device_id": device_entry.id,
-            "entity_id": platform.ENTITIES["battery"].entity_id,
-        },
+            "entity_id": platform.ENTITIES[device_class].entity_id,
+        }
+        for device_class in DEVICE_CLASSES
+        for condition in ENTITY_CONDITIONS[device_class]
     ]
     conditions = await async_get_device_automations(
         hass, "async_get_conditions", device_entry.id
@@ -126,12 +126,13 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
-        DOMAIN,
-        "test",
-        platform.ENTITIES["battery"].unique_id,
-        device_id=device_entry.id,
-    )
+    for device_class in DEVICE_CLASSES:
+        entity_reg.async_get_or_create(
+            DOMAIN,
+            "test",
+            platform.ENTITIES[device_class].unique_id,
+            device_id=device_entry.id,
+        )
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
 
@@ -139,17 +140,12 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         {
             "platform": "device",
             "domain": DOMAIN,
-            "type": "bat_low",
+            "type": trigger["type"],
             "device_id": device_entry.id,
-            "entity_id": platform.ENTITIES["battery"].entity_id,
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "not_bat_low",
-            "device_id": device_entry.id,
-            "entity_id": platform.ENTITIES["battery"].entity_id,
-        },
+            "entity_id": platform.ENTITIES[device_class].entity_id,
+        }
+        for device_class in DEVICE_CLASSES
+        for trigger in ENTITY_TRIGGERS[device_class]
     ]
     triggers = await async_get_device_automations(
         hass, "async_get_triggers", device_entry.id
