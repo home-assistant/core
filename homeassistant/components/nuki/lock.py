@@ -6,15 +6,12 @@ from pynuki import NukiBridge
 from requests.exceptions import RequestException
 import voluptuous as vol
 
-from homeassistant.components.lock import (
-    DOMAIN,
-    PLATFORM_SCHEMA,
-    SUPPORT_OPEN,
-    LockDevice,
-)
+from homeassistant.components.lock import PLATFORM_SCHEMA, SUPPORT_OPEN, LockDevice
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import extract_entity_ids
+
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +65,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             lock.lock_n_go(unlatch=unlatch)
 
     hass.services.register(
-        "nuki", SERVICE_LOCK_N_GO, service_handler, schema=LOCK_N_GO_SERVICE_SCHEMA
+        DOMAIN, SERVICE_LOCK_N_GO, service_handler, schema=LOCK_N_GO_SERVICE_SCHEMA
     )
 
     add_entities(devices)
