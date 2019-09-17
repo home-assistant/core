@@ -52,6 +52,7 @@ CONF_VACUUMS = "vacuums"
 CONF_BATTERY_LEVEL_TEMPLATE = "battery_level_template"
 CONF_FAN_SPEED_LIST = "fan_speeds"
 CONF_FAN_SPEED_TEMPLATE = "fan_speed_template"
+EXPECTED_AVAILABILITY_RENDER_RESULT = "true"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 _VALID_STATES = [
@@ -243,7 +244,7 @@ class TemplateVacuum(StateVacuumDevice):
         self._state = None
         self._battery_level = None
         self._fan_speed = None
-        self._available = True
+        self._available = EXPECTED_AVAILABILITY_RENDER_RESULT
 
         if self._template:
             self._supported_features |= SUPPORT_STATE
@@ -292,7 +293,10 @@ class TemplateVacuum(StateVacuumDevice):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self._available
+        return (
+            self._available is not None
+            and self._available == EXPECTED_AVAILABILITY_RENDER_RESULT
+        )
 
     async def async_start(self):
         """Start or resume the cleaning task."""
@@ -438,8 +442,7 @@ class TemplateVacuum(StateVacuumDevice):
         # Update availability if availability template is defined
         if self._availability_template is not None:
             try:
-                result = self._availability_template.async_render()
-                self._available = result == "true"
+                self._available = self._availability_template.async_render()
             except (TemplateError, ValueError) as ex:
                 _LOGGER.error(
                     "Could not render %s template %s: %s",
