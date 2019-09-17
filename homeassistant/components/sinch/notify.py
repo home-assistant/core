@@ -81,17 +81,17 @@ class SinchNotificationService(BaseNotificationService):
                 _LOGGER.debug(
                     'Successfully sent SMS to "%s" (batch_id: %s)', target, batch_id
                 )
-        except ErrorResponseException as e:
+        except ErrorResponseException as ex:
             _LOGGER.error(
-                "Caught ErrorResponseException. Response code: %d (%s)", e.error_code, e
+                "Caught ErrorResponseException. Response code: %d (%s)", ex.error_code, ex
             )
-        except NotFoundException as e:
-            _LOGGER.error("Caught NotFoundException (request URL: %s)", e.url)
-        except UnauthorizedException as e:
+        except NotFoundException as ex:
+            _LOGGER.error("Caught NotFoundException (request URL: %s)", ex.url)
+        except UnauthorizedException as ex:
             _LOGGER.error(
-                "Caught UnauthorizedException (service plan: %s)", e.service_plan_id
+                "Caught UnauthorizedException (service plan: %s)", ex.service_plan_id
             )
-        except UnexpectedResponseException as e:
-            _LOGGER.error("Caught UnexpectedResponseException: %s", e)
-        except Exception as e:
-            _LOGGER.error("Unexpected error while creating batch: %s", e)
+        except UnexpectedResponseException as ex:
+            _LOGGER.error("Caught UnexpectedResponseException: %s", ex)
+        except Exception as ex:
+            _LOGGER.error("Unexpected error while creating batch: %s", ex)
