@@ -2,6 +2,14 @@
 import logging
 
 import voluptuous as vol
+from clx.xms.api import MtBatchTextSmsResult
+from clx.xms.client import Client
+from clx.xms.exceptions import (
+    ErrorResponseException,
+    UnexpectedResponseException,
+    UnauthorizedException,
+    NotFoundException,
+)
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
@@ -49,11 +57,7 @@ class SinchNotificationService(BaseNotificationService):
 
     def __init__(self, config):
         """Initialize the service."""
-        from clx.xms.client import Client
-
-        self.default_recipients = []
-        if CONF_DEFAULT_RECIPIENTS in config:
-            self.default_recipients = config[CONF_DEFAULT_RECIPIENTS]
+        self.default_recipients = config[CONF_DEFAULT_RECIPIENTS]
         self.sender = config[CONF_SENDER]
         self.client = Client(config[CONF_SERVICE_PLAN_ID], config[CONF_API_KEY])
 
@@ -75,7 +79,6 @@ class SinchNotificationService(BaseNotificationService):
             return
 
         try:
-            from clx.xms.api import MtBatchTextSmsResult
             for target in targets:
                 result: MtBatchTextSmsResult = self.client.create_text_message(
                     clx_args[ATTR_SENDER],
@@ -83,6 +86,14 @@ class SinchNotificationService(BaseNotificationService):
                     clx_args[ATTR_MESSAGE],
                 )
                 batch_id = result.batch_id
-                _LOGGER.debug('Successfully sent SMS to "%s" (batch_id: %s)', str(target), str(batch_id))
+                _LOGGER.debug('Successfully sent SMS to "%s" (batch_id: %s)', target, batch_id)
+        except ErrorResponseException as e:
+            _LOGGER.error('Caught ErrorResponseException. Response code: %d (%s)', e.error_code, e)
+        except NotFoundException as e:
+            _LOGGER.error('Caught NotFoundException (request URL: %s)', e.url)
+        except UnauthorizedException as e:
+            _LOGGER.error('Caught UnauthorizedException (service plan: %s)', e.service_plan_id)
+        except UnexpectedResponseException as e:
+            _LOGGER.error('Caught UnexpectedResponseException: %s', e)
         except Exception as e:
-            _LOGGER.error('Error creating batch: %s', str(e))
+            _LOGGER.error('Unexpected error while creating batch: %s', e)
