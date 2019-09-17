@@ -41,7 +41,7 @@ ATTR_API_PM25_LIMIT = "PM25_LIMIT"
 ATTR_API_PM25_PERCENT = "PM25_PERCENT"
 
 LABEL_ADVICE = "advice"
-LABEL_AQI_LEVEL = "air_quality_index_level"
+LABEL_AQI_LEVEL = f"{ATTR_AQI}_level"
 LABEL_PM_2_5_LIMIT = f"{ATTR_PM_2_5}_limit"
 LABEL_PM_2_5_PERCENT = f"{ATTR_PM_2_5}_percent_of_limit"
 LABEL_PM_10_LIMIT = f"{ATTR_PM_10}_limit"
@@ -159,9 +159,9 @@ class AirlyAirQuality(AirQualityEntity):
         """Get the data from Airly."""
         await self.airly.async_update()
 
-        self._pm_10 = self.data["PM10"]
-        self._pm_2_5 = self.data["PM25"]
-        self._aqi = self.data[ATTR_AQI]
+        self._pm_10 = self.data[ATTR_API_PM10]
+        self._pm_2_5 = self.data[ATTR_API_PM25]
+        self._aqi = self.data[ATTR_API_CAQI]
 
 
 class AirlyData:
