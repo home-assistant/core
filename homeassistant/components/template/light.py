@@ -170,7 +170,7 @@ class LightTemplate(Light):
         self._entity_picture = None
         self._brightness = None
         self._entities = entity_ids
-        self._available = True
+        self._available = "true"
 
         if self._template is not None:
             self._template.hass = self.hass
@@ -224,7 +224,7 @@ class LightTemplate(Light):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self._available
+        return self._available is not None and self._available == "true"
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -321,6 +321,7 @@ class LightTemplate(Light):
         for property_name, template in (
             ("_icon", self._icon_template),
             ("_entity_picture", self._entity_picture_template),
+            ("_available", self._availability_template),
         ):
             if template is None:
                 continue
@@ -349,15 +350,3 @@ class LightTemplate(Light):
                         self._name,
                         ex,
                     )
-        if self._availability_template is not None:
-            try:
-                result = self._availability_template.async_render()
-                self._available = result == "true"
-            except (TemplateError, ValueError) as ex:
-                _LOGGER.error(
-                    "Could not render %s template %s: %s",
-                    CONF_AVAILABILITY_TEMPLATE,
-                    self._name,
-                    ex,
-                )
-                self._available = True
