@@ -191,31 +191,12 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # pylint: disable=unsupported-assignment-operation
         self.context[CONF_BRIDGEID] = bridgeid
 
-        deconz_config = {
+        self.deconz_config = {
             CONF_HOST: discovery_info[CONF_HOST],
             CONF_PORT: discovery_info[CONF_PORT],
         }
 
-        return await self.async_step_import(deconz_config)
-
-    async def async_step_import(self, import_config):
-        """Import a deCONZ bridge as a config entry.
-
-        This flow is triggered by `async_setup` for configured bridges.
-        This flow is also triggered by `async_step_discovery`.
-
-        This will execute for any bridge that does not have a
-        config entry yet (based on host).
-
-        If an API key is provided, we will create an entry.
-        Otherwise we will delegate to `link` step which
-        will ask user to link the bridge.
-        """
-        self.deconz_config = import_config
-        if CONF_API_KEY not in import_config:
-            return await self.async_step_link()
-
-        return await self._create_entry()
+        return await self.async_step_link()
 
     async def async_step_hassio(self, user_input=None):
         """Prepare configuration for a Hass.io deCONZ bridge.

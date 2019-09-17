@@ -355,7 +355,7 @@ colorlog==4.0.2
 concord232==0.15
 
 # homeassistant.components.upc_connect
-connect-box==0.2.3
+connect-box==0.2.4
 
 # homeassistant.components.eddystone_temperature
 # homeassistant.components.eq3btsmart
@@ -446,7 +446,7 @@ enocean==0.50
 enturclient==0.2.0
 
 # homeassistant.components.environment_canada
-env_canada==0.0.24
+env_canada==0.0.25
 
 # homeassistant.components.envirophat
 # envirophat==0.0.6
@@ -639,7 +639,7 @@ hole==0.5.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190911.1
+home-assistant-frontend==20190917.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.4
@@ -1059,7 +1059,7 @@ pyW215==0.6.0
 pyW800rf32==0.1
 
 # homeassistant.components.nextbus
-py_nextbus==0.1.2
+py_nextbusnext==0.1.4
 
 # homeassistant.components.noaa_tides
 # py_noaa==0.3.0
@@ -1347,6 +1347,9 @@ pynws==0.7.4
 # homeassistant.components.nx584
 pynx584==0.4
 
+# homeassistant.components.nzbget
+pynzbgetapi==0.2.0
+
 # homeassistant.components.obihai
 pyobihai==1.0.2
 
@@ -1467,7 +1470,7 @@ pytautulli==0.5.0
 pyteleloisirs==3.5
 
 # homeassistant.components.tfiac
-pytfiac==0.3
+pytfiac==0.4
 
 # homeassistant.components.thinkingcleaner
 pythinkingcleaner==0.0.3

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "invalid_login": "Ong\u00ebltege Benotzernumm oder Passwuert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwuert",
+                    "username": "E-Mail Adresse"
+                },
+                "title": "Benotznumm a Passwuert aginn"
+            }
+        },
+        "title": "VeSync"
+    }
+}

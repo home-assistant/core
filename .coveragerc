@@ -289,6 +289,7 @@ omit =
     homeassistant/components/hydrawise/*
     homeassistant/components/hyperion/light.py
     homeassistant/components/ialarm/alarm_control_panel.py
+    homeassistant/components/iaqualink/binary_sensor.py
     homeassistant/components/iaqualink/climate.py
     homeassistant/components/iaqualink/light.py
     homeassistant/components/iaqualink/sensor.py
@@ -435,6 +436,7 @@ omit =
     homeassistant/components/nuki/lock.py
     homeassistant/components/nut/sensor.py
     homeassistant/components/nx584/alarm_control_panel.py
+    homeassistant/components/nzbget/__init__.py
     homeassistant/components/nzbget/sensor.py
     homeassistant/components/obihai/*
     homeassistant/components/octoprint/*
