@@ -75,19 +75,19 @@ class LightGroup(light.Light):
 
     def __init__(self, name: str, entity_ids: List[str]) -> None:
         """Initialize a light group."""
-        self._name = name  # type: str
-        self._entity_ids = entity_ids  # type: List[str]
-        self._is_on = False  # type: bool
-        self._available = False  # type: bool
-        self._brightness = None  # type: Optional[int]
-        self._hs_color = None  # type: Optional[Tuple[float, float]]
-        self._color_temp = None  # type: Optional[int]
-        self._min_mireds = 154  # type: Optional[int]
-        self._max_mireds = 500  # type: Optional[int]
-        self._white_value = None  # type: Optional[int]
-        self._effect_list = None  # type: Optional[List[str]]
-        self._effect = None  # type: Optional[str]
-        self._supported_features = 0  # type: int
+        self._name = name
+        self._entity_ids = entity_ids
+        self._is_on = False
+        self._available = False
+        self._brightness: Optional[int] = None
+        self._hs_color: Optional[Tuple[float, float]] = None
+        self._color_temp: Optional[int] = None
+        self._min_mireds: Optional[int] = 154
+        self._max_mireds: Optional[int] = 500
+        self._white_value: Optional[int] = None
+        self._effect_list: Optional[List[str]] = None
+        self._effect: Optional[str] = None
+        self._supported_features: int = 0
         self._async_unsub_state_changed = None
 
     async def async_added_to_hass(self) -> None:

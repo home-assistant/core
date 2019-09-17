@@ -332,7 +332,7 @@ class FilterState:
 
     def __repr__(self):
         """Return timestamp and state as the representation of FilterState."""
-        return "{} : {}".format(self.timestamp, self.state)
+        return f"{self.timestamp} : {self.state}"
 
 
 class Filter:

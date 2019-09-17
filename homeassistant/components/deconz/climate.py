@@ -8,7 +8,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -21,7 +21,6 @@ SUPPORT_HVAC = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up deCONZ platforms."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -38,17 +37,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         for sensor in sensors:
 
-            if sensor.type in Thermostat.ZHATYPE and not (
-                not gateway.allow_clip_sensor and sensor.type.startswith("CLIP")
-            ):
-
+            if sensor.type in Thermostat.ZHATYPE:
                 entities.append(DeconzThermostat(sensor, gateway))
 
         async_add_entities(entities, True)
 
     gateway.listeners.append(
         async_dispatcher_connect(
-            hass, gateway.async_event_new_device(NEW_SENSOR), async_add_climate
+            hass, gateway.async_signal_new_device(NEW_SENSOR), async_add_climate
         )
     )
 
@@ -122,9 +118,6 @@ class DeconzThermostat(DeconzDevice, ClimateDevice):
     def device_state_attributes(self):
         """Return the state attributes of the thermostat."""
         attr = {}
-
-        if self._device.battery:
-            attr[ATTR_BATTERY_LEVEL] = self._device.battery
 
         if self._device.offset:
             attr[ATTR_OFFSET] = self._device.offset

@@ -3,7 +3,7 @@ import asyncio
 from datetime import timedelta
 import logging
 from urllib.parse import urlparse
-from typing import Dict  # noqa: F401 pylint: disable=unused-import
+from typing import Dict
 
 import voluptuous as vol
 
@@ -36,7 +36,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 
-_CONFIGURING = {}  # type: Dict[str, str]
+_CONFIGURING: Dict[str, str] = {}
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SOURCES = "sources"

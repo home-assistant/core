@@ -337,7 +337,15 @@ class SonosEntity(MediaPlayerDevice):
     async def async_added_to_hass(self):
         """Subscribe sonos events."""
         await self.async_seen()
+
         self.hass.data[DATA_SONOS].entities.append(self)
+
+        def _rebuild_groups():
+            """Build the current group topology."""
+            for entity in self.hass.data[DATA_SONOS].entities:
+                entity.update_groups()
+
+        self.hass.async_add_executor_job(_rebuild_groups)
 
     @property
     def unique_id(self):
@@ -469,10 +477,6 @@ class SonosEntity(MediaPlayerDevice):
             self.update_volume()
             self._set_favorites()
 
-            # New player available, build the current group topology
-            for entity in self.hass.data[DATA_SONOS].entities:
-                entity.update_groups()
-
             player = self.soco
 
             def subscribe(service, action):
@@ -602,7 +606,7 @@ class SonosEntity(MediaPlayerDevice):
             #   media_artist = "Station - Artist - Title"
             # detect this case and trim from the front of
             # media_artist for cosmetics
-            trim = "{title} - ".format(title=self._media_title)
+            trim = f"{self._media_title} - "
             chars = min(len(self._media_artist), len(trim))
 
             if self._media_artist[:chars].upper() == trim[:chars].upper():

@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/wwlln",
   "requirements": [
-    "aiowwlln==1.0.0"
+    "aiowwlln==2.0.1"
   ],
   "dependencies": [],
   "codeowners": [

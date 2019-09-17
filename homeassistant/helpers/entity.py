@@ -91,7 +91,7 @@ class Entity:
     entity_id = None  # type: str
 
     # Owning hass instance. Will be set by EntityPlatform
-    hass = None  # type: Optional[HomeAssistant]
+    hass: Optional[HomeAssistant] = None
 
     # Owning platform instance. Will be set by EntityPlatform
     platform = None
@@ -109,10 +109,10 @@ class Entity:
     parallel_updates = None
 
     # Entry in the entity registry
-    registry_entry = None  # type: Optional[RegistryEntry]
+    registry_entry: Optional[RegistryEntry] = None
 
     # Hold list for functions to call on remove.
-    _on_remove = None  # type: Optional[List[CALLBACK_TYPE]]
+    _on_remove: Optional[List[CALLBACK_TYPE]] = None
 
     # Context
     _context = None

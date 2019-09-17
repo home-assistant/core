@@ -12,6 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_MODEL_TYPE = "model_type"
 ATTR_ID = "id"
+ATTR_IS_GROUP = "is_group"
 # RSSI HAP -> Device
 ATTR_RSSI_DEVICE = "rssi_device"
 # RSSI Device -> HAP
@@ -92,9 +93,9 @@ class HomematicipGenericDevice(Entity):
         """Return the name of the generic device."""
         name = self._device.label
         if self._home.name is not None and self._home.name != "":
-            name = "{} {}".format(self._home.name, name)
+            name = f"{self._home.name} {name}"
         if self.post is not None and self.post != "":
-            name = "{} {}".format(name, self.post)
+            name = f"{name} {self.post}"
         return name
 
     @property
@@ -110,7 +111,7 @@ class HomematicipGenericDevice(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return "{}_{}".format(self.__class__.__name__, self._device.id)
+        return f"{self.__class__.__name__}_{self._device.id}"
 
     @property
     def icon(self) -> Optional[str]:
@@ -130,5 +131,7 @@ class HomematicipGenericDevice(Entity):
                 attr_value = getattr(self._device, attr, None)
                 if attr_value:
                     state_attr[attr_key] = attr_value
+
+            state_attr[ATTR_IS_GROUP] = False
 
         return state_attr

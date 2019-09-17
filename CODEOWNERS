@@ -29,6 +29,7 @@ homeassistant/components/arcam_fmj/* @elupus
 homeassistant/components/arduino/* @fabaff
 homeassistant/components/arest/* @fabaff
 homeassistant/components/asuswrt/* @kennedyshead
+homeassistant/components/atome/* @baqs
 homeassistant/components/aurora_abb_powerone/* @davet2001
 homeassistant/components/auth/* @home-assistant/core
 homeassistant/components/automatic/* @armills
@@ -110,6 +111,7 @@ homeassistant/components/google_translate/* @awarecan
 homeassistant/components/google_travel_time/* @robbiet480
 homeassistant/components/gpsd/* @fabaff
 homeassistant/components/group/* @home-assistant/core
+homeassistant/components/growatt_server/* @indykoning
 homeassistant/components/gtfs/* @robbiet480
 homeassistant/components/harmony/* @ehendrix23
 homeassistant/components/hassio/* @home-assistant/hass-io
@@ -129,6 +131,7 @@ homeassistant/components/http/* @home-assistant/core
 homeassistant/components/huawei_lte/* @scop
 homeassistant/components/huawei_router/* @abmantis
 homeassistant/components/hue/* @balloob
+homeassistant/components/iaqualink/* @flz
 homeassistant/components/ign_sismologia/* @exxamalte
 homeassistant/components/incomfort/* @zxdavb
 homeassistant/components/influxdb/* @fabaff
@@ -154,7 +157,7 @@ homeassistant/components/life360/* @pnbruckner
 homeassistant/components/lifx/* @amelchio
 homeassistant/components/lifx_cloud/* @amelchio
 homeassistant/components/lifx_legacy/* @amelchio
-homeassistant/components/linky/* @tiste @Quentame
+homeassistant/components/linky/* @Quentame
 homeassistant/components/linux_battery/* @fabaff
 homeassistant/components/liveboxplaytv/* @pschmitt
 homeassistant/components/logger/* @home-assistant/core
@@ -192,8 +195,10 @@ homeassistant/components/no_ip/* @fabaff
 homeassistant/components/notify/* @home-assistant/core
 homeassistant/components/notion/* @bachya
 homeassistant/components/nsw_fuel_station/* @nickw444
+homeassistant/components/nsw_rural_fire_service_feed/* @exxamalte
 homeassistant/components/nuki/* @pschmitt
 homeassistant/components/nws/* @MatthewFlamm
+homeassistant/components/obihai/* @dshokouhi
 homeassistant/components/ohmconnect/* @robbiet480
 homeassistant/components/onboarding/* @home-assistant/core
 homeassistant/components/opentherm_gw/* @mvn23
@@ -208,6 +213,7 @@ homeassistant/components/philips_js/* @elupus
 homeassistant/components/pi_hole/* @fabaff
 homeassistant/components/plaato/* @JohNan
 homeassistant/components/plant/* @ChristianKuehnel
+homeassistant/components/plex/* @jjlawren
 homeassistant/components/plugwise/* @laetificat @CoMPaTech
 homeassistant/components/point/* @fredrike
 homeassistant/components/ps4/* @ktnrg45
@@ -237,6 +243,7 @@ homeassistant/components/shell_command/* @home-assistant/core
 homeassistant/components/shiftr/* @fabaff
 homeassistant/components/shodan/* @fabaff
 homeassistant/components/simplisafe/* @bachya
+homeassistant/components/slide/* @ualex73
 homeassistant/components/sma/* @kellerza
 homeassistant/components/smarthab/* @outadoc
 homeassistant/components/smartthings/* @andrewsayre
@@ -286,6 +293,7 @@ homeassistant/components/twentemilieu/* @frenck
 homeassistant/components/twilio_call/* @robbiet480
 homeassistant/components/twilio_sms/* @robbiet480
 homeassistant/components/unifi/* @kane610
+homeassistant/components/upc_connect/* @pvizeli
 homeassistant/components/upcloud/* @scop
 homeassistant/components/updater/* @home-assistant/core
 homeassistant/components/upnp/* @robbiet480
@@ -296,6 +304,7 @@ homeassistant/components/velbus/* @cereal2nd
 homeassistant/components/velux/* @Julius2342
 homeassistant/components/version/* @fabaff
 homeassistant/components/vesync/* @markperdue @webdjoe
+homeassistant/components/vicare/* @oischinger
 homeassistant/components/vizio/* @raman325
 homeassistant/components/vlc_telnet/* @rodripf
 homeassistant/components/waqi/* @andrey-git

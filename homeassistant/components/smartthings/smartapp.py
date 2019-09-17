@@ -112,7 +112,7 @@ def _get_app_template(hass: HomeAssistantType):
     cloudhook_url = hass.data[DOMAIN][CONF_CLOUDHOOK_URL]
     if cloudhook_url is not None:
         endpoint = "via Nabu Casa"
-    description = "{} {}".format(hass.config.location_name, endpoint)
+    description = f"{hass.config.location_name} {endpoint}"
 
     return {
         "app_name": APP_NAME_PREFIX + str(uuid4()),

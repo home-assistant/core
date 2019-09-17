@@ -215,8 +215,8 @@ class QNAPSensor(Entity):
         server_name = self._api.data["system_stats"]["system"]["name"]
 
         if self.monitor_device is not None:
-            return "{} {} ({})".format(server_name, self.var_name, self.monitor_device)
-        return "{} {}".format(server_name, self.var_name)
+            return f"{server_name} {self.var_name} ({self.monitor_device})"
+        return f"{server_name} {self.var_name}"
 
     @property
     def icon(self):
@@ -270,7 +270,7 @@ class QNAPMemorySensor(QNAPSensor):
         if self._api.data:
             data = self._api.data["system_stats"]["memory"]
             size = round_nicely(float(data["total"]) / 1024)
-            return {ATTR_MEMORY_SIZE: "{} GB".format(size)}
+            return {ATTR_MEMORY_SIZE: f"{size} GB"}
 
 
 class QNAPNetworkSensor(QNAPSensor):
@@ -331,7 +331,7 @@ class QNAPSystemSensor(QNAPSensor):
                 ATTR_NAME: data["system"]["name"],
                 ATTR_MODEL: data["system"]["model"],
                 ATTR_SERIAL: data["system"]["serial_number"],
-                ATTR_UPTIME: "{:0>2d}d {:0>2d}h {:0>2d}m".format(days, hours, minutes),
+                ATTR_UPTIME: f"{days:0>2d}d {hours:0>2d}h {minutes:0>2d}m",
             }
 
 

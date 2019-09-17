@@ -92,7 +92,7 @@ def setup(hass, config):
 
         try:
             pilight_client.send_code(message_data)
-        except IOError:
+        except OSError:
             _LOGGER.error("Pilight send failed for %s", str(message_data))
 
     hass.services.register(DOMAIN, SERVICE_NAME, send_code, schema=RF_CODE_SCHEMA)

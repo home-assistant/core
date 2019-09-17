@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if config.get(CONF_NAME) is not None:
             name = "{} PM{}".format(config.get(CONF_NAME), pmname)
         else:
-            name = "PM{}".format(pmname)
+            name = f"PM{pmname}"
         dev.append(ParticulateMatterSensor(coll, name, pmname))
 
     add_entities(dev)

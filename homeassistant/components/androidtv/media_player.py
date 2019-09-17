@@ -392,7 +392,7 @@ class ADBDevice(MediaPlayerDevice):
         """Send an ADB command to an Android TV / Fire TV device."""
         key = self._keys.get(cmd)
         if key:
-            self.aftv.adb_shell("input keyevent {}".format(key))
+            self.aftv.adb_shell(f"input keyevent {key}")
             self._adb_response = None
             self.schedule_update_ha_state()
             return

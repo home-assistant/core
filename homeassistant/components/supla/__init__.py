@@ -65,7 +65,7 @@ def setup(hass, base_config):
                     srv_info,
                 )
                 return False
-        except IOError:
+        except OSError:
             _LOGGER.exception(
                 "Server: %s not configured. Error on Supla API access: ", server_address
             )
