@@ -3,17 +3,23 @@ import logging
 
 from homeassistant.components.switch import SwitchDevice
 
-from . import DOMAIN as ABODE_DOMAIN, AbodeAutomation, AbodeDevice
+from . import AbodeAutomation, AbodeDevice
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """This platform uses config entries."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up Abode switch devices."""
     import abodepy.helpers.constants as CONST
     import abodepy.helpers.timeline as TIMELINE
 
-    data = hass.data[ABODE_DOMAIN]
+    data = hass.data[DOMAIN]
 
     devices = []
 
@@ -33,9 +39,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             AbodeAutomationSwitch(data, automation, TIMELINE.AUTOMATION_EDIT_GROUP)
         )
 
-    data.devices.extend(devices)
-
-    add_entities(devices)
+    async_add_devices(devices)
 
 
 class AbodeSwitch(AbodeDevice, SwitchDevice):
