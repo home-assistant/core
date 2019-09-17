@@ -18,15 +18,21 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin,
 )
 
-from . import DOMAIN as ABODE_DOMAIN, AbodeDevice
+from . import AbodeDevice
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Platform uses config entry setup."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up Abode light devices."""
 
-    data = hass.data[ABODE_DOMAIN]
+    data = hass.data[DOMAIN]
 
     device_types = [CONST.TYPE_LIGHT, CONST.TYPE_SWITCH]
 
@@ -39,9 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         devices.append(AbodeLight(data, device))
 
-    data.devices.extend(devices)
-
-    add_entities(devices)
+    async_add_devices(devices)
 
 
 class AbodeLight(AbodeDevice, Light):

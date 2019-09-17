@@ -1,4 +1,4 @@
-"""Support for Abode Home Security system."""
+"""Support for the Abode Security System."""
 import logging
 from functools import partial
 from requests.exceptions import HTTPError, ConnectTimeout
@@ -9,6 +9,7 @@ import abodepy.helpers.timeline as TIMELINE
 
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DATE,
@@ -23,16 +24,15 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
+
+from .config_flow import configured_instances
+from .const import DOMAIN, ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by goabode.com"
-
 CONF_POLLING = "polling"
 
-DOMAIN = "abode"
 DEFAULT_CACHEDB = "./abodepy_cache.pickle"
 
 NOTIFICATION_ID = "abode_notification"
@@ -106,7 +106,7 @@ class AbodeSystem:
         self.abode = abodepy.Abode(
             username,
             password,
-            auto_login=True,
+            auto_login=False,
             get_devices=True,
             get_automations=True,
             cache_path=cache,
@@ -133,16 +133,55 @@ class AbodeSystem:
         )
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up Abode component."""
+    if DOMAIN not in config:
+        return True
+
+    config_user = config[DOMAIN][CONF_USERNAME]
+
+    if config_user in configured_instances(hass):
+        _LOGGER.warning(
+            f"Account {config_user} already exists! Ignoring account settings in configuration.yaml"
+        )
+        return True
+
+    hass.data[DOMAIN] = {}
 
     conf = config[DOMAIN]
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
-    name = conf.get(CONF_NAME)
-    polling = conf.get(CONF_POLLING)
-    exclude = conf.get(CONF_EXCLUDE)
-    lights = conf.get(CONF_LIGHTS)
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_USERNAME: conf.get(CONF_USERNAME),
+                CONF_PASSWORD: conf.get(CONF_PASSWORD),
+                CONF_NAME: conf.get(CONF_NAME),
+                CONF_POLLING: conf.get(CONF_POLLING),
+                CONF_EXCLUDE: conf.get(CONF_EXCLUDE),
+                CONF_LIGHTS: conf.get(CONF_LIGHTS),
+            },
+        )
+    )
+
+    return True
+
+
+async def async_setup_entry(hass, config_entry):
+    """Set up Abode component via config entry (Integrations UI)."""
+    from abodepy.exceptions import AbodeException
+
+    username = config_entry.data.get(CONF_USERNAME)
+    password = config_entry.data.get(CONF_PASSWORD)
+    name = config_entry.data.get(CONF_NAME)
+    polling = config_entry.data.get(CONF_POLLING)
+    exclude = config_entry.data.get(CONF_EXCLUDE)
+    lights = config_entry.data.get(CONF_LIGHTS)
+
+    # 'exclude' has to be iterable, can't be of type None
+    if not exclude:
+        exclude = []
 
     try:
         cache = hass.config.path(DEFAULT_CACHEDB)
@@ -161,12 +200,14 @@ def setup(hass, config):
         )
         return False
 
-    setup_hass_services(hass)
-    setup_hass_events(hass)
-    setup_abode_events(hass)
-
     for platform in ABODE_PLATFORMS:
-        discovery.load_platform(hass, platform, DOMAIN, {}, config)
+        hass.async_add_job(
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
+        )
+
+    await hass.async_add_executor_job(setup_hass_services, hass)
+    await hass.async_add_executor_job(setup_hass_events, hass)
+    await hass.async_add_executor_job(setup_abode_events, hass)
 
     return True
 
@@ -210,15 +251,15 @@ def setup_hass_services(hass):
         for device in target_devices:
             device.trigger()
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_SETTINGS, change_setting, schema=CHANGE_SETTING_SCHEMA
     )
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_CAPTURE_IMAGE, capture_image, schema=CAPTURE_IMAGE_SCHEMA
     )
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_TRIGGER, trigger_quick_action, schema=TRIGGER_SCHEMA
     )
 
@@ -316,6 +357,21 @@ class AbodeDevice(Entity):
             "device_id": self._device.device_id,
             "battery_low": self._device.battery_low,
             "no_response": self._device.no_response,
+            "device_type": self._device.type,
+        }
+
+    @property
+    def unique_id(self):
+        """Return a unique ID to use for this device."""
+        return self._device.device_id
+
+    @property
+    def device_info(self):
+        """Return device registry information for this entity."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "manufacturer": "Abode",
+            "name": self._device.name,
             "device_type": self._device.type,
         }
 

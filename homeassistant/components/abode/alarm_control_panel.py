@@ -9,22 +9,24 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
 )
 
-from . import ATTRIBUTION, DOMAIN as ABODE_DOMAIN, AbodeDevice
+from . import AbodeDevice
+from .const import DOMAIN, ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
 
 ICON = "mdi:security"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Platform uses config entry setup."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up an alarm control panel for an Abode device."""
-    data = hass.data[ABODE_DOMAIN]
+    data = hass.data[DOMAIN]
 
-    alarm_devices = [AbodeAlarm(data, data.abode.get_alarm(), data.name)]
-
-    data.devices.extend(alarm_devices)
-
-    add_entities(alarm_devices)
+    async_add_devices([AbodeAlarm(data, data.abode.get_alarm(), data.name)], True)
 
 
 class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):
