@@ -95,5 +95,3 @@ class SinchNotificationService(BaseNotificationService):
             )
         except UnexpectedResponseException as ex:
             _LOGGER.error("Caught UnexpectedResponseException: %s", ex)
-        except Exception as ex:
-            _LOGGER.error("Unexpected error while creating batch: %s", ex)
