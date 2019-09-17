@@ -124,7 +124,6 @@ class NukiLock(LockDevice):
                 self._available = False
                 return
             else:
-                self._available = True
                 break
 
         self._available = self._nuki_lock.state not in ERROR_STATES
