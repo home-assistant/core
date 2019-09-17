@@ -28,7 +28,7 @@ CONF_UNLOCK = "unlock"
 
 DEFAULT_NAME = "Template Lock"
 DEFAULT_OPTIMISTIC = False
-IS_AVAILABLE_RENDER_RESULT = "true"
+EXPECTED_AVAILABILITY_RENDER_RESULT = "true"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -109,7 +109,7 @@ class TemplateLock(LockDevice):
         self._command_lock = Script(hass, command_lock)
         self._command_unlock = Script(hass, command_unlock)
         self._optimistic = optimistic
-        self._available = IS_AVAILABLE_RENDER_RESULT
+        self._available = EXPECTED_AVAILABILITY_RENDER_RESULT
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -158,7 +158,7 @@ class TemplateLock(LockDevice):
         """Return if the device is available."""
         return (
             self._available is not None
-            and self._available == IS_AVAILABLE_RENDER_RESULT
+            and self._available == EXPECTED_AVAILABILITY_RENDER_RESULT
         )
 
     async def async_update(self):
