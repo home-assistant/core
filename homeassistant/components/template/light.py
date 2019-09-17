@@ -38,8 +38,6 @@ CONF_OFF_ACTION = "turn_off"
 CONF_LEVEL_ACTION = "set_level"
 CONF_LEVEL_TEMPLATE = "level_template"
 
-EXPECTED_AVAILABILITY_RENDER_RESULT = "true"
-
 LIGHT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
@@ -172,7 +170,7 @@ class LightTemplate(Light):
         self._entity_picture = None
         self._brightness = None
         self._entities = entity_ids
-        self._available = EXPECTED_AVAILABILITY_RENDER_RESULT
+        self._available = "true"
 
         if self._template is not None:
             self._template.hass = self.hass
@@ -226,10 +224,7 @@ class LightTemplate(Light):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return (
-            self._available is not None
-            and self._available == EXPECTED_AVAILABILITY_RENDER_RESULT
-        )
+        return self._available is not None and self._available.lower() == "true"
 
     async def async_added_to_hass(self):
         """Register callbacks."""
