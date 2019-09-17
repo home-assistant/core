@@ -53,7 +53,6 @@ STOP_ACTION = "stop_cover"
 POSITION_ACTION = "set_cover_position"
 TILT_ACTION = "set_cover_tilt_position"
 CONF_TILT_OPTIMISTIC = "tilt_optimistic"
-EXPECTED_AVAILABILITY_RENDER_RESULT = "true"
 
 CONF_VALUE_OR_POSITION_TEMPLATE = "value_or_position"
 CONF_OPEN_OR_CLOSE = "open_or_close"
@@ -247,7 +246,7 @@ class CoverTemplate(CoverDevice):
         self._position = None
         self._tilt_value = None
         self._entities = entity_ids
-        self._available = EXPECTED_AVAILABILITY_RENDER_RESULT
+        self._available = "true"
 
         if self._template is not None:
             self._template.hass = self.hass
@@ -350,10 +349,7 @@ class CoverTemplate(CoverDevice):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return (
-            self._available is not None
-            and self._available == EXPECTED_AVAILABILITY_RENDER_RESULT
-        )
+        return self._available is not None and self._available.lower() == "true"
 
     async def async_open_cover(self, **kwargs):
         """Move the cover up."""
