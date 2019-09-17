@@ -45,7 +45,7 @@ async def test_dataSet1(hass):
             "platform": "derivative",
             "name": "power",
             "source": "sensor.energy",
-            "unit": "kW",
+            "unit_time": "s",
             "round": 2,
         }
     }
@@ -58,7 +58,7 @@ async def test_dataSet1(hass):
 
     # Testing a energy sensor with non-monotonic intervals and values
     for time, value in [(20, 10), (30, 30), (40, 5), (50, 0)]:
-        now = dt_util.utcnow() + timedelta(minutes=time)
+        now = dt_util.utcnow() + timedelta(seconds=time)
         with patch("homeassistant.util.dt.utcnow", return_value=now):
             hass.states.async_set(entity_id, value, {}, force_update=True)
             await hass.async_block_till_done()
@@ -68,8 +68,6 @@ async def test_dataSet1(hass):
 
     assert round(float(state.state), config["sensor"]["round"]) == -0.5
 
-    assert state.attributes.get("unit_of_measurement") == "kW"
-
 
 async def test_dataSet2(hass):
     """Test derivative sensor state."""
@@ -78,7 +76,7 @@ async def test_dataSet2(hass):
             "platform": "derivative",
             "name": "power",
             "source": "sensor.energy",
-            "unit": "kW",
+            "unit_time": "s",
             "round": 2,
         }
     }
@@ -91,7 +89,7 @@ async def test_dataSet2(hass):
 
     # Testing a energy sensor with non-monotonic intervals and values
     for time, value in [(20, 5), (30, 0)]:
-        now = dt_util.utcnow() + timedelta(minutes=time)
+        now = dt_util.utcnow() + timedelta(seconds=time)
         with patch("homeassistant.util.dt.utcnow", return_value=now):
             hass.states.async_set(entity_id, value, {}, force_update=True)
             await hass.async_block_till_done()
@@ -101,8 +99,6 @@ async def test_dataSet2(hass):
 
     assert round(float(state.state), config["sensor"]["round"]) == -0.5
 
-    assert state.attributes.get("unit_of_measurement") == "kW"
-
 
 async def test_dataSet3(hass):
     """Test derivative sensor state."""
@@ -111,7 +107,7 @@ async def test_dataSet3(hass):
             "platform": "derivative",
             "name": "power",
             "source": "sensor.energy",
-            "unit": "kW",
+            "unit_time": "s",
             "round": 2,
         }
     }
@@ -124,7 +120,7 @@ async def test_dataSet3(hass):
 
     # Testing a energy sensor with non-monotonic intervals and values
     for time, value in [(20, 5), (30, 10)]:
-        now = dt_util.utcnow() + timedelta(minutes=time)
+        now = dt_util.utcnow() + timedelta(seconds=time)
         with patch("homeassistant.util.dt.utcnow", return_value=now):
             hass.states.async_set(entity_id, value, {}, force_update=True)
             await hass.async_block_till_done()
@@ -134,7 +130,7 @@ async def test_dataSet3(hass):
 
     assert round(float(state.state), config["sensor"]["round"]) == 0.5
 
-    assert state.attributes.get("unit_of_measurement") == "kW"
+    assert state.attributes.get("unit_of_measurement") == "/s"
 
 
 async def test_dataSet4(hass):
@@ -144,7 +140,7 @@ async def test_dataSet4(hass):
             "platform": "derivative",
             "name": "power",
             "source": "sensor.energy",
-            "unit": "kW",
+            "unit_time": "s",
             "round": 2,
         }
     }
@@ -157,7 +153,7 @@ async def test_dataSet4(hass):
 
     # Testing a energy sensor with non-monotonic intervals and values
     for time, value in [(20, 5), (30, 5)]:
-        now = dt_util.utcnow() + timedelta(minutes=time)
+        now = dt_util.utcnow() + timedelta(seconds=time)
         with patch("homeassistant.util.dt.utcnow", return_value=now):
             hass.states.async_set(entity_id, value, {}, force_update=True)
             await hass.async_block_till_done()
@@ -167,8 +163,6 @@ async def test_dataSet4(hass):
 
     assert round(float(state.state), config["sensor"]["round"]) == 0
 
-    assert state.attributes.get("unit_of_measurement") == "kW"
-
 
 async def test_dataSet5(hass):
     """Test derivative sensor state."""
@@ -177,7 +171,7 @@ async def test_dataSet5(hass):
             "platform": "derivative",
             "name": "power",
             "source": "sensor.energy",
-            "unit": "kW",
+            "unit_time": "s",
             "round": 2,
         }
     }
@@ -190,7 +184,7 @@ async def test_dataSet5(hass):
 
     # Testing a energy sensor with non-monotonic intervals and values
     for time, value in [(20, 10), (30, -10)]:
-        now = dt_util.utcnow() + timedelta(minutes=time)
+        now = dt_util.utcnow() + timedelta(seconds=time)
         with patch("homeassistant.util.dt.utcnow", return_value=now):
             hass.states.async_set(entity_id, value, {}, force_update=True)
             await hass.async_block_till_done()
@@ -200,7 +194,35 @@ async def test_dataSet5(hass):
 
     assert round(float(state.state), config["sensor"]["round"]) == -2
 
-    assert state.attributes.get("unit_of_measurement") == "kW"
+
+async def test_dataSet6(hass):
+    """Test derivative sensor state."""
+    config = {
+        "sensor": {
+            "platform": "derivative",
+            "name": "power",
+            "source": "sensor.energy",
+            "round": 2,
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+
+    entity_id = config["sensor"]["source"]
+    hass.states.async_set(entity_id, 0, {})
+    await hass.async_block_till_done()
+
+    # Testing a energy sensor with non-monotonic intervals and values
+    for time, value in [(20, 0), (30, 36000)]:
+        now = dt_util.utcnow() + timedelta(seconds=time)
+        with patch("homeassistant.util.dt.utcnow", return_value=now):
+            hass.states.async_set(entity_id, value, {}, force_update=True)
+            await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.power")
+    assert state is not None
+
+    assert round(float(state.state), config["sensor"]["round"]) == 1
 
 
 async def test_prefix(hass):
@@ -218,7 +240,9 @@ async def test_prefix(hass):
     assert await async_setup_component(hass, "sensor", config)
 
     entity_id = config["sensor"]["source"]
-    hass.states.async_set(entity_id, 1000, {"unit_of_measurement": "W"})
+    hass.states.async_set(
+        entity_id, 1000, {"unit_of_measurement": "W"}, force_update=True
+    )
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=3600)

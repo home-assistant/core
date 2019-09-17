@@ -35,7 +35,7 @@ UNIT_PREFIXES = {None: 1, "k": 10 ** 3, "G": 10 ** 6, "T": 10 ** 9}
 # SI Time prefixes
 UNIT_TIME = {"s": 1, "min": 60, "h": 60 * 60, "d": 24 * 60 * 60}
 
-ICON = "mdi:chart-histogram"
+ICON = "mdi:chart-line"
 
 DEFAULT_ROUND = 3
 
@@ -78,6 +78,7 @@ class DerivativeSensor(RestoreEntity):
         unit_of_measurement,
     ):
         """Initialize the derivative sensor."""
+        _LOGGER.warning("unit_of_measurement: %s", unit_of_measurement)
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
         self._state = 0
@@ -85,8 +86,8 @@ class DerivativeSensor(RestoreEntity):
         self._name = name if name is not None else f"{source_entity} derivative"
 
         if unit_of_measurement is None:
-            self._unit_template = "{}{}{}".format(
-                "" if unit_prefix is None else unit_prefix, "/", unit_time
+            self._unit_template = (
+                f"{'' if unit_prefix is None else unit_prefix}/{unit_time}"
             )
             # we postpone the definition of unit_of_measurement to later
             self._unit_of_measurement = None
@@ -128,12 +129,10 @@ class DerivativeSensor(RestoreEntity):
                 elapsed_time = (
                     new_state.last_updated - old_state.last_updated
                 ).total_seconds()
-
-                gradient = (
-                    Decimal(new_state.state) - Decimal(old_state.state)
-                ) / Decimal(elapsed_time)
-
-                derivative = gradient / (self._unit_prefix * self._unit_time)
+                gradient = Decimal(new_state.state) - Decimal(old_state.state)
+                derivative = gradient / (
+                    Decimal(elapsed_time) * (self._unit_prefix * self._unit_time)
+                )
                 assert isinstance(derivative, Decimal)
             except ValueError as err:
                 _LOGGER.warning("While calculating derivative: %s", err)
