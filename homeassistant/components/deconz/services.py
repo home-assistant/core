@@ -89,13 +89,14 @@ async def async_configure_service(hass, data):
     See Dresden Elektroniks REST API documentation for details:
     http://dresden-elektronik.github.io/deconz-rest-doc/rest/
     """
+    bridgeid = data.get(CONF_BRIDGEID)
     field = data.get(SERVICE_FIELD, "")
     entity_id = data.get(SERVICE_ENTITY)
     data = data[SERVICE_DATA]
 
     gateway = get_master_gateway(hass)
-    if CONF_BRIDGEID in data:
-        gateway = hass.data[DOMAIN][data[CONF_BRIDGEID]]
+    if bridgeid:
+        gateway = hass.data[DOMAIN][bridgeid]
 
     if entity_id:
         try:
