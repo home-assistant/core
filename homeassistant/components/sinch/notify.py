@@ -19,10 +19,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_SENDER,
-)
+from homeassistant.const import CONF_API_KEY, CONF_SENDER
 
 DOMAIN = "sinch"
 
@@ -66,10 +63,7 @@ class SinchNotificationService(BaseNotificationService):
         targets = kwargs.get(ATTR_TARGET, self.default_recipients)
         data = kwargs.get(ATTR_DATA, {})
 
-        clx_args = {
-            ATTR_MESSAGE: message,
-            ATTR_SENDER: self.sender,
-        }
+        clx_args = {ATTR_MESSAGE: message, ATTR_SENDER: self.sender}
 
         if ATTR_SENDER in data:
             clx_args[ATTR_SENDER] = data[ATTR_SENDER]
@@ -81,19 +75,23 @@ class SinchNotificationService(BaseNotificationService):
         try:
             for target in targets:
                 result: MtBatchTextSmsResult = self.client.create_text_message(
-                    clx_args[ATTR_SENDER],
-                    target,
-                    clx_args[ATTR_MESSAGE],
+                    clx_args[ATTR_SENDER], target, clx_args[ATTR_MESSAGE]
                 )
                 batch_id = result.batch_id
-                _LOGGER.debug('Successfully sent SMS to "%s" (batch_id: %s)', target, batch_id)
+                _LOGGER.debug(
+                    'Successfully sent SMS to "%s" (batch_id: %s)', target, batch_id
+                )
         except ErrorResponseException as e:
-            _LOGGER.error('Caught ErrorResponseException. Response code: %d (%s)', e.error_code, e)
+            _LOGGER.error(
+                "Caught ErrorResponseException. Response code: %d (%s)", e.error_code, e
+            )
         except NotFoundException as e:
-            _LOGGER.error('Caught NotFoundException (request URL: %s)', e.url)
+            _LOGGER.error("Caught NotFoundException (request URL: %s)", e.url)
         except UnauthorizedException as e:
-            _LOGGER.error('Caught UnauthorizedException (service plan: %s)', e.service_plan_id)
+            _LOGGER.error(
+                "Caught UnauthorizedException (service plan: %s)", e.service_plan_id
+            )
         except UnexpectedResponseException as e:
-            _LOGGER.error('Caught UnexpectedResponseException: %s', e)
+            _LOGGER.error("Caught UnexpectedResponseException: %s", e)
         except Exception as e:
-            _LOGGER.error('Unexpected error while creating batch: %s', e)
+            _LOGGER.error("Unexpected error while creating batch: %s", e)
