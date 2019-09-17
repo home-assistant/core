@@ -169,7 +169,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         self._entities = entity_ids
         self._delay_on = delay_on
         self._delay_off = delay_off
-        self._available = True
+        self._available = "true"
         self._attribute_templates = attribute_templates
         self._attributes = {}
 
@@ -234,7 +234,7 @@ class BinarySensorTemplate(BinarySensorDevice):
     @property
     def available(self):
         """Availability indicator."""
-        return self._available
+        return self._available is not None and self._available == "true"
 
     @callback
     def _async_render(self):
@@ -253,18 +253,6 @@ class BinarySensorTemplate(BinarySensorDevice):
                 return
             _LOGGER.error("Could not render template %s: %s", self._name, ex)
 
-        if self._availability_template is not None:
-            try:
-                result = self._availability_template.async_render()
-                self._available = result == "true"
-            except (TemplateError, ValueError) as ex:
-                _LOGGER.error(
-                    "Could not render %s template %s: %s",
-                    CONF_AVAILABILITY_TEMPLATE,
-                    self._name,
-                    ex,
-                )
-
         attrs = {}
         if self._attribute_templates is not None:
             for key, value in self._attribute_templates.items():
@@ -277,6 +265,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         templates = {
             "_icon": self._icon_template,
             "_entity_picture": self._entity_picture_template,
+            "_available": self._availability_template,
         }
 
         for property_name, template in templates.items():
