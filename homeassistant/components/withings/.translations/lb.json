@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "profile": "Profil"
+                },
+                "title": "Benotzer Profil."
+            }
+        }
+    }
+}

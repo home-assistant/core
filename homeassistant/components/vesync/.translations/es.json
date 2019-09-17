@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_setup": "Solo se permite una instancia de Vesync"
+        },
         "error": {
             "invalid_login": "Nombre de usuario o contrase\u00f1a no v\u00e1lidos"
         },
@@ -11,6 +14,7 @@
                 },
                 "title": "Introduzca el nombre de usuario y la contrase\u00f1a"
             }
-        }
+        },
+        "title": "VeSync"
     }
 }

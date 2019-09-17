@@ -6,12 +6,12 @@
             "turn_on": "Sl\u00e5 p\u00e5 {entity_name}"
         },
         "condition_type": {
-            "is_off": "{entity_name} er av",
-            "is_on": "{entity_name} er p\u00e5"
+            "turn_off": "{entity_name} sl\u00e5tt av",
+            "turn_on": "{entity_name} sl\u00e5tt p\u00e5"
         },
         "trigger_type": {
-            "turn_off": "{name} sl\u00e5tt av",
-            "turn_on": "{name} sl\u00e5tt p\u00e5"
+            "turn_off": "{entity_name} sl\u00e5tt av",
+            "turn_on": "{entity_name} sl\u00e5tt p\u00e5"
         }
     }
 }
