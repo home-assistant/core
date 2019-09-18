@@ -142,7 +142,7 @@ async def async_setup(hass, config):
 
     if config_user in configured_instances(hass):
         _LOGGER.warning(
-            f"Account {config_user} already exists! Ignoring account settings in configuration.yaml"
+            "Account already exists! Ignoring account settings in configuration.yaml"
         )
         return True
 
