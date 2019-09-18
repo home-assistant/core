@@ -51,11 +51,9 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         plex_server = PlexServer(server_config)
         try:
             await self.hass.async_add_executor_job(plex_server.connect)
+
         except NoServersFound:
             errors["base"] = "no_servers"
-        except ServerNotSpecified as available_servers:
-            self.available_servers = available_servers.args[0]
-            return await self.async_step_select_server()
         except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized):
             _LOGGER.error("Invalid credentials provided, config not created")
             errors["base"] = "faulty_credentials"
@@ -64,6 +62,11 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 "Plex server could not be reached: %s", server_config[CONF_URL]
             )
             errors["base"] = "not_found"
+
+        except ServerNotSpecified as available_servers:
+            self.available_servers = available_servers.args[0]
+            return await self.async_step_select_server()
+
         except Exception as error:  # pylint: disable=broad-except
             _LOGGER.error("Unknown error connecting to Plex server: %s", error)
             return self.async_abort(reason="unknown")
