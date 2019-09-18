@@ -144,6 +144,7 @@ TEST_REQUIREMENTS = (
     "pyspcwebgw",
     "python_awair",
     "python-forecastio",
+    "python-izone",
     "python-nest",
     "python-velbus",
     "pythonwhois",
