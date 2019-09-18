@@ -16,17 +16,17 @@ def init_config_flow(hass):
     return flow
 
 
-class MockAvailableServer:
+class MockAvailableServer:  # pylint: disable=too-few-public-methods
     """Mock avilable server objects."""
 
     def __init__(self, name, client_id):
         """Initialize the object."""
         self.name = name
-        self.clientIdentifier = client_id
+        self.clientIdentifier = client_id  # pylint: disable=invalid-name
         self.provides = ["server"]
 
 
-class MockConnection:
+class MockConnection:  # pylint: disable=too-few-public-methods
     """Mock a single account resource connection object."""
 
     def __init__(self, ssl):
@@ -37,7 +37,7 @@ class MockConnection:
         self.local = True
 
 
-class MockConnections:
+class MockConnections:  # pylint: disable=too-few-public-methods
     """Mock a list of resource connections."""
 
     def __init__(self, ssl=False):
@@ -56,7 +56,7 @@ async def test_bad_credentials(hass):
     assert result["step_id"] == "user"
 
     with patch(
-        "plexapi.myplex.MyPlexAccount", side_effect=plexapi.exceptions.Unauthorized
+            "plexapi.myplex.MyPlexAccount", side_effect=plexapi.exceptions.Unauthorized
     ):
 
         result = await hass.config_entries.flow.async_configure(
@@ -78,8 +78,8 @@ async def test_import_file_from_discovery(hass):
     used_url = f"http://{file_host_and_port}"
 
     with patch("plexapi.server.PlexServer") as mock_plex_server, patch(
-        "homeassistant.components.plex.config_flow.load_json",
-        return_value=mock_file_contents,
+            "homeassistant.components.plex.config_flow.load_json",
+            return_value=mock_file_contents,
     ):
         type(mock_plex_server.return_value).machineIdentifier = PropertyMock(
             return_value="unique_id_123"
@@ -87,9 +87,9 @@ async def test_import_file_from_discovery(hass):
         type(mock_plex_server.return_value).friendlyName = PropertyMock(
             return_value="Mock Server"
         )
-        type(mock_plex_server.return_value)._baseurl = PropertyMock(
-            return_value=used_url
-        )
+        type(  # pylint: disable=protected-access
+            mock_plex_server.return_value
+        )._baseurl = PropertyMock(return_value=used_url)
 
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
@@ -156,9 +156,9 @@ async def test_import_success(hass):
         type(mock_plex_server.return_value).friendlyName = PropertyMock(
             return_value=mock_servers[0]
         )
-        type(mock_plex_server.return_value)._baseurl = PropertyMock(
-            return_value=mock_connections.connections[0].httpuri
-        )
+        type(  # pylint: disable=protected-access
+            mock_plex_server.return_value
+        )._baseurl = PropertyMock(return_value=mock_connections.connections[0].httpuri)
 
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
@@ -180,7 +180,7 @@ async def test_import_bad_hostname(hass):
     """Test when an invalid address is provided."""
 
     with patch(
-        "plexapi.server.PlexServer", side_effect=requests.exceptions.ConnectionError
+            "plexapi.server.PlexServer", side_effect=requests.exceptions.ConnectionError
     ):
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
@@ -255,7 +255,7 @@ async def test_single_available_server(hass):
     mm_plex_account.resource = Mock(return_value=mock_connections)
 
     with patch("plexapi.myplex.MyPlexAccount", return_value=mm_plex_account), patch(
-        "plexapi.server.PlexServer"
+            "plexapi.server.PlexServer"
     ) as mock_plex_server:
         type(mock_plex_server.return_value).machineIdentifier = PropertyMock(
             return_value="unique_id_123"
@@ -263,9 +263,9 @@ async def test_single_available_server(hass):
         type(mock_plex_server.return_value).friendlyName = PropertyMock(
             return_value=mock_servers[0]
         )
-        type(mock_plex_server.return_value)._baseurl = PropertyMock(
-            return_value=mock_connections.connections[0].httpuri
-        )
+        type(  # pylint: disable=protected-access
+            mock_plex_server.return_value
+        )._baseurl = PropertyMock(return_value=mock_connections.connections[0].httpuri)
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_TOKEN: "12345"}
@@ -297,7 +297,7 @@ async def test_multiple_servers_with_selection(hass):
     mm_plex_account.resource = Mock(return_value=mock_connections)
 
     with patch("plexapi.myplex.MyPlexAccount", return_value=mm_plex_account), patch(
-        "plexapi.server.PlexServer"
+            "plexapi.server.PlexServer"
     ) as mock_plex_server:
         type(mock_plex_server.return_value).machineIdentifier = PropertyMock(
             return_value="unique_id_123"
@@ -305,9 +305,9 @@ async def test_multiple_servers_with_selection(hass):
         type(mock_plex_server.return_value).friendlyName = PropertyMock(
             return_value=mock_servers[0]
         )
-        type(mock_plex_server.return_value)._baseurl = PropertyMock(
-            return_value=mock_connections.connections[0].httpuri
-        )
+        type(  # pylint: disable=protected-access
+            mock_plex_server.return_value
+        )._baseurl = PropertyMock(return_value=mock_connections.connections[0].httpuri)
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_TOKEN: "12345"}
@@ -354,7 +354,7 @@ async def test_adding_last_unconfigured_server(hass):
     mm_plex_account.resource = Mock(return_value=mock_connections)
 
     with patch("plexapi.myplex.MyPlexAccount", return_value=mm_plex_account), patch(
-        "plexapi.server.PlexServer"
+            "plexapi.server.PlexServer"
     ) as mock_plex_server:
         type(mock_plex_server.return_value).machineIdentifier = PropertyMock(
             return_value="unique_id_123"
@@ -362,9 +362,9 @@ async def test_adding_last_unconfigured_server(hass):
         type(mock_plex_server.return_value).friendlyName = PropertyMock(
             return_value=mock_servers[0]
         )
-        type(mock_plex_server.return_value)._baseurl = PropertyMock(
-            return_value=mock_connections.connections[0].httpuri
-        )
+        type(  # pylint: disable=protected-access
+            mock_plex_server.return_value
+        )._baseurl = PropertyMock(return_value=mock_connections.connections[0].httpuri)
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_TOKEN: "12345"}
@@ -400,9 +400,9 @@ async def test_already_configured(hass):
         type(mock_plex_server.return_value).friendlyName = PropertyMock(
             return_value=mock_servers[0]
         )
-        type(mock_plex_server.return_value)._baseurl = PropertyMock(
-            return_value=mock_connections.connections[0].httpuri
-        )
+        type(  # pylint: disable=protected-access
+            mock_plex_server.return_value
+        )._baseurl = PropertyMock(return_value=mock_connections.connections[0].httpuri)
         result = await flow.async_step_import(
             {CONF_TOKEN: "12345", CONF_URL: "http://1.2.3.4:32400"}
         )
