@@ -479,7 +479,7 @@ class ZoneDevice(ClimateDevice):
         for (key, value) in self._state_to_pizone.items():
             if value == mode:
                 return key
-        return ""
+        return None
 
     @property
     def hvac_modes(self):
