@@ -12,3 +12,68 @@ DEFAULT_GPS_ACCURACY_THRESHOLD = 500  # meters
 
 # Next PR will add sensor
 ICLOUD_COMPONENTS = ["device_tracker"]
+
+# pyicloud.AppleDevice status
+DEVICE_BATTERY_LEVEL = "batteryLevel"
+DEVICE_BATTERY_STATUS = "batteryStatus"
+DEVICE_CLASS = "deviceClass"
+DEVICE_DISPLAY_NAME = "deviceDisplayName"
+DEVICE_LOCATION = "location"
+DEVICE_LOCATION_HORIZONTAL_ACCURACY = "horizontalAccuracy"
+DEVICE_LOCATION_LATITUDE = "latitude"
+DEVICE_LOCATION_LONGITUDE = "longitude"
+DEVICE_LOST_MODE_CAPABLE = "lostModeCapable"
+DEVICE_LOW_POWER_MODE = "lowPowerMode"
+DEVICE_NAME = "name"
+DEVICE_PERSON_ID = "prsId"
+DEVICE_STATUS = "deviceStatus"
+
+DEVICE_STATUS_SET = [
+    "features",
+    "maxMsgChar",
+    "darkWake",
+    "fmlyShare",
+    DEVICE_STATUS,
+    "remoteLock",
+    "activationLocked",
+    DEVICE_CLASS,
+    "id",
+    "deviceModel",
+    "rawDeviceModel",
+    "passcodeLength",
+    "canWipeAfterLock",
+    "trackingInfo",
+    DEVICE_LOCATION,
+    "msg",
+    DEVICE_BATTERY_LEVEL,
+    "remoteWipe",
+    "thisDevice",
+    "snd",
+    DEVICE_PERSON_ID,
+    "wipeInProgress",
+    DEVICE_LOW_POWER_MODE,
+    "lostModeEnabled",
+    "isLocating",
+    DEVICE_LOST_MODE_CAPABLE,
+    "mesg",
+    DEVICE_NAME,
+    DEVICE_BATTERY_STATUS,
+    "lockedTimestamp",
+    "lostTimestamp",
+    "locationCapable",
+    DEVICE_DISPLAY_NAME,
+    "lostDevice",
+    "deviceColor",
+    "wipedTimestamp",
+    "modelDisplayName",
+    "locationEnabled",
+    "isMac",
+    "locFoundEnabled",
+]
+
+DEVICE_STATUS_CODES = {
+    "200": "online",
+    "201": "offline",
+    "203": "pending",
+    "204": "unregistered",
+}

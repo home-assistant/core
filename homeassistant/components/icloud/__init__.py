@@ -30,6 +30,20 @@ from .const import (
     DOMAIN,
     ICLOUD_COMPONENTS,
     TRACKER_UPDATE,
+    DEVICE_BATTERY_LEVEL,
+    DEVICE_BATTERY_STATUS,
+    DEVICE_CLASS,
+    DEVICE_DISPLAY_NAME,
+    DEVICE_LOCATION,
+    DEVICE_LOCATION_LATITUDE,
+    DEVICE_LOCATION_LONGITUDE,
+    DEVICE_LOST_MODE_CAPABLE,
+    DEVICE_LOW_POWER_MODE,
+    DEVICE_NAME,
+    DEVICE_PERSON_ID,
+    DEVICE_STATUS,
+    DEVICE_STATUS_SET,
+    DEVICE_STATUS_CODES,
 )
 
 ATTRIBUTION = "Data provided by Apple iCloud"
@@ -42,56 +56,6 @@ ATTR_DEVICE_NAME = "device_name"
 ATTR_DEVICE_STATUS = "device_status"
 ATTR_LOW_POWER_MODE = "low_power_mode"
 ATTR_OWNER_NAME = "owner_fullname"
-
-DEVICE_STATUS_SET = [
-    "features",
-    "maxMsgChar",
-    "darkWake",
-    "fmlyShare",
-    "deviceStatus",
-    "remoteLock",
-    "activationLocked",
-    "deviceClass",
-    "id",
-    "deviceModel",
-    "rawDeviceModel",
-    "passcodeLength",
-    "canWipeAfterLock",
-    "trackingInfo",
-    "location",
-    "msg",
-    "batteryLevel",
-    "remoteWipe",
-    "thisDevice",
-    "snd",
-    "prsId",
-    "wipeInProgress",
-    "lowPowerMode",
-    "lostModeEnabled",
-    "isLocating",
-    "lostModeCapable",
-    "mesg",
-    "name",
-    "batteryStatus",
-    "lockedTimestamp",
-    "lostTimestamp",
-    "locationCapable",
-    "deviceDisplayName",
-    "lostDevice",
-    "deviceColor",
-    "wipedTimestamp",
-    "modelDisplayName",
-    "locationEnabled",
-    "isMac",
-    "locFoundEnabled",
-]
-
-DEVICE_STATUS_CODES = {
-    "200": "online",
-    "201": "offline",
-    "203": "pending",
-    "204": "unregistered",
-}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -339,7 +303,7 @@ class IcloudAccount:
         # Gets devices infos
         for device in api_devices:
             status = device.status(DEVICE_STATUS_SET)
-            devicename = slugify(status["name"].replace(" ", "", 99))
+            devicename = slugify(status[DEVICE_NAME].replace(" ", "", 99))
 
             if self._devices.get(devicename, None) is not None:
                 # Seen device -> updating
@@ -374,8 +338,8 @@ class IcloudAccount:
                 self.hass.loop,
                 async_active_zone,
                 self.hass,
-                device.location["latitude"],
-                device.location["longitude"],
+                device.location[DEVICE_LOCATION_LATITUDE],
+                device.location[DEVICE_LOCATION_LONGITUDE],
             ).result()
 
             if current_zone is not None:
@@ -389,11 +353,11 @@ class IcloudAccount:
 
             distances = []
             for zone_state in zones:
-                zone_state_lat = zone_state.attributes["latitude"]
-                zone_state_long = zone_state.attributes["longitude"]
+                zone_state_lat = zone_state.attributes[DEVICE_LOCATION_LATITUDE]
+                zone_state_long = zone_state.attributes[DEVICE_LOCATION_LONGITUDE]
                 zone_distance = distance(
-                    device.location["latitude"],
-                    device.location["longitude"],
+                    device.location[DEVICE_LOCATION_LATITUDE],
+                    device.location[DEVICE_LOCATION_LONGITUDE],
                     zone_state_lat,
                     zone_state_long,
                 )
@@ -485,14 +449,16 @@ class IcloudDevice:
         self._device = device
         self._status = status
 
-        self._name = self._status["name"]
+        self._name = self._status[DEVICE_NAME]
         self._dev_id = slugify(self._name.replace(" ", "", 99))  # devicename
         self._unique_id = f"{account_name_slug}_{self._dev_id}"
-        self._device_class = self._status["deviceClass"]
-        device_name = self._status["deviceDisplayName"]
+        self._device_class = self._status[DEVICE_CLASS]
+        device_name = self._status[DEVICE_DISPLAY_NAME]
 
-        if self._status["prsId"]:
-            owner_fullname = account.family_members_fullname[self._status["prsId"]]
+        if self._status[DEVICE_PERSON_ID]:
+            owner_fullname = account.family_members_fullname[
+                self._status[DEVICE_PERSON_ID]
+            ]
         else:
             owner_fullname = account.owner_fullname
 
@@ -515,20 +481,23 @@ class IcloudDevice:
 
         self._status[ATTR_ACCOUNT_FETCH_INTERVAL] = self._account.fetch_interval
 
-        device_status = DEVICE_STATUS_CODES.get(self._status["deviceStatus"], "error")
+        device_status = DEVICE_STATUS_CODES.get(self._status[DEVICE_STATUS], "error")
         self._attrs[ATTR_DEVICE_STATUS] = device_status
 
-        if self._status["batteryStatus"] != "Unknown":
-            self._battery_level = int(self._status.get("batteryLevel", 0) * 100)
-            self._battery_status = self._status["batteryStatus"]
-            low_power_mode = self._status["lowPowerMode"]
+        if self._status[DEVICE_BATTERY_STATUS] != "Unknown":
+            self._battery_level = int(self._status.get(DEVICE_BATTERY_LEVEL, 0) * 100)
+            self._battery_status = self._status[DEVICE_BATTERY_STATUS]
+            low_power_mode = self._status[DEVICE_LOW_POWER_MODE]
 
             self._attrs[ATTR_BATTERY] = self._battery_level
             self._attrs[ATTR_BATTERY_STATUS] = self._battery_status
             self._attrs[ATTR_LOW_POWER_MODE] = low_power_mode
 
-            if self._status["location"] and self._status["location"]["latitude"]:
-                location = self._status["location"]
+            if (
+                self._status[DEVICE_LOCATION]
+                and self._status[DEVICE_LOCATION][DEVICE_LOCATION_LATITUDE]
+            ):
+                location = self._status[DEVICE_LOCATION]
                 self._location = location
 
     def play_sound(self):
@@ -555,7 +524,7 @@ class IcloudDevice:
             return
 
         self._account.api.authenticate()
-        if self._status["lostModeCapable"]:
+        if self._status[DEVICE_LOST_MODE_CAPABLE]:
             _LOGGER.debug("Make device lost for %s", self.name)
             self.device.lost_device(number, message, None)
         else:

@@ -7,7 +7,13 @@ from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import IcloudDevice
-from .const import DOMAIN, TRACKER_UPDATE
+from .const import (
+    DOMAIN,
+    TRACKER_UPDATE,
+    DEVICE_LOCATION_HORIZONTAL_ACCURACY,
+    DEVICE_LOCATION_LATITUDE,
+    DEVICE_LOCATION_LONGITUDE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,17 +58,17 @@ class IcloudTrackerEntity(TrackerEntity):
     @property
     def location_accuracy(self):
         """Return the location accuracy of the device."""
-        return self._device.location["horizontalAccuracy"]
+        return self._device.location[DEVICE_LOCATION_HORIZONTAL_ACCURACY]
 
     @property
     def latitude(self):
         """Return latitude value of the device."""
-        return self._device.location["latitude"]
+        return self._device.location[DEVICE_LOCATION_LATITUDE]
 
     @property
     def longitude(self):
         """Return longitude value of the device."""
-        return self._device.location["longitude"]
+        return self._device.location[DEVICE_LOCATION_LONGITUDE]
 
     @property
     def should_poll(self):
