@@ -48,7 +48,12 @@ SENSOR_TYPES = {
         ENERGY_WATT_HOUR,
         "mdi:solar-power",
     ],
-    "current_power": ["currentPower", "Current Power", POWER_WATT, "mdi:solar-power"],
+    "current_power": [
+        "currentPower",
+        "Current Power",
+        POWER_WATT,
+        "mdi:solar-power"
+    ],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
