@@ -96,8 +96,13 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
 
     async def async_handle_core_service(call):
         """Service handler for handling core services."""
+        # ais dom
+        ais_command = None
+        if "ais_command" in call.data:
+            ais_command = call.data["ais_command"]
+
         if call.service == SERVICE_HOMEASSISTANT_STOP:
-            hass.async_create_task(hass.async_stop())
+            hass.async_create_task(hass.async_stop(ais_command=ais_command))
             return
 
         try:
@@ -115,7 +120,9 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
             return
 
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
-            hass.async_create_task(hass.async_stop(RESTART_EXIT_CODE))
+            hass.async_create_task(
+                hass.async_stop(RESTART_EXIT_CODE, ais_command=ais_command)
+            )
 
     async def async_handle_update_service(call):
         """Service handler for updating an entity."""

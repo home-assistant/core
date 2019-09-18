@@ -8,10 +8,11 @@ ais_restart_system:
   sequence:
     - service: ais_ai_service.say_it
       data:
-        text: "Restartuję. Do usłyszenia."
+        text: "OK, zapisuję status i się restartuję. Do usłyszenia."
     - delay: '2'
-    - service: ais_shell_command.execute_restart
-
+    - service: homeassistant.stop
+      data:
+        ais_command: restart
 ais_cloud_sync:
   alias: 'Synchronizacja z Portalem Integratora'
   sequence:
@@ -29,9 +30,11 @@ ais_stop_system:
   sequence:
     - service: ais_ai_service.say_it
       data:
-        text: "OK wyłączam. Do usłyszenia."
+        text: "OK, zapisuję status i się wyłączam. Do usłyszenia."
     - delay: '2'
-    - service: ais_shell_command.execute_stop
+    - service: homeassistant.stop
+      data:
+        ais_command: stop
 
 ais_button_click:
   alias: 'Button Click'

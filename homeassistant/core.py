@@ -396,7 +396,9 @@ class HomeAssistant:
             return
         fire_coroutine_threadsafe(self.async_stop(), self.loop)
 
-    async def async_stop(self, exit_code: int = 0, *, force: bool = False) -> None:
+    async def async_stop(
+        self, exit_code: int = 0, *, force: bool = False, ais_command: str = None
+    ) -> None:
         """Stop Home Assistant and shuts down all threads.
 
         The "force" flag commands async_stop to proceed regardless of
@@ -428,13 +430,23 @@ class HomeAssistant:
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
         await self.async_block_till_done()
         self.executor.shutdown()
-
         self.exit_code = exit_code
-
         if self._stopped is not None:
             self._stopped.set()
         else:
             self.loop.stop()
+        # ais dom
+        if ais_command is not None:
+            if ais_command == "restart":
+                import subprocess
+
+                subprocess.Popen("su -c reboot", shell=True, stdout=None, stderr=None)
+            if ais_command == "stop":
+                import subprocess
+
+                subprocess.Popen(
+                    "su -c 'reboot -p'", shell=True, stdout=None, stderr=None
+                )
 
 
 @attr.s(slots=True, frozen=True)
