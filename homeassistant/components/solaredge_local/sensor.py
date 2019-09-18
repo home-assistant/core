@@ -171,6 +171,20 @@ class SolarEdgeData:
             _LOGGER.error("Could not retrieve maintenance, skipping update")
             return
         
+        temperture = []
+        voltage = []
+        current = []
+        stringlength = len(maintenance.diagnostics.inverters.primary.optimizer)
+        power = 0
+        
+        for x in range(stringlength):
+            if maintenance.diagnostics.inverters.primary.optimizer[x].online is True:
+                temperture.append(maintenance.diagnostics.inverters.primary.optimizer[x].temperature.value)
+                voltage.append(maintenance.diagnostics.inverters.primary.optimizer[x].inputV)
+                current.append(maintenance.diagnostics.inverters.primary.optimizer[x].inputC) 
+                
+        if len(voltage) >= 1:
+            power = round(statistics.mean(voltage) * statistics.mean(current) * stringlength,2)
         
         try:
             self.data["energyTotal"] = response.energy.total
