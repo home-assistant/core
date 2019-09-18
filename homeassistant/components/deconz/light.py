@@ -29,7 +29,7 @@ from .const import (
     SWITCH_TYPES,
 )
 from .deconz_device import DeconzDevice
-from .gateway import get_gateway_from_config_entry
+from .gateway import get_gateway_from_config_entry, DeconzEntityHandler
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -40,6 +40,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ lights and groups from a config entry."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
+
+    entity_handler = DeconzEntityHandler(gateway)
 
     @callback
     def async_add_light(lights):
@@ -54,7 +56,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     gateway.listeners.append(
         async_dispatcher_connect(
-            hass, gateway.async_event_new_device(NEW_LIGHT), async_add_light
+            hass, gateway.async_signal_new_device(NEW_LIGHT), async_add_light
         )
     )
 
@@ -64,14 +66,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities = []
 
         for group in groups:
-            if group.lights and gateway.allow_deconz_groups:
-                entities.append(DeconzGroup(group, gateway))
+            if group.lights:
+                new_group = DeconzGroup(group, gateway)
+                entity_handler.add_entity(new_group)
+                entities.append(new_group)
 
         async_add_entities(entities, True)
 
     gateway.listeners.append(
         async_dispatcher_connect(
-            hass, gateway.async_event_new_device(NEW_GROUP), async_add_group
+            hass, gateway.async_signal_new_device(NEW_GROUP), async_add_group
         )
     )
 

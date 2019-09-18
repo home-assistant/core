@@ -6,6 +6,9 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
@@ -143,7 +146,7 @@ async def async_setup(hass, config):
     async def turn_onoff_service_handler(service_call):
         """Handle automation turn on/off service calls."""
         tasks = []
-        method = "async_{}".format(service_call.service)
+        method = f"async_{service_call.service}"
         for entity in await component.async_extract_from_service(service_call):
             tasks.append(getattr(entity, method)())
 
@@ -378,7 +381,7 @@ async def _async_process_config(hass, config, component):
 
         for list_no, config_block in enumerate(conf):
             automation_id = config_block.get(CONF_ID)
-            name = config_block.get(CONF_ALIAS) or "{} {}".format(config_key, list_no)
+            name = config_block.get(CONF_ALIAS) or f"{config_key} {list_no}"
 
             hidden = config_block[CONF_HIDE_ENTITY]
             initial_state = config_block.get(CONF_INITIAL_STATE)
@@ -386,7 +389,7 @@ async def _async_process_config(hass, config, component):
             action = _async_get_action(hass, config_block.get(CONF_ACTION, {}), name)
 
             if CONF_CONDITION in config_block:
-                cond_func = _async_process_if(hass, config, config_block)
+                cond_func = await _async_process_if(hass, config, config_block)
 
                 if cond_func is None:
                     continue
@@ -431,20 +434,20 @@ def _async_get_action(hass, config, name):
             await script_obj.async_run(variables, context)
         except Exception as err:  # pylint: disable=broad-except
             script_obj.async_log_exception(
-                _LOGGER, "Error while executing automation {}".format(entity_id), err
+                _LOGGER, f"Error while executing automation {entity_id}", err
             )
 
     return action
 
 
-def _async_process_if(hass, config, p_config):
+async def _async_process_if(hass, config, p_config):
     """Process if checks."""
     if_configs = p_config.get(CONF_CONDITION)
 
     checks = []
     for if_config in if_configs:
         try:
-            checks.append(condition.async_from_config(if_config, False))
+            checks.append(await condition.async_from_config(hass, if_config, False))
         except HomeAssistantError as ex:
             _LOGGER.warning("Invalid condition: %s", ex)
             return None
@@ -467,7 +470,10 @@ async def _async_process_trigger(hass, config, trigger_configs, name, action):
     for conf in trigger_configs:
         platform = importlib.import_module(".{}".format(conf[CONF_PLATFORM]), __name__)
 
-        remove = await platform.async_trigger(hass, conf, action, info)
+        try:
+            remove = await platform.async_trigger(hass, conf, action, info)
+        except InvalidDeviceAutomationConfig:
+            remove = False
 
         if not remove:
             _LOGGER.error("Error setting up trigger %s", name)

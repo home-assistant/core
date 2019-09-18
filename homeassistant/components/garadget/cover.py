@@ -177,7 +177,7 @@ class GaradgetCover(CoverDevice):
             "username": self._username,
             "password": self._password,
         }
-        url = "{}/oauth/token".format(self.particle_url)
+        url = f"{self.particle_url}/oauth/token"
         ret = requests.post(url, auth=("particle", "particle"), data=args, timeout=10)
 
         try:
@@ -187,7 +187,7 @@ class GaradgetCover(CoverDevice):
 
     def remove_token(self):
         """Remove authorization token from API."""
-        url = "{}/v1/access_tokens/{}".format(self.particle_url, self.access_token)
+        url = f"{self.particle_url}/v1/access_tokens/{self.access_token}"
         ret = requests.delete(url, auth=(self._username, self._password), timeout=10)
         return ret.text
 
@@ -266,6 +266,6 @@ class GaradgetCover(CoverDevice):
         params = {"access_token": self.access_token}
         if arg:
             params["command"] = arg
-        url = "{}/v1/devices/{}/{}".format(self.particle_url, self.device_id, func)
+        url = f"{self.particle_url}/v1/devices/{self.device_id}/{func}"
         ret = requests.post(url, data=params, timeout=10)
         return ret.json()

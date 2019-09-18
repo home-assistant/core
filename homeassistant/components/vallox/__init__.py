@@ -152,7 +152,7 @@ class ValloxStateProxy:
             raise OSError("Device state out of sync.")
 
         if metric_key not in vlxDevConstants.__dict__:
-            raise KeyError("Unknown metric key: {}".format(metric_key))
+            raise KeyError(f"Unknown metric key: {metric_key}")
 
         return self._metric_cache[metric_key]
 

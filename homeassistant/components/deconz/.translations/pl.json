@@ -15,9 +15,9 @@
             "hassio_confirm": {
                 "data": {
                     "allow_clip_sensor": "Zezwalaj na importowanie wirtualnych sensor\u00f3w",
-                    "allow_deconz_groups": "Zezw\u00f3l na importowanie grup deCONZ"
+                    "allow_deconz_groups": "Zezwalaj na importowanie grup deCONZ"
                 },
-                "description": "Czy chcesz skonfigurowa\u0107 Home Assistant'a, aby po\u0142\u0105czy\u0142 si\u0119 z bramk\u0105 deCONZ dostarczon\u0105 przez dodatek Hass.io {addon}?",
+                "description": "Czy chcesz skonfigurowa\u0107 Home Assistant, aby po\u0142\u0105czy\u0142 si\u0119 z bramk\u0105 deCONZ dostarczon\u0105 przez dodatek Hass.io {addon}?",
                 "title": "Bramka deCONZ Zigbee przez dodatek Hass.io"
             },
             "init": {
@@ -28,7 +28,7 @@
                 "title": "Zdefiniuj bramk\u0119 deCONZ"
             },
             "link": {
-                "description": "Odblokuj bramk\u0119 deCONZ, aby zarejestrowa\u0107 j\u0105 w Home Assistant. \n\n 1. Przejd\u017a do ustawie\u0144 systemu deCONZ \n 2. Naci\u015bnij przycisk \"Odblokuj bramk\u0119\"",
+                "description": "Odblokuj bramk\u0119 deCONZ, aby zarejestrowa\u0107 j\u0105 w Home Assistant. \n\n 1. Przejd\u017a do ustawienia deCONZ > bramka > Zaawansowane\n 2. Naci\u015bnij przycisk \"Uwierzytelnij aplikacj\u0119\"",
                 "title": "Po\u0142\u0105cz z deCONZ"
             },
             "options": {
@@ -40,5 +40,23 @@
             }
         },
         "title": "Brama deCONZ Zigbee"
+    },
+    "options": {
+        "step": {
+            "async_step_deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "Zezwalaj na czujniki deCONZ CLIP",
+                    "allow_deconz_groups": "Zezwalaj na grupy \u015bwiate\u0142 deCONZ"
+                },
+                "description": "Skonfiguruj widoczno\u015b\u0107 urz\u0105dze\u0144 deCONZ"
+            },
+            "deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "Zezwalaj na czujniki deCONZ CLIP",
+                    "allow_deconz_groups": "Zezwalaj na grupy \u015bwiate\u0142 deCONZ"
+                },
+                "description": "Skonfiguruj widoczno\u015b\u0107 typ\u00f3w urz\u0105dze\u0144 deCONZ"
+            }
+        }
     }
 }

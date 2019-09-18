@@ -125,11 +125,11 @@ class WeatherEntity(Entity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        data = {
-            ATTR_WEATHER_TEMPERATURE: show_temp(
+        data = {}
+        if self.temperature is not None:
+            data[ATTR_WEATHER_TEMPERATURE] = show_temp(
                 self.hass, self.temperature, self.temperature_unit, self.precision
             )
-        }
 
         humidity = self.humidity
         if humidity is not None:

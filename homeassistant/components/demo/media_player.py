@@ -417,7 +417,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
     @property
     def media_title(self):
         """Return the title of current playing media."""
-        return "Chapter {}".format(self._cur_episode)
+        return f"Chapter {self._cur_episode}"
 
     @property
     def media_series_title(self):

@@ -80,7 +80,7 @@ class QSEntity(Entity):
     @property
     def unique_id(self):
         """Return a unique identifier for this sensor."""
-        return "qs{}".format(self.qsid)
+        return f"qs{self.qsid}"
 
     @callback
     def update_packet(self, packet):

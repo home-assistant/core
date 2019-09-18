@@ -333,7 +333,7 @@ class CupsData:
             else:
                 for ipp_printer in self._ipp_printers:
                     self.attributes[ipp_printer] = conn.getPrinterAttributes(
-                        uri="ipp://{}:{}/{}".format(self._host, self._port, ipp_printer)
+                        uri=f"ipp://{self._host}:{self._port}/{ipp_printer}"
                     )
 
             self.available = True

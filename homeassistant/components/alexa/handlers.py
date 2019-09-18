@@ -744,7 +744,7 @@ async def async_api_set_thermostat_mode(hass, config, directive, context):
         presets = entity.attributes.get(climate.ATTR_PRESET_MODES, [])
 
         if ha_preset not in presets:
-            msg = "The requested thermostat mode {} is not supported".format(ha_preset)
+            msg = f"The requested thermostat mode {ha_preset} is not supported"
             raise AlexaUnsupportedThermostatModeError(msg)
 
         service = climate.SERVICE_SET_PRESET_MODE
@@ -754,7 +754,7 @@ async def async_api_set_thermostat_mode(hass, config, directive, context):
         operation_list = entity.attributes.get(climate.ATTR_HVAC_MODES)
         ha_mode = next((k for k, v in API_THERMOSTAT_MODES.items() if v == mode), None)
         if ha_mode not in operation_list:
-            msg = "The requested thermostat mode {} is not supported".format(mode)
+            msg = f"The requested thermostat mode {mode} is not supported"
             raise AlexaUnsupportedThermostatModeError(msg)
 
         service = climate.SERVICE_SET_HVAC_MODE

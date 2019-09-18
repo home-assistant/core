@@ -168,8 +168,8 @@ class Tplink1DeviceScanner(DeviceScanner):
         """
         _LOGGER.info("Loading wireless clients...")
 
-        url = "http://{}/userRpm/WlanStationRpm.htm".format(self.host)
-        referer = "http://{}".format(self.host)
+        url = f"http://{self.host}/userRpm/WlanStationRpm.htm"
+        referer = f"http://{self.host}"
         page = requests.get(
             url,
             auth=(self.username, self.password),
@@ -205,16 +205,16 @@ class Tplink2DeviceScanner(Tplink1DeviceScanner):
         """
         _LOGGER.info("Loading wireless clients...")
 
-        url = "http://{}/data/map_access_wireless_client_grid.json".format(self.host)
-        referer = "http://{}".format(self.host)
+        url = f"http://{self.host}/data/map_access_wireless_client_grid.json"
+        referer = f"http://{self.host}"
 
         # Router uses Authorization cookie instead of header
         # Let's create the cookie
-        username_password = "{}:{}".format(self.username, self.password)
+        username_password = f"{self.username}:{self.password}"
         b64_encoded_username_password = base64.b64encode(
             username_password.encode("ascii")
         ).decode("ascii")
-        cookie = "Authorization=Basic {}".format(b64_encoded_username_password)
+        cookie = f"Authorization=Basic {b64_encoded_username_password}"
 
         response = requests.post(
             url, headers={REFERER: referer, COOKIE: cookie}, timeout=4
@@ -264,8 +264,8 @@ class Tplink3DeviceScanner(Tplink1DeviceScanner):
         """Retrieve auth tokens from the router."""
         _LOGGER.info("Retrieving auth tokens...")
 
-        url = "http://{}/cgi-bin/luci/;stok=/login?form=login".format(self.host)
-        referer = "http://{}/webpages/login.html".format(self.host)
+        url = f"http://{self.host}/cgi-bin/luci/;stok=/login?form=login"
+        referer = f"http://{self.host}/webpages/login.html"
 
         # If possible implement RSA encryption of password here.
         response = requests.post(
@@ -303,7 +303,7 @@ class Tplink3DeviceScanner(Tplink1DeviceScanner):
         url = (
             "http://{}/cgi-bin/luci/;stok={}/admin/wireless?" "form=statistics"
         ).format(self.host, self.stok)
-        referer = "http://{}/webpages/index.html".format(self.host)
+        referer = f"http://{self.host}/webpages/index.html"
 
         response = requests.post(
             url,
@@ -346,7 +346,7 @@ class Tplink3DeviceScanner(Tplink1DeviceScanner):
         url = ("http://{}/cgi-bin/luci/;stok={}/admin/system?" "form=logout").format(
             self.host, self.stok
         )
-        referer = "http://{}/webpages/index.html".format(self.host)
+        referer = f"http://{self.host}/webpages/index.html"
 
         requests.post(
             url,
@@ -379,19 +379,19 @@ class Tplink4DeviceScanner(Tplink1DeviceScanner):
     def _get_auth_tokens(self):
         """Retrieve auth tokens from the router."""
         _LOGGER.info("Retrieving auth tokens...")
-        url = "http://{}/userRpm/LoginRpm.htm?Save=Save".format(self.host)
+        url = f"http://{self.host}/userRpm/LoginRpm.htm?Save=Save"
 
         # Generate md5 hash of password. The C7 appears to use the first 15
         # characters of the password only, so we truncate to remove additional
         # characters from being hashed.
         password = hashlib.md5(self.password.encode("utf")[:15]).hexdigest()
-        credentials = "{}:{}".format(self.username, password).encode("utf")
+        credentials = f"{self.username}:{password}".encode("utf")
 
         # Encode the credentials to be sent as a cookie.
         self.credentials = base64.b64encode(credentials).decode("utf")
 
         # Create the authorization cookie.
-        cookie = "Authorization=Basic {}".format(self.credentials)
+        cookie = f"Authorization=Basic {self.credentials}"
 
         response = requests.get(url, headers={COOKIE: cookie})
 
@@ -423,9 +423,9 @@ class Tplink4DeviceScanner(Tplink1DeviceScanner):
 
         # Check both the 2.4GHz and 5GHz client list URLs
         for clients_url in ("WlanStationRpm.htm", "WlanStationRpm_5g.htm"):
-            url = "http://{}/{}/userRpm/{}".format(self.host, self.token, clients_url)
-            referer = "http://{}".format(self.host)
-            cookie = "Authorization=Basic {}".format(self.credentials)
+            url = f"http://{self.host}/{self.token}/userRpm/{clients_url}"
+            referer = f"http://{self.host}"
+            cookie = f"Authorization=Basic {self.credentials}"
 
             page = requests.get(url, headers={COOKIE: cookie, REFERER: referer})
             mac_results.extend(self.parse_macs.findall(page.text))
@@ -456,7 +456,7 @@ class Tplink5DeviceScanner(Tplink1DeviceScanner):
         """
         _LOGGER.info("Loading wireless clients...")
 
-        base_url = "http://{}".format(self.host)
+        base_url = f"http://{self.host}"
 
         header = {
             USER_AGENT: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12;"
@@ -466,7 +466,7 @@ class Tplink5DeviceScanner(Tplink1DeviceScanner):
             ACCEPT_ENCODING: "gzip, deflate",
             CONTENT_TYPE: "application/x-www-form-urlencoded; charset=UTF-8",
             HTTP_HEADER_X_REQUESTED_WITH: "XMLHttpRequest",
-            REFERER: "http://{}/".format(self.host),
+            REFERER: f"http://{self.host}/",
             CONNECTION: KEEP_ALIVE,
             PRAGMA: HTTP_HEADER_NO_CACHE,
             CACHE_CONTROL: HTTP_HEADER_NO_CACHE,
@@ -484,7 +484,7 @@ class Tplink5DeviceScanner(Tplink1DeviceScanner):
         # A timestamp is required to be sent as get parameter
         timestamp = int(datetime.now().timestamp() * 1e3)
 
-        client_list_url = "{}/data/monitor.client.client.json".format(base_url)
+        client_list_url = f"{base_url}/data/monitor.client.client.json"
 
         get_params = {"operation": "load", "_": timestamp}
 

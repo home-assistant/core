@@ -3,7 +3,7 @@
   "name": "Apple tv",
   "documentation": "https://www.home-assistant.io/components/apple_tv",
   "requirements": [
-    "pyatv==0.3.12"
+    "pyatv==0.3.13"
   ],
   "dependencies": ["configurator"],
   "codeowners": []

@@ -156,7 +156,7 @@ async def async_migrate_entry(hass, entry):
 def format_unique_id(creds, mac_address):
     """Use last 4 Chars of credential as suffix. Unique ID per PSN user."""
     suffix = creds[-4:]
-    return "{}_{}".format(mac_address, suffix)
+    return f"{mac_address}_{suffix}"
 
 
 def load_games(hass: HomeAssistantType) -> dict:

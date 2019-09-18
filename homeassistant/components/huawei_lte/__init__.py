@@ -1,4 +1,5 @@
 """Support for Huawei LTE routers."""
+
 from datetime import timedelta
 from functools import reduce
 from urllib.parse import urlparse
@@ -22,6 +23,14 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
+from .const import (
+    DOMAIN,
+    KEY_DEVICE_INFORMATION,
+    KEY_DEVICE_SIGNAL,
+    KEY_MONITORING_TRAFFIC_STATISTICS,
+    KEY_WLAN_HOST_LIST,
+)
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,9 +39,6 @@ _LOGGER = logging.getLogger(__name__)
 logging.getLogger("dicttoxml").setLevel(logging.WARNING)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
-
-DOMAIN = "huawei_lte"
-DATA_KEY = "huawei_lte"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -107,12 +113,12 @@ class RouterData:
                 finally:
                     _LOGGER.debug("%s=%s", path, getattr(self, path))
 
-        get_data("device_information", self.client.device.information)
-        get_data("device_signal", self.client.device.signal)
+        get_data(KEY_DEVICE_INFORMATION, self.client.device.information)
+        get_data(KEY_DEVICE_SIGNAL, self.client.device.signal)
         get_data(
-            "monitoring_traffic_statistics", self.client.monitoring.traffic_statistics
+            KEY_MONITORING_TRAFFIC_STATISTICS, self.client.monitoring.traffic_statistics
         )
-        get_data("wlan_host_list", self.client.wlan.host_list)
+        get_data(KEY_WLAN_HOST_LIST, self.client.wlan.host_list)
 
 
 @attr.s
@@ -133,8 +139,8 @@ class HuaweiLteData:
 
 def setup(hass, config) -> bool:
     """Set up Huawei LTE component."""
-    if DATA_KEY not in hass.data:
-        hass.data[DATA_KEY] = HuaweiLteData()
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = HuaweiLteData()
     for conf in config.get(DOMAIN, []):
         _setup_lte(hass, conf)
     return True
@@ -164,10 +170,13 @@ def _setup_lte(hass, lte_config) -> None:
     client = Client(connection)
 
     data = RouterData(client, mac)
-    hass.data[DATA_KEY].data[url] = data
+    hass.data[DOMAIN].data[url] = data
 
     def cleanup(event):
         """Clean up resources."""
-        client.user.logout()
+        try:
+            client.user.logout()
+        except ResponseErrorNotSupportedException as ex:
+            _LOGGER.debug("Logout not supported by device", exc_info=ex)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)

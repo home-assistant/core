@@ -10,8 +10,8 @@ import sys
 from script.hassfest.model import Integration
 
 COMMENT_REQUIREMENTS = (
-    "Adafruit-DHT",
     "Adafruit_BBIO",
+    "Adafruit-DHT",
     "avion",
     "beacontools",
     "blinkt",
@@ -26,7 +26,6 @@ COMMENT_REQUIREMENTS = (
     "i2csense",
     "opencv-python-headless",
     "py_noaa",
-    "VL53L1X2",
     "pybluez",
     "pycups",
     "PySwitchbot",
@@ -39,11 +38,11 @@ COMMENT_REQUIREMENTS = (
     "RPi.GPIO",
     "smbus-cffi",
     "tensorflow",
+    "VL53L1X2",
 )
 
 TEST_REQUIREMENTS = (
     "adguardhome",
-    "ambiclimate",
     "aio_geojson_geonetnz_quakes",
     "aioambient",
     "aioautomatic",
@@ -52,13 +51,16 @@ TEST_REQUIREMENTS = (
     "aiohttp_cors",
     "aiohue",
     "aionotion",
-    "aiounifi",
     "aioswitcher",
+    "aiounifi",
     "aiowwlln",
+    "ambiclimate",
+    "androidtv",
     "apns2",
     "aprslib",
     "av",
     "axis",
+    "bellows-homeassistant",
     "caldav",
     "coinmarketcap",
     "defusedxml",
@@ -85,22 +87,24 @@ TEST_REQUIREMENTS = (
     "haversine",
     "hbmqtt",
     "hdate",
+    "hole",
     "holidays",
     "home-assistant-frontend",
     "homekit[IP]",
     "homematicip",
     "httplib2",
     "huawei-lte-api",
+    "iaqualink",
     "influxdb",
     "jsonpath",
     "libpurecool",
     "libsoundtouch",
     "luftdaten",
-    "pyMetno",
     "mbddns",
     "mficlient",
     "minio",
     "netdisco",
+    "nokia",
     "numpy",
     "oauth2client",
     "paho-mqtt",
@@ -111,46 +115,54 @@ TEST_REQUIREMENTS = (
     "ptvsd",
     "pushbullet.py",
     "py-canary",
+    "py17track",
     "pyblackbird",
+    "pychromecast",
     "pydeconz",
     "pydispatcher",
     "pyheos",
     "pyhomematic",
+    "pyHS100",
     "pyiqvia",
+    "pylinky",
     "pylitejet",
+    "pyMetno",
     "pymfy",
     "pymonoprice",
+    "PyNaCl",
+    "pynws",
     "pynx584",
     "pyopenuv",
     "pyotp",
     "pyps4-homeassistant",
+    "pyqwikswitch",
+    "PyRMVtransport",
     "pysma",
     "pysmartapp",
     "pysmartthings",
     "pysonos",
-    "pyqwikswitch",
-    "PyRMVtransport",
-    "PyTransportNSW",
     "pyspcwebgw",
+    "python_awair",
     "python-forecastio",
     "python-nest",
-    "python_awair",
     "python-velbus",
+    "pythonwhois",
     "pytradfri[async]",
+    "PyTransportNSW",
     "pyunifi",
     "pyupnp-async",
     "pyvesync",
     "pywebpush",
-    "pyHS100",
-    "PyNaCl",
     "regenmaschine",
     "restrictedpython",
     "rflink",
     "ring_doorbell",
+    "ruamel.yaml",
     "rxv",
     "simplisafe-python",
     "sleepyq",
     "smhi-pkg",
+    "solaredge",
     "somecomfort",
     "sqlalchemy",
     "srpenergy",
@@ -159,16 +171,12 @@ TEST_REQUIREMENTS = (
     "twentemilieu",
     "uvcclient",
     "vsure",
-    "warrant",
-    "pythonwhois",
-    "wakeonlan",
     "vultr",
+    "wakeonlan",
+    "warrant",
     "YesssSMS",
-    "ruamel.yaml",
     "zeroconf",
     "zigpy-homeassistant",
-    "bellows-homeassistant",
-    "py17track",
 )
 
 IGNORE_PIN = ("colorlog>2.1,<3", "keyring>=9.3,<10.0", "urllib3")
@@ -229,9 +237,7 @@ def gather_recursive_requirements(domain, seen=None):
         seen = set()
 
     seen.add(domain)
-    integration = Integration(
-        pathlib.Path("homeassistant/components/{}".format(domain))
-    )
+    integration = Integration(pathlib.Path(f"homeassistant/components/{domain}"))
     integration.load_manifest()
     reqs = set(integration.manifest["requirements"])
     for dep_domain in integration.manifest["dependencies"]:
@@ -271,13 +277,13 @@ def gather_requirements_from_manifests(errors, reqs):
         integration = integrations[domain]
 
         if not integration.manifest:
-            errors.append("The manifest for integration {} is invalid.".format(domain))
+            errors.append(f"The manifest for integration {domain} is invalid.")
             continue
 
         process_requirements(
             errors,
             integration.manifest["requirements"],
-            "homeassistant.components.{}".format(domain),
+            f"homeassistant.components.{domain}",
             reqs,
         )
 
@@ -305,13 +311,9 @@ def process_requirements(errors, module_requirements, package, reqs):
         if req in IGNORE_REQ:
             continue
         if "://" in req:
-            errors.append(
-                "{}[Only pypi dependencies are allowed: {}]".format(package, req)
-            )
+            errors.append(f"{package}[Only pypi dependencies are allowed: {req}]")
         if req.partition("==")[1] == "" and req not in IGNORE_PIN:
-            errors.append(
-                "{}[Please pin requirement {}, see {}]".format(package, req, URL_PIN)
-            )
+            errors.append(f"{package}[Please pin requirement {req}, see {URL_PIN}]")
         reqs.setdefault(req, []).append(package)
 
 
@@ -320,12 +322,12 @@ def generate_requirements_list(reqs):
     output = []
     for pkg, requirements in sorted(reqs.items(), key=lambda item: item[0]):
         for req in sorted(requirements):
-            output.append("\n# {}".format(req))
+            output.append(f"\n# {req}")
 
         if comment_requirement(pkg):
-            output.append("\n# {}\n".format(pkg))
+            output.append(f"\n# {pkg}\n")
         else:
-            output.append("\n{}\n".format(pkg))
+            output.append(f"\n{pkg}\n")
     return "".join(output)
 
 

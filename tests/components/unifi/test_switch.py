@@ -15,6 +15,7 @@ from homeassistant.components import unifi
 from homeassistant.components.unifi.const import (
     CONF_CONTROLLER,
     CONF_SITE_ID,
+    CONTROLLER_ID as CONF_CONTROLLER_ID,
     UNIFI_CONFIG,
 )
 from homeassistant.helpers import entity_registry
@@ -213,7 +214,7 @@ CONTROLLER_DATA = {
 
 ENTRY_CONFIG = {CONF_CONTROLLER: CONTROLLER_DATA}
 
-CONTROLLER_ID = unifi.CONTROLLER_ID.format(host="mock-host", site="mock-site")
+CONTROLLER_ID = CONF_CONTROLLER_ID.format(host="mock-host", site="mock-site")
 
 
 @pytest.fixture

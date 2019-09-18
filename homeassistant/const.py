@@ -1,8 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 98
-PATCH_VERSION = "5"
+MINOR_VERSION = 99
+PATCH_VERSION = "0"
 __short_version__ = "{}.{}".format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = "{}.{}".format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 6, 0)
@@ -260,8 +260,8 @@ ATTR_ICON = "icon"
 # The unit of measurement if applicable
 ATTR_UNIT_OF_MEASUREMENT = "unit_of_measurement"
 
-CONF_UNIT_SYSTEM_METRIC = "metric"  # type: str
-CONF_UNIT_SYSTEM_IMPERIAL = "imperial"  # type: str
+CONF_UNIT_SYSTEM_METRIC: str = "metric"
+CONF_UNIT_SYSTEM_IMPERIAL: str = "imperial"
 
 # Electrical attributes
 ATTR_VOLTAGE = "voltage"
@@ -334,39 +334,39 @@ TEMP_CELSIUS = "°C"
 TEMP_FAHRENHEIT = "°F"
 
 # Length units
-LENGTH_CENTIMETERS = "cm"  # type: str
-LENGTH_METERS = "m"  # type: str
-LENGTH_KILOMETERS = "km"  # type: str
+LENGTH_CENTIMETERS: str = "cm"
+LENGTH_METERS: str = "m"
+LENGTH_KILOMETERS: str = "km"
 
-LENGTH_INCHES = "in"  # type: str
-LENGTH_FEET = "ft"  # type: str
-LENGTH_YARD = "yd"  # type: str
-LENGTH_MILES = "mi"  # type: str
+LENGTH_INCHES: str = "in"
+LENGTH_FEET: str = "ft"
+LENGTH_YARD: str = "yd"
+LENGTH_MILES: str = "mi"
 
 # Pressure units
-PRESSURE_PA = "Pa"  # type: str
-PRESSURE_HPA = "hPa"  # type: str
-PRESSURE_BAR = "bar"  # type: str
-PRESSURE_MBAR = "mbar"  # type: str
-PRESSURE_INHG = "inHg"  # type: str
-PRESSURE_PSI = "psi"  # type: str
+PRESSURE_PA: str = "Pa"
+PRESSURE_HPA: str = "hPa"
+PRESSURE_BAR: str = "bar"
+PRESSURE_MBAR: str = "mbar"
+PRESSURE_INHG: str = "inHg"
+PRESSURE_PSI: str = "psi"
 
 # Volume units
-VOLUME_LITERS = "L"  # type: str
-VOLUME_MILLILITERS = "mL"  # type: str
+VOLUME_LITERS: str = "L"
+VOLUME_MILLILITERS: str = "mL"
 
-VOLUME_GALLONS = "gal"  # type: str
-VOLUME_FLUID_OUNCE = "fl. oz."  # type: str
+VOLUME_GALLONS: str = "gal"
+VOLUME_FLUID_OUNCE: str = "fl. oz."
 
 # Mass units
-MASS_GRAMS = "g"  # type: str
-MASS_KILOGRAMS = "kg"  # type: str
+MASS_GRAMS: str = "g"
+MASS_KILOGRAMS: str = "kg"
 
-MASS_OUNCES = "oz"  # type: str
-MASS_POUNDS = "lb"  # type: str
+MASS_OUNCES: str = "oz"
+MASS_POUNDS: str = "lb"
 
 # UV Index units
-UNIT_UV_INDEX = "UV index"  # type: str
+UNIT_UV_INDEX: str = "UV index"
 
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = "stop"
@@ -460,15 +460,15 @@ CONTENT_TYPE_TEXT_PLAIN = "text/plain"
 # The exit code to send to request a restart
 RESTART_EXIT_CODE = 100
 
-UNIT_NOT_RECOGNIZED_TEMPLATE = "{} is not a recognized {} unit."  # type: str
+UNIT_NOT_RECOGNIZED_TEMPLATE: str = "{} is not a recognized {} unit."
 
-LENGTH = "length"  # type: str
-MASS = "mass"  # type: str
-PRESSURE = "pressure"  # type: str
-VOLUME = "volume"  # type: str
-TEMPERATURE = "temperature"  # type: str
-SPEED_MS = "speed_ms"  # type: str
-ILLUMINANCE = "illuminance"  # type: str
+LENGTH: str = "length"
+MASS: str = "mass"
+PRESSURE: str = "pressure"
+VOLUME: str = "volume"
+TEMPERATURE: str = "temperature"
+SPEED_MS: str = "speed_ms"
+ILLUMINANCE: str = "illuminance"
 
 WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 

@@ -62,7 +62,7 @@ def async_process_endpoint(
 
     component = None
     profile_clusters = []
-    device_key = "{}-{}".format(device.ieee, endpoint_id)
+    device_key = f"{device.ieee}-{endpoint_id}"
     node_config = {}
     if CONF_DEVICE_CONFIG in config:
         node_config = config[CONF_DEVICE_CONFIG].get(device_key, {})
@@ -281,12 +281,12 @@ def _async_handle_single_cluster_match(
     channels = []
     _async_create_cluster_channel(cluster, zha_device, is_new_join, channels=channels)
 
-    cluster_key = "{}-{}".format(device_key, cluster.cluster_id)
+    cluster_key = f"{device_key}-{cluster.cluster_id}"
     discovery_info = {
         "unique_id": cluster_key,
         "zha_device": zha_device,
         "channels": channels,
-        "entity_suffix": "_{}".format(cluster.cluster_id),
+        "entity_suffix": f"_{cluster.cluster_id}",
         "component": component,
     }
 

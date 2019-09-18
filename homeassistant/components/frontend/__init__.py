@@ -274,9 +274,7 @@ async def async_setup(hass, config):
         ("frontend_latest", True),
         ("frontend_es5", True),
     ):
-        hass.http.register_static_path(
-            "/{}".format(path), str(root_path / path), should_cache
-        )
+        hass.http.register_static_path(f"/{path}", str(root_path / path), should_cache)
 
     hass.http.register_static_path(
         "/auth/authorize", str(root_path / "authorize.html"), False
@@ -294,9 +292,7 @@ async def async_setup(hass, config):
     # To smooth transition to new urls, add redirects to new urls of dev tools
     # Added June 27, 2019. Can be removed in 2021.
     for panel in ("event", "info", "service", "state", "template", "mqtt"):
-        hass.http.register_redirect(
-            "/dev-{}".format(panel), "/developer-tools/{}".format(panel)
-        )
+        hass.http.register_redirect(f"/dev-{panel}", f"/developer-tools/{panel}")
 
     async_register_built_in_panel(
         hass,
