@@ -201,22 +201,22 @@ class SolarEdgeData:
         except (HTTPError):
             _LOGGER.error("Could not retrieve maintenance, skipping update")
             return
-        
+
         temperture = []
         voltage = []
         current = []
         stringlength = len(maintenance.diagnostics.inverters.primary.optimizer)
         power = 0
-        
+
         for x in range(stringlength):
             if maintenance.diagnostics.inverters.primary.optimizer[x].online is True:
                 temperture.append(maintenance.diagnostics.inverters.primary.optimizer[x].temperature.value)
                 voltage.append(maintenance.diagnostics.inverters.primary.optimizer[x].inputV)
-                current.append(maintenance.diagnostics.inverters.primary.optimizer[x].inputC) 
-                
+                current.append(maintenance.diagnostics.inverters.primary.optimizer[x].inputC)
+
         if len(voltage) >= 1:
-            power = round(statistics.mean(voltage) * statistics.mean(current) * stringlength,2)
-        
+            power = round(statistics.mean(voltage) * statistics.mean(current) * stringlength, 2)
+
         self.data["energyTotal"] = status.energy.total
         self.data["energyThisYear"] = status.energy.thisYear
         self.data["energyThisMonth"] = status.energy.thisMonth
@@ -227,4 +227,4 @@ class SolarEdgeData:
             self.data["optimizertemperture"] = statistics.mean(temperture)
             self.data["optimizervoltage"] = statistics.mean(voltage)
             self.data["optimizercurrent"] = statistics.mean(current)
-            self.data["optimizerpower"] = power  
+            self.data["optimizerpower"] = power
