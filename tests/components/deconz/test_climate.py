@@ -264,3 +264,27 @@ async def test_verify_state_update(hass):
     thermostat = hass.states.get("climate.thermostat")
     assert thermostat.state == "auto"
     assert gateway.api.sensors["1"].changed_keys == {"state", "r", "t", "on", "e", "id"}
+
+
+async def test_add_new_climate_device(hass):
+    """Test that adding a new climate device works."""
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    gateway = await setup_deconz_integration(
+        hass, ENTRY_CONFIG, options={}, get_state_response=data
+    )
+    assert len(gateway.deconz_ids) == 0
+
+    state_added = {
+        "t": "event",
+        "e": "added",
+        "r": "sensors",
+        "id": "1",
+        "sensor": deepcopy(SENSORS["1"]),
+    }
+    gateway.api.async_event_handler(state_added)
+    await hass.async_block_till_done()
+
+    assert "climate.thermostat" in gateway.deconz_ids
+
+    thermostat = hass.states.get("climate.thermostat")
+    assert thermostat.state == "auto"

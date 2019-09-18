@@ -112,7 +112,7 @@ async def test_no_binary_sensors(hass):
     gateway = await setup_deconz_integration(
         hass, ENTRY_CONFIG, options={}, get_state_response=data
     )
-    assert len(hass.data[deconz.DOMAIN][gateway.bridgeid].deconz_ids) == 0
+    assert len(gateway.deconz_ids) == 0
     assert len(hass.states.async_all()) == 0
 
 
@@ -141,9 +141,7 @@ async def test_binary_sensors(hass):
     vibration_sensor = hass.states.get("binary_sensor.vibration_sensor")
     assert vibration_sensor.state == "on"
 
-    hass.data[deconz.DOMAIN][gateway.bridgeid].api.sensors["1"].async_update(
-        {"state": {"presence": True}}
-    )
+    gateway.api.sensors["1"].async_update({"state": {"presence": True}})
     await hass.async_block_till_done()
 
     presence_sensor = hass.states.get("binary_sensor.presence_sensor")
@@ -177,3 +175,27 @@ async def test_allow_clip_sensor(hass):
 
     vibration_sensor = hass.states.get("binary_sensor.vibration_sensor")
     assert vibration_sensor.state == "on"
+
+
+async def test_add_new_binary_sensor(hass):
+    """Test that adding a new binary sensor works."""
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    gateway = await setup_deconz_integration(
+        hass, ENTRY_CONFIG, options={}, get_state_response=data
+    )
+    assert len(gateway.deconz_ids) == 0
+
+    state_added = {
+        "t": "event",
+        "e": "added",
+        "r": "sensors",
+        "id": "1",
+        "sensor": deepcopy(SENSORS["1"]),
+    }
+    gateway.api.async_event_handler(state_added)
+    await hass.async_block_till_done()
+
+    assert "binary_sensor.presence_sensor" in gateway.deconz_ids
+
+    presence_sensor = hass.states.get("binary_sensor.presence_sensor")
+    assert presence_sensor.state == "off"
