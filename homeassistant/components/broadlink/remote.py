@@ -1,6 +1,7 @@
 """Support for Broadlink IR/RF remotes."""
 import asyncio
 from base64 import b64encode
+from binascii import hexlify
 from datetime import timedelta
 from ipaddress import ip_address
 from itertools import product, takewhile, zip_longest
@@ -84,15 +85,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     import broadlink
 
     host = config.get(CONF_HOST)
-    mac_addr = config.get(CONF_MAC).replace("-", "").lower()
+    mac_addr = config.get(CONF_MAC)
     timeout = config.get(CONF_TIMEOUT)
     name = config.get(CONF_NAME)
-    unique_id = f"remote_{mac_addr}"
+    unique_id = f"remote_{hexlify(mac_addr).decode('utf-8')}"
 
-    if mac_addr in hass.data.setdefault(DOMAIN, {}).setdefault(COMPONENT, []):
-        _LOGGER.error("Duplicate remote: %s", config.get(CONF_MAC))
+    if unique_id in hass.data.setdefault(DOMAIN, {}).setdefault(COMPONENT, []):
+        _LOGGER.error("Duplicate: %s", unique_id)
         return
-    hass.data[DOMAIN][COMPONENT].append(mac_addr)
+    hass.data[DOMAIN][COMPONENT].append(unique_id)
 
     api = broadlink.rm((host, DEFAULT_PORT), mac_addr, None)
     api.timeout = timeout
@@ -107,11 +108,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     except socket.error:
         pass
     if not connected:
-        hass.data[DOMAIN][COMPONENT].remove(mac_addr)
+        hass.data[DOMAIN][COMPONENT].remove(unique_id)
         raise PlatformNotReady
     if not loaded:
-        _LOGGER.error("Failed to set up remote: %s", config.get(CONF_MAC))
-        hass.data[DOMAIN][COMPONENT].remove(mac_addr)
+        _LOGGER.error("Failed to set up %s", unique_id)
+        hass.data[DOMAIN][COMPONENT].remove(unique_id)
         return
     async_add_entities([remote], False)
 
