@@ -111,12 +111,12 @@ async def get_api(hass, host, port, username=None, password=None):
         if "401: Unauthorized" in str(error):
             _LOGGER.error("Credentials for Transmission client are not valid")
             raise AuthenticationError
-        elif "111: Connection refused" in str(error):
+        if "111: Connection refused" in str(error):
             _LOGGER.error("Connecting to the Transmission client failed")
             raise CannotConnect
-        else:
-            _LOGGER.error(error)
-            raise UnknownError
+
+        _LOGGER.error(error)
+        raise UnknownError
 
 
 async def async_populate_options(hass, config_entry):
