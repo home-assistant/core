@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 import operator
+from typing import Dict
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import PyiCloudFailedLoginException, PyiCloudNoDevicesException
@@ -271,15 +272,15 @@ class IcloudAccount:
     def __init__(
         self,
         hass,
-        username,
-        password,
-        accountname,
-        max_interval,
-        gps_accuracy_threshold,
+        username: str,
+        password: str,
+        accountname: str,
+        max_interval: int,
+        gps_accuracy_threshold: int,
     ):
         """Initialize an iCloud account."""
         self.hass = hass
-        self.username = username
+        self._username = username
         self._password = password
         self._name = accountname or slugify(username.partition("@")[0])
         self._fetch_interval = max_interval
@@ -287,9 +288,9 @@ class IcloudAccount:
         self._gps_accuracy_threshold = gps_accuracy_threshold
 
         self.api = None
-        self.account_owner_fullname = None
-        self.family_members_fullname = {}
-        self.devices = {}
+        self._owner_fullname = None
+        self._family_members_fullname = {}
+        self._devices = {}
 
         self.unsub_device_tracker = None
 
@@ -299,7 +300,7 @@ class IcloudAccount:
 
         try:
             self.api = PyiCloudService(
-                self.username, self._password, cookie_directory=icloud_dir, verify=True
+                self._username, self._password, cookie_directory=icloud_dir, verify=True
             )
         except PyiCloudFailedLoginException as error:
             self.api = None
@@ -313,17 +314,15 @@ class IcloudAccount:
         except PyiCloudNoDevicesException:
             _LOGGER.error("No iCloud Devices found")
 
-        self.account_owner_fullname = (
-            f"{user_info['firstName']} {user_info['lastName']}"
-        )
+        self._owner_fullname = f"{user_info['firstName']} {user_info['lastName']}"
 
-        self.family_members_fullname = {}
+        self._family_members_fullname = {}
         for prs_id, member in user_info["membersInfo"].items():
-            self.family_members_fullname[
+            self._family_members_fullname[
                 prs_id
             ] = f"{member['firstName']} {member['lastName']}"
 
-        self.devices = {}
+        self._devices = {}
         self.update_devices()
 
     def update_devices(self):
@@ -342,19 +341,19 @@ class IcloudAccount:
             status = device.status(DEVICE_STATUS_SET)
             devicename = slugify(status["name"].replace(" ", "", 99))
 
-            if self.devices.get(devicename, None) is not None:
+            if self._devices.get(devicename, None) is not None:
                 # Seen device -> updating
                 _LOGGER.debug("Updating iCloud device: %s", devicename)
-                self.devices[devicename].update(status)
+                self._devices[devicename].update(status)
             else:
                 # New device, should be unique
-                if devicename in self.devices:
+                if devicename in self._devices:
                     _LOGGER.error("Multiple devices with name: %s", devicename)
                     continue
 
                 _LOGGER.debug("Adding iCloud device: %s", devicename)
-                self.devices[devicename] = IcloudDevice(self, device, status)
-                self.devices[devicename].update(status)
+                self._devices[devicename] = IcloudDevice(self, device, status)
+                self._devices[devicename].update(status)
 
         dispatcher_send(self.hass, TRACKER_UPDATE)
         self._fetch_interval = self.determine_interval()
@@ -367,7 +366,7 @@ class IcloudAccount:
     def determine_interval(self) -> int:
         """Calculate new interval between two API fetch (in minutes)."""
         intervals = {}
-        for device in self.devices.values():
+        for device in self._devices.values():
             if device.location is None:
                 continue
 
@@ -443,14 +442,34 @@ class IcloudAccount:
         self.update_devices()
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the account name."""
         return self._name
 
     @property
-    def fetch_interval(self):
-        """Return the fetch interval."""
+    def username(self) -> str:
+        """Return the account username."""
+        return self._username
+
+    @property
+    def owner_fullname(self) -> str:
+        """Return the account owner fullname."""
+        return self._owner_fullname
+
+    @property
+    def family_members_fullname(self) -> Dict[str, str]:
+        """Return the account family members fullname."""
+        return self._family_members_fullname
+
+    @property
+    def fetch_interval(self) -> int:
+        """Return the account fetch interval."""
         return self._fetch_interval
+
+    @property
+    def devices(self) -> Dict[str, any]:
+        """Return the account devices."""
+        return self._devices
 
 
 class IcloudDevice:
@@ -475,7 +494,7 @@ class IcloudDevice:
         if self._status["prsId"]:
             owner_fullname = account.family_members_fullname[self._status["prsId"]]
         else:
-            owner_fullname = account.account_owner_fullname
+            owner_fullname = account.owner_fullname
 
         self._battery_level = None
         self._battery_status = None
@@ -500,7 +519,7 @@ class IcloudDevice:
         self._attrs[ATTR_DEVICE_STATUS] = device_status
 
         if self._status["batteryStatus"] != "Unknown":
-            self._battery_level = round(self._status.get("batteryLevel", 0) * 100)
+            self._battery_level = int(self._status.get("batteryLevel", 0) * 100)
             self._battery_status = self._status["batteryStatus"]
             low_power_mode = self._status["lowPowerMode"]
 
@@ -543,12 +562,12 @@ class IcloudDevice:
             _LOGGER.error("Cannot make device lost for %s", self.name)
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique ID."""
         return self._unique_id
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the Apple device name."""
         return self._name
 
@@ -558,31 +577,31 @@ class IcloudDevice:
         return self._device
 
     @property
-    def dev_id(self):
+    def dev_id(self) -> str:
         """Return the device ID."""
         return self._dev_id
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the Apple device class."""
         return self._device_class
 
     @property
-    def battery_level(self):
+    def battery_level(self) -> int:
         """Return the Apple device battery level."""
         return self._battery_level
 
     @property
-    def battery_status(self):
+    def battery_status(self) -> str:
         """Return the Apple device battery status."""
         return self._battery_status
 
     @property
-    def location(self):
+    def location(self) -> Dict[str, any]:
         """Return the Apple device location."""
         return self._location
 
     @property
-    def state_attributes(self):
+    def state_attributes(self) -> Dict[str, any]:
         """Return the attributes."""
         return self._attrs
