@@ -21,7 +21,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_TIME_ZONE): cv.time_zone,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_TIME_FORMAT, default=TIME_STR_FORMAT): cv.datetime
+        vol.Optional(CONF_TIME_FORMAT, default=TIME_STR_FORMAT): cv.time_period_str
     }
 )
 
