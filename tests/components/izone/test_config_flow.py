@@ -1,6 +1,5 @@
 """Tests for iZone."""
 
-from asyncio import Event
 from unittest.mock import Mock, patch
 
 import pytest
@@ -8,7 +7,6 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.izone.const import (
     IZONE,
-    DATA_DISCOVERY_SERVICE,
     DISPATCH_CONTROLLER_DISCOVERED,
 )
 
