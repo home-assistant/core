@@ -1,6 +1,7 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
 import logging
 
+from pyrainbird import RainbirdController
 import voluptuous as vol
 
 from homeassistant.components import binary_sensor, sensor, switch
@@ -63,7 +64,6 @@ def setup(hass, config):
 
 
 def _setup_controller(hass, config):
-    from pyrainbird import RainbirdController
 
     server = config[CONF_HOST]
     password = config[CONF_PASSWORD]
