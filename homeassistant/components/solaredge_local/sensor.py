@@ -183,7 +183,7 @@ class SolarEdgeData:
     def update(self):
         """Update the data from the SolarEdge Monitoring API."""
         try:
-            response = self.api.get_status()
+            status = self.api.get_status()
             _LOGGER.debug("response from SolarEdge: %s", response)
         except (ConnectTimeout):
             _LOGGER.error("Connection timeout, skipping update")
@@ -217,12 +217,14 @@ class SolarEdgeData:
         if len(voltage) >= 1:
             power = round(statistics.mean(voltage) * statistics.mean(current) * stringlength,2)
         
-        try:
-            self.data["energyTotal"] = response.energy.total
-            self.data["energyThisYear"] = response.energy.thisYear
-            self.data["energyThisMonth"] = response.energy.thisMonth
-            self.data["energyToday"] = response.energy.today
-            self.data["currentPower"] = response.powerWatt
-            _LOGGER.debug("Updated SolarEdge overview data: %s", self.data)
-        except AttributeError:
-            _LOGGER.error("Missing details data in SolarEdge response")
+        self.data["energyTotal"] = status.energy.total
+        self.data["energyThisYear"] = status.energy.thisYear
+        self.data["energyThisMonth"] = status.energy.thisMonth
+        self.data["energyToday"] = status.energy.today
+        self.data["currentPower"] = status.powerWatt
+        self.data["invertertemperature"] = status.inverters.primary.temperature.value
+        if len(voltage) >= 1:
+            self.data["optimizertemperture"] = statistics.mean(temperture)
+            self.data["optimizervoltage"] = statistics.mean(voltage)
+            self.data["optimizercurrent"] = statistics.mean(current)
+            self.data["optimizerpower"] = power  
