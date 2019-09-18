@@ -7,17 +7,7 @@ import logging
 import os
 import re
 import shutil
-from typing import (  # noqa: F401 pylint: disable=unused-import
-    Any,
-    Tuple,
-    Optional,
-    Dict,
-    List,
-    Union,
-    Callable,
-    Sequence,
-    Set,
-)
+from typing import Any, Tuple, Optional, Dict, Union, Callable, Sequence, Set
 from types import ModuleType
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -118,7 +108,7 @@ def _no_duplicate_auth_provider(
     Each type of auth provider can only have one config without optional id.
     Unique id is required if same type of auth provider used multiple times.
     """
-    config_keys = set()  # type: Set[Tuple[str, Optional[str]]]
+    config_keys: Set[Tuple[str, Optional[str]]] = set()
     for config in configs:
         key = (config[CONF_TYPE], config.get(CONF_ID))
         if key in config_keys:
@@ -142,7 +132,7 @@ def _no_duplicate_auth_mfa_module(
     times.
     Note: this is different than auth provider
     """
-    config_keys = set()  # type: Set[str]
+    config_keys: Set[str] = set()
     for config in configs:
         key = config.get(CONF_ID, config[CONF_TYPE])
         if key in config_keys:
@@ -299,7 +289,7 @@ def _write_default_config(config_dir: str) -> Optional[str]:
 
         return config_path
 
-    except IOError:
+    except OSError:
         print("Unable to create default configuration file", config_path)
         return None
 
@@ -317,7 +307,7 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
         path = find_config_file(hass.config.config_dir)
         if path is None:
             raise HomeAssistantError(
-                "Config file not found in: {}".format(hass.config.config_dir)
+                f"Config file not found in: {hass.config.config_dir}"
             )
         config = load_yaml_config_file(path)
         return config
@@ -403,7 +393,7 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
             try:
                 with open(config_path, "wt", encoding="utf-8") as config_file:
                     config_file.write(config_raw)
-            except IOError:
+            except OSError:
                 _LOGGER.exception("Migrating to google_translate tts failed")
                 pass
 
@@ -443,7 +433,7 @@ def _format_config_error(ex: vol.Invalid, domain: str, config: Dict) -> str:
 
     This method must be run in the event loop.
     """
-    message = "Invalid config for [{}]: ".format(domain)
+    message = f"Invalid config for [{domain}]: "
     if "extra keys not allowed" in ex.error_message:
         message += (
             "[{option}] is an invalid option for [{domain}]. "
@@ -623,7 +613,7 @@ def _identify_config_schema(module: ModuleType) -> Tuple[Optional[str], Optional
 
 def _recursive_merge(conf: Dict[str, Any], package: Dict[str, Any]) -> Union[bool, str]:
     """Merge package into conf, recursively."""
-    error = False  # type: Union[bool, str]
+    error: Union[bool, str] = False
     for key, pack_conf in package.items():
         if isinstance(pack_conf, dict):
             if not pack_conf:
@@ -705,7 +695,7 @@ async def merge_packages_config(
             error = _recursive_merge(conf=config[comp_name], package=comp_conf)
             if error:
                 _log_pkg_error(
-                    pack_name, comp_name, config, "has duplicate key '{}'".format(error)
+                    pack_name, comp_name, config, f"has duplicate key '{error}'"
                 )
 
     return config
@@ -777,7 +767,7 @@ async def async_process_component_config(
                     p_config
                 )
             except vol.Invalid as ex:
-                async_log_exception(ex, "{}.{}".format(domain, p_name), p_config, hass)
+                async_log_exception(ex, f"{domain}.{p_name}", p_config, hass)
                 continue
 
         platforms.append(p_validated)
@@ -836,7 +826,7 @@ def async_notify_setup_error(
         else:
             part = name
 
-        message += " - {}\n".format(part)
+        message += f" - {part}\n"
 
     message += "\nPlease check your config."
 

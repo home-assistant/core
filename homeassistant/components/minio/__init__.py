@@ -166,7 +166,7 @@ def setup(hass, config):
 
 def get_minio_endpoint(host: str, port: int) -> str:
     """Create minio endpoint from host and port."""
-    return "{}:{}".format(host, port)
+    return f"{host}:{port}"
 
 
 class QueueListener(threading.Thread):

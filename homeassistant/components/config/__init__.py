@@ -36,7 +36,7 @@ async def async_setup(hass, config):
 
     async def setup_panel(panel_name):
         """Set up a panel."""
-        panel = importlib.import_module(".{}".format(panel_name), __name__)
+        panel = importlib.import_module(f".{panel_name}", __name__)
 
         if not panel:
             return
@@ -44,7 +44,7 @@ async def async_setup(hass, config):
         success = await panel.async_setup(hass)
 
         if success:
-            key = "{}.{}".format(DOMAIN, panel_name)
+            key = f"{DOMAIN}.{panel_name}"
             hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: key})
 
     @callback
@@ -82,8 +82,8 @@ class BaseEditConfigView(HomeAssistantView):
         post_write_hook=None,
     ):
         """Initialize a config view."""
-        self.url = "/api/config/%s/%s/{config_key}" % (component, config_type)
-        self.name = "api:config:%s:%s" % (component, config_type)
+        self.url = f"/api/config/{component}/{config_type}/{{config_key}}"
+        self.name = f"api:config:{component}:{config_type}"
         self.path = path
         self.key_schema = key_schema
         self.data_schema = data_schema
@@ -126,14 +126,14 @@ class BaseEditConfigView(HomeAssistantView):
         try:
             self.key_schema(config_key)
         except vol.Invalid as err:
-            return self.json_message("Key malformed: {}".format(err), 400)
+            return self.json_message(f"Key malformed: {err}", 400)
 
         try:
             # We just validate, we don't store that data because
             # we don't want to store the defaults.
             self.data_schema(data)
         except vol.Invalid as err:
-            return self.json_message("Message malformed: {}".format(err), 400)
+            return self.json_message(f"Message malformed: {err}", 400)
 
         hass = request.app["hass"]
         path = hass.config.path(self.path)

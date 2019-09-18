@@ -10,7 +10,7 @@ trigger:
     - requirements_all.txt
 pr: none
 schedules:
-- cron: '0 */8 * * *'
+- cron: '0 */4 * * *'
   displayName: 'daily builds'
   branches:
     include:
@@ -30,7 +30,8 @@ jobs:
 - template: templates/azp-job-wheels.yaml@azure
   parameters:
     builderVersion: '$(versionWheels)'
-    builderApk: 'build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;linux-headers;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev'
+    builderApk: 'build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev'
+    builderPip: 'Cython;numpy'
     wheelsRequirement: 'requirements_wheels.txt'
     wheelsRequirementDiff: 'requirements_diff.txt'
     preBuild:
@@ -65,5 +66,6 @@ jobs:
           sed -i "s|# PySwitchbot|PySwitchbot|g" ${requirement_file}
           sed -i "s|# pySwitchmate|pySwitchmate|g" ${requirement_file}
           sed -i "s|# face_recognition|face_recognition|g" ${requirement_file}
+          sed -i "s|# py_noaa|py_noaa|g" ${requirement_file}
         done
       displayName: 'Prepare requirements files for Hass.io'

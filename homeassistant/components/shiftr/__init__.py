@@ -69,10 +69,7 @@ def setup(hass, config):
             if state.attributes:
                 for attribute, data in state.attributes.items():
                     mqttc.publish(
-                        "/{}/{}".format(topic, attribute),
-                        str(data),
-                        qos=0,
-                        retain=False,
+                        f"/{topic}/{attribute}", str(data), qos=0, retain=False
                     )
         except RuntimeError:
             pass

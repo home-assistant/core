@@ -38,5 +38,21 @@
             }
         },
         "title": "Pasarela Zigbee deCONZ"
+    },
+    "options": {
+        "step": {
+            "async_step_deconz_devices": {
+                "data": {
+                    "allow_deconz_groups": "Permitir grupos de luz deCONZ"
+                }
+            },
+            "deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "Permitir sensores deCONZ CLIP",
+                    "allow_deconz_groups": "Permitir grupos de luz deCONZ"
+                },
+                "description": "Configurar la visibilidad de los tipos de dispositivos deCONZ"
+            }
+        }
     }
 }

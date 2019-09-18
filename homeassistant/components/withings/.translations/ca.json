@@ -1,0 +1,17 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Autenticaci\u00f3 exitosa amb Withings per al perfil seleccionat."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "profile": "Perfil"
+                },
+                "description": "Selecciona un perfil d'usuari amb el qual vols que Home Assistant s'uneixi amb un perfil de Withings. A la p\u00e0gina de Withings, assegura't de seleccionar el mateix usuari o, les dades no seran les correctes.",
+                "title": "Perfil d'usuari."
+            }
+        },
+        "title": "Withings"
+    }
+}

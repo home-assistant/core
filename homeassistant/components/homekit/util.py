@@ -116,9 +116,7 @@ def validate_entity_config(values):
                 params = MEDIA_PLAYER_SCHEMA(feature)
                 key = params.pop(CONF_FEATURE)
                 if key in feature_list:
-                    raise vol.Invalid(
-                        "A feature can be added only once for {}".format(entity)
-                    )
+                    raise vol.Invalid(f"A feature can be added only once for {entity}")
                 feature_list[key] = params
             config[CONF_FEATURE_LIST] = feature_list
 

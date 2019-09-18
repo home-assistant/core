@@ -87,7 +87,7 @@ class SrpEnergy(Entity):
         if self._state is None:
             return None
 
-        return "{0:.2f}".format(self._state)
+        return f"{self._state:.2f}"
 
     @property
     def name(self):

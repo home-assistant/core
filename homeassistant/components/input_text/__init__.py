@@ -45,12 +45,12 @@ def _cv_input_text(cfg):
     maximum = cfg.get(CONF_MAX)
     if minimum > maximum:
         raise vol.Invalid(
-            "Max len ({}) is not greater than min len ({})".format(minimum, maximum)
+            f"Max len ({minimum}) is not greater than min len ({maximum})"
         )
     state = cfg.get(CONF_INITIAL)
     if state is not None and (len(state) < minimum or len(state) > maximum):
         raise vol.Invalid(
-            "Initial value {} length not in range {}-{}".format(state, minimum, maximum)
+            f"Initial value {state} length not in range {minimum}-{maximum}"
         )
     return cfg
 
@@ -58,20 +58,23 @@ def _cv_input_text(cfg):
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: cv.schema_with_slug_keys(
-            vol.All(
-                {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_MIN, default=0): vol.Coerce(int),
-                    vol.Optional(CONF_MAX, default=100): vol.Coerce(int),
-                    vol.Optional(CONF_INITIAL, ""): cv.string,
-                    vol.Optional(CONF_ICON): cv.icon,
-                    vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
-                    vol.Optional(ATTR_PATTERN): cv.string,
-                    vol.Optional(CONF_MODE, default=MODE_TEXT): vol.In(
-                        [MODE_TEXT, MODE_PASSWORD]
-                    ),
-                },
-                _cv_input_text,
+            vol.Any(
+                vol.All(
+                    {
+                        vol.Optional(CONF_NAME): cv.string,
+                        vol.Optional(CONF_MIN, default=0): vol.Coerce(int),
+                        vol.Optional(CONF_MAX, default=100): vol.Coerce(int),
+                        vol.Optional(CONF_INITIAL, ""): cv.string,
+                        vol.Optional(CONF_ICON): cv.icon,
+                        vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
+                        vol.Optional(ATTR_PATTERN): cv.string,
+                        vol.Optional(CONF_MODE, default=MODE_TEXT): vol.In(
+                            [MODE_TEXT, MODE_PASSWORD]
+                        ),
+                    },
+                    _cv_input_text,
+                ),
+                None,
             )
         )
     },
@@ -87,6 +90,8 @@ async def async_setup(hass, config):
     entities = []
 
     for object_id, cfg in config[DOMAIN].items():
+        if cfg is None:
+            cfg = {}
         name = cfg.get(CONF_NAME)
         minimum = cfg.get(CONF_MIN)
         maximum = cfg.get(CONF_MAX)

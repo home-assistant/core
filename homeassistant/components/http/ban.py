@@ -127,7 +127,7 @@ async def process_wrong_login(request):
         _LOGGER.warning("Banned IP %s for too many login attempts", remote_addr)
 
         hass.components.persistent_notification.async_create(
-            "Too many login attempts from {}".format(remote_addr),
+            f"Too many login attempts from {remote_addr}",
             "Banning IP address",
             NOTIFICATION_ID_BAN,
         )

@@ -107,7 +107,7 @@ class UtilityMeterSensor(RestoreEntity):
         if name:
             self._name = name
         else:
-            self._name = "{} meter".format(source_entity)
+            self._name = f"{source_entity} meter"
         self._unit_of_measurement = None
         self._period = meter_type
         self._period_offset = meter_offset

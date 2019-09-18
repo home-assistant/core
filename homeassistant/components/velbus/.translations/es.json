@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "port_exists": "Este puerto ya est\u00e1 configurado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Cadena de conexi\u00f3n"
+                }
+            }
+        }
+    }
+}

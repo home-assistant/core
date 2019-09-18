@@ -138,7 +138,7 @@ NODE_FILTERS = {
             "Siren",
             "Siren_ADV",
         ],
-        "insteon_type": ["2.", "9.10.", "9.11."],
+        "insteon_type": ["2.", "9.10.", "9.11.", "113."],
     },
 }
 
@@ -182,6 +182,7 @@ def _check_for_node_def(hass: HomeAssistant, node, single_domain: str = None) ->
             hass.data[ISY994_NODES][domain].append(node)
             return True
 
+    _LOGGER.warning("Unsupported node: %s, type: %s", node.name, node.type)
     return False
 
 
@@ -343,7 +344,7 @@ def _categorize_programs(hass: HomeAssistant, programs: dict) -> None:
     """Categorize the ISY994 programs."""
     for domain in SUPPORTED_PROGRAM_DOMAINS:
         try:
-            folder = programs[KEY_MY_PROGRAMS]["HA.{}".format(domain)]
+            folder = programs[KEY_MY_PROGRAMS][f"HA.{domain}"]
         except KeyError:
             pass
         else:
@@ -378,10 +379,10 @@ def _categorize_weather(hass: HomeAssistant, climate) -> None:
         WeatherNode(
             getattr(climate, attr),
             attr.replace("_", " "),
-            getattr(climate, "{}_units".format(attr)),
+            getattr(climate, f"{attr}_units"),
         )
         for attr in climate_attrs
-        if "{}_units".format(attr) in climate_attrs
+        if f"{attr}_units" in climate_attrs
     ]
     hass.data[ISY994_WEATHER].extend(weather_nodes)
 
@@ -458,7 +459,7 @@ class ISYDevice(Entity):
     """Representation of an ISY994 device."""
 
     _attrs = {}
-    _name = None  # type: str
+    _name: str = None
 
     def __init__(self, node) -> None:
         """Initialize the insteon device."""

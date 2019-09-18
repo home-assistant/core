@@ -140,7 +140,7 @@ class WinkHub(WinkBinarySensorDevice):
             # The service call to set the Kidde code
             # takes a string of 1s and 0s so it makes
             # sense to display it to the user that way
-            _formatted_kidde_code = "{:b}".format(_kidde_code).zfill(8)
+            _formatted_kidde_code = f"{_kidde_code:b}".zfill(8)
             _attributes["kidde_radio_code"] = _formatted_kidde_code
         return _attributes
 

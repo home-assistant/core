@@ -232,7 +232,7 @@ class XiaomiDevice(Entity):
         self._state = None
         self._is_available = True
         self._sid = device["sid"]
-        self._name = "{}_{}".format(device_type, self._sid)
+        self._name = f"{device_type}_{self._sid}"
         self._type = device_type
         self._write_to_hub = xiaomi_hub.write_to_hub
         self._get_from_hub = xiaomi_hub.get_from_hub
@@ -247,7 +247,7 @@ class XiaomiDevice(Entity):
                 self._data_key, self._sid  # pylint: disable=no-member
             )
         else:
-            self._unique_id = "{}{}".format(self._type, self._sid)
+            self._unique_id = f"{self._type}{self._sid}"
 
     def _add_push_data_job(self, *args):
         self.hass.add_job(self.push_data, *args)
@@ -345,7 +345,7 @@ def _add_gateway_to_schema(xiaomi, schema):
             if gateway.sid == sid:
                 return gateway
 
-        raise vol.Invalid("Unknown gateway sid {}".format(sid))
+        raise vol.Invalid(f"Unknown gateway sid {sid}")
 
     gateways = list(xiaomi.gateways.values())
     kwargs = {}

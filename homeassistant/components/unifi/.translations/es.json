@@ -22,5 +22,16 @@
             }
         },
         "title": "Controlador UniFi"
+    },
+    "options": {
+        "step": {
+            "device_tracker": {
+                "data": {
+                    "detection_time": "Tiempo en segundos desde la \u00faltima vez que se vio hasta considerarlo desconectado",
+                    "track_clients": "Seguimiento de los clientes de red",
+                    "track_wired_clients": "Incluir clientes de red cableada"
+                }
+            }
+        }
     }
 }

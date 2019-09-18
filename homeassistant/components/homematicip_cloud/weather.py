@@ -79,7 +79,7 @@ class HomematicipWeatherSensor(HomematicipGenericDevice, WeatherEntity):
     @property
     def condition(self) -> str:
         """Return the current condition."""
-        if hasattr(self._device, "raining") and self._device.raining:
+        if getattr(self._device, "raining", None):
             return "rainy"
         if self._device.storm:
             return "windy"

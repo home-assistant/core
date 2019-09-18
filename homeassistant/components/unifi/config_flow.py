@@ -1,4 +1,4 @@
-"""Config flow for Unifi."""
+"""Config flow for UniFi."""
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -13,11 +13,12 @@ from homeassistant.const import (
 
 from .const import (
     CONF_CONTROLLER,
+    CONF_DETECTION_TIME,
+    CONF_SITE_ID,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
-    CONF_DETECTION_TIME,
-    CONF_SITE_ID,
+    CONTROLLER_ID,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
@@ -33,8 +34,22 @@ DEFAULT_SITE_ID = "default"
 DEFAULT_VERIFY_SSL = False
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class UnifiFlowHandler(config_entries.ConfigFlow):
+@callback
+def get_controller_id_from_config_entry(config_entry):
+    """Return controller with a matching bridge id."""
+    return CONTROLLER_ID.format(
+        host=config_entry.data[CONF_CONTROLLER][CONF_HOST],
+        site=config_entry.data[CONF_CONTROLLER][CONF_SITE_ID],
+    )
+
+
+@callback
+def get_controller_from_config_entry(hass, config_entry):
+    """Return controller with a matching bridge id."""
+    return hass.data[DOMAIN][get_controller_id_from_config_entry(config_entry)]
+
+
+class UnifiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a UniFi config flow."""
 
     VERSION = 1
@@ -148,20 +163,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow):
             data_schema=vol.Schema({vol.Required(CONF_SITE_ID): vol.In(sites)}),
             errors=errors,
         )
-
-    async def async_step_import(self, import_config):
-        """Import from UniFi device tracker config."""
-        config = {
-            CONF_HOST: import_config[CONF_HOST],
-            CONF_USERNAME: import_config[CONF_USERNAME],
-            CONF_PASSWORD: import_config[CONF_PASSWORD],
-            CONF_PORT: import_config.get(CONF_PORT),
-            CONF_VERIFY_SSL: import_config.get(CONF_VERIFY_SSL),
-        }
-
-        self.desc = import_config[CONF_SITE_ID]
-
-        return await self.async_step_user(user_input=config)
 
 
 class UnifiOptionsFlowHandler(config_entries.OptionsFlow):

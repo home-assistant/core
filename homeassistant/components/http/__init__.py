@@ -133,12 +133,12 @@ class ApiConfig:
         if host.startswith(("http://", "https://")):
             self.base_url = host
         elif use_ssl:
-            self.base_url = "https://{}".format(host)
+            self.base_url = f"https://{host}"
         else:
-            self.base_url = "http://{}".format(host)
+            self.base_url = f"http://{host}"
 
         if port is not None:
-            self.base_url += ":{}".format(port)
+            self.base_url += f":{port}"
 
 
 async def async_setup(hass, config):
@@ -268,15 +268,11 @@ class HomeAssistantHTTP:
 
         if not hasattr(view, "url"):
             class_name = view.__class__.__name__
-            raise AttributeError(
-                '{0} missing required attribute "url"'.format(class_name)
-            )
+            raise AttributeError(f'{class_name} missing required attribute "url"')
 
         if not hasattr(view, "name"):
             class_name = view.__class__.__name__
-            raise AttributeError(
-                '{0} missing required attribute "name"'.format(class_name)
-            )
+            raise AttributeError(f'{class_name} missing required attribute "name"')
 
         view.register(self.app, self.app.router)
 

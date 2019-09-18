@@ -55,10 +55,10 @@ async def async_handle(
     text_input: Optional[str] = None,
 ) -> "IntentResponse":
     """Handle an intent."""
-    handler = hass.data.get(DATA_KEY, {}).get(intent_type)  # type: IntentHandler
+    handler: IntentHandler = hass.data.get(DATA_KEY, {}).get(intent_type)
 
     if handler is None:
-        raise UnknownIntent("Unknown intent {}".format(intent_type))
+        raise UnknownIntent(f"Unknown intent {intent_type}")
 
     intent = Intent(hass, platform, intent_type, slots or {}, text_input)
 
@@ -68,13 +68,11 @@ async def async_handle(
         return result
     except vol.Invalid as err:
         _LOGGER.warning("Received invalid slot info for %s: %s", intent_type, err)
-        raise InvalidSlotInfo(
-            "Received invalid slot info for {}".format(intent_type)
-        ) from err
+        raise InvalidSlotInfo(f"Received invalid slot info for {intent_type}") from err
     except IntentHandleError:
         raise
     except Exception as err:
-        raise IntentUnexpectedError("Error handling {}".format(intent_type)) from err
+        raise IntentUnexpectedError(f"Error handling {intent_type}") from err
 
 
 class IntentError(HomeAssistantError):
@@ -109,7 +107,7 @@ def async_match_state(
     state = _fuzzymatch(name, states, lambda state: state.name)
 
     if state is None:
-        raise IntentHandleError("Unable to find an entity called {}".format(name))
+        raise IntentHandleError(f"Unable to find an entity called {name}")
 
     return state
 
@@ -118,18 +116,16 @@ def async_match_state(
 def async_test_feature(state: State, feature: int, feature_name: str) -> None:
     """Test is state supports a feature."""
     if state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & feature == 0:
-        raise IntentHandleError(
-            "Entity {} does not support {}".format(state.name, feature_name)
-        )
+        raise IntentHandleError(f"Entity {state.name} does not support {feature_name}")
 
 
 class IntentHandler:
     """Intent handler registration."""
 
-    intent_type = None  # type: Optional[str]
-    slot_schema = None  # type: Optional[vol.Schema]
+    intent_type: Optional[str] = None
+    slot_schema: Optional[vol.Schema] = None
     _slot_schema = None
-    platforms = []  # type: Optional[Iterable[str]]
+    platforms: Optional[Iterable[str]] = []
 
     @callback
     def async_can_handle(self, intent_obj: "Intent") -> bool:
@@ -240,8 +236,8 @@ class IntentResponse:
     def __init__(self, intent: Optional[Intent] = None) -> None:
         """Initialize an IntentResponse."""
         self.intent = intent
-        self.speech = {}  # type: Dict[str, Dict[str, Any]]
-        self.card = {}  # type: Dict[str, Dict[str, str]]
+        self.speech: Dict[str, Dict[str, Any]] = {}
+        self.card: Dict[str, Dict[str, str]] = {}
 
     @callback
     def async_set_speech(

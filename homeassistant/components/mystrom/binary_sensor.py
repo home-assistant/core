@@ -41,19 +41,16 @@ class MyStromView(HomeAssistantView):
 
         if button_action is None:
             _LOGGER.error("Received unidentified message from myStrom button: %s", data)
-            return (
-                "Received unidentified message: {}".format(data),
-                HTTP_UNPROCESSABLE_ENTITY,
-            )
+            return (f"Received unidentified message: {data}", HTTP_UNPROCESSABLE_ENTITY)
 
         button_id = data[button_action]
-        entity_id = "{}.{}_{}".format(DOMAIN, button_id, button_action)
+        entity_id = f"{DOMAIN}.{button_id}_{button_action}"
         if entity_id not in self.buttons:
             _LOGGER.info(
                 "New myStrom button/action detected: %s/%s", button_id, button_action
             )
             self.buttons[entity_id] = MyStromBinarySensor(
-                "{}_{}".format(button_id, button_action)
+                f"{button_id}_{button_action}"
             )
             self.add_entities([self.buttons[entity_id]])
         else:

@@ -217,9 +217,7 @@ async def async_handle_record_service(hass, call):
 
     # Check for file access
     if not hass.config.is_allowed_path(video_path):
-        raise HomeAssistantError(
-            "Can't write {}, no access to path!".format(video_path)
-        )
+        raise HomeAssistantError(f"Can't write {video_path}, no access to path!")
 
     # Check for active stream
     streams = hass.data[DOMAIN][ATTR_STREAMS]
@@ -231,9 +229,7 @@ async def async_handle_record_service(hass, call):
     # Add recorder
     recorder = stream.outputs.get("recorder")
     if recorder:
-        raise HomeAssistantError(
-            "Stream already recording to {}!".format(recorder.video_path)
-        )
+        raise HomeAssistantError(f"Stream already recording to {recorder.video_path}!")
 
     recorder = stream.add_provider("recorder")
     recorder.video_path = video_path

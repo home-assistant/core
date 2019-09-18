@@ -66,7 +66,7 @@ class RecollectWasteSensor(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return "{}{}".format(self.client.place_id, self.client.service_id)
+        return f"{self.client.place_id}{self.client.service_id}"
 
     @property
     def state(self):
