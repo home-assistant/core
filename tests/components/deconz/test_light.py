@@ -123,7 +123,7 @@ async def test_no_lights_or_groups(hass):
     gateway = await setup_deconz_integration(
         hass, ENTRY_CONFIG, options={}, get_state_response=data
     )
-    assert len(hass.data[deconz.DOMAIN][gateway.bridgeid].deconz_ids) == 0
+    assert len(gateway.deconz_ids) == 0
     assert len(hass.states.async_all()) == 0
 
 
