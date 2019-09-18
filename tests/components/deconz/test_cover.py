@@ -116,3 +116,7 @@ async def test_cover(hass):
         )
         await hass.async_block_till_done()
         set_callback.assert_called_with("/lights/1/state", {"bri_inc": 0})
+
+    await gateway.async_reset()
+
+    assert len(hass.states.async_all()) == 2

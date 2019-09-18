@@ -189,3 +189,7 @@ async def test_switches(hass):
         )
         await hass.async_block_till_done()
         set_callback.assert_called_with("/lights/3/state", {"alert": "none"})
+
+    await gateway.async_reset()
+
+    assert len(hass.states.async_all()) == 2

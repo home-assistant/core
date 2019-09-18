@@ -153,6 +153,10 @@ async def test_sensors(hass):
     switch_2_battery_level = hass.states.get("sensor.switch_2_battery_level")
     assert switch_2_battery_level.state == "75"
 
+    await gateway.async_reset()
+
+    assert len(hass.states.async_all()) == 0
+
 
 async def test_allow_clip_sensors(hass):
     """Test that CLIP sensors can be allowed."""

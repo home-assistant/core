@@ -162,6 +162,10 @@ async def test_climate_devices(hass):
         )
         set_callback.assert_called_with("/sensors/1/config", {"heatsetpoint": 2000.0})
 
+    await gateway.async_reset()
+
+    assert len(hass.states.async_all()) == 0
+
 
 async def test_clip_climate_device(hass):
     """Test successful creation of sensor entities."""

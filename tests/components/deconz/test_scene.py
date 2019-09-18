@@ -69,15 +69,6 @@ async def test_scenes(hass):
         await hass.async_block_till_done()
         set_callback.assert_called_with("/groups/1/scenes/1/recall", {})
 
-
-async def test_unload_scene(hass):
-    """Test that it works to unload scene entities."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    data["groups"] = deepcopy(GROUPS)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
-
     await gateway.async_reset()
 
     assert len(hass.states.async_all()) == 0

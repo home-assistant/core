@@ -199,6 +199,10 @@ async def test_lights_and_groups(hass):
         await hass.async_block_till_done()
         set_callback.assert_called_with("/lights/1/state", {"alert": "lselect"})
 
+    await gateway.async_reset()
+
+    assert len(hass.states.async_all()) == 2
+
 
 async def test_disable_light_groups(hass):
     """Test successful creation of sensor entities."""

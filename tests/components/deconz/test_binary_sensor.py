@@ -101,6 +101,10 @@ async def test_binary_sensors(hass):
     presence_sensor = hass.states.get("binary_sensor.presence_sensor")
     assert presence_sensor.state == "on"
 
+    await gateway.async_reset()
+
+    assert len(hass.states.async_all()) == 0
+
 
 async def test_allow_clip_sensor(hass):
     """Test that CLIP sensors can be allowed."""
