@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.solaredge_local/
 """
 import logging
 from datetime import timedelta
+import statistics
 
 from requests.exceptions import HTTPError, ConnectTimeout
 from solaredge_local import SolarEdge
