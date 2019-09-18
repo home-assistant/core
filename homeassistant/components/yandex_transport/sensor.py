@@ -67,10 +67,10 @@ class DiscoverMoscowYandexTransport(Entity):
             yandex_reply = self.requester.get_stop_info(self._stop_id)
             data = yandex_reply["data"]
             stop_metadata = data["properties"]["StopMetaData"]
-        except KeyError as e:
+        except KeyError as key_error:
             _LOGGER.warning(
-                "Exception KeyError was captured, missing key is %s. Yandex returned: %s"
-                % e,
+                "Exception KeyError was captured, missing key is %s. Yandex returned: %s",
+                key_error,
                 yandex_reply,
             )
             self.requester.set_new_session()

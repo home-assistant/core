@@ -16,21 +16,22 @@ from tests.common import (
 REPLY = loads(load_fixture("yandex_transport_reply.json"))
 
 
+def get_fake_reply(stop_id):
+    """Return fake reply."""
+    return REPLY
+
+
 @fixture
 def mock_requester():
     """Create a mock ya_ma module and YandexMapsRequester."""
     with MockDependency("ya_ma") as ya_ma:
 
-        class MockRequester(object):
+        class MockRequester:
             """Fake YandexRequester object."""
 
             def __init__(self, user_agent=None):
                 """Create mock module object, for avoid importing ya_ma library."""
-                pass
-
-            def get_stop_info(self, stop_id):
-                """Fake method. Return information about stop_id 9639579."""
-                return REPLY
+                self.get_stop_info = get_fake_reply
 
             def set_new_session(self):
                 """Fake method for reset http session."""
@@ -55,7 +56,6 @@ TEST_CONFIG = {
 
 def true_filter(reply, filter_routes=None):
     """Check transport filtering by routes list."""
-
     closer_time = None
     if filter_routes is None:
         filter_routes = []
