@@ -1,10 +1,4 @@
-"""Mock import ya_ma library for the tests."""
-import sys
-from unittest.mock import Mock
-
-fake_module = Mock()
-
-REPLY = {
+{
     "data": {
         "geometries": [{"type": "Point", "coordinates": [37.565280044, 55.851959656]}],
         "geometry": {"type": "Point", "coordinates": [37.565280044, 55.851959656]},
@@ -26,7 +20,7 @@ REPLY = {
                     "name": "moscow",
                     "native_name": "",
                     "iso_name": "RU MOW",
-                    "is_main": True,
+                    "is_main": true,
                     "en_name": "Moscow",
                     "short_en_name": "MSK",
                     "phone_code": "495 499",
@@ -43,7 +37,7 @@ REPLY = {
                     "official_languages": "ru",
                     "widespread_languages": "ru",
                     "suggest_list": [],
-                    "is_eu": False,
+                    "is_eu": false,
                     "services_names": [
                         "bs",
                         "yaca",
@@ -84,7 +78,7 @@ REPLY = {
                         "name": "moscow-and-moscow-oblast",
                         "native_name": "",
                         "iso_name": "RU-MOS",
-                        "is_main": True,
+                        "is_main": true,
                         "en_name": "Moscow and Moscow Oblast",
                         "short_en_name": "RU-MOS",
                         "phone_code": "495 496 498 499",
@@ -114,7 +108,7 @@ REPLY = {
                             10743,
                             21622,
                         ],
-                        "is_eu": False,
+                        "is_eu": false,
                         "services_names": ["bs", "yaca", "ad"],
                         "ename": "moscow-and-moscow-oblast",
                         "bounds": [
@@ -143,7 +137,7 @@ REPLY = {
                             "name": "russia",
                             "native_name": "",
                             "iso_name": "RU",
-                            "is_main": False,
+                            "is_main": false,
                             "en_name": "Russia",
                             "short_en_name": "RU",
                             "phone_code": "7",
@@ -173,7 +167,7 @@ REPLY = {
                                 39,
                                 62,
                             ],
-                            "is_eu": False,
+                            "is_eu": false,
                             "services_names": ["bs", "yaca", "ad"],
                             "ename": "russia",
                             "bounds": [
@@ -1860,24 +1854,3 @@ REPLY = {
         "toponymSeoname": "dmitrovskoye_shosse",
     }
 }
-
-
-class MockRequester(object):
-    """Fake YandexRequester object."""
-
-    def __init__(self, user_agent=None):
-        """Create mock module object, for avoid importing ya_ma library."""
-        pass
-
-    def get_stop_info(self, stop_id):
-        """Fake method. Return information about stop_id 9639579."""
-        return REPLY
-
-    def set_new_session(self):
-        """Fake method for reset http session."""
-        pass
-
-
-requester = MockRequester()
-fake_module.YandexMapsRequester = MockRequester
-sys.modules["ya_ma"] = fake_module

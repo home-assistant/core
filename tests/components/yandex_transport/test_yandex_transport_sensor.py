@@ -1,17 +1,42 @@
 """Tests for the yandex transport platform."""
 
-import unittest
-from unittest.mock import Mock
+from json import load
+from pathlib import Path
 
+from pytest import fixture
+
+import homeassistant.components.sensor as sensor
 import homeassistant.util.dt as dt_util
-from homeassistant.components.yandex_transport.sensor import (
-    DiscoverMoscowYandexTransport,
-    setup_platform,
-)
 from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
-from homeassistant.setup import setup_component
-from tests.common import assert_setup_component, get_test_home_assistant
-from tests.components.yandex_transport import mock_import
+from tests.common import assert_setup_component, async_setup_component, MockDependency
+
+with open(Path(__file__).parents[0] / "reply.json") as json_file:
+    REPLY = load(json_file)
+
+
+@fixture
+def mock_requester():
+    """Create a mock ya_ma module and YandexMapsRequester."""
+    with MockDependency("ya_ma") as ya_ma:
+
+        class MockRequester(object):
+            """Fake YandexRequester object."""
+
+            def __init__(self, user_agent=None):
+                """Create mock module object, for avoid importing ya_ma library."""
+                pass
+
+            def get_stop_info(self, stop_id):
+                """Fake method. Return information about stop_id 9639579."""
+                return REPLY
+
+            def set_new_session(self):
+                """Fake method for reset http session."""
+                pass
+
+        ya_ma.YandexMapsRequester = MockRequester
+        yield MockRequester()
+
 
 STOP_ID = 9639579
 ROUTES = ["194", "т36", "т47", "м10"]
@@ -33,7 +58,7 @@ def true_filter(reply, filter_routes=None):
     if filter_routes is None:
         filter_routes = []
     attrs = {}
-    ["data"]
+
     stop_metadata = reply["data"]["properties"]["StopMetaData"]
 
     stop_name = reply["data"]["properties"]["name"]
@@ -61,58 +86,51 @@ def true_filter(reply, filter_routes=None):
     return attrs, state
 
 
-class TestYandexTransportSensor(unittest.TestCase):
-    """Test yandex transport sensor."""
+async def assert_setup_sensor(hass, config, count=1):
+    """Set up the sensor and assert it's been created."""
+    with assert_setup_component(count):
+        assert await async_setup_component(hass, sensor.DOMAIN, config)
 
-    def setup_method(self, method):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
 
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
+async def test_setup_platform_valid_config(hass, mock_requester):
+    """Test that sensor is set up properly with valid config."""
+    await assert_setup_sensor(hass, TEST_CONFIG)
 
-    def test_setup_platform_valid_config(self):
-        """Check a valid configuration and call add_entities with sensor."""
-        with assert_setup_component(1, "sensor"):
-            assert setup_component(self.hass, "sensor", TEST_CONFIG)
-        add_entities = Mock()
-        setup_platform(None, TEST_CONFIG["sensor"], add_entities)
-        assert add_entities.called
-        assert isinstance(
-            add_entities.call_args[0][0][0], DiscoverMoscowYandexTransport
-        )
 
-    def test_setup_platform_invalid_config(self):
-        """Check an invalid configuration."""
-        with assert_setup_component(0):
-            assert setup_component(
-                self.hass,
-                "sensor",
-                {"sensor": {"platform": "yandex_transport", "stopid": 1234}},
-            )
+async def test_setup_platform_invalid_config(hass, mock_requester):
+    """Check an invalid configuration."""
+    await assert_setup_sensor(
+        hass, {"sensor": {"platform": "yandex_transport", "stopid": 1234}}, count=0
+    )
 
-    def test_name(self):
-        """Return the name if set in the configuration."""
-        sensor = DiscoverMoscowYandexTransport(mock_import.requester, STOP_ID, [], NAME)
-        assert sensor.name == TEST_CONFIG["sensor"][CONF_NAME]
 
-    def test_state(self):
-        """Return the contents of _state."""
-        sensor = DiscoverMoscowYandexTransport(
-            mock_import.requester, STOP_ID, ROUTES, NAME
-        )
-        sensor.update()
-        assert sensor.state == dt_util.utc_from_timestamp(1568659253).isoformat(
-            timespec="seconds"
-        )
+async def test_name(hass, mock_requester):
+    """Return the name if set in the configuration."""
+    await assert_setup_sensor(hass, TEST_CONFIG)
+    state = hass.states.get("sensor.test_name")
+    assert state.name == TEST_CONFIG["sensor"][CONF_NAME]
 
-    def test_filtered_attributes(self):
-        """Return the contents of attributes."""
-        sensor = DiscoverMoscowYandexTransport(
-            mock_import.requester, STOP_ID, ROUTES, NAME
-        )
-        sensor.update()
-        attrs, state = true_filter(mock_import.REPLY, filter_routes=ROUTES)
-        assert sensor.device_state_attributes == attrs
-        assert sensor.state == state
+
+async def test_state(hass, mock_requester):
+    """Return the contents of _state."""
+    await assert_setup_sensor(hass, TEST_CONFIG)
+    state = hass.states.get("sensor.test_name")
+    assert state.state == dt_util.utc_from_timestamp(1568659253).isoformat(
+        timespec="seconds"
+    )
+
+
+async def test_filtered_attributes(hass, mock_requester):
+    """Return the contents of attributes."""
+    await assert_setup_sensor(hass, TEST_CONFIG)
+    state = hass.states.get("sensor.test_name")
+
+    true_attrs, true_state = true_filter(REPLY, filter_routes=ROUTES)
+    assert state.state == true_state
+    result_key_len = len(true_attrs)
+    i = 0
+    assert i != result_key_len
+    for key in true_attrs:
+        i += 1
+        assert state.attributes[key] == true_attrs[key]
+    assert i == result_key_len
