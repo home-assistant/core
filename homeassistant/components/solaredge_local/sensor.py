@@ -112,7 +112,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         status.energy  # pylint: disable=pointless-statement
         _LOGGER.debug("Credentials correct and site is active")
     except AttributeError:
-        _LOGGER.error("Missing details data in solaredge response")
+        _LOGGER.error("Missing details data in solaredge status")
         _LOGGER.debug("Response is: %s", status)
         return
     except (ConnectTimeout, HTTPError):
@@ -184,12 +184,12 @@ class SolarEdgeData:
         """Update the data from the SolarEdge Monitoring API."""
         try:
             status = self.api.get_status()
-            _LOGGER.debug("response from SolarEdge: %s", response)
+            _LOGGER.debug("status from SolarEdge: %s", status)
         except (ConnectTimeout):
             _LOGGER.error("Connection timeout, skipping update")
             return
         except (HTTPError):
-            _LOGGER.error("Could not retrieve data, skipping update")
+            _LOGGER.error("Could not retrieve status, skipping update")
             return
 
         try:
