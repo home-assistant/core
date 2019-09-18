@@ -23,6 +23,7 @@
             "not_found": "Plex server not found"
         },
         "abort": {
+            "all_configured": "All linked servers already configured",
             "already_configured": "This Plex server is already configured",
             "already_in_progress": "Plex is being configured",
             "invalid_import": "Imported configuration is invalid",

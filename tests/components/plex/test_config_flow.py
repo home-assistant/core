@@ -409,3 +409,47 @@ async def test_already_configured(hass):
 
         assert result["type"] == "abort"
         assert result["reason"] == "already_configured"
+
+
+async def test_all_available_servers_configured(hass):
+    """Test when all available servers are already configured."""
+
+    MockConfigEntry(
+        domain=config_flow.DOMAIN,
+        data={
+            config_flow.CONF_SERVER_IDENTIFIER: "unique_id_123",
+            config_flow.CONF_SERVER: "Server1",
+        },
+    ).add_to_hass(hass)
+
+    MockConfigEntry(
+        domain=config_flow.DOMAIN,
+        data={
+            config_flow.CONF_SERVER_IDENTIFIER: "unique_id_456",
+            config_flow.CONF_SERVER: "Server2",
+        },
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": "user"}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    mock_connections = MockConnections()
+    server1 = MockAvailableServer("Server1", "unique_id_123")
+    server2 = MockAvailableServer("Server2", "unique_id_456")
+
+    mm_plex_account = MagicMock()
+    mm_plex_account.resources = Mock(return_value=[server1, server2])
+    mm_plex_account.resource = Mock(return_value=mock_connections)
+
+    with patch("plexapi.myplex.MyPlexAccount", return_value=mm_plex_account):
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_TOKEN: "12345"}
+        )
+
+        assert result["type"] == "abort"
+        assert result["reason"] == "all_configured"

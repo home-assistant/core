@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_URL, CONF_TOKEN, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.core import callback
 from homeassistant.util.json import load_json
 
 from .const import (  # pylint: disable=unused-import
@@ -23,6 +24,15 @@ from .server import PlexServer
 USER_SCHEMA = vol.Schema({vol.Required(CONF_TOKEN): str})
 
 _LOGGER = logging.getLogger(__package__)
+
+
+@callback
+def configured_servers(hass):
+    """Return a set of the configured Plex servers."""
+    return set(
+        entry.data[CONF_SERVER_IDENTIFIER]
+        for entry in hass.config_entries.async_entries(DOMAIN)
+    )
 
 
 class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -109,26 +119,28 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         config = dict(self.current_login)
         if user_input is not None:
             config[CONF_SERVER] = user_input[CONF_SERVER]
-        else:
-            configured_servers = [
-                x.data[CONF_SERVER_IDENTIFIER] for x in self._async_current_entries()
-            ]
-            available_servers = [
-                name
-                for (name, server_id) in self.available_servers
-                if server_id not in configured_servers
-            ]
-            if len(available_servers) > 1:
-                return self.async_show_form(
-                    step_id="select_server",
-                    data_schema=vol.Schema(
-                        {vol.Required(CONF_SERVER): vol.In(available_servers)}
-                    ),
-                    errors={},
-                )
-            config[CONF_SERVER] = available_servers[0]
+            return await self.async_step_server_validate(config)
 
-        return await self.async_step_server_validate(config)
+        configured = configured_servers(self.hass)
+        available_servers = [
+            name
+            for (name, server_id) in self.available_servers
+            if server_id not in configured
+        ]
+
+        if not available_servers:
+            return self.async_abort(reason="all_configured")
+        if len(available_servers) == 1:
+            config[CONF_SERVER] = available_servers[0]
+            return await self.async_step_server_validate(config)
+
+        return self.async_show_form(
+            step_id="select_server",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_SERVER): vol.In(available_servers)}
+            ),
+            errors={},
+        )
 
     async def async_step_discovery(self, discovery_info):
         """Set default host and port from discovery."""
