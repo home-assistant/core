@@ -44,6 +44,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
+    STATE_ALARM_PENDING,
     ATTR_CODE,
     STATE_UNKNOWN,
 )
@@ -948,20 +949,28 @@ class ArmDisArmTrait(_Trait):
             armed_state = self.state.attributes["post_pending_state"]
         else:
             armed_state = self.state.state
-
-        return {
-            "isArmed": armed_state in self.state_to_service,
-            "currentArmLevel": armed_state,
-        }
+        response = {"isArmed": armed_state in self.state_to_service}
+        if response["isArmed"]:
+            response.update({"currentArmLevel": armed_state})
+        return response
 
     async def execute(self, command, data, params, challenge):
         """Execute an ArmDisarm command."""
-        if params["arm"] and self.state.attributes["code_arm_required"]:
-            _verify_pin_challenge(data, self.state, challenge)
-        elif params["arm"] and not params.get("cancel"):
+        if params["arm"] and not params.get("cancel"):
+            # _LOGGER.debug("%s - %s", self.state.state, params["armLevel"])
             if self.state.state == params["armLevel"]:
                 raise SmartHomeError(ERR_ALREADY_ARMED, "System is already armed")
+            if self.state.attributes["code_arm_required"]:
+                _verify_pin_challenge(data, self.state, challenge)
             service = self.state_to_service[params["armLevel"]]
+        # disarm the system without asking for code when
+        # 'cancel' arming action is received current status is pending
+        elif (
+            params["arm"]
+            and params.get("cancel")
+            and self.state.state == STATE_ALARM_PENDING
+        ):
+            service = SERVICE_ALARM_DISARM
         else:
             if self.state.state == STATE_ALARM_DISARMED:
                 raise SmartHomeError(ERR_ALREADY_DISARMED, "System is already disarmed")
@@ -973,7 +982,7 @@ class ArmDisArmTrait(_Trait):
             service,
             {
                 ATTR_ENTITY_ID: self.state.entity_id,
-                ATTR_CODE: challenge["pin"] if challenge else "",
+                ATTR_CODE: data.config.secure_devices_pin,
             },
             blocking=True,
             context=data.context,
@@ -1450,7 +1459,6 @@ def _verify_pin_challenge(data, state, challenge):
     """Verify a pin challenge."""
     if not data.config.should_2fa(state):
         return
-
     if not data.config.secure_devices_pin:
         raise SmartHomeError(ERR_CHALLENGE_NOT_SETUP, "Challenge is not set up")
 
