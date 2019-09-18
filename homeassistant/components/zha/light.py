@@ -89,6 +89,7 @@ class Light(ZhaEntity, light.Light):
         self._color_temp = None
         self._hs_color = None
         self._brightness = None
+        self._off_brightness = None
         self._effect_list = []
         self._effect = None
         self._on_off_channel = self.cluster_channels.get(CHANNEL_ON_OFF)
@@ -189,6 +190,8 @@ class Light(ZhaEntity, light.Light):
         self._state = last_state.state == STATE_ON
         if "brightness" in last_state.attributes:
             self._brightness = last_state.attributes["brightness"]
+        if "off_brightness" in last_state.attributes:
+            self._off_brightness = last_state.attributes["off_brightness"]
         if "color_temp" in last_state.attributes:
             self._color_temp = last_state.attributes["color_temp"]
         if "hs_color" in last_state.attributes:
@@ -202,6 +205,10 @@ class Light(ZhaEntity, light.Light):
         duration = transition * 10 if transition else 0
         brightness = kwargs.get(light.ATTR_BRIGHTNESS)
         effect = kwargs.get(light.ATTR_EFFECT)
+
+        if brightness is None and self._off_brightness is not None:
+            brightness = self._off_brightness
+        self._off_brightness = None
 
         t_log = {}
         if (
@@ -228,17 +235,6 @@ class Light(ZhaEntity, light.Light):
                 self.debug("turned on: %s", t_log)
                 return
             self._state = True
-
-            level = await self._level_channel.get_attribute_value(
-                "on_level", from_cache=False
-            )
-            # 255 is a special value meaning "use current_level attribute"
-            if level == 255:
-                level = await self._level_channel.get_attribute_value(
-                    "current_level", from_cache=False
-                )
-            self._brightness = level
-
         if (
             light.ATTR_COLOR_TEMP in kwargs
             and self.supported_features & light.SUPPORT_COLOR_TEMP
@@ -304,10 +300,8 @@ class Light(ZhaEntity, light.Light):
         duration = kwargs.get(light.ATTR_TRANSITION)
         supports_level = self.supported_features & light.SUPPORT_BRIGHTNESS
         # store current brightness so that the next turn_on uses it.
-        curr_level_result = await self._level_channel.cluster.write_attributes(
-            {"on_level": self._brightness}
-        )
-        self.debug("set: on_level attribute: %s", curr_level_result)
+        self._off_brightness = self._brightness
+
         if duration and supports_level:
             result = await self._level_channel.move_to_level_with_on_off(
                 0, duration * 10
