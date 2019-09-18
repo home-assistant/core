@@ -159,6 +159,7 @@ async def test_import_success(hass):
         result["data"][config_flow.PLEX_SERVER_CONFIG][CONF_URL]
         == mock_connections.connections[0].httpuri
     )
+    assert result["data"][config_flow.PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
 
 async def test_import_bad_hostname(hass):
@@ -266,6 +267,11 @@ async def test_single_available_server(hass):
             result["data"][config_flow.CONF_SERVER_IDENTIFIER]
             == MOCK_SERVER_1.clientIdentifier
         )
+        assert (
+            result["data"][config_flow.PLEX_SERVER_CONFIG][CONF_URL]
+            == mock_connections.connections[0].httpuri
+        )
+        assert result["data"][config_flow.PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
 
 async def test_multiple_servers_with_selection(hass):
@@ -314,6 +320,11 @@ async def test_multiple_servers_with_selection(hass):
             result["data"][config_flow.CONF_SERVER_IDENTIFIER]
             == MOCK_SERVER_1.clientIdentifier
         )
+        assert (
+            result["data"][config_flow.PLEX_SERVER_CONFIG][CONF_URL]
+            == mock_connections.connections[0].httpuri
+        )
+        assert result["data"][config_flow.PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
 
 async def test_adding_last_unconfigured_server(hass):
@@ -363,6 +374,11 @@ async def test_adding_last_unconfigured_server(hass):
             result["data"][config_flow.CONF_SERVER_IDENTIFIER]
             == MOCK_SERVER_1.clientIdentifier
         )
+        assert (
+            result["data"][config_flow.PLEX_SERVER_CONFIG][CONF_URL]
+            == mock_connections.connections[0].httpuri
+        )
+        assert result["data"][config_flow.PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
 
 async def test_already_configured(hass):
