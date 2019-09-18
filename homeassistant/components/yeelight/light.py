@@ -822,7 +822,7 @@ class YeelightWhiteTempLightsupport:
 
 
 class YeelightWhiteTempWithoutNightlightSwitch(
-    YeelightGenericLight, YeelightWhiteTempLightsupport
+    YeelightWhiteTempLightsupport, YeelightGenericLight
 ):
     """White temp light, when nightlight switch is not set to light."""
 
@@ -831,7 +831,7 @@ class YeelightWhiteTempWithoutNightlightSwitch(
         return "current_brightness"
 
 
-class YeelightWithNightLight(YeelightGenericLight, YeelightWhiteTempLightsupport):
+class YeelightWithNightLight(YeelightWhiteTempLightsupport, YeelightGenericLight):
     """Representation of a Yeelight with nightlight support.
 
     It represents case when nightlight switch is set to light.
