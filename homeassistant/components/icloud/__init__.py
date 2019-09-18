@@ -12,7 +12,7 @@ from homeassistant.components.zone import async_active_zone
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import slugify
@@ -35,11 +35,11 @@ ATTRIBUTION = "Data provided by Apple iCloud"
 
 # entity attributes
 ATTR_BATTERY = "battery"
-ATTR_BATTERYSTATUS = "battery_status"
-ATTR_DEVICENAME = "device_name"
-ATTR_DEVICESTATUS = "device_status"
-ATTR_LOWPOWERMODE = "low_power_mode"
-ATTR_OWNERNAME = "owner_fullname"
+ATTR_BATTERY_STATUS = "battery_status"
+ATTR_DEVICE_NAME = "device_name"
+ATTR_DEVICE_STATUS = "device_status"
+ATTR_LOW_POWER_MODE = "low_power_mode"
+ATTR_OWNER_NAME = "owner_fullname"
 
 DEVICE_STATUS_SET = [
     "features",
@@ -108,14 +108,14 @@ SERVICE_SCHEMA = vol.Schema({vol.Optional(SERVICE_ATTR_USERNAME): cv.string})
 SERVICE_SCHEMA_PLAY_SOUND = vol.Schema(
     {
         vol.Required(SERVICE_ATTR_USERNAME): cv.string,
-        vol.Required(ATTR_DEVICENAME): cv.string,
+        vol.Required(ATTR_DEVICE_NAME): cv.string,
     }
 )
 
 SERVICE_SCHEMA_DISPLAY_MESSAGE = vol.Schema(
     {
         vol.Required(SERVICE_ATTR_USERNAME): cv.string,
-        vol.Required(ATTR_DEVICENAME): cv.string,
+        vol.Required(ATTR_DEVICE_NAME): cv.string,
         vol.Required(SERVICE_ATTR_LOST_DEVICE_MESSAGE): cv.string,
         vol.Optional(SERVICE_ATTR_LOST_DEVICE_SOUND): cv.boolean,
     }
@@ -124,7 +124,7 @@ SERVICE_SCHEMA_DISPLAY_MESSAGE = vol.Schema(
 SERVICE_SCHEMA_LOST_DEVICE = vol.Schema(
     {
         vol.Required(SERVICE_ATTR_USERNAME): cv.string,
-        vol.Required(ATTR_DEVICENAME): cv.string,
+        vol.Required(ATTR_DEVICE_NAME): cv.string,
         vol.Required(SERVICE_ATTR_LOST_DEVICE_NUMBER): cv.string,
         vol.Required(SERVICE_ATTR_LOST_DEVICE_MESSAGE): cv.string,
     }
@@ -190,7 +190,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     def play_sound(service):
         """Play sound on the device."""
         username = entry.data[SERVICE_ATTR_USERNAME]
-        devicename = service.data.get(ATTR_DEVICENAME)
+        devicename = service.data.get(ATTR_DEVICE_NAME)
         devicename = slugify(devicename.replace(" ", "", 99))
 
         hass.data[DOMAIN][username].devices[devicename].play_sound()
@@ -198,7 +198,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     def display_message(service):
         """Display a message on the device."""
         username = entry.data[SERVICE_ATTR_USERNAME]
-        devicename = service.data.get(ATTR_DEVICENAME)
+        devicename = service.data.get(ATTR_DEVICE_NAME)
         devicename = slugify(devicename.replace(" ", "", 99))
         message = service.data.get(SERVICE_ATTR_LOST_DEVICE_MESSAGE)
         sound = service.data.get(SERVICE_ATTR_LOST_DEVICE_SOUND, False)
@@ -208,7 +208,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     def lost_device(service):
         """Make the device in lost state."""
         username = entry.data[SERVICE_ATTR_USERNAME]
-        devicename = service.data.get(ATTR_DEVICENAME)
+        devicename = service.data.get(ATTR_DEVICE_NAME)
         devicename = slugify(devicename.replace(" ", "", 99))
         number = service.data.get(SERVICE_ATTR_LOST_DEVICE_NUMBER)
         message = service.data.get(SERVICE_ATTR_LOST_DEVICE_MESSAGE)
@@ -354,7 +354,7 @@ class IcloudAccount:
                 self.devices[devicename] = IcloudDevice(self, device, status)
                 self.devices[devicename].update(status)
 
-        async_dispatcher_send(self.hass, TRACKER_UPDATE)
+        dispatcher_send(self.hass, TRACKER_UPDATE)
         interval = self.determine_interval()
         track_point_in_utc_time(
             self.hass, self.keep_alive, utcnow() + timedelta(minutes=interval)
@@ -475,9 +475,9 @@ class IcloudDevice:
         self._attrs = {
             CONF_ACCOUNT_NAME: account_name,
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_DEVICENAME: device_name,
-            ATTR_DEVICESTATUS: None,
-            ATTR_OWNERNAME: owner_fullname,
+            ATTR_DEVICE_NAME: device_name,
+            ATTR_DEVICE_STATUS: None,
+            ATTR_OWNER_NAME: owner_fullname,
         }
 
     def update(self, status):
@@ -485,7 +485,7 @@ class IcloudDevice:
         self._status = status
 
         device_status = DEVICE_STATUS_CODES.get(self._status["deviceStatus"], "error")
-        self._attrs[ATTR_DEVICESTATUS] = device_status
+        self._attrs[ATTR_DEVICE_STATUS] = device_status
 
         if self._status["batteryStatus"] != "Unknown":
             self._battery_level = round(self._status.get("batteryLevel", 0) * 100)
@@ -493,8 +493,8 @@ class IcloudDevice:
             low_power_mode = self._status["lowPowerMode"]
 
             self._attrs[ATTR_BATTERY] = self._battery_level
-            self._attrs[ATTR_BATTERYSTATUS] = self._battery_status
-            self._attrs[ATTR_LOWPOWERMODE] = low_power_mode
+            self._attrs[ATTR_BATTERY_STATUS] = self._battery_status
+            self._attrs[ATTR_LOW_POWER_MODE] = low_power_mode
 
             if self._status["location"] and self._status["location"]["latitude"]:
                 location = self._status["location"]

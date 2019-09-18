@@ -1,7 +1,6 @@
 """Support for tracking for iCloud devices."""
 import logging
 
-from homeassistant.core import callback
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.const import CONF_USERNAME
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
@@ -93,17 +92,12 @@ class IcloudTrackerEntity(TrackerEntity):
     async def async_added_to_hass(self):
         """Register state update callback."""
         self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass, TRACKER_UPDATE, self._async_receive_data
+            self.hass, TRACKER_UPDATE, self.async_write_ha_state
         )
 
     async def async_will_remove_from_hass(self):
         """Clean up after entity before removal."""
         self._unsub_dispatcher()
-
-    @callback
-    def _async_receive_data(self):
-        """Update device data."""
-        self.async_write_ha_state()
 
 
 def icon_for_icloud_device(icloud_device: IcloudDevice) -> str:

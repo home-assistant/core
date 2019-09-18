@@ -8,7 +8,7 @@ from homeassistant.components.icloud import config_flow
 from homeassistant.components.icloud.config_flow import CONF_TRUSTED_DEVICE
 from homeassistant.components.icloud.const import (
     DOMAIN,
-    CONF_ACCOUNTNAME,
+    CONF_ACCOUNT_NAME,
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
     DEFAULT_GPS_ACCURACY_THRESHOLD,
@@ -74,7 +74,7 @@ async def test_user(
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_ACCOUNTNAME] == ACCOUNTNAME_FROM_USERNAME
+    assert result["data"][CONF_ACCOUNT_NAME] == ACCOUNTNAME_FROM_USERNAME
     assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
@@ -93,7 +93,7 @@ async def test_import(
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_ACCOUNTNAME] == ACCOUNTNAME_FROM_USERNAME
+    assert result["data"][CONF_ACCOUNT_NAME] == ACCOUNTNAME_FROM_USERNAME
     assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
@@ -102,7 +102,7 @@ async def test_import(
         {
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
-            CONF_ACCOUNTNAME: ACCOUNTNAME,
+            CONF_ACCOUNT_NAME: ACCOUNTNAME,
             CONF_MAX_INTERVAL: MAX_INTERVAL,
             CONF_GPS_ACCURACY_THRESHOLD: GPS_ACCURACY_THRESHOLD,
         }
@@ -111,7 +111,7 @@ async def test_import(
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_ACCOUNTNAME] == ACCOUNTNAME
+    assert result["data"][CONF_ACCOUNT_NAME] == ACCOUNTNAME
     assert result["data"][CONF_MAX_INTERVAL] == MAX_INTERVAL
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == GPS_ACCURACY_THRESHOLD
 
@@ -137,7 +137,7 @@ async def test_abort_if_already_setup(
         {
             CONF_USERNAME: "other_username@icloud.com",
             CONF_PASSWORD: PASSWORD,
-            CONF_ACCOUNTNAME: USERNAME,
+            CONF_ACCOUNT_NAME: USERNAME,
         }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -155,7 +155,7 @@ async def test_abort_if_already_setup(
         {
             CONF_USERNAME: "other_username@icloud.com",
             CONF_PASSWORD: PASSWORD,
-            CONF_ACCOUNTNAME: USERNAME,
+            CONF_ACCOUNT_NAME: USERNAME,
         }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
