@@ -162,6 +162,17 @@ class SolarEdgeData:
             return
 
         try:
+            maintenance = self.api.get_maintenance()
+            _LOGGER.debug("maintenance from SolarEdge: %s", maintenance)
+        except (ConnectTimeout):
+            _LOGGER.error("Connection timeout, skipping update")
+            return
+        except (HTTPError):
+            _LOGGER.error("Could not retrieve maintenance, skipping update")
+            return
+        
+        
+        try:
             self.data["energyTotal"] = response.energy.total
             self.data["energyThisYear"] = response.energy.thisYear
             self.data["energyThisMonth"] = response.energy.thisMonth
