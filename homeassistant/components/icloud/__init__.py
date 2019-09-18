@@ -263,9 +263,7 @@ class IcloudAccount:
         icloud_dir = self.hass.config.path("icloud")
 
         try:
-            self.api = PyiCloudService(
-                self._username, self._password, cookie_directory=icloud_dir, verify=True
-            )
+            self.api = PyiCloudService(self._username, self._password, icloud_dir)
         except PyiCloudFailedLoginException as error:
             self.api = None
             _LOGGER.error("Error logging into iCloud Service: %s", error)

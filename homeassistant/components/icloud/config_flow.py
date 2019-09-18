@@ -100,11 +100,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             self.api = await self.hass.async_add_executor_job(
-                PyiCloudService,
-                self._username,
-                self._password,
-                cookie_directory=icloud_dir,
-                verify=True,
+                PyiCloudService, self._username, self._password, icloud_dir
             )
         except PyiCloudFailedLoginException as error:
             _LOGGER.error("Error logging into iCloud service: %s", error)
