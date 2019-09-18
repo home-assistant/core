@@ -131,7 +131,7 @@ class ControllerDevice(ClimateDevice):
         # Register for connect/disconnect/update events
         @callback
         def controller_disconnected(ctrl: Controller, ex: Exception) -> None:
-            """Disconnected from contrller."""
+            """Disconnected from controller."""
             if ctrl is not self._controller:
                 return
             self.set_available(False, ex)
@@ -173,11 +173,6 @@ class ControllerDevice(ClimateDevice):
         """Return True if entity is available."""
         return self._available
 
-    @property
-    def assumed_state(self) -> bool:
-        """Return True if unable to access real state of the entity."""
-        return False
-
     @callback
     def set_available(self, available: bool, ex: Exception = None) -> None:
         """
@@ -215,7 +210,7 @@ class ControllerDevice(ClimateDevice):
     @property
     def name(self) -> str:
         """Return the name of the entity."""
-        return "iZone Controller " + self._controller.device_uid
+        return f"iZone Controller {self._controller.device_uid}"
 
     @property
     def should_poll(self) -> bool:
@@ -412,6 +407,7 @@ class ZoneDevice(ClimateDevice):
     async def async_added_to_hass(self):
         """Call on adding to hass."""
 
+        @callback
         def zone_update(ctrl: Controller, zone: Zone) -> None:
             """Handle zone data updates."""
             if zone is not self._zone:
