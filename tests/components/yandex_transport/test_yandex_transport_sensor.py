@@ -1,17 +1,19 @@
 """Tests for the yandex transport platform."""
 
-from json import load
-from pathlib import Path
-
+from json import loads
 from pytest import fixture
 
 import homeassistant.components.sensor as sensor
 import homeassistant.util.dt as dt_util
 from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
-from tests.common import assert_setup_component, async_setup_component, MockDependency
+from tests.common import (
+    assert_setup_component,
+    async_setup_component,
+    MockDependency,
+    load_fixture,
+)
 
-with open(Path(__file__).parents[0] / "reply.json") as json_file:
-    REPLY = load(json_file)
+REPLY = loads(load_fixture("yandex_transport_reply.json"))
 
 
 @fixture
