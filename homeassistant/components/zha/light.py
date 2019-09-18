@@ -129,7 +129,9 @@ class Light(ZhaEntity, light.Light):
     @property
     def device_state_attributes(self):
         """Return state attributes."""
-        return self.state_attributes
+        state_attrs = self.state_attributes.copy()
+        state_attrs["off_brightness"] = self._off_brightness
+        return state_attrs
 
     def set_level(self, value):
         """Set the brightness of this light between 0..254.
