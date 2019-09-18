@@ -56,7 +56,7 @@ async def test_bad_credentials(hass):
     assert result["step_id"] == "user"
 
     with patch(
-            "plexapi.myplex.MyPlexAccount", side_effect=plexapi.exceptions.Unauthorized
+        "plexapi.myplex.MyPlexAccount", side_effect=plexapi.exceptions.Unauthorized
     ):
 
         result = await hass.config_entries.flow.async_configure(
@@ -78,8 +78,8 @@ async def test_import_file_from_discovery(hass):
     used_url = f"http://{file_host_and_port}"
 
     with patch("plexapi.server.PlexServer") as mock_plex_server, patch(
-            "homeassistant.components.plex.config_flow.load_json",
-            return_value=mock_file_contents,
+        "homeassistant.components.plex.config_flow.load_json",
+        return_value=mock_file_contents,
     ):
         type(mock_plex_server.return_value).machineIdentifier = PropertyMock(
             return_value="unique_id_123"
@@ -180,7 +180,7 @@ async def test_import_bad_hostname(hass):
     """Test when an invalid address is provided."""
 
     with patch(
-            "plexapi.server.PlexServer", side_effect=requests.exceptions.ConnectionError
+        "plexapi.server.PlexServer", side_effect=requests.exceptions.ConnectionError
     ):
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
@@ -255,7 +255,7 @@ async def test_single_available_server(hass):
     mm_plex_account.resource = Mock(return_value=mock_connections)
 
     with patch("plexapi.myplex.MyPlexAccount", return_value=mm_plex_account), patch(
-            "plexapi.server.PlexServer"
+        "plexapi.server.PlexServer"
     ) as mock_plex_server:
         type(mock_plex_server.return_value).machineIdentifier = PropertyMock(
             return_value="unique_id_123"
@@ -297,7 +297,7 @@ async def test_multiple_servers_with_selection(hass):
     mm_plex_account.resource = Mock(return_value=mock_connections)
 
     with patch("plexapi.myplex.MyPlexAccount", return_value=mm_plex_account), patch(
-            "plexapi.server.PlexServer"
+        "plexapi.server.PlexServer"
     ) as mock_plex_server:
         type(mock_plex_server.return_value).machineIdentifier = PropertyMock(
             return_value="unique_id_123"
@@ -354,7 +354,7 @@ async def test_adding_last_unconfigured_server(hass):
     mm_plex_account.resource = Mock(return_value=mock_connections)
 
     with patch("plexapi.myplex.MyPlexAccount", return_value=mm_plex_account), patch(
-            "plexapi.server.PlexServer"
+        "plexapi.server.PlexServer"
     ) as mock_plex_server:
         type(mock_plex_server.return_value).machineIdentifier = PropertyMock(
             return_value="unique_id_123"
