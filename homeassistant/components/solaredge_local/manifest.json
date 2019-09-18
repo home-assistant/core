@@ -4,5 +4,5 @@
     "documentation": "",
     "dependencies": [],
     "codeowners": ["@drobtravels"],
-    "requirements": ["solaredge-local==0.1.4"]
+    "requirements": ["solaredge-local==0.2.0"]
   }
