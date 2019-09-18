@@ -28,14 +28,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     sensors = [
         ValloxProfileSensor(
-            name="{} Current Profile".format(name),
+            name=f"{name} Current Profile",
             state_proxy=state_proxy,
             device_class=None,
             unit_of_measurement=None,
             icon="mdi:gauge",
         ),
         ValloxFanSpeedSensor(
-            name="{} Fan Speed".format(name),
+            name=f"{name} Fan Speed",
             state_proxy=state_proxy,
             metric_key="A_CYC_FAN_SPEED",
             device_class=None,
@@ -43,7 +43,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             icon="mdi:fan",
         ),
         ValloxSensor(
-            name="{} Extract Air".format(name),
+            name=f"{name} Extract Air",
             state_proxy=state_proxy,
             metric_key="A_CYC_TEMP_EXTRACT_AIR",
             device_class=DEVICE_CLASS_TEMPERATURE,
@@ -51,7 +51,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             icon=None,
         ),
         ValloxSensor(
-            name="{} Exhaust Air".format(name),
+            name=f"{name} Exhaust Air",
             state_proxy=state_proxy,
             metric_key="A_CYC_TEMP_EXHAUST_AIR",
             device_class=DEVICE_CLASS_TEMPERATURE,
@@ -59,7 +59,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             icon=None,
         ),
         ValloxSensor(
-            name="{} Outdoor Air".format(name),
+            name=f"{name} Outdoor Air",
             state_proxy=state_proxy,
             metric_key="A_CYC_TEMP_OUTDOOR_AIR",
             device_class=DEVICE_CLASS_TEMPERATURE,
@@ -67,7 +67,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             icon=None,
         ),
         ValloxSensor(
-            name="{} Supply Air".format(name),
+            name=f"{name} Supply Air",
             state_proxy=state_proxy,
             metric_key="A_CYC_TEMP_SUPPLY_AIR",
             device_class=DEVICE_CLASS_TEMPERATURE,
@@ -75,7 +75,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             icon=None,
         ),
         ValloxSensor(
-            name="{} Humidity".format(name),
+            name=f"{name} Humidity",
             state_proxy=state_proxy,
             metric_key="A_CYC_RH_VALUE",
             device_class=DEVICE_CLASS_HUMIDITY,
@@ -83,7 +83,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             icon=None,
         ),
         ValloxFilterRemainingSensor(
-            name="{} Remaining Time For Filter".format(name),
+            name=f"{name} Remaining Time For Filter",
             state_proxy=state_proxy,
             metric_key="A_CYC_REMAINING_TIME_FOR_FILTER",
             device_class=DEVICE_CLASS_TIMESTAMP,

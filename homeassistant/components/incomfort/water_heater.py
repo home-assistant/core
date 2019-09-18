@@ -96,7 +96,7 @@ class IncomfortWaterHeater(WaterHeaterDevice):
     def current_operation(self):
         """Return the current operation mode."""
         if self._heater.is_failed:
-            return "Fault code: {}".format(self._heater.fault_code)
+            return f"Fault code: {self._heater.fault_code}"
 
         return self._heater.display_text
 

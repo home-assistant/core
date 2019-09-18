@@ -26,6 +26,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    ATTR_ICON,
 )
 from homeassistant.setup import async_setup_component
 from tests.common import assert_setup_component, async_fire_time_changed
@@ -148,6 +149,7 @@ async def test_setup(hass):
                 ATTR_MAGNITUDE: 5.7,
                 ATTR_UNIT_OF_MEASUREMENT: "km",
                 ATTR_SOURCE: "usgs_earthquakes_feed",
+                ATTR_ICON: "mdi:pulse",
             }
             assert round(abs(float(state.state) - 15.5), 7) == 0
 
@@ -161,6 +163,7 @@ async def test_setup(hass):
                 ATTR_FRIENDLY_NAME: "Title 2",
                 ATTR_UNIT_OF_MEASUREMENT: "km",
                 ATTR_SOURCE: "usgs_earthquakes_feed",
+                ATTR_ICON: "mdi:pulse",
             }
             assert round(abs(float(state.state) - 20.5), 7) == 0
 
@@ -174,6 +177,7 @@ async def test_setup(hass):
                 ATTR_FRIENDLY_NAME: "Title 3",
                 ATTR_UNIT_OF_MEASUREMENT: "km",
                 ATTR_SOURCE: "usgs_earthquakes_feed",
+                ATTR_ICON: "mdi:pulse",
             }
             assert round(abs(float(state.state) - 25.5), 7) == 0
 

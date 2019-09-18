@@ -62,7 +62,7 @@ async def async_get_service(hass, config, discovery_info=None):
         )
 
     http_protocol = "https" if encryption else "http"
-    url = "{}://{}:{}/jsonrpc".format(http_protocol, host, port)
+    url = f"{http_protocol}://{host}:{port}/jsonrpc"
 
     if username is not None:
         auth = aiohttp.BasicAuth(username, password)

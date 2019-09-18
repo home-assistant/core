@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "doorbird"
 
-API_URL = "/api/{}".format(DOMAIN)
+API_URL = f"/api/{DOMAIN}"
 
 CONF_CUSTOM_URL = "hass_url_override"
 CONF_EVENTS = "events"
@@ -195,17 +195,15 @@ class ConfiguredDoorBird:
         return slugify(self._name)
 
     def _get_event_name(self, event):
-        return "{}_{}".format(self.slug, event)
+        return f"{self.slug}_{event}"
 
     def _register_event(self, hass_url, event):
         """Add a schedule entry in the device for a sensor."""
-        url = "{}{}/{}?token={}".format(hass_url, API_URL, event, self._token)
+        url = f"{hass_url}{API_URL}/{event}?token={self._token}"
 
         # Register HA URL as webhook if not already, then get the ID
         if not self.webhook_is_registered(url):
-            self.device.change_favorite(
-                "http", "Home Assistant ({})".format(event), url
-            )
+            self.device.change_favorite("http", f"Home Assistant ({event})", url)
 
         fav_id = self.get_webhook_id(url)
 
@@ -288,9 +286,9 @@ class DoorBirdRequestView(HomeAssistantView):
         if event == "clear":
             hass.bus.async_fire(RESET_DEVICE_FAVORITES, {"token": token})
 
-            message = "HTTP Favorites cleared for {}".format(device.slug)
+            message = f"HTTP Favorites cleared for {device.slug}"
             return web.Response(status=200, text=message)
 
-        hass.bus.async_fire("{}_{}".format(DOMAIN, event), event_data)
+        hass.bus.async_fire(f"{DOMAIN}_{event}", event_data)
 
         return web.Response(status=200, text="OK")

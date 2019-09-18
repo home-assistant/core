@@ -134,7 +134,7 @@ async def async_request_stream(hass, entity_id, fmt):
 
     if not source:
         raise HomeAssistantError(
-            "{} does not support play stream service".format(camera.entity_id)
+            f"{camera.entity_id} does not support play stream service"
         )
 
     return request_stream(hass, source, fmt=fmt, keepalive=camera_prefs.preload_stream)
@@ -534,9 +534,7 @@ class CameraMjpegStream(CameraView):
             # Compose camera stream from stills
             interval = float(request.query.get("interval"))
             if interval < MIN_STREAM_INTERVAL:
-                raise ValueError(
-                    "Stream interval must be be > {}".format(MIN_STREAM_INTERVAL)
-                )
+                raise ValueError(f"Stream interval must be be > {MIN_STREAM_INTERVAL}")
             return await camera.handle_async_still_stream(request, interval)
         except ValueError:
             raise web.HTTPBadRequest()
@@ -588,7 +586,7 @@ async def ws_camera_stream(hass, connection, msg):
 
         if not source:
             raise HomeAssistantError(
-                "{} does not support play stream service".format(camera.entity_id)
+                f"{camera.entity_id} does not support play stream service"
             )
 
         fmt = msg["format"]
@@ -670,7 +668,7 @@ async def async_handle_play_stream_service(camera, service_call):
 
     if not source:
         raise HomeAssistantError(
-            "{} does not support play stream service".format(camera.entity_id)
+            f"{camera.entity_id} does not support play stream service"
         )
 
     hass = camera.hass
@@ -681,7 +679,7 @@ async def async_handle_play_stream_service(camera, service_call):
     url = request_stream(hass, source, fmt=fmt, keepalive=camera_prefs.preload_stream)
     data = {
         ATTR_ENTITY_ID: entity_ids,
-        ATTR_MEDIA_CONTENT_ID: "{}{}".format(hass.config.api.base_url, url),
+        ATTR_MEDIA_CONTENT_ID: f"{hass.config.api.base_url}{url}",
         ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[fmt],
     }
 
@@ -696,9 +694,7 @@ async def async_handle_record_service(camera, call):
         source = await camera.stream_source()
 
     if not source:
-        raise HomeAssistantError(
-            "{} does not support record service".format(camera.entity_id)
-        )
+        raise HomeAssistantError(f"{camera.entity_id} does not support record service")
 
     hass = camera.hass
     filename = call.data[CONF_FILENAME]

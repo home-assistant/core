@@ -207,6 +207,8 @@ class GlancesSensor(Entity):
                         "soc_thermal 1",
                         "soc-thermal 1",
                         "aml_thermal",
+                        "Core 0",
+                        "Core 1",
                     ]:
                         self._state = sensor["value"]
             elif self.type == "docker_active":

@@ -132,7 +132,7 @@ class IPMAWeather(WeatherEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique id."""
-        return "{}, {}".format(self._station.latitude, self._station.longitude)
+        return f"{self._station.latitude}, {self._station.longitude}"
 
     @property
     def attribution(self):

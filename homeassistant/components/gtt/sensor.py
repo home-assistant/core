@@ -38,7 +38,7 @@ class GttSensor(Entity):
         """Initialize the Gtt sensor."""
         self.data = GttData(stop, bus_name)
         self._state = None
-        self._name = "Stop {}".format(stop)
+        self._name = f"Stop {stop}"
 
     @property
     def name(self):

@@ -117,7 +117,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 CONF_WMO_ID,
             )
     elif zone_id and wmo_id:
-        station = "{}.{}".format(zone_id, wmo_id)
+        station = f"{zone_id}.{wmo_id}"
     else:
         station = closest_station(
             config.get(CONF_LATITUDE),

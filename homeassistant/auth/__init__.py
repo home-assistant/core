@@ -47,7 +47,7 @@ async def auth_manager_from_config(
     else:
         providers = ()
     # So returned auth providers are in same order as config
-    provider_hash = OrderedDict()  # type: _ProviderDict
+    provider_hash: _ProviderDict = OrderedDict()
     for provider in providers:
         key = (provider.type, provider.id)
         provider_hash[key] = provider
@@ -59,7 +59,7 @@ async def auth_manager_from_config(
     else:
         modules = ()
     # So returned auth modules are in same order as config
-    module_hash = OrderedDict()  # type: _MfaModuleDict
+    module_hash: _MfaModuleDict = OrderedDict()
     for module in modules:
         module_hash[module.id] = module
 
@@ -168,11 +168,11 @@ class AuthManager:
 
     async def async_create_user(self, name: str) -> models.User:
         """Create a user."""
-        kwargs = {
+        kwargs: Dict[str, Any] = {
             "name": name,
             "is_active": True,
             "group_ids": [GROUP_ID_ADMIN],
-        }  # type: Dict[str, Any]
+        }
 
         if await self._user_should_be_owner():
             kwargs["is_owner"] = True
@@ -238,7 +238,7 @@ class AuthManager:
         group_ids: Optional[List[str]] = None,
     ) -> None:
         """Update a user."""
-        kwargs = {}  # type: Dict[str,Any]
+        kwargs: Dict[str, Any] = {}
         if name is not None:
             kwargs["name"] = name
         if group_ids is not None:
@@ -278,9 +278,7 @@ class AuthManager:
 
         module = self.get_auth_mfa_module(mfa_module_id)
         if module is None:
-            raise ValueError(
-                "Unable find multi-factor auth module: {}".format(mfa_module_id)
-            )
+            raise ValueError(f"Unable find multi-factor auth module: {mfa_module_id}")
 
         await module.async_setup_user(user.id, data)
 
@@ -295,15 +293,13 @@ class AuthManager:
 
         module = self.get_auth_mfa_module(mfa_module_id)
         if module is None:
-            raise ValueError(
-                "Unable find multi-factor auth module: {}".format(mfa_module_id)
-            )
+            raise ValueError(f"Unable find multi-factor auth module: {mfa_module_id}")
 
         await module.async_depose_user(user.id)
 
     async def async_get_enabled_mfa(self, user: models.User) -> Dict[str, str]:
         """List enabled mfa modules for user."""
-        modules = OrderedDict()  # type: Dict[str, str]
+        modules: Dict[str, str] = OrderedDict()
         for module_id, module in self._mfa_modules.items():
             if await module.async_is_user_setup(user.id):
                 modules[module_id] = module.name
@@ -356,7 +352,7 @@ class AuthManager:
                 ):
                     # Each client_name can only have one
                     # long_lived_access_token type of refresh token
-                    raise ValueError("{} already exists".format(client_name))
+                    raise ValueError(f"{client_name} already exists")
 
         return await self._store.async_create_refresh_token(
             user,

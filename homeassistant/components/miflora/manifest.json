@@ -3,6 +3,7 @@
   "name": "Miflora",
   "documentation": "https://www.home-assistant.io/components/miflora",
   "requirements": [
+    "bluepy==1.1.4",
     "miflora==0.4.0"
   ],
   "dependencies": [],

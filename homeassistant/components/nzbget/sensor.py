@@ -65,7 +65,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     password = config.get(CONF_PASSWORD)
     monitored_types = config.get(CONF_MONITORED_VARIABLES)
 
-    url = "http{}://{}:{}/jsonrpc".format(ssl, host, port)
+    url = f"http{ssl}://{host}:{port}/jsonrpc"
 
     try:
         nzbgetapi = NZBGetAPI(api_url=url, username=username, password=password)

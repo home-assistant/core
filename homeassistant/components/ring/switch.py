@@ -38,7 +38,7 @@ class BaseRingSwitch(SwitchDevice):
         """Initialize the switch."""
         self._device = device
         self._device_type = device_type
-        self._unique_id = "{}-{}".format(self._device.id, self._device_type)
+        self._unique_id = f"{self._device.id}-{self._device_type}"
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -53,7 +53,7 @@ class BaseRingSwitch(SwitchDevice):
     @property
     def name(self):
         """Name of the device."""
-        return "{} {}".format(self._device.name, self._device_type)
+        return f"{self._device.name} {self._device_type}"
 
     @property
     def unique_id(self):

@@ -118,7 +118,7 @@ class EmailReader:
             if not self._unread_ids:
                 search = "SINCE {0:%d-%b-%Y}".format(datetime.date.today())
                 if self._last_id is not None:
-                    search = "UID {}:*".format(self._last_id)
+                    search = f"UID {self._last_id}:*"
 
                 _, data = self.connection.uid("search", None, search)
                 self._unread_ids = deque(data[0].split())

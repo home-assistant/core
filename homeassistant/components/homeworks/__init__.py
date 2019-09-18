@@ -106,7 +106,7 @@ class HomeworksDevice:
     @property
     def unique_id(self):
         """Return a unique identifier."""
-        return "homeworks.{}".format(self._addr)
+        return f"homeworks.{self._addr}"
 
     @property
     def name(self):

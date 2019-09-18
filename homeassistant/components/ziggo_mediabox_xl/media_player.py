@@ -206,5 +206,5 @@ class ZiggoMediaboxXLDevice(MediaPlayerDevice):
         if digits is None:
             return
 
-        self.send_keys(["NUM_{}".format(digit) for digit in str(digits)])
+        self.send_keys([f"NUM_{digit}" for digit in str(digits)])
         self._state = STATE_PLAYING

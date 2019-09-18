@@ -87,12 +87,12 @@ class XmppNotificationService(BaseNotificationService):
     async def async_send_message(self, message="", **kwargs):
         """Send a message to a user."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-        text = "{}: {}".format(title, message) if title else message
+        text = f"{title}: {message}" if title else message
         data = kwargs.get(ATTR_DATA)
         timeout = data.get(ATTR_TIMEOUT, XEP_0363_TIMEOUT) if data else None
 
         await async_send_message(
-            "{}/{}".format(self._sender, self._resource),
+            f"{self._sender}/{self._resource}",
             self._password,
             self._recipient,
             self._tls,

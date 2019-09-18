@@ -91,7 +91,7 @@ class Entity:
     entity_id = None  # type: str
 
     # Owning hass instance. Will be set by EntityPlatform
-    hass = None  # type: Optional[HomeAssistant]
+    hass: Optional[HomeAssistant] = None
 
     # Owning platform instance. Will be set by EntityPlatform
     platform = None
@@ -109,10 +109,10 @@ class Entity:
     parallel_updates = None
 
     # Entry in the entity registry
-    registry_entry = None  # type: Optional[RegistryEntry]
+    registry_entry: Optional[RegistryEntry] = None
 
     # Hold list for functions to call on remove.
-    _on_remove = None  # type: Optional[List[CALLBACK_TYPE]]
+    _on_remove: Optional[List[CALLBACK_TYPE]] = None
 
     # Context
     _context = None
@@ -248,11 +248,11 @@ class Entity:
         This method must be run in the event loop.
         """
         if self.hass is None:
-            raise RuntimeError("Attribute hass is None for {}".format(self))
+            raise RuntimeError(f"Attribute hass is None for {self}")
 
         if self.entity_id is None:
             raise NoEntitySpecifiedError(
-                "No entity id specified for entity {}".format(self.name)
+                f"No entity id specified for entity {self.name}"
             )
 
         # update entity data
@@ -269,11 +269,11 @@ class Entity:
     def async_write_ha_state(self):
         """Write the state to the state machine."""
         if self.hass is None:
-            raise RuntimeError("Attribute hass is None for {}".format(self))
+            raise RuntimeError(f"Attribute hass is None for {self}")
 
         if self.entity_id is None:
             raise NoEntitySpecifiedError(
-                "No entity id specified for entity {}".format(self.name)
+                f"No entity id specified for entity {self.name}"
             )
 
         self._async_write_ha_state()

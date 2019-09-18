@@ -126,7 +126,7 @@ def setup(hass, config):
             if key != "unit_of_measurement":
                 # If the key is already in fields
                 if key in out_event["fields"]:
-                    key = "{}_".format(key)
+                    key = f"{key}_"
                 # For each value we try to cast it as float
                 # But if we can not do it we store the value
                 # as string

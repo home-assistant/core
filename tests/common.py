@@ -602,40 +602,40 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
         )
 
 
-class MockToggleDevice(entity.ToggleEntity):
+class MockToggleEntity(entity.ToggleEntity):
     """Provide a mock toggle device."""
 
-    def __init__(self, name, state):
-        """Initialize the mock device."""
+    def __init__(self, name, state, unique_id=None):
+        """Initialize the mock entity."""
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = state
         self.calls = []
 
     @property
     def name(self):
-        """Return the name of the device if any."""
+        """Return the name of the entity if any."""
         self.calls.append(("name", {}))
         return self._name
 
     @property
     def state(self):
-        """Return the name of the device if any."""
+        """Return the state of the entity if any."""
         self.calls.append(("state", {}))
         return self._state
 
     @property
     def is_on(self):
-        """Return true if device is on."""
+        """Return true if entity is on."""
         self.calls.append(("is_on", {}))
         return self._state == STATE_ON
 
     def turn_on(self, **kwargs):
-        """Turn the device on."""
+        """Turn the entity on."""
         self.calls.append(("turn_on", kwargs))
         self._state = STATE_ON
 
     def turn_off(self, **kwargs):
-        """Turn the device off."""
+        """Turn the entity off."""
         self.calls.append(("turn_off", kwargs))
         self._state = STATE_OFF
 
@@ -1030,3 +1030,18 @@ def async_capture_events(hass, event_name):
     hass.bus.async_listen(event_name, capture_events)
 
     return events
+
+
+@ha.callback
+def async_mock_signal(hass, signal):
+    """Catch all dispatches to a signal."""
+    calls = []
+
+    @ha.callback
+    def mock_signal_handler(*args):
+        """Mock service call."""
+        calls.append(args)
+
+    hass.helpers.dispatcher.async_dispatcher_connect(signal, mock_signal_handler)
+
+    return calls

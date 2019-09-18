@@ -1,13 +1,6 @@
 """Classes to help gather user submissions."""
 import logging
-from typing import (
-    Dict,
-    Any,
-    Callable,
-    Hashable,
-    List,
-    Optional,
-)  # noqa pylint: disable=unused-import
+from typing import Dict, Any, Callable, Hashable, List, Optional
 import uuid
 import voluptuous as vol
 from .core import callback, HomeAssistant
@@ -52,7 +45,7 @@ class FlowManager:
     ) -> None:
         """Initialize the flow manager."""
         self.hass = hass
-        self._progress = {}  # type: Dict[str, Any]
+        self._progress: Dict[str, Any] = {}
         self._async_create_flow = async_create_flow
         self._async_finish_flow = async_finish_flow
 
@@ -126,7 +119,7 @@ class FlowManager:
         self, flow: Any, step_id: str, user_input: Optional[Dict]
     ) -> Dict:
         """Handle a step of a flow."""
-        method = "async_step_{}".format(step_id)
+        method = f"async_step_{step_id}"
 
         if not hasattr(flow, method):
             self._progress.pop(flow.flow_id)
@@ -136,7 +129,7 @@ class FlowManager:
                 )
             )
 
-        result = await getattr(flow, method)(user_input)  # type: Dict
+        result: Dict = await getattr(flow, method)(user_input)
 
         if result["type"] not in (
             RESULT_TYPE_FORM,
