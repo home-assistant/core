@@ -26,7 +26,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             _LOGGER.debug("No position found for device %s", device.name)
             continue
 
-        _LOGGER.debug("Updating device_tracker for %s", device.name)
+        _LOGGER.debug("Adding device_tracker for %s", device.name)
 
         async_add_entities([IcloudTrackerEntity(device)])
 
