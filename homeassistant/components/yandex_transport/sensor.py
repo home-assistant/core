@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Service for obtaining information about closer bus from Transport Yandex Service
-"""
+"""Service for obtaining information about closer bus from Transport Yandex Service."""
 
 import logging
 from datetime import timedelta
@@ -34,7 +32,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_STOP_ID): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_ROUTE, default=[]): vol.All(cv.ensure_list, [cv.string]),
-
     }
 )
 
@@ -50,6 +47,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class DiscoverMoscowYandexTransport(Entity):
+    """Implementation of yandex_transport sensor."""
+
     def __init__(self, requester, stop_id, routes, name):
         """Initialize sensor."""
         self.requester = requester
@@ -70,7 +69,10 @@ class DiscoverMoscowYandexTransport(Entity):
             stop_metadata = data["properties"]["StopMetaData"]
         except KeyError as e:
             _LOGGER.warning(
-                "Exception KeyError was captured, missing key is %s. Yandex returned: %s" % e, yandex_reply)
+                "Exception KeyError was captured, missing key is %s. Yandex returned: %s"
+                % e,
+                yandex_reply,
+            )
             self.requester.set_new_session()
             data = self.requester.get_stop_info(self._stop_id)["data"]
             stop_metadata = data["properties"]["StopMetaData"]
@@ -95,7 +97,9 @@ class DiscoverMoscowYandexTransport(Entity):
         if closer_time is None:
             self._state = None
         else:
-            self._state = dt_util.utc_from_timestamp(closer_time).isoformat(timespec="seconds")
+            self._state = dt_util.utc_from_timestamp(closer_time).isoformat(
+                timespec="seconds"
+            )
         self._attrs = attrs
 
     @property
