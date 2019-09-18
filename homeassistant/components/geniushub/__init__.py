@@ -88,7 +88,7 @@ class GeniusBroker:
         try:
             await self.client.update()
         except aiohttp.ClientResponseError as err:
-            _LOGGER.warning("Update failed, %s", err)
+            _LOGGER.warning("Update failed, message is: %s", err)
             return
         self.make_debug_log_entries()
 
