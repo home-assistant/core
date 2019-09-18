@@ -57,31 +57,31 @@ SENSOR_TYPES = {
     ],
     "inverter_temperature": [
         "invertertemperature",
-        "Inverter temperature",
+        "Inverter Temperature",
         'C',
         "mdi:thermometer"
     ],
-    "optimizer_temperture": [
-        "optimizertemperture",
-        "Avrage optimizer temperture",
+    "optimizer_temperature": [
+        "optimizertemperature",
+        "Avrage Optimizer Temperature",
         'C',
         "mdi:solar-panel"
     ],
     "optimizer_voltage": [
         "optimizervoltage",
-        "Avrage optimizer voltage",
+        "Avrage Optimizer Voltage",
         'V',
         "mdi:solar-panel"
     ],
     "optimizer_current": [
         "optimizercurrent",
-        "Avrage optimizer current",
+        "Avrage Optimizer Current",
         'A',
         "mdi:solar-panel"
     ],
     "optimizer_power": [
         "optimizerpower",
-        "Avrage optimizer power",
+        "Avrage Optimizer Power",
         POWER_WATT,
         "mdi:solar-panel"
     ],
@@ -202,7 +202,7 @@ class SolarEdgeData:
             _LOGGER.error("Could not retrieve maintenance, skipping update")
             return
 
-        temperture = []
+        temperature = []
         voltage = []
         current = []
         stringlength = len(maintenance.diagnostics.inverters.primary.optimizer)
@@ -210,7 +210,7 @@ class SolarEdgeData:
 
         for x in range(stringlength):
             if maintenance.diagnostics.inverters.primary.optimizer[x].online is True:
-                temperture.append(maintenance.diagnostics.inverters.primary.optimizer[x].temperature.value)
+                temperature.append(maintenance.diagnostics.inverters.primary.optimizer[x].temperature.value)
                 voltage.append(maintenance.diagnostics.inverters.primary.optimizer[x].inputV)
                 current.append(maintenance.diagnostics.inverters.primary.optimizer[x].inputC)
 
@@ -224,7 +224,7 @@ class SolarEdgeData:
         self.data["currentPower"] = status.powerWatt
         self.data["invertertemperature"] = status.inverters.primary.temperature.value
         if len(voltage) >= 1:
-            self.data["optimizertemperture"] = statistics.mean(temperture)
+            self.data["optimizertemperature"] = statistics.mean(temperature)
             self.data["optimizervoltage"] = statistics.mean(voltage)
             self.data["optimizercurrent"] = statistics.mean(current)
             self.data["optimizerpower"] = power
