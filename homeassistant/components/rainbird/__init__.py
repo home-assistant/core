@@ -8,11 +8,12 @@ from homeassistant.const import (
     CONF_FRIENDLY_NAME,
     CONF_HOST,
     CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
     CONF_TRIGGER_TIME,
 )
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+
+CONF_ZONES = "zones"
 
 SUPPORTED_PLATFORMS = [switch.DOMAIN, sensor.DOMAIN, binary_sensor.DOMAIN]
 
@@ -34,7 +35,6 @@ ZONE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_FRIENDLY_NAME): cv.string,
         vol.Optional(CONF_TRIGGER_TIME): cv.positive_int,
-        vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int,
     }
 )
 CONTROLLER_SCHEMA = vol.Schema(
@@ -42,8 +42,7 @@ CONTROLLER_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_TRIGGER_TIME): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL): cv.string,
-        vol.Optional("zones"): vol.Schema({cv.positive_int: ZONE_SCHEMA}),
+        vol.Optional(CONF_ZONES): vol.Schema({cv.positive_int: ZONE_SCHEMA}),
     }
 )
 CONFIG_SCHEMA = vol.Schema(
@@ -56,26 +55,34 @@ def setup(hass, config):
     """Set up the Rain Bird component."""
 
     hass.data[DATA_RAINBIRD] = []
+    success = False
     for controller_config in config[DOMAIN]:
-        _setup_controller(controller_config, hass)
+        success = success or _setup_controller(hass, controller_config)
 
-    return True
+    return success
 
 
-def _setup_controller(config, hass):
+def _setup_controller(hass, config):
     from pyrainbird import RainbirdController
 
     server = config[CONF_HOST]
     password = config[CONF_PASSWORD]
     controller = RainbirdController(server, password)
     position = len(hass.data[DATA_RAINBIRD])
-    hass.data[DATA_RAINBIRD].append(controller)
-    _LOGGER.debug("Rain Bird Controller %d set to: %s", position, server)
-    for platform in SUPPORTED_PLATFORMS:
-        discovery.load_platform(
-            hass,
-            platform,
-            DOMAIN,
-            discovered={**{RAINBIRD_CONTROLLER: position}, **config},
-            hass_config=config,
-        )
+    success = False
+    try:
+        controller.get_serial_number()
+        hass.data[DATA_RAINBIRD].append(controller)
+        _LOGGER.debug("Rain Bird Controller %d set to: %s", position, server)
+        for platform in SUPPORTED_PLATFORMS:
+            discovery.load_platform(
+                hass,
+                platform,
+                DOMAIN,
+                discovered={**{RAINBIRD_CONTROLLER: position}, **config},
+                hass_config=config,
+            )
+        success = True
+    except Exception as e:
+        logging.error("Unable to setup controller", e)
+    return success

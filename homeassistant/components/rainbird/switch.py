@@ -45,26 +45,27 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 CONF_TRIGGER_TIME, discovery_info.get(CONF_TRIGGER_TIME, 0)
             )
             name = zone_config.get(CONF_FRIENDLY_NAME)
-            if time:
-                devices.append(
-                    RainBirdSwitch(
-                        controller,
-                        zone,
-                        time,
-                        name if name else "Sprinkler {}".format(zone),
-                    )
-                )
-            else:
+            if not time:
                 logging.warning(
                     "No delay configured for zone {0:d}, controller {1:s}. "
                     "Not adding sprinklers for zone {0:d}.".format(
                         zone, discovery_info[RAINBIRD_CONTROLLER]
                     )
                 )
+                continue
+
+            devices.append(
+                RainBirdSwitch(
+                    controller,
+                    zone,
+                    time,
+                    name if name else "Sprinkler {}".format(zone),
+                )
+            )
 
     add_entities(devices, True)
 
-    def _start_irrigation(service):
+    def start_irrigation(service):
         entity_id = service.data[ATTR_ENTITY_ID]
         duration = service.data[ATTR_DURATION]
 
@@ -75,7 +76,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.services.register(
         DOMAIN,
         SERVICE_START_IRRIGATION,
-        _start_irrigation,
+        start_irrigation,
         schema=SERVICE_SCHEMA_IRRIGATION,
     )
 
