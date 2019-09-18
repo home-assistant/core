@@ -11,7 +11,9 @@
         },
         "trigger_type": {
             "turn_off": "{name} apagat",
-            "turn_on": "{name} enc\u00e8s"
+            "turn_on": "{name} enc\u00e8s",
+            "turned_off": "{entity_name} apagat",
+            "turned_on": "{entity_name} enc\u00e8s"
         }
     }
 }

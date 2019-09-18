@@ -11,7 +11,9 @@
         },
         "trigger_type": {
             "turn_off": "{entity_name} apagada",
-            "turn_on": "{entity_name} encendida"
+            "turn_on": "{entity_name} encendida",
+            "turned_off": "{entity_name} apagado",
+            "turned_on": "{entity_name} encendido"
         }
     }
 }
