@@ -54,6 +54,36 @@ SENSOR_TYPES = {
         POWER_WATT,
         "mdi:solar-power"
     ],
+    "inverter_temperature": [
+        "invertertemperature",
+        "Inverter temperature",
+        'C',
+        "mdi:thermometer"
+    ],
+    "optimizer_temperture": [
+        "optimizertemperture",
+        "Avrage optimizer temperture",
+        'C',
+        "mdi:solar-panel"
+    ],
+    "optimizer_voltage": [
+        "optimizervoltage",
+        "Avrage optimizer voltage",
+        'V',
+        "mdi:solar-panel"
+    ],
+    "optimizer_current": [
+        "optimizercurrent",
+        "Avrage optimizer current",
+        'A',
+        "mdi:solar-panel"
+    ],
+    "optimizer_power": [
+        "optimizerpower",
+        "Avrage optimizer power",
+        POWER_WATT,
+        "mdi:solar-panel"
+    ],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
