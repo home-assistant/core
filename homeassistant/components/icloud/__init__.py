@@ -34,6 +34,7 @@ from .const import (
 ATTRIBUTION = "Data provided by Apple iCloud"
 
 # entity attributes
+ATTR_ACCOUNT_FETCH_INTERVAL = "account_fetch_interval"
 ATTR_BATTERY = "battery"
 ATTR_BATTERY_STATUS = "battery_status"
 ATTR_DEVICE_NAME = "device_name"
@@ -280,7 +281,8 @@ class IcloudAccount:
         self.hass = hass
         self.username = username
         self._password = password
-        self._account_name = accountname or slugify(username.partition("@")[0])
+        self._name = accountname or slugify(username.partition("@")[0])
+        self._fetch_interval = max_interval
         self._max_interval = max_interval
         self._gps_accuracy_threshold = gps_accuracy_threshold
 
@@ -355,9 +357,11 @@ class IcloudAccount:
                 self.devices[devicename].update(status)
 
         dispatcher_send(self.hass, TRACKER_UPDATE)
-        interval = self.determine_interval()
+        self._fetch_interval = self.determine_interval()
         track_point_in_utc_time(
-            self.hass, self.keep_alive, utcnow() + timedelta(minutes=interval)
+            self.hass,
+            self.keep_alive,
+            utcnow() + timedelta(minutes=self._fetch_interval),
         )
 
     def determine_interval(self) -> int:
@@ -441,7 +445,12 @@ class IcloudAccount:
     @property
     def name(self):
         """Return the account name."""
-        return self._account_name
+        return self._name
+
+    @property
+    def fetch_interval(self):
+        """Return the fetch interval."""
+        return self._fetch_interval
 
 
 class IcloudDevice:
@@ -473,8 +482,9 @@ class IcloudDevice:
         self._location = None
 
         self._attrs = {
-            CONF_ACCOUNT_NAME: account_name,
             ATTR_ATTRIBUTION: ATTRIBUTION,
+            CONF_ACCOUNT_NAME: account_name,
+            ATTR_ACCOUNT_FETCH_INTERVAL: self._account.fetch_interval,
             ATTR_DEVICE_NAME: device_name,
             ATTR_DEVICE_STATUS: None,
             ATTR_OWNER_NAME: owner_fullname,
@@ -483,6 +493,8 @@ class IcloudDevice:
     def update(self, status):
         """Update the iCloud device."""
         self._status = status
+
+        self._status[ATTR_ACCOUNT_FETCH_INTERVAL] = self._account.fetch_interval
 
         device_status = DEVICE_STATUS_CODES.get(self._status["deviceStatus"], "error")
         self._attrs[ATTR_DEVICE_STATUS] = device_status
