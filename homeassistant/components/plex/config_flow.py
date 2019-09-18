@@ -38,12 +38,10 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=USER_SCHEMA, errors={}
-            )
+        if user_input is not None:
+            return await self.async_step_server_validate(user_input)
 
-        return await self.async_step_server_validate(user_input)
+        return self.async_show_form(step_id="user", data_schema=USER_SCHEMA, errors={})
 
     async def async_step_server_validate(self, server_config):
         """Validate a provided configuration."""
@@ -106,7 +104,9 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_select_server(self, user_input=None):
         """Use selected Plex server."""
         config = dict(self.current_login)
-        if user_input is None:
+        if user_input is not None:
+            config[CONF_SERVER] = user_input[CONF_SERVER]
+        else:
             configured_servers = [
                 x.data[CONF_SERVER_IDENTIFIER] for x in self._async_current_entries()
             ]
@@ -124,8 +124,6 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     errors={},
                 )
             config[CONF_SERVER] = available_servers[0]
-        else:
-            config[CONF_SERVER] = user_input[CONF_SERVER]
 
         return await self.async_step_server_validate(config)
 
