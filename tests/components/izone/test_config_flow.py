@@ -6,8 +6,11 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import izone
-from homeassistant.components.izone.const import DATA_DISCOVERY_SERVICE
+from homeassistant.components.izone.const import (
+    IZONE,
+    DATA_DISCOVERY_SERVICE,
+    DISPATCH_CONTROLLER_DISCOVERED,
+)
 
 from tests.common import mock_coro
 
@@ -16,26 +19,33 @@ from tests.common import mock_coro
 def mock_disco():
     """Mock discovery service."""
     disco = Mock()
-    disco.controllers = {}
-    disco.controller_ready = Event()
-    disco.controller_ready.set()
+    disco.pi_disco = Mock()
+    disco.pi_disco.controllers = {}
     yield disco
+
+
+def _mock_start_discovery(hass, mock_disco):
+    from homeassistant.helpers.dispatcher import async_dispatcher_send
+
+    def do_disovered(*args):
+        async_dispatcher_send(hass, DISPATCH_CONTROLLER_DISCOVERED, True)
+        return mock_coro(mock_disco)
+
+    return do_disovered
 
 
 async def test_not_found(hass, mock_disco):
     """Test not finding iZone controller."""
+
     with patch(
-        "homeassistant.components.izone.climate.async_setup_entry",
-        return_value=mock_coro(True),
-    ) as mock_setup, patch(
-        "homeassistant.components.izone.discovery." "async_start_discovery_service",
-        return_value=mock_coro(mock_disco),
-    ), patch(
-        "homeassistant.components.izone.discovery." "async_stop_discovery_service",
+        "homeassistant.components.izone.discovery.async_start_discovery_service"
+    ) as start_disco, patch(
+        "homeassistant.components.izone.discovery.async_stop_discovery_service",
         return_value=mock_coro(),
-    ):
+    ) as stop_disco:
+        start_disco.side_effect = _mock_start_discovery(hass, mock_disco)
         result = await hass.config_entries.flow.async_init(
-            izone.IZONE, context={"source": config_entries.SOURCE_USER}
+            IZONE, context={"source": config_entries.SOURCE_USER}
         )
 
         # Confirmation form
@@ -46,25 +56,25 @@ async def test_not_found(hass, mock_disco):
 
         await hass.async_block_till_done()
 
-    mock_setup.assert_not_called()
+    stop_disco.assert_called_once()
 
 
 async def test_found(hass, mock_disco):
     """Test not finding iZone controller."""
-    mock_disco.controllers["blah"] = object()
-    hass.data[DATA_DISCOVERY_SERVICE] = mock_disco
+    mock_disco.pi_disco.controllers["blah"] = object()
+
     with patch(
         "homeassistant.components.izone.climate.async_setup_entry",
         return_value=mock_coro(True),
     ) as mock_setup, patch(
-        "homeassistant.components.izone.discovery." "async_start_discovery_service",
-        return_value=mock_coro(mock_disco),
-    ), patch(
-        "homeassistant.components.izone.discovery." "async_stop_discovery_service",
+        "homeassistant.components.izone.discovery.async_start_discovery_service"
+    ) as start_disco, patch(
+        "homeassistant.components.izone.async_start_discovery_service",
         return_value=mock_coro(),
     ):
+        start_disco.side_effect = _mock_start_discovery(hass, mock_disco)
         result = await hass.config_entries.flow.async_init(
-            izone.IZONE, context={"source": config_entries.SOURCE_USER}
+            IZONE, context={"source": config_entries.SOURCE_USER}
         )
 
         # Confirmation form
