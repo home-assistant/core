@@ -184,11 +184,7 @@ class DeconzGateway:
         self.api.close()
 
     async def async_reset(self):
-        """Reset this gateway to default state.
-
-        Will cancel any scheduled setup retry and will unload
-        the config entry.
-        """
+        """Reset this gateway to default state."""
         self.api.async_connection_status_callback = None
         self.api.close()
 
