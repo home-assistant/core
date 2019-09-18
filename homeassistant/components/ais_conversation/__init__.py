@@ -219,7 +219,7 @@ class ConversationProcessView(http.HomeAssistantView):
         hass = request.app["hass"]
 
         try:
-            intent_result = await ais_ai_service._process(hass, data["text"], None)
+            intent_result = await ais_ai_service._process(hass, data["text"])
         except intent.IntentHandleError as err:
             intent_result = intent.IntentResponse()
             intent_result.async_set_speech(str(err))

@@ -152,7 +152,8 @@ async def async_setup(hass, config):
             hass.components.persistent_notification.async_create(
                 title="Dostępna jest nowa wersja " + newest,
                 message=(
-                    info_for_screen + "[ Przejdz by zainstalować](/config/ais_dom)"
+                    info_for_screen
+                    + "[ Przejdź, by zainstalować](/config/ais_dom_config_update)"
                 ),
                 notification_id="ais_update_notification",
             )

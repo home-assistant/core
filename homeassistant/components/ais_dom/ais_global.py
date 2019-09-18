@@ -94,7 +94,7 @@ G_AIS_NEW_DEVICE_NAME = ""
 G_AIS_NEW_DEVICE_START_ADD_TIME = None
 
 #
-G_AIS_DAY_MEDIA_VOLUME_LEVEL = 0.5
+G_AIS_DAY_MEDIA_VOLUME_LEVEL = None
 
 
 def get_pass_for_ssid(ssid):

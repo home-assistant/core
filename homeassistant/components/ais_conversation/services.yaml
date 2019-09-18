@@ -1,0 +1,10 @@
+# Describes the format for available component services
+
+process:
+  description: Rozpocznij rozmowę z asystentem.
+  fields:
+    text:
+      description: Zdanie do przetworzenia dla asystenta
+      example: Włącz światło w biurze
+
+

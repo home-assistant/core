@@ -2275,9 +2275,6 @@ async def async_setup(hass, config):
         if "timer" in service.data:
             timer = service.data["timer"]
         quiet_mode = hass.states.get("input_boolean.ais_quiet_mode").state
-        _LOGGER.info(
-            "check_night_mode: timer " + str(timer) + " quiet_mode " + str(quiet_mode)
-        )
 
         def apply_night_mode():
             _LOGGER.info("Start Night ")
@@ -2306,19 +2303,22 @@ async def async_setup(hass, config):
             curr_volume_level = hass.states.get(
                 "media_player.wbudowany_glosnik"
             ).attributes["volume_level"]
-            # set volume as max from (curr_volume_level, ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL)
-            hass.async_add_job(
-                hass.services.async_call(
-                    "media_player",
-                    "volume_set",
-                    {
-                        "entity_id": "media_player.wbudowany_glosnik",
-                        "volume_level": max(
-                            ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL, curr_volume_level
-                        ),
-                    },
+            # get volume level
+            if ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL is not None:
+                # TODO get the volume level on start
+                hass.async_add_job(
+                    hass.services.async_call(
+                        "media_player",
+                        "volume_set",
+                        {
+                            "entity_id": "media_player.wbudowany_glosnik",
+                            "volume_level": max(
+                                ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL,
+                                curr_volume_level,
+                            ),
+                        },
+                    )
                 )
-            )
             hass.async_add_job(
                 hass.services.async_call("frontend", "set_theme", {"name": "ais"})
             )
@@ -2336,10 +2336,36 @@ async def async_setup(hass, config):
             ts = th + tm
             qm_st = quiet_mode_start_attr["timestamp"]
             qm_et = quiet_mode_stop_attr["timestamp"]
-            _LOGGER.info("qm_st: " + str(qm_st))
-            _LOGGER.info("ts: " + str(ts))
-            _LOGGER.info("qm_et: " + str(qm_et))
-            if (int(qm_st) < int(ts) < int(qm_et)) and quiet_mode == "on":
+            # if the times are equal and 0 we can set them as default
+            if (qm_st == qm_et == 0) and quiet_mode == "on":
+                hass.async_add_job(
+                    hass.services.async_call(
+                        "input_datetime",
+                        "set_datetime",
+                        {
+                            "entity_id": "input_datetime.ais_quiet_mode_start",
+                            "time": "22:00",
+                        },
+                    )
+                )
+                hass.async_add_job(
+                    hass.services.async_call(
+                        "input_datetime",
+                        "set_datetime",
+                        {
+                            "entity_id": "input_datetime.ais_quiet_mode_stop",
+                            "time": "06:00",
+                        },
+                    )
+                )
+            # if times are smaller than current time, this means that this time (hour and minute)
+            # will be again tomorrow - add one day
+            if int(qm_st) < int(ts):
+                qm_st = int(qm_st) + 86400
+            if int(qm_et) < int(ts):
+                qm_et = int(qm_et) + 86400
+            # if we are more close to night - apply day mode
+            if (int(qm_st) > int(qm_et)) and quiet_mode == "on":
                 _LOGGER.info("-> apply_night_mode")
                 apply_night_mode()
             else:
@@ -3057,23 +3083,18 @@ def _process_command_from_frame(hass, service):
         elif voice == "pl-pl-x-oda#male_3-local":
             set_voice = "Andrzej"
 
-        state = hass.states.get("input_select.assistant_voice").state
-        if state != set_voice:
-            # set the voice, on change we will inform Android frame
-            # only after startup
-            if ais_global.G_AIS_START_IS_DONE:
-                hass.async_run_job(
-                    hass.services.async_call(
-                        "input_select",
-                        "select_option",
-                        {
-                            "entity_id": "input_select.assistant_voice",
-                            "option": set_voice,
-                        },
-                    )
+        current_voice = hass.states.get("input_select.assistant_voice").state
+        if current_voice != set_voice:
+            # we will inform the frame about change in EVENT_STATE_CHANGED listener
+            hass.async_run_job(
+                hass.services.async_call(
+                    "input_select",
+                    "select_option",
+                    {"entity_id": "input_select.assistant_voice", "option": set_voice},
                 )
+            )
         else:
-            # publish back to frame
+            # EVENT_STATE_CHANGED listener will not notice this change - publish info to frame about voice
             hass.services.call(
                 "ais_ai_service",
                 "publish_command_to_frame",

@@ -205,33 +205,33 @@ def async_setup(hass, config):
             if _new["friendly_name"] != _old["friendly_name"]:
                 hass.async_add_job(hass.services.async_call("ais_cloud", "get_players"))
         elif entity_id == "input_select.assistant_voice":
-            voice = hass.states.get(entity_id).state
-            if voice == "Jola online":
+            # old_voice = state_event.data["old_state"].state
+            new_voice = state_event.data["new_state"].state
+            if new_voice == "Jola online":
                 ais_global.GLOBAL_TTS_VOICE = "pl-pl-x-oda-network"
-            elif voice == "Jola lokalnie":
+            elif new_voice == "Jola lokalnie":
                 ais_global.GLOBAL_TTS_VOICE = "pl-pl-x-oda-local"
-            elif voice == "Celina":
+            elif new_voice == "Celina":
                 ais_global.GLOBAL_TTS_VOICE = "pl-pl-x-oda#female_1-local"
-            elif voice == "Anżela":
+            elif new_voice == "Anżela":
                 ais_global.GLOBAL_TTS_VOICE = "pl-pl-x-oda#female_2-local"
-            elif voice == "Asia":
+            elif new_voice == "Asia":
                 ais_global.GLOBAL_TTS_VOICE = "pl-pl-x-oda#female_3-local"
-            elif voice == "Sebastian":
+            elif new_voice == "Sebastian":
                 ais_global.GLOBAL_TTS_VOICE = "pl-pl-x-oda#male_1-local"
-            elif voice == "Bartek":
+            elif new_voice == "Bartek":
                 ais_global.GLOBAL_TTS_VOICE = "pl-pl-x-oda#male_2-local"
-            elif voice == "Andrzej":
+            elif new_voice == "Andrzej":
                 ais_global.GLOBAL_TTS_VOICE = "pl-pl-x-oda#male_3-local"
             else:
                 ais_global.GLOBAL_TTS_VOICE = "pl-pl-x-oda-local"
             # publish to frame
-            hass.services.call("ais_ai_service", "say_it", {"text": voice})
+            hass.services.call("ais_ai_service", "say_it", {"text": new_voice})
             hass.services.call(
                 "ais_ai_service",
                 "publish_command_to_frame",
                 {"key": "setTtsVoice", "val": ais_global.GLOBAL_TTS_VOICE},
             )
-
         elif entity_id == "input_number.assistant_rate":
             try:
                 ais_global.GLOBAL_TTS_RATE = float(hass.states.get(entity_id).state)
@@ -265,7 +265,6 @@ def async_setup(hass, config):
             "input_datetime.ais_quiet_mode_start",
             "input_datetime.ais_quiet_mode_stop",
         ):
-            _LOGGER.info("quiet_mode changes")
             hass.async_add_job(
                 hass.services.async_call(
                     "ais_ai_service", "check_night_mode", {"timer": False}

@@ -44,6 +44,7 @@ input_select:
       - "Andrzej"
     icon: mdi:voice
     initial: "Jola lokalnie"
+
 input_number:
   assistant_rate:
     name: "Szybkość mowy"
