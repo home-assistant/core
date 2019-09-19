@@ -86,12 +86,12 @@ SENSOR_TYPES = {
     ],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_IP_ADDRESS):
-    cv.string,
-    vol.Optional(CONF_NAME, default="SolarEdge"):
-    cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_IP_ADDRESS): cv.string,
+        vol.Optional(CONF_NAME, default="SolarEdge"): cv.string,
+    }
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -182,20 +182,20 @@ class SolarEdgeData:
         try:
             status = self.api.get_status()
             _LOGGER.debug("status from SolarEdge: %s", status)
-        except (ConnectTimeout):
+        except ConnectTimeout:
             _LOGGER.error("Connection timeout, skipping update")
             return
-        except (HTTPError):
+        except HTTPError:
             _LOGGER.error("Could not retrieve status, skipping update")
             return
 
         try:
             maintenance = self.api.get_maintenance()
             _LOGGER.debug("maintenance from SolarEdge: %s", maintenance)
-        except (ConnectTimeout):
+        except ConnectTimeout:
             _LOGGER.error("Connection timeout, skipping update")
             return
-        except (HTTPError):
+        except HTTPError:
             _LOGGER.error("Could not retrieve maintenance, skipping update")
             return
 
@@ -224,7 +224,8 @@ class SolarEdgeData:
         self.data["energyToday"] = status.energy.today
         self.data["currentPower"] = status.powerWatt
         self.data[
-            "invertertemperature"] = status.inverters.primary.temperature.value
+            "invertertemperature"
+        ] = status.inverters.primary.temperature.value
         self.data["optimizertemperature"] = statistics.mean(temperature)
         self.data["optimizervoltage"] = statistics.mean(voltage)
         self.data["optimizercurrent"] = statistics.mean(current)
