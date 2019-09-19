@@ -38,7 +38,7 @@ TRIGGER_TIME_SCHEMA = vol.All(cv.time_period, cv.positive_timedelta)
 
 def _set_defaults(config):
     config = copy.deepcopy(config)
-    for zone, value in config[CONF_ZONES]:  # pylint: disable=W0612
+    for value in config[CONF_ZONES].values():
         if not value[CONF_TRIGGER_TIME]:
             value[CONF_TRIGGER_TIME] = config[CONF_TRIGGER_TIME]
     return config
