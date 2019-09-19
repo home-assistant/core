@@ -8,7 +8,12 @@ from solaredge_local import SolarEdge
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, POWER_WATT, ENERGY_WATT_HOUR
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    CONF_NAME,
+    POWER_WATT,
+    ENERGY_WATT_HOUR,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -90,7 +95,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 _LOGGER = logging.getLogger(__name__)
 
-
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the SolarEdge Monitoring API sensor."""
     ip_address = config[CONF_IP_ADDRESS]
@@ -122,7 +126,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities(entities, True)
 
-
 class SolarEdgeSensor(Entity):
     """Representation of an SolarEdge Monitoring API sensor."""
 
@@ -135,32 +138,26 @@ class SolarEdgeSensor(Entity):
 
         self._json_key = SENSOR_TYPES[self.sensor_key][0]
         self._unit_of_measurement = SENSOR_TYPES[self.sensor_key][2]
-
     @property
     def name(self):
         """Return the name."""
         return f"{self.platform_name} ({SENSOR_TYPES[self.sensor_key][1]})"
-
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
-
     @property
     def icon(self):
         """Return the sensor icon."""
         return SENSOR_TYPES[self.sensor_key][3]
-
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-
     def update(self):
         """Get the latest data from the sensor and update the state."""
         self.data.update()
         self._state = self.data.data[self._json_key]
-
 
 class SolarEdgeData:
     """Get and update the latest data."""
@@ -170,7 +167,6 @@ class SolarEdgeData:
         self.hass = hass
         self.api = api
         self.data = {}
-
     @Throttle(UPDATE_DELAY)
     def update(self):
         """Update the data from the SolarEdge Monitoring API."""
