@@ -58,7 +58,7 @@ def setup(hass, config):
     hass.data[DATA_RAINBIRD] = []
     success = False
     for controller_config in config[DOMAIN]:
-        success = success or _setup_controller(hass, controller_config)
+        success = success or _setup_controller(hass, controller_config, config)
 
     return success
 
