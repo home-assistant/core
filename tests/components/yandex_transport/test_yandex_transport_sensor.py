@@ -85,4 +85,4 @@ async def test_filtered_attributes(hass, mock_requester):
     await assert_setup_sensor(hass, TEST_CONFIG)
     state = hass.states.get("sensor.test_name")
     state_attrs = {key: state.attributes[key] for key in FILTERED_ATTRS}
-    assert dict(state_attrs) == FILTERED_ATTRS
+    assert state_attrs == FILTERED_ATTRS
