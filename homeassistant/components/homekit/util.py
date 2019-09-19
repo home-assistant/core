@@ -80,10 +80,10 @@ KEY_ACTION_NAMES = [
 MEDIA_PLAYER_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
         vol.Optional(CONF_FEATURE_LIST, default=[]): cv.ensure_list,
-        vol.Optional(CONF_KEY_ACTIONS, default={}): vol.Schema({
-            vol.In(KEY_ACTION_NAMES): cv.SCRIPT_SCHEMA,
-        })
-    },
+        vol.Optional(CONF_KEY_ACTIONS, default={}): vol.Schema(
+            {vol.In(KEY_ACTION_NAMES): cv.SCRIPT_SCHEMA}
+        ),
+    }
 )
 
 CODE_SCHEMA = BASIC_INFO_SCHEMA.extend(

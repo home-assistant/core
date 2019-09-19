@@ -17,7 +17,9 @@ from homeassistant.components.homekit.const import (
     TYPE_SPRINKLER,
     TYPE_SWITCH,
     TYPE_VALVE,
-    CONF_KEY_ACTIONS, MEDIA_PLAYER_KEY_ARROW_LEFT)
+    CONF_KEY_ACTIONS,
+    MEDIA_PLAYER_KEY_ARROW_LEFT,
+)
 from homeassistant.components.homekit.util import (
     HomeKitSpeedMapping,
     SpeedRange,
@@ -44,7 +46,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    ATTR_SERVICE)
+    ATTR_SERVICE,
+)
 from homeassistant.core import State
 from tests.common import async_mock_service
 
@@ -118,7 +121,7 @@ def test_validate_entity_config(MEDIA_PLAYER_KEY_LEFT=None):
             CONF_FEATURE_LIST: {},
             CONF_KEY_ACTIONS: {},
             CONF_LOW_BATTERY_THRESHOLD: 20,
-        },
+        }
     }
     config = {
         CONF_FEATURE_LIST: [
@@ -126,21 +129,15 @@ def test_validate_entity_config(MEDIA_PLAYER_KEY_LEFT=None):
             {CONF_FEATURE: FEATURE_PLAY_PAUSE},
         ],
         CONF_KEY_ACTIONS: {
-            MEDIA_PLAYER_KEY_ARROW_LEFT: {
-                ATTR_SERVICE: 'domain.service',
-                ATTR_DATA: {}
-            }
-        }
+            MEDIA_PLAYER_KEY_ARROW_LEFT: {ATTR_SERVICE: "domain.service", ATTR_DATA: {}}
+        },
     }
     assert vec({"media_player.demo": config}) == {
         "media_player.demo": {
             CONF_FEATURE_LIST: {FEATURE_ON_OFF: {}, FEATURE_PLAY_PAUSE: {}},
             CONF_KEY_ACTIONS: {
                 MEDIA_PLAYER_KEY_ARROW_LEFT: [
-                    {
-                        ATTR_SERVICE: 'domain.service',
-                        ATTR_DATA: {}
-                    }
+                    {ATTR_SERVICE: "domain.service", ATTR_DATA: {}}
                 ]
             },
             CONF_LOW_BATTERY_THRESHOLD: 20,
