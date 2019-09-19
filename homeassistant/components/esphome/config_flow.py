@@ -19,9 +19,9 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
 
     def __init__(self):
         """Initialize flow."""
-        self._host = None  # type: Optional[str]
-        self._port = None  # type: Optional[int]
-        self._password = None  # type: Optional[str]
+        self._host: Optional[str] = None
+        self._port: Optional[int] = None
+        self._password: Optional[str] = None
 
     async def async_step_user(
         self, user_input: Optional[ConfigType] = None, error: Optional[str] = None
@@ -94,9 +94,7 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
                 already_configured = True
             elif entry.entry_id in self.hass.data.get(DATA_KEY, {}):
                 # Does a config entry with this name already exist?
-                data = self.hass.data[DATA_KEY][
-                    entry.entry_id
-                ]  # type: RuntimeEntryData
+                data: RuntimeEntryData = self.hass.data[DATA_KEY][entry.entry_id]
                 # Node names are unique in the network
                 if data.device_info is not None:
                     already_configured = data.device_info.name == node_name

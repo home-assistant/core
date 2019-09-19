@@ -43,9 +43,7 @@ class IASZoneChannel(ZigbeeChannel):
         if command_id == 0:
             state = args[0] & 3
             async_dispatcher_send(
-                self._zha_device.hass,
-                "{}_{}".format(self.unique_id, SIGNAL_ATTR_UPDATED),
-                state,
+                self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", state
             )
             self.debug("Updated alarm state: %s", state)
         elif command_id == 1:
@@ -91,9 +89,7 @@ class IASZoneChannel(ZigbeeChannel):
         if attrid == 2:
             value = value & 3
             async_dispatcher_send(
-                self._zha_device.hass,
-                "{}_{}".format(self.unique_id, SIGNAL_ATTR_UPDATED),
-                value,
+                self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value
             )
 
     async def async_initialize(self, from_cache):

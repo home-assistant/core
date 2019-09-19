@@ -138,10 +138,10 @@ class ConfigEntry:
         self.state = state
 
         # Listeners to call on update
-        self.update_listeners = []  # type: list
+        self.update_listeners: List = []
 
         # Function to cancel a scheduled retry
-        self._async_cancel_retry_setup = None  # type: Optional[Callable[[], Any]]
+        self._async_cancel_retry_setup: Optional[Callable[[], Any]] = None
 
     async def async_setup(
         self,
@@ -386,14 +386,14 @@ class ConfigEntries:
         )
         self.options = OptionsFlowManager(hass)
         self._hass_config = hass_config
-        self._entries = []  # type: List[ConfigEntry]
+        self._entries: List[ConfigEntry] = []
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         EntityRegistryDisabledHandler(hass).async_setup()
 
     @callback
     def async_domains(self) -> List[str]:
         """Return domains for which we have entries."""
-        seen = set()  # type: Set[str]
+        seen: Set[str] = set()
         result = []
 
         for entry in self._entries:

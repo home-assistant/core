@@ -490,7 +490,7 @@ class AmcrestCam(Camera):
             self._api.go_to_preset(action="start", preset_point_number=preset)
         except AmcrestError as error:
             log_update_error(
-                _LOGGER, "move", self.name, "camera to preset {}".format(preset), error
+                _LOGGER, "move", self.name, f"camera to preset {preset}", error
             )
 
     def _set_color_bw(self, cbw):
@@ -499,7 +499,7 @@ class AmcrestCam(Camera):
             self._api.day_night_color = _CBW.index(cbw)
         except AmcrestError as error:
             log_update_error(
-                _LOGGER, "set", self.name, "camera color mode to {}".format(cbw), error
+                _LOGGER, "set", self.name, f"camera color mode to {cbw}", error
             )
         else:
             self._color_bw = cbw

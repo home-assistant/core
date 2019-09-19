@@ -117,7 +117,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             miio_device = Device(host, token)
             device_info = miio_device.info()
             model = device_info.model
-            unique_id = "{}-{}".format(model, device_info.mac_address)
+            unique_id = f"{model}-{device_info.mac_address}"
             _LOGGER.info(
                 "%s %s %s detected",
                 model,
@@ -426,7 +426,7 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
 
     def __init__(self, name, plug, model, unique_id, channel_usb):
         """Initialize the plug switch."""
-        name = "{} USB".format(name) if channel_usb else name
+        name = f"{name} USB" if channel_usb else name
 
         if unique_id is not None and channel_usb:
             unique_id = "{}-{}".format(unique_id, "usb")

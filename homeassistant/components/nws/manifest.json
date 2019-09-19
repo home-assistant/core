@@ -1,0 +1,8 @@
+{
+    "domain": "nws",
+    "name": "National Weather Service",
+    "documentation": "https://www.home-assistant.io/components/nws",
+    "dependencies": [],
+    "codeowners": ["@MatthewFlamm"],
+    "requirements": ["pynws==0.7.4"]
+}

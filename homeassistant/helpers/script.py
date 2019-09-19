@@ -9,7 +9,12 @@ from typing import Optional, Sequence, Callable, Dict, List, Set, Tuple
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, Context, callback, CALLBACK_TYPE
-from homeassistant.const import CONF_CONDITION, CONF_TIMEOUT
+from homeassistant.const import (
+    CONF_CONDITION,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    CONF_TIMEOUT,
+)
 from homeassistant import exceptions
 from homeassistant.helpers import (
     service,
@@ -22,6 +27,7 @@ from homeassistant.helpers.event import (
     async_track_template,
 )
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import async_get_integration
 import homeassistant.util.dt as date_util
 from homeassistant.util.async_ import run_coroutine_threadsafe, run_callback_threadsafe
 
@@ -48,6 +54,7 @@ ACTION_WAIT_TEMPLATE = "wait_template"
 ACTION_CHECK_CONDITION = "condition"
 ACTION_FIRE_EVENT = "event"
 ACTION_CALL_SERVICE = "call_service"
+ACTION_DEVICE_AUTOMATION = "device"
 
 
 def _determine_action(action):
@@ -63,6 +70,9 @@ def _determine_action(action):
 
     if CONF_EVENT in action:
         return ACTION_FIRE_EVENT
+
+    if CONF_DEVICE_ID in action:
+        return ACTION_DEVICE_AUTOMATION
 
     return ACTION_CALL_SERVICE
 
@@ -102,21 +112,22 @@ class Script:
         self.name = name
         self._change_listener = change_listener
         self._cur = -1
-        self._exception_step = None  # type: Optional[int]
+        self._exception_step: Optional[int] = None
         self.last_action = None
-        self.last_triggered = None  # type: Optional[datetime]
+        self.last_triggered: Optional[datetime] = None
         self.can_cancel = any(
             CONF_DELAY in action or CONF_WAIT_TEMPLATE in action
             for action in self.sequence
         )
-        self._async_listener = []  # type: List[CALLBACK_TYPE]
-        self._config_cache = {}  # type: Dict[Set[Tuple], Callable[..., bool]]
+        self._async_listener: List[CALLBACK_TYPE] = []
+        self._config_cache: Dict[Set[Tuple], Callable[..., bool]] = {}
         self._actions = {
             ACTION_DELAY: self._async_delay,
             ACTION_WAIT_TEMPLATE: self._async_wait_template,
             ACTION_CHECK_CONDITION: self._async_check_condition,
             ACTION_FIRE_EVENT: self._async_fire_event,
             ACTION_CALL_SERVICE: self._async_call_service,
+            ACTION_DEVICE_AUTOMATION: self._async_device_automation,
         }
 
     @property
@@ -318,6 +329,19 @@ class Script:
             context=context,
         )
 
+    async def _async_device_automation(self, action, variables, context):
+        """Perform the device automation specified in the action.
+
+        This method is a coroutine.
+        """
+        self.last_action = action.get(CONF_ALIAS, "device automation")
+        self._log("Executing step %s" % self.last_action)
+        integration = await async_get_integration(self.hass, action[CONF_DOMAIN])
+        platform = integration.get_platform("device_automation")
+        await platform.async_call_action_from_config(
+            self.hass, action, variables, context
+        )
+
     async def _async_fire_event(self, action, variables, context):
         """Fire an event."""
         self.last_action = action.get(CONF_ALIAS, action[CONF_EVENT])
@@ -338,7 +362,7 @@ class Script:
         config_cache_key = frozenset((k, str(v)) for k, v in action.items())
         config = self._config_cache.get(config_cache_key)
         if not config:
-            config = condition.async_from_config(action, False)
+            config = await condition.async_from_config(self.hass, action, False)
             self._config_cache[config_cache_key] = config
 
         self.last_action = action.get(CONF_ALIAS, action[CONF_CONDITION])

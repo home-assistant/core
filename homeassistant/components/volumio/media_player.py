@@ -125,7 +125,7 @@ class Volumio(MediaPlayerDevice):
 
     async def send_volumio_msg(self, method, params=None):
         """Send message."""
-        url = "http://{}:{}/api/v1/{}/".format(self.host, self.port, method)
+        url = f"http://{self.host}:{self.port}/api/v1/{method}/"
 
         _LOGGER.debug("URL: %s params: %s", url, params)
 
@@ -202,7 +202,7 @@ class Volumio(MediaPlayerDevice):
         if str(url[0:2]).lower() == "ht":
             mediaurl = url
         else:
-            mediaurl = "http://{}:{}{}".format(self.host, self.port, url)
+            mediaurl = f"http://{self.host}:{self.port}{url}"
         return mediaurl
 
     @property

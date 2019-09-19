@@ -554,7 +554,7 @@ class TelegramNotificationService:
     def send_message(self, message="", target=None, **kwargs):
         """Send a message to one or multiple pre-allowed chat IDs."""
         title = kwargs.get(ATTR_TITLE)
-        text = "{}\n{}".format(title, message) if title else message
+        text = f"{title}\n{message}" if title else message
         params = self._get_msg_kwargs(kwargs)
         for chat_id in self._get_target_chat_ids(target):
             _LOGGER.debug("Send message in chat ID %s with params: %s", chat_id, params)
@@ -590,7 +590,7 @@ class TelegramNotificationService:
         if type_edit == SERVICE_EDIT_MESSAGE:
             message = kwargs.get(ATTR_MESSAGE)
             title = kwargs.get(ATTR_TITLE)
-            text = "{}\n{}".format(title, message) if title else message
+            text = f"{title}\n{message}" if title else message
             _LOGGER.debug(
                 "Editing message with ID %s.", message_id or inline_message_id
             )

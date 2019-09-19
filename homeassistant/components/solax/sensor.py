@@ -35,7 +35,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         idx, unit = solax.INVERTER_SENSORS[sensor]
         if unit == "C":
             unit = TEMP_CELSIUS
-        uid = "{}-{}".format(serial, idx)
+        uid = f"{serial}-{idx}"
         devices.append(Inverter(uid, serial, sensor, unit))
     endpoint.sensors = devices
     async_add_entities(devices)
@@ -97,7 +97,7 @@ class Inverter(Entity):
     @property
     def name(self):
         """Name of this inverter attribute."""
-        return "Solax {} {}".format(self.serial, self.key)
+        return f"Solax {self.serial} {self.key}"
 
     @property
     def unit_of_measurement(self):

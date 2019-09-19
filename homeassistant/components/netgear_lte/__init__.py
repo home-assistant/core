@@ -350,7 +350,7 @@ class LTEEntity(Entity):
     @_unique_id.default
     def _init_unique_id(self):
         """Register unique_id while we know data is valid."""
-        return "{}_{}".format(self.sensor_type, self.modem_data.data.serial_number)
+        return f"{self.sensor_type}_{self.modem_data.data.serial_number}"
 
     async def async_added_to_hass(self):
         """Register callback."""
@@ -380,4 +380,4 @@ class LTEEntity(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "Netgear LTE {}".format(self.sensor_type)
+        return f"Netgear LTE {self.sensor_type}"

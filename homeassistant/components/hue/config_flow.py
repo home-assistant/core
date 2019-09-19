@@ -160,7 +160,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 "host": host,
                 # This format is the legacy format that Hue used for discovery
-                "path": "phue-{}.conf".format(serial),
+                "path": f"phue-{serial}.conf",
             }
         )
 

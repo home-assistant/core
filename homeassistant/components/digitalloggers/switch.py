@@ -88,7 +88,7 @@ class DINRelay(SwitchDevice):
     @property
     def name(self):
         """Return the display name of this relay."""
-        return "{}_{}".format(self._controller_name, self._name)
+        return f"{self._controller_name}_{self._name}"
 
     @property
     def is_on(self):

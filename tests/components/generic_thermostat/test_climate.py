@@ -116,7 +116,7 @@ async def test_heater_switch(hass, setup_comp_1):
     """Test heater switching test switch."""
     platform = getattr(hass.components, "test.switch")
     platform.init()
-    switch_1 = platform.DEVICES[1]
+    switch_1 = platform.ENTITIES[1]
     assert await async_setup_component(
         hass, switch.DOMAIN, {"switch": {"platform": "test"}}
     )

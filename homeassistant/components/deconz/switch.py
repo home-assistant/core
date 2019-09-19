@@ -37,7 +37,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     gateway.listeners.append(
         async_dispatcher_connect(
-            hass, gateway.async_event_new_device(NEW_LIGHT), async_add_switch
+            hass, gateway.async_signal_new_device(NEW_LIGHT), async_add_switch
         )
     )
 

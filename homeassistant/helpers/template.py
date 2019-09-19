@@ -320,10 +320,10 @@ class AllStates:
         """Return the domain state."""
         if "." in name:
             if not valid_entity_id(name):
-                raise TemplateError("Invalid entity ID '{}'".format(name))
+                raise TemplateError(f"Invalid entity ID '{name}'")
             return _get_state(self._hass, name)
         if not valid_entity_id(name + ".entity"):
-            raise TemplateError("Invalid domain name '{}'".format(name))
+            raise TemplateError(f"Invalid domain name '{name}'")
         return DomainStates(self._hass, name)
 
     def _collect_all(self):
@@ -367,9 +367,9 @@ class DomainStates:
 
     def __getattr__(self, name):
         """Return the states."""
-        entity_id = "{}.{}".format(self._domain, name)
+        entity_id = f"{self._domain}.{name}"
         if not valid_entity_id(entity_id):
-            raise TemplateError("Invalid entity ID '{}'".format(entity_id))
+            raise TemplateError(f"Invalid entity ID '{entity_id}'")
         return _get_state(self._hass, entity_id)
 
     def _collect_domain(self):
@@ -399,7 +399,7 @@ class DomainStates:
 
     def __repr__(self):
         """Representation of Domain States."""
-        return "<template DomainStates('{}')>".format(self._domain)
+        return f"<template DomainStates('{self._domain}')>"
 
 
 class TemplateState(State):
@@ -426,7 +426,7 @@ class TemplateState(State):
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         if unit is None:
             return state.state
-        return "{} {}".format(state.state, unit)
+        return f"{state.state} {unit}"
 
     def __getattribute__(self, name):
         """Return an attribute of the state."""

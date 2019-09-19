@@ -156,7 +156,7 @@ async def async_setup_entry(hass, entry):
     except asyncio.TimeoutError:
         # The TimeoutError exception object returns nothing when casted to a
         # string, so we'll handle it separately.
-        err = "{}s timeout exceeded when connecting to Logi Circle API".format(_TIMEOUT)
+        err = f"{_TIMEOUT}s timeout exceeded when connecting to Logi Circle API"
         hass.components.persistent_notification.create(
             "Error: {}<br />"
             "You will need to restart hass after fixing."

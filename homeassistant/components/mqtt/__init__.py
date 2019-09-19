@@ -10,7 +10,7 @@ import os
 import socket
 import ssl
 import time
-from typing import Any, Callable, List, Optional, Union, cast  # noqa: F401
+from typing import Any, Callable, List, Optional, Union
 
 import attr
 import requests.certs
@@ -479,7 +479,7 @@ async def _async_setup_server(hass: HomeAssistantType, config: ConfigType):
 
     This method is a coroutine.
     """
-    conf = config.get(DOMAIN, {})  # type: ConfigType
+    conf: ConfigType = config.get(DOMAIN, {})
 
     success, broker_config = await server.async_start(
         hass, conf.get(CONF_PASSWORD), conf.get(CONF_EMBEDDED)
@@ -502,16 +502,16 @@ async def _async_setup_discovery(
         _LOGGER.error("Unable to load MQTT discovery")
         return False
 
-    success = await discovery.async_start(
+    success: bool = await discovery.async_start(
         hass, conf[CONF_DISCOVERY_PREFIX], hass_config, config_entry
-    )  # type: bool
+    )
 
     return success
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Start the MQTT protocol service."""
-    conf = config.get(DOMAIN)  # type: Optional[ConfigType]
+    conf: Optional[ConfigType] = config.get(DOMAIN)
 
     # We need this because discovery can cause components to be set up and
     # otherwise it will not load the users config.
@@ -621,7 +621,7 @@ async def async_setup_entry(hass, entry):
         birth_message = None
 
     # Be able to override versions other than TLSv1.0 under Python3.6
-    conf_tls_version = conf.get(CONF_TLS_VERSION)  # type: str
+    conf_tls_version: str = conf.get(CONF_TLS_VERSION)
     if conf_tls_version == "1.2":
         tls_version = ssl.PROTOCOL_TLSv1_2
     elif conf_tls_version == "1.1":
@@ -655,7 +655,7 @@ async def async_setup_entry(hass, entry):
         tls_version=tls_version,
     )
 
-    result = await hass.data[DATA_MQTT].async_connect()  # type: str
+    result: str = await hass.data[DATA_MQTT].async_connect()
 
     if result == CONNECTION_FAILED:
         return False
@@ -671,11 +671,11 @@ async def async_setup_entry(hass, entry):
 
     async def async_publish_service(call: ServiceCall):
         """Handle MQTT publish service calls."""
-        msg_topic = call.data[ATTR_TOPIC]  # type: str
+        msg_topic: str = call.data[ATTR_TOPIC]
         payload = call.data.get(ATTR_PAYLOAD)
         payload_template = call.data.get(ATTR_PAYLOAD_TEMPLATE)
-        qos = call.data[ATTR_QOS]  # type: int
-        retain = call.data[ATTR_RETAIN]  # type: bool
+        qos: int = call.data[ATTR_QOS]
+        retain: bool = call.data[ATTR_RETAIN]
         if payload_template is not None:
             try:
                 payload = template.Template(payload_template, hass).async_render()
@@ -741,14 +741,14 @@ class MQTT:
         self.broker = broker
         self.port = port
         self.keepalive = keepalive
-        self.subscriptions = []  # type: List[Subscription]
+        self.subscriptions: List[Subscription] = []
         self.birth_message = birth_message
         self.connected = False
-        self._mqttc = None  # type: mqtt.Client
+        self._mqttc: mqtt.Client = None
         self._paho_lock = asyncio.Lock()
 
         if protocol == PROTOCOL_31:
-            proto = mqtt.MQTTv31  # type: int
+            proto: int = mqtt.MQTTv31
         else:
             proto = mqtt.MQTTv311
 
@@ -796,7 +796,7 @@ class MQTT:
 
         This method is a coroutine.
         """
-        result = None  # type: int
+        result: int = None
         try:
             result = await self.hass.async_add_job(
                 self._mqttc.connect, self.broker, self.port, self.keepalive
@@ -870,7 +870,7 @@ class MQTT:
         This method is a coroutine.
         """
         async with self._paho_lock:
-            result = None  # type: int
+            result: int = None
             result, _ = await self.hass.async_add_job(self._mqttc.unsubscribe, topic)
             _raise_on_error(result)
 
@@ -879,7 +879,7 @@ class MQTT:
         _LOGGER.debug("Subscribing to %s", topic)
 
         async with self._paho_lock:
-            result = None  # type: int
+            result: int = None
             result, _ = await self.hass.async_add_job(self._mqttc.subscribe, topic, qos)
             _raise_on_error(result)
 
@@ -928,7 +928,7 @@ class MQTT:
             if not _match_topic(subscription.topic, msg.topic):
                 continue
 
-            payload = msg.payload  # type: SubscribePayloadType
+            payload: SubscribePayloadType = msg.payload
             if subscription.encoding is not None:
                 try:
                     payload = msg.payload.decode(subscription.encoding)
@@ -1077,7 +1077,7 @@ class MqttAvailability(Entity):
     def __init__(self, config: dict) -> None:
         """Initialize the availability mixin."""
         self._availability_sub_state = None
-        self._available = False  # type: bool
+        self._available = False
 
         self._avail_config = config
 

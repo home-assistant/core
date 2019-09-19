@@ -68,7 +68,7 @@ def main():
         print()
 
     for integration in sorted(invalid_itg, key=lambda itg: itg.domain):
-        print("Integration {}:".format(integration.domain))
+        print(f"Integration {integration.domain}:")
         for error in integration.errors:
             print("*", error)
         print()

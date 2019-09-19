@@ -339,7 +339,7 @@ class ZHAGateway:
 
         _LOGGER.debug(
             "device - %s entering async_device_initialized - is_new_join: %s",
-            "0x{:04x}:{}".format(device.nwk, device.ieee),
+            f"0x{device.nwk:04x}:{device.ieee}",
             zha_device.status is not DeviceStatus.INITIALIZED,
         )
 
@@ -348,13 +348,13 @@ class ZHAGateway:
             # new nwk or device was physically reset and added again without being removed
             _LOGGER.debug(
                 "device - %s has been reset and readded or its nwk address changed",
-                "0x{:04x}:{}".format(device.nwk, device.ieee),
+                f"0x{device.nwk:04x}:{device.ieee}",
             )
             await self._async_device_rejoined(zha_device)
         else:
             _LOGGER.debug(
                 "device - %s has joined the ZHA zigbee network",
-                "0x{:04x}:{}".format(device.nwk, device.ieee),
+                f"0x{device.nwk:04x}:{device.ieee}",
             )
             await self._async_device_joined(device, zha_device)
 
@@ -413,9 +413,9 @@ class ZHAGateway:
             # to update it now
             _LOGGER.debug(
                 "attempting to request fresh state for device - %s %s %s",
-                "0x{:04x}:{}".format(zha_device.nwk, zha_device.ieee),
+                f"0x{zha_device.nwk:04x}:{zha_device.ieee}",
                 zha_device.name,
-                "with power source: {}".format(zha_device.power_source),
+                f"with power source: {zha_device.power_source}",
             )
             await zha_device.async_initialize(from_cache=False)
         else:
@@ -427,7 +427,7 @@ class ZHAGateway:
     async def _async_device_rejoined(self, zha_device):
         _LOGGER.debug(
             "skipping discovery for previously discovered device - %s",
-            "0x{:04x}:{}".format(zha_device.nwk, zha_device.ieee),
+            f"0x{zha_device.nwk:04x}:{zha_device.ieee}",
         )
         # we don't have to do this on a nwk swap but we don't have a way to tell currently
         await zha_device.async_configure()
