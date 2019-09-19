@@ -1,6 +1,5 @@
 """Class to hold all media player accessories."""
 import logging
-from pprint import pprint
 
 from pyhap.const import CATEGORY_SWITCH, CATEGORY_TELEVISION
 
@@ -424,7 +423,7 @@ class TelevisionMediaPlayer(HomeAccessory):
         if key_name:
             script = self._key_scripts.get(key_name)
             if script:
-                pprint(script)
+                _LOGGER.debug("Running script for key: %s", key_name)
                 script.run()
 
     def update_state(self, new_state):
