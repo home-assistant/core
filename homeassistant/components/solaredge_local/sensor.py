@@ -196,13 +196,13 @@ class SolarEdgeData:
         stringlength = len(data.optimizer)
         power = 0
 
-        for x in range(stringlength):
+        for loop in range(stringlength):
             if data.optimizer[x].online is True:
                 temperature.append(data.optimizer[x].temperature.value)
                 voltage.append(data.optimizer[x].inputV)
                 current.append(data.optimizer[x].inputC)
 
-        if len(voltage) == 0:
+        if not voltage:
             temperature.append(0)
             voltage.append(0)
             current.append(0)
