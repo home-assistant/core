@@ -249,6 +249,9 @@ pexpect==4.6.0
 # homeassistant.components.pilight
 pilight==0.1.1
 
+# homeassistant.components.plex
+plexapi==3.0.6
+
 # homeassistant.components.mhz19
 # homeassistant.components.serial_pm
 pmsensor==0.4
