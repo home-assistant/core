@@ -271,10 +271,7 @@ class APISpaceApiView(HomeAssistantView):
         spaceapi = dict(hass.data[DATA_SPACEAPI])
         is_sensors = spaceapi.get("sensors")
 
-        location = {
-            ATTR_LATITUDE: hass.config.latitude,
-            ATTR_LONGITUDE: hass.config.longitude,
-        }
+        location = {ATTR_LAT: hass.config.latitude, ATTR_LON: hass.config.longitude}
 
         try:
             location[ATTR_ADDRESS] = spaceapi[ATTR_LOCATION][CONF_ADDRESS]
