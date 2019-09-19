@@ -110,6 +110,7 @@ TEST_REQUIREMENTS = (
     "paho-mqtt",
     "pexpect",
     "pilight",
+    "plexapi",
     "pmsensor",
     "prometheus_client",
     "ptvsd",
