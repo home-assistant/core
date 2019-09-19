@@ -3,7 +3,7 @@ from homeassistant.const import ENERGY_KILO_WATT_HOUR
 
 DOMAIN = "ebusd"
 
-#  SensorTypes:
+#  SensorTypes from ebusdpy:
 #  0='decimal', 1='time-schedule', 2='switch', 3='string', 4='value;status'
 
 SENSOR_TYPES = {
@@ -81,9 +81,18 @@ SENSOR_TYPES = {
         "OutsideTemp": ["OutsideTemp", "°C", "mdi:thermometer", 4],
     },
     "bai": {
+        "HotWaterTemperature": ["HwcTemp", "°C", "mdi:thermometer", 4],
+        "StorageTemperature": ["StorageTemp", "°C", "mdi:thermometer", 4],
+        "DesiredStorageTemperature": ["StorageTempDesired", "°C", "mdi:thermometer", 0],
+        "OutdoorsTemperature": ["OutdoorstempSensor", "°C", "mdi:thermometer", 4],
+        "WaterPreasure": ["WaterPressure", "bar", "mdi:pipe", 4],
+        "AverageIgnitionTime": ["averageIgnitiontime", "seconds", "mdi:av-timer", 0],
+        "MaximumIgnitionTime": ["maxIgnitiontime", "seconds", "mdi:av-timer", 0],
+        "MinimumIgnitionTime": ["minIgnitiontime", "seconds", "mdi:av-timer", 0],
         "ReturnTemperature": ["ReturnTemp", "°C", "mdi:thermometer", 4],
         "CentralHeatingPump": ["WP", None, "mdi:toggle-switch", 2],
         "HeatingSwitch": ["HeatingSwitch", None, "mdi:toggle-switch", 2],
+        "DesiredFlowTemperature": ["FlowTempDesired", "°C", "mdi:thermometer", 0],
         "FlowTemperature": ["FlowTemp", "°C", "mdi:thermometer", 4],
         "Flame": ["Flame", None, "mdi:toggle-switch", 2],
         "PowerEnergyConsumptionHeatingCircuit": [
