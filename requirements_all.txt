@@ -687,7 +687,7 @@ ihcsdk==2.3.0
 incomfort-client==0.3.1
 
 # homeassistant.components.influxdb
-influxdb==5.2.0
+influxdb==5.2.3
 
 # homeassistant.components.insteon
 insteonplm==0.16.5
