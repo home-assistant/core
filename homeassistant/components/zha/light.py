@@ -210,7 +210,6 @@ class Light(ZhaEntity, light.Light):
 
         if brightness is None and self._off_brightness is not None:
             brightness = self._off_brightness
-        self._off_brightness = None
 
         t_log = {}
         if (
@@ -294,6 +293,7 @@ class Light(ZhaEntity, light.Light):
             t_log["color_loop_set"] = result
             self._effect = None
 
+        self._off_brightness = None
         self.debug("turned on: %s", t_log)
         self.async_schedule_update_ha_state()
 
@@ -301,8 +301,6 @@ class Light(ZhaEntity, light.Light):
         """Turn the entity off."""
         duration = kwargs.get(light.ATTR_TRANSITION)
         supports_level = self.supported_features & light.SUPPORT_BRIGHTNESS
-        # store current brightness so that the next turn_on uses it.
-        self._off_brightness = self._brightness
 
         if duration and supports_level:
             result = await self._level_channel.move_to_level_with_on_off(
@@ -314,6 +312,11 @@ class Light(ZhaEntity, light.Light):
         if not isinstance(result, list) or result[1] is not Status.SUCCESS:
             return
         self._state = False
+
+        if duration and supports_level:
+            # store current brightness so that the next turn_on uses it.
+            self._off_brightness = self._brightness
+
         self.async_schedule_update_ha_state()
 
     async def async_update(self):
