@@ -36,7 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "geniushub"
 
 # temperature is repeated here, as it gives access to high-precision temps
-GH_STATE_ATTRS = ["mode", "temperature", "type", "occupied", "override"]
+GH_ZONE_ATTRS = ["mode", "temperature", "type", "occupied", "override"]
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -203,7 +203,7 @@ class GeniusZone(GeniusEntity):
     def device_state_attributes(self) -> Dict[str, Any]:
         """Return the device state attributes."""
         tmp = self._zone.data.items()
-        return {"status": {k: v for k, v in tmp if k in GH_STATE_ATTRS}}
+        return {"status": {k: v for k, v in tmp if k in GH_ZONE_ATTRS}}
 
     @property
     def current_temperature(self) -> Optional[float]:
