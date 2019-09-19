@@ -43,6 +43,7 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 GROUP_NAME_ALL_AUTOMATIONS = "all automations"
 
 CONF_ALIAS = "alias"
+CONF_DESCRIPTION = "description"
 CONF_HIDE_ENTITY = "hide_entity"
 
 CONF_CONDITION = "condition"
@@ -95,6 +96,7 @@ PLATFORM_SCHEMA = vol.Schema(
         # str on purpose
         CONF_ID: str,
         CONF_ALIAS: cv.string,
+        vol.Optional(CONF_DESCRIPTION): cv.string,
         vol.Optional(CONF_INITIAL_STATE): cv.boolean,
         vol.Optional(CONF_HIDE_ENTITY, default=DEFAULT_HIDE_ENTITY): cv.boolean,
         vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
