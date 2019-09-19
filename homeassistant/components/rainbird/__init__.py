@@ -36,7 +36,7 @@ SENSOR_TYPES = {
 TRIGGER_TIME_SCHEMA = vol.All(cv.time_period, cv.positive_timedelta)
 
 
-def _validator(config):
+def _set_defaults(config):
     config = copy.deepcopy(config)
     for zone, value in config[CONF_ZONES]:
         if not value[CONF_TRIGGER_TIME]:
@@ -45,21 +45,21 @@ def _validator(config):
 
 
 ZONE_SCHEMA = vol.Schema(
-    vol.All(
-        {
-            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-            vol.Optional(CONF_TRIGGER_TIME): TRIGGER_TIME_SCHEMA,
-        },
-        _validator,
-    )
+    {
+        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+        vol.Optional(CONF_TRIGGER_TIME): TRIGGER_TIME_SCHEMA,
+    }
 )
 CONTROLLER_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_TRIGGER_TIME): TRIGGER_TIME_SCHEMA,
-        vol.Optional(CONF_ZONES): vol.Schema({cv.positive_int: ZONE_SCHEMA}),
-    }
+    vol.All(
+        {
+            vol.Required(CONF_HOST): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
+            vol.Required(CONF_TRIGGER_TIME): TRIGGER_TIME_SCHEMA,
+            vol.Optional(CONF_ZONES): vol.Schema({cv.positive_int: ZONE_SCHEMA}),
+        },
+        _set_defaults,
+    )
 )
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [CONTROLLER_SCHEMA]))},
