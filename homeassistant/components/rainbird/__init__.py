@@ -1,5 +1,4 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
-import copy
 import logging
 
 from pyrainbird import RainbirdController
@@ -33,16 +32,7 @@ SENSOR_TYPES = {
     SENSOR_TYPE_RAINDELAY: ["Raindelay", None, "mdi:water-off"],
 }
 
-TRIGGER_TIME_SCHEMA = vol.All(cv.time_period, cv.positive_timedelta)
-
-
-def _set_defaults(config):
-    config = copy.deepcopy(config)
-    for value in config[CONF_ZONES].values():
-        if not value[CONF_TRIGGER_TIME]:
-            value[CONF_TRIGGER_TIME] = config[CONF_TRIGGER_TIME]
-    return config
-
+TRIGGER_TIME_SCHEMA = cv.positive_int
 
 ZONE_SCHEMA = vol.Schema(
     {
@@ -51,15 +41,12 @@ ZONE_SCHEMA = vol.Schema(
     }
 )
 CONTROLLER_SCHEMA = vol.Schema(
-    vol.All(
-        {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Required(CONF_PASSWORD): cv.string,
-            vol.Required(CONF_TRIGGER_TIME): TRIGGER_TIME_SCHEMA,
-            vol.Optional(CONF_ZONES): vol.Schema({cv.positive_int: ZONE_SCHEMA}),
-        },
-        _set_defaults,
-    )
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_TRIGGER_TIME): TRIGGER_TIME_SCHEMA,
+        vol.Optional(CONF_ZONES): vol.Schema({cv.positive_int: ZONE_SCHEMA}),
+    }
 )
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [CONTROLLER_SCHEMA]))},
