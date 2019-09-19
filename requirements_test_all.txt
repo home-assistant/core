@@ -356,7 +356,7 @@ python-velbus==2.0.27
 python_awair==0.0.4
 
 # homeassistant.components.tradfri
-pytradfri[async]==6.0.1
+pytradfri[async]==6.3.1
 
 # homeassistant.components.vesync
 pyvesync==1.1.0
