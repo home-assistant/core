@@ -38,7 +38,7 @@ TRIGGER_TIME_SCHEMA = vol.All(cv.time_period, cv.positive_timedelta)
 
 def _set_defaults(config):
     config = copy.deepcopy(config)
-    for zone, value in config[CONF_ZONES]:
+    for zone, value in config[CONF_ZONES]:  # pylint: disable=W0612
         if not value[CONF_TRIGGER_TIME]:
             value[CONF_TRIGGER_TIME] = config[CONF_TRIGGER_TIME]
     return config
@@ -86,7 +86,7 @@ def _setup_controller(hass, controller_config, config):
     position = len(hass.data[DATA_RAINBIRD])
     try:
         controller.get_serial_number()
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=W0703
         _LOGGER.error("Unable to setup controller: %s", exc)
         return False
     hass.data[DATA_RAINBIRD].append(controller)
