@@ -1029,13 +1029,9 @@ def say_curr_entity(hass):
     elif entity_id.startswith("input_datetime."):
         state = hass.states.get(entity_id)
         attr = state.attributes
-        info = (
-            ". Godzina "
-            + str(attr.get("hour", "00"))
-            + ":"
-            + str(attr.get("minute", "00"))
-        )
-        _say_it(hass, info_name + info + ". Naciśnij OK by zmienić godzinę.")
+        info_name = info_name + "; "
+        info_time = get_hour_to_say(attr.get("hour", "00"), attr.get("minute", 0))
+        _say_it(hass, info_name + info_time + ". Naciśnij OK by zmienić godzinę.")
         return
     elif entity_id.startswith("input_text."):
         if CURR_BUTTON_CODE == 4:
@@ -1411,7 +1407,7 @@ def select_entity(hass, long_press):
                     _say_it(
                         hass,
                         "OK, dostosuj godzinę strzałkami góra lub dół a minuty strzałkami lewo lub prawo."
-                        " By zatwierdzić naciśnij OK.",
+                        " By zatwierdzić naciśnij 'OK'.",
                     )
                 else:
                     set_next_position(hass)
@@ -3050,14 +3046,27 @@ def _process_command_from_frame(hass, service):
             {"friendly_name": friendly_name, "icon": icon},
         )
     elif service.data["topic"] == "ais/player_status":
-        hass.services.call(
-            "media_player",
-            "play_media",
-            {
-                "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                "media_content_type": "exo_info",
-                "media_content_id": service.data["payload"],
-            },
+        # try to get current volume
+        try:
+            message = json.loads(service.data["payload"])
+            ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL = (
+                message.get("currentVolume", 0) / 100
+            )
+        except Exception:
+            _LOGGER.warning(
+                "ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL: "
+                + str(ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL)
+            )
+        hass.async_run_job(
+            hass.services.async_call(
+                "media_player",
+                "play_media",
+                {
+                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+                    "media_content_type": "exo_info",
+                    "media_content_id": service.data["payload"],
+                },
+            )
         )
     elif service.data["topic"] == "ais/execute_script":
         hass.services.call(
