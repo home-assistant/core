@@ -45,6 +45,7 @@ FLOWS = [
     "openuv",
     "owntracks",
     "plaato",
+    "plex",
     "point",
     "ps4",
     "rainmachine",
