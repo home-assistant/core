@@ -63,26 +63,25 @@ def setup(hass, config):
     return success
 
 
-def _setup_controller(hass, config):
-
-    server = config[CONF_HOST]
-    password = config[CONF_PASSWORD]
+def _setup_controller(hass, controller_config, config):
+    """Set up a controller."""
+    server = controller_config[CONF_HOST]
+    password = controller_config[CONF_PASSWORD]
     controller = RainbirdController(server, password)
     position = len(hass.data[DATA_RAINBIRD])
-    success = False
     try:
         controller.get_serial_number()
-        hass.data[DATA_RAINBIRD].append(controller)
-        _LOGGER.debug("Rain Bird Controller %d set to: %s", position, server)
-        for platform in SUPPORTED_PLATFORMS:
-            discovery.load_platform(
-                hass,
-                platform,
-                DOMAIN,
-                discovered={**{RAINBIRD_CONTROLLER: position}, **config},
-                hass_config=config,
-            )
-        success = True
-    except Exception as e:
-        logging.error("Unable to setup controller", e)
-    return success
+    except Exception as exc:
+        _LOGGER.error("Unable to setup controller: %s", exc)
+        return False
+    hass.data[DATA_RAINBIRD].append(controller)
+    _LOGGER.debug("Rain Bird Controller %d set to: %s", position, server)
+    for platform in SUPPORTED_PLATFORMS:
+        discovery.load_platform(
+            hass,
+            platform,
+            DOMAIN,
+            {RAINBIRD_CONTROLLER: position, **controller_config},
+            config,
+        )
+    return True
