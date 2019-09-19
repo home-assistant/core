@@ -451,7 +451,7 @@ class IcloudDevice:
         self._dev_id = slugify(self._name.replace(" ", "", 99))  # devicename
         self._unique_id = f"{account_name_slug}_{self._dev_id}"
         self._device_class = self._status[DEVICE_CLASS]
-        device_name = self._status[DEVICE_DISPLAY_NAME]
+        self._device_model = self._status[DEVICE_DISPLAY_NAME]
 
         if self._status[DEVICE_PERSON_ID]:
             owner_fullname = account.family_members_fullname[
@@ -468,7 +468,7 @@ class IcloudDevice:
             ATTR_ATTRIBUTION: ATTRIBUTION,
             CONF_ACCOUNT_NAME: account_name,
             ATTR_ACCOUNT_FETCH_INTERVAL: self._account.fetch_interval,
-            ATTR_DEVICE_NAME: device_name,
+            ATTR_DEVICE_NAME: self._device_model,
             ATTR_DEVICE_STATUS: None,
             ATTR_OWNER_NAME: owner_fullname,
         }
@@ -534,6 +534,11 @@ class IcloudDevice:
         return self._unique_id
 
     @property
+    def dev_id(self) -> str:
+        """Return the device ID."""
+        return self._dev_id
+
+    @property
     def name(self) -> str:
         """Return the Apple device name."""
         return self._name
@@ -544,14 +549,14 @@ class IcloudDevice:
         return self._device
 
     @property
-    def dev_id(self) -> str:
-        """Return the device ID."""
-        return self._dev_id
-
-    @property
     def device_class(self) -> str:
         """Return the Apple device class."""
         return self._device_class
+
+    @property
+    def device_model(self) -> str:
+        """Return the Apple device model."""
+        return self._device_model
 
     @property
     def battery_level(self) -> int:

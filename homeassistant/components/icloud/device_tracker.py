@@ -95,6 +95,16 @@ class IcloudTrackerEntity(TrackerEntity):
         """Return the device state attributes."""
         return self._device.state_attributes
 
+    @property
+    def device_info(self):
+        """Return the device information."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "Apple",
+            "model": self._device.device_model,
+        }
+
     async def async_added_to_hass(self):
         """Register state update callback."""
         self._unsub_dispatcher = async_dispatcher_connect(
