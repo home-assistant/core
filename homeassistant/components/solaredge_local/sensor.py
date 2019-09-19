@@ -113,7 +113,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.debug("Credentials correct and site is active")
     except AttributeError:
         _LOGGER.error("Missing details data in solaredge status")
-        _LOGGER.debug("Response is: %s", status)
+        _LOGGER.debug(f"Response is: {status}")
         return
     except (ConnectTimeout, HTTPError):
         _LOGGER.error("Could not retrieve details from SolarEdge API")
@@ -147,7 +147,7 @@ class SolarEdgeSensor(Entity):
     @property
     def name(self):
         """Return the name."""
-        return "{} ({})".format(self.platform_name, SENSOR_TYPES[self.sensor_key][1])
+        return f"{self.platform_name} ({SENSOR_TYPES[self.sensor_key][1]})")
 
     @property
     def unit_of_measurement(self):
@@ -184,7 +184,7 @@ class SolarEdgeData:
         """Update the data from the SolarEdge Monitoring API."""
         try:
             status = self.api.get_status()
-            _LOGGER.debug("status from SolarEdge: %s", status)
+            _LOGGER.debug(f"status from SolarEdge: {status}")
         except (ConnectTimeout):
             _LOGGER.error("Connection timeout, skipping update")
             return
@@ -194,7 +194,7 @@ class SolarEdgeData:
 
         try:
             maintenance = self.api.get_maintenance()
-            _LOGGER.debug("maintenance from SolarEdge: %s", maintenance)
+            _LOGGER.debug(f"maintenance from SolarEdge: {maintenance}")
         except (ConnectTimeout):
             _LOGGER.error("Connection timeout, skipping update")
             return
