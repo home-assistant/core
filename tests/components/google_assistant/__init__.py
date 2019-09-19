@@ -231,8 +231,8 @@ DEMO_DEVICES = [
         "willReportState": False,
     },
     {
-        "id": "alarm_control_panel.home_alarm",
-        "name": {"name": "Home Alarm"},
+        "id": "alarm_control_panel.alarm",
+        "name": {"name": "Alarm"},
         "traits": ["action.devices.traits.ArmDisarm"],
         "type": "action.devices.types.SECURITYSYSTEM",
         "willReportState": False,

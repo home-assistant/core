@@ -830,7 +830,7 @@ async def test_arm_disarm_arm_away(hass):
     trt = trait.ArmDisArmTrait(
         hass,
         State(
-            "alarm_control_panel.home_alarm",
+            "alarm_control_panel.alarm",
             STATE_ALARM_ARMED_AWAY,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
@@ -896,7 +896,7 @@ async def test_arm_disarm_arm_away(hass):
         trt = trait.ArmDisArmTrait(
             hass,
             State(
-                "alarm_control_panel.home_alarm",
+                "alarm_control_panel.alarm",
                 STATE_ALARM_DISARMED,
                 {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
             ),
@@ -914,7 +914,7 @@ async def test_arm_disarm_arm_away(hass):
     trt = trait.ArmDisArmTrait(
         hass,
         State(
-            "alarm_control_panel.home_alarm",
+            "alarm_control_panel.alarm",
             STATE_ALARM_DISARMED,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
@@ -953,50 +953,13 @@ async def test_arm_disarm_arm_away(hass):
     )
 
     assert len(calls) == 1
-    # assert calls[0].data == {
-    #     "entity_id": "alarm.control_panel.home_alarm",
-    #     "code": "1234",
-    # }
-
-    # Cancel arming while already armed
-    with pytest.raises(error.SmartHomeError) as err:
-        trt = trait.ArmDisArmTrait(
-            hass,
-            State(
-                "alarm_control_panel.home_alarm",
-                STATE_ALARM_ARMED_AWAY,
-                {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
-            ),
-            PIN_CONFIG,
-        )
-        await trt.execute(
-            trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": True, "cancel": True}, {}
-        )
-    assert len(calls) == 1
-    assert err.value.code == const.ERR_CHALLENGE_NEEDED
-    assert err.value.challenge_type == const.CHALLENGE_PIN_NEEDED
-
-    # Cancel arming while pending doesn't require pin
-    trt = trait.ArmDisArmTrait(
-        hass,
-        State(
-            "alarm_control_panel.home_alarm",
-            STATE_ALARM_PENDING,
-            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
-        ),
-        PIN_CONFIG,
-    )
-    await trt.execute(
-        trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": True, "cancel": True}, {}
-    )
-    assert len(calls) == 1
 
     # Test already armed
     with pytest.raises(error.SmartHomeError) as err:
         trt = trait.ArmDisArmTrait(
             hass,
             State(
-                "alarm_control_panel.home_alarm",
+                "alarm_control_panel.alarm",
                 STATE_ALARM_ARMED_AWAY,
                 {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
             ),
@@ -1015,7 +978,7 @@ async def test_arm_disarm_arm_away(hass):
     trt = trait.ArmDisArmTrait(
         hass,
         State(
-            "alarm_control_panel.home_alarm",
+            "alarm_control_panel.alarm",
             STATE_ALARM_DISARMED,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
         ),
@@ -1039,7 +1002,7 @@ async def test_arm_disarm_disarm(hass):
     trt = trait.ArmDisArmTrait(
         hass,
         State(
-            "alarm_control_panel.home_alarm",
+            "alarm_control_panel.alarm",
             STATE_ALARM_DISARMED,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
@@ -1099,7 +1062,7 @@ async def test_arm_disarm_disarm(hass):
         trt = trait.ArmDisArmTrait(
             hass,
             State(
-                "alarm_control_panel.home_alarm",
+                "alarm_control_panel.alarm",
                 STATE_ALARM_ARMED_AWAY,
                 {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
             ),
@@ -1113,7 +1076,7 @@ async def test_arm_disarm_disarm(hass):
     trt = trait.ArmDisArmTrait(
         hass,
         State(
-            "alarm_control_panel.home_alarm",
+            "alarm_control_panel.alarm",
             STATE_ALARM_ARMED_AWAY,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
@@ -1148,7 +1111,7 @@ async def test_arm_disarm_disarm(hass):
         trt = trait.ArmDisArmTrait(
             hass,
             State(
-                "alarm_control_panel.home_alarm",
+                "alarm_control_panel.alarm",
                 STATE_ALARM_DISARMED,
                 {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
             ),
@@ -1157,6 +1120,39 @@ async def test_arm_disarm_disarm(hass):
         await trt.execute(trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": False}, {})
     assert len(calls) == 1
     assert err.value.code == const.ERR_ALREADY_DISARMED
+
+    # Cancel arming after already armed will require pin
+    with pytest.raises(error.SmartHomeError) as err:
+        trt = trait.ArmDisArmTrait(
+            hass,
+            State(
+                "alarm_control_panel.alarm",
+                STATE_ALARM_ARMED_AWAY,
+                {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
+            ),
+            PIN_CONFIG,
+        )
+        await trt.execute(
+            trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": True, "cancel": True}, {}
+        )
+    assert len(calls) == 1
+    assert err.value.code == const.ERR_CHALLENGE_NEEDED
+    assert err.value.challenge_type == const.CHALLENGE_PIN_NEEDED
+
+    # Cancel arming while pending to arm doesn't require pin
+    trt = trait.ArmDisArmTrait(
+        hass,
+        State(
+            "alarm_control_panel.alarm",
+            STATE_ALARM_PENDING,
+            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
+        ),
+        PIN_CONFIG,
+    )
+    await trt.execute(
+        trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": True, "cancel": True}, {}
+    )
+    assert len(calls) == 2
 
 
 async def test_fan_speed(hass):
