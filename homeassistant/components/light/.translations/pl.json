@@ -10,8 +10,8 @@
             "is_on": "(entity_name} jest w\u0142\u0105czony."
         },
         "trigger_type": {
-            "turn_off": "{nazwa} wy\u0142\u0105czone",
-            "turn_on": "{name} w\u0142\u0105czone"
+            "turned_off": "{nazwa} wy\u0142\u0105czone",
+            "turned_on": "{name} w\u0142\u0105czone"
         }
     }
 }

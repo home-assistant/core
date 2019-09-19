@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "address_exists": "Adresse ass scho ageriicht."
+        },
+        "error": {
+            "connection_error": "Feeler beim verbannen."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "house_letter": "Haus Buschtaf/zous\u00e4tzlech",
+                    "house_number": "Haus Nummer",
+                    "post_code": "Postleitzuel"
+                },
+                "title": "Twente Milieu"
+            }
+        },
+        "title": "Twente Milieu"
+    }
+}
