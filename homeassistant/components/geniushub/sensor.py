@@ -3,7 +3,7 @@ from datetime import timedelta
 from typing import Any, Awaitable, Dict
 
 from homeassistant.const import DEVICE_CLASS_BATTERY
-from homeassistant.util.dt import utc_from_timestamp, utcnow
+from homeassistant.util.dt import utcnow
 
 from . import DOMAIN, GeniusDevice, GeniusEntity
 
@@ -41,22 +41,17 @@ class GeniusBattery(GeniusDevice):
         super().__init__()
 
         self._device = device
-        self._name = f"{device.type} {device.id}"
         self._state_attr = state_attr
+
+        self._name = f"{device.type} {device.id}"
 
     @property
     def icon(self) -> str:
         """Return the icon of the sensor."""
-
-        values = self._device._raw["childValues"]  # pylint: disable=protected-access
-
-        last_comms = utc_from_timestamp(values["lastComms"]["val"])
-        if "WakeUp_Interval" in values:
-            interval = timedelta(seconds=values["WakeUp_Interval"]["val"])
-        else:
-            interval = timedelta(minutes=20)
-
-        if last_comms < utcnow() - interval * 3:
+        interval = timedelta(
+            seconds=self._device.data["_state"].get("wakeupInterval", 30 * 60)
+        )
+        if self._last_comms < utcnow() - interval * 3:
             return "mdi:battery-unknown"
 
         battery_level = self._device.data["state"][self._state_attr]

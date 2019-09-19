@@ -167,11 +167,7 @@ class GeniusDevice(GeniusEntity):
 
         attrs = {}
         attrs["assigned_zone"] = self._device.data["assignedZones"][0]["name"]
-        attrs["last_comms"] = (
-            None
-            if self._last_comms == 0
-            else utc_from_timestamp(self._last_comms).isoformat()
-        )
+        attrs["last_comms"] = self._last_comms.isoformat()
 
         state = dict(self._device.data["state"])
         state.update(self._device.data["_state"])
@@ -184,7 +180,7 @@ class GeniusDevice(GeniusEntity):
 
     async def async_update(self) -> Awaitable[None]:
         """Update an entity's state data."""
-        self._last_comms = self._device.data["_state"]["lastComms"]
+        self._last_comms = utc_from_timestamp(self._device.data["_state"]["lastComms"])
 
 
 class GeniusZone(GeniusEntity):

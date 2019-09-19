@@ -30,11 +30,12 @@ class GeniusBinarySensor(GeniusDevice, BinarySensorDevice):
         super().__init__()
 
         self._device = device
-        if device.type[:21] == "Dual Channel Receiver":  # TODO: can I rationalise this?
+        self._state_attr = state_attr
+
+        if device.type[:21] == "Dual Channel Receiver":
             self._name = f"Dual Channel Receiver {device.id}"
         else:
             self._name = f"{device.type} {device.id}"
-        self._state_attr = state_attr
 
     @property
     def is_on(self) -> bool:
