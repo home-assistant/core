@@ -10,8 +10,8 @@
             "turn_on": "{entity_name} w\u0142\u0105czone"
         },
         "trigger_type": {
-            "turn_off": "{entity_name} wy\u0142\u0105czone",
-            "turn_on": "{entity_name} w\u0142\u0105czone"
+            "turned_off": "{entity_name} wy\u0142\u0105czone",
+            "turned_on": "{entity_name} w\u0142\u0105czone"
         }
     }
 }
