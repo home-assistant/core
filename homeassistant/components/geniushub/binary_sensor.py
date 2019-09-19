@@ -1,10 +1,9 @@
 """Support for Genius Hub binary_sensor devices."""
-from typing import Any, Dict
-
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.util.dt import utc_from_timestamp
 
-from . import DOMAIN, GeniusEntity
+from . import DOMAIN, GeniusDevice
+
+GH_STATE_ATTR = "outputOnOff"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -15,45 +14,29 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     client = hass.data[DOMAIN]["client"]
 
     switches = [
-        GeniusBinarySensor(d)
+        GeniusBinarySensor(d, GH_STATE_ATTR)
         for d in client.device_objs
-        if "outputOnOff" in d.data["state"]
+        if GH_STATE_ATTR in d.data["state"]
     ]
 
-    async_add_entities(switches)
+    async_add_entities(switches, update_before_add=True)
 
 
-class GeniusBinarySensor(GeniusEntity, BinarySensorDevice):
+class GeniusBinarySensor(GeniusDevice, BinarySensorDevice):
     """Representation of a Genius Hub binary_sensor."""
 
-    def __init__(self, device) -> None:
+    def __init__(self, device, state_attr) -> None:
         """Initialize the binary sensor."""
         super().__init__()
 
         self._device = device
-        if device.type[:21] == "Dual Channel Receiver":
+        if device.type[:21] == "Dual Channel Receiver":  # TODO: can I rationalise this?
             self._name = f"Dual Channel Receiver {device.id}"
         else:
             self._name = f"{device.type} {device.id}"
+        self._state_attr = state_attr
 
     @property
     def is_on(self) -> bool:
         """Return the status of the sensor."""
-        return self._device.data["state"]["outputOnOff"]
-
-    @property
-    def device_state_attributes(self) -> Dict[str, Any]:
-        """Return the device state attributes."""
-        attrs = {}
-        attrs["assigned_zone"] = self._device.data["assignedZones"][0]["name"]
-
-        attrs["state"] = dict(self._device.data["state"])
-        attrs["state"].update(self._device.data["_state"])
-        attrs["state"].pop("outputOnOff")
-        attrs["state"].pop("lastComms")
-
-        last_comms = self._device.data["_state"]["lastComms"]
-        if last_comms != 0:
-            attrs["last_comms"] = utc_from_timestamp(last_comms).isoformat()
-
-        return attrs
+        return self._device.data["state"][self._state_attr]

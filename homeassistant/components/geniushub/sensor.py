@@ -5,7 +5,9 @@ from typing import Any, Awaitable, Dict
 from homeassistant.const import DEVICE_CLASS_BATTERY
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 
-from . import DOMAIN, GeniusEntity
+from . import DOMAIN, GeniusDevice, GeniusEntity
+
+GH_STATE_ATTR = "batteryLevel"
 
 GH_LEVEL_MAPPING = {
     "error": "Errors",
@@ -22,24 +24,25 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     client = hass.data[DOMAIN]["client"]
 
     sensors = [
-        GeniusBattery(d)
+        GeniusBattery(d, GH_STATE_ATTR)
         for d in client.device_objs
-        if "batteryLevel" in d.data["state"]
+        if GH_STATE_ATTR in d.data["state"]
     ]
     issues = [GeniusIssue(client, i) for i in list(GH_LEVEL_MAPPING)]
 
     async_add_entities(sensors + issues, update_before_add=True)
 
 
-class GeniusBattery(GeniusEntity):
+class GeniusBattery(GeniusDevice):
     """Representation of a Genius Hub sensor."""
 
-    def __init__(self, device) -> None:
+    def __init__(self, device, state_attr) -> None:
         """Initialize the sensor."""
         super().__init__()
 
         self._device = device
         self._name = f"{device.type} {device.id}"
+        self._state_attr = state_attr
 
     @property
     def icon(self) -> str:
@@ -56,7 +59,7 @@ class GeniusBattery(GeniusEntity):
         if last_comms < utcnow() - interval * 3:
             return "mdi:battery-unknown"
 
-        battery_level = self._device.data["state"]["batteryLevel"]
+        battery_level = self._device.data["state"][self._state_attr]
         if battery_level == 255:
             return "mdi:battery-unknown"
         if battery_level < 40:
@@ -81,24 +84,8 @@ class GeniusBattery(GeniusEntity):
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
-        level = self._device.data["state"].get("batteryLevel", 255)
+        level = self._device.data["state"][self._state_attr]
         return level if level != 255 else 0
-
-    @property
-    def device_state_attributes(self) -> Dict[str, Any]:
-        """Return the device state attributes."""
-        attrs = {}
-        attrs["assigned_zone"] = self._device.data["assignedZones"][0]["name"]
-
-        attrs["state"] = dict(self._device.data["state"])
-        attrs["state"].update(self._device.data["_state"])
-        attrs["state"].pop("batteryLevel")
-        attrs["state"].pop("lastComms")
-
-        last_comms = self._device.data["_state"]["lastComms"]
-        attrs["last_comms"] = utc_from_timestamp(last_comms).isoformat()
-
-        return attrs
 
 
 class GeniusIssue(GeniusEntity):

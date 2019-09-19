@@ -1,14 +1,22 @@
 """Support for a Genius Hub system."""
 from datetime import timedelta
 import logging
-from typing import Awaitable
+import re
+from typing import Any, Awaitable, Dict, Optional
 
 import aiohttp
 import voluptuous as vol
 
 from geniushubclient import GeniusHub
 
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -19,10 +27,16 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.dt import utc_from_timestamp
+
+ATTR_DURATION = "duration"
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "geniushub"
+
+# temperature is repeated here, as it gives access to high-precision temps
+GH_STATE_ATTRS = ["mode", "temperature", "type", "occupied", "override"]
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -105,7 +119,7 @@ class GeniusBroker:
 
 
 class GeniusEntity(Entity):
-    """Base for all Genius Hub endtities."""
+    """Base for all Genius Hub entities."""
 
     def __init__(self):
         """Initialize the entity."""
@@ -128,3 +142,101 @@ class GeniusEntity(Entity):
     def should_poll(self) -> bool:
         """Return False as geniushub entities should not be polled."""
         return False
+
+
+class GeniusDevice(GeniusEntity):
+    """Base for all Genius Hub devices."""
+
+    def __init__(self):
+        """Initialize the device."""
+        super().__init__()
+
+        self._state_attr = None
+        self._last_comms = None
+
+    @property
+    def device_state_attributes(self) -> Dict[str, Any]:
+        """Return the device state attributes."""
+
+        def snake_case(string):
+            """Convert a string to snake_case."""
+            string = re.sub(r"[\-\.\s]", "_", str(string))
+            return (string[0]).lower() + re.sub(
+                r"[A-Z]", lambda matched: "_" + matched.group(0).lower(), string[1:]
+            )
+
+        attrs = {}
+        attrs["assigned_zone"] = self._device.data["assignedZones"][0]["name"]
+        attrs["last_comms"] = (
+            None
+            if self._last_comms == 0
+            else utc_from_timestamp(self._last_comms).isoformat()
+        )
+
+        state = dict(self._device.data["state"])
+        state.update(self._device.data["_state"])
+        state.pop(self._state_attr)
+        state.pop("lastComms")
+
+        attrs["state"] = {snake_case(k): v for k, v in state.items()}
+
+        return attrs
+
+    async def async_update(self) -> Awaitable[None]:
+        """Update an entity's state data."""
+        self._last_comms = self._device.data["_state"]["lastComms"]
+
+
+class GeniusZone(GeniusEntity):
+    """Base for all Genius Hub zones."""
+
+    def __init__(self):
+        """Initialize the zone."""
+        super().__init__()
+
+    @property
+    def name(self) -> str:
+        """Return the name of the climate device."""
+        return self._zone.name
+
+    @property
+    def device_state_attributes(self) -> Dict[str, Any]:
+        """Return the device state attributes."""
+        tmp = self._zone.data.items()
+        return {"status": {k: v for k, v in tmp if k in GH_STATE_ATTRS}}
+
+    @property
+    def current_temperature(self) -> Optional[float]:
+        """Return the current temperature."""
+        return self._zone.data.get("temperature")
+
+    @property
+    def target_temperature(self) -> float:
+        """Return the temperature we try to reach."""
+        return self._zone.data["setpoint"]
+
+    @property
+    def min_temp(self) -> float:
+        """Return max valid temperature that can be set."""
+        return self._min_temp
+
+    @property
+    def max_temp(self) -> float:
+        """Return max valid temperature that can be set."""
+        return self._max_temp
+
+    @property
+    def temperature_unit(self) -> str:
+        """Return the unit of measurement."""
+        return TEMP_CELSIUS
+
+    @property
+    def supported_features(self) -> int:
+        """Return the bitmask of supported features."""
+        return self._supported_features
+
+    async def async_set_temperature(self, **kwargs) -> Awaitable[None]:
+        """Set a new target temperature for this zone."""
+        await self._zone.set_override(
+            kwargs[ATTR_TEMPERATURE], kwargs.get(ATTR_DURATION, 3600)
+        )
