@@ -6,9 +6,12 @@
         "step": {
             "user": {
                 "data": {
+                    "mmi": "MMI",
                     "radius": "Radio"
-                }
+                },
+                "title": "Complete todos los campos requeridos"
             }
-        }
+        },
+        "title": "GeoNet NZ Quakes"
     }
 }

@@ -8,6 +8,8 @@ from homeassistant.components.device_automation.const import (
     CONF_TOGGLE,
     CONF_TURN_OFF,
     CONF_TURN_ON,
+    CONF_TURNED_OFF,
+    CONF_TURNED_ON,
 )
 from homeassistant.core import split_entity_id
 from homeassistant.const import (
@@ -53,12 +55,12 @@ ENTITY_TRIGGERS = [
     {
         # Trigger when entity is turned off
         CONF_PLATFORM: "device",
-        CONF_TYPE: CONF_TURN_OFF,
+        CONF_TYPE: CONF_TURNED_OFF,
     },
     {
         # Trigger when entity is turned on
         CONF_PLATFORM: "device",
-        CONF_TYPE: CONF_TURN_ON,
+        CONF_TYPE: CONF_TURNED_ON,
     },
 ]
 
@@ -87,7 +89,7 @@ TRIGGER_SCHEMA = vol.Schema(
         vol.Required(CONF_DEVICE_ID): str,
         vol.Required(CONF_DOMAIN): str,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Required(CONF_TYPE): vol.In([CONF_TURN_OFF, CONF_TURN_ON]),
+        vol.Required(CONF_TYPE): vol.In([CONF_TURNED_OFF, CONF_TURNED_ON]),
     }
 )
 
@@ -136,7 +138,7 @@ def async_condition_from_config(config, config_validation):
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     trigger_type = config[CONF_TYPE]
-    if trigger_type == CONF_TURN_ON:
+    if trigger_type == CONF_TURNED_ON:
         from_state = "off"
         to_state = "on"
     else:
