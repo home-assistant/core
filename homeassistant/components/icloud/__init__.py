@@ -57,42 +57,38 @@ ATTR_DEVICE_STATUS = "device_status"
 ATTR_LOW_POWER_MODE = "low_power_mode"
 ATTR_OWNER_NAME = "owner_fullname"
 
-_LOGGER = logging.getLogger(__name__)
-
+# services
 SERVICE_ICLOUD_PLAY_SOUND = "play_sound"
 SERVICE_ICLOUD_DISPLAY_MESSAGE = "display_message"
 SERVICE_ICLOUD_LOST_DEVICE = "lost_device"
 SERVICE_ICLOUD_UPDATE = "update"
 SERVICE_ICLOUD_RESET = "reset"
-SERVICE_ATTR_USERNAME = CONF_USERNAME
-SERVICE_ATTR_LOST_DEVICE_MESSAGE = "message"
-SERVICE_ATTR_LOST_DEVICE_NUMBER = "number"
-SERVICE_ATTR_LOST_DEVICE_SOUND = "sound"
+ATTR_USERNAME = CONF_USERNAME
+ATTR_LOST_DEVICE_MESSAGE = "message"
+ATTR_LOST_DEVICE_NUMBER = "number"
+ATTR_LOST_DEVICE_SOUND = "sound"
 
-SERVICE_SCHEMA = vol.Schema({vol.Optional(SERVICE_ATTR_USERNAME): cv.string})
+SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_USERNAME): cv.string})
 
 SERVICE_SCHEMA_PLAY_SOUND = vol.Schema(
-    {
-        vol.Required(SERVICE_ATTR_USERNAME): cv.string,
-        vol.Required(ATTR_DEVICE_NAME): cv.string,
-    }
+    {vol.Required(ATTR_USERNAME): cv.string, vol.Required(ATTR_DEVICE_NAME): cv.string}
 )
 
 SERVICE_SCHEMA_DISPLAY_MESSAGE = vol.Schema(
     {
-        vol.Required(SERVICE_ATTR_USERNAME): cv.string,
+        vol.Required(ATTR_USERNAME): cv.string,
         vol.Required(ATTR_DEVICE_NAME): cv.string,
-        vol.Required(SERVICE_ATTR_LOST_DEVICE_MESSAGE): cv.string,
-        vol.Optional(SERVICE_ATTR_LOST_DEVICE_SOUND): cv.boolean,
+        vol.Required(ATTR_LOST_DEVICE_MESSAGE): cv.string,
+        vol.Optional(ATTR_LOST_DEVICE_SOUND): cv.boolean,
     }
 )
 
 SERVICE_SCHEMA_LOST_DEVICE = vol.Schema(
     {
-        vol.Required(SERVICE_ATTR_USERNAME): cv.string,
+        vol.Required(ATTR_USERNAME): cv.string,
         vol.Required(ATTR_DEVICE_NAME): cv.string,
-        vol.Required(SERVICE_ATTR_LOST_DEVICE_NUMBER): cv.string,
-        vol.Required(SERVICE_ATTR_LOST_DEVICE_MESSAGE): cv.string,
+        vol.Required(ATTR_LOST_DEVICE_NUMBER): cv.string,
+        vol.Required(ATTR_LOST_DEVICE_MESSAGE): cv.string,
     }
 )
 
@@ -112,6 +108,8 @@ CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [ACCOUNT_SCHEMA]))},
     extra=vol.ALLOW_EXTRA,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
@@ -155,7 +153,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     def play_sound(service):
         """Play sound on the device."""
-        username = entry.data[SERVICE_ATTR_USERNAME]
+        username = entry.data[ATTR_USERNAME]
         devicename = service.data.get(ATTR_DEVICE_NAME)
         devicename = slugify(devicename.replace(" ", "", 99))
 
@@ -163,27 +161,27 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     def display_message(service):
         """Display a message on the device."""
-        username = entry.data[SERVICE_ATTR_USERNAME]
+        username = entry.data[ATTR_USERNAME]
         devicename = service.data.get(ATTR_DEVICE_NAME)
         devicename = slugify(devicename.replace(" ", "", 99))
-        message = service.data.get(SERVICE_ATTR_LOST_DEVICE_MESSAGE)
-        sound = service.data.get(SERVICE_ATTR_LOST_DEVICE_SOUND, False)
+        message = service.data.get(ATTR_LOST_DEVICE_MESSAGE)
+        sound = service.data.get(ATTR_LOST_DEVICE_SOUND, False)
 
         hass.data[DOMAIN][username].devices[devicename].display_message(message, sound)
 
     def lost_device(service):
         """Make the device in lost state."""
-        username = entry.data[SERVICE_ATTR_USERNAME]
+        username = entry.data[ATTR_USERNAME]
         devicename = service.data.get(ATTR_DEVICE_NAME)
         devicename = slugify(devicename.replace(" ", "", 99))
-        number = service.data.get(SERVICE_ATTR_LOST_DEVICE_NUMBER)
-        message = service.data.get(SERVICE_ATTR_LOST_DEVICE_MESSAGE)
+        number = service.data.get(ATTR_LOST_DEVICE_NUMBER)
+        message = service.data.get(ATTR_LOST_DEVICE_MESSAGE)
 
         hass.data[DOMAIN][username].devices[devicename].lost_device(number, message)
 
     def update_account(service):
         """Call the update function of an iCloud account."""
-        username = entry.data.get(SERVICE_ATTR_USERNAME)
+        username = entry.data.get(ATTR_USERNAME)
 
         if username is None:
             for account in hass.data[DOMAIN].items():
@@ -193,7 +191,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     def reset_account(service):
         """Reset an iCloud account."""
-        username = entry.data.get(SERVICE_ATTR_USERNAME)
+        username = entry.data.get(ATTR_USERNAME)
 
         if username is None:
             for account in hass.data[DOMAIN].items():
@@ -238,7 +236,7 @@ class IcloudAccount:
         hass,
         username: str,
         password: str,
-        accountname: str,
+        account_name: str,
         max_interval: int,
         gps_accuracy_threshold: int,
     ):
@@ -246,7 +244,7 @@ class IcloudAccount:
         self.hass = hass
         self._username = username
         self._password = password
-        self._name = accountname or slugify(username.partition("@")[0])
+        self._name = account_name or slugify(username.partition("@")[0])
         self._fetch_interval = max_interval
         self._max_interval = max_interval
         self._gps_accuracy_threshold = gps_accuracy_threshold

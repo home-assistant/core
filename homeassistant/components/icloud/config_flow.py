@@ -36,19 +36,19 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.api = None
         self._username = None
         self._password = None
-        self._accountname = None
+        self._account_name = None
         self._max_interval = None
         self._gps_accuracy_threshold = None
 
         self._trusted_device = None
         self._verification_code = None
 
-    def _configuration_exists(self, username: str, accountname: str) -> bool:
-        """Return True if username or accountname exists in configuration."""
+    def _configuration_exists(self, username: str, account_name: str) -> bool:
+        """Return True if username or account_name exists in configuration."""
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if (
                 entry.data[CONF_USERNAME] == username
-                or entry.data[CONF_ACCOUNT_NAME] == accountname
+                or entry.data[CONF_ACCOUNT_NAME] == account_name
                 or entry.data[CONF_ACCOUNT_NAME] == slugify(username.partition("@")[0])
             ):
                 return True
@@ -88,13 +88,13 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
-        self._accountname = user_input.get(CONF_ACCOUNT_NAME)
+        self._account_name = user_input.get(CONF_ACCOUNT_NAME)
         self._max_interval = user_input.get(CONF_MAX_INTERVAL, DEFAULT_MAX_INTERVAL)
         self._gps_accuracy_threshold = user_input.get(
             CONF_GPS_ACCURACY_THRESHOLD, DEFAULT_GPS_ACCURACY_THRESHOLD
         )
 
-        if self._configuration_exists(self._username, self._accountname):
+        if self._configuration_exists(self._username, self._account_name):
             errors[CONF_USERNAME] = "username_exists"
             return await self._show_setup_form(user_input, errors)
 
@@ -134,7 +134,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={
                 CONF_USERNAME: self._username,
                 CONF_PASSWORD: self._password,
-                CONF_ACCOUNT_NAME: self._accountname,
+                CONF_ACCOUNT_NAME: self._account_name,
                 CONF_MAX_INTERVAL: self._max_interval,
                 CONF_GPS_ACCURACY_THRESHOLD: self._gps_accuracy_threshold,
             },
@@ -227,7 +227,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 CONF_USERNAME: self._username,
                 CONF_PASSWORD: self._password,
-                CONF_ACCOUNT_NAME: self._accountname,
+                CONF_ACCOUNT_NAME: self._account_name,
                 CONF_MAX_INTERVAL: self._max_interval,
                 CONF_GPS_ACCURACY_THRESHOLD: self._gps_accuracy_threshold,
             }

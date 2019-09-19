@@ -20,8 +20,8 @@ from tests.common import MockConfigEntry
 
 USERNAME = "username@me.com"
 PASSWORD = "password"
-ACCOUNTNAME = "Account name 1 2 3"
-ACCOUNTNAME_FROM_USERNAME = "username"
+ACCOUNT_NAME = "Account name 1 2 3"
+ACCOUNT_NAME_FROM_USERNAME = "username"
 MAX_INTERVAL = 15
 GPS_ACCURACY_THRESHOLD = 250
 
@@ -74,7 +74,7 @@ async def test_user(
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_ACCOUNT_NAME] == ACCOUNTNAME_FROM_USERNAME
+    assert result["data"][CONF_ACCOUNT_NAME] == ACCOUNT_NAME_FROM_USERNAME
     assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
@@ -93,7 +93,7 @@ async def test_import(
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_ACCOUNT_NAME] == ACCOUNTNAME_FROM_USERNAME
+    assert result["data"][CONF_ACCOUNT_NAME] == ACCOUNT_NAME_FROM_USERNAME
     assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
@@ -102,7 +102,7 @@ async def test_import(
         {
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
-            CONF_ACCOUNT_NAME: ACCOUNTNAME,
+            CONF_ACCOUNT_NAME: ACCOUNT_NAME,
             CONF_MAX_INTERVAL: MAX_INTERVAL,
             CONF_GPS_ACCURACY_THRESHOLD: GPS_ACCURACY_THRESHOLD,
         }
@@ -111,7 +111,7 @@ async def test_import(
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_ACCOUNT_NAME] == ACCOUNTNAME
+    assert result["data"][CONF_ACCOUNT_NAME] == ACCOUNT_NAME
     assert result["data"][CONF_MAX_INTERVAL] == MAX_INTERVAL
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == GPS_ACCURACY_THRESHOLD
 
@@ -132,7 +132,7 @@ async def test_abort_if_already_setup(
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "username_exists"
 
-    # Should fail, same ACCOUNTNAME (import)
+    # Should fail, same ACCOUNT_NAME (import)
     result = await flow.async_step_import(
         {
             CONF_USERNAME: "other_username@icloud.com",
@@ -150,7 +150,7 @@ async def test_abort_if_already_setup(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {CONF_USERNAME: "username_exists"}
 
-    # Should fail, same ACCOUNTNAME (flow)
+    # Should fail, same ACCOUNT_NAME (flow)
     result = await flow.async_step_user(
         {
             CONF_USERNAME: "other_username@icloud.com",
