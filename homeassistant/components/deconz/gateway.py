@@ -199,7 +199,7 @@ class DeconzGateway:
 
         for event in self.events:
             event.async_will_remove_from_hass()
-            self.events.remove(event)
+        self.events.clear()
 
         self.deconz_ids = {}
         return True
