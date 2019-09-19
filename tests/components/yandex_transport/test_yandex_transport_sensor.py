@@ -1,7 +1,7 @@
 """Tests for the yandex transport platform."""
 
-from json import loads
-from pytest import fixture
+import json
+import pytest
 
 import homeassistant.components.sensor as sensor
 import homeassistant.util.dt as dt_util
@@ -13,32 +13,16 @@ from tests.common import (
     load_fixture,
 )
 
-REPLY = loads(load_fixture("yandex_transport_reply.json"))
+REPLY = json.loads(load_fixture("yandex_transport_reply.json"))
 
 
-def get_fake_reply(stop_id):
-    """Return fake reply."""
-    return REPLY
-
-
-@fixture
+@pytest.fixture
 def mock_requester():
     """Create a mock ya_ma module and YandexMapsRequester."""
     with MockDependency("ya_ma") as ya_ma:
-
-        class MockRequester:
-            """Fake YandexRequester object."""
-
-            def __init__(self, user_agent=None):
-                """Create mock module object, for avoid importing ya_ma library."""
-                self.get_stop_info = get_fake_reply
-
-            def set_new_session(self):
-                """Fake method for reset http session."""
-                pass
-
-        ya_ma.YandexMapsRequester = MockRequester
-        yield MockRequester()
+        instance = ya_ma.YandexMapsRequester.return_value
+        instance.get_stop_info.return_value = REPLY
+        yield instance
 
 
 STOP_ID = 9639579
@@ -129,10 +113,5 @@ async def test_filtered_attributes(hass, mock_requester):
 
     true_attrs, true_state = true_filter(REPLY, filter_routes=ROUTES)
     assert state.state == true_state
-    result_key_len = len(true_attrs)
-    i = 0
-    assert i != result_key_len
-    for key in true_attrs:
-        i += 1
-        assert state.attributes[key] == true_attrs[key]
-    assert i == result_key_len
+    state_attrs = {key: state.attributes[key] for key in true_attrs}
+    assert state_attrs == true_attrs
