@@ -7,7 +7,6 @@ import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST,
@@ -70,7 +69,6 @@ class Concord232Alarm(alarm.AlarmControlPanel):
         self._url = url
         self._alarm = concord232_client.Client(self._url)
         self._alarm.partitions = self._alarm.list_partitions()
-        self._alarm.last_partition_update = dt_util.utcnow()
 
     @property
     def name(self):
