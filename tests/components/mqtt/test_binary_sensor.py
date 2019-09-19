@@ -25,7 +25,7 @@ from tests.common import (
 )
 
 
-async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
+async def test_setting_sensor_value_expires_availability_topic(hass, mqtt_mock, caplog):
     """Test the expiration of the value."""
     assert await async_setup_component(
         hass,
@@ -44,6 +44,39 @@ async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
 
     state = hass.states.get("binary_sensor.test")
     assert state.state == STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, "availability-topic", "online")
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state != STATE_UNAVAILABLE
+
+    await expires_helper(hass, mqtt_mock, caplog)
+
+
+async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
+    """Test the expiration of the value."""
+    assert await async_setup_component(
+        hass,
+        binary_sensor.DOMAIN,
+        {
+            binary_sensor.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "test-topic",
+                "expire_after": 4,
+                "force_update": True,
+            }
+        },
+    )
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_OFF
+
+    await expires_helper(hass, mqtt_mock, caplog)
+
+
+async def expires_helper(hass, mqtt_mock, caplog):
+    """Run the basic expiry code."""
 
     now = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
     with patch(("homeassistant.helpers.event." "dt_util.utcnow"), return_value=now):

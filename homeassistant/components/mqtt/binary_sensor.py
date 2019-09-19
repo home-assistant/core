@@ -28,7 +28,6 @@ from homeassistant.util import dt as dt_util
 
 from . import (
     ATTR_DISCOVERY_HASH,
-    CONF_AVAILABILITY_TOPIC,
     CONF_QOS,
     CONF_STATE_TOPIC,
     CONF_UNIQUE_ID,
@@ -120,22 +119,13 @@ class MqttBinarySensor(
         self._sub_state = None
         self._expiration_trigger = None
         self._delay_listener = None
-
+        self._expired = None
         device_config = config.get(CONF_DEVICE)
 
         MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_hash, self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
-
-        availability_topic = self._avail_config.get(CONF_AVAILABILITY_TOPIC)
-
-        # If no availability topic, the sensor is always available.
-        # If we set an availability topic, we default the availability to false
-        if availability_topic is None:
-            self._available = True
-        else:
-            self._available = False
 
     async def async_added_to_hass(self):
         """Subscribe mqtt events."""
@@ -174,8 +164,8 @@ class MqttBinarySensor(
 
             if expire_after is not None and expire_after > 0:
 
-                # When expire_after is set, and we receive a message, assume device is available since it has to be to receive the message
-                self._available = True
+                # When expire_after is set, and we receive a message, assume device is not expired since it has to be to receive the message
+                self._expired = False
 
                 # Reset old trigger
                 if self._expiration_trigger:
@@ -243,7 +233,8 @@ class MqttBinarySensor(
         """Triggered when value is expired."""
 
         self._expiration_trigger = None
-        self._available = False
+        self._expired = True
+
         self.async_write_ha_state()
 
     @property
@@ -275,3 +266,11 @@ class MqttBinarySensor(
     def unique_id(self):
         """Return a unique ID."""
         return self._unique_id
+
+    @property
+    def available(self) -> bool:
+        """Return true if the device is available and value has not expired."""
+        expire_after = self._config.get(CONF_EXPIRE_AFTER)
+        return MqttAvailability.available.fget(self) and (
+            expire_after is None or not self._expired
+        )
