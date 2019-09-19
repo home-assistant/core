@@ -5,7 +5,7 @@ import pytest
 
 import homeassistant.components.sensor as sensor
 import homeassistant.util.dt as dt_util
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
+from homeassistant.const import CONF_NAME
 from tests.common import (
     assert_setup_component,
     async_setup_component,
@@ -37,39 +37,15 @@ TEST_CONFIG = {
     }
 }
 
+FILTERED_ATTRS = {
+    "т36": ["21:43", "21:47", "22:02"],
+    "т47": ["21:40", "22:01"],
+    "м10": ["21:48", "22:00"],
+    "stop_name": "7-й автобусный парк",
+    "attribution": "Data provided by maps.yandex.ru",
+}
 
-def true_filter(reply, filter_routes=None):
-    """Check transport filtering by routes list."""
-    closer_time = None
-    if filter_routes is None:
-        filter_routes = []
-    attrs = {}
-
-    stop_metadata = reply["data"]["properties"]["StopMetaData"]
-
-    stop_name = reply["data"]["properties"]["name"]
-    transport_list = stop_metadata["Transport"]
-    for transport in transport_list:
-        route = transport["name"]
-        if filter_routes and route not in filter_routes:
-            # skip unnecessary route info
-            continue
-        if "Events" in transport["BriefSchedule"]:
-            for event in transport["BriefSchedule"]["Events"]:
-                if "Estimated" in event:
-                    posix_time_next = int(event["Estimated"]["value"])
-                    if closer_time is None or closer_time > posix_time_next:
-                        closer_time = posix_time_next
-                    if route not in attrs:
-                        attrs[route] = []
-                    attrs[route].append(event["Estimated"]["text"])
-    attrs["stop_name"] = stop_name
-    attrs[ATTR_ATTRIBUTION] = "Data provided by maps.yandex.ru"
-    if closer_time is None:
-        state = None
-    else:
-        state = dt_util.utc_from_timestamp(closer_time).isoformat(timespec="seconds")
-    return attrs, state
+RESULT_STATE = dt_util.utc_from_timestamp(1568659253).isoformat(timespec="seconds")
 
 
 async def assert_setup_sensor(hass, config, count=1):
@@ -101,17 +77,12 @@ async def test_state(hass, mock_requester):
     """Return the contents of _state."""
     await assert_setup_sensor(hass, TEST_CONFIG)
     state = hass.states.get("sensor.test_name")
-    assert state.state == dt_util.utc_from_timestamp(1568659253).isoformat(
-        timespec="seconds"
-    )
+    assert state.state == RESULT_STATE
 
 
 async def test_filtered_attributes(hass, mock_requester):
     """Return the contents of attributes."""
     await assert_setup_sensor(hass, TEST_CONFIG)
     state = hass.states.get("sensor.test_name")
-
-    true_attrs, true_state = true_filter(REPLY, filter_routes=ROUTES)
-    assert state.state == true_state
-    state_attrs = {key: state.attributes[key] for key in true_attrs}
-    assert state_attrs == true_attrs
+    state_attrs = {key: state.attributes[key] for key in FILTERED_ATTRS}
+    assert dict(state_attrs) == FILTERED_ATTRS
