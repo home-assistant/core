@@ -8,7 +8,12 @@ from solaredge_local import SolarEdge
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, POWER_WATT, ENERGY_WATT_HOUR
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    CONF_NAME,
+    POWER_WATT,
+    ENERGY_WATT_HOUR
+ )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -197,26 +202,30 @@ class SolarEdgeData:
         temperature = []
         voltage = []
         current = []
-        stringlength = len(maintenance.diagnostics.inverters.primary.optimizer)
+        data = maintenance.diagnostics.inverters.primary
+        stringlength = len(data.optimizer)
         power = 0
 
         for x in range(stringlength):
-            if maintenance.diagnostics.inverters.primary.optimizer[x].online is True:
-                temperature.append(maintenance.diagnostics.inverters.primary.optimizer[x].temperature.value)
-                voltage.append(maintenance.diagnostics.inverters.primary.optimizer[x].inputV)
-                current.append(maintenance.diagnostics.inverters.primary.optimizer[x].inputC)
+            if data.optimizer[x].online is True:
+                temperature.append(data.optimizer[x].temperature.value)
+                voltage.append(data.optimizer[x].inputV)
+                current.append(data.optimizer[x].inputC)
 
-        if len(voltage) >= 1:
-            power = round(statistics.mean(voltage) * statistics.mean(current) * stringlength, 2)
-
+        if len(voltage) == 0:
+            temperature.append(0)
+            voltage.append(0)
+            current.append(0)            
+        else:
+            power = statistics.mean(voltage) * statistics.mean(current)
         self.data["energyTotal"] = status.energy.total
         self.data["energyThisYear"] = status.energy.thisYear
         self.data["energyThisMonth"] = status.energy.thisMonth
         self.data["energyToday"] = status.energy.today
         self.data["currentPower"] = status.powerWatt
         self.data["invertertemperature"] = status.inverters.primary.temperature.value
-        if len(voltage) >= 1:
-            self.data["optimizertemperature"] = statistics.mean(temperature)
-            self.data["optimizervoltage"] = statistics.mean(voltage)
-            self.data["optimizercurrent"] = statistics.mean(current)
-            self.data["optimizerpower"] = power
+        self.data["optimizertemperature"] = \
+        statistics.mean(temperature)
+        self.data["optimizervoltage"] = statistics.mean(voltage)
+        self.data["optimizercurrent"] = statistics.mean(current)
+        self.data["optimizerpower"] = power
