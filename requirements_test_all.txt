@@ -11,7 +11,7 @@ flake8-docstrings==1.3.1
 flake8==3.7.8
 mock-open==1.3.1
 mypy==0.720
-pre-commit==1.18.2
+pre-commit==1.18.3
 pydocstyle==4.0.1
 pylint==2.3.1
 pytest-aiohttp==0.3.0
