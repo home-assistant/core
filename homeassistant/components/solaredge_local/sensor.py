@@ -1,9 +1,4 @@
-"""
-Support for SolarEdge Monitoring API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.solaredge_local/
-"""
+"""Support for SolarEdge-local Monitoring API."""
 import logging
 from datetime import timedelta
 import statistics
@@ -11,7 +6,6 @@ import statistics
 from requests.exceptions import HTTPError, ConnectTimeout
 from solaredge_local import SolarEdge
 import voluptuous as vol
-
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, POWER_WATT, ENERGY_WATT_HOUR
@@ -25,9 +19,15 @@ UPDATE_DELAY = timedelta(seconds=10)
 # Supported sensor types:
 # Key: ['json_key', 'name', unit, icon]
 SENSOR_TYPES = {
-    "lifetime_energy": [
-        "energyTotal",
-        "Lifetime energy",
+    "current_power": [
+        "currentPower",
+        "Current Power",
+        POWER_WATT,
+        "mdi:solar-power"
+    ],
+    "energy_this_month": [
+        "energyThisMonth",
+        "Energy this month",
         ENERGY_WATT_HOUR,
         "mdi:solar-power",
     ],
@@ -37,23 +37,11 @@ SENSOR_TYPES = {
         ENERGY_WATT_HOUR,
         "mdi:solar-power",
     ],
-    "energy_this_month": [
-        "energyThisMonth",
-        "Energy this month",
-        ENERGY_WATT_HOUR,
-        "mdi:solar-power",
-    ],
     "energy_today": [
         "energyToday",
         "Energy today",
         ENERGY_WATT_HOUR,
         "mdi:solar-power",
-    ],
-    "current_power": [
-        "currentPower",
-        "Current Power",
-        POWER_WATT,
-        "mdi:solar-power"
     ],
     "inverter_temperature": [
         "invertertemperature",
@@ -61,17 +49,11 @@ SENSOR_TYPES = {
         'C',
         "mdi:thermometer"
     ],
-    "optimizer_temperature": [
-        "optimizertemperature",
-        "Avrage Optimizer Temperature",
-        'C',
-        "mdi:solar-panel"
-    ],
-    "optimizer_voltage": [
-        "optimizervoltage",
-        "Avrage Optimizer Voltage",
-        'V',
-        "mdi:solar-panel"
+    "lifetime_energy": [
+        "energyTotal",
+        "Lifetime energy",
+        ENERGY_WATT_HOUR,
+        "mdi:solar-power",
     ],
     "optimizer_current": [
         "optimizercurrent",
@@ -85,6 +67,18 @@ SENSOR_TYPES = {
         POWER_WATT,
         "mdi:solar-panel"
     ],
+    "optimizer_temperature": [
+        "optimizertemperature",
+        "Avrage Optimizer Temperature",
+        'C',
+        "mdi:solar-panel"
+    ],
+    "optimizer_voltage": [
+        "optimizervoltage",
+        "Avrage Optimizer Voltage",
+        'V',
+        "mdi:solar-panel"
+    ]
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -102,18 +96,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     ip_address = config[CONF_IP_ADDRESS]
     platform_name = config[CONF_NAME]
 
-    # Create new SolarEdge object to retrieve data
+    # Create new SolarEdge object to retrieve data.
     api = SolarEdge(f"http://{ip_address}/")
 
-    # Check if api can be reached and site is active
+    # Check if api can be reached and site is active.
     try:
         status = api.get_status()
-
-        status.energy  # pylint: disable=pointless-statement
         _LOGGER.debug("Credentials correct and site is active")
     except AttributeError:
         _LOGGER.error("Missing details data in solaredge status")
-        _LOGGER.debug(f"Response is: {status}")
+        _LOGGER.debug("status is: %s", status)
         return
     except (ConnectTimeout, HTTPError):
         _LOGGER.error("Could not retrieve details from SolarEdge API")
@@ -147,7 +139,7 @@ class SolarEdgeSensor(Entity):
     @property
     def name(self):
         """Return the name."""
-        return f"{self.platform_name} ({SENSOR_TYPES[self.sensor_key][1]})")
+        return f"{self.platform_name} ({SENSOR_TYPES[self.sensor_key][1]})"
 
     @property
     def unit_of_measurement(self):
@@ -184,7 +176,7 @@ class SolarEdgeData:
         """Update the data from the SolarEdge Monitoring API."""
         try:
             status = self.api.get_status()
-            _LOGGER.debug(f"status from SolarEdge: {status}")
+            _LOGGER.debug("status from SolarEdge: %s", status)
         except (ConnectTimeout):
             _LOGGER.error("Connection timeout, skipping update")
             return
@@ -194,7 +186,7 @@ class SolarEdgeData:
 
         try:
             maintenance = self.api.get_maintenance()
-            _LOGGER.debug(f"maintenance from SolarEdge: {maintenance}")
+            _LOGGER.debug("maintenance from SolarEdge: %s", maintenance)
         except (ConnectTimeout):
             _LOGGER.error("Connection timeout, skipping update")
             return
