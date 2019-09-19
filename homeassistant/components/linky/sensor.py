@@ -145,8 +145,8 @@ class LinkySensor(Entity):
     def device_info(self):
         """Return device information."""
         return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
+            "identifiers": {(DOMAIN, "meter")},
+            "name": "Linky meter",
             "manufacturer": "Enedis",
         }
 
