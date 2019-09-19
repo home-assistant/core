@@ -1,0 +1,8 @@
+{
+    "domain": "solaredge_local",
+    "name": "Solar Edge Local",
+    "documentation": "",
+    "dependencies": [],
+    "codeowners": ["@drobtravels"],
+    "requirements": ["solaredge-local==0.1.4"]
+  }

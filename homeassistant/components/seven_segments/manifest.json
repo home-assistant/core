@@ -1,0 +1,8 @@
+{
+  "domain": "seven_segments",
+  "name": "Seven segments",
+  "documentation": "https://www.home-assistant.io/components/seven_segments",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

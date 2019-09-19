@@ -1,0 +1,1 @@
+"""The Ampio component."""

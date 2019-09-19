@@ -6,40 +6,45 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 
-DOMAIN = 'logger'
+DOMAIN = "logger"
 
-DATA_LOGGER = 'logger'
+DATA_LOGGER = "logger"
 
-SERVICE_SET_DEFAULT_LEVEL = 'set_default_level'
-SERVICE_SET_LEVEL = 'set_level'
+SERVICE_SET_DEFAULT_LEVEL = "set_default_level"
+SERVICE_SET_LEVEL = "set_level"
 
 LOGSEVERITY = {
-    'CRITICAL': 50,
-    'FATAL': 50,
-    'ERROR': 40,
-    'WARNING': 30,
-    'WARN': 30,
-    'INFO': 20,
-    'DEBUG': 10,
-    'NOTSET': 0
+    "CRITICAL": 50,
+    "FATAL": 50,
+    "ERROR": 40,
+    "WARNING": 30,
+    "WARN": 30,
+    "INFO": 20,
+    "DEBUG": 10,
+    "NOTSET": 0,
 }
 
-LOGGER_DEFAULT = 'default'
-LOGGER_LOGS = 'logs'
+LOGGER_DEFAULT = "default"
+LOGGER_LOGS = "logs"
 
-ATTR_LEVEL = 'level'
+ATTR_LEVEL = "level"
 
 _VALID_LOG_LEVEL = vol.All(vol.Upper, vol.In(LOGSEVERITY))
 
 SERVICE_SET_DEFAULT_LEVEL_SCHEMA = vol.Schema({ATTR_LEVEL: _VALID_LOG_LEVEL})
 SERVICE_SET_LEVEL_SCHEMA = vol.Schema({cv.string: _VALID_LOG_LEVEL})
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(LOGGER_DEFAULT): _VALID_LOG_LEVEL,
-        vol.Optional(LOGGER_LOGS): vol.Schema({cv.string: _VALID_LOG_LEVEL}),
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(LOGGER_DEFAULT): _VALID_LOG_LEVEL,
+                vol.Optional(LOGGER_LOGS): vol.Schema({cv.string: _VALID_LOG_LEVEL}),
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 class HomeAssistantLogFilter(logging.Filter):
@@ -86,20 +91,16 @@ async def async_setup(hass, config):
             logs[key] = LOGSEVERITY[value]
 
         logfilter[LOGGER_LOGS] = OrderedDict(
-            sorted(
-                logs.items(),
-                key=lambda t: len(t[0]),
-                reverse=True
-            )
+            sorted(logs.items(), key=lambda t: len(t[0]), reverse=True)
         )
 
     # Set default log severity
     if LOGGER_DEFAULT in config.get(DOMAIN):
         set_default_log_level(config.get(DOMAIN)[LOGGER_DEFAULT])
     else:
-        set_default_log_level('DEBUG')
+        set_default_log_level("DEBUG")
 
-    logger = logging.getLogger('')
+    logger = logging.getLogger("")
     logger.setLevel(logging.NOTSET)
 
     # Set log filter for all log handler
@@ -118,11 +119,17 @@ async def async_setup(hass, config):
             set_log_levels(service.data)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_DEFAULT_LEVEL, async_service_handler,
-        schema=SERVICE_SET_DEFAULT_LEVEL_SCHEMA)
+        DOMAIN,
+        SERVICE_SET_DEFAULT_LEVEL,
+        async_service_handler,
+        schema=SERVICE_SET_DEFAULT_LEVEL_SCHEMA,
+    )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_LEVEL, async_service_handler,
-        schema=SERVICE_SET_LEVEL_SCHEMA)
+        DOMAIN,
+        SERVICE_SET_LEVEL,
+        async_service_handler,
+        schema=SERVICE_SET_LEVEL_SCHEMA,
+    )
 
     return True

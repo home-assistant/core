@@ -1,0 +1,15 @@
+{
+  "domain": "demo",
+  "name": "Demo",
+  "documentation": "https://www.home-assistant.io/components/demo",
+  "requirements": [],
+  "dependencies": [
+    "conversation",
+    "zone",
+    "group",
+    "configurator"
+  ],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

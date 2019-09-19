@@ -1,24 +1,17 @@
-"""
-Support for LiteJet switch.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.litejet/
-"""
+"""Support for LiteJet switch."""
 import logging
 
 from homeassistant.components import litejet
 from homeassistant.components.switch import SwitchDevice
 
-DEPENDENCIES = ['litejet']
-
-ATTR_NUMBER = 'number'
+ATTR_NUMBER = "number"
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LiteJet switch platform."""
-    litejet_ = hass.data['litejet_system']
+    litejet_ = hass.data["litejet_system"]
 
     devices = []
     for i in litejet_.button_switches():
@@ -70,9 +63,7 @@ class LiteJetSwitch(SwitchDevice):
     @property
     def device_state_attributes(self):
         """Return the device-specific state attributes."""
-        return {
-            ATTR_NUMBER: self._index
-        }
+        return {ATTR_NUMBER: self._index}
 
     def turn_on(self, **kwargs):
         """Press the switch."""

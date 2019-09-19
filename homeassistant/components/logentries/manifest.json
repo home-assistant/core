@@ -1,0 +1,8 @@
+{
+  "domain": "logentries",
+  "name": "Logentries",
+  "documentation": "https://www.home-assistant.io/components/logentries",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

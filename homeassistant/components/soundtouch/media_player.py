@@ -1,75 +1,87 @@
-"""
-Support for interface with a Bose Soundtouch.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.soundtouch/
-"""
+"""Support for interface with a Bose Soundtouch."""
 import logging
 import re
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
-    DOMAIN, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
+    DOMAIN,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
+)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
-    STATE_UNAVAILABLE)
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    STATE_OFF,
+    STATE_PAUSED,
+    STATE_PLAYING,
+    STATE_UNAVAILABLE,
+)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['libsoundtouch==0.7.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_PLAY_EVERYWHERE = 'soundtouch_play_everywhere'
-SERVICE_CREATE_ZONE = 'soundtouch_create_zone'
-SERVICE_ADD_ZONE_SLAVE = 'soundtouch_add_zone_slave'
-SERVICE_REMOVE_ZONE_SLAVE = 'soundtouch_remove_zone_slave'
+SERVICE_PLAY_EVERYWHERE = "soundtouch_play_everywhere"
+SERVICE_CREATE_ZONE = "soundtouch_create_zone"
+SERVICE_ADD_ZONE_SLAVE = "soundtouch_add_zone_slave"
+SERVICE_REMOVE_ZONE_SLAVE = "soundtouch_remove_zone_slave"
 
 MAP_STATUS = {
     "PLAY_STATE": STATE_PLAYING,
     "BUFFERING_STATE": STATE_PLAYING,
     "PAUSE_STATE": STATE_PAUSED,
-    "STOP_STATE": STATE_OFF
+    "STOP_STATE": STATE_OFF,
 }
 
 DATA_SOUNDTOUCH = "soundtouch"
 
-SOUNDTOUCH_PLAY_EVERYWHERE = vol.Schema({
-    vol.Required('master'): cv.entity_id
-})
+SOUNDTOUCH_PLAY_EVERYWHERE = vol.Schema({vol.Required("master"): cv.entity_id})
 
-SOUNDTOUCH_CREATE_ZONE_SCHEMA = vol.Schema({
-    vol.Required('master'): cv.entity_id,
-    vol.Required('slaves'): cv.entity_ids,
-})
+SOUNDTOUCH_CREATE_ZONE_SCHEMA = vol.Schema(
+    {vol.Required("master"): cv.entity_id, vol.Required("slaves"): cv.entity_ids}
+)
 
-SOUNDTOUCH_ADD_ZONE_SCHEMA = vol.Schema({
-    vol.Required('master'): cv.entity_id,
-    vol.Required('slaves'): cv.entity_ids,
-})
+SOUNDTOUCH_ADD_ZONE_SCHEMA = vol.Schema(
+    {vol.Required("master"): cv.entity_id, vol.Required("slaves"): cv.entity_ids}
+)
 
-SOUNDTOUCH_REMOVE_ZONE_SCHEMA = vol.Schema({
-    vol.Required('master'): cv.entity_id,
-    vol.Required('slaves'): cv.entity_ids,
-})
+SOUNDTOUCH_REMOVE_ZONE_SCHEMA = vol.Schema(
+    {vol.Required("master"): cv.entity_id, vol.Required("slaves"): cv.entity_ids}
+)
 
-DEFAULT_NAME = 'Bose Soundtouch'
+DEFAULT_NAME = "Bose Soundtouch"
 DEFAULT_PORT = 8090
 
-SUPPORT_SOUNDTOUCH = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
-    SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | \
-    SUPPORT_NEXT_TRACK | SUPPORT_TURN_OFF | \
-    SUPPORT_VOLUME_SET | SUPPORT_TURN_ON | SUPPORT_PLAY
+SUPPORT_SOUNDTOUCH = (
+    SUPPORT_PAUSE
+    | SUPPORT_VOLUME_STEP
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_TURN_OFF
+    | SUPPORT_VOLUME_SET
+    | SUPPORT_TURN_ON
+    | SUPPORT_PLAY
+    | SUPPORT_PLAY_MEDIA
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -78,28 +90,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hass.data[DATA_SOUNDTOUCH] = []
 
     if discovery_info:
-        host = discovery_info['host']
-        port = int(discovery_info['port'])
+        host = discovery_info["host"]
+        port = int(discovery_info["port"])
 
         # if device already exists by config
-        if host in [device.config['host'] for device in
-                    hass.data[DATA_SOUNDTOUCH]]:
+        if host in [device.config["host"] for device in hass.data[DATA_SOUNDTOUCH]]:
             return
 
-        remote_config = {
-            'id': 'ha.component.soundtouch',
-            'host': host,
-            'port': port
-        }
+        remote_config = {"id": "ha.component.soundtouch", "host": host, "port": port}
         soundtouch_device = SoundTouchDevice(None, remote_config)
         hass.data[DATA_SOUNDTOUCH].append(soundtouch_device)
         add_entities([soundtouch_device])
     else:
         name = config.get(CONF_NAME)
         remote_config = {
-            'id': 'ha.component.soundtouch',
-            'port': config.get(CONF_PORT),
-            'host': config.get(CONF_HOST)
+            "id": "ha.component.soundtouch",
+            "port": config.get(CONF_PORT),
+            "host": config.get(CONF_HOST),
         }
         soundtouch_device = SoundTouchDevice(name, remote_config)
         hass.data[DATA_SOUNDTOUCH].append(soundtouch_device)
@@ -107,24 +114,35 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     def service_handle(service):
         """Handle the applying of a service."""
-        master_device_id = service.data.get('master')
-        slaves_ids = service.data.get('slaves')
+        master_device_id = service.data.get("master")
+        slaves_ids = service.data.get("slaves")
         slaves = []
         if slaves_ids:
-            slaves = [device for device in hass.data[DATA_SOUNDTOUCH] if
-                      device.entity_id in slaves_ids]
+            slaves = [
+                device
+                for device in hass.data[DATA_SOUNDTOUCH]
+                if device.entity_id in slaves_ids
+            ]
 
-        master = next([device for device in hass.data[DATA_SOUNDTOUCH] if
-                       device.entity_id == master_device_id].__iter__(), None)
+        master = next(
+            [
+                device
+                for device in hass.data[DATA_SOUNDTOUCH]
+                if device.entity_id == master_device_id
+            ].__iter__(),
+            None,
+        )
 
         if master is None:
-            _LOGGER.warning("Unable to find master with entity_id: %s",
-                            str(master_device_id))
+            _LOGGER.warning(
+                "Unable to find master with entity_id: %s", str(master_device_id)
+            )
             return
 
         if service.service == SERVICE_PLAY_EVERYWHERE:
-            slaves = [d for d in hass.data[DATA_SOUNDTOUCH] if
-                      d.entity_id != master_device_id]
+            slaves = [
+                d for d in hass.data[DATA_SOUNDTOUCH] if d.entity_id != master_device_id
+            ]
             master.create_zone(slaves)
         elif service.service == SERVICE_CREATE_ZONE:
             master.create_zone(slaves)
@@ -133,18 +151,30 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         elif service.service == SERVICE_ADD_ZONE_SLAVE:
             master.add_zone_slave(slaves)
 
-    hass.services.register(DOMAIN, SERVICE_PLAY_EVERYWHERE,
-                           service_handle,
-                           schema=SOUNDTOUCH_PLAY_EVERYWHERE)
-    hass.services.register(DOMAIN, SERVICE_CREATE_ZONE,
-                           service_handle,
-                           schema=SOUNDTOUCH_CREATE_ZONE_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_REMOVE_ZONE_SLAVE,
-                           service_handle,
-                           schema=SOUNDTOUCH_REMOVE_ZONE_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_ADD_ZONE_SLAVE,
-                           service_handle,
-                           schema=SOUNDTOUCH_ADD_ZONE_SCHEMA)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_PLAY_EVERYWHERE,
+        service_handle,
+        schema=SOUNDTOUCH_PLAY_EVERYWHERE,
+    )
+    hass.services.register(
+        DOMAIN,
+        SERVICE_CREATE_ZONE,
+        service_handle,
+        schema=SOUNDTOUCH_CREATE_ZONE_SCHEMA,
+    )
+    hass.services.register(
+        DOMAIN,
+        SERVICE_REMOVE_ZONE_SLAVE,
+        service_handle,
+        schema=SOUNDTOUCH_REMOVE_ZONE_SCHEMA,
+    )
+    hass.services.register(
+        DOMAIN,
+        SERVICE_ADD_ZONE_SLAVE,
+        service_handle,
+        schema=SOUNDTOUCH_ADD_ZONE_SCHEMA,
+    )
 
 
 class SoundTouchDevice(MediaPlayerDevice):
@@ -153,7 +183,8 @@ class SoundTouchDevice(MediaPlayerDevice):
     def __init__(self, name, config):
         """Create Soundtouch Entity."""
         from libsoundtouch import soundtouch_device
-        self._device = soundtouch_device(config['host'], config['port'])
+
+        self._device = soundtouch_device(config["host"], config["port"])
         if name is None:
             self._name = self._device.config.name
         else:
@@ -190,7 +221,7 @@ class SoundTouchDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._status.source == 'STANDBY':
+        if self._status.source == "STANDBY":
             return STATE_OFF
 
         return MAP_STATUS.get(self._status.play_status, STATE_UNAVAILABLE)
@@ -298,15 +329,19 @@ class SoundTouchDevice(MediaPlayerDevice):
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         _LOGGER.debug("Starting media with media_id: %s", media_id)
-        if re.match(r'http?://', str(media_id)):
+        if re.match(r"http?://", str(media_id)):
             # URL
             _LOGGER.debug("Playing URL %s", str(media_id))
             self._device.play_url(str(media_id))
         else:
             # Preset
             presets = self._device.presets()
-            preset = next([preset for preset in presets if
-                           preset.preset_id == str(media_id)].__iter__(), None)
+            preset = next(
+                [
+                    preset for preset in presets if preset.preset_id == str(media_id)
+                ].__iter__(),
+                None,
+            )
             if preset is not None:
                 _LOGGER.debug("Playing preset: %s", preset.name)
                 self._device.select_preset(preset)
@@ -323,8 +358,7 @@ class SoundTouchDevice(MediaPlayerDevice):
         if not slaves:
             _LOGGER.warning("Unable to create zone without slaves")
         else:
-            _LOGGER.info("Creating zone with master %s",
-                         self._device.config.name)
+            _LOGGER.info("Creating zone with master %s", self._device.config.name)
             self._device.create_zone([slave.device for slave in slaves])
 
     def remove_zone_slave(self, slaves):
@@ -341,8 +375,9 @@ class SoundTouchDevice(MediaPlayerDevice):
         if not slaves:
             _LOGGER.warning("Unable to find slaves to remove")
         else:
-            _LOGGER.info("Removing slaves from zone with master %s",
-                         self._device.config.name)
+            _LOGGER.info(
+                "Removing slaves from zone with master %s", self._device.config.name
+            )
             self._device.remove_zone_slave([slave.device for slave in slaves])
 
     def add_zone_slave(self, slaves):
@@ -357,6 +392,7 @@ class SoundTouchDevice(MediaPlayerDevice):
         if not slaves:
             _LOGGER.warning("Unable to find slaves to add")
         else:
-            _LOGGER.info("Adding slaves to zone with master %s",
-                         self._device.config.name)
+            _LOGGER.info(
+                "Adding slaves to zone with master %s", self._device.config.name
+            )
             self._device.add_zone_slave([slave.device for slave in slaves])

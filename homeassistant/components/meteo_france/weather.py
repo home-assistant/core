@@ -1,13 +1,18 @@
 """Support for Meteo-France weather service."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
 from homeassistant.components.weather import (
-    ATTR_FORECAST_CONDITION, ATTR_FORECAST_TEMP, ATTR_FORECAST_TEMP_LOW,
-    ATTR_FORECAST_TIME, WeatherEntity)
+    ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_TIME,
+    WeatherEntity,
+)
+import homeassistant.util.dt as dt_util
 from homeassistant.const import TEMP_CELSIUS
 
-from . import ATTRIBUTION, CONDITION_CLASSES, CONF_CITY, DATA_METEO_FRANCE
+from .const import ATTRIBUTION, CONDITION_CLASSES, CONF_CITY, DATA_METEO_FRANCE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,17 +44,17 @@ class MeteoFranceWeather(WeatherEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._data['name']
+        return self._data["name"]
 
     @property
     def condition(self):
         """Return the current condition."""
-        return self.format_condition(self._data['weather'])
+        return self.format_condition(self._data["weather"])
 
     @property
     def temperature(self):
         """Return the temperature."""
-        return self._data['temperature']
+        return self._data["temperature"]
 
     @property
     def humidity(self):
@@ -64,12 +69,12 @@ class MeteoFranceWeather(WeatherEntity):
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        return self._data['wind_speed']
+        return self._data["wind_speed"]
 
     @property
     def wind_bearing(self):
         """Return the wind bearing."""
-        return self._data['wind_bearing']
+        return self._data["wind_bearing"]
 
     @property
     def attribution(self):
@@ -79,17 +84,17 @@ class MeteoFranceWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast."""
-        reftime = datetime.now().replace(hour=12, minute=00)
+        reftime = dt_util.utcnow().replace(hour=12, minute=0, second=0, microsecond=0)
         reftime += timedelta(hours=24)
+        _LOGGER.debug("reftime used for %s forecast: %s", self._data["name"], reftime)
         forecast_data = []
-        for key in self._data['forecast']:
-            value = self._data['forecast'][key]
+        for key in self._data["forecast"]:
+            value = self._data["forecast"][key]
             data_dict = {
                 ATTR_FORECAST_TIME: reftime.isoformat(),
-                ATTR_FORECAST_TEMP: int(value['max_temp']),
-                ATTR_FORECAST_TEMP_LOW: int(value['min_temp']),
-                ATTR_FORECAST_CONDITION:
-                    self.format_condition(value['weather'])
+                ATTR_FORECAST_TEMP: int(value["max_temp"]),
+                ATTR_FORECAST_TEMP_LOW: int(value["min_temp"]),
+                ATTR_FORECAST_CONDITION: self.format_condition(value["weather"]),
             }
             reftime = reftime + timedelta(hours=24)
             forecast_data.append(data_dict)
@@ -102,3 +107,11 @@ class MeteoFranceWeather(WeatherEntity):
             if condition in value:
                 return key
         return condition
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        data = dict()
+        if self._data and "next_rain" in self._data:
+            data["next_rain"] = self._data["next_rain"]
+        return data

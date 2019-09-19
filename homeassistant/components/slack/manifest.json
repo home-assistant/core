@@ -1,0 +1,10 @@
+{
+  "domain": "slack",
+  "name": "Slack",
+  "documentation": "https://www.home-assistant.io/components/slack",
+  "requirements": [
+    "slacker==0.13.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

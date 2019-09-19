@@ -1,32 +1,26 @@
-"""
-Support for tracking the moon phases.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.moon/
-"""
+"""Support for tracking the moon phases."""
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME)
+from homeassistant.const import CONF_NAME
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Moon'
+DEFAULT_NAME = "Moon"
 
-ICON = 'mdi:brightness-3'
+ICON = "mdi:brightness-3"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}
+)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Moon sensor."""
     name = config.get(CONF_NAME)
 
@@ -50,20 +44,20 @@ class MoonSensor(Entity):
     def state(self):
         """Return the state of the device."""
         if self._state == 0:
-            return 'new_moon'
+            return "new_moon"
         if self._state < 7:
-            return 'waxing_crescent'
+            return "waxing_crescent"
         if self._state == 7:
-            return 'first_quarter'
+            return "first_quarter"
         if self._state < 14:
-            return 'waxing_gibbous'
+            return "waxing_gibbous"
         if self._state == 14:
-            return 'full_moon'
+            return "full_moon"
         if self._state < 21:
-            return 'waning_gibbous'
+            return "waning_gibbous"
         if self._state == 21:
-            return 'last_quarter'
-        return 'waning_crescent'
+            return "last_quarter"
+        return "waning_crescent"
 
     @property
     def icon(self):

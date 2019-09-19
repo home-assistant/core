@@ -1,9 +1,4 @@
-"""
-Support for displaying details about a Gitter.im chat room.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.gitter/
-"""
+"""Support for displaying details about a Gitter.im chat room."""
 import logging
 
 import voluptuous as vol
@@ -13,24 +8,24 @@ from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_ROOM
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['gitterpy==0.1.7']
-
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_MENTION = 'mention'
-ATTR_ROOM = 'room'
-ATTR_USERNAME = 'username'
+ATTR_MENTION = "mention"
+ATTR_ROOM = "room"
+ATTR_USERNAME = "username"
 
-DEFAULT_NAME = 'Gitter messages'
-DEFAULT_ROOM = 'home-assistant/home-assistant'
+DEFAULT_NAME = "Gitter messages"
+DEFAULT_ROOM = "home-assistant/home-assistant"
 
-ICON = 'mdi:message-settings-variant'
+ICON = "mdi:message-settings-variant"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_ROOM, default=DEFAULT_ROOM): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_ROOM, default=DEFAULT_ROOM): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -44,7 +39,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     gitter = GitterClient(api_key)
     try:
-        username = gitter.auth.get_my_id['name']
+        username = gitter.auth.get_my_id["name"]
     except GitterTokenError:
         _LOGGER.error("Token is not valid")
         return
@@ -63,7 +58,7 @@ class GitterSensor(Entity):
         self._username = username
         self._state = None
         self._mention = 0
-        self._unit_of_measurement = 'Msg'
+        self._unit_of_measurement = "Msg"
 
     @property
     def name(self):
@@ -104,8 +99,8 @@ class GitterSensor(Entity):
             _LOGGER.error(error)
             return
 
-        if 'error' not in data.keys():
-            self._mention = len(data['mention'])
-            self._state = len(data['chat'])
+        if "error" not in data.keys():
+            self._mention = len(data["mention"])
+            self._state = len(data["chat"])
         else:
             _LOGGER.error("Not joined: %s", self._room)

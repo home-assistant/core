@@ -3,27 +3,25 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_DEVICE,
-                                 EVENT_HOMEASSISTANT_START,
-                                 EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (
+    CONF_DEVICE,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+)
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (dispatcher_send)
+from homeassistant.helpers.dispatcher import dispatcher_send
 
-REQUIREMENTS = ['pyW800rf32==0.1']
+DATA_W800RF32 = "data_w800rf32"
+DOMAIN = "w800rf32"
 
-DATA_W800RF32 = 'data_w800rf32'
-DOMAIN = 'w800rf32'
-
-W800RF32_DEVICE = 'w800rf32_{}'
+W800RF32_DEVICE = "w800rf32_{}"
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_DEVICE): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
+)
 
 
 def setup(hass, config):
@@ -50,11 +48,13 @@ def setup(hass, config):
 
     def _start_w800rf32(event):
         w800_object.event_callback = handle_receive
+
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, _start_w800rf32)
 
     def _shutdown_w800rf32(event):
         """Close connection with w800rf32."""
         w800_object.close_connection()
+
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_w800rf32)
 
     hass.data[DATA_W800RF32] = w800_object

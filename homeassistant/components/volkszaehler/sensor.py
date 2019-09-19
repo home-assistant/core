@@ -1,9 +1,4 @@
-"""
-Support for consuming values for the Volkszaehler API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.volkszaehler/
-"""
+"""Support for consuming values for the Volkszaehler API."""
 from datetime import timedelta
 import logging
 
@@ -11,45 +6,50 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT, CONF_MONITORED_CONDITIONS, POWER_WATT,
-    ENERGY_WATT_HOUR)
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_MONITORED_CONDITIONS,
+    POWER_WATT,
+    ENERGY_WATT_HOUR,
+)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['volkszaehler==0.1.2']
-
 _LOGGER = logging.getLogger(__name__)
 
-CONF_UUID = 'uuid'
+CONF_UUID = "uuid"
 
-DEFAULT_HOST = 'localhost'
-DEFAULT_NAME = 'Volkszaehler'
+DEFAULT_HOST = "localhost"
+DEFAULT_NAME = "Volkszaehler"
 DEFAULT_PORT = 80
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 SENSOR_TYPES = {
-    'average': ['Average', POWER_WATT, 'mdi:power-off'],
-    'consumption': ['Consumption', ENERGY_WATT_HOUR, 'mdi:power-plug'],
-    'max': ['Max', POWER_WATT, 'mdi:arrow-up'],
-    'min': ['Min', POWER_WATT, 'mdi:arrow-down'],
+    "average": ["Average", POWER_WATT, "mdi:power-off"],
+    "consumption": ["Consumption", ENERGY_WATT_HOUR, "mdi:power-plug"],
+    "max": ["Max", POWER_WATT, "mdi:arrow-up"],
+    "min": ["Min", POWER_WATT, "mdi:arrow-down"],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_UUID): cv.string,
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=['average']):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_UUID): cv.string,
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=["average"]): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        ),
+    }
+)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Volkszaehler sensors."""
     from volkszaehler import Volkszaehler
 
@@ -61,7 +61,8 @@ async def async_setup_platform(
 
     session = async_get_clientsession(hass)
     vz_api = VolkszaehlerData(
-        Volkszaehler(hass.loop, session, uuid, host=host, port=port))
+        Volkszaehler(hass.loop, session, uuid, host=host, port=port)
+    )
 
     await vz_api.async_update()
 
@@ -88,7 +89,7 @@ class VolkszaehlerSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self._name, SENSOR_TYPES[self.type][0])
+        return "{} {}".format(self._name, SENSOR_TYPES[self.type][0])
 
     @property
     def icon(self):

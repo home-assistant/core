@@ -1,0 +1,12 @@
+{
+  "domain": "digital_ocean",
+  "name": "Digital ocean",
+  "documentation": "https://www.home-assistant.io/components/digital_ocean",
+  "requirements": [
+    "python-digitalocean==1.13.2"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

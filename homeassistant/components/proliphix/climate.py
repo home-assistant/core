@@ -1,28 +1,32 @@
-"""
-Support for Proliphix NT10e Thermostats.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.proliphix/
-"""
+"""Support for Proliphix NT10e Thermostats."""
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_TARGET_TEMPERATURE)
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    SUPPORT_TARGET_TEMPERATURE,
+)
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, PRECISION_TENTHS, TEMP_FAHRENHEIT,
-    ATTR_TEMPERATURE)
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    PRECISION_TENTHS,
+    TEMP_FAHRENHEIT,
+    ATTR_TEMPERATURE,
+)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['proliphix==0.4.1']
+ATTR_FAN = "fan"
 
-ATTR_FAN = 'fan'
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -35,7 +39,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     pdp = proliphix.PDP(host, username, password)
 
-    add_entities([ProliphixThermostat(pdp)])
+    add_entities([ProliphixThermostat(pdp)], True)
 
 
 class ProliphixThermostat(ClimateDevice):
@@ -44,7 +48,6 @@ class ProliphixThermostat(ClimateDevice):
     def __init__(self, pdp):
         """Initialize the thermostat."""
         self._pdp = pdp
-        self._pdp.update()
         self._name = self._pdp.name
 
     @property
@@ -78,9 +81,7 @@ class ProliphixThermostat(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
-        return {
-            ATTR_FAN: self._pdp.fan_state
-        }
+        return {ATTR_FAN: self._pdp.fan_state}
 
     @property
     def temperature_unit(self):
@@ -98,15 +99,20 @@ class ProliphixThermostat(ClimateDevice):
         return self._pdp.setback
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return the current state of the thermostat."""
-        state = self._pdp.hvac_state
+        state = self._pdp.hvac_mode
         if state in (1, 2):
-            return STATE_IDLE
+            return HVAC_MODE_OFF
         if state == 3:
-            return STATE_HEAT
+            return HVAC_MODE_HEAT
         if state == 6:
-            return STATE_COOL
+            return HVAC_MODE_COOL
+
+    @property
+    def hvac_modes(self):
+        """Return available HVAC modes."""
+        return []
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""

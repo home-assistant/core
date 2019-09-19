@@ -9,43 +9,46 @@ from aiohttp.hdrs import USER_AGENT, AUTHORIZATION
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_DOMAIN, CONF_TIMEOUT, CONF_PASSWORD, CONF_USERNAME)
+from homeassistant.const import CONF_DOMAIN, CONF_TIMEOUT, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'no_ip'
+DOMAIN = "no_ip"
 
 # We should set a dedicated address for the user agent.
-EMAIL = 'hello@home-assistant.io'
+EMAIL = "hello@home-assistant.io"
 
 INTERVAL = timedelta(minutes=5)
 
 DEFAULT_TIMEOUT = 10
 
 NO_IP_ERRORS = {
-    'nohost': "Hostname supplied does not exist under specified account",
-    'badauth': "Invalid username password combination",
-    'badagent': "Client disabled",
-    '!donator':
-        "An update request was sent with a feature that is not available",
-    'abuse': "Username is blocked due to abuse",
-    '911': "A fatal error on NO-IP's side such as a database outage",
+    "nohost": "Hostname supplied does not exist under specified account",
+    "badauth": "Invalid username password combination",
+    "badagent": "Client disabled",
+    "!donator": "An update request was sent with a feature that is not available",
+    "abuse": "Username is blocked due to abuse",
+    "911": "A fatal error on NO-IP's side such as a database outage",
 }
 
-UPDATE_URL = 'https://dynupdate.noip.com/nic/update'
-HA_USER_AGENT = "{} {}".format(SERVER_SOFTWARE, EMAIL)
+UPDATE_URL = "https://dynupdate.noip.com/nic/update"
+HA_USER_AGENT = f"{SERVER_SOFTWARE} {EMAIL}"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_DOMAIN): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_DOMAIN): cv.string,
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):
@@ -55,12 +58,11 @@ async def async_setup(hass, config):
     password = config[DOMAIN].get(CONF_PASSWORD)
     timeout = config[DOMAIN].get(CONF_TIMEOUT)
 
-    auth_str = base64.b64encode('{}:{}'.format(user, password).encode('utf-8'))
+    auth_str = base64.b64encode(f"{user}:{password}".encode("utf-8"))
 
     session = hass.helpers.aiohttp_client.async_get_clientsession()
 
-    result = await _update_no_ip(
-        hass, session, domain, auth_str, timeout)
+    result = await _update_no_ip(hass, session, domain, auth_str, timeout)
 
     if not result:
         return False
@@ -69,8 +71,7 @@ async def async_setup(hass, config):
         """Update the NO-IP entry."""
         await _update_no_ip(hass, session, domain, auth_str, timeout)
 
-    hass.helpers.event.async_track_time_interval(
-        update_domain_interval, INTERVAL)
+    hass.helpers.event.async_track_time_interval(update_domain_interval, INTERVAL)
 
     return True
 
@@ -79,25 +80,24 @@ async def _update_no_ip(hass, session, domain, auth_str, timeout):
     """Update NO-IP."""
     url = UPDATE_URL
 
-    params = {
-        'hostname': domain,
-    }
+    params = {"hostname": domain}
 
     headers = {
-        AUTHORIZATION: "Basic {}".format(auth_str.decode('utf-8')),
+        AUTHORIZATION: "Basic {}".format(auth_str.decode("utf-8")),
         USER_AGENT: HA_USER_AGENT,
     }
 
     try:
-        with async_timeout.timeout(timeout, loop=hass.loop):
+        with async_timeout.timeout(timeout):
             resp = await session.get(url, params=params, headers=headers)
             body = await resp.text()
 
-            if body.startswith('good') or body.startswith('nochg'):
+            if body.startswith("good") or body.startswith("nochg"):
                 return True
 
-            _LOGGER.warning("Updating NO-IP failed: %s => %s", domain,
-                            NO_IP_ERRORS[body.strip()])
+            _LOGGER.warning(
+                "Updating NO-IP failed: %s => %s", domain, NO_IP_ERRORS[body.strip()]
+            )
 
     except aiohttp.ClientError:
         _LOGGER.warning("Can't connect to NO-IP API")

@@ -1,0 +1,10 @@
+{
+  "domain": "nuheat",
+  "name": "Nuheat",
+  "documentation": "https://www.home-assistant.io/components/nuheat",
+  "requirements": [
+    "nuheat==0.3.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

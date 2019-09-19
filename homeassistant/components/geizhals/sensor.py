@@ -1,9 +1,4 @@
-"""
-Parse prices of a device from geizhals.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.geizhals/
-"""
+"""Parse prices of a device from geizhals."""
 import logging
 from datetime import timedelta
 
@@ -15,29 +10,24 @@ from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_NAME
 
-REQUIREMENTS = ['geizhals==0.0.9']
-
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DESCRIPTION = 'description'
-CONF_PRODUCT_ID = 'product_id'
-CONF_LOCALE = 'locale'
+CONF_DESCRIPTION = "description"
+CONF_PRODUCT_ID = "product_id"
+CONF_LOCALE = "locale"
 
-ICON = 'mdi:coin'
+ICON = "mdi:coin"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_PRODUCT_ID): cv.positive_int,
-    vol.Optional(CONF_DESCRIPTION, default='Price'): cv.string,
-    vol.Optional(CONF_LOCALE, default='DE'): vol.In(
-        ['AT',
-         'EU',
-         'DE',
-         'UK',
-         'PL']),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_PRODUCT_ID): cv.positive_int,
+        vol.Optional(CONF_DESCRIPTION, default="Price"): cv.string,
+        vol.Optional(CONF_LOCALE, default="DE"): vol.In(["AT", "EU", "DE", "UK", "PL"]),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -47,8 +37,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     product_id = config.get(CONF_PRODUCT_ID)
     domain = config.get(CONF_LOCALE)
 
-    add_entities([Geizwatch(name, description, product_id, domain)],
-                 True)
+    add_entities([Geizwatch(name, description, product_id, domain)], True)
 
 
 class Geizwatch(Entity):
@@ -89,15 +78,17 @@ class Geizwatch(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         while len(self._device.prices) < 4:
-            self._device.prices.append('None')
-        attrs = {'device_name': self._device.name,
-                 'description': self.description,
-                 'unit_of_measurement': self._device.price_currency,
-                 'product_id': self.product_id,
-                 'price1': self._device.prices[0],
-                 'price2': self._device.prices[1],
-                 'price3': self._device.prices[2],
-                 'price4': self._device.prices[3]}
+            self._device.prices.append("None")
+        attrs = {
+            "device_name": self._device.name,
+            "description": self.description,
+            "unit_of_measurement": self._device.price_currency,
+            "product_id": self.product_id,
+            "price1": self._device.prices[0],
+            "price2": self._device.prices[1],
+            "price3": self._device.prices[2],
+            "price4": self._device.prices[3],
+        }
         return attrs
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)

@@ -6,90 +6,108 @@ from requests.exceptions import HTTPError, ConnectTimeout
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_DATE, ATTR_TIME, ATTR_ENTITY_ID, CONF_USERNAME,
-    CONF_PASSWORD, CONF_EXCLUDE, CONF_NAME, CONF_LIGHTS,
-    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START)
+    ATTR_ATTRIBUTION,
+    ATTR_DATE,
+    ATTR_TIME,
+    ATTR_ENTITY_ID,
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    CONF_EXCLUDE,
+    CONF_NAME,
+    CONF_LIGHTS,
+    EVENT_HOMEASSISTANT_STOP,
+    EVENT_HOMEASSISTANT_START,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['abodepy==0.15.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by goabode.com"
 
-CONF_POLLING = 'polling'
+CONF_POLLING = "polling"
 
-DOMAIN = 'abode'
-DEFAULT_CACHEDB = './abodepy_cache.pickle'
+DOMAIN = "abode"
+DEFAULT_CACHEDB = "./abodepy_cache.pickle"
 
-NOTIFICATION_ID = 'abode_notification'
-NOTIFICATION_TITLE = 'Abode Security Setup'
+NOTIFICATION_ID = "abode_notification"
+NOTIFICATION_TITLE = "Abode Security Setup"
 
-EVENT_ABODE_ALARM = 'abode_alarm'
-EVENT_ABODE_ALARM_END = 'abode_alarm_end'
-EVENT_ABODE_AUTOMATION = 'abode_automation'
-EVENT_ABODE_FAULT = 'abode_panel_fault'
-EVENT_ABODE_RESTORE = 'abode_panel_restore'
+EVENT_ABODE_ALARM = "abode_alarm"
+EVENT_ABODE_ALARM_END = "abode_alarm_end"
+EVENT_ABODE_AUTOMATION = "abode_automation"
+EVENT_ABODE_FAULT = "abode_panel_fault"
+EVENT_ABODE_RESTORE = "abode_panel_restore"
 
-SERVICE_SETTINGS = 'change_setting'
-SERVICE_CAPTURE_IMAGE = 'capture_image'
-SERVICE_TRIGGER = 'trigger_quick_action'
+SERVICE_SETTINGS = "change_setting"
+SERVICE_CAPTURE_IMAGE = "capture_image"
+SERVICE_TRIGGER = "trigger_quick_action"
 
-ATTR_DEVICE_ID = 'device_id'
-ATTR_DEVICE_NAME = 'device_name'
-ATTR_DEVICE_TYPE = 'device_type'
-ATTR_EVENT_CODE = 'event_code'
-ATTR_EVENT_NAME = 'event_name'
-ATTR_EVENT_TYPE = 'event_type'
-ATTR_EVENT_UTC = 'event_utc'
-ATTR_SETTING = 'setting'
-ATTR_USER_NAME = 'user_name'
-ATTR_VALUE = 'value'
+ATTR_DEVICE_ID = "device_id"
+ATTR_DEVICE_NAME = "device_name"
+ATTR_DEVICE_TYPE = "device_type"
+ATTR_EVENT_CODE = "event_code"
+ATTR_EVENT_NAME = "event_name"
+ATTR_EVENT_TYPE = "event_type"
+ATTR_EVENT_UTC = "event_utc"
+ATTR_SETTING = "setting"
+ATTR_USER_NAME = "user_name"
+ATTR_VALUE = "value"
 
 ABODE_DEVICE_ID_LIST_SCHEMA = vol.Schema([str])
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_POLLING, default=False): cv.boolean,
-        vol.Optional(CONF_EXCLUDE, default=[]): ABODE_DEVICE_ID_LIST_SCHEMA,
-        vol.Optional(CONF_LIGHTS, default=[]): ABODE_DEVICE_ID_LIST_SCHEMA
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_NAME): cv.string,
+                vol.Optional(CONF_POLLING, default=False): cv.boolean,
+                vol.Optional(CONF_EXCLUDE, default=[]): ABODE_DEVICE_ID_LIST_SCHEMA,
+                vol.Optional(CONF_LIGHTS, default=[]): ABODE_DEVICE_ID_LIST_SCHEMA,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
-CHANGE_SETTING_SCHEMA = vol.Schema({
-    vol.Required(ATTR_SETTING): cv.string,
-    vol.Required(ATTR_VALUE): cv.string
-})
+CHANGE_SETTING_SCHEMA = vol.Schema(
+    {vol.Required(ATTR_SETTING): cv.string, vol.Required(ATTR_VALUE): cv.string}
+)
 
-CAPTURE_IMAGE_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
-})
+CAPTURE_IMAGE_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 
-TRIGGER_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
-})
+TRIGGER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 
 ABODE_PLATFORMS = [
-    'alarm_control_panel', 'binary_sensor', 'lock', 'switch', 'cover',
-    'camera', 'light', 'sensor'
+    "alarm_control_panel",
+    "binary_sensor",
+    "lock",
+    "switch",
+    "cover",
+    "camera",
+    "light",
+    "sensor",
 ]
 
 
 class AbodeSystem:
     """Abode System class."""
 
-    def __init__(self, username, password, cache,
-                 name, polling, exclude, lights):
+    def __init__(self, username, password, cache, name, polling, exclude, lights):
         """Initialize the system."""
         import abodepy
+
         self.abode = abodepy.Abode(
-            username, password, auto_login=True, get_devices=True,
-            get_automations=True, cache_path=cache)
+            username,
+            password,
+            auto_login=True,
+            get_devices=True,
+            get_automations=True,
+            cache_path=cache,
+        )
         self.name = name
         self.polling = polling
         self.exclude = exclude
@@ -108,9 +126,9 @@ class AbodeSystem:
         """Check if a switch device is configured as a light."""
         import abodepy.helpers.constants as CONST
 
-        return (device.generic_type == CONST.TYPE_LIGHT or
-                (device.generic_type == CONST.TYPE_SWITCH and
-                 device.device_id in self.lights))
+        return device.generic_type == CONST.TYPE_LIGHT or (
+            device.generic_type == CONST.TYPE_SWITCH and device.device_id in self.lights
+        )
 
 
 def setup(hass, config):
@@ -128,16 +146,18 @@ def setup(hass, config):
     try:
         cache = hass.config.path(DEFAULT_CACHEDB)
         hass.data[DOMAIN] = AbodeSystem(
-            username, password, cache, name, polling, exclude, lights)
+            username, password, cache, name, polling, exclude, lights
+        )
     except (AbodeException, ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Abode: %s", str(ex))
 
         hass.components.persistent_notification.create(
-            'Error: {}<br />'
-            'You will need to restart hass after fixing.'
-            ''.format(ex),
+            "Error: {}<br />"
+            "You will need to restart hass after fixing."
+            "".format(ex),
             title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID)
+            notification_id=NOTIFICATION_ID,
+        )
         return False
 
     setup_hass_services(hass)
@@ -168,8 +188,11 @@ def setup_hass_services(hass):
         """Capture a new image."""
         entity_ids = call.data.get(ATTR_ENTITY_ID)
 
-        target_devices = [device for device in hass.data[DOMAIN].devices
-                          if device.entity_id in entity_ids]
+        target_devices = [
+            device
+            for device in hass.data[DOMAIN].devices
+            if device.entity_id in entity_ids
+        ]
 
         for device in target_devices:
             device.capture()
@@ -178,27 +201,31 @@ def setup_hass_services(hass):
         """Trigger a quick action."""
         entity_ids = call.data.get(ATTR_ENTITY_ID, None)
 
-        target_devices = [device for device in hass.data[DOMAIN].devices
-                          if device.entity_id in entity_ids]
+        target_devices = [
+            device
+            for device in hass.data[DOMAIN].devices
+            if device.entity_id in entity_ids
+        ]
 
         for device in target_devices:
             device.trigger()
 
     hass.services.register(
-        DOMAIN, SERVICE_SETTINGS, change_setting,
-        schema=CHANGE_SETTING_SCHEMA)
+        DOMAIN, SERVICE_SETTINGS, change_setting, schema=CHANGE_SETTING_SCHEMA
+    )
 
     hass.services.register(
-        DOMAIN, SERVICE_CAPTURE_IMAGE, capture_image,
-        schema=CAPTURE_IMAGE_SCHEMA)
+        DOMAIN, SERVICE_CAPTURE_IMAGE, capture_image, schema=CAPTURE_IMAGE_SCHEMA
+    )
 
     hass.services.register(
-        DOMAIN, SERVICE_TRIGGER, trigger_quick_action,
-        schema=TRIGGER_SCHEMA)
+        DOMAIN, SERVICE_TRIGGER, trigger_quick_action, schema=TRIGGER_SCHEMA
+    )
 
 
 def setup_hass_events(hass):
     """Home Assistant start and stop callbacks."""
+
     def startup(event):
         """Listen for push events."""
         hass.data[DOMAIN].abode.events.start()
@@ -224,28 +251,32 @@ def setup_abode_events(hass):
     def event_callback(event, event_json):
         """Handle an event callback from Abode."""
         data = {
-            ATTR_DEVICE_ID: event_json.get(ATTR_DEVICE_ID, ''),
-            ATTR_DEVICE_NAME: event_json.get(ATTR_DEVICE_NAME, ''),
-            ATTR_DEVICE_TYPE: event_json.get(ATTR_DEVICE_TYPE, ''),
-            ATTR_EVENT_CODE: event_json.get(ATTR_EVENT_CODE, ''),
-            ATTR_EVENT_NAME: event_json.get(ATTR_EVENT_NAME, ''),
-            ATTR_EVENT_TYPE: event_json.get(ATTR_EVENT_TYPE, ''),
-            ATTR_EVENT_UTC: event_json.get(ATTR_EVENT_UTC, ''),
-            ATTR_USER_NAME: event_json.get(ATTR_USER_NAME, ''),
-            ATTR_DATE: event_json.get(ATTR_DATE, ''),
-            ATTR_TIME: event_json.get(ATTR_TIME, ''),
+            ATTR_DEVICE_ID: event_json.get(ATTR_DEVICE_ID, ""),
+            ATTR_DEVICE_NAME: event_json.get(ATTR_DEVICE_NAME, ""),
+            ATTR_DEVICE_TYPE: event_json.get(ATTR_DEVICE_TYPE, ""),
+            ATTR_EVENT_CODE: event_json.get(ATTR_EVENT_CODE, ""),
+            ATTR_EVENT_NAME: event_json.get(ATTR_EVENT_NAME, ""),
+            ATTR_EVENT_TYPE: event_json.get(ATTR_EVENT_TYPE, ""),
+            ATTR_EVENT_UTC: event_json.get(ATTR_EVENT_UTC, ""),
+            ATTR_USER_NAME: event_json.get(ATTR_USER_NAME, ""),
+            ATTR_DATE: event_json.get(ATTR_DATE, ""),
+            ATTR_TIME: event_json.get(ATTR_TIME, ""),
         }
 
         hass.bus.fire(event, data)
 
-    events = [TIMELINE.ALARM_GROUP, TIMELINE.ALARM_END_GROUP,
-              TIMELINE.PANEL_FAULT_GROUP, TIMELINE.PANEL_RESTORE_GROUP,
-              TIMELINE.AUTOMATION_GROUP]
+    events = [
+        TIMELINE.ALARM_GROUP,
+        TIMELINE.ALARM_END_GROUP,
+        TIMELINE.PANEL_FAULT_GROUP,
+        TIMELINE.PANEL_RESTORE_GROUP,
+        TIMELINE.AUTOMATION_GROUP,
+    ]
 
     for event in events:
         hass.data[DOMAIN].abode.events.add_event_callback(
-            event,
-            partial(event_callback, event))
+            event, partial(event_callback, event)
+        )
 
 
 class AbodeDevice(Entity):
@@ -260,7 +291,8 @@ class AbodeDevice(Entity):
         """Subscribe Abode events."""
         self.hass.async_add_job(
             self._data.abode.events.add_device_callback,
-            self._device.device_id, self._update_callback
+            self._device.device_id,
+            self._update_callback,
         )
 
     @property
@@ -282,10 +314,10 @@ class AbodeDevice(Entity):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            'device_id': self._device.device_id,
-            'battery_low': self._device.battery_low,
-            'no_response': self._device.no_response,
-            'device_type': self._device.type
+            "device_id": self._device.device_id,
+            "battery_low": self._device.battery_low,
+            "no_response": self._device.no_response,
+            "device_type": self._device.type,
         }
 
     def _update_callback(self, device):
@@ -307,7 +339,8 @@ class AbodeAutomation(Entity):
         if self._event:
             self.hass.async_add_job(
                 self._data.abode.events.add_event_callback,
-                self._event, self._update_callback
+                self._event,
+                self._update_callback,
             )
 
     @property
@@ -329,9 +362,9 @@ class AbodeAutomation(Entity):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            'automation_id': self._automation.automation_id,
-            'type': self._automation.type,
-            'sub_type': self._automation.sub_type
+            "automation_id": self._automation.automation_id,
+            "type": self._automation.type,
+            "sub_type": self._automation.sub_type,
         }
 
     def _update_callback(self, device):

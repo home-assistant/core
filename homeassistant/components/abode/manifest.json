@@ -1,0 +1,10 @@
+{
+  "domain": "abode",
+  "name": "Abode",
+  "documentation": "https://www.home-assistant.io/components/abode",
+  "requirements": [
+    "abodepy==0.15.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

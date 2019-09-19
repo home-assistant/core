@@ -1,9 +1,4 @@
-"""
-Support for THOMSON routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.thomson/
-"""
+"""Support for THOMSON routers."""
 import logging
 import re
 import telnetlib
@@ -12,25 +7,31 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    DeviceScanner,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 
 _DEVICES_REGEX = re.compile(
-    r'(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2})))\s'
-    r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s+'
-    r'(?P<status>([^\s]+))\s+'
-    r'(?P<type>([^\s]+))\s+'
-    r'(?P<intf>([^\s]+))\s+'
-    r'(?P<hwintf>([^\s]+))\s+'
-    r'(?P<host>([^\s]+))')
+    r"(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2})))\s"
+    r"(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s+"
+    r"(?P<status>([^\s]+))\s+"
+    r"(?P<type>([^\s]+))\s+"
+    r"(?P<intf>([^\s]+))\s+"
+    r"(?P<hwintf>([^\s]+))\s+"
+    r"(?P<host>([^\s]+))"
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_USERNAME): cv.string
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+    }
+)
 
 
 def get_scanner(hass, config):
@@ -57,15 +58,15 @@ class ThomsonDeviceScanner(DeviceScanner):
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
-        return [client['mac'] for client in self.last_results]
+        return [client["mac"] for client in self.last_results]
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         if not self.last_results:
             return None
         for client in self.last_results:
-            if client['mac'] == device:
-                return client['host']
+            if client["mac"] == device:
+                return client["host"]
         return None
 
     def _update_info(self):
@@ -82,8 +83,9 @@ class ThomsonDeviceScanner(DeviceScanner):
             return False
 
         # Flag C stands for CONNECTED
-        active_clients = [client for client in data.values() if
-                          client['status'].find('C') != -1]
+        active_clients = [
+            client for client in data.values() if client["status"].find("C") != -1
+        ]
         self.last_results = active_clients
         return True
 
@@ -91,30 +93,29 @@ class ThomsonDeviceScanner(DeviceScanner):
         """Retrieve data from THOMSON and return parsed result."""
         try:
             telnet = telnetlib.Telnet(self.host)
-            telnet.read_until(b'Username : ')
-            telnet.write((self.username + '\r\n').encode('ascii'))
-            telnet.read_until(b'Password : ')
-            telnet.write((self.password + '\r\n').encode('ascii'))
-            telnet.read_until(b'=>')
-            telnet.write(('hostmgr list\r\n').encode('ascii'))
-            devices_result = telnet.read_until(b'=>').split(b'\r\n')
-            telnet.write('exit\r\n'.encode('ascii'))
+            telnet.read_until(b"Username : ")
+            telnet.write((self.username + "\r\n").encode("ascii"))
+            telnet.read_until(b"Password : ")
+            telnet.write((self.password + "\r\n").encode("ascii"))
+            telnet.read_until(b"=>")
+            telnet.write(("hostmgr list\r\n").encode("ascii"))
+            devices_result = telnet.read_until(b"=>").split(b"\r\n")
+            telnet.write("exit\r\n".encode("ascii"))
         except EOFError:
             _LOGGER.exception("Unexpected response from router")
             return
         except ConnectionRefusedError:
-            _LOGGER.exception(
-                "Connection refused by router. Telnet enabled?")
+            _LOGGER.exception("Connection refused by router. Telnet enabled?")
             return
 
         devices = {}
         for device in devices_result:
-            match = _DEVICES_REGEX.search(device.decode('utf-8'))
+            match = _DEVICES_REGEX.search(device.decode("utf-8"))
             if match:
-                devices[match.group('ip')] = {
-                    'ip': match.group('ip'),
-                    'mac': match.group('mac').upper(),
-                    'host': match.group('host'),
-                    'status': match.group('status')
-                    }
+                devices[match.group("ip")] = {
+                    "ip": match.group("ip"),
+                    "mac": match.group("mac").upper(),
+                    "host": match.group("host"),
+                    "status": match.group("status"),
+                }
         return devices

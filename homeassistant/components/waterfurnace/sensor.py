@@ -1,9 +1,4 @@
-"""
-Support for Waterfurnace.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.waterfurnace/
-"""
+"""Support for Waterfurnace."""
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.const import TEMP_FAHRENHEIT
@@ -17,8 +12,9 @@ from . import DOMAIN as WF_DOMAIN, UPDATE_TOPIC
 class WFSensorConfig:
     """Water Furnace Sensor configuration."""
 
-    def __init__(self, friendly_name, field, icon="mdi:gauge",
-                 unit_of_measurement=None):
+    def __init__(
+        self, friendly_name, field, icon="mdi:gauge", unit_of_measurement=None
+    ):
         """Initialize configuration."""
         self.friendly_name = friendly_name
         self.field = field
@@ -29,26 +25,24 @@ class WFSensorConfig:
 SENSORS = [
     WFSensorConfig("Furnace Mode", "mode"),
     WFSensorConfig("Total Power", "totalunitpower", "mdi:flash", "W"),
-    WFSensorConfig("Active Setpoint", "tstatactivesetpoint",
-                   "mdi:thermometer", TEMP_FAHRENHEIT),
-    WFSensorConfig("Leaving Air", "leavingairtemp",
-                   "mdi:thermometer", TEMP_FAHRENHEIT),
-    WFSensorConfig("Room Temp", "tstatroomtemp",
-                   "mdi:thermometer", TEMP_FAHRENHEIT),
-    WFSensorConfig("Loop Temp", "enteringwatertemp",
-                   "mdi:thermometer", TEMP_FAHRENHEIT),
-    WFSensorConfig("Humidity Set Point", "tstathumidsetpoint",
-                   "mdi:water-percent", "%"),
-    WFSensorConfig("Humidity", "tstatrelativehumidity",
-                   "mdi:water-percent", "%"),
+    WFSensorConfig(
+        "Active Setpoint", "tstatactivesetpoint", "mdi:thermometer", TEMP_FAHRENHEIT
+    ),
+    WFSensorConfig("Leaving Air", "leavingairtemp", "mdi:thermometer", TEMP_FAHRENHEIT),
+    WFSensorConfig("Room Temp", "tstatroomtemp", "mdi:thermometer", TEMP_FAHRENHEIT),
+    WFSensorConfig(
+        "Loop Temp", "enteringwatertemp", "mdi:thermometer", TEMP_FAHRENHEIT
+    ),
+    WFSensorConfig(
+        "Humidity Set Point", "tstathumidsetpoint", "mdi:water-percent", "%"
+    ),
+    WFSensorConfig("Humidity", "tstatrelativehumidity", "mdi:water-percent", "%"),
     WFSensorConfig("Compressor Power", "compressorpower", "mdi:flash", "W"),
     WFSensorConfig("Fan Power", "fanpower", "mdi:flash", "W"),
     WFSensorConfig("Aux Power", "auxpower", "mdi:flash", "W"),
     WFSensorConfig("Loop Pump Power", "looppumppower", "mdi:flash", "W"),
-    WFSensorConfig("Compressor Speed", "actualcompressorspeed",
-                   "mdi:speedometer"),
+    WFSensorConfig("Compressor Speed", "actualcompressorspeed", "mdi:speedometer"),
     WFSensorConfig("Fan Speed", "airflowcurrentspeed", "mdi:fan"),
-
 ]
 
 
@@ -79,7 +73,8 @@ class WaterFurnaceSensor(Entity):
 
         # This ensures that the sensors are isolated per waterfurnace unit
         self.entity_id = ENTITY_ID_FORMAT.format(
-            'wf_{}_{}'.format(slugify(self.client.unit), slugify(self._attr)))
+            "wf_{}_{}".format(slugify(self.client.unit), slugify(self._attr))
+        )
 
     @property
     def name(self):
@@ -109,7 +104,8 @@ class WaterFurnaceSensor(Entity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            UPDATE_TOPIC, self.async_update_callback)
+            UPDATE_TOPIC, self.async_update_callback
+        )
 
     @callback
     def async_update_callback(self):

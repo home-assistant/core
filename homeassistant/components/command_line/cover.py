@@ -1,34 +1,37 @@
-"""
-Support for command line covers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.command_line/
-"""
+"""Support for command line covers."""
 import logging
 import subprocess
 
 import voluptuous as vol
 
-from homeassistant.components.cover import (CoverDevice, PLATFORM_SCHEMA)
+from homeassistant.components.cover import CoverDevice, PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_COMMAND_CLOSE, CONF_COMMAND_OPEN, CONF_COMMAND_STATE,
-    CONF_COMMAND_STOP, CONF_COVERS, CONF_VALUE_TEMPLATE, CONF_FRIENDLY_NAME)
+    CONF_COMMAND_CLOSE,
+    CONF_COMMAND_OPEN,
+    CONF_COMMAND_STATE,
+    CONF_COMMAND_STOP,
+    CONF_COVERS,
+    CONF_VALUE_TEMPLATE,
+    CONF_FRIENDLY_NAME,
+)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-COVER_SCHEMA = vol.Schema({
-    vol.Optional(CONF_COMMAND_CLOSE, default='true'): cv.string,
-    vol.Optional(CONF_COMMAND_OPEN, default='true'): cv.string,
-    vol.Optional(CONF_COMMAND_STATE): cv.string,
-    vol.Optional(CONF_COMMAND_STOP, default='true'): cv.string,
-    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-})
+COVER_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_COMMAND_CLOSE, default="true"): cv.string,
+        vol.Optional(CONF_COMMAND_OPEN, default="true"): cv.string,
+        vol.Optional(CONF_COMMAND_STATE): cv.string,
+        vol.Optional(CONF_COMMAND_STOP, default="true"): cv.string,
+        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_SCHEMA),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_SCHEMA)}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -63,8 +66,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class CommandCover(CoverDevice):
     """Representation a command line cover."""
 
-    def __init__(self, hass, name, command_open, command_close, command_stop,
-                 command_state, value_template):
+    def __init__(
+        self,
+        hass,
+        name,
+        command_open,
+        command_close,
+        command_stop,
+        command_state,
+        value_template,
+    ):
         """Initialize the cover."""
         self._hass = hass
         self._name = name
@@ -80,7 +91,7 @@ class CommandCover(CoverDevice):
         """Execute the actual commands."""
         _LOGGER.info("Running command: %s", command)
 
-        success = (subprocess.call(command, shell=True) == 0)
+        success = subprocess.call(command, shell=True) == 0
 
         if not success:
             _LOGGER.error("Command failed: %s", command)
@@ -94,7 +105,7 @@ class CommandCover(CoverDevice):
 
         try:
             return_value = subprocess.check_output(command, shell=True)
-            return return_value.strip().decode('utf-8')
+            return return_value.strip().decode("utf-8")
         except subprocess.CalledProcessError:
             _LOGGER.error("Command failed: %s", command)
 
@@ -134,8 +145,7 @@ class CommandCover(CoverDevice):
         if self._command_state:
             payload = str(self._query_state())
             if self._value_template:
-                payload = self._value_template.render_with_possible_json_value(
-                    payload)
+                payload = self._value_template.render_with_possible_json_value(payload)
             self._state = int(payload)
 
     def open_cover(self, **kwargs):

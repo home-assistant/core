@@ -17,7 +17,8 @@
       "timeout": "Timeout validating the code."
     },
     "abort": {
-      "already_configured": "Bridge is already configured"
+      "already_configured": "Bridge is already configured.",
+      "already_in_progress": "Bridge configuration is already in progress."
     }
   }
 }

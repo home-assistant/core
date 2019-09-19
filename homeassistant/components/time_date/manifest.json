@@ -1,0 +1,10 @@
+{
+  "domain": "time_date",
+  "name": "Time date",
+  "documentation": "https://www.home-assistant.io/components/time_date",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

@@ -19,6 +19,7 @@
             },
             "user": {
                 "data": {
+                    "authorization_code": "Autorisasjonskode (kreves for manuell godkjenning)",
                     "email": "E-postadresse",
                     "password": "Passord"
                 },

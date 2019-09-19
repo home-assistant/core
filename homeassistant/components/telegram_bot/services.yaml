@@ -22,7 +22,7 @@ send_message:
       description: Disables link previews for links in the message.
       example: true
     keyboard:
-      description: List of rows of commands, comma-separated, to make a custom keyboard.
+      description: List of rows of commands, comma-separated, to make a custom keyboard. Empty list clears a previously set keyboard.
       example: '["/command1, /command2", "/command3"]'
     inline_keyboard:
       description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.

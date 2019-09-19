@@ -1,0 +1,12 @@
+{
+  "domain": "lametric",
+  "name": "Lametric",
+  "documentation": "https://www.home-assistant.io/components/lametric",
+  "requirements": [
+    "lmnotify==0.0.4"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@robbiet480"
+  ]
+}

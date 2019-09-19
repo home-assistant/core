@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u6865\u63a5\u5668\u5df2\u914d\u7f6e\u5b8c\u6210"
+            "already_configured": "\u6865\u63a5\u5668\u5df2\u914d\u7f6e\u5b8c\u6210",
+            "already_in_progress": "\u6865\u914d\u7f6e\u5df2\u5728\u8fdb\u884c\u4e2d\u3002"
         },
         "error": {
             "cannot_connect": "\u65e0\u6cd5\u8fde\u63a5\u5230\u7f51\u5173\u3002",

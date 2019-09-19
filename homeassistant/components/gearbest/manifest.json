@@ -1,0 +1,12 @@
+{
+  "domain": "gearbest",
+  "name": "Gearbest",
+  "documentation": "https://www.home-assistant.io/components/gearbest",
+  "requirements": [
+    "gearbest_parser==1.0.7"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@HerrHofrat"
+  ]
+}

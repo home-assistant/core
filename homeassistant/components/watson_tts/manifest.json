@@ -1,0 +1,12 @@
+{
+  "domain": "watson_tts",
+  "name": "IBM Watson TTS",
+  "documentation": "https://www.home-assistant.io/components/watson_tts",
+  "requirements": [
+    "ibm-watson==3.0.3"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@rutkai"
+  ]
+}

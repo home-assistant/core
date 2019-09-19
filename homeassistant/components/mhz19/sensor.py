@@ -1,45 +1,42 @@
-"""
-Support for CO2 sensor connected to a serial port.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.mhz19/
-"""
+"""Support for CO2 sensor connected to a serial port."""
 import logging
 from datetime import timedelta
 
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_NAME, CONF_MONITORED_CONDITIONS, TEMP_FAHRENHEIT)
+    ATTR_TEMPERATURE,
+    CONF_NAME,
+    CONF_MONITORED_CONDITIONS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.util.temperature import celsius_to_fahrenheit
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pmsensor==0.4']
-
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SERIAL_DEVICE = 'serial_device'
+CONF_SERIAL_DEVICE = "serial_device"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
-DEFAULT_NAME = 'CO2 Sensor'
+DEFAULT_NAME = "CO2 Sensor"
 
-ATTR_CO2_CONCENTRATION = 'co2_concentration'
+ATTR_CO2_CONCENTRATION = "co2_concentration"
 
-SENSOR_TEMPERATURE = 'temperature'
-SENSOR_CO2 = 'co2'
-SENSOR_TYPES = {
-    SENSOR_TEMPERATURE: ['Temperature', None],
-    SENSOR_CO2: ['CO2', 'ppm']
-}
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_SERIAL_DEVICE): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=[SENSOR_CO2]):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-})
+SENSOR_TEMPERATURE = "temperature"
+SENSOR_CO2 = "co2"
+SENSOR_TYPES = {SENSOR_TEMPERATURE: ["Temperature", None], SENSOR_CO2: ["CO2", "ppm"]}
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Required(CONF_SERIAL_DEVICE): cv.string,
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=[SENSOR_CO2]): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        ),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -49,8 +46,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         co2sensor.read_mh_z19(config.get(CONF_SERIAL_DEVICE))
     except OSError as err:
-        _LOGGER.error("Could not open serial connection to %s (%s)",
-                      config.get(CONF_SERIAL_DEVICE), err)
+        _LOGGER.error(
+            "Could not open serial connection to %s (%s)",
+            config.get(CONF_SERIAL_DEVICE),
+            err,
+        )
         return False
     SENSOR_TYPES[SENSOR_TEMPERATURE][1] = hass.config.units.temperature_unit
 
@@ -59,8 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config.get(CONF_NAME)
 
     for variable in config[CONF_MONITORED_CONDITIONS]:
-        dev.append(
-            MHZ19Sensor(data, variable, SENSOR_TYPES[variable][1], name))
+        dev.append(MHZ19Sensor(data, variable, SENSOR_TYPES[variable][1], name))
 
     add_entities(dev, True)
     return True
@@ -82,13 +81,12 @@ class MHZ19Sensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{}: {}'.format(self._name, SENSOR_TYPES[self._sensor_type][0])
+        return "{}: {}".format(self._name, SENSOR_TYPES[self._sensor_type][0])
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._ppm if self._sensor_type == SENSOR_CO2 \
-            else self._temperature
+        return self._ppm if self._sensor_type == SENSOR_CO2 else self._temperature
 
     @property
     def unit_of_measurement(self):
@@ -100,10 +98,8 @@ class MHZ19Sensor(Entity):
         self._mhz_client.update()
         data = self._mhz_client.data
         self._temperature = data.get(SENSOR_TEMPERATURE)
-        if self._temperature is not None and \
-                self._temp_unit == TEMP_FAHRENHEIT:
-            self._temperature = round(
-                celsius_to_fahrenheit(self._temperature), 1)
+        if self._temperature is not None and self._temp_unit == TEMP_FAHRENHEIT:
+            self._temperature = round(celsius_to_fahrenheit(self._temperature), 1)
         self._ppm = data.get(SENSOR_CO2)
 
     @property
@@ -137,8 +133,9 @@ class MHZClient:
             co2, temperature = result
 
         except OSError as err:
-            _LOGGER.error("Could not open serial connection to %s (%s)",
-                          self._serial, err)
+            _LOGGER.error(
+                "Could not open serial connection to %s (%s)", self._serial, err
+            )
             return
 
         if temperature is not None:

@@ -1,0 +1,10 @@
+{
+  "domain": "fastdotcom",
+  "name": "Fastdotcom",
+  "documentation": "https://www.home-assistant.io/components/fastdotcom",
+  "requirements": [
+    "fastdotcom==0.0.3"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

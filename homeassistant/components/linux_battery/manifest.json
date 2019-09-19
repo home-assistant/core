@@ -1,0 +1,12 @@
+{
+  "domain": "linux_battery",
+  "name": "Linux battery",
+  "documentation": "https://www.home-assistant.io/components/linux_battery",
+  "requirements": [
+    "batinfo==0.4.2"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

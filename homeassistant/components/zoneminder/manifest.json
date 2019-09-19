@@ -1,0 +1,12 @@
+{
+  "domain": "zoneminder",
+  "name": "Zoneminder",
+  "documentation": "https://www.home-assistant.io/components/zoneminder",
+  "requirements": [
+    "zm-py==0.3.3"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@rohankapoorcom"
+  ]
+}

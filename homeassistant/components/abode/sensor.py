@@ -2,19 +2,20 @@
 import logging
 
 from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE)
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_TEMPERATURE,
+)
 
 from . import DOMAIN as ABODE_DOMAIN, AbodeDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['abode']
-
 # Sensor types: Name, icon
 SENSOR_TYPES = {
-    'temp': ['Temperature', DEVICE_CLASS_TEMPERATURE],
-    'humidity': ['Humidity', DEVICE_CLASS_HUMIDITY],
-    'lux': ['Lux', DEVICE_CLASS_ILLUMINANCE],
+    "temp": ["Temperature", DEVICE_CLASS_TEMPERATURE],
+    "humidity": ["Humidity", DEVICE_CLASS_HUMIDITY],
+    "lux": ["Lux", DEVICE_CLASS_ILLUMINANCE],
 }
 
 
@@ -44,8 +45,9 @@ class AbodeSensor(AbodeDevice):
         """Initialize a sensor for an Abode device."""
         super().__init__(data, device)
         self._sensor_type = sensor_type
-        self._name = '{0} {1}'.format(
-            self._device.name, SENSOR_TYPES[self._sensor_type][0])
+        self._name = "{0} {1}".format(
+            self._device.name, SENSOR_TYPES[self._sensor_type][0]
+        )
         self._device_class = SENSOR_TYPES[self._sensor_type][1]
 
     @property
@@ -61,19 +63,19 @@ class AbodeSensor(AbodeDevice):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._sensor_type == 'temp':
+        if self._sensor_type == "temp":
             return self._device.temp
-        if self._sensor_type == 'humidity':
+        if self._sensor_type == "humidity":
             return self._device.humidity
-        if self._sensor_type == 'lux':
+        if self._sensor_type == "lux":
             return self._device.lux
 
     @property
     def unit_of_measurement(self):
         """Return the units of measurement."""
-        if self._sensor_type == 'temp':
+        if self._sensor_type == "temp":
             return self._device.temp_unit
-        if self._sensor_type == 'humidity':
+        if self._sensor_type == "humidity":
             return self._device.humidity_unit
-        if self._sensor_type == 'lux':
+        if self._sensor_type == "lux":
             return self._device.lux_unit

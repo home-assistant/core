@@ -1,30 +1,27 @@
-"""
-Support for Cisco IOS Routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.cisco_ios/
-"""
+"""Support for Cisco IOS Routers."""
 import logging
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, \
-    CONF_PORT
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    DeviceScanner,
+)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pexpect==4.6.0']
-
 PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD, default=''): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
-    })
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_HOST): cv.string,
+            vol.Required(CONF_USERNAME): cv.string,
+            vol.Optional(CONF_PASSWORD, default=""): cv.string,
+            vol.Optional(CONF_PORT): cv.port,
+        }
+    )
 )
 
 
@@ -48,7 +45,7 @@ class CiscoDeviceScanner(DeviceScanner):
         self.last_results = {}
 
         self.success_init = self._update_info()
-        _LOGGER.info('cisco_ios scanner initialized')
+        _LOGGER.info("cisco_ios scanner initialized")
 
     def get_device_name(self, device):
         """Get the firmware doesn't save the name of the wireless device."""
@@ -108,15 +105,20 @@ class CiscoDeviceScanner(DeviceScanner):
 
         try:
             cisco_ssh = pxssh.pxssh()
-            cisco_ssh.login(self.host, self.username, self.password,
-                            port=self.port, auto_prompt_reset=False)
+            cisco_ssh.login(
+                self.host,
+                self.username,
+                self.password,
+                port=self.port,
+                auto_prompt_reset=False,
+            )
 
             # Find the hostname
-            initial_line = cisco_ssh.before.decode('utf-8').splitlines()
+            initial_line = cisco_ssh.before.decode("utf-8").splitlines()
             router_hostname = initial_line[len(initial_line) - 1]
             router_hostname += "#"
             # Set the discovered hostname as prompt
-            regex_expression = ('(?i)^%s' % router_hostname).encode()
+            regex_expression = ("(?i)^%s" % router_hostname).encode()
             cisco_ssh.PROMPT = re.compile(regex_expression, re.MULTILINE)
             # Allow full arp table to print at once
             cisco_ssh.sendline("terminal length 0")
@@ -127,7 +129,7 @@ class CiscoDeviceScanner(DeviceScanner):
 
             devices_result = cisco_ssh.before
 
-            return devices_result.decode('utf-8')
+            return devices_result.decode("utf-8")
         except pxssh.ExceptionPxssh as px_e:
             _LOGGER.error("pxssh failed on login")
             _LOGGER.error(px_e)
@@ -148,8 +150,9 @@ def _parse_cisco_mac_address(cisco_hardware_addr):
     Takes in cisco_hwaddr: HWAddr String from Cisco ARP table
     Returns a regular standard MAC address
     """
-    cisco_hardware_addr = cisco_hardware_addr.replace('.', '')
-    blocks = [cisco_hardware_addr[x:x + 2]
-              for x in range(0, len(cisco_hardware_addr), 2)]
+    cisco_hardware_addr = cisco_hardware_addr.replace(".", "")
+    blocks = [
+        cisco_hardware_addr[x : x + 2] for x in range(0, len(cisco_hardware_addr), 2)
+    ]
 
-    return ':'.join(blocks).upper()
+    return ":".join(blocks).upper()

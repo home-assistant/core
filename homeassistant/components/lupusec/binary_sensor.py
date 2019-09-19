@@ -2,12 +2,9 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES, BinarySensorDevice)
+from homeassistant.components.binary_sensor import DEVICE_CLASSES, BinarySensorDevice
 
 from . import DOMAIN as LUPUSEC_DOMAIN, LupusecDevice
-
-DEPENDENCIES = ['lupusec']
 
 SCAN_INTERVAL = timedelta(seconds=2)
 

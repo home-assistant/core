@@ -2,12 +2,15 @@
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
+    ATTR_BRIGHTNESS,
+    ATTR_HS_COLOR,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    Light,
+)
 import homeassistant.util.color as color_util
 
 from . import DOMAIN as SKYBELL_DOMAIN, SkybellDevice
-
-DEPENDENCIES = ['skybell']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,8 +55,7 @@ class SkybellLight(SkybellDevice, Light):
             rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
             self._device.led_rgb = rgb
         elif ATTR_BRIGHTNESS in kwargs:
-            self._device.led_intensity = _to_skybell_level(
-                kwargs[ATTR_BRIGHTNESS])
+            self._device.led_intensity = _to_skybell_level(kwargs[ATTR_BRIGHTNESS])
         else:
             self._device.led_intensity = _to_skybell_level(255)
 

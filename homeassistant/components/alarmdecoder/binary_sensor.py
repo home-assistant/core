@@ -4,22 +4,30 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import (
-    CONF_RELAY_ADDR, CONF_RELAY_CHAN, CONF_ZONE_LOOP, CONF_ZONE_NAME,
-    CONF_ZONE_RFID, CONF_ZONE_TYPE, CONF_ZONES, SIGNAL_REL_MESSAGE,
-    SIGNAL_RFX_MESSAGE, SIGNAL_ZONE_FAULT, SIGNAL_ZONE_RESTORE, ZONE_SCHEMA)
-
-DEPENDENCIES = ['alarmdecoder']
+    CONF_RELAY_ADDR,
+    CONF_RELAY_CHAN,
+    CONF_ZONE_LOOP,
+    CONF_ZONE_NAME,
+    CONF_ZONE_RFID,
+    CONF_ZONE_TYPE,
+    CONF_ZONES,
+    SIGNAL_REL_MESSAGE,
+    SIGNAL_RFX_MESSAGE,
+    SIGNAL_ZONE_FAULT,
+    SIGNAL_ZONE_RESTORE,
+    ZONE_SCHEMA,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_RF_BIT0 = 'rf_bit0'
-ATTR_RF_LOW_BAT = 'rf_low_battery'
-ATTR_RF_SUPERVISED = 'rf_supervised'
-ATTR_RF_BIT3 = 'rf_bit3'
-ATTR_RF_LOOP3 = 'rf_loop3'
-ATTR_RF_LOOP2 = 'rf_loop2'
-ATTR_RF_LOOP4 = 'rf_loop4'
-ATTR_RF_LOOP1 = 'rf_loop1'
+ATTR_RF_BIT0 = "rf_bit0"
+ATTR_RF_LOW_BAT = "rf_low_battery"
+ATTR_RF_SUPERVISED = "rf_supervised"
+ATTR_RF_BIT3 = "rf_bit3"
+ATTR_RF_LOOP3 = "rf_loop3"
+ATTR_RF_LOOP2 = "rf_loop2"
+ATTR_RF_LOOP4 = "rf_loop4"
+ATTR_RF_LOOP1 = "rf_loop1"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -36,8 +44,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         relay_addr = device_config_data.get(CONF_RELAY_ADDR)
         relay_chan = device_config_data.get(CONF_RELAY_CHAN)
         device = AlarmDecoderBinarySensor(
-            zone_num, zone_name, zone_type, zone_rfid, zone_loop, relay_addr,
-            relay_chan)
+            zone_num, zone_name, zone_type, zone_rfid, zone_loop, relay_addr, relay_chan
+        )
         devices.append(device)
 
     add_entities(devices)
@@ -48,8 +56,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AlarmDecoderBinarySensor(BinarySensorDevice):
     """Representation of an AlarmDecoder binary sensor."""
 
-    def __init__(self, zone_number, zone_name, zone_type, zone_rfid, zone_loop,
-                 relay_addr, relay_chan):
+    def __init__(
+        self,
+        zone_number,
+        zone_name,
+        zone_type,
+        zone_rfid,
+        zone_loop,
+        relay_addr,
+        relay_chan,
+    ):
         """Initialize the binary_sensor."""
         self._zone_number = zone_number
         self._zone_type = zone_type
@@ -64,16 +80,20 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_ZONE_FAULT, self._fault_callback)
+            SIGNAL_ZONE_FAULT, self._fault_callback
+        )
 
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_ZONE_RESTORE, self._restore_callback)
+            SIGNAL_ZONE_RESTORE, self._restore_callback
+        )
 
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_RFX_MESSAGE, self._rfx_message_callback)
+            SIGNAL_RFX_MESSAGE, self._rfx_message_callback
+        )
 
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_REL_MESSAGE, self._rel_message_callback)
+            SIGNAL_REL_MESSAGE, self._rel_message_callback
+        )
 
     @property
     def name(self):
@@ -132,9 +152,9 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
 
     def _rel_message_callback(self, message):
         """Update relay state."""
-        if (self._relay_addr == message.address and
-                self._relay_chan == message.channel):
-            _LOGGER.debug("Relay %d:%d value:%d", message.address,
-                          message.channel, message.value)
+        if self._relay_addr == message.address and self._relay_chan == message.channel:
+            _LOGGER.debug(
+                "Relay %d:%d value:%d", message.address, message.channel, message.value
+            )
             self._state = message.value
             self.schedule_update_ha_state()

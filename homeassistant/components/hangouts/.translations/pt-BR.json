@@ -19,6 +19,7 @@
             },
             "user": {
                 "data": {
+                    "authorization_code": "C\u00f3digo de Autoriza\u00e7\u00e3o (requerido para autentica\u00e7\u00e3o manual)",
                     "email": "Endere\u00e7o de e-mail",
                     "password": "Senha"
                 },

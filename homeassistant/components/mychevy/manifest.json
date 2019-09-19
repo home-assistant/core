@@ -1,0 +1,10 @@
+{
+  "domain": "mychevy",
+  "name": "Mychevy",
+  "documentation": "https://www.home-assistant.io/components/mychevy",
+  "requirements": [
+    "mychevy==1.2.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

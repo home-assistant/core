@@ -12,18 +12,18 @@ from . import PLATFORM_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_TYPE = 'type'
-CONF_MAX_VOLTS = 'max_volts'
+CONF_TYPE = "type"
+CONF_MAX_VOLTS = "max_volts"
 
 DEFAULT_VOLTS = 1.2
-DEPENDENCIES = ['zigbee']
+TYPES = ["analog", "temperature"]
 
-TYPES = ['analog', 'temperature']
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_TYPE): vol.In(TYPES),
-    vol.Optional(CONF_MAX_VOLTS, default=DEFAULT_VOLTS): vol.Coerce(float),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_TYPE): vol.In(TYPES),
+        vol.Optional(CONF_MAX_VOLTS, default=DEFAULT_VOLTS): vol.Coerce(float),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -73,14 +73,15 @@ class ZigBeeTemperatureSensor(Entity):
         except zigbee.ZIGBEE_TX_FAILURE:
             _LOGGER.warning(
                 "Transmission failure when attempting to get sample from "
-                "ZigBee device at address: %s", hexlify(self._config.address))
+                "ZigBee device at address: %s",
+                hexlify(self._config.address),
+            )
         except zigbee.ZIGBEE_EXCEPTION as exc:
-            _LOGGER.exception(
-                "Unable to get sample from ZigBee device: %s", exc)
+            _LOGGER.exception("Unable to get sample from ZigBee device: %s", exc)
 
 
 # This must be below the classes to which it refers.
 TYPE_CLASSES = {
     "temperature": (ZigBeeTemperatureSensor, zigbee.ZigBeeConfig),
-    "analog": (zigbee.ZigBeeAnalogIn, zigbee.ZigBeeAnalogInConfig)
+    "analog": (zigbee.ZigBeeAnalogIn, zigbee.ZigBeeAnalogInConfig),
 }

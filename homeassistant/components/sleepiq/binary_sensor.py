@@ -1,13 +1,6 @@
-"""
-Support for SleepIQ sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.sleepiq/
-"""
+"""Support for SleepIQ sensors."""
 from homeassistant.components import sleepiq
 from homeassistant.components.binary_sensor import BinarySensorDevice
-
-DEPENDENCIES = ['sleepiq']
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -19,9 +12,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     data.update()
 
     dev = list()
-    for bed_id, _ in data.beds.items():
+    for bed_id, bed in data.beds.items():
         for side in sleepiq.SIDES:
-            dev.append(IsInBedBinarySensor(data, bed_id, side))
+            if getattr(bed, side) is not None:
+                dev.append(IsInBedBinarySensor(data, bed_id, side))
     add_entities(dev)
 
 

@@ -1,9 +1,4 @@
-"""
-Adds a simulated sensor.
-
-For more details about this platform, refer to the documentation at
-https://home-assistant.io/components/sensor.simulated/
-"""
+"""Adds a simulated sensor."""
 import logging
 import math
 from random import Random
@@ -19,39 +14,42 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_AMP = 'amplitude'
-CONF_FWHM = 'spread'
-CONF_MEAN = 'mean'
-CONF_PERIOD = 'period'
-CONF_PHASE = 'phase'
-CONF_SEED = 'seed'
-CONF_UNIT = 'unit'
-CONF_RELATIVE_TO_EPOCH = 'relative_to_epoch'
+CONF_AMP = "amplitude"
+CONF_FWHM = "spread"
+CONF_MEAN = "mean"
+CONF_PERIOD = "period"
+CONF_PHASE = "phase"
+CONF_SEED = "seed"
+CONF_UNIT = "unit"
+CONF_RELATIVE_TO_EPOCH = "relative_to_epoch"
 
 DEFAULT_AMP = 1
 DEFAULT_FWHM = 0
 DEFAULT_MEAN = 0
-DEFAULT_NAME = 'simulated'
+DEFAULT_NAME = "simulated"
 DEFAULT_PERIOD = 60
 DEFAULT_PHASE = 0
 DEFAULT_SEED = 999
-DEFAULT_UNIT = 'value'
+DEFAULT_UNIT = "value"
 DEFAULT_RELATIVE_TO_EPOCH = True
 
-ICON = 'mdi:chart-line'
+ICON = "mdi:chart-line"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_AMP, default=DEFAULT_AMP): vol.Coerce(float),
-    vol.Optional(CONF_FWHM, default=DEFAULT_FWHM): vol.Coerce(float),
-    vol.Optional(CONF_MEAN, default=DEFAULT_MEAN): vol.Coerce(float),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PERIOD, default=DEFAULT_PERIOD): cv.positive_int,
-    vol.Optional(CONF_PHASE, default=DEFAULT_PHASE): vol.Coerce(float),
-    vol.Optional(CONF_SEED, default=DEFAULT_SEED): cv.positive_int,
-    vol.Optional(CONF_UNIT, default=DEFAULT_UNIT): cv.string,
-    vol.Optional(CONF_RELATIVE_TO_EPOCH, default=DEFAULT_RELATIVE_TO_EPOCH):
-        cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_AMP, default=DEFAULT_AMP): vol.Coerce(float),
+        vol.Optional(CONF_FWHM, default=DEFAULT_FWHM): vol.Coerce(float),
+        vol.Optional(CONF_MEAN, default=DEFAULT_MEAN): vol.Coerce(float),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PERIOD, default=DEFAULT_PERIOD): cv.positive_int,
+        vol.Optional(CONF_PHASE, default=DEFAULT_PHASE): vol.Coerce(float),
+        vol.Optional(CONF_SEED, default=DEFAULT_SEED): cv.positive_int,
+        vol.Optional(CONF_UNIT, default=DEFAULT_UNIT): cv.string,
+        vol.Optional(
+            CONF_RELATIVE_TO_EPOCH, default=DEFAULT_RELATIVE_TO_EPOCH
+        ): cv.boolean,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -66,16 +64,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     seed = config.get(CONF_SEED)
     relative_to_epoch = config.get(CONF_RELATIVE_TO_EPOCH)
 
-    sensor = SimulatedSensor(name, unit, amp, mean, period, phase, fwhm, seed,
-                             relative_to_epoch)
+    sensor = SimulatedSensor(
+        name, unit, amp, mean, period, phase, fwhm, seed, relative_to_epoch
+    )
     add_entities([sensor], True)
 
 
 class SimulatedSensor(Entity):
     """Class for simulated sensor."""
 
-    def __init__(self, name, unit, amp, mean, period, phase, fwhm, seed,
-                 relative_to_epoch):
+    def __init__(
+        self, name, unit, amp, mean, period, phase, fwhm, seed, relative_to_epoch
+    ):
         """Init the class."""
         self._name = name
         self._unit = unit
@@ -87,7 +87,8 @@ class SimulatedSensor(Entity):
         self._seed = seed
         self._random = Random(seed)  # A local seeded Random
         self._start_time = (
-            datetime(1970, 1, 1, tzinfo=dt_util.UTC) if relative_to_epoch
+            datetime(1970, 1, 1, tzinfo=dt_util.UTC)
+            if relative_to_epoch
             else dt_util.utcnow()
         )
         self._relative_to_epoch = relative_to_epoch
@@ -103,14 +104,14 @@ class SimulatedSensor(Entity):
         """Calculate the signal."""
         mean = self._mean
         amp = self._amp
-        time_delta = self.time_delta().total_seconds()*1e6  # to milliseconds
-        period = self._period*1e6  # to milliseconds
-        fwhm = self._fwhm/2
+        time_delta = self.time_delta().total_seconds() * 1e6  # to milliseconds
+        period = self._period * 1e6  # to milliseconds
+        fwhm = self._fwhm / 2
         phase = math.radians(self._phase)
         if period == 0:
             periodic = 0
         else:
-            periodic = amp * (math.sin((2*math.pi*time_delta/period) + phase))
+            periodic = amp * (math.sin((2 * math.pi * time_delta / period) + phase))
         noise = self._random.gauss(mu=0, sigma=fwhm)
         return round(mean + periodic + noise, 3)
 
@@ -142,12 +143,12 @@ class SimulatedSensor(Entity):
     def device_state_attributes(self):
         """Return other details about the sensor state."""
         attr = {
-            'amplitude': self._amp,
-            'mean': self._mean,
-            'period': self._period,
-            'phase': self._phase,
-            'spread': self._fwhm,
-            'seed': self._seed,
-            'relative_to_epoch': self._relative_to_epoch,
-            }
+            "amplitude": self._amp,
+            "mean": self._mean,
+            "period": self._period,
+            "phase": self._phase,
+            "spread": self._fwhm,
+            "seed": self._seed,
+            "relative_to_epoch": self._relative_to_epoch,
+        }
         return attr

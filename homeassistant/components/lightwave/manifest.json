@@ -1,0 +1,10 @@
+{
+  "domain": "lightwave",
+  "name": "Lightwave",
+  "documentation": "https://www.home-assistant.io/components/lightwave",
+  "requirements": [
+    "lightwave==0.15"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

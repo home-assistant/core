@@ -1,14 +1,11 @@
-"""
-Support for the QR image processing.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/image_processing.qr/
-"""
+"""Support for the QR image processing."""
 from homeassistant.core import split_entity_id
 from homeassistant.components.image_processing import (
-    ImageProcessingEntity, CONF_SOURCE, CONF_ENTITY_ID, CONF_NAME)
-
-REQUIREMENTS = ['pyzbar==0.1.7', 'pillow==5.4.1']
+    ImageProcessingEntity,
+    CONF_SOURCE,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -16,9 +13,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # pylint: disable=unused-argument
     entities = []
     for camera in config[CONF_SOURCE]:
-        entities.append(QrEntity(
-            camera[CONF_ENTITY_ID], camera.get(CONF_NAME)
-        ))
+        entities.append(QrEntity(camera[CONF_ENTITY_ID], camera.get(CONF_NAME)))
 
     add_entities(entities)
 
@@ -34,8 +29,7 @@ class QrEntity(ImageProcessingEntity):
         if name:
             self._name = name
         else:
-            self._name = "QR {0}".format(
-                split_entity_id(camera_entity)[1])
+            self._name = "QR {0}".format(split_entity_id(camera_entity)[1])
         self._state = None
 
     @property

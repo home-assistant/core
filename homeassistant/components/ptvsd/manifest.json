@@ -1,0 +1,10 @@
+{
+  "domain": "ptvsd",
+  "name": "ptvsd",
+  "documentation": "https://www.home-assistant.io/components/ptvsd",
+  "requirements": [
+    "ptvsd==4.2.8"
+  ],
+  "dependencies": [],
+  "codeowners": ["@swamp-ig"]
+}

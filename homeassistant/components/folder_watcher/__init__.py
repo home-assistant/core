@@ -4,26 +4,34 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['watchdog==0.8.3']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_FOLDER = 'folder'
-CONF_PATTERNS = 'patterns'
-DEFAULT_PATTERN = '*'
+CONF_FOLDER = "folder"
+CONF_PATTERNS = "patterns"
+DEFAULT_PATTERN = "*"
 DOMAIN = "folder_watcher"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
-        vol.Required(CONF_FOLDER): cv.isdir,
-        vol.Optional(CONF_PATTERNS, default=[DEFAULT_PATTERN]):
-            vol.All(cv.ensure_list, [cv.string]),
-    })])
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.All(
+            cv.ensure_list,
+            [
+                vol.Schema(
+                    {
+                        vol.Required(CONF_FOLDER): cv.isdir,
+                        vol.Optional(CONF_PATTERNS, default=[DEFAULT_PATTERN]): vol.All(
+                            cv.ensure_list, [cv.string]
+                        ),
+                    }
+                )
+            ],
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
@@ -58,12 +66,14 @@ def create_event_handler(patterns, hass):
             if not event.is_directory:
                 folder, file_name = os.path.split(event.src_path)
                 self.hass.bus.fire(
-                    DOMAIN, {
+                    DOMAIN,
+                    {
                         "event_type": event.event_type,
-                        'path': event.src_path,
-                        'file': file_name,
-                        'folder': folder,
-                        })
+                        "path": event.src_path,
+                        "file": file_name,
+                        "folder": folder,
+                    },
+                )
 
         def on_modified(self, event):
             """File modified."""
@@ -84,17 +94,17 @@ def create_event_handler(patterns, hass):
     return EventHandler(patterns, hass)
 
 
-class Watcher():
+class Watcher:
     """Class for starting Watchdog."""
 
     def __init__(self, path, patterns, hass):
         """Initialise the watchdog observer."""
         from watchdog.observers import Observer
+
         self._observer = Observer()
         self._observer.schedule(
-            create_event_handler(patterns, hass),
-            path,
-            recursive=True)
+            create_event_handler(patterns, hass), path, recursive=True
+        )
         hass.bus.listen_once(EVENT_HOMEASSISTANT_START, self.startup)
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.shutdown)
 

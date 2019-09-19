@@ -1,0 +1,12 @@
+{
+  "domain": "twilio_sms",
+  "name": "Twilio sms",
+  "documentation": "https://www.home-assistant.io/components/twilio_sms",
+  "requirements": [],
+  "dependencies": [
+    "twilio"
+  ],
+  "codeowners": [
+    "@robbiet480"
+  ]
+}

@@ -4,10 +4,16 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    PLATFORM_SCHEMA, AlarmControlPanel)
+    PLATFORM_SCHEMA,
+    AlarmControlPanel,
+)
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED)
+    ATTR_ATTRIBUTION,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_DISARMED,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -16,23 +22,23 @@ from . import ATTRIBUTION, DATA_ARLO, SIGNAL_UPDATE_ARLO
 
 _LOGGER = logging.getLogger(__name__)
 
-ARMED = 'armed'
+ARMED = "armed"
 
-CONF_HOME_MODE_NAME = 'home_mode_name'
-CONF_AWAY_MODE_NAME = 'away_mode_name'
-CONF_NIGHT_MODE_NAME = 'night_mode_name'
+CONF_HOME_MODE_NAME = "home_mode_name"
+CONF_AWAY_MODE_NAME = "away_mode_name"
+CONF_NIGHT_MODE_NAME = "night_mode_name"
 
-DEPENDENCIES = ['arlo']
+DISARMED = "disarmed"
 
-DISARMED = 'disarmed'
+ICON = "mdi:security"
 
-ICON = 'mdi:security'
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOME_MODE_NAME, default=ARMED): cv.string,
-    vol.Optional(CONF_AWAY_MODE_NAME, default=ARMED): cv.string,
-    vol.Optional(CONF_NIGHT_MODE_NAME, default=ARMED): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_HOME_MODE_NAME, default=ARMED): cv.string,
+        vol.Optional(CONF_AWAY_MODE_NAME, default=ARMED): cv.string,
+        vol.Optional(CONF_NIGHT_MODE_NAME, default=ARMED): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -47,8 +53,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     night_mode_name = config.get(CONF_NIGHT_MODE_NAME)
     base_stations = []
     for base_station in arlo.base_stations:
-        base_stations.append(ArloBaseStation(base_station, home_mode_name,
-                                             away_mode_name, night_mode_name))
+        base_stations.append(
+            ArloBaseStation(
+                base_station, home_mode_name, away_mode_name, night_mode_name
+            )
+        )
     add_entities(base_stations, True)
 
 
@@ -70,8 +79,7 @@ class ArloBaseStation(AlarmControlPanel):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_ARLO, self._update_callback)
+        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_ARLO, self._update_callback)
 
     @callback
     def _update_callback(self):
@@ -118,7 +126,7 @@ class ArloBaseStation(AlarmControlPanel):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            'device_id': self._base_station.device_id
+            "device_id": self._base_station.device_id,
         }
 
     def _get_state_from_mode(self, mode):

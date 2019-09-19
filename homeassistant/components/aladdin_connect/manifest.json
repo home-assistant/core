@@ -1,0 +1,10 @@
+{
+  "domain": "aladdin_connect",
+  "name": "Aladdin connect",
+  "documentation": "https://www.home-assistant.io/components/aladdin_connect",
+  "requirements": [
+    "aladdin_connect==0.3"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

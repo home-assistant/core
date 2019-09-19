@@ -1,0 +1,11 @@
+{
+  "domain": "rpi_pfio",
+  "name": "Rpi pfio",
+  "documentation": "https://www.home-assistant.io/components/rpi_pfio",
+  "requirements": [
+    "pifacecommon==4.2.2",
+    "pifacedigitalio==3.0.5"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

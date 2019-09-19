@@ -1,9 +1,4 @@
-"""
-Component to make instant statistics about your history.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.history_stats/
-"""
+"""Component to make instant statistics about your history."""
 import datetime
 import logging
 import math
@@ -16,55 +11,59 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_ENTITY_ID, CONF_STATE, CONF_TYPE,
-    EVENT_HOMEASSISTANT_START)
+    CONF_NAME,
+    CONF_ENTITY_ID,
+    CONF_STATE,
+    CONF_TYPE,
+    EVENT_HOMEASSISTANT_START,
+)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'history_stats'
-DEPENDENCIES = ['history']
-
-CONF_START = 'start'
-CONF_END = 'end'
-CONF_DURATION = 'duration'
+DOMAIN = "history_stats"
+CONF_START = "start"
+CONF_END = "end"
+CONF_DURATION = "duration"
 CONF_PERIOD_KEYS = [CONF_START, CONF_END, CONF_DURATION]
 
-CONF_TYPE_TIME = 'time'
-CONF_TYPE_RATIO = 'ratio'
-CONF_TYPE_COUNT = 'count'
+CONF_TYPE_TIME = "time"
+CONF_TYPE_RATIO = "ratio"
+CONF_TYPE_COUNT = "count"
 CONF_TYPE_KEYS = [CONF_TYPE_TIME, CONF_TYPE_RATIO, CONF_TYPE_COUNT]
 
-DEFAULT_NAME = 'unnamed statistics'
-UNITS = {
-    CONF_TYPE_TIME: 'h',
-    CONF_TYPE_RATIO: '%',
-    CONF_TYPE_COUNT: ''
-}
-ICON = 'mdi:chart-line'
+DEFAULT_NAME = "unnamed statistics"
+UNITS = {CONF_TYPE_TIME: "h", CONF_TYPE_RATIO: "%", CONF_TYPE_COUNT: ""}
+ICON = "mdi:chart-line"
 
-ATTR_VALUE = 'value'
+ATTR_VALUE = "value"
 
 
 def exactly_two_period_keys(conf):
     """Ensure exactly 2 of CONF_PERIOD_KEYS are provided."""
     if sum(param in conf for param in CONF_PERIOD_KEYS) != 2:
-        raise vol.Invalid('You must provide exactly 2 of the following:'
-                          ' start, end, duration')
+        raise vol.Invalid(
+            "You must provide exactly 2 of the following:" " start, end, duration"
+        )
     return conf
 
 
-PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Required(CONF_STATE): cv.string,
-    vol.Optional(CONF_START): cv.template,
-    vol.Optional(CONF_END): cv.template,
-    vol.Optional(CONF_DURATION): cv.time_period,
-    vol.Optional(CONF_TYPE, default=CONF_TYPE_TIME): vol.In(CONF_TYPE_KEYS),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-}), exactly_two_period_keys)
+PLATFORM_SCHEMA = vol.All(
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_ENTITY_ID): cv.entity_id,
+            vol.Required(CONF_STATE): cv.string,
+            vol.Optional(CONF_START): cv.template,
+            vol.Optional(CONF_END): cv.template,
+            vol.Optional(CONF_DURATION): cv.time_period,
+            vol.Optional(CONF_TYPE, default=CONF_TYPE_TIME): vol.In(CONF_TYPE_KEYS),
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        }
+    ),
+    exactly_two_period_keys,
+)
 
 
 # noinspection PyUnusedLocal
@@ -82,8 +81,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if template is not None:
             template.hass = hass
 
-    add_entities([HistoryStatsSensor(hass, entity_id, entity_state, start, end,
-                                     duration, sensor_type, name)])
+    add_entities(
+        [
+            HistoryStatsSensor(
+                hass, entity_id, entity_state, start, end, duration, sensor_type, name
+            )
+        ]
+    )
 
     return True
 
@@ -92,8 +96,8 @@ class HistoryStatsSensor(Entity):
     """Representation of a HistoryStats sensor."""
 
     def __init__(
-            self, hass, entity_id, entity_state, start, end, duration,
-            sensor_type, name):
+        self, hass, entity_id, entity_state, start, end, duration, sensor_type, name
+    ):
         """Initialize the HistoryStats sensor."""
         self._entity_id = entity_id
         self._entity_state = entity_state
@@ -111,6 +115,7 @@ class HistoryStatsSensor(Entity):
         @callback
         def start_refresh(*args):
             """Register state tracking."""
+
             @callback
             def force_refresh(*args):
                 """Force the component to refresh."""
@@ -159,9 +164,7 @@ class HistoryStatsSensor(Entity):
             return {}
 
         hsh = HistoryStatsHelper
-        return {
-            ATTR_VALUE: hsh.pretty_duration(self.value),
-        }
+        return {ATTR_VALUE: hsh.pretty_duration(self.value)}
 
     @property
     def icon(self):
@@ -192,23 +195,25 @@ class HistoryStatsSensor(Entity):
         now_timestamp = math.floor(dt_util.as_timestamp(now))
 
         # If period has not changed and current time after the period end...
-        if start_timestamp == p_start_timestamp and \
-            end_timestamp == p_end_timestamp and \
-                end_timestamp <= now_timestamp:
+        if (
+            start_timestamp == p_start_timestamp
+            and end_timestamp == p_end_timestamp
+            and end_timestamp <= now_timestamp
+        ):
             # Don't compute anything as the value cannot have changed
             return
 
         # Get history between start and end
         history_list = history.state_changes_during_period(
-            self.hass, start, end, str(self._entity_id))
+            self.hass, start, end, str(self._entity_id)
+        )
 
         if self._entity_id not in history_list.keys():
             return
 
         # Get the first state
         last_state = history.get_state(self.hass, start, self._entity_id)
-        last_state = (last_state is not None and
-                      last_state == self._entity_state)
+        last_state = last_state is not None and last_state == self._entity_state
         last_time = start_timestamp
         elapsed = 0
         count = 0
@@ -247,16 +252,18 @@ class HistoryStatsSensor(Entity):
             try:
                 start_rendered = self._start.render()
             except (TemplateError, TypeError) as ex:
-                HistoryStatsHelper.handle_template_exception(ex, 'start')
+                HistoryStatsHelper.handle_template_exception(ex, "start")
                 return
             start = dt_util.parse_datetime(start_rendered)
             if start is None:
                 try:
-                    start = dt_util.as_local(dt_util.utc_from_timestamp(
-                        math.floor(float(start_rendered))))
+                    start = dt_util.as_local(
+                        dt_util.utc_from_timestamp(math.floor(float(start_rendered)))
+                    )
                 except ValueError:
-                    _LOGGER.error("Parsing error: start must be a datetime"
-                                  "or a timestamp")
+                    _LOGGER.error(
+                        "Parsing error: start must be a datetime" "or a timestamp"
+                    )
                     return
 
         # Parse end
@@ -264,16 +271,18 @@ class HistoryStatsSensor(Entity):
             try:
                 end_rendered = self._end.render()
             except (TemplateError, TypeError) as ex:
-                HistoryStatsHelper.handle_template_exception(ex, 'end')
+                HistoryStatsHelper.handle_template_exception(ex, "end")
                 return
             end = dt_util.parse_datetime(end_rendered)
             if end is None:
                 try:
-                    end = dt_util.as_local(dt_util.utc_from_timestamp(
-                        math.floor(float(end_rendered))))
+                    end = dt_util.as_local(
+                        dt_util.utc_from_timestamp(math.floor(float(end_rendered)))
+                    )
                 except ValueError:
-                    _LOGGER.error("Parsing error: end must be a datetime "
-                                  "or a timestamp")
+                    _LOGGER.error(
+                        "Parsing error: end must be a datetime " "or a timestamp"
+                    )
                     return
 
         # Calculate start or end using the duration
@@ -303,10 +312,10 @@ class HistoryStatsHelper:
         hours, seconds = divmod(seconds, 3600)
         minutes, seconds = divmod(seconds, 60)
         if days > 0:
-            return '%dd %dh %dm' % (days, hours, minutes)
+            return "%dd %dh %dm" % (days, hours, minutes)
         if hours > 0:
-            return '%dh %dm' % (hours, minutes)
-        return '%dm' % minutes
+            return "%dh %dm" % (hours, minutes)
+        return "%dm" % minutes
 
     @staticmethod
     def pretty_ratio(value, period):
@@ -320,8 +329,7 @@ class HistoryStatsHelper:
     @staticmethod
     def handle_template_exception(ex, field):
         """Log an error nicely if the template cannot be interpreted."""
-        if ex.args and ex.args[0].startswith(
-                "UndefinedError: 'None' has no attribute"):
+        if ex.args and ex.args[0].startswith("UndefinedError: 'None' has no attribute"):
             # Common during HA startup - so just a warning
             _LOGGER.warning(ex)
             return

@@ -1,0 +1,10 @@
+{
+  "domain": "fritzdect",
+  "name": "Fritzdect",
+  "documentation": "https://www.home-assistant.io/components/fritzdect",
+  "requirements": [
+    "fritzhome==1.0.4"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

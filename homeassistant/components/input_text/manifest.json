@@ -1,0 +1,10 @@
+{
+  "domain": "input_text",
+  "name": "Input text",
+  "documentation": "https://www.home-assistant.io/components/input_text",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

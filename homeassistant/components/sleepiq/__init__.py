@@ -1,7 +1,6 @@
 """Support for SleepIQ from SleepNumber."""
 import logging
 from datetime import timedelta
-from requests.exceptions import HTTPError
 
 import voluptuous as vol
 
@@ -11,33 +10,33 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
 
-DOMAIN = 'sleepiq'
-
-REQUIREMENTS = ['sleepyq==0.6']
+DOMAIN = "sleepiq"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
-IS_IN_BED = 'is_in_bed'
-SLEEP_NUMBER = 'sleep_number'
-SENSOR_TYPES = {
-    SLEEP_NUMBER: 'SleepNumber',
-    IS_IN_BED: 'Is In Bed',
-}
+IS_IN_BED = "is_in_bed"
+SLEEP_NUMBER = "sleep_number"
+SENSOR_TYPES = {SLEEP_NUMBER: "SleepNumber", IS_IN_BED: "Is In Bed"}
 
-LEFT = 'left'
-RIGHT = 'right'
+LEFT = "left"
+RIGHT = "right"
 SIDES = [LEFT, RIGHT]
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA = None
 
-CONFIG_SCHEMA = vol.Schema({
-    vol.Required(DOMAIN): vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(DOMAIN): vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
@@ -49,21 +48,22 @@ def setup(hass, config):
     global DATA
 
     from sleepyq import Sleepyq
+
     username = config[DOMAIN][CONF_USERNAME]
     password = config[DOMAIN][CONF_PASSWORD]
     client = Sleepyq(username, password)
     try:
         DATA = SleepIQData(client)
         DATA.update()
-    except HTTPError:
+    except ValueError:
         message = """
             SleepIQ failed to login, double check your username and password"
         """
         _LOGGER.error(message)
         return False
 
-    discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
-    discovery.load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
+    discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
+    discovery.load_platform(hass, "binary_sensor", DOMAIN, {}, config)
 
     return True
 
@@ -105,8 +105,9 @@ class SleepIQSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return 'SleepNumber {} {} {}'.format(
-            self.bed.name, self.side.sleeper.first_name, self._name)
+        return "SleepNumber {} {} {}".format(
+            self.bed.name, self.side.sleeper.first_name, self._name
+        )
 
     def update(self):
         """Get the latest data from SleepIQ and updates the states."""

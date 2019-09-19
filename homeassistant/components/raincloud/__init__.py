@@ -1,9 +1,4 @@
-"""
-Support for Melnor RainCloud sprinkler water timer.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/raincloud/
-"""
+"""Support for Melnor RainCloud sprinkler water timer."""
 from datetime import timedelta
 import logging
 
@@ -11,14 +6,15 @@ from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME)
+    ATTR_ATTRIBUTION,
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
-
-REQUIREMENTS = ['raincloudy==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,66 +22,70 @@ ALLOWED_WATERING_TIME = [5, 10, 15, 30, 45, 60]
 
 ATTRIBUTION = "Data provided by Melnor Aquatimer.com"
 
-CONF_WATERING_TIME = 'watering_minutes'
+CONF_WATERING_TIME = "watering_minutes"
 
-NOTIFICATION_ID = 'raincloud_notification'
-NOTIFICATION_TITLE = 'Rain Cloud Setup'
+NOTIFICATION_ID = "raincloud_notification"
+NOTIFICATION_TITLE = "Rain Cloud Setup"
 
-DATA_RAINCLOUD = 'raincloud'
-DOMAIN = 'raincloud'
+DATA_RAINCLOUD = "raincloud"
+DOMAIN = "raincloud"
 DEFAULT_WATERING_TIME = 15
 
 KEY_MAP = {
-    'auto_watering': 'Automatic Watering',
-    'battery': 'Battery',
-    'is_watering': 'Watering',
-    'manual_watering': 'Manual Watering',
-    'next_cycle': 'Next Cycle',
-    'rain_delay': 'Rain Delay',
-    'status': 'Status',
-    'watering_time': 'Remaining Watering Time',
+    "auto_watering": "Automatic Watering",
+    "battery": "Battery",
+    "is_watering": "Watering",
+    "manual_watering": "Manual Watering",
+    "next_cycle": "Next Cycle",
+    "rain_delay": "Rain Delay",
+    "status": "Status",
+    "watering_time": "Remaining Watering Time",
 }
 
 ICON_MAP = {
-    'auto_watering': 'mdi:autorenew',
-    'battery': '',
-    'is_watering': '',
-    'manual_watering': 'mdi:water-pump',
-    'next_cycle': 'mdi:calendar-clock',
-    'rain_delay': 'mdi:weather-rainy',
-    'status': '',
-    'watering_time': 'mdi:water-pump',
+    "auto_watering": "mdi:autorenew",
+    "battery": "",
+    "is_watering": "",
+    "manual_watering": "mdi:water-pump",
+    "next_cycle": "mdi:calendar-clock",
+    "rain_delay": "mdi:weather-rainy",
+    "status": "",
+    "watering_time": "mdi:water-pump",
 }
 
 UNIT_OF_MEASUREMENT_MAP = {
-    'auto_watering': '',
-    'battery': '%',
-    'is_watering': '',
-    'manual_watering': '',
-    'next_cycle': '',
-    'rain_delay': 'days',
-    'status': '',
-    'watering_time': 'min',
+    "auto_watering": "",
+    "battery": "%",
+    "is_watering": "",
+    "manual_watering": "",
+    "next_cycle": "",
+    "rain_delay": "days",
+    "status": "",
+    "watering_time": "min",
 }
 
-BINARY_SENSORS = ['is_watering', 'status']
+BINARY_SENSORS = ["is_watering", "status"]
 
-SENSORS = ['battery', 'next_cycle', 'rain_delay', 'watering_time']
+SENSORS = ["battery", "next_cycle", "rain_delay", "watering_time"]
 
-SWITCHES = ['auto_watering', 'manual_watering']
+SWITCHES = ["auto_watering", "manual_watering"]
 
 SCAN_INTERVAL = timedelta(seconds=20)
 
 SIGNAL_UPDATE_RAINCLOUD = "raincloud_update"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
-            cv.time_period,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
@@ -105,11 +105,12 @@ def setup(hass, config):
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Rain Cloud service: %s", str(ex))
         hass.components.persistent_notification.create(
-            'Error: {}<br />'
-            'You will need to restart hass after fixing.'
-            ''.format(ex),
+            "Error: {}<br />"
+            "You will need to restart hass after fixing."
+            "".format(ex),
             title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID)
+            notification_id=NOTIFICATION_ID,
+        )
         return False
 
     def hub_refresh(event_time):
@@ -139,8 +140,7 @@ class RainCloudEntity(Entity):
         """Initialize the RainCloud entity."""
         self.data = data
         self._sensor_type = sensor_type
-        self._name = "{0} {1}".format(
-            self.data.name, KEY_MAP.get(self._sensor_type))
+        self._name = "{0} {1}".format(self.data.name, KEY_MAP.get(self._sensor_type))
         self._state = None
 
     @property
@@ -151,7 +151,8 @@ class RainCloudEntity(Entity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_RAINCLOUD, self._update_callback)
+            self.hass, SIGNAL_UPDATE_RAINCLOUD, self._update_callback
+        )
 
     def _update_callback(self):
         """Call update method."""
@@ -165,10 +166,7 @@ class RainCloudEntity(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            'identifier': self.data.serial,
-        }
+        return {ATTR_ATTRIBUTION: ATTRIBUTION, "identifier": self.data.serial}
 
     @property
     def icon(self):

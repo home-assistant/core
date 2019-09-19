@@ -1,32 +1,26 @@
-"""
-Support for Edimax switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.edimax/
-"""
+"""Support for Edimax switches."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
+from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pyedimax==0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Edimax Smart Plug'
-DEFAULT_PASSWORD = '1234'
-DEFAULT_USERNAME = 'admin'
+DEFAULT_NAME = "Edimax Smart Plug"
+DEFAULT_PASSWORD = "1234"
+DEFAULT_USERNAME = "admin"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
-    vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -73,11 +67,11 @@ class SmartPlugSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        self.smartplug.state = 'ON'
+        self.smartplug.state = "ON"
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        self.smartplug.state = 'OFF'
+        self.smartplug.state = "OFF"
 
     def update(self):
         """Update edimax switch."""
@@ -91,4 +85,4 @@ class SmartPlugSwitch(SwitchDevice):
         except (TypeError, ValueError):
             self._now_energy_day = None
 
-        self._state = self.smartplug.state == 'ON'
+        self._state = self.smartplug.state == "ON"

@@ -1,66 +1,74 @@
-"""
-Support for information from HP ILO sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.sensor.hp_ilo/
-"""
-import logging
+"""Support for information from HP iLO sensors."""
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD, CONF_NAME,
-    CONF_MONITORED_VARIABLES, CONF_VALUE_TEMPLATE, CONF_SENSOR_TYPE,
-    CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MONITORED_VARIABLES,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SENSOR_TYPE,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_USERNAME,
+    CONF_VALUE_TEMPLATE,
+)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['python-hpilo==3.9']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'HP ILO'
+DEFAULT_NAME = "HP ILO"
 DEFAULT_PORT = 443
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
 SENSOR_TYPES = {
-    'server_name': ['Server Name', 'get_server_name'],
-    'server_fqdn': ['Server FQDN', 'get_server_fqdn'],
-    'server_host_data': ['Server Host Data', 'get_host_data'],
-    'server_oa_info': ['Server Onboard Administrator Info', 'get_oa_info'],
-    'server_power_status': ['Server Power state', 'get_host_power_status'],
-    'server_power_readings': ['Server Power readings', 'get_power_readings'],
-    'server_power_on_time': ['Server Power On time',
-                             'get_server_power_on_time'],
-    'server_asset_tag': ['Server Asset Tag', 'get_asset_tag'],
-    'server_uid_status': ['Server UID light', 'get_uid_status'],
-    'server_health': ['Server Health', 'get_embedded_health'],
-    'network_settings': ['Network Settings', 'get_network_settings']
+    "server_name": ["Server Name", "get_server_name"],
+    "server_fqdn": ["Server FQDN", "get_server_fqdn"],
+    "server_host_data": ["Server Host Data", "get_host_data"],
+    "server_oa_info": ["Server Onboard Administrator Info", "get_oa_info"],
+    "server_power_status": ["Server Power state", "get_host_power_status"],
+    "server_power_readings": ["Server Power readings", "get_power_readings"],
+    "server_power_on_time": ["Server Power On time", "get_server_power_on_time"],
+    "server_asset_tag": ["Server Asset Tag", "get_asset_tag"],
+    "server_uid_status": ["Server UID light", "get_uid_status"],
+    "server_health": ["Server Health", "get_embedded_health"],
+    "network_settings": ["Network Settings", "get_network_settings"],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_MONITORED_VARIABLES, default=[]):
-        vol.All(cv.ensure_list, [vol.Schema({
-            vol.Required(CONF_NAME): cv.string,
-            vol.Required(CONF_SENSOR_TYPE):
-                vol.All(cv.string, vol.In(SENSOR_TYPES)),
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-            vol.Optional(CONF_VALUE_TEMPLATE): cv.template
-        })]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_MONITORED_VARIABLES, default=[]): vol.All(
+            cv.ensure_list,
+            [
+                vol.Schema(
+                    {
+                        vol.Required(CONF_NAME): cv.string,
+                        vol.Required(CONF_SENSOR_TYPE): vol.All(
+                            cv.string, vol.In(SENSOR_TYPES)
+                        ),
+                        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+                    }
+                )
+            ],
+        ),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the HP ILO sensor."""
+    """Set up the HP iLO sensors."""
     hostname = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     login = config.get(CONF_USERNAME)
@@ -73,7 +81,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hp_ilo_data = HpIloData(hostname, port, login, password)
     except ValueError as error:
         _LOGGER.error(error)
-        return False
+        return
 
     # Initialize and add all of the sensors.
     devices = []
@@ -81,23 +89,31 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         new_device = HpIloSensor(
             hass=hass,
             hp_ilo_data=hp_ilo_data,
-            sensor_name='{} {}'.format(
-                config.get(CONF_NAME), monitored_variable[CONF_NAME]),
+            sensor_name="{} {}".format(
+                config.get(CONF_NAME), monitored_variable[CONF_NAME]
+            ),
             sensor_type=monitored_variable[CONF_SENSOR_TYPE],
             sensor_value_template=monitored_variable.get(CONF_VALUE_TEMPLATE),
-            unit_of_measurement=monitored_variable.get(
-                CONF_UNIT_OF_MEASUREMENT))
+            unit_of_measurement=monitored_variable.get(CONF_UNIT_OF_MEASUREMENT),
+        )
         devices.append(new_device)
 
     add_entities(devices, True)
 
 
 class HpIloSensor(Entity):
-    """Representation of a HP ILO sensor."""
+    """Representation of a HP iLO sensor."""
 
-    def __init__(self, hass, hp_ilo_data, sensor_type, sensor_name,
-                 sensor_value_template, unit_of_measurement):
-        """Initialize the sensor."""
+    def __init__(
+        self,
+        hass,
+        hp_ilo_data,
+        sensor_type,
+        sensor_name,
+        sensor_value_template,
+        unit_of_measurement,
+    ):
+        """Initialize the HP iLO sensor."""
         self._hass = hass
         self._name = sensor_name
         self._unit_of_measurement = unit_of_measurement
@@ -111,7 +127,7 @@ class HpIloSensor(Entity):
         self._state = None
         self._state_attributes = None
 
-        _LOGGER.debug("Created HP ILO sensor %r", self)
+        _LOGGER.debug("Created HP iLO sensor %r", self)
 
     @property
     def name(self):
@@ -130,11 +146,11 @@ class HpIloSensor(Entity):
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes."""
+        """Return the device state attributes."""
         return self._state_attributes
 
     def update(self):
-        """Get the latest data from HP ILO and updates the states."""
+        """Get the latest data from HP iLO and updates the states."""
         # Call the API for new data. Each sensor will re-trigger this
         # same exact call, but that's fine. Results should be cached for
         # a short period of time to prevent hitting API limits.
@@ -148,7 +164,7 @@ class HpIloSensor(Entity):
 
 
 class HpIloData:
-    """Gets the latest data from HP ILO."""
+    """Gets the latest data from HP iLO."""
 
     def __init__(self, host, port, login, password):
         """Initialize the data object."""
@@ -163,13 +179,19 @@ class HpIloData:
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the latest data from HP ILO."""
+        """Get the latest data from HP iLO."""
         import hpilo
 
         try:
             self.data = hpilo.Ilo(
-                hostname=self._host, login=self._login,
-                password=self._password, port=self._port)
-        except (hpilo.IloError, hpilo.IloCommunicationError,
-                hpilo.IloLoginFailed) as error:
-            raise ValueError("Unable to init HP ILO, {}".format(error))
+                hostname=self._host,
+                login=self._login,
+                password=self._password,
+                port=self._port,
+            )
+        except (
+            hpilo.IloError,
+            hpilo.IloCommunicationError,
+            hpilo.IloLoginFailed,
+        ) as error:
+            raise ValueError(f"Unable to init HP ILO, {error}")

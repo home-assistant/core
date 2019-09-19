@@ -1,0 +1,10 @@
+{
+  "domain": "nad",
+  "name": "Nad",
+  "documentation": "https://www.home-assistant.io/components/nad",
+  "requirements": [
+    "nad_receiver==0.0.11"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

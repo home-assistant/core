@@ -7,16 +7,15 @@ import os
 import re
 from typing import Union, List, Dict
 
-FILENAME_FORMAT = re.compile(r'strings\.(?P<suffix>\w+)\.json')
+FILENAME_FORMAT = re.compile(r"strings\.(?P<suffix>\w+)\.json")
 
 
-def load_json(filename: str) \
-        -> Union[List, Dict]:
+def load_json(filename: str) -> Union[List, Dict]:
     """Load JSON data from a file and return as dict or list.
 
     Defaults to returning empty dict if file is not found.
     """
-    with open(filename, encoding='utf-8') as fdesc:
+    with open(filename, encoding="utf-8") as fdesc:
         return json.loads(fdesc.read())
     return {}
 
@@ -27,7 +26,7 @@ def save_json(filename: str, data: Union[List, Dict]):
     Returns True on success.
     """
     data = json.dumps(data, sort_keys=True, indent=4)
-    with open(filename, 'w', encoding='utf-8') as fdesc:
+    with open(filename, "w", encoding="utf-8") as fdesc:
         fdesc.write(data)
         return True
     return False
@@ -36,8 +35,7 @@ def save_json(filename: str, data: Union[List, Dict]):
 def find_strings_files():
     """Return the paths of the strings source files."""
     return itertools.chain(
-        glob.iglob("strings*.json"),
-        glob.iglob("*{}strings*.json".format(os.sep)),
+        glob.iglob("strings*.json"), glob.iglob(f"*{os.sep}strings*.json")
     )
 
 
@@ -45,7 +43,7 @@ def get_component_platform(path):
     """Get the component and platform name from the path."""
     directory, filename = os.path.split(path)
     match = FILENAME_FORMAT.search(filename)
-    suffix = match.group('suffix') if match else None
+    suffix = match.group("suffix") if match else None
     if directory:
         return directory, suffix
     else:
@@ -55,21 +53,21 @@ def get_component_platform(path):
 def get_translation_dict(translations, component, platform):
     """Return the dict to hold component translations."""
     if not component:
-        return translations['component']
+        return translations["component"]
 
-    if component not in translations['component']:
-        translations['component'][component] = {}
+    if component not in translations["component"]:
+        translations["component"][component] = {}
 
     if not platform:
-        return translations['component'][component]
+        return translations["component"][component]
 
-    if 'platform' not in translations['component'][component]:
-        translations['component'][component]['platform'] = {}
+    if "platform" not in translations["component"][component]:
+        translations["component"][component]["platform"] = {}
 
-    if platform not in translations['component'][component]['platform']:
-        translations['component'][component]['platform'][platform] = {}
+    if platform not in translations["component"][component]["platform"]:
+        translations["component"][component]["platform"][platform] = {}
 
-    return translations['component'][component]['platform'][platform]
+    return translations["component"][component]["platform"][platform]
 
 
 def main():
@@ -81,9 +79,7 @@ def main():
     root = os.getcwd()
     os.chdir(os.path.join("homeassistant", "components"))
 
-    translations = {
-        'component': {}
-    }
+    translations = {"component": {}}
 
     paths = find_strings_files()
     for path in paths:
@@ -96,9 +92,8 @@ def main():
 
     os.makedirs("build", exist_ok=True)
 
-    save_json(
-        os.path.join("build", "translations-upload.json"), translations)
+    save_json(os.path.join("build", "translations-upload.json"), translations)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

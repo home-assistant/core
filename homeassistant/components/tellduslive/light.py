@@ -2,8 +2,7 @@
 import logging
 
 from homeassistant.components import light, tellduslive
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
+from homeassistant.components.light import ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .entry import TelldusLiveEntity
@@ -11,7 +10,7 @@ from .entry import TelldusLiveEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up TelldusLive.
 
     Can only be called when a user accidentally mentions the platform in their
@@ -22,6 +21,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up tellduslive sensors dynamically."""
+
     async def async_discover_light(device_id):
         """Discover and add a discovered sensor."""
         client = hass.data[tellduslive.DOMAIN]
@@ -29,8 +29,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_dispatcher_connect(
         hass,
-        tellduslive.TELLDUS_DISCOVERY_NEW.format(light.DOMAIN,
-                                                 tellduslive.DOMAIN),
+        tellduslive.TELLDUS_DISCOVERY_NEW.format(light.DOMAIN, tellduslive.DOMAIN),
         async_discover_light,
     )
 
@@ -66,6 +65,12 @@ class TelldusLiveLight(TelldusLiveEntity, Light):
     def turn_on(self, **kwargs):
         """Turn the light on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS, self._last_brightness)
+        if brightness == 0:
+            fallback_brightness = 100
+            _LOGGER.info(
+                "Setting brightness to %d%%, because it was 0", fallback_brightness
+            )
+            brightness = int(fallback_brightness * 255 / 100)
         self.device.dim(level=brightness)
         self.changed()
 

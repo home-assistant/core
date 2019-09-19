@@ -1,9 +1,4 @@
-"""
-Support for switches using GC100.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.gc100/
-"""
+"""Support for switches using GC100."""
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA
@@ -13,15 +8,11 @@ from homeassistant.helpers.entity import ToggleEntity
 
 from . import CONF_PORTS, DATA_GC100
 
-DEPENDENCIES = ['gc100']
+_SWITCH_SCHEMA = vol.Schema({cv.string: cv.string})
 
-_SWITCH_SCHEMA = vol.Schema({
-    cv.string: cv.string,
-})
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PORTS): vol.All(cv.ensure_list, [_SWITCH_SCHEMA])
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_PORTS): vol.All(cv.ensure_list, [_SWITCH_SCHEMA])}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -30,8 +21,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     ports = config.get(CONF_PORTS)
     for port in ports:
         for port_addr, port_name in port.items():
-            switches.append(GC100Switch(
-                port_name, port_addr, hass.data[DATA_GC100]))
+            switches.append(GC100Switch(port_name, port_addr, hass.data[DATA_GC100]))
     add_entities(switches, True)
 
 

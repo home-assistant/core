@@ -19,6 +19,7 @@
             },
             "user": {
                 "data": {
+                    "authorization_code": "Kod autoryzacji (wymagany do r\u0119cznego uwierzytelnienia)",
                     "email": "Adres e-mail",
                     "password": "Has\u0142o"
                 },

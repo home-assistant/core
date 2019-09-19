@@ -1,0 +1,10 @@
+{
+  "domain": "counter",
+  "name": "Counter",
+  "documentation": "https://www.home-assistant.io/components/counter",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

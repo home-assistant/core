@@ -2,20 +2,26 @@
 import asyncio
 from typing import Optional, Sequence
 
+from pysmartthings import Capability
+
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_TRANSITION,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_TRANSITION,
-    Light)
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
+    ATTR_TRANSITION,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    SUPPORT_TRANSITION,
+    Light,
+)
 import homeassistant.util.color as color_util
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
-DEPENDENCIES = ['smartthings']
 
-
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Platform uses config entry setup."""
     pass
 
@@ -24,14 +30,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add lights for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(
-        [SmartThingsLight(device) for device in broker.devices.values()
-         if broker.any_assigned(device.device_id, 'light')], True)
+        [
+            SmartThingsLight(device)
+            for device in broker.devices.values()
+            if broker.any_assigned(device.device_id, "light")
+        ],
+        True,
+    )
 
 
 def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
     """Return all capabilities supported if minimum required are present."""
-    from pysmartthings import Capability
-
     supported = [
         Capability.switch,
         Capability.switch_level,
@@ -45,10 +54,9 @@ def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
     light_capabilities = [
         Capability.color_control,
         Capability.color_temperature,
-        Capability.switch_level
+        Capability.switch_level,
     ]
-    if any(capability in capabilities
-           for capability in light_capabilities):
+    if any(capability in capabilities for capability in light_capabilities):
         return supported
     return None
 
@@ -71,13 +79,10 @@ class SmartThingsLight(SmartThingsEntity, Light):
 
     def _determine_features(self):
         """Get features supported by the device."""
-        from pysmartthings.device import Capability
-
         features = 0
         # Brightness and transition
         if Capability.switch_level in self._device.capabilities:
-            features |= \
-                SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+            features |= SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
         # Color Temperature
         if Capability.color_temperature in self._device.capabilities:
             features |= SUPPORT_COLOR_TEMP
@@ -91,25 +96,20 @@ class SmartThingsLight(SmartThingsEntity, Light):
         """Turn the light on."""
         tasks = []
         # Color temperature
-        if self._supported_features & SUPPORT_COLOR_TEMP \
-           and ATTR_COLOR_TEMP in kwargs:
-            tasks.append(self.async_set_color_temp(
-                kwargs[ATTR_COLOR_TEMP]))
+        if self._supported_features & SUPPORT_COLOR_TEMP and ATTR_COLOR_TEMP in kwargs:
+            tasks.append(self.async_set_color_temp(kwargs[ATTR_COLOR_TEMP]))
         # Color
-        if self._supported_features & SUPPORT_COLOR \
-           and ATTR_HS_COLOR in kwargs:
-            tasks.append(self.async_set_color(
-                kwargs[ATTR_HS_COLOR]))
+        if self._supported_features & SUPPORT_COLOR and ATTR_HS_COLOR in kwargs:
+            tasks.append(self.async_set_color(kwargs[ATTR_HS_COLOR]))
         if tasks:
             # Set temp/color first
             await asyncio.gather(*tasks)
 
         # Switch/brightness/transition
-        if self._supported_features & SUPPORT_BRIGHTNESS \
-           and ATTR_BRIGHTNESS in kwargs:
+        if self._supported_features & SUPPORT_BRIGHTNESS and ATTR_BRIGHTNESS in kwargs:
             await self.async_set_level(
-                kwargs[ATTR_BRIGHTNESS],
-                kwargs.get(ATTR_TRANSITION, 0))
+                kwargs[ATTR_BRIGHTNESS], kwargs.get(ATTR_TRANSITION, 0)
+            )
         else:
             await self._device.switch_on(set_status=True)
 
@@ -120,8 +120,7 @@ class SmartThingsLight(SmartThingsEntity, Light):
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the light off."""
         # Switch/transition
-        if self._supported_features & SUPPORT_TRANSITION \
-                and ATTR_TRANSITION in kwargs:
+        if self._supported_features & SUPPORT_TRANSITION and ATTR_TRANSITION in kwargs:
             await self.async_set_level(0, int(kwargs[ATTR_TRANSITION]))
         else:
             await self._device.switch_off(set_status=True)
@@ -134,17 +133,19 @@ class SmartThingsLight(SmartThingsEntity, Light):
         """Update entity attributes when the device status has changed."""
         # Brightness and transition
         if self._supported_features & SUPPORT_BRIGHTNESS:
-            self._brightness = convert_scale(
-                self._device.status.level, 100, 255)
+            self._brightness = int(
+                convert_scale(self._device.status.level, 100, 255, 0)
+            )
         # Color Temperature
         if self._supported_features & SUPPORT_COLOR_TEMP:
             self._color_temp = color_util.color_temperature_kelvin_to_mired(
-                self._device.status.color_temperature)
+                self._device.status.color_temperature
+            )
         # Color
         if self._supported_features & SUPPORT_COLOR:
             self._hs_color = (
                 convert_scale(self._device.status.hue, 100, 360),
-                self._device.status.saturation
+                self._device.status.saturation,
             )
 
     async def async_set_color(self, hs_color):
@@ -152,15 +153,13 @@ class SmartThingsLight(SmartThingsEntity, Light):
         hue = convert_scale(float(hs_color[0]), 360, 100)
         hue = max(min(hue, 100.0), 0.0)
         saturation = max(min(float(hs_color[1]), 100.0), 0.0)
-        await self._device.set_color(
-            hue, saturation, set_status=True)
+        await self._device.set_color(hue, saturation, set_status=True)
 
     async def async_set_color_temp(self, value: float):
         """Set the color temperature of the device."""
         kelvin = color_util.color_temperature_mired_to_kelvin(value)
         kelvin = max(min(kelvin, 30000.0), 1.0)
-        await self._device.set_color_temperature(
-            kelvin, set_status=True)
+        await self._device.set_color_temperature(kelvin, set_status=True)
 
     async def async_set_level(self, brightness: int, transition: int):
         """Set the brightness of the light over transition."""

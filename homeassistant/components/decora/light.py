@@ -1,9 +1,4 @@
-"""
-Support for Decora dimmers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.decora/
-"""
+"""Support for Decora dimmers."""
 import importlib
 import logging
 from functools import wraps
@@ -13,28 +8,29 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light,
-    PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS,
+    SUPPORT_BRIGHTNESS,
+    Light,
+    PLATFORM_SCHEMA,
+)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['decora==0.6', 'bluepy==1.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_DECORA_LED = (SUPPORT_BRIGHTNESS)
+SUPPORT_DECORA_LED = SUPPORT_BRIGHTNESS
 
-DEVICE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Required(CONF_API_KEY): cv.string,
-})
+DEVICE_SCHEMA = vol.Schema(
+    {vol.Optional(CONF_NAME): cv.string, vol.Required(CONF_API_KEY): cv.string}
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}}
+)
 
 
 def retry(method):
     """Retry bluetooth commands."""
+
     @wraps(method)
     def wrapper_retry(device, *args, **kwargs):
         """Try send command and retry on error."""
@@ -48,12 +44,14 @@ def retry(method):
                 return None
             try:
                 return method(device, *args, **kwargs)
-            except (decora.decoraException, AttributeError,
-                    bluepy.btle.BTLEException):
-                _LOGGER.warning("Decora connect error for device %s. "
-                                "Reconnecting...", device.name)
+            except (decora.decoraException, AttributeError, bluepy.btle.BTLEException):
+                _LOGGER.warning(
+                    "Decora connect error for device %s. " "Reconnecting...",
+                    device.name,
+                )
                 # pylint: disable=protected-access
                 device._switch.connect()
+
     return wrapper_retry
 
 
@@ -62,9 +60,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     lights = []
     for address, device_config in config[CONF_DEVICES].items():
         device = {}
-        device['name'] = device_config[CONF_NAME]
-        device['key'] = device_config[CONF_API_KEY]
-        device['address'] = address
+        device["name"] = device_config[CONF_NAME]
+        device["key"] = device_config[CONF_API_KEY]
+        device["address"] = address
         light = DecoraLight(device)
         lights.append(light)
 
@@ -77,10 +75,10 @@ class DecoraLight(Light):
     def __init__(self, device):
         """Initialize the light."""
         # pylint: disable=no-member
-        decora = importlib.import_module('decora')
+        decora = importlib.import_module("decora")
 
-        self._name = device['name']
-        self._address = device['address']
+        self._name = device["name"]
+        self._address = device["address"]
         self._key = device["key"]
         self._switch = decora.decora(self._address, self._key)
         self._brightness = 0

@@ -1,0 +1,10 @@
+{
+  "domain": "epson",
+  "name": "Epson",
+  "documentation": "https://www.home-assistant.io/components/epson",
+  "requirements": [
+    "epson-projector==0.1.3"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

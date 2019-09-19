@@ -1,1 +1,1 @@
-"""The hp_ilo component."""
+"""The HP Integrated Lights-Out (iLO) component."""

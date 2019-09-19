@@ -1,0 +1,11 @@
+{
+  "domain": "decora",
+  "name": "Decora",
+  "documentation": "https://www.home-assistant.io/components/decora",
+  "requirements": [
+    "bluepy==1.1.4",
+    "decora==0.6"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,43 +1,49 @@
-"""
-Provide functionality to interact with vlc devices on the network.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.vlc/
-"""
+"""Provide functionality to interact with vlc devices on the network."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC, SUPPORT_PAUSE, SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA, SUPPORT_STOP, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
-from homeassistant.const import (
-    CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING)
+    MEDIA_TYPE_MUSIC,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
+    SUPPORT_STOP,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
+)
+from homeassistant.const import CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['python-vlc==1.1.2']
-
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ARGUMENTS = 'arguments'
-DEFAULT_NAME = 'Vlc'
+CONF_ARGUMENTS = "arguments"
+DEFAULT_NAME = "Vlc"
 
-SUPPORT_VLC = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_STOP
+SUPPORT_VLC = (
+    SUPPORT_PAUSE
+    | SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_PLAY
+    | SUPPORT_STOP
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ARGUMENTS, default=''): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_ARGUMENTS, default=""): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the vlc platform."""
-    add_entities([VlcDevice(config.get(CONF_NAME, DEFAULT_NAME),
-                            config.get(CONF_ARGUMENTS))])
+    add_entities(
+        [VlcDevice(config.get(CONF_NAME, DEFAULT_NAME), config.get(CONF_ARGUMENTS))]
+    )
 
 
 class VlcDevice(MediaPlayerDevice):
@@ -46,6 +52,7 @@ class VlcDevice(MediaPlayerDevice):
     def __init__(self, name, arguments):
         """Initialize the vlc device."""
         import vlc
+
         self._instance = vlc.Instance(arguments)
         self._vlc = self._instance.media_player_new()
         self._name = name
@@ -59,6 +66,7 @@ class VlcDevice(MediaPlayerDevice):
     def update(self):
         """Get the latest details from the device."""
         import vlc
+
         status = self._vlc.get_state()
         if status == vlc.State.Playing:
             self._state = STATE_PLAYING
@@ -66,14 +74,14 @@ class VlcDevice(MediaPlayerDevice):
             self._state = STATE_PAUSED
         else:
             self._state = STATE_IDLE
-        self._media_duration = self._vlc.get_length()/1000
+        self._media_duration = self._vlc.get_length() / 1000
         position = self._vlc.get_position() * self._media_duration
         if position != self._media_position:
             self._media_position_updated_at = dt_util.utcnow()
             self._media_position = position
 
         self._volume = self._vlc.audio_get_volume() / 100
-        self._muted = (self._vlc.audio_get_mute() == 1)
+        self._muted = self._vlc.audio_get_mute() == 1
 
         return True
 
@@ -124,8 +132,8 @@ class VlcDevice(MediaPlayerDevice):
 
     def media_seek(self, position):
         """Seek the media to a specific location."""
-        track_length = self._vlc.get_length()/1000
-        self._vlc.set_position(position/track_length)
+        track_length = self._vlc.get_length() / 1000
+        self._vlc.set_position(position / track_length)
 
     def mute_volume(self, mute):
         """Mute the volume."""
@@ -157,7 +165,9 @@ class VlcDevice(MediaPlayerDevice):
         if not media_type == MEDIA_TYPE_MUSIC:
             _LOGGER.error(
                 "Invalid media type %s. Only %s is supported",
-                media_type, MEDIA_TYPE_MUSIC)
+                media_type,
+                MEDIA_TYPE_MUSIC,
+            )
             return
         self._vlc.set_media(self._instance.media_new(media_id))
         self._vlc.play()

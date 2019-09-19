@@ -1,0 +1,12 @@
+{
+  "domain": "foursquare",
+  "name": "Foursquare",
+  "documentation": "https://www.home-assistant.io/components/foursquare",
+  "requirements": [],
+  "dependencies": [
+    "http"
+  ],
+  "codeowners": [
+    "@robbiet480"
+  ]
+}

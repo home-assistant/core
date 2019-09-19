@@ -1,41 +1,40 @@
-"""
-Support for FutureNow Ethernet unit outputs as Lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.futurenow/
-"""
+"""Support for FutureNow Ethernet unit outputs as Lights."""
 
 import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT, CONF_DEVICES)
+from homeassistant.const import CONF_NAME, CONF_HOST, CONF_PORT, CONF_DEVICES
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light,
-    PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS,
+    SUPPORT_BRIGHTNESS,
+    Light,
+    PLATFORM_SCHEMA,
+)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pyfnip==0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DRIVER = 'driver'
-CONF_DRIVER_FNIP6X10AD = 'FNIP6x10ad'
-CONF_DRIVER_FNIP8X10A = 'FNIP8x10a'
+CONF_DRIVER = "driver"
+CONF_DRIVER_FNIP6X10AD = "FNIP6x10ad"
+CONF_DRIVER_FNIP8X10A = "FNIP8x10a"
 CONF_DRIVER_TYPES = [CONF_DRIVER_FNIP6X10AD, CONF_DRIVER_FNIP8X10A]
 
-DEVICE_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Optional('dimmable', default=False): cv.boolean,
-})
+DEVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Optional("dimmable", default=False): cv.boolean,
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DRIVER): vol.In(CONF_DRIVER_TYPES),
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PORT): cv.port,
-    vol.Required(CONF_DEVICES): {cv.string: DEVICE_SCHEMA},
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_DRIVER): vol.In(CONF_DRIVER_TYPES),
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PORT): cv.port,
+        vol.Required(CONF_DEVICES): {cv.string: DEVICE_SCHEMA},
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -43,12 +42,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     lights = []
     for channel, device_config in config[CONF_DEVICES].items():
         device = {}
-        device['name'] = device_config[CONF_NAME]
-        device['dimmable'] = device_config['dimmable']
-        device['channel'] = channel
-        device['driver'] = config[CONF_DRIVER]
-        device['host'] = config[CONF_HOST]
-        device['port'] = config[CONF_PORT]
+        device["name"] = device_config[CONF_NAME]
+        device["dimmable"] = device_config["dimmable"]
+        device["channel"] = channel
+        device["driver"] = config[CONF_DRIVER]
+        device["host"] = config[CONF_HOST]
+        device["port"] = config[CONF_PORT]
         lights.append(FutureNowLight(device))
 
     add_entities(lights, True)
@@ -71,21 +70,21 @@ class FutureNowLight(Light):
         """Initialize the light."""
         import pyfnip
 
-        self._name = device['name']
-        self._dimmable = device['dimmable']
-        self._channel = device['channel']
+        self._name = device["name"]
+        self._dimmable = device["dimmable"]
+        self._channel = device["channel"]
         self._brightness = None
         self._last_brightness = 255
         self._state = None
 
-        if device['driver'] == CONF_DRIVER_FNIP6X10AD:
-            self._light = pyfnip.FNIP6x2adOutput(device['host'],
-                                                 device['port'],
-                                                 self._channel)
-        if device['driver'] == CONF_DRIVER_FNIP8X10A:
-            self._light = pyfnip.FNIP8x10aOutput(device['host'],
-                                                 device['port'],
-                                                 self._channel)
+        if device["driver"] == CONF_DRIVER_FNIP6X10AD:
+            self._light = pyfnip.FNIP6x2adOutput(
+                device["host"], device["port"], self._channel
+            )
+        if device["driver"] == CONF_DRIVER_FNIP8X10A:
+            self._light = pyfnip.FNIP8x10aOutput(
+                device["host"], device["port"], self._channel
+            )
 
     @property
     def name(self):

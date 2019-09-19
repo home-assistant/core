@@ -9,23 +9,26 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_DOMAIN
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['defusedxml==0.5.0']
-
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'namecheapdns'
+DOMAIN = "namecheapdns"
 
 INTERVAL = timedelta(minutes=5)
 
-UPDATE_URL = 'https://dynamicdns.park-your-domain.com/update'
+UPDATE_URL = "https://dynamicdns.park-your-domain.com/update"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_DOMAIN): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_HOST, default='@'): cv.string,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_DOMAIN): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_HOST, default="@"): cv.string,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):
@@ -54,16 +57,12 @@ async def _update_namecheapdns(session, host, domain, password):
     """Update namecheap DNS entry."""
     import defusedxml.ElementTree as ET
 
-    params = {
-        'host': host,
-        'domain': domain,
-        'password': password,
-    }
+    params = {"host": host, "domain": domain, "password": password}
 
     resp = await session.get(UPDATE_URL, params=params)
     xml_string = await resp.text()
     root = ET.fromstring(xml_string)
-    err_count = root.find('ErrCount').text
+    err_count = root.find("ErrCount").text
 
     if int(err_count) != 0:
         _LOGGER.warning("Updating namecheap domain failed: %s", domain)

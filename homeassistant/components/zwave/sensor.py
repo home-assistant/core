@@ -4,27 +4,25 @@ from homeassistant.core import callback
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from . import (
-    const,
-    ZWaveDeviceEntity,
-)
+from . import const, ZWaveDeviceEntity
+
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old method of setting up Z-Wave sensors."""
     pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Z-Wave Sensor from Config Entry."""
+
     @callback
     def async_add_sensor(sensor):
         """Add Z-Wave Sensor."""
         async_add_entities([sensor])
 
-    async_dispatcher_connect(hass, 'zwave_new_sensor', async_add_sensor)
+    async_dispatcher_connect(hass, "zwave_new_sensor", async_add_sensor)
 
 
 def get_device(node, values, **kwargs):
@@ -32,11 +30,14 @@ def get_device(node, values, **kwargs):
     # Generic Device mappings
     if node.has_command_class(const.COMMAND_CLASS_SENSOR_MULTILEVEL):
         return ZWaveMultilevelSensor(values)
-    if node.has_command_class(const.COMMAND_CLASS_METER) and \
-            values.primary.type == const.TYPE_DECIMAL:
+    if (
+        node.has_command_class(const.COMMAND_CLASS_METER)
+        and values.primary.type == const.TYPE_DECIMAL
+    ):
         return ZWaveMultilevelSensor(values)
-    if node.has_command_class(const.COMMAND_CLASS_ALARM) or \
-            node.has_command_class(const.COMMAND_CLASS_SENSOR_ALARM):
+    if node.has_command_class(const.COMMAND_CLASS_ALARM) or node.has_command_class(
+        const.COMMAND_CLASS_SENSOR_ALARM
+    ):
         return ZWaveAlarmSensor(values)
     return None
 
@@ -76,7 +77,7 @@ class ZWaveMultilevelSensor(ZWaveSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._units in ('C', 'F'):
+        if self._units in ("C", "F"):
             return round(self._state, 1)
         if isinstance(self._state, float):
             return round(self._state, 2)
@@ -86,9 +87,9 @@ class ZWaveMultilevelSensor(ZWaveSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        if self._units == 'C':
+        if self._units == "C":
             return TEMP_CELSIUS
-        if self._units == 'F':
+        if self._units == "F":
             return TEMP_FAHRENHEIT
         return self._units
 

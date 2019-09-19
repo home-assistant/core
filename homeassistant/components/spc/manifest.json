@@ -1,0 +1,10 @@
+{
+  "domain": "spc",
+  "name": "Spc",
+  "documentation": "https://www.home-assistant.io/components/spc",
+  "requirements": [
+    "pyspcwebgw==0.4.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

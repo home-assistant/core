@@ -5,55 +5,57 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL,
-    STATE_ON, STATE_OFF, STATE_PROBLEM)
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    STATE_ON,
+    STATE_OFF,
+    STATE_PROBLEM,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['upcloud-api==0.4.3']
-
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CORE_NUMBER = 'core_number'
-ATTR_HOSTNAME = 'hostname'
-ATTR_MEMORY_AMOUNT = 'memory_amount'
-ATTR_STATE = 'state'
-ATTR_TITLE = 'title'
-ATTR_UUID = 'uuid'
-ATTR_ZONE = 'zone'
+ATTR_CORE_NUMBER = "core_number"
+ATTR_HOSTNAME = "hostname"
+ATTR_MEMORY_AMOUNT = "memory_amount"
+ATTR_STATE = "state"
+ATTR_TITLE = "title"
+ATTR_UUID = "uuid"
+ATTR_ZONE = "zone"
 
-CONF_SERVERS = 'servers'
+CONF_SERVERS = "servers"
 
-DATA_UPCLOUD = 'data_upcloud'
-DOMAIN = 'upcloud'
+DATA_UPCLOUD = "data_upcloud"
+DOMAIN = "upcloud"
 
-DEFAULT_COMPONENT_NAME = 'UpCloud {}'
-DEFAULT_COMPONENT_DEVICE_CLASS = 'power'
+DEFAULT_COMPONENT_NAME = "UpCloud {}"
+DEFAULT_COMPONENT_DEVICE_CLASS = "power"
 
-UPCLOUD_PLATFORMS = ['binary_sensor', 'switch']
+UPCLOUD_PLATFORMS = ["binary_sensor", "switch"]
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-SIGNAL_UPDATE_UPCLOUD = 'upcloud_update'
+SIGNAL_UPDATE_UPCLOUD = "upcloud_update"
 
-STATE_MAP = {
-    'error': STATE_PROBLEM,
-    'started': STATE_ON,
-    'stopped': STATE_OFF,
-}
+STATE_MAP = {"error": STATE_PROBLEM, "started": STATE_ON, "stopped": STATE_OFF}
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
-            cv.time_period,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
@@ -96,9 +98,7 @@ class UpCloud:
 
     def update(self):
         """Update data from UpCloud API."""
-        self.data = {
-            server.uuid: server for server in self.manager.get_servers()
-        }
+        self.data = {server.uuid: server for server in self.manager.get_servers()}
 
 
 class UpCloudServerEntity(Entity):
@@ -126,7 +126,8 @@ class UpCloudServerEntity(Entity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_UPCLOUD, self._update_callback)
+            self.hass, SIGNAL_UPDATE_UPCLOUD, self._update_callback
+        )
 
     @callback
     def _update_callback(self):
@@ -136,7 +137,7 @@ class UpCloudServerEntity(Entity):
     @property
     def icon(self):
         """Return the icon of this server."""
-        return 'mdi:server' if self.is_on else 'mdi:server-off'
+        return "mdi:server" if self.is_on else "mdi:server-off"
 
     @property
     def state(self):
@@ -161,8 +162,15 @@ class UpCloudServerEntity(Entity):
         """Return the state attributes of the UpCloud server."""
         return {
             x: getattr(self.data, x, None)
-            for x in (ATTR_UUID, ATTR_TITLE, ATTR_HOSTNAME, ATTR_ZONE,
-                      ATTR_STATE, ATTR_CORE_NUMBER, ATTR_MEMORY_AMOUNT)
+            for x in (
+                ATTR_UUID,
+                ATTR_TITLE,
+                ATTR_HOSTNAME,
+                ATTR_ZONE,
+                ATTR_STATE,
+                ATTR_CORE_NUMBER,
+                ATTR_MEMORY_AMOUNT,
+            )
         }
 
     def update(self):

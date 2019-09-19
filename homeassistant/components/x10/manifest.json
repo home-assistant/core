@@ -1,0 +1,8 @@
+{
+  "domain": "x10",
+  "name": "X10",
+  "documentation": "https://www.home-assistant.io/components/x10",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

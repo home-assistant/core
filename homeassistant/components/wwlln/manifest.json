@@ -1,0 +1,13 @@
+{
+  "domain": "wwlln",
+  "name": "World Wide Lightning Location Network",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/components/wwlln",
+  "requirements": [
+    "aiowwlln==2.0.1"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@bachya"
+  ]
+}

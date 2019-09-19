@@ -1,0 +1,10 @@
+{
+  "domain": "enigma2",
+  "name": "Enigma2",
+  "documentation": "https://www.home-assistant.io/components/enigma2",
+  "requirements": [
+    "openwebifpy==3.1.1"
+  ],
+  "dependencies": [],
+  "codeowners": ["@fbradyirl"]
+}

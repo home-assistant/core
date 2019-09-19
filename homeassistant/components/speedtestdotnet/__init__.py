@@ -1,50 +1,41 @@
 """Support for testing internet speed via Speedtest.net."""
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL, CONF_UPDATE_INTERVAL,
-    CONF_UPDATE_INTERVAL_INVALIDATION_VERSION)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-
 from .const import DATA_UPDATED, DOMAIN, SENSOR_TYPES
-
-REQUIREMENTS = ['speedtest-cli==2.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SERVER_ID = 'server_id'
-CONF_MANUAL = 'manual'
+CONF_SERVER_ID = "server_id"
+CONF_MANUAL = "manual"
 
 DEFAULT_INTERVAL = timedelta(hours=1)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(
-        vol.Schema({
-            vol.Optional(CONF_SERVER_ID): cv.positive_int,
-            vol.Optional(CONF_UPDATE_INTERVAL):
-                vol.All(cv.time_period, cv.positive_timedelta),
-            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL):
-                vol.All(cv.time_period, cv.positive_timedelta),
-            vol.Optional(CONF_MANUAL, default=False): cv.boolean,
-            vol.Optional(
-                CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)
-            ): vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))])
-        }),
-        cv.deprecated(
-            CONF_UPDATE_INTERVAL,
-            replacement_key=CONF_SCAN_INTERVAL,
-            invalidation_version=CONF_UPDATE_INTERVAL_INVALIDATION_VERSION,
-            default=DEFAULT_INTERVAL
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_SERVER_ID): cv.positive_int,
+                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL): vol.All(
+                    cv.time_period, cv.positive_timedelta
+                ),
+                vol.Optional(CONF_MANUAL, default=False): cv.boolean,
+                vol.Optional(
+                    CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)
+                ): vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
+            }
         )
-    )
-}, extra=vol.ALLOW_EXTRA)
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):
@@ -53,19 +44,19 @@ async def async_setup(hass, config):
     data = hass.data[DOMAIN] = SpeedtestData(hass, conf.get(CONF_SERVER_ID))
 
     if not conf[CONF_MANUAL]:
-        async_track_time_interval(
-            hass, data.update, conf[CONF_SCAN_INTERVAL])
+        async_track_time_interval(hass, data.update, conf[CONF_SCAN_INTERVAL])
 
     def update(call=None):
         """Service call to manually update the data."""
         data.update()
 
-    hass.services.async_register(DOMAIN, 'speedtest', update)
+    hass.services.async_register(DOMAIN, "speedtest", update)
 
     hass.async_create_task(
         async_load_platform(
-            hass, SENSOR_DOMAIN, DOMAIN, conf[CONF_MONITORED_CONDITIONS],
-            config))
+            hass, SENSOR_DOMAIN, DOMAIN, conf[CONF_MONITORED_CONDITIONS], config
+        )
+    )
 
     return True
 
@@ -82,6 +73,7 @@ class SpeedtestData:
     def update(self, now=None):
         """Get the latest data from speedtest.net."""
         import speedtest
+
         _LOGGER.debug("Executing speedtest.net speed test")
         speed = speedtest.Speedtest()
         speed.get_servers(self._servers)

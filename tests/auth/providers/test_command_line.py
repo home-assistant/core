@@ -23,30 +23,31 @@ def store(hass):
 @pytest.fixture
 def provider(hass, store):
     """Mock provider."""
-    return command_line.CommandLineAuthProvider(hass, store, {
-        CONF_TYPE: "command_line",
-        command_line.CONF_COMMAND: os.path.join(
-            os.path.dirname(__file__), "test_command_line_cmd.sh"
-        ),
-        command_line.CONF_ARGS: [],
-        command_line.CONF_META: False,
-    })
+    return command_line.CommandLineAuthProvider(
+        hass,
+        store,
+        {
+            CONF_TYPE: "command_line",
+            command_line.CONF_COMMAND: os.path.join(
+                os.path.dirname(__file__), "test_command_line_cmd.sh"
+            ),
+            command_line.CONF_ARGS: [],
+            command_line.CONF_META: False,
+        },
+    )
 
 
 @pytest.fixture
 def manager(hass, store, provider):
     """Mock manager."""
-    return AuthManager(hass, store, {
-        (provider.type, provider.id): provider
-    }, {})
+    return AuthManager(hass, store, {(provider.type, provider.id): provider}, {})
 
 
 async def test_create_new_credential(manager, provider):
     """Test that we create a new credential."""
-    credentials = await provider.async_get_or_create_credentials({
-        "username": "good-user",
-        "password": "good-pass",
-    })
+    credentials = await provider.async_get_or_create_credentials(
+        {"username": "good-user", "password": "good-pass"}
+    )
     assert credentials.is_new is True
 
     user = await manager.async_get_or_create_user(credentials)
@@ -59,16 +60,13 @@ async def test_match_existing_credentials(store, provider):
         id=uuid.uuid4(),
         auth_provider_type="command_line",
         auth_provider_id=None,
-        data={
-            "username": "good-user"
-        },
+        data={"username": "good-user"},
         is_new=False,
     )
     provider.async_credentials = Mock(return_value=mock_coro([existing]))
-    credentials = await provider.async_get_or_create_credentials({
-        "username": "good-user",
-        "password": "irrelevant",
-    })
+    credentials = await provider.async_get_or_create_credentials(
+        {"username": "good-user", "password": "irrelevant"}
+    )
     assert credentials is existing
 
 
@@ -96,10 +94,9 @@ async def test_good_auth_with_meta(manager, provider):
 
     await provider.async_validate_login("good-user", "good-pass")
 
-    credentials = await provider.async_get_or_create_credentials({
-        "username": "good-user",
-        "password": "good-pass",
-    })
+    credentials = await provider.async_get_or_create_credentials(
+        {"username": "good-user", "password": "good-pass"}
+    )
     assert credentials.is_new is True
 
     user = await manager.async_get_or_create_user(credentials)
@@ -109,10 +106,9 @@ async def test_good_auth_with_meta(manager, provider):
 
 async def test_utf_8_username_password(provider):
     """Test that we create a new credential."""
-    credentials = await provider.async_get_or_create_credentials({
-        "username": "ßßß",
-        "password": "äöü",
-    })
+    credentials = await provider.async_get_or_create_credentials(
+        {"username": "ßßß", "password": "äöü"}
+    )
     assert credentials.is_new is True
 
 
@@ -122,17 +118,15 @@ async def test_login_flow_validates(provider):
     result = await flow.async_step_init()
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
-    result = await flow.async_step_init({
-        "username": "bad-user",
-        "password": "bad-pass",
-    })
+    result = await flow.async_step_init(
+        {"username": "bad-user", "password": "bad-pass"}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result['errors']["base"] == "invalid_auth"
+    assert result["errors"]["base"] == "invalid_auth"
 
-    result = await flow.async_step_init({
-        "username": "good-user",
-        "password": "good-pass",
-    })
+    result = await flow.async_step_init(
+        {"username": "good-user", "password": "good-pass"}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"]["username"] == "good-user"
 
@@ -140,9 +134,8 @@ async def test_login_flow_validates(provider):
 async def test_strip_username(provider):
     """Test authentication works with username with whitespace around."""
     flow = await provider.async_login_flow({})
-    result = await flow.async_step_init({
-        "username": "\t\ngood-user ",
-        "password": "good-pass",
-    })
+    result = await flow.async_step_init(
+        {"username": "\t\ngood-user ", "password": "good-pass"}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"]["username"] == "good-user"

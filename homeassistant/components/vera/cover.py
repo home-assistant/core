@@ -1,12 +1,9 @@
 """Support for Vera cover - curtains, rollershutters etc."""
 import logging
 
-from homeassistant.components.cover import (
-    ATTR_POSITION, ENTITY_ID_FORMAT, CoverDevice)
+from homeassistant.components.cover import ATTR_POSITION, ENTITY_ID_FORMAT, CoverDevice
 
 from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
-
-DEPENDENCIES = ['vera']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,8 +11,12 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Vera covers."""
     add_entities(
-        [VeraCover(device, hass.data[VERA_CONTROLLER]) for
-         device in hass.data[VERA_DEVICES]['cover']], True)
+        [
+            VeraCover(device, hass.data[VERA_CONTROLLER])
+            for device in hass.data[VERA_DEVICES]["cover"]
+        ],
+        True,
+    )
 
 
 class VeraCover(VeraDevice, CoverDevice):

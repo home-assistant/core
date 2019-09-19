@@ -2,9 +2,7 @@
 from homeassistant.components import ecobee
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
-DEPENDENCIES = ['ecobee']
-
-ECOBEE_CONFIG_FILE = 'ecobee.conf'
+ECOBEE_CONFIG_FILE = "ecobee.conf"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -15,11 +13,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     dev = list()
     for index in range(len(data.ecobee.thermostats)):
         for sensor in data.ecobee.get_remote_sensors(index):
-            for item in sensor['capability']:
-                if item['type'] != 'occupancy':
+            for item in sensor["capability"]:
+                if item["type"] != "occupancy":
                     continue
 
-                dev.append(EcobeeBinarySensor(sensor['name'], index))
+                dev.append(EcobeeBinarySensor(sensor["name"], index))
 
     add_entities(dev, True)
 
@@ -29,11 +27,11 @@ class EcobeeBinarySensor(BinarySensorDevice):
 
     def __init__(self, sensor_name, sensor_index):
         """Initialize the Ecobee sensor."""
-        self._name = sensor_name + ' Occupancy'
+        self._name = sensor_name + " Occupancy"
         self.sensor_name = sensor_name
         self.index = sensor_index
         self._state = None
-        self._device_class = 'occupancy'
+        self._device_class = "occupancy"
 
     @property
     def name(self):
@@ -43,7 +41,7 @@ class EcobeeBinarySensor(BinarySensorDevice):
     @property
     def is_on(self):
         """Return the status of the sensor."""
-        return self._state == 'true'
+        return self._state == "true"
 
     @property
     def device_class(self):
@@ -55,7 +53,6 @@ class EcobeeBinarySensor(BinarySensorDevice):
         data = ecobee.NETWORK
         data.update()
         for sensor in data.ecobee.get_remote_sensors(self.index):
-            for item in sensor['capability']:
-                if (item['type'] == 'occupancy' and
-                        self.sensor_name == sensor['name']):
-                    self._state = item['value']
+            for item in sensor["capability"]:
+                if item["type"] == "occupancy" and self.sensor_name == sensor["name"]:
+                    self._state = item["value"]

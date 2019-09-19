@@ -1,0 +1,12 @@
+{
+  "domain": "yessssms",
+  "name": "Yessssms",
+  "documentation": "https://www.home-assistant.io/components/yessssms",
+  "requirements": [
+    "YesssSMS==0.2.3"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@flowolf"
+  ]
+}

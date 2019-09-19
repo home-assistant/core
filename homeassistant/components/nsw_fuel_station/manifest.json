@@ -1,0 +1,12 @@
+{
+  "domain": "nsw_fuel_station",
+  "name": "Nsw fuel station",
+  "documentation": "https://www.home-assistant.io/components/nsw_fuel_station",
+  "requirements": [
+    "nsw-fuel-api-client==1.0.10"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@nickw444"
+  ]
+}

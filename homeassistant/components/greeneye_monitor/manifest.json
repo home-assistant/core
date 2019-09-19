@@ -1,0 +1,10 @@
+{
+  "domain": "greeneye_monitor",
+  "name": "Greeneye monitor",
+  "documentation": "https://www.home-assistant.io/components/greeneye_monitor",
+  "requirements": [
+    "greeneye_monitor==1.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

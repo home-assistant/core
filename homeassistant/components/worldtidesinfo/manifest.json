@@ -1,0 +1,8 @@
+{
+  "domain": "worldtidesinfo",
+  "name": "Worldtidesinfo",
+  "documentation": "https://www.home-assistant.io/components/worldtidesinfo",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

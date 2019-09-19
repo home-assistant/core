@@ -1,0 +1,8 @@
+{
+  "domain": "pushsafer",
+  "name": "Pushsafer",
+  "documentation": "https://www.home-assistant.io/components/pushsafer",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

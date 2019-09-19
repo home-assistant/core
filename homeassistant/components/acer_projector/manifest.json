@@ -1,0 +1,10 @@
+{
+  "domain": "acer_projector",
+  "name": "Acer projector",
+  "documentation": "https://www.home-assistant.io/components/acer_projector",
+  "requirements": [
+    "pyserial==3.1.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

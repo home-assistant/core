@@ -6,49 +6,45 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE)
-from homeassistant.components.recorder import (
-    CONF_DB_URL, DEFAULT_URL, DEFAULT_DB_FILE)
+from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE
+from homeassistant.components.recorder import CONF_DB_URL, DEFAULT_URL, DEFAULT_DB_FILE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['sqlalchemy==1.3.0']
-
-CONF_COLUMN_NAME = 'column'
-CONF_QUERIES = 'queries'
-CONF_QUERY = 'query'
+CONF_COLUMN_NAME = "column"
+CONF_QUERIES = "queries"
+CONF_QUERY = "query"
 
 
 def validate_sql_select(value):
     """Validate that value is a SQL SELECT query."""
-    if not value.lstrip().lower().startswith('select'):
-        raise vol.Invalid('Only SELECT queries allowed')
+    if not value.lstrip().lower().startswith("select"):
+        raise vol.Invalid("Only SELECT queries allowed")
     return value
 
 
-_QUERY_SCHEME = vol.Schema({
-    vol.Required(CONF_COLUMN_NAME): cv.string,
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_QUERY): vol.All(cv.string, validate_sql_select),
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-})
+_QUERY_SCHEME = vol.Schema(
+    {
+        vol.Required(CONF_COLUMN_NAME): cv.string,
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_QUERY): vol.All(cv.string, validate_sql_select),
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_QUERIES): [_QUERY_SCHEME],
-    vol.Optional(CONF_DB_URL): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_QUERIES): [_QUERY_SCHEME], vol.Optional(CONF_DB_URL): cv.string}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the SQL sensor platform."""
     db_url = config.get(CONF_DB_URL, None)
     if not db_url:
-        db_url = DEFAULT_URL.format(
-            hass_config_path=hass.config.path(DEFAULT_DB_FILE))
+        db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
 
     import sqlalchemy
     from sqlalchemy.orm import sessionmaker, scoped_session
@@ -79,7 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         sensor = SQLSensor(
             name, sessionmaker, query_str, column_name, unit, value_template
-            )
+        )
         queries.append(sensor)
 
     add_entities(queries, True)
@@ -125,6 +121,7 @@ class SQLSensor(Entity):
     def update(self):
         """Retrieve sensor data from the query."""
         import sqlalchemy
+
         try:
             sess = self.sessionmaker()
             result = sess.execute(self._query)
@@ -152,6 +149,7 @@ class SQLSensor(Entity):
 
         if self._template is not None:
             self._state = self._template.async_render_with_possible_json_value(
-                data, None)
+                data, None
+            )
         else:
             self._state = data

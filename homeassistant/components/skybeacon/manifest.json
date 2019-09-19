@@ -1,0 +1,10 @@
+{
+  "domain": "skybeacon",
+  "name": "Skybeacon",
+  "documentation": "https://www.home-assistant.io/components/skybeacon",
+  "requirements": [
+    "pygatt[GATTTOOL]==4.0.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

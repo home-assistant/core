@@ -1,9 +1,4 @@
-"""
-Provides a binary sensor which gets its values from a TCP socket.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.tcp/
-"""
+"""Provides a binary sensor which gets its values from a TCP socket."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice

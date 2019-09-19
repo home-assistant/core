@@ -1,0 +1,13 @@
+{
+  "domain": "aws",
+  "name": "Aws",
+  "documentation": "https://www.home-assistant.io/components/aws",
+  "requirements": [
+    "aiobotocore==0.10.2"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@awarecan",
+    "@robbiet480"
+  ]
+}

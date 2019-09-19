@@ -1,0 +1,10 @@
+{
+  "domain": "kiwi",
+  "name": "Kiwi",
+  "documentation": "https://www.home-assistant.io/components/kiwi",
+  "requirements": [
+    "kiwiki-client==0.1.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

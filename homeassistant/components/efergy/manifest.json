@@ -1,0 +1,8 @@
+{
+  "domain": "efergy",
+  "name": "Efergy",
+  "documentation": "https://www.home-assistant.io/components/efergy",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

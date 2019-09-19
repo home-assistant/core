@@ -1,0 +1,8 @@
+{
+  "domain": "denon",
+  "name": "Denon",
+  "documentation": "https://www.home-assistant.io/components/denon",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

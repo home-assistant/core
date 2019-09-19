@@ -7,8 +7,6 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import DOMAIN as FRITZBOX_DOMAIN
 
-DEPENDENCIES = ['fritzbox']
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -42,7 +40,7 @@ class FritzboxBinarySensor(BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return 'window'
+        return "window"
 
     @property
     def is_on(self):

@@ -6,11 +6,9 @@ from homeassistant.const import STATE_OFF, STATE_ON, STATE_STANDBY
 
 from . import ATTR_NEW, CecDevice
 
-DEPENDENCIES = ['hdmi_cec']
-
 _LOGGER = logging.getLogger(__name__)
 
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -20,9 +18,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         entities = []
         for device in discovery_info[ATTR_NEW]:
             hdmi_device = hass.data.get(device)
-            entities.append(CecSwitchDevice(
-                hdmi_device, hdmi_device.logical_address,
-            ))
+            entities.append(CecSwitchDevice(hdmi_device, hdmi_device.logical_address))
         add_entities(entities, True)
 
 
@@ -32,8 +28,7 @@ class CecSwitchDevice(CecDevice, SwitchDevice):
     def __init__(self, device, logical) -> None:
         """Initialize the HDMI device."""
         CecDevice.__init__(self, device, logical)
-        self.entity_id = "%s.%s_%s" % (
-            DOMAIN, 'hdmi', hex(self._logical_address)[2:])
+        self.entity_id = "%s.%s_%s" % (DOMAIN, "hdmi", hex(self._logical_address)[2:])
 
     def turn_on(self, **kwargs) -> None:
         """Turn device on."""

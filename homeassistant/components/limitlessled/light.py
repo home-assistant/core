@@ -1,78 +1,105 @@
-"""
-Support for LimitlessLED bulbs.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.limitlessled/
-"""
+"""Support for LimitlessLED bulbs."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT, CONF_TYPE, STATE_ON)
+from homeassistant.const import CONF_NAME, CONF_HOST, CONF_PORT, CONF_TYPE, STATE_ON
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
-    ATTR_TRANSITION, EFFECT_COLORLOOP, EFFECT_WHITE, FLASH_LONG,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
-    SUPPORT_COLOR, SUPPORT_TRANSITION, Light, PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    ATTR_EFFECT,
+    ATTR_FLASH,
+    ATTR_HS_COLOR,
+    ATTR_TRANSITION,
+    EFFECT_COLORLOOP,
+    EFFECT_WHITE,
+    FLASH_LONG,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR_TEMP,
+    SUPPORT_EFFECT,
+    SUPPORT_FLASH,
+    SUPPORT_COLOR,
+    SUPPORT_TRANSITION,
+    Light,
+    PLATFORM_SCHEMA,
+)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.color import (
-    color_temperature_mired_to_kelvin, color_hs_to_RGB)
+from homeassistant.util.color import color_temperature_mired_to_kelvin, color_hs_to_RGB
 from homeassistant.helpers.restore_state import RestoreEntity
-
-REQUIREMENTS = ['limitlessled==1.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_BRIDGES = 'bridges'
-CONF_GROUPS = 'groups'
-CONF_NUMBER = 'number'
-CONF_VERSION = 'version'
-CONF_FADE = 'fade'
+CONF_BRIDGES = "bridges"
+CONF_GROUPS = "groups"
+CONF_NUMBER = "number"
+CONF_VERSION = "version"
+CONF_FADE = "fade"
 
-DEFAULT_LED_TYPE = 'rgbw'
+DEFAULT_LED_TYPE = "rgbw"
 DEFAULT_PORT = 5987
 DEFAULT_TRANSITION = 0
 DEFAULT_VERSION = 6
 DEFAULT_FADE = False
 
-LED_TYPE = ['rgbw', 'rgbww', 'white', 'bridge-led', 'dimmer']
+LED_TYPE = ["rgbw", "rgbww", "white", "bridge-led", "dimmer"]
 
-EFFECT_NIGHT = 'night'
+EFFECT_NIGHT = "night"
 
 MIN_SATURATION = 10
 
 WHITE = [0, 0]
 
-SUPPORT_LIMITLESSLED_WHITE = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
-                              SUPPORT_EFFECT | SUPPORT_TRANSITION)
-SUPPORT_LIMITLESSLED_DIMMER = (SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION)
-SUPPORT_LIMITLESSLED_RGB = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
-                            SUPPORT_FLASH | SUPPORT_COLOR |
-                            SUPPORT_TRANSITION)
-SUPPORT_LIMITLESSLED_RGBWW = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
-                              SUPPORT_EFFECT | SUPPORT_FLASH |
-                              SUPPORT_COLOR | SUPPORT_TRANSITION)
+SUPPORT_LIMITLESSLED_WHITE = (
+    SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT | SUPPORT_TRANSITION
+)
+SUPPORT_LIMITLESSLED_DIMMER = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+SUPPORT_LIMITLESSLED_RGB = (
+    SUPPORT_BRIGHTNESS
+    | SUPPORT_EFFECT
+    | SUPPORT_FLASH
+    | SUPPORT_COLOR
+    | SUPPORT_TRANSITION
+)
+SUPPORT_LIMITLESSLED_RGBWW = (
+    SUPPORT_BRIGHTNESS
+    | SUPPORT_COLOR_TEMP
+    | SUPPORT_EFFECT
+    | SUPPORT_FLASH
+    | SUPPORT_COLOR
+    | SUPPORT_TRANSITION
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_BRIDGES): vol.All(cv.ensure_list, [
-        {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Optional(CONF_VERSION,
-                         default=DEFAULT_VERSION): cv.positive_int,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Required(CONF_GROUPS):  vol.All(cv.ensure_list, [
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_BRIDGES): vol.All(
+            cv.ensure_list,
+            [
                 {
-                    vol.Required(CONF_NAME): cv.string,
-                    vol.Optional(CONF_TYPE, default=DEFAULT_LED_TYPE):
-                        vol.In(LED_TYPE),
-                    vol.Required(CONF_NUMBER): cv.positive_int,
-                    vol.Optional(CONF_FADE, default=DEFAULT_FADE): cv.boolean,
+                    vol.Required(CONF_HOST): cv.string,
+                    vol.Optional(
+                        CONF_VERSION, default=DEFAULT_VERSION
+                    ): cv.positive_int,
+                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                    vol.Required(CONF_GROUPS): vol.All(
+                        cv.ensure_list,
+                        [
+                            {
+                                vol.Required(CONF_NAME): cv.string,
+                                vol.Optional(
+                                    CONF_TYPE, default=DEFAULT_LED_TYPE
+                                ): vol.In(LED_TYPE),
+                                vol.Required(CONF_NUMBER): cv.positive_int,
+                                vol.Optional(
+                                    CONF_FADE, default=DEFAULT_FADE
+                                ): cv.boolean,
+                            }
+                        ],
+                    ),
                 }
-            ]),
-        },
-    ]),
-})
+            ],
+        )
+    }
+)
 
 
 def rewrite_legacy(config):
@@ -81,26 +108,31 @@ def rewrite_legacy(config):
     new_bridges = []
     for bridge_conf in bridges:
         groups = []
-        if 'groups' in bridge_conf:
-            groups = bridge_conf['groups']
+        if "groups" in bridge_conf:
+            groups = bridge_conf["groups"]
         else:
             _LOGGER.warning("Legacy configuration format detected")
             for i in range(1, 5):
-                name_key = 'group_%d_name' % i
+                name_key = "group_%d_name" % i
                 if name_key in bridge_conf:
-                    groups.append({
-                        'number': i,
-                        'type':  bridge_conf.get('group_%d_type' % i,
-                                                 DEFAULT_LED_TYPE),
-                        'name': bridge_conf.get(name_key)
-                    })
-        new_bridges.append({
-            'host': bridge_conf.get(CONF_HOST),
-            'version': bridge_conf.get(CONF_VERSION),
-            'port': bridge_conf.get(CONF_PORT),
-            'groups': groups
-        })
-    return {'bridges': new_bridges}
+                    groups.append(
+                        {
+                            "number": i,
+                            "type": bridge_conf.get(
+                                "group_%d_type" % i, DEFAULT_LED_TYPE
+                            ),
+                            "name": bridge_conf.get(name_key),
+                        }
+                    )
+        new_bridges.append(
+            {
+                "host": bridge_conf.get(CONF_HOST),
+                "version": bridge_conf.get(CONF_VERSION),
+                "port": bridge_conf.get(CONF_PORT),
+                "groups": groups,
+            }
+        )
+    return {"bridges": new_bridges}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -114,17 +146,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # Use the expanded configuration format.
     lights = []
     for bridge_conf in config.get(CONF_BRIDGES):
-        bridge = Bridge(bridge_conf.get(CONF_HOST),
-                        port=bridge_conf.get(CONF_PORT, DEFAULT_PORT),
-                        version=bridge_conf.get(CONF_VERSION, DEFAULT_VERSION))
+        bridge = Bridge(
+            bridge_conf.get(CONF_HOST),
+            port=bridge_conf.get(CONF_PORT, DEFAULT_PORT),
+            version=bridge_conf.get(CONF_VERSION, DEFAULT_VERSION),
+        )
         for group_conf in bridge_conf.get(CONF_GROUPS):
             group = bridge.add_group(
                 group_conf.get(CONF_NUMBER),
                 group_conf.get(CONF_NAME),
-                group_conf.get(CONF_TYPE, DEFAULT_LED_TYPE))
-            lights.append(LimitlessLEDGroup(group, {
-                'fade': group_conf[CONF_FADE]
-            }))
+                group_conf.get(CONF_TYPE, DEFAULT_LED_TYPE),
+            )
+            lights.append(LimitlessLEDGroup(group, {"fade": group_conf[CONF_FADE]}))
     add_entities(lights)
 
 
@@ -133,12 +166,14 @@ def state(new_state):
 
     Specify True (turn on) or False (turn off).
     """
+
     def decorator(function):
         """Set up the decorator function."""
         # pylint: disable=protected-access
         def wrapper(self, **kwargs):
             """Wrap a group state change."""
             from limitlessled.pipeline import Pipeline
+
             pipeline = Pipeline()
             transition_time = DEFAULT_TRANSITION
             if self._effect == EFFECT_COLORLOOP:
@@ -153,7 +188,9 @@ def state(new_state):
             self._is_on = new_state
             self.group.enqueue(pipeline)
             self.schedule_update_ha_state()
+
         return wrapper
+
     return decorator
 
 
@@ -166,6 +203,7 @@ class LimitlessLEDGroup(Light, RestoreEntity):
         from limitlessled.group.white import WhiteGroup
         from limitlessled.group.dimmer import DimmerGroup
         from limitlessled.group.rgbww import RgbwwGroup
+
         if isinstance(group, WhiteGroup):
             self._supported = SUPPORT_LIMITLESSLED_WHITE
             self._effect_list = [EFFECT_NIGHT]
@@ -192,10 +230,10 @@ class LimitlessLEDGroup(Light, RestoreEntity):
         await super().async_added_to_hass()
         last_state = await self.async_get_last_state()
         if last_state:
-            self._is_on = (last_state.state == STATE_ON)
-            self._brightness = last_state.attributes.get('brightness')
-            self._temperature = last_state.attributes.get('color_temp')
-            self._color = last_state.attributes.get('hs_color')
+            self._is_on = last_state.state == STATE_ON
+            self._brightness = last_state.attributes.get("brightness")
+            self._temperature = last_state.attributes.get("color_temp")
+            self._color = last_state.attributes.get("hs_color")
 
     @property
     def should_poll(self):
@@ -292,11 +330,11 @@ class LimitlessLEDGroup(Light, RestoreEntity):
         # Set up transition.
         args = {}
         if self.config[CONF_FADE] and not self.is_on and self._brightness:
-            args['brightness'] = self.limitlessled_brightness()
+            args["brightness"] = self.limitlessled_brightness()
 
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
-            args['brightness'] = self.limitlessled_brightness()
+            args["brightness"] = self.limitlessled_brightness()
 
         if ATTR_HS_COLOR in kwargs and self._supported & SUPPORT_COLOR:
             self._color = kwargs[ATTR_HS_COLOR]
@@ -305,7 +343,7 @@ class LimitlessLEDGroup(Light, RestoreEntity):
                 pipeline.white()
                 self._color = WHITE
             else:
-                args['color'] = self.limitlessled_color()
+                args["color"] = self.limitlessled_color()
 
         if ATTR_COLOR_TEMP in kwargs:
             if self._supported & SUPPORT_COLOR:
@@ -313,7 +351,7 @@ class LimitlessLEDGroup(Light, RestoreEntity):
             self._color = WHITE
             if self._supported & SUPPORT_COLOR_TEMP:
                 self._temperature = kwargs[ATTR_COLOR_TEMP]
-                args['temperature'] = self.limitlessled_temperature()
+                args["temperature"] = self.limitlessled_temperature()
 
         if args:
             pipeline.transition(transition_time, **args)
@@ -329,6 +367,7 @@ class LimitlessLEDGroup(Light, RestoreEntity):
         if ATTR_EFFECT in kwargs and self._effect_list:
             if kwargs[ATTR_EFFECT] == EFFECT_COLORLOOP:
                 from limitlessled.presets import COLORLOOP
+
                 self._effect = EFFECT_COLORLOOP
                 pipeline.append(COLORLOOP)
             if kwargs[ATTR_EFFECT] == EFFECT_WHITE:
@@ -351,4 +390,5 @@ class LimitlessLEDGroup(Light, RestoreEntity):
     def limitlessled_color(self):
         """Convert Home Assistant HS list to RGB Color tuple."""
         from limitlessled import Color
+
         return Color(*color_hs_to_RGB(*tuple(self._color)))

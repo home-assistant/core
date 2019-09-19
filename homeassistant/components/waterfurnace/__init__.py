@@ -6,37 +6,39 @@ import threading
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
-)
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 
-REQUIREMENTS = ['waterfurnace==1.1.0']
-
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'waterfurnace'
+DOMAIN = "waterfurnace"
 UPDATE_TOPIC = DOMAIN + "_update"
 SCAN_INTERVAL = timedelta(seconds=10)
 ERROR_INTERVAL = timedelta(seconds=300)
 MAX_FAILS = 10
-NOTIFICATION_ID = 'waterfurnace_website_notification'
-NOTIFICATION_TITLE = 'WaterFurnace website status'
+NOTIFICATION_ID = "waterfurnace_website_notification"
+NOTIFICATION_TITLE = "WaterFurnace website status"
 
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Required(CONF_USERNAME): cv.string,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, base_config):
     """Set up waterfurnace platform."""
     import waterfurnace.waterfurnace as wf
+
     config = base_config.get(DOMAIN)
 
     username = config.get(CONF_USERNAME)
@@ -54,7 +56,7 @@ def setup(hass, base_config):
     hass.data[DOMAIN] = WaterFurnaceData(hass, wfconn)
     hass.data[DOMAIN].start()
 
-    discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
+    discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
     return True
 
 
@@ -82,15 +84,16 @@ class WaterFurnaceData(threading.Thread):
     def _reconnect(self):
         """Reconnect on a failure."""
         import waterfurnace.waterfurnace as wf
+
         self._fails += 1
         if self._fails > MAX_FAILS:
-            _LOGGER.error(
-                "Failed to refresh login credentials. Thread stopped.")
+            _LOGGER.error("Failed to refresh login credentials. Thread stopped.")
             self.hass.components.persistent_notification.create(
                 "Error:<br/>Connection to waterfurnace website failed "
                 "the maximum number of times. Thread has stopped.",
                 title=NOTIFICATION_TITLE,
-                notification_id=NOTIFICATION_ID)
+                notification_id=NOTIFICATION_ID,
+            )
 
             self._shutdown = True
             return
@@ -115,6 +118,7 @@ class WaterFurnaceData(threading.Thread):
         @callback
         def register():
             """Connect to hass for shutdown."""
+
             def shutdown(event):
                 """Shutdown the thread."""
                 _LOGGER.debug("Signaled to shutdown.")

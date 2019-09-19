@@ -1,54 +1,64 @@
 """Support for ESPHome fans."""
 import logging
-from typing import TYPE_CHECKING, List, Optional
+from typing import List, Optional
+
+from aioesphomeapi import FanInfo, FanSpeed, FanState
 
 from homeassistant.components.fan import (
-    SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF, SUPPORT_OSCILLATE,
-    SUPPORT_SET_SPEED, FanEntity)
+    SPEED_HIGH,
+    SPEED_LOW,
+    SPEED_MEDIUM,
+    SPEED_OFF,
+    SUPPORT_OSCILLATE,
+    SUPPORT_SET_SPEED,
+    FanEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import EsphomeEntity, platform_async_setup_entry
+from . import (
+    EsphomeEntity,
+    esphome_map_enum,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 
-if TYPE_CHECKING:
-    # pylint: disable=unused-import
-    from aioesphomeapi import FanInfo, FanState  # noqa
-
-DEPENDENCIES = ['esphome']
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistantType,
-                            entry: ConfigEntry, async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
     """Set up ESPHome fans based on a config entry."""
-    # pylint: disable=redefined-outer-name
-    from aioesphomeapi import FanInfo, FanState  # noqa
-
     await platform_async_setup_entry(
-        hass, entry, async_add_entities,
-        component_key='fan',
-        info_type=FanInfo, entity_type=EsphomeFan,
-        state_type=FanState
+        hass,
+        entry,
+        async_add_entities,
+        component_key="fan",
+        info_type=FanInfo,
+        entity_type=EsphomeFan,
+        state_type=FanState,
     )
 
 
-FAN_SPEED_STR_TO_INT = {
-    SPEED_LOW: 0,
-    SPEED_MEDIUM: 1,
-    SPEED_HIGH: 2
-}
-FAN_SPEED_INT_TO_STR = {v: k for k, v in FAN_SPEED_STR_TO_INT.items()}
+@esphome_map_enum
+def _fan_speeds():
+    return {
+        FanSpeed.LOW: SPEED_LOW,
+        FanSpeed.MEDIUM: SPEED_MEDIUM,
+        FanSpeed.HIGH: SPEED_HIGH,
+    }
 
 
 class EsphomeFan(EsphomeEntity, FanEntity):
     """A fan implementation for ESPHome."""
 
     @property
-    def _static_info(self) -> 'FanInfo':
+    def _static_info(self) -> FanInfo:
         return super()._static_info
 
     @property
-    def _state(self) -> Optional['FanState']:
+    def _state(self) -> Optional[FanState]:
         return super()._state
 
     async def async_set_speed(self, speed: str) -> None:
@@ -56,18 +66,19 @@ class EsphomeFan(EsphomeEntity, FanEntity):
         if speed == SPEED_OFF:
             await self.async_turn_off()
             return
-        await self._client.fan_command(
-            self._static_info.key, speed=FAN_SPEED_STR_TO_INT[speed])
 
-    async def async_turn_on(self, speed: Optional[str] = None,
-                            **kwargs) -> None:
+        await self._client.fan_command(
+            self._static_info.key, speed=_fan_speeds.from_hass(speed)
+        )
+
+    async def async_turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
         """Turn on the fan."""
         if speed == SPEED_OFF:
             await self.async_turn_off()
             return
-        data = {'key': self._static_info.key, 'state': True}
+        data = {"key": self._static_info.key, "state": True}
         if speed is not None:
-            data['speed'] = FAN_SPEED_STR_TO_INT[speed]
+            data["speed"] = _fan_speeds.from_hass(speed)
         await self._client.fan_command(**data)
 
     # pylint: disable=arguments-differ
@@ -75,32 +86,27 @@ class EsphomeFan(EsphomeEntity, FanEntity):
         """Turn off the fan."""
         await self._client.fan_command(key=self._static_info.key, state=False)
 
-    async def async_oscillate(self, oscillating: bool):
+    async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
-        await self._client.fan_command(key=self._static_info.key,
-                                       oscillating=oscillating)
+        await self._client.fan_command(
+            key=self._static_info.key, oscillating=oscillating
+        )
 
-    @property
+    @esphome_state_property
     def is_on(self) -> Optional[bool]:
         """Return true if the entity is on."""
-        if self._state is None:
-            return None
         return self._state.state
 
-    @property
+    @esphome_state_property
     def speed(self) -> Optional[str]:
         """Return the current speed."""
-        if self._state is None:
-            return None
         if not self._static_info.supports_speed:
             return None
-        return FAN_SPEED_INT_TO_STR[self._state.speed]
+        return _fan_speeds.from_esphome(self._state.speed)
 
-    @property
+    @esphome_state_property
     def oscillating(self) -> None:
         """Return the oscillation state."""
-        if self._state is None:
-            return None
         if not self._static_info.supports_oscillation:
             return None
         return self._state.oscillating

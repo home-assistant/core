@@ -1,0 +1,8 @@
+{
+  "domain": "uk_transport",
+  "name": "Uk transport",
+  "documentation": "https://www.home-assistant.io/components/uk_transport",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,10 @@
+{
+  "domain": "twitch",
+  "name": "Twitch",
+  "documentation": "https://www.home-assistant.io/components/twitch",
+  "requirements": [
+    "python-twitch-client==0.6.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

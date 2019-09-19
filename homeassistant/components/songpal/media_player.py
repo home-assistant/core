@@ -1,57 +1,64 @@
-"""
-Support for Songpal-enabled (Sony) media devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.songpal/
-"""
+"""Support for Songpal-enabled (Sony) media devices."""
 import asyncio
 import logging
 from collections import OrderedDict
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    DOMAIN, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP)
+    DOMAIN,
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
+)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON, EVENT_HOMEASSISTANT_STOP)
+    ATTR_ENTITY_ID,
+    CONF_NAME,
+    STATE_OFF,
+    STATE_ON,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-songpal==0.0.9.1']
-
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ENDPOINT = 'endpoint'
+CONF_ENDPOINT = "endpoint"
 
-PARAM_NAME = 'name'
-PARAM_VALUE = 'value'
+PARAM_NAME = "name"
+PARAM_VALUE = "value"
 
-PLATFORM = 'songpal'
+PLATFORM = "songpal"
 
-SET_SOUND_SETTING = 'songpal_set_sound_setting'
+SET_SOUND_SETTING = "songpal_set_sound_setting"
 
-SUPPORT_SONGPAL = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | \
-                  SUPPORT_VOLUME_MUTE | SUPPORT_SELECT_SOURCE | \
-                  SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+SUPPORT_SONGPAL = (
+    SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_STEP
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_SELECT_SOURCE
+    | SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Required(CONF_ENDPOINT): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_NAME): cv.string, vol.Required(CONF_ENDPOINT): cv.string}
+)
 
-SET_SOUND_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
-    vol.Required(PARAM_NAME): cv.string,
-    vol.Required(PARAM_VALUE): cv.string,
-})
+SET_SOUND_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(PARAM_NAME): cv.string,
+        vol.Required(PARAM_VALUE): cv.string,
+    }
+)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Songpal platform."""
     from songpal import SongpalException
 
@@ -86,20 +93,23 @@ async def async_setup_platform(
     async def async_service_handler(service):
         """Service handler."""
         entity_id = service.data.get("entity_id", None)
-        params = {key: value for key, value in service.data.items()
-                  if key != ATTR_ENTITY_ID}
+        params = {
+            key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
+        }
 
         for device in hass.data[PLATFORM].values():
             if device.entity_id == entity_id or entity_id is None:
-                _LOGGER.debug("Calling %s (entity: %s) with params %s",
-                              service, entity_id, params)
+                _LOGGER.debug(
+                    "Calling %s (entity: %s) with params %s", service, entity_id, params
+                )
 
                 await device.async_set_sound_setting(
-                    params[PARAM_NAME], params[PARAM_VALUE])
+                    params[PARAM_NAME], params[PARAM_VALUE]
+                )
 
     hass.services.async_register(
-        DOMAIN, SET_SOUND_SETTING, async_service_handler,
-        schema=SET_SOUND_SCHEMA)
+        DOMAIN, SET_SOUND_SETTING, async_service_handler, schema=SET_SOUND_SCHEMA
+    )
 
 
 class SongpalDevice(MediaPlayerDevice):
@@ -108,6 +118,7 @@ class SongpalDevice(MediaPlayerDevice):
     def __init__(self, name, endpoint, poll=False):
         """Init."""
         from songpal import Device
+
         self._name = name
         self._endpoint = endpoint
         self._poll = poll
@@ -140,8 +151,7 @@ class SongpalDevice(MediaPlayerDevice):
     async def async_activate_websocket(self):
         """Activate websocket for listening if wanted."""
         _LOGGER.info("Activating websocket connection..")
-        from songpal import (VolumeChange, ContentChange,
-                             PowerChange, ConnectChange)
+        from songpal import VolumeChange, ContentChange, PowerChange, ConnectChange
 
         async def _volume_changed(volume: VolumeChange):
             _LOGGER.debug("Volume changed: %s", volume)
@@ -156,8 +166,7 @@ class SongpalDevice(MediaPlayerDevice):
                 _LOGGER.debug("New active source: %s", self._active_source)
                 await self.async_update_ha_state()
             else:
-                _LOGGER.debug("Got non-handled content change: %s",
-                              content)
+                _LOGGER.debug("Got non-handled content change: %s", content)
 
         async def _power_changed(power: PowerChange):
             _LOGGER.debug("Power changed: %s", power)
@@ -165,8 +174,9 @@ class SongpalDevice(MediaPlayerDevice):
             await self.async_update_ha_state()
 
         async def _try_reconnect(connect: ConnectChange):
-            _LOGGER.error("Got disconnected with %s, trying to reconnect.",
-                          connect.exception)
+            _LOGGER.error(
+                "Got disconnected with %s, trying to reconnect.", connect.exception
+            )
             self._available = False
             self.dev.clear_notification_callbacks()
             await self.async_update_ha_state()
@@ -180,7 +190,7 @@ class SongpalDevice(MediaPlayerDevice):
                 # We need to inform HA about the state in case we are coming
                 # back from a disconnected state.
                 await self.async_update_ha_state(force_refresh=True)
-                delay = min(2*delay, 300)
+                delay = min(2 * delay, 300)
 
             _LOGGER.info("Reconnected to %s", self.name)
 
@@ -221,6 +231,7 @@ class SongpalDevice(MediaPlayerDevice):
     async def async_update(self):
         """Fetch updates from the device."""
         from songpal import SongpalException
+
         try:
             volumes = await self.dev.get_volume_information()
             if not volumes:
@@ -229,8 +240,7 @@ class SongpalDevice(MediaPlayerDevice):
                 return
 
             if len(volumes) > 1:
-                _LOGGER.debug(
-                    "Got %s volume controls, using the first one", volumes)
+                _LOGGER.debug("Got %s volume controls, using the first one", volumes)
 
             volume = volumes[0]
             _LOGGER.debug("Current volume: %s", volume)
@@ -260,8 +270,7 @@ class SongpalDevice(MediaPlayerDevice):
 
             # activate notifications if wanted
             if not self._poll:
-                await self.hass.async_create_task(
-                    self.async_activate_websocket())
+                await self.hass.async_create_task(self.async_activate_websocket())
         except SongpalException as ex:
             _LOGGER.error("Unable to update: %s", ex)
             self._available = False
@@ -291,7 +300,7 @@ class SongpalDevice(MediaPlayerDevice):
     def source(self):
         """Return currently active source."""
         # Avoid a KeyError when _active_source is not (yet) populated
-        return getattr(self._active_source, 'title', None)
+        return getattr(self._active_source, "title", None)
 
     @property
     def volume_level(self):

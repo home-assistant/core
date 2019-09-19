@@ -1,0 +1,8 @@
+{
+  "domain": "plugwise",
+  "name": "Plugwise",
+  "documentation": "https://www.home-assistant.io/components/plugwise",
+  "dependencies": [],
+  "codeowners": ["@laetificat","@CoMPaTech"],
+  "requirements": ["haanna==0.10.1"]
+}

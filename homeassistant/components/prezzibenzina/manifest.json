@@ -1,0 +1,10 @@
+{
+  "domain": "prezzibenzina",
+  "name": "Prezzibenzina",
+  "documentation": "https://www.home-assistant.io/components/prezzibenzina",
+  "requirements": [
+    "prezzibenzina-py==1.1.4"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

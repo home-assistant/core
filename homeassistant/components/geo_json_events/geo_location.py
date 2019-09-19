@@ -5,51 +5,57 @@ from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.components.geo_location import (
-    PLATFORM_SCHEMA, GeolocationEvent)
+from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
 from homeassistant.const import (
-    CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, CONF_SCAN_INTERVAL, CONF_URL,
-    EVENT_HOMEASSISTANT_START)
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_RADIUS,
+    CONF_SCAN_INTERVAL,
+    CONF_URL,
+    EVENT_HOMEASSISTANT_START,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.event import track_time_interval
-
-REQUIREMENTS = ['geojson_client==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_EXTERNAL_ID = 'external_id'
+ATTR_EXTERNAL_ID = "external_id"
 
 DEFAULT_RADIUS_IN_KM = 20.0
-DEFAULT_UNIT_OF_MEASUREMENT = 'km'
+DEFAULT_UNIT_OF_MEASUREMENT = "km"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-SIGNAL_DELETE_ENTITY = 'geo_json_events_delete_{}'
-SIGNAL_UPDATE_ENTITY = 'geo_json_events_update_{}'
+SIGNAL_DELETE_ENTITY = "geo_json_events_delete_{}"
+SIGNAL_UPDATE_ENTITY = "geo_json_events_update_{}"
 
-SOURCE = 'geo_json_events'
+SOURCE = "geo_json_events"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_URL): cv.string,
-    vol.Optional(CONF_LATITUDE): cv.latitude,
-    vol.Optional(CONF_LONGITUDE): cv.longitude,
-    vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_URL): cv.string,
+        vol.Optional(CONF_LATITUDE): cv.latitude,
+        vol.Optional(CONF_LONGITUDE): cv.longitude,
+        vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the GeoJSON Events platform."""
     url = config[CONF_URL]
     scan_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
-    coordinates = (config.get(CONF_LATITUDE, hass.config.latitude),
-                   config.get(CONF_LONGITUDE, hass.config.longitude))
+    coordinates = (
+        config.get(CONF_LATITUDE, hass.config.latitude),
+        config.get(CONF_LONGITUDE, hass.config.longitude),
+    )
     radius_in_km = config[CONF_RADIUS]
     # Initialize the entity manager.
     feed = GeoJsonFeedEntityManager(
-        hass, add_entities, scan_interval, coordinates, url, radius_in_km)
+        hass, add_entities, scan_interval, coordinates, url, radius_in_km
+    )
 
     def start_feed_manager(event):
         """Start feed manager."""
@@ -61,15 +67,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class GeoJsonFeedEntityManager:
     """Feed Entity Manager for GeoJSON feeds."""
 
-    def __init__(self, hass, add_entities, scan_interval, coordinates, url,
-                 radius_in_km):
+    def __init__(
+        self, hass, add_entities, scan_interval, coordinates, url, radius_in_km
+    ):
         """Initialize the GeoJSON Feed Manager."""
         from geojson_client.generic_feed import GenericFeedManager
 
         self._hass = hass
         self._feed_manager = GenericFeedManager(
-            self._generate_entity, self._update_entity, self._remove_entity,
-            coordinates, url, filter_radius=radius_in_km)
+            self._generate_entity,
+            self._update_entity,
+            self._remove_entity,
+            coordinates,
+            url,
+            filter_radius=radius_in_km,
+        )
         self._add_entities = add_entities
         self._scan_interval = scan_interval
 
@@ -81,8 +93,8 @@ class GeoJsonFeedEntityManager:
     def _init_regular_updates(self):
         """Schedule regular updates at the specified interval."""
         track_time_interval(
-            self._hass, lambda now: self._feed_manager.update(),
-            self._scan_interval)
+            self._hass, lambda now: self._feed_manager.update(), self._scan_interval
+        )
 
     def get_entry(self, external_id):
         """Get feed entry by external id."""
@@ -120,11 +132,15 @@ class GeoJsonLocationEvent(GeolocationEvent):
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self._remove_signal_delete = async_dispatcher_connect(
-            self.hass, SIGNAL_DELETE_ENTITY.format(self._external_id),
-            self._delete_callback)
+            self.hass,
+            SIGNAL_DELETE_ENTITY.format(self._external_id),
+            self._delete_callback,
+        )
         self._remove_signal_update = async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_ENTITY.format(self._external_id),
-            self._update_callback)
+            self.hass,
+            SIGNAL_UPDATE_ENTITY.format(self._external_id),
+            self._update_callback,
+        )
 
     @callback
     def _delete_callback(self):

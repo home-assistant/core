@@ -3,7 +3,7 @@ from collections import defaultdict
 from datetime import datetime
 from ipaddress import ip_address
 import logging
-import os
+from typing import List, Optional
 
 from aiohttp.web import middleware
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
@@ -17,21 +17,24 @@ from homeassistant.util.yaml import dump
 
 from .const import KEY_REAL_IP
 
+
+# mypy: allow-incomplete-defs, allow-untyped-defs, no-check-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
-KEY_BANNED_IPS = 'ha_banned_ips'
-KEY_FAILED_LOGIN_ATTEMPTS = 'ha_failed_login_attempts'
-KEY_LOGIN_THRESHOLD = 'ha_login_threshold'
+KEY_BANNED_IPS = "ha_banned_ips"
+KEY_FAILED_LOGIN_ATTEMPTS = "ha_failed_login_attempts"
+KEY_LOGIN_THRESHOLD = "ha_login_threshold"
 
-NOTIFICATION_ID_BAN = 'ip-ban'
-NOTIFICATION_ID_LOGIN = 'http-login'
+NOTIFICATION_ID_BAN = "ip-ban"
+NOTIFICATION_ID_LOGIN = "http-login"
 
-IP_BANS_FILE = 'ip_bans.yaml'
-ATTR_BANNED_AT = 'banned_at'
+IP_BANS_FILE = "ip_bans.yaml"
+ATTR_BANNED_AT = "banned_at"
 
-SCHEMA_IP_BAN_ENTRY = vol.Schema({
-    vol.Optional('banned_at'): vol.Any(None, cv.datetime)
-})
+SCHEMA_IP_BAN_ENTRY = vol.Schema(
+    {vol.Optional("banned_at"): vol.Any(None, cv.datetime)}
+)
 
 
 @callback
@@ -44,7 +47,8 @@ def setup_bans(hass, app, login_threshold):
     async def ban_startup(app):
         """Initialize bans when app starts up."""
         app[KEY_BANNED_IPS] = await async_load_ip_bans_config(
-            hass, hass.config.path(IP_BANS_FILE))
+            hass, hass.config.path(IP_BANS_FILE)
+        )
 
     app.on_startup.append(ban_startup)
 
@@ -58,8 +62,9 @@ async def ban_middleware(request, handler):
 
     # Verify if IP is not banned
     ip_address_ = request[KEY_REAL_IP]
-    is_banned = any(ip_ban.ip_address == ip_address_
-                    for ip_ban in request.app[KEY_BANNED_IPS])
+    is_banned = any(
+        ip_ban.ip_address == ip_address_ for ip_ban in request.app[KEY_BANNED_IPS]
+    )
 
     if is_banned:
         raise HTTPForbidden()
@@ -73,12 +78,14 @@ async def ban_middleware(request, handler):
 
 def log_invalid_auth(func):
     """Decorate function to handle invalid auth or failed login attempts."""
+
     async def handle_req(view, request, *args, **kwargs):
         """Try to log failed login attempts if response status >= 400."""
         resp = await func(view, request, *args, **kwargs)
         if resp.status >= 400:
             await process_wrong_login(request)
         return resp
+
     return handle_req
 
 
@@ -90,35 +97,40 @@ async def process_wrong_login(request):
     """
     remote_addr = request[KEY_REAL_IP]
 
-    msg = ('Login attempt or request with invalid authentication '
-           'from {}'.format(remote_addr))
+    msg = "Login attempt or request with invalid authentication " "from {}".format(
+        remote_addr
+    )
     _LOGGER.warning(msg)
 
-    hass = request.app['hass']
+    hass = request.app["hass"]
     hass.components.persistent_notification.async_create(
-        msg, 'Login attempt failed', NOTIFICATION_ID_LOGIN)
+        msg, "Login attempt failed", NOTIFICATION_ID_LOGIN
+    )
 
     # Check if ban middleware is loaded
-    if (KEY_BANNED_IPS not in request.app or
-            request.app[KEY_LOGIN_THRESHOLD] < 1):
+    if KEY_BANNED_IPS not in request.app or request.app[KEY_LOGIN_THRESHOLD] < 1:
         return
 
     request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] += 1
 
-    if (request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] >=
-            request.app[KEY_LOGIN_THRESHOLD]):
+    if (
+        request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr]
+        >= request.app[KEY_LOGIN_THRESHOLD]
+    ):
         new_ban = IpBan(remote_addr)
         request.app[KEY_BANNED_IPS].append(new_ban)
 
         await hass.async_add_job(
-            update_ip_bans_config, hass.config.path(IP_BANS_FILE), new_ban)
+            update_ip_bans_config, hass.config.path(IP_BANS_FILE), new_ban
+        )
 
-        _LOGGER.warning(
-            "Banned IP %s for too many login attempts", remote_addr)
+        _LOGGER.warning("Banned IP %s for too many login attempts", remote_addr)
 
         hass.components.persistent_notification.async_create(
-            'Too many login attempts from {}'.format(remote_addr),
-            'Banning IP address', NOTIFICATION_ID_BAN)
+            f"Too many login attempts from {remote_addr}",
+            "Banning IP address",
+            NOTIFICATION_ID_BAN,
+        )
 
 
 async def process_success_login(request):
@@ -131,21 +143,23 @@ async def process_success_login(request):
     remote_addr = request[KEY_REAL_IP]
 
     # Check if ban middleware is loaded
-    if (KEY_BANNED_IPS not in request.app or
-            request.app[KEY_LOGIN_THRESHOLD] < 1):
+    if KEY_BANNED_IPS not in request.app or request.app[KEY_LOGIN_THRESHOLD] < 1:
         return
 
-    if remote_addr in request.app[KEY_FAILED_LOGIN_ATTEMPTS] and \
-            request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] > 0:
-        _LOGGER.debug('Login success, reset failed login attempts counter'
-                      ' from %s', remote_addr)
+    if (
+        remote_addr in request.app[KEY_FAILED_LOGIN_ATTEMPTS]
+        and request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] > 0
+    ):
+        _LOGGER.debug(
+            "Login success, reset failed login attempts counter" " from %s", remote_addr
+        )
         request.app[KEY_FAILED_LOGIN_ATTEMPTS].pop(remote_addr)
 
 
 class IpBan:
     """Represents banned IP address."""
 
-    def __init__(self, ip_ban: str, banned_at: datetime = None) -> None:
+    def __init__(self, ip_ban: str, banned_at: Optional[datetime] = None) -> None:
         """Initialize IP Ban object."""
         self.ip_address = ip_address(ip_ban)
         self.banned_at = banned_at or datetime.utcnow()
@@ -153,21 +167,20 @@ class IpBan:
 
 async def async_load_ip_bans_config(hass: HomeAssistant, path: str):
     """Load list of banned IPs from config file."""
-    ip_list = []
-
-    if not os.path.isfile(path):
-        return ip_list
+    ip_list: List[IpBan] = []
 
     try:
         list_ = await hass.async_add_executor_job(load_yaml_config_file, path)
+    except FileNotFoundError:
+        return ip_list
     except HomeAssistantError as err:
-        _LOGGER.error('Unable to load %s: %s', path, str(err))
+        _LOGGER.error("Unable to load %s: %s", path, str(err))
         return ip_list
 
     for ip_ban, ip_info in list_.items():
         try:
             ip_info = SCHEMA_IP_BAN_ENTRY(ip_info)
-            ip_list.append(IpBan(ip_ban, ip_info['banned_at']))
+            ip_list.append(IpBan(ip_ban, ip_info["banned_at"]))
         except vol.Invalid as err:
             _LOGGER.error("Failed to load IP ban %s: %s", ip_info, err)
             continue
@@ -177,9 +190,11 @@ async def async_load_ip_bans_config(hass: HomeAssistant, path: str):
 
 def update_ip_bans_config(path: str, ip_ban: IpBan):
     """Update config file with new banned IP address."""
-    with open(path, 'a') as out:
-        ip_ = {str(ip_ban.ip_address): {
-            ATTR_BANNED_AT: ip_ban.banned_at.strftime("%Y-%m-%dT%H:%M:%S")
-        }}
-        out.write('\n')
+    with open(path, "a") as out:
+        ip_ = {
+            str(ip_ban.ip_address): {
+                ATTR_BANNED_AT: ip_ban.banned_at.strftime("%Y-%m-%dT%H:%M:%S")
+            }
+        }
+        out.write("\n")
         out.write(dump(ip_))

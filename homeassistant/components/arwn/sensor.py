@@ -1,9 +1,4 @@
-"""
-Support for collecting data from the ARWN project.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.arwn/
-"""
+"""Support for collecting data from the ARWN project."""
 import json
 import logging
 
@@ -15,11 +10,10 @@ from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['mqtt']
-DOMAIN = 'arwn'
+DOMAIN = "arwn"
 
-DATA_ARWN = 'arwn'
-TOPIC = 'arwn/#'
+DATA_ARWN = "arwn"
+TOPIC = "arwn/#"
 
 
 def discover_sensors(topic, payload):
@@ -27,39 +21,41 @@ def discover_sensors(topic, payload):
 
     Async friendly.
     """
-    parts = topic.split('/')
-    unit = payload.get('units', '')
+    parts = topic.split("/")
+    unit = payload.get("units", "")
     domain = parts[1]
-    if domain == 'temperature':
+    if domain == "temperature":
         name = parts[2]
-        if unit == 'F':
+        if unit == "F":
             unit = TEMP_FAHRENHEIT
         else:
             unit = TEMP_CELSIUS
-        return ArwnSensor(name, 'temp', unit)
+        return ArwnSensor(name, "temp", unit)
     if domain == "moisture":
         name = parts[2] + " Moisture"
-        return ArwnSensor(name, 'moisture', unit, "mdi:water-percent")
+        return ArwnSensor(name, "moisture", unit, "mdi:water-percent")
     if domain == "rain":
         if len(parts) >= 3 and parts[2] == "today":
-            return ArwnSensor("Rain Since Midnight", 'since_midnight',
-                              "in", "mdi:water")
-    if domain == 'barometer':
-        return ArwnSensor('Barometer', 'pressure', unit,
-                          "mdi:thermometer-lines")
-    if domain == 'wind':
-        return (ArwnSensor('Wind Speed', 'speed', unit, "mdi:speedometer"),
-                ArwnSensor('Wind Gust', 'gust', unit, "mdi:speedometer"),
-                ArwnSensor('Wind Direction', 'direction', '°', "mdi:compass"))
+            return ArwnSensor(
+                "Rain Since Midnight", "since_midnight", "in", "mdi:water"
+            )
+    if domain == "barometer":
+        return ArwnSensor("Barometer", "pressure", unit, "mdi:thermometer-lines")
+    if domain == "wind":
+        return (
+            ArwnSensor("Wind Speed", "speed", unit, "mdi:speedometer"),
+            ArwnSensor("Wind Gust", "gust", unit, "mdi:speedometer"),
+            ArwnSensor("Wind Direction", "direction", "°", "mdi:compass"),
+        )
 
 
 def _slug(name):
-    return 'sensor.arwn_{}'.format(slugify(name))
+    return "sensor.arwn_{}".format(slugify(name))
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the ARWN platform."""
+
     @callback
     def async_sensor_event_received(msg):
         """Process events as sensors.
@@ -84,24 +80,25 @@ async def async_setup_platform(hass, config, async_add_entities,
             store = hass.data[DATA_ARWN] = {}
 
         if isinstance(sensors, ArwnSensor):
-            sensors = (sensors, )
+            sensors = (sensors,)
 
-        if 'timestamp' in event:
-            del event['timestamp']
+        if "timestamp" in event:
+            del event["timestamp"]
 
         for sensor in sensors:
             if sensor.name not in store:
                 sensor.hass = hass
                 sensor.set_event(event)
                 store[sensor.name] = sensor
-                _LOGGER.debug("Registering new sensor %(name)s => %(event)s",
-                              dict(name=sensor.name, event=event))
+                _LOGGER.debug(
+                    "Registering new sensor %(name)s => %(event)s",
+                    dict(name=sensor.name, event=event),
+                )
                 async_add_entities((sensor,), True)
             else:
                 store[sensor.name].set_event(event)
 
-    await mqtt.async_subscribe(
-        hass, TOPIC, async_sensor_event_received, 0)
+    await mqtt.async_subscribe(hass, TOPIC, async_sensor_event_received, 0)
     return True
 
 

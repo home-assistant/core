@@ -11,15 +11,11 @@ from . import NEATO_LOGIN, NEATO_ROBOTS
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['neato']
-
 SCAN_INTERVAL = timedelta(minutes=10)
 
-SWITCH_TYPE_SCHEDULE = 'schedule'
+SWITCH_TYPE_SCHEDULE = "schedule"
 
-SWITCH_TYPES = {
-    SWITCH_TYPE_SCHEDULE: ['Schedule']
-}
+SWITCH_TYPES = {SWITCH_TYPE_SCHEDULE: ["Schedule"]}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -40,12 +36,13 @@ class NeatoConnectedSwitch(ToggleEntity):
         self.type = switch_type
         self.robot = robot
         self.neato = hass.data[NEATO_LOGIN]
-        self._robot_name = '{} {}'.format(
-            self.robot.name, SWITCH_TYPES[self.type][0])
+        self._robot_name = "{} {}".format(self.robot.name, SWITCH_TYPES[self.type][0])
         try:
             self._state = self.robot.state
-        except (requests.exceptions.ConnectionError,
-                requests.exceptions.HTTPError) as ex:
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.HTTPError,
+        ) as ex:
             _LOGGER.warning("Neato connection error: %s", ex)
             self._state = None
         self._schedule_state = None
@@ -58,15 +55,17 @@ class NeatoConnectedSwitch(ToggleEntity):
         self.neato.update_robots()
         try:
             self._state = self.robot.state
-        except (requests.exceptions.ConnectionError,
-                requests.exceptions.HTTPError) as ex:
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.HTTPError,
+        ) as ex:
             _LOGGER.warning("Neato connection error: %s", ex)
             self._state = None
             return
-        _LOGGER.debug('self._state=%s', self._state)
+        _LOGGER.debug("self._state=%s", self._state)
         if self.type == SWITCH_TYPE_SCHEDULE:
             _LOGGER.debug("State: %s", self._state)
-            if self._state['details']['isScheduleEnabled']:
+            if self._state["details"]["isScheduleEnabled"]:
                 self._schedule_state = STATE_ON
             else:
                 self._schedule_state = STATE_OFF

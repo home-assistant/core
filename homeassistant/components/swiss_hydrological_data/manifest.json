@@ -1,0 +1,12 @@
+{
+  "domain": "swiss_hydrological_data",
+  "name": "Swiss hydrological data",
+  "documentation": "https://www.home-assistant.io/components/swiss_hydrological_data",
+  "requirements": [
+    "swisshydrodata==0.0.3"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

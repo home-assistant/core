@@ -1,68 +1,89 @@
-"""
-Support for Denon AVR receivers using their HTTP interface.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.denon/
-"""
+"""Support for Denon AVR receivers using their HTTP interface."""
 
 from collections import namedtuple
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOUND_MODE, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP)
+    MEDIA_TYPE_CHANNEL,
+    MEDIA_TYPE_MUSIC,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOUND_MODE,
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
+)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_TIMEOUT, CONF_ZONE, STATE_OFF, STATE_ON,
-    STATE_PAUSED, STATE_PLAYING)
+    CONF_HOST,
+    CONF_NAME,
+    CONF_TIMEOUT,
+    CONF_ZONE,
+    STATE_OFF,
+    STATE_ON,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['denonavr==0.7.8']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_SOUND_MODE_RAW = 'sound_mode_raw'
+ATTR_SOUND_MODE_RAW = "sound_mode_raw"
 
-CONF_INVALID_ZONES_ERR = 'Invalid Zone (expected Zone2 or Zone3)'
-CONF_SHOW_ALL_SOURCES = 'show_all_sources'
-CONF_VALID_ZONES = ['Zone2', 'Zone3']
-CONF_ZONES = 'zones'
+CONF_INVALID_ZONES_ERR = "Invalid Zone (expected Zone2 or Zone3)"
+CONF_SHOW_ALL_SOURCES = "show_all_sources"
+CONF_VALID_ZONES = ["Zone2", "Zone3"]
+CONF_ZONES = "zones"
 
 DEFAULT_SHOW_SOURCES = False
 DEFAULT_TIMEOUT = 2
 
-KEY_DENON_CACHE = 'denonavr_hosts'
+KEY_DENON_CACHE = "denonavr_hosts"
 
-SUPPORT_DENON = SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
-    SUPPORT_SELECT_SOURCE | SUPPORT_VOLUME_SET
+SUPPORT_DENON = (
+    SUPPORT_VOLUME_STEP
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+    | SUPPORT_SELECT_SOURCE
+    | SUPPORT_VOLUME_SET
+)
 
-SUPPORT_MEDIA_MODES = SUPPORT_PLAY_MEDIA | \
-    SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | \
-    SUPPORT_NEXT_TRACK | SUPPORT_VOLUME_SET | SUPPORT_PLAY
+SUPPORT_MEDIA_MODES = (
+    SUPPORT_PLAY_MEDIA
+    | SUPPORT_PAUSE
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_VOLUME_SET
+    | SUPPORT_PLAY
+)
 
-DENON_ZONE_SCHEMA = vol.Schema({
-    vol.Required(CONF_ZONE): vol.In(CONF_VALID_ZONES, CONF_INVALID_ZONES_ERR),
-    vol.Optional(CONF_NAME): cv.string,
-})
+DENON_ZONE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ZONE): vol.In(CONF_VALID_ZONES, CONF_INVALID_ZONES_ERR),
+        vol.Optional(CONF_NAME): cv.string,
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_SHOW_ALL_SOURCES, default=DEFAULT_SHOW_SOURCES):
-        cv.boolean,
-    vol.Optional(CONF_ZONES):
-        vol.All(cv.ensure_list, [DENON_ZONE_SCHEMA]),
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_SHOW_ALL_SOURCES, default=DEFAULT_SHOW_SOURCES): cv.boolean,
+        vol.Optional(CONF_ZONES): vol.All(cv.ensure_list, [DENON_ZONE_SCHEMA]),
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    }
+)
 
-NewHost = namedtuple('NewHost', ['host', 'name'])
+NewHost = namedtuple("NewHost", ["host", "name"])
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -99,8 +120,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # 2. option: discovery using netdisco
     if discovery_info is not None:
-        host = discovery_info.get('host')
-        name = discovery_info.get('name')
+        host = discovery_info.get("host")
+        name = discovery_info.get("name")
         new_hosts.append(NewHost(host=host, name=name))
 
     # 3. option: discovery using denonavr library
@@ -110,17 +131,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for d_receiver in d_receivers:
             host = d_receiver["host"]
             name = d_receiver["friendlyName"]
-            new_hosts.append(
-                NewHost(host=host, name=name))
+            new_hosts.append(NewHost(host=host, name=name))
 
     for entry in new_hosts:
         # Check if host not in cache, append it and save for later
         # starting
         if entry.host not in cache:
             new_device = denonavr.DenonAVR(
-                host=entry.host, name=entry.name,
-                show_all_inputs=show_all_sources, timeout=timeout,
-                add_zones=add_zones)
+                host=entry.host,
+                name=entry.name,
+                show_all_inputs=show_all_sources,
+                timeout=timeout,
+                add_zones=add_zones,
+            )
             for new_zone in new_device.zones.values():
                 receivers.append(DenonDevice(new_zone))
             cache.add(host)
@@ -163,8 +186,9 @@ class DenonDevice(MediaPlayerDevice):
             self._sound_mode_list = None
 
         self._supported_features_base = SUPPORT_DENON
-        self._supported_features_base |= (self._sound_mode_support and
-                                          SUPPORT_SELECT_SOUND_MODE)
+        self._supported_features_base |= (
+            self._sound_mode_support and SUPPORT_SELECT_SOUND_MODE
+        )
 
     def update(self):
         """Get the latest status information from device."""
@@ -312,8 +336,11 @@ class DenonDevice(MediaPlayerDevice):
     def device_state_attributes(self):
         """Return device specific state attributes."""
         attributes = {}
-        if (self._sound_mode_raw is not None and self._sound_mode_support and
-                self._power == 'ON'):
+        if (
+            self._sound_mode_raw is not None
+            and self._sound_mode_support
+            and self._power == "ON"
+        ):
             attributes[ATTR_SOUND_MODE_RAW] = self._sound_mode_raw
         return attributes
 

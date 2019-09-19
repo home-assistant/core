@@ -1,0 +1,8 @@
+{
+  "domain": "intent_script",
+  "name": "Intent script",
+  "documentation": "https://www.home-assistant.io/components/intent_script",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

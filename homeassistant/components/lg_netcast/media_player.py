@@ -1,9 +1,4 @@
-"""
-Support for LG TV running on NetCast 3 or 4.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.lg_netcast/
-"""
+"""Support for LG TV running on NetCast 3 or 4."""
 from datetime import timedelta
 import logging
 
@@ -11,36 +6,53 @@ from requests import RequestException
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
-    SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP)
+    MEDIA_TYPE_CHANNEL,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_STEP,
+)
 from homeassistant.const import (
-    CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, STATE_OFF, STATE_PAUSED,
-    STATE_PLAYING)
+    CONF_ACCESS_TOKEN,
+    CONF_HOST,
+    CONF_NAME,
+    STATE_OFF,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pylgnetcast-homeassistant==0.2.0.dev0']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'LG TV Remote'
+DEFAULT_NAME = "LG TV Remote"
 
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-SUPPORT_LGTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
-               SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | \
-               SUPPORT_NEXT_TRACK | SUPPORT_TURN_OFF | \
-               SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
+SUPPORT_LGTV = (
+    SUPPORT_PAUSE
+    | SUPPORT_VOLUME_STEP
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_TURN_OFF
+    | SUPPORT_SELECT_SOURCE
+    | SUPPORT_PLAY
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_ACCESS_TOKEN): vol.All(cv.string, vol.Length(max=6)),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_ACCESS_TOKEN): vol.All(cv.string, vol.Length(max=6)),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -67,8 +79,8 @@ class LgTVDevice(MediaPlayerDevice):
         # Assume that the TV is in Play mode
         self._playing = True
         self._volume = 0
-        self._channel_name = ''
-        self._program_name = ''
+        self._channel_name = ""
+        self._program_name = ""
         self._state = None
         self._sources = {}
         self._source_names = []
@@ -76,6 +88,7 @@ class LgTVDevice(MediaPlayerDevice):
     def send_command(self, command):
         """Send remote control commands to the TV."""
         from pylgnetcast import LgNetCastError
+
         try:
             with self._client as client:
                 client.send_command(command)
@@ -86,34 +99,37 @@ class LgTVDevice(MediaPlayerDevice):
     def update(self):
         """Retrieve the latest data from the LG TV."""
         from pylgnetcast import LgNetCastError
+
         try:
             with self._client as client:
                 self._state = STATE_PLAYING
-                volume_info = client.query_data('volume_info')
+                volume_info = client.query_data("volume_info")
                 if volume_info:
                     volume_info = volume_info[0]
-                    self._volume = float(volume_info.find('level').text)
-                    self._muted = volume_info.find('mute').text == 'true'
+                    self._volume = float(volume_info.find("level").text)
+                    self._muted = volume_info.find("mute").text == "true"
 
-                channel_info = client.query_data('cur_channel')
+                channel_info = client.query_data("cur_channel")
                 if channel_info:
                     channel_info = channel_info[0]
-                    self._channel_name = channel_info.find('chname').text
-                    self._program_name = channel_info.find('progName').text
+                    self._channel_name = channel_info.find("chname").text
+                    self._program_name = channel_info.find("progName").text
 
-                channel_list = client.query_data('channel_list')
+                channel_list = client.query_data("channel_list")
                 if channel_list:
                     channel_names = []
                     for channel in channel_list:
-                        channel_name = channel.find('chname')
+                        channel_name = channel.find("chname")
                         if channel_name is not None:
                             channel_names.append(str(channel_name.text))
                     self._sources = dict(zip(channel_names, channel_list))
                     # sort source names by the major channel number
-                    source_tuples = [(k, self._sources[k].find('major').text)
-                                     for k in self._sources]
+                    source_tuples = [
+                        (k, self._sources[k].find("major").text) for k in self._sources
+                    ]
                     sorted_sources = sorted(
-                        source_tuples, key=lambda channel: int(channel[1]))
+                        source_tuples, key=lambda channel: int(channel[1])
+                    )
                     self._source_names = [n for n, k in sorted_sources]
         except (LgNetCastError, RequestException):
             self._state = STATE_OFF
@@ -171,7 +187,7 @@ class LgTVDevice(MediaPlayerDevice):
     @property
     def media_image_url(self):
         """URL for obtaining a screen capture."""
-        return self._client.url + 'data?target=screen_image'
+        return self._client.url + "data?target=screen_image"
 
     def turn_off(self):
         """Turn off media player."""

@@ -14,6 +14,7 @@
                 "data": {
                     "2fa": "2FA Pin"
                 },
+                "description": "\u65e0",
                 "title": "\u53cc\u91cd\u8ba4\u8bc1"
             },
             "user": {
@@ -21,6 +22,7 @@
                     "email": "\u7535\u5b50\u90ae\u4ef6\u5730\u5740",
                     "password": "\u5bc6\u7801"
                 },
+                "description": "\u65e0",
                 "title": "\u767b\u5f55 Google Hangouts"
             }
         },

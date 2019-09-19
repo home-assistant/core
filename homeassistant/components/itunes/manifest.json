@@ -1,0 +1,8 @@
+{
+  "domain": "itunes",
+  "name": "Itunes",
+  "documentation": "https://www.home-assistant.io/components/itunes",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

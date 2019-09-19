@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "access_token": "Onbekannte Feeler beim gener\u00e9ieren vum Acc\u00e8s Jeton.",
+            "already_setup": "Den Ambiclimate Kont ass konfigur\u00e9iert.",
+            "no_config": "Dir musst Ambiclimate konfigur\u00e9ieren, ier Dir d\u00ebs Authentifiz\u00e9ierung k\u00ebnnt benotzen.[Liest w.e.g. d'Instruktioune](https://www.home-assistant.io/components/ambiclimatet/)."
+        },
+        "create_entry": {
+            "default": "Erfollegr\u00e4ich mat Ambiclimate authentifiz\u00e9iert."
+        },
+        "error": {
+            "follow_link": "Follegt w.e.g. dem Link an authentifiz\u00e9iert de Kont ier dir op ofsch\u00e9cken dr\u00e9ckt.",
+            "no_token": "Net mat Ambiclimate authentifiz\u00e9iert"
+        },
+        "step": {
+            "auth": {
+                "description": "Follegt d\u00ebsem [Link]({authorization_url}) an <b>erlaabtt</b> den Acc\u00e8s zu \u00e4rem Ambiclimate Kont , a kommt dann zer\u00e9ck heihin an dr\u00e9ck op <b>ofsch\u00e9cken</b> hei \u00ebnnen.\n(Stellt s\u00e9cher dass den Type vun Callback {cb_url} ass.)",
+                "title": "Ambiclimate authentifiz\u00e9ieren"
+            }
+        },
+        "title": "Ambiclimate"
+    }
+}

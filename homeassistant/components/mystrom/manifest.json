@@ -1,0 +1,14 @@
+{
+  "domain": "mystrom",
+  "name": "Mystrom",
+  "documentation": "https://www.home-assistant.io/components/mystrom",
+  "requirements": [
+    "python-mystrom==0.5.0"
+  ],
+  "dependencies": [
+    "http"
+  ],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

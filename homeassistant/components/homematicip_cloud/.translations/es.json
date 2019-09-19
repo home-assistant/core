@@ -21,7 +21,7 @@
                 "title": "Elegir punto de acceso HomematicIP"
             },
             "link": {
-                "description": "Presione el bot\u00f3n azul en el punto de acceso y el bot\u00f3n enviar para registrar HomematicIP con Home Assistant. \n\n ! [Ubicaci\u00f3n del bot\u00f3n punto de acceso](/static/images/config_flows/config_homematicip_cloud.png)",
+                "description": "Pulsa el bot\u00f3n azul en el punto de acceso y el bot\u00f3n de env\u00edo para registrar HomematicIP en Home Assistant.\n\n![Ubicaci\u00f3n del bot\u00f3n en el puente](/static/images/config_flows/config_homematicip_cloud.png)",
                 "title": "Enlazar punto de acceso"
             }
         },

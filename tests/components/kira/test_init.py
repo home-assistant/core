@@ -12,17 +12,18 @@ from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 
-TEST_CONFIG = {kira.DOMAIN: {
-    'sensors': [{'name': 'test_sensor',
-                 'host': '127.0.0.1',
-                 'port': 34293},
-                {'name': 'second_sensor',
-                 'port': 29847}],
-    'remotes': [{'host': '127.0.0.1',
-                 'port': 34293},
-                {'name': 'one_more',
-                 'host': '127.0.0.1',
-                 'port': 29847}]}}
+TEST_CONFIG = {
+    kira.DOMAIN: {
+        "sensors": [
+            {"name": "test_sensor", "host": "127.0.0.1", "port": 34293},
+            {"name": "second_sensor", "port": 29847},
+        ],
+        "remotes": [
+            {"host": "127.0.0.1", "port": 34293},
+            {"name": "one_more", "host": "127.0.0.1", "port": 29847},
+        ],
+    }
+}
 
 KIRA_CODES = """
 - name: test
@@ -40,10 +41,8 @@ class TestKiraSetup(unittest.TestCase):
         self.hass = get_test_home_assistant()
         _base_mock = MagicMock()
         pykira = _base_mock.pykira
-        pykira.__file__ = 'test'
-        self._module_patcher = patch.dict('sys.modules', {
-            'pykira': pykira
-        })
+        pykira.__file__ = "test"
+        self._module_patcher = patch.dict("sys.modules", {"pykira": pykira})
         self._module_patcher.start()
 
         self.work_dir = tempfile.mkdtemp()
@@ -57,29 +56,32 @@ class TestKiraSetup(unittest.TestCase):
     def test_kira_empty_config(self):
         """Kira component should load a default sensor."""
         setup_component(self.hass, kira.DOMAIN, {})
-        assert len(self.hass.data[kira.DOMAIN]['sensor']) == 1
+        assert len(self.hass.data[kira.DOMAIN]["sensor"]) == 1
 
     def test_kira_setup(self):
         """Ensure platforms are loaded correctly."""
         setup_component(self.hass, kira.DOMAIN, TEST_CONFIG)
-        assert len(self.hass.data[kira.DOMAIN]['sensor']) == 2
-        assert sorted(self.hass.data[kira.DOMAIN]['sensor'].keys()) == \
-            ['kira', 'kira_1']
-        assert len(self.hass.data[kira.DOMAIN]['remote']) == 2
-        assert sorted(self.hass.data[kira.DOMAIN]['remote'].keys()) == \
-            ['kira', 'kira_1']
+        assert len(self.hass.data[kira.DOMAIN]["sensor"]) == 2
+        assert sorted(self.hass.data[kira.DOMAIN]["sensor"].keys()) == [
+            "kira",
+            "kira_1",
+        ]
+        assert len(self.hass.data[kira.DOMAIN]["remote"]) == 2
+        assert sorted(self.hass.data[kira.DOMAIN]["remote"].keys()) == [
+            "kira",
+            "kira_1",
+        ]
 
     def test_kira_creates_codes(self):
         """Kira module should create codes file if missing."""
-        code_path = os.path.join(self.work_dir, 'codes.yaml')
+        code_path = os.path.join(self.work_dir, "codes.yaml")
         kira.load_codes(code_path)
-        assert os.path.exists(code_path), \
-            "Kira component didn't create codes file"
+        assert os.path.exists(code_path), "Kira component didn't create codes file"
 
     def test_load_codes(self):
         """Kira should ignore invalid codes."""
-        code_path = os.path.join(self.work_dir, 'codes.yaml')
-        with open(code_path, 'w') as code_file:
+        code_path = os.path.join(self.work_dir, "codes.yaml")
+        with open(code_path, "w") as code_file:
             code_file.write(KIRA_CODES)
         res = kira.load_codes(code_path)
         assert len(res) == 1, "Expected exactly 1 valid Kira code"

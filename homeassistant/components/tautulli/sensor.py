@@ -1,9 +1,4 @@
-"""
-A platform which allows you to get information from Tautulli.
-
-For more details about this platform, please refer to the documentation at
-https://www.home-assistant.io/components/sensor.tautulli/
-"""
+"""A platform which allows you to get information from Tautulli."""
 from datetime import timedelta
 import logging
 
@@ -11,44 +6,49 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_API_KEY, CONF_HOST, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_PORT,
-    CONF_SSL, CONF_VERIFY_SSL, CONF_PATH)
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+    CONF_PATH,
+)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pytautulli==0.5.0']
-
 _LOGGER = logging.getLogger(__name__)
 
-CONF_MONITORED_USERS = 'monitored_users'
+CONF_MONITORED_USERS = "monitored_users"
 
-DEFAULT_NAME = 'Tautulli'
-DEFAULT_PORT = '8181'
-DEFAULT_PATH = ''
+DEFAULT_NAME = "Tautulli"
+DEFAULT_PORT = "8181"
+DEFAULT_PATH = ""
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
 TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_MONITORED_USERS): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
-    vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_MONITORED_USERS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
+        vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    }
+)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Create the Tautulli sensor."""
     from pytautulli import Tautulli
 
@@ -63,8 +63,9 @@ async def async_setup_platform(
     verify_ssl = config.get(CONF_VERIFY_SSL)
 
     session = async_get_clientsession(hass, verify_ssl)
-    tautulli = TautulliData(Tautulli(
-        host, port, api_key, hass.loop, session, use_ssl, path))
+    tautulli = TautulliData(
+        Tautulli(host, port, api_key, hass.loop, session, use_ssl, path)
+    )
 
     if not await tautulli.test_connection():
         raise PlatformNotReady
@@ -93,23 +94,23 @@ class TautulliSensor(Entity):
         await self.tautulli.async_update()
         self.home = self.tautulli.api.home_data
         self.sessions = self.tautulli.api.session_data
-        self._attributes['Top Movie'] = self.home.get('movie')
-        self._attributes['Top TV Show'] = self.home.get('tv')
-        self._attributes['Top User'] = self.home.get('user')
+        self._attributes["Top Movie"] = self.home.get("movie")
+        self._attributes["Top TV Show"] = self.home.get("tv")
+        self._attributes["Top User"] = self.home.get("user")
         for key in self.sessions:
-            if 'sessions' not in key:
+            if "sessions" not in key:
                 self._attributes[key] = self.sessions[key]
         for user in self.tautulli.api.users:
             if self.usernames is None or user in self.usernames:
                 userdata = self.tautulli.api.user_data
                 self._attributes[user] = {}
-                self._attributes[user]['Activity'] = userdata[user]['Activity']
+                self._attributes[user]["Activity"] = userdata[user]["Activity"]
                 if self.monitored_conditions:
                     for key in self.monitored_conditions:
                         try:
                             self._attributes[user][key] = userdata[user][key]
                         except (KeyError, TypeError):
-                            self._attributes[user][key] = ''
+                            self._attributes[user][key] = ""
 
     @property
     def name(self):
@@ -119,12 +120,17 @@ class TautulliSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.sessions.get('stream_count')
+        return self.sessions.get("stream_count")
 
     @property
     def icon(self):
         """Return the icon of the sensor."""
-        return 'mdi:plex'
+        return "mdi:plex"
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit this state is expressed in."""
+        return "Watching"
 
     @property
     def device_state_attributes(self):

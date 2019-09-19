@@ -5,51 +5,68 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_HOST, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_PASSWORD, CONF_PORT,
-    CONF_SCAN_INTERVAL, CONF_USERNAME)
+    CONF_HOST,
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['transmissionrpc==0.11']
-
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'transmission'
-DATA_UPDATED = 'transmission_data_updated'
-DATA_TRANSMISSION = 'data_transmission'
+DOMAIN = "transmission"
+DATA_UPDATED = "transmission_data_updated"
+DATA_TRANSMISSION = "data_transmission"
 
-DEFAULT_NAME = 'Transmission'
+DEFAULT_NAME = "Transmission"
 DEFAULT_PORT = 9091
-TURTLE_MODE = 'turtle_mode'
+TURTLE_MODE = "turtle_mode"
 
 SENSOR_TYPES = {
-    'active_torrents': ['Active Torrents', None],
-    'current_status': ['Status', None],
-    'download_speed': ['Down Speed', 'MB/s'],
-    'paused_torrents': ['Paused Torrents', None],
-    'total_torrents': ['Total Torrents', None],
-    'upload_speed': ['Up Speed', 'MB/s'],
-    'completed_torrents': ['Completed Torrents', None],
-    'started_torrents': ['Started Torrents', None],
+    "active_torrents": ["Active Torrents", None],
+    "current_status": ["Status", None],
+    "download_speed": ["Down Speed", "MB/s"],
+    "paused_torrents": ["Paused Torrents", None],
+    "total_torrents": ["Total Torrents", None],
+    "upload_speed": ["Up Speed", "MB/s"],
+    "completed_torrents": ["Completed Torrents", None],
+    "started_torrents": ["Started Torrents", None],
 }
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=120)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(TURTLE_MODE, default=False): cv.boolean,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-            cv.time_period,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=['current_status']):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    })
-}, extra=vol.ALLOW_EXTRA)
+ATTR_TORRENT = "torrent"
+
+SERVICE_ADD_TORRENT = "add_torrent"
+
+SERVICE_ADD_TORRENT_SCHEMA = vol.Schema({vol.Required(ATTR_TORRENT): cv.string})
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_HOST): cv.string,
+                vol.Optional(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_USERNAME): cv.string,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(TURTLE_MODE, default=False): cv.boolean,
+                vol.Optional(
+                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                ): cv.time_period,
+                vol.Optional(
+                    CONF_MONITORED_CONDITIONS, default=["current_status"]
+                ): vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
@@ -62,18 +79,16 @@ def setup(hass, config):
 
     import transmissionrpc
     from transmissionrpc.error import TransmissionError
+
     try:
-        api = transmissionrpc.Client(
-            host, port=port, user=username, password=password)
+        api = transmissionrpc.Client(host, port=port, user=username, password=password)
         api.session_stats()
     except TransmissionError as error:
         if str(error).find("401: Unauthorized"):
-            _LOGGER.error("Credentials for"
-                          " Transmission client are not valid")
+            _LOGGER.error("Credentials for" " Transmission client are not valid")
         return False
 
-    tm_data = hass.data[DATA_TRANSMISSION] = TransmissionData(
-        hass, config, api)
+    tm_data = hass.data[DATA_TRANSMISSION] = TransmissionData(hass, config, api)
 
     tm_data.update()
     tm_data.init_torrent_list()
@@ -84,14 +99,31 @@ def setup(hass, config):
 
     track_time_interval(hass, refresh, scan_interval)
 
-    sensorconfig = {
-        'sensors': config[DOMAIN][CONF_MONITORED_CONDITIONS],
-        'client_name': config[DOMAIN][CONF_NAME]}
+    def add_torrent(service):
+        """Add new torrent to download."""
+        torrent = service.data[ATTR_TORRENT]
+        if torrent.startswith(
+            ("http", "ftp:", "magnet:")
+        ) or hass.config.is_allowed_path(torrent):
+            api.add_torrent(torrent)
+        else:
+            _LOGGER.warning(
+                "Could not add torrent: " "unsupported type or no permission"
+            )
 
-    discovery.load_platform(hass, 'sensor', DOMAIN, sensorconfig, config)
+    hass.services.register(
+        DOMAIN, SERVICE_ADD_TORRENT, add_torrent, schema=SERVICE_ADD_TORRENT_SCHEMA
+    )
+
+    sensorconfig = {
+        "sensors": config[DOMAIN][CONF_MONITORED_CONDITIONS],
+        "client_name": config[DOMAIN][CONF_NAME],
+    }
+
+    discovery.load_platform(hass, "sensor", DOMAIN, sensorconfig, config)
 
     if config[DOMAIN][TURTLE_MODE]:
-        discovery.load_platform(hass, 'switch', DOMAIN, sensorconfig, config)
+        discovery.load_platform(hass, "switch", DOMAIN, sensorconfig, config)
 
     return True
 
@@ -134,24 +166,25 @@ class TransmissionData:
         """Initialize torrent lists."""
         self.torrents = self._api.get_torrents()
         self.completed_torrents = [
-            x.name for x in self.torrents if x.status == "seeding"]
+            x.name for x in self.torrents if x.status == "seeding"
+        ]
         self.started_torrents = [
-            x.name for x in self.torrents if x.status == "downloading"]
+            x.name for x in self.torrents if x.status == "downloading"
+        ]
 
     def check_completed_torrent(self):
         """Get completed torrent functionality."""
         actual_torrents = self.torrents
         actual_completed_torrents = [
-            var.name for var in actual_torrents if var.status == "seeding"]
+            var.name for var in actual_torrents if var.status == "seeding"
+        ]
 
         tmp_completed_torrents = list(
-            set(actual_completed_torrents).difference(
-                self.completed_torrents))
+            set(actual_completed_torrents).difference(self.completed_torrents)
+        )
 
         for var in tmp_completed_torrents:
-            self.hass.bus.fire(
-                'transmission_downloaded_torrent', {
-                    'name': var})
+            self.hass.bus.fire("transmission_downloaded_torrent", {"name": var})
 
         self.completed_torrents = actual_completed_torrents
 
@@ -159,17 +192,15 @@ class TransmissionData:
         """Get started torrent functionality."""
         actual_torrents = self.torrents
         actual_started_torrents = [
-            var.name for var
-            in actual_torrents if var.status == "downloading"]
+            var.name for var in actual_torrents if var.status == "downloading"
+        ]
 
         tmp_started_torrents = list(
-            set(actual_started_torrents).difference(
-                self.started_torrents))
+            set(actual_started_torrents).difference(self.started_torrents)
+        )
 
         for var in tmp_started_torrents:
-            self.hass.bus.fire(
-                'transmission_started_torrent', {
-                    'name': var})
+            self.hass.bus.fire("transmission_started_torrent", {"name": var})
         self.started_torrents = actual_started_torrents
 
     def get_started_torrent_count(self):

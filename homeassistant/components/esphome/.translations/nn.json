@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "discovery_confirm": {
+                "title": "Fann ESPhome node"
+            }
+        }
+    }
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "uptime",
+  "name": "Uptime",
+  "documentation": "https://www.home-assistant.io/components/uptime",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

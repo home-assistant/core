@@ -19,11 +19,12 @@
             },
             "user": {
                 "data": {
+                    "authorization_code": "C\u00f3digo de autorizaci\u00f3n (requerido para la autenticaci\u00f3n manual)",
                     "email": "Correo electr\u00f3nico",
                     "password": "Contrase\u00f1a"
                 },
                 "description": "Vac\u00edo",
-                "title": "Usuario Google Hangouts"
+                "title": "Iniciar sesi\u00f3n en Google Hangouts"
             }
         },
         "title": "Google Hangouts"
