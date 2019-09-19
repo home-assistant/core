@@ -1,7 +1,6 @@
 """Collection of useful functions for the HomeKit component."""
 import logging
 from collections import OrderedDict, namedtuple
-from pprint import pprint
 
 import voluptuous as vol
 
@@ -144,7 +143,6 @@ def validate_entity_config(values):
             config = CODE_SCHEMA(config)
 
         elif domain == media_player.const.DOMAIN:
-            pprint(config)
             config = MEDIA_PLAYER_SCHEMA(config)
             feature_list = {}
             for feature in config[CONF_FEATURE_LIST]:
