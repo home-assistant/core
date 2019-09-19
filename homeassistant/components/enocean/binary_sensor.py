@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant.components import enocean
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
+    DEVICE_CLASS_OCCUPANCY,
     PLATFORM_SCHEMA,
     BinarySensorDevice,
 )
@@ -17,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "EnOcean binary sensor"
 DEPENDENCIES = ["enocean"]
 EVENT_BUTTON_PRESSED = "button_pressed"
+EVENT_OCCUPANCY_DETECTED = "occupancy_detected"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -32,8 +34,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     dev_id = config.get(CONF_ID)
     dev_name = config.get(CONF_NAME)
     device_class = config.get(CONF_DEVICE_CLASS)
-
-    add_entities([EnOceanBinarySensor(dev_id, dev_name, device_class)])
+    
+    if device_class == DEVICE_CLASS_OCCUPANCY:
+        add_entities([EnOceanOccupancySensor(dev_id, dev_name, device_class)])
+    else:
+        add_entities([EnOceanBinarySensor(dev_id, dev_name, device_class)])
 
 
 class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
@@ -109,5 +114,54 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
                 "pushed": pushed,
                 "which": self.which,
                 "onoff": self.onoff,
+            },
+        )
+
+
+class EnOceanOccupancySensor(enocean.EnOceanDevice, BinarySensorDevice):
+    """Representation of EnOcean occupancy sensor
+
+    Supported EEPs (EnOcean Equipment Profiles):
+    - A5-07-01 (Occupancy Sensor with Supply voltage monitor)
+    """
+
+    def __init__(self, dev_id, dev_name, device_class):
+        """Initialize the EnOcean binary sensor."""
+        super().__init__(dev_id, dev_name)
+        self._device_class = device_class
+        self._detection = False
+
+    @property
+    def name(self):
+        """Return the default name for the binary sensor."""
+        return self.dev_name
+
+    @property
+    def device_class(self):
+        """Return the class of this sensor."""
+        return self._device_class
+
+    def value_changed(self, packet):
+        """Fire an event with the data that have changed.
+
+        This method is called when there is an incoming packet associated
+        with this platform.
+
+        Example packet data:
+        - no occupancy detected       v-- pir status value, < 127 == off
+            ['0xa5', '0x7c', '0x0', '0x0', '0x9', '0x5', '0x3', '0x27', '0x7c', '0x0']
+        """
+
+        if packet.data[0] != 0xa5:
+            return
+
+        pir_status = packet.data[3]
+        self._detection = True if pir_status > 127 else False
+
+        self.hass.bus.fire(
+            EVENT_OCCUPANCY_DETECTED,
+            {
+                "id": self.dev_id,
+                "detection": self._detection,
             },
         )
