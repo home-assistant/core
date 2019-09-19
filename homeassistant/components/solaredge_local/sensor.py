@@ -215,7 +215,7 @@ class SolarEdgeData:
         if len(voltage) == 0:
             temperature.append(0)
             voltage.append(0)
-            current.append(0)            
+            current.append(0)
         else:
             power = statistics.mean(voltage) * statistics.mean(current)
         self.data["energyTotal"] = status.energy.total
@@ -223,9 +223,9 @@ class SolarEdgeData:
         self.data["energyThisMonth"] = status.energy.thisMonth
         self.data["energyToday"] = status.energy.today
         self.data["currentPower"] = status.powerWatt
-        self.data["invertertemperature"] = status.inverters.primary.temperature.value
-        self.data["optimizertemperature"] = \
-        statistics.mean(temperature)
+        self.data["invertertemperature"] = \
+            status.inverters.primary.temperature.value
+        self.data["optimizertemperature"] = statistics.mean(temperature)
         self.data["optimizervoltage"] = statistics.mean(voltage)
         self.data["optimizercurrent"] = statistics.mean(current)
         self.data["optimizerpower"] = power
