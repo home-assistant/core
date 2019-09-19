@@ -8,12 +8,7 @@ from solaredge_local import SolarEdge
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_IP_ADDRESS,
-    CONF_NAME,
-    POWER_WATT,
-    ENERGY_WATT_HOUR,
-)
+from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, POWER_WATT, ENERGY_WATT_HOUR
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -24,12 +19,7 @@ UPDATE_DELAY = timedelta(seconds=10)
 # Supported sensor types:
 # Key: ['json_key', 'name', unit, icon]
 SENSOR_TYPES = {
-    "current_power": [
-        "currentPower",
-        "Current Power",
-        POWER_WATT,
-        "mdi:solar-power",
-    ],
+    "current_power": ["currentPower", "Current Power", POWER_WATT, "mdi:solar-power"],
     "energy_this_month": [
         "energyThisMonth",
         "Energy this month",
@@ -223,9 +213,7 @@ class SolarEdgeData:
         self.data["energyThisMonth"] = status.energy.thisMonth
         self.data["energyToday"] = status.energy.today
         self.data["currentPower"] = status.powerWatt
-        self.data[
-            "invertertemperature"
-        ] = status.inverters.primary.temperature.value
+        self.data["invertertemperature"] = status.inverters.primary.temperature.value
         self.data["optimizertemperature"] = statistics.mean(temperature)
         self.data["optimizervoltage"] = statistics.mean(voltage)
         self.data["optimizercurrent"] = statistics.mean(current)
