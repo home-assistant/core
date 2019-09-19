@@ -1,4 +1,5 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
+import copy
 import logging
 
 from pyrainbird import RainbirdController
@@ -32,17 +33,31 @@ SENSOR_TYPES = {
     SENSOR_TYPE_RAINDELAY: ["Raindelay", None, "mdi:water-off"],
 }
 
+TRIGGER_TIME_SCHEMA = vol.All(cv.time_period, cv.positive_timedelta)
+
+
+def _validator(config):
+    config = copy.deepcopy(config)
+    for zone, value in config[CONF_ZONES]:
+        if not value[CONF_TRIGGER_TIME]:
+            value[CONF_TRIGGER_TIME] = config[CONF_TRIGGER_TIME]
+    return config
+
+
 ZONE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-        vol.Optional(CONF_TRIGGER_TIME): cv.positive_int,
-    }
+    vol.All(
+        {
+            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+            vol.Optional(CONF_TRIGGER_TIME): TRIGGER_TIME_SCHEMA,
+        },
+        _validator,
+    )
 )
 CONTROLLER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_TRIGGER_TIME): cv.string,
+        vol.Required(CONF_TRIGGER_TIME): TRIGGER_TIME_SCHEMA,
         vol.Optional(CONF_ZONES): vol.Schema({cv.positive_int: ZONE_SCHEMA}),
     }
 )

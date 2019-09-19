@@ -41,19 +41,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for zone in range(1, available_stations.stations.count + 1):
         if available_stations.stations.active(zone):
             zone_config = discovery_info.get("zones", {}).get(zone, {})
-            time = zone_config.get(
-                CONF_TRIGGER_TIME, discovery_info.get(CONF_TRIGGER_TIME, 0)
-            )
+            time = zone_config[CONF_TRIGGER_TIME]
             name = zone_config.get(CONF_FRIENDLY_NAME)
-            if not time:
-                logging.warning(
-                    "No delay configured for zone {0:d}, controller {1:s}. "
-                    "Not adding sprinklers for zone {0:d}.".format(
-                        zone, discovery_info[RAINBIRD_CONTROLLER]
-                    )
-                )
-                continue
-
             devices.append(
                 RainBirdSwitch(
                     controller,
