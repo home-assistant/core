@@ -13,12 +13,15 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.event import async_track_time_interval
 
+from solax import real_time_api
+from solax.inverter import InverterError
+
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Optional(CONF_PORT, default=80): cv.positive_int,
+        vol.Optional(CONF_PORT, default=80): cv.port,
     }
 )
 
@@ -27,9 +30,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Platform setup."""
-    import solax
-
-    api = await solax.real_time_api(config[CONF_IP_ADDRESS], config[CONF_PORT])
+    api = await real_time_api(config[CONF_IP_ADDRESS], config[CONF_PORT])
     endpoint = RealTimeDataEndpoint(hass, api)
     resp = await api.get_data()
     serial = resp.serial_number
@@ -60,8 +61,6 @@ class RealTimeDataEndpoint:
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        from solax.inverter import InverterError
-
         try:
             api_response = await self.api.get_data()
             self.ready.set()
@@ -69,8 +68,7 @@ class RealTimeDataEndpoint:
             if now is not None:
                 self.ready.clear()
                 return
-            else:
-                raise PlatformNotReady
+            raise PlatformNotReady
         data = api_response.data
         for sensor in self.sensors:
             if sensor.key in data:
