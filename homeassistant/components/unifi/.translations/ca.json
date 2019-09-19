@@ -32,6 +32,12 @@
                     "track_devices": "Segueix dispositius de la xarxa (dispositius Ubiquiti)",
                     "track_wired_clients": "Inclou clients de xarxa per cable"
                 }
+            },
+            "init": {
+                "data": {
+                    "one": "un",
+                    "other": "altre"
+                }
             }
         }
     }

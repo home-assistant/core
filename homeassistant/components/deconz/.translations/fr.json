@@ -40,5 +40,52 @@
             }
         },
         "title": "Passerelle deCONZ Zigbee"
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "both_buttons": "Les deux boutons",
+            "button_1": "Premier bouton",
+            "button_2": "Deuxi\u00e8me bouton",
+            "button_3": "Troisi\u00e8me bouton",
+            "button_4": "Quatri\u00e8me bouton",
+            "close": "Ferm\u00e9",
+            "dim_down": "Assombrir",
+            "dim_up": "\u00c9claircir",
+            "left": "Gauche",
+            "open": "Ouvert",
+            "right": "Droite",
+            "turn_off": "\u00c9teint",
+            "turn_on": "Allum\u00e9"
+        },
+        "trigger_type": {
+            "remote_button_double_press": "Bouton \"{subtype}\" double cliqu\u00e9",
+            "remote_button_long_press": "Bouton \"{subtype}\" appuy\u00e9 continuellement",
+            "remote_button_long_release": "Bouton \"{subtype}\" rel\u00e2ch\u00e9 apr\u00e8s appui long",
+            "remote_button_quadruple_press": "Bouton \"{subtype}\" quadruple cliqu\u00e9",
+            "remote_button_quintuple_press": "Bouton \"{subtype}\" quintuple cliqu\u00e9",
+            "remote_button_rotated": "Bouton \"{subtype}\" tourn\u00e9",
+            "remote_button_short_press": "Bouton \"{subtype}\" appuy\u00e9",
+            "remote_button_short_release": "Bouton \"{subtype}\" rel\u00e2ch\u00e9",
+            "remote_button_triple_press": "Bouton \"{subtype}\" triple cliqu\u00e9",
+            "remote_gyro_activated": "Appareil secou\u00e9"
+        }
+    },
+    "options": {
+        "step": {
+            "async_step_deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "Autoriser les capteurs deCONZ CLIP",
+                    "allow_deconz_groups": "Autoriser les groupes de lumi\u00e8res deCONZ"
+                },
+                "description": "Configurer la visibilit\u00e9 des appareils de type deCONZ"
+            },
+            "deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "Autoriser les capteurs deCONZ CLIP",
+                    "allow_deconz_groups": "Autoriser les groupes de lumi\u00e8res deCONZ"
+                },
+                "description": "Configurer la visibilit\u00e9 des appareils de type deCONZ"
+            }
+        }
     }
 }

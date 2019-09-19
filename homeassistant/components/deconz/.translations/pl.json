@@ -41,6 +41,35 @@
         },
         "title": "Brama deCONZ Zigbee"
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "both_buttons": "Oba przyciski",
+            "button_1": "Pierwszy przycisk",
+            "button_2": "Drugi przycisk",
+            "button_3": "Trzeci przycisk",
+            "button_4": "Czwarty przycisk",
+            "close": "Zamknij",
+            "dim_down": "Przyciemnienie",
+            "dim_up": "Przyciemnienie",
+            "left": "Lewo",
+            "open": "Otw\u00f3rz",
+            "right": "Prawo",
+            "turn_off": "Wy\u0142\u0105cz",
+            "turn_on": "W\u0142\u0105cz"
+        },
+        "trigger_type": {
+            "remote_button_double_press": "Przycisk \"{subtype}\" podw\u00f3jnie naci\u015bni\u0119ty",
+            "remote_button_long_press": "Przycisk \"{subtype}\" naci\u015bni\u0119ty w spos\u00f3b ci\u0105g\u0142y",
+            "remote_button_long_release": "Przycisk \"{subtype}\" zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
+            "remote_button_quadruple_press": "Przycisk \"{subtype}\" czterokrotnie naci\u015bni\u0119ty",
+            "remote_button_quintuple_press": "Przycisk \"{subtype}\" pi\u0119ciokrotnie naci\u015bni\u0119ty",
+            "remote_button_rotated": "Przycisk obr\u00f3cony \"{subtype}\"",
+            "remote_button_short_press": "Przycisk \"{subtype}\" naci\u015bni\u0119ty",
+            "remote_button_short_release": "Przycisk \"{subtype}\" zwolniony",
+            "remote_button_triple_press": "Przycisk \"{subtype}\" trzykrotnie naci\u015bni\u0119ty",
+            "remote_gyro_activated": "Urz\u0105dzenie potrz\u0105\u015bni\u0119te"
+        }
+    },
     "options": {
         "step": {
             "async_step_deconz_devices": {
