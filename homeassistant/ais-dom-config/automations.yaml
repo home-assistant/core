@@ -5,6 +5,11 @@
   - event: start
     platform: homeassistant
   action:
+   - service: ais_ai_service.publish_command_to_frame
+      data:
+        key: getAudioStatus
+        val: true
+   - delay: '1'
    - service: ais_ai_service.check_night_mode
      data:
        timer: false
