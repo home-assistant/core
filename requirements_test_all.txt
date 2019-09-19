@@ -371,7 +371,7 @@ pywebpush==1.9.2
 regenmaschine==1.5.1
 
 # homeassistant.components.python_script
-restrictedpython==4.0
+restrictedpython==5.0
 
 # homeassistant.components.rflink
 rflink==0.0.46
