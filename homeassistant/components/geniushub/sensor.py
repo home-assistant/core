@@ -34,7 +34,7 @@ class GeniusBattery(GeniusEntity):
         super().__init__()
 
         self._device = device
-        self._name = "{} {}".format(device.type, device.id)
+        self._name = f"{device.type} {device.id}"
 
     @property
     def icon(self) -> str:
@@ -59,7 +59,7 @@ class GeniusBattery(GeniusEntity):
 
         icon = "mdi:battery"
         if battery_level <= 95:
-            icon += "-{}".format(int(round(battery_level / 10 - 0.01)) * 10)
+            icon += f"-{int(round(battery_level / 10 - 0.01)) * 10}"
 
         return icon
 
@@ -112,7 +112,7 @@ class GeniusIssue(GeniusEntity):
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
         """Return the device state attributes."""
-        return {"{}_list".format(self._level): self._issues}
+        return {f"{self._level}_list": self._issues}
 
     async def async_update(self) -> Awaitable[None]:
         """Process the sensor's state data."""

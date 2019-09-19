@@ -40,5 +40,23 @@
             }
         },
         "title": "deCONZ Zigbee Gateway"
+    },
+    "options": {
+        "step": {
+            "async_step_deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "deCONZ CLIP-Sensoren zulassen",
+                    "allow_deconz_groups": "deCONZ-Lichtgruppen zulassen"
+                },
+                "description": "Konfigurieren der Sichtbarkeit von deCONZ-Ger\u00e4tetypen"
+            },
+            "deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "deCONZ CLIP-Sensoren zulassen",
+                    "allow_deconz_groups": "deCONZ-Lichtgruppen zulassen"
+                },
+                "description": "Sichtbarkeit der deCONZ-Ger\u00e4tetypen konfigurieren"
+            }
+        }
     }
 }

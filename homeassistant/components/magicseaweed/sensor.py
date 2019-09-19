@@ -108,10 +108,10 @@ class MagicSeaweedSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         if self.hour is None and "forecast" in self.type:
-            return "{} {}".format(self.client_name, self._name)
+            return f"{self.client_name} {self._name}"
         if self.hour is None:
-            return "Current {} {}".format(self.client_name, self._name)
-        return "{} {} {}".format(self.hour, self.client_name, self._name)
+            return f"Current {self.client_name} {self._name}"
+        return f"{self.hour} {self.client_name} {self._name}"
 
     @property
     def state(self):

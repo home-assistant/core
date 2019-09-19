@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
 
-    url = "{}:{}".format(host, port)
+    url = f"{host}:{port}"
 
     add_entities([MpcHcDevice(name, url)], True)
 
@@ -73,9 +73,7 @@ class MpcHcDevice(MediaPlayerDevice):
     def update(self):
         """Get the latest details."""
         try:
-            response = requests.get(
-                "{}/variables.html".format(self._url), data=None, timeout=3
-            )
+            response = requests.get(f"{self._url}/variables.html", data=None, timeout=3)
 
             mpchc_variables = re.findall(r'<p id="(.+?)">(.+?)</p>', response.text)
 
@@ -88,7 +86,7 @@ class MpcHcDevice(MediaPlayerDevice):
         """Send a command to MPC-HC via its window message ID."""
         try:
             params = {"wm_command": command_id}
-            requests.get("{}/command.html".format(self._url), params=params, timeout=3)
+            requests.get(f"{self._url}/command.html", params=params, timeout=3)
         except requests.exceptions.RequestException:
             _LOGGER.error(
                 "Could not send command %d to MPC-HC at: %s", command_id, self._url

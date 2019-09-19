@@ -1,16 +1,13 @@
 """Support for devices connected to UniFi POE."""
 import logging
 
-from homeassistant.components import unifi
+from homeassistant.components.unifi.config_flow import get_controller_from_config_entry
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
-
-from .const import CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID
 
 LOGGER = logging.getLogger(__name__)
 
@@ -25,11 +22,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     Switches are controlling network switch ports with Poe.
     """
-    controller_id = CONTROLLER_ID.format(
-        host=config_entry.data[CONF_CONTROLLER][CONF_HOST],
-        site=config_entry.data[CONF_CONTROLLER][CONF_SITE_ID],
-    )
-    controller = hass.data[unifi.DOMAIN][controller_id]
+    controller = get_controller_from_config_entry(hass, config_entry)
 
     if controller.site_role != "admin":
         return
@@ -61,7 +54,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Update the values of the controller."""
         update_items(controller, async_add_entities, switches, switches_off)
 
-    async_dispatcher_connect(hass, controller.event_update, update_controller)
+    async_dispatcher_connect(hass, controller.signal_update, update_controller)
 
     update_controller()
     switches_off.clear()
@@ -76,7 +69,7 @@ def update_items(controller, async_add_entities, switches, switches_off):
     # block client
     for client_id in controller.option_block_clients:
 
-        block_client_id = "block-{}".format(client_id)
+        block_client_id = f"block-{client_id}"
 
         if block_client_id in switches:
             LOGGER.debug(
@@ -98,7 +91,7 @@ def update_items(controller, async_add_entities, switches, switches_off):
     # control poe
     for client_id in controller.api.clients:
 
-        poe_client_id = "poe-{}".format(client_id)
+        poe_client_id = f"poe-{client_id}"
 
         if poe_client_id in switches:
             LOGGER.debug(
@@ -201,7 +194,7 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchDevice, RestoreEntity):
     @property
     def unique_id(self):
         """Return a unique identifier for this switch."""
-        return "poe-{}".format(self.client.mac)
+        return f"poe-{self.client.mac}"
 
     @property
     def is_on(self):
@@ -220,7 +213,7 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchDevice, RestoreEntity):
             or self.client.sw_mac
             and (
                 self.controller.available
-                or self.client.sw_mac in self.controller.api.devices
+                and self.client.sw_mac in self.controller.api.devices
             )
         )
 
@@ -262,7 +255,7 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchDevice):
     @property
     def unique_id(self):
         """Return a unique identifier for this switch."""
-        return "block-{}".format(self.client.mac)
+        return f"block-{self.client.mac}"
 
     @property
     def is_on(self):

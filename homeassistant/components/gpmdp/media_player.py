@@ -142,7 +142,7 @@ def setup_gpmdp(hass, config, code, add_entities):
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-    url = "ws://{}:{}".format(host, port)
+    url = f"ws://{host}:{port}"
 
     if not code:
         request_configuration(hass, config, url, add_entities)

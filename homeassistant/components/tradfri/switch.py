@@ -34,7 +34,7 @@ class TradfriSwitch(SwitchDevice):
     def __init__(self, switch, api, gateway_id):
         """Initialize a switch."""
         self._api = api
-        self._unique_id = "{}-{}".format(gateway_id, switch.id)
+        self._unique_id = f"{gateway_id}-{switch.id}"
         self._switch = None
         self._socket_control = None
         self._switch_data = None

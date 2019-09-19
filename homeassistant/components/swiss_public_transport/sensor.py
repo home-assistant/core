@@ -110,7 +110,7 @@ class SwissPublicTransportSensor(Entity):
             ATTR_DEPARTURE_TIME2: self._opendata.connections[2]["departure"],
             ATTR_START: self._opendata.from_name,
             ATTR_TARGET: self._opendata.to_name,
-            ATTR_REMAINING_TIME: "{}".format(self._remaining_time),
+            ATTR_REMAINING_TIME: f"{self._remaining_time}",
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
         return attr

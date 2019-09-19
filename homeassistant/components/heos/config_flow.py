@@ -10,7 +10,7 @@ from .const import DATA_DISCOVERED_HOSTS, DOMAIN
 
 def format_title(host: str) -> str:
     """Format the title for config entries."""
-    return "Controller ({})".format(host)
+    return f"Controller ({host})"
 
 
 @config_entries.HANDLERS.register(DOMAIN)

@@ -240,7 +240,7 @@ async def async_prepare_setup_platform(
     try:
         platform = integration.get_platform(domain)
     except ImportError as exc:
-        log_error("Platform not found ({}).".format(exc))
+        log_error(f"Platform not found ({exc}).")
         return None
 
     # Already loaded
@@ -253,7 +253,7 @@ async def async_prepare_setup_platform(
         try:
             component = integration.get_component()
         except ImportError as exc:
-            log_error("Unable to import the component ({}).".format(exc))
+            log_error(f"Unable to import the component ({exc}).")
             return None
 
         if hasattr(component, "setup") or hasattr(component, "async_setup"):

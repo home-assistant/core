@@ -1,0 +1,8 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "{name} slukket",
+            "turn_on": "{name} t\u00e6ndt"
+        }
+    }
+}

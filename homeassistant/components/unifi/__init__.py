@@ -1,6 +1,9 @@
 """Support for devices connected to UniFi POE."""
 import voluptuous as vol
 
+from homeassistant.components.unifi.config_flow import (
+    get_controller_id_from_config_entry,
+)
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
@@ -9,20 +12,18 @@ import homeassistant.helpers.config_validation as cv
 from .const import (
     ATTR_MANUFACTURER,
     CONF_BLOCK_CLIENT,
-    CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_DONT_TRACK_CLIENTS,
+    CONF_DONT_TRACK_DEVICES,
+    CONF_DONT_TRACK_WIRED_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
-    CONTROLLER_ID,
     DOMAIN,
     UNIFI_CONFIG,
 )
 from .controller import UniFiController
 
 CONF_CONTROLLERS = "controllers"
-CONF_DONT_TRACK_CLIENTS = "dont_track_clients"
-CONF_DONT_TRACK_DEVICES = "dont_track_devices"
-CONF_DONT_TRACK_WIRED_CLIENTS = "dont_track_wired_clients"
 
 CONTROLLER_SCHEMA = vol.Schema(
     {
@@ -70,10 +71,7 @@ async def async_setup_entry(hass, config_entry):
 
     controller = UniFiController(hass, config_entry)
 
-    controller_id = CONTROLLER_ID.format(
-        host=config_entry.data[CONF_CONTROLLER][CONF_HOST],
-        site=config_entry.data[CONF_CONTROLLER][CONF_SITE_ID],
-    )
+    controller_id = get_controller_id_from_config_entry(config_entry)
 
     hass.data[DOMAIN][controller_id] = controller
 
@@ -98,9 +96,6 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    controller_id = CONTROLLER_ID.format(
-        host=config_entry.data[CONF_CONTROLLER][CONF_HOST],
-        site=config_entry.data[CONF_CONTROLLER][CONF_SITE_ID],
-    )
+    controller_id = get_controller_id_from_config_entry(config_entry)
     controller = hass.data[DOMAIN].pop(controller_id)
     return await controller.async_reset()

@@ -56,7 +56,7 @@ def is_persistence_file(value):
     """Validate that persistence file path ends in either .pickle or .json."""
     if value.endswith((".json", ".pickle")):
         return value
-    raise vol.Invalid("{} does not end in either `.json` or `.pickle`".format(value))
+    raise vol.Invalid(f"{value} does not end in either `.json` or `.pickle`")
 
 
 def deprecated(key):
@@ -138,7 +138,7 @@ def _get_mysensors_name(gateway, node_id, child_id):
         ),
         node_name,
     )
-    return "{} {}".format(node_name, child_id)
+    return f"{node_name} {child_id}"
 
 
 @callback

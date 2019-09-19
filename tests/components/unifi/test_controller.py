@@ -42,12 +42,12 @@ async def test_controller_setup():
             {
                 CONF_HOST: CONTROLLER_DATA[CONF_HOST],
                 CONF_SITE_ID: "nice name",
-                controller.CONF_BLOCK_CLIENT: [],
-                controller.CONF_TRACK_CLIENTS: True,
-                controller.CONF_TRACK_DEVICES: True,
-                controller.CONF_TRACK_WIRED_CLIENTS: True,
-                controller.CONF_DETECTION_TIME: 300,
-                controller.CONF_SSID_FILTER: [],
+                controller.CONF_BLOCK_CLIENT: ["mac"],
+                controller.CONF_DONT_TRACK_CLIENTS: True,
+                controller.CONF_DONT_TRACK_DEVICES: True,
+                controller.CONF_DONT_TRACK_WIRED_CLIENTS: True,
+                controller.CONF_DETECTION_TIME: 30,
+                controller.CONF_SSID_FILTER: ["ssid"],
             }
         ]
     }

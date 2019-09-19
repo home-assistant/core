@@ -53,7 +53,7 @@ class RegistryEntry:
     device_id = attr.ib(type=str, default=None)
     config_entry_id = attr.ib(type=str, default=None)
     disabled_by = attr.ib(
-        type=str,
+        type=Optional[str],
         default=None,
         validator=attr.validators.in_(
             (
@@ -64,7 +64,7 @@ class RegistryEntry:
                 None,
             )
         ),
-    )  # type: Optional[str]
+    )
     domain = attr.ib(type=str, init=False, repr=False)
 
     @domain.default
@@ -154,8 +154,8 @@ class EntityRegistry:
         if entity_id:
             return self._async_update_entity(
                 entity_id,
-                config_entry_id=config_entry_id,
-                device_id=device_id,
+                config_entry_id=config_entry_id or _UNDEF,
+                device_id=device_id or _UNDEF,
                 # When we changed our slugify algorithm, we invalidated some
                 # stored entity IDs with either a __ or ending in _.
                 # Fix introduced in 0.86 (Jan 23, 2019). Next line can be
@@ -166,9 +166,7 @@ class EntityRegistry:
             )
 
         entity_id = self.async_generate_entity_id(
-            domain,
-            suggested_object_id or "{}_{}".format(platform, unique_id),
-            known_object_ids,
+            domain, suggested_object_id or f"{platform}_{unique_id}", known_object_ids
         )
 
         if (

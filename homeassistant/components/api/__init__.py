@@ -138,7 +138,7 @@ class APIEventStream(HomeAssistantView):
                     if payload is stop_obj:
                         break
 
-                    msg = "data: {}\n\n".format(payload)
+                    msg = f"data: {payload}\n\n"
                     _LOGGER.debug("STREAM %s WRITING %s", id(stop_obj), msg.strip())
                     await response.write(msg.encode("UTF-8"))
                 except asyncio.TimeoutError:
@@ -316,7 +316,7 @@ class APIEventView(HomeAssistantView):
             event_type, event_data, ha.EventOrigin.remote, self.context(request)
         )
 
-        return self.json_message("Event {} fired.".format(event_type))
+        return self.json_message(f"Event {event_type} fired.")
 
 
 class APIServicesView(HomeAssistantView):
@@ -388,7 +388,7 @@ class APITemplateView(HomeAssistantView):
             return tpl.async_render(data.get("variables"))
         except (ValueError, TemplateError) as ex:
             return self.json_message(
-                "Error rendering template: {}".format(ex), HTTP_BAD_REQUEST
+                f"Error rendering template: {ex}", HTTP_BAD_REQUEST
             )
 
 

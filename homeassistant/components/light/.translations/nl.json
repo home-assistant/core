@@ -1,0 +1,17 @@
+{
+    "device_automation": {
+        "action_type": {
+            "toggle": "Omschakelen {naam}",
+            "turn_off": "{Naam} uitschakelen",
+            "turn_on": "{Naam} inschakelen"
+        },
+        "condition_type": {
+            "is_off": "{name} is uitgeschakeld",
+            "is_on": "{name} is ingeschakeld"
+        },
+        "trigger_type": {
+            "turn_off": "{name} is uitgeschakeld",
+            "turn_on": "{name} is ingeschakeld"
+        }
+    }
+}

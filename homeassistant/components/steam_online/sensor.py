@@ -80,7 +80,7 @@ class SteamSensor(Entity):
     @property
     def entity_id(self):
         """Return the entity ID."""
-        return "sensor.steam_{}".format(self._account)
+        return f"sensor.steam_{self._account}"
 
     @property
     def state(self):
