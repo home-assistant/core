@@ -1,11 +1,11 @@
 """Support for UPnP/IGD Sensors."""
-from datetime import datetime
 import logging
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
+import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN as DOMAIN_UPNP, SIGNAL_REMOVE_SENSOR
 
@@ -199,10 +199,10 @@ class PerSecondUPnPIGDSensor(UpnpSensor):
 
         if self._last_value is None:
             self._last_value = new_value
-            self._last_update_time = datetime.now()
+            self._last_update_time = dt_util.utcnow()
             return
 
-        now = datetime.now()
+        now = dt_util.utcnow()
         if self._is_overflowed(new_value):
             self._state = None  # temporarily report nothing
         else:
