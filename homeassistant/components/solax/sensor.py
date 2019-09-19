@@ -4,6 +4,8 @@ import asyncio
 from datetime import timedelta
 import logging
 
+from solax import real_time_api
+from solax.inverter import InverterError
 import voluptuous as vol
 
 from homeassistant.const import TEMP_CELSIUS, CONF_IP_ADDRESS, CONF_PORT
@@ -12,9 +14,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.event import async_track_time_interval
-
-from solax import real_time_api
-from solax.inverter import InverterError
 
 _LOGGER = logging.getLogger(__name__)
 
