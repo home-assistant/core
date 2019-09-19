@@ -10,10 +10,8 @@
             "is_on": "{name} est\u00e0 enc\u00e8s"
         },
         "trigger_type": {
-            "turn_off": "{name} apagat",
-            "turn_on": "{name} enc\u00e8s",
-            "turned_off": "{entity_name} apagat",
-            "turned_on": "{entity_name} enc\u00e8s"
+            "turned_off": "{name} apagat",
+            "turned_on": "{name} enc\u00e8s"
         }
     }
 }

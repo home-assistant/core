@@ -12,8 +12,6 @@
             "turn_on": "{entity_name} encendido"
         },
         "trigger_type": {
-            "turn_off": "{entity_name} apagado",
-            "turn_on": "{entity_name} encendido",
             "turned_off": "{entity_name} apagado",
             "turned_on": "{entity_name} encendido"
         }
