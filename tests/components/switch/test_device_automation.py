@@ -125,14 +125,14 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         {
             "platform": "device",
             "domain": DOMAIN,
-            "type": "turn_off",
+            "type": "turned_off",
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
         {
             "platform": "device",
             "domain": DOMAIN,
-            "type": "turn_on",
+            "type": "turned_on",
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
@@ -163,7 +163,7 @@ async def test_if_fires_on_state_change(hass, calls):
                         "domain": DOMAIN,
                         "device_id": "",
                         "entity_id": ent1.entity_id,
-                        "type": "turn_on",
+                        "type": "turned_on",
                     },
                     "action": {
                         "service": "test.automation",
@@ -187,7 +187,7 @@ async def test_if_fires_on_state_change(hass, calls):
                         "domain": DOMAIN,
                         "device_id": "",
                         "entity_id": ent1.entity_id,
-                        "type": "turn_off",
+                        "type": "turned_off",
                     },
                     "action": {
                         "service": "test.automation",

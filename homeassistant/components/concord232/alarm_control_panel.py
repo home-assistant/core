@@ -69,7 +69,6 @@ class Concord232Alarm(alarm.AlarmControlPanel):
         self._url = url
         self._alarm = concord232_client.Client(self._url)
         self._alarm.partitions = self._alarm.list_partitions()
-        self._alarm.last_partition_update = datetime.datetime.now()
 
     @property
     def name(self):

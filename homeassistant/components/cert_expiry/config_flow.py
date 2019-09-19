@@ -38,10 +38,12 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return True
         return False
 
-    def _test_connection(self, user_input=None):
+    async def _test_connection(self, user_input=None):
         """Test connection to the server and try to get the certtificate."""
         try:
-            get_cert(user_input[CONF_HOST], user_input.get(CONF_PORT, DEFAULT_PORT))
+            await self.hass.async_add_executor_job(
+                get_cert, user_input[CONF_HOST], user_input.get(CONF_PORT, DEFAULT_PORT)
+            )
             return True
         except socket.gaierror:
             self._errors[CONF_HOST] = "resolve_failed"
@@ -59,7 +61,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if self._prt_in_configuration_exists(user_input):
                 self._errors[CONF_HOST] = "host_port_exists"
             else:
-                if self._test_connection(user_input):
+                if await self._test_connection(user_input):
                     host = user_input[CONF_HOST]
                     name = slugify(user_input.get(CONF_NAME, DEFAULT_NAME))
                     prt = user_input.get(CONF_PORT, DEFAULT_PORT)
