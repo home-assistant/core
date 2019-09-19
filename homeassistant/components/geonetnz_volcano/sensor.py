@@ -23,7 +23,6 @@ from .const import (
     DEFAULT_ICON,
     DOMAIN,
     FEED,
-    SIGNAL_DELETE_ENTITY,
     SIGNAL_UPDATE_ENTITY,
 )
 
@@ -74,16 +73,10 @@ class GeonetnzVolcanoSensor(Entity):
         self._hazards = None
         self._feed_last_update = None
         self._feed_last_update_successful = None
-        self._remove_signal_delete = None
         self._remove_signal_update = None
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self._remove_signal_delete = async_dispatcher_connect(
-            self.hass,
-            SIGNAL_DELETE_ENTITY.format(self._external_id),
-            self._delete_callback,
-        )
         self._remove_signal_update = async_dispatcher_connect(
             self.hass,
             SIGNAL_UPDATE_ENTITY.format(self._external_id),
@@ -92,15 +85,8 @@ class GeonetnzVolcanoSensor(Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed from hass."""
-        if self._remove_signal_delete:
-            self._remove_signal_delete()
         if self._remove_signal_update:
             self._remove_signal_update()
-
-    @callback
-    def _delete_callback(self):
-        """Remove this entity."""
-        self.hass.async_create_task(self.async_remove())
 
     @callback
     def _update_callback(self):

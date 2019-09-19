@@ -29,7 +29,6 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     FEED,
-    SIGNAL_DELETE_ENTITY,
     SIGNAL_NEW_SENSOR,
     SIGNAL_UPDATE_ENTITY,
 )
@@ -205,5 +204,4 @@ class GeonetnzVolcanoFeedEntityManager:
         async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY.format(external_id))
 
     async def _remove_entity(self, external_id):
-        """Remove entity."""
-        async_dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
+        """Ignore removing entity."""

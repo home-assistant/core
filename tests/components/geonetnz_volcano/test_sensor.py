@@ -57,7 +57,7 @@ async def test_setup(hass):
         await hass.async_block_till_done()
 
         all_states = hass.states.async_all()
-        # 3 geolocation and 1 sensor entities
+        # 3 sensor entities
         assert len(all_states) == 3
 
         state = hass.states.get("sensor.volcano_title_1")
@@ -101,7 +101,7 @@ async def test_setup(hass):
         await hass.async_block_till_done()
 
         all_states = hass.states.async_all()
-        assert len(all_states) == 3
+        assert len(all_states) == 4
 
         # Simulate an update - empty data, but successful update,
         # so no changes to entities.
@@ -110,15 +110,23 @@ async def test_setup(hass):
         await hass.async_block_till_done()
 
         all_states = hass.states.async_all()
-        assert len(all_states) == 3
+        assert len(all_states) == 4
 
-        # Simulate an update - empty data, removes all entities
+        # Simulate an update - empty data, keep all entities
         mock_feed_update.return_value = "ERROR", None
         async_fire_time_changed(hass, utcnow + 3 * DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
         all_states = hass.states.async_all()
-        assert len(all_states) == 0
+        assert len(all_states) == 4
+
+        # Simulate an update - regular data for 3 entries
+        mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
+        async_fire_time_changed(hass, utcnow + 4 * DEFAULT_SCAN_INTERVAL)
+        await hass.async_block_till_done()
+
+        all_states = hass.states.async_all()
+        assert len(all_states) == 4
 
 
 async def test_setup_imperial(hass):
