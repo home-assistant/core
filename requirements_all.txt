@@ -1508,6 +1508,9 @@ python-gitlab==1.6.0
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
 
+# homeassistant.components.izone
+python-izone==1.1.1
+
 # homeassistant.components.joaoapps_join
 python-join-api==0.0.4
 

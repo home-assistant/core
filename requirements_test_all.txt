@@ -349,6 +349,9 @@ pyspcwebgw==0.4.0
 # homeassistant.components.darksky
 python-forecastio==1.4.0
 
+# homeassistant.components.izone
+python-izone==1.1.1
+
 # homeassistant.components.nest
 python-nest==4.1.0
 
