@@ -154,9 +154,6 @@ homeassistant/components/lametric/* @robbiet480
 homeassistant/components/launch_library/* @ludeeus
 homeassistant/components/lcn/* @alengwenus
 homeassistant/components/life360/* @pnbruckner
-homeassistant/components/lifx/* @amelchio
-homeassistant/components/lifx_cloud/* @amelchio
-homeassistant/components/lifx_legacy/* @amelchio
 homeassistant/components/linky/* @Quentame
 homeassistant/components/linux_battery/* @fabaff
 homeassistant/components/liveboxplaytv/* @pschmitt
@@ -187,7 +184,6 @@ homeassistant/components/nello/* @pschmitt
 homeassistant/components/ness_alarm/* @nickw444
 homeassistant/components/nest/* @awarecan
 homeassistant/components/netdata/* @fabaff
-homeassistant/components/netgear_lte/* @amelchio
 homeassistant/components/nextbus/* @vividboarder
 homeassistant/components/nissan_leaf/* @filcole
 homeassistant/components/nmbs/* @thibmaek
@@ -254,7 +250,6 @@ homeassistant/components/solaredge_local/* @drobtravels
 homeassistant/components/solax/* @squishykid
 homeassistant/components/somfy/* @tetienne
 homeassistant/components/songpal/* @rytilahti
-homeassistant/components/sonos/* @amelchio
 homeassistant/components/spaceapi/* @fabaff
 homeassistant/components/spider/* @peternijssen
 homeassistant/components/sql/* @dgomes
