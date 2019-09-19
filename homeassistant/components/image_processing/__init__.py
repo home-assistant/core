@@ -64,6 +64,24 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
 
 
+def draw_box(draw, box, img_width, img_height, text="", color=(255, 255, 0)):
+    """Draw bounding box on image."""
+    ymin, xmin, ymax, xmax = box
+    (left, right, top, bottom) = (
+        xmin * img_width,
+        xmax * img_width,
+        ymin * img_height,
+        ymax * img_height,
+    )
+    draw.line(
+        [(left, top), (left, bottom), (right, bottom), (right, top), (left, top)],
+        width=5,
+        fill=color,
+    )
+    if text:
+        draw.text((left, abs(top - 15)), text, fill=color)
+
+
 async def async_setup(hass, config):
     """Set up the image processing."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
