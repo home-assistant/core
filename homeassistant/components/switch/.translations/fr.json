@@ -10,8 +10,8 @@
             "turn_on": "{entity_name} allum\u00e9"
         },
         "trigger_type": {
-            "turn_off": "{entity_name} \u00e9teint",
-            "turn_on": "{entity_name} allum\u00e9"
+            "turned_off": "{entity_name} \u00e9teint",
+            "turned_on": "{entity_name} allum\u00e9"
         }
     }
 }

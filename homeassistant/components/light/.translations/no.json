@@ -10,8 +10,8 @@
             "is_on": "{entity_name} er p\u00e5"
         },
         "trigger_type": {
-            "turn_off": "{name} sl\u00e5tt av",
-            "turn_on": "{name} sl\u00e5tt p\u00e5"
+            "turned_off": "{name} sl\u00e5tt av",
+            "turned_on": "{name} sl\u00e5tt p\u00e5"
         }
     }
 }

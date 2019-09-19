@@ -10,8 +10,10 @@
             "user": {
                 "data": {
                     "api_key": "API Schl\u00ebssel fir d\u00ebsen Site",
-                    "name": "Numm vun d\u00ebser Installatioun"
-                }
+                    "name": "Numm vun d\u00ebser Installatioun",
+                    "site_id": "SolarEdge site-ID"
+                },
+                "title": "API Parameter fir d\u00ebs Installatioun d\u00e9fin\u00e9ieren"
             }
         },
         "title": "SolarEdge"
