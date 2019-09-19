@@ -20,7 +20,7 @@ GH_HVAC_TO_HA = {v: k for k, v in HA_HVAC_TO_GH.items()}
 HA_PRESET_TO_GH = {PRESET_ACTIVITY: "footprint", PRESET_BOOST: "override"}
 GH_PRESET_TO_HA = {v: k for k, v in HA_PRESET_TO_GH.items()}
 
-GH_ZONES = ["radiator"]
+GH_ZONES = ["radiator", "wet underfloor"]
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
