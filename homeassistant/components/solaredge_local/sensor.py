@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_NAME,
     POWER_WATT,
     ENERGY_WATT_HOUR
- )
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
