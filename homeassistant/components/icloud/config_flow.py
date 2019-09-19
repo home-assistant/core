@@ -48,8 +48,9 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if (
                 entry.data[CONF_USERNAME] == username
-                or entry.data[CONF_ACCOUNT_NAME] == account_name
-                or entry.data[CONF_ACCOUNT_NAME] == slugify(username.partition("@")[0])
+                or entry.data.get(CONF_ACCOUNT_NAME) == account_name
+                or entry.data.get(CONF_ACCOUNT_NAME)
+                == slugify(username.partition("@")[0])
             ):
                 return True
         return False

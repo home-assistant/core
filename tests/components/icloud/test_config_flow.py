@@ -70,7 +70,7 @@ async def test_user(
     result = await flow.async_step_user(
         {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
@@ -89,7 +89,7 @@ async def test_import(
     result = await flow.async_step_import(
         {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
@@ -107,7 +107,7 @@ async def test_import(
             CONF_GPS_ACCURACY_THRESHOLD: GPS_ACCURACY_THRESHOLD,
         }
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
@@ -174,7 +174,7 @@ async def test_abort_on_login_failed(hass):
             {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "login"}
+        assert result["errors"] == {CONF_USERNAME: "login"}
 
 
 async def test_abort_on_fetch_failed(hass, requires_2fa):
