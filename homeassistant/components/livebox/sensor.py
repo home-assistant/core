@@ -10,20 +10,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the sensors."""
 
     box_data = hass.data[DOMAIN][DATA_LIVEBOX]
-    id = config_entry.data["id"]
-    async_add_entities([RXSensor(box_data, id), TXSensor(box_data, id)], True)
+    box_id = config_entry.data["id"]
+    async_add_entities([RXSensor(box_data, box_id), TXSensor(box_data, box_id)], True)
 
 
 class LiveboxSensor(Entity):
     """Representation of a livebox sensor."""
 
-    def __init__(self, box_data, id):
+    def __init__(self, box_data, box_id):
         """Initialize the sensor."""
 
         self._box_data = box_data
-        self._box_id = id
+        self._box_id = box_id
         self._state = None
-        self._datas = None
         self._dsl = None
 
     @property
@@ -41,7 +40,8 @@ class LiveboxSensor(Entity):
     async def async_update(self):
         """Return update entry."""
 
-        self._dsl = await self._box_data.async_dsl_status()
+        if self._box_data:
+            self._dsl = await self._box_data.async_dsl_status()
 
 
 class RXSensor(LiveboxSensor):

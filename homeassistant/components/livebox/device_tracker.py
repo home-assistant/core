@@ -27,7 +27,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     box_data = hass.data[DOMAIN][DATA_LIVEBOX]
     device_trackers = await box_data.async_devices()
-    if device_trackers is not None:
+    if device_trackers:
         await _async_setup_entities(
             hass, config_entry, async_add_entities, device_trackers
         )
@@ -54,7 +54,7 @@ class LiveboxDeviceScannerEntity(ScannerEntity):
     """Represent a tracked device."""
 
     def __init__(self, id, box_data, **kwargs):
-        """Initialize the ZHA device tracker."""
+        """Initialize the device tracker."""
         self._device = kwargs
         self._box_id = id
         self._box_data = box_data
@@ -100,7 +100,10 @@ class LiveboxDeviceScannerEntity(ScannerEntity):
     async def _update_entity(self):
 
         device = await self._box_data.async_devices(self._device)
-        return device[0]["Active"]
+        if device:
+            return device[0]["Active"]
+        else:
+            return False
 
     @property
     def is_connected(self):

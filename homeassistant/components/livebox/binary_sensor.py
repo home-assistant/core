@@ -11,8 +11,8 @@ from .const import TEMPLATE_SENSOR
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer binary sensor setup to the shared sensor module."""
     box_data = hass.data[DOMAIN][DATA_LIVEBOX]
-    id = config_entry.data["id"]
-    async_add_entities([InfoSensor(box_data, id)], True)
+    box_id = config_entry.data["id"]
+    async_add_entities([InfoSensor(box_data, box_id)], True)
 
 
 class InfoSensor(BinarySensorDevice):
@@ -20,13 +20,12 @@ class InfoSensor(BinarySensorDevice):
 
     device_class = DEVICE_CLASS_CONNECTIVITY
 
-    def __init__(self, box_data, id):
+    def __init__(self, box_data, box_id):
         """Initialize the sensor."""
 
         self._box_data = box_data
-        self._box_id = id
+        self._box_id = box_id
         self._state = None
-        self._datas = None
         self._dsl = None
 
     @property
@@ -38,9 +37,7 @@ class InfoSensor(BinarySensorDevice):
     def is_on(self):
         """Return true if the binary sensor is on."""
 
-        if self._dsl["WanState"] == "up":
-            return True
-        return False
+        return self._dsl["WanState"] == "up"
 
     @property
     def unique_id(self):
@@ -75,4 +72,5 @@ class InfoSensor(BinarySensorDevice):
     async def async_update(self):
         """Fetch status from livebox."""
 
-        self._dsl = await self._box_data.async_status()
+        if self._box_data:
+            self._dsl = await self._box_data.async_status()

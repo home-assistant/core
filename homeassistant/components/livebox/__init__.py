@@ -1,8 +1,8 @@
 """Orange Livebox."""
 import logging
 from datetime import timedelta
-import voluptuous as vol
 
+import voluptuous as vol
 from aiosysbus import Sysbus
 from aiosysbus.exceptions import HttpRequestError, AuthorizationError
 
@@ -71,12 +71,12 @@ async def async_setup_entry(hass, config_entry):
         sw_version=config["SoftwareVersion"],
     )
 
-    for component in COMPONENTS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
+    # ~ for component in COMPONENTS:
+    # ~ hass.async_create_task(
+    # ~ hass.config_entries.async_forward_entry_setup(config_entry, component)
+    # ~ )
 
-    return True
+    # ~ return True
 
 
 async def async_unload_entry(hass, config_entry):
@@ -111,7 +111,15 @@ class LiveboxData:
                     }
                 }
             }
-        await self.async_conn()
+        try:
+            await self.async_conn()
+        except AuthorizationError:
+            _LOGGER.error("Connection Error or permission refused")
+            return None
+        except Exception:
+            _LOGGER.error("Connexion Error")
+            return None
+
         devices = await self._box.system.get_devices(parameters)
 
         return devices.get("status", {}).get("wifi", {})
@@ -119,7 +127,15 @@ class LiveboxData:
     async def async_infos(self):
         """Get infos."""
 
-        await self.async_conn()
+        try:
+            await self.async_conn()
+        except AuthorizationError:
+            _LOGGER.error("Connection Error or permission refused")
+            return None
+        except Exception:
+            _LOGGER.error("Connexion Error")
+            return None
+
         infos = await self._box.system.get_deviceinfo()
 
         return infos.get("status", {})
@@ -127,7 +143,15 @@ class LiveboxData:
     async def async_status(self):
         """Get status."""
 
-        await self.async_conn()
+        try:
+            await self.async_conn()
+        except AuthorizationError:
+            _LOGGER.error("Connection Error or permission refused")
+            return None
+        except Exception:
+            _LOGGER.error("Connexion Error")
+            return None
+
         status = await self._box.system.get_WANStatus()
 
         return status.get("data", {})
@@ -135,7 +159,15 @@ class LiveboxData:
     async def async_dsl_status(self):
         """Get dsl status."""
 
-        await self.async_conn()
+        try:
+            await self.async_conn()
+        except AuthorizationError:
+            _LOGGER.error("Connection Error or permission refused")
+            return None
+        except Exception:
+            _LOGGER.error("Connexion Error")
+            return None
+
         parameters = {"parameters": {"mibs": "dsl", "flag": "", "traverse": "down"}}
         dsl_status = await self._box.connection.get_data_MIBS(parameters)
 
