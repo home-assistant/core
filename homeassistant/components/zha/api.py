@@ -671,6 +671,16 @@ def async_load_api(hass):
             channel = zha_device.cluster_channels.get(CHANNEL_IAS_WD)
             if channel:
                 await channel.squawk(mode, strobe, level)
+            else:
+                _LOGGER.error(
+                    "Squawking IASWD: %s is missing the required IASWD channel!",
+                    "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+                )
+        else:
+            _LOGGER.error(
+                "Squawking IASWD: %s could not be found!",
+                "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+            )
         _LOGGER.debug(
             "Squawking IASWD: %s %s %s %s",
             "{}: [{}]".format(ATTR_IEEE, str(ieee)),
@@ -703,6 +713,16 @@ def async_load_api(hass):
                 await channel.start_warning(
                     mode, strobe, level, duration, duty_mode, intensity
                 )
+            else:
+                _LOGGER.error(
+                    "Warning IASWD: %s is missing the required IASWD channel!",
+                    "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+                )
+        else:
+            _LOGGER.error(
+                "Warning IASWD: %s could not be found!",
+                "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+            )
         _LOGGER.debug(
             "Warning IASWD: %s %s %s %s",
             "{}: [{}]".format(ATTR_IEEE, str(ieee)),
