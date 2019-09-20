@@ -10,8 +10,8 @@
             "is_on": "{entity_name} is on"
         },
         "trigger_type": {
-            "turn_off": "{entity_name} turned off",
-            "turn_on": "{entity_name} turned on"
+            "turned_off": "{entity_name} turned off",
+            "turned_on": "{entity_name} turned on"
         }
     }
 }
