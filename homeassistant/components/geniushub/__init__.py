@@ -1,4 +1,4 @@
-"""Support for a Genius Hub systemm."""
+"""Support for a Genius Hub system."""
 from datetime import timedelta
 import logging
 import re
