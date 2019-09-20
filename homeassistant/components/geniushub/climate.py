@@ -71,8 +71,8 @@ class GeniusClimateZone(GeniusZone, ClimateDevice):
     @property
     def preset_modes(self) -> Optional[List[str]]:
         """Return a list of available preset modes."""
-        if "occupied" in self._zone.data:
-            return list(HA_PRESET_TO_GH)  # has a movement sensor
+        if "occupied" in self._zone.data:  # if has a movement sensor
+            return [PRESET_ACTIVITY, PRESET_BOOST]
         return [PRESET_BOOST]
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> Awaitable[None]:
