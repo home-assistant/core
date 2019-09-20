@@ -1,8 +1,8 @@
 {
-  "domain": "ombi",
-  "name": "Ombi",
-  "documentation": "https://www.home-assistant.io/components/ombi/",
-  "dependencies": [],
-  "codeowners": ["@larssont"],
-  "requirements": ["pyombi==0.0.6"]
+    "domain": "ombi",
+    "name": "Ombi",
+    "documentation": "https://www.home-assistant.io/components/ombi/",
+    "dependencies": [],
+    "codeowners": ["@larssont"],
+    "requirements": ["pyombi==0.0.6"],
 }
