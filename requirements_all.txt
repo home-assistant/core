@@ -1738,7 +1738,7 @@ shodan==1.15.0
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==4.3.0
+simplisafe-python==5.0.1
 
 # homeassistant.components.sisyphus
 sisyphus-control==2.2.1
