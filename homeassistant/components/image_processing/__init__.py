@@ -3,6 +3,9 @@ import asyncio
 from datetime import timedelta
 import logging
 
+from typing import Tuple
+from PIL import Image, ImageDraw
+
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, CONF_ENTITY_ID, CONF_NAME
@@ -64,22 +67,42 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
 
 
-def draw_box(draw, box, img_width, img_height, text="", color=(255, 255, 0)):
-    """Draw bounding box on image."""
-    ymin, xmin, ymax, xmax = box
+def draw_box(
+    draw: ImageDraw,
+    box: Tuple[float, float, float, float],
+    img_width: int,
+    img_height: int,
+    text: str = "",
+    color=(255, 255, 0),
+):
+
+    """
+    Draw a bounding box on and image.
+    The bounding box is defined by the tuple (y_min, x_min, y_max, x_max) 
+    where the coordinates are floats in the range [0.0, 1.0] and 
+    relative to the width and height of the  image.
+    
+    For example, if an image is 100 x 200 pixels (height x width) and the bounding
+    box is `[0.1, 0.2, 0.5, 0.9]`, the upper-left and bottom-right coordinates of
+    the bounding box will be `(40, 10)` to `(180, 50)` (in (x,y) coordinates).
+    
+    Parts of the bounding box may fall outside the image.
+    """
+    line_width = 5
+    y_min, x_min, y_max, x_max = box
     (left, right, top, bottom) = (
-        xmin * img_width,
-        xmax * img_width,
-        ymin * img_height,
-        ymax * img_height,
+        x_min * img_width,
+        x_max * img_width,
+        y_min * img_height,
+        y_max * img_height,
     )
     draw.line(
         [(left, top), (left, bottom), (right, bottom), (right, top), (left, top)],
-        width=5,
+        width=line_width,
         fill=color,
     )
     if text:
-        draw.text((left, abs(top - 15)), text, fill=color)
+        draw.text((left + line_width, abs(top - line_width)), text, fill=color)
 
 
 async def async_setup(hass, config):
