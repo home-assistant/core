@@ -17,14 +17,7 @@ HEATER_MAX_TEMP = 80.0
 HEATER_MIN_TEMP = 30.0
 
 HEATER_NAME = "Boiler"
-HEATER_ATTRS = [
-    "display_code",
-    "display_text",
-    "is_burning",
-    "rf_message_rssi",
-    "nodenr",
-    "rfstatus_cntr",
-]
+HEATER_ATTRS = ["display_code", "display_text", "is_burning"]
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
