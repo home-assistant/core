@@ -58,3 +58,4 @@ night:
   paper-slider-disabled-active-color: "hsl(var(--base-hue), 80%, 25%)"
   paper-slider-disabled-secondary-color: "hsl(var(--base-hue), 80%, 25%)"
   paper-dialog-color: "hsl(var(--base-hue), 20%, 80%)"
+  card-background-color: "#323232"

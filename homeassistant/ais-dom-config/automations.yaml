@@ -58,6 +58,7 @@
    - delay: '1'
    - service: ais_ai_service.prepare_remote_menu
    - service: ais_shell_command.change_remote_access
+   - service: ais_shell_command.disable_irda_remote
    - service: ais_ai_service.check_local_ip
    - service: ais_amplifier_service.get_audio_mono
    - service: ais_shell_command.hdmi_control_disable

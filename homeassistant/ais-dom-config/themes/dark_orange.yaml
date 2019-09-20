@@ -39,3 +39,4 @@ ais:
   table-row-alternative-background-color: "var(--sidebar-text_-_background)"
   ha-card-border-radius: "0px"
   more-info-header-background: "var(--paper-card-background-color)"
+  card-background-color: "#323232"

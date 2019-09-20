@@ -96,6 +96,10 @@ def async_setup(hass, config):
     def change_wm_overscan(service):
         yield from _change_wm_overscan(hass, service)
 
+    @asyncio.coroutine
+    def disable_irda_remote(service):
+        yield from _disable_irda_remote(hass, service)
+
     # register services
     hass.services.async_register(DOMAIN, "change_host_name", change_host_name)
     hass.services.async_register(DOMAIN, "execute_command", execute_command)
@@ -121,6 +125,7 @@ def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "ssh_remote_access", ssh_remote_access)
     hass.services.async_register(DOMAIN, "hdmi_control_disable", hdmi_control_disable)
     hass.services.async_register(DOMAIN, "change_wm_overscan", change_wm_overscan)
+    hass.services.async_register(DOMAIN, "disable_irda_remote", disable_irda_remote)
     return True
 
 
@@ -695,3 +700,14 @@ def _flush_logs(hass, call):
     yield from hass.services.async_call(
         "recorder", "purge", {"keep_days": 3, "repack": True}
     )
+
+
+@asyncio.coroutine
+def _disable_irda_remote(hass, call):
+    # aml_keypad -> event0 irda remote
+    comm = r'su -c "rm -rf /dev/input/event0"'
+    os.system(comm)
+    # cec_input -> event2 hdmi cec
+    comm = r'su -c "rm -rf /dev/input/event2"'
+    os.system(comm)
+    # gpio_keypad -> event0 - button behind the AV port can be used it in the future :)
