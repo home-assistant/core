@@ -3,6 +3,7 @@ import asyncio
 from functools import partial
 import importlib
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -34,7 +35,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime, utcnow
 
 
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
 
 DOMAIN = "automation"
@@ -281,11 +282,11 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         if enable_automation:
             await self.async_enable()
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on and update the state."""
         await self.async_enable()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.async_disable()
 
