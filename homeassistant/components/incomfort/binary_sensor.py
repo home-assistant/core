@@ -8,6 +8,9 @@ from . import DOMAIN
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up an InComfort/InTouch binary_sensor device."""
+    if discovery_info is None:
+        return
+
     async_add_entities(
         [IncomfortFailed(hass.data[DOMAIN]["client"], hass.data[DOMAIN]["heater"])]
     )

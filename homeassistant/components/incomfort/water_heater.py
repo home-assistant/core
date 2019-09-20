@@ -27,14 +27,15 @@ HEATER_ATTRS = [
 ]
 
 
-async def async_setup_platform(
-    hass, hass_config, async_add_entities, discovery_info=None
-):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up an InComfort/Intouch water_heater device."""
+    if discovery_info is None:
+        return
+
     client = hass.data[DOMAIN]["client"]
     heater = hass.data[DOMAIN]["heater"]
 
-    async_add_entities([IncomfortWaterHeater(client, heater)], update_before_add=True)
+    async_add_entities([IncomfortWaterHeater(client, heater)])
 
 
 class IncomfortWaterHeater(WaterHeaterDevice):
@@ -53,15 +54,12 @@ class IncomfortWaterHeater(WaterHeaterDevice):
     @property
     def icon(self):
         """Return the icon of the water_heater device."""
-        return "mdi:oil-temperature"
+        return "mdi-thermometer-lines"
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        state = {
-            k: self._heater.status[k] for k in self._heater.status if k in HEATER_ATTRS
-        }
-        return state
+        return {k: v for k, v in self._heater.status.items() if k in HEATER_ATTRS}
 
     @property
     def current_temperature(self):
@@ -108,4 +106,5 @@ class IncomfortWaterHeater(WaterHeaterDevice):
         except (ClientResponseError, asyncio.TimeoutError) as err:
             _LOGGER.warning("Update failed, message is: %s", err)
 
-        async_dispatcher_send(self.hass, DOMAIN)
+        else:
+            async_dispatcher_send(self.hass, DOMAIN)

@@ -13,10 +13,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import DOMAIN
 
 
-async def async_setup_platform(
-    hass, hass_config, async_add_entities, discovery_info=None
-):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up an InComfort/InTouch climate device."""
+    if discovery_info is None:
+        return
+
     client = hass.data[DOMAIN]["client"]
     heater = hass.data[DOMAIN]["heater"]
 
