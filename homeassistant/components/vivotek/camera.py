@@ -68,6 +68,7 @@ class VivotekCam(Camera):
         self._cam = cam
         self._frame_interval = 1 / config[CONF_FRAMERATE]
         self._motion_detection_enabled = False
+        self._model_name = None
         self._name = config[CONF_NAME]
         self._stream_source = stream_source
 
@@ -117,4 +118,8 @@ class VivotekCam(Camera):
     @property
     def model(self):
         """Return the camera model."""
-        return self._cam.model_name
+        return self._model_name
+
+    def update(self):
+        """Update entity status."""
+        self._model_name = self._cam.model_name
