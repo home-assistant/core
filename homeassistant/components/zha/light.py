@@ -129,9 +129,8 @@ class Light(ZhaEntity, light.Light):
     @property
     def device_state_attributes(self):
         """Return state attributes."""
-        state_attrs = self.state_attributes.copy()
-        state_attrs["off_brightness"] = self._off_brightness
-        return state_attrs
+        attributes = {"off_brightness": self._off_brightness}
+        return attributes
 
     def set_level(self, value):
         """Set the brightness of this light between 0..254.
@@ -172,6 +171,8 @@ class Light(ZhaEntity, light.Light):
     def async_set_state(self, state):
         """Set the state."""
         self._state = bool(state)
+        if state:
+            self._off_brightness = None
         self.async_schedule_update_ha_state()
 
     async def async_added_to_hass(self):
@@ -229,7 +230,10 @@ class Light(ZhaEntity, light.Light):
             self._state = bool(level)
             if level:
                 self._brightness = level
-        else:
+
+        if brightness is None or brightness:
+            # since some lights don't always turn on with move_to_level_with_on_off,
+            # we should call the on command on the on_off cluster if brightness is not 0.
             result = await self._on_off_channel.on()
             t_log["on_off"] = result
             if not isinstance(result, list) or result[1] is not Status.SUCCESS:
