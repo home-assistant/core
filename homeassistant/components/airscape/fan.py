@@ -73,8 +73,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         entity = hass.data[DOMAIN].get_entity(entity_id)
         entity.slow_down()
 
-    hass.services.register(DOMAIN, "speed_up", service_speed_up)
-    hass.services.register(DOMAIN, "slow_down", service_slow_down)
+    hass.services.register(DOMAIN, "airscape_speed_up", service_speed_up)
+    hass.services.register(DOMAIN, "airscape_slow_down", service_slow_down)
 
     return True
 
