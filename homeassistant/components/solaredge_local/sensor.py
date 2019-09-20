@@ -100,7 +100,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.debug("Credentials correct and site is active")
     except AttributeError:
         _LOGGER.error("Missing details data in solaredge status")
-        _LOGGER.debug("status is: %s", status)
+        _LOGGER.debug("Status is: %s", status)
         return
     except (ConnectTimeout, HTTPError):
         _LOGGER.error("Could not retrieve details from SolarEdge API")
