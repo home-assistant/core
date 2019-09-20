@@ -25,7 +25,6 @@ class HiveDevicePlug(SwitchDevice):
         self.attributes = {}
         self.data_updatesource = f"{self.device_type}.{self.node_id}"
         self._unique_id = f"{self.node_id}-{self.device_type}"
-        self.session.entities.append(self)
 
     @property
     def unique_id(self):
@@ -36,11 +35,6 @@ class HiveDevicePlug(SwitchDevice):
     def device_info(self):
         """Return device information."""
         return {"identifiers": {(DOMAIN, self.unique_id)}, "name": self.name}
-
-    def handle_update(self, updatesource):
-        """Handle the new update request."""
-        if f"{self.device_type}.{self.node_id}" not in updatesource:
-            self.schedule_update_ha_state()
 
     @property
     def name(self):
@@ -73,6 +67,17 @@ class HiveDevicePlug(SwitchDevice):
         self.session.switch.turn_off(self.node_id)
         for entity in self.session.entities:
             entity.handle_update(self.data_updatesource)
+
+    async def async_added_to_hass(self):
+        """When entity is added to Home Assistant."""
+        await super().async_added_to_hass()
+        self.session.entities.append(self)
+        self.session.entity_lookup.update({self.entity_id: self.node_id})
+
+    def handle_update(self, updatesource):
+        """Handle the new update request."""
+        if f"{self.device_type}.{self.node_id}" not in updatesource:
+            self.schedule_update_ha_state()
 
     def update(self):
         """Update all Node data from Hive."""

@@ -1,19 +1,21 @@
 """Support for the Hive climate devices."""
 
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, ATTR_ENTITY_ID
+import voluptuous as vol
+
 from homeassistant.components.climate import ClimateDevice
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     PRESET_BOOST,
+    PRESET_NONE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    PRESET_NONE,
 )
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, TEMP_CELSIUS
+import homeassistant.helpers.config_validation as cv
+
 from . import DATA_HIVE, DOMAIN
-import voluptuous as vol
 
 HIVE_TO_HASS_STATE = {
     "SCHEDULE": HVAC_MODE_AUTO,
@@ -96,11 +98,6 @@ class HiveClimateEntity(ClimateDevice):
         """Return the list of supported features."""
         return SUPPORT_FLAGS
 
-    def handle_update(self, updatesource):
-        """Handle the new update request."""
-        if f"{self.device_type}.{self.node_id}" not in updatesource:
-            self.schedule_update_ha_state()
-
     @property
     def name(self):
         """Return the name of the Climate device."""
@@ -167,12 +164,6 @@ class HiveClimateEntity(ClimateDevice):
         """Return a list of available preset modes."""
         return SUPPORT_PRESET
 
-    async def async_added_to_hass(self):
-        """When entity is added to Home Assistant."""
-        await super().async_added_to_hass()
-        self.session.entities.append(self)
-        self.session.entity_lookup.update({self.entity_id: self.node_id})
-
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         new_mode = HASS_TO_HIVE_STATE[hvac_mode]
@@ -204,6 +195,17 @@ class HiveClimateEntity(ClimateDevice):
 
         for entity in self.session.entities:
             entity.handle_update(self.data_updatesource)
+
+    async def async_added_to_hass(self):
+        """When entity is added to Home Assistant."""
+        await super().async_added_to_hass()
+        self.session.entities.append(self)
+        self.session.entity_lookup.update({self.entity_id: self.node_id})
+
+    def handle_update(self, updatesource):
+        """Handle the new update request."""
+        if f"{self.device_type}.{self.node_id}" not in updatesource:
+            self.schedule_update_ha_state()
 
     def update(self):
         """Update all Node data from Hive."""

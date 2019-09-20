@@ -39,7 +39,6 @@ class HiveSensorEntity(Entity):
         self.session = hivesession
         self.data_updatesource = f"{self.device_type}.{self.node_id}"
         self._unique_id = f"{self.node_id}-{self.device_type}"
-        self.session.entities.append(self)
 
     @property
     def unique_id(self):
@@ -50,11 +49,6 @@ class HiveSensorEntity(Entity):
     def device_info(self):
         """Return device information."""
         return {"identifiers": {(DOMAIN, self.unique_id)}, "name": self.name}
-
-    def handle_update(self, updatesource):
-        """Handle the new update request."""
-        if f"{self.device_type}.{self.node_id}" not in updatesource:
-            self.schedule_update_ha_state()
 
     @property
     def name(self):
@@ -79,6 +73,17 @@ class HiveSensorEntity(Entity):
     def icon(self):
         """Return the icon to use."""
         return DEVICETYPE_ICONS.get(self.device_type)
+
+    async def async_added_to_hass(self):
+        """When entity is added to Home Assistant."""
+        await super().async_added_to_hass()
+        self.session.entities.append(self)
+        self.session.entity_lookup.update({self.entity_id: self.node_id})
+
+    def handle_update(self, updatesource):
+        """Handle the new update request."""
+        if f"{self.device_type}.{self.node_id}" not in updatesource:
+            self.schedule_update_ha_state()
 
     def update(self):
         """Update all Node data from Hive."""
