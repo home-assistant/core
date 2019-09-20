@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/geonetnz_volcano",
   "requirements": [
-    "aio_geojson_geonetnz_volcano==0.2"
+    "aio_geojson_geonetnz_volcano==0.3"
   ],
   "dependencies": [],
   "codeowners": [
