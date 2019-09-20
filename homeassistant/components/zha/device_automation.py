@@ -20,12 +20,12 @@ CONF_DOUBLE_PRESS = "remote_button_double_press"
 CONF_TRIPLE_PRESS = "remote_button_triple_press"
 CONF_QUADRUPLE_PRESS = "remote_button_quadruple_press"
 CONF_QUINTUPLE_PRESS = "remote_button_quintuple_press"
-CONF_ROTATE = "device_rotate"
-CONF_SHAKE = "device_shake"
-CONF_DROP = "device_drop"
-CONF_SLIDE = "device_slide"
-CONF_KNOCK = "device_knock"
-CONF_FLIP = "device_flip"
+CONF_ROTATED = "device_rotated"
+CONF_SHAKEN = "device_shaken"
+CONF_DROPPED = "device_dropped"
+CONF_SLID = "device_slid"
+CONF_KNOCKED = "device_knocked"
+CONF_FLIPPED = "device_flipped"
 
 CONF_TURN_ON = "turn_on"
 CONF_TURN_OFF = "turn_off"
@@ -40,6 +40,8 @@ CONF_BUTTON_1 = "button_1"
 CONF_BUTTON_2 = "button_2"
 CONF_BUTTON_3 = "button_3"
 CONF_BUTTON_4 = "button_4"
+CONF_BUTTON_5 = "button_5"
+CONF_BUTTON_6 = "button_6"
 
 AQARA_ROUND_SWITCH_MODEL = "lumi.sensor_switch"
 AQARA_ROUND_SWITCH = {
@@ -65,7 +67,33 @@ AQARA_ROUND_SWITCH = {
     },
 }
 
-REMOTES = {AQARA_ROUND_SWITCH_MODEL: AQARA_ROUND_SWITCH}
+AQARA_CUBE_MODEL = "lumi.sensor_cube.aqgl01"
+AQARA_CUBE = {
+    (CONF_ROTATED, CONF_RIGHT): {"command": "rotate_right"},
+    (CONF_ROTATED, CONF_LEFT): {"command": "rotate_left"},
+    (CONF_SHAKEN, CONF_TURN_ON): {"command": "shake"},
+    (CONF_DROPPED, CONF_TURN_ON): {"command": "drop"},
+    (CONF_SLID, CONF_BUTTON_1): {"command": "slide", "args": {"activated_face": 1}},
+    (CONF_SLID, CONF_BUTTON_2): {"command": "slide", "args": {"activated_face": 2}},
+    (CONF_SLID, CONF_BUTTON_3): {"command": "slide", "args": {"activated_face": 3}},
+    (CONF_SLID, CONF_BUTTON_4): {"command": "slide", "args": {"activated_face": 4}},
+    (CONF_SLID, CONF_BUTTON_5): {"command": "slide", "args": {"activated_face": 5}},
+    (CONF_SLID, CONF_BUTTON_6): {"command": "slide", "args": {"activated_face": 6}},
+    (CONF_KNOCKED, CONF_BUTTON_1): {"command": "knock", "args": {"activated_face": 1}},
+    (CONF_KNOCKED, CONF_BUTTON_2): {"command": "knock", "args": {"activated_face": 2}},
+    (CONF_KNOCKED, CONF_BUTTON_3): {"command": "knock", "args": {"activated_face": 3}},
+    (CONF_KNOCKED, CONF_BUTTON_4): {"command": "knock", "args": {"activated_face": 4}},
+    (CONF_KNOCKED, CONF_BUTTON_5): {"command": "knock", "args": {"activated_face": 5}},
+    (CONF_KNOCKED, CONF_BUTTON_6): {"command": "knock", "args": {"activated_face": 6}},
+    (CONF_FLIPPED, CONF_BUTTON_1): {"command": "flip", "args": {"activated_face": 1}},
+    (CONF_FLIPPED, CONF_BUTTON_2): {"command": "flip", "args": {"activated_face": 2}},
+    (CONF_FLIPPED, CONF_BUTTON_3): {"command": "flip", "args": {"activated_face": 3}},
+    (CONF_FLIPPED, CONF_BUTTON_4): {"command": "flip", "args": {"activated_face": 4}},
+    (CONF_FLIPPED, CONF_BUTTON_5): {"command": "flip", "args": {"activated_face": 5}},
+    (CONF_FLIPPED, CONF_BUTTON_6): {"command": "flip", "args": {"activated_face": 6}},
+}
+
+REMOTES = {AQARA_ROUND_SWITCH_MODEL: AQARA_ROUND_SWITCH, AQARA_CUBE_MODEL: AQARA_CUBE}
 
 TRIGGER_SCHEMA = vol.All(
     vol.Schema(
