@@ -336,8 +336,6 @@ class TradfriLight(Light):
     @callback
     def _async_start_observe(self, exc=None):
         """Start observation of light."""
-        # pylint: disable=import-error
-        from pytradfri.error import PytradfriError
 
         if exc:
             self._available = False
