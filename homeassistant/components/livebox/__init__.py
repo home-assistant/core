@@ -61,22 +61,24 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DOMAIN][DATA_LIVEBOX] = box_data
 
     config = await box_data.async_infos()
-    device_registry = await dr.async_get_registry(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, config_entry.data["id"])},
-        manufacturer=config["Manufacturer"],
-        name=config["ProductClass"],
-        model=config["ModelName"],
-        sw_version=config["SoftwareVersion"],
-    )
+    if config:
+        device_registry = await dr.async_get_registry(hass)
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={(DOMAIN, config_entry.data["id"])},
+            manufacturer=config["Manufacturer"],
+            name=config["ProductClass"],
+            model=config["ModelName"],
+            sw_version=config["SoftwareVersion"],
+        )
 
-    # ~ for component in COMPONENTS:
-    # ~ hass.async_create_task(
-    # ~ hass.config_entries.async_forward_entry_setup(config_entry, component)
-    # ~ )
+        for component in COMPONENTS:
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(config_entry, component)
+            )
+        return True
 
-    # ~ return True
+    return False
 
 
 async def async_unload_entry(hass, config_entry):
