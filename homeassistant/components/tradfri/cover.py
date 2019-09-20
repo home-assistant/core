@@ -3,7 +3,13 @@ import logging
 
 from pytradfri.error import PytradfriError
 
-from homeassistant.components.cover import CoverDevice, ATTR_POSITION
+from homeassistant.components.cover import (
+    CoverDevice,
+    ATTR_POSITION,
+    SUPPORT_OPEN,
+    SUPPORT_CLOSE,
+    SUPPORT_SET_POSITION,
+)
 from homeassistant.core import callback
 from . import DOMAIN as TRADFRI_DOMAIN, KEY_API, KEY_GATEWAY
 from .const import CONF_GATEWAY_ID
@@ -21,9 +27,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     devices = await api(devices_commands)
     covers = [dev for dev in devices if dev.has_blind_control]
     if covers:
-        async_add_entities(
-            TradfriCover(cover, api, gateway_id) for cover in covers
-        )
+        async_add_entities(TradfriCover(cover, api, gateway_id) for cover in covers)
 
 
 class TradfriCover(CoverDevice):
@@ -41,6 +45,11 @@ class TradfriCover(CoverDevice):
         self._gateway_id = gateway_id
 
         self._refresh(cover)
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
     @property
     def unique_id(self):
@@ -86,19 +95,24 @@ class TradfriCover(CoverDevice):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        return self._cover_data.current_cover_position
+        return 100 - self._cover_data.current_cover_position
 
-    def set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        self._cover_control.set_state(kwargs[ATTR_POSITION])
+        await self._api(self._cover_control.set_state(100 - kwargs[ATTR_POSITION]))
 
-    def open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        self._cover_control.set_state(100)
+        await self._api(self._cover_control.set_state(0))
 
-    def close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs):
         """Close cover."""
-        self._cover_control.set_state(0)
+        await self._api(self._cover_control.set_state(100))
+
+    @property
+    def is_closed(self):
+        """Return if the cover is closed or not."""
+        return self.current_cover_position == 0
 
     @callback
     def _async_start_observe(self, exc=None):
@@ -107,7 +121,6 @@ class TradfriCover(CoverDevice):
             self._available = False
             self.async_schedule_update_ha_state()
             _LOGGER.warning("Observation failed for %s", self._name, exc_info=exc)
-
         try:
             cmd = self._cover.observe(
                 callback=self._observe_update,
