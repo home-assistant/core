@@ -39,9 +39,9 @@ def main():
     print()
 
     print("Running tests")
-    print(f"$ py.test tests/components/{info.domain}")
+    print(f"$ pytest tests/components/{info.domain}")
     if (
-        subprocess.run(f"py.test tests/components/{info.domain}", shell=True).returncode
+        subprocess.run(f"pytest tests/components/{info.domain}", shell=True).returncode
         != 0
     ):
         return 1
