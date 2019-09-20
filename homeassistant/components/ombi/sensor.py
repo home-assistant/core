@@ -73,8 +73,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for condition in conditions:
         sensor_label = condition
-        sensor_type = SENSOR_TYPES[condition].get("type")
-        sensor_icon = SENSOR_TYPES[condition].get("icon")
+        sensor_type = SENSOR_TYPES[condition]["type"]
+        sensor_icon = SENSOR_TYPES[condition]["icon"]
         sensors.append(OmbiSensor(sensor_label, sensor_type, ombi, sensor_icon))
 
     add_entities(sensors, True)
