@@ -73,7 +73,7 @@ aioswitcher==2019.4.26
 aiounifi==11
 
 # homeassistant.components.wwlln
-aiowwlln==2.0.1
+aiowwlln==2.0.2
 
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1
