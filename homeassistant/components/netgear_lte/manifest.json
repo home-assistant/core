@@ -6,7 +6,5 @@
     "eternalegypt==0.0.10"
   ],
   "dependencies": [],
-  "codeowners": [
-    "@amelchio"
-  ]
+  "codeowners": []
 }

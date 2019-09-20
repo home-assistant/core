@@ -1,30 +1,19 @@
 """deCONZ service tests."""
+from copy import deepcopy
+
 from asynctest import Mock, patch
 
 import pytest
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import deconz
 
-BRIDGEID = "0123456789"
-
-ENTRY_CONFIG = {
-    deconz.config_flow.CONF_API_KEY: "ABCDEF",
-    deconz.config_flow.CONF_BRIDGEID: BRIDGEID,
-    deconz.config_flow.CONF_HOST: "1.2.3.4",
-    deconz.config_flow.CONF_PORT: 80,
-}
-
-DECONZ_CONFIG = {
-    "bridgeid": BRIDGEID,
-    "mac": "00:11:22:33:44:55",
-    "name": "deCONZ mock gateway",
-    "sw_version": "2.05.69",
-    "websocketport": 1234,
-}
-
-DECONZ_WEB_REQUEST = {"config": DECONZ_CONFIG}
+from .test_gateway import (
+    BRIDGEID,
+    ENTRY_CONFIG,
+    DECONZ_WEB_REQUEST,
+    setup_deconz_integration,
+)
 
 GROUP = {
     "1": {
@@ -58,31 +47,6 @@ SENSOR = {
         "uniqueid": "00:00:00:00:00:00:00:02-00",
     }
 }
-
-
-async def setup_deconz_integration(hass, options):
-    """Create the deCONZ gateway."""
-    config_entry = config_entries.ConfigEntry(
-        version=1,
-        domain=deconz.DOMAIN,
-        title="Mock Title",
-        data=ENTRY_CONFIG,
-        source="test",
-        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
-        system_options={},
-        options=options,
-        entry_id="1",
-    )
-
-    with patch(
-        "pydeconz.DeconzSession.async_get_state", return_value=DECONZ_WEB_REQUEST
-    ):
-        await deconz.async_setup_entry(hass, config_entry)
-    await hass.async_block_till_done()
-
-    hass.config_entries._entries.append(config_entry)
-
-    return hass.data[deconz.DOMAIN][BRIDGEID]
 
 
 async def test_service_setup(hass):
@@ -129,7 +93,10 @@ async def test_service_unload_not_registered(hass):
 
 async def test_configure_service_with_field(hass):
     """Test that service invokes pydeconz with the correct path and data."""
-    await setup_deconz_integration(hass, options={})
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    await setup_deconz_integration(
+        hass, ENTRY_CONFIG, options={}, get_state_response=data
+    )
 
     data = {
         deconz.services.SERVICE_FIELD: "/light/2",
@@ -149,7 +116,10 @@ async def test_configure_service_with_field(hass):
 
 async def test_configure_service_with_entity(hass):
     """Test that service invokes pydeconz with the correct path and data."""
-    gateway = await setup_deconz_integration(hass, options={})
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    gateway = await setup_deconz_integration(
+        hass, ENTRY_CONFIG, options={}, get_state_response=data
+    )
 
     gateway.deconz_ids["light.test"] = "/light/1"
     data = {
@@ -169,7 +139,10 @@ async def test_configure_service_with_entity(hass):
 
 async def test_configure_service_with_entity_and_field(hass):
     """Test that service invokes pydeconz with the correct path and data."""
-    gateway = await setup_deconz_integration(hass, options={})
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    gateway = await setup_deconz_integration(
+        hass, ENTRY_CONFIG, options={}, get_state_response=data
+    )
 
     gateway.deconz_ids["light.test"] = "/light/1"
     data = {
@@ -192,7 +165,10 @@ async def test_configure_service_with_entity_and_field(hass):
 
 async def test_configure_service_with_faulty_field(hass):
     """Test that service invokes pydeconz with the correct path and data."""
-    await setup_deconz_integration(hass, options={})
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    await setup_deconz_integration(
+        hass, ENTRY_CONFIG, options={}, get_state_response=data
+    )
 
     data = {deconz.services.SERVICE_FIELD: "light/2", deconz.services.SERVICE_DATA: {}}
 
@@ -205,7 +181,10 @@ async def test_configure_service_with_faulty_field(hass):
 
 async def test_configure_service_with_faulty_entity(hass):
     """Test that service invokes pydeconz with the correct path and data."""
-    await setup_deconz_integration(hass, options={})
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    await setup_deconz_integration(
+        hass, ENTRY_CONFIG, options={}, get_state_response=data
+    )
 
     data = {
         deconz.services.SERVICE_ENTITY: "light.nonexisting",
@@ -224,7 +203,10 @@ async def test_configure_service_with_faulty_entity(hass):
 
 async def test_service_refresh_devices(hass):
     """Test that service can refresh devices."""
-    gateway = await setup_deconz_integration(hass, options={})
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    gateway = await setup_deconz_integration(
+        hass, ENTRY_CONFIG, options={}, get_state_response=data
+    )
 
     data = {deconz.CONF_BRIDGEID: BRIDGEID}
 

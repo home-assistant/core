@@ -1,5 +1,5 @@
 # Home Assistant core
-aiohttp==3.5.4
+aiohttp==3.6.1
 astral==1.10.1
 async_timeout==3.0.1
 attrs==19.1.0
@@ -639,7 +639,7 @@ hole==0.5.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190918.1
+home-assistant-frontend==20190919.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.4
@@ -687,7 +687,7 @@ ihcsdk==2.3.0
 incomfort-client==0.3.1
 
 # homeassistant.components.influxdb
-influxdb==5.2.0
+influxdb==5.2.3
 
 # homeassistant.components.insteon
 insteonplm==0.16.5
@@ -1351,7 +1351,7 @@ pynx584==0.4
 pynzbgetapi==0.2.0
 
 # homeassistant.components.obihai
-pyobihai==1.0.2
+pyobihai==1.1.0
 
 # homeassistant.components.openuv
 pyopenuv==1.0.9
@@ -1508,6 +1508,9 @@ python-gitlab==1.6.0
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
 
+# homeassistant.components.izone
+python-izone==1.1.1
+
 # homeassistant.components.joaoapps_join
 python-join-api==0.0.4
 
@@ -1596,7 +1599,7 @@ pytraccar==0.9.0
 pytrackr==0.0.5
 
 # homeassistant.components.tradfri
-pytradfri[async]==6.0.1
+pytradfri[async]==6.3.1
 
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
@@ -1666,7 +1669,7 @@ recollect-waste==1.0.1
 regenmaschine==1.5.1
 
 # homeassistant.components.python_script
-restrictedpython==4.0
+restrictedpython==5.0
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -1785,7 +1788,7 @@ solaredge-local==0.1.4
 solaredge==0.0.2
 
 # homeassistant.components.solax
-solax==0.1.2
+solax==0.2.2
 
 # homeassistant.components.honeywell
 somecomfort==0.5.2
@@ -1990,6 +1993,9 @@ xmltodict==0.12.0
 
 # homeassistant.components.xs1
 xs1-api-client==2.3.5
+
+# homeassistant.components.yandex_transport
+ya_ma==0.3.4
 
 # homeassistant.components.yweather
 yahooweather==0.10

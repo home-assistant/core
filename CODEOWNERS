@@ -144,6 +144,7 @@ homeassistant/components/ios/* @robbiet480
 homeassistant/components/ipma/* @dgomes
 homeassistant/components/iqvia/* @bachya
 homeassistant/components/irish_rail_transport/* @ttroy50
+homeassistant/components/izone/* @Swamp-Ig
 homeassistant/components/jewish_calendar/* @tsvi
 homeassistant/components/keba/* @dannerph
 homeassistant/components/knx/* @Julius2342
@@ -153,9 +154,6 @@ homeassistant/components/lametric/* @robbiet480
 homeassistant/components/launch_library/* @ludeeus
 homeassistant/components/lcn/* @alengwenus
 homeassistant/components/life360/* @pnbruckner
-homeassistant/components/lifx/* @amelchio
-homeassistant/components/lifx_cloud/* @amelchio
-homeassistant/components/lifx_legacy/* @amelchio
 homeassistant/components/linky/* @Quentame
 homeassistant/components/linux_battery/* @fabaff
 homeassistant/components/liveboxplaytv/* @pschmitt
@@ -186,7 +184,6 @@ homeassistant/components/nello/* @pschmitt
 homeassistant/components/ness_alarm/* @nickw444
 homeassistant/components/nest/* @awarecan
 homeassistant/components/netdata/* @fabaff
-homeassistant/components/netgear_lte/* @amelchio
 homeassistant/components/nextbus/* @vividboarder
 homeassistant/components/nissan_leaf/* @filcole
 homeassistant/components/nmbs/* @thibmaek
@@ -253,7 +250,6 @@ homeassistant/components/solaredge_local/* @drobtravels
 homeassistant/components/solax/* @squishykid
 homeassistant/components/somfy/* @tetienne
 homeassistant/components/songpal/* @rytilahti
-homeassistant/components/sonos/* @amelchio
 homeassistant/components/spaceapi/* @fabaff
 homeassistant/components/spider/* @peternijssen
 homeassistant/components/sql/* @dgomes
@@ -322,6 +318,7 @@ homeassistant/components/xiaomi_miio/* @rytilahti @syssi
 homeassistant/components/xiaomi_tv/* @simse
 homeassistant/components/xmpp/* @fabaff @flowolf
 homeassistant/components/yamaha_musiccast/* @jalmeroth
+homeassistant/components/yandex_transport/* @rishatik92
 homeassistant/components/yeelight/* @rytilahti @zewelor
 homeassistant/components/yeelightsunflower/* @lindsaymarkward
 homeassistant/components/yessssms/* @flowolf
