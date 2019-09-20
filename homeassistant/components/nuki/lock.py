@@ -1,9 +1,8 @@
 """Nuki.io lock platform."""
 from datetime import timedelta
 import logging
-
+import time
 from pynuki import NukiBridge
-from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant.components.lock import PLATFORM_SCHEMA, SUPPORT_OPEN, LockDevice
@@ -23,7 +22,7 @@ ATTR_NUKI_ID = "nuki_id"
 ATTR_UNLATCH = "unlatch"
 
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=5)
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 NUKI_DATA = "nuki"
 
@@ -48,9 +47,10 @@ LOCK_N_GO_SERVICE_SCHEMA = vol.Schema(
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Nuki lock platform."""
+    """Set up the Nuki lock platform. Enforce strict queuing of requests."""
+    enforce_queuing = True
     bridge = NukiBridge(
-        config[CONF_HOST], config[CONF_TOKEN], config[CONF_PORT], DEFAULT_TIMEOUT
+        config[CONF_HOST], config[CONF_TOKEN], config[CONF_PORT], 5, enforce_queuing
     )
     devices = [NukiLock(lock) for lock in bridge.locks]
 
@@ -77,10 +77,11 @@ class NukiLock(LockDevice):
     def __init__(self, nuki_lock):
         """Initialize the lock."""
         self._nuki_lock = nuki_lock
-        self._locked = nuki_lock.is_locked
+        #        self._locked = nuki_lock.is_locked
         self._name = nuki_lock.name
         self._battery_critical = nuki_lock.battery_critical
         self._available = nuki_lock.state not in ERROR_STATES
+        self._cached_status_time = 0
 
     @property
     def name(self):
@@ -90,7 +91,7 @@ class NukiLock(LockDevice):
     @property
     def is_locked(self):
         """Return true if lock is locked."""
-        return self._locked
+        return self._nuki_lock.is_locked
 
     @property
     def device_state_attributes(self):
@@ -113,30 +114,54 @@ class NukiLock(LockDevice):
 
     def update(self):
         """Update the nuki lock properties."""
-        for level in (False, True):
-            try:
-                self._nuki_lock.update(aggressive=level)
-            except RequestException:
-                _LOGGER.warning("Network issues detect with %s", self.name)
-                self._available = False
-                return
+        now = time.time()
+        if not self._available or now - self._cached_status_time > 30:
+            self.__update_from_bridge()
 
-            # If in error state, we force an update and repoll data
-            self._available = self._nuki_lock.state not in ERROR_STATES
-            if self._available:
-                break
+        """Else use maintained state """
 
-        self._name = self._nuki_lock.name
-        self._locked = self._nuki_lock.is_locked
-        self._battery_critical = self._nuki_lock.battery_critical
+    def __update_from_bridge(self):
+        for _ in range(3):
+            """Initially request list from bridge, then lockState from lcock itself."""
+            for level in (False, True):
+                try:
+                    self._nuki_lock.update(level)
+                except Exception:
+                    _LOGGER.warning("Error updataing nuki  %s", self.name)
+                    self._available = False
+                    continue
+
+                # If in error state, we force update from bridge on repoll of update
+                self._available = self._nuki_lock.state not in ERROR_STATES
+                if self._available:
+                    self._cached_status_time = time.time()
+                    self._name = self._nuki_lock.name
+                    self._battery_critical = self._nuki_lock.battery_critical
+                    break
 
     def lock(self, **kwargs):
-        """Lock the device."""
-        self._nuki_lock.lock()
+        """Lock. Make blocking API request, so status is correct and reusable."""
+        for _ in range(3):
+            result = self._nuki_lock.lock(True)
+            if result is not None and result["success"]:
+                self._available = True
+                self._cached_status_time = time.time()
+                break
+
+        self._available = False
+        self.update()
 
     def unlock(self, **kwargs):
-        """Unlock the device."""
-        self._nuki_lock.unlock()
+        """Unlock. Make blocking API request, so status is correct and reusable."""
+        for _ in range(3):
+            result = self._nuki_lock.unlock(True)
+            if result is not None and result["success"]:
+                self._available = True
+                self._cached_status_time = time.time()
+                break
+
+        self._available = False
+        self.update()
 
     def open(self, **kwargs):
         """Open the door latch."""
