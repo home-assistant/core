@@ -1,6 +1,4 @@
 """Config flow to configure Livebox."""
-import logging
-import asyncio
 from collections import namedtuple
 
 from aiosysbus.exceptions import AuthorizationError
@@ -12,16 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWO
 
 
 from . import LiveboxData
-from .const import (
-    DOMAIN,
-    LOGGER,
-    DEFAULT_USERNAME,
-    DEFAULT_HOST,
-    DEFAULT_PORT,
-    TEMPLATE_SENSOR,
-)
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, DEFAULT_USERNAME, DEFAULT_HOST, DEFAULT_PORT, TEMPLATE_SENSOR
 
 
 class LiveboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -89,41 +78,22 @@ class LiveboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Step for register component."""
 
         errors = {}
-        try:
-            self.box_id = (await self._box.async_infos())["SerialNumber"]
-            if await self._entry_from_box(self.box_id):
-                return self.async_create_entry(
-                    title=f"{TEMPLATE_SENSOR}",
-                    data={
-                        "id": self.box_id,
-                        "host": self.host,
-                        "port": self.port,
-                        "username": self.username,
-                        "password": self.password,
-                    },
-                )
-        except Exception:
-            LOGGER.error("Unique ID not found")
+        self.box_id = (await self._box.async_infos())["SerialNumber"]
+        entry_id = self.hass.config_entries.async_entries(DOMAIN)
+        if self.box_id:
+            if entry_id and entry_id.get("data", {}).get("id", 0) == self.box_id:
+                self.hass.config_entries.async_remove(entry_id)
+            return self.async_create_entry(
+                title=f"{TEMPLATE_SENSOR}",
+                data={
+                    "id": self.box_id,
+                    "host": self.host,
+                    "port": self.port,
+                    "username": self.username,
+                    "password": self.password,
+                },
+            )
+        else:
             errors["base"] = "register_failed"
 
         return self.async_show_form(step_id="register", errors=errors)
-
-    async def _entry_from_box(self, id):
-        """Return a config entry from an initialized box."""
-
-        # Remove all other entries of hubs with same ID or host
-        same_hub_entries = [
-            entry.entry_id
-            for entry in self.hass.config_entries.async_entries(DOMAIN)
-            if entry.data["id"] == id
-        ]
-
-        if same_hub_entries:
-            await asyncio.wait(
-                [
-                    self.hass.config_entries.async_remove(entry_id)
-                    for entry_id in same_hub_entries
-                ]
-            )
-
-        return True

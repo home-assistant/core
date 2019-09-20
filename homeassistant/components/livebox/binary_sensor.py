@@ -26,7 +26,7 @@ class InfoSensor(BinarySensorDevice):
         self._box_data = box_data
         self._box_id = box_id
         self._state = None
-        self._dsl = None
+        self._dsl = {}
 
     @property
     def name(self):
@@ -37,7 +37,9 @@ class InfoSensor(BinarySensorDevice):
     def is_on(self):
         """Return true if the binary sensor is on."""
 
-        return self._dsl["WanState"] == "up"
+        if self._dsl.get("WanState"):
+            return self._dsl["WanState"] == "up"
+        return None
 
     @property
     def unique_id(self):
@@ -61,16 +63,17 @@ class InfoSensor(BinarySensorDevice):
         """Return the device state attributes."""
 
         return {
-            "link_type": self._dsl["LinkType"],
-            "link_state": self._dsl["LinkState"],
-            "last_connection_error": self._dsl["LastConnectionError"],
-            "wan_ipaddress": self._dsl["IPAddress"],
-            "wan_ipv6address": self._dsl["IPv6Address"],
+            "link_type": self._dsl.get("LinkType", None),
+            "link_state": self._dsl.get("LinkState", None),
+            "last_connection_error": self._dsl.get("LastConnectionError", None),
+            "wan_ipaddress": self._dsl.get("IPAddress", None),
+            "wan_ipv6address": self._dsl.get("IPv6Address", None),
         }
 
     @Throttle(SCAN_INTERVAL)
     async def async_update(self):
         """Fetch status from livebox."""
 
-        if self._box_data:
-            self._dsl = await self._box_data.async_status()
+        data_status = await self._box_data.async_status()
+        if data_status:
+            self._dsl = data_status

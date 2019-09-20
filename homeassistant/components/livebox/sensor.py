@@ -23,7 +23,7 @@ class LiveboxSensor(Entity):
         self._box_data = box_data
         self._box_id = box_id
         self._state = None
-        self._dsl = None
+        self._dsl = {}
 
     @property
     def device_info(self):
@@ -40,8 +40,9 @@ class LiveboxSensor(Entity):
     async def async_update(self):
         """Return update entry."""
 
-        if self._box_data:
-            self._dsl = await self._box_data.async_dsl_status()
+        data_status = await self._box_data.async_dsl_status()
+        if data_status:
+            self._dsl = data_status
 
 
 class RXSensor(LiveboxSensor):
@@ -59,9 +60,9 @@ class RXSensor(LiveboxSensor):
     def state(self):
         """Return the state of the device."""
 
-        if self._dsl["DownstreamCurrRate"] is None:
-            return None
-        return round(self._dsl["DownstreamCurrRate"] / 1000, 2)
+        if self._dsl.get("DownstreamCurrRate"):
+            return round(self._dsl["DownstreamCurrRate"] / 1000, 2)
+        return None
 
     @property
     def unique_id(self):
@@ -74,10 +75,12 @@ class RXSensor(LiveboxSensor):
         """Return the device state attributes."""
 
         return {
-            "downstream_maxrate": self._dsl["DownstreamMaxRate"],
-            "downstream_lineattenuation": self._dsl["DownstreamLineAttenuation"],
-            "downstream_noisemargin": self._dsl["DownstreamNoiseMargin"],
-            "downstream_power": self._dsl["DownstreamPower"],
+            "downstream_maxrate": self._dsl.get("DownstreamMaxRate", None),
+            "downstream_lineattenuation": self._dsl.get(
+                "DownstreamLineAttenuation", None
+            ),
+            "downstream_noisemargin": self._dsl.get("DownstreamNoiseMargin", None),
+            "downstream_power": self._dsl.get("DownstreamPower", None),
         }
 
 
@@ -96,9 +99,9 @@ class TXSensor(LiveboxSensor):
     def state(self):
         """Return the state of the device."""
 
-        if self._dsl["UpstreamCurrRate"] is None:
-            return None
-        return round(self._dsl["UpstreamCurrRate"] / 1000, 2)
+        if self._dsl.get("UpstreamCurrRate"):
+            return round(self._dsl["UpstreamCurrRate"] / 1000, 2)
+        return None
 
     @property
     def unique_id(self):
@@ -111,8 +114,8 @@ class TXSensor(LiveboxSensor):
         """Return the device state attributes."""
 
         return {
-            "upstream_maxrate": self._dsl["UpstreamMaxRate"],
-            "upstream_lineattenuation": self._dsl["UpstreamLineAttenuation"],
-            "upstream_noisemargin": self._dsl["UpstreamNoiseMargin"],
-            "upstream_power": self._dsl["UpstreamPower"],
+            "upstream_maxrate": self._dsl.get("UpstreamMaxRate", None),
+            "upstream_lineattenuation": self._dsl.get("UpstreamLineAttenuation", None),
+            "upstream_noisemargin": self._dsl.get("UpstreamNoiseMargin", None),
+            "upstream_power": self._dsl.get("UpstreamPower", None),
         }
