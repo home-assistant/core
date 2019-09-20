@@ -639,7 +639,7 @@ hole==0.5.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-ais-dom-frontend==20190918.1
+ais-dom-frontend==20190919.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.4
@@ -1345,7 +1345,7 @@ pynws==0.7.4
 pynx584==0.4
 
 # homeassistant.components.obihai
-pyobihai==1.0.2
+pyobihai==1.1.0
 
 # homeassistant.components.openuv
 pyopenuv==1.0.9
@@ -1590,7 +1590,7 @@ pytraccar==0.9.0
 pytrackr==0.0.5
 
 # homeassistant.components.tradfri
-pytradfri[async]==6.0.1
+pytradfri[async]==6.3.1
 
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
