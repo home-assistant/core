@@ -171,7 +171,7 @@ class SolarEdgeData:
         """Update the data from the SolarEdge Monitoring API."""
         try:
             status = self.api.get_status()
-            _LOGGER.debug("status from SolarEdge: %s", status)
+            _LOGGER.debug("Status from SolarEdge: %s", status)
         except ConnectTimeout:
             _LOGGER.error("Connection timeout, skipping update")
             return
@@ -181,7 +181,7 @@ class SolarEdgeData:
 
         try:
             maintenance = self.api.get_maintenance()
-            _LOGGER.debug("maintenance from SolarEdge: %s", maintenance)
+            _LOGGER.debug("Maintenance from SolarEdge: %s", maintenance)
         except ConnectTimeout:
             _LOGGER.error("Connection timeout, skipping update")
             return
@@ -192,15 +192,14 @@ class SolarEdgeData:
         temperature = []
         voltage = []
         current = []
-        data = maintenance.diagnostics.inverters.primary
-        stringlength = len(data.optimizer)
         power = 0
 
-        for number in range(stringlength):
-            if data.optimizer[number].online is True:
-                temperature.append(data.optimizer[number].temperature.value)
-                voltage.append(data.optimizer[number].inputV)
-                current.append(data.optimizer[number].inputC)
+        for optimizer in maintenance.diagnostics.inverters.primary.optimizer:
+            if not optimizer.online:
+                continue
+            temperature.append(optimizer.temperature.value)
+            voltage.append(optimizer.inputV)
+            current.append(optimizer.inputC)
 
         if not voltage:
             temperature.append(0)
