@@ -3,6 +3,9 @@
     "name": "Solar Edge Local",
     "documentation": "",
     "dependencies": [],
-    "codeowners": ["@drobtravels"],
+    "codeowners": [
+      "@drobtravels",
+      "@scheric"
+  ],
     "requirements": ["solaredge-local==0.2.0"]
   }
