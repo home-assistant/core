@@ -49,8 +49,6 @@ FIELDS = {
 
 def gather_info() -> Info:
     """Gather info from user."""
-    print("Creating a new integration for Home Assistant.")
-
     answers = {}
 
     for key, info in FIELDS.items():

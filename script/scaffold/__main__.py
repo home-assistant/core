@@ -3,7 +3,7 @@ from pathlib import Path
 import subprocess
 import sys
 
-from . import gather_info, generate, error
+from . import gather_info, generate, error, model
 
 
 def main():
@@ -12,12 +12,25 @@ def main():
         print("Run from project root")
         return 1
 
-    try:
-        info = gather_info.gather_info()
-    except error.ExitApp as err:
+    print("Creating a new integration for Home Assistant.")
+
+    if "--develop" in sys.argv:
+        print("Running in developer mode. Automatically filling in info.")
         print()
-        print(err.reason)
-        return err.exit_code
+
+        info = model.Info(
+            domain="develop",
+            name="Develop Hub",
+            codeowner="@developer",
+            requirement="aiodevelop==1.2.3",
+        )
+    else:
+        try:
+            info = gather_info.gather_info()
+        except error.ExitApp as err:
+            print()
+            print(err.reason)
+            return err.exit_code
 
     generate.generate(info)
 
@@ -27,7 +40,11 @@ def main():
 
     print("Running tests")
     print(f"$ py.test tests/components/{info.domain}")
-    subprocess.run(f"py.test tests/components/{info.domain}", shell=True)
+    if (
+        subprocess.run(f"py.test tests/components/{info.domain}", shell=True).returncode
+        != 0
+    ):
+        return 1
     print()
 
     print(f"Successfully created the {info.domain} integration!")
