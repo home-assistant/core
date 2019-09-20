@@ -30,10 +30,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     client = hass.data[DOMAIN]["client"]
 
-    entities = [
-        GeniusClimateZone(z) for z in client.zone_objs if z.data["type"] in GH_ZONES
-    ]
-    async_add_entities(entities)
+    async_add_entities(
+        [GeniusClimateZone(z) for z in client.zone_objs if z.data["type"] in GH_ZONES]
+    )
 
 
 class GeniusClimateZone(GeniusZone, ClimateDevice):
@@ -44,13 +43,9 @@ class GeniusClimateZone(GeniusZone, ClimateDevice):
         super().__init__()
 
         self._zone = zone
-        if hasattr(self._zone, "occupied"):  # has a movement sensor
-            self._preset_modes = list(HA_PRESET_TO_GH)
-        else:
-            self._preset_modes = [PRESET_BOOST]
 
-        self._min_temp = 4.0
         self._max_temp = 28.0
+        self._min_temp = 4.0
         self._supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
     @property
@@ -76,7 +71,9 @@ class GeniusClimateZone(GeniusZone, ClimateDevice):
     @property
     def preset_modes(self) -> Optional[List[str]]:
         """Return a list of available preset modes."""
-        return self._preset_modes
+        if "occupied" in self._zone.data:
+            return list(HA_PRESET_TO_GH)  # has a movement sensor
+        return [PRESET_BOOST]
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> Awaitable[None]:
         """Set a new hvac mode."""

@@ -121,10 +121,6 @@ class GeniusBroker:
 class GeniusEntity(Entity):
     """Base for all Genius Hub entities."""
 
-    def __init__(self):
-        """Initialize the entity."""
-        self._name = None
-
     async def async_added_to_hass(self) -> Awaitable[None]:
         """Set up a listener when this entity is added to HA."""
         async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
@@ -132,11 +128,6 @@ class GeniusEntity(Entity):
     @callback
     def _refresh(self) -> None:
         self.async_schedule_update_ha_state(force_refresh=True)
-
-    @property
-    def name(self) -> str:
-        """Return the name of the geniushub entity."""
-        return self._name
 
     @property
     def should_poll(self) -> bool:
@@ -149,10 +140,13 @@ class GeniusDevice(GeniusEntity):
 
     def __init__(self):
         """Initialize the device."""
-        super().__init__()
+        self._device = None
+        self._last_comms = self._name = self._state_attr = None
 
-        self._state_attr = None
-        self._last_comms = None
+    @property
+    def name(self) -> str:
+        """Return the name of the geniushub entity."""
+        return self._name
 
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
@@ -187,8 +181,9 @@ class GeniusZone(GeniusEntity):
     """Base for all Genius Hub zones."""
 
     def __init__(self):
-        """Initialize the zone."""
-        super().__init__()
+        """Initialize the device."""
+        self._zone = None
+        self._max_temp = self._min_temp = self._supported_features = None
 
     @property
     def name(self) -> str:

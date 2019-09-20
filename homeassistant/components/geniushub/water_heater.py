@@ -37,31 +37,28 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     client = hass.data[DOMAIN]["client"]
 
-    entities = [
-        GeniusWaterHeater(z) for z in client.zone_objs if z.data["type"] in GH_HEATERS
-    ]
-
-    async_add_entities(entities)
+    async_add_entities(
+        [GeniusWaterHeater(z) for z in client.zone_objs if z.data["type"] in GH_HEATERS]
+    )
 
 
 class GeniusWaterHeater(GeniusZone, WaterHeaterDevice):
     """Representation of a Genius Hub water_heater device."""
 
-    def __init__(self, boiler) -> None:
+    def __init__(self, zone) -> None:
         """Initialize the water_heater device."""
         super().__init__()
 
-        self._zone = boiler
-        self._operation_list = list(HA_OPMODE_TO_GH)
+        self._zone = zone
 
-        self._min_temp = 30.0
         self._max_temp = 80.0
+        self._min_temp = 30.0
         self._supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
     @property
     def operation_list(self) -> List[str]:
         """Return the list of available operation modes."""
-        return self._operation_list
+        return list(HA_OPMODE_TO_GH)
 
     @property
     def current_operation(self) -> str:
