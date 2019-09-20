@@ -10,7 +10,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SSL,
@@ -42,16 +41,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): cv.string,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
         vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)): vol.All(
-            cv.ensure_list, [vol.In(list(SENSOR_TYPES))]
-        ),
     }
 )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ombi sensor platform."""
-    conditions = config[CONF_MONITORED_CONDITIONS]
 
     urlbase = f"{config[CONF_URLBASE].strip('/') if config[CONF_URLBASE] else ''}/"
 
@@ -71,10 +66,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     sensors = []
 
-    for condition in conditions:
-        sensor_label = condition
-        sensor_type = SENSOR_TYPES[condition]["type"]
-        sensor_icon = SENSOR_TYPES[condition]["icon"]
+    for sensor in SENSOR_TYPES:
+        sensor_label = sensor
+        sensor_type = SENSOR_TYPES[sensor]["type"]
+        sensor_icon = SENSOR_TYPES[sensor]["icon"]
         sensors.append(OmbiSensor(sensor_label, sensor_type, ombi, sensor_icon))
 
     add_entities(sensors, True)
