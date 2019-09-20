@@ -1,5 +1,5 @@
 """Tests for the ecobee config flow."""
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.ecobee import config_flow
@@ -36,16 +36,15 @@ async def test_pin_request_succeeds(hass):
     flow.hass = hass
     flow.hass.data[DATA_ECOBEE_CONFIG] = {}
 
-    mock_ecobee = Mock()
-    mock_ecobee.request_pin.return_value = True
-    mock_ecobee.return_value.pin = "test-pin"
-    config_flow.Ecobee = mock_ecobee
+    with patch("homeassistant.components.ecobee.config_flow.Ecobee") as mock_ecobee:
+        mock_ecobee.request_pin.return_value = True
+        mock_ecobee.return_value.pin = "test-pin"
 
-    result = await flow.async_step_user(user_input={CONF_API_KEY: "api-key"})
+        result = await flow.async_step_user(user_input={CONF_API_KEY: "api-key"})
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "authorize"
-    assert result["description_placeholders"] == {"pin": "test-pin"}
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "authorize"
+        assert result["description_placeholders"] == {"pin": "test-pin"}
 
 
 async def test_pin_request_fails(hass):
@@ -54,12 +53,11 @@ async def test_pin_request_fails(hass):
     flow.hass = hass
     flow.hass.data[DATA_ECOBEE_CONFIG] = {}
 
-    mock_ecobee = Mock()
-    mock_ecobee.request_pin.return_value = False
-    config_flow.Ecobee = mock_ecobee
+    with patch("homeassistant.components.ecobee.config_flow.Ecobee") as mock_ecobee:
+        mock_ecobee.request_pin.return_value = False
 
-    result = await flow.async_step_user(user_input={CONF_API_KEY: "api-key"})
+        result = await flow.async_step_user(user_input={CONF_API_KEY: "api-key"})
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"]["base"] == "pin_request_failed"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+        assert result["errors"]["base"] == "pin_request_failed"
