@@ -7,21 +7,16 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    CONF_SSL,
-)
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_INTERVAL = timedelta(seconds=60)
+
 CONF_URLBASE = "urlbase"
 
 DEFAULT_PORT = 5000
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 DEFAULT_SSL = False
 DEFAULT_URLBASE = ""
 
@@ -40,7 +35,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): cv.string,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
     }
 )
 
