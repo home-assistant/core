@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     dev_id = config.get(CONF_ID)
     dev_name = config.get(CONF_NAME)
     device_class = config.get(CONF_DEVICE_CLASS)
-    
+
     if device_class == DEVICE_CLASS_OCCUPANCY:
         add_entities([EnOceanOccupancySensor(dev_id, dev_name, device_class)])
     else:
@@ -119,7 +119,7 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
 
 
 class EnOceanOccupancySensor(enocean.EnOceanDevice, BinarySensorDevice):
-    """Representation of EnOcean occupancy sensor
+    """Representation of EnOcean occupancy sensor.
 
     Supported EEPs (EnOcean Equipment Profiles):
     - A5-07-01 (Occupancy Sensor with Supply voltage monitor)
