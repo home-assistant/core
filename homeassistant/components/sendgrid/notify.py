@@ -11,6 +11,8 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
+from sendgrid import SendGridAPIClient
+
 from homeassistant.components.notify import (
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
@@ -45,8 +47,6 @@ class SendgridNotificationService(BaseNotificationService):
 
     def __init__(self, config):
         """Initialize the service."""
-        from sendgrid import SendGridAPIClient
-
         self.api_key = config[CONF_API_KEY]
         self.sender = config[CONF_SENDER]
         self.sender_name = config[CONF_SENDER_NAME]
