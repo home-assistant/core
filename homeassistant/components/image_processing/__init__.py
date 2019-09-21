@@ -75,6 +75,7 @@ def draw_box(
 ):
     """
     Draw a bounding box on and image.
+
     The bounding box is defined by the tuple (y_min, x_min, y_max, x_max)
     where the coordinates are floats in the range [0.0, 1.0] and
     relative to the width and height of the image.
