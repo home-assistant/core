@@ -73,7 +73,7 @@ aioswitcher==2019.4.26
 aiounifi==11
 
 # homeassistant.components.wwlln
-aiowwlln==2.0.1
+aiowwlln==2.0.2
 
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1
@@ -386,7 +386,7 @@ ring_doorbell==0.2.3
 rxv==0.6.0
 
 # homeassistant.components.simplisafe
-simplisafe-python==4.3.0
+simplisafe-python==5.0.1
 
 # homeassistant.components.sleepiq
 sleepyq==0.7

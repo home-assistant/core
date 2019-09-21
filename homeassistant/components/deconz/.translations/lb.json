@@ -49,6 +49,8 @@
             "button_3": "Dr\u00ebtte Kn\u00e4ppchen",
             "button_4": "V\u00e9ierte Kn\u00e4ppchen",
             "close": "Zoumaachen",
+            "dim_down": "Erhellen",
+            "dim_up": "Verd\u00e4ischteren",
             "left": "L\u00e9nks",
             "open": "Op",
             "right": "Riets",
@@ -70,6 +72,13 @@
     },
     "options": {
         "step": {
+            "async_step_deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "deCONZ Clip Sensoren erlaben",
+                    "allow_deconz_groups": "deCONZ Luucht Gruppen erlaben"
+                },
+                "description": "Visibilit\u00e9it vun deCONZ Apparater konfigur\u00e9ieren"
+            },
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "deCONZ Clip Sensoren erlaben",
