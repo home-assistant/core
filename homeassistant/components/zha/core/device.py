@@ -188,6 +188,11 @@ class ZHADevice(LogMixin):
         return self._all_channels
 
     @property
+    def device_automation_triggers(self):
+        """Return the device automation triggers for this device."""
+        return self._zigpy_device.device_automation_triggers
+
+    @property
     def available_signal(self):
         """Signal to use to subscribe to device availability changes."""
         return self._available_signal

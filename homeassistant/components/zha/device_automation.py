@@ -9,6 +9,8 @@ from homeassistant.components.device_automation.exceptions import (
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 
 from . import DOMAIN
+from .core.const import DATA_ZHA, DATA_ZHA_GATEWAY
+from .core.helpers import convert_ieee
 
 CONF_SUBTYPE = "subtype"
 
@@ -67,33 +69,7 @@ AQARA_ROUND_SWITCH = {
     },
 }
 
-AQARA_CUBE_MODEL = "lumi.sensor_cube.aqgl01"
-AQARA_CUBE = {
-    (CONF_ROTATED, CONF_RIGHT): {"command": "rotate_right"},
-    (CONF_ROTATED, CONF_LEFT): {"command": "rotate_left"},
-    (CONF_SHAKEN, CONF_TURN_ON): {"command": "shake"},
-    (CONF_DROPPED, CONF_TURN_ON): {"command": "drop"},
-    (CONF_SLID, CONF_BUTTON_1): {"command": "slide", "args": {"activated_face": 1}},
-    (CONF_SLID, CONF_BUTTON_2): {"command": "slide", "args": {"activated_face": 2}},
-    (CONF_SLID, CONF_BUTTON_3): {"command": "slide", "args": {"activated_face": 3}},
-    (CONF_SLID, CONF_BUTTON_4): {"command": "slide", "args": {"activated_face": 4}},
-    (CONF_SLID, CONF_BUTTON_5): {"command": "slide", "args": {"activated_face": 5}},
-    (CONF_SLID, CONF_BUTTON_6): {"command": "slide", "args": {"activated_face": 6}},
-    (CONF_KNOCKED, CONF_BUTTON_1): {"command": "knock", "args": {"activated_face": 1}},
-    (CONF_KNOCKED, CONF_BUTTON_2): {"command": "knock", "args": {"activated_face": 2}},
-    (CONF_KNOCKED, CONF_BUTTON_3): {"command": "knock", "args": {"activated_face": 3}},
-    (CONF_KNOCKED, CONF_BUTTON_4): {"command": "knock", "args": {"activated_face": 4}},
-    (CONF_KNOCKED, CONF_BUTTON_5): {"command": "knock", "args": {"activated_face": 5}},
-    (CONF_KNOCKED, CONF_BUTTON_6): {"command": "knock", "args": {"activated_face": 6}},
-    (CONF_FLIPPED, CONF_BUTTON_1): {"command": "flip", "args": {"activated_face": 1}},
-    (CONF_FLIPPED, CONF_BUTTON_2): {"command": "flip", "args": {"activated_face": 2}},
-    (CONF_FLIPPED, CONF_BUTTON_3): {"command": "flip", "args": {"activated_face": 3}},
-    (CONF_FLIPPED, CONF_BUTTON_4): {"command": "flip", "args": {"activated_face": 4}},
-    (CONF_FLIPPED, CONF_BUTTON_5): {"command": "flip", "args": {"activated_face": 5}},
-    (CONF_FLIPPED, CONF_BUTTON_6): {"command": "flip", "args": {"activated_face": 6}},
-}
-
-REMOTES = {AQARA_ROUND_SWITCH_MODEL: AQARA_ROUND_SWITCH, AQARA_CUBE_MODEL: AQARA_CUBE}
+REMOTES = {AQARA_ROUND_SWITCH_MODEL: AQARA_ROUND_SWITCH}
 
 TRIGGER_SCHEMA = vol.All(
     vol.Schema(
@@ -113,21 +89,25 @@ async def async_trigger(hass, config, action, automation_info):
     config = TRIGGER_SCHEMA(config)
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
-    device = device_registry.async_get(config[CONF_DEVICE_ID])
+    registry_device = device_registry.async_get(config[CONF_DEVICE_ID])
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    ieee_address = list(list(registry_device.identifiers)[0])[1]
+    ieee = convert_ieee(ieee_address)
+    zha_device = zha_gateway.devices[ieee]
 
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
 
-    if device.model not in REMOTES and trigger not in REMOTES[device.model]:
+    if (
+        not zha_device.device_automation_triggers
+        and trigger not in zha_device.device_automation_triggers
+    ):
         raise InvalidDeviceAutomationConfig
 
-    trigger = REMOTES[device.model][trigger]
+    trigger = zha_device.device_automation_triggers[trigger]
 
     state_config = {
         event.CONF_EVENT_TYPE: "zha_event",
-        event.CONF_EVENT_DATA: {
-            "device_ieee": list(list(device.identifiers)[0])[1],
-            **trigger,
-        },
+        event.CONF_EVENT_DATA: {"device_ieee": ieee_address, **trigger},
     }
 
     return await event.async_trigger(hass, state_config, action, automation_info)
@@ -141,13 +121,17 @@ async def async_get_triggers(hass, device_id):
     Generate device trigger list.
     """
     device_registry = await hass.helpers.device_registry.async_get_registry()
-    device = device_registry.async_get(device_id)
+    registry_device = device_registry.async_get(device_id)
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    ieee_address = list(list(registry_device.identifiers)[0])[1]
+    ieee = convert_ieee(ieee_address)
+    zha_device = zha_gateway.devices[ieee]
 
-    if device.model not in REMOTES:
+    if not zha_device.device_automation_triggers:
         return
 
     triggers = []
-    for trigger, subtype in REMOTES[device.model].keys():
+    for trigger, subtype in zha_device.device_automation_triggers.keys():
         triggers.append(
             {
                 CONF_DEVICE_ID: device_id,

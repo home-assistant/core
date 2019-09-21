@@ -49,7 +49,13 @@
       "button_3": "Third button",
       "button_4": "Fourth button",
       "button_5": "Fifth button",
-      "button_6": "Sixth button"
+      "button_6": "Sixth button",
+      "face_1": "with face 1 activated",
+      "face_2": "with face 2 activated",
+      "face_3": "with face 3 activated",
+      "face_4": "with face 4 activated",
+      "face_5": "with face 5 activated",
+      "face_6": "with face 6 activated"
     }
   }
 }
