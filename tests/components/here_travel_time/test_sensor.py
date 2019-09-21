@@ -912,3 +912,36 @@ async def test_invalid_credentials(hass, requests_mock, caplog):
     assert await async_setup_component(hass, DOMAIN, config)
     assert len(caplog.records) == 1
     assert "Invalid credentials" in caplog.text
+
+
+async def test_attribution(hass, requests_mock_credentials_check):
+    """Test that attributions are correctly displayed."""
+    origin = "50.037751372637686,14.39233448220898"
+    destination = "50.07993838201255,14.42582157361062"
+    modes = [ROUTE_MODE_SHORTEST, TRAVEL_MODE_PUBLIC_TIME_TABLE, TRAFFIC_MODE_ENABLED]
+    response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
+    requests_mock_credentials_check.get(
+        response_url, text=load_fixture("here_travel_time/attribution_response.json")
+    )
+
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin_latitude": origin.split(",")[0],
+            "origin_longitude": origin.split(",")[1],
+            "destination_latitude": destination.split(",")[0],
+            "destination_longitude": destination.split(",")[1],
+            "app_id": APP_ID,
+            "app_code": APP_CODE,
+            "traffic_mode": True,
+            "route_mode": ROUTE_MODE_SHORTEST,
+            "mode": TRAVEL_MODE_PUBLIC_TIME_TABLE,
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+    sensor = hass.states.get("sensor.test")
+    assert (
+        sensor.attributes.get(ATTR_ATTRIBUTION)
+        == 'With the support of <span class="company"><a href="https://transit.api.here.com/r?appId=Mt1bOYh3m9uxE7r3wuUx&u=https://wego.here.com">HERE Technologies</a></span>. All information is provided without warranty of any kind.'
+    )

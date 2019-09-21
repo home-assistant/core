@@ -78,6 +78,8 @@ ATTR_ORIGIN = "origin"
 ATTR_DESTINATION = "destination"
 
 ATTR_MODE = "mode"
+ATTR_UNIT_SYSTEM = CONF_UNIT_SYSTEM
+ATTR_TRAFFIC_MODE = CONF_TRAFFIC_MODE
 
 ATTR_DURATION_IN_TRAFFIC = "duration_in_traffic"
 ATTR_ORIGIN_NAME = "origin_name"
@@ -205,6 +207,11 @@ class HERETravelTimeSensor(Entity):
         self._unit_of_measurement = UNIT_OF_MEASUREMENT
         self._origin_entity_id = None
         self._destination_entity_id = None
+        self._attrs = {
+            ATTR_UNIT_SYSTEM: self._here_data.units,
+            ATTR_MODE: self._here_data.travel_mode,
+            ATTR_TRAFFIC_MODE: self._here_data.traffic_mode,
+        }
 
         # Check if location is a trackable entity
         if origin.split(".", 1)[0] in TRACKABLE_DOMAINS:
@@ -241,19 +248,16 @@ class HERETravelTimeSensor(Entity):
         if self._here_data.base_time is None:
             return None
 
-        res = {}
+        res = self._attrs
         res[ATTR_ATTRIBUTION] = self._here_data.attribution
         res[ATTR_DURATION] = self._here_data.base_time / 60
         res[ATTR_DISTANCE] = self._here_data.distance
         res[ATTR_ROUTE] = self._here_data.route
-        res[CONF_UNIT_SYSTEM] = self._here_data.units
         res[ATTR_DURATION_IN_TRAFFIC] = self._here_data.traffic_time / 60
         res[ATTR_ORIGIN] = self._here_data.origin
         res[ATTR_DESTINATION] = self._here_data.destination
         res[ATTR_ORIGIN_NAME] = self._here_data.origin_name
         res[ATTR_DESTINATION_NAME] = self._here_data.destination_name
-        res[ATTR_MODE] = self._here_data.travel_mode
-        res[CONF_TRAFFIC_MODE] = self._here_data.traffic_mode
         return res
 
     @property
@@ -386,8 +390,9 @@ class HERETravelTimeData:
             route = response.response["route"]
             summary = route[0]["summary"]
             waypoint = route[0]["waypoint"]
-
-            self.attribution = None
+            source_attribution = response.response.get("sourceAttribution")
+            if source_attribution is not None:
+                self.attribution = source_attribution["attribution"]
             self.base_time = summary["baseTime"]
             if self.travel_mode in TRAVEL_MODES_VEHICLE:
                 self.traffic_time = summary["trafficTime"]
