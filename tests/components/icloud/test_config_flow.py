@@ -26,10 +26,10 @@ MAX_INTERVAL = 15
 GPS_ACCURACY_THRESHOLD = 250
 
 
-@pytest.fixture(name="authenticate")
+@pytest.fixture(name="init")
 def mock_controller_authenticate():
     """Mock a successful authenticate."""
-    with patch("pyicloud.PyiCloudService.authenticate"):
+    with patch("pyicloud.PyiCloudService.__init__"):
         yield
 
 
@@ -64,7 +64,7 @@ def init_config_flow(hass):
 
 
 async def test_user(
-    hass, authenticate, requires_2fa, send_verification_code, validate_verification_code
+    hass, init, requires_2fa, send_verification_code, validate_verification_code
 ):
     """Test user config."""
     flow = init_config_flow(hass)
@@ -87,7 +87,7 @@ async def test_user(
 
 
 async def test_import(
-    hass, authenticate, requires_2fa, send_verification_code, validate_verification_code
+    hass, init, requires_2fa, send_verification_code, validate_verification_code
 ):
     """Test import step."""
     flow = init_config_flow(hass)
@@ -124,7 +124,7 @@ async def test_import(
 
 
 async def test_abort_if_already_setup(
-    hass, authenticate, requires_2fa, send_verification_code, validate_verification_code
+    hass, init, requires_2fa, send_verification_code, validate_verification_code
 ):
     """Test we abort if Linky is already setup."""
     flow = init_config_flow(hass)
@@ -184,7 +184,7 @@ async def test_abort_on_login_failed(hass):
         assert result["errors"] == {CONF_USERNAME: "login"}
 
 
-async def test_abort_on_fetch_failed(hass, authenticate, requires_2fa):
+async def test_abort_on_fetch_failed(hass, init, requires_2fa):
     """Test when we have errors during fetch."""
     flow = init_config_flow(hass)
 
