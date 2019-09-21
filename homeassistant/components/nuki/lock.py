@@ -2,8 +2,8 @@
 from datetime import timedelta
 import logging
 import time
-from pynuki import NukiBridge
 import voluptuous as vol
+from pynuki import NukiBridge
 
 from homeassistant.components.lock import PLATFORM_SCHEMA, SUPPORT_OPEN, LockDevice
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_TOKEN
@@ -81,7 +81,6 @@ class NukiLock(LockDevice):
     def __init__(self, nuki_lock):
         """Initialize the lock."""
         self._nuki_lock = nuki_lock
-        #        self._locked = nuki_lock.is_locked
         self._name = nuki_lock.name
         self._battery_critical = nuki_lock.battery_critical
         self._available = nuki_lock.state not in ERROR_STATES
@@ -142,6 +141,8 @@ class NukiLock(LockDevice):
                     self._name = self._nuki_lock.name
                     self._battery_critical = self._nuki_lock.battery_critical
                     break
+            if self._available:
+                break
 
     def lock(self, **kwargs):
         """Lock. Make blocking API request, so status is correct and reusable."""
