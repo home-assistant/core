@@ -287,7 +287,7 @@ class EvoDevice(Entity):
         self._schedule = {}
 
     @callback
-    def _refresh(self, packet):
+    def _refresh(self, packet) -> None:
         if packet["signal"] == "refresh":
             self.async_schedule_update_ha_state(force_refresh=True)
 
