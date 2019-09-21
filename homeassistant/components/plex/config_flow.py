@@ -149,7 +149,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 ): int,
                 vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
                 vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
-                vol.Optional(CONF_TOKEN, default=user_input[CONF_TOKEN]): str,
+                vol.Optional(CONF_TOKEN, default=user_input.get(CONF_TOKEN, "")): str,
             }
         )
         return self.async_show_form(step_id="manual_setup", data_schema=data_schema)
