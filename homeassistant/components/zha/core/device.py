@@ -190,7 +190,9 @@ class ZHADevice(LogMixin):
     @property
     def device_automation_triggers(self):
         """Return the device automation triggers for this device."""
-        return self._zigpy_device.device_automation_triggers
+        if hasattr(self._zigpy_device, "device_automation_triggers"):
+            return self._zigpy_device.device_automation_triggers
+        return None
 
     @property
     def available_signal(self):

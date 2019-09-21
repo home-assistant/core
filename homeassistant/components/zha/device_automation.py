@@ -99,7 +99,7 @@ async def async_trigger(hass, config, action, automation_info):
 
     if (
         not zha_device.device_automation_triggers
-        and trigger not in zha_device.device_automation_triggers
+        or trigger not in zha_device.device_automation_triggers
     ):
         raise InvalidDeviceAutomationConfig
 
