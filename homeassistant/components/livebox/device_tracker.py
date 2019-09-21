@@ -1,51 +1,53 @@
 """Support for the Livebox platform."""
 import logging
 
+from homeassistant.core import callback
 from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DOMAIN, DATA_LIVEBOX
+from . import DOMAIN, DATA_LIVEBOX, DATA_LIVEBOX_UNSUB
 
+TRACKER_UPDATE = "{}_tracker_update".format(DOMAIN)
 _LOGGER = logging.getLogger(__name__)
-
-DATA_LIVEBOX_DISPATCHERS = "livebox_dispatchers"
-LIVEBOX_DISCOVERY_NEW = "livebox_discovery_new_{}"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up device tracker from config entry."""
 
-    async def async_discover(device):
-        await _async_setup_entities(hass, config_entry, async_add_entities, [device])
+    @callback
+    def _receive_data(device):
+        """Receive set location."""
+        if device["PhysAddress"] in hass.data[DOMAIN]["devices"]:
+            return
 
-    unsub = async_dispatcher_connect(
-        hass, LIVEBOX_DISCOVERY_NEW.format(DOMAIN), async_discover
-    )
-    hass.data[DOMAIN][DATA_LIVEBOX_DISPATCHERS] = []
-    hass.data[DOMAIN][DATA_LIVEBOX_DISPATCHERS].append(unsub)
+        hass.data[DOMAIN]["devices"].add(device["PhysAddress"])
+
+        async_add_entities(
+            [
+                LiveboxDeviceScannerEntity(
+                    config_entry.data["id"], hass.data[DOMAIN][DATA_LIVEBOX], **device
+                )
+            ]
+        )
+
+    hass.data[DOMAIN][DATA_LIVEBOX_UNSUB][
+        config_entry.entry_id
+    ] = async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
 
     box_data = hass.data[DOMAIN][DATA_LIVEBOX]
     device_trackers = await box_data.async_devices()
-    if device_trackers:
-        await _async_setup_entities(
-            hass, config_entry, async_add_entities, device_trackers
-        )
-
-
-async def _async_setup_entities(
-    hass, config_entry, async_add_entities, device_trackers
-):
-    """Set up the device trackers."""
+    if not device_trackers:
+        return
 
     entities = []
     for device in device_trackers:
         if "IPAddress" in device:
-            entities.append(
-                LiveboxDeviceScannerEntity(
-                    config_entry.data["id"], hass.data[DOMAIN][DATA_LIVEBOX], **device
-                )
+            hass.data[DOMAIN]["devices"].add(device["PhysAddress"])
+            entity = LiveboxDeviceScannerEntity(
+                config_entry.data["id"], hass.data[DOMAIN][DATA_LIVEBOX], **device
             )
+            entities.append(entity)
 
     async_add_entities(entities, update_before_add=True)
 
@@ -53,10 +55,10 @@ async def _async_setup_entities(
 class LiveboxDeviceScannerEntity(ScannerEntity):
     """Represent a tracked device."""
 
-    def __init__(self, id, box_data, **kwargs):
+    def __init__(self, box_id, box_data, **kwargs):
         """Initialize the device tracker."""
         self._device = kwargs
-        self._box_id = id
+        self._box_id = box_id
         self._box_data = box_data
         self._connected = False
         self._unsubs = []
@@ -82,12 +84,19 @@ class LiveboxDeviceScannerEntity(ScannerEntity):
             "via_device": (DOMAIN, self._box_id),
         }
 
+    async def async_added_to_hass(self):
+        """Register state update callback."""
+
+        await super().async_added_to_hass()
+        self._unsubs = async_dispatcher_connect(
+            self.hass, TRACKER_UPDATE, self._async_receive_data
+        )
+
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
 
-        for unsub in self._unsubs:
-            unsub()
-            self._unsubs.remove(unsub)
+        await super().async_will_remove_from_hass()
+        self._unsubs()
 
     async def async_update(self):
         """Handle polling."""
@@ -116,3 +125,12 @@ class LiveboxDeviceScannerEntity(ScannerEntity):
         """Return the source type, eg gps or router, of the device."""
 
         return SOURCE_TYPE_ROUTER
+
+    @callback
+    def _async_receive_data(self, device):
+        """Mark the device as seen."""
+
+        if device["Name"] != self.name:
+            return
+        if self._update_entity():
+            self.async_write_ha_state()

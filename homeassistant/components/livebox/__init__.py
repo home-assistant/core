@@ -14,6 +14,8 @@ from .const import (
     DOMAIN,
     COMPONENTS,
     DATA_LIVEBOX,
+    DATA_LIVEBOX_UNSUB,
+    DATA__LIVEBOX_DEVICES,
     DEFAULT_USERNAME,
     DEFAULT_HOST,
     DEFAULT_PORT,
@@ -59,6 +61,8 @@ async def async_setup_entry(hass, config_entry):
     box_data = LiveboxData(config_entry)
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_LIVEBOX] = box_data
+    hass.data[DOMAIN][DATA_LIVEBOX_UNSUB] = {}
+    hass.data[DOMAIN][DATA__LIVEBOX_DEVICES] = set()
 
     config = await box_data.async_infos()
     if config:
