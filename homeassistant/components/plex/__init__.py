@@ -142,9 +142,7 @@ async def async_unload_entry(hass, entry):
     await hass.async_add_executor_job(cancel)
 
     tasks = [
-        asyncio.ensure_future(
-            hass.config_entries.async_forward_entry_unload(entry, platform)
-        )
+        hass.config_entries.async_forward_entry_unload(entry, platform)
         for platform in PLATFORMS
     ]
     await asyncio.gather(*tasks)
