@@ -256,6 +256,7 @@ class ONVIFHassCamera(Camera):
 
             _LOGGER.debug("Retrieving stream uri")
 
+            media_service = self._camera.create_media_service()
             req = media_service.create_type("GetStreamUri")
             req.ProfileToken = profiles[self._profile_index].token
             req.StreamSetup = {
