@@ -22,7 +22,7 @@ ATTR_NUKI_ID = "nuki_id"
 ATTR_UNLATCH = "unlatch"
 
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=5)
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
 NUKI_DATA = "nuki"
 
@@ -50,7 +50,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nuki lock platform. Enforce strict queuing of requests."""
     enforce_queuing = True
     bridge = NukiBridge(
-        config[CONF_HOST], config[CONF_TOKEN], config[CONF_PORT], 5, enforce_queuing
+        config[CONF_HOST],
+        config[CONF_TOKEN],
+        config[CONF_PORT],
+        DEFAULT_TIMEOUT,
+        enforce_queuing,
     )
     devices = [NukiLock(lock) for lock in bridge.locks]
 
