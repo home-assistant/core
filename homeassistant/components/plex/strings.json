@@ -31,7 +31,8 @@
         "error": {
             "faulty_credentials": "Authorization failed",
             "no_servers": "No servers linked to account",
-            "not_found": "Plex server not found"
+            "not_found": "Plex server not found",
+            "no_token": "Provide a token or select manual setup"
         },
         "abort": {
             "all_configured": "All linked servers already configured",

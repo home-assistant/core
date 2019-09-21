@@ -60,13 +60,17 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
+        errors = {}
         if user_input is not None:
             if user_input.pop("manual_setup", False):
                 return await self.async_step_manual_setup(user_input)
             if CONF_TOKEN in user_input:
                 return await self.async_step_server_validate(user_input)
+            errors["base"] = "no_token"
 
-        return self.async_show_form(step_id="user", data_schema=USER_SCHEMA, errors={})
+        return self.async_show_form(
+            step_id="user", data_schema=USER_SCHEMA, errors=errors
+        )
 
     async def async_step_server_validate(self, server_config):
         """Validate a provided configuration."""
