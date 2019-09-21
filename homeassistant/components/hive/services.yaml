@@ -4,7 +4,7 @@ boost_heating:
   fields:
     entity_id:
       {
-        description: Enter the entity_id for the device reuired to set the boost mode.,
+        description: Enter the entity_id for the device required to set the boost mode.,
         example: "climate.heating",
       }
     minutes:
@@ -21,7 +21,7 @@ boost_hotwater:
     entity_id:
       {
         description: Enter the entity_id for the device reuired to set the boost mode.,
-        example: "water_heater.hotwater",
+        example: "water_heater.hot_water",
       }
     minutes: { description: Set the duration of boost in minutes., example: "90" }
-    on_off: { description: Set the boost function on or off., example: "on or off" }
+    on_off: { description: Set the boost function on or off., example: "on" }

@@ -1,6 +1,6 @@
 """Support for hive water heaters."""
 import voluptuous as vol
-from homeassistant.const import TEMP_CELSIUS, ATTR_ENTITY_ID, ATTR_COMMAND
+from homeassistant.const import TEMP_CELSIUS, ATTR_ENTITY_ID
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.water_heater import (
     STATE_ECO,
@@ -18,11 +18,12 @@ HASS_TO_HIVE_STATE = {STATE_ECO: "SCHEDULE", STATE_ON: "ON", STATE_OFF: "OFF"}
 SUPPORT_WATER_HEATER = [STATE_ECO, STATE_ON, STATE_OFF]
 SERVICE_BOOST_HEATING = "boost_hotwater"
 ATTR_BOOST_MINUTES = "minutes"
+ATTR_MODE = "on_off"
 BOOST_HOTWATER_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_BOOST_MINUTES): cv.positive_int,
-        vol.Required(ATTR_COMMAND): cv.string,
+        vol.Optional(ATTR_BOOST_MINUTES): cv.positive_int,
+        vol.Required(ATTR_MODE): cv.string,
     }
 )
 
@@ -43,11 +44,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         """Handle the service call."""
         session = hass.data.get(DATA_HIVE)
         entity = session.entity_lookup[service.data.get(ATTR_ENTITY_ID)]
-        time = service.data.get(ATTR_BOOST_MINUTES)
-        mode = service.data.get(ATTR_COMMAND)
+        minutes = service.data.get(ATTR_BOOST_MINUTES, 30)
+        mode = service.data.get(ATTR_MODE)
 
         if mode == "on":
-            session.hotwater.turn_boost_on(entity, time)
+            session.hotwater.turn_boost_on(entity, minutes)
         elif mode == "off":
             session.hotwater.turn_boost_off(entity)
 

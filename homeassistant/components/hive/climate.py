@@ -38,7 +38,7 @@ BOOST_HEATING_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
         vol.Required(ATTR_BOOST_MINUTES): cv.positive_int,
-        vol.Required(ATTR_TEMPERATURE): cv.string,
+        vol.Optional(ATTR_TEMPERATURE): cv.string,
     }
 )
 
@@ -59,10 +59,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         """Handle the service call."""
         session = hass.data.get(DATA_HIVE)
         entity = session.entity_lookup[service.data.get(ATTR_ENTITY_ID)]
-        time = service.data.get(ATTR_BOOST_MINUTES)
-        temperature = float(service.data.get(ATTR_TEMPERATURE))
+        minutes = service.data.get(ATTR_BOOST_MINUTES)
+        temperature = float(service.data.get(ATTR_TEMPERATURE, 25))
 
-        session.heating.turn_boost_on(entity, time, temperature)
+        session.heating.turn_boost_on(entity, minutes, temperature)
 
     hass.services.register(
         DOMAIN, SERVICE_BOOST_HEATING, heating_boost, schema=BOOST_HEATING_SCHEMA
