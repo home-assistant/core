@@ -29,9 +29,11 @@ class InComfortClimate(ClimateDevice):
 
     def __init__(self, client, room):
         """Initialize the climate device."""
+        self.entity_id = f"climate.incomfort_{room.room_no}"
+
         self._client = client
         self._room = room
-        self._name = f"Room {room.room_no}"
+        self._name = f"InComfort Thermostat {room.room_no}"
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""

@@ -16,7 +16,7 @@ HEATER_SUPPORT_FLAGS = 0
 HEATER_MAX_TEMP = 80.0
 HEATER_MIN_TEMP = 30.0
 
-HEATER_NAME = "Boiler"
+HEATER_NAME = "InComfort Boiler"
 HEATER_ATTRS = ["display_code", "display_text", "is_burning"]
 
 
@@ -36,6 +36,8 @@ class IncomfortWaterHeater(WaterHeaterDevice):
 
     def __init__(self, client, heater):
         """Initialize the water_heater device."""
+        self.entity_id = f"water_heater.incomfort"
+
         self._client = client
         self._heater = heater
 
@@ -47,7 +49,7 @@ class IncomfortWaterHeater(WaterHeaterDevice):
     @property
     def icon(self):
         """Return the icon of the water_heater device."""
-        return "mdi-thermometer-lines"
+        return "mdi:thermometer-lines"
 
     @property
     def device_state_attributes(self):
