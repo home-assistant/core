@@ -41,24 +41,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ombi sensor platform."""
-
-    urlbase = f"{config[CONF_URLBASE].strip('/') if config[CONF_URLBASE] else ''}/"
-
-    ombi = pyombi.Ombi(
-        ssl=config[CONF_SSL],
-        host=config[CONF_HOST],
-        port=config[CONF_PORT],
-        api_key=config[CONF_API_KEY],
-        urlbase=urlbase,
-    )
-
-    try:
-        ombi.test_connection()
-    except pyombi.OmbiError as err:
-        _LOGGER.warning("Unable to setup Ombi: %s", err)
-        return
-
     sensors = []
+
+    ombi = hass.data[DOMAIN]["instance"]
 
     for sensor in SENSOR_TYPES:
         sensor_label = sensor
