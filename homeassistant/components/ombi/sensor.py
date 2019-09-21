@@ -98,17 +98,19 @@ class OmbiSensor(Entity):
     def update(self):
         """Update the sensor."""
         try:
-            if self._label == "pending":
-                self._state = self._ombi.pending_requests
-            elif self._label == "movies":
+            if self._label == "movies":
                 self._state = self._ombi.movie_requests
             elif self._label == "tv":
                 self._state = self._ombi.tv_requests
+            elif self._label == "music":
+                self._state = self._ombi.music_requests
+            elif self._label == "pending":
+                self._state = self._ombi.total_requests["pending"]
             elif self._label == "approved":
-                self._state = self._ombi.approved_requests
+                self._state = self._ombi.total_requests["approved"]
             elif self._label == "available":
-                self._state = self._ombi.available_requests
-        except pyombi.OmbiError as err:
+                self._state = self._ombi.total_requests["available"]
+        except OmbiError as err:
             _LOGGER.warning("Unable to update Ombi sensor: %s", err)
             self._state = None
             return
