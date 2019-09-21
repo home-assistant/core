@@ -297,8 +297,8 @@ class EvoDevice(Entity):
 
         Only Zones & DHW controllers (but not the TCS) can have schedules.
         """
-        if not self._schedule["DailySchedules"]:
-            return {}
+        # if not self._schedule["DailySchedules"]:  # TODO: is this needed?
+        #     return {}
 
         switchpoints = {}
 

@@ -153,14 +153,14 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
             return
 
         temperature = self._evo_device.setpointStatus["targetHeatTemperature"]
-        until = None  # EVO_PERMOVER
 
-        if op_mode == EVO_TEMPOVER and self._schedule["DailySchedules"]:
+        if op_mode == EVO_TEMPOVER:
             await self._update_schedule()
-            if self._schedule["DailySchedules"]:
-                until = parse_datetime(self.setpoints["next"]["from"])
+            until = parse_datetime(self.setpoints["next"]["from"])
+        else:  # EVO_PERMOVER
+            until = None
 
-        await self._set_temperature(temperature, until=until)
+        await self._set_temperature(temperature, until)
 
     async def _set_tcs_mode(self, op_mode: str) -> None:
         """Set the Controller to any of its native EVO_* operating modes."""
@@ -268,10 +268,14 @@ class EvoZone(EvoClimateDevice):
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set a new target temperature."""
-        until = kwargs.get("until")
-        if until:
-            until = parse_datetime(until)
+        if self._evo_device.setpointStatus["setpointMode"] == EVO_PERMOVER:
+            until = kwargs.get("until")
+        else:
+            await self._update_schedule()
+            until = kwargs.get("until", self.setpoints["next"]["from"])
 
+        if until is not None:
+            until = parse_datetime(until)
         await self._set_temperature(kwargs["temperature"], until)
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:

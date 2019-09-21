@@ -7,6 +7,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterDevice,
 )
 from homeassistant.const import PRECISION_WHOLE, STATE_OFF, STATE_ON
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.dt import parse_datetime
 
 from . import EvoDevice
@@ -21,7 +22,7 @@ HA_OPMODE_TO_DHW = {STATE_ON: EVO_FOLLOW, STATE_OFF: EVO_PERMOVER}
 
 
 async def async_setup_platform(
-    hass, config, async_add_entities, discovery_info=None
+    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ) -> None:
     """Create the DHW controller."""
     if discovery_info is None:
@@ -85,13 +86,12 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         op_mode = HA_OPMODE_TO_DHW[operation_mode]
 
         state = "" if op_mode == EVO_FOLLOW else HA_STATE_TO_EVO[STATE_OFF]
-        until = None  # EVO_FOLLOW, EVO_PERMOVER
+        until = None  # for EVO_FOLLOW, EVO_PERMOVER
 
-        if op_mode == EVO_TEMPOVER and self._schedule["DailySchedules"]:
+        if op_mode == EVO_TEMPOVER:
             await self._update_schedule()
-            if self._schedule["DailySchedules"]:
-                until = parse_datetime(self.setpoints["next"]["from"])
-                until = until.strftime(EVO_STRFTIME)
+            until = parse_datetime(self.setpoints["next"]["from"])
+            until = until.strftime(EVO_STRFTIME)
 
         data = {"Mode": op_mode, "State": state, "UntilTime": until}
 
