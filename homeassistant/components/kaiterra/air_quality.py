@@ -1,3 +1,4 @@
+"""Support for Kaiterra Air Quality Sensors."""
 from homeassistant.components.air_quality import AirQualityEntity
 
 from homeassistant.helpers.dispatcher import (

@@ -1,4 +1,4 @@
-
+"""Support for Kaiterra Temperature ahn Humidity Sensors."""
 from homeassistant.helpers.entity import Entity
 
 from homeassistant.helpers.dispatcher import (

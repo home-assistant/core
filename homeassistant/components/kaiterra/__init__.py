@@ -1,4 +1,4 @@
-"""The Kaiterra component"""
+"""Support for Kaiterra devices."""
 import voluptuous as vol
 
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -52,7 +52,6 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: KAITERRA_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 async def async_setup(hass, config):
     """Set up the Kaiterra components."""
-    from kaiterra_async_client import KaiterraAPIClient, AQIStandard, Units
 
     config = config.get(DOMAIN, {})
     scan_interval = config.get(CONF_SCAN_INTERVAL)

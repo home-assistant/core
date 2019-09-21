@@ -1,6 +1,11 @@
+"""Data for all Kaiterra devices."""
 from logging import getLogger
 
 import async_timeout
+
+from asyncio import TimeoutError
+
+from aiohttp.client_exceptions import ClientResponseError
 
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
@@ -10,9 +15,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_DEVICES,
     CONF_DEVICE_ID,
-    CONF_SCAN_INTERVAL,
     CONF_TYPE,
-    CONF_NAME,
 )
 
 from .const import (
@@ -20,7 +23,6 @@ from .const import (
     AQI_LEVEL,
     CONF_AQI_STANDARD,
     CONF_PREFERRED_UNITS,
-    KAITERRA_COMPONENTS,
     DISPATCHER_KAITERRA
 )
 
@@ -65,7 +67,10 @@ class KaiterraApiData:
             with async_timeout.timeout(10):
                 data = await self._api.get_latest_sensor_readings(self._devices)
                 _LOGGER.debug('New data retrieved: %s', data)
-        except:
+        except (
+            ClientResponseError,
+            TimeoutError
+        ):
             _LOGGER.debug("Couldn't fetch data")
             self.data = {}
             async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)
