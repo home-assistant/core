@@ -71,8 +71,8 @@ def draw_box(
     img_width: int,
     img_height: int,
     text: str = "",
-    color=(255, 255, 0),
-):
+    color: Tuple[int, int, int] = (255, 255, 0),
+) -> None:
     """
     Draw a bounding box on and image.
 
