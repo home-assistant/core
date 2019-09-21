@@ -61,9 +61,10 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if user_input is not None:
-            if user_input["manual_setup"]:
-                return await self.async_step_manual_setup()
-            return await self.async_step_server_validate(user_input)
+            if user_input.pop("manual_setup", False):
+                return await self.async_step_manual_setup(user_input)
+            if CONF_TOKEN in user_input:
+                return await self.async_step_server_validate(user_input)
 
         return self.async_show_form(step_id="user", data_schema=USER_SCHEMA, errors={})
 
@@ -130,7 +131,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_manual_setup(self, user_input=None):
         """Begin manual configuration."""
-        if user_input is not None:
+        if len(user_input) > 1:
             host = user_input.pop(CONF_HOST)
             port = user_input.pop(CONF_PORT)
             prefix = "https" if user_input.pop(CONF_SSL) else "http"
@@ -148,7 +149,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 ): int,
                 vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
                 vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
-                vol.Optional(CONF_TOKEN): str,
+                vol.Optional(CONF_TOKEN, default=user_input[CONF_TOKEN]): str,
             }
         )
         return self.async_show_form(step_id="manual_setup", data_schema=data_schema)
