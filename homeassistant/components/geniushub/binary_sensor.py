@@ -33,7 +33,7 @@ class GeniusBinarySensor(GeniusDevice, BinarySensorDevice):
         self._state_attr = state_attr
 
         if device.type[:21] == "Dual Channel Receiver":
-            self._name = f"Dual Channel Receiver {device.id}"
+            self._name = f"{device.type[:21]} {device.id}"
         else:
             self._name = f"{device.type} {device.id}"
 
