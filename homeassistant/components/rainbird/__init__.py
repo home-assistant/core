@@ -32,7 +32,14 @@ SENSOR_TYPES = {
     SENSOR_TYPE_RAINDELAY: ["Raindelay", None, "mdi:water-off"],
 }
 
-TRIGGER_TIME_SCHEMA = cv.positive_int
+TRIGGER_TIME_SCHEMA = vol.Any(
+    cv.positive_int,
+    vol.All(
+        cv.time_period,
+        cv.positive_timedelta,
+        lambda td: (td.days * 24 * 60) + td.seconds // 60,
+    ),
+)
 
 ZONE_SCHEMA = vol.Schema(
     {
