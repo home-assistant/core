@@ -1140,7 +1140,7 @@ pydelijn==0.5.1
 pydispatcher==2.0.5
 
 # homeassistant.components.doods
-pydoods==1.0.1
+pydoods==1.0.2
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==0.8
