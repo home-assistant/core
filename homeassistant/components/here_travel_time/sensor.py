@@ -1,7 +1,7 @@
 """Support for HERE travel time sensors."""
 from datetime import timedelta
 import logging
-from typing import Callable, Dict, Optional, Union, List
+from typing import Callable, Dict, Optional, Union
 
 import herepy
 import voluptuous as vol
@@ -56,8 +56,8 @@ TRAVEL_MODES_PUBLIC = [TRAVEL_MODE_PUBLIC, TRAVEL_MODE_PUBLIC_TIME_TABLE]
 TRAVEL_MODES_VEHICLE = [TRAVEL_MODE_CAR, TRAVEL_MODE_TRUCK]
 TRAVEL_MODES_NON_VEHICLE = [TRAVEL_MODE_BICYCLE, TRAVEL_MODE_PEDESTRIAN]
 
-TRAFFIC_MODE_ENABLED = "traffic:enabled"
-TRAFFIC_MODE_DISABLED = "traffic:disabled"
+TRAFFIC_MODE_ENABLED = "traffic_enabled"
+TRAFFIC_MODE_DISABLED = "traffic_disabled"
 
 ROUTE_MODE_FASTEST = "fastest"
 ROUTE_MODE_SHORTEST = "shortest"
@@ -88,7 +88,6 @@ SCAN_INTERVAL = timedelta(minutes=5)
 TRACKABLE_DOMAINS = ["device_tracker", "sensor", "zone", "person"]
 DATA_KEY = "here_travel_time"
 
-NO_ROUTE_ERRORS = ["NGEO_ERROR_GRAPH_DISCONNECTED", "NGEO_ERROR_ROUTE_NO_END_POINT"]
 NO_ROUTE_ERROR_MESSAGE = "HERE could not find a route based on the input"
 
 COORDINATE_SCHEMA = vol.Schema(
@@ -136,57 +135,70 @@ async def async_setup_platform(
     discovery_info: None = None,
 ) -> None:
     """Set up the HERE travel time platform."""
-    hass.data.setdefault(DATA_KEY, [])
 
     app_id = config[CONF_APP_ID]
     app_code = config[CONF_APP_CODE]
-    if config.get(CONF_ORIGIN_LATITUDE) is not None:
-        origin = ",".join(
-            [str(config[CONF_ORIGIN_LATITUDE]), str(config[CONF_ORIGIN_LONGITUDE])]
+    here_client = herepy.RoutingApi(app_id, app_code)
+
+    if not _are_valid_client_credentials(here_client):
+        _LOGGER.error(
+            "Invalid credentials. This error is returned if the specified token was invalid or no contract could be found for this token."
         )
+        return
+
+    if config.get(CONF_ORIGIN_LATITUDE) is not None:
+        origin = f"{config[CONF_ORIGIN_LATITUDE]},{config[CONF_ORIGIN_LONGITUDE]}"
     else:
         origin = config[CONF_ORIGIN_ENTITY_ID]
 
     if config.get(CONF_DESTINATION_LATITUDE) is not None:
-        destination = ",".join(
-            [
-                str(config[CONF_DESTINATION_LATITUDE]),
-                str(config[CONF_DESTINATION_LONGITUDE]),
-            ]
+        destination = (
+            f"{config[CONF_DESTINATION_LATITUDE]},{config[CONF_DESTINATION_LONGITUDE]}"
         )
     else:
         destination = config[CONF_DESTINATION_ENTITY_ID]
 
-    travel_mode = config.get(CONF_MODE)
-    traffic_mode = config.get(CONF_TRAFFIC_MODE)
-    route_mode = config.get(CONF_ROUTE_MODE)
-    name = config.get(CONF_NAME)
+    travel_mode = config[CONF_MODE]
+    traffic_mode = config[CONF_TRAFFIC_MODE]
+    route_mode = config[CONF_ROUTE_MODE]
+    name = config[CONF_NAME]
     units = config.get(CONF_UNIT_SYSTEM, hass.config.units.name)
 
     here_data = HERETravelTimeData(
-        None, None, app_id, app_code, travel_mode, traffic_mode, route_mode, units
+        here_client, travel_mode, traffic_mode, route_mode, units
     )
 
-    sensor = HERETravelTimeSensor(hass, name, origin, destination, here_data)
-
-    hass.data[DATA_KEY].append(sensor)
+    sensor = HERETravelTimeSensor(name, origin, destination, here_data)
 
     async_add_entities([sensor], True)
+
+
+def _are_valid_client_credentials(here_client: herepy.RoutingApi) -> bool:
+    """Check if the provided credentials are correct using defaults."""
+    test_origin = [38.9, -77.04833]
+    test_destination = [39.0, -77.1]
+    try:
+        here_client.car_route(
+            test_origin,
+            test_destination,
+            [
+                herepy.RouteMode[ROUTE_MODE_FASTEST],
+                herepy.RouteMode[TRAVEL_MODE_CAR],
+                herepy.RouteMode[TRAFFIC_MODE_DISABLED],
+            ],
+        )
+    except herepy.InvalidCredentialsError:
+        return False
+    return True
 
 
 class HERETravelTimeSensor(Entity):
     """Representation of a HERE travel time sensor."""
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        name: str,
-        origin: str,
-        destination: str,
-        here_data: "HERETravelTimeData",
+        self, name: str, origin: str, destination: str, here_data: "HERETravelTimeData"
     ) -> None:
         """Initialize the sensor."""
-        self._hass = hass
         self._name = name
         self._here_data = here_data
         self._unit_of_measurement = UNIT_OF_MEASUREMENT
@@ -274,11 +286,11 @@ class HERETravelTimeSensor(Entity):
                 self._destination_entity_id
             )
 
-        await self._hass.async_add_executor_job(self._here_data.update)
+        await self.hass.async_add_executor_job(self._here_data.update)
 
     async def _get_location_from_entity(self, entity_id: str) -> Optional[str]:
         """Get the location from the entity state or attributes."""
-        entity = self._hass.states.get(entity_id)
+        entity = self.hass.states.get(entity_id)
 
         if entity is None:
             _LOGGER.error("Unable to find entity %s", entity_id)
@@ -289,7 +301,7 @@ class HERETravelTimeSensor(Entity):
             return self._get_location_from_attributes(entity)
 
         # Check if device is in a zone
-        zone_entity = self._hass.states.get("zone.{}".format(entity.state))
+        zone_entity = self.hass.states.get("zone.{}".format(entity.state))
         if location.has_location(zone_entity):
             _LOGGER.debug(
                 "%s is in %s, getting zone location", entity_id, zone_entity.entity_id
@@ -312,18 +324,15 @@ class HERETravelTimeData:
 
     def __init__(
         self,
-        origin: None,
-        destination: None,
-        app_id: str,
-        app_code: str,
+        here_client: herepy.RoutingApi,
         travel_mode: str,
         traffic_mode: bool,
         route_mode: str,
         units: str,
     ) -> None:
         """Initialize herepy."""
-        self.origin = origin
-        self.destination = destination
+        self.origin = None
+        self.destination = None
         self.travel_mode = travel_mode
         self.traffic_mode = traffic_mode
         self.route_mode = route_mode
@@ -335,7 +344,7 @@ class HERETravelTimeData:
         self.origin_name = None
         self.destination_name = None
         self.units = units
-        self._client = herepy.RoutingApi(app_id, app_code)
+        self._client = here_client
 
     def update(self) -> None:
         """Get the latest data from HERE."""
@@ -353,26 +362,29 @@ class HERETravelTimeData:
                 "Requesting route for origin: %s, destination: %s, route_mode: %s, mode: %s, traffic_mode: %s",
                 origin,
                 destination,
-                self.route_mode,
-                self.travel_mode,
-                traffic_mode,
+                herepy.RouteMode[self.route_mode],
+                herepy.RouteMode[self.travel_mode],
+                herepy.RouteMode[traffic_mode],
             )
-            response = self._client.car_route(
-                origin, destination, [self.route_mode, self.travel_mode, traffic_mode]
-            )
-            if isinstance(response, herepy.error.HEREError):
+            try:
+                response = self._client.car_route(
+                    origin,
+                    destination,
+                    [
+                        herepy.RouteMode[self.route_mode],
+                        herepy.RouteMode[self.travel_mode],
+                        herepy.RouteMode[traffic_mode],
+                    ],
+                )
+            except herepy.NoRouteFoundError:
                 # Better error message for cryptic no route error codes
-                if any(error in response.message for error in NO_ROUTE_ERRORS):
-                    _LOGGER.error(NO_ROUTE_ERROR_MESSAGE)
-                else:
-                    _LOGGER.error("API returned error %s", response.message)
+                _LOGGER.error(NO_ROUTE_ERROR_MESSAGE)
                 return
 
             # pylint: disable=no-member
             route = response.response["route"]
             summary = route[0]["summary"]
             waypoint = route[0]["waypoint"]
-            maneuver = route[0]["leg"][0]["maneuver"]
 
             self.attribution = None
             self.base_time = summary["baseTime"]
@@ -387,82 +399,7 @@ class HERETravelTimeData:
             else:
                 # Convert to kilometers
                 self.distance = distance / 1000
-            if self.travel_mode in TRAVEL_MODES_VEHICLE:
-                # Get Route for Car and Truck
-                self.route = self._get_route_from_vehicle_maneuver(maneuver)
-            elif self.travel_mode in TRAVEL_MODES_PUBLIC:
-                # Get Route for Public Transport
-                public_transport_line = route[0]["publicTransportLine"]
-                self.route = self._get_route_from_public_transport_line(
-                    public_transport_line
-                )
-            elif self.travel_mode in TRAVEL_MODES_NON_VEHICLE:
-                # Get Route for Pedestrian and Biyclce
-                self.route = self._get_route_from_non_vehicle_maneuver(maneuver)
+            # pylint: disable=no-member
+            self.route = response.route_short
             self.origin_name = waypoint[0]["mappedRoadName"]
             self.destination_name = waypoint[1]["mappedRoadName"]
-
-    @staticmethod
-    def _get_route_from_non_vehicle_maneuver(maneuver: str) -> str:
-        """Extract a Waze-like route from the maneuver instructions."""
-        road_names: List[str] = []
-
-        for step in maneuver:
-            instruction = step["instruction"]
-            try:
-                road_name = instruction.split('<span class="next-street">')[1].split(
-                    "</span>"
-                )[0]
-                road_name = road_name.replace("(", "").replace(")", "")
-
-                # Only add if it does not repeat
-                if not road_names or road_names[-1] != road_name:
-                    road_names.append(road_name)
-            except IndexError:
-                pass  # No street name found in this maneuver step
-        route = "; ".join(list(map(str, road_names)))
-        return route
-
-    @staticmethod
-    def _get_route_from_public_transport_line(
-        public_transport_line_segment: str
-    ) -> str:
-        """Extract Waze-like route info from the public transport lines."""
-        lines: List[str] = []
-        for line_info in public_transport_line_segment:
-            lines.append(line_info["lineName"] + " - " + line_info["destination"])
-
-        route = "; ".join(list(map(str, lines)))
-        return route
-
-    @staticmethod
-    def _get_route_from_vehicle_maneuver(maneuver: str) -> str:
-        """Extract a Waze-like route from the maneuver instructions."""
-        road_names: List[str] = []
-
-        for step in maneuver:
-            instruction = step["instruction"]
-            try:
-                road_number = instruction.split('<span class="number">')[1].split(
-                    "</span>"
-                )[0]
-                road_name = road_number.replace("(", "").replace(")", "")
-
-                try:
-                    street_name = instruction.split('<span class="next-street">')[
-                        1
-                    ].split("</span>")[0]
-                    street_name = street_name.replace("(", "").replace(")", "")
-
-                    road_name += " - " + street_name
-                except IndexError:
-                    pass  # No street name found in this maneuver step
-
-                # Only add if it does not repeat
-                if not road_names or road_names[-1] != road_name:
-                    road_names.append(road_name)
-            except IndexError:
-                pass  # No road number found in this maneuver step
-
-        route = "; ".join(list(map(str, road_names)))
-        return route

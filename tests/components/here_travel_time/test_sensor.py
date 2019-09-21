@@ -3,6 +3,7 @@ import logging
 from unittest.mock import patch
 import urllib
 
+import herepy
 import pytest
 
 from homeassistant.components.here_travel_time.sensor import (
@@ -72,7 +73,7 @@ def _build_mock_url(origin, destination, modes, app_id, app_code, departure):
     parameters = {
         "waypoint0": origin,
         "waypoint1": destination,
-        "mode": modes,
+        "mode": ";".join(str(herepy.RouteMode[mode]) for mode in modes),
         "app_id": app_id,
         "app_code": app_code,
         "departure": departure,
@@ -110,26 +111,9 @@ def _assert_truck_sensor(sensor):
 
 
 @pytest.fixture
-def requests_mock_truck_response(requests_mock):
-    """Return a requests_mock for truck respones."""
-    modes = ";".join([ROUTE_MODE_FASTEST, TRAVEL_MODE_TRUCK, TRAFFIC_MODE_DISABLED])
-    response_url = _build_mock_url(
-        ",".join([TRUCK_ORIGIN_LATITUDE, TRUCK_ORIGIN_LONGITUDE]),
-        ",".join([TRUCK_DESTINATION_LATITUDE, TRUCK_DESTINATION_LONGITUDE]),
-        modes,
-        APP_ID,
-        APP_CODE,
-        "now",
-    )
-    requests_mock.get(
-        response_url, text=load_fixture("here_travel_time/truck_response.json")
-    )
-
-
-@pytest.fixture
-def requests_mock_car_disabled_response(requests_mock):
-    """Return a requests_mock for truck respones."""
-    modes = ";".join([ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_DISABLED])
+def requests_mock_credentials_check(requests_mock):
+    """Add the url used in the api validation to all requests mock."""
+    modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_DISABLED]
     response_url = _build_mock_url(
         ",".join([CAR_ORIGIN_LATITUDE, CAR_ORIGIN_LONGITUDE]),
         ",".join([CAR_DESTINATION_LATITUDE, CAR_DESTINATION_LONGITUDE]),
@@ -139,6 +123,41 @@ def requests_mock_car_disabled_response(requests_mock):
         "now",
     )
     requests_mock.get(
+        response_url, text=load_fixture("here_travel_time/car_response.json")
+    )
+    return requests_mock
+
+
+@pytest.fixture
+def requests_mock_truck_response(requests_mock_credentials_check):
+    """Return a requests_mock for truck respones."""
+    modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_TRUCK, TRAFFIC_MODE_DISABLED]
+    response_url = _build_mock_url(
+        ",".join([TRUCK_ORIGIN_LATITUDE, TRUCK_ORIGIN_LONGITUDE]),
+        ",".join([TRUCK_DESTINATION_LATITUDE, TRUCK_DESTINATION_LONGITUDE]),
+        modes,
+        APP_ID,
+        APP_CODE,
+        "now",
+    )
+    requests_mock_credentials_check.get(
+        response_url, text=load_fixture("here_travel_time/truck_response.json")
+    )
+
+
+@pytest.fixture
+def requests_mock_car_disabled_response(requests_mock_credentials_check):
+    """Return a requests_mock for truck respones."""
+    modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_DISABLED]
+    response_url = _build_mock_url(
+        ",".join([CAR_ORIGIN_LATITUDE, CAR_ORIGIN_LONGITUDE]),
+        ",".join([CAR_DESTINATION_LATITUDE, CAR_DESTINATION_LONGITUDE]),
+        modes,
+        APP_ID,
+        APP_CODE,
+        "now",
+    )
+    requests_mock_credentials_check.get(
         response_url, text=load_fixture("here_travel_time/car_response.json")
     )
 
@@ -192,9 +211,9 @@ async def test_car(hass, requests_mock_car_disabled_response):
     )
 
 
-async def test_traffic_mode_enabled(hass, requests_mock):
+async def test_traffic_mode_enabled(hass, requests_mock_credentials_check):
     """Test that traffic mode enabled works."""
-    modes = ";".join([ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_ENABLED])
+    modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_ENABLED]
     response_url = _build_mock_url(
         ",".join([CAR_ORIGIN_LATITUDE, CAR_ORIGIN_LONGITUDE]),
         ",".join([CAR_DESTINATION_LATITUDE, CAR_DESTINATION_LONGITUDE]),
@@ -203,7 +222,7 @@ async def test_traffic_mode_enabled(hass, requests_mock):
         APP_CODE,
         "now",
     )
-    requests_mock.get(
+    requests_mock_credentials_check.get(
         response_url, text=load_fixture("here_travel_time/car_enabled_response.json")
     )
 
@@ -251,13 +270,13 @@ async def test_imperial(hass, requests_mock_car_disabled_response):
     assert sensor.attributes.get(ATTR_DISTANCE) == 14.852635608048994
 
 
-async def test_route_mode_shortest(hass, requests_mock):
+async def test_route_mode_shortest(hass, requests_mock_credentials_check):
     """Test that route mode shortest works."""
     origin = "38.902981,-77.048338"
     destination = "39.042158,-77.119116"
-    modes = ";".join([ROUTE_MODE_SHORTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_DISABLED])
+    modes = [ROUTE_MODE_SHORTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_DISABLED]
     response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
-    requests_mock.get(
+    requests_mock_credentials_check.get(
         response_url, text=load_fixture("here_travel_time/car_shortest_response.json")
     )
 
@@ -280,13 +299,13 @@ async def test_route_mode_shortest(hass, requests_mock):
     assert sensor.attributes.get(ATTR_DISTANCE) == 18.388
 
 
-async def test_route_mode_fastest(hass, requests_mock):
+async def test_route_mode_fastest(hass, requests_mock_credentials_check):
     """Test that route mode fastest works."""
     origin = "38.902981,-77.048338"
     destination = "39.042158,-77.119116"
-    modes = ";".join([ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_ENABLED])
+    modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_ENABLED]
     response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
-    requests_mock.get(
+    requests_mock_credentials_check.get(
         response_url, text=load_fixture("here_travel_time/car_enabled_response.json")
     )
 
@@ -329,13 +348,13 @@ async def test_truck(hass, requests_mock_truck_response):
     _assert_truck_sensor(sensor)
 
 
-async def test_public_transport(hass, requests_mock):
+async def test_public_transport(hass, requests_mock_credentials_check):
     """Test that publicTransport works."""
     origin = "41.9798,-87.8801"
     destination = "41.9043,-87.9216"
-    modes = ";".join([ROUTE_MODE_FASTEST, TRAVEL_MODE_PUBLIC, TRAFFIC_MODE_DISABLED])
+    modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_PUBLIC, TRAFFIC_MODE_DISABLED]
     response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
-    requests_mock.get(
+    requests_mock_credentials_check.get(
         response_url, text=load_fixture("here_travel_time/public_response.json")
     )
 
@@ -376,15 +395,13 @@ async def test_public_transport(hass, requests_mock):
     assert sensor.attributes.get(ATTR_ICON) == ICON_PUBLIC
 
 
-async def test_public_transport_time_table(hass, requests_mock):
+async def test_public_transport_time_table(hass, requests_mock_credentials_check):
     """Test that publicTransportTimeTable works."""
     origin = "41.9798,-87.8801"
     destination = "41.9043,-87.9216"
-    modes = ";".join(
-        [ROUTE_MODE_FASTEST, TRAVEL_MODE_PUBLIC_TIME_TABLE, TRAFFIC_MODE_DISABLED]
-    )
+    modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_PUBLIC_TIME_TABLE, TRAFFIC_MODE_DISABLED]
     response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
-    requests_mock.get(
+    requests_mock_credentials_check.get(
         response_url,
         text=load_fixture("here_travel_time/public_time_table_response.json"),
     )
@@ -426,15 +443,13 @@ async def test_public_transport_time_table(hass, requests_mock):
     assert sensor.attributes.get(ATTR_ICON) == ICON_PUBLIC
 
 
-async def test_pedestrian(hass, requests_mock):
+async def test_pedestrian(hass, requests_mock_credentials_check):
     """Test that pedestrian works."""
     origin = "41.9798,-87.8801"
     destination = "41.9043,-87.9216"
-    modes = ";".join(
-        [ROUTE_MODE_FASTEST, TRAVEL_MODE_PEDESTRIAN, TRAFFIC_MODE_DISABLED]
-    )
+    modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_PEDESTRIAN, TRAFFIC_MODE_DISABLED]
     response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
-    requests_mock.get(
+    requests_mock_credentials_check.get(
         response_url, text=load_fixture("here_travel_time/pedestrian_response.json")
     )
 
@@ -477,13 +492,13 @@ async def test_pedestrian(hass, requests_mock):
     assert sensor.attributes.get(ATTR_ICON) == ICON_PEDESTRIAN
 
 
-async def test_bicycle(hass, requests_mock):
+async def test_bicycle(hass, requests_mock_credentials_check):
     """Test that bicycle works."""
     origin = "41.9798,-87.8801"
     destination = "41.9043,-87.9216"
-    modes = ";".join([ROUTE_MODE_FASTEST, TRAVEL_MODE_BICYCLE, TRAFFIC_MODE_DISABLED])
+    modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_BICYCLE, TRAFFIC_MODE_DISABLED]
     response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
-    requests_mock.get(
+    requests_mock_credentials_check.get(
         response_url, text=load_fixture("here_travel_time/bike_response.json")
     )
 
@@ -796,14 +811,14 @@ async def test_location_device_tracker_in_zone(
     assert ", getting zone location" in caplog.text
 
 
-async def test_route_not_found(hass, requests_mock, caplog):
+async def test_route_not_found(hass, requests_mock_credentials_check, caplog):
     """Test that route not found error is correctly handled."""
     caplog.set_level(logging.ERROR)
     origin = "52.516,13.3779"
     destination = "47.013399,-10.171986"
-    modes = ";".join([ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_DISABLED])
+    modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_DISABLED]
     response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
-    requests_mock.get(
+    requests_mock_credentials_check.get(
         response_url,
         text=load_fixture("here_travel_time/routing_error_no_route_found.json"),
     )
@@ -868,11 +883,14 @@ async def test_pattern_destination(hass, caplog):
 async def test_invalid_credentials(hass, requests_mock, caplog):
     """Test that invalid credentials error is correctly handled."""
     caplog.set_level(logging.ERROR)
-    origin = "52.516,13.3779"
-    destination = "47.013399,-10.171986"
-    modes = ";".join([ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_DISABLED])
+    modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_DISABLED]
     response_url = _build_mock_url(
-        origin, destination, modes, "invalid", "invalid", "now"
+        ",".join([CAR_ORIGIN_LATITUDE, CAR_ORIGIN_LONGITUDE]),
+        ",".join([CAR_DESTINATION_LATITUDE, CAR_DESTINATION_LONGITUDE]),
+        modes,
+        APP_ID,
+        APP_CODE,
+        "now",
     )
     requests_mock.get(
         response_url,
@@ -883,14 +901,14 @@ async def test_invalid_credentials(hass, requests_mock, caplog):
         DOMAIN: {
             "platform": PLATFORM,
             "name": "test",
-            "origin_latitude": origin.split(",")[0],
-            "origin_longitude": origin.split(",")[1],
-            "destination_latitude": destination.split(",")[0],
-            "destination_longitude": destination.split(",")[1],
-            "app_id": "invalid",
-            "app_code": "invalid",
+            "origin_latitude": CAR_ORIGIN_LATITUDE,
+            "origin_longitude": CAR_ORIGIN_LONGITUDE,
+            "destination_latitude": CAR_DESTINATION_LATITUDE,
+            "destination_longitude": CAR_DESTINATION_LONGITUDE,
+            "app_id": APP_ID,
+            "app_code": APP_CODE,
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
     assert len(caplog.records) == 1
-    assert "API returned error" in caplog.text
+    assert "Invalid credentials" in caplog.text
