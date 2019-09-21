@@ -1,4 +1,5 @@
 """Support to embed Plex."""
+import asyncio
 import logging
 
 import plexapi.exceptions
@@ -140,10 +141,13 @@ async def async_unload_entry(hass, entry):
     cancel = hass.data[PLEX_DOMAIN][REFRESH_LISTENERS].pop(server_id)
     await hass.async_add_executor_job(cancel)
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
+    tasks = [
+        asyncio.ensure_future(
             hass.config_entries.async_forward_entry_unload(entry, platform)
         )
+        for platform in PLATFORMS
+    ]
+    await asyncio.gather(*tasks)
 
     hass.data[PLEX_DOMAIN][SERVERS].pop(server_id)
 
