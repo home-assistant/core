@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "no_flows": "Vous devez configurer Withings avant de pouvoir vous authentifier avec celui-ci. Veuillez lire la documentation."
+        },
         "create_entry": {
             "default": "Authentifi\u00e9 avec succ\u00e8s \u00e0 Withings pour le profil s\u00e9lectionn\u00e9."
         },
