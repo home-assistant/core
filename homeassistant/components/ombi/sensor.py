@@ -1,13 +1,8 @@
 """Support for Ombi."""
-from datetime import timedelta
 import logging
 
-import pyombi
-import voluptuous as vol
+from pyombi import OmbiError
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, SENSOR_TYPES
