@@ -249,7 +249,8 @@ class HERETravelTimeSensor(Entity):
             return None
 
         res = self._attrs
-        res[ATTR_ATTRIBUTION] = self._here_data.attribution
+        if self._here_data.attribution is not None:
+            res[ATTR_ATTRIBUTION] = self._here_data.attribution
         res[ATTR_DURATION] = self._here_data.base_time / 60
         res[ATTR_DISTANCE] = self._here_data.distance
         res[ATTR_ROUTE] = self._here_data.route
