@@ -66,7 +66,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_manual_setup(user_input)
             if CONF_TOKEN in user_input:
                 return await self.async_step_server_validate(user_input)
-            errors["base"] = "no_token"
+            errors[CONF_TOKEN] = "no_token"
 
         return self.async_show_form(
             step_id="user", data_schema=USER_SCHEMA, errors=errors
