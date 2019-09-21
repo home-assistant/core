@@ -1,5 +1,7 @@
 """An abstract class for entities."""
-from datetime import timedelta
+
+import asyncio
+from datetime import datetime, timedelta
 import logging
 import functools as ft
 from timeit import default_timer as timer
@@ -22,6 +24,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_DEVICE_CLASS,
 )
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.entity_registry import (
     EVENT_ENTITY_REGISTRY_UPDATED,
     RegistryEntry,
@@ -94,7 +97,7 @@ class Entity:
     hass: Optional[HomeAssistant] = None
 
     # Owning platform instance. Will be set by EntityPlatform
-    platform = None
+    platform: Optional[EntityPlatform] = None
 
     # If we reported if this entity was slow
     _slow_reported = False
@@ -106,7 +109,7 @@ class Entity:
     _update_staged = False
 
     # Process updates in parallel
-    parallel_updates = None
+    parallel_updates: Optional[asyncio.Semaphore] = None
 
     # Entry in the entity registry
     registry_entry: Optional[RegistryEntry] = None
@@ -115,8 +118,8 @@ class Entity:
     _on_remove: Optional[List[CALLBACK_TYPE]] = None
 
     # Context
-    _context = None
-    _context_set = None
+    _context: Optional[Context] = None
+    _context_set: Optional[datetime] = None
 
     @property
     def should_poll(self) -> bool:

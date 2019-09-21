@@ -19,6 +19,9 @@ from homeassistant.helpers import condition, config_validation as cv, service
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from . import TRIGGER_BASE_SCHEMA
 
+
+# mypy: allow-untyped-calls, allow-untyped-defs
+
 ENTITY_ACTIONS = [
     {
         # Turn entity off
