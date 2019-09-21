@@ -3,7 +3,7 @@ from homeassistant.const import ENERGY_KILO_WATT_HOUR, TEMP_CELSIUS, PRESSURE_BA
 
 DOMAIN = "ebusd"
 
-#  SensorTypes from ebusdpy:
+#  SensorTypes from ebusdpy module:
 #  0='decimal', 1='time-schedule', 2='switch', 3='string', 4='value;status'
 
 SENSOR_TYPES = {
