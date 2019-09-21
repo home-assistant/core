@@ -193,8 +193,8 @@ class GeniusZone(GeniusEntity):
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
         """Return the device state attributes."""
-        tmp = self._zone.data.items()
-        return {"status": {k: v for k, v in tmp if k in GH_ZONE_ATTRS}}
+        status = {k: v for k, v in self._zone.data.items() if k in GH_ZONE_ATTRS}
+        return {"status": status}
 
     @property
     def current_temperature(self) -> Optional[float]:
