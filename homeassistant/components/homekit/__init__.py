@@ -31,6 +31,8 @@ from homeassistant.util.decorator import Registry
 
 from .const import (
     BRIDGE_NAME,
+    CONF_ADVERTISE_IP,
+    CONF_ADVERTISE_MAC,
     CONF_AUTO_START,
     CONF_ENTITY_CONFIG,
     CONF_FEATURE_LIST,
@@ -89,6 +91,10 @@ CONFIG_SCHEMA = vol.Schema(
                 ),
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                 vol.Optional(CONF_IP_ADDRESS): vol.All(ipaddress.ip_address, cv.string),
+                vol.Optional(CONF_ADVERTISE_IP): vol.All(
+                    ipaddress.ip_address, cv.string
+                ),
+                vol.Optional(CONF_ADVERTISE_MAC): cv.string,
                 vol.Optional(CONF_AUTO_START, default=DEFAULT_AUTO_START): cv.boolean,
                 vol.Optional(CONF_SAFE_MODE, default=DEFAULT_SAFE_MODE): cv.boolean,
                 vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
@@ -112,13 +118,23 @@ async def async_setup(hass, config):
     name = conf[CONF_NAME]
     port = conf[CONF_PORT]
     ip_address = conf.get(CONF_IP_ADDRESS)
+    advertise_ip = conf.get(CONF_ADVERTISE_IP)
+    advertise_mac = conf.get(CONF_ADVERTISE_MAC)
     auto_start = conf[CONF_AUTO_START]
     safe_mode = conf[CONF_SAFE_MODE]
     entity_filter = conf[CONF_FILTER]
     entity_config = conf[CONF_ENTITY_CONFIG]
 
     homekit = HomeKit(
-        hass, name, port, ip_address, entity_filter, entity_config, safe_mode
+        hass,
+        name,
+        port,
+        ip_address,
+        entity_filter,
+        entity_config,
+        safe_mode,
+        advertise_ip,
+        advertise_mac,
     )
     await hass.async_add_executor_job(homekit.setup)
 
@@ -265,7 +281,16 @@ class HomeKit:
     """Class to handle all actions between HomeKit and Home Assistant."""
 
     def __init__(
-        self, hass, name, port, ip_address, entity_filter, entity_config, safe_mode
+        self,
+        hass,
+        name,
+        port,
+        ip_address,
+        entity_filter,
+        entity_config,
+        safe_mode,
+        advertise_ip=None,
+        advertise_mac=None,
     ):
         """Initialize a HomeKit object."""
         self.hass = hass
@@ -275,6 +300,8 @@ class HomeKit:
         self._filter = entity_filter
         self._config = entity_config
         self._safe_mode = safe_mode
+        self._advertise_ip = advertise_ip
+        self._advertise_mac = advertise_mac
         self.status = STATUS_READY
 
         self.bridge = None
@@ -289,7 +316,12 @@ class HomeKit:
         ip_addr = self._ip_address or get_local_ip()
         path = self.hass.config.path(HOMEKIT_FILE)
         self.driver = HomeDriver(
-            self.hass, address=ip_addr, port=self._port, persist_file=path
+            self.hass,
+            address=ip_addr,
+            port=self._port,
+            persist_file=path,
+            advertised_address=self._advertise_ip,
+            mac=self._advertise_mac,
         )
         self.bridge = HomeBridge(self.hass, self.driver, self._name)
         if self._safe_mode:
