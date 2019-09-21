@@ -2,10 +2,9 @@
 import asyncio
 from datetime import timedelta
 import logging
-
 from typing import Tuple
-from PIL import Image, ImageDraw
 
+from PIL import Image, ImageDraw
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, CONF_ENTITY_ID, CONF_NAME
@@ -16,7 +15,6 @@ from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util.async_ import run_callback_threadsafe
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
