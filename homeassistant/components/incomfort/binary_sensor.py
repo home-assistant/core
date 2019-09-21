@@ -1,4 +1,6 @@
 """Support for an Intergas boiler via an InComfort/InTouch Lan2RF gateway."""
+from typing import Any, Dict, Optional
+
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -19,31 +21,31 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class IncomfortFailed(BinarySensorDevice):
     """Representation of an InComfort Failed sensor."""
 
-    def __init__(self, client, boiler):
+    def __init__(self, client, boiler) -> None:
         """Initialize the binary sensor."""
         self._client = client
         self._boiler = boiler
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
         async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
 
     @callback
-    def _refresh(self):
+    def _refresh(self) -> None:
         self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
-    def name(self):
+    def name(self) -> Optional[str]:
         """Return the name of the sensor."""
         return "Fault state"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the status of the sensor."""
         return self._boiler.status["is_failed"]
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the device state attributes."""
         return {"fault_code": self._boiler.status["fault_code"]}
 

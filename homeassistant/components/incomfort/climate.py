@@ -1,5 +1,5 @@
 """Support for an Intergas boiler via an InComfort/InTouch Lan2RF gateway."""
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, List, Optional
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -27,7 +27,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class InComfortClimate(ClimateDevice):
     """Representation of an InComfort/InTouch climate device."""
 
-    def __init__(self, client, room):
+    def __init__(self, client, room) -> None:
         """Initialize the climate device."""
         self.entity_id = f"climate.incomfort_{room.room_no}"
 
@@ -40,7 +40,7 @@ class InComfortClimate(ClimateDevice):
         async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
 
     @callback
-    def _refresh(self):
+    def _refresh(self) -> None:
         self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
