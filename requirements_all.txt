@@ -1354,7 +1354,7 @@ pynzbgetapi==0.2.0
 pyobihai==1.1.0
 
 # homeassistant.components.ombi
-pyombi==0.0.6
+pyombi==0.1.3
 
 # homeassistant.components.openuv
 pyopenuv==1.0.9
