@@ -49,6 +49,7 @@ class GeniusClimateZone(GeniusEntity, ClimateDevice):
         super().__init__()
 
         self._zone = zone
+        self.entity_id = f"climate.genius_zone_{zone.id}"
         if hasattr(self._zone, "occupied"):  # has a movement sensor
             self._preset_modes = list(HA_PRESET_TO_GH)
         else:

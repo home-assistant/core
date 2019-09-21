@@ -53,11 +53,12 @@ async def async_setup_platform(
 class GeniusWaterHeater(GeniusEntity, WaterHeaterDevice):
     """Representation of a Genius Hub water_heater device."""
 
-    def __init__(self, boiler) -> None:
+    def __init__(self, zone) -> None:
         """Initialize the water_heater device."""
         super().__init__()
 
-        self._boiler = boiler
+        self._boiler = zone
+        self.entity_id = f"climate.genius_zone_{zone.id}"
         self._operation_list = list(HA_OPMODE_TO_GH)
 
     @property
