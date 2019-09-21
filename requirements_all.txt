@@ -179,7 +179,7 @@ aioswitcher==2019.4.26
 aiounifi==11
 
 # homeassistant.components.wwlln
-aiowwlln==2.0.1
+aiowwlln==2.0.2
 
 # homeassistant.components.aladdin_connect
 aladdin_connect==0.3
@@ -913,13 +913,10 @@ opensensemap-api==0.1.5
 openwebifpy==3.1.1
 
 # homeassistant.components.luci
-openwrt-luci-rpc==1.1.0
+openwrt-luci-rpc==1.1.1
 
 # homeassistant.components.orvibo
 orvibo==1.1.1
-
-# homeassistant.components.luci
-packaging==19.1
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
@@ -1741,7 +1738,7 @@ shodan==1.15.0
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==4.3.0
+simplisafe-python==5.0.1
 
 # homeassistant.components.sisyphus
 sisyphus-control==2.2.1
@@ -1995,7 +1992,7 @@ xmltodict==0.12.0
 xs1-api-client==2.3.5
 
 # homeassistant.components.yandex_transport
-ya_ma==0.3.4
+ya_ma==0.3.7
 
 # homeassistant.components.yweather
 yahooweather==0.10
