@@ -86,7 +86,6 @@ UNIT_OF_MEASUREMENT = "min"
 SCAN_INTERVAL = timedelta(minutes=5)
 
 TRACKABLE_DOMAINS = ["device_tracker", "sensor", "zone", "person"]
-DATA_KEY = "here_travel_time"
 
 NO_ROUTE_ERROR_MESSAGE = "HERE could not find a route based on the input"
 
