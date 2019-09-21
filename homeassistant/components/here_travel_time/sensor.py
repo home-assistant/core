@@ -77,6 +77,8 @@ ATTR_ROUTE = "route"
 ATTR_ORIGIN = "origin"
 ATTR_DESTINATION = "destination"
 
+ATTR_MODE = "mode"
+
 ATTR_DURATION_IN_TRAFFIC = "duration_in_traffic"
 ATTR_ORIGIN_NAME = "origin_name"
 ATTR_DESTINATION_NAME = "destination_name"
@@ -250,7 +252,7 @@ class HERETravelTimeSensor(Entity):
         res[ATTR_DESTINATION] = self._here_data.destination
         res[ATTR_ORIGIN_NAME] = self._here_data.origin_name
         res[ATTR_DESTINATION_NAME] = self._here_data.destination_name
-        res[CONF_MODE] = self._here_data.travel_mode
+        res[ATTR_MODE] = self._here_data.travel_mode
         res[CONF_TRAFFIC_MODE] = self._here_data.traffic_mode
         return res
 
