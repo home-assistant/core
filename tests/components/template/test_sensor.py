@@ -3,7 +3,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.setup import setup_component, async_setup_component
 
 from tests.common import get_test_home_assistant, assert_setup_component
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, STATE_ON, STATE_OFF
 
 
 class TestTemplateSensor:
@@ -377,51 +377,43 @@ class TestTemplateSensor:
         state = self.hass.states.get("sensor.test2")
         assert "device_class" not in state.attributes
 
-    def test_available_template_with_entities(self):
-        """Test availability tempalates with values from other entities."""
-        availability_template = """
-            {% if is_state('availability_boolean.state', 'True') %}
-                {{ 'true' }}
-            {% else %}
-                {{ 'false' }}
-            {% endif %}
-        """
 
-        with assert_setup_component(1):
-            assert setup_component(
-                self.hass,
-                "sensor",
-                {
-                    "sensor": {
-                        "platform": "template",
-                        "sensors": {
-                            "test_template_sensor": {
-                                "value_template": "{{ states.sensor.test_state.state }}",
-                                "availability_template": availability_template,
-                            }
-                        },
-                    }
-                },
-            )
+async def test_available_template_with_entities(hass):
+    """Test availability tempalates with values from other entities."""
+    hass.states.async_set("sensor.availability_sensor", STATE_OFF)
+    with assert_setup_component(1, "sensor"):
+        assert await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": {
+                    "platform": "template",
+                    "sensors": {
+                        "test_template_sensor": {
+                            "value_template": "{{ states.sensor.test_sensor.state }}",
+                            "availability_template": "{{ is_state('sensor.availability_sensor', 'on') }}",
+                        }
+                    },
+                }
+            },
+        )
 
-        self.hass.start()
-        self.hass.block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
 
-        # When template returns true..
-        self.hass.states.set("availability_boolean.state", True)
-        self.hass.block_till_done()
+    # When template returns true..
+    hass.states.async_set("sensor.availability_sensor", STATE_ON)
+    await hass.async_block_till_done()
 
-        # Device State should not be unavailable
-        state = self.hass.states.get("sensor.test_template_sensor")
-        assert state.state != STATE_UNAVAILABLE
+    # Device State should not be unavailable
+    assert hass.states.get("sensor.test_template_sensor").state != STATE_UNAVAILABLE
 
-        # When Availability template returns false
-        self.hass.states.set("availability_boolean.state", False)
-        self.hass.block_till_done()
+    # When Availability template returns false
+    hass.states.async_set("sensor.availability_sensor", STATE_OFF)
+    await hass.async_block_till_done()
 
-        # device state should be unavailable
-        state = self.hass.states.get("sensor.test_template_sensor")
-        assert state.state == STATE_UNAVAILABLE
+    # device state should be unavailable
+    assert hass.states.get("sensor.test_template_sensor").state == STATE_UNAVAILABLE
 
 
 async def test_invalid_attribute_template(hass, caplog):
