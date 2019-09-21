@@ -59,11 +59,11 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: KAITERRA_SCHEMA}, extra=vol.ALLOW_EXTRA)
 async def async_setup(hass, config):
     """Set up the Kaiterra components."""
 
-    config = config.get(DOMAIN, {})
-    scan_interval = config.get(CONF_SCAN_INTERVAL)
-    devices = config.get(CONF_DEVICES)
+    conf = config[DOMAIN]
+    scan_interval = conf[CONF_SCAN_INTERVAL]
+    devices = conf[CONF_DEVICES]
     session = async_get_clientsession(hass)
-    api = hass.data[DOMAIN] = KaiterraApiData(hass, config, session)
+    api = hass.data[DOMAIN] = KaiterraApiData(hass, conf, session)
 
     await api.async_update()
 
@@ -76,8 +76,8 @@ async def async_setup(hass, config):
     # Load platforms for each device
     for device in devices:
         device_name, device_id = (
-            device.get(CONF_NAME) or device.get(CONF_TYPE),
-            device.get(CONF_DEVICE_ID),
+            device.get(CONF_NAME) or device[CONF_TYPE],
+            device[CONF_DEVICE_ID],
         )
         for component in KAITERRA_COMPONENTS:
             hass.async_create_task(

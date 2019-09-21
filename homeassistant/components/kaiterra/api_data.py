@@ -31,10 +31,10 @@ class KaiterraApiData:
         """Initialize the API data object."""
         from kaiterra_async_client import KaiterraAPIClient, AQIStandard, Units
 
-        api_key = config.get(CONF_API_KEY)
-        aqi_standard = config.get(CONF_AQI_STANDARD)
-        devices = config.get(CONF_DEVICES)
-        units = config.get(CONF_PREFERRED_UNITS)
+        api_key = config[CONF_API_KEY]
+        aqi_standard = config[CONF_AQI_STANDARD]
+        devices = config[CONF_DEVICES]
+        units = config[CONF_PREFERRED_UNITS]
 
         self._hass = hass
         self._api = KaiterraAPIClient(
@@ -43,9 +43,9 @@ class KaiterraApiData:
             aqi_standard=AQIStandard.from_str(aqi_standard),
             preferred_units=[Units.from_str(unit) for unit in units],
         )
-        self._devices_ids = [device.get(CONF_DEVICE_ID) for device in devices]
+        self._devices_ids = [device[CONF_DEVICE_ID] for device in devices]
         self._devices = [
-            f"/{device.get(CONF_TYPE)}s/{device.get(CONF_DEVICE_ID)}"
+            f"/{device[CONF_TYPE]}s/{device[CONF_DEVICE_ID]}"
             for device in devices
         ]
         self._scale = AQI_SCALE[aqi_standard]
@@ -74,22 +74,22 @@ class KaiterraApiData:
                     continue
 
                 aqi, main_pollutant = None, None
-                for sensor in device:
-                    points = device.get(sensor).get("points")
+                for sensor_name, sensor in device.items():
+                    points = sensor.get("points")
 
                     if not points:
                         continue
 
                     point = points[0]
-                    device[sensor]["value"] = point.get("value")
+                    sensor["value"] = point.get("value")
 
                     if "aqi" not in point:
                         continue
 
-                    device[sensor]["aqi"] = point.get("aqi")
-                    if not aqi or aqi < point.get("aqi"):
+                    sensor["aqi"] = point["aqi"]
+                    if not aqi or aqi < point["aqi"]:
                         aqi = point["aqi"]
-                        main_pollutant = POLLUTANTS.get(sensor)
+                        main_pollutant = POLLUTANTS.get(sensor_name)
 
                 level = None
                 for j in range(1, len(self._scale)):

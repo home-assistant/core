@@ -28,9 +28,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if discovery_info is None:
         return
 
-    api = hass.data.get(DOMAIN)
-    name = discovery_info.get(CONF_NAME)
-    device_id = discovery_info.get(CONF_DEVICE_ID)
+    api = hass.data[DOMAIN]
+    name = discovery_info[CONF_NAME]
+    device_id = discovery_info[CONF_DEVICE_ID]
 
     async_add_entities(
         [KaiterraSensor(api, name, device_id, sensor) for sensor in SENSORS]
@@ -43,12 +43,11 @@ class KaiterraSensor(Entity):
     def __init__(self, api, name, device_id, sensor):
         """Initialize the sensor."""
         self._api = api
-        self._name = f'{name} - {sensor.get("name")}'
+        self._name = f'{name} {sensor["name"]}'
         self._device_id = device_id
-        self._kind = sensor.get("name").lower()
-        self._icon = sensor.get("icon")
-        self._property = sensor.get("prop")
-        self._device_class = sensor.get("device_class")
+        self._kind = sensor["name"].lower()
+        self._property = sensor["prop"]
+        self._device_class = sensor["device_class"]
 
     @property
     def _sensor(self):
@@ -96,7 +95,7 @@ class KaiterraSensor(Entity):
         if not self._sensor.get("units"):
             return None
 
-        value = self._sensor.get("units").value
+        value = self._sensor["units"].value
         return "°" + value if value in ["F", "C"] else value
 
     async def async_added_to_hass(self):

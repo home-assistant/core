@@ -19,9 +19,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if discovery_info is None:
         return
 
-    api = hass.data.get(DOMAIN)
-    name = discovery_info.get(CONF_NAME)
-    device_id = discovery_info.get(CONF_DEVICE_ID)
+    api = hass.data[DOMAIN]
+    name = discovery_info[CONF_NAME]
+    device_id = discovery_info[CONF_DEVICE_ID]
 
     async_add_entities([KaiterraAirQuality(api, name, device_id)])
 
@@ -32,11 +32,11 @@ class KaiterraAirQuality(AirQualityEntity):
     def __init__(self, api, name, device_id):
         """Initialize the sensor."""
         self._api = api
-        self._name = f"{name} - Air Quality"
+        self._name = f"{name} Air Quality"
         self._device_id = device_id
 
     def _data(self, key):
-        prop = self._device.get(key)
+        return self._device.get(key, {}).get("value")
         return prop.get("value") if prop else None
 
     @property
