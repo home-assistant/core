@@ -1,3 +1,5 @@
+"""Consts for Kaiterra integration."""
+
 from datetime import timedelta
 
 DOMAIN = "kaiterra"

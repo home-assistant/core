@@ -52,7 +52,7 @@ class KaiterraSensor(Entity):
 
     @property
     def _sensor(self):
-        """Return the sensor data"""
+        """Return the sensor data."""
         return self._api.data.get(self._device_id, {}).get(self._property, {})
 
     @property
@@ -67,7 +67,7 @@ class KaiterraSensor(Entity):
 
     @property
     def device_class(self):
-        """Return the device class"""
+        """Return the device class."""
         return self._device_class
 
     @property

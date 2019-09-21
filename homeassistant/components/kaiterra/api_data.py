@@ -48,7 +48,7 @@ class KaiterraApiData:
         self.data = {}
 
     def _create_api_client(self, session, api_key, aqi_standard, units):
-        """Creates the Kaiterra API client"""
+        """Create the Kaiterra API client."""
         from kaiterra_async_client import KaiterraAPIClient, AQIStandard, Units
 
         return KaiterraAPIClient(
