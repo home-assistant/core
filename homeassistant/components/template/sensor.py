@@ -170,7 +170,7 @@ class SensorTemplate(Entity):
         self._entity_picture = None
         self._entities = entity_ids
         self._device_class = device_class
-        self._available = "true"
+        self._available = True
         self._attribute_templates = attribute_templates
         self._attributes = {}
 
@@ -230,7 +230,7 @@ class SensorTemplate(Entity):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self._available is not None and self._available.lower() == "true"
+        return self._available
 
     @property
     def device_state_attributes(self):
@@ -246,9 +246,9 @@ class SensorTemplate(Entity):
         """Update the state from the template."""
         try:
             self._state = self._template.async_render()
-            self._available = "True"
+            self._available = True
         except TemplateError as ex:
-            self._available = "False"
+            self._available = False
             if ex.args and ex.args[0].startswith(
                 "UndefinedError: 'None' has no attribute"
             ):
@@ -281,7 +281,10 @@ class SensorTemplate(Entity):
                 continue
 
             try:
-                setattr(self, property_name, template.async_render())
+                value = template.async_render()
+                if property_name == "_available":
+                    value = value.lower() == "true"
+                setattr(self, property_name, value)
             except TemplateError as ex:
                 friendly_property_name = property_name[1:].replace("_", " ")
                 if ex.args and ex.args[0].startswith(
