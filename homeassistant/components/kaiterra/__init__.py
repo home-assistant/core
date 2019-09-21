@@ -12,7 +12,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_SCAN_INTERVAL,
     CONF_TYPE,
-    CONF_NAME
+    CONF_NAME,
 )
 
 from .const import (
@@ -25,26 +25,32 @@ from .const import (
     DEFAULT_AQI_STANDARD,
     DEFAULT_PREFERRED_UNIT,
     DEFAULT_SCAN_INTERVAL,
-    KAITERRA_COMPONENTS
+    KAITERRA_COMPONENTS,
 )
 
 from .api_data import KaiterraApiData
 
-KAITERRA_DEVICE_SCHEMA = vol.Schema({
-    vol.Required(CONF_DEVICE_ID): cv.string,
-    vol.Required(CONF_TYPE): vol.In(AVAILABLE_DEVICE_TYPES),
-    vol.Optional(CONF_NAME): cv.string,
-})
+KAITERRA_DEVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE_ID): cv.string,
+        vol.Required(CONF_TYPE): vol.In(AVAILABLE_DEVICE_TYPES),
+        vol.Optional(CONF_NAME): cv.string,
+    }
+)
 
 KAITERRA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [KAITERRA_DEVICE_SCHEMA]),
-        vol.Optional(CONF_AQI_STANDARD, default=DEFAULT_AQI_STANDARD): vol.In(AVAILABLE_AQI_STANDARDS),
-        vol.Optional(CONF_PREFERRED_UNITS, default=DEFAULT_PREFERRED_UNIT): vol.All(cv.ensure_list, [vol.In(AVAILABLE_UNITS)]),
+        vol.Optional(CONF_AQI_STANDARD, default=DEFAULT_AQI_STANDARD): vol.In(
+            AVAILABLE_AQI_STANDARDS
+        ),
+        vol.Optional(CONF_PREFERRED_UNITS, default=DEFAULT_PREFERRED_UNIT): vol.All(
+            cv.ensure_list, [vol.In(AVAILABLE_UNITS)]
+        ),
         vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
     },
-    extra=vol.PREVENT_EXTRA
+    extra=vol.PREVENT_EXTRA,
 )
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: KAITERRA_SCHEMA}, extra=vol.ALLOW_EXTRA)
@@ -69,8 +75,19 @@ async def async_setup(hass, config):
 
     # Load platforms for each device
     for device in devices:
-        device_name, device_id = device.get(CONF_NAME) or device.get(CONF_TYPE), device.get(CONF_DEVICE_ID)
+        device_name, device_id = (
+            device.get(CONF_NAME) or device.get(CONF_TYPE),
+            device.get(CONF_DEVICE_ID),
+        )
         for component in KAITERRA_COMPONENTS:
-            hass.async_create_task(async_load_platform(hass, component, DOMAIN, {CONF_NAME: device_name, CONF_DEVICE_ID: device_id}, config))
+            hass.async_create_task(
+                async_load_platform(
+                    hass,
+                    component,
+                    DOMAIN,
+                    {CONF_NAME: device_name, CONF_DEVICE_ID: device_id},
+                    config,
+                )
+            )
 
     return True

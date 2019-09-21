@@ -7,32 +7,21 @@ from asyncio import TimeoutError
 
 from aiohttp.client_exceptions import ClientResponseError
 
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_DEVICES,
-    CONF_DEVICE_ID,
-    CONF_TYPE,
-)
+from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_DEVICE_ID, CONF_TYPE
 
 from .const import (
     AQI_SCALE,
     AQI_LEVEL,
     CONF_AQI_STANDARD,
     CONF_PREFERRED_UNITS,
-    DISPATCHER_KAITERRA
+    DISPATCHER_KAITERRA,
 )
 
 _LOGGER = getLogger(__name__)
 
-POLLUTANTS = {
-    'rpm25c': 'PM2.5',
-    'rpm10c': 'PM10',
-    'rtvoc': 'TVOC'
-}
+POLLUTANTS = {"rpm25c": "PM2.5", "rpm10c": "PM10", "rtvoc": "TVOC"}
 
 
 class KaiterraApiData:
@@ -49,7 +38,10 @@ class KaiterraApiData:
         self._hass = hass
         self._api = self._create_api_client(session, api_key, aqi_standard, units)
         self._devices_ids = [device.get(CONF_DEVICE_ID) for device in devices]
-        self._devices = [f'/{device.get(CONF_TYPE)}s/{device.get(CONF_DEVICE_ID)}' for device in devices]
+        self._devices = [
+            f"/{device.get(CONF_TYPE)}s/{device.get(CONF_DEVICE_ID)}"
+            for device in devices
+        ]
         self._scale = AQI_SCALE[aqi_standard]
         self._level = AQI_LEVEL[aqi_standard]
         self._update_listeners = []
@@ -58,7 +50,13 @@ class KaiterraApiData:
     def _create_api_client(self, session, api_key, aqi_standard, units):
         """Creates the Kaiterra API client"""
         from kaiterra_async_client import KaiterraAPIClient, AQIStandard, Units
-        return KaiterraAPIClient(session, api_key=api_key, aqi_standard=AQIStandard.from_str(aqi_standard), preferred_units=[Units.from_str(unit) for unit in units])
+
+        return KaiterraAPIClient(
+            session,
+            api_key=api_key,
+            aqi_standard=AQIStandard.from_str(aqi_standard),
+            preferred_units=[Units.from_str(unit) for unit in units],
+        )
 
     async def async_update(self) -> None:
         """Get the data from Kaiterra API."""
@@ -66,11 +64,8 @@ class KaiterraApiData:
         try:
             with async_timeout.timeout(10):
                 data = await self._api.get_latest_sensor_readings(self._devices)
-                _LOGGER.debug('New data retrieved: %s', data)
-        except (
-            ClientResponseError,
-            TimeoutError
-        ):
+                _LOGGER.debug("New data retrieved: %s", data)
+        except (ClientResponseError, TimeoutError):
             _LOGGER.debug("Couldn't fetch data")
             self.data = {}
             async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)
@@ -87,20 +82,20 @@ class KaiterraApiData:
 
                 aqi, main_pollutant = None, None
                 for sensor in device:
-                    points = device.get(sensor).get('points')
+                    points = device.get(sensor).get("points")
 
                     if not points or len(points) == 0:
                         continue
 
                     point = points[0]
-                    device[sensor]['value'] = point.get('value')
+                    device[sensor]["value"] = point.get("value")
 
-                    if 'aqi' not in point:
+                    if "aqi" not in point:
                         continue
 
-                    device[sensor]['aqi'] = point.get('aqi')
-                    if not aqi or aqi < point.get('aqi'):
-                        aqi = point['aqi']
+                    device[sensor]["aqi"] = point.get("aqi")
+                    if not aqi or aqi < point.get("aqi"):
+                        aqi = point["aqi"]
                         main_pollutant = POLLUTANTS.get(sensor)
 
                 level = None
@@ -109,15 +104,15 @@ class KaiterraApiData:
                         level = self._level[j - 1]
                         break
 
-                device['aqi'] = {'value': aqi}
-                device['aqi_level'] = {'value': level}
-                device['aqi_pollutant'] = {'value': main_pollutant}
+                device["aqi"] = {"value": aqi}
+                device["aqi_level"] = {"value": level}
+                device["aqi_pollutant"] = {"value": main_pollutant}
 
                 self.data[self._devices_ids[i]] = device
 
                 async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)
         except IndexError as err:
-            _LOGGER.error('Parsing error %s', err)
+            _LOGGER.error("Parsing error %s", err)
             async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)
             return False
         return True

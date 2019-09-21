@@ -1,21 +1,16 @@
 """Support for Kaiterra Air Quality Sensors."""
 from homeassistant.components.air_quality import AirQualityEntity
 
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_DEVICE_ID, CONF_NAME
 
 from .const import (
     DOMAIN,
     ATTR_VOC,
     ATTR_AQI_LEVEL,
     ATTR_AQI_POLLUTANT,
-    DISPATCHER_KAITERRA
+    DISPATCHER_KAITERRA,
 )
 
 
@@ -37,12 +32,12 @@ class KaiterraAirQuality(AirQualityEntity):
     def __init__(self, api, name, device_id):
         """Initialize the sensor."""
         self._api = api
-        self._name = f'{name} - Air Quality'
+        self._name = f"{name} - Air Quality"
         self._device_id = device_id
 
     def _data(self, key):
         prop = self._device.get(key)
-        return prop.get('value') if prop else None
+        return prop.get("value") if prop else None
 
     @property
     def _device(self):
@@ -66,37 +61,37 @@ class KaiterraAirQuality(AirQualityEntity):
     @property
     def air_quality_index(self):
         """Return the Air Quality Index (AQI)."""
-        return self._data('aqi')
+        return self._data("aqi")
 
     @property
     def air_quality_index_level(self):
         """Return the Air Quality Index level."""
-        return self._data('aqi_level')
+        return self._data("aqi_level")
 
     @property
     def air_quality_index_pollutant(self):
         """Return the Air Quality Index level."""
-        return self._data('aqi_pollutant')
+        return self._data("aqi_pollutant")
 
     @property
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
-        return self._data('rpm25c')
+        return self._data("rpm25c")
 
     @property
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
-        return self._data('rpm10c')
+        return self._data("rpm10c")
 
     @property
     def volatile_organic_compounds(self):
         """Return the VOC (Volatile Organic Compounds) level."""
-        return self._data('rtvoc')
+        return self._data("rtvoc")
 
     @property
     def unique_id(self):
         """Return the sensor's unique id."""
-        return f'{self._device_id}_air_quality'
+        return f"{self._device_id}_air_quality"
 
     @property
     def device_state_attributes(self):
@@ -105,7 +100,7 @@ class KaiterraAirQuality(AirQualityEntity):
         attributes = [
             (ATTR_VOC, self.volatile_organic_compounds),
             (ATTR_AQI_LEVEL, self.air_quality_index_level),
-            (ATTR_AQI_POLLUTANT, self.air_quality_index_pollutant)
+            (ATTR_AQI_POLLUTANT, self.air_quality_index_pollutant),
         ]
 
         for attr, value in attributes:
@@ -116,7 +111,9 @@ class KaiterraAirQuality(AirQualityEntity):
 
     async def async_added_to_hass(self):
         """Register callback."""
-        async_dispatcher_connect(self.hass, DISPATCHER_KAITERRA, self.async_write_ha_state)
+        async_dispatcher_connect(
+            self.hass, DISPATCHER_KAITERRA, self.async_write_ha_state
+        )
 
     async def async_update(self):
         """Force update of state."""

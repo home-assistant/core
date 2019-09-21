@@ -1,23 +1,25 @@
 """Support for Kaiterra Temperature ahn Humidity Sensors."""
 from homeassistant.helpers.entity import Entity
 
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_DEVICE_ID, CONF_NAME
 
-from .const import (
-    DOMAIN,
-    DISPATCHER_KAITERRA
-)
+from .const import DOMAIN, DISPATCHER_KAITERRA
 
 SENSORS = [
-    {'name': 'Temperature', 'prop': 'rtemp', 'icon': 'mdi:temperature-celsius', 'device_class': 'temperature'},
-    {'name': 'Humidity', 'prop': 'rhumid', 'icon': 'mdi:water', 'device_class': 'humidity'},
+    {
+        "name": "Temperature",
+        "prop": "rtemp",
+        "icon": "mdi:temperature-celsius",
+        "device_class": "temperature",
+    },
+    {
+        "name": "Humidity",
+        "prop": "rhumid",
+        "icon": "mdi:water",
+        "device_class": "humidity",
+    },
 ]
 
 
@@ -30,7 +32,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     name = discovery_info.get(CONF_NAME)
     device_id = discovery_info.get(CONF_DEVICE_ID)
 
-    async_add_entities([KaiterraSensor(api, name, device_id, sensor) for sensor in SENSORS])
+    async_add_entities(
+        [KaiterraSensor(api, name, device_id, sensor) for sensor in SENSORS]
+    )
 
 
 class KaiterraSensor(Entity):
@@ -41,10 +45,10 @@ class KaiterraSensor(Entity):
         self._api = api
         self._name = f'{name} - {sensor.get("name")}'
         self._device_id = device_id
-        self._kind = sensor.get('name').lower()
-        self._icon = sensor.get('icon')
-        self._property = sensor.get('prop')
-        self._device_class = sensor.get('device_class')
+        self._kind = sensor.get("name").lower()
+        self._icon = sensor.get("icon")
+        self._property = sensor.get("prop")
+        self._device_class = sensor.get("device_class")
 
     @property
     def _sensor(self):
@@ -79,21 +83,21 @@ class KaiterraSensor(Entity):
     @property
     def state(self):
         """Return the state."""
-        return self._sensor.get('value')
+        return self._sensor.get("value")
 
     @property
     def unique_id(self):
         """Return the sensor's unique id."""
-        return f'{self._device_id}_{self._kind}'
+        return f"{self._device_id}_{self._kind}"
 
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        if not self._sensor.get('units'):
+        if not self._sensor.get("units"):
             return None
 
-        value = self._sensor.get('units').value
-        return '°' + value if value in ['F', 'C'] else value
+        value = self._sensor.get("units").value
+        return "°" + value if value in ["F", "C"] else value
 
     async def async_added_to_hass(self):
         """Register callback."""
