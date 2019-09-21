@@ -84,7 +84,7 @@ class KaiterraSensor(Entity):
 
         if value == "F":
             return TEMP_FAHRENHEIT
-        elif value == "C":
+        if value == "C":
             return TEMP_CELSIUS
         return value
 
