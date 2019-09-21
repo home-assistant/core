@@ -36,7 +36,7 @@ class TradfriCover(CoverDevice):
     def __init__(self, cover, api, gateway_id):
         """Initialize a cover."""
         self._api = api
-        self._unique_id = f"{gateway_id}-{cover.id}"
+        self._unique_id = f"cover-{gateway_id}-{cover.id}"
         self._cover = None
         self._cover_control = None
         self._cover_data = None
