@@ -34,11 +34,7 @@ SENSOR_TYPES = {
 
 TRIGGER_TIME_SCHEMA = vol.Any(
     cv.positive_int,
-    vol.All(
-        cv.time_period,
-        cv.positive_timedelta,
-        lambda td: (td.days * 24 * 60) + td.seconds // 60,
-    ),
+    vol.All(cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds // 60),
 )
 
 ZONE_SCHEMA = vol.Schema(
