@@ -29,7 +29,7 @@ GPS_ACCURACY_THRESHOLD = 250
 @pytest.fixture(name="init")
 def mock_controller_authenticate():
     """Mock a successful authenticate."""
-    with patch("pyicloud.PyiCloudService.__init__"):
+    with patch("pyicloud.PyiCloudService", return_value=None):
         yield
 
 
