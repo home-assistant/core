@@ -49,8 +49,7 @@ KAITERRA_SCHEMA = vol.Schema(
             cv.ensure_list, [vol.In(AVAILABLE_UNITS)]
         ),
         vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
-    },
-    extra=vol.PREVENT_EXTRA,
+    }
 )
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: KAITERRA_SCHEMA}, extra=vol.ALLOW_EXTRA)

@@ -3,23 +3,13 @@ from homeassistant.helpers.entity import Entity
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from homeassistant.const import CONF_DEVICE_ID, CONF_NAME
+from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 from .const import DOMAIN, DISPATCHER_KAITERRA
 
 SENSORS = [
-    {
-        "name": "Temperature",
-        "prop": "rtemp",
-        "icon": "mdi:temperature-celsius",
-        "device_class": "temperature",
-    },
-    {
-        "name": "Humidity",
-        "prop": "rhumid",
-        "icon": "mdi:water",
-        "device_class": "humidity",
-    },
+    {"name": "Temperature", "prop": "rtemp", "device_class": "temperature"},
+    {"name": "Humidity", "prop": "rhumid", "device_class": "humidity"},
 ]
 
 
@@ -75,11 +65,6 @@ class KaiterraSensor(Entity):
         return self._name
 
     @property
-    def icon(self):
-        """Return the icon."""
-        return self._icon
-
-    @property
     def state(self):
         """Return the state."""
         return self._sensor.get("value")
@@ -96,14 +81,15 @@ class KaiterraSensor(Entity):
             return None
 
         value = self._sensor["units"].value
-        return "°" + value if value in ["F", "C"] else value
+
+        if value == "F":
+            return TEMP_FAHRENHEIT
+        elif value == "C":
+            return TEMP_CELSIUS
+        return value
 
     async def async_added_to_hass(self):
         """Register callback."""
         async_dispatcher_connect(
             self.hass, DISPATCHER_KAITERRA, self.async_write_ha_state
         )
-
-    async def async_update(self):
-        """Force update of state."""
-        await self._api.async_update()

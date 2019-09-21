@@ -37,7 +37,6 @@ class KaiterraAirQuality(AirQualityEntity):
 
     def _data(self, key):
         return self._device.get(key, {}).get("value")
-        return prop.get("value") if prop else None
 
     @property
     def _device(self):
@@ -114,7 +113,3 @@ class KaiterraAirQuality(AirQualityEntity):
         async_dispatcher_connect(
             self.hass, DISPATCHER_KAITERRA, self.async_write_ha_state
         )
-
-    async def async_update(self):
-        """Force update of state."""
-        await self._api.async_update()

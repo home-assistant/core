@@ -7,6 +7,8 @@ import async_timeout
 
 from aiohttp.client_exceptions import ClientResponseError
 
+from kaiterra_async_client import KaiterraAPIClient, AQIStandard, Units
+
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_DEVICE_ID, CONF_TYPE
@@ -29,7 +31,6 @@ class KaiterraApiData:
 
     def __init__(self, hass, config, session):
         """Initialize the API data object."""
-        from kaiterra_async_client import KaiterraAPIClient, AQIStandard, Units
 
         api_key = config[CONF_API_KEY]
         aqi_standard = config[CONF_AQI_STANDARD]
@@ -45,8 +46,7 @@ class KaiterraApiData:
         )
         self._devices_ids = [device[CONF_DEVICE_ID] for device in devices]
         self._devices = [
-            f"/{device[CONF_TYPE]}s/{device[CONF_DEVICE_ID]}"
-            for device in devices
+            f"/{device[CONF_TYPE]}s/{device[CONF_DEVICE_ID]}" for device in devices
         ]
         self._scale = AQI_SCALE[aqi_standard]
         self._level = AQI_LEVEL[aqi_standard]
@@ -59,12 +59,12 @@ class KaiterraApiData:
         try:
             with async_timeout.timeout(10):
                 data = await self._api.get_latest_sensor_readings(self._devices)
-                _LOGGER.debug("New data retrieved: %s", data)
         except (ClientResponseError, asyncio.TimeoutError):
             _LOGGER.debug("Couldn't fetch data")
             self.data = {}
             async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)
-            return False
+
+        _LOGGER.debug("New data retrieved: %s", data)
 
         try:
             self.data = {}
@@ -107,5 +107,3 @@ class KaiterraApiData:
         except IndexError as err:
             _LOGGER.error("Parsing error %s", err)
             async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)
-            return False
-        return True
