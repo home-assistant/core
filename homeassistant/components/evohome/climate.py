@@ -1,7 +1,7 @@
 """Support for Climate devices of (EMEA/EU-based) Honeywell TCC systems."""
 from datetime import datetime
 import logging
-from typing import Any, Dict, Optional, List
+from typing import Optional, List
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -22,7 +22,7 @@ from homeassistant.const import PRECISION_TENTHS
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.dt import parse_datetime
 
-from . import CONF_LOCATION_IDX, EvoDevice
+from . import CONF_LOCATION_IDX, EvoDevice, EvoChild
 from .const import (
     DOMAIN,
     EVO_RESET,
@@ -60,6 +60,9 @@ EVO_PRESET_TO_HA = {
     EVO_PERMOVER: "permanent",
 }
 HA_PRESET_TO_EVO = {v: k for k, v in EVO_PRESET_TO_HA.items()}
+
+STATE_ATTRS_TCS = ["systemId", "activeFaults", "systemModeStatus"]
+STATE_ATTRS_ZONES = ["zoneId", "activeFaults", "setpointStatus", "temperatureStatus"]
 
 
 async def async_setup_platform(
@@ -119,6 +122,37 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
 
         self._preset_modes = None
 
+    async def _set_tcs_mode(self, op_mode: str) -> None:
+        """Set the Controller to any of its native EVO_* operating modes."""
+        await self._call_client_api(
+            self._evo_tcs._set_status(op_mode)  # pylint: disable=protected-access
+        )
+
+    @property
+    def hvac_modes(self) -> List[str]:
+        """Return the list of available hvac operation modes."""
+        return list(HA_HVAC_TO_TCS)
+
+    @property
+    def preset_modes(self) -> Optional[List[str]]:
+        """Return a list of available preset modes."""
+        return self._preset_modes
+
+
+class EvoZone(EvoChild, EvoClimateDevice):
+    """Base for a Honeywell evohome Zone."""
+
+    def __init__(self, evo_broker, evo_device) -> None:
+        """Initialize the evohome Zone."""
+        super().__init__(evo_broker, evo_device)
+
+        self._name = evo_device.name
+        self._icon = "mdi:radiator"
+
+        self._precision = self._evo_device.setpointCapabilities["valueResolution"]
+        self._supported_features = SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
+        self._preset_modes = list(HA_PRESET_TO_EVO)
+
     async def _set_temperature(
         self, temperature: float, until: Optional[datetime] = None
     ) -> None:
@@ -156,55 +190,11 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
 
         if op_mode == EVO_TEMPOVER:
             await self._update_schedule()
-            until = parse_datetime(self.setpoints["next"]["from"])
+            until = parse_datetime(self.setpoints["next_sp_from"])
         else:  # EVO_PERMOVER
             until = None
 
         await self._set_temperature(temperature, until)
-
-    async def _set_tcs_mode(self, op_mode: str) -> None:
-        """Set the Controller to any of its native EVO_* operating modes."""
-        await self._call_client_api(
-            self._evo_tcs._set_status(op_mode)  # pylint: disable=protected-access
-        )
-
-    @property
-    def hvac_modes(self) -> List[str]:
-        """Return the list of available hvac operation modes."""
-        return list(HA_HVAC_TO_TCS)
-
-    @property
-    def preset_modes(self) -> Optional[List[str]]:
-        """Return a list of available preset modes."""
-        return self._preset_modes
-
-
-class EvoZone(EvoClimateDevice):
-    """Base for a Honeywell evohome Zone."""
-
-    def __init__(self, evo_broker, evo_device) -> None:
-        """Initialize the evohome Zone."""
-        super().__init__(evo_broker, evo_device)
-
-        self._name = evo_device.name
-        self._icon = "mdi:radiator"
-
-        self._precision = self._evo_device.setpointCapabilities["valueResolution"]
-        self._state_attributes = [
-            "zoneId",
-            "activeFaults",
-            "setpointStatus",
-            "temperatureStatus",
-            "setpoints",
-        ]
-
-        self._supported_features = SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
-        self._preset_modes = list(HA_PRESET_TO_EVO)
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._evo_device.temperatureStatus["isAvailable"]
 
     @property
     def hvac_mode(self) -> str:
@@ -224,15 +214,6 @@ class EvoZone(EvoClimateDevice):
         if self.target_temperature < self.current_temperature:
             return CURRENT_HVAC_IDLE
         return CURRENT_HVAC_HEAT
-
-    @property
-    def current_temperature(self) -> Optional[float]:
-        """Return the current temperature of the evohome Zone."""
-        return (
-            self._evo_device.temperatureStatus["temperature"]
-            if self._evo_device.temperatureStatus["isAvailable"]
-            else None
-        )
 
     @property
     def target_temperature(self) -> float:
@@ -268,15 +249,16 @@ class EvoZone(EvoClimateDevice):
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set a new target temperature."""
-        if self._evo_device.setpointStatus["setpointMode"] == EVO_PERMOVER:
-            until = kwargs.get("until")
-        else:
-            await self._update_schedule()
-            until = kwargs.get("until", self.setpoints["next"]["from"])
+        until = kwargs.get("until")
 
-        if until is not None:
-            until = parse_datetime(until)
-        await self._set_temperature(kwargs["temperature"], until)
+        if until is None:
+            if self._evo_device.setpointStatus["setpointMode"] == EVO_TEMPOVER:
+                until = self._evo_device.setpointStatus["until"]
+            elif self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
+                await self._update_schedule()
+                until = self.setpoints["next_sp_from"]
+
+        await self._set_temperature(kwargs["temperature"], parse_datetime(str(until)))
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set an operating mode for the Zone."""
@@ -292,6 +274,13 @@ class EvoZone(EvoClimateDevice):
         If preset_mode is None, then revert to following the schedule.
         """
         await self._set_zone_mode(HA_PRESET_TO_EVO.get(preset_mode, EVO_FOLLOW))
+
+    async def async_update(self) -> None:
+        """Get the latest state data."""
+        await super().async_update()
+
+        for attr in STATE_ATTRS_ZONES:
+            self._device_state_attrs[attr] = getattr(self._evo_device, attr)
 
 
 class EvoController(EvoClimateDevice):
@@ -309,8 +298,6 @@ class EvoController(EvoClimateDevice):
         self._icon = "mdi:thermostat"
 
         self._precision = PRECISION_TENTHS
-        self._state_attributes = ["systemId", "activeFaults", "systemModeStatus"]
-
         self._supported_features = SUPPORT_PRESET_MODE
         self._preset_modes = list(HA_PRESET_TO_TCS)
 
@@ -358,7 +345,14 @@ class EvoController(EvoClimateDevice):
 
     async def async_update(self) -> None:
         """Get the latest state data."""
-        return
+        self._device_state_attrs = {}
+
+        attrs = self._device_state_attrs
+        for attr in STATE_ATTRS_TCS:
+            if attr == "activeFaults":
+                attrs["activeSystemFaults"] = getattr(self._evo_tcs, attr)
+            else:
+                attrs[attr] = getattr(self._evo_tcs, attr)
 
 
 class EvoThermostat(EvoZone):
@@ -373,16 +367,6 @@ class EvoThermostat(EvoZone):
 
         self._name = evo_broker.tcs.location.name
         self._preset_modes = [PRESET_AWAY, PRESET_ECO]
-
-    @property
-    def device_state_attributes(self) -> Dict[str, Any]:
-        """Return the device-specific state attributes."""
-        status = super().device_state_attributes["status"]
-
-        status["systemModeStatus"] = self._evo_tcs.systemModeStatus
-        status["activeFaults"] += self._evo_tcs.activeFaults
-
-        return {"status": status}
 
     @property
     def hvac_mode(self) -> str:
@@ -416,3 +400,14 @@ class EvoThermostat(EvoZone):
             await self._set_tcs_mode(HA_PRESET_TO_TCS.get(preset_mode))
         else:
             await self._set_zone_mode(HA_PRESET_TO_EVO.get(preset_mode, EVO_FOLLOW))
+
+    async def async_update(self) -> None:
+        """Get the latest state data."""
+        await super().async_update()
+
+        attrs = self._device_state_attrs
+        for attr in STATE_ATTRS_TCS:
+            if attr == "activeFaults":
+                attrs["activeSystemFaults"] = getattr(self._evo_tcs, attr)
+            else:
+                attrs[attr] = getattr(self._evo_tcs, attr)

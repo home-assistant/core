@@ -10,7 +10,7 @@ from homeassistant.const import PRECISION_WHOLE, STATE_OFF, STATE_ON
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.dt import parse_datetime
 
-from . import EvoDevice
+from . import EvoChild
 from .const import DOMAIN, EVO_STRFTIME, EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,6 +19,8 @@ HA_STATE_TO_EVO = {STATE_ON: "On", STATE_OFF: "Off"}
 EVO_STATE_TO_HA = {v: k for k, v in HA_STATE_TO_EVO.items()}
 
 HA_OPMODE_TO_DHW = {STATE_ON: EVO_FOLLOW, STATE_OFF: EVO_PERMOVER}
+
+STATE_ATTRS_DHW = ["dhwId", "activeFaults", "stateStatus", "temperatureStatus"]
 
 
 async def async_setup_platform(
@@ -39,7 +41,7 @@ async def async_setup_platform(
     async_add_entities([evo_dhw], update_before_add=True)
 
 
-class EvoDHW(EvoDevice, WaterHeaterDevice):
+class EvoDHW(EvoChild, WaterHeaterDevice):
     """Base for a Honeywell evohome DHW controller (aka boiler)."""
 
     def __init__(self, evo_broker, evo_device) -> None:
@@ -50,21 +52,8 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         self._icon = "mdi:thermometer-lines"
 
         self._precision = PRECISION_WHOLE
-        self._state_attributes = [
-            "dhwId",
-            "activeFaults",
-            "stateStatus",
-            "temperatureStatus",
-            "setpoints",
-        ]
-
         self._supported_features = SUPPORT_OPERATION_MODE
         self._operation_list = list(HA_OPMODE_TO_DHW)
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._evo_device.temperatureStatus.get("isAvailable", False)
 
     @property
     def current_operation(self) -> str:
@@ -76,11 +65,6 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         """Return the list of available operations."""
         return self._operation_list
 
-    @property
-    def current_temperature(self) -> float:
-        """Return the current temperature."""
-        return self._evo_device.temperatureStatus["temperature"]
-
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode for a DHW controller."""
         op_mode = HA_OPMODE_TO_DHW[operation_mode]
@@ -90,7 +74,7 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
 
         if op_mode == EVO_TEMPOVER:
             await self._update_schedule()
-            until = parse_datetime(self.setpoints["next"]["from"])
+            until = parse_datetime(self.setpoints["next_sp_from"])
             until = until.strftime(EVO_STRFTIME)
 
         data = {"Mode": op_mode, "State": state, "UntilTime": until}
@@ -98,3 +82,10 @@ class EvoDHW(EvoDevice, WaterHeaterDevice):
         await self._call_client_api(
             self._evo_device._set_dhw(data)  # pylint: disable=protected-access
         )
+
+    async def async_update(self) -> None:
+        """Get the latest state data."""
+        await super().async_update()
+
+        for attr in STATE_ATTRS_DHW:
+            self._device_state_attrs[attr] = getattr(self._evo_device, attr)
