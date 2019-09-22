@@ -693,7 +693,7 @@ influxdb==5.2.3
 insteonplm==0.16.5
 
 # homeassistant.components.iperf3
-iperf3==0.1.10
+iperf3==0.1.11
 
 # homeassistant.components.route53
 ipify==1.0.0
