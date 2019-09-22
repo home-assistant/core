@@ -52,7 +52,7 @@ from homeassistant.helpers.logging import KeywordStyleAdapter
 from homeassistant.util import slugify as util_slugify
 
 
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
 # pylint: disable=invalid-name
 
@@ -95,7 +95,7 @@ def has_at_least_one_key(*keys: str) -> Callable:
     return validate
 
 
-def has_at_most_one_key(*keys: str) -> Callable:
+def has_at_most_one_key(*keys: str) -> Callable[[Dict], Dict]:
     """Validate that zero keys exist or one key exists."""
 
     def validate(obj: Dict) -> Dict:
@@ -224,7 +224,7 @@ def entity_ids(value: Union[str, List]) -> List[str]:
 comp_entity_ids = vol.Any(vol.All(vol.Lower, ENTITY_MATCH_ALL), entity_ids)
 
 
-def entity_domain(domain: str):
+def entity_domain(domain: str) -> Callable[[Any], str]:
     """Validate that entity belong to domain."""
 
     def validate(value: Any) -> str:
@@ -235,7 +235,7 @@ def entity_domain(domain: str):
     return validate
 
 
-def entities_domain(domain: str):
+def entities_domain(domain: str) -> Callable[[Union[str, List]], List[str]]:
     """Validate that entities belong to domain."""
 
     def validate(values: Union[str, List]) -> List[str]:
@@ -284,7 +284,7 @@ time_period_dict = vol.All(
 )
 
 
-def time(value) -> time_sys:
+def time(value: Any) -> time_sys:
     """Validate and transform a time."""
     if isinstance(value, time_sys):
         return value
@@ -300,7 +300,7 @@ def time(value) -> time_sys:
     return time_val
 
 
-def date(value) -> date_sys:
+def date(value: Any) -> date_sys:
     """Validate and transform a date."""
     if isinstance(value, date_sys):
         return value
@@ -439,7 +439,7 @@ def string(value: Any) -> str:
     return str(value)
 
 
-def temperature_unit(value) -> str:
+def temperature_unit(value: Any) -> str:
     """Validate and transform temperature unit."""
     value = str(value).upper()
     if value == "C":
@@ -578,7 +578,7 @@ def deprecated(
     replacement_key: Optional[str] = None,
     invalidation_version: Optional[str] = None,
     default: Optional[Any] = None,
-):
+) -> Callable[[Dict], Dict]:
     """
     Log key as deprecated and provide a replacement (if exists).
 
@@ -626,7 +626,7 @@ def deprecated(
             " deprecated, please remove it from your configuration"
         )
 
-    def check_for_invalid_version(value: Optional[Any]):
+    def check_for_invalid_version(value: Optional[Any]) -> None:
         """Raise error if current version has reached invalidation."""
         if not invalidation_version:
             return
@@ -641,7 +641,7 @@ def deprecated(
                 )
             )
 
-    def validator(config: Dict):
+    def validator(config: Dict) -> Dict:
         """Check if key is in config and log warning."""
         if key in config:
             value = config[key]

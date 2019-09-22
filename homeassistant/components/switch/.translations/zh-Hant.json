@@ -6,12 +6,14 @@
             "turn_on": "\u958b\u555f {entity_name}"
         },
         "condition_type": {
+            "is_off": "{entity_name} \u5df2\u95dc\u9589",
+            "is_on": "{entity_name} \u5df2\u958b\u555f",
             "turn_off": "{entity_name} \u5df2\u95dc\u9589",
             "turn_on": "{entity_name} \u5df2\u958b\u555f"
         },
         "trigger_type": {
-            "turn_off": "{entity_name} \u5df2\u95dc\u9589",
-            "turn_on": "{entity_name} \u5df2\u958b\u555f"
+            "turned_off": "{entity_name} \u5df2\u95dc\u9589",
+            "turned_on": "{entity_name} \u5df2\u958b\u555f"
         }
     }
 }

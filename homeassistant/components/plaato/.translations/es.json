@@ -12,6 +12,7 @@
                 "description": "\u00bfEst\u00e1s seguro de que quieres configurar el Airlock de Plaato?",
                 "title": "Configurar el webhook de Plaato"
             }
-        }
+        },
+        "title": "Plaato Airlock"
     }
 }

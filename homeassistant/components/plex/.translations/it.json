@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Tutti i server collegati sono gi\u00e0 configurati",
+            "already_configured": "Questo server Plex \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Plex \u00e8 in fase di configurazione",
+            "invalid_import": "La configurazione importata non \u00e8 valida",
+            "unknown": "Non riuscito per motivo sconosciuto"
+        },
+        "error": {
+            "faulty_credentials": "Autorizzazione non riuscita",
+            "no_servers": "Nessun server collegato all'account",
+            "not_found": "Server Plex non trovato"
+        },
+        "step": {
+            "select_server": {
+                "data": {
+                    "server": "Server"
+                },
+                "description": "Sono disponibili pi\u00f9 server, selezionarne uno:",
+                "title": "Selezionare il server Plex"
+            },
+            "user": {
+                "data": {
+                    "token": "Token Plex"
+                },
+                "description": "Immettere un token Plex per la configurazione automatica.",
+                "title": "Collegare il server Plex"
+            }
+        },
+        "title": "Plex"
+    }
+}
