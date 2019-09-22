@@ -2,8 +2,9 @@
 import logging
 from datetime import timedelta
 
-import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
