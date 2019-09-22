@@ -1,6 +1,6 @@
 """Support for Ombi."""
 import logging
-from timedelta import timedelta
+from datetime import timedelta
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
