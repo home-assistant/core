@@ -15,6 +15,9 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ombi sensor platform."""
+    if discovery_info is None:
+        return
+
     sensors = []
 
     ombi = hass.data[DOMAIN]["instance"]
