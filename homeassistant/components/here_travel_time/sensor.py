@@ -387,6 +387,8 @@ class HERETravelTimeData:
                 _LOGGER.error(NO_ROUTE_ERROR_MESSAGE)
                 return
 
+            _LOGGER.debug("Raw response is: %s", response.response)
+
             # pylint: disable=no-member
             route = response.response["route"]
             summary = route[0]["summary"]
