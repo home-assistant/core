@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.const import ATTR_ENTITY_ID
 
 from .const import DOMAIN, LOGGER
 from .errors import AuthenticationRequired, CannotConnect
@@ -17,6 +18,35 @@ ATTR_GROUP_NAME = "group_name"
 ATTR_SCENE_NAME = "scene_name"
 SCENE_SCHEMA = vol.Schema(
     {vol.Required(ATTR_GROUP_NAME): cv.string, vol.Required(ATTR_SCENE_NAME): cv.string}
+)
+
+SERVICE_HUE_CONFIG = "hue_config_sensor"
+ATTR_ON = "on"
+ATTR_SENSITIVITY = "sensitivity"
+ATTR_THOLDOFFSET = "tholdoffset"
+ATTR_THOLDDARK = "tholddark"
+ATTR_SUNRISEOFFSET = "sunriseoffset"
+ATTR_SUNSETOFFSET = "sunsetoffset"
+ATTR_LONG = "long"
+ATTR_LAT = "lat"
+
+
+CONFIG_SENSOR_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
+        vol.Optional(ATTR_ON): cv.boolean,
+        vol.Optional(ATTR_SENSITIVITY): cv.positive_int,
+        vol.Optional(ATTR_THOLDOFFSET): cv.positive_int,
+        vol.Optional(ATTR_THOLDDARK): cv.positive_int,
+        vol.Optional(ATTR_SUNRISEOFFSET): vol.All(
+            vol.Coerce(int), vol.Range(min=-120, max=120)
+        ),
+        vol.Optional(ATTR_SUNSETOFFSET): vol.All(
+            vol.Coerce(int), vol.Range(min=-120, max=120)
+        ),
+        vol.Optional(ATTR_LONG): cv.longitude,
+        vol.Optional(ATTR_LAT): cv.latitude,
+    }
 )
 
 
@@ -82,6 +112,13 @@ class HueBridge:
             DOMAIN, SERVICE_HUE_SCENE, self.hue_activate_scene, schema=SCENE_SCHEMA
         )
 
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_HUE_CONFIG,
+            self.hue_config_sensor,
+            schema=CONFIG_SENSOR_SCHEMA,
+        )
+
         return True
 
     async def async_reset(self):
@@ -99,6 +136,7 @@ class HueBridge:
             return True
 
         self.hass.services.async_remove(DOMAIN, SERVICE_HUE_SCENE)
+        self.hass.services.async_remove(DOMAIN, SERVICE_HUE_CONFIG)
 
         # If setup was successful, we set api variable, forwarded entry and
         # register service
@@ -154,6 +192,18 @@ class HueBridge:
             return
 
         await group.set_action(scene=scene.id)
+
+    async def hue_config_sensor(self, service):
+        """Service to call directly into bridge to set config."""
+
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        data_dict = {k: v for k, v in service.data.items() if ATTR_ENTITY_ID not in k}
+
+        current_sensors = self.hass.data[DOMAIN]["current_sensors"]
+        for entry in current_sensors.values():
+            if entry.entity_id in entity_ids:
+                await entry.sensor.set_config(**data_dict)
+        return
 
 
 async def get_bridge(hass, host, username=None):

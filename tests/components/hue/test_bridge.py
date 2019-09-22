@@ -83,11 +83,11 @@ async def test_reset_unloads_entry_if_setup():
     with patch.object(bridge, "get_bridge", return_value=mock_coro(Mock())):
         assert await hue_bridge.async_setup() is True
 
-    assert len(hass.services.async_register.mock_calls) == 1
+    assert len(hass.services.async_register.mock_calls) == 2
     assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 3
 
     hass.config_entries.async_forward_entry_unload.return_value = mock_coro(True)
     assert await hue_bridge.async_reset()
 
     assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 3
-    assert len(hass.services.async_remove.mock_calls) == 1
+    assert len(hass.services.async_remove.mock_calls) == 2
