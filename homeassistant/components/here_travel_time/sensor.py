@@ -178,12 +178,12 @@ async def async_setup_platform(
 
 def _are_valid_client_credentials(here_client: herepy.RoutingApi) -> bool:
     """Check if the provided credentials are correct using defaults."""
-    test_origin = [38.9, -77.04833]
-    test_destination = [39.0, -77.1]
+    known_working_origin = [38.9, -77.04833]
+    known_working_destination = [39.0, -77.1]
     try:
         here_client.car_route(
-            test_origin,
-            test_destination,
+            known_working_origin,
+            known_working_destination,
             [
                 herepy.RouteMode[ROUTE_MODE_FASTEST],
                 herepy.RouteMode[TRAVEL_MODE_CAR],
