@@ -169,7 +169,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         self._entities = entity_ids
         self._delay_on = delay_on
         self._delay_off = delay_off
-        self._available = "true"
+        self._available = True
         self._attribute_templates = attribute_templates
         self._attributes = {}
 
@@ -234,7 +234,7 @@ class BinarySensorTemplate(BinarySensorDevice):
     @property
     def available(self):
         """Availability indicator."""
-        return self._available is not None and self._available.lower() == "true"
+        return self._available
 
     @callback
     def _async_render(self):
@@ -273,7 +273,10 @@ class BinarySensorTemplate(BinarySensorDevice):
                 continue
 
             try:
-                setattr(self, property_name, template.async_render())
+                value = template.async_render()
+                if property_name == "_available":
+                    value = value.lower() == "true"
+                setattr(self, property_name, value)
             except TemplateError as ex:
                 friendly_property_name = property_name[1:].replace("_", " ")
                 if ex.args and ex.args[0].startswith(
