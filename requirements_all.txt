@@ -707,6 +707,9 @@ jsonrpc-async==0.6
 # homeassistant.components.kodi
 jsonrpc-websocket==0.6
 
+# homeassistant.components.kaiterra
+kaiterra-async-client==0.0.2
+
 # homeassistant.components.keba
 keba-kecontact==0.2.0
 
