@@ -10,8 +10,8 @@
             "is_on": "{entity_name} je vklopljen"
         },
         "trigger_type": {
-            "turn_off": "{name} izklopljeno",
-            "turn_on": "{name} vklopljeno"
+            "turned_off": "{entity_name} izklopljen",
+            "turned_on": "{entity_name} vklopljen"
         }
     }
 }

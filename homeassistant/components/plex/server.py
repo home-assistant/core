@@ -1,6 +1,4 @@
 """Shared class to maintain Plex server instances."""
-import logging
-
 import plexapi.myplex
 import plexapi.server
 from requests import Session
@@ -8,8 +6,7 @@ from requests import Session
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 
 from .const import CONF_SERVER, DEFAULT_VERIFY_SSL
-
-_LOGGER = logging.getLogger(__package__)
+from .errors import NoServersFound, ServerNotSpecified
 
 
 class PlexServer:
@@ -29,8 +26,16 @@ class PlexServer:
         def _set_missing_url():
             account = plexapi.myplex.MyPlexAccount(token=self._token)
             available_servers = [
-                x.name for x in account.resources() if "server" in x.provides
+                (x.name, x.clientIdentifier)
+                for x in account.resources()
+                if "server" in x.provides
             ]
+
+            if not available_servers:
+                raise NoServersFound
+            if not self._server_name and len(available_servers) > 1:
+                raise ServerNotSpecified(available_servers)
+
             server_choice = (
                 self._server_name if self._server_name else available_servers[0]
             )
@@ -47,7 +52,6 @@ class PlexServer:
             self._plex_server = plexapi.server.PlexServer(
                 self._url, self._token, session
             )
-            _LOGGER.debug("Connected to: %s (%s)", self.friendly_name, self.url_in_use)
 
         if self._token and not self._url:
             _set_missing_url()

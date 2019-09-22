@@ -6,7 +6,5 @@
     "liffylights==0.9.4"
   ],
   "dependencies": [],
-  "codeowners": [
-    "@amelchio"
-  ]
+  "codeowners": []
 }
