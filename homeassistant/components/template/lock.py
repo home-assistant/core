@@ -108,7 +108,7 @@ class TemplateLock(LockDevice):
         self._command_lock = Script(hass, command_lock)
         self._command_unlock = Script(hass, command_unlock)
         self._optimistic = optimistic
-        self._available = "true"
+        self._available = True
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -155,7 +155,7 @@ class TemplateLock(LockDevice):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self._available is not None and self._available.lower() == "true"
+        return self._available
 
     async def async_update(self):
         """Update the state from the template."""
@@ -171,7 +171,9 @@ class TemplateLock(LockDevice):
 
         if self._availability_template is not None:
             try:
-                self._available = self._availability_template.async_render()
+                self._available = (
+                    self._availability_template.async_render().lower() == "true"
+                )
             except (TemplateError, ValueError) as ex:
                 _LOGGER.error(
                     "Could not render %s template %s: %s",
