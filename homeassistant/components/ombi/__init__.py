@@ -13,7 +13,19 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_URLBASE, DEFAULT_PORT, DEFAULT_SSL, DEFAULT_URLBASE, DOMAIN
+from .const import (
+    CONF_URLBASE,
+    CONF_NAME,
+    CONF_SEASON,
+    DEFAULT_PORT,
+    DEFAULT_SEASON,
+    DEFAULT_SSL,
+    DEFAULT_URLBASE,
+    DOMAIN,
+    SERVICE_MOVIE_REQUEST,
+    SERVICE_MUSIC_REQUEST,
+    SERVICE_TV_REQUEST,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +37,19 @@ def urlbase(value) -> str:
     value = str(value)
     return value.strip("/") + "/"
 
+
+SUBMIT_MOVIE_REQUEST_SERVICE_SCHEME = vol.Schema({vol.Required(CONF_NAME): cv.string})
+
+SUBMIT_MUSIC_REQUEST_SERVICE_SCHEME = vol.Schema({vol.Required(CONF_NAME): cv.string})
+
+SUBMIT_TV_REQUEST_SERVICE_SCHEME = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_SEASON, default=DEFAULT_SEASON): vol.In(
+            ["first", "latest", "all"]
+        ),
+    }
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -65,10 +90,11 @@ def setup(hass, config):
 
     def submit_movie_request(call):
         """Submit request for movie."""
-        name = call.data.get("name")
+        name = call.data.get(CONF_NAME)
         movies = ombi.search_movie(name)
         if movies:
-            ombi.request_movie(movies[0]["theMovieDbId"])
+            movie = movies[0]
+            ombi.request_movie(movie["theMovieDbId"])
 
     def submit_tv_request(call):
         """Submit request for TV show."""
@@ -92,9 +118,24 @@ def setup(hass, config):
         if music:
             ombi.request_music(music[0]["foreignAlbumId"])
 
-    hass.services.register(DOMAIN, "submit_movie_request", submit_movie_request)
-    hass.services.register(DOMAIN, "submit_tv_request", submit_tv_request)
-    hass.services.register(DOMAIN, "submit_music_request", submit_music_request)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_MOVIE_REQUEST,
+        submit_movie_request,
+        schema=SUBMIT_MOVIE_REQUEST_SERVICE_SCHEME,
+    )
+    hass.services.register(
+        DOMAIN,
+        SERVICE_MUSIC_REQUEST,
+        submit_music_request,
+        schema=SUBMIT_MUSIC_REQUEST_SERVICE_SCHEME,
+    )
+    hass.services.register(
+        DOMAIN,
+        SERVICE_TV_REQUEST,
+        submit_tv_request,
+        schema=SUBMIT_TV_REQUEST_SERVICE_SCHEME,
+    )
     hass.helpers.discovery.load_platform("sensor", DOMAIN, {}, config)
 
     return True
