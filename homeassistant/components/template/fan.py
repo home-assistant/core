@@ -182,7 +182,7 @@ class TemplateFan(FanEntity):
         self._oscillating_template = oscillating_template
         self._direction_template = direction_template
         self._availability_template = availability_template
-        self._available = "true"
+        self._available = True
         self._supported_features = 0
 
         self._on_script = Script(hass, on_action)
@@ -265,7 +265,7 @@ class TemplateFan(FanEntity):
     @property
     def available(self):
         """Return availability of Device."""
-        return self._available is not None and self._available.lower() == "true"
+        return self._available
 
     # pylint: disable=arguments-differ
     async def async_turn_on(self, speed: str = None) -> None:
@@ -441,7 +441,9 @@ class TemplateFan(FanEntity):
         # Update Availability if 'availability_template' is defined
         if self._availability_template is not None:
             try:
-                self._available = self._availability_template.async_render()
+                self._available = (
+                    self._availability_template.async_render().lower() == "true"
+                )
             except (TemplateError, ValueError) as ex:
                 _LOGGER.error(
                     "Could not render %s template %s: %s",
