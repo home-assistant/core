@@ -10,8 +10,8 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_get_scanner(hass, config, tracker_interfaces=None):
     """Configure the OPNSense device_tracker."""
-    interface_client = hass.data[OPNSENSE_DATA]['interfaces']
-    interfaces = tracker_interfaces or ['LAN']
+    interface_client = hass.data[OPNSENSE_DATA]["interfaces"]
+    interfaces = tracker_interfaces or ["LAN"]
     scanner = OPNSenseDeviceScanner(interface_client, interfaces)
     return scanner
 
@@ -30,8 +30,8 @@ class OPNSenseDeviceScanner(DeviceScanner):
     def _get_mac_addrs(self, devices):
         out_devices = {}
         for device in devices:
-            if device['intf_description'] in self.interfaces:
-                out_devices[device['mac']] = device
+            if device["intf_description"] in self.interfaces:
+                out_devices[device["mac"]] = device
         return out_devices
 
     def scan_devices(self):
@@ -43,7 +43,7 @@ class OPNSenseDeviceScanner(DeviceScanner):
         """Return the name of the given device or None if we don't know."""
         if device not in self.last_results:
             return None
-        hostname = self.last_results[device].get('hostname') or None
+        hostname = self.last_results[device].get("hostname") or None
         return hostname
 
     def update_info(self):
@@ -51,7 +51,7 @@ class OPNSenseDeviceScanner(DeviceScanner):
 
         Return boolean if scanning successful.
         """
-        _LOGGER.info('Checking Devices')
+        _LOGGER.info("Checking Devices")
 
         devices = self.client.get_arp()
         self.last_results = self._get_mac_addrs(devices)
@@ -61,7 +61,7 @@ class OPNSenseDeviceScanner(DeviceScanner):
         """Return the extra attrs of the given device."""
         if device not in self.last_results:
             return None
-        mfg = self.last_results[device].get('manufacturer')
+        mfg = self.last_results[device].get("manufacturer")
         if mfg:
-            return {'manufacturer': mfg}
+            return {"manufacturer": mfg}
         return {}
