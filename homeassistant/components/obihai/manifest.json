@@ -3,7 +3,7 @@
     "name": "Obihai",
     "documentation": "https://www.home-assistant.io/components/obihai",
     "requirements": [
-      "pyobihai==1.0.2"
+      "pyobihai==1.1.0"
     ],
     "dependencies": [],
     "codeowners": ["@dshokouhi"]
