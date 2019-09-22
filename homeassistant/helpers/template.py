@@ -426,7 +426,7 @@ class TemplateState(State):
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         if unit is None:
             return state.state
-        return f"{state.state} {unit}"
+        return f"{state.state}\N{NO-BREAK SPACE}{unit}"
 
     def __getattribute__(self, name):
         """Return an attribute of the state."""

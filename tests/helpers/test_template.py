@@ -1737,7 +1737,7 @@ def test_state_with_unit(hass):
 
     tpl = template.Template("{{ states.sensor.test.state_with_unit }}", hass)
 
-    assert tpl.async_render() == "23 beers"
+    assert tpl.async_render() == "23\N{NO-BREAK SPACE}beers"
 
     tpl = template.Template("{{ states.sensor.test2.state_with_unit }}", hass)
 
@@ -1747,7 +1747,7 @@ def test_state_with_unit(hass):
         "{% for state in states %}{{ state.state_with_unit }} {% endfor %}", hass
     )
 
-    assert tpl.async_render() == "23 beers wow"
+    assert tpl.async_render() == "23\N{NO-BREAK SPACE}beers wow"
 
     tpl = template.Template("{{ states.sensor.non_existing.state_with_unit }}", hass)
 
