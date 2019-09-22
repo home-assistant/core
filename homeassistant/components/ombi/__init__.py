@@ -17,6 +17,15 @@ from .const import CONF_URLBASE, DEFAULT_PORT, DEFAULT_SSL, DEFAULT_URLBASE, DOM
 
 _LOGGER = logging.getLogger(__name__)
 
+
+def urlbase(value) -> str:
+    """Validate and transform urlbase."""
+    if value is None:
+        raise vol.Invalid("string value is None")
+    value = str(value)
+    return value.strip("/") + "/"
+
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -25,7 +34,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_HOST): cv.string,
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): cv.string,
+                vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): urlbase,
                 vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
             }
         )
@@ -37,15 +46,13 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Set up the Ombi component platform."""
 
-    urlbase = f"{config[DOMAIN][CONF_URLBASE].strip('/') if config[DOMAIN][CONF_URLBASE] else ''}/"
-
     ombi = pyombi.Ombi(
         ssl=config[DOMAIN][CONF_SSL],
         host=config[DOMAIN][CONF_HOST],
         port=config[DOMAIN][CONF_PORT],
         api_key=config[DOMAIN][CONF_API_KEY],
         username=config[DOMAIN][CONF_USERNAME],
-        urlbase=urlbase,
+        urlbase=config[DOMAIN][CONF_URLBASE],
     )
 
     try:
