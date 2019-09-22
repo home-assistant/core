@@ -9,6 +9,7 @@ from homeassistant.components.ecobee.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_API_KEY
+from tests.common import MockConfigEntry
 
 
 async def test_abort_if_already_setup(hass):
@@ -16,8 +17,9 @@ async def test_abort_if_already_setup(hass):
     flow = config_flow.EcobeeFlowHandler()
     flow.hass = hass
 
-    with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
-        result = await flow.async_step_user()
+    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
+
+    result = await flow.async_step_user()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "one_instance_only"
