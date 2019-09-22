@@ -14,5 +14,6 @@ PLEX_MEDIA_PLAYER_OPTIONS = "plex_mp_options"
 PLEX_SERVER_CONFIG = "server_config"
 
 CONF_SERVER = "server"
+CONF_SERVER_IDENTIFIER = "server_id"
 CONF_USE_EPISODE_ART = "use_episode_art"
 CONF_SHOW_ALL_CONTROLS = "show_all_controls"
