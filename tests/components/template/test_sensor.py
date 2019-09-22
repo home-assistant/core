@@ -466,7 +466,7 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.my_sensor") != STATE_UNAVAILABLE
+    assert hass.states.get("sensor.my_sensor").state != STATE_UNAVAILABLE
     assert ("UndefinedError: 'x' is undefined") in caplog.text
 
 
