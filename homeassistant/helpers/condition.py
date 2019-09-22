@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import (  # noqa: F401 pylint: disable=unused-import
     async_device_condition_from_config as async_device_from_config,
+    async_validate_condition_config as async_validate_device_condition_config,
 )
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
@@ -488,3 +489,25 @@ def zone_from_config(
         return zone(hass, zone_entity_id, entity_id)
 
     return if_in_zone
+
+
+async def async_validate_condition_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config.
+
+    This method is a coroutine.
+    """
+    condition = config[CONF_CONDITION]
+    if condition in ("and", "or"):
+        conditions = []
+        for sub_cond in config["conditions"]:
+            sub_cond = async_validate_condition_config(hass, sub_cond)
+            conditions.append(sub_cond)
+        config["conditions"] = conditions
+
+    if condition == "device":
+        config = cv.DEVICE_CONDITION_SCHEMA(config)
+        return await async_validate_device_condition_config(hass, config)
+
+    return config

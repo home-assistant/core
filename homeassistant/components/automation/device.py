@@ -1,8 +1,8 @@
 """Offer device oriented automation."""
 import voluptuous as vol
 
+import homeassistant.components.device_automation as device_automation
 from homeassistant.const import CONF_DOMAIN, CONF_PLATFORM
-from homeassistant.loader import async_get_integration
 
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -13,8 +13,14 @@ TRIGGER_SCHEMA = vol.Schema(
 )
 
 
+async def async_validate_trigger_config(hass, config):
+    """Validate config.
+
+    This method is a coroutine.
+    """
+    return await device_automation.async_validate_trigger_config(hass, config)
+
+
 async def async_trigger(hass, config, action, automation_info):
     """Listen for trigger."""
-    integration = await async_get_integration(hass, config[CONF_DOMAIN])
-    platform = integration.get_platform("device_automation")
-    return await platform.async_trigger(hass, config, action, automation_info)
+    return await device_automation.async_trigger(hass, config, action, automation_info)

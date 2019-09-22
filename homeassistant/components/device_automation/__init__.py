@@ -13,6 +13,8 @@ from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, IntegrationNotFound
 
+from .exceptions import InvalidDeviceAutomationConfig
+
 DOMAIN = "device_automation"
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,6 +34,79 @@ async def async_setup(hass, config):
     return True
 
 
+async def async_get_device_automation_platform(hass, config):
+    """Load device automation platform for integration.
+
+    Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.
+    This method is a coroutine.
+    """
+    try:
+        integration = await async_get_integration(hass, config[CONF_DOMAIN])
+        platform = integration.get_platform("device_automation")
+    except IntegrationNotFound:
+        raise InvalidDeviceAutomationConfig(
+            f"Integration '{config[CONF_DOMAIN]}' not found"
+        )
+    except ImportError:
+        raise InvalidDeviceAutomationConfig(
+            f"Integration '{config[CONF_DOMAIN]}' does not support device automations"
+        )
+
+    return platform
+
+
+async def async_validate_action_config(hass, config):
+    """Validate config.
+
+    This method is a coroutine.
+    """
+    platform = await async_get_device_automation_platform(hass, config)
+    if not hasattr(platform, "async_get_actions"):
+        raise InvalidDeviceAutomationConfig(
+            f"Integration '{config[CONF_DOMAIN]}' does not support device automation actions"
+        )
+
+    return platform.ACTION_SCHEMA(config)
+
+
+async def async_validate_condition_config(hass, config):
+    """Validate config.
+
+    This method is a coroutine.
+    """
+    platform = await async_get_device_automation_platform(hass, config)
+    if not hasattr(platform, "async_get_conditions"):
+        raise InvalidDeviceAutomationConfig(
+            f"Integration '{config[CONF_DOMAIN]}' does not support device automation conditions"
+        )
+
+    return platform.CONDITION_SCHEMA(config)
+
+
+async def async_validate_trigger_config(hass, config):
+    """Validate config.
+
+    This method is a coroutine.
+    """
+    platform = await async_get_device_automation_platform(hass, config)
+    if not hasattr(platform, "async_get_triggers"):
+        raise InvalidDeviceAutomationConfig(
+            f"Integration '{config[CONF_DOMAIN]}' does not support device automation triggers"
+        )
+
+    return platform.TRIGGER_SCHEMA(config)
+
+
+async def async_handle_action(hass, action, variables, context):
+    """Perform the device automation specified in the action.
+
+    This method is a coroutine.
+    """
+    integration = await async_get_integration(hass, action[CONF_DOMAIN])
+    platform = integration.get_platform("device_automation")
+    await platform.async_call_action_from_config(hass, action, variables, context)
+
+
 async def async_device_condition_from_config(
     hass: HomeAssistant, config: ConfigType, config_validation: bool = True
 ) -> Callable[..., bool]:
@@ -44,6 +119,13 @@ async def async_device_condition_from_config(
         Callable[..., bool],
         platform.async_condition_from_config(config, config_validation),  # type: ignore
     )
+
+
+async def async_trigger(hass, config, action, automation_info):
+    """Listen for trigger."""
+    integration = await async_get_integration(hass, config[CONF_DOMAIN])
+    platform = integration.get_platform("device_automation")
+    return await platform.async_trigger(hass, config, action, automation_info)
 
 
 async def _async_get_device_automations_from_domain(hass, domain, fname, device_id):
