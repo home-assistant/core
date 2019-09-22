@@ -408,8 +408,9 @@ class TemplateVacuum(StateVacuumDevice):
         # Update availability if availability template is defined
         if self._availability_template is not None:
             try:
-                result = self._availability_template.async_render()
-                self._available = result == "true"
+                self._available = (
+                    self._availability_template.async_render().lower() == "true"
+                )
             except (TemplateError, ValueError) as ex:
                 _LOGGER.error(
                     "Could not render %s template %s: %s",
@@ -417,4 +418,3 @@ class TemplateVacuum(StateVacuumDevice):
                     self._name,
                     ex,
                 )
-                self._available = True
