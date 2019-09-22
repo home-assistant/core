@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "no_flows": "U moet Withings configureren voordat u zich ermee kunt verifi\u00ebren. [Gelieve de documentatie te lezen]"
+        },
         "create_entry": {
             "default": "Succesvol geverifieerd met Withings voor het geselecteerde profiel."
         },

@@ -35,26 +35,40 @@ from homeassistant.util import dt as dt_util
 from .const import (
     CONF_USE_EPISODE_ART,
     CONF_SHOW_ALL_CONTROLS,
+    CONF_SERVER_IDENTIFIER,
     DOMAIN as PLEX_DOMAIN,
     NAME_FORMAT,
     PLEX_MEDIA_PLAYER_OPTIONS,
     SERVERS,
 )
 
-SERVER_SETUP = "server_setup"
-
-_CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities_callback, discovery_info=None):
-    """Set up the Plex platform."""
-    if discovery_info is None:
-        return
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the Plex media_player platform.
 
-    plexserver = list(hass.data[PLEX_DOMAIN][SERVERS].values())[0]
+    Deprecated.
+    """
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Plex media_player from a config entry."""
+
+    def add_entities(entities, update_before_add=False):
+        """Sync version of async add entities."""
+        hass.add_job(async_add_entities, entities, update_before_add)
+
+    hass.async_add_executor_job(_setup_platform, hass, config_entry, add_entities)
+
+
+def _setup_platform(hass, config_entry, add_entities_callback):
+    """Set up the Plex media_player platform."""
+    server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
     config = hass.data[PLEX_MEDIA_PLAYER_OPTIONS]
 
+    plexserver = hass.data[PLEX_DOMAIN][SERVERS][server_id]
     plex_clients = {}
     plex_sessions = {}
     track_time_interval(hass, lambda now: update_devices(), timedelta(seconds=10))

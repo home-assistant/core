@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "All verbonne Server sinn scho konfigur\u00e9iert",
+            "already_configured": "D\u00ebse Plex Server ass scho konfigur\u00e9iert",
+            "already_in_progress": "Plex g\u00ebtt konfigur\u00e9iert",
+            "invalid_import": "D\u00e9i importiert Konfiguratioun ass ong\u00eblteg",
+            "unknown": "Onbekannte Feeler opgetrueden"
+        },
+        "error": {
+            "faulty_credentials": "Feeler beider Autorisatioun",
+            "no_servers": "Kee Server as mam Kont verbonnen",
+            "not_found": "Kee Plex Server fonnt"
+        },
+        "step": {
+            "select_server": {
+                "data": {
+                    "server": "Server"
+                },
+                "description": "M\u00e9i Server disponibel, wielt een aus:",
+                "title": "Plex Server auswielen"
+            },
+            "user": {
+                "data": {
+                    "token": "Jeton fir de Plex"
+                },
+                "description": "Gitt een Jeton fir de Plex un fir eng automatesch Konfiguratioun",
+                "title": "Plex Server verbannen"
+            }
+        },
+        "title": "Plex"
+    }
+}
