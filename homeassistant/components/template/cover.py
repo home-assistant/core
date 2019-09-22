@@ -246,7 +246,7 @@ class CoverTemplate(CoverDevice):
         self._position = None
         self._tilt_value = None
         self._entities = entity_ids
-        self._available = "true"
+        self._available = True
 
         if self._template is not None:
             self._template.hass = self.hass
@@ -349,7 +349,7 @@ class CoverTemplate(CoverDevice):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self._available is not None and self._available.lower() == "true"
+        return self._available
 
     async def async_open_cover(self, **kwargs):
         """Move the cover up."""
@@ -476,7 +476,10 @@ class CoverTemplate(CoverDevice):
                 continue
 
             try:
-                setattr(self, property_name, template.async_render())
+                value = template.async_render()
+                if property_name == "_available":
+                    value = value.lower() == "true"
+                setattr(self, property_name, value)
             except TemplateError as ex:
                 friendly_property_name = property_name[1:].replace("_", " ")
                 if ex.args and ex.args[0].startswith(
