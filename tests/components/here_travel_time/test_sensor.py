@@ -943,5 +943,5 @@ async def test_attribution(hass, requests_mock_credentials_check):
     sensor = hass.states.get("sensor.test")
     assert (
         sensor.attributes.get(ATTR_ATTRIBUTION)
-        == 'With the support of <span class="company"><a href="https://transit.api.here.com/r?appId=Mt1bOYh3m9uxE7r3wuUx&u=https://wego.here.com">HERE Technologies</a></span>. All information is provided without warranty of any kind.'
+        == "With the support of HERE Technologies. All information is provided without warranty of any kind."
     )

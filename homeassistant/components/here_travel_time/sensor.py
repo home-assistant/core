@@ -390,12 +390,13 @@ class HERETravelTimeData:
             _LOGGER.debug("Raw response is: %s", response.response)
 
             # pylint: disable=no-member
+            source_attribution = response.response.get("sourceAttribution")
+            if source_attribution is not None:
+                self.attribution = self._build_hass_attribution(source_attribution)
+            # pylint: disable=no-member
             route = response.response["route"]
             summary = route[0]["summary"]
             waypoint = route[0]["waypoint"]
-            source_attribution = response.response.get("sourceAttribution")
-            if source_attribution is not None:
-                self.attribution = source_attribution["attribution"]
             self.base_time = summary["baseTime"]
             if self.travel_mode in TRAVEL_MODES_VEHICLE:
                 self.traffic_time = summary["trafficTime"]
@@ -412,3 +413,17 @@ class HERETravelTimeData:
             self.route = response.route_short
             self.origin_name = waypoint[0]["mappedRoadName"]
             self.destination_name = waypoint[1]["mappedRoadName"]
+
+    @staticmethod
+    def _build_hass_attribution(source_attribution: Dict) -> Optional[str]:
+        """Build a hass frontend ready string out of the sourceAttribution."""
+        suppliers = source_attribution.get("supplier")
+        if suppliers is not None:
+            supplier_titles = []
+            for supplier in suppliers:
+                title = supplier.get("title")
+                if title is not None:
+                    supplier_titles.append(title)
+            joined_supplier_titles = ",".join(supplier_titles)
+            attribution = f"With the support of {joined_supplier_titles}. All information is provided without warranty of any kind."
+            return attribution
