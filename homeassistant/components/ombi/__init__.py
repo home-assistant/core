@@ -97,14 +97,16 @@ def setup(hass, config):
         if movies:
             movie = movies[0]
             ombi.request_movie(movie["theMovieDbId"])
+        else:
+            raise Warning("No movie found.")
 
     def submit_tv_request(call):
         """Submit request for TV show."""
-        name = call.data.get("name")
+        name = call.data.get(CONF_NAME)
         tv_shows = ombi.search_tv(name)
 
         if tv_shows:
-            season = call.data.get("season")
+            season = call.data.get(CONF_SEASON)
             show = tv_shows[0]["id"]
             if season == "first":
                 ombi.request_tv(show, request_first=True)
@@ -112,13 +114,17 @@ def setup(hass, config):
                 ombi.request_tv(show, request_latest=True)
             elif season == "all":
                 ombi.request_tv(show, request_all=True)
+        else:
+            raise Warning("No TV show found.")
 
     def submit_music_request(call):
         """Submit request for music album."""
-        name = call.data.get("name")
+        name = call.data.get(CONF_NAME)
         music = ombi.search_music_album(name)
         if music:
             ombi.request_music(music[0]["foreignAlbumId"])
+        else:
+            raise Warning("No music album found.")
 
     hass.services.register(
         DOMAIN,
