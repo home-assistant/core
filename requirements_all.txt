@@ -6,12 +6,12 @@ attrs==19.1.0
 bcrypt==3.1.7
 certifi>=2019.6.16
 contextvars==2.4;python_version<"3.7"
-importlib-metadata==0.19
+importlib-metadata==0.23
 jinja2>=2.10.1
 PyJWT==1.7.1
 cryptography==2.7
 pip>=8.0.3
-python-slugify==3.0.3
+python-slugify==3.0.4
 pytz>=2019.02
 pyyaml==5.1.2
 requests==2.22.0
@@ -612,7 +612,7 @@ hangups==0.4.9
 hass-nabucasa==0.17
 
 # homeassistant.components.mqtt
-hbmqtt==0.9.4
+hbmqtt==0.9.5
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.0
@@ -693,7 +693,7 @@ influxdb==5.2.3
 insteonplm==0.16.5
 
 # homeassistant.components.iperf3
-iperf3==0.1.10
+iperf3==0.1.11
 
 # homeassistant.components.route53
 ipify==1.0.0
@@ -1140,7 +1140,7 @@ pydelijn==0.5.1
 pydispatcher==2.0.5
 
 # homeassistant.components.doods
-pydoods==1.0.1
+pydoods==1.0.2
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==0.8
@@ -1569,7 +1569,7 @@ python-velbus==2.0.27
 python-vlc==1.1.2
 
 # homeassistant.components.whois
-python-whois==0.7.1
+python-whois==0.7.2
 
 # homeassistant.components.wink
 python-wink==1.10.5
@@ -1732,7 +1732,7 @@ sense_energy==0.7.0
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.shodan
-shodan==1.15.0
+shodan==1.17.0
 
 # homeassistant.components.simplepush
 simplepush==1.1.4
