@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.setup import async_setup_component
+import homeassistant.components.automation as automation
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.helpers import device_registry
 
@@ -161,3 +162,193 @@ async def test_websocket_get_triggers(hass, hass_ws_client, device_reg, entity_r
     assert msg["success"]
     triggers = msg["result"]
     assert _same_lists(triggers, expected_triggers)
+
+
+async def test_automation_with_non_existing_integration(hass, caplog):
+    """Test automation with an error in script."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "device", "domain": "beer"},
+                "action": {"service": "test.automation", "entity_id": "hello.world"},
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert "Integration 'beer' not found" in caplog.text
+
+
+async def test_automation_with_integration_without_device_automation(hass, caplog):
+    """Test automation with an error in script."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "device", "domain": "mqtt"},
+                "action": {"service": "test.automation", "entity_id": "hello.world"},
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert "Integration 'mqtt' does not support device automations" in caplog.text
+
+
+async def test_automation_with_integration_without_device_automation_action(
+    hass, caplog
+):
+    """Test automation with an error in script."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event1"},
+                "action": {"device_id": "", "domain": "test"},
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert (
+        "Integration 'test' does not support device automation actions" in caplog.text
+    )
+
+
+async def test_automation_with_integration_without_device_automation_condition(
+    hass, caplog
+):
+    """Test automation with an error in script."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event1"},
+                "condition": {"condition": "device", "domain": "test"},
+                "action": {"service": "test.automation", "entity_id": "hello.world"},
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert (
+        "Integration 'test' does not support device automation conditions"
+        in caplog.text
+    )
+
+
+async def test_automation_with_integration_without_device_automation_trigger(
+    hass, caplog
+):
+    """Test automation with an error in script."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "device", "domain": "test"},
+                "action": {"service": "test.automation", "entity_id": "hello.world"},
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert (
+        "Integration 'test' does not support device automation triggers" in caplog.text
+    )
+
+
+async def test_automation_with_bad_action(hass, caplog):
+    """Test automation with an error in script."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event1"},
+                "action": {"device_id": "", "domain": "light"},
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert "required key not provided" in caplog.text
+
+
+async def test_automation_with_bad_condition(hass, caplog):
+    """Test automation with an error in script."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event1"},
+                "condition": {"condition": "device", "domain": "light"},
+                "action": {"service": "test.automation", "entity_id": "hello.world"},
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert "required key not provided" in caplog.text
+
+
+async def test_automation_with_bad_sub_condition(hass, caplog):
+    """Test automation with an error in script."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event1"},
+                "condition": {
+                    "condition": "and",
+                    "conditions": [{"condition": "device", "domain": "light"}],
+                },
+                "action": {"service": "test.automation", "entity_id": "hello.world"},
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert "required key not provided" in caplog.text
+
+
+async def test_automation_with_bad_trigger(hass, caplog):
+    """Test automation with an error in script."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "device", "domain": "light"},
+                "action": {"service": "test.automation", "entity_id": "hello.world"},
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert "required key not provided" in caplog.text

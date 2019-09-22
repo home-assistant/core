@@ -499,7 +499,7 @@ async def async_validate_condition_config(
     if condition in ("and", "or"):
         conditions = []
         for sub_cond in config["conditions"]:
-            sub_cond = async_validate_condition_config(hass, sub_cond)
+            sub_cond = await async_validate_condition_config(hass, sub_cond)
             conditions.append(sub_cond)
         config["conditions"] = conditions
 
