@@ -218,13 +218,7 @@ async def test_templates_with_entities(hass, calls):
 
 async def test_availability_template_with_entities(hass, calls):
     """Test availability tempalates with values from other entities."""
-    availability_template = """
-        {% if is_state('availability_boolean.state', 'True') %}
-            {{ 'true' }}
-        {% else %}
-            {{ 'false' }}
-        {% endif %}
-    """
+
     with assert_setup_component(1, "fan"):
         assert await setup.async_setup_component(
             hass,
@@ -234,7 +228,7 @@ async def test_availability_template_with_entities(hass, calls):
                     "platform": "template",
                     "fans": {
                         "test_fan": {
-                            "availability_template": availability_template,
+                            "availability_template": "{{ is_state('availability_boolean.state', 'on') }}",
                             "value_template": "{{ 'on' }}",
                             "speed_template": "{{ 'medium' }}",
                             "oscillating_template": "{{ 1 == 1 }}",
@@ -251,20 +245,18 @@ async def test_availability_template_with_entities(hass, calls):
     await hass.async_block_till_done()
 
     # When template returns true..
-    hass.states.async_set(_STATE_AVAILABILITY_BOOLEAN, True)
+    hass.states.async_set(_STATE_AVAILABILITY_BOOLEAN, STATE_ON)
     await hass.async_block_till_done()
 
     # Device State should not be unavailable
-    state = hass.states.get(_TEST_FAN)
-    assert state.state != STATE_UNAVAILABLE
+    assert hass.states.get(_TEST_FAN).state != STATE_UNAVAILABLE
 
     # When Availability template returns false
-    hass.states.async_set(_STATE_AVAILABILITY_BOOLEAN, False)
+    hass.states.async_set(_STATE_AVAILABILITY_BOOLEAN, STATE_OFF)
     await hass.async_block_till_done()
 
     # device state should be unavailable
-    state = hass.states.get(_TEST_FAN)
-    assert state.state == STATE_UNAVAILABLE
+    assert hass.states.get(_TEST_FAN).state == STATE_UNAVAILABLE
 
 
 async def test_templates_with_valid_values(hass, calls):
@@ -353,7 +345,7 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert hass.states.get("fan.test_fan") != STATE_UNAVAILABLE
+    assert hass.states.get("fan.test_fan").state != STATE_UNAVAILABLE
     assert ("Could not render availability_template template") in caplog.text
     assert ("UndefinedError: 'x' is undefined") in caplog.text
 
