@@ -198,7 +198,6 @@ omit =
     homeassistant/components/evohome/*
     homeassistant/components/familyhub/camera.py
     homeassistant/components/fastdotcom/*
-    homeassistant/components/fedex/sensor.py
     homeassistant/components/ffmpeg/camera.py
     homeassistant/components/fibaro/*
     homeassistant/components/filesize/sensor.py
