@@ -1288,7 +1288,7 @@ pyloopenergy==0.1.3
 pylutron-caseta==0.5.0
 
 # homeassistant.components.lutron
-pylutron==0.2.2
+pylutron==0.2.5
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
