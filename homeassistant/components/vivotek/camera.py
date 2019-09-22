@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             config[CONF_IP_ADDRESS],
         ),
     )
-    add_entities([VivotekCam(**args)])
+    add_entities([VivotekCam(**args)], True)
 
 
 class VivotekCam(Camera):
