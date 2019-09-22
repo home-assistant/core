@@ -53,7 +53,12 @@ def main():
 
     # If creating new integration, create config flow too
     if args.template == "integration":
-        generate.generate("config_flow", info)
+        if info.authentication or not info.discoverable:
+            template = "config_flow"
+        else:
+            template = "config_flow_discovery"
+
+        generate.generate(template, info)
 
     print("Running hassfest to pick up new information.")
     subprocess.run("python -m script.hassfest", shell=True)

@@ -70,9 +70,41 @@ def _custom_tasks(template, info) -> None:
 
     if template == "config_flow":
         info.update_manifest(config_flow=True)
+        info.update_strings(
+            config={
+                "title": info.name,
+                "step": {
+                    "user": {"title": "Connect to the device", "data": {"host": "Host"}}
+                },
+                "error": {
+                    "cannot_connect": "Failed to connect, please try again",
+                    "invalid_auth": "Invalid authentication",
+                    "unknown": "Unexpected error",
+                },
+                "abort": {"already_configured": "Device is already configured"},
+            }
+        )
 
+    if template == "config_flow_discovery":
+        info.update_manifest(config_flow=True)
+        info.update_strings(
+            config={
+                "title": info.name,
+                "step": {
+                    "confirm": {
+                        "title": info.name,
+                        "description": f"Do you want to set up {info.name}?",
+                    }
+                },
+                "abort": {
+                    "single_instance_allowed": f"Only a single configuration of {info.name} is possible.",
+                    "no_devices_found": f"No {info.name} devices found on the network.",
+                },
+            }
+        )
+
+    if template in ("config_flow", "config_flow_discovery"):
         init_file = info.integration_dir / "__init__.py"
-
         init_file.write_text(
             init_file.read_text()
             + """

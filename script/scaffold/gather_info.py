@@ -81,6 +81,28 @@ def gather_new_integration() -> Info:
                         ]
                     ],
                 },
+                "authentication": {
+                    "prompt": "Does Home Assistant need the user to authenticate to control the device/service? (yes/no)",
+                    "default": "yes",
+                    "validators": [
+                        [
+                            "Type either 'yes' or 'no'",
+                            lambda value: value in ("yes", "no"),
+                        ]
+                    ],
+                    "convertor": lambda value: value == "yes",
+                },
+                "discoverable": {
+                    "prompt": "Is the device/service discoverable on the local network? (yes/no)",
+                    "default": "no",
+                    "validators": [
+                        [
+                            "Type either 'yes' or 'no'",
+                            lambda value: value in ("yes", "no"),
+                        ]
+                    ],
+                    "convertor": lambda value: value == "yes",
+                },
             }
         )
     )
@@ -133,11 +155,18 @@ def _gather_info(fields) -> dict:
 
             try:
                 print()
-                value = input(info["prompt"] + "\n> ")
+                msg = info["prompt"]
+                if "default" in info:
+                    msg += f" [{info['default']}]"
+                value = input(f"{msg}\n> ")
             except (KeyboardInterrupt, EOFError):
                 raise ExitApp("Interrupted!", 1)
 
             value = value.strip()
+
+            if value == "" and "default" in info:
+                value = info["default"]
+
             hint = None
 
             for validator_hint, validator in info["validators"]:
@@ -146,6 +175,8 @@ def _gather_info(fields) -> dict:
                     break
 
             if hint is None:
+                if "convertor" in info:
+                    value = info["convertor"](value)
                 answers[key] = value
 
     print()

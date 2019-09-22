@@ -15,6 +15,8 @@ class Info:
     name: str = attr.ib()
     codeowner: str = attr.ib(default=None)
     requirement: str = attr.ib(default=None)
+    authentication: str = attr.ib(default=None)
+    discoverable: str = attr.ib(default=None)
 
     @property
     def integration_dir(self) -> Path:
@@ -41,3 +43,19 @@ class Info:
         self.manifest_path.write_text(
             json.dumps({**self.manifest(), **kwargs}, indent=2)
         )
+
+    @property
+    def strings_path(self) -> Path:
+        """Path to the strings."""
+        return COMPONENT_DIR / self.domain / "strings.json"
+
+    def strings(self) -> dict:
+        """Return integration strings."""
+        if not self.strings_path.exists():
+            return {}
+        return json.loads(self.strings_path.read_text())
+
+    def update_strings(self, **kwargs) -> None:
+        """Update the integration strings."""
+        print(f"Updating {self.domain} strings: {list(kwargs)}")
+        self.strings_path.write_text(json.dumps({**self.strings(), **kwargs}, indent=2))
