@@ -86,7 +86,7 @@ def setup(hass, config):
         ombi.test_connection()
     except pyombi.OmbiError as err:
         _LOGGER.warning("Unable to setup Ombi: %s", err)
-        return
+        return False
 
     hass.data[DOMAIN] = {"instance": ombi}
 
