@@ -612,7 +612,7 @@ hangups==0.4.9
 hass-nabucasa==0.17
 
 # homeassistant.components.mqtt
-hbmqtt==0.9.4
+hbmqtt==0.9.5
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.0
