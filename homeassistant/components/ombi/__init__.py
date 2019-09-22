@@ -1,5 +1,6 @@
 """Support for Ombi."""
 import logging
+from timedelta import timedelta
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
@@ -30,6 +31,8 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+SCAN_INTERVAL = timedelta(seconds=60)
 
 
 def setup(hass, config):
