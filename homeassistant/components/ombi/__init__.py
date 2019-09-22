@@ -1,5 +1,4 @@
 """Support for Ombi."""
-from datetime import timedelta
 import logging
 
 import pyombi
@@ -33,8 +32,6 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-SCAN_INTERVAL = timedelta(seconds=60)
 
 
 def setup(hass, config):

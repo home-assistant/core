@@ -1,4 +1,5 @@
 """Support for Ombi."""
+from datetime import timedelta
 import logging
 
 from pyombi import OmbiError
@@ -8,6 +9,8 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(seconds=60)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
