@@ -160,8 +160,13 @@ class TemplateLock(LockDevice):
 
         if self._availability_template is not None:
             try:
-                result = self._availability_template.async_render()
-                self._available = result == "true"
+                _LOGGER.debug(
+                    ">>> render: %s ",
+                    self._availability_template.async_render().lower(),
+                )
+                self._available = (
+                    self._availability_template.async_render().lower() == "true"
+                )
             except (TemplateError, ValueError) as ex:
                 _LOGGER.error(
                     "Could not render %s template %s: %s",
