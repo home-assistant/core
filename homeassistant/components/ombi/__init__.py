@@ -14,9 +14,9 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
+    ATTR_NAME,
+    ATTR_SEASON,
     CONF_URLBASE,
-    CONF_NAME,
-    CONF_SEASON,
     DEFAULT_PORT,
     DEFAULT_SEASON,
     DEFAULT_SSL,
@@ -40,14 +40,14 @@ def urlbase(value) -> str:
     return value + "/"
 
 
-SUBMIT_MOVIE_REQUEST_SERVICE_SCHEME = vol.Schema({vol.Required(CONF_NAME): cv.string})
+SUBMIT_MOVIE_REQUEST_SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): cv.string})
 
-SUBMIT_MUSIC_REQUEST_SERVICE_SCHEME = vol.Schema({vol.Required(CONF_NAME): cv.string})
+SUBMIT_MUSIC_REQUEST_SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): cv.string})
 
-SUBMIT_TV_REQUEST_SERVICE_SCHEME = vol.Schema(
+SUBMIT_TV_REQUEST_SERVICE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_SEASON, default=DEFAULT_SEASON): vol.In(
+        vol.Required(ATTR_NAME): cv.string,
+        vol.Optional(ATTR_SEASON, default=DEFAULT_SEASON): vol.In(
             ["first", "latest", "all"]
         ),
     }
@@ -92,7 +92,7 @@ def setup(hass, config):
 
     def submit_movie_request(call):
         """Submit request for movie."""
-        name = call.data[CONF_NAME]
+        name = call.data[ATTR_NAME]
         movies = ombi.search_movie(name)
         if movies:
             movie = movies[0]
@@ -102,11 +102,11 @@ def setup(hass, config):
 
     def submit_tv_request(call):
         """Submit request for TV show."""
-        name = call.data[CONF_NAME]
+        name = call.data[ATTR_NAME]
         tv_shows = ombi.search_tv(name)
 
         if tv_shows:
-            season = call.data[CONF_SEASON]
+            season = call.data[ATTR_SEASON]
             show = tv_shows[0]["id"]
             if season == "first":
                 ombi.request_tv(show, request_first=True)
@@ -119,7 +119,7 @@ def setup(hass, config):
 
     def submit_music_request(call):
         """Submit request for music album."""
-        name = call.data[CONF_NAME]
+        name = call.data[ATTR_NAME]
         music = ombi.search_music_album(name)
         if music:
             ombi.request_music(music[0]["foreignAlbumId"])
@@ -130,19 +130,19 @@ def setup(hass, config):
         DOMAIN,
         SERVICE_MOVIE_REQUEST,
         submit_movie_request,
-        schema=SUBMIT_MOVIE_REQUEST_SERVICE_SCHEME,
+        schema=SUBMIT_MOVIE_REQUEST_SERVICE_SCHEMA,
     )
     hass.services.register(
         DOMAIN,
         SERVICE_MUSIC_REQUEST,
         submit_music_request,
-        schema=SUBMIT_MUSIC_REQUEST_SERVICE_SCHEME,
+        schema=SUBMIT_MUSIC_REQUEST_SERVICE_SCHEMA,
     )
     hass.services.register(
         DOMAIN,
         SERVICE_TV_REQUEST,
         submit_tv_request,
-        schema=SUBMIT_TV_REQUEST_SERVICE_SCHEME,
+        schema=SUBMIT_TV_REQUEST_SERVICE_SCHEMA,
     )
     hass.helpers.discovery.load_platform("sensor", DOMAIN, {}, config)
 

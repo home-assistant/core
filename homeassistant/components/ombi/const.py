@@ -1,7 +1,8 @@
 """Support for Ombi."""
-CONF_NAME = "name"
+ATTR_NAME = "name"
+ATTR_SEASON = "season"
+
 CONF_URLBASE = "urlbase"
-CONF_SEASON = "season"
 
 DEFAULT_NAME = DOMAIN = "ombi"
 DEFAULT_PORT = 5000
