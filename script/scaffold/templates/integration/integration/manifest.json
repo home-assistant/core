@@ -1,11 +1,11 @@
 {
   "domain": "NEW_DOMAIN",
   "name": "NEW_NAME",
-  "config_flow": true,
+  "config_flow": false,
   "documentation": "https://www.home-assistant.io/components/NEW_DOMAIN",
-  "requirements": ["MANIFEST_NEW_REQUIREMENT"],
+  "requirements": [],
   "ssdp": {},
   "homekit": {},
   "dependencies": [],
-  "codeowners": ["NEW_CODEOWNER"]
+  "codeowners": []
 }
