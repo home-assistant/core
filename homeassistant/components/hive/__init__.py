@@ -88,9 +88,9 @@ def refresh_system(func):
     """Force update all entities after state change."""
 
     @wraps(func)
-    async def wrapper(self, *args, **kwargs):
+    def wrapper(self, *args, **kwargs):
         """Call decorated function and send update signal to all entities."""
-        await func(self, *args, **kwargs)
+        func(self, *args, **kwargs)
         async_dispatcher_send(self.hass, DOMAIN)
 
     return wrapper

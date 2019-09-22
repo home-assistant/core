@@ -42,7 +42,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities([water_heater])
 
-    @refresh_system
     def hotwater_boost(service):
         """Handle the service call."""
         node_id = HiveSession.entity_lookup[service.data.get(ATTR_ENTITY_ID)]
