@@ -40,7 +40,7 @@
       "is_vibration": "{entity_name} is detecting vibration",
       "is_no_vibration": "{entity_name} is not detecting vibration",
       "is_open": "{entity_name} is open",
-      "is_not_open": "{entity_name} is closed"
+      "is_not_open": "{entity_name} is closed",
       "is_on": "{entity_name} is on",
       "is_off": "{entity_name} is off"
     },
@@ -84,7 +84,7 @@
       "vibration": "{entity_name} started detecting vibration",
       "no_vibration": "{entity_name} stopped detecting vibration",
       "opened": "{entity_name} opened",
-      "closed": "{entity_name} closed"
+      "closed": "{entity_name} closed",
       "turned_on": "{entity_name} turned on",
       "turned_off": "{entity_name} turned off"
 
