@@ -1,4 +1,4 @@
-"""deCONZ device automation tests."""
+"""ZHA device automation tests."""
 from homeassistant.components.device_automation import (
     _async_get_device_automations as async_get_device_automations,
 )
