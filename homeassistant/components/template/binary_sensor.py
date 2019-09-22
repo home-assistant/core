@@ -227,18 +227,6 @@ class BinarySensorTemplate(BinarySensorDevice):
                 return
             _LOGGER.error("Could not render template %s: %s", self._name, ex)
 
-        if self._availability_template is not None:
-            try:
-                result = self._availability_template.async_render()
-                self._available = result == "true"
-            except (TemplateError, ValueError) as ex:
-                _LOGGER.error(
-                    "Could not render %s template %s: %s",
-                    CONF_AVAILABILITY_TEMPLATE,
-                    self._name,
-                    ex,
-                )
-
         attrs = {}
         if self._attribute_templates is not None:
             for key, value in self._attribute_templates.items():
@@ -251,6 +239,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         templates = {
             "_icon": self._icon_template,
             "_entity_picture": self._entity_picture_template,
+            "_available": self._availability_template,
         }
 
         for property_name, template in templates.items():
@@ -258,7 +247,10 @@ class BinarySensorTemplate(BinarySensorDevice):
                 continue
 
             try:
-                setattr(self, property_name, template.async_render())
+                value = template.async_render()
+                if property_name == "_available":
+                    value = value.lower() == "true"
+                setattr(self, property_name, value)
             except TemplateError as ex:
                 friendly_property_name = property_name[1:].replace("_", " ")
                 if ex.args and ex.args[0].startswith(

@@ -3,7 +3,13 @@ from datetime import timedelta
 import unittest
 from unittest import mock
 
-from homeassistant.const import MATCH_ALL, EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
+from homeassistant.const import (
+    MATCH_ALL,
+    EVENT_HOMEASSISTANT_START,
+    STATE_UNAVAILABLE,
+    STATE_ON,
+    STATE_OFF,
+)
 from homeassistant import setup
 from homeassistant.components.template import binary_sensor as template
 from homeassistant.exceptions import TemplateError
@@ -449,8 +455,7 @@ async def test_available_without_availability_template(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.test")
-    assert state.state != "unavailable"
+    assert hass.states.get("binary_sensor.test").state != STATE_UNAVAILABLE
 
 
 async def test_availability_template(hass):
@@ -464,31 +469,24 @@ async def test_availability_template(hass):
                     "value_template": "true",
                     "device_class": "motion",
                     "delay_off": 5,
-                    "availability_template": "{% if states.sensor.test_state.state == 'on' %}"
-                    "true"
-                    "{% else %}"
-                    "false"
-                    "{% endif %}",
+                    "availability_template": "{{ is_state('sensor.test_state','on') }}",
                 }
             },
         }
     }
-    hass.states.async_set("sensor.test_state", "on")
     await setup.async_setup_component(hass, "binary_sensor", config)
     await hass.async_start()
     await hass.async_block_till_done()
 
-    state = hass.states.async_set("sensor.test_state", "off")
+    hass.states.async_set("sensor.test_state", STATE_OFF)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == "unavailable"
+    assert hass.states.get("binary_sensor.test").state == STATE_UNAVAILABLE
 
-    hass.states.async_set("sensor.test_state", "on")
+    hass.states.async_set("sensor.test_state", STATE_ON)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.test")
-    assert state.state != "unavailable"
+    assert hass.states.get("binary_sensor.test").state != STATE_UNAVAILABLE
 
 
 async def test_invalid_attribute_template(hass, caplog):
@@ -543,7 +541,7 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert hass.states.get("binary_sensor.my_sensor") != STATE_UNAVAILABLE
+    assert hass.states.get("binary_sensor.my_sensor").state != STATE_UNAVAILABLE
     assert ("UndefinedError: 'x' is undefined") in caplog.text
 
 
