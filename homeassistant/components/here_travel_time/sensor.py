@@ -143,7 +143,9 @@ async def async_setup_platform(
     app_code = config[CONF_APP_CODE]
     here_client = herepy.RoutingApi(app_id, app_code)
 
-    if not _are_valid_client_credentials(here_client):
+    if not await hass.async_add_executor_job(
+        _are_valid_client_credentials, here_client
+    ):
         _LOGGER.error(
             "Invalid credentials. This error is returned if the specified token was invalid or no contract could be found for this token."
         )
