@@ -8,7 +8,7 @@ from homeassistant.components.cert_expiry import config_flow
 from homeassistant.components.cert_expiry.const import DEFAULT_PORT
 from homeassistant.const import CONF_PORT, CONF_NAME, CONF_HOST
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_coro
 
 NAME = "Cert Expiry test 1 2 3"
 PORT = 443
@@ -20,7 +20,7 @@ def mock_controller():
     """Mock a successfull _prt_in_configuration_exists."""
     with patch(
         "homeassistant.components.cert_expiry.config_flow.CertexpiryConfigFlow._test_connection",
-        return_value=True,
+        side_effect=lambda *_: mock_coro(True),
     ):
         yield
 

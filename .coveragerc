@@ -289,11 +289,15 @@ omit =
     homeassistant/components/hydrawise/*
     homeassistant/components/hyperion/light.py
     homeassistant/components/ialarm/alarm_control_panel.py
+    homeassistant/components/iaqualink/binary_sensor.py
     homeassistant/components/iaqualink/climate.py
     homeassistant/components/iaqualink/light.py
     homeassistant/components/iaqualink/sensor.py
     homeassistant/components/iaqualink/switch.py
     homeassistant/components/icloud/device_tracker.py
+    homeassistant/components/izone/climate.py
+    homeassistant/components/izone/discovery.py
+    homeassistant/components/izone/__init__.py
     homeassistant/components/idteck_prox/*
     homeassistant/components/ifttt/*
     homeassistant/components/iglo/light.py
@@ -435,6 +439,7 @@ omit =
     homeassistant/components/nuki/lock.py
     homeassistant/components/nut/sensor.py
     homeassistant/components/nx584/alarm_control_panel.py
+    homeassistant/components/nzbget/__init__.py
     homeassistant/components/nzbget/sensor.py
     homeassistant/components/obihai/*
     homeassistant/components/octoprint/*
@@ -477,7 +482,10 @@ omit =
     homeassistant/components/pioneer/media_player.py
     homeassistant/components/pjlink/media_player.py
     homeassistant/components/plaato/*
-    homeassistant/components/plex/*
+    homeassistant/components/plex/__init__.py
+    homeassistant/components/plex/media_player.py
+    homeassistant/components/plex/sensor.py
+    homeassistant/components/plex/server.py
     homeassistant/components/plugwise/*
     homeassistant/components/plum_lightpad/*
     homeassistant/components/pocketcasts/sensor.py
@@ -739,6 +747,7 @@ omit =
     homeassistant/components/yale_smart_alarm/alarm_control_panel.py
     homeassistant/components/yamaha/media_player.py
     homeassistant/components/yamaha_musiccast/media_player.py
+    homeassistant/components/yandex_transport/*
     homeassistant/components/yeelight/*
     homeassistant/components/yeelightsunflower/light.py
     homeassistant/components/yi/camera.py

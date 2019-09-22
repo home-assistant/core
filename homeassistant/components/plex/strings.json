@@ -1,0 +1,33 @@
+{
+    "config": {
+        "title": "Plex",
+        "step": {
+            "select_server": {
+                "title": "Select Plex server",
+                "description": "Multiple servers available, select one:",
+                "data": {
+                    "server": "Server"
+                }
+            },
+            "user": {
+                "title": "Connect Plex server",
+                "description": "Enter a Plex token for automatic setup.",
+                "data": {
+                    "token": "Plex token"
+                }
+            }
+        },
+        "error": {
+            "faulty_credentials": "Authorization failed",
+            "no_servers": "No servers linked to account",
+            "not_found": "Plex server not found"
+        },
+        "abort": {
+            "all_configured": "All linked servers already configured",
+            "already_configured": "This Plex server is already configured",
+            "already_in_progress": "Plex is being configured",
+            "invalid_import": "Imported configuration is invalid",
+            "unknown": "Failed for unknown reason"
+        }
+    }
+}
