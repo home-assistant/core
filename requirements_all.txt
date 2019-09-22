@@ -262,7 +262,6 @@ batinfo==0.4.2
 
 # homeassistant.components.linksys_ap
 # homeassistant.components.scrape
-# homeassistant.components.sytadin
 beautifulsoup4==4.8.0
 
 # homeassistant.components.beewi_smartclim
