@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import dispatcher_send
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,8 +89,7 @@ def refresh_system(func):
 
     @wraps(func)
     def wrapper(self, *args, **kwargs):
-        """Call decorated function and send update signal to all entities."""
         func(self, *args, **kwargs)
-        async_dispatcher_send(self.hass, DOMAIN)
+        dispatcher_send(self.hass, DOMAIN)
 
     return wrapper

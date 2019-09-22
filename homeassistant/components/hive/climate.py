@@ -1,4 +1,5 @@
 """Support for the Hive climate devices."""
+import logging
 
 import voluptuous as vol
 
@@ -15,7 +16,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, TEMP_CELSIUS
 import homeassistant.helpers.config_validation as cv
 
-from . import DATA_HIVE, DOMAIN, refresh_system, HiveSession
+from . import DATA_HIVE, DOMAIN, HiveSession, refresh_system
 
 HIVE_TO_HASS_STATE = {
     "SCHEDULE": HVAC_MODE_AUTO,
@@ -40,9 +41,11 @@ BOOST_HEATING_SCHEMA = vol.Schema(
         vol.Required(ATTR_TIME_PERIOD): vol.All(
             cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds() // 60
         ),
-        vol.Optional(ATTR_TEMPERATURE): cv.string,
+        vol.Optional(ATTR_TEMPERATURE, default="25.0"): cv.string,
     }
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -59,9 +62,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     def heating_boost(service):
         """Handle the service call."""
-        node_id = HiveSession.entity_lookup[service.data.get(ATTR_ENTITY_ID)]
-        minutes = service.data.get(ATTR_TIME_PERIOD)
-        temperature = float(service.data.get(ATTR_TEMPERATURE, 25))
+        node_id = HiveSession.entity_lookup.get(service.data[ATTR_ENTITY_ID])
+        if not node_id:
+            # log or raise error
+            _LOGGER.error("Cannot boost entity id entered.")
+            return
+
+        minutes = service.data[ATTR_TIME_PERIOD]
+        temperature = service.data.get(ATTR_TEMPERATURE)
 
         session.heating.turn_boost_on(node_id, minutes, temperature)
 
@@ -193,7 +201,7 @@ class HiveClimateEntity(ClimateDevice):
     async def async_added_to_hass(self):
         """When entity is added to Home Assistant."""
         await super().async_added_to_hass()
-        self.session.entity_lookup.update({self.entity_id: self.node_id})
+        self.session.entity_lookup[self.entity_id] = self.node_id
 
     def update(self):
         """Update all Node data from Hive."""

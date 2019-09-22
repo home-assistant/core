@@ -1,15 +1,19 @@
 """Support for hive water heaters."""
+import logging
+
 import voluptuous as vol
-from homeassistant.const import TEMP_CELSIUS, ATTR_ENTITY_ID
-import homeassistant.helpers.config_validation as cv
+
 from homeassistant.components.water_heater import (
     STATE_ECO,
-    STATE_ON,
     STATE_OFF,
+    STATE_ON,
     SUPPORT_OPERATION_MODE,
     WaterHeaterDevice,
 )
-from . import DATA_HIVE, DOMAIN, refresh_system, HiveSession
+from homeassistant.const import ATTR_ENTITY_ID, TEMP_CELSIUS
+import homeassistant.helpers.config_validation as cv
+
+from . import DATA_HIVE, DOMAIN, HiveSession, refresh_system
 
 SUPPORT_FLAGS_HEATER = SUPPORT_OPERATION_MODE
 
@@ -22,12 +26,15 @@ ATTR_MODE = "on_off"
 BOOST_HOTWATER_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Optional(ATTR_TIME_PERIOD): vol.All(
+        vol.Optional(ATTR_TIME_PERIOD, default="00:30:00"): vol.All(
             cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds() // 60
         ),
         vol.Required(ATTR_MODE): cv.string,
     }
 )
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -44,9 +51,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     def hotwater_boost(service):
         """Handle the service call."""
-        node_id = HiveSession.entity_lookup[service.data.get(ATTR_ENTITY_ID)]
-        minutes = service.data.get(ATTR_TIME_PERIOD, 30)
-        mode = service.data.get(ATTR_MODE)
+        node_id = HiveSession.entity_lookup.get(service.data[ATTR_ENTITY_ID])
+        if not node_id:
+            # log or raise error
+            _LOGGER.error("Cannot boost entity id entered.")
+            return
+        minutes = service.data.get(ATTR_TIME_PERIOD)
+        mode = service.data[ATTR_MODE]
 
         if mode == "on":
             session.hotwater.turn_boost_on(node_id, minutes)
@@ -116,7 +127,7 @@ class HiveWaterHeater(WaterHeaterDevice):
     async def async_added_to_hass(self):
         """When entity is added to Home Assistant."""
         await super().async_added_to_hass()
-        self.session.entity_lookup.update({self.entity_id: self.node_id})
+        self.session.entity_lookup[self.entity_id] = self.node_id
 
     def update(self):
         """Update all Node data from Hive."""
