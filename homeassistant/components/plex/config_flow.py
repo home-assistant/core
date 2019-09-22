@@ -148,8 +148,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_HOST, default=self.discovery_info.get(CONF_HOST)
                 ): str,
                 vol.Required(
-                    CONF_PORT,
-                    default=int(self.discovery_info.get(CONF_PORT, DEFAULT_PORT)),
+                    CONF_PORT, default=self.discovery_info.get(CONF_PORT, DEFAULT_PORT)
                 ): int,
                 vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
                 vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
@@ -192,6 +191,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # Skip discovery if a config already exists or is in progress.
             return self.async_abort(reason="already_configured")
 
+        discovery_info[CONF_PORT] = int(discovery_info[CONF_PORT])
         self.discovery_info = discovery_info
         json_file = self.hass.config.path(PLEX_CONFIG_FILE)
         file_config = await self.hass.async_add_executor_job(load_json, json_file)
