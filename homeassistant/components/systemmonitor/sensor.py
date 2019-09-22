@@ -1,5 +1,4 @@
 """Support for monitoring the local system."""
-from datetime import datetime
 import logging
 import os
 import socket
@@ -193,7 +192,7 @@ class SystemMonitorSensor(Entity):
             counters = psutil.net_io_counters(pernic=True)
             if self.argument in counters:
                 counter = counters[self.argument][IO_COUNTER[self.type]]
-                now = datetime.now()
+                now = dt_util.utcnow()
                 if self._last_value and self._last_value < counter:
                     self._state = round(
                         (counter - self._last_value)

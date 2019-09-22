@@ -34,7 +34,6 @@ from .gateway import get_gateway_from_config_entry, DeconzEntityHandler
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up deCONZ platforms."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -194,9 +193,6 @@ class DeconzLight(DeconzDevice, Light):
         attributes = {}
         attributes["is_deconz_group"] = self._device.type == "LightGroup"
 
-        if self._device.type == "LightGroup":
-            attributes["all_on"] = self._device.all_on
-
         return attributes
 
 
@@ -207,9 +203,7 @@ class DeconzGroup(DeconzLight):
         """Set up group and create an unique id."""
         super().__init__(device, gateway)
 
-        self._unique_id = "{}-{}".format(
-            self.gateway.api.config.bridgeid, self._device.deconz_id
-        )
+        self._unique_id = f"{self.gateway.api.config.bridgeid}-{self._device.deconz_id}"
 
     @property
     def unique_id(self):
@@ -228,3 +222,11 @@ class DeconzGroup(DeconzLight):
             "name": self._device.name,
             "via_device": (DECONZ_DOMAIN, bridgeid),
         }
+
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        attributes = dict(super().device_state_attributes)
+        attributes["all_on"] = self._device.all_on
+
+        return attributes

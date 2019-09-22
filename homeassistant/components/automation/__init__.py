@@ -3,6 +3,7 @@ import asyncio
 from functools import partial
 import importlib
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -34,7 +35,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime, utcnow
 
 
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
 
 DOMAIN = "automation"
@@ -43,6 +44,7 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 GROUP_NAME_ALL_AUTOMATIONS = "all automations"
 
 CONF_ALIAS = "alias"
+CONF_DESCRIPTION = "description"
 CONF_HIDE_ENTITY = "hide_entity"
 
 CONF_CONDITION = "condition"
@@ -95,6 +97,7 @@ PLATFORM_SCHEMA = vol.Schema(
         # str on purpose
         CONF_ID: str,
         CONF_ALIAS: cv.string,
+        vol.Optional(CONF_DESCRIPTION): cv.string,
         vol.Optional(CONF_INITIAL_STATE): cv.boolean,
         vol.Optional(CONF_HIDE_ENTITY, default=DEFAULT_HIDE_ENTITY): cv.boolean,
         vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
@@ -279,11 +282,11 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         if enable_automation:
             await self.async_enable()
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on and update the state."""
         await self.async_enable()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.async_disable()
 

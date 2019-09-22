@@ -19,9 +19,16 @@ from .core.const import (
     ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
     ATTR_ENDPOINT_ID,
+    ATTR_LEVEL,
     ATTR_MANUFACTURER,
     ATTR_NAME,
     ATTR_VALUE,
+    ATTR_WARNING_DEVICE_DURATION,
+    ATTR_WARNING_DEVICE_MODE,
+    ATTR_WARNING_DEVICE_STROBE,
+    ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE,
+    ATTR_WARNING_DEVICE_STROBE_INTENSITY,
+    CHANNEL_IAS_WD,
     CLUSTER_COMMAND_SERVER,
     CLUSTER_COMMANDS_CLIENT,
     CLUSTER_COMMANDS_SERVER,
@@ -31,6 +38,11 @@ from .core.const import (
     DATA_ZHA_GATEWAY,
     DOMAIN,
     MFG_CLUSTER_ID_START,
+    WARNING_DEVICE_MODE_EMERGENCY,
+    WARNING_DEVICE_SOUND_HIGH,
+    WARNING_DEVICE_SQUAWK_MODE_ARMED,
+    WARNING_DEVICE_STROBE_HIGH,
+    WARNING_DEVICE_STROBE_YES,
 )
 from .core.helpers import async_is_bindable_target, convert_ieee, get_matched_clusters
 
@@ -56,6 +68,8 @@ SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE = "set_zigbee_cluster_attribute"
 SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND = "issue_zigbee_cluster_command"
 SERVICE_DIRECT_ZIGBEE_BIND = "issue_direct_zigbee_bind"
 SERVICE_DIRECT_ZIGBEE_UNBIND = "issue_direct_zigbee_unbind"
+SERVICE_WARNING_DEVICE_SQUAWK = "warning_device_squawk"
+SERVICE_WARNING_DEVICE_WARN = "warning_device_warn"
 SERVICE_ZIGBEE_BIND = "service_zigbee_bind"
 IEEE_SERVICE = "ieee_based_service"
 
@@ -78,6 +92,41 @@ SERVICE_SCHEMAS = {
             vol.Required(ATTR_ATTRIBUTE): cv.positive_int,
             vol.Required(ATTR_VALUE): cv.string,
             vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
+        }
+    ),
+    SERVICE_WARNING_DEVICE_SQUAWK: vol.Schema(
+        {
+            vol.Required(ATTR_IEEE): convert_ieee,
+            vol.Optional(
+                ATTR_WARNING_DEVICE_MODE, default=WARNING_DEVICE_SQUAWK_MODE_ARMED
+            ): cv.positive_int,
+            vol.Optional(
+                ATTR_WARNING_DEVICE_STROBE, default=WARNING_DEVICE_STROBE_YES
+            ): cv.positive_int,
+            vol.Optional(
+                ATTR_LEVEL, default=WARNING_DEVICE_SOUND_HIGH
+            ): cv.positive_int,
+        }
+    ),
+    SERVICE_WARNING_DEVICE_WARN: vol.Schema(
+        {
+            vol.Required(ATTR_IEEE): convert_ieee,
+            vol.Optional(
+                ATTR_WARNING_DEVICE_MODE, default=WARNING_DEVICE_MODE_EMERGENCY
+            ): cv.positive_int,
+            vol.Optional(
+                ATTR_WARNING_DEVICE_STROBE, default=WARNING_DEVICE_STROBE_YES
+            ): cv.positive_int,
+            vol.Optional(
+                ATTR_LEVEL, default=WARNING_DEVICE_SOUND_HIGH
+            ): cv.positive_int,
+            vol.Optional(ATTR_WARNING_DEVICE_DURATION, default=5): cv.positive_int,
+            vol.Optional(
+                ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE, default=0x00
+            ): cv.positive_int,
+            vol.Optional(
+                ATTR_WARNING_DEVICE_STROBE_INTENSITY, default=WARNING_DEVICE_STROBE_HIGH
+            ): cv.positive_int,
         }
     ),
     SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND: vol.Schema(
@@ -610,6 +659,85 @@ def async_load_api(hass):
         schema=SERVICE_SCHEMAS[SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND],
     )
 
+    async def warning_device_squawk(service):
+        """Issue the squawk command for an IAS warning device."""
+        ieee = service.data[ATTR_IEEE]
+        mode = service.data.get(ATTR_WARNING_DEVICE_MODE)
+        strobe = service.data.get(ATTR_WARNING_DEVICE_STROBE)
+        level = service.data.get(ATTR_LEVEL)
+
+        zha_device = zha_gateway.get_device(ieee)
+        if zha_device is not None:
+            channel = zha_device.cluster_channels.get(CHANNEL_IAS_WD)
+            if channel:
+                await channel.squawk(mode, strobe, level)
+            else:
+                _LOGGER.error(
+                    "Squawking IASWD: %s is missing the required IASWD channel!",
+                    "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+                )
+        else:
+            _LOGGER.error(
+                "Squawking IASWD: %s could not be found!",
+                "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+            )
+        _LOGGER.debug(
+            "Squawking IASWD: %s %s %s %s",
+            "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+            "{}: [{}]".format(ATTR_WARNING_DEVICE_MODE, mode),
+            "{}: [{}]".format(ATTR_WARNING_DEVICE_STROBE, strobe),
+            "{}: [{}]".format(ATTR_LEVEL, level),
+        )
+
+    hass.helpers.service.async_register_admin_service(
+        DOMAIN,
+        SERVICE_WARNING_DEVICE_SQUAWK,
+        warning_device_squawk,
+        schema=SERVICE_SCHEMAS[SERVICE_WARNING_DEVICE_SQUAWK],
+    )
+
+    async def warning_device_warn(service):
+        """Issue the warning command for an IAS warning device."""
+        ieee = service.data[ATTR_IEEE]
+        mode = service.data.get(ATTR_WARNING_DEVICE_MODE)
+        strobe = service.data.get(ATTR_WARNING_DEVICE_STROBE)
+        level = service.data.get(ATTR_LEVEL)
+        duration = service.data.get(ATTR_WARNING_DEVICE_DURATION)
+        duty_mode = service.data.get(ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE)
+        intensity = service.data.get(ATTR_WARNING_DEVICE_STROBE_INTENSITY)
+
+        zha_device = zha_gateway.get_device(ieee)
+        if zha_device is not None:
+            channel = zha_device.cluster_channels.get(CHANNEL_IAS_WD)
+            if channel:
+                await channel.start_warning(
+                    mode, strobe, level, duration, duty_mode, intensity
+                )
+            else:
+                _LOGGER.error(
+                    "Warning IASWD: %s is missing the required IASWD channel!",
+                    "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+                )
+        else:
+            _LOGGER.error(
+                "Warning IASWD: %s could not be found!",
+                "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+            )
+        _LOGGER.debug(
+            "Warning IASWD: %s %s %s %s",
+            "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+            "{}: [{}]".format(ATTR_WARNING_DEVICE_MODE, mode),
+            "{}: [{}]".format(ATTR_WARNING_DEVICE_STROBE, strobe),
+            "{}: [{}]".format(ATTR_LEVEL, level),
+        )
+
+    hass.helpers.service.async_register_admin_service(
+        DOMAIN,
+        SERVICE_WARNING_DEVICE_WARN,
+        warning_device_warn,
+        schema=SERVICE_SCHEMAS[SERVICE_WARNING_DEVICE_WARN],
+    )
+
     websocket_api.async_register_command(hass, websocket_permit_devices)
     websocket_api.async_register_command(hass, websocket_get_devices)
     websocket_api.async_register_command(hass, websocket_get_device)
@@ -629,3 +757,5 @@ def async_unload_api(hass):
     hass.services.async_remove(DOMAIN, SERVICE_REMOVE)
     hass.services.async_remove(DOMAIN, SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE)
     hass.services.async_remove(DOMAIN, SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND)
+    hass.services.async_remove(DOMAIN, SERVICE_WARNING_DEVICE_SQUAWK)
+    hass.services.async_remove(DOMAIN, SERVICE_WARNING_DEVICE_WARN)

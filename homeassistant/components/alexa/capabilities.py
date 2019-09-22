@@ -1,5 +1,4 @@
 """Alexa capabilities."""
-from datetime import datetime
 import logging
 
 from homeassistant.const import (
@@ -16,6 +15,7 @@ from homeassistant.const import (
 import homeassistant.components.climate.const as climate
 from homeassistant.components import light, fan, cover
 import homeassistant.util.color as color_util
+import homeassistant.util.dt as dt_util
 
 from .const import (
     API_TEMP_UNITS,
@@ -109,7 +109,7 @@ class AlexaCapibility:
                     "name": prop_name,
                     "namespace": self.name(),
                     "value": prop_value,
-                    "timeOfSample": datetime.now().strftime(DATE_FORMAT),
+                    "timeOfSample": dt_util.utcnow().strftime(DATE_FORMAT),
                     "uncertaintyInMilliseconds": 0,
                 }
 

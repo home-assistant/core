@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Tots els servidors enlla\u00e7ats ja estan configurats",
+            "already_configured": "Aquest servidor Plex ja est\u00e0 configurat",
+            "already_in_progress": "S\u2019est\u00e0 configurant Plex",
+            "invalid_import": "La configuraci\u00f3 importada \u00e9s inv\u00e0lida",
+            "unknown": "Ha fallat per motiu desconegut"
+        },
+        "error": {
+            "faulty_credentials": "Ha fallat l'autoritzaci\u00f3",
+            "no_servers": "No hi ha servidors enlla\u00e7ats amb el compte",
+            "not_found": "No s'ha trobat el servidor Plex"
+        },
+        "step": {
+            "select_server": {
+                "data": {
+                    "server": "Servidor"
+                },
+                "description": "Hi ha diversos servidors disponibles, selecciona'n un:",
+                "title": "Selecciona servidor Plex"
+            },
+            "user": {
+                "data": {
+                    "token": "Testimoni d'autenticaci\u00f3 Plex"
+                },
+                "description": "Introdueix un testimoni d'autenticaci\u00f3 Plex per configurar-ho autom\u00e0ticament.",
+                "title": "Connexi\u00f3 amb el servidor Plex"
+            }
+        },
+        "title": "Plex"
+    }
+}
