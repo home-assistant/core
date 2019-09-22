@@ -3,7 +3,7 @@
   "name": "Vivotek",
   "documentation": "https://www.home-assistant.io/components/vivotek",
   "requirements": [
-    "libpyvivotek==0.2.1"
+    "libpyvivotek==0.2.2"
   ],
   "dependencies": [],
   "codeowners": []
