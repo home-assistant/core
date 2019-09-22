@@ -241,6 +241,7 @@ class ZigbeeChannel(LogMixin):
                 "unique_id": self._unique_id,
                 "device_ieee": str(self._zha_device.ieee),
                 "endpoint_id": cluster.endpoint.endpoint_id,
+                "cluster_id": cluster.cluster_id,
                 "command": command,
                 "args": args,
             },
