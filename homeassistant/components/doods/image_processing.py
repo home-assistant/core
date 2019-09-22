@@ -139,6 +139,7 @@ class Doods(ImageProcessingEntity):
             self._name = f"Doods {name}"
         self._doods = doods
         self._file_out = config[CONF_FILE_OUT]
+        self._detector_name = detector["name"]
 
         # detector config and aspect ratio
         self._width = None
@@ -289,7 +290,9 @@ class Doods(ImageProcessingEntity):
 
         # Run detection
         start = time.time()
-        response = self._doods.detect(image, self._dconfig)
+        response = self._doods.detect(
+            image, dconfig=self._dconfig, detector_name=self._detector_name
+        )
         _LOGGER.debug(
             "doods detect: %s response: %s duration: %s",
             self._dconfig,

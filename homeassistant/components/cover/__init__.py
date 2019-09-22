@@ -2,6 +2,7 @@
 from datetime import timedelta
 import functools as ft
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -33,7 +34,7 @@ from homeassistant.const import (
 )
 
 
-# mypy: allow-untyped-calls, allow-incomplete-defs, allow-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -263,7 +264,7 @@ class CoverDevice(Entity):
         """Return if the cover is closed or not."""
         raise NotImplementedError()
 
-    def open_cover(self, **kwargs):
+    def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         raise NotImplementedError()
 
@@ -274,7 +275,7 @@ class CoverDevice(Entity):
         """
         return self.hass.async_add_job(ft.partial(self.open_cover, **kwargs))
 
-    def close_cover(self, **kwargs):
+    def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         raise NotImplementedError()
 
@@ -285,7 +286,7 @@ class CoverDevice(Entity):
         """
         return self.hass.async_add_job(ft.partial(self.close_cover, **kwargs))
 
-    def toggle(self, **kwargs) -> None:
+    def toggle(self, **kwargs: Any) -> None:
         """Toggle the entity."""
         if self.is_closed:
             self.open_cover(**kwargs)
@@ -323,7 +324,7 @@ class CoverDevice(Entity):
         """
         return self.hass.async_add_job(ft.partial(self.stop_cover, **kwargs))
 
-    def open_cover_tilt(self, **kwargs):
+    def open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         pass
 
@@ -334,7 +335,7 @@ class CoverDevice(Entity):
         """
         return self.hass.async_add_job(ft.partial(self.open_cover_tilt, **kwargs))
 
-    def close_cover_tilt(self, **kwargs):
+    def close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         pass
 
@@ -369,7 +370,7 @@ class CoverDevice(Entity):
         """
         return self.hass.async_add_job(ft.partial(self.stop_cover_tilt, **kwargs))
 
-    def toggle_tilt(self, **kwargs) -> None:
+    def toggle_tilt(self, **kwargs: Any) -> None:
         """Toggle the entity."""
         if self.current_cover_tilt_position == 0:
             self.open_cover_tilt(**kwargs)
