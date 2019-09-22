@@ -379,10 +379,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
 
 
 async def async_validate_config_item(hass, config):
-    """Validate config item.
-
-    This method is a coroutine.
-    """
+    """Validate config item."""
     p_validated = PLATFORM_SCHEMA(config)
 
     triggers = []
@@ -414,10 +411,7 @@ async def async_validate_config_item(hass, config):
 
 
 async def async_validate_config(hass, config):
-    """Validate config.
-
-    This method is a coroutine.
-    """
+    """Validate config."""
     automations = []
     for _, p_config in config_per_platform(config, DOMAIN):
         try:

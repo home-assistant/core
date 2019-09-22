@@ -84,15 +84,11 @@ def call_from_config(
 async def async_validate_action_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConfigType:
-    """Validate config.
-
-    This method is a coroutine.
-    """
+    """Validate config."""
     action_type = _determine_action(config)
 
     if action_type == ACTION_DEVICE_AUTOMATION:
         config = await device_automation.async_validate_action_config(hass, config)
-    # TODO: Special validation also if ACTION_CHECK_CONDITION: CONDITION_SCHEMA is not enough
 
     return config
 

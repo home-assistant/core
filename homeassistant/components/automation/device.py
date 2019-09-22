@@ -14,10 +14,7 @@ TRIGGER_SCHEMA = vol.Schema(
 
 
 async def async_validate_trigger_config(hass, config):
-    """Validate config.
-
-    This method is a coroutine.
-    """
+    """Validate config."""
     return await device_automation.async_validate_trigger_config(hass, config)
 
 

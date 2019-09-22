@@ -38,7 +38,6 @@ async def async_get_device_automation_platform(hass, config):
     """Load device automation platform for integration.
 
     Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.
-    This method is a coroutine.
     """
     try:
         integration = await async_get_integration(hass, config[CONF_DOMAIN])
@@ -56,10 +55,7 @@ async def async_get_device_automation_platform(hass, config):
 
 
 async def async_validate_action_config(hass, config):
-    """Validate config.
-
-    This method is a coroutine.
-    """
+    """Validate config."""
     platform = await async_get_device_automation_platform(hass, config)
     if not hasattr(platform, "async_get_actions"):
         raise InvalidDeviceAutomationConfig(
@@ -69,11 +65,10 @@ async def async_validate_action_config(hass, config):
     return platform.ACTION_SCHEMA(config)
 
 
-async def async_validate_condition_config(hass, config):
-    """Validate config.
-
-    This method is a coroutine.
-    """
+async def async_validate_condition_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config."""
     platform = await async_get_device_automation_platform(hass, config)
     if not hasattr(platform, "async_get_conditions"):
         raise InvalidDeviceAutomationConfig(
@@ -84,10 +79,7 @@ async def async_validate_condition_config(hass, config):
 
 
 async def async_validate_trigger_config(hass, config):
-    """Validate config.
-
-    This method is a coroutine.
-    """
+    """Validate config."""
     platform = await async_get_device_automation_platform(hass, config)
     if not hasattr(platform, "async_get_triggers"):
         raise InvalidDeviceAutomationConfig(
@@ -98,10 +90,7 @@ async def async_validate_trigger_config(hass, config):
 
 
 async def async_handle_action(hass, action, variables, context):
-    """Perform the device automation specified in the action.
-
-    This method is a coroutine.
-    """
+    """Perform the device automation specified in the action."""
     integration = await async_get_integration(hass, action[CONF_DOMAIN])
     platform = integration.get_platform("device_automation")
     await platform.async_call_action_from_config(hass, action, variables, context)

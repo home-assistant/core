@@ -494,10 +494,7 @@ def zone_from_config(
 async def async_validate_condition_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConfigType:
-    """Validate config.
-
-    This method is a coroutine.
-    """
+    """Validate config."""
     condition = config[CONF_CONDITION]
     if condition in ("and", "or"):
         conditions = []
