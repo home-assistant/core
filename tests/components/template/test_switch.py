@@ -135,89 +135,6 @@ class TestTemplateSwitch:
         state = self.hass.states.get("switch.test_template_switch")
         assert state.state == STATE_OFF
 
-    def test_available_template_with_entities(self):
-        """Test availability templates with values from other entities."""
-        availability_template = """
-            {% if is_state('availability_boolean.state', 'True') %}
-                {{ 'true' }}
-            {% else %}
-                {{ 'false' }}
-            {% endif %}
-        """
-        with assert_setup_component(1, "switch"):
-            assert setup.setup_component(
-                self.hass,
-                "switch",
-                {
-                    "switch": {
-                        "platform": "template",
-                        "switches": {
-                            "test_template_switch": {
-                                "value_template": "{{ 1 == 1 }}",
-                                "turn_on": {
-                                    "service": "switch.turn_on",
-                                    "entity_id": "switch.test_state",
-                                },
-                                "turn_off": {
-                                    "service": "switch.turn_off",
-                                    "entity_id": "switch.test_state",
-                                },
-                                "availability_template": availability_template,
-                            }
-                        },
-                    }
-                },
-            )
-
-        self.hass.start()
-        self.hass.block_till_done()
-
-        self.hass.states.set("availability_boolean.state", True)
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("switch.test_template_switch")
-        assert state.state != STATE_UNAVAILABLE
-
-        self.hass.states.set("availability_boolean.state", False)
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("switch.test_template_switch")
-        assert state.state == STATE_UNAVAILABLE
-
-    def test_invalid_availability_template_keeps_component_available(self, caplog):
-        """Test that an invalid availability keeps the device available."""
-        with assert_setup_component(1, "switch"):
-            assert setup.setup_component(
-                self.hass,
-                "switch",
-                {
-                    "switch": {
-                        "platform": "template",
-                        "switches": {
-                            "test_template_switch": {
-                                "value_template": "{{ true }}",
-                                "turn_on": {
-                                    "service": "switch.turn_on",
-                                    "entity_id": "switch.test_state",
-                                },
-                                "turn_off": {
-                                    "service": "switch.turn_off",
-                                    "entity_id": "switch.test_state",
-                                },
-                                "availability_template": "{{ x - 12 }}",
-                            }
-                        },
-                    }
-                },
-            )
-
-        self.hass.start()
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("switch.test_template_switch")
-        assert state.state != STATE_UNAVAILABLE
-        assert ("UndefinedError: 'x' is undefined") in caplog.text
-
     def test_icon_template(self):
         """Test icon template."""
         with assert_setup_component(1, "switch"):
@@ -557,3 +474,76 @@ class TestTemplateSwitch:
         self.hass.block_till_done()
 
         assert len(self.calls) == 1
+
+
+async def test_available_template_with_entities(hass):
+    """Test availability templates with values from other entities."""
+    await setup.async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "template",
+                "switches": {
+                    "test_template_switch": {
+                        "value_template": "{{ 1 == 1 }}",
+                        "turn_on": {
+                            "service": "switch.turn_on",
+                            "entity_id": "switch.test_state",
+                        },
+                        "turn_off": {
+                            "service": "switch.turn_off",
+                            "entity_id": "switch.test_state",
+                        },
+                        "availability_template": "{{ is_state('availability_state.state', 'on') }}",
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("availability_state.state", STATE_ON)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.test_template_switch").state != STATE_UNAVAILABLE
+
+    hass.states.async_set("availability_state.state", STATE_OFF)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.test_template_switch").state == STATE_UNAVAILABLE
+
+
+async def test_invalid_availability_template_keeps_component_available(hass, caplog):
+    """Test that an invalid availability keeps the device available."""
+    await setup.async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "template",
+                "switches": {
+                    "test_template_switch": {
+                        "value_template": "{{ true }}",
+                        "turn_on": {
+                            "service": "switch.turn_on",
+                            "entity_id": "switch.test_state",
+                        },
+                        "turn_off": {
+                            "service": "switch.turn_off",
+                            "entity_id": "switch.test_state",
+                        },
+                        "availability_template": "{{ x - 12 }}",
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.test_template_switch").state != STATE_UNAVAILABLE
+    assert ("UndefinedError: 'x' is undefined") in caplog.text
