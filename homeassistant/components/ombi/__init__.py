@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+import pyombi
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -38,7 +39,6 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 def setup(hass, config):
     """Set up the Ombi component platform."""
-    import pyombi
 
     urlbase = f"{config[DOMAIN][CONF_URLBASE].strip('/') if config[DOMAIN][CONF_URLBASE] else ''}/"
 
