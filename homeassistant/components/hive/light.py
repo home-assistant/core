@@ -10,7 +10,7 @@ from homeassistant.components.light import (
 )
 import homeassistant.util.color as color_util
 
-from . import DATA_HIVE, DOMAIN
+from . import DATA_HIVE, DOMAIN, refresh_system
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -33,7 +33,6 @@ class HiveDeviceLight(Light):
         self.light_device_type = hivedevice["Hive_Light_DeviceType"]
         self.session = hivesession
         self.attributes = {}
-        self.data_updatesource = f"{self.device_type}.{self.node_id}"
         self._unique_id = f"{self.node_id}-{self.device_type}"
 
     @property
@@ -100,6 +99,7 @@ class HiveDeviceLight(Light):
         """Return true if light is on."""
         return self.session.light.get_state(self.node_id)
 
+    @refresh_system
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
         new_brightness = None
@@ -128,14 +128,10 @@ class HiveDeviceLight(Light):
             new_color,
         )
 
-        for entity in self.session.entities:
-            entity.handle_update(self.data_updatesource)
-
+    @refresh_system
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
         self.session.light.turn_off(self.node_id)
-        for entity in self.session.entities:
-            entity.handle_update(self.data_updatesource)
 
     @property
     def supported_features(self):
@@ -150,18 +146,8 @@ class HiveDeviceLight(Light):
 
         return supported_features
 
-    async def async_added_to_hass(self):
-        """When entity is added to Home Assistant."""
-        await super().async_added_to_hass()
-        self.session.entities.append(self)
-        self.session.entity_lookup.update({self.entity_id: self.node_id})
 
-    def handle_update(self, updatesource):
-        """Handle the new update request."""
-        if f"{self.device_type}.{self.node_id}" not in updatesource:
-            self.schedule_update_ha_state()
-
-    def update(self):
-        """Update all Node data from Hive."""
-        self.session.core.update_data(self.node_id)
-        self.attributes = self.session.attributes.state_attributes(self.node_id)
+def update(self):
+    """Update all Node data from Hive."""
+    self.session.core.update_data(self.node_id)
+    self.attributes = self.session.attributes.state_attributes(self.node_id)

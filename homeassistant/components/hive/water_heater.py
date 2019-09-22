@@ -9,7 +9,7 @@ from homeassistant.components.water_heater import (
     SUPPORT_OPERATION_MODE,
     WaterHeaterDevice,
 )
-from . import DATA_HIVE, DOMAIN
+from . import DATA_HIVE, DOMAIN, refresh_system, HiveSession
 
 SUPPORT_FLAGS_HEATER = SUPPORT_OPERATION_MODE
 
@@ -17,12 +17,14 @@ HIVE_TO_HASS_STATE = {"SCHEDULE": STATE_ECO, "ON": STATE_ON, "OFF": STATE_OFF}
 HASS_TO_HIVE_STATE = {STATE_ECO: "SCHEDULE", STATE_ON: "ON", STATE_OFF: "OFF"}
 SUPPORT_WATER_HEATER = [STATE_ECO, STATE_ON, STATE_OFF]
 SERVICE_BOOST_HEATING = "boost_hotwater"
-ATTR_BOOST_MINUTES = "minutes"
+ATTR_TIME_PERIOD = "time_period"
 ATTR_MODE = "on_off"
 BOOST_HOTWATER_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Optional(ATTR_BOOST_MINUTES): cv.positive_int,
+        vol.Optional(ATTR_TIME_PERIOD): vol.All(
+            cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds() // 60
+        ),
         vol.Required(ATTR_MODE): cv.string,
     }
 )
@@ -40,17 +42,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities([water_heater])
 
+    @refresh_system
     def hotwater_boost(service):
         """Handle the service call."""
-        session = hass.data.get(DATA_HIVE)
-        entity = session.entity_lookup[service.data.get(ATTR_ENTITY_ID)]
-        minutes = service.data.get(ATTR_BOOST_MINUTES, 30)
+        node_id = HiveSession.entity_lookup[service.data.get(ATTR_ENTITY_ID)]
+        minutes = service.data.get(ATTR_TIME_PERIOD, 30)
         mode = service.data.get(ATTR_MODE)
 
         if mode == "on":
-            session.hotwater.turn_boost_on(entity, minutes)
+            session.hotwater.turn_boost_on(node_id, minutes)
         elif mode == "off":
-            session.hotwater.turn_boost_off(entity)
+            session.hotwater.turn_boost_off(node_id)
 
     hass.services.register(
         DOMAIN, SERVICE_BOOST_HEATING, hotwater_boost, schema=BOOST_HOTWATER_SCHEMA
@@ -66,7 +68,6 @@ class HiveWaterHeater(WaterHeaterDevice):
         self.node_name = hivedevice["Hive_NodeName"]
         self.device_type = hivedevice["HA_DeviceType"]
         self.session = hivesession
-        self.data_updatesource = f"{self.device_type}.{self.node_id}"
         self._unique_id = f"{self.node_id}-{self.device_type}"
         self._unit_of_measurement = TEMP_CELSIUS
 
@@ -107,24 +108,16 @@ class HiveWaterHeater(WaterHeaterDevice):
         """List of available operation modes."""
         return SUPPORT_WATER_HEATER
 
+    @refresh_system
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
         new_mode = HASS_TO_HIVE_STATE[operation_mode]
         self.session.hotwater.set_mode(self.node_id, new_mode)
 
-        for entity in self.session.entities:
-            entity.handle_update(self.data_updatesource)
-
     async def async_added_to_hass(self):
         """When entity is added to Home Assistant."""
         await super().async_added_to_hass()
-        self.session.entities.append(self)
         self.session.entity_lookup.update({self.entity_id: self.node_id})
-
-    def handle_update(self, updatesource):
-        """Handle the new update request."""
-        if f"{self.device_type}.{self.node_id}" not in updatesource:
-            self.schedule_update_ha_state()
 
     def update(self):
         """Update all Node data from Hive."""

@@ -7,8 +7,8 @@ boost_heating:
         description: Enter the entity_id for the device required to set the boost mode.,
         example: "climate.heating",
       }
-    minutes:
-      { description: Set the duration of boost in minutes., example: "90" }
+    time_period:
+      { description: Set the time period for the boost., example: "01:30:00"  }
     temperature:
       {
         description: Set the target temperature for the boost period.,
@@ -23,5 +23,5 @@ boost_hotwater:
         description: Enter the entity_id for the device reuired to set the boost mode.,
         example: "water_heater.hot_water",
       }
-    minutes: { description: Set the duration of boost in minutes., example: "90" }
+    time_period: { description: Set the time period for the boost., example: "01:30:00" }
     on_off: { description: Set the boost function on or off., example: "on" }

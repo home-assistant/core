@@ -26,7 +26,6 @@ class HiveBinarySensorEntity(BinarySensorDevice):
         self.node_device_type = hivedevice["Hive_DeviceType"]
         self.session = hivesession
         self.attributes = {}
-        self.data_updatesource = f"{self.device_type}.{self.node_id}"
         self._unique_id = f"{self.node_id}-{self.device_type}"
 
     @property
@@ -58,17 +57,6 @@ class HiveBinarySensorEntity(BinarySensorDevice):
     def is_on(self):
         """Return true if the binary sensor is on."""
         return self.session.sensor.get_state(self.node_id, self.node_device_type)
-
-    async def async_added_to_hass(self):
-        """When entity is added to Home Assistant."""
-        await super().async_added_to_hass()
-        self.session.entities.append(self)
-        self.session.entity_lookup.update({self.entity_id: self.node_id})
-
-    def handle_update(self, updatesource):
-        """Handle the new update request."""
-        if f"{self.device_type}.{self.node_id}" not in updatesource:
-            self.schedule_update_ha_state()
 
     def update(self):
         """Update all Node data from Hive."""

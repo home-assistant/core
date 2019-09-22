@@ -1,7 +1,7 @@
 """Support for the Hive switches."""
 from homeassistant.components.switch import SwitchDevice
 
-from . import DATA_HIVE, DOMAIN
+from . import DATA_HIVE, DOMAIN, refresh_system
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -23,7 +23,6 @@ class HiveDevicePlug(SwitchDevice):
         self.device_type = hivedevice["HA_DeviceType"]
         self.session = hivesession
         self.attributes = {}
-        self.data_updatesource = f"{self.device_type}.{self.node_id}"
         self._unique_id = f"{self.node_id}-{self.device_type}"
 
     @property
@@ -56,28 +55,15 @@ class HiveDevicePlug(SwitchDevice):
         """Return true if switch is on."""
         return self.session.switch.get_state(self.node_id)
 
+    @refresh_system
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         self.session.switch.turn_on(self.node_id)
-        for entity in self.session.entities:
-            entity.handle_update(self.data_updatesource)
 
+    @refresh_system
     def turn_off(self, **kwargs):
         """Turn the device off."""
         self.session.switch.turn_off(self.node_id)
-        for entity in self.session.entities:
-            entity.handle_update(self.data_updatesource)
-
-    async def async_added_to_hass(self):
-        """When entity is added to Home Assistant."""
-        await super().async_added_to_hass()
-        self.session.entities.append(self)
-        self.session.entity_lookup.update({self.entity_id: self.node_id})
-
-    def handle_update(self, updatesource):
-        """Handle the new update request."""
-        if f"{self.device_type}.{self.node_id}" not in updatesource:
-            self.schedule_update_ha_state()
 
     def update(self):
         """Update all Node data from Hive."""

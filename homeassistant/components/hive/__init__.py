@@ -1,5 +1,6 @@
 """Support for the Hive devices."""
 import logging
+from functools import wraps
 
 from pyhiveapi import Pyhiveapi
 import voluptuous as vol
@@ -7,6 +8,8 @@ import voluptuous as vol
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +41,6 @@ CONFIG_SCHEMA = vol.Schema(
 class HiveSession:
     """Initiate Hive Session Class."""
 
-    entities = []
     entity_lookup = {}
     core = None
     heating = None
@@ -80,3 +82,15 @@ def setup(hass, config):
                 for hivedevice in devices:
                     load_platform(hass, ha_type, DOMAIN, hivedevice, config)
     return True
+
+
+def refresh_system(func):
+    """Force update all entities after state change."""
+
+    @wraps(func)
+    async def wrapper(self, *args, **kwargs):
+        """Call decorated function and send update signal to all entities."""
+        await func(self, *args, **kwargs)
+        async_dispatcher_send(self.hass, DOMAIN)
+
+    return wrapper
