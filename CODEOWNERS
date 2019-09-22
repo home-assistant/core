@@ -198,6 +198,7 @@ homeassistant/components/nws/* @MatthewFlamm
 homeassistant/components/nzbget/* @chriscla
 homeassistant/components/obihai/* @dshokouhi
 homeassistant/components/ohmconnect/* @robbiet480
+homeassistant/components/ombi/* @larssont
 homeassistant/components/onboarding/* @home-assistant/core
 homeassistant/components/opentherm_gw/* @mvn23
 homeassistant/components/openuv/* @bachya
