@@ -40,10 +40,20 @@ async def async_setup_ha_cast(
 
     async def handle_show_view(call: core.ServiceCall):
         """Handle a Show View service call."""
+        hass_url = hass.config.api.base_url
+
+        # Home Assistant Cast only works with https urls. If user has no configured
+        # base url, use their remote url.
+        if not hass_url.lower().startswith("https://"):
+            try:
+                hass_url = hass.components.cloud.async_remote_ui_url()
+            except hass.components.cloud.CloudNotAvailable:
+                pass
+
         controller = HomeAssistantController(
             # If you are developing Home Assistant Cast, uncomment and set to your dev app id.
             # app_id="5FE44367",
-            hass_url=hass.config.api.base_url,
+            hass_url=hass_url,
             client_id=None,
             refresh_token=refresh_token.token,
         )

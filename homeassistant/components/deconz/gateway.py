@@ -184,11 +184,7 @@ class DeconzGateway:
         self.api.close()
 
     async def async_reset(self):
-        """Reset this gateway to default state.
-
-        Will cancel any scheduled setup retry and will unload
-        the config entry.
-        """
+        """Reset this gateway to default state."""
         self.api.async_connection_status_callback = None
         self.api.close()
 
@@ -203,7 +199,7 @@ class DeconzGateway:
 
         for event in self.events:
             event.async_will_remove_from_hass()
-            self.events.remove(event)
+        self.events.clear()
 
         self.deconz_ids = {}
         return True
