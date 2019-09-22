@@ -131,7 +131,7 @@ class SwitchTemplate(SwitchDevice):
         self._icon = None
         self._entity_picture = None
         self._entities = entity_ids
-        self._available = "true"
+        self._available = True
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -182,7 +182,7 @@ class SwitchTemplate(SwitchDevice):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self._available is not None and self._available.lower() == "true"
+        return self._available
 
     async def async_turn_on(self, **kwargs):
         """Fire the on action."""
@@ -220,7 +220,10 @@ class SwitchTemplate(SwitchDevice):
                 continue
 
             try:
-                setattr(self, property_name, template.async_render())
+                value = template.async_render()
+                if property_name == "_available":
+                    value = value.lower() == "true"
+                setattr(self, property_name, value)
             except TemplateError as ex:
                 friendly_property_name = property_name[1:].replace("_", " ")
                 if ex.args and ex.args[0].startswith(
