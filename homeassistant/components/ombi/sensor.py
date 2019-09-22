@@ -75,4 +75,3 @@ class OmbiSensor(Entity):
         except OmbiError as err:
             _LOGGER.warning("Unable to update Ombi sensor: %s", err)
             self._state = None
-            return
