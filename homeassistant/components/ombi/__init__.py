@@ -34,8 +34,10 @@ def urlbase(value) -> str:
     """Validate and transform urlbase."""
     if value is None:
         raise vol.Invalid("string value is None")
-    value = str(value)
-    return value.strip("/") + "/"
+    value = str(value).strip("/")
+    if not value:
+        return value
+    return value + "/"
 
 
 SUBMIT_MOVIE_REQUEST_SERVICE_SCHEME = vol.Schema({vol.Required(CONF_NAME): cv.string})
