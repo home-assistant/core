@@ -1,6 +1,8 @@
 """Tests for the ecobee config flow."""
 from unittest.mock import patch
 
+from pyecobee import ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN
+
 from homeassistant import data_entry_flow
 from homeassistant.components.ecobee import config_flow
 from homeassistant.components.ecobee.const import (
@@ -112,3 +114,85 @@ async def test_token_request_fails(hass):
         assert result["step_id"] == "authorize"
         assert result["errors"]["base"] == "token_request_failed"
         assert result["description_placeholders"] == {"pin": "test-pin"}
+
+
+async def test_import_flow_triggered_but_no_ecobee_conf(hass):
+    """Test expected result if import flow triggers but ecobee.conf doesn't exist."""
+    flow = config_flow.EcobeeFlowHandler()
+    flow.hass = hass
+    flow.hass.data[DATA_ECOBEE_CONFIG] = {}
+
+    result = await flow.async_step_import(import_data=None)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+
+async def test_import_flow_triggered_with_ecobee_conf_and_valid_data_and_valid_tokens(
+    hass
+):
+    """Test expected result if import flow triggers and ecobee.conf exists with valid tokens."""
+    flow = config_flow.EcobeeFlowHandler()
+    flow.hass = hass
+
+    MOCK_ECOBEE_CONF = {ECOBEE_API_KEY: None, ECOBEE_REFRESH_TOKEN: None}
+
+    with patch(
+        "homeassistant.components.ecobee.config_flow.load_json",
+        return_value=MOCK_ECOBEE_CONF,
+    ), patch("homeassistant.components.ecobee.config_flow.Ecobee") as MockEcobee:
+        mock_ecobee = MockEcobee.return_value
+        mock_ecobee.refresh_tokens.return_value = True
+        mock_ecobee.api_key = "test-api-key"
+        mock_ecobee.refresh_token = "test-token"
+
+        result = await flow.async_step_import(import_data=None)
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == DOMAIN
+        assert result["data"] == {
+            CONF_API_KEY: "test-api-key",
+            CONF_REFRESH_TOKEN: "test-token",
+        }
+
+
+async def test_import_flow_triggered_with_ecobee_conf_and_invalid_data(hass):
+    """Test expected result if import flow triggers and ecobee.conf exists with invalid data."""
+    flow = config_flow.EcobeeFlowHandler()
+    flow.hass = hass
+    flow.hass.data[DATA_ECOBEE_CONFIG] = {}
+
+    MOCK_ECOBEE_CONF = {}
+
+    with patch(
+        "homeassistant.components.ecobee.config_flow.load_json",
+        return_value=MOCK_ECOBEE_CONF,
+    ):
+
+        result = await flow.async_step_import(import_data=None)
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+
+
+async def test_import_flow_triggered_with_ecobee_conf_and_valid_data_and_stale_tokens(
+    hass
+):
+    """Test expected result if import flow triggers and ecobee.conf exists with stale tokens."""
+    flow = config_flow.EcobeeFlowHandler()
+    flow.hass = hass
+    flow.hass.data[DATA_ECOBEE_CONFIG] = {}
+
+    MOCK_ECOBEE_CONF = {ECOBEE_API_KEY: None, ECOBEE_REFRESH_TOKEN: None}
+
+    with patch(
+        "homeassistant.components.ecobee.config_flow.load_json",
+        return_value=MOCK_ECOBEE_CONF,
+    ), patch("homeassistant.components.ecobee.config_flow.Ecobee") as MockEcobee:
+        mock_ecobee = MockEcobee.return_value
+        mock_ecobee.refresh_tokens.return_value = False
+
+        result = await flow.async_step_import(import_data=None)
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
