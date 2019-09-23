@@ -407,9 +407,6 @@ somecomfort==0.5.2
 # homeassistant.components.sql
 sqlalchemy==1.3.8
 
-# homeassistant.components.srp_energy
-srpenergy==1.0.6
-
 # homeassistant.components.statsd
 statsd==3.2.1
 
