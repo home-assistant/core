@@ -6,7 +6,11 @@ To update, run python3 -m script.hassfest
 # fmt: off
 
 SSDP = {
-    "device_type": {},
+    "device_type": {
+        "urn:samsung.com:device:MainTVServer2:1": [
+            "samsungtv"
+        ]
+    },
     "manufacturer": {
         "Belkin International Inc.": [
             "wemo"

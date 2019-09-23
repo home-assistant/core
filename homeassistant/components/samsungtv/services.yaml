@@ -1,0 +1,9 @@
+send_key:
+  description: Send any key to Samsung TV.
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set
+      example: 'media_player.samsungtv'
+    key:
+      description: Name of the key
+      example: 'KEY_HDMI'

@@ -1,9 +1,4 @@
 """Support for interface with an Samsung TV."""
-import asyncio
-from datetime import timedelta
-import logging
-import socket
-
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
@@ -22,6 +17,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     CONF_HOST,
+    CONF_ID,
     CONF_MAC,
     CONF_NAME,
     CONF_PORT,
@@ -32,7 +28,8 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
+from .const import LOGGER
+
 
 DEFAULT_NAME = "Samsung TV Remote"
 DEFAULT_PORT = 55000
@@ -67,6 +64,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Samsung TV platform."""
+    import socket
+
     known_devices = hass.data.get(KNOWN_DEVICES_KEY)
     if known_devices is None:
         known_devices = set()
@@ -81,18 +80,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         mac = config.get(CONF_MAC)
         timeout = config.get(CONF_TIMEOUT)
     elif discovery_info is not None:
-        tv_name = discovery_info.get("name")
-        model = discovery_info.get("model_name")
-        host = discovery_info.get("host")
-        name = f"{tv_name} ({model})"
+        name = discovery_info.get("title")
+        host = discovery_info.get(CONF_HOST)
+        mac = discovery_info.get(CONF_MAC)
+        uuid = discovery_info.get(CONF_ID)
         port = DEFAULT_PORT
         timeout = DEFAULT_TIMEOUT
-        mac = None
-        udn = discovery_info.get("udn")
-        if udn and udn.startswith("uuid:"):
-            uuid = udn[len("uuid:") :]
     else:
-        _LOGGER.warning("Cannot determine device")
+        LOGGER.warning("Cannot determine device")
         return
 
     # Only add a device once, so discovered devices do not override manual
@@ -101,9 +96,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if ip_addr not in known_devices:
         known_devices.add(ip_addr)
         add_entities([SamsungTVDevice(host, port, name, timeout, mac, uuid)])
-        _LOGGER.info("Samsung TV %s:%d added as '%s'", host, port, name)
+        LOGGER.info("Samsung TV %s:%d added as '%s'", host, port, name)
     else:
-        _LOGGER.info("Ignoring duplicate Samsung TV %s:%d", host, port)
+        LOGGER.info("Ignoring duplicate Samsung TV %s:%d", host, port)
 
 
 class SamsungTVDevice(MediaPlayerDevice):
@@ -161,7 +156,7 @@ class SamsungTVDevice(MediaPlayerDevice):
     def send_key(self, key):
         """Send a key to the tv and handles exceptions."""
         if self._power_off_in_progress() and key not in ("KEY_POWER", "KEY_POWEROFF"):
-            _LOGGER.info("TV is powering off, not sending command: %s", key)
+            LOGGER.info("TV is powering off, not sending command: %s", key)
             return
         try:
             # recreate connection if connection was dead
@@ -181,7 +176,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             # We got a response so it's on.
             self._state = STATE_ON
             self._remote = None
-            _LOGGER.debug("Failed sending command %s", key, exc_info=True)
+            LOGGER.debug("Failed sending command %s", key, exc_info=True)
             return
         except OSError:
             self._state = STATE_OFF
@@ -229,6 +224,8 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn off media player."""
+        from datetime import timedelta
+
         self._end_of_power_off = dt_util.utcnow() + timedelta(seconds=15)
 
         if self._config["method"] == "websocket":
@@ -240,7 +237,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             self.get_remote().close()
             self._remote = None
         except OSError:
-            _LOGGER.debug("Could not establish connection.")
+            LOGGER.debug("Could not establish connection.")
 
     def volume_up(self):
         """Volume up the media player."""
@@ -281,15 +278,19 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Support changing a channel."""
+        import asyncio
+        import voluptuous as vol
+        import homeassistant.helpers.config_validation as cv
+
         if media_type != MEDIA_TYPE_CHANNEL:
-            _LOGGER.error("Unsupported media type")
+            LOGGER.error("Unsupported media type")
             return
 
         # media_id should only be a channel number
         try:
             cv.positive_int(media_id)
         except vol.Invalid:
-            _LOGGER.error("Media ID must be positive integer")
+            LOGGER.error("Media ID must be positive integer")
             return
 
         for digit in media_id:
@@ -307,7 +308,7 @@ class SamsungTVDevice(MediaPlayerDevice):
     async def async_select_source(self, source):
         """Select input source."""
         if source not in SOURCES:
-            _LOGGER.error("Unsupported source")
+            LOGGER.error("Unsupported source")
             return
 
         await self.hass.async_add_job(self.send_key, SOURCES[source])
