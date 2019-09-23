@@ -1,6 +1,6 @@
 """Config flow to configure ecobee."""
-import voluptuous as vol
 from copy import copy
+import voluptuous as vol
 
 from pyecobee import (
     Ecobee,

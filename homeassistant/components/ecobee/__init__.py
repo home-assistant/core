@@ -110,7 +110,9 @@ class EcobeeData:
             await self._hass.async_add_executor_job(self.ecobee.update)
             _LOGGER.debug("Updating ecobee")
         except ExpiredTokenError:
-            _LOGGER.warn("ecobee update failed; attempting to refresh expired tokens")
+            _LOGGER.warning(
+                "ecobee update failed; attempting to refresh expired tokens"
+            )
             await self.refresh()
 
     async def refresh(self) -> bool:
@@ -125,9 +127,8 @@ class EcobeeData:
                 },
             )
             return True
-        else:
-            _LOGGER.error("Error updating ecobee tokens")
-            return False
+        _LOGGER.error("Error updating ecobee tokens")
+        return False
 
 
 async def async_populate_options(hass, config_entry):
