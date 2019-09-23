@@ -13,7 +13,5 @@
     ]
   },
   "dependencies": [],
-  "codeowners": [
-    "@amelchio"
-  ]
+  "codeowners": []
 }

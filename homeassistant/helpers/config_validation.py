@@ -24,10 +24,14 @@ from homeassistant.const import (
     CONF_ALIAS,
     CONF_BELOW,
     CONF_CONDITION,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_ENTITY_NAMESPACE,
+    CONF_FOR,
     CONF_PLATFORM,
     CONF_SCAN_INTERVAL,
+    CONF_STATE,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
     CONF_VALUE_TEMPLATE,
@@ -48,7 +52,7 @@ from homeassistant.helpers.logging import KeywordStyleAdapter
 from homeassistant.util import slugify as util_slugify
 
 
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
 # pylint: disable=invalid-name
 
@@ -91,7 +95,7 @@ def has_at_least_one_key(*keys: str) -> Callable:
     return validate
 
 
-def has_at_most_one_key(*keys: str) -> Callable:
+def has_at_most_one_key(*keys: str) -> Callable[[Dict], Dict]:
     """Validate that zero keys exist or one key exists."""
 
     def validate(obj: Dict) -> Dict:
@@ -220,7 +224,7 @@ def entity_ids(value: Union[str, List]) -> List[str]:
 comp_entity_ids = vol.Any(vol.All(vol.Lower, ENTITY_MATCH_ALL), entity_ids)
 
 
-def entity_domain(domain: str):
+def entity_domain(domain: str) -> Callable[[Any], str]:
     """Validate that entity belong to domain."""
 
     def validate(value: Any) -> str:
@@ -231,7 +235,7 @@ def entity_domain(domain: str):
     return validate
 
 
-def entities_domain(domain: str):
+def entities_domain(domain: str) -> Callable[[Union[str, List]], List[str]]:
     """Validate that entities belong to domain."""
 
     def validate(values: Union[str, List]) -> List[str]:
@@ -280,7 +284,7 @@ time_period_dict = vol.All(
 )
 
 
-def time(value) -> time_sys:
+def time(value: Any) -> time_sys:
     """Validate and transform a time."""
     if isinstance(value, time_sys):
         return value
@@ -296,7 +300,7 @@ def time(value) -> time_sys:
     return time_val
 
 
-def date(value) -> date_sys:
+def date(value: Any) -> date_sys:
     """Validate and transform a date."""
     if isinstance(value, date_sys):
         return value
@@ -435,7 +439,7 @@ def string(value: Any) -> str:
     return str(value)
 
 
-def temperature_unit(value) -> str:
+def temperature_unit(value: Any) -> str:
     """Validate and transform temperature unit."""
     value = str(value).upper()
     if value == "C":
@@ -574,7 +578,7 @@ def deprecated(
     replacement_key: Optional[str] = None,
     invalidation_version: Optional[str] = None,
     default: Optional[Any] = None,
-):
+) -> Callable[[Dict], Dict]:
     """
     Log key as deprecated and provide a replacement (if exists).
 
@@ -622,7 +626,7 @@ def deprecated(
             " deprecated, please remove it from your configuration"
         )
 
-    def check_for_invalid_version(value: Optional[Any]):
+    def check_for_invalid_version(value: Optional[Any]) -> None:
         """Raise error if current version has reached invalidation."""
         if not invalidation_version:
             return
@@ -637,7 +641,7 @@ def deprecated(
                 )
             )
 
-    def validator(config: Dict):
+    def validator(config: Dict) -> Dict:
         """Check if key is in config and log warning."""
         if key in config:
             value = config[key]
@@ -746,8 +750,8 @@ STATE_CONDITION_SCHEMA = vol.All(
         {
             vol.Required(CONF_CONDITION): "state",
             vol.Required(CONF_ENTITY_ID): entity_id,
-            vol.Required("state"): str,
-            vol.Optional("for"): vol.All(time_period, positive_timedelta),
+            vol.Required(CONF_STATE): str,
+            vol.Optional(CONF_FOR): vol.All(time_period, positive_timedelta),
             # To support use_trigger_value in automation
             # Deprecated 2016/04/25
             vol.Optional("from"): str,
@@ -823,6 +827,11 @@ OR_CONDITION_SCHEMA = vol.Schema(
     }
 )
 
+DEVICE_CONDITION_SCHEMA = vol.Schema(
+    {vol.Required(CONF_CONDITION): "device", vol.Required(CONF_DOMAIN): str},
+    extra=vol.ALLOW_EXTRA,
+)
+
 CONDITION_SCHEMA: vol.Schema = vol.Any(
     NUMERIC_STATE_CONDITION_SCHEMA,
     STATE_CONDITION_SCHEMA,
@@ -832,6 +841,7 @@ CONDITION_SCHEMA: vol.Schema = vol.Any(
     ZONE_CONDITION_SCHEMA,
     AND_CONDITION_SCHEMA,
     OR_CONDITION_SCHEMA,
+    DEVICE_CONDITION_SCHEMA,
 )
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(
@@ -852,6 +862,11 @@ _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema(
     }
 )
 
+DEVICE_ACTION_SCHEMA = vol.Schema(
+    {vol.Required(CONF_DEVICE_ID): string, vol.Required(CONF_DOMAIN): str},
+    extra=vol.ALLOW_EXTRA,
+)
+
 SCRIPT_SCHEMA = vol.All(
     ensure_list,
     [
@@ -861,6 +876,7 @@ SCRIPT_SCHEMA = vol.All(
             _SCRIPT_WAIT_TEMPLATE_SCHEMA,
             EVENT_SCHEMA,
             CONDITION_SCHEMA,
+            DEVICE_ACTION_SCHEMA,
         )
     ],
 )

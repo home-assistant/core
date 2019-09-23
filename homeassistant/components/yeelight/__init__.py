@@ -37,6 +37,7 @@ CONF_SAVE_ON_CHANGE = "save_on_change"
 CONF_MODE_MUSIC = "use_music_mode"
 CONF_FLOW_PARAMS = "flow_params"
 CONF_CUSTOM_EFFECTS = "custom_effects"
+CONF_NIGHTLIGHT_SWITCH_TYPE = "nightlight_switch_type"
 
 ATTR_COUNT = "count"
 ATTR_ACTION = "action"
@@ -47,6 +48,8 @@ ACTION_STAY = "stay"
 ACTION_OFF = "off"
 
 ACTIVE_MODE_NIGHTLIGHT = "1"
+
+NIGHTLIGHT_SWITCH_TYPE_LIGHT = "light"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -84,6 +87,9 @@ DEVICE_SCHEMA = vol.Schema(
         vol.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION): cv.positive_int,
         vol.Optional(CONF_MODE_MUSIC, default=False): cv.boolean,
         vol.Optional(CONF_SAVE_ON_CHANGE, default=False): cv.boolean,
+        vol.Optional(CONF_NIGHTLIGHT_SWITCH_TYPE): vol.Any(
+            NIGHTLIGHT_SWITCH_TYPE_LIGHT
+        ),
         vol.Optional(CONF_MODEL): cv.string,
     }
 )
@@ -256,10 +262,12 @@ class YeelightDevice:
 
         return self._device_type
 
-    def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None):
+    def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None, power_mode=None):
         """Turn on device."""
         try:
-            self.bulb.turn_on(duration=duration, light_type=light_type)
+            self.bulb.turn_on(
+                duration=duration, light_type=light_type, power_mode=power_mode
+            )
         except BulbException as ex:
             _LOGGER.error("Unable to turn the bulb on: %s", ex)
 

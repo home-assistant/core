@@ -122,7 +122,7 @@ def get_next_departure(
     include_tomorrow: bool = False,
 ) -> dict:
     """Get the next departure for the given schedule."""
-    now = datetime.datetime.now() + offset
+    now = dt_util.now().replace(tzinfo=None) + offset
     now_date = now.strftime(dt_util.DATE_STR_FORMAT)
     yesterday = now - datetime.timedelta(days=1)
     yesterday_date = yesterday.strftime(dt_util.DATE_STR_FORMAT)
@@ -256,7 +256,7 @@ def get_next_departure(
 
     _LOGGER.debug("Timetable: %s", sorted(timetable.keys()))
 
-    item = {}  # type: dict
+    item = {}
     for key in sorted(timetable.keys()):
         if dt_util.parse_datetime(key) > now:
             item = timetable[key]
@@ -393,11 +393,11 @@ class GTFSDepartureSensor(Entity):
         self._available = False
         self._icon = ICON
         self._name = ""
-        self._state = None  # type: Optional[str]
-        self._attributes = {}  # type: dict
+        self._state: Optional[str] = None
+        self._attributes = {}
 
         self._agency = None
-        self._departure = {}  # type: dict
+        self._departure = {}
         self._destination = None
         self._origin = None
         self._route = None

@@ -5,11 +5,12 @@
             "user_already_configured": "L'account \u00e8 gi\u00e0 stato configurato"
         },
         "create_entry": {
-            "default": "Per impostare le opzioni avanzate, consultare la [Documentazione Life360] ( {docs_url} )."
+            "default": "Per impostare le opzioni avanzate, consultare la [Documentazione Life360]({docs_url})."
         },
         "error": {
             "invalid_credentials": "Credenziali non valide",
             "invalid_username": "Nome utente non valido",
+            "unexpected": "Errore imprevisto durante la comunicazione con il server di Life360",
             "user_already_configured": "L'account \u00e8 gi\u00e0 stato configurato"
         },
         "step": {
@@ -18,6 +19,7 @@
                     "password": "Password",
                     "username": "Nome utente"
                 },
+                "description": "Per impostare le opzioni avanzate, vedere [Documentazione di Life360]({docs_url}).\n\u00c8 consigliabile eseguire questa operazione prima di aggiungere gli account.",
                 "title": "Informazioni sull'account Life360"
             }
         },

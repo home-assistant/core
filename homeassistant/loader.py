@@ -322,9 +322,7 @@ class CircularDependency(LoaderError):
 
 
 def _load_file(
-    hass,  # type: HomeAssistant
-    comp_or_platform: str,
-    base_paths: List[str],
+    hass: "HomeAssistant", comp_or_platform: str, base_paths: List[str]
 ) -> Optional[ModuleType]:
     """Try to load specified file.
 
@@ -391,11 +389,7 @@ def _load_file(
 class ModuleWrapper:
     """Class to wrap a Python module and auto fill in hass argument."""
 
-    def __init__(
-        self,
-        hass,  # type: HomeAssistant
-        module: ModuleType,
-    ) -> None:
+    def __init__(self, hass: "HomeAssistant", module: ModuleType) -> None:
         """Initialize the module wrapper."""
         self._hass = hass
         self._module = module
@@ -414,9 +408,7 @@ class ModuleWrapper:
 class Components:
     """Helper to load components."""
 
-    def __init__(
-        self, hass  # type: HomeAssistant
-    ) -> None:
+    def __init__(self, hass: "HomeAssistant") -> None:
         """Initialize the Components class."""
         self._hass = hass
 
@@ -442,9 +434,7 @@ class Components:
 class Helpers:
     """Helper to load helpers."""
 
-    def __init__(
-        self, hass  # type: HomeAssistant
-    ) -> None:
+    def __init__(self, hass: "HomeAssistant") -> None:
         """Initialize the Helpers class."""
         self._hass = hass
 
@@ -462,10 +452,7 @@ def bind_hass(func: CALLABLE_T) -> CALLABLE_T:
     return func
 
 
-async def async_component_dependencies(
-    hass,  # type: HomeAssistant
-    domain: str,
-) -> Set[str]:
+async def async_component_dependencies(hass: "HomeAssistant", domain: str) -> Set[str]:
     """Return all dependencies and subdependencies of components.
 
     Raises CircularDependency if a circular dependency is found.
@@ -474,10 +461,7 @@ async def async_component_dependencies(
 
 
 async def _async_component_dependencies(
-    hass,  # type: HomeAssistant
-    domain: str,
-    loaded: Set[str],
-    loading: Set,
+    hass: "HomeAssistant", domain: str, loaded: Set[str], loading: Set
 ) -> Set[str]:
     """Recursive function to get component dependencies.
 
@@ -508,9 +492,7 @@ async def _async_component_dependencies(
     return loaded
 
 
-def _async_mount_config_dir(
-    hass,  # type: HomeAssistant
-) -> bool:
+def _async_mount_config_dir(hass: "HomeAssistant") -> bool:
     """Mount config dir in order to load custom_component.
 
     Async friendly but not a coroutine.

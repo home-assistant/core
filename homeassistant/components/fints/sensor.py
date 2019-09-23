@@ -162,11 +162,11 @@ class FinTsAccount(Entity):
 
     def __init__(self, client: FinTsClient, account, name: str) -> None:
         """Initialize a FinTs balance account."""
-        self._client = client  # type: FinTsClient
+        self._client = client
         self._account = account
-        self._name = name  # type: str
-        self._balance = None  # type: float
-        self._currency = None  # type: str
+        self._name = name
+        self._balance: float = None
+        self._currency: str = None
 
     @property
     def should_poll(self) -> bool:
@@ -222,11 +222,11 @@ class FinTsHoldingsAccount(Entity):
 
     def __init__(self, client: FinTsClient, account, name: str) -> None:
         """Initialize a FinTs holdings account."""
-        self._client = client  # type: FinTsClient
-        self._name = name  # type: str
+        self._client = client
+        self._name = name
         self._account = account
         self._holdings = []
-        self._total = None  # type: float
+        self._total: float = None
 
     @property
     def should_poll(self) -> bool:

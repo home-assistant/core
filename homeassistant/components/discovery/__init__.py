@@ -36,6 +36,7 @@ SERVICE_KONNECTED = "konnected"
 SERVICE_MOBILE_APP = "hass_mobile_app"
 SERVICE_NETGEAR = "netgear_router"
 SERVICE_OCTOPRINT = "octoprint"
+SERVICE_PLEX = "plex_mediaserver"
 SERVICE_ROKU = "roku"
 SERVICE_SABNZBD = "sabnzbd"
 SERVICE_SAMSUNG_PRINTER = "samsung_printer"
@@ -49,6 +50,7 @@ CONFIG_ENTRY_HANDLERS = {
     SERVICE_DAIKIN: "daikin",
     SERVICE_TELLDUSLIVE: "tellduslive",
     SERVICE_IGD: "upnp",
+    SERVICE_PLEX: "plex",
 }
 
 SERVICE_HANDLERS = {
@@ -68,7 +70,6 @@ SERVICE_HANDLERS = {
     SERVICE_FREEBOX: ("freebox", None),
     SERVICE_YEELIGHT: ("yeelight", None),
     "panasonic_viera": ("media_player", "panasonic_viera"),
-    "plex_mediaserver": ("media_player", "plex"),
     "yamaha": ("media_player", "yamaha"),
     "logitech_mediaserver": ("media_player", "squeezebox"),
     "directv": ("media_player", "directv"),

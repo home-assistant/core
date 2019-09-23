@@ -3,7 +3,7 @@
   "name": "Sendgrid",
   "documentation": "https://www.home-assistant.io/components/sendgrid",
   "requirements": [
-    "sendgrid==6.0.5"
+    "sendgrid==6.1.0"
   ],
   "dependencies": [],
   "codeowners": []

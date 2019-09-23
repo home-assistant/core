@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Alle knyttet servere som allerede er konfigurert",
+            "already_configured": "Denne Plex-serveren er allerede konfigurert",
+            "already_in_progress": "Plex blir konfigurert",
+            "invalid_import": "Den importerte konfigurasjonen er ugyldig",
+            "unknown": "Mislyktes av ukjent \u00e5rsak"
+        },
+        "error": {
+            "faulty_credentials": "Autorisasjonen mislyktes",
+            "no_servers": "Ingen servere koblet til kontoen",
+            "not_found": "Plex-server ikke funnet"
+        },
+        "step": {
+            "select_server": {
+                "data": {
+                    "server": "Server"
+                },
+                "description": "Flere servere tilgjengelig, velg en:",
+                "title": "Velg Plex-server"
+            },
+            "user": {
+                "data": {
+                    "token": "Plex token"
+                },
+                "description": "Legg inn et Plex-token for automatisk oppsett.",
+                "title": "Koble til Plex-server"
+            }
+        },
+        "title": "Plex"
+    }
+}

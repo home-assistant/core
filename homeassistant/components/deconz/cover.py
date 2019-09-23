@@ -17,7 +17,6 @@ from .gateway import get_gateway_from_config_entry
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up deCONZ platforms."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -40,7 +39,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     gateway.listeners.append(
         async_dispatcher_connect(
-            hass, gateway.async_event_new_device(NEW_LIGHT), async_add_cover
+            hass, gateway.async_signal_new_device(NEW_LIGHT), async_add_cover
         )
     )
 
