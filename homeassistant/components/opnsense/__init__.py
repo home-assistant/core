@@ -64,7 +64,7 @@ def setup(hass, config):
         api_key, api_secret, url, verify_ssl
     )
     clients = {"interfaces": interfaces_client}
-    hass.data[OPNSENSE_DATA] = clients
+    hass.data[OPNSENSE_DATA] = {"interfaces": interfaces_client}
 
     hass.async_create_task(
         async_load_platform(hass, "device_tracker", DOMAIN, tracker_interfaces, config)
