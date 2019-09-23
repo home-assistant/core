@@ -62,7 +62,6 @@ def setup(hass, config):
     interfaces_client = diagnostics.InterfaceClient(
         api_key, api_secret, url, verify_ssl
     )
-    clients = {"interfaces": interfaces_client}
     hass.data[OPNSENSE_DATA] = {"interfaces": interfaces_client}
 
     hass.async_create_task(
