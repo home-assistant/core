@@ -1,15 +1,11 @@
 """Support for IKEA Tradfri switches."""
-import logging
-
-
 from homeassistant.components.switch import SwitchDevice
-from . import DOMAIN as TRADFRI_DOMAIN, KEY_API, KEY_GATEWAY
+from . import KEY_API, KEY_GATEWAY
 from .base_class import TradfriBaseDevice
 from .const import CONF_GATEWAY_ID
 
-_LOGGER = logging.getLogger(__name__)
 
-TRADFRI_SWITCH_MANAGER = "Tradfri Switch Manager"
+TRADFRI_device_MANAGER = "Tradfri Switch Manager"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -32,16 +28,16 @@ class TradfriSwitch(TradfriBaseDevice, SwitchDevice):
 
     def __init__(self, device, api, gateway_id):
         """Initialize a switch."""
-        self._api = api
+        super().__init__(device, api, gateway_id)
         self._unique_id = f"{gateway_id}-{device.id}"
-        self._device = None
-        self._device_control = None
-        self._device_data = None
-        self._name = None
-        self._available = True
-        self._gateway_id = gateway_id
 
-        self._refresh(device)
+    def _refresh(self, device):
+        """Refresh the switch data."""
+        super()._refresh(device)
+
+        # Caching of switch control and switch object
+        self._device_control = device.socket_control
+        self._device_data = device.socket_control.sockets[0]
 
     @property
     def is_on(self):
