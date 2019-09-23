@@ -1,8 +1,8 @@
-"""Provides device automations for lights."""
-import logging
+"""Provides device automations for sensors."""
 import voluptuous as vol
 
 import homeassistant.components.automation.numeric_state as numeric_state
+from homeassistant.components.device_automation.const import CONF_SUPPORTS
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     CONF_ABOVE,
@@ -30,7 +30,6 @@ from homeassistant.helpers import condition, config_validation as cv
 from . import DOMAIN
 
 
-_LOGGER = logging.getLogger(__name__)
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 DEVICE_CLASS_NONE = "none"
@@ -96,18 +95,20 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_SIGNAL_STRENGTH,
                     CONF_IS_TEMPERATURE,
                     CONF_IS_TIMESTAMP,
+                    CONF_IS_VALUE,
                 ]
             ),
-            vol.Optional(CONF_BELOW): vol.Any(None, vol.Coerce(float)),
-            vol.Optional(CONF_ABOVE): vol.Any(None, vol.Coerce(float)),
+            vol.Optional(CONF_BELOW): vol.Any(vol.Coerce(float)),
+            vol.Optional(CONF_ABOVE): vol.Any(vol.Coerce(float)),
             vol.Optional(CONF_FOR): vol.Any(
                 vol.All(cv.time_period, cv.positive_timedelta),
                 cv.template,
                 cv.template_complex,
             ),
+            vol.Remove(CONF_SUPPORTS): any,
         }
     ),
-    cv.has_at_least_one_non_empty_key(CONF_BELOW, CONF_ABOVE),
+    cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
 )
 
 TRIGGER_SCHEMA = vol.All(
@@ -127,18 +128,20 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_SIGNAL_STRENGTH,
                     CONF_TEMPERATURE,
                     CONF_TIMESTAMP,
+                    CONF_VALUE,
                 ]
             ),
-            vol.Optional(CONF_BELOW): vol.Any(None, vol.Coerce(float)),
-            vol.Optional(CONF_ABOVE): vol.Any(None, vol.Coerce(float)),
+            vol.Optional(CONF_BELOW): vol.Any(vol.Coerce(float)),
+            vol.Optional(CONF_ABOVE): vol.Any(vol.Coerce(float)),
             vol.Optional(CONF_FOR): vol.Any(
                 vol.All(cv.time_period, cv.positive_timedelta),
                 cv.template,
                 cv.template_complex,
             ),
+            vol.Remove(CONF_SUPPORTS): any,
         }
     ),
-    cv.has_at_least_one_non_empty_key(CONF_BELOW, CONF_ABOVE),
+    cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
 )
 
 
@@ -205,7 +208,7 @@ async def async_get_conditions(hass, device_id):
         hass, device_id, ENTITY_CONDITIONS, DOMAIN
     )
     for automation in automations:
-        automation.update(condition="device", above=None, below=None)
+        automation.update(condition="device", supports=[CONF_ABOVE, CONF_BELOW])
     return automations
 
 
@@ -213,5 +216,5 @@ async def async_get_triggers(hass, device_id):
     """List device triggers."""
     automations = await _async_get_automations(hass, device_id, ENTITY_TRIGGERS, DOMAIN)
     for automation in automations:
-        automation.update(platform="device", above=None, below=None)
+        automation.update(platform="device", supports=[CONF_ABOVE, CONF_BELOW])
     return automations

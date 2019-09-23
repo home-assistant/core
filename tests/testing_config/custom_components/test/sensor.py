@@ -18,7 +18,7 @@ def init(empty=False):
         {}
         if empty
         else {
-            device_class: MockBinarySensor(
+            device_class: MockSensor(
                 name=f"{device_class} sensor",
                 unique_id=f"unique_{device_class}",
                 device_class=device_class,
@@ -35,7 +35,7 @@ async def async_setup_platform(
     async_add_entities_callback(list(ENTITIES.values()))
 
 
-class MockBinarySensor(MockEntity):
+class MockSensor(MockEntity):
     """Mock Sensor class."""
 
     @property

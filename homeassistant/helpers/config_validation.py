@@ -95,24 +95,6 @@ def has_at_least_one_key(*keys: str) -> Callable:
     return validate
 
 
-def has_at_least_one_non_empty_key(*keys: str) -> Callable:
-    """Validate that at least one key exists and is not None."""
-
-    def validate(obj: Dict) -> Dict:
-        """Test keys exist in dict."""
-        if not isinstance(obj, dict):
-            raise vol.Invalid("expected dictionary")
-
-        for k in obj.keys():
-            if k in keys and obj[k] is not None:
-                return obj
-        raise vol.Invalid(
-            "must contain at least one of {} not set to 'None'.".format(", ".join(keys))
-        )
-
-    return validate
-
-
 def has_at_most_one_key(*keys: str) -> Callable[[Dict], Dict]:
     """Validate that zero keys exist or one key exists."""
 

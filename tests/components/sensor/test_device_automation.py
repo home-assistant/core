@@ -51,7 +51,7 @@ def _same_lists(a, b):
 
 
 async def test_get_actions(hass, device_reg, entity_reg):
-    """Test we get the expected actions from a sensor."""
+    """Test we get no actions from a sensor."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
 
@@ -105,8 +105,7 @@ async def test_get_conditions(hass, device_reg, entity_reg):
             "type": condition["type"],
             "device_id": device_entry.id,
             "entity_id": platform.ENTITIES[device_class].entity_id,
-            "above": None,
-            "below": None,
+            "supports": ["above", "below"],
         }
         for device_class in DEVICE_CLASSES
         for condition in ENTITY_CONDITIONS[device_class]
@@ -145,8 +144,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
             "type": trigger["type"],
             "device_id": device_entry.id,
             "entity_id": platform.ENTITIES[device_class].entity_id,
-            "above": None,
-            "below": None,
+            "supports": ["above", "below"],
         }
         for device_class in DEVICE_CLASSES
         for trigger in ENTITY_TRIGGERS[device_class]
@@ -158,7 +156,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
 
 
 async def test_if_fires_on_state_above(hass, calls):
-    """Test for on and off triggers firing."""
+    """Test for value triggers firing."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
@@ -215,7 +213,7 @@ async def test_if_fires_on_state_above(hass, calls):
 
 
 async def test_if_fires_on_state_below(hass, calls):
-    """Test for on and off triggers firing."""
+    """Test for value triggers firing."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
@@ -272,7 +270,7 @@ async def test_if_fires_on_state_below(hass, calls):
 
 
 async def test_if_fires_on_state_between(hass, calls):
-    """Test for on and off triggers firing."""
+    """Test for value triggers firing."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
@@ -340,8 +338,9 @@ async def test_if_fires_on_state_between(hass, calls):
     ] == "bat_low numeric_state - {} - 21 - 19 - None".format(sensor1.entity_id)
 
 
-async def test_if_state_not_above_below(hass, calls):
-    """Test for turn_on and turn_off conditions."""
+@pytest.mark.skip(reason="Depends on PR26830")
+async def test_if_state_not_above_below(hass, calls, caplog):
+    """Test for bad value conditions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 
     platform.init()
@@ -363,42 +362,18 @@ async def test_if_state_not_above_below(hass, calls):
                             "device_id": "",
                             "entity_id": sensor1.entity_id,
                             "type": "is_battery_level",
-                            "above": None,
                         }
                     ],
-                    "action": {
-                        "service": "test.automation",
-                        "data_template": {
-                            "some": "{{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(("platform", "event.event_type"))
-                        },
-                    },
+                    "action": {"service": "test.automation"},
                 }
             ]
         },
     )
-    await hass.async_block_till_done()
-    assert hass.states.get(sensor1.entity_id).state == STATE_UNKNOWN
-    assert len(calls) == 0
-
-    hass.bus.async_fire("test_event1")
-    await hass.async_block_till_done()
-    assert len(calls) == 0
-
-    hass.states.async_set(sensor1.entity_id, 9)
-    hass.bus.async_fire("test_event1")
-    await hass.async_block_till_done()
-    assert len(calls) == 0
-
-    hass.states.async_set(sensor1.entity_id, 11)
-    hass.bus.async_fire("test_event1")
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "event - test_event1"
+    assert "must contain at least one of below, above" in caplog.text
 
 
 async def test_if_state_above(hass, calls):
-    """Test for turn_on and turn_off conditions."""
+    """Test for value conditions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 
     platform.init()
@@ -455,7 +430,7 @@ async def test_if_state_above(hass, calls):
 
 
 async def test_if_state_below(hass, calls):
-    """Test for turn_on and turn_off conditions."""
+    """Test for value conditions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 
     platform.init()
@@ -512,7 +487,7 @@ async def test_if_state_below(hass, calls):
 
 
 async def test_if_state_between(hass, calls):
-    """Test for turn_on and turn_off conditions."""
+    """Test for value conditions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 
     platform.init()
