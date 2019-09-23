@@ -111,7 +111,7 @@ class EcobeeData:
             _LOGGER.debug("Updating ecobee")
         except ExpiredTokenError:
             _LOGGER.warning(
-                "ecobee update failed; attempting to refresh expired tokens"
+                "Ecobee update failed; attempting to refresh expired tokens"
             )
             await self.refresh()
 
