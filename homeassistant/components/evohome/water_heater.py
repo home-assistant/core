@@ -3,6 +3,7 @@ import logging
 from typing import List
 
 from homeassistant.components.water_heater import (
+    SUPPORT_AWAY_MODE,
     SUPPORT_OPERATION_MODE,
     WaterHeaterDevice,
 )
@@ -15,10 +16,10 @@ from .const import DOMAIN, EVO_STRFTIME, EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER
 
 _LOGGER = logging.getLogger(__name__)
 
-HA_STATE_TO_EVO = {STATE_ON: "On", STATE_OFF: "Off"}
-EVO_STATE_TO_HA = {v: k for k, v in HA_STATE_TO_EVO.items()}
+STATE_AUTO = "auto"
 
-HA_OPMODE_TO_DHW = {STATE_ON: EVO_FOLLOW, STATE_OFF: EVO_PERMOVER}
+HA_STATE_TO_EVO = {STATE_AUTO: "", STATE_ON: "On", STATE_OFF: "Off"}
+EVO_STATE_TO_HA = {v: k for k, v in HA_STATE_TO_EVO.items()}
 
 STATE_ATTRS_DHW = ["dhwId", "activeFaults", "stateStatus", "temperatureStatus"]
 
@@ -52,8 +53,12 @@ class EvoDHW(EvoChild, WaterHeaterDevice):
         self._icon = "mdi:thermometer-lines"
 
         self._precision = PRECISION_WHOLE
-        self._supported_features = SUPPORT_OPERATION_MODE
-        self._operation_list = list(HA_OPMODE_TO_DHW)
+        self._supported_features = SUPPORT_AWAY_MODE | SUPPORT_OPERATION_MODE
+
+    @property
+    def state(self):
+        """Return the current state."""
+        return EVO_STATE_TO_HA[self._evo_device.stateStatus["state"]]
 
     @property
     def current_operation(self) -> str:
@@ -63,28 +68,48 @@ class EvoDHW(EvoChild, WaterHeaterDevice):
     @property
     def operation_list(self) -> List[str]:
         """Return the list of available operations."""
-        return self._operation_list
+        return [STATE_AUTO, STATE_ON, STATE_OFF]
+
+    @property
+    def is_away_mode_on(self):
+        """Return true if away mode is on."""
+        is_off = EVO_STATE_TO_HA[self._evo_device.stateStatus["state"]] == STATE_OFF
+        is_permanent = self._evo_device.stateStatus["mode"] == EVO_PERMOVER
+        return is_off and is_permanent
+
+    async def _set_dhw_state(self, op_mode, state, until=None) -> None:
+        data = {"Mode": op_mode, "State": state, "UntilTime": until}
+        await self._call_client_api(
+            # pylint: disable=protected-access
+            self._evo_device._set_dhw(data)
+        )
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode for a DHW controller."""
-        op_mode = HA_OPMODE_TO_DHW[operation_mode]
+        state = HA_STATE_TO_EVO[operation_mode]
 
-        state = "" if op_mode == EVO_FOLLOW else HA_STATE_TO_EVO[STATE_OFF]
-        until = None  # for EVO_FOLLOW, EVO_PERMOVER
-
-        if op_mode == EVO_TEMPOVER:
+        if operation_mode == STATE_AUTO:
+            op_mode = EVO_FOLLOW
+            until = None
+        else:  # STATE_ON, STATE_OFF
+            op_mode = EVO_TEMPOVER
             await self._update_schedule()
-            until = parse_datetime(self.setpoints["next_sp_from"])
-            until = until.strftime(EVO_STRFTIME)
+            until = parse_datetime(str(self.setpoints.get("next_sp_from")))
 
-        data = {"Mode": op_mode, "State": state, "UntilTime": until}
+            until = until.strftime(EVO_STRFTIME) if until else None
 
-        await self._call_client_api(
-            self._evo_device._set_dhw(data)  # pylint: disable=protected-access
-        )
+        await self._set_dhw_state(op_mode, state, until)
+
+    async def async_turn_away_mode_on(self):
+        """Turn away mode on."""
+        await self._set_dhw_state(EVO_PERMOVER, HA_STATE_TO_EVO[STATE_OFF])
+
+    async def async_turn_away_mode_off(self):
+        """Turn away mode off."""
+        await self._set_dhw_state(EVO_FOLLOW, HA_STATE_TO_EVO[STATE_AUTO])
 
     async def async_update(self) -> None:
-        """Get the latest state data."""
+        """Get the latest state data for the DHW controller."""
         await super().async_update()
 
         for attr in STATE_ATTRS_DHW:

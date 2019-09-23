@@ -28,7 +28,15 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.dt import as_local, parse_datetime, utcnow
 
-from .const import DOMAIN, EVO_STRFTIME, STORAGE_VERSION, STORAGE_KEY, GWS, TCS
+from .const import (
+    DOMAIN,
+    EVO_FOLLOW,
+    EVO_STRFTIME,
+    STORAGE_VERSION,
+    STORAGE_KEY,
+    GWS,
+    TCS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -284,7 +292,7 @@ class EvoDevice(Entity):
         self._name = self._icon = self._precision = None
         self._supported_features = None
 
-        self._device_state_attrs = self._schedule = {}
+        self._device_state_attrs = {}
 
     @callback
     def _refresh(self, packet) -> None:
@@ -384,7 +392,7 @@ class EvoChild(EvoDevice):
     def __init__(self, evo_broker, evo_device) -> None:
         """Initialize the evohome Controller (hub)."""
         super().__init__(evo_broker, evo_device)
-        self._setpoints = {}
+        self._schedule = self._setpoints = {}
 
     @property
     def available(self) -> bool:
@@ -406,9 +414,8 @@ class EvoChild(EvoDevice):
 
         Only Zones & DHW controllers (but not the TCS) can have schedules.
         """
-        # worst case is schedule = {'DailySchedules': []}
         if not self._schedule["DailySchedules"]:
-            return {}
+            return {}  # no schedule {'DailySchedules': []}, so no scheduled setpoints
 
         day_time = datetime.now()
         day_of_week = int(day_time.strftime("%w"))  # 0 is Sunday
@@ -450,6 +457,11 @@ class EvoChild(EvoDevice):
 
     async def _update_schedule(self) -> None:
         """Get the latest schedule."""
+        if (
+            "DailySchedules" in self._schedule and not self._schedule["DailySchedules"]
+        ) and not self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
+            return  # avoid unnecessary I/O - there's nothing to update
+
         try:
             self._schedule = await self._evo_device.schedule()
         except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
@@ -459,6 +471,6 @@ class EvoChild(EvoDevice):
         """Get the latest state data."""
         dt_min = "2000-01-01T00:00:00+00:00"
         if parse_datetime(self._setpoints.get("next_sp_from", dt_min)) <= utcnow():
-            await self._update_schedule()
+            await self._update_schedule()  # no schedule, or it's out-of-date
 
         self._device_state_attrs = {"setpoints": self.setpoints}

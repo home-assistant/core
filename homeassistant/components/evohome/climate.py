@@ -190,7 +190,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
 
         if op_mode == EVO_TEMPOVER:
             await self._update_schedule()
-            until = parse_datetime(self.setpoints["next_sp_from"])
+            until = parse_datetime(str(self.setpoints.get("next_sp_from")))
         else:  # EVO_PERMOVER
             until = None
 
@@ -256,9 +256,9 @@ class EvoZone(EvoChild, EvoClimateDevice):
                 until = self._evo_device.setpointStatus["until"]
             elif self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
                 await self._update_schedule()
-                until = self.setpoints["next_sp_from"]
+                until = parse_datetime(str(self.setpoints.get("next_sp_from")))
 
-        await self._set_temperature(kwargs["temperature"], parse_datetime(str(until)))
+        await self._set_temperature(kwargs["temperature"], until)
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set an operating mode for the Zone."""
@@ -276,7 +276,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
         await self._set_zone_mode(HA_PRESET_TO_EVO.get(preset_mode, EVO_FOLLOW))
 
     async def async_update(self) -> None:
-        """Get the latest state data."""
+        """Get the latest state data for the Zone."""
         await super().async_update()
 
         for attr in STATE_ATTRS_ZONES:
@@ -330,7 +330,7 @@ class EvoController(EvoClimateDevice):
 
         The evohome Controller doesn't have a target temperature.
         """
-        return
+        return  # override NotImplementedError
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set an operating mode for the Controller."""
@@ -344,7 +344,7 @@ class EvoController(EvoClimateDevice):
         await self._set_tcs_mode(HA_PRESET_TO_TCS.get(preset_mode, EVO_AUTO))
 
     async def async_update(self) -> None:
-        """Get the latest state data."""
+        """Get the latest state data for the Controller."""
         self._device_state_attrs = {}
 
         attrs = self._device_state_attrs
@@ -358,7 +358,7 @@ class EvoController(EvoClimateDevice):
 class EvoThermostat(EvoZone):
     """Base for a Honeywell Round Thermostat.
 
-    Implemented as a combined Controller/Zone.
+    These are implemented as a combined Controller/Zone.
     """
 
     def __init__(self, evo_broker, evo_device) -> None:
@@ -402,12 +402,12 @@ class EvoThermostat(EvoZone):
             await self._set_zone_mode(HA_PRESET_TO_EVO.get(preset_mode, EVO_FOLLOW))
 
     async def async_update(self) -> None:
-        """Get the latest state data."""
+        """Get the latest state data for the RoundThermostat."""
         await super().async_update()
 
         attrs = self._device_state_attrs
         for attr in STATE_ATTRS_TCS:
-            if attr == "activeFaults":
+            if attr == "activeFaults":  # self._evo_device also has one
                 attrs["activeSystemFaults"] = getattr(self._evo_tcs, attr)
             else:
                 attrs[attr] = getattr(self._evo_tcs, attr)
