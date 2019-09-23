@@ -17,7 +17,7 @@ async def async_get_scanner(hass, config, tracker_interfaces=None):
 
 
 class OPNSenseDeviceScanner(DeviceScanner):
-    """This class queries a router running ASUSWRT firmware."""
+    """This class queries a router running OPNsense."""
 
     # Eighth attribute needed for mode (AP mode vs router mode)
     def __init__(self, client, interfaces):
@@ -28,6 +28,7 @@ class OPNSenseDeviceScanner(DeviceScanner):
         self.interfaces = interfaces
 
     def _get_mac_addrs(self, devices):
+        """Create dict with mac address keys from list of devices."""
         out_devices = {}
         for device in devices:
             if device["intf_description"] in self.interfaces:

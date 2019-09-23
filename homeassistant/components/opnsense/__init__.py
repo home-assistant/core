@@ -1,6 +1,7 @@
 """Support for OPNSense Routers."""
 import logging
 
+from pyopnsense import diagnostics
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -40,10 +41,8 @@ def setup(hass, config):
     url = conf[CONF_URL]
     api_key = conf[CONF_API_KEY]
     api_secret = conf[CONF_API_SECRET]
-    verify_ssl = conf.get(CONF_VERIFY_SSL, False)
+    verify_ssl = conf.get(CONF_VERIFY_SSL)
     tracker_interfaces = conf.get(CONF_TRACKER_INTERFACE, None)
-
-    from pyopnsense import diagnostics
 
     if tracker_interfaces:
         # Verify that specified tracker interfaces are valid

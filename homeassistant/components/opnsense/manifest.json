@@ -6,5 +6,5 @@
     "pyopnsense==0.2.0"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@mtreinish"]
 }
