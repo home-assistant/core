@@ -1,4 +1,5 @@
 """Tests for Met.no config flow."""
+import logging
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -23,6 +24,8 @@ from homeassistant.const import (
 )
 
 from tests.common import MockConfigEntry
+
+LOGGER = logging.getLogger(__name__)
 
 NAME = "Transmission"
 HOST = "192.168.1.100"
@@ -111,6 +114,33 @@ async def test_flow_works(hass, api):
     assert result["data"][CONF_PASSWORD] == PASSWORD
     assert result["data"][CONF_PORT] == PORT
     assert result["data"]["options"][CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
+
+
+async def test_options(hass):
+    """Test updating options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=CONF_NAME,
+        data={
+            "name": DEFAULT_NAME,
+            "host": HOST,
+            "username": USERNAME,
+            "password": PASSWORD,
+            "port": DEFAULT_PORT,
+            "options": {CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
+        },
+        options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
+    )
+
+    flow = config_flow.TransmissionOptionsFlowHandler(entry)
+    flow.hass = hass
+
+    result = await flow.async_step_init()
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+    result = await flow.async_step_init({CONF_SCAN_INTERVAL: 10})
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"][CONF_SCAN_INTERVAL] == 10
 
 
 async def test_import(hass, api):
