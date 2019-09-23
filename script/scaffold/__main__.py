@@ -1,9 +1,42 @@
 """Validate manifests."""
+import argparse
 from pathlib import Path
 import subprocess
 import sys
 
-from . import gather_info, generate, error, model
+from . import gather_info, generate, error
+from .const import COMPONENT_DIR
+
+
+TEMPLATES = [
+    p.name for p in (Path(__file__).parent / "templates").glob("*") if p.is_dir()
+]
+
+
+def valid_integration(integration):
+    """Test if it's a valid integration."""
+    if not (COMPONENT_DIR / integration).exists():
+        raise argparse.ArgumentTypeError(
+            f"The integration {integration} does not exist."
+        )
+
+    return integration
+
+
+def get_arguments() -> argparse.Namespace:
+    """Get parsed passed in arguments."""
+    parser = argparse.ArgumentParser(description="Home Assistant Scaffolder")
+    parser.add_argument("template", type=str, choices=TEMPLATES)
+    parser.add_argument(
+        "--develop", action="store_true", help="Automatically fill in info"
+    )
+    parser.add_argument(
+        "--integration", type=valid_integration, help="Integration to target."
+    )
+
+    arguments = parser.parse_args()
+
+    return arguments
 
 
 def main():
@@ -12,29 +45,22 @@ def main():
         print("Run from project root")
         return 1
 
-    print("Creating a new integration for Home Assistant.")
+    args = get_arguments()
 
-    if "--develop" in sys.argv:
-        print("Running in developer mode. Automatically filling in info.")
-        print()
+    info = gather_info.gather_info(args)
 
-        info = model.Info(
-            domain="develop",
-            name="Develop Hub",
-            codeowner="@developer",
-            requirement="aiodevelop==1.2.3",
-        )
-    else:
-        try:
-            info = gather_info.gather_info()
-        except error.ExitApp as err:
-            print()
-            print(err.reason)
-            return err.exit_code
+    generate.generate(args.template, info)
 
-    generate.generate(info)
+    # If creating new integration, create config flow too
+    if args.template == "integration":
+        if info.authentication or not info.discoverable:
+            template = "config_flow"
+        else:
+            template = "config_flow_discovery"
 
-    print("Running hassfest to pick up new codeowner and config flow.")
+        generate.generate(template, info)
+
+    print("Running hassfest to pick up new information.")
     subprocess.run("python -m script.hassfest", shell=True)
     print()
 
@@ -47,10 +73,15 @@ def main():
         return 1
     print()
 
-    print(f"Successfully created the {info.domain} integration!")
+    print(f"Done!")
 
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except error.ExitApp as err:
+        print()
+        print(f"Fatal Error: {err.reason}")
+        sys.exit(err.exit_code)

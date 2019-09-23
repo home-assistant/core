@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.NEW_DOMAIN.const import DOMAIN
-from homeassistant.components.NEW_DOMAIN.error import CannotConnect, InvalidAuth
+from homeassistant.components.NEW_DOMAIN.config_flow import CannotConnect, InvalidAuth
 
 from tests.common import mock_coro
 
