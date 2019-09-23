@@ -478,9 +478,6 @@ evohome-async==0.3.3b4
 # homeassistant.components.fastdotcom
 fastdotcom==0.0.3
 
-# homeassistant.components.fedex
-fedexdeliverymanager==1.0.6
-
 # homeassistant.components.feedreader
 feedparser-homeassistant==5.2.2.dev1
 
