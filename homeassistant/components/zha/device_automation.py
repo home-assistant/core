@@ -36,7 +36,7 @@ async def async_trigger(hass, config, action, automation_info):
     zha_device = await _async_get_zha_device(hass, config[CONF_DEVICE_ID])
 
     if (
-        not zha_device.device_automation_triggers
+        zha_device.device_automation_triggers is None
         or trigger not in zha_device.device_automation_triggers
     ):
         raise InvalidDeviceAutomationConfig
