@@ -326,7 +326,7 @@ pyopenuv==1.0.9
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.otp
-pyotp==2.2.7
+pyotp==2.3.0
 
 # homeassistant.components.ps4
 pyps4-homeassistant==0.8.7
