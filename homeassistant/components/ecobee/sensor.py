@@ -66,8 +66,10 @@ class EcobeeSensor(Entity):
         """Return the state of the sensor."""
         if self._state in [ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN]:
             return None
-        elif self.type == "temperature":  # pylint disable=no-else-return
+
+        if self.type == "temperature":
             return float(self._state) / 10
+
         return self._state
 
     @property
