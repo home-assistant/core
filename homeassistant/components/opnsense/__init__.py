@@ -41,7 +41,7 @@ def setup(hass, config):
     url = conf[CONF_URL]
     api_key = conf[CONF_API_KEY]
     api_secret = conf[CONF_API_SECRET]
-    verify_ssl = conf.get(CONF_VERIFY_SSL)
+    verify_ssl = conf[CONF_VERIFY_SSL]
     tracker_interfaces = conf.get(CONF_TRACKER_INTERFACE, None)
 
     if tracker_interfaces:

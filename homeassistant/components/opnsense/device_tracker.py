@@ -8,11 +8,10 @@ from homeassistant.components.opnsense import OPNSENSE_DATA
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_get_scanner(hass, config, tracker_interfaces=None):
+async def async_get_scanner(hass, config, discovery_info=None):
     """Configure the OPNSense device_tracker."""
     interface_client = hass.data[OPNSENSE_DATA]["interfaces"]
-    interfaces = tracker_interfaces or ["LAN"]
-    scanner = OPNSenseDeviceScanner(interface_client, interfaces)
+    scanner = OPNSenseDeviceScanner(interface_client, discovery_info)
     return scanner
 
 
@@ -23,7 +22,6 @@ class OPNSenseDeviceScanner(DeviceScanner):
     def __init__(self, client, interfaces):
         """Initialize the scanner."""
         self.last_results = {}
-        self.success_init = False
         self.client = client
         self.interfaces = interfaces
 
@@ -38,7 +36,7 @@ class OPNSenseDeviceScanner(DeviceScanner):
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self.update_info()
-        return list(self.last_results.keys())
+        return list(self.last_results)
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
@@ -52,11 +50,9 @@ class OPNSenseDeviceScanner(DeviceScanner):
 
         Return boolean if scanning successful.
         """
-        _LOGGER.info("Checking Devices")
 
         devices = self.client.get_arp()
         self.last_results = self._get_mac_addrs(devices)
-        return True
 
     def get_extra_attributes(self, device):
         """Return the extra attrs of the given device."""
