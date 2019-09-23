@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "all_configured": "TelldusLive ya est\u00e1 configurado",
             "already_setup": "TelldusLive ya est\u00e1 configurado",
             "authorize_url_fail": "Error desconocido generando la url de autorizaci\u00f3n",
             "authorize_url_timeout": "Tiempo de espera agotado generando la url de autorizaci\u00f3n",
@@ -19,6 +18,7 @@
                 "data": {
                     "host": "Host"
                 },
+                "description": "Vac\u00edo",
                 "title": "Elige el punto final."
             }
         },

@@ -1,5 +1,4 @@
 """Support for Genius Hub climate devices."""
-import logging
 from typing import Any, Awaitable, Dict, Optional, List
 
 from homeassistant.components.climate import ClimateDevice
@@ -12,12 +11,8 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from . import DOMAIN, GeniusEntity
 
 ATTR_DURATION = "duration"
 
@@ -40,35 +35,24 @@ async def async_setup_platform(
     """Set up the Genius Hub climate entities."""
     client = hass.data[DOMAIN]["client"]
 
-    async_add_entities(
-        [
-            GeniusClimateZone(client, z)
-            for z in client.hub.zone_objs
-            if z.type in GH_ZONES
-        ]
-    )
+    entities = [
+        GeniusClimateZone(z) for z in client.zone_objs if z.data["type"] in GH_ZONES
+    ]
+    async_add_entities(entities)
 
 
-class GeniusClimateZone(ClimateDevice):
+class GeniusClimateZone(GeniusEntity, ClimateDevice):
     """Representation of a Genius Hub climate device."""
 
-    def __init__(self, client, zone):
+    def __init__(self, zone) -> None:
         """Initialize the climate device."""
-        self._client = client
-        self._zone = zone
+        super().__init__()
 
+        self._zone = zone
         if hasattr(self._zone, "occupied"):  # has a movement sensor
             self._preset_modes = list(HA_PRESET_TO_GH)
         else:
             self._preset_modes = [PRESET_BOOST]
-
-    async def async_added_to_hass(self) -> Awaitable[None]:
-        """Run when entity about to be added."""
-        async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
-
-    @callback
-    def _refresh(self) -> None:
-        self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
     def name(self) -> str:
@@ -78,13 +62,8 @@ class GeniusClimateZone(ClimateDevice):
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
         """Return the device state attributes."""
-        tmp = self._zone.__dict__.items()
+        tmp = self._zone.data.items()
         return {"status": {k: v for k, v in tmp if k in GH_STATE_ATTRS}}
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False as the geniushub devices should not be polled."""
-        return False
 
     @property
     def icon(self) -> str:
@@ -94,12 +73,12 @@ class GeniusClimateZone(ClimateDevice):
     @property
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
-        return self._zone.temperature
+        return self._zone.data["temperature"]
 
     @property
-    def target_temperature(self) -> Optional[float]:
+    def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
-        return self._zone.setpoint
+        return self._zone.data["setpoint"]
 
     @property
     def min_temp(self) -> float:
@@ -124,7 +103,7 @@ class GeniusClimateZone(ClimateDevice):
     @property
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
-        return GH_HVAC_TO_HA.get(self._zone.mode, HVAC_MODE_HEAT)
+        return GH_HVAC_TO_HA.get(self._zone.data["mode"], HVAC_MODE_HEAT)
 
     @property
     def hvac_modes(self) -> List[str]:
@@ -134,7 +113,7 @@ class GeniusClimateZone(ClimateDevice):
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        return GH_PRESET_TO_HA.get(self._zone.mode)
+        return GH_PRESET_TO_HA.get(self._zone.data["mode"])
 
     @property
     def preset_modes(self) -> Optional[List[str]]:

@@ -1,5 +1,6 @@
 """Light support for switch entities."""
 import logging
+from typing import cast
 
 import voluptuous as vol
 
@@ -18,6 +19,9 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from homeassistant.components.light import PLATFORM_SCHEMA, Light
 
+
+# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Light Switch"
@@ -35,7 +39,7 @@ async def async_setup_platform(
 ) -> None:
     """Initialize Light Switch platform."""
     async_add_entities(
-        [LightSwitch(config.get(CONF_NAME), config[CONF_ENTITY_ID])], True
+        [LightSwitch(cast(str, config.get(CONF_NAME)), config[CONF_ENTITY_ID])], True
     )
 
 
@@ -44,10 +48,10 @@ class LightSwitch(Light):
 
     def __init__(self, name: str, switch_entity_id: str) -> None:
         """Initialize Light Switch."""
-        self._name = name  # type: str
-        self._switch_entity_id = switch_entity_id  # type: str
-        self._is_on = False  # type: bool
-        self._available = False  # type: bool
+        self._name = name
+        self._switch_entity_id = switch_entity_id
+        self._is_on = False
+        self._available = False
         self._async_unsub_state_changed = None
 
     @property

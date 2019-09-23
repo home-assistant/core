@@ -11,7 +11,7 @@ from datetime import (
 )
 from socket import _GLOBAL_DEFAULT_TIMEOUT
 from numbers import Number
-from typing import Any, Union, TypeVar, Callable, Sequence, Dict, Optional
+from typing import Any, Union, TypeVar, Callable, List, Dict, Optional
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -24,10 +24,14 @@ from homeassistant.const import (
     CONF_ALIAS,
     CONF_BELOW,
     CONF_CONDITION,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_ENTITY_NAMESPACE,
+    CONF_FOR,
     CONF_PLATFORM,
     CONF_SCAN_INTERVAL,
+    CONF_STATE,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
     CONF_VALUE_TEMPLATE,
@@ -191,7 +195,7 @@ def isdir(value: Any) -> str:
     return dir_in
 
 
-def ensure_list(value: Union[T, Sequence[T], None]) -> Sequence[T]:
+def ensure_list(value: Union[T, List[T], None]) -> List[T]:
     """Wrap value in list if it is not one."""
     if value is None:
         return []
@@ -207,7 +211,7 @@ def entity_id(value: Any) -> str:
     raise vol.Invalid("Entity ID {} is an invalid entity id".format(value))
 
 
-def entity_ids(value: Union[str, Sequence]) -> Sequence[str]:
+def entity_ids(value: Union[str, List]) -> List[str]:
     """Validate Entity IDs."""
     if value is None:
         raise vol.Invalid("Entity IDs can not be None")
@@ -234,7 +238,7 @@ def entity_domain(domain: str):
 def entities_domain(domain: str):
     """Validate that entities belong to domain."""
 
-    def validate(values: Union[str, Sequence]) -> Sequence[str]:
+    def validate(values: Union[str, List]) -> List[str]:
         """Test if entity domain is domain."""
         values = entity_ids(values)
         for ent_id in values:
@@ -261,7 +265,7 @@ def icon(value):
     if ":" in value:
         return value
 
-    raise vol.Invalid('Icons should be specifed on the form "prefix:name"')
+    raise vol.Invalid('Icons should be specified in the form "prefix:name"')
 
 
 time_period_dict = vol.All(
@@ -370,7 +374,7 @@ def positive_timedelta(value: timedelta) -> timedelta:
     return value
 
 
-def remove_falsy(value: Sequence[T]) -> Sequence[T]:
+def remove_falsy(value: List[T]) -> List[T]:
     """Remove falsy values from a list."""
     return [v for v in value if v]
 
@@ -562,7 +566,7 @@ def uuid4_hex(value):
     return result.hex
 
 
-def ensure_list_csv(value: Any) -> Sequence:
+def ensure_list_csv(value: Any) -> List:
     """Ensure that input is a list or make one from comma-separated string."""
     if isinstance(value, str):
         return [member.strip() for member in value.split(",")]
@@ -746,8 +750,8 @@ STATE_CONDITION_SCHEMA = vol.All(
         {
             vol.Required(CONF_CONDITION): "state",
             vol.Required(CONF_ENTITY_ID): entity_id,
-            vol.Required("state"): str,
-            vol.Optional("for"): vol.All(time_period, positive_timedelta),
+            vol.Required(CONF_STATE): str,
+            vol.Optional(CONF_FOR): vol.All(time_period, positive_timedelta),
             # To support use_trigger_value in automation
             # Deprecated 2016/04/25
             vol.Optional("from"): str,
@@ -823,7 +827,12 @@ OR_CONDITION_SCHEMA = vol.Schema(
     }
 )
 
-CONDITION_SCHEMA = vol.Any(
+DEVICE_CONDITION_SCHEMA = vol.Schema(
+    {vol.Required(CONF_CONDITION): "device", vol.Required(CONF_DOMAIN): str},
+    extra=vol.ALLOW_EXTRA,
+)
+
+CONDITION_SCHEMA: vol.Schema = vol.Any(
     NUMERIC_STATE_CONDITION_SCHEMA,
     STATE_CONDITION_SCHEMA,
     SUN_CONDITION_SCHEMA,
@@ -832,7 +841,8 @@ CONDITION_SCHEMA = vol.Any(
     ZONE_CONDITION_SCHEMA,
     AND_CONDITION_SCHEMA,
     OR_CONDITION_SCHEMA,
-)  # type: vol.Schema
+    DEVICE_CONDITION_SCHEMA,
+)
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(
     {
@@ -852,6 +862,11 @@ _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema(
     }
 )
 
+DEVICE_ACTION_SCHEMA = vol.Schema(
+    {vol.Required(CONF_DEVICE_ID): string, vol.Required(CONF_DOMAIN): str},
+    extra=vol.ALLOW_EXTRA,
+)
+
 SCRIPT_SCHEMA = vol.All(
     ensure_list,
     [
@@ -861,6 +876,7 @@ SCRIPT_SCHEMA = vol.All(
             _SCRIPT_WAIT_TEMPLATE_SCHEMA,
             EVENT_SCHEMA,
             CONDITION_SCHEMA,
+            DEVICE_ACTION_SCHEMA,
         )
     ],
 )

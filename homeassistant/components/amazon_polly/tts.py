@@ -45,7 +45,7 @@ SUPPORTED_VOICES = [
     "Ruben",
     "Lotte",  # Dutch
     "Russell",
-    "Nicole",  # English Austrailian
+    "Nicole",  # English Australian
     "Brian",
     "Amy",
     "Emma",  # English

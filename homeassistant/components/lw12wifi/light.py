@@ -55,9 +55,8 @@ class LW12WiFi(Light):
     def __init__(self, name, lw12_light):
         """Initialise LW-12 WiFi LED Controller.
 
-        Args:
-            name: Friendly name for this platform to use.
-            lw12_light: Instance of the LW12 controller.
+        :param name: Friendly name for this platform to use.
+        :param lw12_light: Instance of the LW12 controller.
         """
         self._light = lw12_light
         self._name = name

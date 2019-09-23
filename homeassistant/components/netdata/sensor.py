@@ -112,7 +112,7 @@ class NetdataSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._name, self._sensor_name)
+        return f"{self._name} {self._sensor_name}"
 
     @property
     def unit_of_measurement(self):

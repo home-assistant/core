@@ -1,4 +1,4 @@
-"""Suport for Netgear LTE notifications."""
+"""Support for Netgear LTE notifications."""
 import logging
 
 import attr

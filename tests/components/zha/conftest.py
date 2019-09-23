@@ -6,9 +6,6 @@ from homeassistant.components.zha.core.const import DOMAIN, DATA_ZHA, COMPONENTS
 from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
 from homeassistant.components.zha.core.gateway import ZHAGateway
 from homeassistant.components.zha.core.registries import establish_device_mappings
-from homeassistant.components.zha.core.channels.registry import (
-    populate_channel_registry,
-)
 from .common import async_setup_entry
 from homeassistant.components.zha.core.store import async_get_registry
 
@@ -17,7 +14,13 @@ from homeassistant.components.zha.core.store import async_get_registry
 def config_entry_fixture(hass):
     """Fixture representing a config entry."""
     config_entry = config_entries.ConfigEntry(
-        1, DOMAIN, "Mock Title", {}, "test", config_entries.CONN_CLASS_LOCAL_PUSH
+        1,
+        DOMAIN,
+        "Mock Title",
+        {},
+        "test",
+        config_entries.CONN_CLASS_LOCAL_PUSH,
+        system_options={},
     )
     return config_entry
 
@@ -29,7 +32,6 @@ async def zha_gateway_fixture(hass, config_entry):
     Create a ZHAGateway object that can be used to interact with as if we
     had a real zigbee network running.
     """
-    populate_channel_registry()
     establish_device_mappings()
     for component in COMPONENTS:
         hass.data[DATA_ZHA][component] = hass.data[DATA_ZHA].get(component, {})

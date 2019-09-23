@@ -71,7 +71,8 @@ async def setup_gateway(hass, data, allow_clip_sensor=True):
         ENTRY_CONFIG,
         "test",
         config_entries.CONN_CLASS_LOCAL_PUSH,
-        ENTRY_OPTIONS,
+        system_options={},
+        options=ENTRY_OPTIONS,
     )
     gateway = deconz.DeconzGateway(hass, config_entry)
     gateway.api = DeconzSession(hass.loop, session, **config_entry.data)
@@ -117,11 +118,21 @@ async def test_climate_devices(hass):
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
-        {"entity_id": "climate.climate_1_name", "hvac_mode": "heat"},
+        {"entity_id": "climate.climate_1_name", "hvac_mode": "auto"},
         blocking=True,
     )
     gateway.api.session.put.assert_called_with(
         "http://1.2.3.4:80/api/ABCDEF/sensors/1/config", data='{"mode": "auto"}'
+    )
+
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {"entity_id": "climate.climate_1_name", "hvac_mode": "heat"},
+        blocking=True,
+    )
+    gateway.api.session.put.assert_called_with(
+        "http://1.2.3.4:80/api/ABCDEF/sensors/1/config", data='{"mode": "heat"}'
     )
 
     await hass.services.async_call(
@@ -144,7 +155,7 @@ async def test_climate_devices(hass):
         "http://1.2.3.4:80/api/ABCDEF/sensors/1/config", data='{"heatsetpoint": 2000.0}'
     )
 
-    assert len(gateway.api.session.put.mock_calls) == 3
+    assert len(gateway.api.session.put.mock_calls) == 4
 
 
 async def test_verify_state_update(hass):
@@ -153,7 +164,7 @@ async def test_verify_state_update(hass):
     assert "climate.climate_1_name" in gateway.deconz_ids
 
     thermostat = hass.states.get("climate.climate_1_name")
-    assert thermostat.state == "off"
+    assert thermostat.state == "auto"
 
     state_update = {
         "t": "event",
@@ -168,7 +179,7 @@ async def test_verify_state_update(hass):
     assert len(hass.states.async_all()) == 1
 
     thermostat = hass.states.get("climate.climate_1_name")
-    assert thermostat.state == "off"
+    assert thermostat.state == "auto"
     assert gateway.api.sensors["1"].changed_keys == {"state", "r", "t", "on", "e", "id"}
 
 
@@ -178,8 +189,9 @@ async def test_add_new_climate_device(hass):
     sensor = Mock()
     sensor.name = "name"
     sensor.type = "ZHAThermostat"
+    sensor.uniqueid = "1"
     sensor.register_async_callback = Mock()
-    async_dispatcher_send(hass, gateway.async_event_new_device("sensor"), [sensor])
+    async_dispatcher_send(hass, gateway.async_signal_new_device("sensor"), [sensor])
     await hass.async_block_till_done()
     assert "climate.name" in gateway.deconz_ids
 
@@ -191,7 +203,7 @@ async def test_do_not_allow_clipsensor(hass):
     sensor.name = "name"
     sensor.type = "CLIPThermostat"
     sensor.register_async_callback = Mock()
-    async_dispatcher_send(hass, gateway.async_event_new_device("sensor"), [sensor])
+    async_dispatcher_send(hass, gateway.async_signal_new_device("sensor"), [sensor])
     await hass.async_block_till_done()
     assert len(gateway.deconz_ids) == 0
 

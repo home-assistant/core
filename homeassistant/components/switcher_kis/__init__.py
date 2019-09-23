@@ -116,7 +116,7 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
     async def async_switch_platform_discovered(
         platform: str, discovery_info: Optional[Dict]
     ) -> None:
-        """Use for registering services after switch platform is discoverd."""
+        """Use for registering services after switch platform is discovered."""
         if platform != DOMAIN:
             return
 

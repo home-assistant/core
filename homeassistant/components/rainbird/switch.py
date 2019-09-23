@@ -53,7 +53,7 @@ class RainBirdSwitch(SwitchDevice):
         self._rainbird = rb
         self._devid = dev_id
         self._zone = int(dev.get(CONF_ZONE))
-        self._name = dev.get(CONF_FRIENDLY_NAME, "Sprinkler {}".format(self._zone))
+        self._name = dev.get(CONF_FRIENDLY_NAME, f"Sprinkler {self._zone}")
         self._state = None
         self._duration = dev.get(CONF_TRIGGER_TIME)
         self._attributes = {"duration": self._duration, "zone": self._zone}
@@ -70,15 +70,23 @@ class RainBirdSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        self._rainbird.startIrrigation(int(self._zone), int(self._duration))
+        response = self._rainbird.startIrrigation(int(self._zone), int(self._duration))
+        if response and response["type"] == "AcknowledgeResponse":
+            self._state = True
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        self._rainbird.stopIrrigation()
+        response = self._rainbird.stopIrrigation()
+        if response and response["type"] == "AcknowledgeResponse":
+            self._state = False
 
     def get_device_status(self):
         """Get the status of the switch from Rain Bird Controller."""
-        return self._rainbird.currentIrrigation() == self._zone
+        response = self._rainbird.currentIrrigation()
+        if response is None:
+            return None
+        if isinstance(response, dict) and "sprinklers" in response:
+            return response["sprinklers"][self._zone]
 
     def update(self):
         """Update switch status."""

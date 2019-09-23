@@ -6,5 +6,7 @@
     "plexapi==3.0.6"
   ],
   "dependencies": ["configurator"],
-  "codeowners": []
+  "codeowners": [
+    "@jjlawren"
+  ]
 }

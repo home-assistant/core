@@ -49,7 +49,7 @@ class LaunchLibrarySensor(Entity):
         """Get the latest data."""
         await self.launches.get_launches()
         if self.launches.launches is None:
-            _LOGGER.error("No data recieved")
+            _LOGGER.error("No data received")
             return
         try:
             data = self.launches.launches[0]

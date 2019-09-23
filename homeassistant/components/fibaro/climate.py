@@ -50,7 +50,7 @@ HA_FANMODES = {v: k for k, v in FANMODES.items()}
 
 # SDS13781-10 Z-Wave Application Command Class Specification 2019-01-04
 # Table 130, Thermostat Mode Set version 3::Mode encoding.
-# 4 AUXILARY
+# 4 AUXILIARY
 OPMODES_PRESET = {
     5: PRESET_RESUME,
     7: PRESET_FURNACE,
@@ -115,7 +115,7 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
         self._op_mode_device = None
         self._fan_mode_device = None
         self._support_flags = 0
-        self.entity_id = "climate.{}".format(self.ha_id)
+        self.entity_id = f"climate.{self.ha_id}"
         self._hvac_support = []
         self._preset_support = []
         self._fan_support = []

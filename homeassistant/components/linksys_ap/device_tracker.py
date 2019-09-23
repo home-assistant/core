@@ -30,6 +30,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass, config):
     """Validate the configuration and return a Linksys AP scanner."""
+    _LOGGER.warning(
+        "The linksys_ap integration is deprecated and will be removed "
+        "in Home Assistant 0.100.0. For more information see ADR-0004:"
+        "https://github.com/home-assistant/architecture/blob/master/adr/0004-webscraping.md"
+    )
+
     try:
         return LinksysAPDeviceScanner(config[DOMAIN])
     except ConnectionError:

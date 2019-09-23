@@ -22,7 +22,7 @@ JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
 class ExtSafeConstructor(SafeConstructor):
     """Extended SafeConstructor."""
 
-    name = None  # type: Optional[str]
+    name: Optional[str] = None
 
 
 class UnsupportedYamlError(HomeAssistantError):
@@ -40,6 +40,7 @@ def _include_yaml(
 
     Example:
         device_tracker: !include device_tracker.yaml
+
     """
     if constructor.name is None:
         raise HomeAssistantError(
@@ -66,7 +67,7 @@ def object_to_yaml(data: JSON_TYPE) -> str:
     stream = StringIO()
     try:
         yaml.dump(data, stream)
-        result = stream.getvalue()  # type: str
+        result: str = stream.getvalue()
         return result
     except YAMLError as exc:
         _LOGGER.error("YAML error: %s", exc)
@@ -77,7 +78,7 @@ def yaml_to_object(data: str) -> JSON_TYPE:
     """Create object from yaml string."""
     yaml = YAML(typ="rt")
     try:
-        result = yaml.load(data)  # type: Union[List, Dict, str]
+        result: Union[List, Dict, str] = yaml.load(data)
         return result
     except YAMLError as exc:
         _LOGGER.error("YAML error: %s", exc)
@@ -88,7 +89,8 @@ def load_yaml(fname: str, round_trip: bool = False) -> JSON_TYPE:
     """Load a YAML file."""
     if round_trip:
         yaml = YAML(typ="rt")
-        yaml.preserve_quotes = True
+        # type ignore: https://bitbucket.org/ruamel/yaml/pull-requests/42
+        yaml.preserve_quotes = True  # type: ignore
     else:
         if ExtSafeConstructor.name is None:
             ExtSafeConstructor.name = fname

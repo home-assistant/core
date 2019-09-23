@@ -84,7 +84,7 @@ class TodSensor(BinarySensorDevice):
 
     @property
     def after(self):
-        """Return the timestamp for the begining of the period."""
+        """Return the timestamp for the beginning of the period."""
         return self._time_after
 
     @property

@@ -11,12 +11,12 @@ from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from . import config_flow  # noqa  # pylint: disable=unused-import
 from . import api
 from .core import ZHAGateway
-from .core.channels.registry import populate_channel_registry
 from .core.const import (
     COMPONENTS,
     CONF_BAUDRATE,
     CONF_DATABASE,
     CONF_DEVICE_CONFIG,
+    CONF_ENABLE_QUIRKS,
     CONF_RADIO_TYPE,
     CONF_USB_PATH,
     DATA_ZHA,
@@ -26,7 +26,6 @@ from .core.const import (
     DEFAULT_BAUDRATE,
     DEFAULT_RADIO_TYPE,
     DOMAIN,
-    ENABLE_QUIRKS,
     RadioType,
 )
 from .core.registries import establish_device_mappings
@@ -46,7 +45,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_DEVICE_CONFIG, default={}): vol.Schema(
                     {cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}
                 ),
-                vol.Optional(ENABLE_QUIRKS, default=True): cv.boolean,
+                vol.Optional(CONF_ENABLE_QUIRKS, default=True): cv.boolean,
             }
         )
     },
@@ -90,7 +89,6 @@ async def async_setup_entry(hass, config_entry):
     Will automatically load components to support devices found on the network.
     """
     establish_device_mappings()
-    populate_channel_registry()
 
     for component in COMPONENTS:
         hass.data[DATA_ZHA][component] = hass.data[DATA_ZHA].get(component, {})
@@ -99,7 +97,7 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS] = []
     config = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {})
 
-    if config.get(ENABLE_QUIRKS, True):
+    if config.get(CONF_ENABLE_QUIRKS, True):
         # needs to be done here so that the ZHA module is finished loading
         # before zhaquirks is imported
         # pylint: disable=W0611, W0612

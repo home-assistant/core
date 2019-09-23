@@ -7,17 +7,10 @@ https://home-assistant.io/components/zha/
 import asyncio
 import collections
 import logging
-from concurrent.futures import TimeoutError as Timeout
+
 from homeassistant.core import callback
-from .const import (
-    DEFAULT_BAUDRATE,
-    REPORT_CONFIG_MAX_INT,
-    REPORT_CONFIG_MIN_INT,
-    REPORT_CONFIG_RPT_CHANGE,
-    RadioType,
-    IN,
-    OUT,
-)
+
+from .const import CLUSTER_TYPE_IN, CLUSTER_TYPE_OUT, DEFAULT_BAUDRATE, RadioType
 from .registries import BINDABLE_CLUSTERS
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,104 +39,6 @@ async def safe_read(
         return {}
 
 
-async def bind_cluster(entity_id, cluster):
-    """Bind a zigbee cluster.
-
-    This also swallows DeliveryError exceptions that are thrown when devices
-    are unreachable.
-    """
-    from zigpy.exceptions import DeliveryError
-
-    cluster_name = cluster.ep_attribute
-    try:
-        res = await cluster.bind()
-        _LOGGER.debug("%s: bound  '%s' cluster: %s", entity_id, cluster_name, res[0])
-    except (DeliveryError, Timeout) as ex:
-        _LOGGER.debug(
-            "%s: Failed to bind '%s' cluster: %s", entity_id, cluster_name, str(ex)
-        )
-
-
-async def configure_reporting(
-    entity_id,
-    cluster,
-    attr,
-    min_report=REPORT_CONFIG_MIN_INT,
-    max_report=REPORT_CONFIG_MAX_INT,
-    reportable_change=REPORT_CONFIG_RPT_CHANGE,
-    manufacturer=None,
-):
-    """Configure attribute reporting for a cluster.
-
-    This also swallows DeliveryError exceptions that are thrown when devices
-    are unreachable.
-    """
-    from zigpy.exceptions import DeliveryError
-
-    attr_name = cluster.attributes.get(attr, [attr])[0]
-
-    if isinstance(attr, str):
-        attr_id = get_attr_id_by_name(cluster, attr_name)
-    else:
-        attr_id = attr
-
-    cluster_name = cluster.ep_attribute
-    kwargs = {}
-    if manufacturer:
-        kwargs["manufacturer"] = manufacturer
-    try:
-        res = await cluster.configure_reporting(
-            attr_id, min_report, max_report, reportable_change, **kwargs
-        )
-        _LOGGER.debug(
-            "%s: reporting '%s' attr on '%s' cluster: %d/%d/%d: Result: '%s'",
-            entity_id,
-            attr_name,
-            cluster_name,
-            min_report,
-            max_report,
-            reportable_change,
-            res,
-        )
-    except (DeliveryError, Timeout) as ex:
-        _LOGGER.debug(
-            "%s: failed to set reporting for '%s' attr on '%s' cluster: %s",
-            entity_id,
-            attr_name,
-            cluster_name,
-            str(ex),
-        )
-
-
-async def bind_configure_reporting(
-    entity_id,
-    cluster,
-    attr,
-    skip_bind=False,
-    min_report=REPORT_CONFIG_MIN_INT,
-    max_report=REPORT_CONFIG_MAX_INT,
-    reportable_change=REPORT_CONFIG_RPT_CHANGE,
-    manufacturer=None,
-):
-    """Bind and configure zigbee attribute reporting for a cluster.
-
-    This also swallows DeliveryError exceptions that are thrown when devices
-    are unreachable.
-    """
-    if not skip_bind:
-        await bind_cluster(entity_id, cluster)
-
-    await configure_reporting(
-        entity_id,
-        cluster,
-        attr,
-        min_report=min_report,
-        max_report=max_report,
-        reportable_change=reportable_change,
-        manufacturer=manufacturer,
-    )
-
-
 async def check_zigpy_connection(usb_path, radio_type, database_path):
     """Test zigpy radio connection."""
     if radio_type == RadioType.ezsp.name:
@@ -161,6 +56,11 @@ async def check_zigpy_connection(usb_path, radio_type, database_path):
         from zigpy_deconz.zigbee.application import ControllerApplication
 
         radio = zigpy_deconz.api.Deconz()
+    elif radio_type == RadioType.zigate.name:
+        import zigpy_zigate.api
+        from zigpy_zigate.zigbee.application import ControllerApplication
+
+        radio = zigpy_zigate.api.ZiGate()
     try:
         await radio.connect(usb_path, DEFAULT_BAUDRATE)
         controller = ControllerApplication(radio, database_path)
@@ -178,13 +78,6 @@ def convert_ieee(ieee_str):
     if ieee_str is None:
         return None
     return EUI64([uint8_t(p, base=16) for p in ieee_str.split(":")])
-
-
-def construct_unique_id(cluster):
-    """Construct a unique id from a cluster."""
-    return "0x{:04x}:{}:0x{:04x}".format(
-        cluster.endpoint.device.nwk, cluster.endpoint.endpoint_id, cluster.cluster_id
-    )
 
 
 def get_attr_id_by_name(cluster, attr_name):
@@ -206,14 +99,18 @@ async def get_matched_clusters(source_zha_device, target_zha_device):
     clusters_to_bind = []
 
     for endpoint_id in source_clusters:
-        for cluster_id in source_clusters[endpoint_id][OUT]:
+        for cluster_id in source_clusters[endpoint_id][CLUSTER_TYPE_OUT]:
             if cluster_id not in BINDABLE_CLUSTERS:
                 continue
             for t_endpoint_id in target_clusters:
-                if cluster_id in target_clusters[t_endpoint_id][IN]:
+                if cluster_id in target_clusters[t_endpoint_id][CLUSTER_TYPE_IN]:
                     cluster_pair = ClusterPair(
-                        source_cluster=source_clusters[endpoint_id][OUT][cluster_id],
-                        target_cluster=target_clusters[t_endpoint_id][IN][cluster_id],
+                        source_cluster=source_clusters[endpoint_id][CLUSTER_TYPE_OUT][
+                            cluster_id
+                        ],
+                        target_cluster=target_clusters[t_endpoint_id][CLUSTER_TYPE_IN][
+                            cluster_id
+                        ],
                     )
                     clusters_to_bind.append(cluster_pair)
     return clusters_to_bind
@@ -225,13 +122,12 @@ def async_is_bindable_target(source_zha_device, target_zha_device):
     source_clusters = source_zha_device.async_get_std_clusters()
     target_clusters = target_zha_device.async_get_std_clusters()
 
-    bindables = set(BINDABLE_CLUSTERS)
     for endpoint_id in source_clusters:
         for t_endpoint_id in target_clusters:
-            matches = set(source_clusters[endpoint_id][OUT].keys()).intersection(
-                target_clusters[t_endpoint_id][IN].keys()
-            )
-            if any(bindable in bindables for bindable in matches):
+            matches = set(
+                source_clusters[endpoint_id][CLUSTER_TYPE_OUT].keys()
+            ).intersection(target_clusters[t_endpoint_id][CLUSTER_TYPE_IN].keys())
+            if any(bindable in BINDABLE_CLUSTERS for bindable in matches):
                 return True
     return False
 

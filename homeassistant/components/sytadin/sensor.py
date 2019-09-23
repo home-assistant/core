@@ -50,6 +50,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up of the Sytadin Traffic sensor platform."""
+    _LOGGER.warning(
+        "The sytadin integration is deprecated and will be removed "
+        "in Home Assistant 0.100.0. For more information see ADR-0004:"
+        "https://github.com/home-assistant/architecture/blob/master/adr/0004-webscraping.md"
+    )
+
     name = config.get(CONF_NAME)
 
     sytadin = SytadinData(URL)
@@ -80,7 +86,7 @@ class SytadinSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._name, self._option)
+        return f"{self._name} {self._option}"
 
     @property
     def state(self):

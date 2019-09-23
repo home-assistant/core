@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_handle_message(hass, config, user_id, message):
     """Handle incoming API messages."""
-    request_id = message.get("requestId")  # type: str
+    request_id: str = message.get("requestId")
 
     data = RequestData(config, user_id, request_id)
 
@@ -38,7 +38,7 @@ async def async_handle_message(hass, config, user_id, message):
 
 async def _process(hass, data, message):
     """Process a message."""
-    inputs = message.get("inputs")  # type: list
+    inputs: list = message.get("inputs")
 
     if len(inputs) != 1:
         return {

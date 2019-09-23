@@ -192,7 +192,7 @@ class PublicTransportData:
             _LOGGER.debug("API returned error: %s", error)
             return
         except (rjpl.rjplConnectionError, rjpl.rjplHTTPError):
-            _LOGGER.debug("Error occured while connecting to the API")
+            _LOGGER.debug("Error occurred while connecting to the API")
             return
 
         # Filter result
@@ -220,7 +220,7 @@ class PublicTransportData:
                 and due_at_time is not None
                 and route is not None
             ):
-                due_at = "{} {}".format(due_at_date, due_at_time)
+                due_at = f"{due_at_date} {due_at_time}"
 
                 departure_data = {
                     ATTR_DUE_IN: due_in_minutes(due_at),

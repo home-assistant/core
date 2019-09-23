@@ -80,7 +80,7 @@ class UbusDeviceScanner(DeviceScanner):
 
         self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
         self.last_results = {}
-        self.url = "http://{}/ubus".format(host)
+        self.url = f"http://{host}/ubus"
 
         self.session_id = _get_session_id(self.url, self.username, self.password)
         self.hostapd = []

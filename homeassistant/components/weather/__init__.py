@@ -11,6 +11,9 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CONDITION_CLASS = "condition_class"
@@ -122,11 +125,11 @@ class WeatherEntity(Entity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        data = {
-            ATTR_WEATHER_TEMPERATURE: show_temp(
+        data = {}
+        if self.temperature is not None:
+            data[ATTR_WEATHER_TEMPERATURE] = show_temp(
                 self.hass, self.temperature, self.temperature_unit, self.precision
             )
-        }
 
         humidity = self.humidity
         if humidity is not None:

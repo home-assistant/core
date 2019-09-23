@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 import logging
 import re
+from typing import Any, Callable, Optional, Union
 
 import aiohttp
 import async_timeout
@@ -56,29 +57,25 @@ class WUSensorConfig:
 
     def __init__(
         self,
-        friendly_name,
-        feature,
-        value,
-        unit_of_measurement=None,
+        friendly_name: Union[str, Callable],
+        feature: str,
+        value: Callable[["WUndergroundData"], Any],
+        unit_of_measurement: Optional[str] = None,
         entity_picture=None,
-        icon="mdi:gauge",
+        icon: str = "mdi:gauge",
         device_state_attributes=None,
         device_class=None,
     ):
         """Constructor.
 
-        Args:
-            friendly_name (string|func): Friendly name
-            feature (string): WU feature. See:
+        :param friendly_name: Friendly name
+        :param feature: WU feature. See:
                 https://www.wunderground.com/weather/api/d/docs?d=data/index
-            value (function(WUndergroundData)): callback that
-                extracts desired value from WUndergroundData object
-            unit_of_measurement (string): unit of measurement
-            entity_picture (string): value or callback returning
-                URL of entity picture
-            icon (string): icon name or URL
-            device_state_attributes (dict): dictionary of attributes,
-                or callable that returns it
+        :param value: callback that extracts desired value from WUndergroundData object
+        :param unit_of_measurement: unit of measurement
+        :param entity_picture: value or callback returning URL of entity picture
+        :param icon: icon name or URL
+        :param device_state_attributes: dictionary of attributes, or callable that returns it
         """
         self.friendly_name = friendly_name
         self.unit_of_measurement = unit_of_measurement
@@ -95,21 +92,18 @@ class WUCurrentConditionsSensorConfig(WUSensorConfig):
 
     def __init__(
         self,
-        friendly_name,
-        field,
-        icon="mdi:gauge",
-        unit_of_measurement=None,
+        friendly_name: Union[str, Callable],
+        field: str,
+        icon: Optional[str] = "mdi:gauge",
+        unit_of_measurement: Optional[str] = None,
         device_class=None,
     ):
         """Constructor.
 
-        Args:
-            friendly_name (string|func): Friendly name of sensor
-            field (string): Field name in the "current_observation"
-                            dictionary.
-            icon (string): icon name or URL, if None sensor
-                           will use current weather symbol
-            unit_of_measurement (string): unit of measurement
+        :param friendly_name: Friendly name of sensor
+        :field: Field name in the "current_observation" dictionary.
+        :icon: icon name or URL, if None sensor will use current weather symbol
+        :unit_of_measurement: unit of measurement
         """
         super().__init__(
             friendly_name,
@@ -130,13 +124,14 @@ class WUCurrentConditionsSensorConfig(WUSensorConfig):
 class WUDailyTextForecastSensorConfig(WUSensorConfig):
     """Helper for defining sensor configurations for daily text forecasts."""
 
-    def __init__(self, period, field, unit_of_measurement=None):
+    def __init__(
+        self, period: int, field: str, unit_of_measurement: Optional[str] = None
+    ):
         """Constructor.
 
-        Args:
-            period (int): forecast period number
-            field (string):  field name to use as value
-            unit_of_measurement(string): unit of measurement
+        :param period: forecast period number
+        :param field: field name to use as value
+        :param unit_of_measurement: unit of measurement
         """
         super().__init__(
             friendly_name=lambda wu: wu.data["forecast"]["txt_forecast"]["forecastday"][
@@ -161,24 +156,22 @@ class WUDailySimpleForecastSensorConfig(WUSensorConfig):
 
     def __init__(
         self,
-        friendly_name,
-        period,
-        field,
-        wu_unit=None,
-        ha_unit=None,
+        friendly_name: str,
+        period: int,
+        field: str,
+        wu_unit: Optional[str] = None,
+        ha_unit: Optional[str] = None,
         icon=None,
         device_class=None,
     ):
         """Constructor.
 
-        Args:
-            period (int): forecast period number
-            field (string): field name to use as value
-            wu_unit (string): "fahrenheit", "celsius", "degrees" etc.
-                 see the example json at:
-        https://www.wunderground.com/weather/api/d/docs?d=data/forecast&MR=1
-            ha_unit (string): corresponding unit in home assistant
-            title (string): friendly_name of the sensor
+        :param friendly_name: friendly_name of the sensor
+        :param period: forecast period number
+        :param field: field name to use as value
+        :param wu_unit: "fahrenheit", "celsius", "degrees" etc. see the example json at:
+                https://www.wunderground.com/weather/api/d/docs?d=data/forecast&MR=1
+        :param ha_unit: corresponding unit in home assistant
         """
         super().__init__(
             friendly_name=friendly_name,
@@ -213,12 +206,11 @@ class WUDailySimpleForecastSensorConfig(WUSensorConfig):
 class WUHourlyForecastSensorConfig(WUSensorConfig):
     """Helper for defining sensor configurations for hourly text forecasts."""
 
-    def __init__(self, period, field):
+    def __init__(self, period: int, field: int):
         """Constructor.
 
-        Args:
-            period (int): forecast period number
-            field (int): field name to use as value
+        :param period: forecast period number
+        :param field: field name to use as value
         """
         super().__init__(
             friendly_name=lambda wu: "{} {}".format(
@@ -274,24 +266,22 @@ class WUAlmanacSensorConfig(WUSensorConfig):
 
     def __init__(
         self,
-        friendly_name,
-        field,
-        value_type,
-        wu_unit,
-        unit_of_measurement,
-        icon,
+        friendly_name: Union[str, Callable],
+        field: str,
+        value_type: str,
+        wu_unit: str,
+        unit_of_measurement: str,
+        icon: str,
         device_class=None,
     ):
         """Constructor.
 
-        Args:
-            friendly_name (string|func): Friendly name
-            field (string): value name returned in 'almanac' dict
-                            as returned by the WU API
-            value_type (string):  "record" or "normal"
-            wu_unit (string): unit name in WU API
-            icon (string): icon name or URL
-            unit_of_measurement (string): unit of measurement
+        :param friendly_name: Friendly name
+        :param field: value name returned in 'almanac' dict as returned by the WU API
+        :param value_type: "record" or "normal"
+        :param wu_unit: unit name in WU API
+        :param unit_of_measurement: unit of measurement
+        :param icon: icon name or URL
         """
         super().__init__(
             friendly_name=friendly_name,
@@ -306,11 +296,10 @@ class WUAlmanacSensorConfig(WUSensorConfig):
 class WUAlertsSensorConfig(WUSensorConfig):
     """Helper for defining field configuration for alerts."""
 
-    def __init__(self, friendly_name):
+    def __init__(self, friendly_name: Union[str, Callable]):
         """Constructor.
 
-        Args:
-            friendly_name (string|func): Friendly name
+        :param friendly_name: Friendly name
         """
         super().__init__(
             friendly_name=friendly_name,
@@ -979,7 +968,7 @@ async def async_setup_platform(
     )
 
     if pws_id is None:
-        unique_id_base = "@{:06f},{:06f}".format(longitude, latitude)
+        unique_id_base = f"@{longitude:06f},{latitude:06f}"
     else:
         # Manually specified weather station, use that for unique_id
         unique_id_base = pws_id
@@ -1010,7 +999,7 @@ class WUndergroundSensor(Entity):
         # This is only the suggested entity id, it might get changed by
         # the entity registry later.
         self.entity_id = sensor.ENTITY_ID_FORMAT.format("pws_" + condition)
-        self._unique_id = "{},{}".format(unique_id_base, condition)
+        self._unique_id = f"{unique_id_base},{condition}"
         self._device_class = self._cfg_expand("device_class")
 
     def _cfg_expand(self, what, default=None):
@@ -1117,7 +1106,7 @@ class WUndergroundData:
         self._hass = hass
         self._api_key = api_key
         self._pws_id = pws_id
-        self._lang = "lang:{}".format(lang)
+        self._lang = f"lang:{lang}"
         self._latitude = latitude
         self._longitude = longitude
         self._features = set()
@@ -1133,9 +1122,9 @@ class WUndergroundData:
             self._api_key, "/".join(sorted(self._features)), self._lang
         )
         if self._pws_id:
-            url = url + "pws:{}".format(self._pws_id)
+            url = url + f"pws:{self._pws_id}"
         else:
-            url = url + "{},{}".format(self._latitude, self._longitude)
+            url = url + f"{self._latitude},{self._longitude}"
 
         return url + ".json"
 

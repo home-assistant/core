@@ -45,7 +45,7 @@ async def async_setup_platform(hass, config):
     else:
         _LOGGER.debug("telegram webhook Status: %s", current_status)
 
-    handler_url = "{0}{1}".format(base_url, TELEGRAM_HANDLER_URL)
+    handler_url = f"{base_url}{TELEGRAM_HANDLER_URL}"
     if not handler_url.startswith("https"):
         _LOGGER.error("Invalid telegram webhook %s must be https", handler_url)
         return False

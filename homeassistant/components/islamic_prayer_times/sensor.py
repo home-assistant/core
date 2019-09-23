@@ -89,6 +89,7 @@ async def schedule_future_update(hass, sensors, midnight_time, prayer_times_data
 
     calculated midnight = 1:35AM (after traditional midnight)
     update time: 1:36AM.
+
     """
     _LOGGER.debug("Scheduling next update for Islamic prayer times")
 

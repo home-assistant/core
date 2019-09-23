@@ -21,7 +21,7 @@ def entity_reg(hass):
     return mock_registry(hass)
 
 
-def _same_triggers(a, b):
+def _same_lists(a, b):
     if len(a) != len(b):
         return False
 
@@ -29,6 +29,94 @@ def _same_triggers(a, b):
         if d not in b:
             return False
     return True
+
+
+async def test_websocket_get_actions(hass, hass_ws_client, device_reg, entity_reg):
+    """Test we get the expected conditions from a light through websocket."""
+    await async_setup_component(hass, "device_automation", {})
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
+    expected_actions = [
+        {
+            "domain": "light",
+            "type": "turn_off",
+            "device_id": device_entry.id,
+            "entity_id": "light.test_5678",
+        },
+        {
+            "domain": "light",
+            "type": "turn_on",
+            "device_id": device_entry.id,
+            "entity_id": "light.test_5678",
+        },
+        {
+            "domain": "light",
+            "type": "toggle",
+            "device_id": device_entry.id,
+            "entity_id": "light.test_5678",
+        },
+    ]
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 1, "type": "device_automation/action/list", "device_id": device_entry.id}
+    )
+    msg = await client.receive_json()
+
+    assert msg["id"] == 1
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    actions = msg["result"]
+    assert _same_lists(actions, expected_actions)
+
+
+async def test_websocket_get_conditions(hass, hass_ws_client, device_reg, entity_reg):
+    """Test we get the expected conditions from a light through websocket."""
+    await async_setup_component(hass, "device_automation", {})
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
+    expected_conditions = [
+        {
+            "condition": "device",
+            "domain": "light",
+            "type": "is_off",
+            "device_id": device_entry.id,
+            "entity_id": "light.test_5678",
+        },
+        {
+            "condition": "device",
+            "domain": "light",
+            "type": "is_on",
+            "device_id": device_entry.id,
+            "entity_id": "light.test_5678",
+        },
+    ]
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "device_automation/condition/list",
+            "device_id": device_entry.id,
+        }
+    )
+    msg = await client.receive_json()
+
+    assert msg["id"] == 1
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    conditions = msg["result"]
+    assert _same_lists(conditions, expected_conditions)
 
 
 async def test_websocket_get_triggers(hass, hass_ws_client, device_reg, entity_reg):
@@ -45,14 +133,14 @@ async def test_websocket_get_triggers(hass, hass_ws_client, device_reg, entity_r
         {
             "platform": "device",
             "domain": "light",
-            "type": "turn_off",
+            "type": "turned_off",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
         },
         {
             "platform": "device",
             "domain": "light",
-            "type": "turn_on",
+            "type": "turned_on",
             "device_id": device_entry.id,
             "entity_id": "light.test_5678",
         },
@@ -62,7 +150,7 @@ async def test_websocket_get_triggers(hass, hass_ws_client, device_reg, entity_r
     await client.send_json(
         {
             "id": 1,
-            "type": "device_automation/list_triggers",
+            "type": "device_automation/trigger/list",
             "device_id": device_entry.id,
         }
     )
@@ -71,5 +159,5 @@ async def test_websocket_get_triggers(hass, hass_ws_client, device_reg, entity_r
     assert msg["id"] == 1
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
-    triggers = msg["result"]["triggers"]
-    assert _same_triggers(triggers, expected_triggers)
+    triggers = msg["result"]
+    assert _same_lists(triggers, expected_triggers)

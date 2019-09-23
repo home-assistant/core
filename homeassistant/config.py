@@ -7,17 +7,7 @@ import logging
 import os
 import re
 import shutil
-from typing import (  # noqa: F401 pylint: disable=unused-import
-    Any,
-    Tuple,
-    Optional,
-    Dict,
-    List,
-    Union,
-    Callable,
-    Sequence,
-    Set,
-)
+from typing import Any, Tuple, Optional, Dict, Union, Callable, Sequence, Set
 from types import ModuleType
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -53,8 +43,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as CONF_CORE, SOURCE_YAML, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import Integration, async_get_integration, IntegrationNotFound
-from homeassistant.requirements import async_process_requirements
+from homeassistant.loader import Integration, IntegrationNotFound
+from homeassistant.requirements import (
+    async_get_integration_with_requirements,
+    RequirementsNotFound,
+)
 from homeassistant.util.yaml import load_yaml, SECRET_YAML
 from homeassistant.util.package import is_docker_env
 import homeassistant.helpers.config_validation as cv
@@ -115,7 +108,7 @@ def _no_duplicate_auth_provider(
     Each type of auth provider can only have one config without optional id.
     Unique id is required if same type of auth provider used multiple times.
     """
-    config_keys = set()  # type: Set[Tuple[str, Optional[str]]]
+    config_keys: Set[Tuple[str, Optional[str]]] = set()
     for config in configs:
         key = (config[CONF_TYPE], config.get(CONF_ID))
         if key in config_keys:
@@ -139,7 +132,7 @@ def _no_duplicate_auth_mfa_module(
     times.
     Note: this is different than auth provider
     """
-    config_keys = set()  # type: Set[str]
+    config_keys: Set[str] = set()
     for config in configs:
         key = config.get(CONF_ID, config[CONF_TYPE])
         if key in config_keys:
@@ -296,7 +289,7 @@ def _write_default_config(config_dir: str) -> Optional[str]:
 
         return config_path
 
-    except IOError:
+    except OSError:
         print("Unable to create default configuration file", config_path)
         return None
 
@@ -314,12 +307,13 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
         path = find_config_file(hass.config.config_dir)
         if path is None:
             raise HomeAssistantError(
-                "Config file not found in: {}".format(hass.config.config_dir)
+                f"Config file not found in: {hass.config.config_dir}"
             )
         config = load_yaml_config_file(path)
         return config
 
-    config = await hass.async_add_executor_job(_load_hass_yaml_config)
+    # Not using async_add_executor_job because this is an internal method.
+    config = await hass.loop.run_in_executor(None, _load_hass_yaml_config)
     core_config = config.get(CONF_CORE, {})
     await merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
     return config
@@ -399,7 +393,7 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
             try:
                 with open(config_path, "wt", encoding="utf-8") as config_file:
                     config_file.write(config_raw)
-            except IOError:
+            except OSError:
                 _LOGGER.exception("Migrating to google_translate tts failed")
                 pass
 
@@ -439,7 +433,7 @@ def _format_config_error(ex: vol.Invalid, domain: str, config: Dict) -> str:
 
     This method must be run in the event loop.
     """
-    message = "Invalid config for [{}]: ".format(domain)
+    message = f"Invalid config for [{domain}]: "
     if "extra keys not allowed" in ex.error_message:
         message += (
             "[{option}] is an invalid option for [{domain}]. "
@@ -619,7 +613,7 @@ def _identify_config_schema(module: ModuleType) -> Tuple[Optional[str], Optional
 
 def _recursive_merge(conf: Dict[str, Any], package: Dict[str, Any]) -> Union[bool, str]:
     """Merge package into conf, recursively."""
-    error = False  # type: Union[bool, str]
+    error: Union[bool, str] = False
     for key, pack_conf in package.items():
         if isinstance(pack_conf, dict):
             if not pack_conf:
@@ -628,10 +622,9 @@ def _recursive_merge(conf: Dict[str, Any], package: Dict[str, Any]) -> Union[boo
             error = _recursive_merge(conf=conf[key], package=pack_conf)
 
         elif isinstance(pack_conf, list):
-            if not pack_conf:
-                continue
-            conf[key] = cv.ensure_list(conf.get(key))
-            conf[key].extend(cv.ensure_list(pack_conf))
+            conf[key] = cv.remove_falsy(
+                cv.ensure_list(conf.get(key)) + cv.ensure_list(pack_conf)
+            )
 
         else:
             if conf.get(key) is not None:
@@ -658,45 +651,25 @@ async def merge_packages_config(
             domain = comp_name.split(" ")[0]
 
             try:
-                integration = await async_get_integration(hass, domain)
-            except IntegrationNotFound:
-                _log_pkg_error(pack_name, comp_name, config, "does not exist")
-                continue
-
-            if (
-                not hass.config.skip_pip
-                and integration.requirements
-                and not await async_process_requirements(
-                    hass, integration.domain, integration.requirements
+                integration = await async_get_integration_with_requirements(
+                    hass, domain
                 )
-            ):
-                _log_pkg_error(
-                    pack_name, comp_name, config, "unable to install all requirements"
-                )
-                continue
-
-            try:
                 component = integration.get_component()
-            except ImportError:
-                _log_pkg_error(pack_name, comp_name, config, "unable to import")
+            except (IntegrationNotFound, RequirementsNotFound, ImportError) as ex:
+                _log_pkg_error(pack_name, comp_name, config, str(ex))
                 continue
 
-            if hasattr(component, "PLATFORM_SCHEMA"):
-                if not comp_conf:
-                    continue  # Ensure we dont add Falsy items to list
-                config[comp_name] = cv.ensure_list(config.get(comp_name))
-                config[comp_name].extend(cv.ensure_list(comp_conf))
-                continue
+            merge_list = hasattr(component, "PLATFORM_SCHEMA")
 
-            if hasattr(component, "CONFIG_SCHEMA"):
+            if not merge_list and hasattr(component, "CONFIG_SCHEMA"):
                 merge_type, _ = _identify_config_schema(component)
+                merge_list = merge_type == "list"
 
-                if merge_type == "list":
-                    if not comp_conf:
-                        continue  # Ensure we dont add Falsy items to list
-                    config[comp_name] = cv.ensure_list(config.get(comp_name))
-                    config[comp_name].extend(cv.ensure_list(comp_conf))
-                    continue
+            if merge_list:
+                config[comp_name] = cv.remove_falsy(
+                    cv.ensure_list(config.get(comp_name)) + cv.ensure_list(comp_conf)
+                )
+                continue
 
             if comp_conf is None:
                 comp_conf = OrderedDict()
@@ -722,7 +695,7 @@ async def merge_packages_config(
             error = _recursive_merge(conf=config[comp_name], package=comp_conf)
             if error:
                 _log_pkg_error(
-                    pack_name, comp_name, config, "has duplicate key '{}'".format(error)
+                    pack_name, comp_name, config, f"has duplicate key '{error}'"
                 )
 
     return config
@@ -775,26 +748,15 @@ async def async_process_component_config(
             continue
 
         try:
-            p_integration = await async_get_integration(hass, p_name)
-        except IntegrationNotFound:
-            continue
-
-        if (
-            not hass.config.skip_pip
-            and p_integration.requirements
-            and not await async_process_requirements(
-                hass, p_integration.domain, p_integration.requirements
-            )
-        ):
-            _LOGGER.error(
-                "Unable to install all requirements for %s.%s", domain, p_name
-            )
+            p_integration = await async_get_integration_with_requirements(hass, p_name)
+        except (RequirementsNotFound, IntegrationNotFound) as ex:
+            _LOGGER.error("Platform error: %s - %s", domain, ex)
             continue
 
         try:
             platform = p_integration.get_platform(domain)
         except ImportError:
-            _LOGGER.exception("Failed to get platform %s.%s", domain, p_name)
+            _LOGGER.exception("Platform error: %s", domain)
             continue
 
         # Validate platform specific schema
@@ -805,7 +767,7 @@ async def async_process_component_config(
                     p_config
                 )
             except vol.Invalid as ex:
-                async_log_exception(ex, "{}.{}".format(domain, p_name), p_config, hass)
+                async_log_exception(ex, f"{domain}.{p_name}", p_config, hass)
                 continue
 
         platforms.append(p_validated)
@@ -864,7 +826,7 @@ def async_notify_setup_error(
         else:
             part = name
 
-        message += " - {}\n".format(part)
+        message += f" - {part}\n"
 
     message += "\nPlease check your config."
 

@@ -63,6 +63,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         ["Power Consumption", obis_ref.CURRENT_ELECTRICITY_USAGE],
         ["Power Production", obis_ref.CURRENT_ELECTRICITY_DELIVERY],
         ["Power Tariff", obis_ref.ELECTRICITY_ACTIVE_TARIFF],
+        ["Power Consumption (total)", obis_ref.ELECTRICITY_IMPORTED_TOTAL],
         ["Power Consumption (low)", obis_ref.ELECTRICITY_USED_TARIFF_1],
         ["Power Consumption (normal)", obis_ref.ELECTRICITY_USED_TARIFF_2],
         ["Power Production (low)", obis_ref.ELECTRICITY_DELIVERED_TARIFF_1],

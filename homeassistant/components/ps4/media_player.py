@@ -58,11 +58,6 @@ DEFAULT_RETRIES = 2
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up PS4 from a config entry."""
     config = config_entry
-    await async_setup_platform(hass, config, async_add_entities, discovery_info=None)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up PS4 Platform."""
     creds = config.data[CONF_TOKEN]
     device_list = []
     for device in config.data["devices"]:
@@ -72,6 +67,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         ps4 = pyps4.Ps4Async(host, creds, device_name=DEFAULT_ALIAS)
         device_list.append(PS4Device(config, name, host, region, ps4, creds))
     async_add_entities(device_list, update_before_add=True)
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Not Implemented."""
+    pass
 
 
 class PS4Device(MediaPlayerDevice):

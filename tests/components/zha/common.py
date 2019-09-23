@@ -50,7 +50,7 @@ class FakeEndpoint:
         """Add an input cluster."""
         from zigpy.zcl import Cluster
 
-        cluster = Cluster.from_id(self, cluster_id)
+        cluster = Cluster.from_id(self, cluster_id, is_server=True)
         patch_cluster(cluster)
         self.in_clusters[cluster_id] = cluster
         if hasattr(cluster, "ep_attribute"):
@@ -60,7 +60,7 @@ class FakeEndpoint:
         """Add an output cluster."""
         from zigpy.zcl import Cluster
 
-        cluster = Cluster.from_id(self, cluster_id)
+        cluster = Cluster.from_id(self, cluster_id, is_server=False)
         patch_cluster(cluster)
         self.out_clusters[cluster_id] = cluster
 
@@ -68,12 +68,13 @@ class FakeEndpoint:
 def patch_cluster(cluster):
     """Patch a cluster for testing."""
     cluster.bind = CoroutineMock(return_value=[0])
+    cluster.configure_reporting = CoroutineMock(return_value=[0])
     cluster.deserialize = Mock()
     cluster.handle_cluster_request = Mock()
     cluster.handle_cluster_general_request = Mock()
+    cluster.read_attributes = CoroutineMock()
     cluster.read_attributes_raw = Mock()
-    cluster.read_attributes = Mock()
-    cluster.unbind = Mock()
+    cluster.unbind = CoroutineMock(return_value=[0])
 
 
 class FakeDevice:
@@ -139,7 +140,10 @@ async def async_init_zigpy_device(
     device = make_device(
         in_cluster_ids, out_cluster_ids, device_type, ieee, manufacturer, model
     )
-    await gateway.async_device_initialized(device, is_new_join)
+    if is_new_join:
+        await gateway.async_device_initialized(device)
+    else:
+        await gateway.async_device_restored(device)
     await hass.async_block_till_done()
     return device
 

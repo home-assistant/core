@@ -240,7 +240,7 @@ async def async_prepare_setup_platform(
     try:
         platform = integration.get_platform(domain)
     except ImportError as exc:
-        log_error("Platform not found ({}).".format(exc))
+        log_error(f"Platform not found ({exc}).")
         return None
 
     # Already loaded
@@ -253,7 +253,7 @@ async def async_prepare_setup_platform(
         try:
             component = integration.get_component()
         except ImportError as exc:
-            log_error("Unable to import the component ({}).".format(exc))
+            log_error(f"Unable to import the component ({exc}).")
             return None
 
         if hasattr(component, "setup") or hasattr(component, "async_setup"):
@@ -283,14 +283,10 @@ async def async_process_deps_reqs(
     ):
         raise HomeAssistantError("Could not set up all dependencies.")
 
-    if (
-        not hass.config.skip_pip
-        and integration.requirements
-        and not await requirements.async_process_requirements(
+    if not hass.config.skip_pip and integration.requirements:
+        await requirements.async_process_requirements(
             hass, integration.domain, integration.requirements
         )
-    ):
-        raise HomeAssistantError("Could not install all requirements.")
 
     processed.add(integration.domain)
 
