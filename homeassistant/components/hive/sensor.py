@@ -2,7 +2,7 @@
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
-from . import DATA_HIVE, DOMAIN
+from . import DOMAIN, DATA_HIVE
 
 FRIENDLY_NAMES = {
     "Hub_OnlineStatus": "Hive Hub Status",
@@ -19,13 +19,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Hive sensor devices."""
     if discovery_info is None:
         return
-    session = hass.data.get(DATA_HIVE)
 
-    if (
-        discovery_info["HA_DeviceType"] == "Hub_OnlineStatus"
-        or discovery_info["HA_DeviceType"] == "Hive_OutsideTemperature"
-    ):
-        add_entities([HiveSensorEntity(session, discovery_info)])
+    session = hass.data.get(DATA_HIVE)
+    for device in discovery_info:
+        if device["HA_DeviceType"] in FRIENDLY_NAMES:
+            add_entities([HiveSensorEntity(session, device)])
 
 
 class HiveSensorEntity(Entity):

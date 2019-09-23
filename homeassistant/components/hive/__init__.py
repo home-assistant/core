@@ -1,20 +1,29 @@
 """Support for the Hive devices."""
-import logging
 from functools import wraps
+import logging
 
 from pyhiveapi import Pyhiveapi
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
-
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "hive"
 DATA_HIVE = "data_hive"
+SERVICE_BOOST_HOTWATER = "boost_hotwater"
+SERVICE_BOOST_HEATING = "boost_heating"
+ATTR_TIME_PERIOD = "time_period"
+ATTR_MODE = "on_off"
 DEVICETYPES = {
     "binary_sensor": "device_list_binary_sensor",
     "climate": "device_list_climate",
@@ -37,6 +46,26 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+BOOST_HEATING_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_TIME_PERIOD): vol.All(
+            cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds() // 60
+        ),
+        vol.Optional(ATTR_TEMPERATURE, default="25.0"): vol.Coerce(float),
+    }
+)
+
+BOOST_HOTWATER_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Optional(ATTR_TIME_PERIOD, default="00:30:00"): vol.All(
+            cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds() // 60
+        ),
+        vol.Required(ATTR_MODE): cv.string,
+    }
+)
+
 
 class HiveSession:
     """Initiate Hive Session Class."""
@@ -54,6 +83,35 @@ class HiveSession:
 
 def setup(hass, config):
     """Set up the Hive Component."""
+
+    def heating_boost(service):
+        """Handle the service call."""
+        node_id = HiveSession.entity_lookup.get(service.data[ATTR_ENTITY_ID])
+        if not node_id:
+            # log or raise error
+            _LOGGER.error("Cannot boost entity id entered.")
+            return
+
+        minutes = service.data[ATTR_TIME_PERIOD]
+        temperature = service.data.get(ATTR_TEMPERATURE)
+
+        session.heating.turn_boost_on(node_id, minutes, temperature)
+
+    def hotwater_boost(service):
+        """Handle the service call."""
+        node_id = HiveSession.entity_lookup.get(service.data[ATTR_ENTITY_ID])
+        if not node_id:
+            # log or raise error
+            _LOGGER.error("Cannot boost entity id entered.")
+            return
+        minutes = service.data.get(ATTR_TIME_PERIOD)
+        mode = service.data[ATTR_MODE]
+
+        if mode == "on":
+            session.hotwater.turn_boost_on(node_id, minutes)
+        elif mode == "off":
+            session.hotwater.turn_boost_off(node_id)
+
     session = HiveSession()
     session.core = Pyhiveapi()
 
@@ -61,9 +119,9 @@ def setup(hass, config):
     password = config[DOMAIN][CONF_PASSWORD]
     update_interval = config[DOMAIN][CONF_SCAN_INTERVAL]
 
-    devicelist = session.core.initialise_api(username, password, update_interval)
+    devices = session.core.initialise_api(username, password, update_interval)
 
-    if devicelist is None:
+    if devices is None:
         _LOGGER.error("Hive API initialization failed")
         return False
 
@@ -76,11 +134,25 @@ def setup(hass, config):
     session.attributes = Pyhiveapi.Attributes()
     hass.data[DATA_HIVE] = session
 
-    for ha_type, hive_type in DEVICETYPES.items():
-        for key, devices in devicelist.items():
-            if key == hive_type:
-                for hivedevice in devices:
-                    load_platform(hass, ha_type, DOMAIN, hivedevice, config)
+    for ha_type in DEVICETYPES:
+        devicelist = devices.get(DEVICETYPES[ha_type], None)
+        if devicelist:
+            load_platform(hass, ha_type, DOMAIN, devicelist, config)
+            if ha_type == "climate":
+                hass.services.register(
+                    DOMAIN,
+                    SERVICE_BOOST_HEATING,
+                    heating_boost,
+                    schema=BOOST_HEATING_SCHEMA,
+                )
+            if ha_type == "water_heater":
+                hass.services.register(
+                    DOMAIN,
+                    SERVICE_BOOST_HEATING,
+                    hotwater_boost,
+                    schema=BOOST_HOTWATER_SCHEMA,
+                )
+
     return True
 
 

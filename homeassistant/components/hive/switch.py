@@ -1,16 +1,17 @@
 """Support for the Hive switches."""
 from homeassistant.components.switch import SwitchDevice
 
-from . import DATA_HIVE, DOMAIN, refresh_system
+from . import DOMAIN, DATA_HIVE, refresh_system
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Hive switches."""
     if discovery_info is None:
         return
-    session = hass.data.get(DATA_HIVE)
 
-    add_entities([HiveDevicePlug(session, discovery_info)])
+    session = hass.data.get(DATA_HIVE)
+    for device in discovery_info:
+        add_entities([HiveDevicePlug(session, device)])
 
 
 class HiveDevicePlug(SwitchDevice):

@@ -1,8 +1,4 @@
 """Support for the Hive climate devices."""
-import logging
-
-import voluptuous as vol
-
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
@@ -13,10 +9,11 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, TEMP_CELSIUS
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
-from . import DATA_HIVE, DOMAIN, HiveSession, refresh_system
+# from homeassistant.helpers.dispatcher import dispatcher_connect
+
+from . import DOMAIN, DATA_HIVE, refresh_system
 
 HIVE_TO_HASS_STATE = {
     "SCHEDULE": HVAC_MODE_AUTO,
@@ -33,49 +30,16 @@ HASS_TO_HIVE_STATE = {
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 SUPPORT_HVAC = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
 SUPPORT_PRESET = [PRESET_NONE, PRESET_BOOST]
-SERVICE_BOOST_HEATING = "boost_heating"
-ATTR_TIME_PERIOD = "time_period"
-BOOST_HEATING_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_TIME_PERIOD): vol.All(
-            cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds() // 60
-        ),
-        vol.Optional(ATTR_TEMPERATURE, default="25.0"): cv.string,
-    }
-)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Hive climate devices."""
     if discovery_info is None:
         return
-    if discovery_info["HA_DeviceType"] != "Heating":
-        return
 
     session = hass.data.get(DATA_HIVE)
-    climate = HiveClimateEntity(session, discovery_info)
-
-    add_entities([climate])
-
-    def heating_boost(service):
-        """Handle the service call."""
-        node_id = HiveSession.entity_lookup.get(service.data[ATTR_ENTITY_ID])
-        if not node_id:
-            # log or raise error
-            _LOGGER.error("Cannot boost entity id entered.")
-            return
-
-        minutes = service.data[ATTR_TIME_PERIOD]
-        temperature = service.data.get(ATTR_TEMPERATURE)
-
-        session.heating.turn_boost_on(node_id, minutes, temperature)
-
-    hass.services.register(
-        DOMAIN, SERVICE_BOOST_HEATING, heating_boost, schema=BOOST_HEATING_SCHEMA
-    )
+    for device in discovery_info:
+        add_entities([HiveClimateEntity(session, device)])
 
 
 class HiveClimateEntity(ClimateDevice):
@@ -186,7 +150,7 @@ class HiveClimateEntity(ClimateDevice):
             self.session.heating.set_target_temperature(self.node_id, new_temperature)
 
     @refresh_system
-    def set_preset_mode(self, preset_mode) -> None:
+    def set_preset_mode(self, preset_mode):
         """Set new preset mode."""
         if preset_mode == PRESET_NONE and self.preset_mode == PRESET_BOOST:
             self.session.heating.turn_boost_off(self.node_id)
@@ -195,13 +159,18 @@ class HiveClimateEntity(ClimateDevice):
             curtemp = self.session.heating.current_temperature(self.node_id)
             curtemp = round(curtemp * 2) / 2
             temperature = curtemp + 0.5
-
             self.session.heating.turn_boost_on(self.node_id, 30, temperature)
 
     async def async_added_to_hass(self):
         """When entity is added to Home Assistant."""
         await super().async_added_to_hass()
         self.session.entity_lookup[self.entity_id] = self.node_id
+
+    #       dispatcher_connect(self.hass, DOMAIN, self._update_callback)
+
+    #   def _update_callback(self):
+    #        """Call update method."""
+    #        self.schedule_update_ha_state(False)
 
     def update(self):
         """Update all Node data from Hive."""
