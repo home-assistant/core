@@ -6,7 +6,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_URL, CONF_API_KEY, CONF_VERIFY_SSL
-from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.discovery import load_platform
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_API_KEY): cv.string,
                 vol.Required(CONF_API_SECRET): cv.string,
                 vol.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
-                vol.Optional(CONF_TRACKER_INTERFACE): vol.All(
+                vol.Optional(CONF_TRACKER_INTERFACE, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
             }
@@ -42,7 +42,7 @@ def setup(hass, config):
     api_key = conf[CONF_API_KEY]
     api_secret = conf[CONF_API_SECRET]
     verify_ssl = conf[CONF_VERIFY_SSL]
-    tracker_interfaces = conf.get(CONF_TRACKER_INTERFACE, None)
+    tracker_interfaces = conf[CONF_TRACKER_INTERFACE]
 
     if tracker_interfaces:
         # Verify that specified tracker interfaces are valid
@@ -56,15 +56,11 @@ def setup(hass, config):
                     "Specified OPNsense tracker interface %s is not found", interface
                 )
                 return False
-    else:
-        tracker_interfaces = ["LAN"]
 
     interfaces_client = diagnostics.InterfaceClient(
         api_key, api_secret, url, verify_ssl
     )
     hass.data[OPNSENSE_DATA] = {"interfaces": interfaces_client}
 
-    hass.async_create_task(
-        async_load_platform(hass, "device_tracker", DOMAIN, tracker_interfaces, config)
-    )
+    load_platform(hass, "device_tracker", DOMAIN, tracker_interfaces, config)
     return True

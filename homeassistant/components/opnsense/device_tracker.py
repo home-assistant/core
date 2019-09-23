@@ -18,7 +18,6 @@ async def async_get_scanner(hass, config, discovery_info=None):
 class OPNSenseDeviceScanner(DeviceScanner):
     """This class queries a router running OPNsense."""
 
-    # Eighth attribute needed for mode (AP mode vs router mode)
     def __init__(self, client, interfaces):
         """Initialize the scanner."""
         self.last_results = {}
@@ -29,7 +28,9 @@ class OPNSenseDeviceScanner(DeviceScanner):
         """Create dict with mac address keys from list of devices."""
         out_devices = {}
         for device in devices:
-            if device["intf_description"] in self.interfaces:
+            if not self.interfaces:
+                out_devices[device["mac"]] = device
+            elif device["intf_description"] in self.interfaces:
                 out_devices[device["mac"]] = device
         return out_devices
 
