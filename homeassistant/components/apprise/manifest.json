@@ -1,0 +1,10 @@
+{
+  "domain": "apprise",
+  "name": "Apprise",
+  "documentation": "https://www.home-assistant.io/components/apprise",
+  "requirements": [
+    "apprise==0.8.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}
