@@ -27,9 +27,16 @@ GPS_ACCURACY_THRESHOLD = 250
 
 
 @pytest.fixture(name="init")
+def mock_controller_init():
+    """Mock a successful init."""
+    with patch("pyicloud.PyiCloudService"):
+        yield
+
+
+@pytest.fixture(name="authenticate")
 def mock_controller_authenticate():
     """Mock a successful authenticate."""
-    with patch("pyicloud.PyiCloudService"):
+    with patch("pyicloud.PyiCloudService.authenticate"):
         yield
 
 
@@ -64,7 +71,12 @@ def init_config_flow(hass):
 
 
 async def test_user(
-    hass, init, requires_2fa, send_verification_code, validate_verification_code
+    hass,
+    init,
+    authenticate,
+    requires_2fa,
+    send_verification_code,
+    validate_verification_code,
 ):
     """Test user config."""
     flow = init_config_flow(hass)
@@ -87,7 +99,12 @@ async def test_user(
 
 
 async def test_import(
-    hass, init, requires_2fa, send_verification_code, validate_verification_code
+    hass,
+    init,
+    authenticate,
+    requires_2fa,
+    send_verification_code,
+    validate_verification_code,
 ):
     """Test import step."""
     flow = init_config_flow(hass)
@@ -124,9 +141,14 @@ async def test_import(
 
 
 async def test_abort_if_already_setup(
-    hass, init, requires_2fa, send_verification_code, validate_verification_code
+    hass,
+    init,
+    authenticate,
+    requires_2fa,
+    send_verification_code,
+    validate_verification_code,
 ):
-    """Test we abort if Linky is already setup."""
+    """Test we abort if the account is already setup."""
     flow = init_config_flow(hass)
     MockConfigEntry(
         domain=DOMAIN, data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
@@ -144,7 +166,7 @@ async def test_abort_if_already_setup(
         {
             CONF_USERNAME: "other_username@icloud.com",
             CONF_PASSWORD: PASSWORD,
-            CONF_ACCOUNT_NAME: USERNAME,
+            CONF_ACCOUNT_NAME: ACCOUNT_NAME_FROM_USERNAME,
         }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -162,7 +184,7 @@ async def test_abort_if_already_setup(
         {
             CONF_USERNAME: "other_username@icloud.com",
             CONF_PASSWORD: PASSWORD,
-            CONF_ACCOUNT_NAME: USERNAME,
+            CONF_ACCOUNT_NAME: ACCOUNT_NAME_FROM_USERNAME,
         }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -184,7 +206,7 @@ async def test_abort_on_login_failed(hass):
         assert result["errors"] == {CONF_USERNAME: "login"}
 
 
-async def test_abort_on_fetch_failed(hass, init, requires_2fa):
+async def test_abort_on_fetch_failed(hass, init, authenticate, requires_2fa):
     """Test when we have errors during fetch."""
     flow = init_config_flow(hass)
 
