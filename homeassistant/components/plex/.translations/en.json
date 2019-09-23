@@ -10,9 +10,20 @@
         "error": {
             "faulty_credentials": "Authorization failed",
             "no_servers": "No servers linked to account",
+            "no_token": "Provide a token or select manual setup",
             "not_found": "Plex server not found"
         },
         "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "ssl": "Use SSL",
+                    "token": "Token (if required)",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "title": "Plex server"
+            },
             "select_server": {
                 "data": {
                     "server": "Server"
@@ -22,9 +33,10 @@
             },
             "user": {
                 "data": {
+                    "manual_setup": "Manual setup",
                     "token": "Plex token"
                 },
-                "description": "Enter a Plex token for automatic setup.",
+                "description": "Enter a Plex token for automatic setup or manually configure a server.",
                 "title": "Connect Plex server"
             }
         },
