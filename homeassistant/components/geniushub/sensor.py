@@ -91,7 +91,7 @@ class GeniusIssue(GeniusEntity):
         super().__init__()
 
         self._hub = hub
-        self._name = f"Genius Hub {GH_LEVEL_MAPPING[level]}"
+        self._name = f"GeniusHub {GH_LEVEL_MAPPING[level]}"
         self._level = level
         self._issues = []
 
