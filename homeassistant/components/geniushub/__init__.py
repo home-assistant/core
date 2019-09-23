@@ -152,25 +152,33 @@ class GeniusDevice(GeniusEntity):
     def device_state_attributes(self) -> Dict[str, Any]:
         """Return the device state attributes."""
 
-        def snake_case(string):
-            """Convert a string to snake_case."""
-            string = re.sub(r"[\-\.\s]", "_", str(string))
-            return (string[0]).lower() + re.sub(
-                r"[A-Z]", lambda matched: "_" + matched.group(0).lower(), string[1:]
-            )
+        def convert_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
+            """Recursively convert a dict's keys to snake_case."""
+
+            def convert_key(key: str) -> str:
+                """Convert a string to snake_case."""
+                string = re.sub(r"[\-\.\s]", "_", str(key))
+                return (string[0]).lower() + re.sub(
+                    r"[A-Z]", lambda matched: "_" + matched.group(0).lower(), string[1:]
+                )
+
+            return {
+                (convert_key(k) if isinstance(k, str) else k): (
+                    convert_dict(v) if isinstance(v, dict) else v
+                )
+                for k, v in dictionary.items()
+            }
 
         attrs = {}
         attrs["assigned_zone"] = self._device.data["assignedZones"][0]["name"]
         attrs["last_comms"] = self._last_comms.isoformat()
 
-        state = dict(self._device.data["state"])
-        state.update(self._device.data["_state"])
-        state.pop(self._state_attr)
-        state.pop("lastComms")
+        attrs["state"] = dict(self._device.data["state"])
+        attrs["state"].update(self._device.data["_state"])
+        attrs["state"].pop(self._state_attr)
+        attrs["state"].pop("lastComms")
 
-        attrs["state"] = {snake_case(k): v for k, v in state.items()}
-
-        return attrs
+        return convert_dict(attrs)
 
     async def async_update(self) -> Awaitable[None]:
         """Update an entity's state data."""
