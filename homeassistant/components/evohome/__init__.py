@@ -406,7 +406,7 @@ class EvoChild(EvoDevice):
 
         Only Zones & DHW controllers (but not the TCS) can have schedules.
         """
-        # worst case is: zone.schedule = {'DailySchedules': []}
+        # worst case is schedule = {'DailySchedules': []}
         if not self._schedule["DailySchedules"]:
             return {}
 
