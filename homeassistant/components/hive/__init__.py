@@ -1,4 +1,4 @@
-"""Support for the Hive devices."""
+"""Support for the Hive devices and services."""
 from functools import wraps
 import logging
 
