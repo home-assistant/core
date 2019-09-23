@@ -457,10 +457,9 @@ class EvoChild(EvoDevice):
 
     async def _update_schedule(self) -> None:
         """Get the latest schedule."""
-        if (
-            "DailySchedules" in self._schedule and not self._schedule["DailySchedules"]
-        ) and not self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
-            return  # avoid unnecessary I/O - there's nothing to update
+        if "DailySchedules" in self._schedule and not self._schedule["DailySchedules"]:
+            if not self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
+                return  # avoid unnecessary I/O - there's nothing to update
 
         try:
             self._schedule = await self._evo_device.schedule()
