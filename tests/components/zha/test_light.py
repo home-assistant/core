@@ -230,7 +230,7 @@ async def async_test_level_on_off_from_hass(
         4,
         (types.uint8_t, types.uint16_t),
         10,
-        5.0,
+        0,
         expect_reply=True,
         manufacturer=None,
     )
