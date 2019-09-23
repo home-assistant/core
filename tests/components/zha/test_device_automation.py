@@ -7,9 +7,6 @@ import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import (
     _async_get_device_automations as async_get_device_automations,
 )
-from homeassistant.components.device_automation.exceptions import (
-    InvalidDeviceAutomationConfig,
-)
 from homeassistant.components.switch import DOMAIN
 from homeassistant.components.zha.core.const import CHANNEL_ON_OFF
 from homeassistant.helpers.device_registry import async_get_registry
@@ -207,7 +204,7 @@ async def test_if_fires_on_event(hass, config_entry, zha_gateway, calls):
     assert calls[0].data["message"] == "service called"
 
 
-async def test_exception_on_event(hass, config_entry, zha_gateway, calls):
+async def test_exception_no_triggers(hass, config_entry, zha_gateway, calls):
     """Test for exception on event triggers firing."""
     from zigpy.zcl.clusters.general import OnOff, Basic
 
@@ -229,11 +226,7 @@ async def test_exception_on_event(hass, config_entry, zha_gateway, calls):
     ha_device_registry = await async_get_registry(hass)
     reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
 
-    exception_patch = patch(
-        "homeassistant.components.zha.device_automation.async_trigger",
-        side_effect=InvalidDeviceAutomationConfig,
-    )
-    with exception_patch:
+    with patch("logging.Logger.error") as mock:
         await async_setup_component(
             hass,
             automation.DOMAIN,
@@ -255,8 +248,61 @@ async def test_exception_on_event(hass, config_entry, zha_gateway, calls):
                 ]
             },
         )
+        await hass.async_block_till_done()
+        mock.assert_called_with("Error setting up trigger %s", "automation 0")
 
+
+async def test_exception_bad_trigger(hass, config_entry, zha_gateway, calls):
+    """Test for exception on event triggers firing."""
+    from zigpy.zcl.clusters.general import OnOff, Basic
+
+    # create zigpy device
+    zigpy_device = await async_init_zigpy_device(
+        hass, [Basic.cluster_id], [OnOff.cluster_id], None, zha_gateway
+    )
+
+    zigpy_device.device_automation_triggers = {
+        (SHAKEN, SHAKEN): {COMMAND: COMMAND_SHAKE},
+        (DOUBLE_PRESS, DOUBLE_PRESS): {COMMAND: COMMAND_DOUBLE},
+        (SHORT_PRESS, SHORT_PRESS): {COMMAND: COMMAND_SINGLE},
+        (LONG_PRESS, LONG_PRESS): {COMMAND: COMMAND_HOLD},
+        (LONG_RELEASE, LONG_RELEASE): {COMMAND: COMMAND_HOLD},
+    }
+
+    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+    await hass.async_block_till_done()
+    hass.config_entries._entries.append(config_entry)
+
+    zha_device = zha_gateway.get_device(zigpy_device.ieee)
+
+    # allow traffic to flow through the gateway and device
+    await async_enable_traffic(hass, zha_gateway, [zha_device])
+
+    ieee_address = str(zha_device.ieee)
+    ha_device_registry = await async_get_registry(hass)
+    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
+
+    with patch("logging.Logger.error") as mock:
+        await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: [
+                    {
+                        "trigger": {
+                            "device_id": reg_device.id,
+                            "domain": "zha",
+                            "platform": "device",
+                            "type": "junk",
+                            "subtype": "junk",
+                        },
+                        "action": {
+                            "service": "test.automation",
+                            "data": {"message": "service called"},
+                        },
+                    }
+                ]
+            },
+        )
         await hass.async_block_till_done()
-        on_off_channel = zha_device.cluster_channels[CHANNEL_ON_OFF]
-        on_off_channel.zha_send_event(on_off_channel.cluster, COMMAND_SINGLE, [])
-        await hass.async_block_till_done()
+        mock.assert_called_with("Error setting up trigger %s", "automation 0")
