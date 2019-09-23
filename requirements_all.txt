@@ -646,7 +646,7 @@ homeassistant-pyozw==0.1.4
 homekit[IP]==0.15.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.10
+homematicip==0.10.11
 
 # homeassistant.components.horizon
 horimote==0.4.1
