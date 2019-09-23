@@ -608,7 +608,6 @@ omit =
     homeassistant/components/spotcrime/sensor.py
     homeassistant/components/spotify/media_player.py
     homeassistant/components/squeezebox/media_player.py
-    homeassistant/components/srp_energy/sensor.py
     homeassistant/components/starlingbank/sensor.py
     homeassistant/components/steam_online/sensor.py
     homeassistant/components/stiebel_eltron/*
