@@ -406,6 +406,10 @@ class EvoChild(EvoDevice):
 
         Only Zones & DHW controllers (but not the TCS) can have schedules.
         """
+        # worst case is: self._schedule = {'DailySchedules': []}
+        if not self._schedule["DailySchedules"]:
+            return {}
+
         day_time = datetime.now()
         day_of_week = int(day_time.strftime("%w"))  # 0 is Sunday
 
