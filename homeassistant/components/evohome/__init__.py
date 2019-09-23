@@ -384,7 +384,7 @@ class EvoChild(EvoDevice):
     def __init__(self, evo_broker, evo_device) -> None:
         """Initialize the evohome Controller (hub)."""
         super().__init__(evo_broker, evo_device)
-        self._setpoints = {"next_sp_from": "2000-01-01T00:00:00+00:00"}
+        self._setpoints = {}
 
     @property
     def available(self) -> bool:
@@ -406,7 +406,7 @@ class EvoChild(EvoDevice):
 
         Only Zones & DHW controllers (but not the TCS) can have schedules.
         """
-        # worst case is: self._schedule = {'DailySchedules': []}
+        # worst case is: zone.schedule = {'DailySchedules': []}
         if not self._schedule["DailySchedules"]:
             return {}
 
@@ -457,7 +457,8 @@ class EvoChild(EvoDevice):
 
     async def async_update(self) -> None:
         """Get the latest state data."""
-        if parse_datetime(self._setpoints["next_sp_from"]) <= utcnow():
+        dt_min = "2000-01-01T00:00:00+00:00"
+        if parse_datetime(self._setpoints.get("next_sp_from", dt_min)) <= utcnow():
             await self._update_schedule()
 
         self._device_state_attrs = {"setpoints": self.setpoints}
