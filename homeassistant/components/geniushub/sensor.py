@@ -1,6 +1,6 @@
 """Support for Genius Hub sensor devices."""
 from datetime import timedelta
-from typing import Any, Awaitable, Dict
+from typing import Any, Dict
 
 from homeassistant.const import DEVICE_CLASS_BATTERY
 from homeassistant.util.dt import utcnow
@@ -105,7 +105,7 @@ class GeniusIssue(GeniusEntity):
         """Return the device state attributes."""
         return {f"{self._level}_list": self._issues}
 
-    async def async_update(self) -> Awaitable[None]:
+    async def async_update(self) -> None:
         """Process the sensor's state data."""
         self._issues = [
             i["description"] for i in self._hub.issues if i["level"] == self._level

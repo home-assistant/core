@@ -1,5 +1,5 @@
 """Support for Genius Hub climate devices."""
-from typing import Awaitable, Optional, List
+from typing import Optional, List
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -76,10 +76,10 @@ class GeniusClimateZone(GeniusZone, ClimateDevice):
             return [PRESET_ACTIVITY, PRESET_BOOST]
         return [PRESET_BOOST]
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> Awaitable[None]:
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set a new hvac mode."""
         await self._zone.set_mode(HA_HVAC_TO_GH.get(hvac_mode))
 
-    async def async_set_preset_mode(self, preset_mode: str) -> Awaitable[None]:
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set a new preset mode."""
         await self._zone.set_mode(HA_PRESET_TO_GH.get(preset_mode, "timer"))

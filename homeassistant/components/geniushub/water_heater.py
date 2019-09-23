@@ -1,5 +1,5 @@
 """Support for Genius Hub water_heater devices."""
-from typing import Awaitable, List
+from typing import List
 
 from homeassistant.components.water_heater import (
     WaterHeaterDevice,
@@ -66,6 +66,6 @@ class GeniusWaterHeater(GeniusZone, WaterHeaterDevice):
         """Return the current operation mode."""
         return GH_STATE_TO_HA[self._zone.data["mode"]]
 
-    async def async_set_operation_mode(self, operation_mode) -> Awaitable[None]:
+    async def async_set_operation_mode(self, operation_mode) -> None:
         """Set a new operation mode for this boiler."""
         await self._zone.set_mode(HA_OPMODE_TO_GH[operation_mode])

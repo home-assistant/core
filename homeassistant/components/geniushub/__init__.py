@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 import re
-from typing import Any, Awaitable, Dict, Optional
+from typing import Any, Dict, Optional
 
 import aiohttp
 import voluptuous as vol
@@ -125,7 +125,7 @@ class GeniusEntity(Entity):
         """Initialize the device."""
         self._name = None
 
-    async def async_added_to_hass(self) -> Awaitable[None]:
+    async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
         async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
 
@@ -186,7 +186,7 @@ class GeniusDevice(GeniusEntity):
 
         return convert_dict(attrs)
 
-    async def async_update(self) -> Awaitable[None]:
+    async def async_update(self) -> None:
         """Update an entity's state data."""
         self._last_comms = utc_from_timestamp(self._device.data["_state"]["lastComms"])
 
@@ -242,7 +242,7 @@ class GeniusZone(GeniusEntity):
         """Return the bitmask of supported features."""
         return self._supported_features
 
-    async def async_set_temperature(self, **kwargs) -> Awaitable[None]:
+    async def async_set_temperature(self, **kwargs) -> None:
         """Set a new target temperature for this zone."""
         await self._zone.set_override(
             kwargs[ATTR_TEMPERATURE], kwargs.get(ATTR_DURATION, 3600)
