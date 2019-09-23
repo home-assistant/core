@@ -87,6 +87,7 @@ TEST_REQUIREMENTS = (
     "haversine",
     "hbmqtt",
     "hdate",
+    "herepy",
     "hole",
     "holidays",
     "home-assistant-frontend",
