@@ -54,7 +54,7 @@ def setup(hass, config):
         for interface in tracker_interfaces:
             if interface not in interfaces:
                 _LOGGER.error(
-                    "Specified OPNsense tracker interface %s is not " "found", interface
+                    "Specified OPNsense tracker interface %s is not found", interface
                 )
                 return False
     else:
