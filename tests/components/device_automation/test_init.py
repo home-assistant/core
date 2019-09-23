@@ -4,10 +4,16 @@ import pytest
 from homeassistant.setup import async_setup_component
 import homeassistant.components.automation as automation
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.const import STATE_ON, STATE_OFF, CONF_PLATFORM
 from homeassistant.helpers import device_registry
 
 
-from tests.common import MockConfigEntry, mock_device_registry, mock_registry
+from tests.common import (
+    MockConfigEntry,
+    async_mock_service,
+    mock_device_registry,
+    mock_registry,
+)
 
 
 @pytest.fixture
@@ -165,7 +171,7 @@ async def test_websocket_get_triggers(hass, hass_ws_client, device_reg, entity_r
 
 
 async def test_automation_with_non_existing_integration(hass, caplog):
-    """Test automation with an error in script."""
+    """Test device automation with non existing integration."""
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -178,13 +184,11 @@ async def test_automation_with_non_existing_integration(hass, caplog):
         },
     )
 
-    hass.bus.async_fire("test_event")
-    await hass.async_block_till_done()
     assert "Integration 'beer' not found" in caplog.text
 
 
 async def test_automation_with_integration_without_device_automation(hass, caplog):
-    """Test automation with an error in script."""
+    """Test automation with integration wihtout device automation."""
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -197,15 +201,13 @@ async def test_automation_with_integration_without_device_automation(hass, caplo
         },
     )
 
-    hass.bus.async_fire("test_event")
-    await hass.async_block_till_done()
     assert "Integration 'mqtt' does not support device automations" in caplog.text
 
 
 async def test_automation_with_integration_without_device_automation_action(
     hass, caplog
 ):
-    """Test automation with an error in script."""
+    """Test automation with integration without device action support."""
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -218,8 +220,6 @@ async def test_automation_with_integration_without_device_automation_action(
         },
     )
 
-    hass.bus.async_fire("test_event")
-    await hass.async_block_till_done()
     assert (
         "Integration 'test' does not support device automation actions" in caplog.text
     )
@@ -228,7 +228,7 @@ async def test_automation_with_integration_without_device_automation_action(
 async def test_automation_with_integration_without_device_automation_condition(
     hass, caplog
 ):
-    """Test automation with an error in script."""
+    """Test automation with integration without device condition support."""
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -242,8 +242,6 @@ async def test_automation_with_integration_without_device_automation_condition(
         },
     )
 
-    hass.bus.async_fire("test_event")
-    await hass.async_block_till_done()
     assert (
         "Integration 'test' does not support device automation conditions"
         in caplog.text
@@ -253,7 +251,7 @@ async def test_automation_with_integration_without_device_automation_condition(
 async def test_automation_with_integration_without_device_automation_trigger(
     hass, caplog
 ):
-    """Test automation with an error in script."""
+    """Test automation with integration without device trigger support."""
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -266,15 +264,13 @@ async def test_automation_with_integration_without_device_automation_trigger(
         },
     )
 
-    hass.bus.async_fire("test_event")
-    await hass.async_block_till_done()
     assert (
         "Integration 'test' does not support device automation triggers" in caplog.text
     )
 
 
 async def test_automation_with_bad_action(hass, caplog):
-    """Test automation with an error in script."""
+    """Test automation with bad device action."""
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -287,13 +283,28 @@ async def test_automation_with_bad_action(hass, caplog):
         },
     )
 
-    hass.bus.async_fire("test_event")
-    await hass.async_block_till_done()
+    assert "required key not provided" in caplog.text
+
+
+async def test_automation_with_bad_condition_action(hass, caplog):
+    """Test automation with bad device action."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event1"},
+                "action": {"condition": "device", "device_id": "", "domain": "light"},
+            }
+        },
+    )
+
     assert "required key not provided" in caplog.text
 
 
 async def test_automation_with_bad_condition(hass, caplog):
-    """Test automation with an error in script."""
+    """Test automation with bad device condition."""
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -307,13 +318,128 @@ async def test_automation_with_bad_condition(hass, caplog):
         },
     )
 
-    hass.bus.async_fire("test_event")
-    await hass.async_block_till_done()
     assert "required key not provided" in caplog.text
 
 
+@pytest.fixture
+def calls(hass):
+    """Track calls to a mock serivce."""
+    return async_mock_service(hass, "test", "automation")
+
+
+async def test_automation_with_sub_condition(hass, calls):
+    """Test automation with device condition under and/or conditions."""
+    DOMAIN = "light"
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+
+    platform.init()
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+
+    ent1, ent2, ent3 = platform.ENTITIES
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event1"},
+                    "condition": [
+                        {
+                            "condition": "and",
+                            "conditions": [
+                                {
+                                    "condition": "device",
+                                    "domain": DOMAIN,
+                                    "device_id": "",
+                                    "entity_id": ent1.entity_id,
+                                    "type": "is_on",
+                                },
+                                {
+                                    "condition": "device",
+                                    "domain": DOMAIN,
+                                    "device_id": "",
+                                    "entity_id": ent2.entity_id,
+                                    "type": "is_on",
+                                },
+                            ],
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "and {{ trigger.%s }}"
+                            % "}} - {{ trigger.".join(("platform", "event.event_type"))
+                        },
+                    },
+                },
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event1"},
+                    "condition": [
+                        {
+                            "condition": "or",
+                            "conditions": [
+                                {
+                                    "condition": "device",
+                                    "domain": DOMAIN,
+                                    "device_id": "",
+                                    "entity_id": ent1.entity_id,
+                                    "type": "is_on",
+                                },
+                                {
+                                    "condition": "device",
+                                    "domain": DOMAIN,
+                                    "device_id": "",
+                                    "entity_id": ent2.entity_id,
+                                    "type": "is_on",
+                                },
+                            ],
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "or {{ trigger.%s }}"
+                            % "}} - {{ trigger.".join(("platform", "event.event_type"))
+                        },
+                    },
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ent1.entity_id).state == STATE_ON
+    assert hass.states.get(ent2.entity_id).state == STATE_OFF
+    assert len(calls) == 0
+
+    hass.bus.async_fire("test_event1")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "or event - test_event1"
+
+    hass.states.async_set(ent1.entity_id, STATE_OFF)
+    hass.bus.async_fire("test_event1")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    hass.states.async_set(ent2.entity_id, STATE_ON)
+    hass.bus.async_fire("test_event1")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[1].data["some"] == "or event - test_event1"
+
+    hass.states.async_set(ent1.entity_id, STATE_ON)
+    hass.bus.async_fire("test_event1")
+    await hass.async_block_till_done()
+    assert len(calls) == 4
+    assert _same_lists(
+        [calls[2].data["some"], calls[3].data["some"]],
+        ["or event - test_event1", "and event - test_event1"],
+    )
+
+
 async def test_automation_with_bad_sub_condition(hass, caplog):
-    """Test automation with an error in script."""
+    """Test automation with bad device condition under and/or conditions."""
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -330,13 +456,11 @@ async def test_automation_with_bad_sub_condition(hass, caplog):
         },
     )
 
-    hass.bus.async_fire("test_event")
-    await hass.async_block_till_done()
     assert "required key not provided" in caplog.text
 
 
 async def test_automation_with_bad_trigger(hass, caplog):
-    """Test automation with an error in script."""
+    """Test automation with bad device trigger."""
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -349,6 +473,4 @@ async def test_automation_with_bad_trigger(hass, caplog):
         },
     )
 
-    hass.bus.async_fire("test_event")
-    await hass.async_block_till_done()
     assert "required key not provided" in caplog.text

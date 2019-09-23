@@ -380,10 +380,10 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
 
 async def async_validate_config_item(hass, config):
     """Validate config item."""
-    p_validated = PLATFORM_SCHEMA(config)
+    config = PLATFORM_SCHEMA(config)
 
     triggers = []
-    for trigger in p_validated[CONF_TRIGGER]:
+    for trigger in config[CONF_TRIGGER]:
         trigger_platform = importlib.import_module(
             ".{}".format(trigger[CONF_PLATFORM]), __name__
         )
@@ -392,22 +392,22 @@ async def async_validate_config_item(hass, config):
                 hass, trigger
             )
         triggers.append(trigger)
-    p_validated[CONF_TRIGGER] = triggers
+    config[CONF_TRIGGER] = triggers
 
-    if CONF_CONDITION in p_validated:
+    if CONF_CONDITION in config:
         conditions = []
-        for cond in p_validated[CONF_CONDITION]:
+        for cond in config[CONF_CONDITION]:
             cond = await condition.async_validate_condition_config(hass, cond)
             conditions.append(cond)
-        p_validated[CONF_CONDITION] = conditions
+        config[CONF_CONDITION] = conditions
 
     actions = []
-    for action in p_validated[CONF_ACTION]:
+    for action in config[CONF_ACTION]:
         action = await script.async_validate_action_config(hass, action)
         actions.append(action)
-    p_validated[CONF_ACTION] = actions
+    config[CONF_ACTION] = actions
 
-    return p_validated
+    return config
 
 
 async def async_validate_config(hass, config):

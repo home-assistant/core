@@ -89,6 +89,8 @@ async def async_validate_action_config(
 
     if action_type == ACTION_DEVICE_AUTOMATION:
         config = await device_automation.async_validate_action_config(hass, config)
+    if action_type == ACTION_CHECK_CONDITION and config[CONF_CONDITION] == "device":
+        config = await device_automation.async_validate_condition_config(hass, config)
 
     return config
 
