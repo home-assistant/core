@@ -42,18 +42,18 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         if self._async_current_entries():
-            """Config entry already exists, only one allowed."""
+            # Config entry already exists, only one allowed.
             return self.async_abort(reason="one_instance_only")
 
         errors = {}
         stored_api_key = self.hass.data[DATA_ECOBEE_CONFIG].get(CONF_API_KEY)
 
         if user_input is not None:
-            """Use the user-supplied API key to attempt to obtain a PIN from ecobee."""
+            # Use the user-supplied API key to attempt to obtain a PIN from ecobee.
             self._ecobee = Ecobee(config={ECOBEE_API_KEY: user_input[CONF_API_KEY]})
 
             if await self.hass.async_add_executor_job(self._ecobee.request_pin):
-                """We have a PIN; move to the next step of the flow."""
+                # We have a PIN; move to the next step of the flow.
                 return await self.async_step_authorize()
             errors["base"] = "pin_request_failed"
 
@@ -70,9 +70,9 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            """Attempt to obtain tokens from ecobee and finish the flow."""
+            # Attempt to obtain tokens from ecobee and finish the flow.
             if await self.hass.async_add_executor_job(self._ecobee.request_tokens):
-                """Refresh token obtained; create the config entry."""
+                # Refresh token obtained; create the config entry.
                 config = {
                     CONF_API_KEY: self._ecobee.api_key,
                     CONF_REFRESH_TOKEN: self._ecobee.refresh_token,
@@ -111,7 +111,7 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         ecobee = Ecobee(config=config)
         if await self.hass.async_add_executor_job(ecobee.refresh_tokens):
-            """Credentials found and validated; create the entry."""
+            # Credentials found and validated; create the entry.
             _LOGGER.debug(
                 "Valid ecobee configuration found for import, creating config entry"
             )

@@ -48,7 +48,7 @@ async def async_setup(hass, config):
     hass.data[DATA_ECOBEE_CONFIG] = config.get(DOMAIN, {})
 
     if not hass.config_entries.async_entries(DOMAIN) and hass.data[DATA_ECOBEE_CONFIG]:
-        """No config entry exists and configuration.yaml config exists, trigger the import flow."""
+        # No config entry exists and configuration.yaml config exists, trigger the import flow.
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}
@@ -61,7 +61,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Set up ecobee via a config entry."""
     if not entry.options:
-        """Loading via config entry for the first time, set up options."""
+        # Loading via config entry for the first time, set up options.
         await async_populate_options(hass, entry)
 
     api_key = entry.data[CONF_API_KEY]
