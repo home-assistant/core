@@ -629,7 +629,6 @@ omit =
     homeassistant/components/synologydsm/sensor.py
     homeassistant/components/syslog/notify.py
     homeassistant/components/systemmonitor/sensor.py
-    homeassistant/components/sytadin/sensor.py
     homeassistant/components/tado/*
     homeassistant/components/tado/device_tracker.py
     homeassistant/components/tahoma/*
