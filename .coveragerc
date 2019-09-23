@@ -348,7 +348,6 @@ omit =
     homeassistant/components/lifx_legacy/light.py
     homeassistant/components/lightwave/*
     homeassistant/components/limitlessled/light.py
-    homeassistant/components/linksys_ap/device_tracker.py
     homeassistant/components/linksys_smart/device_tracker.py
     homeassistant/components/linky/__init__.py
     homeassistant/components/linky/sensor.py
