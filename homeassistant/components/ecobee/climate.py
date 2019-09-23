@@ -84,8 +84,8 @@ PRESET_TO_ECOBEE_HOLD = {
     PRESET_HOLD_INDEFINITE: "indefinite",
 }
 
-SERVICE_SET_FAN_MIN_ON_TIME = "ecobee_set_fan_min_on_time"
-SERVICE_RESUME_PROGRAM = "ecobee_resume_program"
+SERVICE_SET_FAN_MIN_ON_TIME = "set_fan_min_on_time"
+SERVICE_RESUME_PROGRAM = "resume_program"
 
 SET_FAN_MIN_ON_TIME_SCHEMA = vol.Schema(
     {
