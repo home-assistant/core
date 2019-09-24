@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     login = pyobihai.check_account(host, username, password)
     if not login:
         _LOGGER.error("Invalid credentials")
-        return False
+        return
 
     services = pyobihai.get_state(host, username, password)
 
