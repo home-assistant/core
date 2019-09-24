@@ -3,9 +3,9 @@ from asynctest import patch
 
 from homeassistant import config_entries
 from homeassistant.components import deconz
-from homeassistant.components.device_automation import (
-    _async_get_device_automations as async_get_device_automations,
-)
+from homeassistant.components.deconz import device_trigger
+
+from tests.common import async_get_device_automations
 
 BRIDGEID = "0123456789"
 
@@ -49,16 +49,6 @@ DECONZ_SENSOR = {
 DECONZ_WEB_REQUEST = {"config": DECONZ_CONFIG, "sensors": DECONZ_SENSOR}
 
 
-def _same_lists(a, b):
-    if len(a) != len(b):
-        return False
-
-    for d in a:
-        if d not in b:
-            return False
-    return True
-
-
 async def setup_deconz(hass, options):
     """Create the deCONZ gateway."""
     config_entry = config_entries.ConfigEntry(
@@ -88,51 +78,51 @@ async def test_get_triggers(hass):
     """Test triggers work."""
     gateway = await setup_deconz(hass, options={})
     device_id = gateway.events[0].device_id
-    triggers = await async_get_device_automations(hass, "async_get_triggers", device_id)
+    triggers = await async_get_device_automations(hass, "trigger", device_id)
 
     expected_triggers = [
         {
             "device_id": device_id,
             "domain": "deconz",
             "platform": "device",
-            "type": deconz.device_automation.CONF_SHORT_PRESS,
-            "subtype": deconz.device_automation.CONF_TURN_ON,
+            "type": device_trigger.CONF_SHORT_PRESS,
+            "subtype": device_trigger.CONF_TURN_ON,
         },
         {
             "device_id": device_id,
             "domain": "deconz",
             "platform": "device",
-            "type": deconz.device_automation.CONF_LONG_PRESS,
-            "subtype": deconz.device_automation.CONF_TURN_ON,
+            "type": device_trigger.CONF_LONG_PRESS,
+            "subtype": device_trigger.CONF_TURN_ON,
         },
         {
             "device_id": device_id,
             "domain": "deconz",
             "platform": "device",
-            "type": deconz.device_automation.CONF_LONG_RELEASE,
-            "subtype": deconz.device_automation.CONF_TURN_ON,
+            "type": device_trigger.CONF_LONG_RELEASE,
+            "subtype": device_trigger.CONF_TURN_ON,
         },
         {
             "device_id": device_id,
             "domain": "deconz",
             "platform": "device",
-            "type": deconz.device_automation.CONF_SHORT_PRESS,
-            "subtype": deconz.device_automation.CONF_TURN_OFF,
+            "type": device_trigger.CONF_SHORT_PRESS,
+            "subtype": device_trigger.CONF_TURN_OFF,
         },
         {
             "device_id": device_id,
             "domain": "deconz",
             "platform": "device",
-            "type": deconz.device_automation.CONF_LONG_PRESS,
-            "subtype": deconz.device_automation.CONF_TURN_OFF,
+            "type": device_trigger.CONF_LONG_PRESS,
+            "subtype": device_trigger.CONF_TURN_OFF,
         },
         {
             "device_id": device_id,
             "domain": "deconz",
             "platform": "device",
-            "type": deconz.device_automation.CONF_LONG_RELEASE,
-            "subtype": deconz.device_automation.CONF_TURN_OFF,
+            "type": device_trigger.CONF_LONG_RELEASE,
+            "subtype": device_trigger.CONF_TURN_OFF,
         },
     ]
 
-    assert _same_lists(triggers, expected_triggers)
+    assert triggers == expected_triggers

@@ -4,9 +4,6 @@ from unittest.mock import patch
 import pytest
 
 import homeassistant.components.automation as automation
-from homeassistant.components.device_automation import (
-    _async_get_device_automations as async_get_device_automations,
-)
 from homeassistant.components.switch import DOMAIN
 from homeassistant.components.zha.core.const import CHANNEL_ON_OFF
 from homeassistant.helpers.device_registry import async_get_registry
@@ -14,7 +11,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import async_enable_traffic, async_init_zigpy_device
 
-from tests.common import async_mock_service
+from tests.common import async_mock_service, async_get_device_automations
 
 ON = 1
 OFF = 0
@@ -73,9 +70,7 @@ async def test_triggers(hass, config_entry, zha_gateway):
     ha_device_registry = await async_get_registry(hass)
     reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
 
-    triggers = await async_get_device_automations(
-        hass, "async_get_triggers", reg_device.id
-    )
+    triggers = await async_get_device_automations(hass, "trigger", reg_device.id)
 
     expected_triggers = [
         {
@@ -136,9 +131,7 @@ async def test_no_triggers(hass, config_entry, zha_gateway):
     ha_device_registry = await async_get_registry(hass)
     reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
 
-    triggers = await async_get_device_automations(
-        hass, "async_get_triggers", reg_device.id
-    )
+    triggers = await async_get_device_automations(hass, "trigger", reg_device.id)
     assert triggers == []
 
 
