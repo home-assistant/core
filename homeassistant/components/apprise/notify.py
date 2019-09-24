@@ -3,6 +3,8 @@ import logging
 
 import voluptuous as vol
 
+from apprise import Apprise, AppriseConfig
+
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (
@@ -27,7 +29,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_service(hass, config, discovery_info=None):
     """Get the Apprise notification service."""
-    from apprise import Apprise, AppriseConfig
 
     # Create our object
     a_obj = Apprise()
