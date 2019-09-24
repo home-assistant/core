@@ -11,7 +11,6 @@ from homeassistant.components.device_automation.const import (
     CONF_TURNED_OFF,
     CONF_TURNED_ON,
 )
-from homeassistant.core import split_entity_id
 from homeassistant.const import (
     CONF_CONDITION,
     CONF_DEVICE_ID,
@@ -94,10 +93,6 @@ TRIGGER_SCHEMA = vol.Schema(
 )
 
 
-def _is_domain(entity, domain):
-    return split_entity_id(entity.entity_id)[0] == domain
-
-
 async def async_call_action_from_config(hass, config, variables, context, domain):
     """Change state based on configuration."""
     config = ACTION_SCHEMA(config)
@@ -160,21 +155,31 @@ async def _async_get_automations(hass, device_id, automation_templates, domain):
     automations = []
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
-    entities = async_entries_for_device(entity_registry, device_id)
-    domain_entities = [x for x in entities if _is_domain(x, domain)]
-    for entity in domain_entities:
-        for automation in automation_templates:
-            automation = dict(automation)
-            automation.update(
-                device_id=device_id, entity_id=entity.entity_id, domain=domain
+    entries = [
+        entry
+        for entry in async_entries_for_device(entity_registry, device_id)
+        if entry.domain == domain
+    ]
+
+    for entry in entries:
+        automations.extend(
+            (
+                {
+                    **template,
+                    "device_id": device_id,
+                    "entity_id": entry.entity_id,
+                    "domain": domain,
+                }
+                for template in automation_templates
             )
-            automations.append(automation)
+        )
 
     return automations
 
 
 async def async_get_actions(hass, device_id, domain):
     """List device actions."""
+    print("YO")
     return await _async_get_automations(hass, device_id, ENTITY_ACTIONS, domain)
 
 
