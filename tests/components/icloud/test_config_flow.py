@@ -36,7 +36,7 @@ def mock_controller_init():
 @pytest.fixture(name="authenticate")
 def mock_controller_authenticate():
     """Mock a successful authenticate."""
-    with patch("pyicloud.PyiCloudService.authenticate"):
+    with patch("pyicloud.PyiCloudService.authenticate", return_value=None):
         yield
 
 
