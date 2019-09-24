@@ -11,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class TradfriBaseDevice(Entity):
-    """GBase class for a TRADFRI device."""
+    """Base class for a TRADFRI device."""
 
     def __init__(self, device, api, gateway_id):
         """Initialize a device."""
