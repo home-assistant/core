@@ -65,7 +65,7 @@ class RingBinarySensor(BinarySensorDevice):
 
     def __init__(self, hass, data, sensor_type):
         """Initialize a sensor for Ring device."""
-        super(RingBinarySensor, self).__init__()
+        super().__init__()
         self._sensor_type = sensor_type
         self._data = data
         self._name = "{0} {1}".format(

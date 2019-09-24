@@ -107,7 +107,7 @@ class NX584Watcher(threading.Thread):
 
     def __init__(self, client, zone_sensors):
         """Initialize NX584 watcher thread."""
-        super(NX584Watcher, self).__init__()
+        super().__init__()
         self.daemon = True
         self._client = client
         self._zone_sensors = zone_sensors

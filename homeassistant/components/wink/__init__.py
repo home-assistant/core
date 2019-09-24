@@ -863,7 +863,7 @@ class WinkSirenDevice(WinkDevice):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attributes = super(WinkSirenDevice, self).device_state_attributes
+        attributes = super().device_state_attributes
 
         auto_shutoff = self.wink.auto_shutoff()
         if auto_shutoff is not None:
@@ -921,7 +921,7 @@ class WinkNimbusDialDevice(WinkDevice):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attributes = super(WinkNimbusDialDevice, self).device_state_attributes
+        attributes = super().device_state_attributes
         dial_attributes = self.dial_attributes()
 
         return {**attributes, **dial_attributes}
