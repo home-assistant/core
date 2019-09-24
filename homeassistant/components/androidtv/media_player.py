@@ -126,7 +126,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = "{0}:{1}".format(config[CONF_HOST], config[CONF_PORT])
 
     if CONF_ADB_SERVER_IP not in config:
-        # Use "python-adb" (Python ADB implementation)
+        # Use "adb_shell" (Python ADB implementation)
         adb_log = "using Python ADB implementation "
         if CONF_ADBKEY in config:
             aftv = setup(
@@ -251,6 +251,7 @@ def adb_decorator(override_available=False):
                     "establishing attempt in the next update. Error: %s",
                     err,
                 )
+                self.aftv.adb.close()
                 self._available = False  # pylint: disable=protected-access
                 return None
 
@@ -278,13 +279,13 @@ class ADBDevice(MediaPlayerDevice):
 
         # ADB exceptions to catch
         if not self.aftv.adb_server_ip:
-            # Using "python-adb" (Python ADB implementation)
-            from adb.adb_protocol import (
+            # Using "adb_shell" (Python ADB implementation)
+            from adb_shell.exceptions import (
                 InvalidChecksumError,
                 InvalidCommandError,
                 InvalidResponseError,
+                TcpTimeoutException,
             )
-            from adb.usb_exceptions import TcpTimeoutException
 
             self.exceptions = (
                 AttributeError,
