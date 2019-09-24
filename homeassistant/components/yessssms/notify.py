@@ -3,11 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_RECIPIENT,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_RECIPIENT, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
