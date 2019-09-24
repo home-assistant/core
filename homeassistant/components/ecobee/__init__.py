@@ -11,10 +11,8 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
 
 from .const import (
-    CONF_HOLD_TEMP,
     CONF_REFRESH_TOKEN,
     DATA_ECOBEE_CONFIG,
-    DEFAULT_HOLD_TEMP,
     DOMAIN,
     ECOBEE_PLATFORMS,
     _LOGGER,
@@ -23,15 +21,7 @@ from .const import (
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_API_KEY): cv.string,
-                vol.Optional(CONF_HOLD_TEMP, default=DEFAULT_HOLD_TEMP): cv.boolean,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
+    {DOMAIN: vol.Schema({vol.Optional(CONF_API_KEY): cv.string})}, extra=vol.ALLOW_EXTRA
 )
 
 
@@ -60,10 +50,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up ecobee via a config entry."""
-    if not entry.options:
-        # Loading via config entry for the first time, set up options.
-        await async_populate_options(hass, entry)
-
     api_key = entry.data[CONF_API_KEY]
     refresh_token = entry.data[CONF_REFRESH_TOKEN]
 
@@ -129,22 +115,6 @@ class EcobeeData:
             return True
         _LOGGER.error("Error updating ecobee tokens")
         return False
-
-
-async def async_populate_options(hass, config_entry):
-    """
-    Populate options for ecobee. Called by async_setup_entry.
-
-    Options will be initially set to the values specified in
-    configuration.yaml, if they exist, or, if not, the default.
-    """
-    options = {
-        CONF_HOLD_TEMP: hass.data[DATA_ECOBEE_CONFIG].get(
-            CONF_HOLD_TEMP, DEFAULT_HOLD_TEMP
-        )
-    }
-
-    hass.config_entries.async_update_entry(config_entry, options=options)
 
 
 async def async_unload_entry(hass, config_entry):
