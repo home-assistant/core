@@ -373,7 +373,7 @@ class OnkyoDeviceZone(OnkyoDevice):
         """Initialize the Zone with the zone identifier."""
         self._zone = zone
         self._supports_volume = True
-        super(OnkyoDeviceZone, self).__init__(receiver, sources, name)
+        super().__init__(receiver, sources, name)
 
     def update(self):
         """Get the latest state from the device."""
