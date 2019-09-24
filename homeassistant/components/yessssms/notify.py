@@ -3,7 +3,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_RECIPIENT, CONF_USERNAME, CONF_PROVIDER
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_RECIPIENT,
+    CONF_USERNAME,
+    CONF_PROVIDER,
+)
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
@@ -15,7 +20,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_RECIPIENT): cv.string,
-        vol.Optional(CONF_PROVIDER, default='YESSS'): cv.string,
+        vol.Optional(CONF_PROVIDER, default="YESSS"): cv.string,
     }
 )
 
@@ -23,10 +28,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def get_service(hass, config, discovery_info=None):
     """Get the YesssSMS notification service."""
     return YesssSMSNotificationService(
-        config[CONF_USERNAME], 
-        config[CONF_PASSWORD], 
-        config[CONF_RECIPIENT], 
-        config[CONF_PROVIDER]
+        config[CONF_USERNAME],
+        config[CONF_PASSWORD],
+        config[CONF_RECIPIENT],
+        config[CONF_PROVIDER],
     )
 
 
@@ -36,6 +41,7 @@ class YesssSMSNotificationService(BaseNotificationService):
     def __init__(self, username, password, recipient, provider=None):
         """Initialize the service."""
         from YesssSMS import YesssSMS
+
         try:
             self.yesss = YesssSMS(username, password, provider=provider)
         except (KeyError, YesssSMS.UnsupportedProviderError) as ex:
@@ -45,8 +51,9 @@ class YesssSMSNotificationService(BaseNotificationService):
             _LOGGER.error("Missing Login Credentials: %s", ex)
             return
         self._recipient = recipient
-        _LOGGER.debug("initialized; library version: %s, with %s", 
-            self.yesss.version(), provider)
+        _LOGGER.debug(
+            "initialized; library version: %s, with %s", self.yesss.version(), provider
+        )
 
     def send_message(self, message="", **kwargs):
         """Send a SMS message via Yesss.at's website."""
