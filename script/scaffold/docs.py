@@ -20,3 +20,14 @@ https://developers.home-assistant.io/docs/en/creating_integration_file_structure
 The config flow has been added to the {info.domain} integration. Next step is to fill in the blanks for the code marked with TODO.
 """
         )
+
+    elif template == "reproduce_state":
+        print(
+            f"""
+Reproduce state code has been added to the {info.domain} integration:
+ - {info.integration_dir / "reproduce_state.py"}
+ - {info.tests_dir / "test_reproduce_state.py"}
+
+Please update the relevant items marked as TODO before submitting a pull request.
+"""
+        )
