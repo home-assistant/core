@@ -3,6 +3,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.setup import setup_component, async_setup_component
 
 from tests.common import get_test_home_assistant, assert_setup_component
+from homeassistant.const import STATE_UNAVAILABLE, STATE_ON, STATE_OFF
 
 
 class TestTemplateSensor:
@@ -251,7 +252,7 @@ class TestTemplateSensor:
         self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test_template_sensor")
-        assert state.state == "unknown"
+        assert state.state == STATE_UNAVAILABLE
 
     def test_invalid_name_does_not_create(self):
         """Test invalid name."""
@@ -377,6 +378,44 @@ class TestTemplateSensor:
         assert "device_class" not in state.attributes
 
 
+async def test_available_template_with_entities(hass):
+    """Test availability tempalates with values from other entities."""
+    hass.states.async_set("sensor.availability_sensor", STATE_OFF)
+    with assert_setup_component(1, "sensor"):
+        assert await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": {
+                    "platform": "template",
+                    "sensors": {
+                        "test_template_sensor": {
+                            "value_template": "{{ states.sensor.test_sensor.state }}",
+                            "availability_template": "{{ is_state('sensor.availability_sensor', 'on') }}",
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    # When template returns true..
+    hass.states.async_set("sensor.availability_sensor", STATE_ON)
+    await hass.async_block_till_done()
+
+    # Device State should not be unavailable
+    assert hass.states.get("sensor.test_template_sensor").state != STATE_UNAVAILABLE
+
+    # When Availability template returns false
+    hass.states.async_set("sensor.availability_sensor", STATE_OFF)
+    await hass.async_block_till_done()
+
+    # device state should be unavailable
+    assert hass.states.get("sensor.test_template_sensor").state == STATE_UNAVAILABLE
+
+
 async def test_invalid_attribute_template(hass, caplog):
     """Test that errors are logged if rendering template fails."""
     hass.states.async_set("sensor.test_sensor", "startup")
@@ -403,6 +442,32 @@ async def test_invalid_attribute_template(hass, caplog):
     await hass.helpers.entity_component.async_update_entity("sensor.invalid_template")
 
     assert ("Error rendering attribute test_attribute") in caplog.text
+
+
+async def test_invalid_availability_template_keeps_component_available(hass, caplog):
+    """Test that an invalid availability keeps the device available."""
+
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "my_sensor": {
+                        "value_template": "{{ states.sensor.test_state.state }}",
+                        "availability_template": "{{ x - 12 }}",
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.my_sensor").state != STATE_UNAVAILABLE
+    assert ("UndefinedError: 'x' is undefined") in caplog.text
 
 
 async def test_no_template_match_all(hass, caplog):

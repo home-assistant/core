@@ -245,7 +245,7 @@ class Tplink3DeviceScanner(Tplink1DeviceScanner):
         """Initialize the scanner."""
         self.stok = ""
         self.sysauth = ""
-        super(Tplink3DeviceScanner, self).__init__(config)
+        super().__init__(config)
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -365,7 +365,7 @@ class Tplink4DeviceScanner(Tplink1DeviceScanner):
         """Initialize the scanner."""
         self.credentials = ""
         self.token = ""
-        super(Tplink4DeviceScanner, self).__init__(config)
+        super().__init__(config)
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""

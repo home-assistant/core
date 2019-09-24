@@ -10,9 +10,20 @@
         "error": {
             "faulty_credentials": "Ha fallat l'autoritzaci\u00f3",
             "no_servers": "No hi ha servidors enlla\u00e7ats amb el compte",
+            "no_token": "Proporciona un testimoni d'autenticaci\u00f3 o selecciona configuraci\u00f3 manual",
             "not_found": "No s'ha trobat el servidor Plex"
         },
         "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "port": "Port",
+                    "ssl": "Utilitza SSL",
+                    "token": "Testimoni d'autenticaci\u00f3 (si \u00e9s necessari)",
+                    "verify_ssl": "Verifica el certificat SSL"
+                },
+                "title": "Servidor Plex"
+            },
             "select_server": {
                 "data": {
                     "server": "Servidor"
@@ -22,6 +33,7 @@
             },
             "user": {
                 "data": {
+                    "manual_setup": "Configuraci\u00f3 manual",
                     "token": "Testimoni d'autenticaci\u00f3 Plex"
                 },
                 "description": "Introdueix un testimoni d'autenticaci\u00f3 Plex per configurar-ho autom\u00e0ticament.",
