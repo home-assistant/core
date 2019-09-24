@@ -111,7 +111,7 @@ TEST_REQUIREMENTS = (
     "paho-mqtt",
     "pexpect",
     "pilight",
-    "Pillow",
+    "pillow",
     "plexapi",
     "pmsensor",
     "prometheus_client",
