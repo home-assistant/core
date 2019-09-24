@@ -9,7 +9,7 @@
             "default": "Vellykket autentisering med Ambiclimate"
         },
         "error": {
-            "follow_link": "Vennligst f\u00f8lg lenken og godkjen f\u00f8r du trykker p\u00e5 Send",
+            "follow_link": "Vennligst f\u00f8lg lenken og godkjenn f\u00f8r du trykker p\u00e5 Send",
             "no_token": "Ikke autentisert med Ambiclimate"
         },
         "step": {
