@@ -238,12 +238,11 @@ class EvoZone(EvoChild, EvoClimateDevice):
             await self._call_client_api(
                 self._evo_device.set_temperature(self.min_temp, until=None)
             )
-
         else:  # HVAC_MODE_HEAT
             await self._call_client_api(self._evo_device.cancel_temp_override())
 
     async def async_set_preset_mode(self, preset_mode: Optional[str]) -> None:
-        """Set the preset mode, if None, then revert to following the schedule."""
+        """Set the preset mode; if None, then revert to following the schedule."""
         evo_preset_mode = HA_PRESET_TO_EVO.get(preset_mode, EVO_FOLLOW)
 
         if evo_preset_mode == EVO_FOLLOW:
@@ -331,10 +330,7 @@ class EvoController(EvoClimateDevice):
         await self._set_tcs_mode(HA_HVAC_TO_TCS.get(hvac_mode))
 
     async def async_set_preset_mode(self, preset_mode: Optional[str]) -> None:
-        """Set a new preset mode.
-
-        If preset_mode is None, then revert to 'Auto' mode.
-        """
+        """Set the preset mode; if None, then revert to 'Auto' mode."""
         await self._set_tcs_mode(HA_PRESET_TO_TCS.get(preset_mode, EVO_AUTO))
 
     async def async_update(self) -> None:
@@ -386,10 +382,7 @@ class EvoThermostat(EvoZone):
         await self._set_tcs_mode(HA_HVAC_TO_TCS.get(hvac_mode))
 
     async def async_set_preset_mode(self, preset_mode: Optional[str]) -> None:
-        """Set a new preset mode.
-
-        If preset_mode is None, then revert to following the schedule.
-        """
+        """Set the preset mode; if None, then revert to following the schedule."""
         if preset_mode in list(HA_PRESET_TO_TCS):
             await self._set_tcs_mode(HA_PRESET_TO_TCS.get(preset_mode))
         else:
