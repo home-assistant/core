@@ -19,15 +19,5 @@
         "abort": {
             "one_instance_only": "This integration currently supports only one ecobee instance."
         }
-    },
-    "options": {
-        "step": {
-            "ecobee_options": {
-                "description": "ecobee Options",
-                "data": {
-                    "hold_temp": "Hold changes indefinitely (checked) or until the next scheduled event (unchecked)."
-                }
-            }
-        }
     }
 }
