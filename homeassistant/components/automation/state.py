@@ -37,7 +37,9 @@ TRIGGER_SCHEMA = vol.All(
 )
 
 
-async def async_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass, config, action, automation_info, *, platform_type="state"
+):
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
     from_state = config.get(CONF_FROM, MATCH_ALL)
@@ -59,7 +61,7 @@ async def async_trigger(hass, config, action, automation_info):
                 action(
                     {
                         "trigger": {
-                            "platform": "state",
+                            "platform": platform_type,
                             "entity_id": entity,
                             "from_state": from_s,
                             "to_state": to_s,

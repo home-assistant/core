@@ -6,6 +6,7 @@ from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
+from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 
 from . import DOMAIN
 from .core.const import DATA_ZHA, DATA_ZHA_GATEWAY
@@ -16,20 +17,12 @@ DEVICE = "device"
 DEVICE_IEEE = "device_ieee"
 ZHA_EVENT = "zha_event"
 
-TRIGGER_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(CONF_DEVICE_ID): str,
-            vol.Required(CONF_DOMAIN): DOMAIN,
-            vol.Required(CONF_PLATFORM): DEVICE,
-            vol.Required(CONF_TYPE): str,
-            vol.Required(CONF_SUBTYPE): str,
-        }
-    )
+TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+    {vol.Required(CONF_TYPE): str, vol.Required(CONF_SUBTYPE): str}
 )
 
 
-async def async_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     config = TRIGGER_SCHEMA(config)
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
@@ -48,7 +41,9 @@ async def async_trigger(hass, config, action, automation_info):
         event.CONF_EVENT_DATA: {DEVICE_IEEE: str(zha_device.ieee), **trigger},
     }
 
-    return await event.async_trigger(hass, state_config, action, automation_info)
+    return await event.async_attach_trigger(
+        hass, state_config, action, automation_info, platform_type="device"
+    )
 
 
 async def async_get_triggers(hass, device_id):
