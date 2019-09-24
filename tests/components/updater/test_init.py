@@ -65,6 +65,8 @@ def test_new_version_shows_entity_startup(hass, mock_get_uuid, mock_get_newest_v
     assert hass.states.is_state("binary_sensor.updater", "unavailable")
     assert "newest_version" not in hass.states.get("binary_sensor.updater").attributes
     assert "release_notes" not in hass.states.get("binary_sensor.updater").attributes
+    # Current version is always available.
+    assert "current_version" in hass.states.get("binary_sensor.updater").attributes
 
 
 @asyncio.coroutine
@@ -128,6 +130,10 @@ def test_new_version_shows_entity_true(hass, mock_get_uuid, mock_get_newest_vers
         hass.states.get("binary_sensor.updater").attributes["release_notes"]
         == RELEASE_NOTES
     )
+    assert (
+        hass.states.get("binary_sensor.updater").attributes["current_version"]
+        == MOCK_VERSION
+    )
 
 
 @asyncio.coroutine
@@ -154,6 +160,10 @@ def test_same_version_shows_entity_false(hass, mock_get_uuid, mock_get_newest_ve
         == MOCK_VERSION
     )
     assert "release_notes" not in hass.states.get("binary_sensor.updater").attributes
+    assert (
+        hass.states.get("binary_sensor.updater").attributes["current_version"]
+        == MOCK_VERSION
+    )
 
 
 @asyncio.coroutine
