@@ -46,22 +46,34 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     pyobihai = PyObihai()
 
-    services = pyobihai.get_state(host, username, password)
+    login = pyobihai.check_account(host, username, password)
+    if login:
 
-    line_services = pyobihai.get_line_state(host, username, password)
+        services = pyobihai.get_state(host, username, password)
 
-    call_direction = pyobihai.get_call_direction(host, username, password)
+        line_services = pyobihai.get_line_state(host, username, password)
 
-    for key in services:
-        sensors.append(ObihaiServiceSensors(pyobihai, host, username, password, key))
+        call_direction = pyobihai.get_call_direction(host, username, password)
 
-    for key in line_services:
-        sensors.append(ObihaiServiceSensors(pyobihai, host, username, password, key))
+        for key in services:
+            sensors.append(
+                ObihaiServiceSensors(pyobihai, host, username, password, key)
+            )
 
-    for key in call_direction:
-        sensors.append(ObihaiServiceSensors(pyobihai, host, username, password, key))
+        for key in line_services:
+            sensors.append(
+                ObihaiServiceSensors(pyobihai, host, username, password, key)
+            )
 
-    add_entities(sensors)
+        for key in call_direction:
+            sensors.append(
+                ObihaiServiceSensors(pyobihai, host, username, password, key)
+            )
+
+        add_entities(sensors)
+    else:
+        _LOGGER.error("Invalid credentials")
+        return False
 
 
 class ObihaiServiceSensors(Entity):
