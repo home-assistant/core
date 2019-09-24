@@ -4,8 +4,8 @@ import voluptuous as vol
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 from .config_flow import get_master_gateway
-from .const import CONF_BRIDGEID, CONF_MASTER_GATEWAY, DOMAIN
-from .gateway import DeconzGateway
+from .const import CONF_BRIDGEID, CONF_MASTER_GATEWAY, CONF_UUID, DOMAIN
+from .gateway import DeconzGateway, get_gateway_from_config_entry
 from .services import async_setup_services, async_unload_services
 
 CONFIG_SCHEMA = vol.Schema(
@@ -38,6 +38,8 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DOMAIN][gateway.bridgeid] = gateway
 
     await gateway.async_update_device_registry()
+
+    await async_add_uuid_to_config_entry(hass, config_entry)
 
     await async_setup_services(hass)
 
@@ -76,3 +78,18 @@ async def async_update_master_gateway(hass, config_entry):
     options = {**old_options, **new_options}
 
     hass.config_entries.async_update_entry(config_entry, options=options)
+
+
+async def async_add_uuid_to_config_entry(hass, config_entry):
+    """Add UUID to config entry to help discovery identify entries."""
+    if CONF_UUID in config_entry.data:
+        return
+
+    gateway = get_gateway_from_config_entry(hass, config_entry)
+
+    old_config = dict(config_entry.data)
+    new_config = {CONF_UUID: gateway.api.config.uuid}
+
+    config = {**old_config, **new_config}
+
+    hass.config_entries.async_update_entry(config_entry, data=config)
