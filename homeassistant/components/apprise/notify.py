@@ -30,30 +30,32 @@ def get_service(hass, config, discovery_info=None):
     from apprise import Apprise, AppriseConfig
 
     # Create our object
-    a = Apprise()
+    a_obj = Apprise()
 
     if config.get(CONF_FILE):
         # Sourced from a Configuration File
-        ac = AppriseConfig()
-        if not ac.add(config[CONF_FILE]):
+        a_config = AppriseConfig()
+        if not a_config.add(config[CONF_FILE]):
             _LOGGER.error("Invalid Apprise config url provided")
             return None
 
-        elif not a.add(ac):
+        if not a_obj.add(a_config):
             _LOGGER.error("Invalid Apprise config url provided")
             return None
 
     if config.get(CONF_URL):
         # Ordered list of URLs
-        if not a.add(config[CONF_URL]):
+        if not a_obj.add(config[CONF_URL]):
             _LOGGER.error("Invalid Apprise URL(s) supplied")
             return None
 
-    if len(a) == 0:
+    loaded = len(a_obj)
+    if not loaded:
         _LOGGER.error("No Apprise services were loaded.")
         return None
 
-    return AppriseNotificationService(a)
+    _LOGGER.info("Loaded %d Apprise service(s).", loaded)
+    return AppriseNotificationService(a_obj)
 
 
 class AppriseNotificationService(BaseNotificationService):
