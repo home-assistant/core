@@ -1,4 +1,5 @@
 """Config flow for Plex."""
+import copy
 import logging
 
 import plexapi.exceptions
@@ -230,7 +231,7 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry):
         """Initialize Plex options flow."""
-        self.options = dict(config_entry.options)
+        self.options = copy.deepcopy(config_entry.options)
 
     async def async_step_init(self, user_input=None):
         """Manage the Plex options."""
