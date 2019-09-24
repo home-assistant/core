@@ -3,6 +3,7 @@ import voluptuous as vol
 
 import homeassistant.components.automation.event as event
 
+from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -171,16 +172,8 @@ REMOTES = {
     AQARA_SQUARE_SWITCH_MODEL: AQARA_SQUARE_SWITCH,
 }
 
-TRIGGER_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(CONF_DEVICE_ID): str,
-            vol.Required(CONF_DOMAIN): DOMAIN,
-            vol.Required(CONF_PLATFORM): "device",
-            vol.Required(CONF_TYPE): str,
-            vol.Required(CONF_SUBTYPE): str,
-        }
-    )
+TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+    {vol.Required(CONF_TYPE): str, vol.Required(CONF_SUBTYPE): str}
 )
 
 
@@ -198,7 +191,7 @@ def _get_deconz_event_from_device_id(hass, device_id):
     return None
 
 
-async def async_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     config = TRIGGER_SCHEMA(config)
 
@@ -223,7 +216,9 @@ async def async_trigger(hass, config, action, automation_info):
         event.CONF_EVENT_DATA: {CONF_UNIQUE_ID: event_id, CONF_EVENT: trigger},
     }
 
-    return await event.async_trigger(hass, state_config, action, automation_info)
+    return await event.async_attach_trigger(
+        hass, state_config, action, automation_info, platform_type="device"
+    )
 
 
 async def async_get_triggers(hass, device_id):

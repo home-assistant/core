@@ -64,7 +64,7 @@ class MochadCtrl:
 
     def __init__(self, host, port):
         """Initialize a PyMochad controller."""
-        super(MochadCtrl, self).__init__()
+        super().__init__()
         self._host = host
         self._port = port
 
