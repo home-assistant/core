@@ -24,32 +24,33 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_service(hass, config, discovery_info=None):
     """Get the YesssSMS notification service."""
-    return YesssSMSNotificationService(
-        config[CONF_USERNAME],
-        config[CONF_PASSWORD],
-        config[CONF_RECIPIENT],
-        config[CONF_PROVIDER],
-    )
+    from YesssSMS import YesssSMS
+
+    try:
+        yesss = YesssSMS(
+            config[CONF_USERNAME], config[CONF_PASSWORD], provider=config[CONF_PROVIDER]
+        )
+    except (KeyError, YesssSMS.UnsupportedProviderError) as ex:
+        _LOGGER.error("Unknown provider: %s", ex)
+        return
+    except YesssSMS.MissingLoginCredentialsError as ex:
+        _LOGGER.error("Missing Login Credentials: %s", ex)
+        return
+
+    return YesssSMSNotificationService(yesss, config[CONF_RECIPIENT])
 
 
 class YesssSMSNotificationService(BaseNotificationService):
     """Implement a notification service for the YesssSMS service."""
 
-    def __init__(self, username, password, recipient, provider=None):
+    def __init__(self, client, recipient):
         """Initialize the service."""
-        from YesssSMS import YesssSMS
-
-        try:
-            self.yesss = YesssSMS(username, password, provider=provider)
-        except (KeyError, YesssSMS.UnsupportedProviderError) as ex:
-            _LOGGER.error("Unknown provider: %s", ex)
-            return
-        except YesssSMS.MissingLoginCredentialsError as ex:
-            _LOGGER.error("Missing Login Credentials: %s", ex)
-            return
+        self.yesss = client
         self._recipient = recipient
         _LOGGER.debug(
-            "initialized; library version: %s, with %s", self.yesss.version(), provider
+            "initialized; library version: %s, with %s",
+            self.yesss.version(),
+            self.yesss._provider,
         )
 
     def send_message(self, message="", **kwargs):
