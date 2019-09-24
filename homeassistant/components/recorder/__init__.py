@@ -320,10 +320,10 @@ class Recorder(threading.Thread):
                 purge.purge_old_data(self, event.keep_days, event.repack)
                 self.queue.task_done()
                 continue
-            elif event.event_type == EVENT_TIME_CHANGED:
+            if event.event_type == EVENT_TIME_CHANGED:
                 self.queue.task_done()
                 continue
-            elif event.event_type in self.exclude_t:
+            if event.event_type in self.exclude_t:
                 self.queue.task_done()
                 continue
 
