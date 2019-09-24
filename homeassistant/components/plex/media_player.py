@@ -8,7 +8,7 @@ import plexapi.playlist
 import plexapi.playqueue
 import requests.exceptions
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
@@ -38,7 +38,6 @@ from .const import (
     CONF_SERVER_IDENTIFIER,
     DOMAIN as PLEX_DOMAIN,
     NAME_FORMAT,
-    PLEX_MEDIA_PLAYER_OPTIONS,
     REFRESH_LISTENERS,
     SERVERS,
 )
@@ -67,7 +66,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 def _setup_platform(hass, config_entry, add_entities_callback):
     """Set up the Plex media_player platform."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
-    config = hass.data[PLEX_MEDIA_PLAYER_OPTIONS]
+    config = config_entry.options[MP_DOMAIN]
 
     plexserver = hass.data[PLEX_DOMAIN][SERVERS][server_id]
     plex_clients = {}

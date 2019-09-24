@@ -28,6 +28,13 @@ MOCK_FILE_CONTENTS = {
 MOCK_SERVER_1 = MockAvailableServer(MOCK_NAME_1, MOCK_ID_1)
 MOCK_SERVER_2 = MockAvailableServer(MOCK_NAME_2, MOCK_ID_2)
 
+DEFAULT_OPTIONS = {
+    config_flow.MP_DOMAIN: {
+        config_flow.CONF_USE_EPISODE_ART: False,
+        config_flow.CONF_SHOW_ALL_CONTROLS: False,
+    }
+}
+
 
 def init_config_flow(hass):
     """Init a configuration flow."""
@@ -520,3 +527,51 @@ async def test_manual_config(hass):
             == mock_connections.connections[0].httpuri
         )
         assert result["data"][config_flow.PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
+
+
+async def test_no_token(hass):
+    """Test failing when no token provided."""
+
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": "user"}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"manual_setup": False}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"][CONF_TOKEN] == "no_token"
+
+
+async def test_option_flow(hass):
+    """Test config flow selection of one of two bridges."""
+
+    entry = MockConfigEntry(domain=config_flow.DOMAIN, data={}, options=DEFAULT_OPTIONS)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.flow.async_init(
+        entry.entry_id, context={"source": "test"}, data=None
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "plex_mp_settings"
+
+    result = await hass.config_entries.options.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            config_flow.CONF_USE_EPISODE_ART: True,
+            config_flow.CONF_SHOW_ALL_CONTROLS: True,
+        },
+    )
+    assert result["type"] == "create_entry"
+    assert result["data"] == {
+        config_flow.MP_DOMAIN: {
+            config_flow.CONF_USE_EPISODE_ART: True,
+            config_flow.CONF_SHOW_ALL_CONTROLS: True,
+        }
+    }
