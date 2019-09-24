@@ -370,17 +370,17 @@ class EvoDevice(Entity):
         """Return the temperature unit to use in the frontend UI."""
         return TEMP_CELSIUS
 
-    async def _call_client_api(self, api_function) -> Any:
+    async def _call_client_api(self, api_function, refresh=True) -> Any:
         try:
             result = await api_function
         except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
-            _handle_exception(err)
-        else:
-            return result
+            if not _handle_exception(err):
+                return
 
-        self.hass.helpers.event.async_call_later(
-            2, self._evo_broker.update()
-        )  # call update() in 2 seconds
+        if refresh is not True:
+            self.hass.helpers.event.async_call_later(2, self._evo_broker.update())
+
+        return result
 
 
 class EvoChild(EvoDevice):
@@ -461,10 +461,7 @@ class EvoChild(EvoDevice):
             if not self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
                 return  # avoid unnecessary I/O - there's nothing to update
 
-        try:
-            self._schedule = await self._evo_device.schedule()
-        except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
-            _handle_exception(err)
+        self._schedule = await self._call_client_api(self._evo_device.schedule())
 
     async def async_update(self) -> None:
         """Get the latest state data."""
