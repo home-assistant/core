@@ -273,7 +273,7 @@ class EvoBroker:
                 DOMAIN, {"signal": "refresh"}
             )
 
-            _LOGGER.debug("Status = %s", status[GWS][0][TCS][0])
+            _LOGGER.warn("Status = %s", status[GWS][0][TCS][0])
 
 
 class EvoDevice(Entity):
@@ -377,7 +377,7 @@ class EvoDevice(Entity):
             if not _handle_exception(err):
                 return
 
-        if refresh is not True:
+        if refresh is True:
             self.hass.helpers.event.async_call_later(2, self._evo_broker.update())
 
         return result
@@ -461,7 +461,9 @@ class EvoChild(EvoDevice):
             if not self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
                 return  # avoid unnecessary I/O - there's nothing to update
 
-        self._schedule = await self._call_client_api(self._evo_device.schedule())
+        self._schedule = await self._call_client_api(
+            self._evo_device.schedule(), refresh=False
+        )
 
     async def async_update(self) -> None:
         """Get the latest state data."""
