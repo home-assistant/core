@@ -25,11 +25,7 @@ class TestApprise(unittest.TestCase):
     def test_apprise_config(self, mock__get_data):
         """Test setup."""
         config = {
-            notify.DOMAIN: {
-                "name": "test",
-                "platform": "apprise",
-                "url": "dbus://",
-            }
+            notify.DOMAIN: {"name": "test", "platform": "apprise", "url": "dbus://"}
         }
         with assert_setup_component(1) as handle_config:
             assert setup_component(self.hass, notify.DOMAIN, config)
@@ -54,11 +50,7 @@ class TestApprise(unittest.TestCase):
     def test_apprise_push_default(self, mock, mock__get_data):
         """Test simple apprise push."""
         config = {
-            notify.DOMAIN: {
-                "name": "test",
-                "platform": "apprise",
-                "url": "windows://",
-            }
+            notify.DOMAIN: {"name": "test", "platform": "apprise", "url": "windows://"}
         }
         with assert_setup_component(1) as handle_config:
             assert setup_component(self.hass, notify.DOMAIN, config)

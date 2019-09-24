@@ -20,15 +20,14 @@ CONF_URL = "url"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_URL): vol.All(cv.ensure_list, [str]),
-        vol.Optional(CONF_FILE): cv.string
+        vol.Optional(CONF_FILE): cv.string,
     }
 )
 
 
 def get_service(hass, config, discovery_info=None):
     """Get the Apprise notification service."""
-    from apprise import Apprise
-    from apprise import AppriseConfig
+    from apprise import Apprise, AppriseConfig
 
     # Create our object
     a = Apprise()
@@ -65,7 +64,6 @@ class AppriseNotificationService(BaseNotificationService):
         self.apprise = a_obj
 
     def send_message(self, message="", **kwargs):
-        """Send a message to a specified target.
-        """
+        """Send a message to a specified target."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         self.apprise.notify(body=message, title=title)
