@@ -12,12 +12,7 @@ from homeassistant.components.fan import (
     FanEntity,
     DOMAIN,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_TIMEOUT,
-    CONF_MINIMUM
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TIMEOUT, CONF_MINIMUM
 
 DEFAULT_TIMEOUT = 5
 DEFAULT_MINIMUM = 1
@@ -45,13 +40,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         device = airscape.Fan(host, timeout)
-    except (
-        airscape.exceptions.Timeout,
-        airscape.exceptions.ConnectionError
-    ):
+    except (airscape.exceptions.Timeout, airscape.exceptions.ConnectionError):
         _LOGGER.error(
-            "Cannot connect to %s.  "
-            "Device did not respond to API request", host
+            "Cannot connect to %s.  " "Device did not respond to API request", host
         )
     else:
         # Add devices
@@ -124,30 +115,21 @@ class AirscapeWHF(FanEntity):
                 self._fan.speed = int(speed)
             else:
                 self._fan.speed = int(self._minimum_speed)
-        except (
-            airscape.exceptions.ConnectionError,
-            airscape.exceptions.Timeout
-        ):
+        except (airscape.exceptions.ConnectionError, airscape.exceptions.Timeout):
             self._available = False
 
     def turn_off(self, **kwargs):
         """Instruct the fan to turn off."""
         try:
             self._fan.is_on = False
-        except (
-            airscape.exceptions.ConnectionError,
-            airscape.exceptions.Timeout
-        ):
+        except (airscape.exceptions.ConnectionError, airscape.exceptions.Timeout):
             self._available = False
 
     def speed_up(self):
         """Instruct fan to increment speed up by 1."""
         try:
             self._fan.speed_up()
-        except (
-            airscape.exceptions.ConnectionError,
-            airscape.exceptions.Timeout
-        ):
+        except (airscape.exceptions.ConnectionError, airscape.exceptions.Timeout):
             self._available = False
 
     def slow_down(self):
@@ -155,10 +137,7 @@ class AirscapeWHF(FanEntity):
         try:
             if int(self._speed) - 1 >= self._minimum_speed:
                 self._fan.slow_down()
-        except (
-            airscape.exceptions.ConnectionError,
-            airscape.exceptions.Timeout
-        ):
+        except (airscape.exceptions.ConnectionError, airscape.exceptions.Timeout):
             self._available = False
 
     @property
@@ -177,10 +156,7 @@ class AirscapeWHF(FanEntity):
             self._fan.is_on = False
         try:
             self._fan.speed = int(speed)
-        except (
-            airscape.exceptions.ConnectionError,
-            airscape.exceptions.Timeout
-        ):
+        except (airscape.exceptions.ConnectionError, airscape.exceptions.Timeout):
             self._available = False
 
     def update(self):
@@ -190,10 +166,7 @@ class AirscapeWHF(FanEntity):
         """
         try:
             fan_data = self._fan.get_device_state()
-        except (
-            airscape.exceptions.ConnectionError,
-            airscape.exceptions.Timeout
-        ):
+        except (airscape.exceptions.ConnectionError, airscape.exceptions.Timeout):
             self._available = False
         else:
             self._state = bool(fan_data["fanspd"])
