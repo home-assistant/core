@@ -11,9 +11,8 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
-# from homeassistant.helpers.dispatcher import dispatcher_connect
 
-from . import DOMAIN, DATA_HIVE, refresh_system
+from . import DOMAIN, DATA_HIVE, HiveSession, refresh_system
 
 HIVE_TO_HASS_STATE = {
     "SCHEDULE": HVAC_MODE_AUTO,
@@ -38,11 +37,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     session = hass.data.get(DATA_HIVE)
-    for device in discovery_info:
-        add_entities([HiveClimateEntity(session, device)])
+    devs = []
+    for dev in discovery_info:
+        devs.append(HiveClimateEntity(session, dev))
+    add_entities(devs)
 
 
-class HiveClimateEntity(ClimateDevice):
+class HiveClimateEntity(HiveSession, ClimateDevice):
     """Hive Climate Device."""
 
     def __init__(self, hivesession, hivedevice):
@@ -92,7 +93,7 @@ class HiveClimateEntity(ClimateDevice):
         return SUPPORT_HVAC
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self):
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
@@ -154,23 +155,10 @@ class HiveClimateEntity(ClimateDevice):
         """Set new preset mode."""
         if preset_mode == PRESET_NONE and self.preset_mode == PRESET_BOOST:
             self.session.heating.turn_boost_off(self.node_id)
-
         elif preset_mode == PRESET_BOOST:
-            curtemp = self.session.heating.current_temperature(self.node_id)
-            curtemp = round(curtemp * 2) / 2
+            curtemp = round(self.current_temperature * 2) / 2
             temperature = curtemp + 0.5
             self.session.heating.turn_boost_on(self.node_id, 30, temperature)
-
-    async def async_added_to_hass(self):
-        """When entity is added to Home Assistant."""
-        await super().async_added_to_hass()
-        self.session.entity_lookup[self.entity_id] = self.node_id
-
-    #       dispatcher_connect(self.hass, DOMAIN, self._update_callback)
-
-    #   def _update_callback(self):
-    #        """Call update method."""
-    #        self.schedule_update_ha_state(False)
 
     def update(self):
         """Update all Node data from Hive."""

@@ -1,7 +1,7 @@
 """Support for the Hive switches."""
 from homeassistant.components.switch import SwitchDevice
 
-from . import DOMAIN, DATA_HIVE, refresh_system
+from . import DOMAIN, DATA_HIVE, HiveSession, refresh_system
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -10,11 +10,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     session = hass.data.get(DATA_HIVE)
-    for device in discovery_info:
-        add_entities([HiveDevicePlug(session, device)])
+    devs = []
+    for dev in discovery_info:
+        devs.append(HiveDevicePlug(session, dev))
+    add_entities(devs)
 
 
-class HiveDevicePlug(SwitchDevice):
+class HiveDevicePlug(HiveSession, SwitchDevice):
     """Hive Active Plug."""
 
     def __init__(self, hivesession, hivedevice):

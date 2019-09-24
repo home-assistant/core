@@ -1,7 +1,7 @@
 """Support for the Hive binary sensors."""
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
-from . import DOMAIN, DATA_HIVE
+from . import DOMAIN, DATA_HIVE, HiveSession
 
 DEVICETYPE_DEVICE_CLASS = {"motionsensor": "motion", "contactsensor": "opening"}
 
@@ -12,11 +12,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     session = hass.data.get(DATA_HIVE)
-    for device in discovery_info:
-        add_entities([HiveBinarySensorEntity(session, device)])
+    devs = []
+    for dev in discovery_info:
+        devs.append(HiveBinarySensorEntity(session, dev))
+    add_entities(devs)
 
 
-class HiveBinarySensorEntity(BinarySensorDevice):
+class HiveBinarySensorEntity(HiveSession, BinarySensorDevice):
     """Representation of a Hive binary sensor."""
 
     def __init__(self, hivesession, hivedevice):

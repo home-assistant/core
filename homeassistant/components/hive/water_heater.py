@@ -7,10 +7,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterDevice,
 )
 from homeassistant.const import TEMP_CELSIUS
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import dispatcher_connect
-
-from . import DOMAIN, DATA_HIVE, refresh_system
+from . import DOMAIN, DATA_HIVE, HiveSession, refresh_system
 
 SUPPORT_FLAGS_HEATER = SUPPORT_OPERATION_MODE
 
@@ -25,11 +22,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     session = hass.data.get(DATA_HIVE)
-    for device in discovery_info:
-        add_entities([HiveWaterHeater(session, device)])
+    devs = []
+    for dev in discovery_info:
+        devs.append(HiveWaterHeater(session, dev))
+    add_entities(devs)
 
 
-class HiveWaterHeater(WaterHeaterDevice):
+class HiveWaterHeater(HiveSession, WaterHeaterDevice):
     """Hive Water Heater Device."""
 
     def __init__(self, hivesession, hivedevice):
@@ -83,16 +82,6 @@ class HiveWaterHeater(WaterHeaterDevice):
         """Set operation mode."""
         new_mode = HASS_TO_HIVE_STATE[operation_mode]
         self.session.hotwater.set_mode(self.node_id, new_mode)
-
-    async def async_added_to_hass(self):
-        """When entity is added to Home Assistant."""
-        await super().async_added_to_hass()
-        self.session.entity_lookup[self.entity_id] = self.node_id
-        dispatcher_connect(self.hass, DOMAIN, self._update_callback)
-
-    @callback
-    def _update_callback(self) -> None:
-        self.schedule_update_ha_state()
 
     def update(self):
         """Update all Node data from Hive."""

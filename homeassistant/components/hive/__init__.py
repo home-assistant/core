@@ -6,20 +6,23 @@ from pyhiveapi import Pyhiveapi
 import voluptuous as vol
 
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
 )
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "hive"
 DATA_HIVE = "data_hive"
+SERVICES = ["Heating", "HotWater"]
 SERVICE_BOOST_HOTWATER = "boost_hotwater"
 SERVICE_BOOST_HEATING = "boost_heating"
 ATTR_TIME_PERIOD = "time_period"
@@ -67,20 +70,6 @@ BOOST_HOTWATER_SCHEMA = vol.Schema(
 )
 
 
-class HiveSession:
-    """Initiate Hive Session Class."""
-
-    entity_lookup = {}
-    core = None
-    heating = None
-    hotwater = None
-    light = None
-    sensor = None
-    switch = None
-    weather = None
-    attributes = None
-
-
 def setup(hass, config):
     """Set up the Hive Component."""
 
@@ -104,7 +93,7 @@ def setup(hass, config):
             # log or raise error
             _LOGGER.error("Cannot boost entity id entered")
             return
-        minutes = service.data.[ATTR_TIME_PERIOD]
+        minutes = service.data[ATTR_TIME_PERIOD]
         mode = service.data[ATTR_MODE]
 
         if mode == "on":
@@ -165,3 +154,29 @@ def refresh_system(func):
         dispatcher_send(self.hass, DOMAIN)
 
     return wrapper
+
+
+class HiveSession(Entity):
+    """Initiate Hive Session Class."""
+
+    entity_lookup = {}
+    core = None
+    heating = None
+    hotwater = None
+    light = None
+    sensor = None
+    switch = None
+    weather = None
+    attributes = None
+
+    async def async_added_to_hass(self):
+        """When entity is added to Home Assistant."""
+        await super().async_added_to_hass()
+        async_dispatcher_connect(self.hass, DOMAIN, self._update_callback)
+        if self.device_type in SERVICES:
+            self.session.entity_lookup[self.entity_id] = self.node_id
+
+    @callback
+    def _update_callback(self):
+        """Call update method."""
+        self.async_schedule_update_ha_state()
