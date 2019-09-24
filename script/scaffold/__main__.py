@@ -4,7 +4,7 @@ from pathlib import Path
 import subprocess
 import sys
 
-from . import gather_info, generate, error
+from . import gather_info, generate, error, docs
 from .const import COMPONENT_DIR
 
 
@@ -65,15 +65,19 @@ def main():
     print()
 
     print("Running tests")
-    print(f"$ pytest tests/components/{info.domain}")
+    print(f"$ pytest -v tests/components/{info.domain}")
     if (
-        subprocess.run(f"pytest tests/components/{info.domain}", shell=True).returncode
+        subprocess.run(
+            f"pytest -v tests/components/{info.domain}", shell=True
+        ).returncode
         != 0
     ):
         return 1
     print()
 
     print(f"Done!")
+
+    docs.print_relevant_docs(args.template, info)
 
     return 0
 
