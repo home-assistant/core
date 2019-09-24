@@ -260,7 +260,6 @@ batinfo==0.4.2
 # homeassistant.components.eddystone_temperature
 # beacontools[scan]==1.2.3
 
-# homeassistant.components.linksys_ap
 # homeassistant.components.scrape
 beautifulsoup4==4.8.0
 
@@ -268,7 +267,7 @@ beautifulsoup4==4.8.0
 beewi_smartclim==0.0.7
 
 # homeassistant.components.zha
-bellows-homeassistant==0.9.1
+bellows-homeassistant==0.10.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.6.0
@@ -638,7 +637,7 @@ hole==0.5.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190919.0
+home-assistant-frontend==20190919.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.4
@@ -647,7 +646,7 @@ homeassistant-pyozw==0.1.4
 homekit[IP]==0.15.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.10
+homematicip==0.10.11
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -951,9 +950,9 @@ piglow==1.2.4
 # homeassistant.components.pilight
 pilight==0.1.1
 
+# homeassistant.components.image_processing
 # homeassistant.components.proxy
 # homeassistant.components.qrcode
-# homeassistant.components.tensorflow
 pillow==6.1.0
 
 # homeassistant.components.dominos
@@ -1367,7 +1366,7 @@ pyotgw==0.4b4
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.otp
-pyotp==2.2.7
+pyotp==2.3.0
 
 # homeassistant.components.owlet
 pyowlet==1.0.2
@@ -1376,7 +1375,7 @@ pyowlet==1.0.2
 pyowm==2.10.0
 
 # homeassistant.components.elv
-pypca==0.0.4
+pypca==0.0.5
 
 # homeassistant.components.lcn
 pypck==0.6.3
@@ -2021,13 +2020,13 @@ zhong_hong_hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-deconz==0.3.0
+zigpy-deconz==0.4.0
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.8.0
+zigpy-homeassistant==0.9.0
 
 # homeassistant.components.zha
-zigpy-xbee-homeassistant==0.4.0
+zigpy-xbee-homeassistant==0.5.0
 
 # homeassistant.components.zha
 zigpy-zigate==0.3.1

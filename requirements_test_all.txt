@@ -94,7 +94,7 @@ av==6.1.2
 axis==25
 
 # homeassistant.components.zha
-bellows-homeassistant==0.9.1
+bellows-homeassistant==0.10.0
 
 # homeassistant.components.caldav
 caldav==0.6.1
@@ -181,13 +181,13 @@ hole==0.5.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190919.0
+home-assistant-frontend==20190919.1
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.15.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.10
+homematicip==0.10.11
 
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk
@@ -251,6 +251,11 @@ pexpect==4.6.0
 
 # homeassistant.components.pilight
 pilight==0.1.1
+
+# homeassistant.components.image_processing
+# homeassistant.components.proxy
+# homeassistant.components.qrcode
+pillow==6.1.0
 
 # homeassistant.components.plex
 plexapi==3.0.6
@@ -326,7 +331,7 @@ pyopenuv==1.0.9
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.otp
-pyotp==2.2.7
+pyotp==2.3.0
 
 # homeassistant.components.ps4
 pyps4-homeassistant==0.8.7
@@ -434,4 +439,4 @@ wakeonlan==1.1.6
 zeroconf==0.23.0
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.8.0
+zigpy-homeassistant==0.9.0

@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Alle linkede servere er allerede konfigureret",
+            "already_configured": "Denne Plex-server er allerede konfigureret",
+            "already_in_progress": "Plex konfigureres",
+            "invalid_import": "Importeret konfiguration er ugyldig",
+            "unknown": "Mislykkedes af ukendt \u00e5rsag"
+        },
+        "error": {
+            "faulty_credentials": "Godkendelse mislykkedes",
+            "no_servers": "Ingen servere knyttet til konto",
+            "no_token": "Angiv et token eller v\u00e6lg manuel ops\u00e6tning",
+            "not_found": "Plex-server ikke fundet"
+        },
+        "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "V\u00e6rt",
+                    "port": "Port",
+                    "ssl": "Brug SSL",
+                    "token": "Token (hvis n\u00f8dvendigt)",
+                    "verify_ssl": "Bekr\u00e6ft SSL-certifikat"
+                },
+                "title": "Plex-server"
+            },
+            "select_server": {
+                "data": {
+                    "server": "Server"
+                },
+                "description": "Flere servere til r\u00e5dighed, v\u00e6lg en:",
+                "title": "V\u00e6lg Plex-server"
+            },
+            "user": {
+                "data": {
+                    "manual_setup": "Manuel ops\u00e6tning",
+                    "token": "Plex token"
+                },
+                "description": "Indtast et Plex-token til automatisk ops\u00e6tning eller konfigurerer en server manuelt.",
+                "title": "Tilslut Plex-server"
+            }
+        },
+        "title": "Plex"
+    }
+}
