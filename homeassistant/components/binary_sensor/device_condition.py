@@ -4,14 +4,7 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
 from homeassistant.components.device_automation.const import CONF_IS_OFF, CONF_IS_ON
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    CONF_CONDITION,
-    CONF_DEVICE_ID,
-    CONF_DOMAIN,
-    CONF_ENTITY_ID,
-    CONF_TYPE,
-)
+from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, CONF_TYPE
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.entity_registry import (
     async_entries_for_device,
@@ -191,11 +184,8 @@ ENTITY_CONDITIONS = {
     DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_IS_ON}, {CONF_TYPE: CONF_IS_OFF}],
 }
 
-CONDITION_SCHEMA = vol.Schema(
+CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_CONDITION): "device",
-        vol.Required(CONF_DEVICE_ID): str,
-        vol.Required(CONF_DOMAIN): DOMAIN,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(IS_OFF + IS_ON),
     }

@@ -13,17 +13,11 @@ from homeassistant.components.device_automation.const import (
     CONF_TURNED_OFF,
     CONF_TURNED_ON,
 )
-from homeassistant.const import (
-    CONF_CONDITION,
-    CONF_DEVICE_ID,
-    CONF_DOMAIN,
-    CONF_ENTITY_ID,
-    CONF_PLATFORM,
-    CONF_TYPE,
-)
+from homeassistant.const import CONF_CONDITION, CONF_ENTITY_ID, CONF_PLATFORM, CONF_TYPE
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers import condition, config_validation as cv, service
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+from . import TRIGGER_BASE_SCHEMA
 
 ENTITY_ACTIONS = [
     {
@@ -66,30 +60,22 @@ ENTITY_TRIGGERS = [
     },
 ]
 
-ACTION_SCHEMA = vol.Schema(
+ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_DEVICE_ID): str,
-        vol.Required(CONF_DOMAIN): str,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In([CONF_TOGGLE, CONF_TURN_OFF, CONF_TURN_ON]),
     }
 )
 
-CONDITION_SCHEMA = vol.Schema(
+CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_CONDITION): "device",
-        vol.Required(CONF_DEVICE_ID): str,
-        vol.Required(CONF_DOMAIN): str,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In([CONF_IS_OFF, CONF_IS_ON]),
     }
 )
 
-TRIGGER_SCHEMA = vol.Schema(
+TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): "device",
-        vol.Required(CONF_DEVICE_ID): str,
-        vol.Required(CONF_DOMAIN): str,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In([CONF_TURNED_OFF, CONF_TURNED_ON]),
     }

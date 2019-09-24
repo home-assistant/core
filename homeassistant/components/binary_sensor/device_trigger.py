@@ -2,18 +2,12 @@
 import voluptuous as vol
 
 from homeassistant.components.automation import state as state_automation
+from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.const import (
     CONF_TURNED_OFF,
     CONF_TURNED_ON,
 )
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    CONF_DEVICE_ID,
-    CONF_DOMAIN,
-    CONF_ENTITY_ID,
-    CONF_PLATFORM,
-    CONF_TYPE,
-)
+from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, CONF_TYPE
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers import config_validation as cv
 
@@ -177,11 +171,8 @@ ENTITY_TRIGGERS = {
 }
 
 
-TRIGGER_SCHEMA = vol.Schema(
+TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): "device",
-        vol.Required(CONF_DEVICE_ID): str,
-        vol.Required(CONF_DOMAIN): DOMAIN,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TURNED_OFF + TURNED_ON),
     }

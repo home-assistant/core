@@ -6,6 +6,7 @@ from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
+from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 
 from . import DOMAIN
 from .core.const import DATA_ZHA, DATA_ZHA_GATEWAY
@@ -16,14 +17,8 @@ DEVICE = "device"
 DEVICE_IEEE = "device_ieee"
 ZHA_EVENT = "zha_event"
 
-TRIGGER_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_DEVICE_ID): str,
-        vol.Required(CONF_DOMAIN): DOMAIN,
-        vol.Required(CONF_PLATFORM): DEVICE,
-        vol.Required(CONF_TYPE): str,
-        vol.Required(CONF_SUBTYPE): str,
-    }
+TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+    {vol.Required(CONF_TYPE): str, vol.Required(CONF_SUBTYPE): str}
 )
 
 

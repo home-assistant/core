@@ -3,6 +3,7 @@ import voluptuous as vol
 
 import homeassistant.components.automation.event as event
 
+from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -171,16 +172,8 @@ REMOTES = {
     AQARA_SQUARE_SWITCH_MODEL: AQARA_SQUARE_SWITCH,
 }
 
-TRIGGER_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(CONF_DEVICE_ID): str,
-            vol.Required(CONF_DOMAIN): DOMAIN,
-            vol.Required(CONF_PLATFORM): "device",
-            vol.Required(CONF_TYPE): str,
-            vol.Required(CONF_SUBTYPE): str,
-        }
-    )
+TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+    {vol.Required(CONF_TYPE): str, vol.Required(CONF_SUBTYPE): str}
 )
 
 

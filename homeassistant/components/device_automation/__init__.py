@@ -4,6 +4,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.const import CONF_PLATFORM, CONF_DOMAIN, CONF_DEVICE_ID
 from homeassistant.components import websocket_api
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.loader import async_get_integration, IntegrationNotFound
@@ -12,6 +13,14 @@ DOMAIN = "device_automation"
 
 _LOGGER = logging.getLogger(__name__)
 
+
+TRIGGER_BASE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PLATFORM): "device",
+        vol.Required(CONF_DOMAIN): str,
+        vol.Required(CONF_DEVICE_ID): str,
+    }
+)
 
 TYPES = {
     "trigger": ("device_trigger", "async_get_triggers"),
