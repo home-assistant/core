@@ -231,7 +231,11 @@ class Entity:
 
     @property
     def enabled(self) -> bool:
-        """Return if the entity is enabled in the entity registry."""
+        """Return if the entity is enabled in the entity registry.
+
+        If an entity is not part of the registry, it cannot be disabled
+        and will therefore always be enabled.
+        """
         return self.registry_entry is None or not self.registry_entry.disabled
 
     @callback
