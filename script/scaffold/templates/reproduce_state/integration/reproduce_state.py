@@ -66,6 +66,8 @@ async def async_reproduce_states(
     hass: HomeAssistantType, states: Iterable[State], context: Optional[Context] = None
 ) -> None:
     """Reproduce NEW_NAME states."""
+    # TODO pick one and remove other one
+
     # Reproduce states in parallel.
     await asyncio.gather(
         *(_async_reproduce_state(hass, state, context) for state in states)

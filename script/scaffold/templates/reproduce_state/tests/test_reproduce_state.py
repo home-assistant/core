@@ -4,7 +4,7 @@ from homeassistant.core import State
 from tests.common import async_mock_service
 
 
-async def test_reproducing_states(hass):
+async def test_reproducing_states(hass, caplog):
     """Test reproducing NEW_NAME states."""
     hass.states.async_set("NEW_DOMAIN.entity_off", "off", {})
     hass.states.async_set("NEW_DOMAIN.entity_on", "on", {"color": "red"})
@@ -21,6 +21,15 @@ async def test_reproducing_states(hass):
         blocking=True,
     )
 
+    assert len(turn_on_calls) == 0
+    assert len(turn_off_calls) == 0
+
+    # Test invalid state is handled
+    await hass.helpers.state.async_reproduce_state(
+        [State("NEW_DOMAIN.entity_off", "not_supported")], blocking=True
+    )
+
+    assert "not_supported" in caplog.text
     assert len(turn_on_calls) == 0
     assert len(turn_off_calls) == 0
 
