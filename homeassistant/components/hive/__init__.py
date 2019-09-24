@@ -89,11 +89,11 @@ def setup(hass, config):
         node_id = HiveSession.entity_lookup.get(service.data[ATTR_ENTITY_ID])
         if not node_id:
             # log or raise error
-            _LOGGER.error("Cannot boost entity id entered.")
+            _LOGGER.error("Cannot boost entity id entered")
             return
 
         minutes = service.data[ATTR_TIME_PERIOD]
-        temperature = service.data.get(ATTR_TEMPERATURE)
+        temperature = service.data[ATTR_TEMPERATURE]
 
         session.heating.turn_boost_on(node_id, minutes, temperature)
 
@@ -102,9 +102,9 @@ def setup(hass, config):
         node_id = HiveSession.entity_lookup.get(service.data[ATTR_ENTITY_ID])
         if not node_id:
             # log or raise error
-            _LOGGER.error("Cannot boost entity id entered.")
+            _LOGGER.error("Cannot boost entity id entered")
             return
-        minutes = service.data.get(ATTR_TIME_PERIOD)
+        minutes = service.data.[ATTR_TIME_PERIOD]
         mode = service.data[ATTR_MODE]
 
         if mode == "on":
@@ -135,7 +135,7 @@ def setup(hass, config):
     hass.data[DATA_HIVE] = session
 
     for ha_type in DEVICETYPES:
-        devicelist = devices.get(DEVICETYPES[ha_type], None)
+        devicelist = devices.get(DEVICETYPES[ha_type])
         if devicelist:
             load_platform(hass, ha_type, DOMAIN, devicelist, config)
             if ha_type == "climate":
