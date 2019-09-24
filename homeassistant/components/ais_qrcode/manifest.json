@@ -1,5 +1,5 @@
 {
-  "domain": "ais_shell_command",
+  "domain": "ais_qrcode",
   "name": "AIS QR code camera",
   "config_flow": false,
   "documentation": "https://www.ai-speaker.com",

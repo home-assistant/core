@@ -59,6 +59,7 @@ FLOWS = [
     "solaredge",
     "somfy",
     "sonos",
+    "supla",
     "tellduslive",
     "toon",
     "tplink",
@@ -75,5 +76,5 @@ FLOWS = [
     "wwlln",
     "zha",
     "zone",
-    "zwave",
+    "zwave"
 ]

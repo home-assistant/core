@@ -1,7 +1,7 @@
 {
   "domain": "ais_device_search_mqtt",
   "name": "AIS Wyszukiwanie urządzeń",
-  "config_flow": true,
+  "config_flow": false,
   "documentation": "https://www.ai-speaker.com",
   "requirements": [],
   "dependencies": [],

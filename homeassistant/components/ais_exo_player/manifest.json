@@ -1,6 +1,6 @@
 {
-  "domain": "ais_media_player",
-  "name": "AIS Media Player",
+  "domain": "ais_exo_player",
+  "name": "AIS Exo Player",
   "config_flow": false,
   "documentation": "https://www.ai-speaker.com",
   "requirements": [],

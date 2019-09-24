@@ -8,11 +8,11 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
+from .const import DOMAIN
 
 REQUIREMENTS = ["pysupla==0.0.3"]
 
 _LOGGER = logging.getLogger(__name__)
-DOMAIN = "supla"
 
 CONF_SERVER = "server"
 CONF_SERVERS = "servers"

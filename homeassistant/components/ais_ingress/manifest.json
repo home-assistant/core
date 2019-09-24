@@ -1,0 +1,9 @@
+{
+  "domain": "ais_ingress",
+  "name": "AIS Ingress Proxy",
+  "config_flow": false,
+  "documentation": "https://ai-speaker.com",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}
