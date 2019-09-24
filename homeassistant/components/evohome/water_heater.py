@@ -74,13 +74,16 @@ class EvoDHW(EvoChild, WaterHeaterDevice):
 
     @property
     def is_away_mode_on(self):
-        """Return true if away mode is on."""
+        """Return True if away mode is on."""
         is_off = EVO_STATE_TO_HA[self._evo_device.stateStatus["state"]] == STATE_OFF
         is_permanent = self._evo_device.stateStatus["mode"] == EVO_PERMOVER
         return is_off and is_permanent
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
-        """Set new operation mode for a DHW controller."""
+        """Set new operation mode for a DHW controller.
+
+        Except for Auto, the mode is only until the next SetPoint.
+        """
         if operation_mode == STATE_AUTO:
             await self._call_client_api(self._evo_device.set_dhw_auto())
         else:

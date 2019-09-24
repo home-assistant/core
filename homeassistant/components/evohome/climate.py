@@ -152,40 +152,6 @@ class EvoZone(EvoChild, EvoClimateDevice):
         self._supported_features = SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
         self._preset_modes = list(HA_PRESET_TO_EVO)
 
-    async def _set_zone_mode(self, op_mode: str) -> None:
-        """Set a Zone to one of its native EVO_* operating modes.
-
-        Zones inherit their _effective_ operating mode from the Controller.
-
-        Usually, Zones are in 'FollowSchedule' mode, where their setpoints are
-        a function of their own schedule and the Controller's operating mode,
-        e.g. 'AutoWithEco' mode means their setpoint is (by default) 3C less
-        than scheduled.
-
-        However, Zones can _override_ these setpoints, either indefinitely,
-        'PermanentOverride' mode, or for a period of time, 'TemporaryOverride',
-        after which they will revert back to 'FollowSchedule'.
-
-        Finally, some of the Controller's operating modes are _forced_ upon the
-        Zones, regardless of any override mode, e.g. 'HeatingOff', Zones to
-        (by default) 5C, and 'Away', Zones to (by default) 12C.
-        """
-        if op_mode == EVO_FOLLOW:
-            await self._call_client_api(self._evo_device.cancel_temp_override())
-            return
-
-        temperature = self._evo_device.setpointStatus["targetHeatTemperature"]
-
-        if op_mode == EVO_TEMPOVER:
-            await self._update_schedule()
-            until = parse_datetime(str(self.setpoints.get("next_sp_from")))
-        else:  # EVO_PERMOVER
-            until = None
-
-        await self._call_client_api(
-            self._evo_device.set_temperature(temperature, until)
-        )
-
     @property
     def hvac_mode(self) -> str:
         """Return the current operating mode of the evohome Zone."""
@@ -252,21 +218,49 @@ class EvoZone(EvoChild, EvoClimateDevice):
         )
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
-        """Set an operating mode for the Zone."""
+        """Set a Zone to one of its native EVO_* operating modes.
+
+        Zones inherit their _effective_ operating mode from the Controller.
+
+        Usually, Zones are in 'FollowSchedule' mode, where their setpoints are a
+        function of their own schedule and the Controller's operating mode, e.g.
+        'AutoWithEco' mode means their setpoint is (by default) 3C less than scheduled.
+
+        However, Zones can _override_ these setpoints, either indefinitely,
+        'PermanentOverride' mode, or for a set period of time, 'TemporaryOverride' mode
+        (after which they will revert back to 'FollowSchedule' mode).
+
+        Finally, some of the Controller's operating modes are _forced_ upon the Zones,
+        regardless of any override mode, e.g. 'HeatingOff', Zones to (by default) 5C,
+        and 'Away', Zones to (by default) 12C.
+        """
         if hvac_mode == HVAC_MODE_OFF:
             await self._call_client_api(
                 self._evo_device.set_temperature(self.min_temp, until=None)
             )
 
         else:  # HVAC_MODE_HEAT
-            await self._set_zone_mode(EVO_FOLLOW)
+            await self._call_client_api(self._evo_device.cancel_temp_override())
 
     async def async_set_preset_mode(self, preset_mode: Optional[str]) -> None:
-        """Set a new preset mode.
+        """Set the preset mode, if None, then revert to following the schedule."""
+        op_mode = HA_PRESET_TO_EVO.get(preset_mode, EVO_FOLLOW)
 
-        If preset_mode is None, then revert to following the schedule.
-        """
-        await self._set_zone_mode(HA_PRESET_TO_EVO.get(preset_mode, EVO_FOLLOW))
+        if op_mode == EVO_FOLLOW:
+            await self._call_client_api(self._evo_device.cancel_temp_override())
+            return
+
+        temperature = self._evo_device.setpointStatus["targetHeatTemperature"]
+
+        if op_mode == EVO_TEMPOVER:
+            await self._update_schedule()
+            until = parse_datetime(str(self.setpoints.get("next_sp_from")))
+        else:  # EVO_PERMOVER
+            until = None
+
+        await self._call_client_api(
+            self._evo_device.set_temperature(temperature, until)
+        )
 
     async def async_update(self) -> None:
         """Get the latest state data for the Zone."""
@@ -328,12 +322,9 @@ class EvoController(EvoClimateDevice):
         """Return the maximum target temperature of a evohome Zone."""
         return None
 
-    # async def async_set_temperature(self, **kwargs) -> None:
-    #     """Do nothing.
-
-    #     The evohome Controller doesn't have a target temperature.
-    #     """
-    #     return  # override NotImplementedError
+    async def async_set_temperature(self, **kwargs) -> None:
+        """Do nothing as evohome Controller don't have target temperatures."""
+        raise NotImplementedError("Evohome Controllers don't have target temperatures.")
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set an operating mode for the Controller."""
@@ -402,7 +393,7 @@ class EvoThermostat(EvoZone):
         if preset_mode in list(HA_PRESET_TO_TCS):
             await self._set_tcs_mode(HA_PRESET_TO_TCS.get(preset_mode))
         else:
-            await self._set_zone_mode(HA_PRESET_TO_EVO.get(preset_mode, EVO_FOLLOW))
+            await super().async_set_hvac_mode(preset_mode)
 
     async def async_update(self) -> None:
         """Get the latest state data for the RoundThermostat."""
