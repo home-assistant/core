@@ -117,18 +117,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the ecobee thermostat."""
-
     data = hass.data[DOMAIN]
     hold_temp = config_entry.options[CONF_HOLD_TEMP]
+    devices = list()
 
     _LOGGER.info(
         "Loading ecobee thermostat component with hold_temp set to %s", hold_temp
     )
 
-    devices = [
-        Thermostat(data, index, hold_temp)
-        for index in range(len(data.ecobee.thermostats))
-    ]
+    for index in range(len(data.ecobee.thermostats)):
+        dev = Thermostat(data, index, hold_temp)
+        config_entry.add_update_listener(dev.option_update_listener)
+        devices.append(dev)
 
     async_add_entities(devices, True)
 
@@ -217,6 +217,11 @@ class Thermostat(ClimateDevice):
         else:
             await self.data.update()
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
+
+    async def option_update_listener(self, hass, entry):
+        """Update relevant options in this entity."""
+        _LOGGER.debug("Updating options in ecobee thermostat {}".format(self.name))
+        self.hold_temp = entry.options[CONF_HOLD_TEMP]
 
     @property
     def available(self):
