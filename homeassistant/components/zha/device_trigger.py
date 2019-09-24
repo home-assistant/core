@@ -16,16 +16,14 @@ DEVICE = "device"
 DEVICE_IEEE = "device_ieee"
 ZHA_EVENT = "zha_event"
 
-TRIGGER_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(CONF_DEVICE_ID): str,
-            vol.Required(CONF_DOMAIN): DOMAIN,
-            vol.Required(CONF_PLATFORM): DEVICE,
-            vol.Required(CONF_TYPE): str,
-            vol.Required(CONF_SUBTYPE): str,
-        }
-    )
+TRIGGER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE_ID): str,
+        vol.Required(CONF_DOMAIN): DOMAIN,
+        vol.Required(CONF_PLATFORM): DEVICE,
+        vol.Required(CONF_TYPE): str,
+        vol.Required(CONF_SUBTYPE): str,
+    }
 )
 
 

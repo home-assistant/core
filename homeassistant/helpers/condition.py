@@ -502,5 +502,5 @@ async def async_device_from_config(
     platform = integration.get_platform("device_condition")
     return cast(
         ConditionCheckerType,
-        platform.async_condition_from_config(config, config_validation),
+        platform.async_condition_from_config(config, config_validation),  # type: ignore
     )

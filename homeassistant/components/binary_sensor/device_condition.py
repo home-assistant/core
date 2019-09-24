@@ -1,6 +1,8 @@
 """Implemenet device conditions for binary sensor."""
+from typing import List
 import voluptuous as vol
 
+from homeassistant.core import HomeAssistant
 from homeassistant.components.device_automation.const import CONF_IS_OFF, CONF_IS_ON
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -15,6 +17,7 @@ from homeassistant.helpers.entity_registry import (
     async_entries_for_device,
     async_get_registry,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from . import (
     DOMAIN,
@@ -199,9 +202,9 @@ CONDITION_SCHEMA = vol.Schema(
 )
 
 
-async def async_get_conditions(hass, device_id):
+async def async_get_conditions(hass: HomeAssistant, device_id: str) -> List[dict]:
     """List device conditions."""
-    conditions = []
+    conditions: List[dict] = []
     entity_registry = await async_get_registry(hass)
     entries = [
         entry
@@ -210,10 +213,10 @@ async def async_get_conditions(hass, device_id):
     ]
 
     for entry in entries:
-        device_class = None
+        device_class = DEVICE_CLASS_NONE
         state = hass.states.get(entry.entity_id)
-        if state:
-            device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+        if state and ATTR_DEVICE_CLASS in state.attributes:
+            device_class = state.attributes[ATTR_DEVICE_CLASS]
 
         templates = ENTITY_CONDITIONS.get(
             device_class, ENTITY_CONDITIONS[DEVICE_CLASS_NONE]
@@ -235,7 +238,9 @@ async def async_get_conditions(hass, device_id):
     return conditions
 
 
-def async_condition_from_config(config, config_validation):
+def async_condition_from_config(
+    config: ConfigType, config_validation: bool
+) -> condition.ConditionCheckerType:
     """Evaluate state based on configuration."""
     config = CONDITION_SCHEMA(config)
     condition_type = config[CONF_TYPE]
