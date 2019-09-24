@@ -231,10 +231,12 @@ class Entity:
 
     @property
     def enabled(self):
-        """Return if the entity is enabled in the entity registry."""
-        return self.registry_entry is None or (
-            self.registry_entry is not None and not self.registry_entry.disabled
-        )
+        """Return if the entity is enabled in the entity registry.
+
+        If an entity is not part of the registry, it cannot be disabled
+        and will therefore always be enabled.
+        """
+        return self.registry_entry is None or not self.registry_entry.disabled
 
     @callback
     def async_set_context(self, context):
