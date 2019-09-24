@@ -20,8 +20,8 @@ async def test_form(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
 
-async def test_import(hass):
-    """Test configuration from YAML."""
+async def test_import_abort(hass):
+    """Test configuration from YAML aborting with existing entity."""
     flow = config_flow.SomaFlowHandler()
     flow.hass = hass
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
@@ -30,11 +30,20 @@ async def test_import(hass):
     assert result["reason"] == "already_setup"
 
 
+async def test_import_create(hass):
+    """Test configuration from YAML."""
+    flow = config_flow.SomaFlowHandler()
+    flow.hass = hass
+    with patch.object(SomaApi, "list_devices", return_value={}):
+        result = await flow.async_step_import({"host": MOCK_HOST, "port": MOCK_PORT})
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+
 async def test_full_flow(hass):
     """Check classic use case."""
     hass.data[DOMAIN] = {}
     flow = config_flow.SomaFlowHandler()
     flow.hass = hass
     with patch.object(SomaApi, "list_devices", return_value={}):
-        result = await flow.async_step_creation({"host": MOCK_HOST, "port": MOCK_PORT})
+        result = await flow.async_step_user({"host": MOCK_HOST, "port": MOCK_PORT})
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
