@@ -6,5 +6,5 @@
     "apprise==0.8.0"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@caronc"]
 }
