@@ -31,3 +31,30 @@ Reproduce state code has been added to the {info.domain} integration:
 Please update the relevant items marked as TODO before submitting a pull request.
 """
         )
+
+    elif template == "device_trigger":
+        print(
+            f"""
+Device trigger base has been added to the {info.domain} integration:
+ - {info.integration_dir / "device_trigger.py"}
+ - {info.tests_dir / "test_device_trigger.py"}
+"""
+        )
+
+    elif template == "device_condition":
+        print(
+            f"""
+Device condition base has been added to the {info.domain} integration:
+ - {info.integration_dir / "device_condition.py"}
+ - {info.tests_dir / "test_device_condition.py"}
+"""
+        )
+
+    elif template == "device_action":
+        print(
+            f"""
+Device action base has been added to the {info.domain} integration:
+ - {info.integration_dir / "device_action.py"}
+ - {info.tests_dir / "test_device_action.py"}
+"""
+        )

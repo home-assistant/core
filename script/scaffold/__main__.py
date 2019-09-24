@@ -65,10 +65,10 @@ def main():
     print()
 
     print("Running tests")
-    print(f"$ pytest -v tests/components/{info.domain}")
+    print(f"$ pytest -vvv tests/components/{info.domain}")
     if (
         subprocess.run(
-            f"pytest -v tests/components/{info.domain}", shell=True
+            f"pytest -vvv tests/components/{info.domain}", shell=True
         ).returncode
         != 0
     ):
