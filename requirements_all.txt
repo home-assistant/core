@@ -950,9 +950,9 @@ piglow==1.2.4
 # homeassistant.components.pilight
 pilight==0.1.1
 
+# homeassistant.components.image_processing
 # homeassistant.components.proxy
 # homeassistant.components.qrcode
-# homeassistant.components.tensorflow
 pillow==6.1.0
 
 # homeassistant.components.dominos

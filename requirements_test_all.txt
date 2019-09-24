@@ -252,6 +252,11 @@ pexpect==4.6.0
 # homeassistant.components.pilight
 pilight==0.1.1
 
+# homeassistant.components.image_processing
+# homeassistant.components.proxy
+# homeassistant.components.qrcode
+pillow==6.1.0
+
 # homeassistant.components.plex
 plexapi==3.0.6
 
