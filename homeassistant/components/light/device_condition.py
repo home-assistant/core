@@ -1,4 +1,4 @@
-"""Provides device automations for lights."""
+"""Provides device conditions for lights."""
 import voluptuous as vol
 
 from homeassistant.components.device_automation import toggle_entity

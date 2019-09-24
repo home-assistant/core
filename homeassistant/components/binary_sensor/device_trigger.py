@@ -1,4 +1,4 @@
-"""Provides device automations for lights."""
+"""Provides device triggers for binary sensors."""
 import voluptuous as vol
 
 from homeassistant.components.automation import state as state_automation

@@ -1,4 +1,4 @@
-"""Implemenet device condition for binary sensor."""
+"""Implemenet device conditions for binary sensor."""
 import voluptuous as vol
 
 from homeassistant.components.device_automation.const import CONF_IS_OFF, CONF_IS_ON
