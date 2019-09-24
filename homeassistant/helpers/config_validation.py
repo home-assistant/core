@@ -827,10 +827,15 @@ OR_CONDITION_SCHEMA = vol.Schema(
     }
 )
 
-DEVICE_CONDITION_SCHEMA = vol.Schema(
-    {vol.Required(CONF_CONDITION): "device", vol.Required(CONF_DOMAIN): str},
-    extra=vol.ALLOW_EXTRA,
+DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_CONDITION): "device",
+        vol.Required(CONF_DEVICE_ID): str,
+        vol.Required(CONF_DOMAIN): str,
+    }
 )
+
+DEVICE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
 CONDITION_SCHEMA: vol.Schema = vol.Any(
     NUMERIC_STATE_CONDITION_SCHEMA,
@@ -862,10 +867,11 @@ _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema(
     }
 )
 
-DEVICE_ACTION_SCHEMA = vol.Schema(
-    {vol.Required(CONF_DEVICE_ID): string, vol.Required(CONF_DOMAIN): str},
-    extra=vol.ALLOW_EXTRA,
+DEVICE_ACTION_BASE_SCHEMA = vol.Schema(
+    {vol.Required(CONF_DEVICE_ID): string, vol.Required(CONF_DOMAIN): str}
 )
+
+DEVICE_ACTION_SCHEMA = DEVICE_ACTION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
 SCRIPT_SCHEMA = vol.All(
     ensure_list,

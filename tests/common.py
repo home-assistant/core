@@ -54,7 +54,9 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.util.async_ import run_callback_threadsafe, run_coroutine_threadsafe
-
+from homeassistant.components.device_automation import (  # noqa
+    _async_get_device_automations as async_get_device_automations,
+)
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
