@@ -38,7 +38,7 @@ adguardhome==0.3.0
 aio_geojson_geonetnz_quakes==0.11
 
 # homeassistant.components.geonetnz_volcano
-aio_geojson_geonetnz_volcano==0.4b1
+aio_geojson_geonetnz_volcano==0.4b2
 
 # homeassistant.components.ambient_station
 aioambient==0.3.2
