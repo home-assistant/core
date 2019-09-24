@@ -93,7 +93,7 @@ class TestSamsungTv(unittest.TestCase):
 
     @MockDependency("samsungctl")
     @MockDependency("wakeonlan")
-    @mock.patch("homeassistant.components.samsungtv.media_player._LOGGER.warning")
+    @mock.patch("homeassistant.components.samsungtv.media_player.LOGGER.warning")
     def test_setup_none(self, samsung_mock, wol_mock, mocked_warn):
         """Testing setup of platform with no data."""
         with mock.patch("homeassistant.components.samsungtv.media_player.socket"):
@@ -212,7 +212,7 @@ class TestSamsungTv(unittest.TestCase):
         self.device.turn_off()
         self.device.send_key.assert_called_once_with("KEY_POWEROFF")
 
-    @mock.patch("homeassistant.components.samsungtv.media_player._LOGGER.debug")
+    @mock.patch("homeassistant.components.samsungtv.media_player.LOGGER.debug")
     def test_turn_off_os_error(self, mocked_debug):
         """Test for turn_off with OSError."""
         _remote = mock.Mock()
