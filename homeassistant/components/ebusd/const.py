@@ -47,7 +47,12 @@ SENSOR_TYPES = {
         "Zone1RoomZoneMapping": ["z1RoomZoneMapping", None, "mdi:label", 0],
         "Zone1NightTemperature": ["z1NightTemp", TEMP_CELSIUS, "mdi:weather-night", 0],
         "Zone1DayTemperature": ["z1DayTemp", TEMP_CELSIUS, "mdi:weather-sunny", 0],
-        "Zone1HolidayTemperature": ["z1HolidayTemp", TEMP_CELSIUS, "mdi:thermometer", 0],
+        "Zone1HolidayTemperature": [
+            "z1HolidayTemp", 
+            TEMP_CELSIUS, 
+            "mdi:thermometer", 
+            0,
+        ],
         "Zone1RoomTemperature": ["z1RoomTemp", TEMP_CELSIUS, "mdi:thermometer", 0],
         "Zone1ActualRoomTemperatureDesired": [
             "z1ActualRoomTempDesired",
@@ -84,8 +89,18 @@ SENSOR_TYPES = {
     "bai": {
         "HotWaterTemperature": ["HwcTemp", TEMP_CELSIUS, "mdi:thermometer", 4],
         "StorageTemperature": ["StorageTemp", TEMP_CELSIUS, "mdi:thermometer", 4],
-        "DesiredStorageTemperature": ["StorageTempDesired", TEMP_CELSIUS, "mdi:thermometer", 0],
-        "OutdoorsTemperature": ["OutdoorstempSensor", TEMP_CELSIUS, "mdi:thermometer", 4],
+        "DesiredStorageTemperature": [
+            "StorageTempDesired", 
+            TEMP_CELSIUS, 
+            "mdi:thermometer", 
+            0
+        ],
+        "OutdoorsTemperature": [
+            "OutdoorstempSensor", 
+            TEMP_CELSIUS, 
+            "mdi:thermometer", 
+            4,
+        ],
         "WaterPreasure": ["WaterPressure", PRESSURE_BAR, "mdi:pipe", 4],
         "AverageIgnitionTime": ["averageIgnitiontime", TIME_SECONDS, "mdi:av-timer", 0],
         "MaximumIgnitionTime": ["maxIgnitiontime", TIME_SECONDS, "mdi:av-timer", 0],
@@ -93,7 +108,12 @@ SENSOR_TYPES = {
         "ReturnTemperature": ["ReturnTemp", TEMP_CELSIUS, "mdi:thermometer", 4],
         "CentralHeatingPump": ["WP", None, "mdi:toggle-switch", 2],
         "HeatingSwitch": ["HeatingSwitch", None, "mdi:toggle-switch", 2],
-        "DesiredFlowTemperature": ["FlowTempDesired", TEMP_CELSIUS, "mdi:thermometer", 0],
+        "DesiredFlowTemperature": [
+            "FlowTempDesired", 
+            TEMP_CELSIUS, 
+            "mdi:thermometer", 
+            0,
+        ],
         "FlowTemperature": ["FlowTemp", TEMP_CELSIUS, "mdi:thermometer", 4],
         "Flame": ["Flame", None, "mdi:toggle-switch", 2],
         "PowerEnergyConsumptionHeatingCircuit": [
