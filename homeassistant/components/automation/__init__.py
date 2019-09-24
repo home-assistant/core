@@ -474,7 +474,7 @@ async def _async_process_trigger(hass, config, trigger_configs, name, action):
         platform = importlib.import_module(".{}".format(conf[CONF_PLATFORM]), __name__)
 
         try:
-            remove = await platform.async_trigger(hass, conf, action, info)
+            remove = await platform.async_attach_trigger(hass, conf, action, info)
         except InvalidDeviceAutomationConfig:
             remove = False
 

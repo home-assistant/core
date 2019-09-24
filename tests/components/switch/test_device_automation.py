@@ -215,14 +215,14 @@ async def test_if_fires_on_state_change(hass, calls):
     hass.states.async_set(ent1.entity_id, STATE_OFF)
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0].data["some"] == "turn_off state - {} - on - off - None".format(
+    assert calls[0].data["some"] == "turn_off device - {} - on - off - None".format(
         ent1.entity_id
     )
 
     hass.states.async_set(ent1.entity_id, STATE_ON)
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[1].data["some"] == "turn_on state - {} - off - on - None".format(
+    assert calls[1].data["some"] == "turn_on device - {} - off - on - None".format(
         ent1.entity_id
     )
 

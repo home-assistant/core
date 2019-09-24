@@ -150,7 +150,9 @@ async def async_attach_trigger(hass, config, action, automation_info):
         state.CONF_TO: to_state,
     }
 
-    return await state.async_trigger(hass, state_config, action, automation_info)
+    return await state.async_attach_trigger(
+        hass, state_config, action, automation_info, platform_type="device"
+    )
 
 
 async def _async_get_automations(hass, device_id, automation_templates, domain):

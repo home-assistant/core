@@ -29,7 +29,7 @@ TRIGGER_SCHEMA = vol.All(
 )
 
 
-async def async_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     config = TRIGGER_SCHEMA(config)
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
@@ -48,7 +48,9 @@ async def async_trigger(hass, config, action, automation_info):
         event.CONF_EVENT_DATA: {DEVICE_IEEE: str(zha_device.ieee), **trigger},
     }
 
-    return await event.async_trigger(hass, state_config, action, automation_info)
+    return await event.async_attach_trigger(
+        hass, state_config, action, automation_info, platform_type="device"
+    )
 
 
 async def async_get_triggers(hass, device_id):

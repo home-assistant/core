@@ -33,7 +33,7 @@ def async_condition_from_config(config, config_validation):
     return toggle_entity.async_condition_from_config(config, config_validation)
 
 
-async def async_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     config = TRIGGER_SCHEMA(config)
     return await toggle_entity.async_attach_trigger(

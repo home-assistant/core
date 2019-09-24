@@ -359,7 +359,7 @@ def async_condition_from_config(config, config_validation):
     return condition.state_from_config(state_config, config_validation)
 
 
-async def async_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     config = TRIGGER_SCHEMA(config)
     trigger_type = config[CONF_TYPE]
@@ -375,7 +375,9 @@ async def async_trigger(hass, config, action, automation_info):
         state.CONF_TO: to_state,
     }
 
-    return await state.async_trigger(hass, state_config, action, automation_info)
+    return await state.async_attach_trigger(
+        hass, state_config, action, automation_info, platform_type="device"
+    )
 
 
 def _is_domain(entity, domain):
