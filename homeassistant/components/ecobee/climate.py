@@ -35,7 +35,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_HOLD_TEMP, DOMAIN, _LOGGER
+from .const import DOMAIN, _LOGGER
 
 ATTR_FAN_MIN_ON_TIME = "fan_min_on_time"
 ATTR_RESUME_ALL = "resume_all"
@@ -119,16 +119,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the ecobee thermostat."""
 
     data = hass.data[DOMAIN]
-    hold_temp = config_entry.options[CONF_HOLD_TEMP]
 
-    _LOGGER.info(
-        "Loading ecobee thermostat component with hold_temp set to %s", hold_temp
-    )
-
-    devices = [
-        Thermostat(data, index, hold_temp)
-        for index in range(len(data.ecobee.thermostats))
-    ]
+    devices = [Thermostat(data, index) for index in range(len(data.ecobee.thermostats))]
 
     async_add_entities(devices, True)
 
@@ -184,13 +176,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class Thermostat(ClimateDevice):
     """A thermostat class for Ecobee."""
 
-    def __init__(self, data, thermostat_index, hold_temp):
+    def __init__(self, data, thermostat_index):
         """Initialize the thermostat."""
         self.data = data
         self.thermostat_index = thermostat_index
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
         self._name = self.thermostat["name"]
-        self.hold_temp = hold_temp
         self.vacation = None
 
         self._operation_list = []
