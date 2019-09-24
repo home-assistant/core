@@ -244,8 +244,12 @@ class AiohttpClientMockResponse:
     def raise_for_status(self):
         """Raise error if status is 400 or higher."""
         if self.status >= 400:
+            request_info = mock.Mock(real_url="http://example.com")
             raise ClientResponseError(
-                None, None, code=self.status, headers=self.headers
+                request_info=request_info,
+                history=None,
+                code=self.status,
+                headers=self.headers,
             )
 
     def close(self):

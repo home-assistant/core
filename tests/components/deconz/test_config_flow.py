@@ -234,41 +234,6 @@ async def test_bridge_discovery_update_existing_entry(hass):
     assert entry.data[config_flow.CONF_HOST] == "mock-deconz"
 
 
-async def test_import_without_api_key(hass):
-    """Test importing a host without an API key."""
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
-        data={config_flow.CONF_HOST: "1.2.3.4"},
-        context={"source": "import"},
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "link"
-
-
-async def test_import_with_api_key(hass):
-    """Test importing a host with an API key."""
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
-        data={
-            config_flow.CONF_BRIDGEID: "id",
-            config_flow.CONF_HOST: "mock-deconz",
-            config_flow.CONF_PORT: 80,
-            config_flow.CONF_API_KEY: "1234567890ABCDEF",
-        },
-        context={"source": "import"},
-    )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "deCONZ-id"
-    assert result["data"] == {
-        config_flow.CONF_BRIDGEID: "id",
-        config_flow.CONF_HOST: "mock-deconz",
-        config_flow.CONF_PORT: 80,
-        config_flow.CONF_API_KEY: "1234567890ABCDEF",
-    }
-
-
 async def test_create_entry(hass, aioclient_mock):
     """Test that _create_entry work and that bridgeid can be requested."""
     aioclient_mock.get(

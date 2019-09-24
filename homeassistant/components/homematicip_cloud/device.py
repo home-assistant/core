@@ -12,6 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_MODEL_TYPE = "model_type"
 ATTR_ID = "id"
+ATTR_IS_GROUP = "is_group"
 # RSSI HAP -> Device
 ATTR_RSSI_DEVICE = "rssi_device"
 # RSSI Device -> HAP
@@ -130,5 +131,7 @@ class HomematicipGenericDevice(Entity):
                 attr_value = getattr(self._device, attr, None)
                 if attr_value:
                     state_attr[attr_key] = attr_value
+
+            state_attr[ATTR_IS_GROUP] = False
 
         return state_attr

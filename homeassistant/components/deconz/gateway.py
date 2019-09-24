@@ -3,11 +3,10 @@ import asyncio
 import async_timeout
 
 from pydeconz import DeconzSession, errors
-from pydeconz.sensor import Switch
 
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.const import CONF_EVENT, CONF_HOST, CONF_ID
-from homeassistant.core import EventOrigin, callback
+from homeassistant.const import CONF_HOST
+from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import (
@@ -18,7 +17,6 @@ from homeassistant.helpers.entity_registry import (
     async_get_registry,
     DISABLED_CONFIG_ENTRY,
 )
-from homeassistant.util import slugify
 
 from .const import (
     _LOGGER,
@@ -30,9 +28,9 @@ from .const import (
     DEFAULT_ALLOW_DECONZ_GROUPS,
     DOMAIN,
     NEW_DEVICE,
-    NEW_SENSOR,
     SUPPORTED_PLATFORMS,
 )
+
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -119,14 +117,6 @@ class DeconzGateway:
                 )
             )
 
-        self.listeners.append(
-            async_dispatcher_connect(
-                hass, self.async_signal_new_device(NEW_SENSOR), self.async_add_remote
-            )
-        )
-
-        self.async_add_remote(self.api.sensors.values())
-
         self.api.start()
 
         self.config_entry.add_update_listener(self.async_new_address)
@@ -186,15 +176,6 @@ class DeconzGateway:
         )
 
     @callback
-    def async_add_remote(self, sensors):
-        """Set up remote from deCONZ."""
-        for sensor in sensors:
-            if sensor.type in Switch.ZHATYPE and not (
-                not self.option_allow_clip_sensor and sensor.type.startswith("CLIP")
-            ):
-                self.events.append(DeconzEvent(self.hass, sensor))
-
-    @callback
     def shutdown(self, event):
         """Wrap the call to deconz.close.
 
@@ -203,11 +184,7 @@ class DeconzGateway:
         self.api.close()
 
     async def async_reset(self):
-        """Reset this gateway to default state.
-
-        Will cancel any scheduled setup retry and will unload
-        the config entry.
-        """
+        """Reset this gateway to default state."""
         self.api.async_connection_status_callback = None
         self.api.close()
 
@@ -222,7 +199,7 @@ class DeconzGateway:
 
         for event in self.events:
             event.async_will_remove_from_hass()
-            self.events.remove(event)
+        self.events.clear()
 
         self.deconz_ids = {}
         return True
@@ -288,33 +265,3 @@ class DeconzEntityHandler:
                 entity_registry.async_update_entity(
                     entity.registry_entry.entity_id, disabled_by=disabled_by
                 )
-
-
-class DeconzEvent:
-    """When you want signals instead of entities.
-
-    Stateless sensors such as remotes are expected to generate an event
-    instead of a sensor entity in hass.
-    """
-
-    def __init__(self, hass, device):
-        """Register callback that will be used for signals."""
-        self._hass = hass
-        self._device = device
-        self._device.register_async_callback(self.async_update_callback)
-        self._event = f"deconz_{CONF_EVENT}"
-        self._id = slugify(self._device.name)
-        _LOGGER.debug("deCONZ event created: %s", self._id)
-
-    @callback
-    def async_will_remove_from_hass(self) -> None:
-        """Disconnect event object when removed."""
-        self._device.remove_callback(self.async_update_callback)
-        self._device = None
-
-    @callback
-    def async_update_callback(self, force_update=False):
-        """Fire the event if reason is that state is updated."""
-        if "state" in self._device.changed_keys:
-            data = {CONF_ID: self._id, CONF_EVENT: self._device.state}
-            self._hass.bus.async_fire(self._event, data, EventOrigin.remote)

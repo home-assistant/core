@@ -88,7 +88,10 @@ class WithingsFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Create an entry for selecting a profile."""
-        flow = self.hass.data.get(DATA_FLOW_IMPL, {})
+        flow = self.hass.data.get(DATA_FLOW_IMPL)
+
+        if not flow:
+            return self.async_abort(reason="no_flows")
 
         if user_input:
             return await self.async_step_auth(user_input)

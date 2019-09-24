@@ -9,7 +9,12 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_HOST, CONF_PORT
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_HOST,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_START,
+)
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, DEFAULT_NAME, DEFAULT_PORT
@@ -81,6 +86,15 @@ class SSLCertificate(Entity):
     def available(self):
         """Icon to use in the frontend, if any."""
         return self._available
+
+    async def async_added_to_hass(self):
+        """Once the entity is added we should update to get the initial data loaded."""
+
+        def do_update(_):
+            """Run the update method when the start event was fired."""
+            self.update()
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, do_update)
 
     def update(self):
         """Fetch the certificate information."""
