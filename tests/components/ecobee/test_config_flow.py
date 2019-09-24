@@ -6,7 +6,6 @@ from pyecobee import ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN
 from homeassistant import data_entry_flow
 from homeassistant.components.ecobee import config_flow
 from homeassistant.components.ecobee.const import (
-    CONF_HOLD_TEMP,
     CONF_REFRESH_TOKEN,
     DATA_ECOBEE_CONFIG,
     DOMAIN,
@@ -197,17 +196,3 @@ async def test_import_flow_triggered_with_ecobee_conf_and_valid_data_and_stale_t
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "user"
-
-
-async def test_option_flow(hass):
-    """Test option flow."""
-    entry = MockConfigEntry(domain=DOMAIN, options={CONF_HOLD_TEMP: None})
-    flow = config_flow.EcobeeFlowHandler().async_get_options_flow(entry)
-
-    result = await flow.async_step_init()
-    assert result["type"] == "form"
-    assert result["step_id"] == "ecobee_options"
-
-    result = await flow.async_step_ecobee_options(user_input={CONF_HOLD_TEMP: False})
-    assert result["type"] == "create_entry"
-    assert result["data"] == {CONF_HOLD_TEMP: False}
