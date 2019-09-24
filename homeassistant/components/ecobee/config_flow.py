@@ -1,6 +1,4 @@
 """Config flow to configure ecobee."""
-from copy import copy
-
 import voluptuous as vol
 
 from pyecobee import (
@@ -12,16 +10,10 @@ from pyecobee import (
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import callback, HomeAssistantError
+from homeassistant.core import HomeAssistantError
 from homeassistant.util.json import load_json
 
-from .const import (
-    CONF_HOLD_TEMP,
-    CONF_REFRESH_TOKEN,
-    DATA_ECOBEE_CONFIG,
-    DOMAIN,
-    _LOGGER,
-)
+from .const import CONF_REFRESH_TOKEN, DATA_ECOBEE_CONFIG, DOMAIN, _LOGGER
 
 
 class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -29,12 +21,6 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry):
-        """Get the options flow for this handler."""
-        return EcobeeOptionsFlowHandler(config_entry)
 
     def __init__(self):
         """Initialize the ecobee flow."""
@@ -124,34 +110,3 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
         return await self.async_step_user()
-
-
-class EcobeeOptionsFlowHandler(config_entries.OptionsFlow):
-    """Manage ecobee options."""
-
-    def __init__(self, config_entry):
-        """Initialize ecobee options flow."""
-        self.config_entry = config_entry
-        self.options = copy(config_entry.options)
-
-    async def async_step_init(self, user_input=None):
-        """Handle an options flow start."""
-        return await self.async_step_ecobee_options()
-
-    async def async_step_ecobee_options(self, user_input=None):
-        """Manage the ecobee options."""
-        if user_input is not None:
-            self.options[CONF_HOLD_TEMP] = user_input[CONF_HOLD_TEMP]
-            return self.async_create_entry(title="", data=self.options)
-
-        return self.async_show_form(
-            step_id="ecobee_options",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_HOLD_TEMP,
-                        default=self.config_entry.options[CONF_HOLD_TEMP],
-                    ): bool
-                }
-            ),
-        )
