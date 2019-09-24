@@ -273,7 +273,7 @@ class EvoBroker:
                 DOMAIN, {"signal": "refresh"}
             )
 
-            _LOGGER.warn("Status = %s", status[GWS][0][TCS][0])
+            _LOGGER.debug("Status = %s", status[GWS][0][TCS][0])
 
 
 class EvoDevice(Entity):
@@ -378,7 +378,7 @@ class EvoDevice(Entity):
                 return
 
         if refresh is True:
-            self.hass.helpers.event.async_call_later(2, self._evo_broker.update())
+            self.hass.helpers.event.async_call_later(1, self._evo_broker.update())
 
         return result
 

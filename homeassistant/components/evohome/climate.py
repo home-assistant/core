@@ -1,5 +1,4 @@
 """Support for Climate devices of (EMEA/EU-based) Honeywell TCC systems."""
-from datetime import datetime
 import logging
 from typing import Optional, List
 
@@ -153,17 +152,6 @@ class EvoZone(EvoChild, EvoClimateDevice):
         self._supported_features = SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
         self._preset_modes = list(HA_PRESET_TO_EVO)
 
-    async def _set_temperature(
-        self, temperature: float, until: Optional[datetime] = None
-    ) -> None:
-        """Set a new target temperature for the Zone.
-
-        until == None means indefinitely (i.e. PermanentOverride)
-        """
-        await self._call_client_api(
-            self._evo_device.set_temperature(temperature, until)
-        )
-
     async def _set_zone_mode(self, op_mode: str) -> None:
         """Set a Zone to one of its native EVO_* operating modes.
 
@@ -194,7 +182,9 @@ class EvoZone(EvoChild, EvoClimateDevice):
         else:  # EVO_PERMOVER
             until = None
 
-        await self._set_temperature(temperature, until)
+        await self._call_client_api(
+            self._evo_device.set_temperature(temperature, until)
+        )
 
     @property
     def hvac_mode(self) -> str:
@@ -218,8 +208,6 @@ class EvoZone(EvoChild, EvoClimateDevice):
     @property
     def target_temperature(self) -> float:
         """Return the target temperature of the evohome Zone."""
-        if self._evo_tcs.systemModeStatus["mode"] == EVO_HEATOFF:
-            return self._evo_device.setpointCapabilities["minHeatSetpoint"]
         return self._evo_device.setpointStatus["targetHeatTemperature"]
 
     @property
@@ -249,21 +237,26 @@ class EvoZone(EvoChild, EvoClimateDevice):
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set a new target temperature."""
-        until = kwargs.get("until")
+        temperature = kwargs["temperature"]
 
+        until = kwargs.get("until")
         if until is None:
             if self._evo_device.setpointStatus["setpointMode"] == EVO_TEMPOVER:
-                until = self._evo_device.setpointStatus["until"]
+                until = parse_datetime(str(self._evo_device.setpointStatus["until"]))
             elif self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
                 await self._update_schedule()
                 until = parse_datetime(str(self.setpoints.get("next_sp_from")))
 
-        await self._set_temperature(kwargs["temperature"], until)
+        await self._call_client_api(
+            self._evo_device.set_temperature(temperature, until)
+        )
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set an operating mode for the Zone."""
         if hvac_mode == HVAC_MODE_OFF:
-            await self._set_temperature(self.min_temp, until=None)
+            await self._call_client_api(
+                self._evo_device.set_temperature(self.min_temp, until=None)
+            )
 
         else:  # HVAC_MODE_HEAT
             await self._set_zone_mode(EVO_FOLLOW)
@@ -325,12 +318,22 @@ class EvoController(EvoClimateDevice):
         """Return the current preset mode, e.g., home, away, temp."""
         return TCS_PRESET_TO_HA.get(self._evo_tcs.systemModeStatus["mode"])
 
-    async def async_set_temperature(self, **kwargs) -> None:
-        """Do nothing.
+    @property
+    def min_temp(self) -> float:
+        """Return the minimum target temperature of a evohome Controller."""
+        return None
 
-        The evohome Controller doesn't have a target temperature.
-        """
-        return  # override NotImplementedError
+    @property
+    def max_temp(self) -> float:
+        """Return the maximum target temperature of a evohome Zone."""
+        return None
+
+    # async def async_set_temperature(self, **kwargs) -> None:
+    #     """Do nothing.
+
+    #     The evohome Controller doesn't have a target temperature.
+    #     """
+    #     return  # override NotImplementedError
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set an operating mode for the Controller."""
