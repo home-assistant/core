@@ -93,7 +93,7 @@ SENSOR_TYPES = {
             "StorageTempDesired",
             TEMP_CELSIUS,
             "mdi:thermometer",
-            0
+            0,
         ],
         "OutdoorsTemperature": [
             "OutdoorstempSensor",
