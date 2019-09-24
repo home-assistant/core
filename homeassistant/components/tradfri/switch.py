@@ -5,9 +5,6 @@ from .base_class import TradfriBaseDevice
 from .const import CONF_GATEWAY_ID
 
 
-TRADFRI_DEVICE_MANAGER = "Tradfri Switch Manager"
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Load Tradfri switches based on a config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
