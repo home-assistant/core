@@ -1375,7 +1375,7 @@ pyowlet==1.0.2
 pyowm==2.10.0
 
 # homeassistant.components.elv
-pypca==0.0.4
+pypca==0.0.5
 
 # homeassistant.components.lcn
 pypck==0.6.3
