@@ -7,11 +7,12 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_RECIPIENT,
     CONF_USERNAME,
-    CONF_PROVIDER,
 )
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
+
+from .const import CONF_PROVIDER
 
 _LOGGER = logging.getLogger(__name__)
 
