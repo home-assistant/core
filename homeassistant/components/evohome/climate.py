@@ -244,15 +244,15 @@ class EvoZone(EvoChild, EvoClimateDevice):
 
     async def async_set_preset_mode(self, preset_mode: Optional[str]) -> None:
         """Set the preset mode, if None, then revert to following the schedule."""
-        op_mode = HA_PRESET_TO_EVO.get(preset_mode, EVO_FOLLOW)
+        evo_preset_mode = HA_PRESET_TO_EVO.get(preset_mode, EVO_FOLLOW)
 
-        if op_mode == EVO_FOLLOW:
+        if evo_preset_mode == EVO_FOLLOW:
             await self._call_client_api(self._evo_device.cancel_temp_override())
             return
 
         temperature = self._evo_device.setpointStatus["targetHeatTemperature"]
 
-        if op_mode == EVO_TEMPOVER:
+        if evo_preset_mode == EVO_TEMPOVER:
             await self._update_schedule()
             until = parse_datetime(str(self.setpoints.get("next_sp_from")))
         else:  # EVO_PERMOVER
