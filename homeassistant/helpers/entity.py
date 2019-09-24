@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 import functools as ft
 from timeit import default_timer as timer
-from typing import Any, Optional, List, Iterable, Dict
+from typing import Any, Dict, Iterable, List, Optional, Union
 
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -137,7 +137,7 @@ class Entity:
         return None
 
     @property
-    def state(self) -> Optional[str]:
+    def state(self) -> Union[None, str, int, float]:
         """Return the state of the entity."""
         return STATE_UNKNOWN
 
