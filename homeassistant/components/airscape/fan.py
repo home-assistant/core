@@ -42,13 +42,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         device = airscape.Fan(host, timeout)
-    except (
-        airscape.exceptions.Timeout,
-        airscape.exceptions.ConnectionError
-    ):
+    except (airscape.exceptions.Timeout, airscape.exceptions.ConnectionError):
         _LOGGER.error(
-            "Cannot connect to %s.  "
-            "Device did not respond to API request", host
+            "Cannot connect to %s.  " "Device did not respond to API request", host
         )
     else:
         # Add devices
