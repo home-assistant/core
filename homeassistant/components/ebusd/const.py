@@ -1,7 +1,8 @@
 """Constants for ebus component."""
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, TEMP_CELSIUS, PRESSURE_BAR, ATTR_SECONDS
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, TEMP_CELSIUS, PRESSURE_BAR
 
 DOMAIN = "ebusd"
+TIME_SECONDS = "seconds"
 
 #  SensorTypes from ebusdpy module:
 #  0='decimal', 1='time-schedule', 2='switch', 3='string', 4='value;status'
@@ -86,9 +87,9 @@ SENSOR_TYPES = {
         "DesiredStorageTemperature": ["StorageTempDesired", TEMP_CELSIUS, "mdi:thermometer", 0],
         "OutdoorsTemperature": ["OutdoorstempSensor", TEMP_CELSIUS, "mdi:thermometer", 4],
         "WaterPreasure": ["WaterPressure", PRESSURE_BAR, "mdi:pipe", 4],
-        "AverageIgnitionTime": ["averageIgnitiontime", ATTR_SECONDS, "mdi:av-timer", 0],
-        "MaximumIgnitionTime": ["maxIgnitiontime", ATTR_SECONDS, "mdi:av-timer", 0],
-        "MinimumIgnitionTime": ["minIgnitiontime", ATTR_SECONDS, "mdi:av-timer", 0],
+        "AverageIgnitionTime": ["averageIgnitiontime", TIME_SECONDS, "mdi:av-timer", 0],
+        "MaximumIgnitionTime": ["maxIgnitiontime", TIME_SECONDS, "mdi:av-timer", 0],
+        "MinimumIgnitionTime": ["minIgnitiontime", TIME_SECONDS, "mdi:av-timer", 0],
         "ReturnTemperature": ["ReturnTemp", TEMP_CELSIUS, "mdi:thermometer", 4],
         "CentralHeatingPump": ["WP", None, "mdi:toggle-switch", 2],
         "HeatingSwitch": ["HeatingSwitch", None, "mdi:toggle-switch", 2],
