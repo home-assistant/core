@@ -484,39 +484,44 @@ class TodoistProjectData:
         for proposed_event in project_tasks:
             if event == proposed_event:
                 continue
+
             if proposed_event[COMPLETED]:
                 # Event is complete!
                 continue
+
             if proposed_event[END] is None:
                 # No end time:
                 if event[END] is None and (proposed_event[PRIORITY] < event[PRIORITY]):
                     # They also have no end time,
                     # but we have a higher priority.
                     event = proposed_event
-                    continue
-                else:
-                    continue
-            elif event[END] is None:
+                continue
+
+            if event[END] is None:
                 # We have an end time, they do not.
                 event = proposed_event
                 continue
+
             if proposed_event[END].date() > event[END].date():
                 # Event is too late.
                 continue
-            elif proposed_event[END].date() < event[END].date():
+
+            if proposed_event[END].date() < event[END].date():
                 # Event is earlier than current, select it.
                 event = proposed_event
                 continue
-            else:
-                if proposed_event[PRIORITY] > event[PRIORITY]:
-                    # Proposed event has a higher priority.
-                    event = proposed_event
-                    continue
-                elif proposed_event[PRIORITY] == event[PRIORITY] and (
-                    proposed_event[END] < event[END]
-                ):
-                    event = proposed_event
-                    continue
+
+            if proposed_event[PRIORITY] > event[PRIORITY]:
+                # Proposed event has a higher priority.
+                event = proposed_event
+                continue
+
+            if proposed_event[PRIORITY] == event[PRIORITY] and (
+                proposed_event[END] < event[END]
+            ):
+                event = proposed_event
+                continue
+
         return event
 
     async def async_get_events(self, hass, start_date, end_date):
