@@ -1,6 +1,9 @@
 """Support for IKEA Tradfri lights."""
 import logging
 
+from pytradfri.error import PytradfriError
+
+import homeassistant.util.color as color_util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -14,8 +17,6 @@ from homeassistant.components.light import (
     Light,
 )
 from homeassistant.core import callback
-import homeassistant.util.color as color_util
-
 from . import DOMAIN as TRADFRI_DOMAIN, KEY_API, KEY_GATEWAY
 from .const import CONF_GATEWAY_ID, CONF_IMPORT_GROUPS
 
@@ -26,7 +27,6 @@ ATTR_HUE = "hue"
 ATTR_SAT = "saturation"
 ATTR_TRANSITION_TIME = "transition_time"
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA
-IKEA = "IKEA of Sweden"
 TRADFRI_LIGHT_MANAGER = "Tradfri Light Manager"
 SUPPORTED_FEATURES = SUPPORT_TRANSITION
 SUPPORTED_GROUP_FEATURES = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
@@ -113,9 +113,6 @@ class TradfriGroup(Light):
     @callback
     def _async_start_observe(self, exc=None):
         """Start observation of light."""
-        # pylint: disable=import-error
-        from pytradfri.error import PytradfriError
-
         if exc:
             _LOGGER.warning("Observation failed for %s", self._name, exc_info=exc)
 
@@ -339,8 +336,6 @@ class TradfriLight(Light):
     @callback
     def _async_start_observe(self, exc=None):
         """Start observation of light."""
-        # pylint: disable=import-error
-        from pytradfri.error import PytradfriError
 
         if exc:
             self._available = False

@@ -4,5 +4,5 @@
     "documentation": "https://www.home-assistant.io/components/pca",
     "dependencies": [],
     "codeowners": ["@majuss"],
-    "requirements": ["pypca==0.0.4"]
+    "requirements": ["pypca==0.0.5"]
   }

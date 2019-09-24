@@ -23,7 +23,8 @@ def run(args: List) -> int:
     for fil in os.listdir(path):
         if fil == "__pycache__":
             continue
-        elif os.path.isdir(os.path.join(path, fil)):
+
+        if os.path.isdir(os.path.join(path, fil)):
             scripts.append(fil)
         elif fil != "__init__.py" and fil.endswith(".py"):
             scripts.append(fil[:-3])
