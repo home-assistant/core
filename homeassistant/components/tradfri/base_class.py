@@ -29,7 +29,7 @@ class TradfriBaseDevice:
         """Start observation of device."""
         if exc:
             self._available = False
-            self.async_schedule_update_ha_state()
+            self.async_schedule_update_ha_state()  # pylint: disable=no-member
             _LOGGER.warning("Observation failed for %s", self._name, exc_info=exc)
 
         try:
@@ -38,7 +38,7 @@ class TradfriBaseDevice:
                 err_callback=self._async_start_observe,
                 duration=0,
             )
-            self.hass.async_create_task(self._api(cmd))
+            self.hass.async_create_task(self._api(cmd))  # pylint: disable=no-member
         except PytradfriError as err:
             _LOGGER.warning("Observation failed, trying again", exc_info=err)
             self._async_start_observe()
@@ -79,13 +79,13 @@ class TradfriBaseDevice:
     @property
     def unique_id(self):
         """Return unique ID for device."""
-        return self._unique_id
+        return self._unique_id  # pylint: disable=no-member
 
     @callback
     def _observe_update(self, device):
         """Receive new state data for this device."""
         self._refresh(device)
-        self.async_schedule_update_ha_state()
+        self.async_schedule_update_ha_state()  # pylint: disable=no-member
 
     def _refresh(self, device):
         """Refresh the device data."""
