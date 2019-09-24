@@ -19,7 +19,8 @@ def config_per_platform(config: ConfigType, domain: str) -> Iterable[Tuple[Any, 
 
         if not platform_config:
             continue
-        elif not isinstance(platform_config, list):
+
+        if not isinstance(platform_config, list):
             platform_config = [platform_config]
 
         for item in platform_config:
