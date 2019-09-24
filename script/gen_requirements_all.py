@@ -140,6 +140,7 @@ TEST_REQUIREMENTS = (
     "pyps4-homeassistant",
     "pyqwikswitch",
     "PyRMVtransport",
+    "pysaj",
     "pysma",
     "pysmartapp",
     "pysmartthings",
