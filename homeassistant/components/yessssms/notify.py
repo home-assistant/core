@@ -25,18 +25,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def get_service(hass, config, discovery_info=None):
     """Get the YesssSMS notification service."""
     from YesssSMS import YesssSMS
-
     try:
         yesss = YesssSMS(
             config[CONF_USERNAME], config[CONF_PASSWORD], provider=config[CONF_PROVIDER]
         )
     except (KeyError, YesssSMS.UnsupportedProviderError) as ex:
         _LOGGER.error("Unknown provider: %s", ex)
-        return
+        return None
     except YesssSMS.MissingLoginCredentialsError as ex:
         _LOGGER.error("Missing Login Credentials: %s", ex)
-        return
+        return None
 
+    _LOGGER.debug(
+        "initialized; library version: %s, with %s", yesss.version(), yesss._provider
+    )
     return YesssSMSNotificationService(yesss, config[CONF_RECIPIENT])
 
 
@@ -47,11 +49,6 @@ class YesssSMSNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.yesss = client
         self._recipient = recipient
-        _LOGGER.debug(
-            "initialized; library version: %s, with %s",
-            self.yesss.version(),
-            self.yesss._provider,
-        )
 
     def send_message(self, message="", **kwargs):
         """Send a SMS message via Yesss.at's website."""
