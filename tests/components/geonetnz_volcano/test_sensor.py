@@ -165,6 +165,5 @@ async def test_setup_imperial(hass):
         assert state.attributes[ATTR_LONGITUDE] == -3.0
         assert state.attributes[ATTR_DISTANCE] == 9.6
         assert state.attributes[ATTR_FRIENDLY_NAME] == "Volcano Title 1"
-        # assert state.attributes[ATTR_ATTRIBUTION] == "Attribution 1"
         assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "alert level"
         assert state.attributes[ATTR_ICON] == "mdi:image-filter-hdr"
