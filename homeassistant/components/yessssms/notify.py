@@ -8,6 +8,8 @@ import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 
+from YesssSMS import YesssSMS
+
 from .const import CONF_PROVIDER
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,7 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_service(hass, config, discovery_info=None):
     """Get the YesssSMS notification service."""
-    from YesssSMS import YesssSMS
+
     try:
         yesss = YesssSMS(
             config[CONF_USERNAME], config[CONF_PASSWORD], provider=config[CONF_PROVIDER]
