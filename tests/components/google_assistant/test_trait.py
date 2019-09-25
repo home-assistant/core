@@ -868,9 +868,7 @@ async def test_arm_disarm_arm_away(hass):
                 },
                 {
                     "level_name": "triggered",
-                    "level_values": [
-                        {"level_synonym": ["triggered", "triggered"], "lang": "en"}
-                    ],
+                    "level_values": [{"level_synonym": ["triggered"], "lang": "en"}],
                 },
             ],
             "ordered": False,
@@ -1040,9 +1038,7 @@ async def test_arm_disarm_disarm(hass):
                 },
                 {
                     "level_name": "triggered",
-                    "level_values": [
-                        {"level_synonym": ["triggered", "triggered"], "lang": "en"}
-                    ],
+                    "level_values": [{"level_synonym": ["triggered"], "lang": "en"}],
                 },
             ],
             "ordered": False,

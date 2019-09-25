@@ -925,19 +925,15 @@ class ArmDisArmTrait(_Trait):
         response = {}
         levels = []
         for state in self.state_to_service:
+            # level synonyms are generated from state names
+            # 'armed_away' becomes 'armed away' or 'away'
+            level_synonym = [state.replace("_", " ")]
+            if state != STATE_ALARM_TRIGGERED:
+                level_synonym.append(state.split("_")[1])
+
             level = {
                 "level_name": state,
-                "level_values": [
-                    {
-                        "level_synonym": [
-                            state.replace("_", " "),
-                            state.split("_")[
-                                1 if state != STATE_ALARM_TRIGGERED else 0
-                            ],
-                        ],
-                        "lang": "en",
-                    }
-                ],
+                "level_values": [{"level_synonym": level_synonym, "lang": "en"}],
             }
             levels.append(level)
         response["availableArmLevels"] = {"levels": levels, "ordered": False}
@@ -957,14 +953,13 @@ class ArmDisArmTrait(_Trait):
     async def execute(self, command, data, params, challenge):
         """Execute an ArmDisarm command."""
         if params["arm"] and not params.get("cancel"):
-            # _LOGGER.debug("%s - %s", self.state.state, params["armLevel"])
             if self.state.state == params["armLevel"]:
                 raise SmartHomeError(ERR_ALREADY_ARMED, "System is already armed")
             if self.state.attributes["code_arm_required"]:
                 _verify_pin_challenge(data, self.state, challenge)
             service = self.state_to_service[params["armLevel"]]
         # disarm the system without asking for code when
-        # 'cancel' arming action is received current status is pending
+        # 'cancel' arming action is received while current status is pending
         elif (
             params["arm"]
             and params.get("cancel")
