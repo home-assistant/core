@@ -3,6 +3,7 @@ import logging
 
 import voluptuous as vol
 from api.soma_api import SomaApi
+from requests import RequestException
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -44,7 +45,7 @@ class SomaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 title="Soma Connect",
                 data={"host": user_input["host"], "port": user_input["port"]},
             )
-        except Exception:  # pylint: disable=broad-except
+        except RequestException:
             _LOGGER.error("Connection to SOMA Connect failed")
             return self.async_abort(reason="connection_error")
 
