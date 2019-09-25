@@ -75,6 +75,15 @@ HUE_TAP_REMOTE = {
     (CONF_SHORT_PRESS, CONF_BUTTON_4): 18,
 }
 
+SYMFONISK_SOUND_CONTROLLER_MODEL = "SYMFONISK Sound Controller"
+SYMFONISK_SOUND_CONTROLLER = {
+    (CONF_SHORT_PRESS, CONF_TURN_ON): 1002,
+    (CONF_DOUBLE_PRESS, CONF_TURN_ON): 1004,
+    (CONF_TRIPLE_PRESS, CONF_TURN_ON): 1005,
+    (CONF_ROTATED, CONF_LEFT): 3002,
+    (CONF_ROTATED, CONF_RIGHT): 2002,
+}
+
 TRADFRI_ON_OFF_SWITCH_MODEL = "TRADFRI on/off switch"
 TRADFRI_ON_OFF_SWITCH = {
     (CONF_SHORT_PRESS, CONF_TURN_ON): 1002,
@@ -162,6 +171,7 @@ AQARA_SQUARE_SWITCH = {
 REMOTES = {
     HUE_DIMMER_REMOTE_MODEL: HUE_DIMMER_REMOTE,
     HUE_TAP_REMOTE_MODEL: HUE_TAP_REMOTE,
+    SYMFONISK_SOUND_CONTROLLER_MODEL: SYMFONISK_SOUND_CONTROLLER,
     TRADFRI_ON_OFF_SWITCH_MODEL: TRADFRI_ON_OFF_SWITCH,
     TRADFRI_OPEN_CLOSE_REMOTE_MODEL: TRADFRI_OPEN_CLOSE_REMOTE,
     TRADFRI_REMOTE_MODEL: TRADFRI_REMOTE,
@@ -200,7 +210,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
 
-    if device.model not in REMOTES and trigger not in REMOTES[device.model]:
+    if device.model not in REMOTES or trigger not in REMOTES[device.model]:
         raise InvalidDeviceAutomationConfig
 
     trigger = REMOTES[device.model][trigger]
