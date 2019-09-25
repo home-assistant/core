@@ -90,7 +90,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             with async_timeout.timeout(10):
                 self.bridges = await async_discovery(session)
 
-        except asyncio.TimeoutError:
+        except (asyncio.TimeoutError, ResponseError):
             self.bridges = []
 
         if len(self.bridges) == 1:
