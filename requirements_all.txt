@@ -639,7 +639,7 @@ hole==0.5.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190919.0
+home-assistant-frontend==20190919.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.4
@@ -2025,7 +2025,7 @@ zigpy-homeassistant==0.8.0
 zigpy-xbee-homeassistant==0.4.0
 
 # homeassistant.components.zha
-zigpy-zigate==0.2.0
+zigpy-zigate==0.3.1
 
 # homeassistant.components.zoneminder
 zm-py==0.3.3
