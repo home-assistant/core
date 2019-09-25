@@ -2011,7 +2011,7 @@ zengge==0.2
 zeroconf==0.23.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.23
+zha-quirks==0.0.25
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9
