@@ -1,15 +1,15 @@
 """Support for IKEA Tradfri switches."""
 import logging
 
+from pytradfri.error import PytradfriError
+
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
-
 from . import DOMAIN as TRADFRI_DOMAIN, KEY_API, KEY_GATEWAY
 from .const import CONF_GATEWAY_ID
 
 _LOGGER = logging.getLogger(__name__)
 
-IKEA = "IKEA of Sweden"
 TRADFRI_SWITCH_MANAGER = "Tradfri Switch Manager"
 
 
@@ -98,8 +98,6 @@ class TradfriSwitch(SwitchDevice):
     @callback
     def _async_start_observe(self, exc=None):
         """Start observation of switch."""
-        from pytradfri.error import PytradfriError
-
         if exc:
             self._available = False
             self.async_schedule_update_ha_state()

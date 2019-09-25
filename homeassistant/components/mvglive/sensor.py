@@ -189,17 +189,19 @@ class MVGLiveData:
                 and _departure["destination"] not in self._destinations
             ):
                 continue
-            elif (
+
+            if (
                 "" not in self._directions[:1]
                 and _departure["direction"] not in self._directions
             ):
                 continue
-            elif (
-                "" not in self._lines[:1] and _departure["linename"] not in self._lines
-            ):
+
+            if "" not in self._lines[:1] and _departure["linename"] not in self._lines:
                 continue
-            elif _departure["time"] < self._timeoffset:
+
+            if _departure["time"] < self._timeoffset:
                 continue
+
             # now select the relevant data
             _nextdep = {ATTR_ATTRIBUTION: ATTRIBUTION}
             for k in ["destination", "linename", "time", "direction", "product"]:

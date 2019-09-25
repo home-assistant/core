@@ -23,6 +23,7 @@ from homeassistant.const import (
     MATCH_ALL,
     CONF_DEVICE_CLASS,
 )
+
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
@@ -162,6 +163,11 @@ class SensorTemplate(Entity):
             """Update template on startup."""
             if self._entities != MATCH_ALL:
                 # Track state change only for valid templates
+                _LOGGER.debug(
+                    ">>>> '%s' Setting up tracking for entities: %s",
+                    self._name,
+                    self._entities,
+                )
                 async_track_state_change(
                     self.hass, self._entities, template_sensor_state_listener
                 )
@@ -205,6 +211,7 @@ class SensorTemplate(Entity):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
+        _LOGGER.debug(">>>> %s is Available: %s", self, self._available)
         return self._available
 
     @property
@@ -221,7 +228,9 @@ class SensorTemplate(Entity):
         """Update the state from the template."""
         try:
             self._state = self._template.async_render()
+            self._available = True
         except TemplateError as ex:
+            self._available = False
             if ex.args and ex.args[0].startswith(
                 "UndefinedError: 'None' has no attribute"
             ):
@@ -233,12 +242,6 @@ class SensorTemplate(Entity):
                 self._state = None
                 _LOGGER.error("Could not render template %s: %s", self._name, ex)
 
-        templates = {
-            "_icon": self._icon_template,
-            "_entity_picture": self._entity_picture_template,
-            "_name": self._friendly_name_template,
-        }
-
         attrs = {}
         for key, value in self._attribute_templates.items():
             try:
@@ -248,12 +251,27 @@ class SensorTemplate(Entity):
 
         self._attributes = attrs
 
+        templates = {
+            "_icon": self._icon_template,
+            "_entity_picture": self._entity_picture_template,
+            "_name": self._friendly_name_template,
+            "_available": self._availability_template,
+        }
+
         for property_name, template in templates.items():
             if template is None:
                 continue
 
             try:
-                setattr(self, property_name, template.async_render())
+                value = template.async_render()
+                if property_name == "_available":
+                    _LOGGER.debug(">>>> A Rendering _available:::%s", value)
+                    value = value.lower() == "true"
+                    _LOGGER.debug(">>>> B Rendering _available:::%s", value)
+                _LOGGER.debug(
+                    ">>>> setting %s property %s to %s", self, property_name, value
+                )
+                setattr(self, property_name, value)
             except TemplateError as ex:
                 friendly_property_name = property_name[1:].replace("_", " ")
                 if ex.args and ex.args[0].startswith(
@@ -276,15 +294,3 @@ class SensorTemplate(Entity):
                         self._name,
                         ex,
                     )
-        if self._availability_template is not None:
-            try:
-                result = self._availability_template.async_render()
-                self._available = result == "true"
-            except (TemplateError, ValueError) as ex:
-                self._available = True
-                _LOGGER.error(
-                    "Could not render %s template %s: %s",
-                    CONF_AVAILABILITY_TEMPLATE,
-                    self._name,
-                    ex,
-                )

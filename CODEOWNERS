@@ -115,6 +115,7 @@ homeassistant/components/gtfs/* @robbiet480
 homeassistant/components/harmony/* @ehendrix23
 homeassistant/components/hassio/* @home-assistant/hass-io
 homeassistant/components/heos/* @andrewsayre
+homeassistant/components/here_travel_time/* @eifinger
 homeassistant/components/hikvision/* @mezz64
 homeassistant/components/hikvisioncam/* @fbradyirl
 homeassistant/components/history/* @home-assistant/core
@@ -146,6 +147,7 @@ homeassistant/components/iqvia/* @bachya
 homeassistant/components/irish_rail_transport/* @ttroy50
 homeassistant/components/izone/* @Swamp-Ig
 homeassistant/components/jewish_calendar/* @tsvi
+homeassistant/components/kaiterra/* @Michsior14
 homeassistant/components/keba/* @dannerph
 homeassistant/components/knx/* @Julius2342
 homeassistant/components/kodi/* @armills
@@ -197,6 +199,7 @@ homeassistant/components/nws/* @MatthewFlamm
 homeassistant/components/nzbget/* @chriscla
 homeassistant/components/obihai/* @dshokouhi
 homeassistant/components/ohmconnect/* @robbiet480
+homeassistant/components/ombi/* @larssont
 homeassistant/components/onboarding/* @home-assistant/core
 homeassistant/components/opentherm_gw/* @mvn23
 homeassistant/components/openuv/* @bachya
@@ -267,7 +270,6 @@ homeassistant/components/switchmate/* @danielhiversen
 homeassistant/components/syncthru/* @nielstron
 homeassistant/components/synology_srm/* @aerialls
 homeassistant/components/syslog/* @fabaff
-homeassistant/components/sytadin/* @gautric
 homeassistant/components/tahoma/* @philklei
 homeassistant/components/tautulli/* @ludeeus
 homeassistant/components/tellduslive/* @fredrike

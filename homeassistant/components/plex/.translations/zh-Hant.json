@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "\u6240\u6709\u7d81\u5b9a\u4f3a\u670d\u5668\u90fd\u5df2\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "Plex \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_in_progress": "Plex \u5df2\u7d93\u8a2d\u5b9a",
+            "invalid_import": "\u532f\u5165\u4e4b\u8a2d\u5b9a\u7121\u6548",
+            "unknown": "\u672a\u77e5\u539f\u56e0\u5931\u6557"
+        },
+        "error": {
+            "faulty_credentials": "\u9a57\u8b49\u5931\u6557",
+            "no_servers": "\u6b64\u5e33\u865f\u672a\u7d81\u5b9a\u4f3a\u670d\u5668",
+            "not_found": "\u627e\u4e0d\u5230 Plex \u4f3a\u670d\u5668"
+        },
+        "step": {
+            "select_server": {
+                "data": {
+                    "server": "\u4f3a\u670d\u5668"
+                },
+                "description": "\u627e\u5230\u591a\u500b\u4f3a\u670d\u5668\uff0c\u8acb\u9078\u64c7\u4e00\u7d44\uff1a",
+                "title": "\u9078\u64c7 Plex \u4f3a\u670d\u5668"
+            },
+            "user": {
+                "data": {
+                    "token": "Plex \u5bc6\u9470"
+                },
+                "description": "\u8acb\u8f38\u5165 Plex \u5bc6\u9470\u4ee5\u9032\u884c\u81ea\u52d5\u8a2d\u5b9a\u3002",
+                "title": "\u9023\u7dda\u81f3 Plex \u4f3a\u670d\u5668"
+            }
+        },
+        "title": "Plex"
+    }
+}

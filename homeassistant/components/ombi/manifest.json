@@ -1,0 +1,8 @@
+{
+    "domain": "ombi",
+    "name": "Ombi",
+    "documentation": "https://www.home-assistant.io/components/ombi/",
+    "dependencies": [],
+    "codeowners": ["@larssont"],
+    "requirements": ["pyombi==0.1.5"]
+}
