@@ -39,7 +39,8 @@ async def async_setup_entry(hass, config_entry):
 
     await gateway.async_update_device_registry()
 
-    await async_add_uuid_to_config_entry(hass, config_entry)
+    if CONF_UUID not in config_entry.data:
+        await async_add_uuid_to_config_entry(hass, config_entry)
 
     await async_setup_services(hass)
 
@@ -73,23 +74,17 @@ async def async_update_master_gateway(hass, config_entry):
 
     old_options = dict(config_entry.options)
 
-    new_options = {CONF_MASTER_GATEWAY: master}
-
-    options = {**old_options, **new_options}
+    options = {**old_options, CONF_MASTER_GATEWAY: master}
 
     hass.config_entries.async_update_entry(config_entry, options=options)
 
 
 async def async_add_uuid_to_config_entry(hass, config_entry):
     """Add UUID to config entry to help discovery identify entries."""
-    if CONF_UUID in config_entry.data:
-        return
-
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     old_config = dict(config_entry.data)
-    new_config = {CONF_UUID: gateway.api.config.uuid}
 
-    config = {**old_config, **new_config}
+    config = {**old_config, CONF_UUID: gateway.api.config.uuid}
 
     hass.config_entries.async_update_entry(config_entry, data=config)
