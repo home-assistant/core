@@ -720,13 +720,22 @@ async def async_process_component_config(
         _LOGGER.error("Unable to import %s: %s", domain, ex)
         return None
 
-    if hasattr(component, "async_validate_config"):
+    # Check if the integration has a custom config validator
+    config_validator = None
+    try:
+        config_validator = integration.get_platform("config")
+    except ImportError:
+        pass
+    if config_validator is not None:
         try:
-            return await component.async_validate_config(hass, config)  # type: ignore
+            return await config_validator.async_validate_config(
+                hass, config
+            )  # type: ignore
         except (vol.Invalid, HomeAssistantError) as ex:
             async_log_exception(ex, domain, config, hass)
             return None
 
+    # No custom config validator, proceed with schema validation
     if hasattr(component, "CONFIG_SCHEMA"):
         try:
             return component.CONFIG_SCHEMA(config)  # type: ignore

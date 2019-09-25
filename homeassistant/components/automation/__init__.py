@@ -23,22 +23,16 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.config import async_log_exception, config_without_domain
 from homeassistant.core import Context, CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    condition,
-    config_per_platform,
-    extract_domain_configs,
-    script,
-)
+from homeassistant.helpers import condition, extract_domain_configs, script
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import TemplateVarsType
-from homeassistant.loader import bind_hass, IntegrationNotFound
+from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime, utcnow
 
 
@@ -379,50 +373,6 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             return None
 
         return {CONF_ID: self._id}
-
-
-async def async_validate_config_item(hass, config, full_config):
-    """Validate config item."""
-    try:
-        config = PLATFORM_SCHEMA(config)
-
-        triggers = []
-        for trigger in config[CONF_TRIGGER]:
-            trigger_platform = importlib.import_module(
-                ".{}".format(trigger[CONF_PLATFORM]), __name__
-            )
-            if hasattr(trigger_platform, "async_validate_trigger_config"):
-                trigger = await trigger_platform.async_validate_trigger_config(
-                    hass, trigger
-                )
-            triggers.append(trigger)
-        config[CONF_TRIGGER] = triggers
-    except (vol.Invalid, HomeAssistantError, IntegrationNotFound) as ex:
-        async_log_exception(ex, DOMAIN, full_config, hass)
-        return None
-
-    return config
-
-
-async def async_validate_config(hass, config):
-    """Validate config."""
-    automations = []
-    validated_automations = await asyncio.gather(
-        *(
-            async_validate_config_item(hass, p_config, config)
-            for _, p_config in config_per_platform(config, DOMAIN)
-        )
-    )
-    for validated_automation in validated_automations:
-        if validated_automation is not None:
-            automations.append(validated_automation)
-
-    # Create a copy of the configuration with all config for current
-    # component removed and add validated config back in.
-    config = config_without_domain(config, DOMAIN)
-    config[DOMAIN] = automations
-
-    return config
 
 
 async def _async_process_config(hass, config, component):
