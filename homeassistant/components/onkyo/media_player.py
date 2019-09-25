@@ -29,11 +29,11 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_SOURCES = "sources"
 CONF_MAX_VOLUME = "max_volume"
-CONF_RECEIVER_MAX_VOLUME = "max_volume"
+CONF_RECEIVER_MAX_VOLUME = "receiver_max_volume"
 
 DEFAULT_NAME = "Onkyo Receiver"
-SUPPORTED_MAX_VOLUME = 80
-RECEIVER_MAX_VOLUME = 164
+SUPPORTED_MAX_VOLUME = 100
+DEFAULT_RECEIVER_MAX_VOLUME = 80
 
 SUPPORT_ONKYO = (
     SUPPORT_VOLUME_SET
@@ -76,8 +76,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_RECEIVER_MAX_VOLUME, default=DEFAULT_RECEIVER_MAX_VOLUME): vol.All(
+            vol.Coerce(int)
+        ),
         vol.Optional(CONF_MAX_VOLUME, default=SUPPORTED_MAX_VOLUME): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=164)
+            vol.Coerce(int), vol.Range(min=1, max=100)
         ),
         vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES): {cv.string: cv.string},
     }
@@ -166,6 +169,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     config.get(CONF_SOURCES),
                     name=config.get(CONF_NAME),
                     max_volume=config.get(CONF_MAX_VOLUME),
+                    receiver_max_volume=config.get(CONF_RECEIVER_MAX_VOLUME)
                 )
             )
             KNOWN_HOSTS.append(host)
@@ -181,7 +185,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                         receiver,
                         config.get(CONF_SOURCES),
                         name=f"{config[CONF_NAME]} Zone 2",
-                        max_volume=config.get(CONF_MAX_VOLUME)
+                        max_volume=config.get(CONF_MAX_VOLUME),
+                        receiver_max_volume=config.get(CONF_RECEIVER_MAX_VOLUME)
                     )
                 )
             # Add Zone3 if available
@@ -193,7 +198,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                         receiver,
                         config.get(CONF_SOURCES),
                         name=f"{config[CONF_NAME]} Zone 3",
-                        max_volume=config.get(CONF_MAX_VOLUME)
+                        max_volume=config.get(CONF_MAX_VOLUME),
+                        receiver_max_volume=config.get(CONF_RECEIVER_MAX_VOLUME)
                     )
                 )
         except OSError:
@@ -209,7 +215,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class OnkyoDevice(MediaPlayerDevice):
     """Representation of an Onkyo device."""
 
-    def __init__(self, receiver, sources, name=None, max_volume=SUPPORTED_MAX_VOLUME, receiver_max_volume=RECEIVER_MAX_VOLUME):
+    def __init__(self, receiver, sources, name, max_volume, receiver_max_volume):
         """Initialize the Onkyo Receiver."""
         self._receiver = receiver
         self._muted = False
@@ -278,7 +284,6 @@ class OnkyoDevice(MediaPlayerDevice):
         self._muted = bool(mute_raw[1] == "on")
 #       AMP_VOL/MAX_RECEIVER_VOL*(MAX_VOL/100)
         self._volume = volume_raw[1] / self._receiver_max_volume * (self._max_volume / 100)
-#       self._volume = volume_raw[1] / self._max_volume
 
         if not hdmi_out_raw:
             return
@@ -330,12 +335,14 @@ class OnkyoDevice(MediaPlayerDevice):
 
     def set_volume_level(self, volume):
         """
-        Set volume level, input is range 0..1.
+        Set volume level, input is range 0..1. however full volume on the amp
+        is usually far too loud so allow the user to specify the upper range with CONF_MAX_VOLUME
 
-        Onkyo ranges from 1-80 however 80 is usually far too loud
-        so allow the user to specify the upper range with CONF_MAX_VOLUME
+        First we change as per max_volume set by user. This means that if max volume is 80 then full
+        volume in HA will give 80% volume on the receiver. Then we convert
+        that to the correct scale for the receiver."""
+
         """
-#        self.command(f"volume {int(volume * self._max_volume)}")
 #        HA_VOL * (MAX VOL / 100) * MAX_RECEIVER_VOL
         self.command(f"volume {int(volume * (self._max_volume / 100) * self._receiver_max_volume)}")
 
@@ -378,11 +385,11 @@ class OnkyoDevice(MediaPlayerDevice):
 class OnkyoDeviceZone(OnkyoDevice):
     """Representation of an Onkyo device's extra zone."""
 
-    def __init__(self, zone, receiver, sources, name=None, max_volume=SUPPORTED_MAX_VOLUME, receiver_max_volume=RECEIVER_MAX_VOLUME):
+    def __init__(self, zone, receiver, sources, name, max_volume, receiver_max_volume):
         """Initialize the Zone with the zone identifier."""
         self._zone = zone
         self._supports_volume = True
-        super().__init__(receiver, sources, name, max_volume, receiver_max_volumr)
+        super().__init__(receiver, sources, name, max_volume, receiver_max_volume)
 
     def update(self):
         """Get the latest state from the device."""
@@ -429,7 +436,6 @@ class OnkyoDeviceZone(OnkyoDevice):
         elif ATTR_PRESET in self._attributes:
             del self._attributes[ATTR_PRESET]
         if self._supports_volume:
-            # self._volume = volume_raw[1] / 80.0
             # AMP_VOL/MAX_RECEIVER_VOL*(MAX_VOL/100)
             self._volume = volume_raw[1] / self._receiver_max_volume * (self._max_volume / 100)
 
@@ -445,8 +451,14 @@ class OnkyoDeviceZone(OnkyoDevice):
         self.command(f"zone{self._zone}.power=standby")
 
     def set_volume_level(self, volume):
-        """Set volume level, input is range 0..1. Onkyo ranges from 1-80."""
-        # self.command(f"zone{self._zone}.volume={int(volume * 80)}")
+        """
+        Set volume level, input is range 0..1. however full volume on the amp
+        is usually far too loud so allow the user to specify the upper range with CONF_MAX_VOLUME
+
+        First we change as per max_volume set by user. This means that if max volume is 80 then full
+        volume in HA will give 80% volume on the receiver. Then we convert
+        that to the correct scale for the receiver."""
+        """
         # HA_VOL * (MAX VOL / 100) * MAX_RECEIVER_VOL
         self.command(f"zone{self._zone}.volume={int(volume * (self._max_volume / 100) * self._receiver_max_volume)}")
 
