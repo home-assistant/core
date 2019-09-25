@@ -151,7 +151,7 @@ stages:
           pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
     - script: |
         . venv/bin/activate
-        pylint homeassistant
+        pylint -v homeassistant
       displayName: 'Run pylint'
   - job: 'Mypy'
     pool:
