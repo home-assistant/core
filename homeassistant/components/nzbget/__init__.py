@@ -154,6 +154,7 @@ class NZBGetData:
     def rate(self, limit):
         """Set download speed."""
         try:
-            self._api.rate(limit)
+            if not self._api.rate(limit):
+                _LOGGER.error("Limit was out of range")
         except pynzbgetapi.NZBGetAPIException as err:
-            _LOGGER.error("Uanble to resume download queue: %s", err)
+            _LOGGER.error("Unable to set download speed: %s", err)
