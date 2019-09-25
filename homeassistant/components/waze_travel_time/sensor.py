@@ -268,7 +268,7 @@ class WazeTravelTimeData:
                     self.destination,
                     self.region,
                     self.vehicle_type,
-                    log_lvl=logging.DEBUG,
+                    log_lvl=None,
                 )
                 routes = params.calc_all_routes_info(real_time=self.realtime)
 
