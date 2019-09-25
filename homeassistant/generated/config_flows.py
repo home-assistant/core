@@ -15,6 +15,7 @@ FLOWS = [
     "daikin",
     "deconz",
     "dialogflow",
+    "ecobee",
     "emulated_roku",
     "esphome",
     "geofency",
