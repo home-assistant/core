@@ -3,7 +3,7 @@
   "name": "Onkyo",
   "documentation": "https://www.home-assistant.io/components/onkyo",
   "requirements": [
-    "onkyo-eiscp==1.2.4"
+    "onkyo-eiscp==1.2.5"
   ],
   "dependencies": [],
   "codeowners": []
