@@ -43,7 +43,7 @@ def get_service(hass, config, discovery_info=None):
             )
             return None
 
-        _LOGGER.info("Login data for '%s' valid", yesss.get_provider())
+        _LOGGER.debug("Login data for '%s' valid", yesss.get_provider())
     except YesssSMS.ConnectionError:
         _LOGGER.warning(
             "Connection Error, could not verify login data for '%s'",
