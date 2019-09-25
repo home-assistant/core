@@ -8,9 +8,12 @@ from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 
 from .const import (
     CONF_SERVER,
+    CONF_SERVER_IDENTIFIER,
     CONF_SHOW_ALL_CONTROLS,
     CONF_USE_EPISODE_ART,
     DEFAULT_VERIFY_SSL,
+    DOMAIN as PLEX_DOMAIN,
+    SERVERS,
 )
 from .errors import NoServersFound, ServerNotSpecified
 
@@ -26,6 +29,12 @@ class PlexServer:
         self._server_name = server_config.get(CONF_SERVER)
         self._verify_ssl = server_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
         self.options = options
+
+    @staticmethod
+    async def async_options_updated(hass, entry):
+        """Triggered by config entry options updates."""
+        server_id = entry.data[CONF_SERVER_IDENTIFIER]
+        hass.data[PLEX_DOMAIN][SERVERS][server_id].options = entry.options
 
     def connect(self):
         """Connect to a Plex server directly, obtaining direct URL if necessary."""

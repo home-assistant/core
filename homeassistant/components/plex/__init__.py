@@ -136,6 +136,8 @@ async def async_setup_entry(hass, entry):
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
+    entry.add_update_listener(plex_server.async_options_updated)
+
     return True
 
 
