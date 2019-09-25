@@ -313,12 +313,12 @@ class EvoController(EvoClimateDevice):
 
     @property
     def min_temp(self) -> float:
-        """Return the minimum target temperature of a evohome Controller."""
+        """Return None as evohome Controllers do not have a target temperature."""
         return None
 
     @property
     def max_temp(self) -> float:
-        """Return the maximum target temperature of a evohome Zone."""
+        """Return None as evohome Controllers do not have a target temperature."""
         return None
 
     async def async_set_temperature(self, **kwargs) -> None:

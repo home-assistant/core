@@ -121,6 +121,31 @@ def _handle_exception(err) -> bool:
         raise  # we don't expect/handle any other ClientResponseError
 
 
+def convert_until(status, until_key) -> str:
+    """Convert datetime string from zulu/naive to local/aware as isoformat."""
+    if until_key in status:
+        dt_utc_naive = datetime.strptime(status[until_key], EVO_STRFTIME)
+        status[until_key] = as_local(dt_utc_naive).isoformat()
+
+
+def convert_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
+    """Recursively convert a dict's keys to snake_case."""
+
+    def convert_key(key: str) -> str:
+        """Convert a string to snake_case."""
+        string = re.sub(r"[\-\.\s]", "_", str(key))
+        return (string[0]).lower() + re.sub(
+            r"[A-Z]", lambda matched: "_" + matched.group(0).lower(), string[1:]
+        )
+
+    return {
+        (convert_key(k) if isinstance(k, str) else k): (
+            convert_dict(v) if isinstance(v, dict) else v
+        )
+        for k, v in dictionary.items()
+    }
+
+
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Create a (EMEA/EU-based) Honeywell evohome system."""
     broker = EvoBroker(hass, config[DOMAIN])
@@ -312,30 +337,6 @@ class EvoDevice(Entity):
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
         """Return the Evohome-specific state attributes."""
-
-        def convert_until(status, until_key) -> str:
-            """Convert datetime string from zulu/naive to local/aware as isoformat."""
-            if until_key in status:
-                dt_utc_naive = datetime.strptime(status[until_key], EVO_STRFTIME)
-                status[until_key] = as_local(dt_utc_naive).isoformat()
-
-        def convert_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
-            """Recursively convert a dict's keys to snake_case."""
-
-            def convert_key(key: str) -> str:
-                """Convert a string to snake_case."""
-                string = re.sub(r"[\-\.\s]", "_", str(key))
-                return (string[0]).lower() + re.sub(
-                    r"[A-Z]", lambda matched: "_" + matched.group(0).lower(), string[1:]
-                )
-
-            return {
-                (convert_key(k) if isinstance(k, str) else k): (
-                    convert_dict(v) if isinstance(v, dict) else v
-                )
-                for k, v in dictionary.items()
-            }
-
         status = self._device_state_attrs
         if "systemModeStatus" in status:
             convert_until(status["systemModeStatus"], "timeUntil")
@@ -392,21 +393,15 @@ class EvoChild(EvoDevice):
     def __init__(self, evo_broker, evo_device) -> None:
         """Initialize the evohome Controller (hub)."""
         super().__init__(evo_broker, evo_device)
-        self._schedule = self._setpoints = {}
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._evo_device.temperatureStatus["isAvailable"]
+        self._schedule = {}
+        self._setpoints = {}
 
     @property
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature of the evohome Zone."""
-        return (
-            self._evo_device.temperatureStatus["temperature"]
-            if self._evo_device.temperatureStatus["isAvailable"]
-            else None
-        )
+        if not self._evo_device.temperatureStatus["isAvailable"]:
+            return None
+        return self._evo_device.temperatureStatus["temperature"]
 
     @property
     def setpoints(self) -> Dict[str, Any]:
