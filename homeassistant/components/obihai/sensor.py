@@ -78,6 +78,7 @@ class ObihaiServiceSensors(Entity):
         self._state = None
         self._name = f"{OBIHAI} {self._service_name}"
         self._pyobihai = pyobihai
+        self._unique_id = f"{self._pyobihai.get_device_serial()}-{self._service_name}"
 
     @property
     def name(self):
@@ -99,9 +100,7 @@ class ObihaiServiceSensors(Entity):
     @property
     def unique_id(self):
         """Return the unique ID."""
-        serial = self._pyobihai.get_device_serial()
-        unique_id = f"{serial}-{self._service_name}"
-        return unique_id
+        return self._unique_id
 
     @property
     def device_class(self):
