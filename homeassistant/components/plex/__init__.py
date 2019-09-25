@@ -104,7 +104,7 @@ async def async_setup_entry(hass, entry):
         )
         hass.config_entries.async_update_entry(entry, options=options)
 
-    plex_server = PlexServer(server_config)
+    plex_server = PlexServer(server_config, entry.options)
     try:
         await hass.async_add_executor_job(plex_server.connect)
     except requests.exceptions.ConnectionError as error:
