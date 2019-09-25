@@ -37,21 +37,23 @@ def get_service(hass, config, discovery_info=None):
         return None
     try:
         if yesss.login_data_valid():
-            _LOGGER.info("Login data for '%s' valid.", yesss._provider)
+            _LOGGER.info("Login data for '%s' valid.", yesss.get_provider())
         else:
             _LOGGER.error(
                 "Login data is not valid! Please double check your login data at %s.",
-                yesss._login_url,
+                yesss.get_login_url(),
             )
             return None
     except YesssSMS.ConnectionError:
         _LOGGER.info(
-            "Not connected, could not verify login data for '%s'.", yesss._provider
+            "Not connected, could not verify login data for '%s'.", yesss.get_provider()
         )
         pass
 
     _LOGGER.debug(
-        "initialized; library version: %s, with %s", yesss.version(), yesss._provider
+        "initialized; library version: %s, with %s",
+        yesss.version(),
+        yesss.get_provider(),
     )
     return YesssSMSNotificationService(yesss, config[CONF_RECIPIENT])
 
@@ -87,7 +89,7 @@ class YesssSMSNotificationService(BaseNotificationService):
         except self.yesss.ConnectionError as ex:
             _LOGGER.error(
                 "Unable to connect to server of provider (%s): %s",
-                self.yesss._provider,
+                self.yesss.get_provider(),
                 ex,
             )
         except self.yesss.AccountSuspendedError as ex:
