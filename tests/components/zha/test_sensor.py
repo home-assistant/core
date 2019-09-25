@@ -177,7 +177,7 @@ async def send_attribute_report(hass, cluster, attrid, value):
     device is paired to the zigbee network.
     """
     attr = make_attribute(attrid, value)
-    cluster.handle_message(False, 1, 0x0A, [[attr]])
+    cluster.handle_message(1, 0x0A, [[attr]])
     await hass.async_block_till_done()
 
 

@@ -39,6 +39,7 @@ from .const import (
     DOMAIN as PLEX_DOMAIN,
     NAME_FORMAT,
     PLEX_MEDIA_PLAYER_OPTIONS,
+    REFRESH_LISTENERS,
     SERVERS,
 )
 
@@ -71,7 +72,9 @@ def _setup_platform(hass, config_entry, add_entities_callback):
     plexserver = hass.data[PLEX_DOMAIN][SERVERS][server_id]
     plex_clients = {}
     plex_sessions = {}
-    track_time_interval(hass, lambda now: update_devices(), timedelta(seconds=10))
+    hass.data[PLEX_DOMAIN][REFRESH_LISTENERS][server_id] = track_time_interval(
+        hass, lambda now: update_devices(), timedelta(seconds=10)
+    )
 
     def update_devices():
         """Update the devices objects."""

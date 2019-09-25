@@ -1,10 +1,11 @@
 """Support for IKEA Tradfri sensors."""
-from datetime import timedelta
 import logging
+from datetime import timedelta
+
+from pytradfri.error import PytradfriError
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
-
 from . import KEY_API, KEY_GATEWAY
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,9 +80,6 @@ class TradfriDevice(Entity):
     @callback
     def _async_start_observe(self, exc=None):
         """Start observation of light."""
-        # pylint: disable=import-error
-        from pytradfri.error import PytradfriError
-
         if exc:
             _LOGGER.warning("Observation failed for %s", self._name, exc_info=exc)
 

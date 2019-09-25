@@ -25,7 +25,7 @@ TRIGGER_SCHEMA = vol.Schema(
 )
 
 
-async def async_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     topic = config[CONF_TOPIC]
     payload = config.get(CONF_PAYLOAD)

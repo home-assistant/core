@@ -1,4 +1,5 @@
 """Support to embed Plex."""
+import asyncio
 import logging
 
 import plexapi.exceptions
@@ -21,6 +22,7 @@ from .const import (
     CONF_USE_EPISODE_ART,
     CONF_SHOW_ALL_CONTROLS,
     CONF_SERVER,
+    CONF_SERVER_IDENTIFIER,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
@@ -28,6 +30,7 @@ from .const import (
     PLATFORMS,
     PLEX_MEDIA_PLAYER_OPTIONS,
     PLEX_SERVER_CONFIG,
+    REFRESH_LISTENERS,
     SERVERS,
 )
 from .server import PlexServer
@@ -61,7 +64,7 @@ _LOGGER = logging.getLogger(__package__)
 
 def setup(hass, config):
     """Set up the Plex component."""
-    hass.data.setdefault(PLEX_DOMAIN, {SERVERS: {}})
+    hass.data.setdefault(PLEX_DOMAIN, {SERVERS: {}, REFRESH_LISTENERS: {}})
 
     plex_config = config.get(PLEX_DOMAIN, {})
     if plex_config:
@@ -127,5 +130,23 @@ async def async_setup_entry(hass, entry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
+
+    return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    server_id = entry.data[CONF_SERVER_IDENTIFIER]
+
+    cancel = hass.data[PLEX_DOMAIN][REFRESH_LISTENERS].pop(server_id)
+    await hass.async_add_executor_job(cancel)
+
+    tasks = [
+        hass.config_entries.async_forward_entry_unload(entry, platform)
+        for platform in PLATFORMS
+    ]
+    await asyncio.gather(*tasks)
+
+    hass.data[PLEX_DOMAIN][SERVERS].pop(server_id)
 
     return True

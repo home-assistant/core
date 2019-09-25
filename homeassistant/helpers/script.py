@@ -336,7 +336,7 @@ class Script:
         self.last_action = action.get(CONF_ALIAS, "device automation")
         self._log("Executing step %s" % self.last_action)
         integration = await async_get_integration(self.hass, action[CONF_DOMAIN])
-        platform = integration.get_platform("device_automation")
+        platform = integration.get_platform("device_action")
         await platform.async_call_action_from_config(
             self.hass, action, variables, context
         )
