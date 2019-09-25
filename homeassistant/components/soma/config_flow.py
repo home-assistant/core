@@ -2,6 +2,7 @@
 import logging
 
 import voluptuous as vol
+from api.soma_api import SomaApi
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -35,8 +36,6 @@ class SomaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_creation(self, user_input=None):
         """Finish config flow."""
-        from api.soma_api import SomaApi
-
         api = SomaApi(user_input["host"], user_input["port"])
         try:
             await self.hass.async_add_executor_job(api.list_devices)
@@ -46,7 +45,7 @@ class SomaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 data={"host": user_input["host"], "port": user_input["port"]},
             )
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.error("Connection to SOMA Connect failed.")
+            _LOGGER.error("Connection to SOMA Connect failed")
             return self.async_abort(reason="connection_error")
 
     async def async_step_import(self, user_input=None):

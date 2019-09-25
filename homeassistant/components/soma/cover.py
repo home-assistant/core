@@ -76,7 +76,4 @@ class SomaCover(SomaEntity, CoverDevice):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        is_closed = False
-        if self.current_position == 0:
-            is_closed = True
-        return is_closed
+        return self.current_position == 0
