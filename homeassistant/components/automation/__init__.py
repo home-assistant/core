@@ -397,19 +397,6 @@ async def async_validate_config_item(hass, config, full_config):
                 )
             triggers.append(trigger)
         config[CONF_TRIGGER] = triggers
-
-        if CONF_CONDITION in config:
-            conditions = []
-            for cond in config[CONF_CONDITION]:
-                cond = await condition.async_validate_condition_config(hass, cond)
-                conditions.append(cond)
-            config[CONF_CONDITION] = conditions
-
-        actions = []
-        for action in config[CONF_ACTION]:
-            action = await script.async_validate_action_config(hass, action)
-            actions.append(action)
-        config[CONF_ACTION] = actions
     except (vol.Invalid, HomeAssistantError, IntegrationNotFound) as ex:
         async_log_exception(ex, DOMAIN, full_config, hass)
         return None
