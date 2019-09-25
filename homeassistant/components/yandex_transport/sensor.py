@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Service for obtaining information about closer bus from Transport Yandex Service."""
 
 import logging
