@@ -94,7 +94,11 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug(
                 "No valid ecobee.conf configuration found for import, delegating to user step"
             )
-            return await self.async_step_user()
+            return await self.async_step_user(
+                user_input={
+                    CONF_API_KEY: self.hass.data[DATA_ECOBEE_CONFIG].get(CONF_API_KEY)
+                }
+            )
 
         ecobee = Ecobee(config=config)
         if await self.hass.async_add_executor_job(ecobee.refresh_tokens):
@@ -109,4 +113,8 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_REFRESH_TOKEN: ecobee.refresh_token,
                 },
             )
-        return await self.async_step_user()
+        return await self.async_step_user(
+            user_input={
+                CONF_API_KEY: self.hass.data[DATA_ECOBEE_CONFIG].get(CONF_API_KEY)
+            }
+        )
