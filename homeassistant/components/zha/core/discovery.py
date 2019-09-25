@@ -199,11 +199,13 @@ def _async_handle_single_cluster_matches(
                 zha_device.is_mains_powered or matched_power_configuration
             ):
                 continue
-            elif (
+
+            if (
                 cluster.cluster_id == PowerConfiguration.cluster_id
                 and not zha_device.is_mains_powered
             ):
                 matched_power_configuration = True
+
             cluster_match_results.append(
                 _async_handle_single_cluster_match(
                     hass,

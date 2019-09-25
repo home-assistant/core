@@ -13,8 +13,8 @@ TRIGGER_SCHEMA = vol.Schema(
 )
 
 
-async def async_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for trigger."""
     integration = await async_get_integration(hass, config[CONF_DOMAIN])
-    platform = integration.get_platform("device_automation")
-    return await platform.async_trigger(hass, config, action, automation_info)
+    platform = integration.get_platform("device_trigger")
+    return await platform.async_attach_trigger(hass, config, action, automation_info)

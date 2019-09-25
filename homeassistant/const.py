@@ -1,4 +1,3 @@
-# coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
 MINOR_VERSION = 100
