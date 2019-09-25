@@ -1,4 +1,5 @@
 """Support for interface with an Samsung TV."""
+import socket
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
@@ -64,8 +65,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Samsung TV platform."""
-    import socket
-
     known_devices = hass.data.get(KNOWN_DEVICES_KEY)
     if known_devices is None:
         known_devices = set()
@@ -114,6 +113,8 @@ class SamsungTVDevice(MediaPlayerDevice):
         self._exceptions_class = exceptions
         self._remote_class = Remote
         self._name = name
+        self._host = host
+        self._port = port
         self._mac = mac
         self._uuid = uuid
         self._wol = wakeonlan
@@ -143,7 +144,15 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def update(self):
         """Update state of device."""
-        self.send_key("KEY")
+        sock = self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(5)
+
+        try:
+            sock.connect((self._host, self._port))
+            sock.close()
+            self._state = STATE_ON
+        except socket.error:
+            self._state = STATE_OFF
 
     def get_remote(self):
         """Create or return a remote control instance."""
