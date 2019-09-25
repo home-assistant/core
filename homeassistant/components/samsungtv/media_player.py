@@ -16,9 +16,14 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.components.ssdp import (
+    ATTR_HOST,
+    ATTR_NAME,
+    ATTR_MODEL_NAME,
+    ATTR_UDN,
+)
 from homeassistant.const import (
     CONF_HOST,
-    CONF_ID,
     CONF_MAC,
     CONF_NAME,
     CONF_PORT,
@@ -70,6 +75,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         known_devices = set()
         hass.data[KNOWN_DEVICES_KEY] = known_devices
 
+    port = DEFAULT_PORT
+    timeout = DEFAULT_TIMEOUT
+    mac = None
     uuid = None
     # Is this a manual configuration?
     if config.get(CONF_HOST) is not None:
@@ -79,12 +87,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         mac = config.get(CONF_MAC)
         timeout = config.get(CONF_TIMEOUT)
     elif discovery_info is not None:
-        name = discovery_info.get("title")
-        host = discovery_info.get(CONF_HOST)
-        mac = discovery_info.get(CONF_MAC)
-        uuid = discovery_info.get(CONF_ID)
-        port = DEFAULT_PORT
-        timeout = DEFAULT_TIMEOUT
+        tv_name = discovery_info.get(ATTR_NAME)
+        model = discovery_info.get(ATTR_MODEL_NAME)
+        host = discovery_info.get(ATTR_HOST)
+        udn = discovery_info.get(ATTR_UDN)
+        if udn and udn.startswith("uuid:"):
+            uuid = udn[len("uuid:") :]
+        if tv_name.startswith("[TV]"):
+            tv_name = tv_name[4:]
+        name = "{} ({})".format(tv_name, model)
     else:
         LOGGER.warning("Cannot determine device")
         return

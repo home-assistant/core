@@ -1,0 +1,24 @@
+{
+  "config": {
+    "title": "Samsung TV",
+    "step": {
+      "user": {
+        "title": "Samsung TV",
+        "data": {
+          "host": "Host",
+          "title": "Name"
+        }
+      },
+      "confirm": {
+        "title": "Samsung TV",
+        "description": "Press the button on the bridge to register Philips Hue with Home Assistant.\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)"
+      }
+    },
+    "error": {
+    },
+    "abort": {
+      "already_configured": "Samsung TV is already configured.",
+      "already_in_progress": "Config flow for Samsung TV is already in progress.",
+    }
+  }
+}

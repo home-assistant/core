@@ -1,5 +1,5 @@
 """The samsungtv component."""
-from homeassistant.const import CONF_ID, CONF_MAC
+from homeassistant.const import CONF_ID, CONF_IP_ADDRESS
 from homeassistant.helpers import device_registry as dr
 
 from .const import CONF_MANUFACTURER, CONF_MODEL, DOMAIN, LOGGER
@@ -20,19 +20,14 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up the Samsung TV platform."""
-    mac = entry.data[CONF_MAC]
-    uuid = entry.data[CONF_ID]
-    manufacturer = entry.data[CONF_MANUFACTURER]
-    model = entry.data[CONF_MODEL]
-
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
-        identifiers={(DOMAIN, uuid)},
-        manufacturer=manufacturer,
+        connections={(dr.CONNECTION_NETWORK_MAC, entry.data[CONF_IP_ADDRESS])},
+        identifiers={(DOMAIN, entry.data[CONF_ID])},
+        manufacturer=entry.data[CONF_MANUFACTURER],
+        model=entry.data[CONF_MODEL],
         name=entry.title,
-        model=model,
     )
 
     return True

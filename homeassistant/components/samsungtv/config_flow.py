@@ -3,8 +3,7 @@ from collections import OrderedDict
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import callback
-from homeassistant.const import CONF_HOST, CONF_ID, CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_IP_ADDRESS, CONF_NAME
 from homeassistant.components.ssdp import (
     ATTR_HOST,
     ATTR_NAME,
@@ -16,28 +15,20 @@ from homeassistant.components.ssdp import (
 from .const import CONF_MANUFACTURER, CONF_MODEL, DOMAIN
 
 
-@callback
-def configured_hosts(hass):
-    """Return a set of the configured hosts."""
-    return set(
-        entry.data.get("mac") for entry in hass.config_entries.async_entries(DOMAIN)
-    )
-
-
 class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Samsung TV config flow."""
 
     def __init__(self):
         """Initialize flow."""
         self._host = None
-        self._mac = None
+        self._ip = None
         self._manufacturer = None
         self._model = None
         self._uuid = None
         self._name = None
         self._title = None
 
-    def _get_mac(self, host):
+    def _get_ip(self, host):
         import socket
 
         if host is None:
@@ -49,7 +40,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=self._title,
             data={
                 CONF_HOST: self._host,
-                CONF_MAC: self._mac,
+                CONF_IP_ADDRESS: self._ip,
                 CONF_NAME: self._name,
                 CONF_MANUFACTURER: self._manufacturer,
                 CONF_MODEL: self._model,
@@ -62,7 +53,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._host = user_input[CONF_HOST]
             self._title = user_input[CONF_NAME]
-            self._mac = self._get_mac(self._host)
+            self._ip = self._get_ip(self._host)
             return self._async_get_entry()
 
         fields = OrderedDict()
@@ -79,18 +70,20 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, user_input=None):
         """Handle user-confirmation of discovered node."""
-        mac = self.context[CONF_MAC] = self._get_mac(user_input[ATTR_HOST])
+        ip = self.context[CONF_IP_ADDRESS] = self._get_ip(user_input[ATTR_HOST])
 
         if any(
-            mac == flow["context"].get(CONF_MAC) for flow in self._async_in_progress()
+            ip == flow["context"].get(CONF_IP_ADDRESS)
+            for flow in self._async_in_progress()
         ):
             return self.async_abort(reason="already_in_progress")
 
-        if mac in configured_hosts(self.hass):
-            return self.async_abort(reason="already_configured")
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if ip == entry.data.get(CONF_IP_ADDRESS):
+                return self.async_abort(reason="already_configured")
 
         self._host = user_input[ATTR_HOST]
-        self._mac = mac
+        self._ip = ip
         self._manufacturer = user_input[ATTR_MANUFACTURER]
         self._model = user_input[ATTR_MODEL_NAME]
         if user_input[ATTR_UDN].startswith("uuid:"):
