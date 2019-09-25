@@ -134,7 +134,9 @@ async def test_user_step_two_bridges_selection(hass, aioclient_mock):
     assert flow.deconz_config[config_flow.CONF_HOST] == "1.2.3.4"
 
 
-async def test_user_step_manual_configuration(hass, aioclient_mock):
+async def test_user_step_manual_configuration_no_bridges_discovered(
+    hass, aioclient_mock
+):
     """Test config flow with manual input."""
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
@@ -148,6 +150,7 @@ async def test_user_step_manual_configuration(hass, aioclient_mock):
 
     assert result["type"] == "form"
     assert result["step_id"] == "init"
+    assert not hass.config_entries.flow._progress[result["flow_id"]].bridges
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -156,6 +159,36 @@ async def test_user_step_manual_configuration(hass, aioclient_mock):
 
     assert result["type"] == "form"
     assert result["step_id"] == "link"
+
+
+async def test_user_step_manual_configuration_after_timeout(hass):
+    """Test config flow with manual input."""
+    with patch(
+        "homeassistant.components.deconz.config_flow.async_discovery",
+        side_effect=asyncio.TimeoutError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN, context={"source": "user"}
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+    assert not hass.config_entries.flow._progress[result["flow_id"]].bridges
+
+
+async def test_user_step_manual_configuration_after_ResponseError(hass):
+    """Test config flow with manual input."""
+    with patch(
+        "homeassistant.components.deconz.config_flow.async_discovery",
+        side_effect=config_flow.ResponseError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN, context={"source": "user"}
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+    assert not hass.config_entries.flow._progress[result["flow_id"]].bridges
 
 
 async def test_link_no_api_key(hass):
