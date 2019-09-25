@@ -209,7 +209,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class OnkyoDevice(MediaPlayerDevice):
     """Representation of an Onkyo device."""
 
-    def __init__(self, receiver, sources, name=None, max_volume=SUPPORTED_MAX_VOLUME):
+    def __init__(self, receiver, sources, name=None, max_volume=SUPPORTED_MAX_VOLUME, receiver_max_volume=RECEIVER_MAX_VOLUME):
         """Initialize the Onkyo Receiver."""
         self._receiver = receiver
         self._muted = False
@@ -219,6 +219,7 @@ class OnkyoDevice(MediaPlayerDevice):
             name or f"{receiver.info['model_name']}_{receiver.info['identifier']}"
         )
         self._max_volume = max_volume
+        self._receiver_max_volume = receiver_max_volume
         self._current_source = None
         self._source_list = list(sources.values())
         self._source_mapping = sources
@@ -276,7 +277,7 @@ class OnkyoDevice(MediaPlayerDevice):
 
         self._muted = bool(mute_raw[1] == "on")
 #       AMP_VOL/MAX_RECEIVER_VOL*(MAX_VOL/100)
-        self._volume = volume_raw[1] / RECEIVER_MAX_VOLUME * (self._max_volume / 100)
+        self._volume = volume_raw[1] / self._receiver_max_volume * (self._max_volume / 100)
 #       self._volume = volume_raw[1] / self._max_volume
 
         if not hdmi_out_raw:
@@ -336,7 +337,7 @@ class OnkyoDevice(MediaPlayerDevice):
         """
 #        self.command(f"volume {int(volume * self._max_volume)}")
 #        HA_VOL * (MAX VOL / 100) * MAX_RECEIVER_VOL
-        self.command(f"volume {int(volume * (self._max_volume / 100) * RECEIVER_MAX_VOLUME)}")
+        self.command(f"volume {int(volume * (self._max_volume / 100) * self._receiver_max_volume)}")
 
     def volume_up(self):
         """Increase volume by 1 step."""
@@ -377,11 +378,11 @@ class OnkyoDevice(MediaPlayerDevice):
 class OnkyoDeviceZone(OnkyoDevice):
     """Representation of an Onkyo device's extra zone."""
 
-    def __init__(self, zone, receiver, sources, name=None, max_volume=SUPPORTED_MAX_VOLUME):
+    def __init__(self, zone, receiver, sources, name=None, max_volume=SUPPORTED_MAX_VOLUME, receiver_max_volume=RECEIVER_MAX_VOLUME):
         """Initialize the Zone with the zone identifier."""
         self._zone = zone
         self._supports_volume = True
-        super().__init__(receiver, sources, name, max_volume)
+        super().__init__(receiver, sources, name, max_volume, receiver_max_volumr)
 
     def update(self):
         """Get the latest state from the device."""
@@ -430,7 +431,7 @@ class OnkyoDeviceZone(OnkyoDevice):
         if self._supports_volume:
             # self._volume = volume_raw[1] / 80.0
             # AMP_VOL/MAX_RECEIVER_VOL*(MAX_VOL/100)
-            self._volume = volume_raw[1] / RECEIVER_MAX_VOLUME * (self._max_volume / 100)
+            self._volume = volume_raw[1] / self._receiver_max_volume * (self._max_volume / 100)
 
     @property
     def supported_features(self):
@@ -447,7 +448,7 @@ class OnkyoDeviceZone(OnkyoDevice):
         """Set volume level, input is range 0..1. Onkyo ranges from 1-80."""
         # self.command(f"zone{self._zone}.volume={int(volume * 80)}")
         # HA_VOL * (MAX VOL / 100) * MAX_RECEIVER_VOL
-        self.command(f"zone{self._zone}.volume={int(volume * (self._max_volume / 100) * RECEIVER_MAX_VOLUME)}")
+        self.command(f"zone{self._zone}.volume={int(volume * (self._max_volume / 100) * self._receiver_max_volume)}")
 
     def volume_up(self):
         """Increase volume by 1 step."""
