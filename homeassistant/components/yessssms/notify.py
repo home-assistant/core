@@ -36,17 +36,18 @@ def get_service(hass, config, discovery_info=None):
         _LOGGER.error("Unknown provider: %s", ex)
         return None
     try:
-        if yesss.login_data_valid():
-            _LOGGER.info("Login data for '%s' valid.", yesss.get_provider())
-        else:
+        if not yesss.login_data_valid():
             _LOGGER.error(
-                "Login data is not valid! Please double check your login data at %s.",
+                "Login data is not valid! Please double check your login data at %s",
                 yesss.get_login_url(),
             )
             return None
+
+        _LOGGER.info("Login data for '%s' valid", yesss.get_provider())
     except YesssSMS.ConnectionError:
-        _LOGGER.info(
-            "Not connected, could not verify login data for '%s'.", yesss.get_provider()
+        _LOGGER.warning(
+            "Connection Error, could not verify login data for '%s'",
+            yesss.get_provider(),
         )
         pass
 
