@@ -16,7 +16,7 @@ from . import CONF_TRIGGER, DOMAIN, PLATFORM_SCHEMA
 # mypy: no-check-untyped-defs, no-warn-return-any
 
 
-async def async_validate_config_item(hass, config, full_config):
+async def async_validate_config_item(hass, config, full_config=None):
     """Validate config item."""
     try:
         config = PLATFORM_SCHEMA(config)
@@ -33,7 +33,7 @@ async def async_validate_config_item(hass, config, full_config):
             triggers.append(trigger)
         config[CONF_TRIGGER] = triggers
     except (vol.Invalid, HomeAssistantError, IntegrationNotFound) as ex:
-        async_log_exception(ex, DOMAIN, full_config, hass)
+        async_log_exception(ex, DOMAIN, full_config or config, hass)
         return None
 
     return config
