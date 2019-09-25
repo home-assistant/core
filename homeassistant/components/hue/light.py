@@ -239,21 +239,23 @@ async def async_update_items(
             current[item_id].async_schedule_update_ha_state()
 
     for item_id in current:
-        if item_id not in api:
-            # Device is removed from Hue, so we remove it from Home Assistant
-            entity = current[item_id]
-            removed_items.append(item_id)
-            hass.async_create_task(entity.async_remove())
-            ent_registry = await get_ent_reg(hass)
-            if entity.entity_id in ent_registry.entities:
-                ent_registry.async_remove(entity.entity_id)
-            dev_registry = await get_dev_reg(hass)
-            device = dev_registry.async_get_device(
-                identifiers={(hue.DOMAIN, entity.unique_id)}, connections=set()
-            )
-            dev_registry.async_update_device(
-                device.id, remove_config_entry_id=config_entry.entry_id
-            )
+        if item_id in api:
+            continue
+
+        # Device is removed from Hue, so we remove it from Home Assistant
+        entity = current[item_id]
+        removed_items.append(item_id)
+        await entity.async_remove()
+        ent_registry = await get_ent_reg(hass)
+        if entity.entity_id in ent_registry.entities:
+            ent_registry.async_remove(entity.entity_id)
+        dev_registry = await get_dev_reg(hass)
+        device = dev_registry.async_get_device(
+            identifiers={(hue.DOMAIN, entity.unique_id)}, connections=set()
+        )
+        dev_registry.async_update_device(
+            device.id, remove_config_entry_id=config_entry.entry_id
+        )
 
     if new_items:
         async_add_entities(new_items)
