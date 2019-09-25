@@ -5,7 +5,7 @@ import async_timeout
 import voluptuous as vol
 
 from pydeconz.errors import ResponseError, RequestError
-from pydeconz.utils import async_discovery, async_get_api_key, async_get_bridgeid
+from pydeconz.utils import async_discovery, async_get_api_key, async_get_gateway_config
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
@@ -16,6 +16,7 @@ from .const import (
     CONF_ALLOW_CLIP_SENSOR,
     CONF_ALLOW_DECONZ_GROUPS,
     CONF_BRIDGEID,
+    CONF_UUID,
     DEFAULT_ALLOW_CLIP_SENSOR,
     DEFAULT_ALLOW_DECONZ_GROUPS,
     DEFAULT_PORT,
@@ -144,9 +145,11 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 with async_timeout.timeout(10):
-                    self.deconz_config[CONF_BRIDGEID] = await async_get_bridgeid(
+                    gateway_config = await async_get_gateway_config(
                         session, **self.deconz_config
                     )
+                    self.deconz_config[CONF_BRIDGEID] = gateway_config.bridgeid
+                    self.deconz_config[CONF_UUID] = gateway_config.uuid
 
             except asyncio.TimeoutError:
                 return self.async_abort(reason="no_bridges")
@@ -172,14 +175,10 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_deconz_bridge")
 
         uuid = discovery_info[ATTR_UUID].replace("uuid:", "")
-        gateways = {
-            gateway.api.config.uuid: gateway
-            for gateway in self.hass.data.get(DOMAIN, {}).values()
-        }
 
-        if uuid in gateways:
-            entry = gateways[uuid].config_entry
-            return await self._update_entry(entry, discovery_info[CONF_HOST])
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if uuid == entry.data.get(CONF_UUID):
+                return await self._update_entry(entry, discovery_info[CONF_HOST])
 
         bridgeid = discovery_info[ATTR_SERIAL]
         if any(

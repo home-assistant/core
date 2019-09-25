@@ -294,7 +294,7 @@ pyblackbird==0.5
 pychromecast==4.0.1
 
 # homeassistant.components.deconz
-pydeconz==62
+pydeconz==63
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
