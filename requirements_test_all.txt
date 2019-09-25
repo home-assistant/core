@@ -62,7 +62,7 @@ aioesphomeapi==2.2.0
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==1.9.1
+aiohue==1.9.2
 
 # homeassistant.components.notion
 aionotion==1.1.0
