@@ -208,8 +208,8 @@ class DeviceRegistry:
             if config_entries == {remove_config_entry_id}:
                 self.async_remove_device(device_id)
                 return
-            else:
-                config_entries = config_entries - {remove_config_entry_id}
+
+            config_entries = config_entries - {remove_config_entry_id}
 
         if config_entries is not old.config_entries:
             changes["config_entries"] = config_entries
