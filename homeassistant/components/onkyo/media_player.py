@@ -76,11 +76,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_RECEIVER_MAX_VOLUME, default=DEFAULT_RECEIVER_MAX_VOLUME): vol.All(
-            vol.Coerce(int)
-        ),
         vol.Optional(CONF_MAX_VOLUME, default=SUPPORTED_MAX_VOLUME): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=100)
+        ),
+        vol.Optional(CONF_RECEIVER_MAX_VOLUME, default=DEFAULT_RECEIVER_MAX_VOLUME): vol.All(
+            vol.Coerce(int), vol.Range(min=0)
         ),
         vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES): {cv.string: cv.string},
     }
@@ -335,13 +335,12 @@ class OnkyoDevice(MediaPlayerDevice):
 
     def set_volume_level(self, volume):
         """
-        Set volume level, input is range 0..1. however full volume on the amp
-        is usually far too loud so allow the user to specify the upper range with CONF_MAX_VOLUME
+        Set volume level, input is range 0..1.
 
-        First we change as per max_volume set by user. This means that if max volume is 80 then full
+        However full volume on the amp is usually far too loud so allow the user to specify the upper range
+        with CONF_MAX_VOLUME.  we change as per max_volume set by user. This means that if max volume is 80 then full
         volume in HA will give 80% volume on the receiver. Then we convert
-        that to the correct scale for the receiver."""
-
+        that to the correct scale for the receiver.
         """
 #        HA_VOL * (MAX VOL / 100) * MAX_RECEIVER_VOL
         self.command(f"volume {int(volume * (self._max_volume / 100) * self._receiver_max_volume)}")
@@ -452,12 +451,12 @@ class OnkyoDeviceZone(OnkyoDevice):
 
     def set_volume_level(self, volume):
         """
-        Set volume level, input is range 0..1. however full volume on the amp
-        is usually far too loud so allow the user to specify the upper range with CONF_MAX_VOLUME
+        Set volume level, input is range 0..1.
 
-        First we change as per max_volume set by user. This means that if max volume is 80 then full
+        However full volume on the amp is usually far too loud so allow the user to specify the upper range
+        with CONF_MAX_VOLUME.  we change as per max_volume set by user. This means that if max volume is 80 then full
         volume in HA will give 80% volume on the receiver. Then we convert
-        that to the correct scale for the receiver."""
+        that to the correct scale for the receiver.
         """
         # HA_VOL * (MAX VOL / 100) * MAX_RECEIVER_VOL
         self.command(f"zone{self._zone}.volume={int(volume * (self._max_volume / 100) * self._receiver_max_volume)}")
