@@ -3,12 +3,13 @@ import logging
 
 import voluptuous as vol
 
+from YesssSMS import YesssSMS
+
 from homeassistant.const import CONF_PASSWORD, CONF_RECIPIENT, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 
-from YesssSMS import YesssSMS
 
 from .const import CONF_PROVIDER
 
@@ -85,7 +86,9 @@ class YesssSMSNotificationService(BaseNotificationService):
             _LOGGER.error(ex)
         except self.yesss.ConnectionError as ex:
             _LOGGER.error(
-                "Unable to connect to server of provider (%s).", self.yesss._provider
+                "Unable to connect to server of provider (%s): %s",
+                self.yesss._provider,
+                ex,
             )
         except self.yesss.AccountSuspendedError as ex:
             _LOGGER.error(
