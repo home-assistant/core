@@ -10,7 +10,7 @@ from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationSer
 
 from YesssSMS import YesssSMS
 
-from .const import CONF_PROVIDER
+from .const import CONF_PROVIDER, CONF_TEST_LOGIN_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,6 +20,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_RECIPIENT): cv.string,
         vol.Optional(CONF_PROVIDER, default="YESSS"): cv.string,
+        vol.Optional(CONF_TEST_LOGIN_DATA, default=True): cv.boolean,
     }
 )
 
@@ -31,12 +32,19 @@ def get_service(hass, config, discovery_info=None):
         yesss = YesssSMS(
             config[CONF_USERNAME], config[CONF_PASSWORD], provider=config[CONF_PROVIDER]
         )
-    except (KeyError, YesssSMS.UnsupportedProviderError) as ex:
+    except YesssSMS.UnsupportedProviderError as ex:
         _LOGGER.error("Unknown provider: %s", ex)
         return None
-    except YesssSMS.MissingLoginCredentialsError as ex:
-        _LOGGER.error("Missing Login Credentials: %s", ex)
-        return None
+
+    if config[CONF_TEST_LOGIN_DATA]:
+        if yesss.login_data_valid():
+            _LOGGER.info("Login data for '%s' valid.", yesss._provider)
+        else:
+            _LOGGER.error(
+                "Login data is not valid! Please double check your login data at %s.",
+                yesss._login_url,
+            )
+            return None
 
     _LOGGER.debug(
         "initialized; library version: %s, with %s", yesss.version(), yesss._provider
