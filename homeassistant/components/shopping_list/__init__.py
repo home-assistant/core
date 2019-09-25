@@ -66,7 +66,7 @@ def async_setup(hass, config):
         """Add an item with `name`."""
         data = hass.data[DOMAIN]
         name = call.data.get(ATTR_NAME)
-        if name is not None:
+        if name is not None and name != '':
             data.async_add(name)
 
     @asyncio.coroutine
