@@ -37,8 +37,16 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, _LOGGER
 
+ATTR_COOL_TEMP = "cool_temp"
+ATTR_END_DATE = "end_date"
+ATTR_END_TIME = "end_time"
 ATTR_FAN_MIN_ON_TIME = "fan_min_on_time"
+ATTR_FAN_MODE = "fan_mode"
+ATTR_HEAT_TEMP = "heat_temp"
 ATTR_RESUME_ALL = "resume_all"
+ATTR_START_DATE = "start_date"
+ATTR_START_TIME = "start_time"
+ATTR_VACATION_NAME = "vacation_name"
 
 DEFAULT_RESUME_ALL = False
 PRESET_TEMPERATURE = "temp"
@@ -84,13 +92,32 @@ PRESET_TO_ECOBEE_HOLD = {
     PRESET_HOLD_INDEFINITE: "indefinite",
 }
 
-SERVICE_SET_FAN_MIN_ON_TIME = "set_fan_min_on_time"
+SERVICE_CREATE_VACATION = "create_vacation"
+SERVICE_DELETE_VACATION = "delete_vacation"
 SERVICE_RESUME_PROGRAM = "resume_program"
+SERVICE_SET_FAN_MIN_ON_TIME = "set_fan_min_on_time"
 
-SET_FAN_MIN_ON_TIME_SCHEMA = vol.Schema(
+CREATE_VACATION_SCHEMA = vol.Schema(
     {
-        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_FAN_MIN_ON_TIME): vol.Coerce(int),
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_VACATION_NAME): cv.string,
+        vol.Required(ATTR_COOL_TEMP): vol.Any(cv.positive_int, float),
+        vol.Required(ATTR_HEAT_TEMP): vol.Any(cv.positive_int, float),
+        vol.Optional(ATTR_START_DATE): cv.string,
+        vol.Optional(ATTR_START_TIME): cv.string,
+        vol.Optional(ATTR_END_DATE): cv.string,
+        vol.Optional(ATTR_END_TIME): cv.string,
+        vol.Optional(ATTR_FAN_MODE, default="auto"): vol.Any("auto", "on"),
+        vol.Optional(ATTR_FAN_MIN_ON_TIME, default=0): vol.All(
+            int, vol.Range(min=0, max=60)
+        ),
+    }
+)
+
+DELETE_VACATION_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_VACATION_NAME): cv.string,
     }
 )
 
@@ -100,6 +127,14 @@ RESUME_PROGRAM_SCHEMA = vol.Schema(
         vol.Optional(ATTR_RESUME_ALL, default=DEFAULT_RESUME_ALL): cv.boolean,
     }
 )
+
+SET_FAN_MIN_ON_TIME_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(ATTR_FAN_MIN_ON_TIME): vol.Coerce(int),
+    }
+)
+
 
 SUPPORT_FLAGS = (
     SUPPORT_TARGET_TEMPERATURE
@@ -123,6 +158,26 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     devices = [Thermostat(data, index) for index in range(len(data.ecobee.thermostats))]
 
     async_add_entities(devices, True)
+
+    def create_vacation_service(service):
+        """Create a vacation on the target thermostat."""
+        entity_id = service.data[ATTR_ENTITY_ID]
+        data = service.data
+
+        for device in devices:
+            if device.entity_id == entity_id:
+                device.create_vacation(data)
+                break
+
+    def delete_vacation_service(service):
+        """Delete a vacation on the target thermostat."""
+        entity_id = service.data[ATTR_ENTITY_ID]
+        vacation_name = service.data[ATTR_VACATION_NAME]
+
+        for device in devices:
+            if device.entity_id == entity_id:
+                device.delete_vacation(vacation_name)
+                break
 
     def fan_min_on_time_set_service(service):
         """Set the minimum fan on time on the target thermostats."""
@@ -157,6 +212,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             thermostat.resume_program(resume_all)
 
             thermostat.schedule_update_ha_state(True)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CREATE_VACATION,
+        create_vacation_service,
+        schema=CREATE_VACATION_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_DELETE_VACATION,
+        delete_vacation_service,
+        schema=DELETE_VACATION_SCHEMA,
+    )
 
     hass.services.async_register(
         DOMAIN,
@@ -536,3 +605,54 @@ class Thermostat(ClimateDevice):
         # supported; note that this should not include 'indefinite'
         # as an indefinite away hold is interpreted as away_mode
         return "nextTransition"
+
+    def create_vacation(self, service_data):
+        """Create a vacation with user-specified parameters."""
+        vacation_name = service_data[ATTR_VACATION_NAME]
+        cool_temp = service_data[ATTR_COOL_TEMP]
+        heat_temp = service_data[ATTR_HEAT_TEMP]
+
+        start_date = service_data.get(ATTR_START_DATE)
+        start_time = service_data.get(ATTR_START_TIME)
+        end_date = service_data.get(ATTR_END_DATE)
+        end_time = service_data.get(ATTR_END_TIME)
+        fan_mode = service_data[ATTR_FAN_MODE]
+        fan_min_on_time = service_data[ATTR_FAN_MIN_ON_TIME]
+
+        if cool_temp < 35:
+            # Assume user has specified cool_temp and heat_temp in celsius
+            # Convert to fahrenheit before calling function
+            cool_temp = (cool_temp * (9 / 5)) + 32
+            heat_temp = (heat_temp * (9 / 5)) + 32
+
+        kwargs = {
+            key: value
+            for key, value in {
+                "start_date": start_date,
+                "start_time": start_time,
+                "end_date": end_date,
+                "end_time": end_time,
+                "fan_mode": fan_mode,
+                "fan_min_on_time": fan_min_on_time,
+            }.items()
+            if value is not None
+        }
+
+        _LOGGER.debug(
+            "Creating a vacation on thermostat {} with name {}, cool temp {}, heat temp {}, "
+            "and the following other parameters: {}".format(
+                self.name, vacation_name, cool_temp, heat_temp, kwargs
+            )
+        )
+        self.data.ecobee.create_vacation(
+            self.thermostat_index, vacation_name, cool_temp, heat_temp, **kwargs
+        )
+
+    def delete_vacation(self, vacation_name):
+        """Delete a vacation with the specified name."""
+        _LOGGER.debug(
+            "Deleting a vacation on thermostat {} with name {}".format(
+                self.name, vacation_name
+            )
+        )
+        self.data.ecobee.delete_vacation(self.thermostat_index, vacation_name)
