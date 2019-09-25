@@ -75,7 +75,9 @@ class MySensorsLight(mysensors.device.MySensorsEntity, Light):
 
         if self._state:
             return
-        self.gateway.set_child_value(self.node_id, self.child_id, set_req.V_LIGHT, 1, ack=1)
+        self.gateway.set_child_value(
+            self.node_id, self.child_id, set_req.V_LIGHT, 1, ack=1
+        )
 
         if self.gateway.optimistic:
             # optimistically assume that light has changed state
