@@ -136,7 +136,7 @@ async def async_setup_entry(hass, entry):
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
-    entry.add_update_listener(plex_server.async_options_updated)
+    entry.add_update_listener(async_options_updated)
 
     return True
 
@@ -157,3 +157,9 @@ async def async_unload_entry(hass, entry):
     hass.data[PLEX_DOMAIN][SERVERS].pop(server_id)
 
     return True
+
+
+async def async_options_updated(hass, entry):
+    """Triggered by config entry options updates."""
+    server_id = entry.data[CONF_SERVER_IDENTIFIER]
+    hass.data[PLEX_DOMAIN][SERVERS][server_id].options = entry.options
