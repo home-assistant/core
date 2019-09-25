@@ -2,7 +2,11 @@
 from collections import OrderedDict
 import uuid
 
-from homeassistant.components.automation import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.automation import (
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    async_validate_config_item,
+)
 from homeassistant.const import CONF_ID, SERVICE_RELOAD
 import homeassistant.helpers.config_validation as cv
 
@@ -26,6 +30,7 @@ async def async_setup(hass):
             cv.string,
             PLATFORM_SCHEMA,
             post_write_hook=hook,
+            data_validator=async_validate_config_item,
         )
     )
     return True

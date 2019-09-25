@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.setup import async_setup_component
+import homeassistant.components.automation as automation
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.helpers import device_registry
 
@@ -161,3 +162,64 @@ async def test_websocket_get_triggers(hass, hass_ws_client, device_reg, entity_r
     assert msg["success"]
     triggers = msg["result"]
     assert _same_lists(triggers, expected_triggers)
+
+
+async def test_automation_with_non_existing_integration(hass, caplog):
+    """Test device automation with non existing integration."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {
+                    "platform": "device",
+                    "device_id": "none",
+                    "domain": "beer",
+                },
+                "action": {"service": "test.automation", "entity_id": "hello.world"},
+            }
+        },
+    )
+
+    assert "Integration 'beer' not found" in caplog.text
+
+
+async def test_automation_with_integration_without_device_trigger(hass, caplog):
+    """Test automation with integration without device trigger support."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {
+                    "platform": "device",
+                    "device_id": "none",
+                    "domain": "test",
+                },
+                "action": {"service": "test.automation", "entity_id": "hello.world"},
+            }
+        },
+    )
+
+    assert (
+        "Integration 'test' does not support device automation triggers" in caplog.text
+    )
+
+
+async def test_automation_with_bad_trigger(hass, caplog):
+    """Test automation with bad device trigger."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "device", "domain": "light"},
+                "action": {"service": "test.automation", "entity_id": "hello.world"},
+            }
+        },
+    )
+
+    assert "required key not provided" in caplog.text
