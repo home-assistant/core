@@ -146,6 +146,7 @@ TEST_REQUIREMENTS = (
     "pysonos",
     "pyspcwebgw",
     "python_awair",
+    "python-ecobee-api",
     "python-forecastio",
     "python-izone",
     "python-nest",

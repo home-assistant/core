@@ -1,14 +1,11 @@
 """Support for Ecobee Thermostats."""
 import collections
-import logging
 from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.components import ecobee
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    DOMAIN,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_AUTO,
@@ -38,8 +35,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-_CONFIGURING = {}
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, _LOGGER
 
 ATTR_FAN_MIN_ON_TIME = "fan_min_on_time"
 ATTR_RESUME_ALL = "resume_all"
@@ -88,8 +84,8 @@ PRESET_TO_ECOBEE_HOLD = {
     PRESET_HOLD_INDEFINITE: "indefinite",
 }
 
-SERVICE_SET_FAN_MIN_ON_TIME = "ecobee_set_fan_min_on_time"
-SERVICE_RESUME_PROGRAM = "ecobee_resume_program"
+SERVICE_SET_FAN_MIN_ON_TIME = "set_fan_min_on_time"
+SERVICE_RESUME_PROGRAM = "resume_program"
 
 SET_FAN_MIN_ON_TIME_SCHEMA = vol.Schema(
     {
@@ -114,20 +110,19 @@ SUPPORT_FLAGS = (
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Ecobee Thermostat Platform."""
-    if discovery_info is None:
-        return
-    data = ecobee.NETWORK
-    hold_temp = discovery_info["hold_temp"]
-    _LOGGER.info(
-        "Loading ecobee thermostat component with hold_temp set to %s", hold_temp
-    )
-    devices = [
-        Thermostat(data, index, hold_temp)
-        for index in range(len(data.ecobee.thermostats))
-    ]
-    add_entities(devices)
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Old way of setting up ecobee thermostat."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the ecobee thermostat."""
+
+    data = hass.data[DOMAIN]
+
+    devices = [Thermostat(data, index) for index in range(len(data.ecobee.thermostats))]
+
+    async_add_entities(devices, True)
 
     def fan_min_on_time_set_service(service):
         """Set the minimum fan on time on the target thermostats."""
@@ -163,14 +158,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
             thermostat.schedule_update_ha_state(True)
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN,
         SERVICE_SET_FAN_MIN_ON_TIME,
         fan_min_on_time_set_service,
         schema=SET_FAN_MIN_ON_TIME_SCHEMA,
     )
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN,
         SERVICE_RESUME_PROGRAM,
         resume_program_set_service,
@@ -181,13 +176,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class Thermostat(ClimateDevice):
     """A thermostat class for Ecobee."""
 
-    def __init__(self, data, thermostat_index, hold_temp):
+    def __init__(self, data, thermostat_index):
         """Initialize the thermostat."""
         self.data = data
         self.thermostat_index = thermostat_index
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
         self._name = self.thermostat["name"]
-        self.hold_temp = hold_temp
         self.vacation = None
 
         self._operation_list = []
@@ -206,14 +200,13 @@ class Thermostat(ClimateDevice):
         self._fan_modes = [FAN_AUTO, FAN_ON]
         self.update_without_throttle = False
 
-    def update(self):
+    async def async_update(self):
         """Get the latest state from the thermostat."""
         if self.update_without_throttle:
-            self.data.update(no_throttle=True)
+            await self.data.update(no_throttle=True)
             self.update_without_throttle = False
         else:
-            self.data.update()
-
+            await self.data.update()
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
 
     @property
