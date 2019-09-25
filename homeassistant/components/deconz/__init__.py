@@ -71,10 +71,7 @@ async def async_update_master_gateway(hass, config_entry):
     Makes sure there is always one master available.
     """
     master = not get_master_gateway(hass)
-
-    old_options = dict(config_entry.options)
-
-    options = {**old_options, CONF_MASTER_GATEWAY: master}
+    options = {**config_entry.options, CONF_MASTER_GATEWAY: master}
 
     hass.config_entries.async_update_entry(config_entry, options=options)
 
@@ -82,9 +79,6 @@ async def async_update_master_gateway(hass, config_entry):
 async def async_add_uuid_to_config_entry(hass, config_entry):
     """Add UUID to config entry to help discovery identify entries."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
-
-    old_config = dict(config_entry.data)
-
-    config = {**old_config, CONF_UUID: gateway.api.config.uuid}
+    config = {**config_entry.data, CONF_UUID: gateway.api.config.uuid}
 
     hass.config_entries.async_update_entry(config_entry, data=config)
