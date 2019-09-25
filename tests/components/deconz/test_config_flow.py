@@ -209,22 +209,25 @@ async def test_bridge_discovery_update_existing_entry(hass):
     """Test if a discovered bridge has already been configured."""
     entry = MockConfigEntry(
         domain=config_flow.DOMAIN,
-        data={config_flow.CONF_HOST: "1.2.3.4", config_flow.CONF_BRIDGEID: "id"},
+        data={
+            config_flow.CONF_HOST: "1.2.3.4",
+            config_flow.CONF_BRIDGEID: "123ABC",
+            config_flow.CONF_UUID: "456DEF",
+        },
     )
     entry.add_to_hass(hass)
 
     gateway = Mock()
     gateway.config_entry = entry
-    gateway.api.config.uuid = "1234"
-    hass.data[config_flow.DOMAIN] = {"id": gateway}
+    hass.data[config_flow.DOMAIN] = {"123ABC": gateway}
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         data={
             config_flow.CONF_HOST: "mock-deconz",
-            ATTR_SERIAL: "id",
+            ATTR_SERIAL: "123ABC",
             ATTR_MANUFACTURERURL: config_flow.DECONZ_MANUFACTURERURL,
-            config_flow.ATTR_UUID: "uuid:1234",
+            config_flow.ATTR_UUID: "uuid:456DEF",
         },
         context={"source": "ssdp"},
     )
@@ -238,7 +241,7 @@ async def test_create_entry(hass, aioclient_mock):
     """Test that _create_entry work and that bridgeid can be requested."""
     aioclient_mock.get(
         "http://1.2.3.4:80/api/1234567890ABCDEF/config",
-        json={"bridgeid": "id"},
+        json={"bridgeid": "123ABC", "uuid": "456DEF"},
         headers={"content-type": "application/json"},
     )
 
@@ -253,12 +256,13 @@ async def test_create_entry(hass, aioclient_mock):
     result = await flow._create_entry()
 
     assert result["type"] == "create_entry"
-    assert result["title"] == "deCONZ-id"
+    assert result["title"] == "deCONZ-123ABC"
     assert result["data"] == {
-        config_flow.CONF_BRIDGEID: "id",
+        config_flow.CONF_BRIDGEID: "123ABC",
         config_flow.CONF_HOST: "1.2.3.4",
         config_flow.CONF_PORT: 80,
         config_flow.CONF_API_KEY: "1234567890ABCDEF",
+        config_flow.CONF_UUID: "456DEF",
     }
 
 
@@ -273,7 +277,7 @@ async def test_create_entry_timeout(hass, aioclient_mock):
     }
 
     with patch(
-        "homeassistant.components.deconz.config_flow.async_get_bridgeid",
+        "homeassistant.components.deconz.config_flow.async_get_gateway_config",
         side_effect=asyncio.TimeoutError,
     ):
         result = await flow._create_entry()
