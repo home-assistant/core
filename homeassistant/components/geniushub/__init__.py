@@ -27,7 +27,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util.dt import utc_from_timestamp
+import homeassistant.util.dt as dt_util
 
 ATTR_DURATION = "duration"
 
@@ -178,7 +178,7 @@ class GeniusDevice(GeniusEntity):
 
         attrs = {}
         attrs["assigned_zone"] = self._device.data["assignedZones"][0]["name"]
-        attrs["last_comms"] = self._last_comms.isoformat()
+        attrs["last_comms"] = dt_util.as_local(self._last_comms).isoformat()
 
         attrs["state"] = dict(self._device.data["state"])
         attrs["state"].update(self._device.data["_state"])
@@ -189,7 +189,9 @@ class GeniusDevice(GeniusEntity):
 
     async def async_update(self) -> None:
         """Update an entity's state data."""
-        self._last_comms = utc_from_timestamp(self._device.data["_state"]["lastComms"])
+        self._last_comms = dt_util.utc_from_timestamp(
+            self._device.data["_state"]["lastComms"]
+        )
 
 
 class GeniusZone(GeniusEntity):

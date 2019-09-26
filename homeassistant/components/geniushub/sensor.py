@@ -3,7 +3,7 @@ from datetime import timedelta
 from typing import Any, Dict
 
 from homeassistant.const import DEVICE_CLASS_BATTERY
-from homeassistant.util.dt import utcnow
+import homeassistant.util.dt as dt_util
 
 from . import DOMAIN, GeniusDevice, GeniusEntity
 
@@ -51,7 +51,7 @@ class GeniusBattery(GeniusDevice):
         interval = timedelta(
             seconds=self._device.data["_state"].get("wakeupInterval", 30 * 60)
         )
-        if self._last_comms < utcnow() - interval * 3:
+        if self._last_comms < dt_util.utcnow() - interval * 3:
             return "mdi:battery-unknown"
 
         battery_level = self._device.data["state"][self._state_attr]
