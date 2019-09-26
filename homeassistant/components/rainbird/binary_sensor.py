@@ -3,7 +3,7 @@ import logging
 
 from pyrainbird import RainbirdController
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import (
     DATA_RAINBIRD,
@@ -18,7 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Rain Bird sensor."""
-
     if discovery_info is None:
         return
 
@@ -28,7 +27,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class RainBirdSensor(Entity):
+class RainBirdSensor(BinarySensorDevice):
     """A sensor implementation for Rain Bird device."""
 
     def __init__(self, controller: RainbirdController, sensor_type):
@@ -37,31 +36,27 @@ class RainBirdSensor(Entity):
         self._controller = controller
         self._name = SENSOR_TYPES[self._sensor_type][0]
         self._icon = SENSOR_TYPES[self._sensor_type][2]
-        self._unit_of_measurement = SENSOR_TYPES[self._sensor_type][1]
         self._state = None
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
+    def is_on(self):
+        """Return true if the binary sensor is on."""
+        return None if self._state is None else bool(self._state)
 
     def update(self):
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating sensor: %s", self._name)
+        state = None
         if self._sensor_type == SENSOR_TYPE_RAINSENSOR:
-            self._state = self._controller.get_rain_sensor_state()
+            state = self._controller.get_rain_sensor_state()
         elif self._sensor_type == SENSOR_TYPE_RAINDELAY:
-            self._state = self._controller.get_rain_delay()
+            state = self._controller.get_rain_delay()
+        self._state = None if state is None else bool(state)
 
     @property
     def name(self):
         """Return the name of this camera."""
         return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Return the units of measurement."""
-        return self._unit_of_measurement
 
     @property
     def icon(self):
