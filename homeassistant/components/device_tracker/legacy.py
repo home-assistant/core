@@ -6,7 +6,7 @@ from typing import Any, List, Sequence
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.components import zone
+from homeassistant.components import zone, history
 from homeassistant.components.group import (
     ATTR_ADD_ENTITIES,
     ATTR_ENTITIES,
@@ -15,6 +15,7 @@ from homeassistant.components.group import (
     DOMAIN as DOMAIN_GROUP,
     SERVICE_SET,
 )
+from homeassistant.components.recorder.models import RecorderRuns
 from homeassistant.components.zone import async_active_zone
 from homeassistant.config import load_yaml_config_file, async_log_exception
 from homeassistant.exceptions import HomeAssistantError
@@ -609,7 +610,15 @@ async def async_load_config(
         except vol.Invalid as exp:
             async_log_exception(exp, dev_id, devices, hass)
         else:
-            result.append(Device(hass, **device))
+            device_entity = Device(hass, **device)
+            now = dt_util.utcnow()
+            run = RecorderRuns(start=(now - timedelta(hours=24)))
+            last_state = history.get_state(hass, now, device_entity.entity_id, run)
+            if last_state:
+                device_entity._state = last_state.state
+            else:
+                LOGGER.warning("can't get last state for %s.", device_entity.entity_id)
+            result.append(device_entity)
     return result
 
 
