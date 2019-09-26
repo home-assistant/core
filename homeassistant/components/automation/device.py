@@ -10,7 +10,7 @@ from homeassistant.const import CONF_DOMAIN
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
-TRIGGER_SCHEMA = device_automation.TRIGGER_BASE_SCHEMA.extend(extra=vol.ALLOW_EXTRA)
+TRIGGER_SCHEMA = device_automation.TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_validate_trigger_config(hass, config):
