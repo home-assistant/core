@@ -116,20 +116,20 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
     """Base for a Honeywell evohome Climate device."""
 
     def __init__(self, evo_broker, evo_device) -> None:
-        """Initialize the evohome Climate device."""
+        """Initialize a Climate device."""
         super().__init__(evo_broker, evo_device)
 
         self._preset_modes = None
 
     async def _set_tcs_mode(self, op_mode: str) -> None:
-        """Set the Controller to any of its native EVO_* operating modes."""
+        """Set a Controller to any of its native EVO_* operating modes."""
         await self._call_client_api(
             self._evo_tcs._set_status(op_mode)  # pylint: disable=protected-access
         )
 
     @property
     def hvac_modes(self) -> List[str]:
-        """Return the list of available hvac operation modes."""
+        """Return a list of available hvac operation modes."""
         return list(HA_HVAC_TO_TCS)
 
     @property
@@ -142,7 +142,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
     """Base for a Honeywell evohome Zone."""
 
     def __init__(self, evo_broker, evo_device) -> None:
-        """Initialize the evohome Zone."""
+        """Initialize a Zone."""
         super().__init__(evo_broker, evo_device)
 
         self._name = evo_device.name
@@ -154,7 +154,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
 
     @property
     def hvac_mode(self) -> str:
-        """Return the current operating mode of the evohome Zone."""
+        """Return the current operating mode of a Zone."""
         if self._evo_tcs.systemModeStatus["mode"] in [EVO_AWAY, EVO_HEATOFF]:
             return HVAC_MODE_AUTO
         is_off = self.target_temperature <= self.min_temp
@@ -175,7 +175,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
 
     @property
     def target_temperature(self) -> float:
-        """Return the target temperature of the evohome Zone."""
+        """Return the target temperature of a Zone."""
         return self._evo_device.setpointStatus["targetHeatTemperature"]
 
     @property
@@ -189,7 +189,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
 
     @property
     def min_temp(self) -> float:
-        """Return the minimum target temperature of a evohome Zone.
+        """Return the minimum target temperature of a Zone.
 
         The default is 5, but is user-configurable within 5-35 (in Celsius).
         """
@@ -197,7 +197,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
 
     @property
     def max_temp(self) -> float:
-        """Return the maximum target temperature of a evohome Zone.
+        """Return the maximum target temperature of a Zone.
 
         The default is 35, but is user-configurable within 5-35 (in Celsius).
         """
@@ -222,7 +222,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set a Zone to one of its native EVO_* operating modes.
 
-        Zones inherit their _effective_ operating mode from the Controller.
+        Zones inherit their _effective_ operating mode from their Controller.
 
         Usually, Zones are in 'FollowSchedule' mode, where their setpoints are a
         function of their own schedule and the Controller's operating mode, e.g.
@@ -264,7 +264,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
         )
 
     async def async_update(self) -> None:
-        """Get the latest state data for the Zone."""
+        """Get the latest state data for a Zone."""
         await super().async_update()
 
         for attr in STATE_ATTRS_ZONES:
@@ -279,7 +279,7 @@ class EvoController(EvoClimateDevice):
     """
 
     def __init__(self, evo_broker, evo_device) -> None:
-        """Initialize the evohome Controller (hub)."""
+        """Initialize a evohome Controller (hub)."""
         super().__init__(evo_broker, evo_device)
 
         self._name = evo_device.location.name
@@ -291,7 +291,7 @@ class EvoController(EvoClimateDevice):
 
     @property
     def hvac_mode(self) -> str:
-        """Return the current operating mode of the evohome Controller."""
+        """Return the current operating mode of a Controller."""
         tcs_mode = self._evo_tcs.systemModeStatus["mode"]
         return HVAC_MODE_OFF if tcs_mode == EVO_HEATOFF else HVAC_MODE_HEAT
 
@@ -315,20 +315,20 @@ class EvoController(EvoClimateDevice):
 
     @property
     def min_temp(self) -> float:
-        """Return None as evohome Controllers do not have a target temperature."""
+        """Return None as Controllers don't have a target temperature."""
         return None
 
     @property
     def max_temp(self) -> float:
-        """Return None as evohome Controllers do not have a target temperature."""
+        """Return None as Controllers don't have a target temperature."""
         return None
 
     async def async_set_temperature(self, **kwargs) -> None:
-        """Do nothing as evohome Controller don't have target temperatures."""
+        """Raise exception as Controllers don't have a target temperature."""
         raise NotImplementedError("Evohome Controllers don't have target temperatures.")
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
-        """Set an operating mode for the Controller."""
+        """Set an operating mode for a Controller."""
         await self._set_tcs_mode(HA_HVAC_TO_TCS.get(hvac_mode))
 
     async def async_set_preset_mode(self, preset_mode: Optional[str]) -> None:
@@ -336,7 +336,7 @@ class EvoController(EvoClimateDevice):
         await self._set_tcs_mode(HA_PRESET_TO_TCS.get(preset_mode, EVO_AUTO))
 
     async def async_update(self) -> None:
-        """Get the latest state data for the Controller."""
+        """Get the latest state data for a Controller."""
         self._device_state_attrs = {}
 
         attrs = self._device_state_attrs
@@ -354,7 +354,7 @@ class EvoThermostat(EvoZone):
     """
 
     def __init__(self, evo_broker, evo_device) -> None:
-        """Initialize the Round Thermostat."""
+        """Initialize the Thermostat."""
         super().__init__(evo_broker, evo_device)
 
         self._name = evo_broker.tcs.location.name
@@ -391,7 +391,7 @@ class EvoThermostat(EvoZone):
             await super().async_set_hvac_mode(preset_mode)
 
     async def async_update(self) -> None:
-        """Get the latest state data for the RoundThermostat."""
+        """Get the latest state data for the Thermostat."""
         await super().async_update()
 
         attrs = self._device_state_attrs

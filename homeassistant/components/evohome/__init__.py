@@ -161,7 +161,7 @@ class EvoBroker:
     """Container for evohome client and data."""
 
     def __init__(self, hass, params) -> None:
-        """Initialize the evohome client and data structure."""
+        """Initialize the evohome client and its data structure."""
         self.hass = hass
         self.params = params
         self.config = {}
@@ -272,11 +272,11 @@ class EvoBroker:
         )
 
     async def update(self, *args, **kwargs) -> None:
-        """Get the latest state data of the entire evohome Location.
+        """Get the latest state data of an entire evohome Location.
 
-        This includes state data for the Controller and all its child devices,
-        such as the operating mode of the Controller and the current temp of
-        its children (e.g. Zones, DHW controller).
+        This includes state data for a Controller and all its child devices, such as the
+        operating mode of the Controller and the current temp of its children (e.g.
+        Zones, DHW controller).
         """
         loc_idx = self.params[CONF_LOCATION_IDX]
 
@@ -383,14 +383,14 @@ class EvoChild(EvoDevice):
     """
 
     def __init__(self, evo_broker, evo_device) -> None:
-        """Initialize the evohome Controller (hub)."""
+        """Initialize a evohome Controller (hub)."""
         super().__init__(evo_broker, evo_device)
         self._schedule = {}
         self._setpoints = {}
 
     @property
     def current_temperature(self) -> Optional[float]:
-        """Return the current temperature of the evohome Zone."""
+        """Return the current temperature of a Zone."""
         if self._evo_device.temperatureStatus["isAvailable"]:
             return self._evo_device.temperatureStatus["temperature"]
         return None

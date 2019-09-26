@@ -27,7 +27,7 @@ STATE_ATTRS_DHW = ["dhwId", "activeFaults", "stateStatus", "temperatureStatus"]
 async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ) -> None:
-    """Create the DHW controller."""
+    """Create a DHW controller."""
     if discovery_info is None:
         return
 
@@ -46,7 +46,7 @@ class EvoDHW(EvoChild, WaterHeaterDevice):
     """Base for a Honeywell evohome DHW controller (aka boiler)."""
 
     def __init__(self, evo_broker, evo_device) -> None:
-        """Initialize the evohome DHW controller."""
+        """Initialize a evohome DHW controller."""
         super().__init__(evo_broker, evo_device)
 
         self._name = "DHW controller"
@@ -104,7 +104,7 @@ class EvoDHW(EvoChild, WaterHeaterDevice):
         await self._call_client_api(self._evo_device.set_dhw_auto())
 
     async def async_update(self) -> None:
-        """Get the latest state data for the DHW controller."""
+        """Get the latest state data for a DHW controller."""
         await super().async_update()
 
         for attr in STATE_ATTRS_DHW:
