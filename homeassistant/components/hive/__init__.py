@@ -175,7 +175,6 @@ class HiveEntity(Entity):
 
     def __init__(self, session, hive_device):
         """Initialize the instance."""
-        self.entity_id = None
         self.node_id = None
         self.device_type = None
         self.session = None
