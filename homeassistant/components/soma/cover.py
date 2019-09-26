@@ -33,7 +33,7 @@ class SomaCover(SomaEntity, CoverDevice):
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        response = self.api.close_shade(self.device["mac"])
+        response = self.api.set_shade_position(self.device["mac"], 100)
         if response["result"] != "success":
             _LOGGER.error(
                 "Unable to reach device %s (%s)", self.device["name"], response["msg"]
@@ -41,7 +41,7 @@ class SomaCover(SomaEntity, CoverDevice):
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        response = self.api.open_shade(self.device["mac"])
+        response = self.api.set_shade_position(self.device["mac"], 0)
         if response["result"] != "success":
             _LOGGER.error(
                 "Unable to reach device %s (%s)", self.device["name"], response["msg"]
@@ -61,7 +61,7 @@ class SomaCover(SomaEntity, CoverDevice):
         """Move the cover shutter to a specific position."""
         self.current_position = kwargs[ATTR_POSITION]
         response = self.api.set_shade_position(
-            self.device["mac"], kwargs[ATTR_POSITION]
+            self.device["mac"], 100 - kwargs[ATTR_POSITION]
         )
         if response["result"] != "success":
             _LOGGER.error(

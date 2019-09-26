@@ -108,4 +108,4 @@ class SomaEntity(Entity):
                 "Unable to reach device %s (%s)", self.device["name"], response["msg"]
             )
             return
-        self.current_position = response["position"]
+        self.current_position = 100 - response["position"]
