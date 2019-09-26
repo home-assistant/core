@@ -48,11 +48,12 @@ class GeniusBattery(GeniusDevice):
     @property
     def icon(self) -> str:
         """Return the icon of the sensor."""
-        interval = timedelta(
-            seconds=self._device.data["_state"].get("wakeupInterval", 30 * 60)
-        )
-        if self._last_comms < dt_util.utcnow() - interval * 3:
-            return "mdi:battery-unknown"
+        if "_state" in self._device.data:  # only for v3 API
+            interval = timedelta(
+                seconds=self._device.data["_state"].get("wakeupInterval", 30 * 60)
+            )
+            if self._last_comms < dt_util.utcnow() - interval * 3:
+                return "mdi:battery-unknown"
 
         battery_level = self._device.data["state"][self._state_attr]
         if battery_level == 255:

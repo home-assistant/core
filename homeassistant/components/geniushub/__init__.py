@@ -91,16 +91,10 @@ async def async_setup(hass, hass_config):
 
     async_track_time_interval(hass, broker.async_update, SCAN_INTERVAL)
 
-    for platform in ["climate", "water_heater"]:
+    for platform in ["climate", "water_heater", "sensor", "binary_sensor"]:
         hass.async_create_task(
             async_load_platform(hass, platform, DOMAIN, {}, hass_config)
         )
-
-    if broker.client.api_version == 3:  # pylint: disable=no-member
-        for platform in ["sensor", "binary_sensor"]:
-            hass.async_create_task(
-                async_load_platform(hass, platform, DOMAIN, {}, hass_config)
-            )
 
     return True
 
@@ -178,20 +172,23 @@ class GeniusDevice(GeniusEntity):
 
         attrs = {}
         attrs["assigned_zone"] = self._device.data["assignedZones"][0]["name"]
-        attrs["last_comms"] = dt_util.as_local(self._last_comms).isoformat()
+        if self._last_comms:
+            attrs["last_comms"] = dt_util.as_local(self._last_comms).isoformat()
 
         attrs["state"] = dict(self._device.data["state"])
-        attrs["state"].update(self._device.data["_state"])
         attrs["state"].pop(self._state_attr)
-        attrs["state"].pop("lastComms")
+        if "_state" in self._device.data:  # only for v3 API
+            attrs["state"].update(self._device.data["_state"])
+            attrs["state"].pop("lastComms")
 
         return convert_dict(attrs)
 
     async def async_update(self) -> None:
         """Update an entity's state data."""
-        self._last_comms = dt_util.utc_from_timestamp(
-            self._device.data["_state"]["lastComms"]
-        )
+        if "_state" in self._device.data:  # only for v3 API
+            self._last_comms = dt_util.utc_from_timestamp(
+                self._device.data["_state"]["lastComms"]
+            )
 
 
 class GeniusZone(GeniusEntity):
