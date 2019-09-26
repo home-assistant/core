@@ -138,7 +138,9 @@ class AlexaEntity:
 
     def description(self):
         """Return the Alexa API description."""
-        return self.entity_conf.get(CONF_DESCRIPTION, self.entity.entity_id)
+        return self.entity_conf.get(CONF_DESCRIPTION) or "{} via Home Assistant".format(
+            self.friendly_name()
+        )
 
     def alexa_id(self):
         """Return the Alexa API entity id."""
@@ -387,12 +389,6 @@ class MediaPlayerCapabilities(AlexaEntity):
 @ENTITY_ADAPTERS.register(scene.DOMAIN)
 class SceneCapabilities(AlexaEntity):
     """Class to represent Scene capabilities."""
-
-    def description(self):
-        """Return the description of the entity."""
-        # Required description as per Amazon Scene docs
-        scene_fmt = "{} (Scene connected via Home Assistant)"
-        return scene_fmt.format(AlexaEntity.description(self))
 
     def default_display_categories(self):
         """Return the display categories for this entity."""
