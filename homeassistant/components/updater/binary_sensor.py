@@ -4,6 +4,7 @@ from homeassistant.core import callback
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from homeassistant.const import __version__ as current_version
 from . import (
     ATTR_NEWEST_VERSION,
     ATTR_RELEASE_NOTES,
@@ -11,7 +12,6 @@ from . import (
     DISPATCHER_REMOTE_UPDATE,
     Updater,
 )
-from homeassistant.const import __version__ as current_version
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
