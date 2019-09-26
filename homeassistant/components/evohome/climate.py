@@ -396,7 +396,7 @@ class EvoThermostat(EvoZone):
 
         attrs = self._device_state_attrs
         for attr in STATE_ATTRS_TCS:
-            if attr == "activeFaults":  # self._evo_device also has one
+            if attr == "activeFaults":  # self._evo_device also has "activeFaults"
                 attrs["activeSystemFaults"] = getattr(self._evo_tcs, attr)
             else:
                 attrs[attr] = getattr(self._evo_tcs, attr)
