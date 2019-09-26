@@ -33,6 +33,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.util.temperature import convert
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, _LOGGER
@@ -614,21 +615,22 @@ class Thermostat(ClimateDevice):
     def create_vacation(self, service_data):
         """Create a vacation with user-specified parameters."""
         vacation_name = service_data[ATTR_VACATION_NAME]
-        cool_temp = service_data[ATTR_COOL_TEMP]
-        heat_temp = service_data[ATTR_HEAT_TEMP]
-
+        cool_temp = convert(
+            service_data[ATTR_COOL_TEMP],
+            self.hass.config.units.temperature_unit,
+            TEMP_FAHRENHEIT,
+        )
+        heat_temp = convert(
+            service_data[ATTR_HEAT_TEMP],
+            self.hass.config.units.temperature_unit,
+            TEMP_FAHRENHEIT,
+        )
         start_date = service_data.get(ATTR_START_DATE)
         start_time = service_data.get(ATTR_START_TIME)
         end_date = service_data.get(ATTR_END_DATE)
         end_time = service_data.get(ATTR_END_TIME)
         fan_mode = service_data[ATTR_FAN_MODE]
         fan_min_on_time = service_data[ATTR_FAN_MIN_ON_TIME]
-
-        if cool_temp < 35:
-            # Assume user has specified cool_temp and heat_temp in celsius
-            # Convert to fahrenheit before calling function
-            cool_temp = (cool_temp * (9 / 5)) + 32
-            heat_temp = (heat_temp * (9 / 5)) + 32
 
         kwargs = {
             key: value
