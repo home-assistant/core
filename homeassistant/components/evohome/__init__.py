@@ -26,17 +26,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from homeassistant.util.dt import as_local, parse_datetime, utcnow
+import homeassistant.util.dt as dt_util
 
-from .const import (
-    DOMAIN,
-    EVO_FOLLOW,
-    EVO_STRFTIME,
-    STORAGE_VERSION,
-    STORAGE_KEY,
-    GWS,
-    TCS,
-)
+from .const import DOMAIN, EVO_FOLLOW, STORAGE_VERSION, STORAGE_KEY, GWS, TCS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,18 +56,43 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def _local_dt_to_utc(dt_naive: datetime) -> datetime:
-    dt_aware = utcnow() + (dt_naive - datetime.now())
+def _local_dt_to_aware(dt_naive: datetime) -> datetime:
+    dt_aware = dt_util.now() + (dt_naive - datetime.now())
     if dt_aware.microsecond >= 500000:
         dt_aware += timedelta(seconds=1)
     return dt_aware.replace(microsecond=0)
 
 
-def _utc_to_local_dt(dt_aware: datetime) -> datetime:
-    dt_naive = datetime.now() + (dt_aware - utcnow())
+def _dt_to_local_naive(dt_aware: datetime) -> datetime:
+    dt_naive = datetime.now() + (dt_aware - dt_util.now())
     if dt_naive.microsecond >= 500000:
         dt_naive += timedelta(seconds=1)
     return dt_naive.replace(microsecond=0)
+
+
+def convert_until(status_dict, until_key) -> str:
+    """Convert datetime string from "%Y-%m-%dT%H:%M:%SZ" to local/aware/isoformat."""
+    if until_key in status_dict:  # only present for certain modes
+        dt_utc_naive = dt_util.parse_datetime(status_dict[until_key])
+        status_dict[until_key] = dt_util.as_local(dt_utc_naive).isoformat()
+
+
+def convert_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
+    """Recursively convert a dict's keys to snake_case."""
+
+    def convert_key(key: str) -> str:
+        """Convert a string to snake_case."""
+        string = re.sub(r"[\-\.\s]", "_", str(key))
+        return (string[0]).lower() + re.sub(
+            r"[A-Z]", lambda matched: "_" + matched.group(0).lower(), string[1:]
+        )
+
+    return {
+        (convert_key(k) if isinstance(k, str) else k): (
+            convert_dict(v) if isinstance(v, dict) else v
+        )
+        for k, v in dictionary.items()
+    }
 
 
 def _handle_exception(err) -> bool:
@@ -119,31 +136,6 @@ def _handle_exception(err) -> bool:
             return False
 
         raise  # we don't expect/handle any other ClientResponseError
-
-
-def convert_until(status, until_key) -> str:
-    """Convert datetime string from zulu/naive to local/aware as isoformat."""
-    if until_key in status:
-        dt_utc_naive = datetime.strptime(status[until_key], EVO_STRFTIME)
-        status[until_key] = as_local(dt_utc_naive).isoformat()
-
-
-def convert_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
-    """Recursively convert a dict's keys to snake_case."""
-
-    def convert_key(key: str) -> str:
-        """Convert a string to snake_case."""
-        string = re.sub(r"[\-\.\s]", "_", str(key))
-        return (string[0]).lower() + re.sub(
-            r"[A-Z]", lambda matched: "_" + matched.group(0).lower(), string[1:]
-        )
-
-    return {
-        (convert_key(k) if isinstance(k, str) else k): (
-            convert_dict(v) if isinstance(v, dict) else v
-        )
-        for k, v in dictionary.items()
-    }
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
@@ -191,7 +183,7 @@ class EvoBroker:
 
         # evohomeasync2 uses naive/local datetimes
         if access_token_expires is not None:
-            access_token_expires = _utc_to_local_dt(access_token_expires)
+            access_token_expires = _dt_to_local_naive(access_token_expires)
 
         client = self.client = evohomeasync2.EvohomeClient(
             self.params[CONF_USERNAME],
@@ -254,7 +246,7 @@ class EvoBroker:
             access_token = app_storage.get(CONF_ACCESS_TOKEN)
             at_expires_str = app_storage.get(CONF_ACCESS_TOKEN_EXPIRES)
             if at_expires_str:
-                at_expires_dt = parse_datetime(at_expires_str)
+                at_expires_dt = dt_util.parse_datetime(at_expires_str)
             else:
                 at_expires_dt = None
 
@@ -264,7 +256,7 @@ class EvoBroker:
 
     async def _save_auth_tokens(self, *args) -> None:
         # evohomeasync2 uses naive/local datetimes
-        access_token_expires = _local_dt_to_utc(self.client.access_token_expires)
+        access_token_expires = _local_dt_to_aware(self.client.access_token_expires)
 
         self._app_storage[CONF_USERNAME] = self.params[CONF_USERNAME]
         self._app_storage[CONF_REFRESH_TOKEN] = self.client.refresh_token
@@ -412,14 +404,15 @@ class EvoChild(EvoDevice):
         if not self._schedule["DailySchedules"]:
             return {}  # no schedule {'DailySchedules': []}, so no scheduled setpoints
 
-        day_time = datetime.now()
+        day_time = dt_util.now()
         day_of_week = int(day_time.strftime("%w"))  # 0 is Sunday
+        time_of_day = day_time.strftime("%H:%M:%S")
 
         # Iterate today's switchpoints until past the current time of day...
         day = self._schedule["DailySchedules"][day_of_week]
         sp_idx = -1  # last switchpoint of the day before
         for i, tmp in enumerate(day["Switchpoints"]):
-            if day_time.strftime("%H:%M:%S") > tmp["TimeOfDay"]:
+            if time_of_day > tmp["TimeOfDay"]:
                 sp_idx = i  # current setpoint
             else:
                 break
@@ -436,13 +429,11 @@ class EvoChild(EvoDevice):
             day = self._schedule["DailySchedules"][(day_of_week + offset) % 7]
             switchpoint = day["Switchpoints"][idx]
 
-            dt_local_naive = datetime.strptime(
-                f"{sp_date}T{switchpoint['TimeOfDay']}", "%Y-%m-%dT%H:%M:%S"
+            dt_local_aware = _local_dt_to_aware(
+                dt_util.parse_datetime(f"{sp_date}T{switchpoint['TimeOfDay']}")
             )
 
-            self._setpoints[f"{key}_sp_from"] = as_local(
-                _local_dt_to_utc(dt_local_naive)
-            ).isoformat()
+            self._setpoints[f"{key}_sp_from"] = dt_local_aware.isoformat()
             try:
                 self._setpoints[f"{key}_sp_temp"] = switchpoint["heatSetpoint"]
             except KeyError:
@@ -462,8 +453,8 @@ class EvoChild(EvoDevice):
 
     async def async_update(self) -> None:
         """Get the latest state data."""
-        dt_min = "2000-01-01T00:00:00+00:00"
-        if parse_datetime(self._setpoints.get("next_sp_from", dt_min)) <= utcnow():
+        next_sp_from = self._setpoints.get("next_sp_from", "2000-01-01T00:00:00+00:00")
+        if dt_util.now() >= dt_util.parse_datetime(next_sp_from):
             await self._update_schedule()  # no schedule, or it's out-of-date
 
         self._device_state_attrs = {"setpoints": self.setpoints}
