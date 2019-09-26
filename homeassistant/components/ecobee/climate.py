@@ -97,16 +97,21 @@ SERVICE_DELETE_VACATION = "delete_vacation"
 SERVICE_RESUME_PROGRAM = "resume_program"
 SERVICE_SET_FAN_MIN_ON_TIME = "set_fan_min_on_time"
 
+DTGROUP_INCLUSIVE_MSG = (
+    f"{ATTR_START_DATE}, {ATTR_START_TIME}, {ATTR_END_DATE}, "
+    f"and {ATTR_END_TIME} must be specified together"
+)
+
 CREATE_VACATION_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
         vol.Required(ATTR_VACATION_NAME): cv.string,
-        vol.Required(ATTR_COOL_TEMP): vol.Any(cv.positive_int, float),
-        vol.Required(ATTR_HEAT_TEMP): vol.Any(cv.positive_int, float),
-        vol.Optional(ATTR_START_DATE): cv.string,
-        vol.Optional(ATTR_START_TIME): cv.string,
-        vol.Optional(ATTR_END_DATE): cv.string,
-        vol.Optional(ATTR_END_TIME): cv.string,
+        vol.Required(ATTR_COOL_TEMP): vol.Coerce(float),
+        vol.Required(ATTR_HEAT_TEMP): vol.Coerce(float),
+        vol.Inclusive(ATTR_START_DATE, "dtgroup", msg=DTGROUP_INCLUSIVE_MSG): cv.string,
+        vol.Inclusive(ATTR_START_TIME, "dtgroup", msg=DTGROUP_INCLUSIVE_MSG): cv.string,
+        vol.Inclusive(ATTR_END_DATE, "dtgroup", msg=DTGROUP_INCLUSIVE_MSG): cv.string,
+        vol.Inclusive(ATTR_END_TIME, "dtgroup", msg=DTGROUP_INCLUSIVE_MSG): cv.string,
         vol.Optional(ATTR_FAN_MODE, default="auto"): vol.Any("auto", "on"),
         vol.Optional(ATTR_FAN_MIN_ON_TIME, default=0): vol.All(
             int, vol.Range(min=0, max=60)
