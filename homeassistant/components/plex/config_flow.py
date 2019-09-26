@@ -39,6 +39,7 @@ from .const import (  # pylint: disable=unused-import
 from .errors import NoServersFound, ServerNotSpecified
 from .server import PlexServer
 
+DELAY_CONFIGURE = 5
 USER_SCHEMA = vol.Schema({vol.Optional("manual_setup"): bool})
 
 _LOGGER = logging.getLogger(__package__)
@@ -243,7 +244,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.plexauth.initiate_auth()
         auth_url = self.plexauth.auth_url()
         self.hass.helpers.event.async_call_later(
-            5, await self.hass.config_entries.flow.async_configure(self.flow_id)
+            DELAY_CONFIGURE, self.hass.config_entries.flow.async_configure(self.flow_id)
         )
         return self.async_external_step(step_id="obtain_token", url=auth_url)
 
