@@ -173,7 +173,7 @@ def refresh_system(func):
 class HiveEntity(Entity):
     """Initiate Hive Base Class."""
 
-    def __init__(self):
+    def __init__(self, session, hive_device):
         """Initialise the varibale."""
         self.entity_id = None
         self.node_id = None
