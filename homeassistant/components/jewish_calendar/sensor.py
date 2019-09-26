@@ -110,15 +110,17 @@ class JewishCalendarSensor(Entity):
         # refers to "current" or "upcoming" dates.
         if self._type == "date":
             return after_shkia_date.hebrew_date
-        elif self._type == "weekly_portion":
+        if self._type == "weekly_portion":
             # Compute the weekly portion based on the upcoming shabbat.
             return after_tzais_date.upcoming_shabbat.parasha
-        elif self._type == "holiday_name":
+        if self._type == "holiday_name":
             return after_shkia_date.holiday_description
-        elif self._type == "holiday_type":
+        if self._type == "holiday_type":
             return after_shkia_date.holiday_type
-        elif self._type == "omer_count":
+        if self._type == "omer_count":
             return after_shkia_date.omer_day
+
+        return None
 
 
 class JewishCalendarTimeSensor(JewishCalendarSensor):
@@ -163,19 +165,19 @@ class JewishCalendarTimeSensor(JewishCalendarSensor):
                 after_tzais_date.upcoming_shabbat.previous_day.gdate
             )
             return times.candle_lighting
-        elif self._type == "upcoming_candle_lighting":
+        if self._type == "upcoming_candle_lighting":
             times = self.make_zmanim(
                 after_tzais_date.upcoming_shabbat_or_yom_tov.first_day.previous_day.gdate
             )
             return times.candle_lighting
-        elif self._type == "upcoming_shabbat_havdalah":
+        if self._type == "upcoming_shabbat_havdalah":
             times = self.make_zmanim(after_tzais_date.upcoming_shabbat.gdate)
             return times.havdalah
-        elif self._type == "upcoming_havdalah":
+        if self._type == "upcoming_havdalah":
             times = self.make_zmanim(
                 after_tzais_date.upcoming_shabbat_or_yom_tov.last_day.gdate
             )
             return times.havdalah
-        else:
-            times = self.make_zmanim(dt_util.now()).zmanim
-            return times[self._type]
+
+        times = self.make_zmanim(dt_util.now()).zmanim
+        return times[self._type]
