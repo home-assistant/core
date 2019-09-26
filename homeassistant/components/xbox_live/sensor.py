@@ -1,4 +1,5 @@
 """Sensor for Xbox Live account status."""
+from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -9,6 +10,8 @@ from homeassistant.const import CONF_API_KEY, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(seconds=60)
 
 CONF_XUID = "xuid"
 
