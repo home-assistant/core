@@ -1,9 +1,9 @@
 """Mock classes used in tests."""
 
 MOCK_HOST_1 = "1.2.3.4"
-MOCK_PORT_1 = "32400"
+MOCK_PORT_1 = 32400
 MOCK_HOST_2 = "4.3.2.1"
-MOCK_PORT_2 = "32400"
+MOCK_PORT_2 = 32400
 
 
 class MockAvailableServer:  # pylint: disable=too-few-public-methods

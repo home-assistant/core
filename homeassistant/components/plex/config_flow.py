@@ -3,6 +3,7 @@ import copy
 import logging
 
 import plexapi.exceptions
+from plexauth import PlexAuth
 import requests.exceptions
 import voluptuous as vol
 
@@ -30,13 +31,15 @@ from .const import (  # pylint: disable=unused-import
     DOMAIN,
     PLEX_CONFIG_FILE,
     PLEX_SERVER_CONFIG,
+    X_PLEX_DEVICE_NAME,
+    X_PLEX_VERSION,
+    X_PLEX_PRODUCT,
+    X_PLEX_PLATFORM,
 )
 from .errors import NoServersFound, ServerNotSpecified
 from .server import PlexServer
 
-USER_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_TOKEN): str, vol.Optional("manual_setup"): bool}
-)
+USER_SCHEMA = vol.Schema({vol.Optional("manual_setup"): bool})
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -67,6 +70,8 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.current_login = {}
         self.discovery_info = {}
         self.available_servers = None
+        self.plexauth = None
+        self.token = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -74,9 +79,8 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if user_input.pop("manual_setup", False):
                 return await self.async_step_manual_setup(user_input)
-            if CONF_TOKEN in user_input:
-                return await self.async_step_server_validate(user_input)
-            errors[CONF_TOKEN] = "no_token"
+
+            return await self.async_step_plex_website_auth()
 
         return self.async_show_form(
             step_id="user", data_schema=USER_SCHEMA, errors=errors
@@ -224,6 +228,43 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Import from Plex configuration."""
         _LOGGER.debug("Imported Plex configuration")
         return await self.async_step_server_validate(import_config)
+
+    async def async_step_plex_website_auth(self):
+        """Begin external auth flow on Plex website."""
+        payload = {
+            "X-Plex-Device-Name": X_PLEX_DEVICE_NAME,
+            "X-Plex-Version": X_PLEX_VERSION,
+            "X-Plex-Product": X_PLEX_PRODUCT,
+            "X-Plex-Device": self.hass.config.location_name,
+            "X-Plex-Platform": X_PLEX_PLATFORM,
+            "X-Plex-Model": "Plex OAuth",
+        }
+        self.plexauth = PlexAuth(payload)
+        await self.plexauth.initiate_auth()
+        auth_url = self.plexauth.auth_url()
+        self.hass.helpers.event.async_call_later(
+            5, await self.hass.config_entries.flow.async_configure(self.flow_id)
+        )
+        return self.async_external_step(step_id="obtain_token", url=auth_url)
+
+    async def async_step_obtain_token(self, user_input=None):
+        """Obtain token after external auth completed."""
+        token = await self.plexauth.token(120)
+
+        if not token:
+            return self.async_external_step_done(next_step_id="timed_out")
+
+        self.token = token
+        return self.async_external_step_done(next_step_id="use_external_token")
+
+    async def async_step_timed_out(self, user_input=None):
+        """Abort flow when time expires."""
+        return self.async_abort(reason="token_request_timeout")
+
+    async def async_step_use_external_token(self, user_input=None):
+        """Continue server validation with external token."""
+        server_config = {CONF_TOKEN: self.token}
+        return await self.async_step_server_validate(server_config)
 
 
 class PlexOptionsFlowHandler(config_entries.OptionsFlow):
