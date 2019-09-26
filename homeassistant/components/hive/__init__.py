@@ -174,7 +174,7 @@ class HiveEntity(Entity):
     """Initiate Hive Base Class."""
 
     def __init__(self, session, hive_device):
-        """Initialise the varibale."""
+        """Initialize the instance."""
         self.entity_id = None
         self.node_id = None
         self.device_type = None
