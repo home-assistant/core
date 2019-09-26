@@ -13,6 +13,11 @@
             "not_found": "Serveur Plex introuvable"
         },
         "step": {
+            "manual_setup": {
+                "data": {
+                    "port": "Port"
+                }
+            },
             "select_server": {
                 "data": {
                     "server": "Serveur"

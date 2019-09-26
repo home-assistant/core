@@ -16,5 +16,22 @@
             }
         },
         "title": "ZHA"
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "both_buttons": "Begge knapper",
+            "button_1": "F\u00f8rste knap",
+            "button_2": "Anden knap",
+            "button_3": "Tredje knap",
+            "button_4": "Fjerde knap",
+            "button_5": "Femte knap",
+            "close": "Luk",
+            "left": "Venstre",
+            "open": "\u00c5ben",
+            "right": "H\u00f8jre"
+        },
+        "trigger_type": {
+            "device_shaken": "Enhed rystet"
+        }
     }
 }
