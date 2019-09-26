@@ -66,17 +66,6 @@ async def async_get_device_automation_platform(hass, config, automation_type):
     return platform
 
 
-async def async_validate_trigger_config(hass, config):
-    """Validate config."""
-    platform = await async_get_device_automation_platform(hass, config, "trigger")
-    if not hasattr(platform, "async_get_triggers"):
-        raise InvalidDeviceAutomationConfig(
-            f"Integration '{config[CONF_DOMAIN]}' does not support device automation triggers"
-        )
-
-    return platform.TRIGGER_SCHEMA(config)
-
-
 async def _async_get_device_automations_from_domain(
     hass, domain, automation_type, device_id
 ):

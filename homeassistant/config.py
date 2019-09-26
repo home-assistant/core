@@ -726,11 +726,13 @@ async def async_process_component_config(
         config_validator = integration.get_platform("config")
     except ImportError:
         pass
-    if config_validator is not None:
+    if config_validator is not None and hasattr(
+        config_validator, "async_validate_config"
+    ):
         try:
-            return await config_validator.async_validate_config(
+            return await config_validator.async_validate_config(  # type: ignore
                 hass, config
-            )  # type: ignore
+            )
         except (vol.Invalid, HomeAssistantError) as ex:
             async_log_exception(ex, domain, config, hass)
             return None
