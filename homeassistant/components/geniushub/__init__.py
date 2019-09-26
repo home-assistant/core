@@ -53,6 +53,24 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+def convert_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
+    """Recursively convert a dict's keys to snake_case."""
+
+    def convert_key(key: str) -> str:
+        """Convert a string to snake_case."""
+        string = re.sub(r"[\-\.\s]", "_", str(key))
+        return (string[0]).lower() + re.sub(
+            r"[A-Z]", lambda matched: "_" + matched.group(0).lower(), string[1:]
+        )
+
+    return {
+        (convert_key(k) if isinstance(k, str) else k): (
+            convert_dict(v) if isinstance(v, dict) else v
+        )
+        for k, v in dictionary.items()
+    }
+
+
 async def async_setup(hass, hass_config):
     """Create a Genius Hub system."""
     kwargs = dict(hass_config[DOMAIN])
@@ -157,23 +175,6 @@ class GeniusDevice(GeniusEntity):
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
         """Return the device state attributes."""
-
-        def convert_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
-            """Recursively convert a dict's keys to snake_case."""
-
-            def convert_key(key: str) -> str:
-                """Convert a string to snake_case."""
-                string = re.sub(r"[\-\.\s]", "_", str(key))
-                return (string[0]).lower() + re.sub(
-                    r"[A-Z]", lambda matched: "_" + matched.group(0).lower(), string[1:]
-                )
-
-            return {
-                (convert_key(k) if isinstance(k, str) else k): (
-                    convert_dict(v) if isinstance(v, dict) else v
-                )
-                for k, v in dictionary.items()
-            }
 
         attrs = {}
         attrs["assigned_zone"] = self._device.data["assignedZones"][0]["name"]
