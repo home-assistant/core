@@ -168,11 +168,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     def create_vacation_service(service):
         """Create a vacation on the target thermostat."""
         entity_id = service.data[ATTR_ENTITY_ID]
-        data = service.data
 
-        for device in devices:
-            if device.entity_id == entity_id:
-                device.create_vacation(data)
+        for thermostat in devices:
+            if thermostat.entity_id == entity_id:
+                thermostat.create_vacation(service.data)
+                thermostat.schedule_update_ha_state(True)
                 break
 
     def delete_vacation_service(service):
@@ -180,9 +180,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entity_id = service.data[ATTR_ENTITY_ID]
         vacation_name = service.data[ATTR_VACATION_NAME]
 
-        for device in devices:
-            if device.entity_id == entity_id:
-                device.delete_vacation(vacation_name)
+        for thermostat in devices:
+            if thermostat.entity_id == entity_id:
+                thermostat.delete_vacation(vacation_name)
+                thermostat.schedule_update_ha_state(True)
                 break
 
     def fan_min_on_time_set_service(service):
