@@ -1,0 +1,21 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_bat_low": "Bateria {entity_name} jest roz\u0142adowana",
+            "is_cold": "{entity_name} wykrywa zimno",
+            "is_connected": "{entity_name} jest po\u0142\u0105czone",
+            "is_gas": "{entity_name} wykrywa gaz",
+            "is_hot": "{entity_name} wykrywa gor\u0105co",
+            "is_light": "{entity_name} wykrywa \u015bwiat\u0142o",
+            "is_locked": "{entity_name} jest zamkni\u0119te",
+            "is_moist": "{entity_name} wykrywa wilgo\u0107",
+            "is_motion": "{entity_name} wykrywa ruch",
+            "is_moving": "{entity_name} porusza si\u0119",
+            "is_no_gas": "{entity_name} nie wykrywa gazu",
+            "is_no_light": "{entity_name} nie wykrywa \u015bwiat\u0142a",
+            "is_no_motion": "{entity_name} nie wykrywa ruchu",
+            "is_off": "{entity_name} jest wy\u0142\u0105czone",
+            "is_on": "{entity_name} jest w\u0142\u0105czone"
+        }
+    }
+}
