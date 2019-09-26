@@ -2,6 +2,96 @@
 import unittest
 import requests_mock
 import homeassistant.components.yessssms.notify as yessssms
+from homeassistant.components.yessssms.const import CONF_PROVIDER
+
+from tests.common import get_test_home_assistant
+from homeassistant.const import CONF_PASSWORD, CONF_RECIPIENT, CONF_USERNAME
+
+
+class TestNotifyYesssSMSSetUP(unittest.TestCase):
+    """Test the yessssms notify setup."""
+
+    def setUp(self):  # pylint: disable=invalid-name
+        """Set up things to be run when tests are started."""
+        self.login = "06641234567"
+        self.passwd = "testpasswd"
+        self.recipient = "06501234567"
+        self.provider = "yesss"
+
+    def test_unsupported_provider_error(self):
+        """Test for unsupported provider."""
+        with self.assertLogs(
+            "homeassistant.components.yessssms.notify", level="ERROR"
+        ) as log_message:
+            service = yessssms.get_service(
+                get_test_home_assistant,
+                {
+                    CONF_USERNAME: self.login,
+                    CONF_PASSWORD: self.passwd,
+                    CONF_PROVIDER: "FantasyMobile",
+                },
+            )
+            self.assertIn("Unknown provider", log_message.output[0])
+        self.assertIsNone(service)
+
+    @requests_mock.Mocker()
+    def test_login_data(self, mock):
+        """Test login data check."""
+        mock.register_uri(
+            "POST",
+            yessssms.YesssSMS("", "", "yesss").get_login_url(),
+            status_code=200,
+            text="BlaBlaBla<strong>Login nicht erfolgreichBlaBla",
+        )
+        with self.assertLogs(
+            "homeassistant.components.yessssms.notify", level="ERROR"
+        ) as log_message:
+            service = yessssms.get_service(
+                get_test_home_assistant,
+                {
+                    CONF_USERNAME: self.login,
+                    CONF_PASSWORD: self.passwd,
+                    CONF_PROVIDER: "yesss",
+                },
+            )
+            self.assertIn("Login data is not valid!", log_message.output[0])
+            self.assertIsNone(service)
+
+    @requests_mock.Mocker()
+    def test_init_success(self, mock):
+        """Test initialization success."""
+        # pylint: disable=protected-access
+        kontomanager_url = yessssms.YesssSMS("", "", self.provider)._kontomanager
+        logout_url = yessssms.YesssSMS("", "", self.provider)._logout_url
+        mock.register_uri(
+            requests_mock.POST,
+            yessssms.YesssSMS("", "", self.provider).get_login_url(),
+            status_code=302,
+            headers={"location": kontomanager_url},
+        )
+        mock.register_uri(requests_mock.GET, kontomanager_url, status_code=200)
+        mock.register_uri(requests_mock.GET, logout_url, status_code=200)
+
+        with self.assertLogs(
+            "homeassistant.components.yessssms.notify", level="DEBUG"
+        ) as log_message:
+            service = yessssms.get_service(
+                get_test_home_assistant,
+                {
+                    CONF_USERNAME: self.login,
+                    CONF_PASSWORD: self.passwd,
+                    CONF_PROVIDER: self.provider,
+                    CONF_RECIPIENT: self.recipient,
+                },
+            )
+            self.assertIn(
+                "Login data for '{}' valid".format(self.provider), log_message.output[0]
+            )
+            self.assertIsInstance(service, yessssms.YesssSMSNotificationService)
+            self.assertIn(
+                "initialized; library version: {}".format(service.yesss.version()),
+                log_message.output[1],
+            )
 
 
 class TestNotifyYesssSMS(unittest.TestCase):
