@@ -88,14 +88,12 @@ def patch_connect(success):
     if success:
         return {
             "python": patch(
-                "{}.AdbDeviceFake.connect".format(__name__), connect_success_python
+                f"{__name__}.AdbDeviceFake.connect", connect_success_python
             ),
             "server": patch("androidtv.adb_manager.Client", ClientFakeSuccess),
         }
     return {
-        "python": patch(
-            "{}.AdbDeviceFake.connect".format(__name__), connect_fail_python
-        ),
+        "python": patch(f"{__name__}.AdbDeviceFake.connect", connect_fail_python),
         "server": patch("androidtv.adb_manager.Client", ClientFakeFail),
     }
 
@@ -120,12 +118,12 @@ def patch_shell(response=None, error=False):
 
     if not error:
         return {
-            "python": patch("{}.AdbDeviceFake.shell".format(__name__), shell_success),
-            "server": patch("{}.DeviceFake.shell".format(__name__), shell_success),
+            "python": patch(f"{__name__}.AdbDeviceFake.shell", shell_success),
+            "server": patch(f"{__name__}.DeviceFake.shell", shell_success),
         }
     return {
-        "python": patch("{}.AdbDeviceFake.shell".format(__name__), shell_fail_python),
-        "server": patch("{}.DeviceFake.shell".format(__name__), shell_fail_server),
+        "python": patch(f"{__name__}.AdbDeviceFake.shell", shell_fail_python),
+        "server": patch(f"{__name__}.DeviceFake.shell", shell_fail_server),
     }
 
 

@@ -3,6 +3,12 @@ import functools
 import logging
 import voluptuous as vol
 
+from adb_shell.exceptions import (
+    InvalidChecksumError,
+    InvalidCommandError,
+    InvalidResponseError,
+    TcpTimeoutException,
+)
 from androidtv import setup, ha_state_detection_rules_validator
 from androidtv.constants import APPS, KEYS
 
@@ -123,7 +129,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Android TV / Fire TV platform."""
     hass.data.setdefault(ANDROIDTV_DOMAIN, {})
 
-    host = "{0}:{1}".format(config[CONF_HOST], config[CONF_PORT])
+    host = f"{config[CONF_HOST]}:{config[CONF_PORT]}"
 
     if CONF_ADB_SERVER_IP not in config:
         # Use "adb_shell" (Python ADB implementation)
@@ -135,7 +141,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 device_class=config[CONF_DEVICE_CLASS],
                 state_detection_rules=config[CONF_STATE_DETECTION_RULES],
             )
-            adb_log += "with adbkey='{0}'".format(config[CONF_ADBKEY])
+            adb_log += f"with adbkey='{config[CONF_ADBKEY]}'"
 
         else:
             aftv = setup(
@@ -153,9 +159,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             device_class=config[CONF_DEVICE_CLASS],
             state_detection_rules=config[CONF_STATE_DETECTION_RULES],
         )
-        adb_log = "using ADB server at {0}:{1}".format(
-            config[CONF_ADB_SERVER_IP], config[CONF_ADB_SERVER_PORT]
-        )
+        adb_log = f"using ADB server at {config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
 
     if not aftv.available:
         # Determine the name that will be used for the device in the log
@@ -280,13 +284,6 @@ class ADBDevice(MediaPlayerDevice):
         # ADB exceptions to catch
         if not self.aftv.adb_server_ip:
             # Using "adb_shell" (Python ADB implementation)
-            from adb_shell.exceptions import (
-                InvalidChecksumError,
-                InvalidCommandError,
-                InvalidResponseError,
-                TcpTimeoutException,
-            )
-
             self.exceptions = (
                 AttributeError,
                 BrokenPipeError,

@@ -39,6 +39,9 @@ PyTransportNSW==0.1.1
 # homeassistant.components.yessssms
 YesssSMS==0.2.3
 
+# homeassistant.components.androidtv
+adb-shell==0.0.2
+
 # homeassistant.components.adguard
 adguardhome==0.2.1
 
