@@ -639,10 +639,13 @@ class Thermostat(ClimateDevice):
         }
 
         _LOGGER.debug(
-            "Creating a vacation on thermostat {} with name {}, cool temp {}, heat temp {}, "
-            "and the following other parameters: {}".format(
-                self.name, vacation_name, cool_temp, heat_temp, kwargs
-            )
+            "Creating a vacation on thermostat %s with name %s, cool temp %s, heat temp %s, "
+            "and the following other parameters: %s",
+            self.name,
+            vacation_name,
+            cool_temp,
+            heat_temp,
+            kwargs,
         )
         self.data.ecobee.create_vacation(
             self.thermostat_index, vacation_name, cool_temp, heat_temp, **kwargs
@@ -651,8 +654,8 @@ class Thermostat(ClimateDevice):
     def delete_vacation(self, vacation_name):
         """Delete a vacation with the specified name."""
         _LOGGER.debug(
-            "Deleting a vacation on thermostat {} with name {}".format(
-                self.name, vacation_name
-            )
+            "Deleting a vacation on thermostat %s with name %s",
+            self.name,
+            vacation_name,
         )
         self.data.ecobee.delete_vacation(self.thermostat_index, vacation_name)
