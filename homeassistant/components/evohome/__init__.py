@@ -399,9 +399,9 @@ class EvoChild(EvoDevice):
     @property
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature of the evohome Zone."""
-        if not self._evo_device.temperatureStatus["isAvailable"]:
-            return None
-        return self._evo_device.temperatureStatus["temperature"]
+        if self._evo_device.temperatureStatus["isAvailable"]:
+            return self._evo_device.temperatureStatus["temperature"]
+        return None
 
     @property
     def setpoints(self) -> Dict[str, Any]:
