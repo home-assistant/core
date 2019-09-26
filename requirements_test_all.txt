@@ -422,6 +422,9 @@ statsd==3.2.1
 # homeassistant.components.toon
 toonapilib==3.2.4
 
+# homeassistant.components.transmission
+transmissionrpc==0.11
+
 # homeassistant.components.twentemilieu
 twentemilieu==0.1.0
 

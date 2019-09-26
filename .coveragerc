@@ -675,7 +675,11 @@ omit =
     homeassistant/components/tradfri/cover.py
     homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/sensor.py
-    homeassistant/components/transmission/*
+    homeassistant/components/transmission/__init__.py
+    homeassistant/components/transmission/sensor.py
+    homeassistant/components/transmission/switch.py
+    homeassistant/components/transmission/const.py
+    homeassistant/components/transmission/errors.py
     homeassistant/components/travisci/sensor.py
     homeassistant/components/tuya/*
     homeassistant/components/twentemilieu/const.py

@@ -62,6 +62,7 @@ FLOWS = [
     "tplink",
     "traccar",
     "tradfri",
+    "transmission",
     "twentemilieu",
     "twilio",
     "unifi",
