@@ -12,7 +12,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 
-from . import DOMAIN, DATA_HIVE, HiveSession, refresh_system
+from . import DOMAIN, DATA_HIVE, HiveEntity, refresh_system
 
 HIVE_TO_HASS_STATE = {
     "SCHEDULE": HVAC_MODE_AUTO,
@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devs)
 
 
-class HiveClimateEntity(HiveSession, ClimateDevice):
+class HiveClimateEntity(HiveEntity, ClimateDevice):
     """Hive Climate Device."""
 
     def __init__(self, hivesession, hivedevice):

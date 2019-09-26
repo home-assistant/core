@@ -10,7 +10,7 @@ from homeassistant.components.light import (
 )
 import homeassistant.util.color as color_util
 
-from . import DOMAIN, DATA_HIVE, HiveSession, refresh_system
+from . import DOMAIN, DATA_HIVE, HiveEntity, refresh_system
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devs)
 
 
-class HiveDeviceLight(HiveSession, Light):
+class HiveDeviceLight(HiveEntity, Light):
     """Hive Active Light Device."""
 
     def __init__(self, hivesession, hivedevice):
@@ -149,8 +149,7 @@ class HiveDeviceLight(HiveSession, Light):
 
         return supported_features
 
-
-def update(self):
-    """Update all Node data from Hive."""
-    self.session.core.update_data(self.node_id)
-    self.attributes = self.session.attributes.state_attributes(self.node_id)
+    def update(self):
+        """Update all Node data from Hive."""
+        self.session.core.update_data(self.node_id)
+        self.attributes = self.session.attributes.state_attributes(self.node_id)

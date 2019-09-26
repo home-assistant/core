@@ -70,6 +70,20 @@ BOOST_HOTWATER_SCHEMA = vol.Schema(
 )
 
 
+class HiveSession:
+    """Initiate Hive Session Class."""
+
+    entity_lookup = {}
+    core = None
+    heating = None
+    hotwater = None
+    light = None
+    sensor = None
+    switch = None
+    weather = None
+    attributes = None
+
+
 def setup(hass, config):
     """Set up the Hive Component."""
 
@@ -156,22 +170,18 @@ def refresh_system(func):
     return wrapper
 
 
-class HiveSession(Entity):
-    """Initiate Hive Session Class."""
+class HiveEntity(Entity):
+    """Initiate Hive Base Class."""
 
-    entity_lookup = {}
-    core = None
-    heating = None
-    hotwater = None
-    light = None
-    sensor = None
-    switch = None
-    weather = None
-    attributes = None
+    def __init__(self):
+        """Initialise the varibale."""
+        self.entity_id = None
+        self.node_id = None
+        self.device_type = None
+        self.session = None
 
     async def async_added_to_hass(self):
         """When entity is added to Home Assistant."""
-        await super().async_added_to_hass()
         async_dispatcher_connect(self.hass, DOMAIN, self._update_callback)
         if self.device_type in SERVICES:
             self.session.entity_lookup[self.entity_id] = self.node_id
