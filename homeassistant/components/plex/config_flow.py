@@ -1,4 +1,5 @@
 """Config flow for Plex."""
+import copy
 import logging
 
 import plexapi.exceptions
@@ -6,6 +7,7 @@ import requests.exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -20,6 +22,8 @@ from homeassistant.util.json import load_json
 from .const import (  # pylint: disable=unused-import
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
+    CONF_USE_EPISODE_ART,
+    CONF_SHOW_ALL_CONTROLS,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
@@ -51,6 +55,12 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return PlexOptionsFlowHandler(config_entry)
 
     def __init__(self):
         """Initialize the Plex flow."""
@@ -214,3 +224,42 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Import from Plex configuration."""
         _LOGGER.debug("Imported Plex configuration")
         return await self.async_step_server_validate(import_config)
+
+
+class PlexOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle Plex options."""
+
+    def __init__(self, config_entry):
+        """Initialize Plex options flow."""
+        self.options = copy.deepcopy(config_entry.options)
+
+    async def async_step_init(self, user_input=None):
+        """Manage the Plex options."""
+        return await self.async_step_plex_mp_settings()
+
+    async def async_step_plex_mp_settings(self, user_input=None):
+        """Manage the Plex media_player options."""
+        if user_input is not None:
+            self.options[MP_DOMAIN][CONF_USE_EPISODE_ART] = user_input[
+                CONF_USE_EPISODE_ART
+            ]
+            self.options[MP_DOMAIN][CONF_SHOW_ALL_CONTROLS] = user_input[
+                CONF_SHOW_ALL_CONTROLS
+            ]
+            return self.async_create_entry(title="", data=self.options)
+
+        return self.async_show_form(
+            step_id="plex_mp_settings",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USE_EPISODE_ART,
+                        default=self.options[MP_DOMAIN][CONF_USE_EPISODE_ART],
+                    ): bool,
+                    vol.Required(
+                        CONF_SHOW_ALL_CONTROLS,
+                        default=self.options[MP_DOMAIN][CONF_SHOW_ALL_CONTROLS],
+                    ): bool,
+                }
+            ),
+        )

@@ -41,5 +41,16 @@
             "invalid_import": "Imported configuration is invalid",
             "unknown": "Failed for unknown reason"
         }
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "description": "Options for Plex Media Players",
+                "data": {
+                    "use_episode_art": "Use episode art",
+                    "show_all_controls": "Show all controls"
+                }
+            }
+        }
     }
 }
