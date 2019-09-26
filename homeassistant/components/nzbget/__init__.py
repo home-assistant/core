@@ -2,7 +2,6 @@
 from datetime import timedelta
 import logging
 
-import pynzbgetapi
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -62,6 +61,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the NZBGet sensors."""
+    import pynzbgetapi
+
     host = config[DOMAIN][CONF_HOST]
     port = config[DOMAIN][CONF_PORT]
     ssl = "s" if config[DOMAIN][CONF_SSL] else ""
@@ -85,11 +86,11 @@ def setup(hass, config):
     def service_handler(service):
         """Handle service calls."""
         if service.service == SERVICE_PAUSE:
-            nzbget_data.pausedownload()
+            nzbget_data.pause_download()
         elif service.service == SERVICE_RESUME:
-            nzbget_data.resumedownload()
+            nzbget_data.resume_download()
         elif service.service == SERVICE_SET_SPEED:
-            limit = service.data.get(ATTR_SPEED)
+            limit = service.data[ATTR_SPEED]
             nzbget_data.rate(limit)
 
     hass.services.register(
@@ -129,6 +130,8 @@ class NZBGetData:
 
     def update(self):
         """Get the latest data from NZBGet instance."""
+        import pynzbgetapi
+
         try:
             self.status = self._api.status()
             self.available = True
@@ -137,15 +140,19 @@ class NZBGetData:
             self.available = False
             _LOGGER.error("Unable to refresh NZBGet data: %s", err)
 
-    def pausedownload(self):
+    def pause_download(self):
         """Pause download queue."""
+        import pynzbgetapi
+
         try:
             self._api.pausedownload()
         except pynzbgetapi.NZBGetAPIException as err:
             _LOGGER.error("Unable to pause queue: %s", err)
 
-    def resumedownload(self):
+    def resume_download(self):
         """Resume download queue."""
+        import pynzbgetapi
+
         try:
             self._api.resumedownload()
         except pynzbgetapi.NZBGetAPIException as err:
@@ -153,6 +160,8 @@ class NZBGetData:
 
     def rate(self, limit):
         """Set download speed."""
+        import pynzbgetapi
+
         try:
             if not self._api.rate(limit):
                 _LOGGER.error("Limit was out of range")
