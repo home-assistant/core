@@ -31,13 +31,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class HiveSensorEntity(HiveEntity, Entity):
     """Hive Sensor Entity."""
 
-    def __init__(self, hivesession, hivedevice):
+    def __init__(self, hive_session, hive_device):
         """Initialize the sensor."""
-        self.node_id = hivedevice["Hive_NodeID"]
-        self.device_type = hivedevice["HA_DeviceType"]
-        self.node_device_type = hivedevice["Hive_DeviceType"]
-        self.session = hivesession
-        self._unique_id = f"{self.node_id}-{self.device_type}"
+        super().__init__(hive_session, hive_device)
 
     @property
     def unique_id(self):

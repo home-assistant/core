@@ -31,14 +31,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class HiveWaterHeater(HiveEntity, WaterHeaterDevice):
     """Hive Water Heater Device."""
 
-    def __init__(self, hivesession, hivedevice):
+    def __init__(self, hive_session, hive_device):
         """Initialize the Water Heater device."""
-        self.node_id = hivedevice["Hive_NodeID"]
-        self.node_name = hivedevice["Hive_NodeName"]
-        self.device_type = hivedevice["HA_DeviceType"]
-        self.session = hivesession
-        self._unique_id = f"{self.node_id}-{self.device_type}"
-        self._unit_of_measurement = TEMP_CELSIUS
+        super().__init__(hive_session, hive_device)
 
     @property
     def unique_id(self):
@@ -65,7 +60,7 @@ class HiveWaterHeater(HiveEntity, WaterHeaterDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return self._unit_of_measurement
+        return TEMP_CELSIUS
 
     @property
     def current_operation(self):

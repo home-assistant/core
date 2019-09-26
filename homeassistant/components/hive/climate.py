@@ -46,15 +46,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class HiveClimateEntity(HiveEntity, ClimateDevice):
     """Hive Climate Device."""
 
-    def __init__(self, hivesession, hivedevice):
+    def __init__(self, hive_session, hive_device):
         """Initialize the Climate device."""
-        self.node_id = hivedevice["Hive_NodeID"]
-        self.node_name = hivedevice["Hive_NodeName"]
-        self.device_type = hivedevice["HA_DeviceType"]
-        self.thermostat_node_id = hivedevice["Thermostat_NodeID"]
-        self.session = hivesession
-        self.attributes = {}
-        self._unique_id = f"{self.node_id}-{self.device_type}"
+        super().__init__(hive_session, hive_device)
 
     @property
     def unique_id(self):

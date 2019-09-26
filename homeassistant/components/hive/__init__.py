@@ -175,9 +175,13 @@ class HiveEntity(Entity):
 
     def __init__(self, session, hive_device):
         """Initialize the instance."""
-        self.node_id = None
-        self.device_type = None
-        self.session = None
+        self.node_id = hive_device["Hive_NodeID"]
+        self.node_name = hive_device["Hive_NodeName"]
+        self.device_type = hive_device["HA_DeviceType"]
+        self.node_device_type = hive_device["Hive_DeviceType"]
+        self.session = session
+        self.attributes = {}
+        self._unique_id = f"{self.node_id}-{self.device_type}"
 
     async def async_added_to_hass(self):
         """When entity is added to Home Assistant."""
