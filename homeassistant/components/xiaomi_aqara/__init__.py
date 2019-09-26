@@ -324,7 +324,7 @@ class XiaomiDevice(Entity):
         max_volt = 3300
         min_volt = 2800
         voltage = data[voltage_key]
-        self._device_state_attributes[ATTR_VOLTAGE] = round(voltage/1000.0, 2)
+        self._device_state_attributes[ATTR_VOLTAGE] = round(voltage / 1000.0, 2)
         voltage = min(voltage, max_volt)
         voltage = max(voltage, min_volt)
         percent = ((voltage - min_volt) / (max_volt - min_volt)) * 100

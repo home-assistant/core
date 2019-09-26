@@ -3,22 +3,29 @@ import plexapi.myplex
 import plexapi.server
 from requests import Session
 
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 
-from .const import CONF_SERVER, DEFAULT_VERIFY_SSL
+from .const import (
+    CONF_SERVER,
+    CONF_SHOW_ALL_CONTROLS,
+    CONF_USE_EPISODE_ART,
+    DEFAULT_VERIFY_SSL,
+)
 from .errors import NoServersFound, ServerNotSpecified
 
 
 class PlexServer:
     """Manages a single Plex server connection."""
 
-    def __init__(self, server_config):
+    def __init__(self, server_config, options=None):
         """Initialize a Plex server instance."""
         self._plex_server = None
         self._url = server_config.get(CONF_URL)
         self._token = server_config.get(CONF_TOKEN)
         self._server_name = server_config.get(CONF_SERVER)
         self._verify_ssl = server_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
+        self.options = options
 
     def connect(self):
         """Connect to a Plex server directly, obtaining direct URL if necessary."""
@@ -80,3 +87,13 @@ class PlexServer:
     def url_in_use(self):
         """Return URL used for connected Plex server."""
         return self._plex_server._baseurl  # pylint: disable=W0212
+
+    @property
+    def use_episode_art(self):
+        """Return use_episode_art option."""
+        return self.options[MP_DOMAIN][CONF_USE_EPISODE_ART]
+
+    @property
+    def show_all_controls(self):
+        """Return show_all_controls option."""
+        return self.options[MP_DOMAIN][CONF_SHOW_ALL_CONTROLS]

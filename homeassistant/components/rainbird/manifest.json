@@ -3,8 +3,10 @@
   "name": "Rainbird",
   "documentation": "https://www.home-assistant.io/components/rainbird",
   "requirements": [
-    "pyrainbird==0.2.1"
+    "pyrainbird==0.4.1"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@konikvranik"
+  ]
 }
