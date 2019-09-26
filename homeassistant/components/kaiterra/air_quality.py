@@ -83,6 +83,11 @@ class KaiterraAirQuality(AirQualityEntity):
         return self._data("rpm10c")
 
     @property
+    def carbon_dioxide(self):
+        """Return the CO2 (carbon dioxide) level."""
+        return self._data("rco2")
+
+    @property
     def volatile_organic_compounds(self):
         """Return the VOC (Volatile Organic Compounds) level."""
         return self._data("rtvoc")

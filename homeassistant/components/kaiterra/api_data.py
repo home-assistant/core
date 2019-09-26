@@ -23,7 +23,7 @@ from .const import (
 
 _LOGGER = getLogger(__name__)
 
-POLLUTANTS = {"rpm25c": "PM2.5", "rpm10c": "PM10", "rtvoc": "TVOC"}
+POLLUTANTS = {"rpm25c": "PM2.5", "rpm10c": "PM10", "rtvoc": "TVOC", "rco2": "CO2"}
 
 
 class KaiterraApiData:
