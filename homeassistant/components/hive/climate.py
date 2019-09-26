@@ -49,6 +49,7 @@ class HiveClimateEntity(HiveEntity, ClimateDevice):
     def __init__(self, hive_session, hive_device):
         """Initialize the Climate device."""
         super().__init__(hive_session, hive_device)
+        self.thermostat_node_id = hive_device["Thermostat_NodeID"]
 
     @property
     def unique_id(self):
