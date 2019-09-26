@@ -133,7 +133,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if CONF_ADB_SERVER_IP not in config:
         # Use "adb_shell" (Python ADB implementation)
-        adb_log = "using Python ADB implementation "
+        adb_log = "using Python ADB implementation " + (
+            f"with adbkey='{config[CONF_ADBKEY]}'"
+            if CONF_ADBKEY in config
+            else "without adbkey authentication"
+        )
         if CONF_ADBKEY in config:
             aftv = setup(
                 host,
@@ -141,7 +145,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 device_class=config[CONF_DEVICE_CLASS],
                 state_detection_rules=config[CONF_STATE_DETECTION_RULES],
             )
-            adb_log += f"with adbkey='{config[CONF_ADBKEY]}'"
 
         else:
             aftv = setup(
@@ -149,7 +152,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 device_class=config[CONF_DEVICE_CLASS],
                 state_detection_rules=config[CONF_STATE_DETECTION_RULES],
             )
-            adb_log += "without adbkey authentication"
     else:
         # Use "pure-python-adb" (communicate with ADB server)
         aftv = setup(
