@@ -14,7 +14,7 @@ create_vacation:
       description: Cooling temperature during the vacation (required).
       example: 23
     heat_temp:
-      description: Hheating temperature during the vacation (required).
+      description: Heating temperature during the vacation (required).
       example: 25
     start_date:
       description: >-
