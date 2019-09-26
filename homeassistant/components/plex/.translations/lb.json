@@ -10,9 +10,20 @@
         "error": {
             "faulty_credentials": "Feeler beider Autorisatioun",
             "no_servers": "Kee Server as mam Kont verbonnen",
+            "no_token": "Gitt en Token un oder wielt manuelle Setup",
             "not_found": "Kee Plex Server fonnt"
         },
         "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Apparat",
+                    "port": "Port",
+                    "ssl": "SSL benotzen",
+                    "token": "Jeton (falls n\u00e9ideg)",
+                    "verify_ssl": "SSL Zertifikat iwwerpr\u00e9iwen"
+                },
+                "title": "Plex Server"
+            },
             "select_server": {
                 "data": {
                     "server": "Server"
@@ -22,6 +33,7 @@
             },
             "user": {
                 "data": {
+                    "manual_setup": "Manuell Konfiguratioun",
                     "token": "Jeton fir de Plex"
                 },
                 "description": "Gitt een Jeton fir de Plex un fir eng automatesch Konfiguratioun",

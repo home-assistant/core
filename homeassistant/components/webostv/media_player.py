@@ -396,10 +396,12 @@ class LgWebOSDevice(MediaPlayerDevice):
                 if media_id == channel["channelNumber"]:
                     perfect_match_channel_id = channel["channelId"]
                     continue
-                elif media_id.lower() == channel["channelName"].lower():
+
+                if media_id.lower() == channel["channelName"].lower():
                     perfect_match_channel_id = channel["channelId"]
                     continue
-                elif media_id.lower() in channel["channelName"].lower():
+
+                if media_id.lower() in channel["channelName"].lower():
                     partial_match_channel_id = channel["channelId"]
 
             if perfect_match_channel_id is not None:

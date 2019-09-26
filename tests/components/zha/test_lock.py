@@ -43,13 +43,13 @@ async def test_lock(hass, config_entry, zha_gateway):
 
     # set state to locked
     attr = make_attribute(0, 1)
-    cluster.handle_message(False, 1, 0x0A, [[attr]])
+    cluster.handle_message(1, 0x0A, [[attr]])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_LOCKED
 
     # set state to unlocked
     attr.value.value = 2
-    cluster.handle_message(False, 0, 0x0A, [[attr]])
+    cluster.handle_message(0, 0x0A, [[attr]])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_UNLOCKED
 

@@ -1,32 +1,29 @@
 """Support for monitoring the Transmission BitTorrent client API."""
-from datetime import timedelta
 import logging
 
-from homeassistant.const import STATE_IDLE
+from homeassistant.const import CONF_NAME, STATE_IDLE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from . import DATA_TRANSMISSION, DATA_UPDATED, SENSOR_TYPES
+from .const import DATA_TRANSMISSION, DATA_UPDATED, DOMAIN, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Transmission"
-
-SCAN_INTERVAL = timedelta(seconds=120)
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Transmission sensors."""
-    if discovery_info is None:
-        return
+    """Import config from configuration.yaml."""
+    pass
 
-    transmission_api = hass.data[DATA_TRANSMISSION]
-    monitored_variables = discovery_info["sensors"]
-    name = discovery_info["client_name"]
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Transmission sensors."""
+
+    transmission_api = hass.data[DOMAIN][DATA_TRANSMISSION]
+    name = config_entry.data[CONF_NAME]
 
     dev = []
-    for sensor_type in monitored_variables:
+    for sensor_type in SENSOR_TYPES:
         dev.append(
             TransmissionSensor(
                 sensor_type,
