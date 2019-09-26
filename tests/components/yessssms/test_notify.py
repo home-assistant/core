@@ -12,7 +12,8 @@ class TestNotifyYesssSMS(unittest.TestCase):
         login = "06641234567"
         passwd = "testpasswd"
         recipient = "06501234567"
-        self.yessssms = yessssms.YesssSMSNotificationService(login, passwd, recipient)
+        client = yessssms.YesssSMS(login, passwd)
+        self.yessssms = yessssms.YesssSMSNotificationService(client, recipient)
 
     @requests_mock.Mocker()
     def test_login_error(self, mock):
@@ -197,7 +198,7 @@ class TestNotifyYesssSMS(unittest.TestCase):
             "POST",
             # pylint: disable=protected-access
             self.yessssms.yesss._login_url,
-            exc=ConnectionError,
+            exc=yessssms.YesssSMS.ConnectionError,
         )
 
         message = "Testing YesssSMS platform :)"
@@ -209,4 +210,4 @@ class TestNotifyYesssSMS(unittest.TestCase):
 
         self.assertTrue(mock.called)
         self.assertEqual(mock.call_count, 1)
-        self.assertIn("unable to connect", context.output[0])
+        self.assertIn("cannot connect to provider", context.output[0])
