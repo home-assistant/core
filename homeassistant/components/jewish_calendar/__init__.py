@@ -44,10 +44,12 @@ CONF_DIASPORA = "diaspora"
 CONF_LANGUAGE = "language"
 CONF_CANDLE_LIGHT_MINUTES = "candle_lighting_minutes_before_sunset"
 CONF_HAVDALAH_OFFSET_MINUTES = "havdalah_minutes_after_sunset"
+CONF_TIME_FORMAT = "time_format"
 
 CANDLE_LIGHT_DEFAULT = 18
 
 DEFAULT_NAME = "Jewish Calendar"
+DEFAULT_TIME_FORMAT = "%H:%M"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -65,6 +67,7 @@ CONFIG_SCHEMA = vol.Schema(
                 ): int,
                 # Default of 0 means use 8.5 degrees / 'three_stars' time.
                 vol.Optional(CONF_HAVDALAH_OFFSET_MINUTES, default=0): int,
+                vol.Optional(CONF_TIME_FORMAT, default=DEFAULT_TIME_FORMAT): cv.string,
             }
         )
     },
@@ -83,6 +86,7 @@ async def async_setup(hass, config):
 
     candle_lighting_offset = config[DOMAIN][CONF_CANDLE_LIGHT_MINUTES]
     havdalah_offset = config[DOMAIN][CONF_HAVDALAH_OFFSET_MINUTES]
+    time_format = config[DOMAIN][CONF_TIME_FORMAT]
 
     location = hdate.Location(
         latitude=latitude,
@@ -98,6 +102,7 @@ async def async_setup(hass, config):
         "candle_lighting_offset": candle_lighting_offset,
         "havdalah_offset": havdalah_offset,
         "diaspora": diaspora,
+        "time_format": time_format,
     }
 
     hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))

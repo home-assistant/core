@@ -1,5 +1,5 @@
 """The tests for the Jewish calendar sensors."""
-from datetime import time, timedelta
+from datetime import timedelta
 from datetime import datetime as dt
 
 import pytest
@@ -81,7 +81,7 @@ TEST_PARAMS = [
         "hebrew",
         "t_set_hakochavim",
         True,
-        time(19, 48),
+        dt(2018, 9, 8, 19, 48),
     ),
     (
         dt(2018, 9, 8),
@@ -91,7 +91,7 @@ TEST_PARAMS = [
         "hebrew",
         "t_set_hakochavim",
         False,
-        time(19, 21),
+        dt(2018, 9, 8, 19, 21),
     ),
     (
         dt(2018, 10, 14),
@@ -182,6 +182,8 @@ async def test_jewish_calendar_sensor(
         future = dt_util.utcnow() + timedelta(seconds=30)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
+
+    result = result.strftime("%H:%M") if isinstance(result, dt) else result
 
     assert hass.states.get(f"sensor.test_{sensor}").state == str(result)
 
@@ -524,8 +526,14 @@ async def test_shabbat_times_sensor(
 
         sensor_type = sensor_type.replace(f"{language}_", "")
 
-        assert hass.states.get(f"sensor.test_{sensor_type}").state == str(
-            result_value
+        result_value = (
+            result_value.strftime("%H:%M")
+            if isinstance(result_value, dt)
+            else result_value
+        )
+
+        assert (
+            hass.states.get(f"sensor.test_{sensor_type}").state == result_value
         ), f"Value for {sensor_type}"
 
 
