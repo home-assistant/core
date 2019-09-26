@@ -51,6 +51,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Invalid credentials")
         return
 
+    serial = pyobihai.get_device_serial()
+
     services = pyobihai.get_state()
 
     line_services = pyobihai.get_line_state()
@@ -58,13 +60,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     call_direction = pyobihai.get_call_direction()
 
     for key in services:
-        sensors.append(ObihaiServiceSensors(pyobihai, key))
+        sensors.append(ObihaiServiceSensors(pyobihai, serial, key))
 
     for key in line_services:
-        sensors.append(ObihaiServiceSensors(pyobihai, key))
+        sensors.append(ObihaiServiceSensors(pyobihai, serial, key))
 
     for key in call_direction:
-        sensors.append(ObihaiServiceSensors(pyobihai, key))
+        sensors.append(ObihaiServiceSensors(pyobihai, serial, key))
 
     add_entities(sensors)
 
@@ -72,13 +74,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ObihaiServiceSensors(Entity):
     """Get the status of each Obihai Lines."""
 
-    def __init__(self, pyobihai, service_name):
+    def __init__(self, pyobihai, serial, service_name):
         """Initialize monitor sensor."""
         self._service_name = service_name
         self._state = None
         self._name = f"{OBIHAI} {self._service_name}"
         self._pyobihai = pyobihai
-        self._unique_id = f"{self._pyobihai.get_device_serial()}-{self._service_name}"
+        self._unique_id = f"{serial}-{self._service_name}"
 
     @property
     def name(self):
