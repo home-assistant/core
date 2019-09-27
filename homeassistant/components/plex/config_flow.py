@@ -7,6 +7,7 @@ from plexauth import PlexAuth
 import requests.exceptions
 import voluptuous as vol
 
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant import config_entries
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import (
@@ -240,7 +241,8 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             "X-Plex-Platform": X_PLEX_PLATFORM,
             "X-Plex-Model": "Plex OAuth",
         }
-        self.plexauth = PlexAuth(payload)
+        session = async_get_clientsession(self.hass)
+        self.plexauth = PlexAuth(payload, session)
         await self.plexauth.initiate_auth()
         auth_url = self.plexauth.auth_url()
         self.hass.helpers.event.async_call_later(
