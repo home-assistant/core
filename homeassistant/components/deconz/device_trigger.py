@@ -31,6 +31,7 @@ CONF_TRIPLE_PRESS = "remote_button_triple_press"
 CONF_QUADRUPLE_PRESS = "remote_button_quadruple_press"
 CONF_QUINTUPLE_PRESS = "remote_button_quintuple_press"
 CONF_ROTATED = "remote_button_rotated"
+CONF_ROTATION_STOPPED = "remote_button_rotation_stopped"
 CONF_SHAKE = "remote_gyro_activated"
 
 CONF_TURN_ON = "turn_on"
@@ -38,11 +39,7 @@ CONF_TURN_OFF = "turn_off"
 CONF_DIM_UP = "dim_up"
 CONF_DIM_DOWN = "dim_down"
 CONF_LEFT = "left"
-CONF_LEFT_START = "left_start"
-CONF_LEFT_STOP = "left_stop"
 CONF_RIGHT = "right"
-CONF_RIGHT_START = "right_start"
-CONF_RIGHT_STOP = "right_stop"
 CONF_OPEN = "open"
 CONF_CLOSE = "close"
 CONF_BOTH_BUTTONS = "both_buttons"
@@ -84,10 +81,10 @@ SYMFONISK_SOUND_CONTROLLER = {
     (CONF_SHORT_PRESS, CONF_TURN_ON): 1002,
     (CONF_DOUBLE_PRESS, CONF_TURN_ON): 1004,
     (CONF_TRIPLE_PRESS, CONF_TURN_ON): 1005,
-    (CONF_ROTATED, CONF_LEFT_START): 2001,
-    (CONF_ROTATED, CONF_LEFT_STOP): 2003,
-    (CONF_ROTATED, CONF_RIGHT_START): 3001,
-    (CONF_ROTATED, CONF_RIGHT_STOP): 3003,
+    (CONF_ROTATED, CONF_LEFT): 2001,
+    (CONF_ROTATION_STOPPED, CONF_LEFT): 2003,
+    (CONF_ROTATED, CONF_RIGHT): 3001,
+    (CONF_ROTATION_STOPPED, CONF_RIGHT): 3003,
 }
 
 TRADFRI_ON_OFF_SWITCH_MODEL = "TRADFRI on/off switch"
