@@ -3,7 +3,7 @@
   "name": "Hive",
   "documentation": "https://www.home-assistant.io/components/hive",
   "requirements": [
-    "pyhiveapi==0.2.18.1"
+    "pyhiveapi==0.2.19"
   ],
   "dependencies": [],
   "codeowners": [
