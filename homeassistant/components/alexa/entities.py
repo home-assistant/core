@@ -52,6 +52,8 @@ from .capabilities import (
 
 ENTITY_ADAPTERS = Registry()
 
+TRANSLATION_TABLE = dict.fromkeys(map(ord, r"}{\/|\"()[]+~!><*%"), None)
+
 
 class DisplayCategory:
     """Possible display categories for Discovery response.
@@ -134,16 +136,18 @@ class AlexaEntity:
 
     def friendly_name(self):
         """Return the Alexa API friendly name."""
-        return self.entity_conf.get(CONF_NAME, self.entity.name)
+        return self.entity_conf.get(CONF_NAME, self.entity.name).translate(
+            TRANSLATION_TABLE
+        )
 
     def description(self):
         """Return the Alexa API description."""
         description = self.entity_conf.get(CONF_DESCRIPTION) or self.entity_id
-        return f"{description} via Home Assistant"
+        return f"{description} via Home Assistant".translate(TRANSLATION_TABLE)
 
     def alexa_id(self):
         """Return the Alexa API entity id."""
-        return self.entity.entity_id.replace(".", "#")
+        return self.entity.entity_id.replace(".", "#").translate(TRANSLATION_TABLE)
 
     def display_categories(self):
         """Return a list of display categories."""
