@@ -174,6 +174,7 @@ async def test_jewish_calendar_sensor(
                     "name": "test",
                     "language": language,
                     "diaspora": diaspora,
+                    "time_format": "%c"
                 }
             },
         )
@@ -183,7 +184,7 @@ async def test_jewish_calendar_sensor(
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    result = result.strftime("%H:%M") if isinstance(result, dt) else result
+    result = result.strftime("%c") if isinstance(result, dt) else result
 
     assert hass.states.get(f"sensor.test_{sensor}").state == str(result)
 
