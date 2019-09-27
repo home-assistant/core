@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 try:
     # pylint: disable=invalid-name
-    asyncio_run = asyncio.run
+    asyncio_run = asyncio.run  # type: ignore
 except AttributeError:
     _T = TypeVar("_T")
 
