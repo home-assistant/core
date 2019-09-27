@@ -98,10 +98,7 @@ async def async_setup(hass, config):
             try:
                 with async_timeout.timeout(timeout):
                     request = await getattr(websession, method)(
-                        request_url,
-                        data=payload,
-                        auth=auth,
-                        headers=headers,
+                        request_url, data=payload, auth=auth, headers=headers
                     )
 
                 if request.status < 400:
