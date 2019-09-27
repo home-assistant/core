@@ -143,6 +143,7 @@ TEST_REQUIREMENTS = (
     "pysma",
     "pysmartapp",
     "pysmartthings",
+    "pysoma",
     "pysonos",
     "pyspcwebgw",
     "python_awair",
