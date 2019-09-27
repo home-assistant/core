@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from api.soma_api import SomaApi
+from requests import RequestException
 
 from homeassistant import data_entry_flow
 from homeassistant.components.soma import config_flow, DOMAIN
@@ -37,6 +38,18 @@ async def test_import_create(hass):
     with patch.object(SomaApi, "list_devices", return_value={}):
         result = await flow.async_step_import({"host": MOCK_HOST, "port": MOCK_PORT})
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+
+async def test_exception(hass):
+    """Test if RequestException fires when no connection can be made."""
+    flow = config_flow.SomaFlowHandler()
+    flow.hass = hass
+    with patch.object(
+        SomaApi, "list_devices", return_value={}, side_effect=RequestException()
+    ):
+        result = await flow.async_step_import({"host": MOCK_HOST, "port": MOCK_PORT})
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "connection_error"
 
 
 async def test_full_flow(hass):
