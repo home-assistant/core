@@ -1,4 +1,4 @@
-"""The test for switch device automation."""
+"""The test for zha device automation actions."""
 from unittest.mock import patch
 
 import pytest
@@ -28,7 +28,7 @@ def calls(hass):
 
 
 async def test_get_actions(hass, config_entry, zha_gateway):
-    """Test we get the expected actions from a switch."""
+    """Test we get the expected actions from a zha device."""
     from zigpy.zcl.clusters.general import Basic
     from zigpy.zcl.clusters.security import IasZone, IasWd
 
@@ -62,7 +62,7 @@ async def test_get_actions(hass, config_entry, zha_gateway):
 
 
 async def test_action(hass, config_entry, zha_gateway, calls):
-    """Test for turn_on and turn_off actions."""
+    """Test for executing a zha device action."""
 
     from zigpy.zcl.clusters.general import Basic, OnOff
     from zigpy.zcl.clusters.security import IasZone, IasWd
