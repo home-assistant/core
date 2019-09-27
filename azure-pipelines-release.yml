@@ -260,9 +260,9 @@ stages:
 
         export CLOUDSDK_CORE_DISABLE_PROMPTS=1
 
-        echo "$(gcloudAuth)" > gcloud.key
-        ./google-cloud-sdk/bin/gcloud auth activate-service-account --key-file gcloud.key
-        rm -f gcloud.key
+        echo "$(gcloudAuth)" > gcloud_auth.json
+        ./google-cloud-sdk/bin/gcloud auth activate-service-account --key-file gcloud_auth.json
+        rm -f gcloud_auth.json
       displayName: 'Auth gCloud'
       condition: eq(variables['homeassistantReleaseStable'], 'true'))
     - script: |
