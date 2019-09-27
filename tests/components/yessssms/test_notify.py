@@ -1,7 +1,9 @@
 """The tests for the notify yessssms platform."""
+# pylint: disable=redefined-outer-name
 import unittest
 from unittest.mock import MagicMock
 import requests_mock
+import pytest
 
 from homeassistant.setup import async_setup_component
 import homeassistant.components.yessssms.notify as yessssms
@@ -10,22 +12,58 @@ from homeassistant.components.yessssms.const import CONF_PROVIDER
 from homeassistant.const import CONF_PASSWORD, CONF_RECIPIENT, CONF_USERNAME
 
 
-async def test_unsupported_provider_error(hass, caplog):
+@pytest.fixture
+def config_data():
+    """Set valid config data."""
+    config = {
+        "notify": {
+            "platform": "yessssms",
+            "name": "sms",
+            CONF_USERNAME: "06641234567",
+            CONF_PASSWORD: "secretPassword",
+            CONF_RECIPIENT: "06509876543",
+            CONF_PROVIDER: "educom",
+        }
+    }
+    return config
+
+
+@pytest.fixture
+def valid_settings(hass, config_data):
+    """Initialize component with valid settings."""
+    yield async_setup_component(hass, "notify", config_data)
+
+
+@pytest.fixture
+def invalid_provider_settings(hass, config_data):
+    """Set invalid provider data and initalize component."""
+    config = config_data
+    config["notify"][CONF_PROVIDER] = "FantasyMobile"  # invalid provider
+    yield async_setup_component(hass, "notify", config)
+
+
+@pytest.fixture
+def invalid_login_data():
+    """Mock invalid login data."""
+    yessssms.YesssSMS.login_data_valid = MagicMock(return_value=False)
+
+
+@pytest.fixture
+def valid_login_data():
+    """Mock valid login data."""
+    yessssms.YesssSMS.login_data_valid = MagicMock(return_value=True)
+
+
+@pytest.fixture
+def connection_error():
+    """Mock a connection error."""
+    yessssms.YesssSMS.login_data_valid = MagicMock(return_value=True)
+    yessssms.YesssSMS.login_data_valid.side_effect = yessssms.YesssSMS.ConnectionError()
+
+
+async def test_unsupported_provider_error(hass, caplog, invalid_provider_settings):
     """Test for error on unsupported provider."""
-    _ = await async_setup_component(
-        hass,
-        "notify",
-        {
-            "notify": {
-                "platform": "yessssms",
-                "name": "sms",
-                CONF_USERNAME: "06641234567",
-                CONF_PASSWORD: "secretPassword",
-                CONF_RECIPIENT: "06509876543",
-                CONF_PROVIDER: "FantasyMobile",
-            }
-        },
-    )
+    _ = await invalid_provider_settings
     for record in caplog.records:
         if (
             record.levelname == "ERROR"
@@ -42,23 +80,9 @@ async def test_unsupported_provider_error(hass, caplog):
     assert hass.services.has_service("notify", "sms") is False
 
 
-async def test_false_login_data_error(hass, caplog):
+async def test_false_login_data_error(hass, caplog, valid_settings, invalid_login_data):
     """Test login data check error."""
-    yessssms.YesssSMS.login_data_valid = MagicMock(return_value=False)
-    _ = await async_setup_component(
-        hass,
-        "notify",
-        {
-            "notify": {
-                "platform": "yessssms",
-                "name": "sms",
-                CONF_USERNAME: "06641234567",
-                CONF_PASSWORD: "secretPassword",
-                CONF_RECIPIENT: "06509876543",
-                CONF_PROVIDER: "educom",
-            }
-        },
-    )
+    _ = await valid_settings
     assert not hass.services.has_service("notify", "sms")
     for record in caplog.records:
         if (
@@ -71,23 +95,9 @@ async def test_false_login_data_error(hass, caplog):
             )
 
 
-async def test_init_success(hass, caplog):
+async def test_init_success(hass, caplog, valid_settings, valid_login_data):
     """Test for successful init of yessssms."""
-    yessssms.YesssSMS.login_data_valid = MagicMock(return_value=True)
-    _ = await async_setup_component(
-        hass,
-        "notify",
-        {
-            "notify": {
-                "platform": "yessssms",
-                "name": "sms",
-                CONF_USERNAME: "06641234567",
-                CONF_PASSWORD: "secretPassword",
-                CONF_RECIPIENT: "06509876543",
-                CONF_PROVIDER: "educom",
-            }
-        },
-    )
+    _ = await valid_settings
     assert hass.services.has_service("notify", "sms")
     messages = []
     for record in caplog.records:
@@ -103,24 +113,9 @@ async def test_init_success(hass, caplog):
     )
 
 
-async def test_connection_error_on_init(hass, caplog):
+async def test_connection_error_on_init(hass, caplog, valid_settings, connection_error):
     """Test for connection error on init."""
-    yessssms.YesssSMS.login_data_valid = MagicMock(return_value=True)
-    yessssms.YesssSMS.login_data_valid.side_effect = yessssms.YesssSMS.ConnectionError()
-    _ = await async_setup_component(
-        hass,
-        "notify",
-        {
-            "notify": {
-                "platform": "yessssms",
-                "name": "sms",
-                CONF_USERNAME: "06641234567",
-                CONF_PASSWORD: "secretPassword",
-                CONF_RECIPIENT: "06509876543",
-                CONF_PROVIDER: "educom",
-            }
-        },
-    )
+    _ = await valid_settings
     assert hass.services.has_service("notify", "sms")
     for record in caplog.records:
         if (
