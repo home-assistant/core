@@ -59,11 +59,11 @@ async def _configure_entities(hass, config, consumer):
             hass.data[DOMAIN][mac][peripheral_id] = peripheral
 
             if peripheral.classification == PERIPHERAL_CLASS_SENSOR:
-                sensor_info_list = await _add_entity_info_to_list(
+                sensor_info_list = _add_entity_info_to_list(
                     peripheral, device, sensor_info_list
                 )
             elif peripheral.classification == PERIPHERAL_CLASS_SENSOR_ACTUATOR:
-                switch_info_list = await _add_entity_info_to_list(
+                switch_info_list = _add_entity_info_to_list(
                     peripheral, device, switch_info_list
                 )
 
@@ -74,7 +74,7 @@ async def _configure_entities(hass, config, consumer):
         _load_platform(hass, config, "switch", switch_info_list)
 
 
-async def _add_entity_info_to_list(peripheral, device, entity_info_list):
+def _add_entity_info_to_list(peripheral, device, entity_info_list):
     """Add info from a peripheral to specified list."""
     for measurement in peripheral.measurements:
         entity_info = {
