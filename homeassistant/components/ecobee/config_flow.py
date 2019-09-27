@@ -36,7 +36,7 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         stored_api_key = (
             self.hass.data[DATA_ECOBEE_CONFIG].get(CONF_API_KEY)
             if DATA_ECOBEE_CONFIG in self.hass.data
-            else None
+            else ""
         )
 
         if user_input is not None:
