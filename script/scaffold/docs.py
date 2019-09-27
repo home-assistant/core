@@ -28,7 +28,8 @@ Reproduce state code has been added to the {info.domain} integration:
  - {info.integration_dir / "reproduce_state.py"}
  - {info.tests_dir / "test_reproduce_state.py"}
 
-Please update the relevant items marked as TODO before submitting a pull request.
+You will now need to update the code to make sure that every attribute
+that can occur in the state will cause the right service to be called.
 """
         )
 
@@ -38,6 +39,9 @@ Please update the relevant items marked as TODO before submitting a pull request
 Device trigger base has been added to the {info.domain} integration:
  - {info.integration_dir / "device_trigger.py"}
  - {info.tests_dir / "test_device_trigger.py"}
+
+You will now need to update the code to make sure that relevant triggers
+are exposed.
 """
         )
 
@@ -47,6 +51,9 @@ Device trigger base has been added to the {info.domain} integration:
 Device condition base has been added to the {info.domain} integration:
  - {info.integration_dir / "device_condition.py"}
  - {info.tests_dir / "test_device_condition.py"}
+
+You will now need to update the code to make sure that relevant condtions
+are exposed.
 """
         )
 
@@ -56,5 +63,8 @@ Device condition base has been added to the {info.domain} integration:
 Device action base has been added to the {info.domain} integration:
  - {info.integration_dir / "device_action.py"}
  - {info.tests_dir / "test_device_action.py"}
+
+You will now need to update the code to make sure that relevant services
+are exposed as actions.
 """
         )
