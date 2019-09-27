@@ -3,15 +3,11 @@ import asyncio
 from datetime import date, timedelta
 import logging
 
+import pysaj
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
-    CONF_SCAN_INTERVAL,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
@@ -21,56 +17,26 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_ICON = "mdi:solar-power"
 
 
-def _check_sensor_schema(conf):
-    """Check sensors and attributes are valid."""
-    try:
-        import pysaj
-
-        valid = [s.name for s in pysaj.Sensors()]
-    except (ImportError, AttributeError):
-        return conf
-
-    for sensor in conf[CONF_MONITORED_CONDITIONS]:
-        if sensor not in valid:
-            raise vol.Invalid(f"{sensor} does not exist")
-    return conf
-
-
 PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Optional(CONF_MONITORED_CONDITIONS, default=[]): vol.Any(
-                vol.All(cv.ensure_list, [str])
-            ),
-        },
-        extra=vol.PREVENT_EXTRA,
-    ),
-    _check_sensor_schema,
+        {vol.Required(CONF_HOST): cv.string}, extra=vol.PREVENT_EXTRA
+    )
 )
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up SAJ sensors."""
-    import pysaj
-
-    # Check config again during load - dependency available
-    config = _check_sensor_schema(config)
 
     # Init all sensors
     sensor_def = pysaj.Sensors()
 
     # Use all sensors by default
-    config_sensors = config[CONF_MONITORED_CONDITIONS]
     hass_sensors = []
     used_sensors = []
 
-    if isinstance(config_sensors, list):
-        if not config_sensors:  # Use all sensors by default
-            config_sensors = [s.name for s in sensor_def]
-        for sensor in config_sensors:
-            hass_sensors.append(SAJsensor(sensor_def[sensor]))
-            used_sensors.append(sensor_def[sensor])
+    for sensor in sensor_def:
+        hass_sensors.append(SAJsensor(sensor))
+        used_sensors.append(sensor)
 
     saj = pysaj.SAJ(config[CONF_HOST])
 
@@ -183,13 +149,13 @@ class SAJsensor(Entity):
             update = True
             self._state = self._sensor.value
 
-        if unkown_state and self._sensor.value != STATE_UNKNOWN:
+        if unkown_state and self._state is not None:
             update = True
-            self._state = STATE_UNKNOWN
+            self._state = None
 
         return self.async_update_ha_state() if update else None
 
     @property
     def unique_id(self):
         """Return a unique identifier for this sensor."""
-        return f"saj-{self._sensor.key}-{self._sensor.name}"
+        return f"{self._sensor.name}"
