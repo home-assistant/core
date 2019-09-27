@@ -91,11 +91,6 @@ async def async_setup(hass, config):
     """Set up the updater component."""
 
     config = config.get(DOMAIN, {})
-    if config.get(CONF_REPORTING):
-        huuid = await hass.async_add_job(_load_uuid, hass)
-    else:
-        huuid = None
-
     include_components = config.get(CONF_COMPONENT_REPORTING)
 
     async def check_new_version(now):
@@ -105,28 +100,37 @@ async def async_setup(hass, config):
             if "say" in now.data:
                 say_it = now.data["say"]
         """Check if a new version is available and report if one is."""
-        result = await get_newest_version(hass, huuid, include_components)
+        result = await get_newest_version(hass, include_components)
 
         if result is None:
             return
 
-        newest, releasenotes, android, apt = result
-        beta = False
-        if "BETA" in releasenotes:
-            beta = True
+        newest_dom_app_version, newest_android_app_version, newest_linux_apt_version, release_notes, apt, beta = (
+            result
+        )
+        # check if we should update
+        need_to_update = False
+        reinstall_dom_app = False
+        reinstall_android_app = False
+        reinstall_linux_app = False
+        if StrictVersion(newest_dom_app_version) > StrictVersion(current_version):
+            reinstall_dom_app = True
+        if StrictVersion(newest_android_app_version) > StrictVersion(
+            G_CURRENT_ANDROID_VERSION
+        ):
+            reinstall_android_app = True
+        if StrictVersion(newest_linux_apt_version) > StrictVersion(
+            G_CURRENT_LINUX_VERSION
+        ):
+            reinstall_linux_app = True
 
-        # Load data from supervisor on hass.io
-        if hass.components.hassio.is_hassio():
-            newest = hass.components.hassio.get_homeassistant_version()
+        if reinstall_dom_app or reinstall_android_app or reinstall_linux_app:
+            need_to_update = True
 
         # Validate version
-        if StrictVersion(newest) > StrictVersion(current_version):
-            _LOGGER.info("The latest available version is %s", newest)
-            info = "Dostępna jest nowa wersja " + newest + ". " + releasenotes
-            info_for_screen = info.replace("Naciśnij OK aby zainstalować.", "")
-            info_for_screen = info_for_screen.replace(
-                "Naciśnij OK/URUCHOM aby zainstalować.", ""
-            )
+        if need_to_update:
+            _LOGGER.info("The latest available version is %s", newest_dom_app_version)
+            info = "Dostępna jest aktualizacja. " + release_notes
 
             hass.states.async_set(
                 ENTITY_ID,
@@ -135,14 +139,14 @@ async def async_setup(hass, config):
                     ATTR_FRIENDLY_NAME: "Aktualizacja",
                     "icon": "mdi:update",
                     "dom_app_current_version": current_version,
-                    "reinstall_dom_app": True,
+                    "reinstall_dom_app": reinstall_dom_app,
                     "android_app_current_version": G_CURRENT_ANDROID_VERSION,
-                    "reinstall_android_app": android,
+                    "reinstall_android_app": reinstall_android_app,
                     "linux_current_version": G_CURRENT_LINUX_VERSION,
-                    "reinstall_linux_app": False,
+                    "reinstall_linux_app": reinstall_linux_app,
                     "apt": apt,
                     "beta": beta,
-                    ATTR_UPDATE_STATUS: UPDATE_STATUS_OUTDATED,
+                    ATTR_UPDATE_STATUS: UPDATE_STATUS_UPDATED,
                     ATTR_UPDATE_CHECK_TIME: get_current_dt(),
                 },
             )
@@ -158,10 +162,9 @@ async def async_setup(hass, config):
 
             # notify about update
             hass.components.persistent_notification.async_create(
-                title="Dostępna jest nowa wersja " + newest,
+                title="Dostępna jest aktualizacja ",
                 message=(
-                    info_for_screen
-                    + "[ Przejdź, by zainstalować](/config/ais_dom_config_update)"
+                    info + "[ Przejdź, by zainstalować](/config/ais_dom_config_update)"
                 ),
                 notification_id="ais_update_notification",
             )
@@ -179,14 +182,14 @@ async def async_setup(hass, config):
             else:
                 if ais_global.G_AIS_START_IS_DONE:
                     await hass.services.async_call(
-                        "ais_ai_service", "say_it", {"text": info_for_screen}
+                        "ais_ai_service", "say_it", {"text": info}
                     )
         else:
             # dismiss update notification
             hass.components.persistent_notification.async_dismiss(
                 "ais_update_notification"
             )
-            info = "Twój system jest aktualny, wersja " + newest + ". "
+            info = "Twój system jest aktualny"
             # only if not executed by scheduler
             import homeassistant.components.ais_ai_service as ais_ai
 
@@ -198,7 +201,7 @@ async def async_setup(hass, config):
                     await hass.services.async_call(
                         "ais_ai_service", "say_it", {"text": info}
                     )
-            info += releasenotes
+            info += release_notes
             hass.states.async_set(
                 ENTITY_ID,
                 info,
@@ -225,9 +228,7 @@ async def async_setup(hass, config):
                     "icon": "mdi:refresh",
                 },
             )
-            _LOGGER.info(
-                "You are on the latest version (%s) of Assystent domowy", newest
-            )
+            _LOGGER.info("You are on the latest version of Assystent domowy")
 
     # Update daily, start at 9AM + some random minutes and seconds based on the system startup
     _dt = dt_util.utcnow()
@@ -351,39 +352,24 @@ async def get_system_info(hass, include_components):
     return info_object
 
 
-async def get_newest_version(hass, huuid, include_components):
+async def get_newest_version(hass, include_components):
     """Get the newest Ais dom version."""
-    global G_CURRENT_ANDROID_VERSION
     hass.states.async_set(
         ENTITY_ID,
-        "sprawdzam dostępność aktualizacji",
+        "Sprawdzam dostępność aktualizacji",
         {
             ATTR_FRIENDLY_NAME: "Wersja",
             "icon": "mdi:update",
-            "reinstall_dom_app": False,
-            "android_app_current_version": G_CURRENT_ANDROID_VERSION,
-            "reinstall_android_app": False,
             ATTR_UPDATE_STATUS: UPDATE_STATUS_CHECKING,
             ATTR_UPDATE_CHECK_TIME: get_current_dt(),
         },
     )
-    if huuid:
-        info_object = await get_system_info(hass, include_components)
-        info_object["huuid"] = huuid
-    else:
-        info_object = {}
 
+    info_object = {}
     session = async_get_clientsession(hass)
     try:
         with async_timeout.timeout(10, loop=hass.loop):
             req = await session.post(UPDATER_URL, json=info_object)
-        _LOGGER.info(
-            (
-                "Submitted analytics to AIS dom servers. "
-                "Information submitted includes %s"
-            ),
-            info_object,
-        )
     except (asyncio.TimeoutError, aiohttp.ClientError):
         _LOGGER.error("Could not contact AIS dom to check " "for updates")
         info = "Nie można skontaktować się z usługą AIS dom."
@@ -394,10 +380,15 @@ async def get_newest_version(hass, huuid, include_components):
             {
                 ATTR_FRIENDLY_NAME: "Wersja",
                 "icon": "mdi:update",
+                "dom_app_current_version": current_version,
                 "reinstall_dom_app": False,
-                "reinstall_android_app": False,
                 "android_app_current_version": G_CURRENT_ANDROID_VERSION,
-                ATTR_UPDATE_STATUS: UPDATE_STATUS_UNKNOWN,
+                "reinstall_android_app": False,
+                "linux_current_version": G_CURRENT_LINUX_VERSION,
+                "reinstall_linux_app": False,
+                "apt": "",
+                "beta": "",
+                ATTR_UPDATE_STATUS: UPDATE_STATUS_UPDATED,
                 ATTR_UPDATE_CHECK_TIME: get_current_dt(),
             },
         )
@@ -405,6 +396,14 @@ async def get_newest_version(hass, huuid, include_components):
 
     try:
         res = await req.json()
+        return (
+            res["dom_app_version"],
+            res["android_app_version"],
+            res["linux_apt_version"],
+            res["release_notes"],
+            res["apt"],
+            res["beta"],
+        )
     except ValueError:
         _LOGGER.error("Received invalid JSON from AIS dom Update")
         info = "Wersja. Otrzmyano nieprawidłową odpowiedz z usługi AIS dom "
@@ -414,36 +413,15 @@ async def get_newest_version(hass, huuid, include_components):
             {
                 ATTR_FRIENDLY_NAME: "Wersja",
                 "icon": "mdi:update",
+                "dom_app_current_version": current_version,
                 "reinstall_dom_app": False,
-                "reinstall_android_app": False,
                 "android_app_current_version": G_CURRENT_ANDROID_VERSION,
-                ATTR_UPDATE_STATUS: UPDATE_STATUS_UNKNOWN,
-                ATTR_UPDATE_CHECK_TIME: get_current_dt(),
-            },
-        )
-        return None
-
-    try:
-        return (
-            res["version"],
-            res["release-notes"],
-            res["reinstall-android"],
-            res["apt"],
-        )
-    except Exception:
-        _LOGGER.error("Got unexpected response: %s", res)
-        info = "Wersja. Otrzmyano nieprawidłową odpowiedz z usługi AIS dom "
-        info += str(res)
-        hass.states.async_set(
-            ENTITY_ID,
-            info,
-            {
-                ATTR_FRIENDLY_NAME: "Wersja",
-                "icon": "mdi:update",
-                "reinstall_dom_app": False,
                 "reinstall_android_app": False,
-                "android_app_current_version": G_CURRENT_ANDROID_VERSION,
-                ATTR_UPDATE_STATUS: UPDATE_STATUS_UNKNOWN,
+                "linux_current_version": G_CURRENT_LINUX_VERSION,
+                "reinstall_linux_app": False,
+                "apt": "",
+                "beta": "",
+                ATTR_UPDATE_STATUS: UPDATE_STATUS_UPDATED,
                 ATTR_UPDATE_CHECK_TIME: get_current_dt(),
             },
         )
