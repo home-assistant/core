@@ -174,7 +174,7 @@ async def test_jewish_calendar_sensor(
                     "name": "test",
                     "language": language,
                     "diaspora": diaspora,
-                    "time_format": "%c"
+                    "time_format": "%c",
                 }
             },
         )
