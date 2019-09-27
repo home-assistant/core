@@ -112,7 +112,7 @@ async def async_setup(hass, config):
                 _LOGGER.warning("Timeout call %s.", request.url)
 
             except aiohttp.ClientError:
-                _LOGGER.error("Client error %s.", request.url)
+                _LOGGER.error("Client error %s.", command_config[CONF_URL])
 
         # register services
         hass.services.async_register(DOMAIN, name, async_service_handler)
