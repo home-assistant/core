@@ -9,6 +9,8 @@ from homeassistant.components import websocket_api
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.loader import async_get_integration, IntegrationNotFound
 
+from .exceptions import InvalidDeviceAutomationConfig
+
 DOMAIN = "device_automation"
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,6 +43,27 @@ async def async_setup(hass, config):
         websocket_device_automation_list_triggers
     )
     return True
+
+
+async def async_get_device_automation_platform(hass, config, automation_type):
+    """Load device automation platform for integration.
+
+    Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.
+    """
+    platform_name, _ = TYPES[automation_type]
+    try:
+        integration = await async_get_integration(hass, config[CONF_DOMAIN])
+        platform = integration.get_platform(platform_name)
+    except IntegrationNotFound:
+        raise InvalidDeviceAutomationConfig(
+            f"Integration '{config[CONF_DOMAIN]}' not found"
+        )
+    except ImportError:
+        raise InvalidDeviceAutomationConfig(
+            f"Integration '{config[CONF_DOMAIN]}' does not support device automation {automation_type}s"
+        )
+
+    return platform
 
 
 async def _async_get_device_automations_from_domain(

@@ -90,7 +90,7 @@ def has_at_least_one_key(*keys: str) -> Callable:
         for k in obj.keys():
             if k in keys:
                 return obj
-        raise vol.Invalid("must contain one of {}.".format(", ".join(keys)))
+        raise vol.Invalid("must contain at least one of {}.".format(", ".join(keys)))
 
     return validate
 
