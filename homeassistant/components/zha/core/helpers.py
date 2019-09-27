@@ -10,7 +10,14 @@ import logging
 
 from homeassistant.core import callback
 
-from .const import CLUSTER_TYPE_IN, CLUSTER_TYPE_OUT, DEFAULT_BAUDRATE, RadioType
+from .const import (
+    CLUSTER_TYPE_IN,
+    CLUSTER_TYPE_OUT,
+    DATA_ZHA,
+    DATA_ZHA_GATEWAY,
+    DEFAULT_BAUDRATE,
+    RadioType,
+)
 from .registries import BINDABLE_CLUSTERS
 
 _LOGGER = logging.getLogger(__name__)
@@ -130,6 +137,16 @@ def async_is_bindable_target(source_zha_device, target_zha_device):
             if any(bindable in BINDABLE_CLUSTERS for bindable in matches):
                 return True
     return False
+
+
+async def async_get_zha_device(hass, device_id):
+    """Get a ZHA device for the given device registry id."""
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    registry_device = device_registry.async_get(device_id)
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    ieee_address = list(list(registry_device.identifiers)[0])[1]
+    ieee = convert_ieee(ieee_address)
+    return zha_gateway.devices[ieee]
 
 
 class LogMixin:
