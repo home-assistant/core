@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+from metno import LightningData
+
 from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -11,39 +13,42 @@ from homeassistant.const import (
     LENGTH_KILOMETERS,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import CONF_TRACK_HOME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_EXTERNAL_ID = "external_id"
 ATTR_PUBLICATION_DATE = "publication_date"
 
-ATTRIBUTION = "Data provided by the Met.no"
+ATTRIBUTION = "Data provided by Met.no"
 DEFAULT_EVENT_NAME = "Lightning Strike: {0}"
 DEFAULT_ICON = "mdi:flash"
-DEFAULT_UPDATE_INTERVAL = timedelta(minutes=10)
+DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
 
 SIGNAL_DELETE_ENTITY = "delete_entity_{0}"
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Met lightning based on a config entry."""
-    client = hass.data[DOMAIN][DATA_CLIENT].get(entry.entry_id)
-    if client is None:
+    if entry.data[CONF_RADIUS] <= 0:
         return
+
+    if entry.data.get(CONF_TRACK_HOME, False):
+        latitude = hass.config.latitude
+        longitude = hass.config.longitude
+    else:
+        latitude = entry.data[CONF_LATITUDE]
+        longitude = entry.data[CONF_LONGITUDE]
+
     manager = MetLightningEventManager(
-        hass,
-        async_add_entities,
-        client,
-        entry.data[CONF_LATITUDE],
-        entry.data[CONF_LONGITUDE],
-        entry.data[CONF_RADIUS],
+        hass, async_add_entities, latitude, longitude, entry.data[CONF_RADIUS]
     )
     await manager.async_init()
 
@@ -51,10 +56,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class MetLightningEventManager:
     """Define a class to handle Met lightning events."""
 
-    def __init__(self, hass, async_add_entities, client, latitude, longitude, radius):
+    def __init__(self, hass, async_add_entities, latitude, longitude, radius):
         """Initialize."""
         self._async_add_entities = async_add_entities
-        self._client = client
+        websession = aiohttp_client.async_get_clientsession(hass)
+        self._client = LightningData(websession)
         self._hass = hass
         self._latitude = latitude
         self._longitude = longitude
@@ -100,9 +106,8 @@ class MetLightningEventManager:
     async def async_update(self):
         """Refresh data."""
         _LOGGER.debug("Refreshing Met lightning data")
-
         self._strikes = await self._client.within_radius(
-            self._latitude, self._longitude, self._radius * 10000
+            self._latitude, self._longitude, self._radius * 100000000000000
         )
 
         new_strike_ids = set(self._strikes)
