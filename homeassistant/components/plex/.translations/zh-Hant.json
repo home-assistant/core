@@ -10,9 +10,20 @@
         "error": {
             "faulty_credentials": "\u9a57\u8b49\u5931\u6557",
             "no_servers": "\u6b64\u5e33\u865f\u672a\u7d81\u5b9a\u4f3a\u670d\u5668",
+            "no_token": "\u63d0\u4f9b\u5bc6\u9470\u6216\u9078\u64c7\u624b\u52d5\u8a2d\u5b9a",
             "not_found": "\u627e\u4e0d\u5230 Plex \u4f3a\u670d\u5668"
         },
         "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "port": "\u901a\u8a0a\u57e0",
+                    "ssl": "\u4f7f\u7528 SSL",
+                    "token": "\u5bc6\u9470\uff08\u5982\u679c\u9700\u8981\uff09",
+                    "verify_ssl": "\u78ba\u8a8d SSL \u8a8d\u8b49"
+                },
+                "title": "Plex \u4f3a\u670d\u5668"
+            },
             "select_server": {
                 "data": {
                     "server": "\u4f3a\u670d\u5668"
@@ -22,9 +33,10 @@
             },
             "user": {
                 "data": {
+                    "manual_setup": "\u624b\u52d5\u8a2d\u5b9a",
                     "token": "Plex \u5bc6\u9470"
                 },
-                "description": "\u8acb\u8f38\u5165 Plex \u5bc6\u9470\u4ee5\u9032\u884c\u81ea\u52d5\u8a2d\u5b9a\u3002",
+                "description": "\u8acb\u8f38\u5165 Plex \u5bc6\u9470\u4ee5\u9032\u884c\u81ea\u52d5\u6216\u624b\u52d5\u8a2d\u5b9a\u4f3a\u670d\u5668\u3002",
                 "title": "\u9023\u7dda\u81f3 Plex \u4f3a\u670d\u5668"
             }
         },

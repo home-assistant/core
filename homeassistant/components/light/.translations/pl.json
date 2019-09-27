@@ -7,11 +7,11 @@
         },
         "condition_type": {
             "is_off": "{entity_name} jest wy\u0142\u0105czone",
-            "is_on": "(entity_name} jest w\u0142\u0105czony."
+            "is_on": "{entity_name} jest w\u0142\u0105czony."
         },
         "trigger_type": {
-            "turned_off": "{nazwa} wy\u0142\u0105czone",
-            "turned_on": "{name} w\u0142\u0105czone"
+            "turned_off": "{entity_name} wy\u0142\u0105czone",
+            "turned_on": "{entity_name} w\u0142\u0105czone"
         }
     }
 }

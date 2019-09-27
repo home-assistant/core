@@ -1,8 +1,8 @@
 {
     "device_automation": {
         "trigger_type": {
-            "turned_off": "{name} ausgeschaltet",
-            "turned_on": "{name} eingeschaltet"
+            "turned_off": "{entity_name} ausgeschaltet",
+            "turned_on": "{entity_name} eingeschaltet"
         }
     }
 }
