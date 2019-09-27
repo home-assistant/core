@@ -1,96 +1,148 @@
 """The tests for the notify yessssms platform."""
 import unittest
+from unittest.mock import MagicMock
 import requests_mock
+
+from homeassistant.setup import async_setup_component
 import homeassistant.components.yessssms.notify as yessssms
 from homeassistant.components.yessssms.const import CONF_PROVIDER
 
-from tests.common import get_test_home_assistant
 from homeassistant.const import CONF_PASSWORD, CONF_RECIPIENT, CONF_USERNAME
 
 
-class TestNotifyYesssSMSSetUP(unittest.TestCase):
-    """Test the yessssms notify setup."""
-
-    def setUp(self):  # pylint: disable=invalid-name
-        """Set up things to be run when tests are started."""
-        self.login = "06641234567"
-        self.passwd = "testpasswd"
-        self.recipient = "06501234567"
-        self.provider = "yesss"
-
-    def test_unsupported_provider_error(self):
-        """Test for unsupported provider."""
-        with self.assertLogs(
-            "homeassistant.components.yessssms.notify", level="ERROR"
-        ) as log_message:
-            service = yessssms.get_service(
-                get_test_home_assistant,
-                {
-                    CONF_USERNAME: self.login,
-                    CONF_PASSWORD: self.passwd,
-                    CONF_PROVIDER: "FantasyMobile",
-                },
+async def test_unsupported_provider_error(hass, caplog):
+    """Test for error on unsupported provider."""
+    _ = await async_setup_component(
+        hass,
+        "notify",
+        {
+            "notify": {
+                "platform": "yessssms",
+                "name": "sms",
+                CONF_USERNAME: "06641234567",
+                CONF_PASSWORD: "secretPassword",
+                CONF_RECIPIENT: "06509876543",
+                CONF_PROVIDER: "FantasyMobile",
+            }
+        },
+    )
+    for record in caplog.records:
+        if (
+            record.levelname == "ERROR"
+            and record.name == "homeassistant.components.yessssms.notify"
+        ):
+            assert (
+                "Unknown provider: provider (fantasymobile) is not known to YesssSMS"
+                in record.message
             )
-            self.assertIn("Unknown provider", log_message.output[0])
-        self.assertIsNone(service)
+    assert (
+        "Unknown provider: provider (fantasymobile) is not known to YesssSMS"
+        in caplog.text
+    )
+    assert hass.services.has_service("notify", "sms") is False
 
-    @requests_mock.Mocker()
-    def test_login_data(self, mock):
-        """Test login data check."""
-        mock.register_uri(
-            "POST",
-            yessssms.YesssSMS("", "", "yesss").get_login_url(),
-            status_code=200,
-            text="BlaBlaBla<strong>Login nicht erfolgreichBlaBla",
-        )
-        with self.assertLogs(
-            "homeassistant.components.yessssms.notify", level="ERROR"
-        ) as log_message:
-            service = yessssms.get_service(
-                get_test_home_assistant,
-                {
-                    CONF_USERNAME: self.login,
-                    CONF_PASSWORD: self.passwd,
-                    CONF_PROVIDER: "yesss",
-                },
-            )
-            self.assertIn("Login data is not valid!", log_message.output[0])
-            self.assertIsNone(service)
 
-    @requests_mock.Mocker()
-    def test_init_success(self, mock):
-        """Test initialization success."""
-        # pylint: disable=protected-access
-        kontomanager_url = yessssms.YesssSMS("", "", self.provider)._kontomanager
-        logout_url = yessssms.YesssSMS("", "", self.provider)._logout_url
-        mock.register_uri(
-            requests_mock.POST,
-            yessssms.YesssSMS("", "", self.provider).get_login_url(),
-            status_code=302,
-            headers={"location": kontomanager_url},
-        )
-        mock.register_uri(requests_mock.GET, kontomanager_url, status_code=200)
-        mock.register_uri(requests_mock.GET, logout_url, status_code=200)
+async def test_false_login_data_error(hass, caplog):
+    """Test login data check error."""
+    yessssms.YesssSMS.login_data_valid = MagicMock(return_value=False)
+    _ = await async_setup_component(
+        hass,
+        "notify",
+        {
+            "notify": {
+                "platform": "yessssms",
+                "name": "sms",
+                CONF_USERNAME: "06641234567",
+                CONF_PASSWORD: "secretPassword",
+                CONF_RECIPIENT: "06509876543",
+                CONF_PROVIDER: "educom",
+            }
+        },
+    )
+    assert not hass.services.has_service("notify", "sms")
+    for record in caplog.records:
+        if (
+            record.levelname == "ERROR"
+            and record.name == "homeassistant.components.yessssms.notify"
+        ):
+            assert (
+                "Login data is not valid! Please double check your login data at"
+                in record.message
+            )
 
-        with self.assertLogs(
-            "homeassistant.components.yessssms.notify", level="DEBUG"
-        ) as log_message:
-            service = yessssms.get_service(
-                get_test_home_assistant,
-                {
-                    CONF_USERNAME: self.login,
-                    CONF_PASSWORD: self.passwd,
-                    CONF_PROVIDER: self.provider,
-                    CONF_RECIPIENT: self.recipient,
-                },
+
+async def test_init_success(hass, caplog):
+    """Test for successful init of yessssms."""
+    yessssms.YesssSMS.login_data_valid = MagicMock(return_value=True)
+    _ = await async_setup_component(
+        hass,
+        "notify",
+        {
+            "notify": {
+                "platform": "yessssms",
+                "name": "sms",
+                CONF_USERNAME: "06641234567",
+                CONF_PASSWORD: "secretPassword",
+                CONF_RECIPIENT: "06509876543",
+                CONF_PROVIDER: "educom",
+            }
+        },
+    )
+    assert hass.services.has_service("notify", "sms")
+    messages = []
+    for record in caplog.records:
+        if (
+            record.levelname == "DEBUG"
+            and record.name == "homeassistant.components.yessssms.notify"
+        ):
+            messages.append(record.message)
+    assert "Login data for 'educom' valid" in messages[0]
+    assert (
+        "initialized; library version: {}".format(yessssms.YesssSMS("", "").version())
+        in messages[1]
+    )
+
+
+async def test_connection_error_on_init(hass, caplog):
+    """Test for connection error on init."""
+    yessssms.YesssSMS.login_data_valid = MagicMock(return_value=True)
+    yessssms.YesssSMS.login_data_valid.side_effect = yessssms.YesssSMS.ConnectionError()
+    _ = await async_setup_component(
+        hass,
+        "notify",
+        {
+            "notify": {
+                "platform": "yessssms",
+                "name": "sms",
+                CONF_USERNAME: "06641234567",
+                CONF_PASSWORD: "secretPassword",
+                CONF_RECIPIENT: "06509876543",
+                CONF_PROVIDER: "educom",
+            }
+        },
+    )
+    assert hass.services.has_service("notify", "sms")
+    for record in caplog.records:
+        if (
+            record.levelname == "WARNING"
+            and record.name == "homeassistant.components.yessssms.notify"
+        ):
+            assert (
+                "Connection Error, could not verify login data for '{}'".format(
+                    "educom"
+                )
+                in record.message
             )
-            self.assertIn(
-                "Login data for '{}' valid".format(self.provider), log_message.output[0]
-            )
-            self.assertIsInstance(service, yessssms.YesssSMSNotificationService)
-            self.assertIn(
-                "initialized; library version: {}".format(service.yesss.version()),
-                log_message.output[1],
+    for record in caplog.records:
+        if (
+            record.levelname == "DEBUG"
+            and record.name == "homeassistant.components.yessssms.notify"
+        ):
+            assert (
+                "initialized; library version: {}".format(
+                    yessssms.YesssSMS("", "").version()
+                )
+                in record.message
             )
 
 
