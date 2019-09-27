@@ -9,7 +9,16 @@ from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
-from .const import PERIPHERAL_CLASS_SENSOR, PERIPHERAL_CLASS_SENSOR_ACTUATOR
+from .const import (
+    PERIPHERAL_CLASS_SENSOR,
+    PERIPHERAL_CLASS_SENSOR_ACTUATOR,
+    KEY_IDENTIFIER,
+    KEY_PARENT_NAME,
+    KEY_PARENT_MAC,
+    KEY_UNIT,
+    KEY_MEASUREMENT,
+    KEY_CONSUMER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +35,7 @@ async def async_setup(hass, config):
     session = aiohttp_client.async_get_clientsession(hass)
     consumer = pyv.Consumer(config[DOMAIN]["host"], session)
 
-    hass.data[DOMAIN] = {"consumer": consumer}
+    hass.data[DOMAIN] = {KEY_CONSUMER: consumer}
 
     await _configure_entities(hass, config, consumer)
 
@@ -69,11 +78,11 @@ async def _add_entity_info_to_list(peripheral, device, entity_info_list):
     """Add info from a peripheral to specified list."""
     for measurement in peripheral.measurements:
         entity_info = {
-            "identifier": peripheral.identifier,
-            "unit": measurement.unit,
-            "measurement": measurement.name,
-            "parent_name": device.name,
-            "parent_mac": device.mac,
+            KEY_IDENTIFIER: peripheral.identifier,
+            KEY_UNIT: measurement.unit,
+            KEY_MEASUREMENT: measurement.name,
+            KEY_PARENT_NAME: device.name,
+            KEY_PARENT_MAC: device.mac,
         }
 
         entity_info_list.append(entity_info)
