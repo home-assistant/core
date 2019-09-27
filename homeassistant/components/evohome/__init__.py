@@ -271,12 +271,37 @@ class EvoBroker:
             access_token_expires + self.params[CONF_SCAN_INTERVAL],
         )
 
-    async def update(self, *args, **kwargs) -> None:
-        """Get the latest state data of an entire evohome Location.
+    def _update_v1(self, *args, **kwargs) -> None:
+        """Get the latest modes, (high-precision) temperatures, setpoints of a Location.
 
-        This includes state data for a Controller and all its child devices, such as the
-        operating mode of the Controller and the current temp of its children (e.g.
-        Zones, DHW controller).
+        For the v1 API, only the first Location's state data can be obtained.
+        """
+        from evohomeclient import EvohomeClient as EvohomeClientVer1
+
+        if not self.client_v1:
+            try:
+                self.client_v1 = EvohomeClientVer1(
+                    self.client.username,
+                    self.client.password,
+                    # debug=True
+                )
+            except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
+                _handle_exception(err)
+
+        try:
+            temps = self.client_v1.temperatures(force_refresh=True)
+        except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
+            _handle_exception(err)
+        else:
+            self.timers["statusUpdated_v1"] = dt_util.utcnow()
+
+        self._temps = {str(i["id"]): i["temp"] for i in temps}
+        _LOGGER.warn("ZZZ Temps = %s", self._temps)
+
+    async def _update_v2(self, *args, **kwargs) -> None:
+        """Get the latest modes, temperatures, setpoints of a Location.
+
+        For the v2 API, any Location's state data can be obtained.
         """
         loc_idx = self.params[CONF_LOCATION_IDX]
 
@@ -291,6 +316,23 @@ class EvoBroker:
             )
 
             _LOGGER.debug("Status = %s", status[GWS][0][TCS][0])
+
+    def update(self, *args, **kwargs) -> None:
+        """Get the latest state data of an entire evohome Location.
+
+        This includes state data for a Controller and all its child devices, such as the
+        operating mode of the Controller and the current temp of its children (e.g.
+        Zones, DHW controller).
+        """
+        self._update_v2()
+
+        if False:  # self.params[CONF_HIGH_PRECISION]:
+            self._update_v1()
+
+        # inform the evohome devices that state data has been updated
+        self.hass.helpers.dispatcher.async_dispatcher_send(
+            DOMAIN, {"signal": "refresh"}
+        )
 
 
 class EvoDevice(Entity):
@@ -391,6 +433,10 @@ class EvoChild(EvoDevice):
     @property
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature of a Zone."""
+        # if self._evo_broker.params[CONF_HIGH_PRECISION] and \
+        #         self._evo_broker._temps:
+        #     return self._evo_broker._temps[self._evo_device.zoneId]
+
         if self._evo_device.temperatureStatus["isAvailable"]:
             return self._evo_device.temperatureStatus["temperature"]
         return None
