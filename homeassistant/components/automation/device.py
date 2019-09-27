@@ -1,34 +1,24 @@
 """Offer device oriented automation."""
 import voluptuous as vol
 
-import homeassistant.components.device_automation as device_automation
-from homeassistant.components.device_automation.exceptions import (
-    InvalidDeviceAutomationConfig,
+from homeassistant.components.device_automation import (
+    TRIGGER_BASE_SCHEMA,
+    async_get_device_automation_platform,
 )
-from homeassistant.const import CONF_DOMAIN
 
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
-TRIGGER_SCHEMA = device_automation.TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
+TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_validate_trigger_config(hass, config):
     """Validate config."""
-    platform = await device_automation.async_get_device_automation_platform(
-        hass, config, "trigger"
-    )
-    if not hasattr(platform, "async_get_triggers"):
-        raise InvalidDeviceAutomationConfig(
-            f"Integration '{config[CONF_DOMAIN]}' does not support device automation triggers"
-        )
-
+    platform = await async_get_device_automation_platform(hass, config, "trigger")
     return platform.TRIGGER_SCHEMA(config)
 
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for trigger."""
-    platform = await device_automation.async_get_device_automation_platform(
-        hass, config, "trigger"
-    )
+    platform = await async_get_device_automation_platform(hass, config, "trigger")
     return await platform.async_attach_trigger(hass, config, action, automation_info)
