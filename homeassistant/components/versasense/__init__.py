@@ -59,10 +59,10 @@ async def _configure_entities(hass, config, consumer):
                 )
 
     if sensor_info_list:
-        await _load_platform(hass, config, "sensor", sensor_info_list)
+        _load_platform(hass, config, "sensor", sensor_info_list)
 
     if switch_info_list:
-        await _load_platform(hass, config, "switch", switch_info_list)
+        _load_platform(hass, config, "switch", switch_info_list)
 
 
 async def _add_entity_info_to_list(peripheral, device, entity_info_list):
@@ -81,7 +81,7 @@ async def _add_entity_info_to_list(peripheral, device, entity_info_list):
     return entity_info_list
 
 
-async def _load_platform(hass, config, entity_type, entity_info_list):
+def _load_platform(hass, config, entity_type, entity_info_list):
     """Load platform with list of entity info."""
     hass.async_create_task(
         async_load_platform(hass, entity_type, DOMAIN, entity_info_list, config)
