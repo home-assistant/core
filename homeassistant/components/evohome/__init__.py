@@ -286,9 +286,7 @@ class EvoBroker:
             _handle_exception(err)
         else:
             # inform the evohome devices that state data has been updated
-            self.hass.helpers.dispatcher.async_dispatcher_send(
-                DOMAIN, {"signal": "refresh"}
-            )
+            self.hass.helpers.dispatcher.async_dispatcher_send(DOMAIN)
 
             _LOGGER.debug("Status = %s", status[GWS][0][TCS][0])
 
@@ -312,9 +310,8 @@ class EvoDevice(Entity):
         self._device_state_attrs = {}
 
     @callback
-    def _refresh(self, packet) -> None:
-        if packet["signal"] == "refresh":
-            self.async_schedule_update_ha_state(force_refresh=True)
+    def _refresh(self) -> None:
+        self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
     def should_poll(self) -> bool:
