@@ -1,25 +1,25 @@
 {
     "config": {
-        "title": "AIS custom host name",
+        "title": "SUPLA",
         "step": {
             "init": {
-                "title": "Define new AIS host name",
-                "description": "You can change the hostname of the device to another one, this is useful if you have several ais-dom devices on the network.\n\n The host name can not have any special characters [Details in the documentation ](https://sviete.github.io/AIS-docs/).",
+                "title": "Podaj parametry połączenia z serwerem Supla",
+                "description": "W tej chwili nie można dodawać pojedynczych urządzeń - wszystkie są wykrywane z serwerów Supla Cloud lub Twojego serwera Supla.\n\n [Szczeg\u00F3\u0142y w dokumentacji](https://www.home-assistant.io/components/supla/).",
                 "data": {
-                    "name": "New Host Name"
+                     "host": "Serwer",
+                    "token": "Token"
                 }
             },
-            "confirm": {
-                "description": "![AIS logo](/static/icons/change_host_name.png)\n\nDo you want to set up own host name for AIS dom device?",
-                "title": "AIS host name"
-            }
+           "confirm": {
+                "description": "![Supla logo](https://www.supla.org/assets/img/supla-cloud.svg)\n\nCzy chcesz połączyć się z serwerem Supla by wykryć swoje urządzenia?",
+                "title": "Połączenie z Supla Cloud"
+           }
         },
         "error": {
-            "name_not_correct": "Name is not valid"
+            "supla_no_connection": "Nie można połączyć"
         },
         "abort": {
-            "do_the_restart": "OK. Now you have to restart the device before the changes are visible on the network.",
-            "single_instance_allowed": "Only a single overwrite of AIS host is allowed."
+            "single_instance_allowed": "Masz już skonfigurowane połączenie z serwerem Supla."
         }
     }
 }

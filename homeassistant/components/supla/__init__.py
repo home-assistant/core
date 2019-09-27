@@ -38,6 +38,15 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+async def async_setup_entry(hass, config_entry):
+    """Set up drive as rclone config entry."""
+    _LOGGER.info("Set up drive as rclone config entry")
+    # hass.async_create_task(
+    #     hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
+    # )
+    return True
+
+
 def setup(hass, base_config):
     """Set up the Supla component."""
     from pysupla import SuplaAPI

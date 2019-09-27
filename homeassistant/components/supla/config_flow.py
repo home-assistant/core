@@ -1,12 +1,17 @@
-"""Config flow to configure zone component."""
+"""Config flow to configure Supla component."""
 
 import voluptuous as vol
+from pysupla import SuplaAPI
+
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import callback
 from homeassistant.util import slugify
+import logging
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -25,7 +30,7 @@ class SuplaFlowHandler(config_entries.ConfigFlow):
     VERSION = 1
 
     def __init__(self):
-        """Initialize zone configuration flow."""
+        """Initialize Supla configuration flow."""
         pass
 
     async def async_step_user(self, user_input=None):
@@ -45,29 +50,31 @@ class SuplaFlowHandler(config_entries.ConfigFlow):
         """Handle a flow start."""
         errors = {}
         if user_input is not None:
-            l_valid = True
-            user_input[CONF_HOST]
-
-            if l_valid:
-                # change host name
-                await self.hass.services.async_call(
-                    "ais_ai_service",
-                    "say_it",
-                    {
-                        "text": "Aktualizuje nazwę hosta. Zrestartuj urządzenie żeby zobaczyć zmiany."
-                    },
+            _LOGGER.error(user_input[CONF_HOST])
+            _LOGGER.error(user_input[CONF_TOKEN])
+            # Test connection
+            server = SuplaAPI(user_input[CONF_HOST], user_input[CONF_TOKEN])
+            srv_info = server.get_server_info()
+            if srv_info.get("authenticated"):
+                """Finish config flow"""
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST], data=user_input
                 )
+            else:
+                _LOGGER.error(
+                    "Server: %s not configured. API call returned: %s",
+                    user_input[CONF_HOST],
+                    srv_info,
+                )
+                errors = {CONF_HOST: "supla_no_connection"}
 
-            """Finish config flow"""
-            if l_valid:
-                # return self.async_create_entry(
-                #     title=user_input[CONF_NAME],
-                #     data=user_input
-                # )
-                return self.async_abort(reason="do_the_restart")
+            """TEST Finish config flow"""
+            return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=vol.Schema(
+                {vol.Required(CONF_HOST): str, vol.Required(CONF_TOKEN): str}
+            ),
             errors=errors,
         )

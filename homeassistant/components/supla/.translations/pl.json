@@ -3,11 +3,11 @@
         "title": "SUPLA",
         "step": {
             "init": {
-                "title": "Podaj parametry połączenia z Supla Cloud",
-                "description": "W tej chwili nie można dodawać pojedynczych urządzeń - wszystkie są wykrywane z serwerów Supla Cloud lub twojego.\n\n [Szczeg\u00F3\u0142y w dokumentacji  ](https://www.home-assistant.io/components/supla/).",
+                "title": "Podaj parametry połączenia z serwerem Supla",
+                "description": "W tej chwili nie można dodawać pojedynczych urządzeń - wszystkie są wykrywane z serwerów Supla Cloud lub Twojego serwera Supla.\n\n [Szczeg\u00F3\u0142y w dokumentacji](https://www.home-assistant.io/components/supla/).",
                 "data": {
-                    "server": "Serwer",
-                    "access_token": "Token"
+                     "host": "Serwer",
+                    "token": "Token"
                 }
             },
            "confirm": {
@@ -16,12 +16,10 @@
            }
         },
         "error": {
-            "name_not_correct": "Nazwa nie jest poprawna",
-            "name_the_same": "Nazwa jest taka sama jak aktualna nazwa hosta"
+            "supla_no_connection": "Nie można połączyć"
         },
         "abort": {
-            "do_the_restart": "OK, teraz trzeba zrestartować urządzenie, żeby zmiany były widoczne w sieci.",
-            "single_instance_allowed": "Masz już skonfigurowaną własną nazwę hosta."
+            "single_instance_allowed": "Masz już skonfigurowane połączenie z serwerem Supla."
         }
     }
 }
