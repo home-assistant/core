@@ -138,9 +138,8 @@ class AlexaEntity:
 
     def description(self):
         """Return the Alexa API description."""
-        return self.entity_conf.get(CONF_DESCRIPTION) or "{} via Home Assistant".format(
-            self.friendly_name()
-        )
+        description = self.entity_conf.get(CONF_DESCRIPTION) or self.entity_id
+        return f"{description} via Home Assistant"
 
     def alexa_id(self):
         """Return the Alexa API entity id."""
@@ -389,6 +388,13 @@ class MediaPlayerCapabilities(AlexaEntity):
 @ENTITY_ADAPTERS.register(scene.DOMAIN)
 class SceneCapabilities(AlexaEntity):
     """Class to represent Scene capabilities."""
+
+    def description(self):
+        """Return the Alexa API description."""
+        description = super().description()
+        if "scene" not in description.casefold():
+            return f"{description} (Scene)"
+        return description
 
     def default_display_categories(self):
         """Return the display categories for this entity."""
