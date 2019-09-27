@@ -105,7 +105,7 @@ async def async_setup(hass, config):
         if result is None:
             return
 
-        newest_dom_app_version, newest_android_app_version, newest_linux_apt_version, release_notes, apt, beta = (
+        dom_app_newest_version, android_app_newest_version, linux_apt_newest_version, release_notes, apt, beta = (
             result
         )
         # check if we should update
@@ -113,23 +113,25 @@ async def async_setup(hass, config):
         reinstall_dom_app = False
         reinstall_android_app = False
         reinstall_linux_app = False
-        if StrictVersion(newest_dom_app_version) > StrictVersion(current_version):
+        if StrictVersion(dom_app_newest_version) > StrictVersion(current_version):
             reinstall_dom_app = True
-        if StrictVersion(newest_android_app_version) > StrictVersion(
-            G_CURRENT_ANDROID_VERSION
-        ):
-            reinstall_android_app = True
-        if StrictVersion(newest_linux_apt_version) > StrictVersion(
-            G_CURRENT_LINUX_VERSION
-        ):
-            reinstall_linux_app = True
+        if G_CURRENT_ANDROID_VERSION != 0:
+            if StrictVersion(android_app_newest_version) > StrictVersion(
+                G_CURRENT_ANDROID_VERSION
+            ):
+                reinstall_android_app = True
+        if G_CURRENT_LINUX_VERSION != 0:
+            if StrictVersion(linux_apt_newest_version) > StrictVersion(
+                G_CURRENT_LINUX_VERSION
+            ):
+                reinstall_linux_app = True
 
         if reinstall_dom_app or reinstall_android_app or reinstall_linux_app:
             need_to_update = True
 
         # Validate version
         if need_to_update:
-            _LOGGER.info("The latest available version is %s", newest_dom_app_version)
+            _LOGGER.info("The latest available version is %s", dom_app_newest_version)
             info = "Dostępna jest aktualizacja. " + release_notes
 
             hass.states.async_set(
@@ -139,14 +141,17 @@ async def async_setup(hass, config):
                     ATTR_FRIENDLY_NAME: "Aktualizacja",
                     "icon": "mdi:update",
                     "dom_app_current_version": current_version,
+                    "dom_app_newest_version": dom_app_newest_version,
                     "reinstall_dom_app": reinstall_dom_app,
                     "android_app_current_version": G_CURRENT_ANDROID_VERSION,
+                    "android_app_newest_version": android_app_newest_version,
                     "reinstall_android_app": reinstall_android_app,
                     "linux_current_version": G_CURRENT_LINUX_VERSION,
+                    "linux_apt_newest_version": linux_apt_newest_version,
                     "reinstall_linux_app": reinstall_linux_app,
                     "apt": apt,
                     "beta": beta,
-                    ATTR_UPDATE_STATUS: UPDATE_STATUS_UPDATED,
+                    ATTR_UPDATE_STATUS: UPDATE_STATUS_OUTDATED,
                     ATTR_UPDATE_CHECK_TIME: get_current_dt(),
                 },
             )
@@ -209,10 +214,13 @@ async def async_setup(hass, config):
                     ATTR_FRIENDLY_NAME: "Wersja",
                     "icon": "mdi:update",
                     "dom_app_current_version": current_version,
+                    "dom_app_newest_version": current_version,
                     "reinstall_dom_app": False,
                     "android_app_current_version": G_CURRENT_ANDROID_VERSION,
+                    "android_app_newest_version": G_CURRENT_ANDROID_VERSION,
                     "reinstall_android_app": False,
                     "linux_current_version": G_CURRENT_LINUX_VERSION,
+                    "linux_apt_newest_version": G_CURRENT_LINUX_VERSION,
                     "reinstall_linux_app": False,
                     "apt": apt,
                     "beta": beta,
