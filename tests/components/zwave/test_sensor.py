@@ -67,6 +67,7 @@ def test_get_device_detects_battery_sensor(mock_openzwave):
 
     device = sensor.get_device(node=node, values=values, node_config={})
     assert isinstance(device, sensor.ZWaveBatterySensor)
+    assert device.device_class == homeassistant.const.DEVICE_CLASS_BATTERY
 
 
 def test_multilevelsensor_value_changed_temp_fahrenheit(mock_openzwave):
