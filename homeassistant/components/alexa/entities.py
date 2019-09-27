@@ -391,7 +391,7 @@ class SceneCapabilities(AlexaEntity):
 
     def description(self):
         """Return the Alexa API description."""
-        description = super().description()
+        description = AlexaEntity.description(self)
         if "scene" not in description.casefold():
             return f"{description} (Scene)"
         return description

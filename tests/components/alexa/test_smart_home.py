@@ -1183,7 +1183,7 @@ async def test_entity_config(hass):
     assert appliance["endpointId"] == "light#test_1"
     assert appliance["displayCategories"][0] == "SWITCH"
     assert appliance["friendlyName"] == "Config name"
-    assert appliance["description"] == "Config description"
+    assert appliance["description"] == "Config description via Home Assistant"
     assert_endpoint_capabilities(
         appliance, "Alexa.PowerController", "Alexa.EndpointHealth"
     )
