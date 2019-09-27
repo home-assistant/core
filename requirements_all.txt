@@ -111,6 +111,9 @@ adafruit-blinka==1.2.1
 # homeassistant.components.mcp23017
 adafruit-circuitpython-mcp230xx==1.1.2
 
+# homeassistant.components.androidtv
+adb-shell==0.0.2
+
 # homeassistant.components.adguard
 adguardhome==0.2.1
 
@@ -197,7 +200,7 @@ ambiclimate==0.2.1
 amcrest==1.5.3
 
 # homeassistant.components.androidtv
-androidtv==0.0.27
+androidtv==0.0.28
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2

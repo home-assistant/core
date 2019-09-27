@@ -4,34 +4,24 @@ from socket import error as socket_error
 from unittest.mock import patch
 
 
-class AdbCommandsFake:
-    """A fake of the `adb.adb_commands.AdbCommands` class."""
+class AdbDeviceFake:
+    """A fake of the `adb_shell.adb_device.AdbDevice` class."""
 
-    def ConnectDevice(self, *args, **kwargs):  # pylint: disable=invalid-name
+    def __init__(self, *args, **kwargs):
+        """Initialize a fake `adb_shell.adb_device.AdbDevice` instance."""
+        self.available = False
+
+    def close(self):
+        """Close the socket connection."""
+        self.available = False
+
+    def connect(self, *args, **kwargs):
         """Try to connect to a device."""
         raise NotImplementedError
 
-    def Shell(self, cmd):  # pylint: disable=invalid-name
+    def shell(self, cmd):
         """Send an ADB shell command."""
-        raise NotImplementedError
-
-
-class AdbCommandsFakeSuccess(AdbCommandsFake):
-    """A fake of the `adb.adb_commands.AdbCommands` class when the connection attempt succeeds."""
-
-    def ConnectDevice(self, *args, **kwargs):  # pylint: disable=invalid-name
-        """Successfully connect to a device."""
-        return self
-
-
-class AdbCommandsFakeFail(AdbCommandsFake):
-    """A fake of the `adb.adb_commands.AdbCommands` class when the connection attempt fails."""
-
-    def ConnectDevice(
-        self, *args, **kwargs
-    ):  # pylint: disable=invalid-name, no-self-use
-        """Fail to connect to a device."""
-        raise socket_error
+        return None
 
 
 class ClientFakeSuccess:
@@ -85,31 +75,39 @@ class DeviceFake:
 
 
 def patch_connect(success):
-    """Mock the `adb.adb_commands.AdbCommands` and `adb_messenger.client.Client` classes."""
+    """Mock the `adb_shell.adb_device.AdbDevice` and `adb_messenger.client.Client` classes."""
+
+    def connect_success_python(self, *args, **kwargs):
+        """Mock the `AdbDeviceFake.connect` method when it succeeds."""
+        self.available = True
+
+    def connect_fail_python(self, *args, **kwargs):
+        """Mock the `AdbDeviceFake.connect` method when it fails."""
+        raise socket_error
 
     if success:
         return {
             "python": patch(
-                "androidtv.adb_manager.AdbCommands", AdbCommandsFakeSuccess
+                f"{__name__}.AdbDeviceFake.connect", connect_success_python
             ),
             "server": patch("androidtv.adb_manager.Client", ClientFakeSuccess),
         }
     return {
-        "python": patch("androidtv.adb_manager.AdbCommands", AdbCommandsFakeFail),
+        "python": patch(f"{__name__}.AdbDeviceFake.connect", connect_fail_python),
         "server": patch("androidtv.adb_manager.Client", ClientFakeFail),
     }
 
 
 def patch_shell(response=None, error=False):
-    """Mock the `AdbCommandsFake.Shell` and `DeviceFake.shell` methods."""
+    """Mock the `AdbDeviceFake.shell` and `DeviceFake.shell` methods."""
 
     def shell_success(self, cmd):
-        """Mock the `AdbCommandsFake.Shell` and `DeviceFake.shell` methods when they are successful."""
+        """Mock the `AdbDeviceFake.shell` and `DeviceFake.shell` methods when they are successful."""
         self.shell_cmd = cmd
         return response
 
     def shell_fail_python(self, cmd):
-        """Mock the `AdbCommandsFake.Shell` method when it fails."""
+        """Mock the `AdbDeviceFake.shell` method when it fails."""
         self.shell_cmd = cmd
         raise AttributeError
 
@@ -120,10 +118,13 @@ def patch_shell(response=None, error=False):
 
     if not error:
         return {
-            "python": patch(f"{__name__}.AdbCommandsFake.Shell", shell_success),
+            "python": patch(f"{__name__}.AdbDeviceFake.shell", shell_success),
             "server": patch(f"{__name__}.DeviceFake.shell", shell_success),
         }
     return {
-        "python": patch(f"{__name__}.AdbCommandsFake.Shell", shell_fail_python),
+        "python": patch(f"{__name__}.AdbDeviceFake.shell", shell_fail_python),
         "server": patch(f"{__name__}.DeviceFake.shell", shell_fail_server),
     }
+
+
+PATCH_ADB_DEVICE = patch("androidtv.adb_manager.AdbDevice", AdbDeviceFake)
