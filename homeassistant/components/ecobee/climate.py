@@ -107,7 +107,7 @@ DTGROUP_INCLUSIVE_MSG = (
 CREATE_VACATION_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_VACATION_NAME): cv.string,
+        vol.Required(ATTR_VACATION_NAME): vol.All(cv.string, vol.Length(max=12)),
         vol.Required(ATTR_COOL_TEMP): vol.Coerce(float),
         vol.Required(ATTR_HEAT_TEMP): vol.Coerce(float),
         vol.Inclusive(
@@ -128,7 +128,7 @@ CREATE_VACATION_SCHEMA = vol.Schema(
 DELETE_VACATION_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_VACATION_NAME): cv.string,
+        vol.Required(ATTR_VACATION_NAME): vol.All(cv.string, vol.Length(max=12)),
     }
 )
 
