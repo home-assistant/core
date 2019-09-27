@@ -19,7 +19,8 @@ def async_condition_from_config(
     config: ConfigType, config_validation: bool
 ) -> ConditionCheckerType:
     """Evaluate state based on configuration."""
-    config = CONDITION_SCHEMA(config)
+    if config_validation:
+        config = CONDITION_SCHEMA(config)
     return toggle_entity.async_condition_from_config(config, config_validation)
 
 
