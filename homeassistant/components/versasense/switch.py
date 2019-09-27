@@ -13,6 +13,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up actuator platform."""
     consumer = hass.data[DOMAIN]["consumer"]
 
+    actuator_list = []
+
     for entity_info in discovery_info:
         peripheral = hass.data[DOMAIN][entity_info["parent_mac"]][
             entity_info["identifier"]
@@ -21,9 +23,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         unit = entity_info["unit"]
         measurement = entity_info["measurement"]
 
-        async_add_entities(
-            [VActuator(peripheral, parent_name, unit, measurement, consumer)]
+        actuator_list.append(
+            VActuator(peripheral, parent_name, unit, measurement, consumer)
         )
+
+    async_add_entities(actuator_list)
 
 
 class VActuator(SwitchDevice):

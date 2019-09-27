@@ -12,6 +12,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the sensor platform."""
     consumer = hass.data[DOMAIN]["consumer"]
 
+    sensor_list = []
+
     for entity_info in discovery_info:
         peripheral = hass.data[DOMAIN][entity_info["parent_mac"]][
             entity_info["identifier"]
@@ -20,9 +22,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         unit = entity_info["unit"]
         measurement = entity_info["measurement"]
 
-        async_add_entities(
-            [VSensor(peripheral, parent_name, unit, measurement, consumer)]
+        sensor_list.append(
+            VSensor(peripheral, parent_name, unit, measurement, consumer)
         )
+
+    async_add_entities(sensor_list)
 
 
 class VSensor(Entity):
@@ -32,7 +36,7 @@ class VSensor(Entity):
         """Initialize the sensor."""
         self._state = None
         self._available = True
-        self._name = "{} {}".format(parent_name, measurement)
+        self._name = f"{parent_name} {measurement}"
         self._parent_mac = peripheral.parentMac
         self._identifier = peripheral.identifier
         self._unit = unit
