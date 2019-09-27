@@ -41,9 +41,20 @@ DOMAIN = "ais_updater"
 SERVICE_CHECK_VERSION = "check_version"
 SERVICE_UPGRADE_PACKAGE = "upgrade_package"
 ENTITY_ID = "sensor.version_info"
+ATTR_UPDATE_STATUS = "update_status"
+ATTR_UPDATE_CHECK_TIME = "update_check_time"
 
-UPDATER_URL = "https://powiedz.co/ords/dom/dom/updater"
+UPDATE_STATUS_CHECKING = "checking"
+UPDATE_STATUS_OUTDATED = "outdated"
+UPDATE_STATUS_DOWNLOADING = "downloading"
+UPDATE_STATUS_INSTALLING = "installing"
+UPDATE_STATUS_UPDATED = "updated"
+UPDATE_STATUS_UNKNOWN = "unknown"
+
+UPDATER_URL = "https://powiedz.co/ords/dom/dom/updater_new"
 UPDATER_UUID_FILE = ".uuid"
+G_CURRENT_ANDROID_VERSION = 0
+G_CURRENT_LINUX_VERSION = 0
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -53,16 +64,6 @@ CONFIG_SCHEMA = vol.Schema(
         }
     },
     extra=vol.ALLOW_EXTRA,
-)
-
-RESPONSE_SCHEMA = vol.Schema(
-    {
-        vol.Required("version"): cv.string,
-        vol.Required("release-notes"): cv.string,
-        vol.Optional("reinstall-android"): cv.boolean,
-        vol.Optional("apt"): cv.string,
-        vol.Optional("beta"): cv.boolean,
-    }
 )
 
 
@@ -126,16 +127,23 @@ async def async_setup(hass, config):
             info_for_screen = info_for_screen.replace(
                 "Naciśnij OK/URUCHOM aby zainstalować.", ""
             )
+
             hass.states.async_set(
                 ENTITY_ID,
                 info,
                 {
                     ATTR_FRIENDLY_NAME: "Aktualizacja",
                     "icon": "mdi:update",
+                    "dom_app_current_version": current_version,
                     "reinstall_dom_app": True,
+                    "android_app_current_version": G_CURRENT_ANDROID_VERSION,
                     "reinstall_android_app": android,
+                    "linux_current_version": G_CURRENT_LINUX_VERSION,
+                    "reinstall_linux_app": False,
                     "apt": apt,
                     "beta": beta,
+                    ATTR_UPDATE_STATUS: UPDATE_STATUS_OUTDATED,
+                    ATTR_UPDATE_CHECK_TIME: get_current_dt(),
                 },
             )
 
@@ -197,10 +205,16 @@ async def async_setup(hass, config):
                 {
                     ATTR_FRIENDLY_NAME: "Wersja",
                     "icon": "mdi:update",
+                    "dom_app_current_version": current_version,
                     "reinstall_dom_app": False,
+                    "android_app_current_version": G_CURRENT_ANDROID_VERSION,
                     "reinstall_android_app": False,
+                    "linux_current_version": G_CURRENT_LINUX_VERSION,
+                    "reinstall_linux_app": False,
                     "apt": apt,
                     "beta": beta,
+                    ATTR_UPDATE_STATUS: UPDATE_STATUS_UPDATED,
+                    ATTR_UPDATE_CHECK_TIME: get_current_dt(),
                 },
             )
             hass.states.async_set(
@@ -281,53 +295,76 @@ async def async_setup(hass, config):
     return True
 
 
+def get_current_dt():
+    from datetime import datetime
+
+    now = datetime.now()
+    return now.strftime("%d/%m/%Y %H:%M:%S")
+
+
+def get_current_android_apk_version():
+    import subprocess
+
+    try:
+        apk_version = subprocess.check_output(
+            'su -c "dumpsys package pl.sviete.dom | grep versionName"',
+            shell=True,
+            timeout=15,
+        )
+        apk_version = (
+            apk_version.decode("utf-8")
+            .replace("\n", "")
+            .strip()
+            .replace("versionName=", "")
+        )
+        return apk_version
+    except Exception as e:
+        _LOGGER.info("Can't get android apk version! " + str(e))
+        return 0
+
+
+def get_current_linux_apt_version():
+    pass
+    return 123
+
+
 async def get_system_info(hass, include_components):
     """Return info about the system."""
-
+    global G_CURRENT_ANDROID_VERSION
+    global G_CURRENT_LINUX_VERSION
     gate_id = hass.states.get("sensor.ais_secure_android_id_dom").state
+    G_CURRENT_ANDROID_VERSION = get_current_android_apk_version()
+    G_CURRENT_LINUX_VERSION = get_current_linux_apt_version()
     info_object = {
         "arch": platform.machine(),
-        "dev": "dev" in current_version,
-        "docker": False,
         "os_name": platform.system(),
         "python_version": platform.python_version(),
-        "timezone": dt_util.DEFAULT_TIME_ZONE.zone,
-        "version": current_version,
-        "virtualenv": os.environ.get("VIRTUAL_ENV") is not None,
-        "hassio": hass.components.hassio.is_hassio(),
         "gate_id": gate_id,
+        "dom_app_version": current_version,
+        "android_app_version": G_CURRENT_ANDROID_VERSION,
+        "linux_apt_version": G_CURRENT_LINUX_VERSION,
     }
 
     if include_components:
         info_object["components"] = list(hass.config.components)
-
-    if platform.system() == "Windows":
-        info_object["os_version"] = platform.win32_ver()[0]
-    elif platform.system() == "Darwin":
-        info_object["os_version"] = platform.mac_ver()[0]
-    elif platform.system() == "FreeBSD":
-        info_object["os_version"] = platform.release()
-    elif platform.system() == "Linux":
-        import distro
-
-        linux_dist = await hass.async_add_job(distro.linux_distribution, False)
-        info_object["distribution"] = linux_dist[0]
-        info_object["os_version"] = linux_dist[1]
-        info_object["docker"] = os.path.isfile("/.dockerenv")
 
     return info_object
 
 
 async def get_newest_version(hass, huuid, include_components):
     """Get the newest Ais dom version."""
+    global G_CURRENT_ANDROID_VERSION
     hass.states.async_set(
         ENTITY_ID,
-        "sprawdzam",
+        "sprawdzam dostępność aktualizacji",
         {
             ATTR_FRIENDLY_NAME: "Wersja",
             "icon": "mdi:update",
             "reinstall_dom_app": False,
+            "android_app_current_version": G_CURRENT_ANDROID_VERSION,
             "reinstall_android_app": False,
+            ATTR_UPDATE_STATUS: UPDATE_STATUS_CHECKING,
+            ATTR_UPDATE_CHECK_TIME: get_current_dt(),
         },
     )
     if huuid:
@@ -359,6 +396,9 @@ async def get_newest_version(hass, huuid, include_components):
                 "icon": "mdi:update",
                 "reinstall_dom_app": False,
                 "reinstall_android_app": False,
+                "android_app_current_version": G_CURRENT_ANDROID_VERSION,
+                ATTR_UPDATE_STATUS: UPDATE_STATUS_UNKNOWN,
+                ATTR_UPDATE_CHECK_TIME: get_current_dt(),
             },
         )
         return None
@@ -376,22 +416,21 @@ async def get_newest_version(hass, huuid, include_components):
                 "icon": "mdi:update",
                 "reinstall_dom_app": False,
                 "reinstall_android_app": False,
+                "android_app_current_version": G_CURRENT_ANDROID_VERSION,
+                ATTR_UPDATE_STATUS: UPDATE_STATUS_UNKNOWN,
+                ATTR_UPDATE_CHECK_TIME: get_current_dt(),
             },
         )
         return None
 
     try:
-        res = RESPONSE_SCHEMA(res)
-        if "apt" in res:
-            return (
-                res["version"],
-                res["release-notes"],
-                res["reinstall-android"],
-                res["apt"],
-            )
-        else:
-            return res["version"], res["release-notes"], res["reinstall-android"], ""
-    except vol.Invalid:
+        return (
+            res["version"],
+            res["release-notes"],
+            res["reinstall-android"],
+            res["apt"],
+        )
+    except Exception:
         _LOGGER.error("Got unexpected response: %s", res)
         info = "Wersja. Otrzmyano nieprawidłową odpowiedz z usługi AIS dom "
         info += str(res)
@@ -403,6 +442,9 @@ async def get_newest_version(hass, huuid, include_components):
                 "icon": "mdi:update",
                 "reinstall_dom_app": False,
                 "reinstall_android_app": False,
+                "android_app_current_version": G_CURRENT_ANDROID_VERSION,
+                ATTR_UPDATE_STATUS: UPDATE_STATUS_UNKNOWN,
+                ATTR_UPDATE_CHECK_TIME: get_current_dt(),
             },
         )
         return None

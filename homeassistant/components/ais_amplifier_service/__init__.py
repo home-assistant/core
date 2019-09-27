@@ -128,8 +128,8 @@ def _get_audio_mono(hass, call):
                 "turn_off",
                 {"entity_id": "input_boolean.ais_audio_mono"},
             )
-    except Exception:
-        _LOGGER.warning("Can't get audio master_mono from system settings")
+    except Exception as e:
+        _LOGGER.info("Can't get audio master_mono from system settings! " + str(e))
 
 
 @asyncio.coroutine

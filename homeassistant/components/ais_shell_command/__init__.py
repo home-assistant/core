@@ -381,8 +381,8 @@ def _set_ais_secure_android_id_dom(hass, call):
                 'su -c "settings get secure android_id"', shell=True, timeout=15
             )
             android_id = android_id.decode("utf-8").replace("\n", "")
-        except Exception:
-            _LOGGER.warning("Can't get secure gate id for the device!")
+        except Exception as e:
+            _LOGGER.info("Can't get secure gate id for the device! " + str(e))
             from uuid import getnode as get_mac
 
             android_id = get_mac()
