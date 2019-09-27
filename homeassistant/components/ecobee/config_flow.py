@@ -33,7 +33,11 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="one_instance_only")
 
         errors = {}
-        stored_api_key = self.hass.data[DATA_ECOBEE_CONFIG].get(CONF_API_KEY)
+        stored_api_key = (
+            self.hass.data[DATA_ECOBEE_CONFIG].get(CONF_API_KEY)
+            if DATA_ECOBEE_CONFIG in self.hass.data
+            else ""
+        )
 
         if user_input is not None:
             # Use the user-supplied API key to attempt to obtain a PIN from ecobee.
