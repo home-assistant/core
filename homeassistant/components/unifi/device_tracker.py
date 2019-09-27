@@ -10,6 +10,7 @@ from homeassistant.helpers import entity_registry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_registry import DISABLED_CONFIG_ENTRY
+from homeassistant.helpers.restore_state import RestoreEntity
 
 import homeassistant.util.dt as dt_util
 
@@ -26,7 +27,6 @@ DEVICE_ATTRIBUTES = [
     "ip",
     "is_11r",
     "is_guest",
-    "is_wired",
     "mac",
     "name",
     "noted",
@@ -114,13 +114,14 @@ def update_items(controller, async_add_entities, tracked):
         async_add_entities(new_tracked)
 
 
-class UniFiClientTracker(ScannerEntity):
+class UniFiClientTracker(ScannerEntity, RestoreEntity):
     """Representation of a network client."""
 
     def __init__(self, client, controller):
         """Set up tracked client."""
         self.client = client
         self.controller = controller
+        self.is_wired = self.client.is_wired
 
     @property
     def entity_registry_enabled_default(self):
@@ -141,22 +142,45 @@ class UniFiClientTracker(ScannerEntity):
         return True
 
     async def async_added_to_hass(self):
-        """Client entity created."""
+        """Client entity created.
+
+        Make sure to update self.is_wired if client is wireless, there is an issue when clients go offline that they get marked as wired.
+        """
         LOGGER.debug("New UniFi client tracker %s (%s)", self.name, self.client.mac)
 
+        state = await self.async_get_last_state()
+
+        if state is None or not self.is_wired:
+            return
+
+        self.is_wired = state.attributes["is_wired"]
+
     async def async_update(self):
-        """Synchronize state with controller."""
+        """Synchronize state with controller.
+
+        Make sure to update self.is_wired if client is wireless, there is an issue when clients go offline that they get marked as wired.
+        """
         LOGGER.debug(
             "Updating UniFi tracked client %s (%s)", self.entity_id, self.client.mac
         )
         await self.controller.request_update()
 
+        if self.is_wired and not self.client.is_wired:
+            self.is_wired = False
+
     @property
     def is_connected(self):
-        """Return true if the client is connected to the network."""
-        if (
-            dt_util.utcnow() - dt_util.utc_from_timestamp(float(self.client.last_seen))
-        ) < self.controller.option_detection_time:
+        """Return true if the client is connected to the network.
+
+        If is_wired and client.is_wired differ it means that the device is offline and UniFi bug shows device as wired.
+        """
+        if self.is_wired == self.client.is_wired and (
+            (
+                dt_util.utcnow()
+                - dt_util.utc_from_timestamp(float(self.client.last_seen))
+            )
+            < self.controller.option_detection_time
+        ):
             return True
 
         return False
@@ -194,6 +218,8 @@ class UniFiClientTracker(ScannerEntity):
         for variable in DEVICE_ATTRIBUTES:
             if variable in self.client.raw:
                 attributes[variable] = self.client.raw[variable]
+
+        attributes["is_wired"] = self.is_wired
 
         return attributes
 
