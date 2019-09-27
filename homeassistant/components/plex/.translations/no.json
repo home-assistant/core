@@ -41,5 +41,15 @@
             }
         },
         "title": "Plex"
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "show_all_controls": "Vis alle kontroller"
+                },
+                "description": "Alternativer for Plex Media Players"
+            }
+        }
     }
 }
