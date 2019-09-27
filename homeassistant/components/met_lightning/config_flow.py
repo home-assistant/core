@@ -22,7 +22,7 @@ def configured_instances(hass):
 class MetLightningFlowHandler(config_entries.ConfigFlow):
     """Handle a Met lightning config flow."""
 
-    VERSION = 2
+    VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def _show_form(self, errors=None):

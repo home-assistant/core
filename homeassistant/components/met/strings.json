@@ -9,7 +9,8 @@
                     "name": "Name",
                     "latitude": "Latitude",
                     "longitude": "Longitude",
-                    "elevation": "Elevation"
+                    "elevation": "Elevation",
+                    "radius": "Show lightning within radius (km) \n (Lightning data only available from Norway and Sweden)"
                 }
             }
         },

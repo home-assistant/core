@@ -6,7 +6,9 @@ from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, C
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, HOME_LOCATION_NAME, CONF_TRACK_HOME
+from .const import DOMAIN, HOME_LOCATION_NAME, CONF_RADIUS, CONF_TRACK_HOME
+
+DEFAULT_RADIUS = -1
 
 
 @callback
@@ -20,7 +22,7 @@ def configured_instances(hass):
 class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for Met component."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
@@ -44,10 +46,11 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             latitude=self.hass.config.latitude,
             longitude=self.hass.config.longitude,
             elevation=self.hass.config.elevation,
+            radius=DEFAULT_RADIUS,
         )
 
     async def _show_config_form(
-        self, name=None, latitude=None, longitude=None, elevation=None
+        self, name=None, latitude=None, longitude=None, elevation=None, radius=None
     ):
         """Show the configuration form to edit location data."""
         return self.async_show_form(
@@ -58,6 +61,7 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_LATITUDE, default=latitude): cv.latitude,
                     vol.Required(CONF_LONGITUDE, default=longitude): cv.longitude,
                     vol.Required(CONF_ELEVATION, default=elevation): int,
+                    vol.Optional(CONF_RADIUS, default=radius): int,
                 }
             ),
             errors=self._errors,

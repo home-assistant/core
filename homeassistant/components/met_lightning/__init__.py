@@ -1,8 +1,8 @@
 """Support for Met Lightning data."""
 import logging
-from metno import LightningData
 
 import voluptuous as vol
+from metno import LightningData
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
@@ -68,7 +68,6 @@ async def async_setup_entry(hass, config_entry):
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(config_entry, "geo_location")
     )
-
     return True
 
 

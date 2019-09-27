@@ -7,6 +7,7 @@ DOMAIN = "met"
 
 HOME_LOCATION_NAME = "Home"
 
+CONF_RADIUS = "radius"
 CONF_TRACK_HOME = "track_home"
 
 ENTITY_ID_SENSOR_FORMAT = WEATHER_DOMAIN + ".met_{}"
