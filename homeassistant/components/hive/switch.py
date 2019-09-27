@@ -19,10 +19,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class HiveDevicePlug(HiveEntity, SwitchDevice):
     """Hive Active Plug."""
 
-    def __init__(self, hive_session, hive_device):
-        """Initialize the Switch device."""
-        super().__init__(hive_session, hive_device)
-
     @property
     def unique_id(self):
         """Return unique ID of entity."""

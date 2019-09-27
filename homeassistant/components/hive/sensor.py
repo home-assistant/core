@@ -31,10 +31,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class HiveSensorEntity(HiveEntity, Entity):
     """Hive Sensor Entity."""
 
-    def __init__(self, hive_session, hive_device):
-        """Initialize the sensor."""
-        super().__init__(hive_session, hive_device)
-
     @property
     def unique_id(self):
         """Return unique ID of entity."""
