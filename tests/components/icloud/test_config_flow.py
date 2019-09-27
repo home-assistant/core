@@ -33,6 +33,13 @@ def mock_controller_init():
         yield
 
 
+@pytest.fixture(name="session")
+def mock_controller_session():
+    """Mock a successful session."""
+    with patch("pyicloud.PyiCloudSession"):
+        yield
+
+
 @pytest.fixture(name="authenticate")
 def mock_controller_authenticate():
     """Mock a successful authenticate."""
@@ -73,6 +80,7 @@ def init_config_flow(hass):
 async def test_user(
     hass,
     init,
+    session,
     authenticate,
     requires_2fa,
     send_verification_code,
@@ -101,6 +109,7 @@ async def test_user(
 async def test_import(
     hass,
     init,
+    session,
     authenticate,
     requires_2fa,
     send_verification_code,
@@ -143,6 +152,7 @@ async def test_import(
 async def test_abort_if_already_setup(
     hass,
     init,
+    session,
     authenticate,
     requires_2fa,
     send_verification_code,
@@ -206,7 +216,7 @@ async def test_abort_on_login_failed(hass):
         assert result["errors"] == {CONF_USERNAME: "login"}
 
 
-async def test_abort_on_fetch_failed(hass, init, authenticate, requires_2fa):
+async def test_abort_on_fetch_failed(hass, init, session, authenticate, requires_2fa):
     """Test when we have errors during fetch."""
     flow = init_config_flow(hass)
 
