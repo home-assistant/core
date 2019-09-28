@@ -31,3 +31,8 @@ async def async_attach_trigger(
 async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
     """List device triggers."""
     return await toggle_entity.async_get_triggers(hass, device_id, DOMAIN)
+
+
+async def async_get_trigger_capabilities(hass: HomeAssistant, trigger: dict) -> dict:
+    """List trigger capabilities."""
+    return await toggle_entity.async_get_trigger_capabilities(hass, dict)

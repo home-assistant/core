@@ -4,6 +4,7 @@ import voluptuous as vol
 from homeassistant.components.automation import state as state_automation
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.const import (
+    CONF_SUPPORTS,
     CONF_TURNED_OFF,
     CONF_TURNED_ON,
 )
@@ -239,3 +240,8 @@ async def async_get_triggers(hass, device_id):
         )
 
     return triggers
+
+
+async def async_get_trigger_capabilities(hass, trigger):
+    """List trigger capabilities."""
+    return {CONF_SUPPORTS: [CONF_FOR]}

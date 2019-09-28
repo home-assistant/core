@@ -7,6 +7,7 @@ from homeassistant.components.automation import state, AutomationActionType
 from homeassistant.components.device_automation.const import (
     CONF_IS_OFF,
     CONF_IS_ON,
+    CONF_SUPPORTS,
     CONF_TOGGLE,
     CONF_TURN_OFF,
     CONF_TURN_ON,
@@ -212,3 +213,8 @@ async def async_get_triggers(
 ) -> List[dict]:
     """List device triggers."""
     return await _async_get_automations(hass, device_id, ENTITY_TRIGGERS, domain)
+
+
+async def async_get_trigger_capabilities(hass: HomeAssistant, trigger: dict) -> dict:
+    """List trigger capabilities."""
+    return {CONF_SUPPORTS: [CONF_FOR]}

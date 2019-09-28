@@ -29,9 +29,17 @@ TRIGGER_BASE_SCHEMA = vol.Schema(
 )
 
 TYPES = {
-    "trigger": ("device_trigger", "async_get_triggers"),
-    "condition": ("device_condition", "async_get_conditions"),
-    "action": ("device_action", "async_get_actions"),
+    "trigger": (
+        "device_trigger",
+        "async_get_triggers",
+        "async_get_trigger_capabilities",
+    ),
+    "condition": (
+        "device_condition",
+        "async_get_conditions",
+        "async_get_condition_capabilities",
+    ),
+    "action": ("device_action", "async_get_actions", "async_get_action_capabilities"),
 }
 
 
@@ -46,6 +54,9 @@ async def async_setup(hass, config):
     hass.components.websocket_api.async_register_command(
         websocket_device_automation_list_triggers
     )
+    hass.components.websocket_api.async_register_command(
+        websocket_device_automation_get_trigger_capabilities
+    )
     return True
 
 
@@ -54,7 +65,7 @@ async def async_get_device_automation_platform(hass, config, automation_type):
 
     Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.
     """
-    platform_name, _ = TYPES[automation_type]
+    platform_name, _, _ = TYPES[automation_type]
     try:
         integration = await async_get_integration(hass, config[CONF_DOMAIN])
         platform = integration.get_platform(platform_name)
@@ -81,7 +92,7 @@ async def _async_get_device_automations_from_domain(
         _LOGGER.warning("Integration %s not found", domain)
         return None
 
-    platform_name, function_name = TYPES[automation_type]
+    platform_name, function_name, _ = TYPES[automation_type]
 
     try:
         platform = integration.get_platform(platform_name)
@@ -125,6 +136,30 @@ async def _async_get_device_automations(hass, automation_type, device_id):
     return automations
 
 
+async def _async_get_device_automation_capabilities(hass, automation_type, automation):
+    """List device automations."""
+    integration = None
+    try:
+        integration = await async_get_integration(hass, automation[CONF_DOMAIN])
+    except IntegrationNotFound:
+        _LOGGER.warning("Integration %s not found", automation[CONF_DOMAIN])
+        return None
+
+    platform_name, _, function_name = TYPES[automation_type]
+
+    try:
+        platform = integration.get_platform(platform_name)
+    except ImportError:
+        # The domain does not have device automations
+        return None
+
+    if not hasattr(platform, function_name):
+        # The device automation has no capabilities
+        return {}
+
+    return await getattr(platform, function_name)(hass, automation)
+
+
 @websocket_api.async_response
 @websocket_api.websocket_command(
     {
@@ -165,3 +200,19 @@ async def websocket_device_automation_list_triggers(hass, connection, msg):
     device_id = msg["device_id"]
     triggers = await _async_get_device_automations(hass, "trigger", device_id)
     connection.send_result(msg["id"], triggers)
+
+
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "device_automation/trigger/capabilities",
+        vol.Required("trigger"): dict,
+    }
+)
+async def websocket_device_automation_get_trigger_capabilities(hass, connection, msg):
+    """Handle request for device trigger capabilities."""
+    trigger = msg["trigger"]
+    capabilities = await _async_get_device_automation_capabilities(
+        hass, "trigger", trigger
+    )
+    connection.send_result(msg["id"], capabilities)

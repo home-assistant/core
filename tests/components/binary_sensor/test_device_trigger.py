@@ -17,6 +17,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
     async_get_device_automations,
+    async_get_device_automation_capabilities,
 )
 
 
@@ -72,6 +73,24 @@ async def test_get_triggers(hass, device_reg, entity_reg):
     ]
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
     assert triggers == expected_triggers
+
+
+async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
+    """Test we get the expected capabilities from a binary_sensor trigger."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    expected_capabilities = {"supports": ["for"]}
+    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    for trigger in triggers:
+        capabilities = await async_get_device_automation_capabilities(
+            hass, "trigger", trigger
+        )
+        assert capabilities == expected_capabilities
 
 
 async def test_if_fires_on_state_change(hass, calls):
