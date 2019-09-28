@@ -5,7 +5,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
+from pybotvac import Account, Neato, Vorwerk
+from requests.exceptions import HTTPError, ConnectionError as ConnError
 
 from .const import CONF_VENDOR, NEATO_DOMAIN, VALID_VENDORS
 
@@ -14,15 +15,6 @@ DOCS_URL = "https://www.home-assistant.io/components/neato"
 DEFAULT_VENDOR = "neato"
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@callback
-def configured_neato(hass):
-    """Return the configured Neato Account."""
-    entries = hass.config_entries.async_entries(NEATO_DOMAIN)
-    if entries:
-        return entries[0]
-    return None
 
 
 class NeatoConfigFlow(config_entries.ConfigFlow, domain=NEATO_DOMAIN):
@@ -41,7 +33,7 @@ class NeatoConfigFlow(config_entries.ConfigFlow, domain=NEATO_DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
 
-        if configured_neato(self.hass) is not None:
+        if self._async_current_entries():
             return self.async_abort(reason="already_configured")
 
         if user_input is not None:
@@ -75,7 +67,7 @@ class NeatoConfigFlow(config_entries.ConfigFlow, domain=NEATO_DOMAIN):
     async def async_step_import(self, user_input):
         """Import a config flow from configuration."""
 
-        if configured_neato(self.hass) is not None:
+        if self._async_current_entries():
             return self.async_abort(reason="already_configured")
 
         username = user_input[CONF_USERNAME]
@@ -99,8 +91,6 @@ class NeatoConfigFlow(config_entries.ConfigFlow, domain=NEATO_DOMAIN):
     @staticmethod
     def try_login(username, password, vendor):
         """Try logging in to device and return any errors."""
-        from requests.exceptions import HTTPError
-        from pybotvac import Account, Neato, Vorwerk
 
         this_vendor = None
         if vendor == "vorwerk":
@@ -113,7 +103,7 @@ class NeatoConfigFlow(config_entries.ConfigFlow, domain=NEATO_DOMAIN):
 
         try:
             Account(username, password, this_vendor)
-        except HTTPError:
+        except (HTTPError, ConnError):
             return "invalid_credentials"
 
         return None

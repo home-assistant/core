@@ -1,7 +1,7 @@
 """Support for Neato botvac connected vacuum cleaners."""
 import logging
 from datetime import timedelta
-from requests.exceptions import HTTPError
+from requests.exceptions import HTTPError, ConnectionError as ConnError
 
 import voluptuous as vol
 
@@ -138,7 +138,7 @@ class NeatoHub:
                 self.config[CONF_USERNAME], self.config[CONF_PASSWORD], self._vendor
             )
             return True
-        except HTTPError:
+        except (HTTPError, ConnError):
             _LOGGER.error("Unable to connect to Neato API")
             return False
 
