@@ -1,7 +1,8 @@
 """Support for displaying weather info from Ecobee API."""
 from datetime import datetime
 
-from homeassistant.components import ecobee
+from pyecobee.const import ECOBEE_STATE_UNKNOWN
+
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_TEMP,
@@ -12,33 +13,37 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import TEMP_FAHRENHEIT
 
+from .const import DOMAIN
+
 ATTR_FORECAST_TEMP_HIGH = "temphigh"
 ATTR_FORECAST_PRESSURE = "pressure"
 ATTR_FORECAST_VISIBILITY = "visibility"
 ATTR_FORECAST_HUMIDITY = "humidity"
 
-MISSING_DATA = -5002
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Old way of setting up the ecobee weather platform."""
+    pass
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Ecobee weather platform."""
-    if discovery_info is None:
-        return
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the ecobee weather platform."""
+    data = hass.data[DOMAIN]
     dev = list()
-    data = ecobee.NETWORK
     for index in range(len(data.ecobee.thermostats)):
         thermostat = data.ecobee.get_thermostat(index)
         if "weather" in thermostat:
-            dev.append(EcobeeWeather(thermostat["name"], index))
+            dev.append(EcobeeWeather(data, thermostat["name"], index))
 
-    add_entities(dev, True)
+    async_add_entities(dev, True)
 
 
 class EcobeeWeather(WeatherEntity):
     """Representation of Ecobee weather data."""
 
-    def __init__(self, name, index):
+    def __init__(self, data, name, index):
         """Initialize the Ecobee weather platform."""
+        self.data = data
         self._name = name
         self._index = index
         self.weather = None
@@ -140,26 +145,25 @@ class EcobeeWeather(WeatherEntity):
                     ATTR_FORECAST_CONDITION: day["condition"],
                     ATTR_FORECAST_TEMP: float(day["tempHigh"]) / 10,
                 }
-                if day["tempHigh"] == MISSING_DATA:
+                if day["tempHigh"] == ECOBEE_STATE_UNKNOWN:
                     break
-                if day["tempLow"] != MISSING_DATA:
+                if day["tempLow"] != ECOBEE_STATE_UNKNOWN:
                     forecast[ATTR_FORECAST_TEMP_LOW] = float(day["tempLow"]) / 10
-                if day["pressure"] != MISSING_DATA:
+                if day["pressure"] != ECOBEE_STATE_UNKNOWN:
                     forecast[ATTR_FORECAST_PRESSURE] = int(day["pressure"])
-                if day["windSpeed"] != MISSING_DATA:
+                if day["windSpeed"] != ECOBEE_STATE_UNKNOWN:
                     forecast[ATTR_FORECAST_WIND_SPEED] = int(day["windSpeed"])
-                if day["visibility"] != MISSING_DATA:
+                if day["visibility"] != ECOBEE_STATE_UNKNOWN:
                     forecast[ATTR_FORECAST_WIND_SPEED] = int(day["visibility"])
-                if day["relativeHumidity"] != MISSING_DATA:
+                if day["relativeHumidity"] != ECOBEE_STATE_UNKNOWN:
                     forecast[ATTR_FORECAST_HUMIDITY] = int(day["relativeHumidity"])
                 forecasts.append(forecast)
             return forecasts
         except (ValueError, IndexError, KeyError):
             return None
 
-    def update(self):
-        """Get the latest state of the sensor."""
-        data = ecobee.NETWORK
-        data.update()
-        thermostat = data.ecobee.get_thermostat(self._index)
+    async def async_update(self):
+        """Get the latest weather data."""
+        await self.data.update()
+        thermostat = self.data.ecobee.get_thermostat(self._index)
         self.weather = thermostat.get("weather", None)

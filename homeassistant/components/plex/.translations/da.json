@@ -41,5 +41,16 @@
             }
         },
         "title": "Plex"
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "show_all_controls": "Vis alle kontrolelementer",
+                    "use_episode_art": "Brug episode kunst"
+                },
+                "description": "Indstillinger for Plex-medieafspillere"
+            }
+        }
     }
 }
