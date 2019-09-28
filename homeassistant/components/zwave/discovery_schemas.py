@@ -57,15 +57,21 @@ DISCOVERY_SCHEMAS = [
             DEFAULT_VALUES_SCHEMA,
             **{
                 const.DISC_PRIMARY: {
-                    const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_THERMOSTAT_SETPOINT]
+                    const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_THERMOSTAT_MODE]
+                },
+                "setpoint_heating": {
+                    const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_THERMOSTAT_SETPOINT],
+                    const.DISC_INDEX: [1],
+                    const.DISC_OPTIONAL: True,
+                },
+                "setpoint_cooling": {
+                    const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_THERMOSTAT_SETPOINT],
+                    const.DISC_INDEX: [2],
+                    const.DISC_OPTIONAL: True,
                 },
                 "temperature": {
                     const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SENSOR_MULTILEVEL],
                     const.DISC_INDEX: [const.INDEX_SENSOR_MULTILEVEL_TEMPERATURE],
-                    const.DISC_OPTIONAL: True,
-                },
-                "mode": {
-                    const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_THERMOSTAT_MODE],
                     const.DISC_OPTIONAL: True,
                 },
                 "fan_mode": {
