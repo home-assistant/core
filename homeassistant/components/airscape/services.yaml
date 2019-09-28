@@ -1,1 +1,13 @@
+speed_up:
+  description: Increment fan speed up by 1
+  fields:
+    entity_id:
+      description: Name of the entity to set
+      example: 'fan.whole_house_fan'
 
+slow_down:
+  description: Decrement fan speed down by 1.  Speed will not go below the minimum configured speed
+  fields:
+    entity_id:
+      description: Name of the entity to set
+      example: 'fan.whole_house_fan'

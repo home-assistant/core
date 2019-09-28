@@ -6,7 +6,12 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.fan import SUPPORT_SET_SPEED, PLATFORM_SCHEMA, FanEntity
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_MINIMUM, ATTR_ENTITY_ID
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+
+from . import DOMAIN
 
 DEFAULT_TIMEOUT = 5
 DEFAULT_MINIMUM = 1
@@ -18,51 +23,44 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_MINIMUM, default=DEFAULT_MINIMUM): cv.positive_int,
     }
 )
 
-SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.string,
-    }
-)
-
+SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.string})
 SIGNAL_AIRSCAPE_SPEEDUP = "airscape_{}_speedup"
 SIGNAL_AIRSCAPE_SLOWDOWN = "airscape_{}_slowdown"
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Airscape Fan platform."""
-    # Assign configuration variables.
-    # The configuration check takes care they are present.
+    # Setup connection to the fan
     host = config[CONF_HOST]
     name = config[CONF_NAME]
     minimum = config[CONF_MINIMUM]
+    timeout = DEFAULT_TIMEOUT
 
     try:
         device = airscape.Fan(host, timeout)
     except (airscape.exceptions.Timeout, airscape.exceptions.ConnectionError):
         _LOGGER.error(
-            "Cannot connect to %s.  " "Device did not respond to API request", host
+            "Cannot connect to %s.  Device did not respond to API request", host
         )
     else:
-        # Add devices
         add_entities([AirscapeWHF(device, name, minimum)], True)
 
     def handle_speed_up(call):
         """Handle speed_up service call."""
-        entity_id = call.data[]"entity_id"]
+        entity_id = call.data["entity_id"]
         _LOGGER.debug("Calling speed_up for %s", entity_id)
         async_dispatcher_send(hass, SIGNAL_AIRSCAPE_SPEEDUP.format(entity_id))
 
-        
     def handle_slow_down(call):
         """Handle slow_down service call."""
-        entity_id = call.data.get("entity_id")
-        _LOGGER.debug("Calling slow_down for %s", entity_id)
+        entity_id = call.data["entity_id"]
+        _LOGGER.debug("Calling speed_up for %s", entity_id)
         async_dispatcher_send(hass, SIGNAL_AIRSCAPE_SLOWDOWN.format(entity_id))
-        
+
     hass.services.register(DOMAIN, "speed_up", handle_speed_up, SERVICE_SCHEMA)
     hass.services.register(DOMAIN, "slow_down", handle_slow_down, SERVICE_SCHEMA)
 
@@ -80,10 +78,14 @@ class AirscapeWHF(FanEntity):
         self._minimum_speed = minimum
         self._speed_list = [f"{i}" for i in range(0, 11)]
 
-    def async_added_to_hass(self):
-        """Register dispatcher connections"""
-        async_dispatcher_connect(self.hass, SIGNAL_AIRSCAPE_SPEEDUP.format(self.entity_id), speed_up)
-        async_dispatcher_connect(self.hass, SIGNAL_AIRSCAPE_SLOWDOWN.format(self.entity_id), slow_down)
+    async def async_added_to_hass(self):
+        """Run when about to be added to hass."""
+        async_dispatcher_connect(
+            self.hass, SIGNAL_AIRSCAPE_SPEEDUP.format(self.entity_id), self.speed_up
+        )
+        async_dispatcher_connect(
+            self.hass, SIGNAL_AIRSCAPE_SLOWDOWN.format(self.entity_id), self.slow_down
+        )
 
     @property
     def name(self):
