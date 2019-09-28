@@ -50,7 +50,7 @@ class GeniusWaterHeater(GeniusZone, WaterHeaterDevice):
         super().__init__()
 
         self._zone = zone
-        self.entity_id = f"climate.genius_zone_{zone.id}"
+        self.entity_id = f"climate.{DOMAIN}_zone_{zone.id}"
 
         self._max_temp = 80.0
         self._min_temp = 30.0

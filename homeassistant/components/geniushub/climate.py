@@ -43,7 +43,7 @@ class GeniusClimateZone(GeniusZone, ClimateDevice):
         super().__init__()
 
         self._zone = zone
-        self.entity_id = f"climate.genius_zone_{zone.id}"
+        self.entity_id = f"climate.{DOMAIN}_zone_{zone.id}"
 
         self._max_temp = 28.0
         self._min_temp = 4.0
