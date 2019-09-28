@@ -99,13 +99,8 @@ class LyricClient:
     def devices(self):
         """Generate a list of thermostats and their location."""
         for location in self.lyric.locations:
-            if location.name in self._location:
-                for device in location.thermostats:
-                    yield (location, device)
-            else:
-                _LOGGER.debug(
-                    "Ignoring location %s, not in %s", location.name, self._location
-                )
+            for device in location.thermostats:
+                yield (location, device)
 
 
 class LyricEntity(Entity):
