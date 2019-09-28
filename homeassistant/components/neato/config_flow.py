@@ -5,7 +5,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from pybotvac import Account, Neato, Vorwerk
 from requests.exceptions import HTTPError, ConnectionError as ConnError
 
 from .const import CONF_VENDOR, NEATO_DOMAIN, VALID_VENDORS
@@ -41,7 +40,9 @@ class NeatoConfigFlow(config_entries.ConfigFlow, domain=NEATO_DOMAIN):
             self._password = user_input["password"]
             self._vendor = user_input["vendor"]
 
-            error = self.try_login(self._username, self._password, self._vendor)
+            error = await self.hass.async_add_executor_job(
+                self.try_login, self._username, self._password, self._vendor
+            )
             if error:
                 errors["base"] = error
             else:
@@ -74,7 +75,9 @@ class NeatoConfigFlow(config_entries.ConfigFlow, domain=NEATO_DOMAIN):
         password = user_input[CONF_PASSWORD]
         vendor = user_input[CONF_VENDOR]
 
-        error = self.try_login(username, password, vendor)
+        error = await self.hass.async_add_executor_job(
+            self.try_login, username, password, vendor
+        )
         if error is not None:
             _LOGGER.error(error)
             return self.async_abort(reason=error)
@@ -91,6 +94,7 @@ class NeatoConfigFlow(config_entries.ConfigFlow, domain=NEATO_DOMAIN):
     @staticmethod
     def try_login(username, password, vendor):
         """Try logging in to device and return any errors."""
+        from pybotvac import Account, Neato, Vorwerk
 
         this_vendor = None
         if vendor == "vorwerk":

@@ -81,16 +81,20 @@ async def async_setup_entry(hass, entry):
     from pybotvac import Account, Neato, Vorwerk
 
     if entry.data[CONF_VENDOR] == "neato":
-        hass.data[NEATO_LOGIN] = NeatoHub(hass, entry.data, Account, Neato)
+        hass.data[NEATO_LOGIN] = await hass.async_add_executor_job(
+            NeatoHub, hass, entry.data, Account, Neato
+        )
     elif entry.data[CONF_VENDOR] == "vorwerk":
-        hass.data[NEATO_LOGIN] = NeatoHub(hass, entry.data, Account, Vorwerk)
+        hass.data[NEATO_LOGIN] = await hass.async_add_executor_job(
+            NeatoHub, hass, entry.data, Account, Vorwerk
+        )
 
     hub = hass.data[NEATO_LOGIN]
     if not hub.logged_in:
         _LOGGER.debug("Failed to login to Neato API")
         return False
 
-    hub.update_robots()
+    await hass.async_add_executor_job(hub.update_robots)
 
     for component in ("camera", "vacuum", "switch"):
         hass.async_add_job(
