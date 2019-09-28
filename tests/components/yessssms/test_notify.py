@@ -1,6 +1,6 @@
 """The tests for the notify yessssms platform."""
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 import requests_mock
@@ -60,8 +60,11 @@ def mock_valid_login_data():
 @pytest.fixture(name="connection_error")
 def mock_connection_error():
     """Mock a connection error."""
-    yessssms.YesssSMS.login_data_valid = MagicMock(return_value=True)
-    yessssms.YesssSMS.login_data_valid.side_effect = yessssms.YesssSMS.ConnectionError()
+    path = "homeassistant.components.yessssms." "notify.YesssSMS.login_data_valid"
+    with patch(
+        path, return_value=True, side_effect=yessssms.YesssSMS.ConnectionError()
+    ):
+        yield
 
 
 async def test_unsupported_provider_error(hass, caplog, invalid_provider_settings):
