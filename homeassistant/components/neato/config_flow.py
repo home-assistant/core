@@ -2,11 +2,12 @@
 
 import logging
 import voluptuous as vol
+from requests.exceptions import HTTPError, ConnectionError as ConnError
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from requests.exceptions import HTTPError, ConnectionError as ConnError
 
+# pylint: disable=unused-import
 from .const import CONF_VENDOR, NEATO_DOMAIN, VALID_VENDORS
 
 
