@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Schl\u00ebssel"
+                },
+                "title": "ecobee API Schl\u00ebssel"
+            }
+        },
+        "title": "ecobee"
+    }
+}

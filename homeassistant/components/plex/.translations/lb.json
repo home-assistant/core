@@ -41,5 +41,16 @@
             }
         },
         "title": "Plex"
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "show_all_controls": "Weis all Kontrollen",
+                    "use_episode_art": "Benotz Biller vun der Episode"
+                },
+                "description": "Optioune fir Plex Medie Spiller"
+            }
+        }
     }
 }
