@@ -29,7 +29,7 @@ class InComfortClimate(ClimateDevice):
 
     def __init__(self, client, room) -> None:
         """Initialize the climate device."""
-        self.entity_id = f"climate.incomfort_{room.room_no}"
+        self.entity_id = f"climate.{DOMAIN}_{room.room_no}"
 
         self._client = client
         self._room = room

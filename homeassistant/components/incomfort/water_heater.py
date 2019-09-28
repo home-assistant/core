@@ -31,7 +31,7 @@ class IncomfortWaterHeater(WaterHeaterDevice):
 
     def __init__(self, client, heater) -> None:
         """Initialize the water_heater device."""
-        self.entity_id = f"water_heater.incomfort"
+        self.entity_id = f"water_heater.{DOMAIN}"
 
         self._client = client
         self._heater = heater
