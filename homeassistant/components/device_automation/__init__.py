@@ -60,45 +60,47 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_get_device_automation_platform(hass, config, automation_type):
+async def _async_get_device_automation_platform(hass, domain, automation_type):
     """Load device automation platform for integration.
 
     Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.
     """
     platform_name, _, _ = TYPES[automation_type]
     try:
-        integration = await async_get_integration(hass, config[CONF_DOMAIN])
+        integration = await async_get_integration(hass, domain)
         platform = integration.get_platform(platform_name)
     except IntegrationNotFound:
-        raise InvalidDeviceAutomationConfig(
-            f"Integration '{config[CONF_DOMAIN]}' not found"
-        )
+        raise InvalidDeviceAutomationConfig(f"Integration '{domain}' not found")
     except ImportError:
         raise InvalidDeviceAutomationConfig(
-            f"Integration '{config[CONF_DOMAIN]}' does not support device automation {automation_type}s"
+            f"Integration '{domain}' does not support device automation {automation_type}s"
         )
 
     return platform
+
+
+async def async_get_device_automation_platform(hass, config, automation_type):
+    """Load device automation platform for integration.
+
+    Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.
+    """
+    return await _async_get_device_automation_platform(
+        hass, config[CONF_DOMAIN], automation_type
+    )
 
 
 async def _async_get_device_automations_from_domain(
     hass, domain, automation_type, device_id
 ):
     """List device automations."""
-    integration = None
     try:
-        integration = await async_get_integration(hass, domain)
-    except IntegrationNotFound:
-        _LOGGER.warning("Integration %s not found", domain)
+        platform = await _async_get_device_automation_platform(
+            hass, domain, automation_type
+        )
+    except InvalidDeviceAutomationConfig:
         return None
 
-    platform_name, function_name, _ = TYPES[automation_type]
-
-    try:
-        platform = integration.get_platform(platform_name)
-    except ImportError:
-        # The domain does not have device automations
-        return None
+    _, function_name, _ = TYPES[automation_type]
 
     return await getattr(platform, function_name)(hass, device_id)
 
@@ -138,20 +140,14 @@ async def _async_get_device_automations(hass, automation_type, device_id):
 
 async def _async_get_device_automation_capabilities(hass, automation_type, automation):
     """List device automations."""
-    integration = None
     try:
-        integration = await async_get_integration(hass, automation[CONF_DOMAIN])
-    except IntegrationNotFound:
-        _LOGGER.warning("Integration %s not found", automation[CONF_DOMAIN])
-        return None
+        platform = await _async_get_device_automation_platform(
+            hass, automation[CONF_DOMAIN], automation_type
+        )
+    except InvalidDeviceAutomationConfig:
+        return {}
 
-    platform_name, _, function_name = TYPES[automation_type]
-
-    try:
-        platform = integration.get_platform(platform_name)
-    except ImportError:
-        # The domain does not have device automations
-        return None
+    _, _, function_name = TYPES[automation_type]
 
     if not hasattr(platform, function_name):
         # The device automation has no capabilities
