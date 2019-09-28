@@ -40,19 +40,6 @@ async def test_no_config_entry(hass):
     assert res is True
 
 
-async def test_create_valid_config_entry(hass, account):
-    """There is something in configuration.yaml."""
-    assert hass.config_entries.async_entries(NEATO_DOMAIN) == []
-    assert await async_setup_component(hass, NEATO_DOMAIN, {NEATO_DOMAIN: VALID_CONFIG})
-    entries = hass.config_entries.async_entries(NEATO_DOMAIN)
-    await hass.async_block_till_done()
-
-    assert entries
-    assert entries[0].data[CONF_USERNAME] == USERNAME
-    assert entries[0].data[CONF_PASSWORD] == PASSWORD
-    assert entries[0].data[CONF_VENDOR] == VENDOR_NEATO
-
-
 async def test_config_entries_in_sync(hass, account):
     """The config entry and configuration.yaml are in sync."""
     MockConfigEntry(domain=NEATO_DOMAIN, data=VALID_CONFIG).add_to_hass(hass)
