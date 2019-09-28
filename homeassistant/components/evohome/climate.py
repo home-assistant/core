@@ -207,13 +207,13 @@ class EvoZone(EvoChild, EvoClimateDevice):
         """Set a new target temperature."""
         temperature = kwargs["temperature"]
 
-        until = kwargs.get("until")
-        if until is None:
-            if self._evo_device.setpointStatus["setpointMode"] == EVO_TEMPOVER:
-                until = parse_datetime(str(self._evo_device.setpointStatus["until"]))
-            elif self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
-                await self._update_schedule()
-                until = parse_datetime(str(self.setpoints.get("next_sp_from")))
+        if self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
+            await self._update_schedule()
+            until = parse_datetime(str(self.setpoints.get("next_sp_from")))
+        elif self._evo_device.setpointStatus["setpointMode"] == EVO_TEMPOVER:
+            until = parse_datetime(self._evo_device.setpointStatus["until"])
+        else:  # EVO_PERMOVER
+            until = None
 
         await self._call_client_api(
             self._evo_device.set_temperature(temperature, until)
