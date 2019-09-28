@@ -1,4 +1,5 @@
 """The test for binary_sensor device automation."""
+from datetime import timedelta
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN, DEVICE_CLASSES
@@ -7,9 +8,11 @@ from homeassistant.const import STATE_ON, STATE_OFF, CONF_PLATFORM
 from homeassistant.setup import async_setup_component
 import homeassistant.components.automation as automation
 from homeassistant.helpers import device_registry
+import homeassistant.util.dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
+    async_fire_time_changed,
     async_mock_service,
     mock_device_registry,
     mock_registry,
@@ -150,5 +153,63 @@ async def test_if_fires_on_state_change(hass, calls):
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].data["some"] == "bat_low device - {} - off - on - None".format(
+        sensor1.entity_id
+    )
+
+
+async def test_if_fires_on_state_change_with_for(hass, calls):
+    """Test for triggers firing with delay."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+
+    platform.init()
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+
+    sensor1 = platform.ENTITIES["battery"]
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": "",
+                        "entity_id": sensor1.entity_id,
+                        "type": "turned_off",
+                        "for": {"seconds": 5},
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "turn_off {{ trigger.%s }}"
+                            % "}} - {{ trigger.".join(
+                                (
+                                    "platform",
+                                    "entity_id",
+                                    "from_state.state",
+                                    "to_state.state",
+                                    "for",
+                                )
+                            )
+                        },
+                    },
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(sensor1.entity_id).state == STATE_ON
+    assert len(calls) == 0
+
+    hass.states.async_set(sensor1.entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    await hass.async_block_till_done()
+    assert calls[0].data["some"] == "turn_off device - {} - on - off - 0:00:05".format(
         sensor1.entity_id
     )

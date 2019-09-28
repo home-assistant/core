@@ -7,7 +7,7 @@ from homeassistant.components.device_automation.const import (
     CONF_TURNED_OFF,
     CONF_TURNED_ON,
 )
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, CONF_TYPE
+from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, CONF_FOR, CONF_TYPE
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers import config_validation as cv
 
@@ -175,6 +175,7 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TURNED_OFF + TURNED_ON),
+        vol.Optional(CONF_FOR): vol.All(cv.time_period, cv.positive_timedelta),
     }
 )
 
@@ -195,6 +196,8 @@ async def async_attach_trigger(hass, config, action, automation_info):
         state_automation.CONF_FROM: from_state,
         state_automation.CONF_TO: to_state,
     }
+    if "for" in config:
+        state_config["for"] = config["for"]
 
     return await state_automation.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"
