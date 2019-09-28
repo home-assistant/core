@@ -7,6 +7,9 @@ from homeassistant.core import callback
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.helpers import config_validation as cv
 
+
+# mypy: allow-untyped-defs
+
 CONF_EVENT_TYPE = "event_type"
 CONF_EVENT_DATA = "event_data"
 
@@ -21,7 +24,9 @@ TRIGGER_SCHEMA = vol.Schema(
 )
 
 
-async def async_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass, config, action, automation_info, *, platform_type="event"
+):
     """Listen for events based on configuration."""
     event_type = config.get(CONF_EVENT_TYPE)
     event_data_schema = (
@@ -44,7 +49,7 @@ async def async_trigger(hass, config, action, automation_info):
 
         hass.async_run_job(
             action(
-                {"trigger": {"platform": "event", "event": event}},
+                {"trigger": {"platform": platform_type, "event": event}},
                 context=event.context,
             )
         )

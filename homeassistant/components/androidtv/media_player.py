@@ -3,6 +3,12 @@ import functools
 import logging
 import voluptuous as vol
 
+from adb_shell.exceptions import (
+    InvalidChecksumError,
+    InvalidCommandError,
+    InvalidResponseError,
+    TcpTimeoutException,
+)
 from androidtv import setup, ha_state_detection_rules_validator
 from androidtv.constants import APPS, KEYS
 
@@ -123,11 +129,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Android TV / Fire TV platform."""
     hass.data.setdefault(ANDROIDTV_DOMAIN, {})
 
-    host = "{0}:{1}".format(config[CONF_HOST], config[CONF_PORT])
+    host = f"{config[CONF_HOST]}:{config[CONF_PORT]}"
 
     if CONF_ADB_SERVER_IP not in config:
-        # Use "python-adb" (Python ADB implementation)
-        adb_log = "using Python ADB implementation "
+        # Use "adb_shell" (Python ADB implementation)
+        adb_log = "using Python ADB implementation " + (
+            f"with adbkey='{config[CONF_ADBKEY]}'"
+            if CONF_ADBKEY in config
+            else "without adbkey authentication"
+        )
         if CONF_ADBKEY in config:
             aftv = setup(
                 host,
@@ -135,7 +145,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 device_class=config[CONF_DEVICE_CLASS],
                 state_detection_rules=config[CONF_STATE_DETECTION_RULES],
             )
-            adb_log += "with adbkey='{0}'".format(config[CONF_ADBKEY])
 
         else:
             aftv = setup(
@@ -143,7 +152,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 device_class=config[CONF_DEVICE_CLASS],
                 state_detection_rules=config[CONF_STATE_DETECTION_RULES],
             )
-            adb_log += "without adbkey authentication"
     else:
         # Use "pure-python-adb" (communicate with ADB server)
         aftv = setup(
@@ -153,9 +161,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             device_class=config[CONF_DEVICE_CLASS],
             state_detection_rules=config[CONF_STATE_DETECTION_RULES],
         )
-        adb_log = "using ADB server at {0}:{1}".format(
-            config[CONF_ADB_SERVER_IP], config[CONF_ADB_SERVER_PORT]
-        )
+        adb_log = f"using ADB server at {config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
 
     if not aftv.available:
         # Determine the name that will be used for the device in the log
@@ -195,7 +201,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             device_name = config[CONF_NAME] if CONF_NAME in config else "Fire TV"
 
         add_entities([device])
-        _LOGGER.debug("Setup %s at %s%s", device_name, host, adb_log)
+        _LOGGER.debug("Setup %s at %s %s", device_name, host, adb_log)
         hass.data[ANDROIDTV_DOMAIN][host] = device
 
     if hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_ADB_COMMAND):
@@ -251,6 +257,7 @@ def adb_decorator(override_available=False):
                     "establishing attempt in the next update. Error: %s",
                     err,
                 )
+                self.aftv.adb.close()
                 self._available = False  # pylint: disable=protected-access
                 return None
 
@@ -270,19 +277,15 @@ class ADBDevice(MediaPlayerDevice):
         self._apps.update(apps)
         self._keys = KEYS
 
+        self._device_properties = self.aftv.device_properties
+        self._unique_id = self._device_properties.get("serialno")
+
         self.turn_on_command = turn_on_command
         self.turn_off_command = turn_off_command
 
         # ADB exceptions to catch
         if not self.aftv.adb_server_ip:
-            # Using "python-adb" (Python ADB implementation)
-            from adb.adb_protocol import (
-                InvalidChecksumError,
-                InvalidCommandError,
-                InvalidResponseError,
-            )
-            from adb.usb_exceptions import TcpTimeoutException
-
+            # Using "adb_shell" (Python ADB implementation)
             self.exceptions = (
                 AttributeError,
                 BrokenPipeError,
@@ -338,6 +341,11 @@ class ADBDevice(MediaPlayerDevice):
         """Return the state of the player."""
         return self._state
 
+    @property
+    def unique_id(self):
+        """Return the device unique id."""
+        return self._unique_id
+
     @adb_decorator()
     def media_play(self):
         """Send play command."""
@@ -384,7 +392,7 @@ class ADBDevice(MediaPlayerDevice):
         """Send an ADB command to an Android TV / Fire TV device."""
         key = self._keys.get(cmd)
         if key:
-            self.aftv.adb_shell("input keyevent {}".format(key))
+            self.aftv.adb_shell(f"input keyevent {key}")
             self._adb_response = None
             self.schedule_update_ha_state()
             return
@@ -412,9 +420,7 @@ class AndroidTVDevice(ADBDevice):
         super().__init__(aftv, name, apps, turn_on_command, turn_off_command)
 
         self._device = None
-        self._device_properties = self.aftv.device_properties
         self._is_volume_muted = None
-        self._unique_id = self._device_properties.get("serialno")
         self._volume_level = None
 
     @adb_decorator(override_available=True)
@@ -425,8 +431,10 @@ class AndroidTVDevice(ADBDevice):
             # Try to connect
             self._available = self.aftv.connect(always_log_errors=False)
 
-            # To be safe, wait until the next update to run ADB commands.
-            return
+            # To be safe, wait until the next update to run ADB commands if
+            # using the Python ADB implementation.
+            if not self.aftv.adb_server_ip:
+                return
 
         # If the ADB connection is not intact, don't update.
         if not self._available:
@@ -437,7 +445,9 @@ class AndroidTVDevice(ADBDevice):
             self.aftv.update()
         )
 
-        self._state = ANDROIDTV_STATES[state]
+        self._state = ANDROIDTV_STATES.get(state)
+        if self._state is None:
+            self._available = False
 
     @property
     def is_volume_muted(self):
@@ -453,11 +463,6 @@ class AndroidTVDevice(ADBDevice):
     def supported_features(self):
         """Flag media player features that are supported."""
         return SUPPORT_ANDROIDTV
-
-    @property
-    def unique_id(self):
-        """Return the device unique id."""
-        return self._unique_id
 
     @property
     def volume_level(self):
@@ -505,8 +510,10 @@ class FireTVDevice(ADBDevice):
             # Try to connect
             self._available = self.aftv.connect(always_log_errors=False)
 
-            # To be safe, wait until the next update to run ADB commands.
-            return
+            # To be safe, wait until the next update to run ADB commands if
+            # using the Python ADB implementation.
+            if not self.aftv.adb_server_ip:
+                return
 
         # If the ADB connection is not intact, don't update.
         if not self._available:
@@ -517,7 +524,9 @@ class FireTVDevice(ADBDevice):
             self._get_sources
         )
 
-        self._state = ANDROIDTV_STATES[state]
+        self._state = ANDROIDTV_STATES.get(state)
+        if self._state is None:
+            self._available = False
 
     @property
     def source(self):

@@ -50,7 +50,7 @@ class FakeEndpoint:
         """Add an input cluster."""
         from zigpy.zcl import Cluster
 
-        cluster = Cluster.from_id(self, cluster_id)
+        cluster = Cluster.from_id(self, cluster_id, is_server=True)
         patch_cluster(cluster)
         self.in_clusters[cluster_id] = cluster
         if hasattr(cluster, "ep_attribute"):
@@ -60,7 +60,7 @@ class FakeEndpoint:
         """Add an output cluster."""
         from zigpy.zcl import Cluster
 
-        cluster = Cluster.from_id(self, cluster_id)
+        cluster = Cluster.from_id(self, cluster_id, is_server=False)
         patch_cluster(cluster)
         self.out_clusters[cluster_id] = cluster
 
@@ -140,7 +140,10 @@ async def async_init_zigpy_device(
     device = make_device(
         in_cluster_ids, out_cluster_ids, device_type, ieee, manufacturer, model
     )
-    await gateway.async_device_initialized(device, is_new_join)
+    if is_new_join:
+        await gateway.async_device_initialized(device)
+    else:
+        await gateway.async_device_restored(device)
     await hass.async_block_till_done()
     return device
 

@@ -7,6 +7,7 @@ from homeassistant.core import callback, DOMAIN as HASS_DOMAIN
 from homeassistant.exceptions import Unauthorized, ServiceNotFound, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_get_all_descriptions
+from homeassistant.helpers.event import async_track_state_change
 
 from . import const, decorators, messages
 
@@ -21,6 +22,7 @@ def async_register_commands(hass, async_reg):
     async_reg(hass, handle_get_services)
     async_reg(hass, handle_get_config)
     async_reg(hass, handle_ping)
+    async_reg(hass, handle_render_template)
 
 
 def pong_message(iden):
@@ -202,3 +204,45 @@ def handle_ping(hass, connection, msg):
     Async friendly.
     """
     connection.send_message(pong_message(msg["id"]))
+
+
+@callback
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "render_template",
+        vol.Required("template"): cv.template,
+        vol.Optional("entity_ids"): cv.entity_ids,
+        vol.Optional("variables"): dict,
+    }
+)
+def handle_render_template(hass, connection, msg):
+    """Handle render_template command.
+
+    Async friendly.
+    """
+    template = msg["template"]
+    template.hass = hass
+
+    variables = msg.get("variables")
+
+    entity_ids = msg.get("entity_ids")
+    if entity_ids is None:
+        entity_ids = template.extract_entities(variables)
+
+    @callback
+    def state_listener(*_):
+        connection.send_message(
+            messages.event_message(
+                msg["id"], {"result": template.async_render(variables)}
+            )
+        )
+
+    if entity_ids and entity_ids != MATCH_ALL:
+        connection.subscriptions[msg["id"]] = async_track_state_change(
+            hass, entity_ids, state_listener
+        )
+    else:
+        connection.subscriptions[msg["id"]] = lambda: None
+
+    connection.send_result(msg["id"])
+    state_listener()

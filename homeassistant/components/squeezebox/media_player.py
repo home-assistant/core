@@ -208,7 +208,7 @@ class LogitechMediaServer:
             if self._username is None
             else aiohttp.BasicAuth(self._username, self._password)
         )
-        url = "http://{}:{}/jsonrpc.js".format(self.host, self.port)
+        url = f"http://{self.host}:{self.port}/jsonrpc.js"
         data = json.dumps(
             {"id": "1", "method": "slim.request", "params": [player, command]}
         )
@@ -246,7 +246,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
     def __init__(self, lms, player_id, name):
         """Initialize the SqueezeBox device."""
-        super(SqueezeBoxDevice, self).__init__()
+        super().__init__()
         self._lms = lms
         self._id = player_id
         self._status = {}
@@ -288,9 +288,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
     async def async_update(self):
         """Retrieve the current state of the player."""
         tags = "adKl"
-        response = await self.async_query(
-            "status", "-", "1", "tags:{tags}".format(tags=tags)
-        )
+        response = await self.async_query("status", "-", "1", f"tags:{tags}")
 
         if response is False:
             return

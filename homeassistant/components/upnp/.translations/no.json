@@ -6,7 +6,7 @@
             "no_devices_discovered": "Ingen UPnP / IGDs oppdaget",
             "no_devices_found": "Ingen UPnP / IGD-enheter funnet p\u00e5 nettverket.",
             "no_sensors_or_port_mapping": "Aktiver minst sensorer eller port mapping",
-            "single_instance_allowed": "Bare en enkelt konfigurasjon av UPnP / IGD er n\u00f8dvendig."
+            "single_instance_allowed": "Bare en konfigurasjon av UPnP / IGD er n\u00f8dvendig."
         },
         "error": {
             "few": "f\u00e5",

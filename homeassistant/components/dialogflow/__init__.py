@@ -17,6 +17,9 @@ SOURCE = "Home Assistant Dialogflow"
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
 
+V1 = 1
+V2 = 2
+
 
 class DialogFlowError(HomeAssistantError):
     """Raised when a DialogFlow error happens."""
@@ -84,23 +87,45 @@ async_remove_entry = config_entry_flow.webhook_async_remove_entry
 
 def dialogflow_error_response(message, error):
     """Return a response saying the error message."""
-    dialogflow_response = DialogflowResponse(message["result"]["parameters"])
+    api_version = get_api_version(message)
+    if api_version is V1:
+        parameters = message["result"]["parameters"]
+    elif api_version is V2:
+        parameters = message["queryResult"]["parameters"]
+    dialogflow_response = DialogflowResponse(parameters, api_version)
     dialogflow_response.add_speech(error)
     return dialogflow_response.as_dict()
 
 
+def get_api_version(message):
+    """Get API version of Dialogflow message."""
+    if message.get("id") is not None:
+        return V1
+    if message.get("responseId") is not None:
+        return V2
+
+
 async def async_handle_message(hass, message):
     """Handle a DialogFlow message."""
-    req = message.get("result")
-    action_incomplete = req["actionIncomplete"]
+    _api_version = get_api_version(message)
+    if _api_version is V1:
+        _LOGGER.warning(
+            "Dialogflow V1 API will be removed on October 23, 2019. Please change your DialogFlow settings to use the V2 api"
+        )
+        req = message.get("result")
+        action_incomplete = req.get("actionIncomplete", True)
+        if action_incomplete:
+            return
 
-    if action_incomplete:
-        return None
+    elif _api_version is V2:
+        req = message.get("queryResult")
+        if req.get("allRequiredParamsPresent", False) is False:
+            return
 
     action = req.get("action", "")
     parameters = req.get("parameters").copy()
     parameters["dialogflow_query"] = message
-    dialogflow_response = DialogflowResponse(parameters)
+    dialogflow_response = DialogflowResponse(parameters, _api_version)
 
     if action == "":
         raise DialogFlowError(
@@ -123,10 +148,11 @@ async def async_handle_message(hass, message):
 class DialogflowResponse:
     """Help generating the response for Dialogflow."""
 
-    def __init__(self, parameters):
+    def __init__(self, parameters, api_version):
         """Initialize the Dialogflow response."""
         self.speech = None
         self.parameters = {}
+        self.api_version = api_version
         # Parameter names replace '.' and '-' for '_'
         for key, value in parameters.items():
             underscored_key = key.replace(".", "_").replace("-", "_")
@@ -143,4 +169,8 @@ class DialogflowResponse:
 
     def as_dict(self):
         """Return response in a Dialogflow valid dictionary."""
-        return {"speech": self.speech, "displayText": self.speech, "source": SOURCE}
+        if self.api_version is V1:
+            return {"speech": self.speech, "displayText": self.speech, "source": SOURCE}
+
+        if self.api_version is V2:
+            return {"fulfillmentText": self.speech, "source": SOURCE}

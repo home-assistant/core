@@ -7,7 +7,7 @@ import logging
 import queue
 import threading
 import time
-from typing import Any, Dict, Optional  # noqa: F401
+from typing import Any, Dict, Optional
 
 import voluptuous as vol
 
@@ -177,12 +177,12 @@ class Recorder(threading.Thread):
         self.hass = hass
         self.keep_days = keep_days
         self.purge_interval = purge_interval
-        self.queue = queue.Queue()  # type: Any
+        self.queue: Any = queue.Queue()
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
         self.async_db_ready = asyncio.Future()
-        self.engine = None  # type: Any
-        self.run_info = None  # type: Any
+        self.engine: Any = None
+        self.run_info: Any = None
 
         self.entity_filter = generate_filter(
             include.get(CONF_DOMAINS, []),
@@ -320,10 +320,10 @@ class Recorder(threading.Thread):
                 purge.purge_old_data(self, event.keep_days, event.repack)
                 self.queue.task_done()
                 continue
-            elif event.event_type == EVENT_TIME_CHANGED:
+            if event.event_type == EVENT_TIME_CHANGED:
                 self.queue.task_done()
                 continue
-            elif event.event_type in self.exclude_t:
+            if event.event_type in self.exclude_t:
                 self.queue.task_done()
                 continue
 

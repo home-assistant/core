@@ -99,7 +99,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Spotify platform."""
     import spotipy.oauth2
 
-    callback_url = "{}{}".format(hass.config.api.base_url, AUTH_CALLBACK_PATH)
+    callback_url = f"{hass.config.api.base_url}{AUTH_CALLBACK_PATH}"
     cache = config.get(CONF_CACHE_PATH, hass.config.path(DEFAULT_CACHE_PATH))
     oauth = spotipy.oauth2.SpotifyOAuth(
         config.get(CONF_CLIENT_ID),

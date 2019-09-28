@@ -1,5 +1,4 @@
 """Alexa capabilities."""
-from datetime import datetime
 import logging
 
 from homeassistant.const import (
@@ -11,10 +10,12 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNLOCKED,
+    STATE_UNKNOWN,
 )
 import homeassistant.components.climate.const as climate
 from homeassistant.components import light, fan, cover
 import homeassistant.util.color as color_util
+import homeassistant.util.dt as dt_util
 
 from .const import (
     API_TEMP_UNITS,
@@ -108,7 +109,7 @@ class AlexaCapibility:
                     "name": prop_name,
                     "namespace": self.name(),
                     "value": prop_value,
-                    "timeOfSample": datetime.now().strftime(DATE_FORMAT),
+                    "timeOfSample": dt_util.utcnow().strftime(DATE_FORMAT),
                     "uncertaintyInMilliseconds": 0,
                 }
 
@@ -443,7 +444,17 @@ class AlexaTemperatureSensor(AlexaCapibility):
         if self.entity.domain == climate.DOMAIN:
             unit = self.hass.config.units.temperature_unit
             temp = self.entity.attributes.get(climate.ATTR_CURRENT_TEMPERATURE)
-        return {"value": float(temp), "scale": API_TEMP_UNITS[unit]}
+
+        if temp in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return None
+
+        try:
+            temp = float(temp)
+        except ValueError:
+            _LOGGER.warning("Invalid temp value %s for %s", temp, self.entity.entity_id)
+            return None
+
+        return {"value": temp, "scale": API_TEMP_UNITS[unit]}
 
 
 class AlexaContactSensor(AlexaCapibility):
@@ -591,4 +602,12 @@ class AlexaThermostatController(AlexaCapibility):
         if temp is None:
             return None
 
-        return {"value": float(temp), "scale": API_TEMP_UNITS[unit]}
+        try:
+            temp = float(temp)
+        except ValueError:
+            _LOGGER.warning(
+                "Invalid temp value %s for %s in %s", temp, name, self.entity.entity_id
+            )
+            return None
+
+        return {"value": temp, "scale": API_TEMP_UNITS[unit]}

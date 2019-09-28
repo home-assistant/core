@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
 
-    url = "http://{}:{}".format(host, port)
+    url = f"http://{host}:{port}"
 
     try:
         add_entities([Concord232Alarm(url, name, code, mode)], True)
@@ -69,7 +69,6 @@ class Concord232Alarm(alarm.AlarmControlPanel):
         self._url = url
         self._alarm = concord232_client.Client(self._url)
         self._alarm.partitions = self._alarm.list_partitions()
-        self._alarm.last_partition_update = datetime.datetime.now()
 
     @property
     def name(self):

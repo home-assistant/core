@@ -1,5 +1,4 @@
 """Support for monitoring the local system."""
-from datetime import datetime
 import logging
 import os
 import socket
@@ -11,6 +10,9 @@ from homeassistant.const import CONF_RESOURCES, STATE_OFF, STATE_ON, CONF_TYPE
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
+
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -190,7 +192,7 @@ class SystemMonitorSensor(Entity):
             counters = psutil.net_io_counters(pernic=True)
             if self.argument in counters:
                 counter = counters[self.argument][IO_COUNTER[self.type]]
-                now = datetime.now()
+                now = dt_util.utcnow()
                 if self._last_value and self._last_value < counter:
                     self._state = round(
                         (counter - self._last_value)

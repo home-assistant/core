@@ -3,7 +3,7 @@
   "name": "Nissan leaf",
   "documentation": "https://www.home-assistant.io/components/nissan_leaf",
   "requirements": [
-    "pycarwings2==2.8"
+    "pycarwings2==2.9"
   ],
   "dependencies": [],
   "codeowners": [

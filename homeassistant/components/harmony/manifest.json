@@ -3,7 +3,7 @@
   "name": "Harmony",
   "documentation": "https://www.home-assistant.io/components/harmony",
   "requirements": [
-    "aioharmony==0.1.11"
+    "aioharmony==0.1.13"
   ],
   "dependencies": [],
   "codeowners": [

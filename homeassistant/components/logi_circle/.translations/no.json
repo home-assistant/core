@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Du kan bare konfigurere en enkelt Logi Circle konto.",
+            "already_setup": "Du kan bare konfigurere en Logi Circle konto.",
             "external_error": "Det oppstod et unntak fra en annen flow.",
             "external_setup": "Logi Circle er vellykket konfigurert fra en annen flow.",
             "no_flows": "Du m\u00e5 konfigurere Logi Circle f\u00f8r du kan autentisere med den. [Vennligst les instruksjonene](https://www.home-assistant.io/components/logi_circle/)."
@@ -12,7 +12,7 @@
         "error": {
             "auth_error": "API-autorisasjonen mislyktes.",
             "auth_timeout": "Autorisasjon ble tidsavbrutt da du ba om token.",
-            "follow_link": "Vennligst f\u00f8lg lenken og godkjen f\u00f8r du trykker send."
+            "follow_link": "Vennligst f\u00f8lg lenken og godkjenn f\u00f8r du trykker send."
         },
         "step": {
             "auth": {

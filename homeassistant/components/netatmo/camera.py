@@ -69,7 +69,7 @@ class NetatmoCamera(Camera):
 
     def __init__(self, data, camera_name, home, camera_type, verify_ssl, quality):
         """Set up for access to the Netatmo camera images."""
-        super(NetatmoCamera, self).__init__()
+        super().__init__()
         self._data = data
         self._camera_name = camera_name
         self._verify_ssl = verify_ssl
@@ -88,11 +88,11 @@ class NetatmoCamera(Camera):
         try:
             if self._localurl:
                 response = requests.get(
-                    "{0}/live/snapshot_720.jpg".format(self._localurl), timeout=10
+                    f"{self._localurl}/live/snapshot_720.jpg", timeout=10
                 )
             elif self._vpnurl:
                 response = requests.get(
-                    "{0}/live/snapshot_720.jpg".format(self._vpnurl),
+                    f"{self._vpnurl}/live/snapshot_720.jpg",
                     timeout=10,
                     verify=self._verify_ssl,
                 )

@@ -209,6 +209,7 @@ class KNXClimate(ClimateDevice):
             await self.async_update_ha_state()
 
         self.device.register_device_updated_cb(after_update_callback)
+        self.device.mode.register_device_updated_cb(after_update_callback)
 
     @property
     def name(self) -> str:

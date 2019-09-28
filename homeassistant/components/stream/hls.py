@@ -64,10 +64,7 @@ class M3U8Renderer:
     @staticmethod
     def render_preamble(track):
         """Render preamble."""
-        return [
-            "#EXT-X-VERSION:3",
-            "#EXT-X-TARGETDURATION:{}".format(track.target_duration),
-        ]
+        return ["#EXT-X-VERSION:3", f"#EXT-X-TARGETDURATION:{track.target_duration}"]
 
     @staticmethod
     def render_playlist(track, start_time):
@@ -84,7 +81,7 @@ class M3U8Renderer:
             playlist.extend(
                 [
                     "#EXTINF:{:.04f},".format(float(segment.duration)),
-                    "./segment/{}.ts".format(segment.sequence),
+                    f"./segment/{segment.sequence}.ts",
                 ]
             )
 

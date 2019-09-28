@@ -28,7 +28,7 @@ ALL_IMAGES = [
     "odroid-c2",
     "odroid-xu",
 ]
-ALL_SOURCES = ["local", "pypi", "hassio", "docker"]
+ALL_SOURCES = ["local", "pypi", "hassio", "docker", "haio"]
 
 CONF_BETA = "beta"
 CONF_IMAGE = "image"
@@ -54,7 +54,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Version sensor platform."""
-    from pyhaversion import LocalVersion, DockerVersion, HassioVersion, PyPiVersion
+    from pyhaversion import (
+        LocalVersion,
+        DockerVersion,
+        HassioVersion,
+        PyPiVersion,
+        HaIoVersion,
+    )
 
     beta = config.get(CONF_BETA)
     image = config.get(CONF_IMAGE)
@@ -74,6 +80,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         haversion = VersionData(HassioVersion(hass.loop, session, branch, image))
     elif source == "docker":
         haversion = VersionData(DockerVersion(hass.loop, session, branch, image))
+    elif source == "haio":
+        haversion = VersionData(HaIoVersion(hass.loop, session))
     else:
         haversion = VersionData(LocalVersion(hass.loop, session))
 

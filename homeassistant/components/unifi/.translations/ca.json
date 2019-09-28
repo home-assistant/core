@@ -22,5 +22,23 @@
             }
         },
         "title": "Controlador UniFi"
+    },
+    "options": {
+        "step": {
+            "device_tracker": {
+                "data": {
+                    "detection_time": "Temps (en segons) des de s'ha vist per \u00faltima vegada fins que es considera a fora",
+                    "track_clients": "Segueix clients de la xarxa",
+                    "track_devices": "Segueix dispositius de la xarxa (dispositius Ubiquiti)",
+                    "track_wired_clients": "Inclou clients de xarxa per cable"
+                }
+            },
+            "init": {
+                "data": {
+                    "one": "un",
+                    "other": "altre"
+                }
+            }
+        }
     }
 }

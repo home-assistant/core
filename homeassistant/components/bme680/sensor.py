@@ -171,7 +171,7 @@ def _setup_bme680(config):
             sensor.select_gas_heater_profile(0)
         else:
             sensor.set_gas_status(bme680.DISABLE_GAS_MEAS)
-    except (RuntimeError, IOError):
+    except (RuntimeError, OSError):
         _LOGGER.error("BME680 sensor not detected at 0x%02x", i2c_address)
         return None
 
@@ -331,7 +331,7 @@ class BME680Sensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.client_name, self._name)
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):

@@ -34,7 +34,7 @@ class AsyncHandler:
         """Initialize async logging handler wrapper."""
         self.handler = handler
         self.loop = loop
-        self._queue = asyncio.Queue(loop=loop)  # type: asyncio.Queue
+        self._queue: asyncio.Queue = asyncio.Queue(loop=loop)
         self._thread = threading.Thread(target=self._process)
 
         # Delegate from handler
@@ -130,7 +130,7 @@ def catch_log_exception(
     """Decorate a callback to catch and log exceptions."""
 
     def log_exception(*args: Any) -> None:
-        module_name = inspect.getmodule(inspect.trace()[1][0]).__name__
+        module_name = inspect.getmodule(inspect.trace()[1][0]).__name__  # type: ignore
         # Do not print the wrapper in the traceback
         frames = len(inspect.trace()) - 1
         exc_msg = traceback.format_exc(-frames)
@@ -178,7 +178,9 @@ def catch_log_coro_exception(
         try:
             return await target
         except Exception:  # pylint: disable=broad-except
-            module_name = inspect.getmodule(inspect.trace()[1][0]).__name__
+            module_name = inspect.getmodule(  # type: ignore
+                inspect.trace()[1][0]
+            ).__name__
             # Do not print the wrapper in the traceback
             frames = len(inspect.trace()) - 1
             exc_msg = traceback.format_exc(-frames)
