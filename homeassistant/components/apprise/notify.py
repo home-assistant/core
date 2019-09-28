@@ -52,10 +52,10 @@ def get_service(hass, config, discovery_info=None):
 
     loaded = len(a_obj)
     if not loaded:
-        _LOGGER.error("No Apprise services were loaded.")
+        _LOGGER.error("No Apprise services were loaded")
         return None
 
-    _LOGGER.info("Loaded %d Apprise service(s).", loaded)
+    _LOGGER.debug("Loaded %d Apprise service(s).", loaded)
     return AppriseNotificationService(a_obj)
 
 
