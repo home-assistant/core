@@ -36,7 +36,7 @@ async def async_setup(hass, hass_config):
     hostname = credentials.pop(CONF_HOST)
 
     client = incomfort_data["client"] = InComfortGateway(
-        hostname, **credentials, session=async_get_clientsession(hass)
+        hostname, **credentials, session=async_get_clientsession(hass), fake_room=True
     )
 
     try:
