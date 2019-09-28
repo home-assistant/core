@@ -1,4 +1,5 @@
 """Support for Neato botvac connected vacuum cleaners."""
+import asyncio
 import logging
 from datetime import timedelta
 from requests.exceptions import HTTPError, ConnectionError as ConnError
@@ -104,10 +105,11 @@ async def async_unload_entry(hass, entry):
     try:
         hass.data.pop(NEATO_LOGIN)
 
-        for component in ("camera", "vacuum", "switch"):
-            hass.async_add_job(
-                hass.config_entries.async_forward_entry_unload(entry, component)
-            )
+        await asyncio.gather(
+            hass.config_entries.async_forward_entry_unload(entry, "camera"),
+            hass.config_entries.async_forward_entry_unload(entry, "vacuum"),
+            hass.config_entries.async_forward_entry_unload(entry, "switch"),
+        )
 
         return True
     except KeyError:
