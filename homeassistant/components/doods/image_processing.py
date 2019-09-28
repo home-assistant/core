@@ -7,12 +7,12 @@ import voluptuous as vol
 from PIL import Image, ImageDraw
 from pydoods import PyDOODS
 
+from homeassistant.const import CONF_TIMEOUT
 from homeassistant.components.image_processing import (
     CONF_CONFIDENCE,
     CONF_ENTITY_ID,
     CONF_NAME,
     CONF_SOURCE,
-    CONF_TIMEOUT,
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
     draw_box,
