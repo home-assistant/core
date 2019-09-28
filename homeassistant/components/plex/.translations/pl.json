@@ -29,5 +29,16 @@
             }
         },
         "title": "Plex"
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "show_all_controls": "Poka\u017c wszystkie elementy steruj\u0105ce",
+                    "use_episode_art": "U\u017cyj grafiki episodu"
+                },
+                "description": "Opcje dla odtwarzaczy multimedialnych Plex"
+            }
+        }
     }
 }
