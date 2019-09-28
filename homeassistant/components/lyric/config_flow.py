@@ -109,8 +109,7 @@ class LyricAuthCallbackView(HomeAssistantView):
     name = AUTH_CALLBACK_NAME
     url = AUTH_CALLBACK_PATH
 
-    @staticmethod
-    async def get(request):
+    async def get(self, request):
         """Receive authorization code."""
         from aiohttp import web_response
 
