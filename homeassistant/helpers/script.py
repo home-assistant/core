@@ -4,7 +4,7 @@ import logging
 from contextlib import suppress
 from datetime import datetime
 from itertools import islice
-from typing import Optional, Sequence, Callable, Dict, List, Set, Tuple
+from typing import Optional, Sequence, Callable, Dict, List, Set, Tuple, Any
 
 import voluptuous as vol
 
@@ -32,8 +32,7 @@ import homeassistant.util.dt as date_util
 from homeassistant.util.async_ import run_coroutine_threadsafe, run_callback_threadsafe
 
 
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
-# mypy: no-check-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,9 +100,9 @@ class Script:
     def __init__(
         self,
         hass: HomeAssistant,
-        sequence,
+        sequence: Sequence[Dict[str, Any]],
         name: Optional[str] = None,
-        change_listener=None,
+        change_listener: Optional[Callable[..., Any]] = None,
     ) -> None:
         """Initialize the script."""
         self.hass = hass
@@ -337,7 +336,7 @@ class Script:
         self.last_action = action.get(CONF_ALIAS, "device automation")
         self._log("Executing step %s" % self.last_action)
         integration = await async_get_integration(self.hass, action[CONF_DOMAIN])
-        platform = integration.get_platform("device_automation")
+        platform = integration.get_platform("device_action")
         await platform.async_call_action_from_config(
             self.hass, action, variables, context
         )

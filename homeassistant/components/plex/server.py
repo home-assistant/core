@@ -1,27 +1,31 @@
 """Shared class to maintain Plex server instances."""
-import logging
-
 import plexapi.myplex
 import plexapi.server
 from requests import Session
 
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 
-from .const import CONF_SERVER, DEFAULT_VERIFY_SSL
-
-_LOGGER = logging.getLogger(__package__)
+from .const import (
+    CONF_SERVER,
+    CONF_SHOW_ALL_CONTROLS,
+    CONF_USE_EPISODE_ART,
+    DEFAULT_VERIFY_SSL,
+)
+from .errors import NoServersFound, ServerNotSpecified
 
 
 class PlexServer:
     """Manages a single Plex server connection."""
 
-    def __init__(self, server_config):
+    def __init__(self, server_config, options=None):
         """Initialize a Plex server instance."""
         self._plex_server = None
         self._url = server_config.get(CONF_URL)
         self._token = server_config.get(CONF_TOKEN)
         self._server_name = server_config.get(CONF_SERVER)
         self._verify_ssl = server_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
+        self.options = options
 
     def connect(self):
         """Connect to a Plex server directly, obtaining direct URL if necessary."""
@@ -29,8 +33,16 @@ class PlexServer:
         def _set_missing_url():
             account = plexapi.myplex.MyPlexAccount(token=self._token)
             available_servers = [
-                x.name for x in account.resources() if "server" in x.provides
+                (x.name, x.clientIdentifier)
+                for x in account.resources()
+                if "server" in x.provides
             ]
+
+            if not available_servers:
+                raise NoServersFound
+            if not self._server_name and len(available_servers) > 1:
+                raise ServerNotSpecified(available_servers)
+
             server_choice = (
                 self._server_name if self._server_name else available_servers[0]
             )
@@ -47,7 +59,6 @@ class PlexServer:
             self._plex_server = plexapi.server.PlexServer(
                 self._url, self._token, session
             )
-            _LOGGER.debug("Connected to: %s (%s)", self.friendly_name, self.url_in_use)
 
         if self._token and not self._url:
             _set_missing_url()
@@ -76,3 +87,13 @@ class PlexServer:
     def url_in_use(self):
         """Return URL used for connected Plex server."""
         return self._plex_server._baseurl  # pylint: disable=W0212
+
+    @property
+    def use_episode_art(self):
+        """Return use_episode_art option."""
+        return self.options[MP_DOMAIN][CONF_USE_EPISODE_ART]
+
+    @property
+    def show_all_controls(self):
+        """Return show_all_controls option."""
+        return self.options[MP_DOMAIN][CONF_SHOW_ALL_CONTROLS]

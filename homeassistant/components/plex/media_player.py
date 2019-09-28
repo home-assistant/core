@@ -33,31 +33,43 @@ from homeassistant.helpers.event import track_time_interval
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    CONF_USE_EPISODE_ART,
-    CONF_SHOW_ALL_CONTROLS,
+    CONF_SERVER_IDENTIFIER,
     DOMAIN as PLEX_DOMAIN,
     NAME_FORMAT,
-    PLEX_MEDIA_PLAYER_OPTIONS,
+    REFRESH_LISTENERS,
     SERVERS,
 )
 
-SERVER_SETUP = "server_setup"
-
-_CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities_callback, discovery_info=None):
-    """Set up the Plex platform."""
-    if discovery_info is None:
-        return
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the Plex media_player platform.
 
-    plexserver = list(hass.data[PLEX_DOMAIN][SERVERS].values())[0]
-    config = hass.data[PLEX_MEDIA_PLAYER_OPTIONS]
+    Deprecated.
+    """
+    pass
 
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Plex media_player from a config entry."""
+
+    def add_entities(entities, update_before_add=False):
+        """Sync version of async add entities."""
+        hass.add_job(async_add_entities, entities, update_before_add)
+
+    hass.async_add_executor_job(_setup_platform, hass, config_entry, add_entities)
+
+
+def _setup_platform(hass, config_entry, add_entities_callback):
+    """Set up the Plex media_player platform."""
+    server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
+    plexserver = hass.data[PLEX_DOMAIN][SERVERS][server_id]
     plex_clients = {}
     plex_sessions = {}
-    track_time_interval(hass, lambda now: update_devices(), timedelta(seconds=10))
+    hass.data[PLEX_DOMAIN][REFRESH_LISTENERS][server_id] = track_time_interval(
+        hass, lambda now: update_devices(), timedelta(seconds=10)
+    )
 
     def update_devices():
         """Update the devices objects."""
@@ -85,7 +97,7 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
 
             if device.machineIdentifier not in plex_clients:
                 new_client = PlexClient(
-                    config, device, None, plex_sessions, update_devices
+                    plexserver, device, None, plex_sessions, update_devices
                 )
                 plex_clients[device.machineIdentifier] = new_client
                 _LOGGER.debug("New device: %s", device.machineIdentifier)
@@ -124,7 +136,7 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
                 and machine_identifier is not None
             ):
                 new_client = PlexClient(
-                    config, player, session, plex_sessions, update_devices
+                    plexserver, player, session, plex_sessions, update_devices
                 )
                 plex_clients[machine_identifier] = new_client
                 _LOGGER.debug("New session: %s", machine_identifier)
@@ -153,7 +165,7 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
 class PlexClient(MediaPlayerDevice):
     """Representation of a Plex device."""
 
-    def __init__(self, config, device, session, plex_sessions, update_devices):
+    def __init__(self, plex_server, device, session, plex_sessions, update_devices):
         """Initialize the Plex device."""
         self._app_name = ""
         self._device = None
@@ -174,7 +186,7 @@ class PlexClient(MediaPlayerDevice):
         self._state = STATE_IDLE
         self._volume_level = 1  # since we can't retrieve remotely
         self._volume_muted = False  # since we can't retrieve remotely
-        self.config = config
+        self.plex_server = plex_server
         self.plex_sessions = plex_sessions
         self.update_devices = update_devices
         # General
@@ -300,8 +312,9 @@ class PlexClient(MediaPlayerDevice):
 
     def _set_media_image(self):
         thumb_url = self._session.thumbUrl
-        if self.media_content_type is MEDIA_TYPE_TVSHOW and not self.config.get(
-            CONF_USE_EPISODE_ART
+        if (
+            self.media_content_type is MEDIA_TYPE_TVSHOW
+            and not self.plex_server.use_episode_art
         ):
             thumb_url = self._session.url(self._session.grandparentThumb)
 
@@ -534,7 +547,7 @@ class PlexClient(MediaPlayerDevice):
             return 0
 
         # force show all controls
-        if self.config.get(CONF_SHOW_ALL_CONTROLS):
+        if self.plex_server.show_all_controls:
             return (
                 SUPPORT_PAUSE
                 | SUPPORT_PREVIOUS_TRACK
