@@ -81,7 +81,7 @@ class InComfortClimate(ClimateDevice):
     @property
     def target_temperature(self) -> Optional[float]:
         """Return the temperature we try to reach."""
-        return self._room.override
+        return self._room.setpoint
 
     @property
     def supported_features(self) -> int:
