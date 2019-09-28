@@ -100,7 +100,7 @@ TwitterAPI==2.5.9
 WazeRouteCalculator==0.10
 
 # homeassistant.components.yessssms
-YesssSMS==0.2.3
+YesssSMS==0.4.1
 
 # homeassistant.components.abode
 abodepy==0.15.0
@@ -110,6 +110,9 @@ adafruit-blinka==1.2.1
 
 # homeassistant.components.mcp23017
 adafruit-circuitpython-mcp230xx==1.1.2
+
+# homeassistant.components.androidtv
+adb-shell==0.0.2
 
 # homeassistant.components.adguard
 adguardhome==0.2.1
@@ -197,7 +200,7 @@ ambiclimate==0.2.1
 amcrest==1.5.3
 
 # homeassistant.components.androidtv
-androidtv==0.0.27
+androidtv==0.0.28
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -1369,7 +1372,7 @@ pyotgw==0.4b4
 pyotp==2.3.0
 
 # homeassistant.components.owlet
-pyowlet==1.0.2
+pyowlet==1.0.3
 
 # homeassistant.components.openweathermap
 pyowm==2.10.0
@@ -1582,7 +1585,7 @@ python_awair==0.0.4
 python_opendata_transport==0.1.4
 
 # homeassistant.components.egardia
-pythonegardia==1.0.39
+pythonegardia==1.0.40
 
 # homeassistant.components.tile
 pytile==2.0.6

@@ -65,7 +65,7 @@
             "remote_button_quintuple_press": "\" {subtype} \" - knappen femdobbelt klikket",
             "remote_button_rotated": "Knappen roterte \" {subtype} \"",
             "remote_button_short_press": "\" {subtype} \" -knappen ble trykket",
-            "remote_button_short_release": "\" {subtype} \" -knappen ble utgitt",
+            "remote_button_short_release": "\"{subtype}\"-knappen sluppet",
             "remote_button_triple_press": "\" {subtype} \"-knappen trippel klikket",
             "remote_gyro_activated": "Enhet er ristet"
         }

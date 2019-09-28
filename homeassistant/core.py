@@ -144,8 +144,8 @@ def async_loop_exception_handler(_: Any, context: Dict) -> None:
     if exception:
         kwargs["exc_info"] = (type(exception), exception, exception.__traceback__)
 
-    _LOGGER.error(  # type: ignore
-        "Error doing job: %s", context["message"], **kwargs
+    _LOGGER.error(
+        "Error doing job: %s", context["message"], **kwargs  # type: ignore
     )
 
 

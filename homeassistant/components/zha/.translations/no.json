@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Kun \u00e9n enkelt konfigurasjon av ZHA er tillatt."
+            "single_instance_allowed": "Kun en konfigurasjon av ZHA er tillatt."
         },
         "error": {
             "cannot_connect": "Kan ikke koble til ZHA-enhet."
@@ -44,11 +44,11 @@
         },
         "trigger_type": {
             "device_dropped": "Enheten ble brutt",
-            "device_flipped": "Enheten snudd \"{undertype}\"",
-            "device_knocked": "Enheten sl\u00e5tt \"{undertype}\"",
-            "device_rotated": "Enheten roterte \"{under type}\"",
+            "device_flipped": "Enheten snudd \"{subtype}\"",
+            "device_knocked": "Enheten sl\u00e5tt \"{subtype}\"",
+            "device_rotated": "Enheten roterte \"{subtype}\"",
             "device_shaken": "Enhet er ristet",
-            "device_slid": "Enheten skled \"{undertype}\"",
+            "device_slid": "Enheten skled \"{subtype}\"",
             "device_tilted": "Enhet vippet",
             "remote_button_double_press": "\" {subtype} \"-knappen ble dobbeltklikket",
             "remote_button_long_press": "\" {subtype} \" - knappen ble kontinuerlig trykket",
@@ -57,7 +57,7 @@
             "remote_button_quintuple_press": "\" {subtype} \" - knappen ble femdobbelt klikket",
             "remote_button_short_press": "\"{subtype}\"-knappen ble trykket",
             "remote_button_short_release": "\"{subtype}\"-knappen sluppet",
-            "remote_button_triple_press": "\" {subtype} \"-knappen ble rippel klikket"
+            "remote_button_triple_press": "\"{subtype}\"-knappen ble trippel klikket"
         }
     }
 }

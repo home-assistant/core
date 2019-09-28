@@ -41,5 +41,16 @@
             }
         },
         "title": "Plex"
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "show_all_controls": "Vis alle kontroller",
+                    "use_episode_art": "Bruk episode bilde"
+                },
+                "description": "Alternativer for Plex Media Players"
+            }
+        }
     }
 }

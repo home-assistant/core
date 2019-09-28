@@ -90,7 +90,7 @@ def has_at_least_one_key(*keys: str) -> Callable:
         for k in obj.keys():
             if k in keys:
                 return obj
-        raise vol.Invalid("must contain one of {}.".format(", ".join(keys)))
+        raise vol.Invalid("must contain at least one of {}.".format(", ".join(keys)))
 
     return validate
 
@@ -598,8 +598,7 @@ def deprecated(
     else:
         # Unclear when it is None, but it happens, so let's guard.
         # https://github.com/home-assistant/home-assistant/issues/24982
-        # type ignore/unreachable: https://github.com/python/typeshed/pull/3137
-        module_name = __name__  # type: ignore
+        module_name = __name__
 
     if replacement_key and invalidation_version:
         warning = (
