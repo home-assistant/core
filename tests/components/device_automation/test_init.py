@@ -211,6 +211,29 @@ async def test_websocket_get_trigger_capabilities(
         id = id + 1
 
 
+async def test_websocket_get_bad_trigger_capabilities(
+    hass, hass_ws_client, device_reg, entity_reg
+):
+    """Test we get the expected trigger capabilities for a light through websocket."""
+    await async_setup_component(hass, "device_automation", {})
+    expected_capabilities = {}
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "device_automation/trigger/capabilities",
+            "trigger": {"domain": "beer"},
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["id"] == 1
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    capabilities = msg["result"]
+    assert capabilities == expected_capabilities
+
+
 async def test_automation_with_non_existing_integration(hass, caplog):
     """Test device automation with non existing integration."""
     assert await async_setup_component(
