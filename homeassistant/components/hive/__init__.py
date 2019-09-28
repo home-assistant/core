@@ -86,6 +86,7 @@ class HiveSession:
 
 def setup(hass, config):
     """Set up the Hive Component."""
+
     def heating_boost(service):
         """Handle the service call."""
         node_id = HiveSession.entity_lookup.get(service.data[ATTR_ENTITY_ID])

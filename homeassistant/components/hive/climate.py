@@ -10,7 +10,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
-    CURRENT_HVAC_HEAT
+    CURRENT_HVAC_HEAT,
 )
 
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -31,9 +31,9 @@ HASS_TO_HIVE_STATE = {
 }
 
 HIVE_TO_HASS_HVAC_ACTION = {
-    'UNKNOWN': CURRENT_HVAC_OFF,
+    "UNKNOWN": CURRENT_HVAC_OFF,
     False: CURRENT_HVAC_IDLE,
-    True: CURRENT_HVAC_HEAT
+    True: CURRENT_HVAC_HEAT,
 }
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
@@ -83,7 +83,7 @@ class HiveClimateEntity(HiveEntity, ClimateDevice):
         if self.device_type == "Heating":
             friendly_name = "Heating"
             if self.node_name is not None:
-                friendly_name = '{} {}'.format(self.node_name, friendly_name)
+                friendly_name = "{} {}".format(self.node_name, friendly_name)
         elif self.device_type == "TRV":
             friendly_name = self.node_name
 
@@ -113,8 +113,9 @@ class HiveClimateEntity(HiveEntity, ClimateDevice):
     @property
     def hvac_action(self):
         """Return current HVAC action."""
-        return HIVE_TO_HASS_HVAC_ACTION[self.session.heating.operational_status(self.node_id,
-                                                                                self.device_type)]
+        return HIVE_TO_HASS_HVAC_ACTION[
+            self.session.heating.operational_status(self.node_id, self.device_type)
+        ]
 
     @property
     def temperature_unit(self):
