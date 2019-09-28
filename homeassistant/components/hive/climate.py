@@ -115,7 +115,7 @@ class HiveClimateEntity(HiveEntity, ClimateDevice):
         """Return current HVAC action."""
         return HIVE_TO_HASS_HVAC_ACTION[self.session.heating.operational_status(self.node_id,
                                                                                 self.device_type)]
-    
+
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
