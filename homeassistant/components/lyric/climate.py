@@ -246,7 +246,9 @@ class LyricThermostat(LyricDeviceEntity, ClimateDevice):
         else:
             temp = kwargs.get(ATTR_TEMPERATURE)
         _LOGGER.debug("Set temperature: %s", temp)
-        await self.hass.async_add_executor_job(setattr, self.device, "temperatureSetpoint", temp)
+        await self.hass.async_add_executor_job(
+            setattr, self.device, "temperatureSetpoint", temp
+        )
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set hvac mode."""
