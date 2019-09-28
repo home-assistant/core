@@ -123,7 +123,7 @@ async def async_setup_entry(
                 )
             )
 
-    async_add_entities(devices, True)
+    async_add_entities(devices)
 
 
 class LyricSensor(LyricDeviceEntity):
