@@ -14,7 +14,6 @@ from homeassistant.components.image_processing import (
     CONF_SOURCE,
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
-    draw_box,
 )
 from homeassistant.core import split_entity_id
 from homeassistant.helpers import template
@@ -31,6 +30,7 @@ CONF_AUTH_KEY = "auth_key"
 CONF_DETECTOR = "detector"
 CONF_LABELS = "labels"
 CONF_AREA = "area"
+CONF_CONTAINS = "contains"
 CONF_TOP = "top"
 CONF_BOTTOM = "bottom"
 CONF_RIGHT = "right"
@@ -43,6 +43,7 @@ AREA_SCHEMA = vol.Schema(
         vol.Optional(CONF_LEFT, default=0): cv.small_float,
         vol.Optional(CONF_RIGHT, default=1): cv.small_float,
         vol.Optional(CONF_TOP, default=0): cv.small_float,
+        vol.Optional(CONF_CONTAINS, default=True): cv.boolean,
     }
 )
 
@@ -50,7 +51,7 @@ LABEL_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_AREA): AREA_SCHEMA,
-        vol.Optional(CONF_CONFIDENCE, default=0.0): vol.Range(min=0, max=100),
+        vol.Optional(CONF_CONFIDENCE): vol.Range(min=0, max=100),
     }
 )
 
@@ -67,6 +68,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_AREA): AREA_SCHEMA,
     }
 )
+
+
+def draw_box(draw, box, img_width, img_height, text="", color=(255, 255, 0)):
+    """Draw bounding box on image."""
+    ymin, xmin, ymax, xmax = box
+    (left, right, top, bottom) = (
+        xmin * img_width,
+        xmax * img_width,
+        ymin * img_height,
+        ymax * img_height,
+    )
+    draw.line(
+        [(left, top), (left, bottom), (right, bottom), (right, top), (left, top)],
+        width=5,
+        fill=color,
+    )
+    if text:
+        draw.text((left, abs(top - 15)), text, fill=color)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -140,6 +159,7 @@ class Doods(ImageProcessingEntity):
         # handle labels and specific detection areas
         labels = config[CONF_LABELS]
         self._label_areas = {}
+        self._label_contains = {}
         for label in labels:
             if isinstance(label, dict):
                 label_name = label[CONF_NAME]
@@ -147,14 +167,17 @@ class Doods(ImageProcessingEntity):
                     _LOGGER.warning("Detector does not support label %s", label_name)
                     continue
 
-                # Label Confidence
-                label_confidence = label[CONF_CONFIDENCE]
+                # If label confidence is not specified, use global confidence
+                label_confidence = label.get(CONF_CONFIDENCE)
+                if not label_confidence:
+                    label_confidence = confidence
                 if label_name not in dconfig or dconfig[label_name] > label_confidence:
                     dconfig[label_name] = label_confidence
 
                 # Label area
                 label_area = label.get(CONF_AREA)
                 self._label_areas[label_name] = [0, 0, 1, 1]
+                self._label_contains[label_name] = True
                 if label_area:
                     self._label_areas[label_name] = [
                         label_area[CONF_TOP],
@@ -162,6 +185,7 @@ class Doods(ImageProcessingEntity):
                         label_area[CONF_BOTTOM],
                         label_area[CONF_RIGHT],
                     ]
+                    self._label_contains[label_name] = label_area[CONF_CONTAINS]
             else:
                 if label not in detector["labels"] and label != "*":
                     _LOGGER.warning("Detector does not support label %s", label)
@@ -175,6 +199,7 @@ class Doods(ImageProcessingEntity):
 
         # Handle global detection area
         self._area = [0, 0, 1, 1]
+        self._contains = True
         area_config = config.get(CONF_AREA)
         if area_config:
             self._area = [
@@ -183,6 +208,7 @@ class Doods(ImageProcessingEntity):
                 area_config[CONF_BOTTOM],
                 area_config[CONF_RIGHT],
             ]
+            self._contains = area_config[CONF_CONTAINS]
 
         template.attach(hass, self._file_out)
 
@@ -308,22 +334,41 @@ class Doods(ImageProcessingEntity):
                 continue
 
             # Exclude matches outside global area definition
-            if (
-                boxes[0] < self._area[0]
-                or boxes[1] < self._area[1]
-                or boxes[2] > self._area[2]
-                or boxes[3] > self._area[3]
-            ):
-                continue
+            if self._contains:
+                if (
+                    boxes[0] < self._area[0]
+                    or boxes[1] < self._area[1]
+                    or boxes[2] > self._area[2]
+                    or boxes[3] > self._area[3]
+                ):
+                    continue
+            else:
+                if (
+                    boxes[0] > self._area[2]
+                    or boxes[1] > self._area[3]
+                    or boxes[2] < self._area[0]
+                    or boxes[3] < self._area[1]
+                ):
+                    continue
 
             # Exclude matches outside label specific area definition
-            if self._label_areas and (
-                boxes[0] < self._label_areas[label][0]
-                or boxes[1] < self._label_areas[label][1]
-                or boxes[2] > self._label_areas[label][2]
-                or boxes[3] > self._label_areas[label][3]
-            ):
-                continue
+            if self._label_areas.get(label):
+                if self._label_contains[label]:
+                    if (
+                        boxes[0] < self._label_areas[label][0]
+                        or boxes[1] < self._label_areas[label][1]
+                        or boxes[2] > self._label_areas[label][2]
+                        or boxes[3] > self._label_areas[label][3]
+                    ):
+                        continue
+                else:
+                    if (
+                        boxes[0] > self._label_areas[label][2]
+                        or boxes[1] > self._label_areas[label][3]
+                        or boxes[2] < self._label_areas[label][0]
+                        or boxes[3] < self._label_areas[label][1]
+                    ):
+                        continue
 
             if label not in matches:
                 matches[label] = []
