@@ -14,7 +14,7 @@ boost_heating:
         description: Set the target temperature for the boost period.,
         example: "20.5",
       }
-boost_hotwater:
+boost_hot_water:
   description:
     "Set the boost mode ON or OFF defining the period of time for the boost."
   fields:
