@@ -8,7 +8,6 @@ from homeassistant.components.climate.const import (
     PRESET_NONE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    PRESET_NONE,
     CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
     CURRENT_HVAC_HEAT
@@ -61,7 +60,7 @@ class HiveClimateEntity(HiveEntity, ClimateDevice):
         """Initialize the Climate device."""
         super().__init__(hive_session, hive_device)
         if self.device_type == "Heating":
-            self.thermostat_node_id = hivedevice["Thermostat_NodeID"]
+            self.thermostat_node_id = hive_device["Thermostat_NodeID"]
 
     @property
     def unique_id(self):
@@ -115,7 +114,8 @@ class HiveClimateEntity(HiveEntity, ClimateDevice):
     def hvac_action(self):
         """Return current HVAC action."""
 
-        return HIVE_TO_HASS_HVAC_ACTION[self.session.heating.operational_status(self.node_id,self.device_type)]
+        return HIVE_TO_HASS_HVAC_ACTION[self.session.heating.operational_status(self.node_id, 
+                                                                                self.device_type)]
 
     @property
     def temperature_unit(self):
