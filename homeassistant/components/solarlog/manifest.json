@@ -3,6 +3,6 @@
   "name": "Solar-Log",
   "documentation": "https://www.home-assistant.io/components/solarlog",
   "dependencies": [],
-  "codeowners": ["Ernst79"],
+  "codeowners": ["@Ernst79"],
   "requirements": ["sunwatcher==0.2.1"]
 }
