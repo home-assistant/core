@@ -410,6 +410,9 @@ srpenergy==1.0.6
 # homeassistant.components.statsd
 statsd==3.2.1
 
+# homeassistant.components.solarlog
+sunwatcher==0.2.1
+
 # homeassistant.components.toon
 toonapilib==3.2.4
 

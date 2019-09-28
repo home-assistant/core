@@ -593,6 +593,7 @@ omit =
     homeassistant/components/solaredge/__init__.py
     homeassistant/components/solaredge/sensor.py
     homeassistant/components/solaredge_local/sensor.py
+    homeassistant/components/solarlog/sensor.py
     homeassistant/components/solax/sensor.py
     homeassistant/components/somfy/*
     homeassistant/components/somfy_mylink/*
