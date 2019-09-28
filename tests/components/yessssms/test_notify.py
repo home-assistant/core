@@ -44,7 +44,7 @@ def init_invalid_provider_settings(hass, config):
 @pytest.fixture(name="invalid_login_data")
 def mock_invalid_login_data():
     """Mock invalid login data."""
-    path = "homeassistant.components.yessssms." "notify.YesssSMS.login_data_valid"
+    path = "homeassistant.components.yessssms.notify.YesssSMS.login_data_valid"
     with patch(path, return_value=False):
         yield
 
@@ -52,7 +52,7 @@ def mock_invalid_login_data():
 @pytest.fixture(name="valid_login_data")
 def mock_valid_login_data():
     """Mock valid login data."""
-    path = "homeassistant.components.yessssms." "notify.YesssSMS.login_data_valid"
+    path = "homeassistant.components.yessssms.notify.YesssSMS.login_data_valid"
     with patch(path, return_value=True):
         yield
 
@@ -60,10 +60,8 @@ def mock_valid_login_data():
 @pytest.fixture(name="connection_error")
 def mock_connection_error():
     """Mock a connection error."""
-    path = "homeassistant.components.yessssms." "notify.YesssSMS.login_data_valid"
-    with patch(
-        path, return_value=True, side_effect=yessssms.YesssSMS.ConnectionError()
-    ):
+    path = "homeassistant.components.yessssms.notify.YesssSMS.login_data_valid"
+    with patch(path, side_effect=yessssms.YesssSMS.ConnectionError()):
         yield
 
 
