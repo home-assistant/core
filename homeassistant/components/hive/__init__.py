@@ -83,10 +83,9 @@ class HiveSession:
     attributes = None
     trv = None
 
+
 def setup(hass, config):
     """Set up the Hive Component."""
-
-
     def heating_boost(service):
         """Handle the service call."""
         node_id = HiveSession.entity_lookup.get(service.data[ATTR_ENTITY_ID])
@@ -136,7 +135,6 @@ def setup(hass, config):
     session.weather = Pyhiveapi.Weather()
     session.attributes = Pyhiveapi.Attributes()
     hass.data[DATA_HIVE] = session
-
 
     for ha_type in DEVICETYPES:
         devicelist = devices.get(DEVICETYPES[ha_type])
