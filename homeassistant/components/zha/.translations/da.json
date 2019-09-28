@@ -18,6 +18,10 @@
         "title": "ZHA"
     },
     "device_automation": {
+        "action_type": {
+            "squawk": "Squawk",
+            "warn": "Advare"
+        },
         "trigger_subtype": {
             "both_buttons": "Begge knapper",
             "button_1": "F\u00f8rste knap",
