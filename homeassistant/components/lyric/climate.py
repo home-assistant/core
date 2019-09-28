@@ -76,7 +76,7 @@ async def async_setup_entry(
     lyric = hass.data[DOMAIN][DATA_LYRIC_CLIENT]
 
     try:
-        devices = lyric.devices()
+        devices = await hass.async_add_executor_job(lyric.devices)
     except ConnectionError as exception:
         raise PlatformNotReady from exception
 
