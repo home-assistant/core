@@ -439,16 +439,6 @@ def string(value: Any) -> str:
     return str(value)
 
 
-def optional_string(value: Any) -> Optional[str]:
-    """Coerce value to string, except if None."""
-    if value is None:
-        return None
-    if isinstance(value, (list, dict)):
-        raise vol.Invalid("value should be a string")
-
-    return str(value)
-
-
 def temperature_unit(value: Any) -> str:
     """Validate and transform temperature unit."""
     value = str(value).upper()

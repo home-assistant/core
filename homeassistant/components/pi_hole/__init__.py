@@ -40,7 +40,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(CONF_API_KEY, default=None): cv.optional_string,
+                vol.Optional(CONF_API_KEY): cv.string,
                 vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
                 vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION): cv.string,
                 vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
@@ -61,7 +61,7 @@ async def async_setup(hass, config):
     conf = config[DOMAIN]
     name = conf[CONF_NAME]
     host = conf[CONF_HOST]
-    api_key = conf.get(CONF_API_KEY)
+    api_key = conf[CONF_API_KEY] if CONF_API_KEY in conf else None
     use_tls = conf[CONF_SSL]
     verify_tls = conf[CONF_VERIFY_SSL]
     location = conf[CONF_LOCATION]
@@ -88,20 +88,20 @@ async def async_setup(hass, config):
 
     async def handle_disable(call):
         if api_key is None:
-            LOGGER.error("api_key is required in configuration to disable")
+            LOGGER.error("Pi-hole `api_key` is required in configuration to disable")
             return
 
-        duration = call.data.get(SERVICE_DISABLE_ATTR_DURATION)
+        duration = call.data[SERVICE_DISABLE_ATTR_DURATION]
 
-        LOGGER.info("Disabling %s %s for %d seconds", DOMAIN, host, duration)
+        LOGGER.debug("Disabling %s %s for %d seconds", DOMAIN, host, duration)
         await pi_hole.api.disable(duration)
 
     async def handle_enable(call):
         if api_key is None:
-            LOGGER.error("api_key is required in configuration to enable")
+            LOGGER.error("Pi-hole `api_key` is required in configuration to enable")
             return
 
-        LOGGER.info("Enabling %s %s", DOMAIN, host)
+        LOGGER.debug("Enabling %s %s", DOMAIN, host)
         await pi_hole.api.enable()
 
     hass.services.async_register(
