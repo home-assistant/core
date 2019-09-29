@@ -65,10 +65,10 @@ async def async_setup(hass, config):
     conf = config[DOMAIN]
     name = conf[CONF_NAME]
     host = conf[CONF_HOST]
-    api_key = conf[CONF_API_KEY] if CONF_API_KEY in conf else None
     use_tls = conf[CONF_SSL]
     verify_tls = conf[CONF_VERIFY_SSL]
     location = conf[CONF_LOCATION]
+    api_key = conf.get(CONF_API_KEY)
 
     LOGGER.debug("Setting up %s integration with host %s", DOMAIN, host)
 
