@@ -68,7 +68,6 @@ def setup(hass, base_config):
                 hass.data[LUTRON_DEVICES]["switch"].append((area.name, output))
         for keypad in area.keypads:
             for button in keypad.buttons:
-<<<<<<< HEAD
                 # This is the best way to determine if a button does anything
                 # useful until pylutron is updated to provide information on
                 # which buttons actually control scenes.
@@ -83,23 +82,6 @@ def setup(hass, base_config):
                         )
                 # All keypads have LEDs except Pico keypads
                 if not keypad.leds:
-=======
-                # All keypads have LEDs except Pico keypads
-                if keypad.leds:
-                    # This is the best way to determine if a button does anything
-                    # useful until pylutron is updated to provide information on
-                    # which buttons actually control scenes.
-                    for led in keypad.leds:
-                        if (
-                            led.number == button.number
-                            and button.name != "Unknown Button"
-                            and button.button_type in ("SingleAction", "Toggle")
-                        ):
-                            hass.data[LUTRON_DEVICES]["scene"].append(
-                                (area.name, keypad.name, button, led)
-                            )
-                else:
->>>>>>> 5ec92e592... Lutron Pico fix
                     hass.data[LUTRON_DEVICES]["scene"].append(
                         (area.name, keypad.name, button, None)
                     )
