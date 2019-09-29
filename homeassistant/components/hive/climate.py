@@ -82,7 +82,8 @@ class HiveClimateEntity(HiveEntity, ClimateDevice):
         if self.node_name is not None:
             if self.device_type == "TRV":
                 friendly_name = self.node_name
-            friendly_name = f"{self.node_name} {friendly_name}"
+            else:
+                friendly_name = f"{self.node_name} {friendly_name}"
 
         return friendly_name
 
