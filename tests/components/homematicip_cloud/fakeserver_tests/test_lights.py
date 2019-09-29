@@ -1,8 +1,6 @@
 """Tests for HomematicIP Cloud lights."""
 import logging
 
-import pytest
-
 from tests.components.homematicip_cloud.fakeserver_tests.helper import (
     get_and_check_device_basics,
 )
@@ -10,7 +8,6 @@ from tests.components.homematicip_cloud.fakeserver_tests.helper import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@pytest.mark.asyncio
 async def test_hmip_light(hass, fake_hmip_hap):
     """Test HomematicipLight."""
     device_id = "light.treppe"
@@ -34,7 +31,6 @@ async def test_hmip_light(hass, fake_hmip_hap):
 # HomematicipDimmer
 
 
-@pytest.mark.asyncio
 async def test_hmip_notification_light(hass, fake_hmip_hap):
     """Test HomematicipNotificationLight."""
     device_id = "light.treppe_top_notification"

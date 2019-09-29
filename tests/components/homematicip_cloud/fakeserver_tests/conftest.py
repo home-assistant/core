@@ -1,15 +1,10 @@
-"""Initializer helpers for HomematicIP fake serverr."""
-import asyncio
-from functools import partial
+"""Initializer helpers for HomematicIP fake server."""
 from pathlib import Path
 from unittest.mock import patch
 
-from homematicip.aio.home import AsyncHome
-from homematicip.home import Home
-from homematicip_demo.fake_cloud_server import FakeCloudServer
-from homematicip_demo.helper import no_ssl_verification
 import pytest
-from pytest_localserver.http import WSGIServer
+
+from homematicip.aio.home import AsyncHome
 
 from homeassistant import config_entries
 from homeassistant.components.homematicip_cloud import (
@@ -17,6 +12,7 @@ from homeassistant.components.homematicip_cloud import (
     const as hmipc,
     hap as hmip_hap,
 )
+from .helper import AsyncConnectionLocal
 
 from tests.common import mock_coro
 
@@ -26,69 +22,23 @@ HOME_JSON = "json_data/home.json"
 
 
 @pytest.fixture
-def fake_hmip_cloud(request):
-    """Create a fake homematic cloud. Defines the testserver funcarg."""
-
+def fake_hmip_connection(request):
+    """Create a fake homematic cloud connection."""
     home_path = Path(__file__).parent.joinpath(HOME_JSON)
-    app = FakeCloudServer(home_path)
-    server = WSGIServer(application=app)
-    app.url = server.url
-    server._server._timeout = 5  # added to allow timeouts in the fake server
-    server.start()
-    request.addfinalizer(server.stop)
-    return server
+    return AsyncConnectionLocal(home_path)
 
 
 @pytest.fixture
-def fake_hmip_home(fake_hmip_cloud):
-    """Create a fake homematic sync home."""
-
-    home = Home()
-    with no_ssl_verification():
-        lookup_url = "{}/getHost".format(fake_hmip_cloud.url)
-        #    home.download_configuration = fake_home_download_configuration
-        from homematicip.connection import Connection
-
-        home._connection = Connection()
-        home._fake_cloud = fake_hmip_cloud
-        home.name = ""
-        home.label = "Access Point"
-        home.modelType = "HmIP-HAP"
-        home.set_auth_token(AUTH_TOKEN)
-        home._connection.init(accesspoint_id=HAPID, lookup_url=lookup_url)
-        home.get_current_state()
-    return home
-
-
-@pytest.fixture
-async def loop(event_loop):
-    """Create an instance of the default event loop for each test case."""
-    # event_loop from pytest_asyncio/plugin.py
-    asyncio.set_event_loop(event_loop)
-    return event_loop
-
-
-@pytest.fixture
-async def fake_hmip_async_home(hass, fake_hmip_cloud, loop):
+async def fake_hmip_async_home(hass, fake_hmip_connection, loop):
     """Create a fake homematic async home."""
-
     home = AsyncHome(loop)
-    home._connection._websession.post = partial(
-        home._connection._websession.post, ssl=False
-    )
-
-    lookup_url = "{}/getHost".format(fake_hmip_cloud.url)
-    home._fake_cloud = fake_hmip_cloud
+    home._connection = fake_hmip_connection
     home.name = ""
     home.label = "Access Point"
     home.modelType = "HmIP-HAP"
     home.set_auth_token(AUTH_TOKEN)
-    await home._connection.init(accesspoint_id=HAPID, lookup_url=lookup_url)
     await home.get_current_state()
-
-    yield home
-
-    await home._connection._websession.close()
+    return home
 
 
 @pytest.fixture
