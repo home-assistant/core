@@ -127,14 +127,3 @@ async def test_abort_on_invalid_credentials(hass):
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "invalid_credentials"
-
-
-async def test_abort_on_invalid_vendor(hass, account):
-    """Test when we have an invalid vendor."""
-    flow = init_config_flow(hass)
-
-    result = await flow.async_step_user(
-        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_VENDOR: VENDOR_INVALID}
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "invalid_vendor"}
