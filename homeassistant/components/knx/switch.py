@@ -8,18 +8,19 @@ import homeassistant.helpers.config_validation as cv
 
 from . import ATTR_DISCOVER_DEVICES, DATA_KNX
 
-CONF_STATE_ADDRESS = 'state_address'
+CONF_STATE_ADDRESS = "state_address"
 
-DEFAULT_NAME = 'KNX Switch'
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ADDRESS): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_STATE_ADDRESS): cv.string,
-})
+DEFAULT_NAME = "KNX Switch"
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_ADDRESS): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_STATE_ADDRESS): cv.string,
+    }
+)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up switch(es) for KNX platform."""
     if discovery_info is not None:
         async_add_entities_discovery(hass, discovery_info, async_add_entities)
@@ -41,11 +42,13 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
 def async_add_entities_config(hass, config, async_add_entities):
     """Set up switch for KNX platform configured within platform."""
     import xknx
+
     switch = xknx.devices.Switch(
         hass.data[DATA_KNX].xknx,
-        name=config.get(CONF_NAME),
-        group_address=config.get(CONF_ADDRESS),
-        group_address_state=config.get(CONF_STATE_ADDRESS))
+        name=config[CONF_NAME],
+        group_address=config[CONF_ADDRESS],
+        group_address_state=config.get(CONF_STATE_ADDRESS),
+    )
     hass.data[DATA_KNX].xknx.devices.add(switch)
     async_add_entities([KNXSwitch(switch)])
 
@@ -60,9 +63,11 @@ class KNXSwitch(SwitchDevice):
     @callback
     def async_register_callbacks(self):
         """Register callbacks to update hass after device was changed."""
+
         async def after_update_callback(device):
             """Call after device was updated."""
             await self.async_update_ha_state()
+
         self.device.register_device_updated_cb(after_update_callback)
 
     async def async_added_to_hass(self):

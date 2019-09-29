@@ -5,32 +5,39 @@ from requests.exceptions import RequestException, HTTPError
 
 import voluptuous as vol
 
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, POWER_WATT, ENERGY_KILO_WATT_HOUR)
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    POWER_WATT,
+    ENERGY_KILO_WATT_HOUR,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 
 _LOGGER = logging.getLogger(__name__)
 
 # Standard Fritz Box IP
-DEFAULT_HOST = 'fritz.box'
+DEFAULT_HOST = "fritz.box"
 
-ATTR_CURRENT_CONSUMPTION = 'current_consumption'
-ATTR_CURRENT_CONSUMPTION_UNIT = 'current_consumption_unit'
+ATTR_CURRENT_CONSUMPTION = "current_consumption"
+ATTR_CURRENT_CONSUMPTION_UNIT = "current_consumption_unit"
 ATTR_CURRENT_CONSUMPTION_UNIT_VALUE = POWER_WATT
 
-ATTR_TOTAL_CONSUMPTION = 'total_consumption'
-ATTR_TOTAL_CONSUMPTION_UNIT = 'total_consumption_unit'
+ATTR_TOTAL_CONSUMPTION = "total_consumption"
+ATTR_TOTAL_CONSUMPTION_UNIT = "total_consumption_unit"
 ATTR_TOTAL_CONSUMPTION_UNIT_VALUE = ENERGY_KILO_WATT_HOUR
 
-ATTR_TEMPERATURE_UNIT = 'temperature_unit'
+ATTR_TEMPERATURE_UNIT = "temperature_unit"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -77,24 +84,27 @@ class FritzDectSwitch(SwitchDevice):
         """Return the state attributes of the device."""
         attrs = {}
 
-        if self.data.has_powermeter and \
-           self.data.current_consumption is not None and \
-           self.data.total_consumption is not None:
+        if (
+            self.data.has_powermeter
+            and self.data.current_consumption is not None
+            and self.data.total_consumption is not None
+        ):
             attrs[ATTR_CURRENT_CONSUMPTION] = "{:.1f}".format(
-                self.data.current_consumption)
+                self.data.current_consumption
+            )
             attrs[ATTR_CURRENT_CONSUMPTION_UNIT] = "{}".format(
-                ATTR_CURRENT_CONSUMPTION_UNIT_VALUE)
-            attrs[ATTR_TOTAL_CONSUMPTION] = "{:.3f}".format(
-                self.data.total_consumption)
+                ATTR_CURRENT_CONSUMPTION_UNIT_VALUE
+            )
+            attrs[ATTR_TOTAL_CONSUMPTION] = f"{self.data.total_consumption:.3f}"
             attrs[ATTR_TOTAL_CONSUMPTION_UNIT] = "{}".format(
-                ATTR_TOTAL_CONSUMPTION_UNIT_VALUE)
+                ATTR_TOTAL_CONSUMPTION_UNIT_VALUE
+            )
 
-        if self.data.has_temperature and \
-           self.data.temperature is not None:
+        if self.data.has_temperature and self.data.temperature is not None:
             attrs[ATTR_TEMPERATURE] = "{}".format(
-                self.units.temperature(self.data.temperature, TEMP_CELSIUS))
-            attrs[ATTR_TEMPERATURE_UNIT] = "{}".format(
-                self.units.temperature_unit)
+                self.units.temperature(self.data.temperature, TEMP_CELSIUS)
+            )
+            attrs[ATTR_TEMPERATURE_UNIT] = f"{self.units.temperature_unit}"
         return attrs
 
     @property
@@ -186,7 +196,7 @@ class FritzDectSwitchData:
             self.temperature = None
             self.current_consumption = None
             self.total_consumption = None
-            raise Exception('Request to actor registry failed')
+            raise Exception("Request to actor registry failed")
 
         if actor is None:
             _LOGGER.error("Actor could not be found")
@@ -194,7 +204,7 @@ class FritzDectSwitchData:
             self.temperature = None
             self.current_consumption = None
             self.total_consumption = None
-            raise Exception('Actor could not be found')
+            raise Exception("Actor could not be found")
 
         try:
             self.state = actor.get_state()
@@ -206,7 +216,7 @@ class FritzDectSwitchData:
             self.temperature = None
             self.current_consumption = None
             self.total_consumption = None
-            raise Exception('Request to actor failed')
+            raise Exception("Request to actor failed")
 
         self.temperature = actor.temperature
         self.has_switch = actor.has_switch

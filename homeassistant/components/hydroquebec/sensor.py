@@ -14,8 +14,13 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, ENERGY_KILO_WATT_HOUR,
-    CONF_NAME, CONF_MONITORED_VARIABLES, TEMP_CELSIUS)
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    ENERGY_KILO_WATT_HOUR,
+    CONF_NAME,
+    CONF_MONITORED_VARIABLES,
+    TEMP_CELSIUS,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -23,75 +28,102 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 KILOWATT_HOUR = ENERGY_KILO_WATT_HOUR
-PRICE = 'CAD'  # type: str
-DAYS = 'days'  # type: str
-CONF_CONTRACT = 'contract'  # type: str
+PRICE = "CAD"
+DAYS = "days"
+CONF_CONTRACT = "contract"
 
-DEFAULT_NAME = 'HydroQuebec'
+DEFAULT_NAME = "HydroQuebec"
 
 REQUESTS_TIMEOUT = 15
 MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 SCAN_INTERVAL = timedelta(hours=1)
 
 SENSOR_TYPES = {
-    'balance':
-    ['Balance', PRICE, 'mdi:square-inc-cash'],
-    'period_total_bill':
-    ['Period total bill', PRICE, 'mdi:square-inc-cash'],
-    'period_length':
-    ['Period length', DAYS, 'mdi:calendar-today'],
-    'period_total_days':
-    ['Period total days', DAYS, 'mdi:calendar-today'],
-    'period_mean_daily_bill':
-    ['Period mean daily bill', PRICE, 'mdi:square-inc-cash'],
-    'period_mean_daily_consumption':
-    ['Period mean daily consumption', KILOWATT_HOUR, 'mdi:flash'],
-    'period_total_consumption':
-    ['Period total consumption', KILOWATT_HOUR, 'mdi:flash'],
-    'period_lower_price_consumption':
-    ['Period lower price consumption', KILOWATT_HOUR, 'mdi:flash'],
-    'period_higher_price_consumption':
-    ['Period higher price consumption', KILOWATT_HOUR, 'mdi:flash'],
-    'yesterday_total_consumption':
-    ['Yesterday total consumption', KILOWATT_HOUR, 'mdi:flash'],
-    'yesterday_lower_price_consumption':
-    ['Yesterday lower price consumption', KILOWATT_HOUR, 'mdi:flash'],
-    'yesterday_higher_price_consumption':
-    ['Yesterday higher price consumption', KILOWATT_HOUR, 'mdi:flash'],
-    'yesterday_average_temperature':
-    ['Yesterday average temperature', TEMP_CELSIUS, 'mdi:thermometer'],
-    'period_average_temperature':
-    ['Period average temperature', TEMP_CELSIUS, 'mdi:thermometer'],
+    "balance": ["Balance", PRICE, "mdi:square-inc-cash"],
+    "period_total_bill": ["Period total bill", PRICE, "mdi:square-inc-cash"],
+    "period_length": ["Period length", DAYS, "mdi:calendar-today"],
+    "period_total_days": ["Period total days", DAYS, "mdi:calendar-today"],
+    "period_mean_daily_bill": ["Period mean daily bill", PRICE, "mdi:square-inc-cash"],
+    "period_mean_daily_consumption": [
+        "Period mean daily consumption",
+        KILOWATT_HOUR,
+        "mdi:flash",
+    ],
+    "period_total_consumption": [
+        "Period total consumption",
+        KILOWATT_HOUR,
+        "mdi:flash",
+    ],
+    "period_lower_price_consumption": [
+        "Period lower price consumption",
+        KILOWATT_HOUR,
+        "mdi:flash",
+    ],
+    "period_higher_price_consumption": [
+        "Period higher price consumption",
+        KILOWATT_HOUR,
+        "mdi:flash",
+    ],
+    "yesterday_total_consumption": [
+        "Yesterday total consumption",
+        KILOWATT_HOUR,
+        "mdi:flash",
+    ],
+    "yesterday_lower_price_consumption": [
+        "Yesterday lower price consumption",
+        KILOWATT_HOUR,
+        "mdi:flash",
+    ],
+    "yesterday_higher_price_consumption": [
+        "Yesterday higher price consumption",
+        KILOWATT_HOUR,
+        "mdi:flash",
+    ],
+    "yesterday_average_temperature": [
+        "Yesterday average temperature",
+        TEMP_CELSIUS,
+        "mdi:thermometer",
+    ],
+    "period_average_temperature": [
+        "Period average temperature",
+        TEMP_CELSIUS,
+        "mdi:thermometer",
+    ],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_VARIABLES):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_CONTRACT): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_MONITORED_VARIABLES): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        ),
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_CONTRACT): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
-HOST = 'https://www.hydroquebec.com'
-HOME_URL = '{}/portail/web/clientele/authentification'.format(HOST)
-PROFILE_URL = ('{}/portail/fr/group/clientele/'
-               'portrait-de-consommation'.format(HOST))
-MONTHLY_MAP = (('period_total_bill', 'montantFacturePeriode'),
-               ('period_length', 'nbJourLecturePeriode'),
-               ('period_total_days', 'nbJourPrevuPeriode'),
-               ('period_mean_daily_bill', 'moyenneDollarsJourPeriode'),
-               ('period_mean_daily_consumption', 'moyenneKwhJourPeriode'),
-               ('period_total_consumption', 'consoTotalPeriode'),
-               ('period_lower_price_consumption', 'consoRegPeriode'),
-               ('period_higher_price_consumption', 'consoHautPeriode'))
-DAILY_MAP = (('yesterday_total_consumption', 'consoTotalQuot'),
-             ('yesterday_lower_price_consumption', 'consoRegQuot'),
-             ('yesterday_higher_price_consumption', 'consoHautQuot'))
+HOST = "https://www.hydroquebec.com"
+HOME_URL = f"{HOST}/portail/web/clientele/authentification"
+PROFILE_URL = "{}/portail/fr/group/clientele/" "portrait-de-consommation".format(HOST)
+MONTHLY_MAP = (
+    ("period_total_bill", "montantFacturePeriode"),
+    ("period_length", "nbJourLecturePeriode"),
+    ("period_total_days", "nbJourPrevuPeriode"),
+    ("period_mean_daily_bill", "moyenneDollarsJourPeriode"),
+    ("period_mean_daily_consumption", "moyenneKwhJourPeriode"),
+    ("period_total_consumption", "consoTotalPeriode"),
+    ("period_lower_price_consumption", "consoRegPeriode"),
+    ("period_higher_price_consumption", "consoHautPeriode"),
+)
+DAILY_MAP = (
+    ("yesterday_total_consumption", "consoTotalQuot"),
+    ("yesterday_lower_price_consumption", "consoRegQuot"),
+    ("yesterday_higher_price_consumption", "consoHautQuot"),
+)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the HydroQuebec sensor."""
     # Create a data fetcher to support all of the configured sensors. Then make
     # the first call to init the data.
@@ -101,13 +133,11 @@ async def async_setup_platform(hass, config, async_add_entities,
     contract = config.get(CONF_CONTRACT)
 
     httpsession = hass.helpers.aiohttp_client.async_get_clientsession()
-    hydroquebec_data = HydroquebecData(username, password, httpsession,
-                                       contract)
+    hydroquebec_data = HydroquebecData(username, password, httpsession, contract)
     contracts = await hydroquebec_data.get_contract_list()
     if not contracts:
         return
-    _LOGGER.info("Contract list: %s",
-                 ", ".join(contracts))
+    _LOGGER.info("Contract list: %s", ", ".join(contracts))
 
     name = config.get(CONF_NAME)
 
@@ -134,7 +164,7 @@ class HydroQuebecSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self.client_name, self._name)
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
@@ -164,8 +194,10 @@ class HydroquebecData:
     def __init__(self, username, password, httpsession, contract=None):
         """Initialize the data object."""
         from pyhydroquebec import HydroQuebecClient
+
         self.client = HydroQuebecClient(
-            username, password, REQUESTS_TIMEOUT, httpsession)
+            username, password, REQUESTS_TIMEOUT, httpsession
+        )
         self._contract = contract
         self.data = {}
 
@@ -181,6 +213,7 @@ class HydroquebecData:
     async def _fetch_data(self):
         """Fetch latest data from HydroQuebec."""
         from pyhydroquebec.client import PyHydroQuebecError
+
         try:
             await self.client.fetch_data()
         except PyHydroQuebecError as exp:

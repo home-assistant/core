@@ -4,39 +4,45 @@ import socket
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, MEDIA_PLAYER_SCHEMA, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    DOMAIN, SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
+    DOMAIN,
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE, STATE_OFF,
-    STATE_ON)
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_TYPE,
+    STATE_OFF,
+    STATE_ON,
+)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_BLACKBIRD = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
-ZONE_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
-})
+MEDIA_PLAYER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
 
-SOURCE_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
-})
+ZONE_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 
-CONF_ZONES = 'zones'
-CONF_SOURCES = 'sources'
+SOURCE_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 
-DATA_BLACKBIRD = 'blackbird'
+CONF_ZONES = "zones"
+CONF_SOURCES = "sources"
 
-SERVICE_SETALLZONES = 'blackbird_set_all_zones'
-ATTR_SOURCE = 'source'
+DATA_BLACKBIRD = "blackbird"
 
-BLACKBIRD_SETALLZONES_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_SOURCE): cv.string
-})
+SERVICE_SETALLZONES = "blackbird_set_all_zones"
+ATTR_SOURCE = "source"
+
+BLACKBIRD_SETALLZONES_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
+    {vol.Required(ATTR_SOURCE): cv.string}
+)
 
 
 # Valid zone ids: 1-8
@@ -47,12 +53,15 @@ SOURCE_IDS = vol.All(vol.Coerce(int), vol.Range(min=1, max=8))
 
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_PORT, CONF_HOST),
-    PLATFORM_SCHEMA.extend({
-        vol.Exclusive(CONF_PORT, CONF_TYPE): cv.string,
-        vol.Exclusive(CONF_HOST, CONF_TYPE): cv.string,
-        vol.Required(CONF_ZONES): vol.Schema({ZONE_IDS: ZONE_SCHEMA}),
-        vol.Required(CONF_SOURCES): vol.Schema({SOURCE_IDS: SOURCE_SCHEMA}),
-    }))
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Exclusive(CONF_PORT, CONF_TYPE): cv.string,
+            vol.Exclusive(CONF_HOST, CONF_TYPE): cv.string,
+            vol.Required(CONF_ZONES): vol.Schema({ZONE_IDS: ZONE_SCHEMA}),
+            vol.Required(CONF_SOURCES): vol.Schema({SOURCE_IDS: SOURCE_SCHEMA}),
+        }
+    ),
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -83,13 +92,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             _LOGGER.error("Error connecting to the Blackbird controller")
             return
 
-    sources = {source_id: extra[CONF_NAME] for source_id, extra
-               in config[CONF_SOURCES].items()}
+    sources = {
+        source_id: extra[CONF_NAME] for source_id, extra in config[CONF_SOURCES].items()
+    }
 
     devices = []
     for zone_id, extra in config[CONF_ZONES].items():
         _LOGGER.info("Adding zone %d - %s", zone_id, extra[CONF_NAME])
-        unique_id = "{}-{}".format(connection, zone_id)
+        unique_id = f"{connection}-{zone_id}"
         device = BlackbirdZone(blackbird, sources, zone_id, extra[CONF_NAME])
         hass.data[DATA_BLACKBIRD][unique_id] = device
         devices.append(device)
@@ -101,8 +111,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         entity_ids = service.data.get(ATTR_ENTITY_ID)
         source = service.data.get(ATTR_SOURCE)
         if entity_ids:
-            devices = [device for device in hass.data[DATA_BLACKBIRD].values()
-                       if device.entity_id in entity_ids]
+            devices = [
+                device
+                for device in hass.data[DATA_BLACKBIRD].values()
+                if device.entity_id in entity_ids
+            ]
 
         else:
             devices = hass.data[DATA_BLACKBIRD].values()
@@ -111,8 +124,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             if service.service == SERVICE_SETALLZONES:
                 device.set_all_zones(source)
 
-    hass.services.register(DOMAIN, SERVICE_SETALLZONES, service_handle,
-                           schema=BLACKBIRD_SETALLZONES_SCHEMA)
+    hass.services.register(
+        DOMAIN, SERVICE_SETALLZONES, service_handle, schema=BLACKBIRD_SETALLZONES_SCHEMA
+    )
 
 
 class BlackbirdZone(MediaPlayerDevice):
@@ -126,8 +140,9 @@ class BlackbirdZone(MediaPlayerDevice):
         # dict source name -> source_id
         self._source_name_id = {v: k for k, v in sources.items()}
         # ordered list of all source names
-        self._source_names = sorted(self._source_name_id.keys(),
-                                    key=lambda v: self._source_name_id[v])
+        self._source_names = sorted(
+            self._source_name_id.keys(), key=lambda v: self._source_name_id[v]
+        )
         self._zone_id = zone_id
         self._name = zone_name
         self._state = None

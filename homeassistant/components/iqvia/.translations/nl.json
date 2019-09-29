@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Postcode reeds geregistreerd",
+            "identifier_exists": "Postcode al geregistreerd",
             "invalid_zip_code": "Postcode is ongeldig"
         },
         "step": {
@@ -9,6 +9,7 @@
                 "data": {
                     "zip_code": "Postcode"
                 },
+                "description": "Vul uw Amerikaanse of Canadese postcode in.",
                 "title": "IQVIA"
             }
         },

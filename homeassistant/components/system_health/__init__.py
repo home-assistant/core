@@ -14,18 +14,20 @@ from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'system_health'
+DOMAIN = "system_health"
 
 INFO_CALLBACK_TIMEOUT = 5
 
 
 @bind_hass
 @callback
-def async_register_info(hass: HomeAssistantType, domain: str,
-                        info_callback: Callable[[HomeAssistantType], Dict]):
+def async_register_info(
+    hass: HomeAssistantType,
+    domain: str,
+    info_callback: Callable[[HomeAssistantType], Dict],
+):
     """Register an info callback."""
-    data = hass.data.setdefault(
-        DOMAIN, OrderedDict()).setdefault('info', OrderedDict())
+    data = hass.data.setdefault(DOMAIN, OrderedDict()).setdefault("info", OrderedDict())
     data[domain] = info_callback
 
 
@@ -41,34 +43,32 @@ async def _info_wrapper(hass, info_callback):
         with async_timeout.timeout(INFO_CALLBACK_TIMEOUT):
             return await info_callback(hass)
     except asyncio.TimeoutError:
-        return {
-            'error': 'Fetching info timed out'
-        }
+        return {"error": "Fetching info timed out"}
     except Exception as err:  # pylint: disable=W0703
         _LOGGER.exception("Error fetching info")
-        return {
-            'error': str(err)
-        }
+        return {"error": str(err)}
 
 
 @websocket_api.async_response
-@websocket_api.websocket_command({
-    vol.Required('type'): 'system_health/info'
-})
-async def handle_info(hass: HomeAssistantType,
-                      connection: websocket_api.ActiveConnection,
-                      msg: Dict):
+@websocket_api.websocket_command({vol.Required("type"): "system_health/info"})
+async def handle_info(
+    hass: HomeAssistantType, connection: websocket_api.ActiveConnection, msg: Dict
+):
     """Handle an info request."""
-    info_callbacks = hass.data.get(DOMAIN, {}).get('info', {})
+    info_callbacks = hass.data.get(DOMAIN, {}).get("info", {})
     data = OrderedDict()
-    data['homeassistant'] = \
-        await hass.helpers.system_info.async_get_system_info()
+    data["homeassistant"] = await hass.helpers.system_info.async_get_system_info()
 
     if info_callbacks:
-        for domain, domain_data in zip(info_callbacks, await asyncio.gather(*[
-                _info_wrapper(hass, info_callback) for info_callback
-                in info_callbacks.values()
-        ])):
+        for domain, domain_data in zip(
+            info_callbacks,
+            await asyncio.gather(
+                *(
+                    _info_wrapper(hass, info_callback)
+                    for info_callback in info_callbacks.values()
+                )
+            ),
+        ):
             data[domain] = domain_data
 
-    connection.send_message(websocket_api.result_message(msg['id'], data))
+    connection.send_message(websocket_api.result_message(msg["id"], data))

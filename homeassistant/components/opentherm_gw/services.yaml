@@ -2,10 +2,17 @@
 
 reset_gateway:
   description: Reset the OpenTherm Gateway.
+  fields:
+    gateway_id:
+      description: The gateway_id of the OpenTherm Gateway.
+      example: 'opentherm_gateway'
 
 set_clock:
   description: Set the clock and day of the week on the connected thermostat.
   fields:
+    gateway_id:
+      description: The gateway_id of the OpenTherm Gateway.
+      example: 'opentherm_gateway'
     date:
       description: Optional date from which the day of the week will be extracted. Defaults to today.
       example: '2018-10-23'
@@ -18,6 +25,9 @@ set_control_setpoint:
     Set the central heating control setpoint override on the gateway.
     You will only need this if you are writing your own software thermostat.
   fields:
+    gateway_id:
+      description: The gateway_id of the OpenTherm Gateway.
+      example: 'opentherm_gateway'
     temperature:
       description: >
         The central heating setpoint to set on the gateway.
@@ -25,9 +35,29 @@ set_control_setpoint:
         A value of 0 disables the central heating setpoint override.
       example: '37.5'
 
+set_hot_water_ovrd:
+  description: >
+    Set the domestic hot water enable option on the gateway.
+  fields:
+    gateway_id:
+      description: The gateway_id of the OpenTherm Gateway.
+      example: 'opentherm_gateway'
+    dhw_override:
+      description: >
+        Control the domestic hot water enable option. If the boiler has
+        been configured to let the room unit control when to keep a
+        small amount of water preheated, this command can influence
+        that.
+        Value should be 0 or 1 to enable the override in off or on
+        state, or "A" to disable the override.
+      example: '1'
+
 set_gpio_mode:
   description: Change the function of the GPIO pins of the gateway.
   fields:
+    gateway_id:
+      description: The gateway_id of the OpenTherm Gateway.
+      example: 'opentherm_gateway'
     id:
       description: The ID of the GPIO pin. Either "A" or "B".
       example: 'B'
@@ -40,6 +70,9 @@ set_gpio_mode:
 set_led_mode:
   description: Change the function of the LEDs of the gateway.
   fields:
+    gateway_id:
+      description: The gateway_id of the OpenTherm Gateway.
+      example: 'opentherm_gateway'
     id:
       description: The ID of the LED. Possible values are "A" through "F".
       example: 'C'
@@ -54,6 +87,9 @@ set_max_modulation:
     Override the maximum relative modulation level.
     You will only need this if you are writing your own software thermostat.
   fields:
+    gateway_id:
+      description: The gateway_id of the OpenTherm Gateway.
+      example: 'opentherm_gateway'
     level:
       description: >
         The modulation level to provide to the gateway.
@@ -66,6 +102,9 @@ set_outside_temperature:
     Provide an outside temperature to the thermostat.
     If your thermostat is unable to display an outside temperature and does not support OTC (Outside Temperature Correction), this has no effect.
   fields:
+    gateway_id:
+      description: The gateway_id of the OpenTherm Gateway.
+      example: 'opentherm_gateway'
     temperature:
       description: >
         The temperature to provide to the thermostat.
@@ -76,6 +115,9 @@ set_outside_temperature:
 set_setback_temperature:
   description: Configure the setback temperature to be used with the GPIO away mode function.
   fields:
+    gateway_id:
+      description: The gateway_id of the OpenTherm Gateway.
+      example: 'opentherm_gateway'
     temperature:
       description: The setback temperature to configure on the gateway. Values between 0.0 and 30.0 are accepted.
       example: '16.0'

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Mostek jest ju\u017c skonfigurowany"
+            "already_configured": "Mostek jest ju\u017c skonfigurowany",
+            "already_in_progress": "Konfiguracja mostka jest ju\u017c w toku."
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z bram\u0105.",
@@ -14,7 +15,7 @@
                     "host": "Host",
                     "security_code": "Kod bezpiecze\u0144stwa"
                 },
-                "description": "Mo\u017cesz znale\u017a\u0107 kod bezpiecze\u0144stwa z ty\u0142u bramy.",
+                "description": "Mo\u017cesz znale\u017a\u0107 kod bezpiecze\u0144stwa z ty\u0142u bramki.",
                 "title": "Wprowad\u017a kod bezpiecze\u0144stwa"
             }
         },

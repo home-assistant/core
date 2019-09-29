@@ -14,7 +14,7 @@
                 "data": {
                     "password": "Has\u0142o"
                 },
-                "description": "Wprowad\u017a has\u0142o ustawione w konfiguracji dla {nazwa}.",
+                "description": "Wprowad\u017a has\u0142o ustawione w konfiguracji dla {name}.",
                 "title": "Wprowad\u017a has\u0142o"
             },
             "discovery_confirm": {
@@ -26,7 +26,7 @@
                     "host": "Host",
                     "port": "Port"
                 },
-                "description": "Wprowad\u017a ustawienia po\u0142\u0105czenia swojego [ESPHome](https://esphomelib.com/) w\u0119z\u0142a.",
+                "description": "Wprowad\u017a ustawienia po\u0142\u0105czenia [ESPHome](https://esphomelib.com/) w\u0119z\u0142a.",
                 "title": "ESPHome"
             }
         },

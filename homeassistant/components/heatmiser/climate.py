@@ -4,28 +4,32 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
-from homeassistant.components.climate.const import (
-    SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.components.climate.const import SUPPORT_TARGET_TEMPERATURE
 from homeassistant.const import (
-    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_PORT, CONF_NAME, CONF_ID)
+    TEMP_CELSIUS,
+    ATTR_TEMPERATURE,
+    CONF_PORT,
+    CONF_NAME,
+    CONF_ID,
+)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_IPADDRESS = 'ipaddress'
-CONF_TSTATS = 'tstats'
+CONF_IPADDRESS = "ipaddress"
+CONF_TSTATS = "tstats"
 
-TSTATS_SCHEMA = vol.Schema({
-    vol.Required(CONF_ID): cv.string,
-    vol.Required(CONF_NAME): cv.string,
-})
+TSTATS_SCHEMA = vol.Schema(
+    {vol.Required(CONF_ID): cv.string, vol.Required(CONF_NAME): cv.string}
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_IPADDRESS): cv.string,
-    vol.Required(CONF_PORT): cv.port,
-    vol.Required(CONF_TSTATS, default={}):
-        vol.Schema({cv.string: TSTATS_SCHEMA}),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_IPADDRESS): cv.string,
+        vol.Required(CONF_PORT): cv.port,
+        vol.Required(CONF_TSTATS, default={}): vol.Schema({cv.string: TSTATS_SCHEMA}),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -39,11 +43,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     serport = connection.connection(ipaddress, port)
     serport.open()
 
-    for tstat in tstats.values():
-        add_entities([
+    add_entities(
+        [
             HeatmiserV3Thermostat(
-                heatmiser, tstat.get(CONF_ID), tstat.get(CONF_NAME), serport)
-            ])
+                heatmiser, tstat.get(CONF_ID), tstat.get(CONF_NAME), serport
+            )
+            for tstat in tstats.values()
+        ],
+        True,
+    )
 
 
 class HeatmiserV3Thermostat(ClimateDevice):
@@ -54,11 +62,10 @@ class HeatmiserV3Thermostat(ClimateDevice):
         self.heatmiser = heatmiser
         self.serport = serport
         self._current_temperature = None
+        self._target_temperature = None
         self._name = name
         self._id = device
         self.dcb = None
-        self.update()
-        self._target_temperature = int(self.dcb.get('roomset'))
 
     @property
     def supported_features(self):
@@ -78,13 +85,6 @@ class HeatmiserV3Thermostat(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        if self.dcb is not None:
-            low = self.dcb.get('floortemplow ')
-            high = self.dcb.get('floortemphigh')
-            temp = (high * 256 + low) / 10.0
-            self._current_temperature = temp
-        else:
-            self._current_temperature = None
         return self._current_temperature
 
     @property
@@ -95,16 +95,12 @@ class HeatmiserV3Thermostat(ClimateDevice):
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
-            return
-        self.heatmiser.hmSendAddress(
-            self._id,
-            18,
-            temperature,
-            1,
-            self.serport)
-        self._target_temperature = temperature
+        self.heatmiser.hmSendAddress(self._id, 18, temperature, 1, self.serport)
 
     def update(self):
         """Get the latest data."""
-        self.dcb = self.heatmiser.hmReadAddress(self._id, 'prt', self.serport)
+        self.dcb = self.heatmiser.hmReadAddress(self._id, "prt", self.serport)
+        low = self.dcb.get("floortemplow ")
+        high = self.dcb.get("floortemphigh")
+        self._current_temperature = (high * 256 + low) / 10.0
+        self._target_temperature = int(self.dcb.get("roomset"))

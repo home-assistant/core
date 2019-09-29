@@ -12,31 +12,32 @@ from tests.common import MockConfigEntry
 @pytest.fixture
 async def setup_push_receiver(hass, aioclient_mock):
     """Fixture that sets up a mocked push receiver."""
-    push_url = 'https://mobile-push.home-assistant.dev/push'
+    push_url = "https://mobile-push.home-assistant.dev/push"
 
     from datetime import datetime, timedelta
-    now = (datetime.now() + timedelta(hours=24))
+
+    now = datetime.now() + timedelta(hours=24)
     iso_time = now.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    aioclient_mock.post(push_url, json={
-        'rateLimits': {
-            'attempts': 1,
-            'successful': 1,
-            'errors': 0,
-            'total': 1,
-            'maximum': 150,
-            'remaining': 149,
-            'resetsAt': iso_time
-        }
-    })
+    aioclient_mock.post(
+        push_url,
+        json={
+            "rateLimits": {
+                "attempts": 1,
+                "successful": 1,
+                "errors": 0,
+                "total": 1,
+                "maximum": 150,
+                "remaining": 149,
+                "resetsAt": iso_time,
+            }
+        },
+    )
 
     entry = MockConfigEntry(
         connection_class="cloud_push",
         data={
-            "app_data": {
-                "push_token": "PUSH_TOKEN",
-                "push_url": push_url
-            },
+            "app_data": {"push_token": "PUSH_TOKEN", "push_url": push_url},
             "app_id": "io.homeassistant.mobile_app",
             "app_name": "mobile_app tests",
             "app_version": "1.0",
@@ -49,12 +50,12 @@ async def setup_push_receiver(hass, aioclient_mock):
             "secret": "123abc",
             "supports_encryption": False,
             "user_id": "1a2b3c",
-            "webhook_id": "webhook_id"
+            "webhook_id": "webhook_id",
         },
         domain=DOMAIN,
         source="registration",
         title="mobile_app test entry",
-        version=1
+        version=1,
     )
     entry.add_to_hass(hass)
 
@@ -64,10 +65,10 @@ async def setup_push_receiver(hass, aioclient_mock):
 
 async def test_notify_works(hass, aioclient_mock, setup_push_receiver):
     """Test notify works."""
-    assert hass.services.has_service('notify', 'mobile_app_test') is True
-    assert await hass.services.async_call('notify', 'mobile_app_test',
-                                          {'message': 'Hello world'},
-                                          blocking=True)
+    assert hass.services.has_service("notify", "mobile_app_test") is True
+    assert await hass.services.async_call(
+        "notify", "mobile_app_test", {"message": "Hello world"}, blocking=True
+    )
 
     assert len(aioclient_mock.mock_calls) == 1
     call = aioclient_mock.mock_calls
@@ -76,6 +77,5 @@ async def test_notify_works(hass, aioclient_mock, setup_push_receiver):
 
     assert call_json["push_token"] == "PUSH_TOKEN"
     assert call_json["message"] == "Hello world"
-    assert call_json["registration_info"]["app_id"] == \
-        "io.homeassistant.mobile_app"
+    assert call_json["registration_info"]["app_id"] == "io.homeassistant.mobile_app"
     assert call_json["registration_info"]["app_version"] == "1.0"

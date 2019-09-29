@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Most je \u017ee konfiguriran"
+            "already_configured": "Most je \u017ee konfiguriran",
+            "already_in_progress": "Konfiguracija mostu je \u017ee v teku."
         },
         "error": {
             "cannot_connect": "Povezava s prehodom ni mogo\u010de.",

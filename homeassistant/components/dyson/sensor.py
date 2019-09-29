@@ -6,21 +6,21 @@ from homeassistant.helpers.entity import Entity
 from . import DYSON_DEVICES
 
 SENSOR_UNITS = {
-    'air_quality': None,
-    'dust': None,
-    'filter_life': 'hours',
-    'humidity': '%',
+    "air_quality": None,
+    "dust": None,
+    "filter_life": "hours",
+    "humidity": "%",
 }
 
 SENSOR_ICONS = {
-    'air_quality': 'mdi:fan',
-    'dust': 'mdi:cloud',
-    'filter_life': 'mdi:filter-outline',
-    'humidity': 'mdi:water-percent',
-    'temperature': 'mdi:thermometer',
+    "air_quality": "mdi:fan",
+    "dust": "mdi:cloud",
+    "filter_life": "mdi:filter-outline",
+    "humidity": "mdi:water-percent",
+    "temperature": "mdi:thermometer",
 }
 
-DYSON_SENSOR_DEVICES = 'dyson_sensor_devices'
+DYSON_SENSOR_DEVICES = "dyson_sensor_devices"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,13 +38,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devices = hass.data[DYSON_SENSOR_DEVICES]
 
     # Get Dyson Devices from parent component
-    device_ids = [device.unique_id for device in
-                  hass.data[DYSON_SENSOR_DEVICES]]
+    device_ids = [device.unique_id for device in hass.data[DYSON_SENSOR_DEVICES]]
     for device in hass.data[DYSON_DEVICES]:
         if isinstance(device, DysonPureCool):
-            if '{}-{}'.format(device.serial, 'temperature') not in device_ids:
+            if "{}-{}".format(device.serial, "temperature") not in device_ids:
                 devices.append(DysonTemperatureSensor(device, unit))
-            if '{}-{}'.format(device.serial, 'humidity') not in device_ids:
+            if "{}-{}".format(device.serial, "humidity") not in device_ids:
                 devices.append(DysonHumiditySensor(device))
         elif isinstance(device, DysonPureCoolLink):
             devices.append(DysonFilterLifeSensor(device))
@@ -68,14 +67,14 @@ class DysonSensor(Entity):
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self.hass.async_add_executor_job(
-            self._device.add_message_listener, self.on_message)
+            self._device.add_message_listener, self.on_message
+        )
 
     def on_message(self, message):
         """Handle new messages which are received from the fan."""
         # Prevent refreshing if not needed
         if self._old_value is None or self._old_value != self.state:
-            _LOGGER.debug("Message received for %s device: %s", self.name,
-                          message)
+            _LOGGER.debug("Message received for %s device: %s", self.name, message)
             self._old_value = self.state
             self.schedule_update_ha_state()
 
@@ -102,7 +101,7 @@ class DysonSensor(Entity):
     @property
     def unique_id(self):
         """Return the sensor's unique id."""
-        return '{}-{}'.format(self._device.serial, self._sensor_type)
+        return f"{self._device.serial}-{self._sensor_type}"
 
 
 class DysonFilterLifeSensor(DysonSensor):
@@ -110,8 +109,8 @@ class DysonFilterLifeSensor(DysonSensor):
 
     def __init__(self, device):
         """Create a new Dyson Filter Life sensor."""
-        super().__init__(device, 'filter_life')
-        self._name = "{} Filter Life".format(self._device.name)
+        super().__init__(device, "filter_life")
+        self._name = f"{self._device.name} Filter Life"
 
     @property
     def state(self):
@@ -126,8 +125,8 @@ class DysonDustSensor(DysonSensor):
 
     def __init__(self, device):
         """Create a new Dyson Dust sensor."""
-        super().__init__(device, 'dust')
-        self._name = "{} Dust".format(self._device.name)
+        super().__init__(device, "dust")
+        self._name = f"{self._device.name} Dust"
 
     @property
     def state(self):
@@ -142,8 +141,8 @@ class DysonHumiditySensor(DysonSensor):
 
     def __init__(self, device):
         """Create a new Dyson Humidity sensor."""
-        super().__init__(device, 'humidity')
-        self._name = "{} Humidity".format(self._device.name)
+        super().__init__(device, "humidity")
+        self._name = f"{self._device.name} Humidity"
 
     @property
     def state(self):
@@ -160,8 +159,8 @@ class DysonTemperatureSensor(DysonSensor):
 
     def __init__(self, device, unit):
         """Create a new Dyson Temperature sensor."""
-        super().__init__(device, 'temperature')
-        self._name = "{} Temperature".format(self._device.name)
+        super().__init__(device, "temperature")
+        self._name = f"{self._device.name} Temperature"
         self._unit = unit
 
     @property
@@ -187,8 +186,8 @@ class DysonAirQualitySensor(DysonSensor):
 
     def __init__(self, device):
         """Create a new Dyson Air Quality sensor."""
-        super().__init__(device, 'air_quality')
-        self._name = "{} AQI".format(self._device.name)
+        super().__init__(device, "air_quality")
+        self._name = f"{self._device.name} AQI"
 
     @property
     def state(self):

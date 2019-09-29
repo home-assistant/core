@@ -1,21 +1,21 @@
 """Data storage helper for ZHA."""
-import logging
-from collections import OrderedDict
 # pylint: disable=W0611
-from typing import MutableMapping  # noqa: F401
+from collections import OrderedDict
+import logging
+from typing import MutableMapping
 from typing import cast
 
 import attr
 
 from homeassistant.core import callback
-from homeassistant.loader import bind_hass
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_REGISTRY = 'zha_storage'
+DATA_REGISTRY = "zha_storage"
 
-STORAGE_KEY = 'zha.storage'
+STORAGE_KEY = "zha.storage"
 STORAGE_VERSION = 1
 SAVE_DELAY = 10
 
@@ -35,17 +35,14 @@ class ZhaDeviceStorage:
     def __init__(self, hass: HomeAssistantType) -> None:
         """Initialize the zha device storage."""
         self.hass = hass
-        self.devices = {}  # type: MutableMapping[str, ZhaDeviceEntry]
+        self.devices: MutableMapping[str, ZhaDeviceEntry] = {}
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @callback
     def async_create(self, device) -> ZhaDeviceEntry:
         """Create a new ZhaDeviceEntry."""
         device_entry = ZhaDeviceEntry(
-            name=device.name,
-            ieee=str(device.ieee),
-            last_seen=device.last_seen
-
+            name=device.name, ieee=str(device.ieee), last_seen=device.last_seen
         )
         self.devices[device_entry.ieee] = device_entry
 
@@ -81,7 +78,7 @@ class ZhaDeviceStorage:
         old = self.devices[ieee_str]
 
         changes = {}
-        changes['last_seen'] = device.last_seen
+        changes["last_seen"] = device.last_seen
 
         new = self.devices[ieee_str] = attr.evolve(old, **changes)
         self.async_schedule_save()
@@ -91,15 +88,14 @@ class ZhaDeviceStorage:
         """Load the registry of zha device entries."""
         data = await self._store.async_load()
 
-        devices = OrderedDict()  # type: OrderedDict[str, ZhaDeviceEntry]
+        devices: "OrderedDict[str, ZhaDeviceEntry]" = OrderedDict()
 
         if data is not None:
-            for device in data['devices']:
-                devices[device['ieee']] = ZhaDeviceEntry(
-                    name=device['name'],
-                    ieee=device['ieee'],
-                    last_seen=device['last_seen'] if 'last_seen' in device
-                    else None
+            for device in data["devices"]:
+                devices[device["ieee"]] = ZhaDeviceEntry(
+                    name=device["name"],
+                    ieee=device["ieee"],
+                    last_seen=device["last_seen"] if "last_seen" in device else None,
                 )
 
         self.devices = devices
@@ -118,12 +114,9 @@ class ZhaDeviceStorage:
         """Return data for the registry of zha devices to store in a file."""
         data = {}
 
-        data['devices'] = [
-            {
-                'name': entry.name,
-                'ieee': entry.ieee,
-                'last_seen': entry.last_seen
-            } for entry in self.devices.values()
+        data["devices"] = [
+            {"name": entry.name, "ieee": entry.ieee, "last_seen": entry.last_seen}
+            for entry in self.devices.values()
         ]
 
         return data
@@ -135,6 +128,7 @@ async def async_get_registry(hass: HomeAssistantType) -> ZhaDeviceStorage:
     task = hass.data.get(DATA_REGISTRY)
 
     if task is None:
+
         async def _load_reg() -> ZhaDeviceStorage:
             registry = ZhaDeviceStorage(hass)
             await registry.async_load()

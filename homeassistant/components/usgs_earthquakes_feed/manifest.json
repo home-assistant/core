@@ -3,8 +3,10 @@
   "name": "Usgs earthquakes feed",
   "documentation": "https://www.home-assistant.io/components/usgs_earthquakes_feed",
   "requirements": [
-    "geojson_client==0.3"
+    "geojson_client==0.4"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@exxamalte"
+  ]
 }

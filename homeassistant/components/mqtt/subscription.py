@@ -21,7 +21,7 @@ class EntitySubscription:
     message_callback = attr.ib(type=MessageCallbackType)
     unsubscribe_callback = attr.ib(type=Optional[Callable[[], None]])
     qos = attr.ib(type=int, default=0)
-    encoding = attr.ib(type=str, default='utf-8')
+    encoding = attr.ib(type=str, default="utf-8")
 
     async def resubscribe_if_necessary(self, hass, other):
         """Re-subscribe to the new topic if necessary."""
@@ -36,8 +36,7 @@ class EntitySubscription:
             return
 
         self.unsubscribe_callback = await mqtt.async_subscribe(
-            hass, self.topic, self.message_callback,
-            self.qos, self.encoding
+            hass, self.topic, self.message_callback, self.qos, self.encoding
         )
 
     def _should_resubscribe(self, other):
@@ -45,15 +44,19 @@ class EntitySubscription:
         if other is None:
             return True
 
-        return (self.topic, self.qos, self.encoding) != \
-            (other.topic, other.qos, other.encoding)
+        return (self.topic, self.qos, self.encoding) != (
+            other.topic,
+            other.qos,
+            other.encoding,
+        )
 
 
 @bind_hass
-async def async_subscribe_topics(hass: HomeAssistantType,
-                                 new_state: Optional[Dict[str,
-                                                          EntitySubscription]],
-                                 topics: Dict[str, Any]):
+async def async_subscribe_topics(
+    hass: HomeAssistantType,
+    new_state: Optional[Dict[str, EntitySubscription]],
+    topics: Dict[str, Any],
+):
     """(Re)Subscribe to a set of MQTT topics.
 
     State is kept in sub_state and a dictionary mapping from the subscription
@@ -68,11 +71,11 @@ async def async_subscribe_topics(hass: HomeAssistantType,
     for key, value in topics.items():
         # Extract the new requested subscription
         requested = EntitySubscription(
-            topic=value.get('topic', None),
-            message_callback=value.get('msg_callback', None),
+            topic=value.get("topic", None),
+            message_callback=value.get("msg_callback", None),
             unsubscribe_callback=None,
-            qos=value.get('qos', DEFAULT_QOS),
-            encoding=value.get('encoding', 'utf-8'),
+            qos=value.get("qos", DEFAULT_QOS),
+            encoding=value.get("encoding", "utf-8"),
         )
         # Get the current subscription state
         current = current_subscriptions.pop(key, None)

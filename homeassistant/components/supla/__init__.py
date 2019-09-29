@@ -9,31 +9,33 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pysupla==0.0.3']
+REQUIREMENTS = ["pysupla==0.0.3"]
 
 _LOGGER = logging.getLogger(__name__)
-DOMAIN = 'supla'
+DOMAIN = "supla"
 
-CONF_SERVER = 'server'
-CONF_SERVERS = 'servers'
+CONF_SERVER = "server"
+CONF_SERVERS = "servers"
 
 SUPLA_FUNCTION_HA_CMP_MAP = {
-    'CONTROLLINGTHEROLLERSHUTTER': 'cover'
+    "CONTROLLINGTHEROLLERSHUTTER": "cover",
+    "LIGHTSWITCH": "switch",
 }
-SUPLA_CHANNELS = 'supla_channels'
-SUPLA_SERVERS = 'supla_servers'
+SUPLA_CHANNELS = "supla_channels"
+SUPLA_SERVERS = "supla_servers"
 
-SERVER_CONFIG = vol.Schema({
-    vol.Required(CONF_SERVER): cv.string,
-    vol.Required(CONF_ACCESS_TOKEN): cv.string
-})
+SERVER_CONFIG = vol.Schema(
+    {vol.Required(CONF_SERVER): cv.string, vol.Required(CONF_ACCESS_TOKEN): cv.string}
+)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_SERVERS):
-            vol.All(cv.ensure_list, [SERVER_CONFIG])
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {vol.Required(CONF_SERVERS): vol.All(cv.ensure_list, [SERVER_CONFIG])}
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, base_config):
@@ -49,27 +51,23 @@ def setup(hass, base_config):
 
         server_address = server_conf[CONF_SERVER]
 
-        server = SuplaAPI(
-            server_address,
-            server_conf[CONF_ACCESS_TOKEN]
-        )
+        server = SuplaAPI(server_address, server_conf[CONF_ACCESS_TOKEN])
 
         # Test connection
         try:
             srv_info = server.get_server_info()
-            if srv_info.get('authenticated'):
+            if srv_info.get("authenticated"):
                 hass.data[SUPLA_SERVERS][server_conf[CONF_SERVER]] = server
             else:
                 _LOGGER.error(
-                    'Server: %s not configured. API call returned: %s',
+                    "Server: %s not configured. API call returned: %s",
                     server_address,
-                    srv_info
+                    srv_info,
                 )
                 return False
-        except IOError:
+        except OSError:
             _LOGGER.exception(
-                'Server: %s not configured. Error on Supla API access: ',
-                server_address
+                "Server: %s not configured. Error on Supla API access: ", server_address
             )
             return False
 
@@ -88,29 +86,24 @@ def discover_devices(hass, hass_config):
 
     for server_name, server in hass.data[SUPLA_SERVERS].items():
 
-        for channel in server.get_channels(include=['iodevice']):
-            channel_function = channel['function']['name']
+        for channel in server.get_channels(include=["iodevice"]):
+            channel_function = channel["function"]["name"]
             component_name = SUPLA_FUNCTION_HA_CMP_MAP.get(channel_function)
 
             if component_name is None:
                 _LOGGER.warning(
-                    'Unsupported function: %s, channel id: %s',
-                    channel_function, channel['id']
+                    "Unsupported function: %s, channel id: %s",
+                    channel_function,
+                    channel["id"],
                 )
                 continue
 
-            channel['server_name'] = server_name
+            channel["server_name"] = server_name
             component_configs.setdefault(component_name, []).append(channel)
 
     # Load discovered devices
     for component_name, channel in component_configs.items():
-        load_platform(
-            hass,
-            component_name,
-            'supla',
-            channel,
-            hass_config
-        )
+        load_platform(hass, component_name, "supla", channel, hass_config)
 
 
 class SuplaChannel(Entity):
@@ -118,7 +111,7 @@ class SuplaChannel(Entity):
 
     def __init__(self, channel_data):
         """Channel data -- raw channel information from PySupla."""
-        self.server_name = channel_data['server_name']
+        self.server_name = channel_data["server_name"]
         self.channel_data = channel_data
 
     @property
@@ -129,15 +122,15 @@ class SuplaChannel(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return 'supla-{}-{}'.format(
-            self.channel_data['iodevice']['gUIDString'].lower(),
-            self.channel_data['channelNumber']
+        return "supla-{}-{}".format(
+            self.channel_data["iodevice"]["gUIDString"].lower(),
+            self.channel_data["channelNumber"],
         )
 
     @property
     def name(self) -> Optional[str]:
         """Return the name of the device."""
-        return self.channel_data['caption']
+        return self.channel_data["caption"]
 
     def action(self, action, **add_pars):
         """
@@ -147,16 +140,15 @@ class SuplaChannel(Entity):
         Supla's API enables autodiscovery
         """
         _LOGGER.debug(
-            'Executing action %s on channel %d, params: %s',
+            "Executing action %s on channel %d, params: %s",
             action,
-            self.channel_data['id'],
-            add_pars
+            self.channel_data["id"],
+            add_pars,
         )
-        self.server.execute_action(self.channel_data['id'], action, **add_pars)
+        self.server.execute_action(self.channel_data["id"], action, **add_pars)
 
     def update(self):
         """Call to update state."""
         self.channel_data = self.server.get_channel(
-            self.channel_data['id'],
-            include=['connected', 'state']
+            self.channel_data["id"], include=["connected", "state"]
         )

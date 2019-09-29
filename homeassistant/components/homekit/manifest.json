@@ -6,7 +6,5 @@
     "HAP-python==2.5.0"
   ],
   "dependencies": [],
-  "codeowners": [
-    "@cdce8p"
-  ]
+  "codeowners": []
 }

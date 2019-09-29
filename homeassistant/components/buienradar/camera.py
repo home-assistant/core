@@ -16,11 +16,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
 
-CONF_DIMENSION = 'dimension'
-CONF_DELTA = 'delta'
+CONF_DIMENSION = "dimension"
+CONF_DELTA = "delta"
 
-RADAR_MAP_URL_TEMPLATE = ('https://api.buienradar.nl/image/1.0/'
-                          'RadarMapNL?w={w}&h={h}')
+RADAR_MAP_URL_TEMPLATE = "https://api.buienradar.nl/image/1.0/" "RadarMapNL?w={w}&h={h}"
 
 _LOG = logging.getLogger(__name__)
 
@@ -28,16 +27,19 @@ _LOG = logging.getLogger(__name__)
 DIM_RANGE = vol.All(vol.Coerce(int), vol.Range(min=120, max=700))
 
 PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend({
-        vol.Optional(CONF_DIMENSION, default=512): DIM_RANGE,
-        vol.Optional(CONF_DELTA, default=600.0): vol.All(vol.Coerce(float),
-                                                         vol.Range(min=0)),
-        vol.Optional(CONF_NAME, default="Buienradar loop"): cv.string,
-    }))
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Optional(CONF_DIMENSION, default=512): DIM_RANGE,
+            vol.Optional(CONF_DELTA, default=600.0): vol.All(
+                vol.Coerce(float), vol.Range(min=0)
+            ),
+            vol.Optional(CONF_NAME, default="Buienradar loop"): cv.string,
+        }
+    )
+)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up buienradar radar-loop camera component."""
     dimension = config[CONF_DIMENSION]
     delta = config[CONF_DELTA]
@@ -79,13 +81,13 @@ class BuienradarCam(Camera):
         # invariant: this condition is private to and owned by this instance.
         self._condition = asyncio.Condition()
 
-        self._last_image = None     # type: Optional[bytes]
+        self._last_image: Optional[bytes] = None
         # value of the last seen last modified header
-        self._last_modified = None  # type: Optional[str]
+        self._last_modified: Optional[str] = None
         # loading status
         self._loading = False
         # deadline for image refresh - self.delta after last successful load
-        self._deadline = None       # type: Optional[datetime]
+        self._deadline: Optional[datetime] = None
 
     @property
     def name(self) -> str:
@@ -102,11 +104,10 @@ class BuienradarCam(Camera):
         """Retrieve new radar image and return whether this succeeded."""
         session = async_get_clientsession(self.hass)
 
-        url = RADAR_MAP_URL_TEMPLATE.format(w=self._dimension,
-                                            h=self._dimension)
+        url = RADAR_MAP_URL_TEMPLATE.format(w=self._dimension, h=self._dimension)
 
         if self._last_modified:
-            headers = {'If-Modified-Since': self._last_modified}
+            headers = {"If-Modified-Since": self._last_modified}
         else:
             headers = {}
 
@@ -118,7 +119,7 @@ class BuienradarCam(Camera):
                     _LOG.debug("HTTP 304 - success")
                     return True
 
-                last_modified = res.headers.get('Last-Modified', None)
+                last_modified = res.headers.get("Last-Modified", None)
                 if last_modified:
                     self._last_modified = last_modified
 

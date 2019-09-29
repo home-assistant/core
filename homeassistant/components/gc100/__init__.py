@@ -3,25 +3,29 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT)
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PORTS = 'ports'
+CONF_PORTS = "ports"
 
 DEFAULT_PORT = 4998
-DOMAIN = 'gc100'
+DOMAIN = "gc100"
 
-DATA_GC100 = 'gc100'
+DATA_GC100 = "gc100"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_HOST): cv.string,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 # pylint: disable=no-member

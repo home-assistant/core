@@ -3,12 +3,29 @@ import logging
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
+    MEDIA_TYPE_MUSIC,
+    MEDIA_TYPE_TVSHOW,
+    MEDIA_TYPE_VIDEO,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEEK,
+    SUPPORT_STOP,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF,
-    STATE_PAUSED, STATE_PLAYING, STATE_STANDBY)
+    CONF_HOST,
+    CONF_NAME,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_IDLE,
+    STATE_OFF,
+    STATE_PAUSED,
+    STATE_PLAYING,
+    STATE_STANDBY,
+)
 from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
 
@@ -16,13 +33,20 @@ from . import ATTR_ATV, ATTR_POWER, DATA_APPLE_TV, DATA_ENTITIES
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_APPLE_TV = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | \
-                   SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_SEEK | \
-                   SUPPORT_STOP | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
+SUPPORT_APPLE_TV = (
+    SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_PAUSE
+    | SUPPORT_PLAY
+    | SUPPORT_SEEK
+    | SUPPORT_STOP
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_PREVIOUS_TRACK
+)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Apple TV platform."""
     if not discovery_info:
         return
@@ -89,15 +113,22 @@ class AppleTvDevice(MediaPlayerDevice):
 
         if self._playing:
             from pyatv import const
+
             state = self._playing.play_state
-            if state in (const.PLAY_STATE_IDLE, const.PLAY_STATE_NO_MEDIA,
-                         const.PLAY_STATE_LOADING):
+            if state in (
+                const.PLAY_STATE_IDLE,
+                const.PLAY_STATE_NO_MEDIA,
+                const.PLAY_STATE_LOADING,
+            ):
                 return STATE_IDLE
             if state == const.PLAY_STATE_PLAYING:
                 return STATE_PLAYING
-            if state in (const.PLAY_STATE_PAUSED,
-                         const.PLAY_STATE_FAST_FORWARD,
-                         const.PLAY_STATE_FAST_BACKWARD):
+            if state in (
+                const.PLAY_STATE_PAUSED,
+                const.PLAY_STATE_FAST_FORWARD,
+                const.PLAY_STATE_FAST_BACKWARD,
+                const.PLAY_STATE_STOPPED,
+            ):
                 # Catch fast forward/backward here so "play" is default action
                 return STATE_PAUSED
             return STATE_STANDBY  # Bad or unknown state?
@@ -111,8 +142,7 @@ class AppleTvDevice(MediaPlayerDevice):
     @callback
     def playstatus_error(self, updater, exception):
         """Inform about an error and restart push updates."""
-        _LOGGER.warning('A %s error occurred: %s',
-                        exception.__class__, exception)
+        _LOGGER.warning("A %s error occurred: %s", exception.__class__, exception)
 
         # This will wait 10 seconds before restarting push updates. If the
         # connection continues to fail, it will flood the log (every 10
@@ -127,6 +157,7 @@ class AppleTvDevice(MediaPlayerDevice):
         """Content type of current playing media."""
         if self._playing:
             from pyatv import const
+
             media_type = self._playing.media_type
             if media_type == const.MEDIA_TYPE_VIDEO:
                 return MEDIA_TYPE_VIDEO
@@ -169,7 +200,7 @@ class AppleTvDevice(MediaPlayerDevice):
         """Fetch media image of current playing image."""
         state = self.state
         if self._playing and state not in [STATE_OFF, STATE_IDLE]:
-            return (await self.atv.metadata.artwork()), 'image/png'
+            return (await self.atv.metadata.artwork()), "image/png"
 
         return None, None
 
@@ -178,11 +209,11 @@ class AppleTvDevice(MediaPlayerDevice):
         """Title of current playing media."""
         if self._playing:
             if self.state == STATE_IDLE:
-                return 'Nothing playing'
+                return "Nothing playing"
             title = self._playing.title
-            return title if title else 'No title'
+            return title if title else "No title"
 
-        return 'Establishing a connection to {0}...'.format(self._name)
+        return f"Establishing a connection to {self._name}..."
 
     @property
     def supported_features(self):

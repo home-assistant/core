@@ -2,11 +2,10 @@
 import requests.exceptions
 
 from homeassistant.components import remote
-from homeassistant.const import (CONF_HOST)
+from homeassistant.const import CONF_HOST
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Roku remote platform."""
     if not discovery_info:
         return
@@ -29,21 +28,20 @@ class RokuRemote(remote.RemoteDevice):
         """Retrieve latest state."""
         try:
             self._device_info = self.roku.device_info
-        except (requests.exceptions.ConnectionError,
-                requests.exceptions.ReadTimeout):
+        except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout):
             pass
 
     @property
     def name(self):
         """Return the name of the device."""
-        if self._device_info.userdevicename:
-            return self._device_info.userdevicename
-        return "Roku {}".format(self._device_info.sernum)
+        if self._device_info.user_device_name:
+            return self._device_info.user_device_name
+        return f"Roku {self._device_info.serial_num}"
 
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._device_info.sernum
+        return self._device_info.serial_num
 
     @property
     def is_on(self):

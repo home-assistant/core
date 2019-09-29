@@ -5,39 +5,67 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST,
-    SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_STOP, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP)
+    MEDIA_TYPE_MUSIC,
+    MEDIA_TYPE_PLAYLIST,
+    SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEEK,
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_SHUFFLE_SET,
+    SUPPORT_STOP,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
+)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, STATE_OFF, STATE_PAUSED,
-    STATE_PLAYING)
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    STATE_OFF,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'MPD'
+DEFAULT_NAME = "MPD"
 DEFAULT_PORT = 6600
 
 PLAYLIST_UPDATE_INTERVAL = timedelta(seconds=120)
 
-SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | \
-    SUPPORT_NEXT_TRACK | SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | \
-    SUPPORT_CLEAR_PLAYLIST | SUPPORT_SHUFFLE_SET | SUPPORT_SEEK | \
-    SUPPORT_STOP | SUPPORT_TURN_OFF | SUPPORT_TURN_ON
+SUPPORT_MPD = (
+    SUPPORT_PAUSE
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_PLAY
+    | SUPPORT_CLEAR_PLAYLIST
+    | SUPPORT_SHUFFLE_SET
+    | SUPPORT_SEEK
+    | SUPPORT_STOP
+    | SUPPORT_TURN_OFF
+    | SUPPORT_TURN_ON
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -80,6 +108,7 @@ class MpdDevice(MediaPlayerDevice):
     def _connect(self):
         """Connect to MPD."""
         import mpd
+
         try:
             self._client.connect(self.server, self.port)
 
@@ -93,6 +122,7 @@ class MpdDevice(MediaPlayerDevice):
     def _disconnect(self):
         """Disconnect from MPD."""
         import mpd
+
         try:
             self._client.disconnect()
         except mpd.ConnectionError:
@@ -135,11 +165,11 @@ class MpdDevice(MediaPlayerDevice):
         """Return the media state."""
         if self._status is None:
             return STATE_OFF
-        if self._status['state'] == 'play':
+        if self._status["state"] == "play":
             return STATE_PLAYING
-        if self._status['state'] == 'pause':
+        if self._status["state"] == "pause":
             return STATE_PAUSED
-        if self._status['state'] == 'stop':
+        if self._status["state"] == "stop":
             return STATE_OFF
 
         return STATE_OFF
@@ -152,7 +182,7 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def media_content_id(self):
         """Return the content ID of current playing media."""
-        return self._currentsong.get('file')
+        return self._currentsong.get("file")
 
     @property
     def media_content_type(self):
@@ -163,14 +193,14 @@ class MpdDevice(MediaPlayerDevice):
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
         # Time does not exist for streams
-        return self._currentsong.get('time')
+        return self._currentsong.get("time")
 
     @property
     def media_title(self):
         """Return the title of current playing media."""
-        name = self._currentsong.get('name', None)
-        title = self._currentsong.get('title', None)
-        file_name = self._currentsong.get('file', None)
+        name = self._currentsong.get("name", None)
+        title = self._currentsong.get("title", None)
+        file_name = self._currentsong.get("file", None)
 
         if name is None and title is None:
             if file_name is None:
@@ -181,23 +211,23 @@ class MpdDevice(MediaPlayerDevice):
         if title is None:
             return name
 
-        return '{}: {}'.format(name, title)
+        return f"{name}: {title}"
 
     @property
     def media_artist(self):
         """Return the artist of current playing media (Music track only)."""
-        return self._currentsong.get('artist')
+        return self._currentsong.get("artist")
 
     @property
     def media_album_name(self):
         """Return the album of current playing media (Music track only)."""
-        return self._currentsong.get('album')
+        return self._currentsong.get("album")
 
     @property
     def volume_level(self):
         """Return the volume level."""
-        if 'volume' in self._status:
-            return int(self._status['volume'])/100
+        if "volume" in self._status:
+            return int(self._status["volume"]) / 100
         return None
 
     @property
@@ -207,9 +237,8 @@ class MpdDevice(MediaPlayerDevice):
             return None
 
         supported = SUPPORT_MPD
-        if 'volume' in self._status:
-            supported |= \
-                SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE
+        if "volume" in self._status:
+            supported |= SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE
         if self._playlists is not None:
             supported |= SUPPORT_SELECT_SOURCE
 
@@ -237,28 +266,28 @@ class MpdDevice(MediaPlayerDevice):
         try:
             self._playlists = []
             for playlist_data in self._client.listplaylists():
-                self._playlists.append(playlist_data['playlist'])
+                self._playlists.append(playlist_data["playlist"])
         except mpd.CommandError as error:
             self._playlists = None
             _LOGGER.warning("Playlists could not be updated: %s:", error)
 
     def set_volume_level(self, volume):
         """Set volume of media player."""
-        if 'volume' in self._status:
+        if "volume" in self._status:
             self._client.setvol(int(volume * 100))
 
     def volume_up(self):
         """Service to send the MPD the command for volume up."""
-        if 'volume' in self._status:
-            current_volume = int(self._status['volume'])
+        if "volume" in self._status:
+            current_volume = int(self._status["volume"])
 
             if current_volume <= 100:
                 self._client.setvol(current_volume + 5)
 
     def volume_down(self):
         """Service to send the MPD the command for volume down."""
-        if 'volume' in self._status:
-            current_volume = int(self._status['volume'])
+        if "volume" in self._status:
+            current_volume = int(self._status["volume"])
 
             if current_volume >= 0:
                 self._client.setvol(current_volume - 5)
@@ -285,7 +314,7 @@ class MpdDevice(MediaPlayerDevice):
 
     def mute_volume(self, mute):
         """Mute. Emulated with set_volume_level."""
-        if 'volume' in self._status:
+        if "volume" in self._status:
             if mute:
                 self._muted_volume = self.volume_level
                 self.set_volume_level(0)
@@ -313,7 +342,7 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def shuffle(self):
         """Boolean if shuffle is enabled."""
-        return bool(int(self._status['random']))
+        return bool(int(self._status["random"]))
 
     def set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""

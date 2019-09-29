@@ -1,26 +1,29 @@
 """Constants for the homekit_controller component."""
-DOMAIN = 'homekit_controller'
+DOMAIN = "homekit_controller"
 
-KNOWN_DEVICES = "{}-devices".format(DOMAIN)
-CONTROLLER = "{}-controller".format(DOMAIN)
-ENTITY_MAP = '{}-entity-map'.format(DOMAIN)
+KNOWN_DEVICES = f"{DOMAIN}-devices"
+CONTROLLER = f"{DOMAIN}-controller"
+ENTITY_MAP = f"{DOMAIN}-entity-map"
 
-HOMEKIT_DIR = '.homekit'
-PAIRING_FILE = 'pairing.json'
+HOMEKIT_DIR = ".homekit"
+PAIRING_FILE = "pairing.json"
 
 # Mapping from Homekit type to component.
 HOMEKIT_ACCESSORY_DISPATCH = {
-    'lightbulb': 'light',
-    'outlet': 'switch',
-    'switch': 'switch',
-    'thermostat': 'climate',
-    'security-system': 'alarm_control_panel',
-    'garage-door-opener': 'cover',
-    'window': 'cover',
-    'window-covering': 'cover',
-    'lock-mechanism': 'lock',
-    'motion': 'binary_sensor',
-    'humidity': 'sensor',
-    'light': 'sensor',
-    'temperature': 'sensor'
+    "lightbulb": "light",
+    "outlet": "switch",
+    "switch": "switch",
+    "thermostat": "climate",
+    "security-system": "alarm_control_panel",
+    "garage-door-opener": "cover",
+    "window": "cover",
+    "window-covering": "cover",
+    "lock-mechanism": "lock",
+    "contact": "binary_sensor",
+    "motion": "binary_sensor",
+    "carbon-dioxide": "sensor",
+    "humidity": "sensor",
+    "light": "sensor",
+    "temperature": "sensor",
+    "battery": "sensor",
 }

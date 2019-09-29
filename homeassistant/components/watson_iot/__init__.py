@@ -7,40 +7,62 @@ import time
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_ID, CONF_INCLUDE,
-    CONF_TOKEN, CONF_TYPE, EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
-    STATE_UNAVAILABLE, STATE_UNKNOWN)
+    CONF_DOMAINS,
+    CONF_ENTITIES,
+    CONF_EXCLUDE,
+    CONF_ID,
+    CONF_INCLUDE,
+    CONF_TOKEN,
+    CONF_TYPE,
+    EVENT_HOMEASSISTANT_STOP,
+    EVENT_STATE_CHANGED,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ORG = 'organization'
+CONF_ORG = "organization"
 
-DOMAIN = 'watson_iot'
+DOMAIN = "watson_iot"
 
 MAX_TRIES = 3
 
 RETRY_DELAY = 20
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(vol.Schema({
-        vol.Required(CONF_ORG): cv.string,
-        vol.Required(CONF_TYPE): cv.string,
-        vol.Required(CONF_ID): cv.string,
-        vol.Required(CONF_TOKEN): cv.string,
-        vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
-            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-            vol.Optional(CONF_DOMAINS, default=[]):
-                vol.All(cv.ensure_list, [cv.string])
-        }),
-        vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
-            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-            vol.Optional(CONF_DOMAINS, default=[]):
-                vol.All(cv.ensure_list, [cv.string]),
-        }),
-    })),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.All(
+            vol.Schema(
+                {
+                    vol.Required(CONF_ORG): cv.string,
+                    vol.Required(CONF_TYPE): cv.string,
+                    vol.Required(CONF_ID): cv.string,
+                    vol.Required(CONF_TOKEN): cv.string,
+                    vol.Optional(CONF_EXCLUDE, default={}): vol.Schema(
+                        {
+                            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+                            vol.Optional(CONF_DOMAINS, default=[]): vol.All(
+                                cv.ensure_list, [cv.string]
+                            ),
+                        }
+                    ),
+                    vol.Optional(CONF_INCLUDE, default={}): vol.Schema(
+                        {
+                            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+                            vol.Optional(CONF_DOMAINS, default=[]): vol.All(
+                                cv.ensure_list, [cv.string]
+                            ),
+                        }
+                    ),
+                }
+            )
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
@@ -57,24 +79,28 @@ def setup(hass, config):
     blacklist_d = set(exclude[CONF_DOMAINS])
 
     client_args = {
-        'org': conf[CONF_ORG],
-        'type': conf[CONF_TYPE],
-        'id': conf[CONF_ID],
-        'auth-method': 'token',
-        'auth-token': conf[CONF_TOKEN],
+        "org": conf[CONF_ORG],
+        "type": conf[CONF_TYPE],
+        "id": conf[CONF_ID],
+        "auth-method": "token",
+        "auth-token": conf[CONF_TOKEN],
     }
     watson_gateway = gateway.Client(client_args)
 
     def event_to_json(event):
         """Add an event to the outgoing list."""
-        state = event.data.get('new_state')
-        if state is None or state.state in (
-                STATE_UNKNOWN, '', STATE_UNAVAILABLE) or \
-                state.entity_id in blacklist_e or state.domain in blacklist_d:
+        state = event.data.get("new_state")
+        if (
+            state is None
+            or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE)
+            or state.entity_id in blacklist_e
+            or state.domain in blacklist_d
+        ):
             return
 
-        if (whitelist_e and state.entity_id not in whitelist_e) or \
-                (whitelist_d and state.domain not in whitelist_d):
+        if (whitelist_e and state.entity_id not in whitelist_e) or (
+            whitelist_d and state.domain not in whitelist_d
+        ):
             return
 
         try:
@@ -89,35 +115,29 @@ def setup(hass, config):
                 _state_as_value = None
 
         out_event = {
-            'tags': {
-                'domain': state.domain,
-                'entity_id': state.object_id,
-            },
-            'time': event.time_fired.isoformat(),
-            'fields': {
-                'state': state.state,
-            }
+            "tags": {"domain": state.domain, "entity_id": state.object_id},
+            "time": event.time_fired.isoformat(),
+            "fields": {"state": state.state},
         }
         if _state_as_value is not None:
-            out_event['fields']['state_value'] = _state_as_value
+            out_event["fields"]["state_value"] = _state_as_value
 
         for key, value in state.attributes.items():
-            if key != 'unit_of_measurement':
+            if key != "unit_of_measurement":
                 # If the key is already in fields
-                if key in out_event['fields']:
-                    key = '{}_'.format(key)
+                if key in out_event["fields"]:
+                    key = f"{key}_"
                 # For each value we try to cast it as float
                 # But if we can not do it we store the value
                 # as string
                 try:
-                    out_event['fields'][key] = float(value)
+                    out_event["fields"][key] = float(value)
                 except (ValueError, TypeError):
-                    out_event['fields'][key] = str(value)
+                    out_event["fields"][key] = str(value)
 
         return out_event
 
-    instance = hass.data[DOMAIN] = WatsonIOTThread(
-        hass, watson_gateway, event_to_json)
+    instance = hass.data[DOMAIN] = WatsonIOTThread(hass, watson_gateway, event_to_json)
     instance.start()
 
     def shutdown(event):
@@ -135,7 +155,7 @@ class WatsonIOTThread(threading.Thread):
 
     def __init__(self, hass, gateway, event_to_json):
         """Initialize the listener."""
-        threading.Thread.__init__(self, name='WatsonIOT')
+        threading.Thread.__init__(self, name="WatsonIOT")
         self.queue = queue.Queue()
         self.gateway = gateway
         self.gateway.connect()
@@ -175,23 +195,24 @@ class WatsonIOTThread(threading.Thread):
         for event in events:
             for retry in range(MAX_TRIES + 1):
                 try:
-                    for field in event['fields']:
-                        value = event['fields'][field]
+                    for field in event["fields"]:
+                        value = event["fields"][field]
                         device_success = self.gateway.publishDeviceEvent(
-                            event['tags']['domain'],
-                            event['tags']['entity_id'],
-                            field, 'json', value)
+                            event["tags"]["domain"],
+                            event["tags"]["entity_id"],
+                            field,
+                            "json",
+                            value,
+                        )
                     if not device_success:
-                        _LOGGER.error(
-                            "Failed to publish message to Watson IoT")
+                        _LOGGER.error("Failed to publish message to Watson IoT")
                         continue
                     break
                 except (ibmiotf.MissingMessageEncoderException, IOError):
                     if retry < MAX_TRIES:
                         time.sleep(RETRY_DELAY)
                     else:
-                        _LOGGER.exception(
-                            "Failed to publish message to Watson IoT")
+                        _LOGGER.exception("Failed to publish message to Watson IoT")
 
     def run(self):
         """Process incoming events."""

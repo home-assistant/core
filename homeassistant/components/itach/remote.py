@@ -6,8 +6,13 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import remote
 from homeassistant.const import (
-    DEVICE_DEFAULT_NAME, CONF_NAME, CONF_MAC, CONF_HOST, CONF_PORT,
-    CONF_DEVICES)
+    DEVICE_DEFAULT_NAME,
+    CONF_NAME,
+    CONF_MAC,
+    CONF_HOST,
+    CONF_PORT,
+    CONF_DEVICES,
+)
 from homeassistant.components.remote import PLATFORM_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
@@ -15,33 +20,46 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_PORT = 4998
 CONNECT_TIMEOUT = 5000
 
-CONF_MODADDR = 'modaddr'
-CONF_CONNADDR = 'connaddr'
-CONF_COMMANDS = 'commands'
-CONF_DATA = 'data'
+CONF_MODADDR = "modaddr"
+CONF_CONNADDR = "connaddr"
+CONF_COMMANDS = "commands"
+CONF_DATA = "data"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MAC): cv.string,
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [{
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_MODADDR): vol.Coerce(int),
-        vol.Required(CONF_CONNADDR): vol.Coerce(int),
-        vol.Required(CONF_COMMANDS): vol.All(cv.ensure_list, [{
-            vol.Required(CONF_NAME): cv.string,
-            vol.Required(CONF_DATA): cv.string,
-        }])
-    }])
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_MAC): cv.string,
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Required(CONF_DEVICES): vol.All(
+            cv.ensure_list,
+            [
+                {
+                    vol.Optional(CONF_NAME): cv.string,
+                    vol.Optional(CONF_MODADDR): vol.Coerce(int),
+                    vol.Required(CONF_CONNADDR): vol.Coerce(int),
+                    vol.Required(CONF_COMMANDS): vol.All(
+                        cv.ensure_list,
+                        [
+                            {
+                                vol.Required(CONF_NAME): cv.string,
+                                vol.Required(CONF_DATA): cv.string,
+                            }
+                        ],
+                    ),
+                }
+            ],
+        ),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ITach connection and devices."""
     import pyitachip2ir
+
     itachip2ir = pyitachip2ir.ITachIP2IR(
-        config.get(CONF_MAC), config.get(CONF_HOST),
-        int(config.get(CONF_PORT)))
+        config.get(CONF_MAC), config.get(CONF_HOST), int(config.get(CONF_PORT))
+    )
 
     if not itachip2ir.ready(CONNECT_TIMEOUT):
         _LOGGER.error("Unable to find iTach")
@@ -60,7 +78,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             cmddata = cmd[CONF_DATA].strip()
             if not cmddata:
                 cmddata = '""'
-            cmddatas += "{}\n{}\n".format(cmdname, cmddata)
+            cmddatas += f"{cmdname}\n{cmddata}\n"
         itachip2ir.addDevice(name, modaddr, connaddr, cmddatas)
         devices.append(ITachIP2IRRemote(itachip2ir, name))
     add_entities(devices, True)

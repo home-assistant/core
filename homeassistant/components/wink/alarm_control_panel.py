@@ -3,13 +3,16 @@ import logging
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_DISARMED,
+)
 
 from . import DOMAIN, WinkDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-STATE_ALARM_PRIVACY = 'Private'
+STATE_ALARM_PRIVACY = "Private"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -23,7 +26,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             camera.capability()
         except AttributeError:
             _id = camera.object_id() + camera.name()
-            if _id not in hass.data[DOMAIN]['unique_ids']:
+            if _id not in hass.data[DOMAIN]["unique_ids"]:
                 add_entities([WinkCameraDevice(camera, hass)])
 
 
@@ -32,7 +35,7 @@ class WinkCameraDevice(WinkDevice, alarm.AlarmControlPanel):
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self.hass.data[DOMAIN]['entities']['alarm_control_panel'].append(self)
+        self.hass.data[DOMAIN]["entities"]["alarm_control_panel"].append(self)
 
     @property
     def state(self):
@@ -63,6 +66,4 @@ class WinkCameraDevice(WinkDevice, alarm.AlarmControlPanel):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
-            'private': self.wink.private()
-        }
+        return {"private": self.wink.private()}

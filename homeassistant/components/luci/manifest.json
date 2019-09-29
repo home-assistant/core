@@ -3,7 +3,8 @@
   "name": "Luci",
   "documentation": "https://www.home-assistant.io/components/luci",
   "requirements": [
-    "openwrt-luci-rpc==1.0.5"
+    "openwrt-luci-rpc==1.1.0",
+    "packaging==19.1"
   ],
   "dependencies": [],
   "codeowners": ["@fbradyirl"]

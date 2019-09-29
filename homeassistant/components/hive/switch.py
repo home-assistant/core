@@ -23,9 +23,8 @@ class HiveDevicePlug(SwitchDevice):
         self.device_type = hivedevice["HA_DeviceType"]
         self.session = hivesession
         self.attributes = {}
-        self.data_updatesource = '{}.{}'.format(
-            self.device_type, self.node_id)
-        self._unique_id = '{}-{}'.format(self.node_id, self.device_type)
+        self.data_updatesource = f"{self.device_type}.{self.node_id}"
+        self._unique_id = f"{self.node_id}-{self.device_type}"
         self.session.entities.append(self)
 
     @property
@@ -36,16 +35,11 @@ class HiveDevicePlug(SwitchDevice):
     @property
     def device_info(self):
         """Return device information."""
-        return {
-            'identifiers': {
-                (DOMAIN, self.unique_id)
-            },
-            'name': self.name
-        }
+        return {"identifiers": {(DOMAIN, self.unique_id)}, "name": self.name}
 
     def handle_update(self, updatesource):
         """Handle the new update request."""
-        if '{}.{}'.format(self.device_type, self.node_id) not in updatesource:
+        if f"{self.device_type}.{self.node_id}" not in updatesource:
             self.schedule_update_ha_state()
 
     @property
@@ -83,5 +77,4 @@ class HiveDevicePlug(SwitchDevice):
     def update(self):
         """Update all Node data from Hive."""
         self.session.core.update_data(self.node_id)
-        self.attributes = self.session.attributes.state_attributes(
-            self.node_id)
+        self.attributes = self.session.attributes.state_attributes(self.node_id)

@@ -10,6 +10,7 @@ BASE = """
 To update, run python3 -m script.hassfest
 \"\"\"
 
+# fmt: off
 
 FLOWS = {}
 """.strip()
@@ -19,8 +20,8 @@ def validate_integration(integration: Integration):
     """Validate we can load config flow without installing requirements."""
     if not (integration.path / "config_flow.py").is_file():
         integration.add_error(
-            'config_flow',
-            "Config flows need to be defined in the file config_flow.py")
+            "config_flow", "Config flows need to be defined in the file config_flow.py"
+        )
 
     # Currently not require being able to load config flow without
     # installing requirements.
@@ -50,7 +51,7 @@ def generate_and_validate(integrations: Dict[str, Integration]):
         if not integration.manifest:
             continue
 
-        config_flow = integration.manifest.get('config_flow')
+        config_flow = integration.manifest.get("config_flow")
 
         if not config_flow:
             continue
@@ -64,22 +65,22 @@ def generate_and_validate(integrations: Dict[str, Integration]):
 
 def validate(integrations: Dict[str, Integration], config: Config):
     """Validate config flow file."""
-    config_flow_path = config.root / 'homeassistant/generated/config_flows.py'
-    config.cache['config_flow'] = content = generate_and_validate(integrations)
+    config_flow_path = config.root / "homeassistant/generated/config_flows.py"
+    config.cache["config_flow"] = content = generate_and_validate(integrations)
 
-    with open(str(config_flow_path), 'r') as fp:
+    with open(str(config_flow_path), "r") as fp:
         if fp.read().strip() != content:
             config.add_error(
                 "config_flow",
                 "File config_flows.py is not up to date. "
                 "Run python3 -m script.hassfest",
-                fixable=True
+                fixable=True,
             )
         return
 
 
 def generate(integrations: Dict[str, Integration], config: Config):
     """Generate config flow file."""
-    config_flow_path = config.root / 'homeassistant/generated/config_flows.py'
-    with open(str(config_flow_path), 'w') as fp:
-        fp.write(config.cache['config_flow'] + '\n')
+    config_flow_path = config.root / "homeassistant/generated/config_flows.py"
+    with open(str(config_flow_path), "w") as fp:
+        fp.write(config.cache["config_flow"] + "\n")

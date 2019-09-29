@@ -2,8 +2,10 @@
 import asyncio
 import logging
 
+from aiohttp import ClientResponseError
 from homeassistant.components.water_heater import WaterHeaterDevice
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import DOMAIN
 
@@ -14,20 +16,25 @@ HEATER_SUPPORT_FLAGS = 0
 HEATER_MAX_TEMP = 80.0
 HEATER_MIN_TEMP = 30.0
 
-HEATER_NAME = 'Boiler'
+HEATER_NAME = "Boiler"
 HEATER_ATTRS = [
-    'display_code', 'display_text', 'fault_code', 'is_burning', 'is_failed',
-    'is_pumping', 'is_tapping', 'heater_temp', 'tap_temp', 'pressure']
+    "display_code",
+    "display_text",
+    "is_burning",
+    "rf_message_rssi",
+    "nodenr",
+    "rfstatus_cntr",
+]
 
 
-async def async_setup_platform(hass, hass_config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+    hass, hass_config, async_add_entities, discovery_info=None
+):
     """Set up an InComfort/Intouch water_heater device."""
-    client = hass.data[DOMAIN]['client']
-    heater = hass.data[DOMAIN]['heater']
+    client = hass.data[DOMAIN]["client"]
+    heater = hass.data[DOMAIN]["heater"]
 
-    async_add_entities([
-        IncomfortWaterHeater(client, heater)], update_before_add=True)
+    async_add_entities([IncomfortWaterHeater(client, heater)], update_before_add=True)
 
 
 class IncomfortWaterHeater(WaterHeaterDevice):
@@ -44,10 +51,16 @@ class IncomfortWaterHeater(WaterHeaterDevice):
         return HEATER_NAME
 
     @property
+    def icon(self):
+        """Return the icon of the water_heater device."""
+        return "mdi:oil-temperature"
+
+    @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        state = {k: self._heater.status[k]
-                 for k in self._heater.status if k in HEATER_ATTRS}
+        state = {
+            k: self._heater.status[k] for k in self._heater.status if k in HEATER_ATTRS
+        }
         return state
 
     @property
@@ -55,7 +68,9 @@ class IncomfortWaterHeater(WaterHeaterDevice):
         """Return the current temperature."""
         if self._heater.is_tapping:
             return self._heater.tap_temp
-        return self._heater.heater_temp
+        if self._heater.is_pumping:
+            return self._heater.heater_temp
+        return max(self._heater.heater_temp, self._heater.tap_temp)
 
     @property
     def min_temp(self):
@@ -81,7 +96,7 @@ class IncomfortWaterHeater(WaterHeaterDevice):
     def current_operation(self):
         """Return the current operation mode."""
         if self._heater.is_failed:
-            return "Failed ({})".format(self._heater.fault_code)
+            return f"Fault code: {self._heater.fault_code}"
 
         return self._heater.display_text
 
@@ -90,5 +105,7 @@ class IncomfortWaterHeater(WaterHeaterDevice):
         try:
             await self._heater.update()
 
-        except (AssertionError, asyncio.TimeoutError) as err:
-            _LOGGER.warning("Update failed, message: %s", err)
+        except (ClientResponseError, asyncio.TimeoutError) as err:
+            _LOGGER.warning("Update failed, message is: %s", err)
+
+        async_dispatcher_send(self.hass, DOMAIN)

@@ -2,7 +2,9 @@
     "config": {
         "abort": {
             "already_configured": "Bridge ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf f\u00fcr die Bridge wird bereits ausgef\u00fchrt.",
             "no_bridges": "Keine deCON-Bridges entdeckt",
+            "not_deconz_bridge": "Keine deCONZ Bridge entdeckt",
             "one_instance_only": "Komponente unterst\u00fctzt nur eine deCONZ-Instanz",
             "updated_instance": "deCONZ-Instanz mit neuer Host-Adresse aktualisiert"
         },
@@ -38,5 +40,23 @@
             }
         },
         "title": "deCONZ Zigbee Gateway"
+    },
+    "options": {
+        "step": {
+            "async_step_deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "deCONZ CLIP-Sensoren zulassen",
+                    "allow_deconz_groups": "deCONZ-Lichtgruppen zulassen"
+                },
+                "description": "Konfigurieren der Sichtbarkeit von deCONZ-Ger\u00e4tetypen"
+            },
+            "deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "deCONZ CLIP-Sensoren zulassen",
+                    "allow_deconz_groups": "deCONZ-Lichtgruppen zulassen"
+                },
+                "description": "Sichtbarkeit der deCONZ-Ger\u00e4tetypen konfigurieren"
+            }
+        }
     }
 }

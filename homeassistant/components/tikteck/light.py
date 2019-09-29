@@ -5,23 +5,27 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PASSWORD
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR,
-    Light, PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS,
+    ATTR_HS_COLOR,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    Light,
+    PLATFORM_SCHEMA,
+)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_TIKTECK_LED = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR)
+SUPPORT_TIKTECK_LED = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
-DEVICE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-})
+DEVICE_SCHEMA = vol.Schema(
+    {vol.Optional(CONF_NAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -29,9 +33,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     lights = []
     for address, device_config in config[CONF_DEVICES].items():
         device = {}
-        device['name'] = device_config[CONF_NAME]
-        device['password'] = device_config[CONF_PASSWORD]
-        device['address'] = address
+        device["name"] = device_config[CONF_NAME]
+        device["password"] = device_config[CONF_PASSWORD]
+        device["address"] = address
         light = TikteckLight(device)
         if light.is_valid:
             lights.append(light)
@@ -46,19 +50,17 @@ class TikteckLight(Light):
         """Initialize the light."""
         import tikteck
 
-        self._name = device['name']
-        self._address = device['address']
-        self._password = device['password']
+        self._name = device["name"]
+        self._address = device["address"]
+        self._password = device["password"]
         self._brightness = 255
         self._hs = [0, 0]
         self._state = False
         self.is_valid = True
-        self._bulb = tikteck.tikteck(
-            self._address, "Smart Light", self._password)
+        self._bulb = tikteck.tikteck(self._address, "Smart Light", self._password)
         if self._bulb.connect() is False:
             self.is_valid = False
-            _LOGGER.error(
-                "Failed to connect to bulb %s, %s", self._address, self._name)
+            _LOGGER.error("Failed to connect to bulb %s, %s", self._address, self._name)
 
     @property
     def unique_id(self):

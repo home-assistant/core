@@ -6,42 +6,46 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    TEMP_FAHRENHEIT, CONF_NAME, CONF_MONITORED_CONDITIONS)
+from homeassistant.const import TEMP_FAHRENHEIT, CONF_NAME, CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PIN = 'pin'
-CONF_SENSOR = 'sensor'
-CONF_HUMIDITY_OFFSET = 'humidity_offset'
-CONF_TEMPERATURE_OFFSET = 'temperature_offset'
+CONF_PIN = "pin"
+CONF_SENSOR = "sensor"
+CONF_HUMIDITY_OFFSET = "humidity_offset"
+CONF_TEMPERATURE_OFFSET = "temperature_offset"
 
-DEFAULT_NAME = 'DHT Sensor'
+DEFAULT_NAME = "DHT Sensor"
 
 # DHT11 is able to deliver data once per second, DHT22 once every two
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
-SENSOR_TEMPERATURE = 'temperature'
-SENSOR_HUMIDITY = 'humidity'
+SENSOR_TEMPERATURE = "temperature"
+SENSOR_HUMIDITY = "humidity"
 SENSOR_TYPES = {
-    SENSOR_TEMPERATURE: ['Temperature', None],
-    SENSOR_HUMIDITY: ['Humidity', '%']
+    SENSOR_TEMPERATURE: ["Temperature", None],
+    SENSOR_HUMIDITY: ["Humidity", "%"],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SENSOR): cv.string,
-    vol.Required(CONF_PIN): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_TEMPERATURE_OFFSET, default=0):
-        vol.All(vol.Coerce(float), vol.Range(min=-100, max=100)),
-    vol.Optional(CONF_HUMIDITY_OFFSET, default=0):
-        vol.All(vol.Coerce(float), vol.Range(min=-100, max=100))
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_SENSOR): cv.string,
+        vol.Required(CONF_PIN): cv.string,
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        ),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_TEMPERATURE_OFFSET, default=0): vol.All(
+            vol.Coerce(float), vol.Range(min=-100, max=100)
+        ),
+        vol.Optional(CONF_HUMIDITY_OFFSET, default=0): vol.All(
+            vol.Coerce(float), vol.Range(min=-100, max=100)
+        ),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -69,9 +73,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         for variable in config[CONF_MONITORED_CONDITIONS]:
-            dev.append(DHTSensor(
-                data, variable, SENSOR_TYPES[variable][1], name,
-                temperature_offset, humidity_offset))
+            dev.append(
+                DHTSensor(
+                    data,
+                    variable,
+                    SENSOR_TYPES[variable][1],
+                    name,
+                    temperature_offset,
+                    humidity_offset,
+                )
+            )
     except KeyError:
         pass
 
@@ -81,8 +92,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class DHTSensor(Entity):
     """Implementation of the DHT sensor."""
 
-    def __init__(self, dht_client, sensor_type, temp_unit, name,
-                 temperature_offset, humidity_offset):
+    def __init__(
+        self,
+        dht_client,
+        sensor_type,
+        temp_unit,
+        name,
+        temperature_offset,
+        humidity_offset,
+    ):
         """Initialize the sensor."""
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -97,7 +115,7 @@ class DHTSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self.client_name, self._name)
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
@@ -118,16 +136,18 @@ class DHTSensor(Entity):
 
         if self.type == SENSOR_TEMPERATURE and SENSOR_TEMPERATURE in data:
             temperature = data[SENSOR_TEMPERATURE]
-            _LOGGER.debug("Temperature %.1f \u00b0C + offset %.1f",
-                          temperature, temperature_offset)
+            _LOGGER.debug(
+                "Temperature %.1f \u00b0C + offset %.1f",
+                temperature,
+                temperature_offset,
+            )
             if -20 <= temperature < 80:
                 self._state = round(temperature + temperature_offset, 1)
                 if self.temp_unit == TEMP_FAHRENHEIT:
                     self._state = round(celsius_to_fahrenheit(temperature), 1)
         elif self.type == SENSOR_HUMIDITY and SENSOR_HUMIDITY in data:
             humidity = data[SENSOR_HUMIDITY]
-            _LOGGER.debug("Humidity %.1f%% + offset %.1f",
-                          humidity, humidity_offset)
+            _LOGGER.debug("Humidity %.1f%% + offset %.1f", humidity, humidity_offset)
             if 0 <= humidity <= 100:
                 self._state = round(humidity + humidity_offset, 1)
 
@@ -145,8 +165,7 @@ class DHTClient:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data the DHT sensor."""
-        humidity, temperature = self.adafruit_dht.read_retry(
-            self.sensor, self.pin)
+        humidity, temperature = self.adafruit_dht.read_retry(self.sensor, self.pin)
         if temperature:
             self.data[SENSOR_TEMPERATURE] = temperature
         if humidity:

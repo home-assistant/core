@@ -6,38 +6,47 @@ import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
-    CONF_DEVICES, CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_TOKEN,
-    CONF_USERNAME)
+    CONF_DEVICES,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util, slugify
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'doorbird'
+DOMAIN = "doorbird"
 
-API_URL = '/api/{}'.format(DOMAIN)
+API_URL = f"/api/{DOMAIN}"
 
-CONF_CUSTOM_URL = 'hass_url_override'
-CONF_EVENTS = 'events'
+CONF_CUSTOM_URL = "hass_url_override"
+CONF_EVENTS = "events"
 
-RESET_DEVICE_FAVORITES = 'doorbird_reset_favorites'
+RESET_DEVICE_FAVORITES = "doorbird_reset_favorites"
 
-DEVICE_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_TOKEN): cv.string,
-    vol.Optional(CONF_EVENTS, default=[]): vol.All(
-        cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_CUSTOM_URL): cv.string,
-    vol.Optional(CONF_NAME): cv.string
-})
+DEVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_TOKEN): cv.string,
+        vol.Optional(CONF_EVENTS, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_CUSTOM_URL): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+    }
+)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [DEVICE_SCHEMA])
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [DEVICE_SCHEMA])}
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
@@ -56,25 +65,32 @@ def setup(hass, config):
         custom_url = doorstation_config.get(CONF_CUSTOM_URL)
         events = doorstation_config.get(CONF_EVENTS)
         token = doorstation_config.get(CONF_TOKEN)
-        name = (doorstation_config.get(CONF_NAME)
-                or 'DoorBird {}'.format(index + 1))
+        name = doorstation_config.get(CONF_NAME) or "DoorBird {}".format(index + 1)
 
         device = DoorBird(device_ip, username, password)
         status = device.ready()
 
         if status[0]:
-            doorstation = ConfiguredDoorBird(device, name, events, custom_url,
-                                             token)
+            doorstation = ConfiguredDoorBird(device, name, events, custom_url, token)
             doorstations.append(doorstation)
-            _LOGGER.info('Connected to DoorBird "%s" as %s@%s',
-                         doorstation.name, username, device_ip)
+            _LOGGER.info(
+                'Connected to DoorBird "%s" as %s@%s',
+                doorstation.name,
+                username,
+                device_ip,
+            )
         elif status[1] == 401:
-            _LOGGER.error("Authorization rejected by DoorBird for %s@%s",
-                          username, device_ip)
+            _LOGGER.error(
+                "Authorization rejected by DoorBird for %s@%s", username, device_ip
+            )
             return False
         else:
-            _LOGGER.error("Could not connect to DoorBird as %s@%s: Error %s",
-                          username, device_ip, str(status[1]))
+            _LOGGER.error(
+                "Could not connect to DoorBird as %s@%s: Error %s",
+                username,
+                device_ip,
+                str(status[1]),
+            )
             return False
 
         # Subscribe to doorbell or motion events
@@ -83,12 +99,13 @@ def setup(hass, config):
                 doorstation.register_events(hass)
             except HTTPError:
                 hass.components.persistent_notification.create(
-                    'Doorbird configuration failed.  Please verify that API '
-                    'Operator permission is enabled for the Doorbird user. '
-                    'A restart will be required once permissions have been '
-                    'verified.',
-                    title='Doorbird Configuration Failure',
-                    notification_id='doorbird_schedule_error')
+                    "Doorbird configuration failed.  Please verify that API "
+                    "Operator permission is enabled for the Doorbird user. "
+                    "A restart will be required once permissions have been "
+                    "verified.",
+                    title="Doorbird Configuration Failure",
+                    notification_id="doorbird_schedule_error",
+                )
 
                 return False
 
@@ -96,7 +113,7 @@ def setup(hass, config):
 
     def _reset_device_favorites_handler(event):
         """Handle clearing favorites on device."""
-        token = event.data.get('token')
+        token = event.data.get("token")
 
         if token is None:
             return
@@ -104,7 +121,7 @@ def setup(hass, config):
         doorstation = get_doorstation_by_token(hass, token)
 
         if doorstation is None:
-            _LOGGER.error('Device not found for provided token.')
+            _LOGGER.error("Device not found for provided token.")
 
         # Clear webhooks
         favorites = doorstation.device.favorites()
@@ -125,7 +142,7 @@ def get_doorstation_by_token(hass, token):
             return doorstation
 
 
-class ConfiguredDoorBird():
+class ConfiguredDoorBird:
     """Attach additional information to pass along with configured device."""
 
     def __init__(self, device, name, events, custom_url, token):
@@ -170,8 +187,7 @@ class ConfiguredDoorBird():
 
             self._register_event(hass_url, event)
 
-            _LOGGER.info('Successfully registered URL for %s on %s',
-                         event, self.name)
+            _LOGGER.info("Successfully registered URL for %s on %s", event, self.name)
 
     @property
     def slug(self):
@@ -179,33 +195,35 @@ class ConfiguredDoorBird():
         return slugify(self._name)
 
     def _get_event_name(self, event):
-        return '{}_{}'.format(self.slug, event)
+        return f"{self.slug}_{event}"
 
     def _register_event(self, hass_url, event):
         """Add a schedule entry in the device for a sensor."""
-        url = '{}{}/{}?token={}'.format(hass_url, API_URL, event, self._token)
+        url = f"{hass_url}{API_URL}/{event}?token={self._token}"
 
         # Register HA URL as webhook if not already, then get the ID
         if not self.webhook_is_registered(url):
-            self.device.change_favorite('http', 'Home Assistant ({})'
-                                        .format(event), url)
+            self.device.change_favorite("http", f"Home Assistant ({event})", url)
 
         fav_id = self.get_webhook_id(url)
 
         if not fav_id:
-            _LOGGER.warning('Could not find favorite for URL "%s". '
-                            'Skipping sensor "%s"', url, event)
+            _LOGGER.warning(
+                'Could not find favorite for URL "%s". ' 'Skipping sensor "%s"',
+                url,
+                event,
+            )
             return
 
     def webhook_is_registered(self, url, favs=None) -> bool:
         """Return whether the given URL is registered as a device favorite."""
         favs = favs if favs else self.device.favorites()
 
-        if 'http' not in favs:
+        if "http" not in favs:
             return False
 
-        for fav in favs['http'].values():
-            if fav['value'] == url:
+        for fav in favs["http"].values():
+            if fav["value"] == url:
                 return True
 
         return False
@@ -218,11 +236,11 @@ class ConfiguredDoorBird():
         """
         favs = favs if favs else self.device.favorites()
 
-        if 'http' not in favs:
+        if "http" not in favs:
             return None
 
-        for fav_id in favs['http']:
-            if favs['http'][fav_id]['value'] == url:
+        for fav_id in favs["http"]:
+            if favs["http"][fav_id]["value"] == url:
                 return fav_id
 
         return None
@@ -230,11 +248,11 @@ class ConfiguredDoorBird():
     def get_event_data(self):
         """Get data to pass along with HA event."""
         return {
-            'timestamp': dt_util.utcnow().isoformat(),
-            'live_video_url': self._device.live_video_url,
-            'live_image_url': self._device.live_image_url,
-            'rtsp_live_video_url': self._device.rtsp_live_video_url,
-            'html5_viewer_url': self._device.html5_viewer_url
+            "timestamp": dt_util.utcnow().isoformat(),
+            "live_video_url": self._device.live_video_url,
+            "live_image_url": self._device.live_image_url,
+            "rtsp_live_video_url": self._device.rtsp_live_video_url,
+            "html5_viewer_url": self._device.html5_viewer_url,
         }
 
 
@@ -243,34 +261,34 @@ class DoorBirdRequestView(HomeAssistantView):
 
     requires_auth = False
     url = API_URL
-    name = API_URL[1:].replace('/', ':')
-    extra_urls = [API_URL + '/{event}']
+    name = API_URL[1:].replace("/", ":")
+    extra_urls = [API_URL + "/{event}"]
 
     # pylint: disable=no-self-use
     async def get(self, request, event):
         """Respond to requests from the device."""
         from aiohttp import web
-        hass = request.app['hass']
 
-        token = request.query.get('token')
+        hass = request.app["hass"]
+
+        token = request.query.get("token")
 
         device = get_doorstation_by_token(hass, token)
 
         if device is None:
-            return web.Response(status=401, text='Invalid token provided.')
+            return web.Response(status=401, text="Invalid token provided.")
 
         if device:
             event_data = device.get_event_data()
         else:
             event_data = {}
 
-        if event == 'clear':
-            hass.bus.async_fire(RESET_DEVICE_FAVORITES,
-                                {'token': token})
+        if event == "clear":
+            hass.bus.async_fire(RESET_DEVICE_FAVORITES, {"token": token})
 
-            message = 'HTTP Favorites cleared for {}'.format(device.slug)
+            message = f"HTTP Favorites cleared for {device.slug}"
             return web.Response(status=200, text=message)
 
-        hass.bus.async_fire('{}_{}'.format(DOMAIN, event), event_data)
+        hass.bus.async_fire(f"{DOMAIN}_{event}", event_data)
 
-        return web.Response(status=200, text='OK')
+        return web.Response(status=200, text="OK")

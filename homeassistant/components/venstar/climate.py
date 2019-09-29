@@ -5,42 +5,62 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    ATTR_OPERATION_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    STATE_AUTO, STATE_COOL, STATE_HEAT, SUPPORT_FAN_MODE,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_HUMIDITY, SUPPORT_AWAY_MODE,
-    SUPPORT_TARGET_HUMIDITY_HIGH, SUPPORT_TARGET_HUMIDITY_LOW,
-    SUPPORT_HOLD_MODE, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
+    ATTR_HVAC_MODE,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
+    HVAC_MODE_AUTO,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    SUPPORT_FAN_MODE,
+    SUPPORT_TARGET_HUMIDITY,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    PRESET_AWAY,
+    PRESET_NONE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
+    HVAC_MODE_OFF,
+)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_TIMEOUT,
-    CONF_USERNAME, PRECISION_WHOLE, STATE_OFF, STATE_ON, TEMP_CELSIUS,
-    TEMP_FAHRENHEIT)
+    ATTR_TEMPERATURE,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_TIMEOUT,
+    CONF_USERNAME,
+    PRECISION_WHOLE,
+    STATE_ON,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_FAN_STATE = 'fan_state'
-ATTR_HVAC_STATE = 'hvac_state'
+ATTR_FAN_STATE = "fan_state"
+ATTR_HVAC_STATE = "hvac_mode"
 
-CONF_HUMIDIFIER = 'humidifier'
+CONF_HUMIDIFIER = "humidifier"
 
 DEFAULT_SSL = False
 
-VALID_FAN_STATES = [STATE_ON, STATE_AUTO]
-VALID_THERMOSTAT_MODES = [STATE_HEAT, STATE_COOL, STATE_OFF, STATE_AUTO]
+VALID_FAN_STATES = [STATE_ON, HVAC_MODE_AUTO]
+VALID_THERMOSTAT_MODES = [HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_OFF, HVAC_MODE_AUTO]
 
-HOLD_MODE_OFF = 'off'
-HOLD_MODE_TEMPERATURE = 'temperature'
+HOLD_MODE_OFF = "off"
+HOLD_MODE_TEMPERATURE = "temperature"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_HUMIDIFIER, default=True): cv.boolean,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-    vol.Optional(CONF_TIMEOUT, default=5):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
-    vol.Optional(CONF_USERNAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_HUMIDIFIER, default=True): cv.boolean,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_TIMEOUT, default=5): vol.All(
+            vol.Coerce(int), vol.Range(min=1)
+        ),
+        vol.Optional(CONF_USERNAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -54,13 +74,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     humidifier = config.get(CONF_HUMIDIFIER)
 
     if config.get(CONF_SSL):
-        proto = 'https'
+        proto = "https"
     else:
-        proto = 'http'
+        proto = "http"
 
     client = venstarcolortouch.VenstarColorTouch(
-        addr=host, timeout=timeout, user=username, password=password,
-        proto=proto)
+        addr=host, timeout=timeout, user=username, password=password, proto=proto
+    )
 
     add_entities([VenstarThermostat(client, humidifier)], True)
 
@@ -83,19 +103,13 @@ class VenstarThermostat(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        features = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE |
-                    SUPPORT_OPERATION_MODE | SUPPORT_AWAY_MODE |
-                    SUPPORT_HOLD_MODE)
+        features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_PRESET_MODE
 
         if self._client.mode == self._client.MODE_AUTO:
-            features |= (SUPPORT_TARGET_TEMPERATURE_HIGH |
-                         SUPPORT_TARGET_TEMPERATURE_LOW)
+            features |= SUPPORT_TARGET_TEMPERATURE_RANGE
 
-        if (self._humidifier and
-                hasattr(self._client, 'hum_active')):
-            features |= (SUPPORT_TARGET_HUMIDITY |
-                         SUPPORT_TARGET_HUMIDITY_HIGH |
-                         SUPPORT_TARGET_HUMIDITY_LOW)
+        if self._humidifier and hasattr(self._client, "hum_active"):
+            features |= SUPPORT_TARGET_HUMIDITY
 
         return features
 
@@ -121,12 +135,12 @@ class VenstarThermostat(ClimateDevice):
         return TEMP_CELSIUS
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """Return the list of available fan modes."""
         return VALID_FAN_STATES
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the list of available operation modes."""
         return VALID_THERMOSTAT_MODES
 
@@ -141,21 +155,21 @@ class VenstarThermostat(ClimateDevice):
         return self._client.get_indoor_humidity()
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         if self._client.mode == self._client.MODE_HEAT:
-            return STATE_HEAT
+            return HVAC_MODE_HEAT
         if self._client.mode == self._client.MODE_COOL:
-            return STATE_COOL
+            return HVAC_MODE_COOL
         if self._client.mode == self._client.MODE_AUTO:
-            return STATE_AUTO
-        return STATE_OFF
+            return HVAC_MODE_AUTO
+        return HVAC_MODE_OFF
 
     @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         if self._client.fan == self._client.FAN_AUTO:
-            return STATE_AUTO
+            return HVAC_MODE_AUTO
         return STATE_ON
 
     @property
@@ -205,24 +219,25 @@ class VenstarThermostat(ClimateDevice):
         return 60
 
     @property
-    def is_away_mode_on(self):
-        """Return the status of away mode."""
-        return self._client.away == self._client.AWAY_AWAY
-
-    @property
-    def current_hold_mode(self):
-        """Return the status of hold mode."""
+    def preset_mode(self):
+        """Return current preset."""
+        if self._client.away:
+            return PRESET_AWAY
         if self._client.schedule == 0:
             return HOLD_MODE_TEMPERATURE
-        return HOLD_MODE_OFF
+
+    @property
+    def preset_modes(self):
+        """Return valid preset modes."""
+        return [PRESET_NONE, PRESET_AWAY, HOLD_MODE_TEMPERATURE]
 
     def _set_operation_mode(self, operation_mode):
         """Change the operation mode (internal)."""
-        if operation_mode == STATE_HEAT:
+        if operation_mode == HVAC_MODE_HEAT:
             success = self._client.set_mode(self._client.MODE_HEAT)
-        elif operation_mode == STATE_COOL:
+        elif operation_mode == HVAC_MODE_COOL:
             success = self._client.set_mode(self._client.MODE_COOL)
-        elif operation_mode == STATE_AUTO:
+        elif operation_mode == HVAC_MODE_AUTO:
             success = self._client.set_mode(self._client.MODE_AUTO)
         else:
             success = self._client.set_mode(self._client.MODE_OFF)
@@ -234,7 +249,7 @@ class VenstarThermostat(ClimateDevice):
     def set_temperature(self, **kwargs):
         """Set a new target temperature."""
         set_temp = True
-        operation_mode = kwargs.get(ATTR_OPERATION_MODE, self._client.mode)
+        operation_mode = kwargs.get(ATTR_HVAC_MODE, self._client.mode)
         temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -244,16 +259,18 @@ class VenstarThermostat(ClimateDevice):
 
         if set_temp:
             if operation_mode == self._client.MODE_HEAT:
-                success = self._client.set_setpoints(
-                    temperature, self._client.cooltemp)
+                success = self._client.set_setpoints(temperature, self._client.cooltemp)
             elif operation_mode == self._client.MODE_COOL:
-                success = self._client.set_setpoints(
-                    self._client.heattemp, temperature)
+                success = self._client.set_setpoints(self._client.heattemp, temperature)
             elif operation_mode == self._client.MODE_AUTO:
                 success = self._client.set_setpoints(temp_low, temp_high)
             else:
-                _LOGGER.error("The thermostat is currently not in a mode "
-                              "that supports target temperature")
+                success = False
+                _LOGGER.error(
+                    "The thermostat is currently not in a mode "
+                    "that supports target temperature: %s",
+                    operation_mode,
+                )
 
             if not success:
                 _LOGGER.error("Failed to change the temperature")
@@ -268,9 +285,9 @@ class VenstarThermostat(ClimateDevice):
         if not success:
             _LOGGER.error("Failed to change the fan mode")
 
-    def set_operation_mode(self, operation_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
-        self._set_operation_mode(operation_mode)
+        self._set_operation_mode(hvac_mode)
 
     def set_humidity(self, humidity):
         """Set new target humidity."""
@@ -279,29 +296,21 @@ class VenstarThermostat(ClimateDevice):
         if not success:
             _LOGGER.error("Failed to change the target humidity level")
 
-    def set_hold_mode(self, hold_mode):
+    def set_preset_mode(self, preset_mode):
         """Set the hold mode."""
-        if hold_mode == HOLD_MODE_TEMPERATURE:
+        if preset_mode == PRESET_AWAY:
+            success = self._client.set_away(self._client.AWAY_AWAY)
+        elif preset_mode == HOLD_MODE_TEMPERATURE:
             success = self._client.set_schedule(0)
-        elif hold_mode == HOLD_MODE_OFF:
-            success = self._client.set_schedule(1)
+        elif preset_mode == PRESET_NONE:
+            success = False
+            if self._client.away:
+                success = self._client.set_away(self._client.AWAY_HOME)
+            if self._client.schedule == 0:
+                success = success and self._client.set_schedule(1)
         else:
-            _LOGGER.error("Unknown hold mode: %s", hold_mode)
+            _LOGGER.error("Unknown hold mode: %s", preset_mode)
             success = False
 
         if not success:
             _LOGGER.error("Failed to change the schedule/hold state")
-
-    def turn_away_mode_on(self):
-        """Activate away mode."""
-        success = self._client.set_away(self._client.AWAY_AWAY)
-
-        if not success:
-            _LOGGER.error("Failed to activate away mode")
-
-    def turn_away_mode_off(self):
-        """Deactivate away mode."""
-        success = self._client.set_away(self._client.AWAY_HOME)
-
-        if not success:
-            _LOGGER.error("Failed to deactivate away mode")

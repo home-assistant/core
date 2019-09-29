@@ -5,8 +5,12 @@ components. Instead call the service directly.
 """
 from homeassistant.components.automation import DOMAIN, SERVICE_TRIGGER
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
-    SERVICE_RELOAD)
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_ON,
+    SERVICE_TURN_OFF,
+    SERVICE_TOGGLE,
+    SERVICE_RELOAD,
+)
 from homeassistant.loader import bind_hass
 
 

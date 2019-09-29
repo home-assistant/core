@@ -3,16 +3,21 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
-                                 CONF_MONITORED_CONDITIONS, CONF_SENSORS,
-                                 CONF_SWITCHES)
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_MONITORED_CONDITIONS,
+    CONF_SENSORS,
+    CONF_SWITCHES,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "ecoal_boiler"
-DATA_ECOAL_BOILER = 'data_' + DOMAIN
+DATA_ECOAL_BOILER = "data_" + DOMAIN
 
 DEFAULT_USERNAME = "admin"
 DEFAULT_PASSWORD = "admin"
@@ -29,37 +34,48 @@ AVAILABLE_PUMPS = {
 # Available temp sensor ids with assigned HA names
 # Available as sensors
 AVAILABLE_SENSORS = {
-    "outdoor_temp": 'Outdoor temperature',
-    "indoor_temp": 'Indoor temperature',
-    "indoor2_temp": 'Indoor temperature 2',
-    "domestic_hot_water_temp": 'Domestic hot water temperature',
-    "target_domestic_hot_water_temp": 'Target hot water temperature',
-    "feedwater_in_temp": 'Feedwater input temperature',
-    "feedwater_out_temp": 'Feedwater output temperature',
-    "target_feedwater_temp": 'Target feedwater temperature',
-    "fuel_feeder_temp": 'Fuel feeder temperature',
-    "exhaust_temp": 'Exhaust temperature',
+    "outdoor_temp": "Outdoor temperature",
+    "indoor_temp": "Indoor temperature",
+    "indoor2_temp": "Indoor temperature 2",
+    "domestic_hot_water_temp": "Domestic hot water temperature",
+    "target_domestic_hot_water_temp": "Target hot water temperature",
+    "feedwater_in_temp": "Feedwater input temperature",
+    "feedwater_out_temp": "Feedwater output temperature",
+    "target_feedwater_temp": "Target feedwater temperature",
+    "fuel_feeder_temp": "Fuel feeder temperature",
+    "exhaust_temp": "Exhaust temperature",
 }
 
-SWITCH_SCHEMA = vol.Schema({
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(AVAILABLE_PUMPS)):
-        vol.All(cv.ensure_list, [vol.In(AVAILABLE_PUMPS)])
-})
+SWITCH_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(AVAILABLE_PUMPS)): vol.All(
+            cv.ensure_list, [vol.In(AVAILABLE_PUMPS)]
+        )
+    }
+)
 
-SENSOR_SCHEMA = vol.Schema({
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(AVAILABLE_SENSORS)):
-        vol.All(cv.ensure_list, [vol.In(AVAILABLE_SENSORS)])
-})
+SENSOR_SCHEMA = vol.Schema(
+    {
+        vol.Optional(
+            CONF_MONITORED_CONDITIONS, default=list(AVAILABLE_SENSORS)
+        ): vol.All(cv.ensure_list, [vol.In(AVAILABLE_SENSORS)])
+    }
+)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
-        vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-        vol.Optional(CONF_SWITCHES, default={}): SWITCH_SCHEMA,
-        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_HOST): cv.string,
+                vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+                vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+                vol.Optional(CONF_SWITCHES, default={}): SWITCH_SCHEMA,
+                vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, hass_config):
@@ -74,16 +90,18 @@ def setup(hass, hass_config):
     ecoal_contr = ECoalController(host, username, passwd)
     if ecoal_contr.version is None:
         # Wrong credentials nor network config
-        _LOGGER.error("Unable to read controller status from %s@%s"
-                      " (wrong host/credentials)", username, host, )
+        _LOGGER.error(
+            "Unable to read controller status from %s@%s" " (wrong host/credentials)",
+            username,
+            host,
+        )
         return False
-    _LOGGER.debug("Detected controller version: %r @%s",
-                  ecoal_contr.version, host, )
+    _LOGGER.debug("Detected controller version: %r @%s", ecoal_contr.version, host)
     hass.data[DATA_ECOAL_BOILER] = ecoal_contr
     # Setup switches
     switches = conf[CONF_SWITCHES][CONF_MONITORED_CONDITIONS]
-    load_platform(hass, 'switch', DOMAIN, switches, hass_config)
+    load_platform(hass, "switch", DOMAIN, switches, hass_config)
     # Setup temp sensors
     sensors = conf[CONF_SENSORS][CONF_MONITORED_CONDITIONS]
-    load_platform(hass, 'sensor', DOMAIN, sensors, hass_config)
+    load_platform(hass, "sensor", DOMAIN, sensors, hass_config)
     return True

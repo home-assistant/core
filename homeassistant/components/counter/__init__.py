@@ -3,62 +3,68 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME,\
-    CONF_MAXIMUM, CONF_MINIMUM
+from homeassistant.const import CONF_ICON, CONF_NAME, CONF_MAXIMUM, CONF_MINIMUM
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_INITIAL = 'initial'
-ATTR_STEP = 'step'
-ATTR_MINIMUM = 'minimum'
-ATTR_MAXIMUM = 'maximum'
+ATTR_INITIAL = "initial"
+ATTR_STEP = "step"
+ATTR_MINIMUM = "minimum"
+ATTR_MAXIMUM = "maximum"
 
-CONF_INITIAL = 'initial'
-CONF_RESTORE = 'restore'
-CONF_STEP = 'step'
+CONF_INITIAL = "initial"
+CONF_RESTORE = "restore"
+CONF_STEP = "step"
 
 DEFAULT_INITIAL = 0
 DEFAULT_STEP = 1
-DOMAIN = 'counter'
+DOMAIN = "counter"
 
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-SERVICE_DECREMENT = 'decrement'
-SERVICE_INCREMENT = 'increment'
-SERVICE_RESET = 'reset'
-SERVICE_CONFIGURE = 'configure'
+SERVICE_DECREMENT = "decrement"
+SERVICE_INCREMENT = "increment"
+SERVICE_RESET = "reset"
+SERVICE_CONFIGURE = "configure"
 
-SERVICE_SCHEMA_SIMPLE = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-})
+SERVICE_SCHEMA_CONFIGURE = ENTITY_SERVICE_SCHEMA.extend(
+    {
+        vol.Optional(ATTR_MINIMUM): vol.Any(None, vol.Coerce(int)),
+        vol.Optional(ATTR_MAXIMUM): vol.Any(None, vol.Coerce(int)),
+        vol.Optional(ATTR_STEP): cv.positive_int,
+    }
+)
 
-SERVICE_SCHEMA_CONFIGURE = vol.Schema({
-    ATTR_ENTITY_ID: cv.comp_entity_ids,
-    vol.Optional(ATTR_MINIMUM): vol.Any(None, vol.Coerce(int)),
-    vol.Optional(ATTR_MAXIMUM): vol.Any(None, vol.Coerce(int)),
-    vol.Optional(ATTR_STEP): cv.positive_int,
-})
-
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: cv.schema_with_slug_keys(
-        vol.Any({
-            vol.Optional(CONF_ICON): cv.icon,
-            vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL):
-                cv.positive_int,
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_MAXIMUM, default=None):
-                vol.Any(None, vol.Coerce(int)),
-            vol.Optional(CONF_MINIMUM, default=None):
-                vol.Any(None, vol.Coerce(int)),
-            vol.Optional(CONF_RESTORE, default=True): cv.boolean,
-            vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
-        }, None)
-    )
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: cv.schema_with_slug_keys(
+            vol.Any(
+                {
+                    vol.Optional(CONF_ICON): cv.icon,
+                    vol.Optional(
+                        CONF_INITIAL, default=DEFAULT_INITIAL
+                    ): cv.positive_int,
+                    vol.Optional(CONF_NAME): cv.string,
+                    vol.Optional(CONF_MAXIMUM, default=None): vol.Any(
+                        None, vol.Coerce(int)
+                    ),
+                    vol.Optional(CONF_MINIMUM, default=None): vol.Any(
+                        None, vol.Coerce(int)
+                    ),
+                    vol.Optional(CONF_RESTORE, default=True): cv.boolean,
+                    vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
+                },
+                None,
+            )
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):
@@ -79,24 +85,25 @@ async def async_setup(hass, config):
         minimum = cfg.get(CONF_MINIMUM)
         maximum = cfg.get(CONF_MAXIMUM)
 
-        entities.append(Counter(object_id, name, initial, minimum, maximum,
-                                restore, step, icon))
+        entities.append(
+            Counter(object_id, name, initial, minimum, maximum, restore, step, icon)
+        )
 
     if not entities:
         return False
 
     component.async_register_entity_service(
-        SERVICE_INCREMENT, SERVICE_SCHEMA_SIMPLE,
-        'async_increment')
+        SERVICE_INCREMENT, ENTITY_SERVICE_SCHEMA, "async_increment"
+    )
     component.async_register_entity_service(
-        SERVICE_DECREMENT, SERVICE_SCHEMA_SIMPLE,
-        'async_decrement')
+        SERVICE_DECREMENT, ENTITY_SERVICE_SCHEMA, "async_decrement"
+    )
     component.async_register_entity_service(
-        SERVICE_RESET, SERVICE_SCHEMA_SIMPLE,
-        'async_reset')
+        SERVICE_RESET, ENTITY_SERVICE_SCHEMA, "async_reset"
+    )
     component.async_register_entity_service(
-        SERVICE_CONFIGURE, SERVICE_SCHEMA_CONFIGURE,
-        'async_configure')
+        SERVICE_CONFIGURE, SERVICE_SCHEMA_CONFIGURE, "async_configure"
+    )
 
     await component.async_add_entities(entities)
     return True
@@ -105,8 +112,7 @@ async def async_setup(hass, config):
 class Counter(RestoreEntity):
     """Representation of a counter."""
 
-    def __init__(self, object_id, name, initial, minimum, maximum,
-                 restore, step, icon):
+    def __init__(self, object_id, name, initial, minimum, maximum, restore, step, icon):
         """Initialize a counter."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
@@ -140,10 +146,7 @@ class Counter(RestoreEntity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        ret = {
-            ATTR_INITIAL: self._initial,
-            ATTR_STEP: self._step,
-        }
+        ret = {ATTR_INITIAL: self._initial, ATTR_STEP: self._step}
         if self._min is not None:
             ret[CONF_MINIMUM] = self._min
         if self._max is not None:

@@ -3,9 +3,7 @@ import logging
 
 from homeassistant.core import callback
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
-from homeassistant.components.device_tracker.config_entry import (
-    DeviceTrackerEntity
-)
+from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DOMAIN as LT_DOMAIN, TRACKER_UPDATE
@@ -15,25 +13,25 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Configure a dispatcher connection based on a config entry."""
+
     @callback
     def _receive_data(device, location, location_name):
         """Receive set location."""
-        if device in hass.data[LT_DOMAIN]['devices']:
+        if device in hass.data[LT_DOMAIN]["devices"]:
             return
 
-        hass.data[LT_DOMAIN]['devices'].add(device)
+        hass.data[LT_DOMAIN]["devices"].add(device)
 
-        async_add_entities([LocativeEntity(
-            device, location, location_name
-        )])
+        async_add_entities([LocativeEntity(device, location, location_name)])
 
-    hass.data[LT_DOMAIN]['unsub_device_tracker'][entry.entry_id] = \
-        async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
+    hass.data[LT_DOMAIN]["unsub_device_tracker"][
+        entry.entry_id
+    ] = async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
 
     return True
 
 
-class LocativeEntity(DeviceTrackerEntity):
+class LocativeEntity(TrackerEntity):
     """Represent a tracked device."""
 
     def __init__(self, device, location, location_name):
@@ -76,7 +74,8 @@ class LocativeEntity(DeviceTrackerEntity):
     async def async_added_to_hass(self):
         """Register state update callback."""
         self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass, TRACKER_UPDATE, self._async_receive_data)
+            self.hass, TRACKER_UPDATE, self._async_receive_data
+        )
 
     async def async_will_remove_from_hass(self):
         """Clean up after entity before removal."""
@@ -85,6 +84,8 @@ class LocativeEntity(DeviceTrackerEntity):
     @callback
     def _async_receive_data(self, device, location, location_name):
         """Update device data."""
+        if device != self._name:
+            return
         self._location_name = location_name
         self._location = location
         self.async_write_ha_state()

@@ -1,85 +1,147 @@
 """Demo platform that offers a fake climate device."""
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
-
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, SUPPORT_AUX_HEAT,
-    SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE, SUPPORT_ON_OFF,
-    SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE, SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_HUMIDITY_HIGH, SUPPORT_TARGET_HUMIDITY_LOW,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE_HIGH,
-    SUPPORT_TARGET_TEMPERATURE_LOW)
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_HEAT,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_OFF,
+    HVAC_MODES,
+    SUPPORT_AUX_HEAT,
+    SUPPORT_FAN_MODE,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_SWING_MODE,
+    SUPPORT_TARGET_HUMIDITY,
+    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
+    HVAC_MODE_AUTO,
+)
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
-SUPPORT_FLAGS = SUPPORT_TARGET_HUMIDITY_LOW | SUPPORT_TARGET_HUMIDITY_HIGH
+SUPPORT_FLAGS = 0
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo climate devices."""
-    add_entities([
-        DemoClimate('HeatPump', 68, TEMP_FAHRENHEIT, None, None, 77,
-                    None, None, None, None, 'heat', None, None,
-                    None, True),
-        DemoClimate('Hvac', 21, TEMP_CELSIUS, True, None, 22, 'On High',
-                    67, 54, 'Off', 'cool', False, None, None, None),
-        DemoClimate('Ecobee', None, TEMP_CELSIUS, None, 'home', 23, 'Auto Low',
-                    None, None, 'Auto', 'auto', None, 24, 21, None)
-    ])
+    add_entities(
+        [
+            DemoClimate(
+                name="HeatPump",
+                target_temperature=68,
+                unit_of_measurement=TEMP_FAHRENHEIT,
+                preset=None,
+                current_temperature=77,
+                fan_mode=None,
+                target_humidity=None,
+                current_humidity=None,
+                swing_mode=None,
+                hvac_mode=HVAC_MODE_HEAT,
+                hvac_action=CURRENT_HVAC_HEAT,
+                aux=None,
+                target_temp_high=None,
+                target_temp_low=None,
+                hvac_modes=[HVAC_MODE_HEAT, HVAC_MODE_OFF],
+            ),
+            DemoClimate(
+                name="Hvac",
+                target_temperature=21,
+                unit_of_measurement=TEMP_CELSIUS,
+                preset=None,
+                current_temperature=22,
+                fan_mode="On High",
+                target_humidity=67,
+                current_humidity=54,
+                swing_mode="Off",
+                hvac_mode=HVAC_MODE_COOL,
+                hvac_action=CURRENT_HVAC_COOL,
+                aux=False,
+                target_temp_high=None,
+                target_temp_low=None,
+                hvac_modes=[mode for mode in HVAC_MODES if mode != HVAC_MODE_HEAT_COOL],
+            ),
+            DemoClimate(
+                name="Ecobee",
+                target_temperature=None,
+                unit_of_measurement=TEMP_CELSIUS,
+                preset="home",
+                preset_modes=["home", "eco"],
+                current_temperature=23,
+                fan_mode="Auto Low",
+                target_humidity=None,
+                current_humidity=None,
+                swing_mode="Auto",
+                hvac_mode=HVAC_MODE_HEAT_COOL,
+                hvac_action=None,
+                aux=None,
+                target_temp_high=24,
+                target_temp_low=21,
+                hvac_modes=[HVAC_MODE_HEAT_COOL, HVAC_MODE_COOL, HVAC_MODE_HEAT],
+            ),
+        ]
+    )
 
 
 class DemoClimate(ClimateDevice):
     """Representation of a demo climate device."""
 
-    def __init__(self, name, target_temperature, unit_of_measurement,
-                 away, hold, current_temperature, current_fan_mode,
-                 target_humidity, current_humidity, current_swing_mode,
-                 current_operation, aux, target_temp_high, target_temp_low,
-                 is_on):
+    def __init__(
+        self,
+        name,
+        target_temperature,
+        unit_of_measurement,
+        preset,
+        current_temperature,
+        fan_mode,
+        target_humidity,
+        current_humidity,
+        swing_mode,
+        hvac_mode,
+        hvac_action,
+        aux,
+        target_temp_high,
+        target_temp_low,
+        hvac_modes,
+        preset_modes=None,
+    ):
         """Initialize the climate device."""
         self._name = name
         self._support_flags = SUPPORT_FLAGS
         if target_temperature is not None:
-            self._support_flags = \
-                self._support_flags | SUPPORT_TARGET_TEMPERATURE
-        if away is not None:
-            self._support_flags = self._support_flags | SUPPORT_AWAY_MODE
-        if hold is not None:
-            self._support_flags = self._support_flags | SUPPORT_HOLD_MODE
-        if current_fan_mode is not None:
+            self._support_flags = self._support_flags | SUPPORT_TARGET_TEMPERATURE
+        if preset is not None:
+            self._support_flags = self._support_flags | SUPPORT_PRESET_MODE
+        if fan_mode is not None:
             self._support_flags = self._support_flags | SUPPORT_FAN_MODE
         if target_humidity is not None:
-            self._support_flags = \
-                self._support_flags | SUPPORT_TARGET_HUMIDITY
-        if current_swing_mode is not None:
+            self._support_flags = self._support_flags | SUPPORT_TARGET_HUMIDITY
+        if swing_mode is not None:
             self._support_flags = self._support_flags | SUPPORT_SWING_MODE
-        if current_operation is not None:
-            self._support_flags = self._support_flags | SUPPORT_OPERATION_MODE
+        if hvac_action is not None:
+            self._support_flags = self._support_flags
         if aux is not None:
             self._support_flags = self._support_flags | SUPPORT_AUX_HEAT
-        if target_temp_high is not None:
-            self._support_flags = \
-                self._support_flags | SUPPORT_TARGET_TEMPERATURE_HIGH
-        if target_temp_low is not None:
-            self._support_flags = \
-                self._support_flags | SUPPORT_TARGET_TEMPERATURE_LOW
-        if is_on is not None:
-            self._support_flags = self._support_flags | SUPPORT_ON_OFF
+        if HVAC_MODE_HEAT_COOL in hvac_modes or HVAC_MODE_AUTO in hvac_modes:
+            self._support_flags = self._support_flags | SUPPORT_TARGET_TEMPERATURE_RANGE
         self._target_temperature = target_temperature
         self._target_humidity = target_humidity
         self._unit_of_measurement = unit_of_measurement
-        self._away = away
-        self._hold = hold
+        self._preset = preset
+        self._preset_modes = preset_modes
         self._current_temperature = current_temperature
         self._current_humidity = current_humidity
-        self._current_fan_mode = current_fan_mode
-        self._current_operation = current_operation
+        self._current_fan_mode = fan_mode
+        self._hvac_action = hvac_action
+        self._hvac_mode = hvac_mode
         self._aux = aux
-        self._current_swing_mode = current_swing_mode
-        self._fan_list = ['On Low', 'On High', 'Auto Low', 'Auto High', 'Off']
-        self._operation_list = ['heat', 'cool', 'auto', 'off']
-        self._swing_list = ['Auto', '1', '2', '3', 'Off']
+        self._current_swing_mode = swing_mode
+        self._fan_modes = ["On Low", "On High", "Auto Low", "Auto High", "Off"]
+        self._hvac_modes = hvac_modes
+        self._swing_modes = ["Auto", "1", "2", "3", "Off"]
         self._target_temperature_high = target_temp_high
         self._target_temperature_low = target_temp_low
-        self._on = is_on
 
     @property
     def supported_features(self):
@@ -132,116 +194,98 @@ class DemoClimate(ClimateDevice):
         return self._target_humidity
 
     @property
-    def current_operation(self):
+    def hvac_action(self):
         """Return current operation ie. heat, cool, idle."""
-        return self._current_operation
+        return self._hvac_action
 
     @property
-    def operation_list(self):
+    def hvac_mode(self):
+        """Return hvac target hvac state."""
+        return self._hvac_mode
+
+    @property
+    def hvac_modes(self):
         """Return the list of available operation modes."""
-        return self._operation_list
+        return self._hvac_modes
 
     @property
-    def is_away_mode_on(self):
-        """Return if away mode is on."""
-        return self._away
+    def preset_mode(self):
+        """Return preset mode."""
+        return self._preset
 
     @property
-    def current_hold_mode(self):
-        """Return hold mode setting."""
-        return self._hold
+    def preset_modes(self):
+        """Return preset modes."""
+        return self._preset_modes
 
     @property
-    def is_aux_heat_on(self):
+    def is_aux_heat(self):
         """Return true if aux heat is on."""
         return self._aux
 
     @property
-    def is_on(self):
-        """Return true if the device is on."""
-        return self._on
-
-    @property
-    def current_fan_mode(self):
+    def fan_mode(self):
         """Return the fan setting."""
         return self._current_fan_mode
 
     @property
-    def fan_list(self):
+    def fan_modes(self):
         """Return the list of available fan modes."""
-        return self._fan_list
-
-    def set_temperature(self, **kwargs):
-        """Set new target temperatures."""
-        if kwargs.get(ATTR_TEMPERATURE) is not None:
-            self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
-        if kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None and \
-           kwargs.get(ATTR_TARGET_TEMP_LOW) is not None:
-            self._target_temperature_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-            self._target_temperature_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        self.schedule_update_ha_state()
-
-    def set_humidity(self, humidity):
-        """Set new humidity level."""
-        self._target_humidity = humidity
-        self.schedule_update_ha_state()
-
-    def set_swing_mode(self, swing_mode):
-        """Set new swing mode."""
-        self._current_swing_mode = swing_mode
-        self.schedule_update_ha_state()
-
-    def set_fan_mode(self, fan_mode):
-        """Set new fan mode."""
-        self._current_fan_mode = fan_mode
-        self.schedule_update_ha_state()
-
-    def set_operation_mode(self, operation_mode):
-        """Set new operation mode."""
-        self._current_operation = operation_mode
-        self.schedule_update_ha_state()
+        return self._fan_modes
 
     @property
-    def current_swing_mode(self):
+    def swing_mode(self):
         """Return the swing setting."""
         return self._current_swing_mode
 
     @property
-    def swing_list(self):
+    def swing_modes(self):
         """List of available swing modes."""
-        return self._swing_list
+        return self._swing_modes
 
-    def turn_away_mode_on(self):
-        """Turn away mode on."""
-        self._away = True
-        self.schedule_update_ha_state()
+    async def async_set_temperature(self, **kwargs):
+        """Set new target temperatures."""
+        if kwargs.get(ATTR_TEMPERATURE) is not None:
+            self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
+        if (
+            kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None
+            and kwargs.get(ATTR_TARGET_TEMP_LOW) is not None
+        ):
+            self._target_temperature_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+            self._target_temperature_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
+        self.async_write_ha_state()
 
-    def turn_away_mode_off(self):
-        """Turn away mode off."""
-        self._away = False
-        self.schedule_update_ha_state()
+    async def async_set_humidity(self, humidity):
+        """Set new humidity level."""
+        self._target_humidity = humidity
+        self.async_write_ha_state()
 
-    def set_hold_mode(self, hold_mode):
-        """Update hold_mode on."""
-        self._hold = hold_mode
-        self.schedule_update_ha_state()
+    async def async_set_swing_mode(self, swing_mode):
+        """Set new swing mode."""
+        self._current_swing_mode = swing_mode
+        self.async_write_ha_state()
+
+    async def async_set_fan_mode(self, fan_mode):
+        """Set new fan mode."""
+        self._current_fan_mode = fan_mode
+        self.async_write_ha_state()
+
+    async def async_set_hvac_mode(self, hvac_mode):
+        """Set new operation mode."""
+        self._hvac_mode = hvac_mode
+        self.async_write_ha_state()
+
+    async def async_set_preset_mode(self, preset_mode):
+        """Update preset_mode on."""
+        self._preset = preset_mode
+        self.async_write_ha_state()
 
     def turn_aux_heat_on(self):
         """Turn auxiliary heater on."""
         self._aux = True
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def turn_aux_heat_off(self):
         """Turn auxiliary heater off."""
         self._aux = False
-        self.schedule_update_ha_state()
-
-    def turn_on(self):
-        """Turn on."""
-        self._on = True
-        self.schedule_update_ha_state()
-
-    def turn_off(self):
-        """Turn off."""
-        self._on = False
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()

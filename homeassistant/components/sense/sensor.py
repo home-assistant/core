@@ -10,16 +10,16 @@ from . import SENSE_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
-ACTIVE_NAME = 'Energy'
-ACTIVE_TYPE = 'active'
+ACTIVE_NAME = "Energy"
+ACTIVE_TYPE = "active"
 
-CONSUMPTION_NAME = 'Usage'
+CONSUMPTION_NAME = "Usage"
 
-ICON = 'mdi:flash'
+ICON = "mdi:flash"
 
 MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=300)
 
-PRODUCTION_NAME = 'Production'
+PRODUCTION_NAME = "Production"
 
 
 class SensorConfig:
@@ -33,19 +33,18 @@ class SensorConfig:
 
 # Sensor types/ranges
 SENSOR_TYPES = {
-    'active': SensorConfig(ACTIVE_NAME, ACTIVE_TYPE),
-    'daily': SensorConfig('Daily', 'DAY'),
-    'weekly': SensorConfig('Weekly', 'WEEK'),
-    'monthly': SensorConfig('Monthly', 'MONTH'),
-    'yearly': SensorConfig('Yearly', 'YEAR'),
+    "active": SensorConfig(ACTIVE_NAME, ACTIVE_TYPE),
+    "daily": SensorConfig("Daily", "DAY"),
+    "weekly": SensorConfig("Weekly", "WEEK"),
+    "monthly": SensorConfig("Monthly", "MONTH"),
+    "yearly": SensorConfig("Yearly", "YEAR"),
 }
 
 # Production/consumption variants
 SENSOR_VARIANTS = [PRODUCTION_NAME.lower(), CONSUMPTION_NAME.lower()]
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Sense sensor."""
     if discovery_info is None:
         return
@@ -70,8 +69,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                 update_call = update_active
             else:
                 update_call = update_trends
-            devices.append(Sense(
-                data, name, sensor_type, is_production, update_call))
+            devices.append(Sense(data, name, sensor_type, is_production, update_call))
 
     async_add_entities(devices)
 
@@ -82,7 +80,7 @@ class Sense(Entity):
     def __init__(self, data, name, sensor_type, is_production, update_call):
         """Initialize the Sense sensor."""
         name_type = PRODUCTION_NAME if is_production else CONSUMPTION_NAME
-        self._name = "{} {}".format(name, name_type)
+        self._name = f"{name} {name_type}"
         self._data = data
         self._sensor_type = sensor_type
         self.update_sensor = update_call
@@ -117,6 +115,7 @@ class Sense(Entity):
     async def async_update(self):
         """Get the latest data, update state."""
         from sense_energy import SenseAPITimeoutException
+
         try:
             await self.update_sensor()
         except SenseAPITimeoutException:
@@ -129,6 +128,5 @@ class Sense(Entity):
             else:
                 self._state = round(self._data.active_power)
         else:
-            state = self._data.get_trend(
-                self._sensor_type, self._is_production)
+            state = self._data.get_trend(self._sensor_type, self._is_production)
             self._state = round(state, 1)

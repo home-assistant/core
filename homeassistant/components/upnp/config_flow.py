@@ -7,7 +7,5 @@ from .device import Device
 
 
 config_entry_flow.register_discovery_flow(
-    DOMAIN,
-    'UPnP/IGD',
-    Device.async_discover,
-    config_entries.CONN_CLASS_LOCAL_POLL)
+    DOMAIN, "UPnP/IGD", Device.async_discover, config_entries.CONN_CLASS_LOCAL_POLL
+)

@@ -10,16 +10,18 @@ from homeassistant.const import CONF_NAME, CONF_MAC
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_FLIP_ON_OFF = 'flip_on_off'
-DEFAULT_NAME = 'Switchmate'
+CONF_FLIP_ON_OFF = "flip_on_off"
+DEFAULT_NAME = "Switchmate"
 
 SCAN_INTERVAL = timedelta(minutes=30)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MAC): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_FLIP_ON_OFF, default=False): cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_MAC): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_FLIP_ON_OFF, default=False): cv.boolean,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
@@ -37,6 +39,7 @@ class SwitchmateEntity(SwitchDevice):
         """Initialize the Switchmate."""
         # pylint: disable=import-error, no-member, no-value-for-parameter
         import switchmate
+
         self._mac = mac
         self._name = name
         self._device = switchmate.Switchmate(mac=mac, flip_on_off=flip_on_off)
@@ -44,7 +47,7 @@ class SwitchmateEntity(SwitchDevice):
     @property
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
-        return self._mac.replace(':', '')
+        return self._mac.replace(":", "")
 
     @property
     def available(self) -> bool:

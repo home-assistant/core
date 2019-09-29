@@ -14,47 +14,45 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
-ATTR_CREATED_AT = 'created_at'
-ATTR_MESSAGE = 'message'
-ATTR_NOTIFICATION_ID = 'notification_id'
-ATTR_TITLE = 'title'
-ATTR_STATUS = 'status'
+ATTR_CREATED_AT = "created_at"
+ATTR_MESSAGE = "message"
+ATTR_NOTIFICATION_ID = "notification_id"
+ATTR_TITLE = "title"
+ATTR_STATUS = "status"
 
-DOMAIN = 'persistent_notification'
+DOMAIN = "persistent_notification"
 
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-EVENT_PERSISTENT_NOTIFICATIONS_UPDATED = 'persistent_notifications_updated'
+EVENT_PERSISTENT_NOTIFICATIONS_UPDATED = "persistent_notifications_updated"
 
-SERVICE_CREATE = 'create'
-SERVICE_DISMISS = 'dismiss'
-SERVICE_MARK_READ = 'mark_read'
+SERVICE_CREATE = "create"
+SERVICE_DISMISS = "dismiss"
+SERVICE_MARK_READ = "mark_read"
 
-SCHEMA_SERVICE_CREATE = vol.Schema({
-    vol.Required(ATTR_MESSAGE): cv.template,
-    vol.Optional(ATTR_TITLE): cv.template,
-    vol.Optional(ATTR_NOTIFICATION_ID): cv.string,
-})
+SCHEMA_SERVICE_CREATE = vol.Schema(
+    {
+        vol.Required(ATTR_MESSAGE): cv.template,
+        vol.Optional(ATTR_TITLE): cv.template,
+        vol.Optional(ATTR_NOTIFICATION_ID): cv.string,
+    }
+)
 
-SCHEMA_SERVICE_DISMISS = vol.Schema({
-    vol.Required(ATTR_NOTIFICATION_ID): cv.string,
-})
+SCHEMA_SERVICE_DISMISS = vol.Schema({vol.Required(ATTR_NOTIFICATION_ID): cv.string})
 
-SCHEMA_SERVICE_MARK_READ = vol.Schema({
-    vol.Required(ATTR_NOTIFICATION_ID): cv.string,
-})
+SCHEMA_SERVICE_MARK_READ = vol.Schema({vol.Required(ATTR_NOTIFICATION_ID): cv.string})
 
-DEFAULT_OBJECT_ID = 'notification'
+DEFAULT_OBJECT_ID = "notification"
 _LOGGER = logging.getLogger(__name__)
 
-STATE = 'notifying'
-STATUS_UNREAD = 'unread'
-STATUS_READ = 'read'
+STATE = "notifying"
+STATUS_UNREAD = "unread"
+STATUS_READ = "read"
 
-WS_TYPE_GET_NOTIFICATIONS = 'persistent_notification/get'
-SCHEMA_WS_GET = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): WS_TYPE_GET_NOTIFICATIONS,
-})
+WS_TYPE_GET_NOTIFICATIONS = "persistent_notification/get"
+SCHEMA_WS_GET = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+    {vol.Required("type"): WS_TYPE_GET_NOTIFICATIONS}
+)
 
 
 @bind_hass
@@ -71,19 +69,21 @@ def dismiss(hass, notification_id):
 
 @callback
 @bind_hass
-def async_create(hass: HomeAssistant, message: str, title: str = None,
-                 notification_id: str = None) -> None:
+def async_create(
+    hass: HomeAssistant, message: str, title: str = None, notification_id: str = None
+) -> None:
     """Generate a notification."""
     data = {
-        key: value for key, value in [
+        key: value
+        for key, value in [
             (ATTR_TITLE, title),
             (ATTR_MESSAGE, message),
             (ATTR_NOTIFICATION_ID, notification_id),
-        ] if value is not None
+        ]
+        if value is not None
     }
 
-    hass.async_create_task(
-        hass.services.async_call(DOMAIN, SERVICE_CREATE, data))
+    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_CREATE, data))
 
 
 @callback
@@ -92,14 +92,13 @@ def async_dismiss(hass: HomeAssistant, notification_id: str) -> None:
     """Remove a notification."""
     data = {ATTR_NOTIFICATION_ID: notification_id}
 
-    hass.async_create_task(
-        hass.services.async_call(DOMAIN, SERVICE_DISMISS, data))
+    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_DISMISS, data))
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
     """Set up the persistent notification component."""
     persistent_notifications = OrderedDict()
-    hass.data[DOMAIN] = {'notifications': persistent_notifications}
+    hass.data[DOMAIN] = {"notifications": persistent_notifications}
 
     @callback
     def create_service(call):
@@ -112,8 +111,9 @@ async def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
             entity_id = ENTITY_ID_FORMAT.format(slugify(notification_id))
         else:
             entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, DEFAULT_OBJECT_ID, hass=hass)
-            notification_id = entity_id.split('.')[1]
+                ENTITY_ID_FORMAT, DEFAULT_OBJECT_ID, hass=hass
+            )
+            notification_id = entity_id.split(".")[1]
 
         attr = {}
         if title is not None:
@@ -121,7 +121,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
                 title.hass = hass
                 title = title.async_render()
             except TemplateError as ex:
-                _LOGGER.error('Error rendering title %s: %s', title, ex)
+                _LOGGER.error("Error rendering title %s: %s", title, ex)
                 title = title.template
 
             attr[ATTR_TITLE] = title
@@ -130,7 +130,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
             message.hass = hass
             message = message.async_render()
         except TemplateError as ex:
-            _LOGGER.error('Error rendering message %s: %s', message, ex)
+            _LOGGER.error("Error rendering message %s: %s", message, ex)
             message = message.template
 
         attr[ATTR_MESSAGE] = message
@@ -170,25 +170,30 @@ async def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
         entity_id = ENTITY_ID_FORMAT.format(slugify(notification_id))
 
         if entity_id not in persistent_notifications:
-            _LOGGER.error('Marking persistent_notification read failed: '
-                          'Notification ID %s not found.', notification_id)
+            _LOGGER.error(
+                "Marking persistent_notification read failed: "
+                "Notification ID %s not found.",
+                notification_id,
+            )
             return
 
         persistent_notifications[entity_id][ATTR_STATUS] = STATUS_READ
         hass.bus.async_fire(EVENT_PERSISTENT_NOTIFICATIONS_UPDATED)
 
-    hass.services.async_register(DOMAIN, SERVICE_CREATE, create_service,
-                                 SCHEMA_SERVICE_CREATE)
+    hass.services.async_register(
+        DOMAIN, SERVICE_CREATE, create_service, SCHEMA_SERVICE_CREATE
+    )
 
-    hass.services.async_register(DOMAIN, SERVICE_DISMISS, dismiss_service,
-                                 SCHEMA_SERVICE_DISMISS)
+    hass.services.async_register(
+        DOMAIN, SERVICE_DISMISS, dismiss_service, SCHEMA_SERVICE_DISMISS
+    )
 
-    hass.services.async_register(DOMAIN, SERVICE_MARK_READ, mark_read_service,
-                                 SCHEMA_SERVICE_MARK_READ)
+    hass.services.async_register(
+        DOMAIN, SERVICE_MARK_READ, mark_read_service, SCHEMA_SERVICE_MARK_READ
+    )
 
     hass.components.websocket_api.async_register_command(
-        WS_TYPE_GET_NOTIFICATIONS, websocket_get_notifications,
-        SCHEMA_WS_GET
+        WS_TYPE_GET_NOTIFICATIONS, websocket_get_notifications, SCHEMA_WS_GET
     )
 
     return True
@@ -196,15 +201,24 @@ async def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
 
 @callback
 def websocket_get_notifications(
-        hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg
+):
     """Return a list of persistent_notifications."""
     connection.send_message(
-        websocket_api.result_message(msg['id'], [
-            {
-                key: data[key] for key in (ATTR_NOTIFICATION_ID,
-                                           ATTR_MESSAGE, ATTR_STATUS,
-                                           ATTR_TITLE, ATTR_CREATED_AT)
-            }
-            for data in hass.data[DOMAIN]['notifications'].values()
-        ])
+        websocket_api.result_message(
+            msg["id"],
+            [
+                {
+                    key: data[key]
+                    for key in (
+                        ATTR_NOTIFICATION_ID,
+                        ATTR_MESSAGE,
+                        ATTR_STATUS,
+                        ATTR_TITLE,
+                        ATTR_CREATED_AT,
+                    )
+                }
+                for data in hass.data[DOMAIN]["notifications"].values()
+            ],
+        )
     )

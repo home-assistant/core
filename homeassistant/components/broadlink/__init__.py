@@ -23,18 +23,18 @@ def data_packet(value):
     value = cv.string(value)
     extra = len(value) % 4
     if extra > 0:
-        value = value + ('=' * (4 - extra))
+        value = value + ("=" * (4 - extra))
     return b64decode(value)
 
 
-SERVICE_SEND_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PACKET): vol.All(cv.ensure_list, [data_packet])
-})
+SERVICE_SEND_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PACKET): vol.All(cv.ensure_list, [data_packet]),
+    }
+)
 
-SERVICE_LEARN_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOST): cv.string,
-})
+SERVICE_LEARN_SCHEMA = vol.Schema({vol.Required(CONF_HOST): cv.string})
 
 
 def async_setup_service(hass, host, device):
@@ -61,24 +61,24 @@ def async_setup_service(hass, host, device):
             _LOGGER.info("Press the key you want Home Assistant to learn")
             start_time = utcnow()
             while (utcnow() - start_time) < timedelta(seconds=20):
-                packet = await hass.async_add_executor_job(
-                    device.check_data)
+                packet = await hass.async_add_executor_job(device.check_data)
                 if packet:
-                    data = b64encode(packet).decode('utf8')
-                    log_msg = "Received packet is: {}".\
-                              format(data)
+                    data = b64encode(packet).decode("utf8")
+                    log_msg = f"Received packet is: {data}"
                     _LOGGER.info(log_msg)
                     hass.components.persistent_notification.async_create(
-                        log_msg, title='Broadlink switch')
+                        log_msg, title="Broadlink switch"
+                    )
                     return
                 await asyncio.sleep(1)
             _LOGGER.error("No signal was received")
             hass.components.persistent_notification.async_create(
-                "No signal was received", title='Broadlink switch')
+                "No signal was received", title="Broadlink switch"
+            )
 
         hass.services.async_register(
-            DOMAIN, SERVICE_LEARN, _learn_command,
-            schema=SERVICE_LEARN_SCHEMA)
+            DOMAIN, SERVICE_LEARN, _learn_command, schema=SERVICE_LEARN_SCHEMA
+        )
 
     if not hass.services.has_service(DOMAIN, SERVICE_SEND):
 
@@ -89,18 +89,15 @@ def async_setup_service(hass, host, device):
             for packet in packets:
                 for retry in range(DEFAULT_RETRY):
                     try:
-                        await hass.async_add_executor_job(
-                            device.send_data, packet)
+                        await hass.async_add_executor_job(device.send_data, packet)
                         break
                     except (socket.timeout, ValueError):
                         try:
-                            await hass.async_add_executor_job(
-                                device.auth)
+                            await hass.async_add_executor_job(device.auth)
                         except socket.timeout:
-                            if retry == DEFAULT_RETRY-1:
-                                _LOGGER.error(
-                                    "Failed to send packet to device")
+                            if retry == DEFAULT_RETRY - 1:
+                                _LOGGER.error("Failed to send packet to device")
 
         hass.services.async_register(
-            DOMAIN, SERVICE_SEND, _send_packet,
-            schema=SERVICE_SEND_SCHEMA)
+            DOMAIN, SERVICE_SEND, _send_packet, schema=SERVICE_SEND_SCHEMA
+        )

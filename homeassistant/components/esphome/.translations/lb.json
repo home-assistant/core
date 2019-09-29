@@ -8,12 +8,13 @@
             "invalid_password": "Ong\u00ebltegt Passwuert!",
             "resolve_error": "Kann d'Adresse vum ESP net opl\u00e9isen. Falls d\u00ebse Problem weiderhi besteet dann defin\u00e9iert eng statesch IP Adresse:\nhttps://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
+        "flow_title": "ESPHome: {name}",
         "step": {
             "authenticate": {
                 "data": {
                     "password": "Passwuert"
                 },
-                "description": "Gitt d'Passwuert vun \u00e4rer Konfiguratioun an.",
+                "description": "Gitt d'Passwuert vun \u00e4rer Konfiguratioun an fir {name}.",
                 "title": "Passwuert aginn"
             },
             "discovery_confirm": {

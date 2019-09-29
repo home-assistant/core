@@ -1,16 +1,17 @@
 """The test for the NuHeat thermostat module."""
 import unittest
 from unittest.mock import Mock, patch
-from tests.common import get_test_home_assistant
 
 from homeassistant.components.climate.const import (
-    SUPPORT_HOLD_MODE,
-    SUPPORT_OPERATION_MODE,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    STATE_HEAT,
-    STATE_IDLE)
+)
 import homeassistant.components.nuheat.climate as nuheat
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+
+from tests.common import get_test_home_assistant
 
 SCHEDULE_HOLD = 3
 SCHEDULE_RUN = 1
@@ -41,7 +42,8 @@ class TestNuHeat(unittest.TestCase):
             min_fahrenheit=41,
             schedule_mode=SCHEDULE_RUN,
             target_celsius=22,
-            target_fahrenheit=72)
+            target_fahrenheit=72,
+        )
 
         thermostat.get_data = Mock()
         thermostat.resume_schedule = Mock()
@@ -51,7 +53,8 @@ class TestNuHeat(unittest.TestCase):
 
         self.hass = get_test_home_assistant()
         self.thermostat = nuheat.NuHeatThermostat(
-            self.api, serial_number, temperature_unit)
+            self.api, serial_number, temperature_unit
+        )
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop hass."""
@@ -86,8 +89,12 @@ class TestNuHeat(unittest.TestCase):
         nuheat.setup_platform(self.hass, {}, Mock(), {})
 
         # Explicit entity
-        self.hass.services.call(nuheat.DOMAIN, nuheat.SERVICE_RESUME_PROGRAM,
-                                {"entity_id": "climate.master_bathroom"}, True)
+        self.hass.services.call(
+            nuheat.NUHEAT_DOMAIN,
+            nuheat.SERVICE_RESUME_PROGRAM,
+            {"entity_id": "climate.master_bathroom"},
+            True,
+        )
 
         thermostat.resume_program.assert_called_with()
         thermostat.schedule_update_ha_state.assert_called_with(True)
@@ -97,7 +104,8 @@ class TestNuHeat(unittest.TestCase):
 
         # All entities
         self.hass.services.call(
-            nuheat.DOMAIN, nuheat.SERVICE_RESUME_PROGRAM, {}, True)
+            nuheat.NUHEAT_DOMAIN, nuheat.SERVICE_RESUME_PROGRAM, {}, True
+        )
 
         thermostat.resume_program.assert_called_with()
         thermostat.schedule_update_ha_state.assert_called_with(True)
@@ -106,14 +114,9 @@ class TestNuHeat(unittest.TestCase):
         """Test name property."""
         assert self.thermostat.name == "Master bathroom"
 
-    def test_icon(self):
-        """Test name property."""
-        assert self.thermostat.icon == "mdi:thermometer"
-
     def test_supported_features(self):
         """Test name property."""
-        features = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_HOLD_MODE |
-                    SUPPORT_OPERATION_MODE)
+        features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
         assert self.thermostat.supported_features == features
 
     def test_temperature_unit(self):
@@ -130,9 +133,9 @@ class TestNuHeat(unittest.TestCase):
 
     def test_current_operation(self):
         """Test current operation."""
-        assert self.thermostat.current_operation == STATE_HEAT
+        assert self.thermostat.hvac_mode == HVAC_MODE_HEAT
         self.thermostat._thermostat.heating = False
-        assert self.thermostat.current_operation == STATE_IDLE
+        assert self.thermostat.hvac_mode == HVAC_MODE_OFF
 
     def test_min_temp(self):
         """Test min temp."""
@@ -152,45 +155,14 @@ class TestNuHeat(unittest.TestCase):
         self.thermostat._temperature_unit = "C"
         assert self.thermostat.target_temperature == 22
 
-    def test_current_hold_mode(self):
-        """Test current hold mode."""
-        self.thermostat._thermostat.schedule_mode = SCHEDULE_RUN
-        assert self.thermostat.current_hold_mode == nuheat.MODE_AUTO
-
-        self.thermostat._thermostat.schedule_mode = SCHEDULE_HOLD
-        assert self.thermostat.current_hold_mode == \
-            nuheat.MODE_HOLD_TEMPERATURE
-
-        self.thermostat._thermostat.schedule_mode = SCHEDULE_TEMPORARY_HOLD
-        assert self.thermostat.current_hold_mode == nuheat.MODE_TEMPORARY_HOLD
-
-        self.thermostat._thermostat.schedule_mode = None
-        assert self.thermostat.current_hold_mode == nuheat.MODE_AUTO
-
     def test_operation_list(self):
         """Test the operation list."""
-        assert self.thermostat.operation_list == \
-            [STATE_HEAT, STATE_IDLE]
+        assert self.thermostat.hvac_modes == [HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
     def test_resume_program(self):
         """Test resume schedule."""
         self.thermostat.resume_program()
         self.thermostat._thermostat.resume_schedule.assert_called_once_with()
-        assert self.thermostat._force_update
-
-    def test_set_hold_mode(self):
-        """Test set hold mode."""
-        self.thermostat.set_hold_mode("temperature")
-        assert self.thermostat._thermostat.schedule_mode == SCHEDULE_HOLD
-        assert self.thermostat._force_update
-
-        self.thermostat.set_hold_mode("temporary_temperature")
-        assert self.thermostat._thermostat.schedule_mode == \
-            SCHEDULE_TEMPORARY_HOLD
-        assert self.thermostat._force_update
-
-        self.thermostat.set_hold_mode("auto")
-        assert self.thermostat._thermostat.schedule_mode == SCHEDULE_RUN
         assert self.thermostat._force_update
 
     def test_set_temperature(self):

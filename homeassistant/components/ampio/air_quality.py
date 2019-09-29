@@ -4,8 +4,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.air_quality import (
-    PLATFORM_SCHEMA, AirQualityEntity)
+from homeassistant.components.air_quality import PLATFORM_SCHEMA, AirQualityEntity
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -13,18 +12,16 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = 'Data provided by Ampio'
-CONF_STATION_ID = 'station_id'
+ATTRIBUTION = "Data provided by Ampio"
+CONF_STATION_ID = "station_id"
 SCAN_INTERVAL = timedelta(minutes=10)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STATION_ID): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_STATION_ID): cv.string, vol.Optional(CONF_NAME): cv.string}
+)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Ampio Smog air quality platform."""
     from asmog import AmpioSmog
 
@@ -60,7 +57,7 @@ class AmpioSmogQuality(AirQualityEntity):
     @property
     def unique_id(self):
         """Return unique_name."""
-        return "ampio_smog_{}".format(self._station_id)
+        return f"ampio_smog_{self._station_id}"
 
     @property
     def particulate_matter_2_5(self):

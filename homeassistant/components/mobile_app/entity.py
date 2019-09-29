@@ -6,16 +6,22 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import (ATTR_SENSOR_ATTRIBUTES,
-                    ATTR_SENSOR_DEVICE_CLASS, ATTR_SENSOR_ICON,
-                    ATTR_SENSOR_NAME, ATTR_SENSOR_TYPE, ATTR_SENSOR_UNIQUE_ID,
-                    DOMAIN, SIGNAL_SENSOR_UPDATE)
+from .const import (
+    ATTR_SENSOR_ATTRIBUTES,
+    ATTR_SENSOR_DEVICE_CLASS,
+    ATTR_SENSOR_ICON,
+    ATTR_SENSOR_NAME,
+    ATTR_SENSOR_TYPE,
+    ATTR_SENSOR_UNIQUE_ID,
+    DOMAIN,
+    SIGNAL_SENSOR_UPDATE,
+)
 from .helpers import device_info
 
 
 def sensor_id(webhook_id, unique_id):
     """Return a unique sensor ID."""
-    return "{}_{}".format(webhook_id, unique_id)
+    return f"{webhook_id}_{unique_id}"
 
 
 class MobileAppEntity(Entity):
@@ -27,16 +33,17 @@ class MobileAppEntity(Entity):
         self._device = device
         self._entry = entry
         self._registration = entry.data
-        self._sensor_id = sensor_id(self._registration[CONF_WEBHOOK_ID],
-                                    config[ATTR_SENSOR_UNIQUE_ID])
+        self._sensor_id = sensor_id(
+            self._registration[CONF_WEBHOOK_ID], config[ATTR_SENSOR_UNIQUE_ID]
+        )
         self._entity_type = config[ATTR_SENSOR_TYPE]
         self.unsub_dispatcher = None
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.unsub_dispatcher = async_dispatcher_connect(self.hass,
-                                                         SIGNAL_SENSOR_UPDATE,
-                                                         self._handle_update)
+        self.unsub_dispatcher = async_dispatcher_connect(
+            self.hass, SIGNAL_SENSOR_UPDATE, self._handle_update
+        )
 
     async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listener when removed."""
@@ -89,8 +96,7 @@ class MobileAppEntity(Entity):
     @callback
     def _handle_update(self, data):
         """Handle async event updates."""
-        incoming_id = sensor_id(data[CONF_WEBHOOK_ID],
-                                data[ATTR_SENSOR_UNIQUE_ID])
+        incoming_id = sensor_id(data[CONF_WEBHOOK_ID], data[ATTR_SENSOR_UNIQUE_ID])
         if incoming_id != self._sensor_id:
             return
 

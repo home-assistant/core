@@ -12,7 +12,6 @@
                     "radio_type": "Tipo de radio",
                     "usb_path": "Ruta del dispositivo USB"
                 },
-                "description": "Vac\u00edo",
                 "title": "ZHA"
             }
         },

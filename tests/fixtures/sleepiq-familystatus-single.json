@@ -1,0 +1,17 @@
+{
+   "beds" : [
+      {
+         "bedId" : "-31",
+         "rightSide" : {
+            "alertId" : 0,
+            "lastLink" : "00:00:00",
+            "isInBed" : true,
+            "sleepNumber" : 40,
+            "alertDetailedMessage" : "No Alert",
+            "pressure" : -16
+         },
+         "status" : 1,
+         "leftSide" : null
+      }
+   ]
+}

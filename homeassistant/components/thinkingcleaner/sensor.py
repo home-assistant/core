@@ -11,36 +11,36 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 SENSOR_TYPES = {
-    'battery': ['Battery', '%', 'mdi:battery'],
-    'state': ['State', None, None],
-    'capacity': ['Capacity', None, None],
+    "battery": ["Battery", "%", "mdi:battery"],
+    "state": ["State", None, None],
+    "capacity": ["Capacity", None, None],
 }
 
 STATES = {
-    'st_base': 'On homebase: Not Charging',
-    'st_base_recon': 'On homebase: Reconditioning Charging',
-    'st_base_full': 'On homebase: Full Charging',
-    'st_base_trickle': 'On homebase: Trickle Charging',
-    'st_base_wait': 'On homebase: Waiting',
-    'st_plug': 'Plugged in: Not Charging',
-    'st_plug_recon': 'Plugged in: Reconditioning Charging',
-    'st_plug_full': 'Plugged in: Full Charging',
-    'st_plug_trickle': 'Plugged in: Trickle Charging',
-    'st_plug_wait': 'Plugged in: Waiting',
-    'st_stopped': 'Stopped',
-    'st_clean': 'Cleaning',
-    'st_cleanstop': 'Stopped with cleaning',
-    'st_clean_spot': 'Spot cleaning',
-    'st_clean_max': 'Max cleaning',
-    'st_delayed': 'Delayed cleaning will start soon',
-    'st_dock': 'Searching Homebase',
-    'st_pickup': 'Roomba picked up',
-    'st_remote': 'Remote control driving',
-    'st_wait': 'Waiting for command',
-    'st_off': 'Off',
-    'st_error': 'Error',
-    'st_locate': 'Find me!',
-    'st_unknown': 'Unknown state',
+    "st_base": "On homebase: Not Charging",
+    "st_base_recon": "On homebase: Reconditioning Charging",
+    "st_base_full": "On homebase: Full Charging",
+    "st_base_trickle": "On homebase: Trickle Charging",
+    "st_base_wait": "On homebase: Waiting",
+    "st_plug": "Plugged in: Not Charging",
+    "st_plug_recon": "Plugged in: Reconditioning Charging",
+    "st_plug_full": "Plugged in: Full Charging",
+    "st_plug_trickle": "Plugged in: Trickle Charging",
+    "st_plug_wait": "Plugged in: Waiting",
+    "st_stopped": "Stopped",
+    "st_clean": "Cleaning",
+    "st_cleanstop": "Stopped with cleaning",
+    "st_clean_spot": "Spot cleaning",
+    "st_clean_max": "Max cleaning",
+    "st_delayed": "Delayed cleaning will start soon",
+    "st_dock": "Searching Homebase",
+    "st_pickup": "Roomba picked up",
+    "st_remote": "Remote control driving",
+    "st_wait": "Waiting for command",
+    "st_off": "Off",
+    "st_error": "Error",
+    "st_locate": "Find me!",
+    "st_unknown": "Unknown state",
 }
 
 
@@ -60,8 +60,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     dev = []
     for device in devices:
         for type_name in SENSOR_TYPES:
-            dev.append(ThinkingCleanerSensor(device, type_name,
-                                             update_devices))
+            dev.append(ThinkingCleanerSensor(device, type_name, update_devices))
 
     add_entities(dev)
 
@@ -81,7 +80,7 @@ class ThinkingCleanerSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self._tc_object.name, SENSOR_TYPES[self.type][0])
+        return "{} {}".format(self._tc_object.name, SENSOR_TYPES[self.type][0])
 
     @property
     def icon(self):
@@ -102,9 +101,9 @@ class ThinkingCleanerSensor(Entity):
         """Update the sensor."""
         self._update_devices()
 
-        if self.type == 'battery':
+        if self.type == "battery":
             self._state = self._tc_object.battery
-        elif self.type == 'state':
+        elif self.type == "state":
             self._state = STATES[self._tc_object.status]
-        elif self.type == 'capacity':
+        elif self.type == "capacity":
             self._state = self._tc_object.capacity

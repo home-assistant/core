@@ -9,8 +9,7 @@ from . import DATA_SABNZBD, SENSOR_TYPES, SIGNAL_SABNZBD_UPDATED
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the SABnzbd sensors."""
     if discovery_info is None:
         return
@@ -18,8 +17,9 @@ async def async_setup_platform(
     sab_api_data = hass.data[DATA_SABNZBD]
     sensors = sab_api_data.sensors
     client_name = sab_api_data.name
-    async_add_entities([SabnzbdSensor(sensor, sab_api_data, client_name)
-                        for sensor in sensors])
+    async_add_entities(
+        [SabnzbdSensor(sensor, sab_api_data, client_name) for sensor in sensors]
+    )
 
 
 class SabnzbdSensor(Entity):
@@ -37,13 +37,12 @@ class SabnzbdSensor(Entity):
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to hass."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_SABNZBD_UPDATED, self.update_state)
+        async_dispatcher_connect(self.hass, SIGNAL_SABNZBD_UPDATED, self.update_state)
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self._client_name, self._name)
+        return f"{self._client_name} {self._name}"
 
     @property
     def state(self):
@@ -63,9 +62,9 @@ class SabnzbdSensor(Entity):
         """Get the latest data and updates the states."""
         self._state = self._sabnzbd_api.get_queue_field(self._field_name)
 
-        if self._type == 'speed':
+        if self._type == "speed":
             self._state = round(float(self._state) / 1024, 1)
-        elif 'size' in self._type:
+        elif "size" in self._type:
             self._state = round(float(self._state), 2)
 
         self.schedule_update_ha_state()

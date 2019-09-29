@@ -54,7 +54,7 @@ class USPSCamera(Camera):
                 self._last_mail = self._usps.mail
                 for article in self._usps.mail:
                     _LOGGER.debug("Fetching article image: %s", article)
-                    img = self._session.get(article['image']).content
+                    img = self._session.get(article["image"]).content
                     self._mail_img.append(img)
 
         try:
@@ -65,13 +65,13 @@ class USPSCamera(Camera):
     @property
     def name(self):
         """Return the name of this camera."""
-        return '{} mail'.format(self._name)
+        return f"{self._name} mail"
 
     @property
     def model(self):
         """Return date of mail as model."""
         try:
-            return 'Date: {}'.format(str(self._usps.mail[0]['date']))
+            return "Date: {}".format(str(self._usps.mail[0]["date"]))
         except IndexError:
             return None
 

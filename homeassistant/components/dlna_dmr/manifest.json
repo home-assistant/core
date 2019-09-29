@@ -3,7 +3,7 @@
   "name": "Dlna dmr",
   "documentation": "https://www.home-assistant.io/components/dlna_dmr",
   "requirements": [
-    "async-upnp-client==0.14.7"
+    "async-upnp-client==0.14.11"
   ],
   "dependencies": [],
   "codeowners": []

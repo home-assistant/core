@@ -14,23 +14,25 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by chain.so"
 
-CONF_NETWORK = 'network'
+CONF_NETWORK = "network"
 
-DEFAULT_NAME = 'Crypto Balance'
+DEFAULT_NAME = "Crypto Balance"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ADDRESS): cv.string,
-    vol.Required(CONF_NETWORK): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_ADDRESS): cv.string,
+        vol.Required(CONF_NETWORK): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the sochain sensors."""
     from pysochain import ChainSo
+
     address = config.get(CONF_ADDRESS)
     network = config.get(CONF_NETWORK)
     name = config.get(CONF_NAME)
@@ -58,8 +60,11 @@ class SochainSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.chainso.data.get("confirmed_balance") \
-            if self.chainso is not None else None
+        return (
+            self.chainso.data.get("confirmed_balance")
+            if self.chainso is not None
+            else None
+        )
 
     @property
     def unit_of_measurement(self):
@@ -69,9 +74,7 @@ class SochainSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
+        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     async def async_update(self):
         """Get the latest state of the sensor."""

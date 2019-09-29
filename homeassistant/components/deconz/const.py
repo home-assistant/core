@@ -1,38 +1,45 @@
 """Constants for the deCONZ component."""
 import logging
 
-_LOGGER = logging.getLogger('.')
+_LOGGER = logging.getLogger(__package__)
 
-DOMAIN = 'deconz'
+DOMAIN = "deconz"
 
 DEFAULT_PORT = 80
 DEFAULT_ALLOW_CLIP_SENSOR = False
-DEFAULT_ALLOW_DECONZ_GROUPS = False
+DEFAULT_ALLOW_DECONZ_GROUPS = True
 
-CONF_ALLOW_CLIP_SENSOR = 'allow_clip_sensor'
-CONF_ALLOW_DECONZ_GROUPS = 'allow_deconz_groups'
-CONF_BRIDGEID = 'bridgeid'
-CONF_MASTER_GATEWAY = 'master'
+CONF_ALLOW_CLIP_SENSOR = "allow_clip_sensor"
+CONF_ALLOW_DECONZ_GROUPS = "allow_deconz_groups"
+CONF_BRIDGEID = "bridgeid"
+CONF_MASTER_GATEWAY = "master"
 
-SUPPORTED_PLATFORMS = ['binary_sensor', 'climate', 'cover',
-                       'light', 'scene', 'sensor', 'switch']
+SUPPORTED_PLATFORMS = [
+    "binary_sensor",
+    "climate",
+    "cover",
+    "light",
+    "scene",
+    "sensor",
+    "switch",
+]
 
-NEW_GROUP = 'group'
-NEW_LIGHT = 'light'
-NEW_SCENE = 'scene'
-NEW_SENSOR = 'sensor'
+NEW_GROUP = "group"
+NEW_LIGHT = "light"
+NEW_SCENE = "scene"
+NEW_SENSOR = "sensor"
 
 NEW_DEVICE = {
-    NEW_GROUP: 'deconz_new_group_{}',
-    NEW_LIGHT: 'deconz_new_light_{}',
-    NEW_SCENE: 'deconz_new_scene_{}',
-    NEW_SENSOR: 'deconz_new_sensor_{}'
+    NEW_GROUP: "deconz_new_group_{}",
+    NEW_LIGHT: "deconz_new_light_{}",
+    NEW_SCENE: "deconz_new_scene_{}",
+    NEW_SENSOR: "deconz_new_sensor_{}",
 }
 
-ATTR_DARK = 'dark'
-ATTR_OFFSET = 'offset'
-ATTR_ON = 'on'
-ATTR_VALVE = 'valve'
+ATTR_DARK = "dark"
+ATTR_OFFSET = "offset"
+ATTR_ON = "on"
+ATTR_VALVE = "valve"
 
 DAMPERS = ["Level controllable output"]
 WINDOW_COVERS = ["Window covering device"]

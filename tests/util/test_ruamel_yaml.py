@@ -130,12 +130,12 @@ def teardown():
 
 
 def _path_for(leaf_name):
-    return os.path.join(TMP_DIR, leaf_name+".yaml")
+    return os.path.join(TMP_DIR, leaf_name + ".yaml")
 
 
 def test_save_and_load():
     """Test saving and loading back."""
-    yaml = YAML(typ='rt')
+    yaml = YAML(typ="rt")
     fname = _path_for("test1")
     open(fname, "w+").close()
     util_yaml.save_yaml(fname, yaml.load(TEST_YAML_A))
@@ -145,7 +145,7 @@ def test_save_and_load():
 
 def test_overwrite_and_reload():
     """Test that we can overwrite an existing file and read back."""
-    yaml = YAML(typ='rt')
+    yaml = YAML(typ="rt")
     fname = _path_for("test2")
     open(fname, "w+").close()
     util_yaml.save_yaml(fname, yaml.load(TEST_YAML_A))

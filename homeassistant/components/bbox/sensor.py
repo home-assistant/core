@@ -7,38 +7,52 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME, CONF_MONITORED_VARIABLES, ATTR_ATTRIBUTION)
+from homeassistant.const import CONF_NAME, CONF_MONITORED_VARIABLES, ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-BANDWIDTH_MEGABITS_SECONDS = 'Mb/s'  # type: str
+BANDWIDTH_MEGABITS_SECONDS = "Mb/s"
 
 ATTRIBUTION = "Powered by Bouygues Telecom"
 
-DEFAULT_NAME = 'Bbox'
+DEFAULT_NAME = "Bbox"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 # Sensor types are defined like so: Name, unit, icon
 SENSOR_TYPES = {
-    'down_max_bandwidth': ['Maximum Download Bandwidth',
-                           BANDWIDTH_MEGABITS_SECONDS, 'mdi:download'],
-    'up_max_bandwidth': ['Maximum Upload Bandwidth',
-                         BANDWIDTH_MEGABITS_SECONDS, 'mdi:upload'],
-    'current_down_bandwidth': ['Currently Used Download Bandwidth',
-                               BANDWIDTH_MEGABITS_SECONDS, 'mdi:download'],
-    'current_up_bandwidth': ['Currently Used Upload Bandwidth',
-                             BANDWIDTH_MEGABITS_SECONDS, 'mdi:upload'],
+    "down_max_bandwidth": [
+        "Maximum Download Bandwidth",
+        BANDWIDTH_MEGABITS_SECONDS,
+        "mdi:download",
+    ],
+    "up_max_bandwidth": [
+        "Maximum Upload Bandwidth",
+        BANDWIDTH_MEGABITS_SECONDS,
+        "mdi:upload",
+    ],
+    "current_down_bandwidth": [
+        "Currently Used Download Bandwidth",
+        BANDWIDTH_MEGABITS_SECONDS,
+        "mdi:download",
+    ],
+    "current_up_bandwidth": [
+        "Currently Used Upload Bandwidth",
+        BANDWIDTH_MEGABITS_SECONDS,
+        "mdi:upload",
+    ],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_VARIABLES):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_MONITORED_VARIABLES): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        ),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -77,7 +91,7 @@ class BboxSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self.client_name, self._name)
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
@@ -97,25 +111,19 @@ class BboxSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
+        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def update(self):
         """Get the latest data from Bbox and update the state."""
         self.bbox_data.update()
-        if self.type == 'down_max_bandwidth':
-            self._state = round(
-                self.bbox_data.data['rx']['maxBandwidth'] / 1000, 2)
-        elif self.type == 'up_max_bandwidth':
-            self._state = round(
-                self.bbox_data.data['tx']['maxBandwidth'] / 1000, 2)
-        elif self.type == 'current_down_bandwidth':
-            self._state = round(self.bbox_data.data['rx']['bandwidth'] / 1000,
-                                2)
-        elif self.type == 'current_up_bandwidth':
-            self._state = round(self.bbox_data.data['tx']['bandwidth'] / 1000,
-                                2)
+        if self.type == "down_max_bandwidth":
+            self._state = round(self.bbox_data.data["rx"]["maxBandwidth"] / 1000, 2)
+        elif self.type == "up_max_bandwidth":
+            self._state = round(self.bbox_data.data["tx"]["maxBandwidth"] / 1000, 2)
+        elif self.type == "current_down_bandwidth":
+            self._state = round(self.bbox_data.data["rx"]["bandwidth"] / 1000, 2)
+        elif self.type == "current_up_bandwidth":
+            self._state = round(self.bbox_data.data["tx"]["bandwidth"] / 1000, 2)
 
 
 class BboxData:

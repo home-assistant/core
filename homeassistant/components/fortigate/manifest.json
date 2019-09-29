@@ -1,0 +1,12 @@
+{
+    "domain": "fortigate",
+    "name": "Fortigate",
+    "documentation": "https://www.home-assistant.io/components/fortigate",
+    "dependencies": [],
+    "codeowners": [
+        "@kifeo"
+    ],
+    "requirements": [
+        "pyfgt==0.5.1"
+    ]
+}

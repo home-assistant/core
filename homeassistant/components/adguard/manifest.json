@@ -4,7 +4,7 @@
     "config_flow": true,
     "documentation": "https://www.home-assistant.io/components/adguard",
     "requirements": [
-        "adguardhome==0.2.0"
+        "adguardhome==0.2.1"
     ],
     "dependencies": [],
     "codeowners": [

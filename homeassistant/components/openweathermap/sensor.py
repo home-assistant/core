@@ -6,8 +6,13 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_NAME,
-    TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_ATTRIBUTION,
+    CONF_API_KEY,
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -16,34 +21,37 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by OpenWeatherMap"
 
-CONF_FORECAST = 'forecast'
-CONF_LANGUAGE = 'language'
+CONF_FORECAST = "forecast"
+CONF_LANGUAGE = "language"
 
-DEFAULT_NAME = 'OWM'
+DEFAULT_NAME = "OWM"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 SENSOR_TYPES = {
-    'weather': ['Condition', None],
-    'temperature': ['Temperature', None],
-    'wind_speed': ['Wind speed', 'm/s'],
-    'wind_bearing': ['Wind bearing', '°'],
-    'humidity': ['Humidity', '%'],
-    'pressure': ['Pressure', 'mbar'],
-    'clouds': ['Cloud coverage', '%'],
-    'rain': ['Rain', 'mm'],
-    'snow': ['Snow', 'mm'],
-    'weather_code': ['Weather code', None],
+    "weather": ["Condition", None],
+    "temperature": ["Temperature", None],
+    "wind_speed": ["Wind speed", "m/s"],
+    "wind_bearing": ["Wind bearing", "°"],
+    "humidity": ["Humidity", "%"],
+    "pressure": ["Pressure", "mbar"],
+    "clouds": ["Cloud coverage", "%"],
+    "rain": ["Rain", "mm"],
+    "snow": ["Snow", "mm"],
+    "weather_code": ["Weather code", None],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_FORECAST, default=False): cv.boolean,
-    vol.Optional(CONF_LANGUAGE): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        ),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_FORECAST, default=False): cv.boolean,
+        vol.Optional(CONF_LANGUAGE): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -54,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return
 
-    SENSOR_TYPES['temperature'][1] = hass.config.units.temperature_unit
+    SENSOR_TYPES["temperature"][1] = hass.config.units.temperature_unit
 
     name = config.get(CONF_NAME)
     forecast = config.get(CONF_FORECAST)
@@ -68,17 +76,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Unable to connect to OpenWeatherMap")
         return
 
-    data = WeatherData(
-        owm, forecast, hass.config.latitude, hass.config.longitude)
+    data = WeatherData(owm, forecast, hass.config.latitude, hass.config.longitude)
     dev = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
-        dev.append(OpenWeatherMapSensor(
-            name, data, variable, SENSOR_TYPES[variable][1]))
+        dev.append(
+            OpenWeatherMapSensor(name, data, variable, SENSOR_TYPES[variable][1])
+        )
 
     if forecast:
-        SENSOR_TYPES['forecast'] = ['Forecast', None]
-        dev.append(OpenWeatherMapSensor(
-            name, data, 'forecast', SENSOR_TYPES['temperature'][1]))
+        SENSOR_TYPES["forecast"] = ["Forecast", None]
+        dev.append(
+            OpenWeatherMapSensor(name, data, "forecast", SENSOR_TYPES["temperature"][1])
+        )
 
     add_entities(dev, True)
 
@@ -99,7 +108,7 @@ class OpenWeatherMapSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self.client_name, self._name)
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
@@ -114,9 +123,7 @@ class OpenWeatherMapSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
+        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def update(self):
         """Get the latest data from OWM and updates the states."""
@@ -135,51 +142,48 @@ class OpenWeatherMapSensor(Entity):
             return
 
         try:
-            if self.type == 'weather':
+            if self.type == "weather":
                 self._state = data.get_detailed_status()
-            elif self.type == 'temperature':
+            elif self.type == "temperature":
                 if self.temp_unit == TEMP_CELSIUS:
-                    self._state = round(
-                        data.get_temperature('celsius')['temp'], 1)
+                    self._state = round(data.get_temperature("celsius")["temp"], 1)
                 elif self.temp_unit == TEMP_FAHRENHEIT:
-                    self._state = round(
-                        data.get_temperature('fahrenheit')['temp'], 1)
+                    self._state = round(data.get_temperature("fahrenheit")["temp"], 1)
                 else:
-                    self._state = round(data.get_temperature()['temp'], 1)
-            elif self.type == 'wind_speed':
-                self._state = round(data.get_wind()['speed'], 1)
-            elif self.type == 'wind_bearing':
-                self._state = round(data.get_wind()['deg'], 1)
-            elif self.type == 'humidity':
+                    self._state = round(data.get_temperature()["temp"], 1)
+            elif self.type == "wind_speed":
+                self._state = round(data.get_wind()["speed"], 1)
+            elif self.type == "wind_bearing":
+                self._state = round(data.get_wind()["deg"], 1)
+            elif self.type == "humidity":
                 self._state = round(data.get_humidity(), 1)
-            elif self.type == 'pressure':
-                self._state = round(data.get_pressure()['press'], 0)
-            elif self.type == 'clouds':
+            elif self.type == "pressure":
+                self._state = round(data.get_pressure()["press"], 0)
+            elif self.type == "clouds":
                 self._state = data.get_clouds()
-            elif self.type == 'rain':
+            elif self.type == "rain":
                 if data.get_rain():
-                    self._state = round(data.get_rain()['3h'], 0)
-                    self._unit_of_measurement = 'mm'
+                    self._state = round(data.get_rain()["3h"], 0)
+                    self._unit_of_measurement = "mm"
                 else:
-                    self._state = 'not raining'
-                    self._unit_of_measurement = ''
-            elif self.type == 'snow':
+                    self._state = "not raining"
+                    self._unit_of_measurement = ""
+            elif self.type == "snow":
                 if data.get_snow():
                     self._state = round(data.get_snow(), 0)
-                    self._unit_of_measurement = 'mm'
+                    self._unit_of_measurement = "mm"
                 else:
-                    self._state = 'not snowing'
-                    self._unit_of_measurement = ''
-            elif self.type == 'forecast':
+                    self._state = "not snowing"
+                    self._unit_of_measurement = ""
+            elif self.type == "forecast":
                 if fc_data is None:
                     return
                 self._state = fc_data.get_weathers()[0].get_detailed_status()
-            elif self.type == 'weather_code':
+            elif self.type == "weather_code":
                 self._state = data.get_weather_code()
         except KeyError:
             self._state = None
-            _LOGGER.warning(
-                "Condition is currently not available: %s", self.type)
+            _LOGGER.warning("Condition is currently not available: %s", self.type)
 
 
 class WeatherData:
@@ -202,8 +206,7 @@ class WeatherData:
         try:
             obs = self.owm.weather_at_coords(self.latitude, self.longitude)
         except (APICallError, TypeError):
-            _LOGGER.error(
-                "Error when calling API to get weather at coordinates")
+            _LOGGER.error("Error when calling API to get weather at coordinates")
             obs = None
 
         if obs is None:
@@ -215,7 +218,8 @@ class WeatherData:
         if self.forecast == 1:
             try:
                 obs = self.owm.three_hours_forecast_at_coords(
-                    self.latitude, self.longitude)
+                    self.latitude, self.longitude
+                )
                 self.fc_data = obs.get_forecast()
             except (ConnectionResetError, TypeError):
                 _LOGGER.warning("Failed to fetch forecast")

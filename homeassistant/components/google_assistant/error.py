@@ -15,9 +15,7 @@ class SmartHomeError(Exception):
 
     def to_response(self):
         """Convert to a response format."""
-        return {
-            'errorCode': self.code
-        }
+        return {"errorCode": self.code}
 
 
 class ChallengeNeeded(SmartHomeError):
@@ -28,15 +26,12 @@ class ChallengeNeeded(SmartHomeError):
 
     def __init__(self, challenge_type):
         """Initialize challenge needed error."""
-        super().__init__(ERR_CHALLENGE_NEEDED,
-                         'Challenge needed: {}'.format(challenge_type))
+        super().__init__(ERR_CHALLENGE_NEEDED, f"Challenge needed: {challenge_type}")
         self.challenge_type = challenge_type
 
     def to_response(self):
         """Convert to a response format."""
         return {
-            'errorCode': self.code,
-            'challengeNeeded': {
-                'type': self.challenge_type
-            }
+            "errorCode": self.code,
+            "challengeNeeded": {"type": self.challenge_type},
         }

@@ -5,36 +5,50 @@ from typing import List
 
 from homeassistant.core import Context, callback
 from homeassistant.const import (
-    CONF_NAME, STATE_UNAVAILABLE, ATTR_SUPPORTED_FEATURES,
-    ATTR_DEVICE_CLASS, CLOUD_NEVER_EXPOSED_ENTITIES
+    CONF_NAME,
+    STATE_UNAVAILABLE,
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_DEVICE_CLASS,
+    CLOUD_NEVER_EXPOSED_ENTITIES,
 )
 
 from . import trait
 from .const import (
-    DOMAIN_TO_GOOGLE_TYPES, CONF_ALIASES, ERR_FUNCTION_NOT_SUPPORTED,
-    DEVICE_CLASS_TO_GOOGLE_TYPES, CONF_ROOM_HINT
+    DOMAIN_TO_GOOGLE_TYPES,
+    CONF_ALIASES,
+    ERR_FUNCTION_NOT_SUPPORTED,
+    DEVICE_CLASS_TO_GOOGLE_TYPES,
+    CONF_ROOM_HINT,
 )
 from .error import SmartHomeError
 
 
-class Config:
+class AbstractConfig:
     """Hold the configuration for Google Assistant."""
 
-    def __init__(self, should_expose,
-                 entity_config=None, secure_devices_pin=None,
-                 agent_user_id=None, should_2fa=None):
-        """Initialize the configuration."""
-        self.should_expose = should_expose
-        self.entity_config = entity_config or {}
-        self.secure_devices_pin = secure_devices_pin
-        self._should_2fa = should_2fa
+    @property
+    def agent_user_id(self):
+        """Return Agent User Id to use for query responses."""
+        return None
 
-        # Agent User Id to use for query responses
-        self.agent_user_id = agent_user_id
+    @property
+    def entity_config(self):
+        """Return entity config."""
+        return {}
+
+    @property
+    def secure_devices_pin(self):
+        """Return entity config."""
+        return None
+
+    def should_expose(self, state) -> bool:
+        """Return if entity should be exposed."""
+        raise NotImplementedError
 
     def should_2fa(self, state):
         """If an entity should have 2FA checked."""
-        return self._should_2fa is None or self._should_2fa(state)
+        # pylint: disable=no-self-use
+        return True
 
 
 class RequestData:
@@ -80,9 +94,11 @@ class GoogleEntity:
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
-        self._traits = [Trait(self.hass, state, self.config)
-                        for Trait in trait.TRAITS
-                        if Trait.supported(domain, features, device_class)]
+        self._traits = [
+            Trait(self.hass, state, self.config)
+            for Trait in trait.TRAITS
+            if Trait.supported(domain, features, device_class)
+        ]
         return self._traits
 
     @callback
@@ -98,8 +114,9 @@ class GoogleEntity:
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
-        return any(trait.might_2fa(domain, features, device_class)
-                   for trait in self.traits())
+        return any(
+            trait.might_2fa(domain, features, device_class) for trait in self.traits()
+        )
 
     async def sync_serialize(self):
         """Serialize entity for a SYNC response.
@@ -115,31 +132,28 @@ class GoogleEntity:
 
         traits = self.traits()
 
-        device_type = get_google_type(domain,
-                                      device_class)
+        device_type = get_google_type(domain, device_class)
 
         device = {
-            'id': state.entity_id,
-            'name': {
-                'name': name
-            },
-            'attributes': {},
-            'traits': [trait.name for trait in traits],
-            'willReportState': False,
-            'type': device_type,
+            "id": state.entity_id,
+            "name": {"name": name},
+            "attributes": {},
+            "traits": [trait.name for trait in traits],
+            "willReportState": False,
+            "type": device_type,
         }
 
         # use aliases
         aliases = entity_config.get(CONF_ALIASES)
         if aliases:
-            device['name']['nicknames'] = aliases
+            device["name"]["nicknames"] = aliases
 
         for trt in traits:
-            device['attributes'].update(trt.sync_attributes())
+            device["attributes"].update(trt.sync_attributes())
 
         room = entity_config.get(CONF_ROOM_HINT)
         if room:
-            device['roomHint'] = room
+            device["roomHint"] = room
             return device
 
         dev_reg, ent_reg, area_reg = await gather(
@@ -158,7 +172,7 @@ class GoogleEntity:
 
         area_entry = area_reg.areas.get(device_entry.area_id)
         if area_entry and area_entry.name:
-            device['roomHint'] = area_entry.name
+            device["roomHint"] = area_entry.name
 
         return device
 
@@ -171,9 +185,9 @@ class GoogleEntity:
         state = self.state
 
         if state.state == STATE_UNAVAILABLE:
-            return {'online': False}
+            return {"online": False}
 
-        attrs = {'online': True}
+        attrs = {"online": True}
 
         for trt in self.traits():
             deep_update(attrs, trt.query_attributes())
@@ -185,9 +199,9 @@ class GoogleEntity:
 
         https://developers.google.com/actions/smarthome/create-app#actiondevicesexecute
         """
-        command = command_payload['command']
-        params = command_payload.get('params', {})
-        challenge = command_payload.get('challenge', {})
+        command = command_payload["command"]
+        params = command_payload.get("params", {})
+        challenge = command_payload.get("challenge", {})
         executed = False
         for trt in self.traits():
             if trt.can_execute(command, params):
@@ -198,8 +212,8 @@ class GoogleEntity:
         if not executed:
             raise SmartHomeError(
                 ERR_FUNCTION_NOT_SUPPORTED,
-                'Unable to execute {} for {}'.format(command,
-                                                     self.state.entity_id))
+                f"Unable to execute {command} for {self.state.entity_id}",
+            )
 
     @callback
     def async_update(self):

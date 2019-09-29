@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "existing_instance_updated": "S'ha actualitzat la configuraci\u00f3 existent.",
             "single_instance_allowed": "Nom\u00e9s es permet una \u00fanica configuraci\u00f3 d'AdGuard Home."
         },
         "error": {

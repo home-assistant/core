@@ -13,35 +13,50 @@ import voluptuous as vol
 
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_IP_ADDRESS, CONF_NAME, POWER_WATT,
-    ENERGY_WATT_HOUR)
+from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, POWER_WATT, ENERGY_WATT_HOUR
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-DOMAIN = 'solaredge_local'
+DOMAIN = "solaredge_local"
 UPDATE_DELAY = timedelta(seconds=10)
 
 # Supported sensor types:
 # Key: ['json_key', 'name', unit, icon]
 SENSOR_TYPES = {
-    'lifetime_energy': ['energyTotal', "Lifetime energy",
-                        ENERGY_WATT_HOUR, 'mdi:solar-power'],
-    'energy_this_year': ['energyThisYear', "Energy this year",
-                         ENERGY_WATT_HOUR, 'mdi:solar-power'],
-    'energy_this_month': ['energyThisMonth', "Energy this month",
-                          ENERGY_WATT_HOUR, 'mdi:solar-power'],
-    'energy_today': ['energyToday', "Energy today",
-                     ENERGY_WATT_HOUR, 'mdi:solar-power'],
-    'current_power': ['currentPower', "Current Power",
-                      POWER_WATT, 'mdi:solar-power']
+    "lifetime_energy": [
+        "energyTotal",
+        "Lifetime energy",
+        ENERGY_WATT_HOUR,
+        "mdi:solar-power",
+    ],
+    "energy_this_year": [
+        "energyThisYear",
+        "Energy this year",
+        ENERGY_WATT_HOUR,
+        "mdi:solar-power",
+    ],
+    "energy_this_month": [
+        "energyThisMonth",
+        "Energy this month",
+        ENERGY_WATT_HOUR,
+        "mdi:solar-power",
+    ],
+    "energy_today": [
+        "energyToday",
+        "Energy today",
+        ENERGY_WATT_HOUR,
+        "mdi:solar-power",
+    ],
+    "current_power": ["currentPower", "Current Power", POWER_WATT, "mdi:solar-power"],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_IP_ADDRESS): cv.string,
-    vol.Optional(CONF_NAME, default='SolarEdge'): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_IP_ADDRESS): cv.string,
+        vol.Optional(CONF_NAME, default="SolarEdge"): cv.string,
+    }
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +67,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     platform_name = config[CONF_NAME]
 
     # Create new SolarEdge object to retrieve data
-    api = SolarEdge("http://{}/".format(ip_address))
+    api = SolarEdge(f"http://{ip_address}/")
 
     # Check if api can be reached and site is active
     try:
@@ -96,8 +111,7 @@ class SolarEdgeSensor(Entity):
     @property
     def name(self):
         """Return the name."""
-        return "{} ({})".format(self.platform_name,
-                                SENSOR_TYPES[self.sensor_key][1])
+        return "{} ({})".format(self.platform_name, SENSOR_TYPES[self.sensor_key][1])
 
     @property
     def unit_of_measurement(self):
@@ -135,25 +149,19 @@ class SolarEdgeData:
         try:
             response = self.api.get_status()
             _LOGGER.debug("response from SolarEdge: %s", response)
+        except (ConnectTimeout):
+            _LOGGER.error("Connection timeout, skipping update")
+            return
+        except (HTTPError):
+            _LOGGER.error("Could not retrieve data, skipping update")
+            return
 
+        try:
             self.data["energyTotal"] = response.energy.total
             self.data["energyThisYear"] = response.energy.thisYear
             self.data["energyThisMonth"] = response.energy.thisMonth
             self.data["energyToday"] = response.energy.today
             self.data["currentPower"] = response.powerWatt
-
             _LOGGER.debug("Updated SolarEdge overview data: %s", self.data)
         except AttributeError:
-            _LOGGER.error("Missing details data in solaredge response")
-            _LOGGER.debug("Response is: %s", response)
-            return
-        except (ConnectTimeout, HTTPError):
-            _LOGGER.error("Could not retrieve data, skipping update")
-            return
-
-        self.data["energyTotal"] = response.energy.total
-        self.data["energyThisYear"] = response.energy.thisYear
-        self.data["energyThisMonth"] = response.energy.thisMonth
-        self.data["energyToday"] = response.energy.today
-        self.data["currentPower"] = response.powerWatt
-        _LOGGER.debug("Updated SolarEdge overview data: %s", self.data)
+            _LOGGER.error("Missing details data in SolarEdge response")

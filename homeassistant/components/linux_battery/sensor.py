@@ -11,40 +11,42 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_PATH = 'path'
-ATTR_ALARM = 'alarm'
-ATTR_CAPACITY = 'capacity'
-ATTR_CAPACITY_LEVEL = 'capacity_level'
-ATTR_CYCLE_COUNT = 'cycle_count'
-ATTR_ENERGY_FULL = 'energy_full'
-ATTR_ENERGY_FULL_DESIGN = 'energy_full_design'
-ATTR_ENERGY_NOW = 'energy_now'
-ATTR_MANUFACTURER = 'manufacturer'
-ATTR_MODEL_NAME = 'model_name'
-ATTR_POWER_NOW = 'power_now'
-ATTR_SERIAL_NUMBER = 'serial_number'
-ATTR_STATUS = 'status'
-ATTR_VOLTAGE_MIN_DESIGN = 'voltage_min_design'
-ATTR_VOLTAGE_NOW = 'voltage_now'
+ATTR_PATH = "path"
+ATTR_ALARM = "alarm"
+ATTR_CAPACITY = "capacity"
+ATTR_CAPACITY_LEVEL = "capacity_level"
+ATTR_CYCLE_COUNT = "cycle_count"
+ATTR_ENERGY_FULL = "energy_full"
+ATTR_ENERGY_FULL_DESIGN = "energy_full_design"
+ATTR_ENERGY_NOW = "energy_now"
+ATTR_MANUFACTURER = "manufacturer"
+ATTR_MODEL_NAME = "model_name"
+ATTR_POWER_NOW = "power_now"
+ATTR_SERIAL_NUMBER = "serial_number"
+ATTR_STATUS = "status"
+ATTR_VOLTAGE_MIN_DESIGN = "voltage_min_design"
+ATTR_VOLTAGE_NOW = "voltage_now"
 
-ATTR_HEALTH = 'health'
-ATTR_STATUS = 'status'
+ATTR_HEALTH = "health"
+ATTR_STATUS = "status"
 
-CONF_BATTERY = 'battery'
-CONF_SYSTEM = 'system'
+CONF_BATTERY = "battery"
+CONF_SYSTEM = "system"
 
 DEFAULT_BATTERY = 1
-DEFAULT_NAME = 'Battery'
-DEFAULT_PATH = '/sys/class/power_supply'
-DEFAULT_SYSTEM = 'linux'
+DEFAULT_NAME = "Battery"
+DEFAULT_PATH = "/sys/class/power_supply"
+DEFAULT_SYSTEM = "linux"
 
-SYSTEMS = ['android', 'linux']
+SYSTEMS = ["android", "linux"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_BATTERY, default=DEFAULT_BATTERY): cv.positive_int,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SYSTEM, default=DEFAULT_SYSTEM): vol.In(SYSTEMS),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_BATTERY, default=DEFAULT_BATTERY): cv.positive_int,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_SYSTEM, default=DEFAULT_SYSTEM): vol.In(SYSTEMS),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -54,10 +56,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     system = config.get(CONF_SYSTEM)
 
     try:
-        if system == 'android':
-            os.listdir(os.path.join(DEFAULT_PATH, 'battery'))
+        if system == "android":
+            os.listdir(os.path.join(DEFAULT_PATH, "battery"))
         else:
-            os.listdir(os.path.join(DEFAULT_PATH, 'BAT{}'.format(battery_id)))
+            os.listdir(os.path.join(DEFAULT_PATH, f"BAT{battery_id}"))
     except FileNotFoundError:
         _LOGGER.error("No battery found")
         return False
@@ -71,13 +73,14 @@ class LinuxBatterySensor(Entity):
     def __init__(self, name, battery_id, system):
         """Initialize the battery sensor."""
         import batinfo
+
         self._battery = batinfo.Batteries()
 
         self._name = name
         self._battery_stat = None
         self._battery_id = battery_id - 1
         self._system = system
-        self._unit_of_measurement = '%'
+        self._unit_of_measurement = "%"
 
     @property
     def name(self):
@@ -102,7 +105,7 @@ class LinuxBatterySensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        if self._system == 'android':
+        if self._system == "android":
             return {
                 ATTR_NAME: self._battery_stat.name,
                 ATTR_PATH: self._battery_stat.path,

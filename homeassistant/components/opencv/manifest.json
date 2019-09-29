@@ -3,7 +3,8 @@
   "name": "Opencv",
   "documentation": "https://www.home-assistant.io/components/opencv",
   "requirements": [
-    "numpy==1.16.3"
+    "numpy==1.17.1",
+    "opencv-python-headless==4.1.1.26"
   ],
   "dependencies": [],
   "codeowners": []

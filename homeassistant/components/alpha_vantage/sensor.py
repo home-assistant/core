@@ -5,56 +5,59 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_API_KEY, CONF_CURRENCY, CONF_NAME)
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_CURRENCY, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CLOSE = 'close'
-ATTR_HIGH = 'high'
-ATTR_LOW = 'low'
+ATTR_CLOSE = "close"
+ATTR_HIGH = "high"
+ATTR_LOW = "low"
 
 ATTRIBUTION = "Stock market information provided by Alpha Vantage"
 
-CONF_FOREIGN_EXCHANGE = 'foreign_exchange'
-CONF_FROM = 'from'
-CONF_SYMBOL = 'symbol'
-CONF_SYMBOLS = 'symbols'
-CONF_TO = 'to'
+CONF_FOREIGN_EXCHANGE = "foreign_exchange"
+CONF_FROM = "from"
+CONF_SYMBOL = "symbol"
+CONF_SYMBOLS = "symbols"
+CONF_TO = "to"
 
 ICONS = {
-    'BTC': 'mdi:currency-btc',
-    'EUR': 'mdi:currency-eur',
-    'GBP': 'mdi:currency-gbp',
-    'INR': 'mdi:currency-inr',
-    'RUB': 'mdi:currency-rub',
-    'TRY': 'mdi:currency-try',
-    'USD': 'mdi:currency-usd',
+    "BTC": "mdi:currency-btc",
+    "EUR": "mdi:currency-eur",
+    "GBP": "mdi:currency-gbp",
+    "INR": "mdi:currency-inr",
+    "RUB": "mdi:currency-rub",
+    "TRY": "mdi:currency-try",
+    "USD": "mdi:currency-usd",
 }
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-SYMBOL_SCHEMA = vol.Schema({
-    vol.Required(CONF_SYMBOL): cv.string,
-    vol.Optional(CONF_CURRENCY): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-})
+SYMBOL_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_SYMBOL): cv.string,
+        vol.Optional(CONF_CURRENCY): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+    }
+)
 
-CURRENCY_SCHEMA = vol.Schema({
-    vol.Required(CONF_FROM): cv.string,
-    vol.Required(CONF_TO): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-})
+CURRENCY_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_FROM): cv.string,
+        vol.Required(CONF_TO): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_FOREIGN_EXCHANGE):
-        vol.All(cv.ensure_list, [CURRENCY_SCHEMA]),
-    vol.Optional(CONF_SYMBOLS):
-        vol.All(cv.ensure_list, [SYMBOL_SCHEMA]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_FOREIGN_EXCHANGE): vol.All(cv.ensure_list, [CURRENCY_SCHEMA]),
+        vol.Optional(CONF_SYMBOLS): vol.All(cv.ensure_list, [SYMBOL_SCHEMA]),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -67,9 +70,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     conversions = config.get(CONF_FOREIGN_EXCHANGE, [])
 
     if not symbols and not conversions:
-        msg = 'Warning: No symbols or currencies configured.'
-        hass.components.persistent_notification.create(
-            msg, 'Sensor alpha_vantage')
+        msg = "Warning: No symbols or currencies configured."
+        hass.components.persistent_notification.create(msg, "Sensor alpha_vantage")
         _LOGGER.warning(msg)
         return
 
@@ -78,12 +80,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     dev = []
     for symbol in symbols:
         try:
-            _LOGGER.debug("Configuring timeseries for symbols: %s",
-                          symbol[CONF_SYMBOL])
+            _LOGGER.debug("Configuring timeseries for symbols: %s", symbol[CONF_SYMBOL])
             timeseries.get_intraday(symbol[CONF_SYMBOL])
         except ValueError:
-            _LOGGER.error(
-                "API Key is not valid or symbol '%s' not known", symbol)
+            _LOGGER.error("API Key is not valid or symbol '%s' not known", symbol)
         dev.append(AlphaVantageSensor(timeseries, symbol))
 
     forex = ForeignExchange(key=api_key)
@@ -92,12 +92,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         to_cur = conversion.get(CONF_TO)
         try:
             _LOGGER.debug("Configuring forex %s - %s", from_cur, to_cur)
-            forex.get_currency_exchange_rate(
-                from_currency=from_cur, to_currency=to_cur)
+            forex.get_currency_exchange_rate(from_currency=from_cur, to_currency=to_cur)
         except ValueError as error:
             _LOGGER.error(
                 "API Key is not valid or currencies '%s'/'%s' not known",
-                from_cur, to_cur)
+                from_cur,
+                to_cur,
+            )
             _LOGGER.debug(str(error))
         dev.append(AlphaVantageForeignExchange(forex, conversion))
 
@@ -115,7 +116,7 @@ class AlphaVantageSensor(Entity):
         self._timeseries = timeseries
         self.values = None
         self._unit_of_measurement = symbol.get(CONF_CURRENCY, self._symbol)
-        self._icon = ICONS.get(symbol.get(CONF_CURRENCY, 'USD'))
+        self._icon = ICONS.get(symbol.get(CONF_CURRENCY, "USD"))
 
     @property
     def name(self):
@@ -130,7 +131,7 @@ class AlphaVantageSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.values['1. open']
+        return self.values["1. open"]
 
     @property
     def device_state_attributes(self):
@@ -138,9 +139,9 @@ class AlphaVantageSensor(Entity):
         if self.values is not None:
             return {
                 ATTR_ATTRIBUTION: ATTRIBUTION,
-                ATTR_CLOSE: self.values['4. close'],
-                ATTR_HIGH: self.values['2. high'],
-                ATTR_LOW: self.values['3. low'],
+                ATTR_CLOSE: self.values["4. close"],
+                ATTR_HIGH: self.values["2. high"],
+                ATTR_LOW: self.values["3. low"],
             }
 
     @property
@@ -167,9 +168,9 @@ class AlphaVantageForeignExchange(Entity):
         if CONF_NAME in config:
             self._name = config.get(CONF_NAME)
         else:
-            self._name = '{}/{}'.format(self._to_currency, self._from_currency)
+            self._name = f"{self._to_currency}/{self._from_currency}"
         self._unit_of_measurement = self._to_currency
-        self._icon = ICONS.get(self._from_currency, 'USD')
+        self._icon = ICONS.get(self._from_currency, "USD")
         self.values = None
 
     @property
@@ -185,7 +186,7 @@ class AlphaVantageForeignExchange(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return round(float(self.values['5. Exchange Rate']), 4)
+        return round(float(self.values["5. Exchange Rate"]), 4)
 
     @property
     def icon(self):
@@ -204,9 +205,16 @@ class AlphaVantageForeignExchange(Entity):
 
     def update(self):
         """Get the latest data and updates the states."""
-        _LOGGER.debug("Requesting new data for forex %s - %s",
-                      self._from_currency, self._to_currency)
+        _LOGGER.debug(
+            "Requesting new data for forex %s - %s",
+            self._from_currency,
+            self._to_currency,
+        )
         self.values, _ = self._foreign_exchange.get_currency_exchange_rate(
-            from_currency=self._from_currency, to_currency=self._to_currency)
-        _LOGGER.debug("Received new data for forex %s - %s",
-                      self._from_currency, self._to_currency)
+            from_currency=self._from_currency, to_currency=self._to_currency
+        )
+        _LOGGER.debug(
+            "Received new data for forex %s - %s",
+            self._from_currency,
+            self._to_currency,
+        )

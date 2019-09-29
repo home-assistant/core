@@ -3,7 +3,7 @@
   "name": "Deluge",
   "documentation": "https://www.home-assistant.io/components/deluge",
   "requirements": [
-    "deluge-client==1.4.0"
+    "deluge-client==1.7.1"
   ],
   "dependencies": [],
   "codeowners": []

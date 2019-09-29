@@ -14,30 +14,36 @@ from homeassistant.util.json import save_json
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
-CONF_HOLD_TEMP = 'hold_temp'
+CONF_HOLD_TEMP = "hold_temp"
 
-DOMAIN = 'ecobee'
+DOMAIN = "ecobee"
 
-ECOBEE_CONFIG_FILE = 'ecobee.conf'
+ECOBEE_CONFIG_FILE = "ecobee.conf"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
 
 NETWORK = None
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_HOLD_TEMP, default=False): cv.boolean,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_API_KEY): cv.string,
+                vol.Optional(CONF_HOLD_TEMP, default=False): cv.boolean,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def request_configuration(network, hass, config):
     """Request configuration steps from the user."""
     configurator = hass.components.configurator
-    if 'ecobee' in _CONFIGURING:
+    if "ecobee" in _CONFIGURING:
         configurator.notify_errors(
-            _CONFIGURING['ecobee'], "Failed to register, please try again.")
+            _CONFIGURING["ecobee"], "Failed to register, please try again."
+        )
 
         return
 
@@ -47,13 +53,15 @@ def request_configuration(network, hass, config):
         network.update()
         setup_ecobee(hass, network, config)
 
-    _CONFIGURING['ecobee'] = configurator.request_config(
-        "Ecobee", ecobee_configuration_callback,
+    _CONFIGURING["ecobee"] = configurator.request_config(
+        "Ecobee",
+        ecobee_configuration_callback,
         description=(
-            'Please authorize this app at https://www.ecobee.com/consumer'
-            'portal/index.html with pin code: ' + network.pin),
+            "Please authorize this app at https://www.ecobee.com/consumer"
+            "portal/index.html with pin code: " + network.pin
+        ),
         description_image="/static/images/config_ecobee_thermostat.png",
-        submit_caption="I have authorized the app."
+        submit_caption="I have authorized the app.",
     )
 
 
@@ -64,17 +72,16 @@ def setup_ecobee(hass, network, config):
         request_configuration(network, hass, config)
         return
 
-    if 'ecobee' in _CONFIGURING:
+    if "ecobee" in _CONFIGURING:
         configurator = hass.components.configurator
-        configurator.request_done(_CONFIGURING.pop('ecobee'))
+        configurator.request_done(_CONFIGURING.pop("ecobee"))
 
     hold_temp = config[DOMAIN].get(CONF_HOLD_TEMP)
 
-    discovery.load_platform(
-        hass, 'climate', DOMAIN, {'hold_temp': hold_temp}, config)
-    discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
-    discovery.load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
-    discovery.load_platform(hass, 'weather', DOMAIN, {}, config)
+    discovery.load_platform(hass, "climate", DOMAIN, {"hold_temp": hold_temp}, config)
+    discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
+    discovery.load_platform(hass, "binary_sensor", DOMAIN, {}, config)
+    discovery.load_platform(hass, "weather", DOMAIN, {}, config)
 
 
 class EcobeeData:
@@ -83,13 +90,14 @@ class EcobeeData:
     def __init__(self, config_file):
         """Init the Ecobee data object."""
         from pyecobee import Ecobee
+
         self.ecobee = Ecobee(config_file)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from pyecobee."""
         self.ecobee.update()
-        _LOGGER.info("Ecobee data updated successfully")
+        _LOGGER.debug("Ecobee data updated successfully")
 
 
 def setup(hass, config):
@@ -100,7 +108,7 @@ def setup(hass, config):
     """
     global NETWORK
 
-    if 'ecobee' in _CONFIGURING:
+    if "ecobee" in _CONFIGURING:
         return
 
     # Create ecobee.conf if it doesn't exist

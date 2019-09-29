@@ -2,13 +2,16 @@
 from datetime import datetime, timedelta
 import logging
 
-from requests.exceptions import (
-    ConnectionError as ConnectError, HTTPError, Timeout)
+from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_NAME, CONF_PASSWORD, ENERGY_KILO_WATT_HOUR,
-    CONF_USERNAME, CONF_ID)
+    CONF_NAME,
+    CONF_PASSWORD,
+    ENERGY_KILO_WATT_HOUR,
+    CONF_USERNAME,
+    CONF_ID,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -18,26 +21,34 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Powered by SRP Energy"
 
-DEFAULT_NAME = 'SRP Energy'
+DEFAULT_NAME = "SRP Energy"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1440)
 ENERGY_KWH = ENERGY_KILO_WATT_HOUR
 
 ATTR_READING_COST = "reading_cost"
-ATTR_READING_TIME = 'datetime'
-ATTR_READING_USAGE = 'reading_usage'
-ATTR_DAILY_USAGE = 'daily_usage'
-ATTR_USAGE_HISTORY = 'usage_history'
+ATTR_READING_TIME = "datetime"
+ATTR_READING_USAGE = "reading_usage"
+ATTR_DAILY_USAGE = "daily_usage"
+ATTR_USAGE_HISTORY = "usage_history"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_ID): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_ID): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the SRP energy."""
+    _LOGGER.warning(
+        "The srp_energy integration is deprecated and will be removed "
+        "in Home Assistant 0.100.0. For more information see ADR-0004:"
+        "https://github.com/home-assistant/architecture/blob/master/adr/0004-webscraping.md"
+    )
+
     name = config[CONF_NAME]
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
@@ -76,7 +87,7 @@ class SrpEnergy(Entity):
         if self._state is None:
             return None
 
-        return "{0:.2f}".format(self._state)
+        return f"{self._state:.2f}"
 
     @property
     def name(self):
@@ -94,20 +105,21 @@ class SrpEnergy(Entity):
         if self._usage is None:
             return None
 
-        history = [{
-            ATTR_READING_TIME: isodate,
-            ATTR_READING_USAGE: kwh,
-            ATTR_READING_COST: cost
-            } for _, _, isodate, kwh, cost in self._usage]
+        history = [
+            {
+                ATTR_READING_TIME: isodate,
+                ATTR_READING_USAGE: kwh,
+                ATTR_READING_COST: cost,
+            }
+            for _, _, isodate, kwh, cost in self._usage
+        ]
 
         return history
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attributes = {
-            ATTR_USAGE_HISTORY: self.history
-        }
+        attributes = {ATTR_USAGE_HISTORY: self.history}
 
         return attributes
 
@@ -138,5 +150,7 @@ class SrpEnergy(Entity):
         except ValueError as error:
             _LOGGER.error("Value error connecting to SRP. %s", error)
         except TypeError as error:
-            _LOGGER.error("Type error connecting to SRP. "
-                          "Check username and password. %s", error)
+            _LOGGER.error(
+                "Type error connecting to SRP. " "Check username and password. %s",
+                error,
+            )

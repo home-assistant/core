@@ -7,30 +7,34 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES, BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_HOST, CONF_PORT)
+    DEVICE_CLASSES,
+    BinarySensorDevice,
+    PLATFORM_SCHEMA,
+)
+from homeassistant.const import CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_EXCLUDE_ZONES = 'exclude_zones'
-CONF_ZONE_TYPES = 'zone_types'
+CONF_EXCLUDE_ZONES = "exclude_zones"
+CONF_ZONE_TYPES = "zone_types"
 
-DEFAULT_HOST = 'localhost'
-DEFAULT_PORT = '5007'
+DEFAULT_HOST = "localhost"
+DEFAULT_PORT = "5007"
 DEFAULT_SSL = False
 
-ZONE_TYPES_SCHEMA = vol.Schema({
-    cv.positive_int: vol.In(DEVICE_CLASSES),
-})
+ZONE_TYPES_SCHEMA = vol.Schema({cv.positive_int: vol.In(DEVICE_CLASSES)})
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_EXCLUDE_ZONES, default=[]):
-        vol.All(cv.ensure_list, [cv.positive_int]),
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_ZONE_TYPES, default={}): ZONE_TYPES_SCHEMA,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_EXCLUDE_ZONES, default=[]): vol.All(
+            cv.ensure_list, [cv.positive_int]
+        ),
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_ZONE_TYPES, default={}): ZONE_TYPES_SCHEMA,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -43,23 +47,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     zone_types = config.get(CONF_ZONE_TYPES)
 
     try:
-        client = nx584_client.Client('http://{}:{}'.format(host, port))
+        client = nx584_client.Client(f"http://{host}:{port}")
         zones = client.list_zones()
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error("Unable to connect to NX584: %s", str(ex))
         return False
 
-    version = [int(v) for v in client.get_version().split('.')]
+    version = [int(v) for v in client.get_version().split(".")]
     if version < [1, 1]:
         _LOGGER.error("NX584 is too old to use for sensors (>=0.2 required)")
         return False
 
     zone_sensors = {
-        zone['number']: NX584ZoneSensor(
-            zone,
-            zone_types.get(zone['number'], 'opening'))
+        zone["number"]: NX584ZoneSensor(zone, zone_types.get(zone["number"], "opening"))
         for zone in zones
-        if zone['number'] not in exclude}
+        if zone["number"] not in exclude
+    }
     if zone_sensors:
         add_entities(zone_sensors.values())
         watcher = NX584Watcher(client, zone_sensors)
@@ -90,13 +93,13 @@ class NX584ZoneSensor(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the binary sensor."""
-        return self._zone['name']
+        return self._zone["name"]
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
         # True means "faulted" or "open" or "abnormal state"
-        return self._zone['state']
+        return self._zone["state"]
 
 
 class NX584Watcher(threading.Thread):
@@ -110,17 +113,17 @@ class NX584Watcher(threading.Thread):
         self._zone_sensors = zone_sensors
 
     def _process_zone_event(self, event):
-        zone = event['zone']
+        zone = event["zone"]
         zone_sensor = self._zone_sensors.get(zone)
         # pylint: disable=protected-access
         if not zone_sensor:
             return
-        zone_sensor._zone['state'] = event['zone_state']
+        zone_sensor._zone["state"] = event["zone_state"]
         zone_sensor.schedule_update_ha_state()
 
     def _process_events(self, events):
         for event in events:
-            if event.get('type') == 'zone_status':
+            if event.get("type") == "zone_status":
                 self._process_zone_event(event)
 
     def _run(self):

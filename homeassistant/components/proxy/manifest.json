@@ -3,7 +3,7 @@
   "name": "Proxy",
   "documentation": "https://www.home-assistant.io/components/proxy",
   "requirements": [
-    "pillow==5.4.1"
+    "pillow==6.1.0"
   ],
   "dependencies": [],
   "codeowners": []

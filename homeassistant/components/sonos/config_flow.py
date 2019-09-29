@@ -12,4 +12,5 @@ async def _async_has_devices(hass):
 
 
 config_entry_flow.register_discovery_flow(
-    DOMAIN, 'Sonos', _async_has_devices, config_entries.CONN_CLASS_LOCAL_PUSH)
+    DOMAIN, "Sonos", _async_has_devices, config_entries.CONN_CLASS_LOCAL_PUSH
+)

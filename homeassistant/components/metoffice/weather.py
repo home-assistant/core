@@ -5,7 +5,12 @@ import voluptuous as vol
 
 from homeassistant.components.weather import PLATFORM_SCHEMA, WeatherEntity
 from homeassistant.const import (
-    CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS)
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    TEMP_CELSIUS,
+)
 from homeassistant.helpers import config_validation as cv
 
 from .sensor import ATTRIBUTION, CONDITION_CLASSES, MetOfficeCurrentData
@@ -14,14 +19,18 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Met Office"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Inclusive(CONF_LATITUDE, 'coordinates',
-                  'Latitude and longitude must exist together'): cv.latitude,
-    vol.Inclusive(CONF_LONGITUDE, 'coordinates',
-                  'Latitude and longitude must exist together'): cv.longitude,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Inclusive(
+            CONF_LATITUDE, "coordinates", "Latitude and longitude must exist together"
+        ): cv.latitude,
+        vol.Inclusive(
+            CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
+        ): cv.longitude,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -39,8 +48,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     try:
-        site = datapoint.get_nearest_site(
-            latitude=latitude, longitude=longitude)
+        site = datapoint.get_nearest_site(latitude=latitude, longitude=longitude)
     except dp.exceptions.APIException as err:
         _LOGGER.error("Received error from Met Office Datapoint: %s", err)
         return
@@ -75,13 +83,14 @@ class MetOfficeWeather(WeatherEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self._name, self.site.name)
+        return f"{self._name} {self.site.name}"
 
     @property
     def condition(self):
         """Return the current condition."""
-        return [k for k, v in CONDITION_CLASSES.items() if
-                self.data.data.weather.value in v][0]
+        return [
+            k for k, v in CONDITION_CLASSES.items() if self.data.data.weather.value in v
+        ][0]
 
     @property
     def temperature(self):
