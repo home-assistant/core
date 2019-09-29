@@ -439,7 +439,7 @@ def string(value: Any) -> str:
     return str(value)
 
 
-def string_or_none(value: Any) -> str:
+def optional_string(value: Any) -> Optional[str]:
     """Coerce value to string, except if None."""
     if value is None:
         return None

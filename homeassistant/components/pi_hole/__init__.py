@@ -40,7 +40,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(CONF_API_KEY, default=None): cv.string_or_none,
+                vol.Optional(CONF_API_KEY, default=None): cv.optional_string,
                 vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
                 vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION): cv.string,
                 vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
