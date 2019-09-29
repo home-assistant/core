@@ -141,14 +141,12 @@ async def async_setup(hass, config):
     @callback
     def connection_fail_callback(data):
         """Network failure callback."""
-        _LOGGER.error("Could not establish a connection with the Envisalink")
-        if not sync_connect.done():
-            sync_connect.set_result(False)
+        _LOGGER.error("Could not establish a connection with the Envisalink- retrying...")
 
     @callback
     def connection_success_callback(data):
         """Handle a successful connection."""
-        _LOGGER.info("Established a connection with the Envisalink")
+        _LOGGER.info("Established a connection with the Envisalink123")
         if not sync_connect.done():
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_envisalink)
             sync_connect.set_result(True)
