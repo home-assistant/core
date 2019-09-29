@@ -127,7 +127,7 @@ class Panel:
     # Icon to show in the sidebar
     sidebar_icon: Optional[str] = None
 
-    # Title to show in the sidebar (optional)
+    # Title to show in the sidebar
     sidebar_title: Optional[str] = None
 
     # Url to show the panel in the frontend
