@@ -598,8 +598,8 @@ class ConfigEntries:
             domain=result["handler"],
             title=result["title"],
             data=result["data"],
-            options={},
-            system_options={},
+            options=result.get("options", {}),
+            system_options=result.get("system_options", {}),
             source=flow.context["source"],
             connection_class=flow.CONNECTION_CLASS,
         )
