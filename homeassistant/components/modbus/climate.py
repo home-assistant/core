@@ -189,10 +189,7 @@ class ModbusThermostat(ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        if self._unit == "F":
-            return TEMP_FAHRENHEIT
-        else:
-            return TEMP_CELSIUS
+        return TEMP_FAHRENHEIT if self._unit == "F" else TEMP_CELSIUS
 
     @property
     def min_temp(self):
