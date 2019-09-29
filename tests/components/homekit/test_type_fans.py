@@ -223,3 +223,51 @@ async def test_fan_speed(hass, hk_driver, cls, events):
     assert call_set_speed[0].data[ATTR_SPEED] == "ludicrous"
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] == "ludicrous"
+
+
+async def test_fan_speed_zero_is_turn_off(hass, hk_driver, cls, events):
+    """Test fan with speed."""
+    entity_id = "fan.demo"
+    speed_list = [SPEED_OFF, SPEED_LOW, SPEED_HIGH]
+
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: SUPPORT_SET_SPEED,
+            ATTR_SPEED: SPEED_LOW,
+            ATTR_SPEED_LIST: speed_list,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = cls.fan(hass, hk_driver, "Fan", entity_id, 2, None)
+    assert acc.char_speed.value == 0
+
+    await hass.async_add_job(acc.run)
+    await hass.async_block_till_done()
+
+    assert acc.char_speed.value == 50
+
+    hass.states.async_set(
+        entity_id,
+        STATE_OFF,
+        {
+            ATTR_SUPPORTED_FEATURES: SUPPORT_SET_SPEED,
+            ATTR_SPEED: SPEED_OFF,
+            ATTR_SPEED_LIST: speed_list,
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_speed.value == 50
+
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: SUPPORT_SET_SPEED,
+            ATTR_SPEED: SPEED_LOW,
+            ATTR_SPEED_LIST: speed_list,
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_speed.value == 50

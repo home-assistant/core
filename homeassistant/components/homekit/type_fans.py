@@ -129,15 +129,19 @@ class Fan(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_SPEED: speed}
         self.call_service(DOMAIN, SERVICE_SET_SPEED, params, speed)
 
+    def _set_hk_state(self, state):
+        """Set state in HomeKit."""
+        self._state = state
+        if not self._flag[CHAR_ACTIVE] and self.char_active.value != self._state:
+            self.char_active.set_value(self._state)
+        self._flag[CHAR_ACTIVE] = False
+
     def update_state(self, new_state):
         """Update fan after state change."""
         # Handle State
         state = new_state.state
         if state in (STATE_ON, STATE_OFF):
-            self._state = 1 if state == STATE_ON else 0
-            if not self._flag[CHAR_ACTIVE] and self.char_active.value != self._state:
-                self.char_active.set_value(self._state)
-            self._flag[CHAR_ACTIVE] = False
+            self._set_hk_state(1 if state == STATE_ON else 0)
 
         # Handle Direction
         if self.char_direction is not None:
@@ -156,7 +160,10 @@ class Fan(HomeAccessory):
             speed = new_state.attributes.get(ATTR_SPEED)
             hk_speed_value = self.speed_mapping.speed_to_homekit(speed)
             if hk_speed_value is not None and self.char_speed.value != hk_speed_value:
-                self.char_speed.set_value(hk_speed_value)
+                if hk_speed_value == 0:
+                    self._set_hk_state(0)
+                else:
+                    self.char_speed.set_value(hk_speed_value)
 
         # Handle Oscillating
         if self.char_swing is not None:
