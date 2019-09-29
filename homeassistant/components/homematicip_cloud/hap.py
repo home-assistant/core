@@ -5,6 +5,7 @@ import logging
 from homematicip.aio.auth import AsyncAuth
 from homematicip.aio.home import AsyncHome
 from homematicip.base.base_connection import HmipConnectionError
+from homematicip.base.enums import EventType
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -137,6 +138,18 @@ class HomematicipHAP:
 
             self.home.update_home_only(args[0])
 
+    @callback
+    def async_create_entity(self, *args, **kwargs):
+        """Create a device or a group."""
+        is_device = EventType(kwargs["event_type"]) == EventType.DEVICE_ADDED
+        self.hass.async_create_task(self.async_create_entity_lazy(is_device))
+
+    async def async_create_entity_lazy(self, is_device=True):
+        """Delay entity creation to allow the user to enter a device name."""
+        if is_device:
+            await asyncio.sleep(30)
+        await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+
     async def get_state(self):
         """Update HMIP state and tell Home Assistant."""
         await self.home.get_current_state()
@@ -225,6 +238,7 @@ class HomematicipHAP:
         except HmipConnectionError:
             raise HmipcConnectionError
         home.on_update(self.async_update)
+        home.on_create(self.async_create_entity)
         hass.loop.create_task(self.async_connect())
 
         return home
