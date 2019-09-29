@@ -33,6 +33,7 @@ CONF_GATEWAYS = "gateways"
 CONF_INTERFACE = "interface"
 CONF_KEY = "key"
 CONF_DISABLE = "disable"
+CONF_PROTO = "proto"
 
 DOMAIN = "xiaomi_aqara"
 
@@ -71,6 +72,7 @@ GATEWAY_CONFIG = vol.Schema(
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=9898): cv.port,
         vol.Optional(CONF_DISABLE, default=False): cv.boolean,
+        vol.Optional(CONF_PROTO, default=None): cv.string,
     }
 )
 
