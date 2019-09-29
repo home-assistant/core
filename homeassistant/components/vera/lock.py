@@ -8,6 +8,10 @@ from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_LAST_USER_ID = "last_user_id"
+ATTR_LAST_USER_NAME = "last_user_name"
+ATTR_LOW_BATTERY = "low_battery"
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Find and return Vera locks."""
@@ -43,6 +47,28 @@ class VeraLock(VeraDevice, LockDevice):
     def is_locked(self):
         """Return true if device is on."""
         return self._state == STATE_LOCKED
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the lock."""
+        data = super().device_state_attributes
+
+        # This check will no longer be required once the version of the pyvera
+        # library with these two functions included is generally available.
+        if ("get_last_user_alert" in dir(self.vera_device)) and (
+            "get_low_battery_alert" in dir(self.vera_device)
+        ):
+            last_user = self.vera_device.get_last_user_alert()
+            if last_user is not None:
+                data[ATTR_LAST_USER_ID] = last_user[0]
+                data[ATTR_LAST_USER_NAME] = last_user[1]
+            else:
+                data[ATTR_LAST_USER_ID] = -1
+                data[ATTR_LAST_USER_NAME] = ""
+
+            data[ATTR_LOW_BATTERY] = self.vera_device.get_low_battery_alert()
+
+        return data
 
     def update(self):
         """Update state by the Vera device callback."""
