@@ -55,7 +55,7 @@ def setup(hass, base_config):
 
     hass.data[LUTRON_CONTROLLER].load_xml_db()
     hass.data[LUTRON_CONTROLLER].connect()
-    _LOGGER.info(f"Connected to main repeater at {config[CONF_HOST]}")
+    _LOGGER.info("Connected to main repeater at %s", config[CONF_HOST])
 
     # Sort our devices into types
     for area in hass.data[LUTRON_CONTROLLER].areas:
