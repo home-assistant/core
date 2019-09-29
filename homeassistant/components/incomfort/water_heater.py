@@ -1,7 +1,7 @@
 """Support for an Intergas boiler via an InComfort/Intouch Lan2RF gateway."""
 import asyncio
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from aiohttp import ClientResponseError
 from homeassistant.components.water_heater import WaterHeaterDevice
@@ -31,15 +31,20 @@ class IncomfortWaterHeater(WaterHeaterDevice):
 
     def __init__(self, client, heater) -> None:
         """Initialize the water_heater device."""
-        self.entity_id = f"water_heater.{DOMAIN}"
+        self._unique_id = f"{DOMAIN}_{heater.serial_no}"
 
         self._client = client
         self._heater = heater
 
     @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        return self._unique_id
+
+    @property
     def name(self) -> str:
         """Return the name of the water_heater device."""
-        return "InComfort Boiler"
+        return "Boiler"
 
     @property
     def icon(self) -> str:

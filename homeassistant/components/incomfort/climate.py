@@ -21,19 +21,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     client = hass.data[DOMAIN]["client"]
     heater = hass.data[DOMAIN]["heater"]
 
-    async_add_entities([InComfortClimate(client, r) for r in heater.rooms])
+    async_add_entities([InComfortClimate(client, heater, r) for r in heater.rooms])
 
 
 class InComfortClimate(ClimateDevice):
     """Representation of an InComfort/InTouch climate device."""
 
-    def __init__(self, client, room) -> None:
+    def __init__(self, client, heater, room) -> None:
         """Initialize the climate device."""
-        self.entity_id = f"climate.{DOMAIN}_{room.room_no}"
+        self._unique_id = f"{DOMAIN}_{heater.serial_no}_{room.room_no}"
 
         self._client = client
         self._room = room
-        self._name = f"InComfort Thermostat {room.room_no}"
+        self._name = f"Room {room.room_no}"
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
@@ -47,6 +47,11 @@ class InComfortClimate(ClimateDevice):
     def should_poll(self) -> bool:
         """Return False as this device should never be polled."""
         return False
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def name(self) -> str:
