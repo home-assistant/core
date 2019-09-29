@@ -13,18 +13,14 @@
             }
         },
         "error": {
-            "invalid_credentials": "Invalid credentials",
-            "invalid_vendor": "Invalid vendor",
-            "unexpected": "Unexpected error communicating with Neato server"
+            "invalid_credentials": "Invalid credentials"
         },
         "create_entry": {
             "default": "See [Neato documentation]({docs_url})."
         },
         "abort": {
             "already_configured": "Already configured",
-            "invalid_credentials": "Invalid credentials",
-            "invalid_vendor": "Invalid vendor",
-            "unexpected": "Unexpected error communicating with Neato server"
+            "invalid_credentials": "Invalid credentials"
         }
     }
 }
