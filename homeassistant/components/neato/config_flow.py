@@ -1,6 +1,7 @@
 """Config flow to configure Neato integration."""
 
 import logging
+
 import voluptuous as vol
 from requests.exceptions import HTTPError, ConnectionError as ConnError
 

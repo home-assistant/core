@@ -2,8 +2,8 @@
 import asyncio
 import logging
 from datetime import timedelta
-from requests.exceptions import HTTPError, ConnectionError as ConnError
 
+from requests.exceptions import HTTPError, ConnectionError as ConnError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
