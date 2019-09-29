@@ -85,7 +85,7 @@ SERVICE_NEATO_CUSTOM_CLEANING_SCHEMA = vol.Schema(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Neato vacuum."""
     pass
 
