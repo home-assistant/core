@@ -124,7 +124,7 @@ class Panel:
     # Name of the webcomponent
     component_name: Optional[str] = None
 
-    # Icon to show in the sidebar (optional)
+    # Icon to show in the sidebar
     sidebar_icon: Optional[str] = None
 
     # Title to show in the sidebar (optional)
