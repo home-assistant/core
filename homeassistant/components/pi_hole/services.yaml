@@ -4,3 +4,5 @@ disable:
     duration:
       description: Length of time to disable the pi-hole, in seconds
       example: 600
+enable:
+  description: Enable pi-hole

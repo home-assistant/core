@@ -29,6 +29,7 @@ from .const import (
     MIN_TIME_BETWEEN_UPDATES,
     SERVICE_DISABLE,
     SERVICE_DISABLE_ATTR_DURATION,
+    SERVICE_ENABLE,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -95,9 +96,19 @@ async def async_setup(hass, config):
         LOGGER.info("Disabling %s %s for %d seconds", DOMAIN, host, duration)
         await pi_hole.api.disable(duration)
 
+    async def handle_enable(call):
+        if api_key is None:
+            LOGGER.error("api_key is required in configuration to enable")
+            return
+
+        LOGGER.info("Enabling %s %s", DOMAIN, host)
+        await pi_hole.api.enable()
+
     hass.services.async_register(
         DOMAIN, SERVICE_DISABLE, handle_disable, schema=SERVICE_DISABLE_SCHEMA
     )
+
+    hass.services.async_register(DOMAIN, SERVICE_ENABLE, handle_enable)
 
     hass.async_create_task(async_load_platform(hass, SENSOR_DOMAIN, DOMAIN, {}, config))
 
