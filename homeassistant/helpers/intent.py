@@ -124,7 +124,7 @@ class IntentHandler:
 
     intent_type: Optional[str] = None
     slot_schema: Optional[vol.Schema] = None
-    _slot_schema = None
+    _slot_schema: Optional[vol.Schema] = None
     platforms: Optional[Iterable[str]] = []
 
     @callback

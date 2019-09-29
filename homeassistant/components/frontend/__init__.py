@@ -4,7 +4,7 @@ import logging
 import mimetypes
 import os
 import pathlib
-from typing import Optional, Set, Tuple
+from typing import Any, Dict, Optional, Set, Tuple
 
 from aiohttp import web, web_urldispatcher, hdrs
 import voluptuous as vol
@@ -122,19 +122,19 @@ class Panel:
     """Abstract class for panels."""
 
     # Name of the webcomponent
-    component_name = None
+    component_name: Optional[str] = None
 
-    # Icon to show in the sidebar (optional)
-    sidebar_icon = None
+    # Icon to show in the sidebar
+    sidebar_icon: Optional[str] = None
 
-    # Title to show in the sidebar (optional)
-    sidebar_title = None
+    # Title to show in the sidebar
+    sidebar_title: Optional[str] = None
 
     # Url to show the panel in the frontend
-    frontend_url_path = None
+    frontend_url_path: Optional[str] = None
 
     # Config to pass to the webcomponent
-    config = None
+    config: Optional[Dict[str, Any]] = None
 
     # If the panel should only be visible to admins
     require_admin = False
