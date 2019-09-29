@@ -18,7 +18,7 @@ SWITCH_TYPE_SCHEDULE = "schedule"
 SWITCH_TYPES = {SWITCH_TYPE_SCHEDULE: ["Schedule"]}
 
 
-def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Neato switches."""
     pass
 
@@ -46,17 +46,11 @@ class NeatoConnectedSwitch(ToggleEntity):
         self.robot = robot
         self.neato = hass.data[NEATO_LOGIN]
         self._robot_name = "{} {}".format(self.robot.name, SWITCH_TYPES[self.type][0])
-        try:
-            self._state = self.robot.state
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.HTTPError,
-        ) as ex:
-            _LOGGER.warning("Neato connection error: %s", ex)
-            self._state = None
+        self._state = None
         self._schedule_state = None
         self._clean_state = None
         self._robot_serial = self.robot.serial
+        self.update()  # TODO: How to get rid of this?
 
     def update(self):
         """Update the states of Neato switches."""

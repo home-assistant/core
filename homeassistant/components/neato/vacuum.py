@@ -85,7 +85,7 @@ SERVICE_NEATO_CUSTOM_CLEANING_SCHEMA = vol.Schema(
 )
 
 
-def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Neato vacuum."""
     pass
 
@@ -151,11 +151,14 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         self._robot_maps = hass.data[NEATO_PERSISTENT_MAPS]
         self._robot_boundaries = {}
         self._robot_has_map = self.robot.has_persistent_maps
-        self._robot_stats = self.robot.get_robot_info().json()
+        self._robot_stats = None
 
     def update(self):
         """Update the states of Neato Vacuums."""
         _LOGGER.debug("Running Neato Vacuums update")
+        if self._robot_stats is None:
+            self._robot_stats = self.robot.get_robot_info().json()
+
         self.neato.update_robots()
         try:
             self._state = self.robot.state
