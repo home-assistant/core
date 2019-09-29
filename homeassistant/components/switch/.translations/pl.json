@@ -6,14 +6,14 @@
             "turn_on": "W\u0142\u0105cz {entity_name}"
         },
         "condition_type": {
-            "is_off": "{entity_name} jest wy\u0142\u0105czone",
-            "is_on": "{entity_name} jest w\u0142\u0105czone",
-            "turn_off": "{entity_name} wy\u0142\u0105czone",
-            "turn_on": "{entity_name} w\u0142\u0105czone"
+            "is_off": "{entity_name} jest wy\u0142\u0105czony",
+            "is_on": "{entity_name} jest w\u0142\u0105czony",
+            "turn_off": "{entity_name} wy\u0142\u0105czony",
+            "turn_on": "{entity_name} w\u0142\u0105czony"
         },
         "trigger_type": {
-            "turned_off": "{entity_name} wy\u0142\u0105czone",
-            "turned_on": "{entity_name} w\u0142\u0105czone"
+            "turned_off": "Wy\u0142\u0105czenie {entity_name}",
+            "turned_on": "W\u0142\u0105czenie {entity_name}"
         }
     }
 }

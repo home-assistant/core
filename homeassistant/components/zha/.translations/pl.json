@@ -16,5 +16,52 @@
             }
         },
         "title": "ZHA"
+    },
+    "device_automation": {
+        "action_type": {
+            "squawk": "Skrzek",
+            "warn": "Ostrze\u017cenie"
+        },
+        "trigger_subtype": {
+            "both_buttons": "Oba przyciski",
+            "button_1": "Pierwszy przycisk",
+            "button_2": "Drugi przycisk",
+            "button_3": "Trzeci przycisk",
+            "button_4": "Czwarty przycisk",
+            "button_5": "Pi\u0105ty przycisk",
+            "button_6": "Sz\u00f3sty przycisk",
+            "close": "Zamkni\u0119cie",
+            "dim_down": "\u015aciemnianie",
+            "dim_up": "Rozja\u015bnienie",
+            "face_1": "z aktywowan\u0105 twarz\u0105 1",
+            "face_2": "z aktywowan\u0105 twarz\u0105 2",
+            "face_3": "z aktywowan\u0105 twarz\u0105 3",
+            "face_4": "z aktywowan\u0105 twarz\u0105 4",
+            "face_5": "z aktywowan\u0105 twarz\u0105 5",
+            "face_6": "z aktywowan\u0105 twarz\u0105 6",
+            "face_any": "z dowoln\u0105 twarz\u0105 aktywowan\u0105",
+            "left": "w lewo",
+            "open": "Otwarcie",
+            "right": "w prawo",
+            "turn_off": "Wy\u0142\u0105czenie",
+            "turn_on": "W\u0142\u0105czenie"
+        },
+        "trigger_type": {
+            "device_dropped": "Upadek urz\u0105dzenia",
+            "device_flipped": "Odwr\u00f3cenie urz\u0105dzenia \"{subtype}\"",
+            "device_knocked": "Pukni\u0119cie urz\u0105dzenia \"{subtype}\"",
+            "device_rotated": "Obr\u00f3cenie urz\u0105dzenia \"{subtype}\"",
+            "device_shaken": "Potrz\u0105\u015bni\u0119cie urz\u0105dzeniem",
+            "device_slid": "Przesuni\u0119cie urz\u0105dzenia \"{subtype}\"",
+            "device_tilted": "Przechylenie urz\u0105dzenia",
+            "remote_button_double_press": "Przycisk \"{subtype}\" podw\u00f3jnie naci\u015bni\u0119ty",
+            "remote_button_long_press": "Przycisk \"{subtype}\" naci\u015bni\u0119ty w spos\u00f3b ci\u0105g\u0142y",
+            "remote_button_long_release": "Przycisk \"{subtype}\" zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
+            "remote_button_quadruple_press": "Przycisk \"{subtype}\" czterokrotnie naci\u015bni\u0119ty",
+            "remote_button_quintuple_press": "Przycisk \"{subtype}\" pi\u0119ciokrotnie naci\u015bni\u0119ty",
+            "remote_button_short_press": "Przycisk \"{subtype}\" naci\u015bni\u0119ty",
+            "remote_button_short_release": "Przycisk \"{subtype}\" zwolniony",
+            "remote_button_triple_press": "Przycisk \"{subtype}\" trzykrotnie naci\u015bni\u0119ty"
+        }
     }
 }
