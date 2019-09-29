@@ -18,7 +18,7 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_OFF,
     SUPPORT_FAN_MODE,
     FAN_ON,
-    FAN_OFF,
+    FAN_AUTO,
     SUPPORT_TARGET_HUMIDITY,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
@@ -185,9 +185,9 @@ class VenstarThermostat(ClimateDevice):
     @property
     def fan_mode(self):
         """Return the current fan mode."""
-        if self._client.fanstate == self._client.FANSTATE_ON:
+        if self._client.fan == self._client.FAN_ON:
             return FAN_ON
-        return FAN_OFF
+        return FAN_AUTO
 
     @property
     def device_state_attributes(self):
