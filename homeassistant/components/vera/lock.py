@@ -53,9 +53,8 @@ class VeraLock(VeraDevice, LockDevice):
         """Return the state attributes of the lock."""
         data = super().device_state_attributes
 
-        # FIXME: this check will no longer be required once the version of the
-        # pyvera library with these two functions included is generally
-        # available.
+        # This check will no longer be required once the version of the pyvera
+        # library with these two functions included is generally available.
         if ("get_last_user_alert" in dir(self.vera_device)) and (
             "get_low_battery_alert" in dir(self.vera_device)
         ):
