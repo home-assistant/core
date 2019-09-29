@@ -31,7 +31,7 @@ class IncomfortWaterHeater(WaterHeaterDevice):
 
     def __init__(self, client, heater) -> None:
         """Initialize the water_heater device."""
-        self._unique_id = f"{DOMAIN}_{heater.serial_no}"
+        self._unique_id = f"{heater.serial_no}"
 
         self._client = client
         self._heater = heater

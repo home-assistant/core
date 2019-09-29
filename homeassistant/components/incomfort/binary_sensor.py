@@ -23,7 +23,7 @@ class IncomfortFailed(BinarySensorDevice):
 
     def __init__(self, client, heater) -> None:
         """Initialize the binary sensor."""
-        self._unique_id = f"{DOMAIN}_{heater.serial_no}_failed"
+        self._unique_id = f"{heater.serial_no}_failed"
 
         self._client = client
         self._heater = heater

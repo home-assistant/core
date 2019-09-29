@@ -29,7 +29,7 @@ class InComfortClimate(ClimateDevice):
 
     def __init__(self, client, heater, room) -> None:
         """Initialize the climate device."""
-        self._unique_id = f"{DOMAIN}_{heater.serial_no}_{room.room_no}"
+        self._unique_id = f"{heater.serial_no}_{room.room_no}"
 
         self._client = client
         self._room = room

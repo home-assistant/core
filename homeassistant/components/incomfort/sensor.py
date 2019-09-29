@@ -50,7 +50,7 @@ class IncomfortSensor(Entity):
         self._client = client
         self._heater = heater
 
-        self._unique_id = f"{DOMAIN}_{heater.serial_no}_{slugify(name)}"
+        self._unique_id = f"{heater.serial_no}_{slugify(name)}"
 
         self._name = name
         self._device_class = None
