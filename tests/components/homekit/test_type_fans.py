@@ -19,7 +19,14 @@ from homeassistant.components.fan import (
     SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED,
 )
-from homeassistant.components.homekit.const import ATTR_VALUE
+from homeassistant.components.homekit.const import (
+    ATTR_VALUE,
+    CHAR_ROTATION_DIRECTION,
+    CHAR_ROTATION_SPEED,
+    CHAR_SWING_MODE,
+    CONF_DISABLE_CHARACTERISTICS,
+    CONF_TURN_ON_DATA,
+)
 from homeassistant.components.homekit.util import HomeKitSpeedMapping
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -223,3 +230,92 @@ async def test_fan_speed(hass, hk_driver, cls, events):
     assert call_set_speed[0].data[ATTR_SPEED] == "ludicrous"
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] == "ludicrous"
+
+
+async def test_fan_disable_rotation_direction(hass, hk_driver, cls, events):
+    """Test light with disable rotation direction."""
+    entity_id = "fan.demo"
+    config = {CONF_DISABLE_CHARACTERISTICS: [CHAR_ROTATION_DIRECTION]}
+
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {ATTR_SUPPORTED_FEATURES: SUPPORT_DIRECTION, ATTR_DIRECTION: DIRECTION_FORWARD},
+    )
+    await hass.async_block_till_done()
+    acc = cls.fan(hass, hk_driver, "Fan", entity_id, 2, config)
+
+    assert acc.char_direction is None
+
+
+async def test_fan_disable_rotation_speed(hass, hk_driver, cls, events):
+    """Test light with disable rotation speed."""
+    entity_id = "fan.demo"
+    speed_list = [SPEED_OFF, SPEED_LOW, SPEED_HIGH]
+    config = {CONF_DISABLE_CHARACTERISTICS: [CHAR_ROTATION_SPEED]}
+
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: SUPPORT_SET_SPEED,
+            ATTR_SPEED: SPEED_OFF,
+            ATTR_SPEED_LIST: speed_list,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = cls.fan(hass, hk_driver, "Fan", entity_id, 2, config)
+
+    assert acc.char_speed is None
+
+
+async def test_fan_disable_swing_mode(hass, hk_driver, cls, events):
+    """Test light with disable rotation direction."""
+    entity_id = "fan.demo"
+    config = {CONF_DISABLE_CHARACTERISTICS: [CHAR_SWING_MODE]}
+
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {ATTR_SUPPORTED_FEATURES: SUPPORT_OSCILLATE, ATTR_OSCILLATING: False},
+    )
+    await hass.async_block_till_done()
+    acc = cls.fan(hass, hk_driver, "Fan", entity_id, 2, config)
+
+    assert acc.char_swing is None
+
+
+async def test_light_turn_on_data(hass, hk_driver, cls, events):
+    """Test light with turn on data."""
+    entity_id = "fan.demo"
+    speed_list = [SPEED_OFF, SPEED_LOW, SPEED_HIGH]
+    config = {CONF_TURN_ON_DATA: {ATTR_SPEED: SPEED_LOW}}
+
+    hass.states.async_set(
+        entity_id,
+        STATE_OFF,
+        {
+            ATTR_SUPPORTED_FEATURES: SUPPORT_SET_SPEED,
+            ATTR_SPEED: SPEED_OFF,
+            ATTR_SPEED_LIST: speed_list,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = cls.fan(hass, hk_driver, "Fan", entity_id, 2, config)
+
+    assert acc.char_speed.value == 0
+
+    await hass.async_add_job(acc.run)
+    await hass.async_block_till_done()
+    assert acc.char_speed.value == 0
+
+    # Set from HomeKit
+    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
+
+    await hass.async_add_job(acc.char_active.client_update_value, 1)
+    await hass.async_block_till_done()
+
+    assert call_turn_on[0]
+    assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_turn_on[0].data[ATTR_SPEED] == SPEED_LOW
+    assert len(events) == 1

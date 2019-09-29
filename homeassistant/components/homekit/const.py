@@ -11,6 +11,7 @@ ATTR_VALUE = "value"
 
 # #### Config ####
 CONF_AUTO_START = "auto_start"
+CONF_DISABLE_CHARACTERISTICS = "disable_characteristics"
 CONF_ENTITY_CONFIG = "entity_config"
 CONF_FEATURE = "feature"
 CONF_FEATURE_LIST = "feature_list"
@@ -18,6 +19,7 @@ CONF_FILTER = "filter"
 CONF_LINKED_BATTERY_SENSOR = "linked_battery_sensor"
 CONF_LOW_BATTERY_THRESHOLD = "low_battery_threshold"
 CONF_SAFE_MODE = "safe_mode"
+CONF_TURN_ON_DATA = "turn_on_data"
 
 # #### Config Defaults ####
 DEFAULT_AUTO_START = True

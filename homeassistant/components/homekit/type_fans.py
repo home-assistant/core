@@ -34,6 +34,8 @@ from .const import (
     CHAR_ROTATION_DIRECTION,
     CHAR_ROTATION_SPEED,
     CHAR_SWING_MODE,
+    CONF_TURN_ON_DATA,
+    CONF_DISABLE_CHARACTERISTICS,
     SERV_FANV2,
 )
 from .util import HomeKitSpeedMapping
@@ -62,6 +64,12 @@ class Fan(HomeAccessory):
         features = self.hass.states.get(self.entity_id).attributes.get(
             ATTR_SUPPORTED_FEATURES
         )
+
+        self._turn_on_data = self.config.get(CONF_TURN_ON_DATA, {})
+        self._disable_characteristics = self.config.get(
+            CONF_DISABLE_CHARACTERISTICS, []
+        )
+
         if features & SUPPORT_DIRECTION:
             chars.append(CHAR_ROTATION_DIRECTION)
         if features & SUPPORT_OSCILLATE:
@@ -72,6 +80,8 @@ class Fan(HomeAccessory):
             )
             self.speed_mapping = HomeKitSpeedMapping(speed_list)
             chars.append(CHAR_ROTATION_SPEED)
+
+        chars = [char for char in chars if char not in self._disable_characteristics]
 
         serv_fan = self.add_preload_service(SERV_FANV2, chars)
         self.char_active = serv_fan.configure_char(
@@ -101,8 +111,13 @@ class Fan(HomeAccessory):
         """Set state if call came from HomeKit."""
         _LOGGER.debug("%s: Set state to %d", self.entity_id, value)
         self._flag[CHAR_ACTIVE] = True
-        service = SERVICE_TURN_ON if value == 1 else SERVICE_TURN_OFF
         params = {ATTR_ENTITY_ID: self.entity_id}
+        if value == 1:
+            service = SERVICE_TURN_ON
+            if self._turn_on_data:
+                params.update(self._turn_on_data)
+        else:
+            service = SERVICE_TURN_OFF
         self.call_service(DOMAIN, service, params)
 
     def set_direction(self, value):

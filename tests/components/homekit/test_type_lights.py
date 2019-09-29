@@ -3,7 +3,15 @@ from collections import namedtuple
 
 import pytest
 
-from homeassistant.components.homekit.const import ATTR_VALUE
+from homeassistant.components.homekit.const import (
+    ATTR_VALUE,
+    CHAR_BRIGHTNESS,
+    CHAR_COLOR_TEMPERATURE,
+    CHAR_HUE,
+    CHAR_SATURATION,
+    CONF_DISABLE_CHARACTERISTICS,
+    CONF_TURN_ON_DATA,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
@@ -203,3 +211,100 @@ async def test_light_rgb_color(hass, hk_driver, cls, events):
     assert call_turn_on[0].data[ATTR_HS_COLOR] == (145, 75)
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] == "set color at (145, 75)"
+
+
+async def test_light_disable_brightness(hass, hk_driver, cls, events):
+    """Test light with disable brightness."""
+    entity_id = "light.demo"
+    config = {CONF_DISABLE_CHARACTERISTICS: [CHAR_BRIGHTNESS]}
+
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS, ATTR_BRIGHTNESS: 255},
+    )
+    await hass.async_block_till_done()
+    acc = cls.light(hass, hk_driver, "Light", entity_id, 2, config)
+
+    assert CHAR_BRIGHTNESS not in acc.chars
+
+
+async def test_light_disable_color_temperature(hass, hk_driver, cls, events):
+    """Test light with disable color temperature."""
+    entity_id = "light.demo"
+    config = {CONF_DISABLE_CHARACTERISTICS: [CHAR_COLOR_TEMPERATURE]}
+
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {ATTR_SUPPORTED_FEATURES: SUPPORT_COLOR_TEMP, ATTR_COLOR_TEMP: 190},
+    )
+    await hass.async_block_till_done()
+    acc = cls.light(hass, hk_driver, "Light", entity_id, 2, config)
+
+    assert CHAR_COLOR_TEMPERATURE not in acc.chars
+
+
+async def test_light_disable_hue(hass, hk_driver, cls, events):
+    """Test light with disable hue."""
+    entity_id = "light.demo"
+    config = {CONF_DISABLE_CHARACTERISTICS: [CHAR_HUE]}
+
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {ATTR_SUPPORTED_FEATURES: SUPPORT_COLOR, ATTR_HS_COLOR: (260, 90)},
+    )
+    await hass.async_block_till_done()
+    acc = cls.light(hass, hk_driver, "Light", entity_id, 2, config)
+
+    assert CHAR_HUE not in acc.chars
+    assert CHAR_SATURATION in acc.chars
+
+
+async def test_light_disable_saturation(hass, hk_driver, cls, events):
+    """Test light with disable saturation."""
+    entity_id = "light.demo"
+    config = {CONF_DISABLE_CHARACTERISTICS: [CHAR_SATURATION]}
+
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {ATTR_SUPPORTED_FEATURES: SUPPORT_COLOR, ATTR_HS_COLOR: (260, 90)},
+    )
+    await hass.async_block_till_done()
+    acc = cls.light(hass, hk_driver, "Light", entity_id, 2, config)
+
+    assert CHAR_HUE in acc.chars
+    assert CHAR_SATURATION not in acc.chars
+
+
+async def test_light_turn_on_data(hass, hk_driver, cls, events):
+    """Test light with turn on data."""
+    entity_id = "light.demo"
+    config = {CONF_TURN_ON_DATA: {ATTR_BRIGHTNESS_PCT: 50}}
+
+    hass.states.async_set(
+        entity_id,
+        STATE_OFF,
+        {ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS, ATTR_BRIGHTNESS: 0},
+    )
+    await hass.async_block_till_done()
+    acc = cls.light(hass, hk_driver, "Light", entity_id, 2, config)
+
+    assert acc.char_brightness.value == 0
+
+    await hass.async_add_job(acc.run)
+    await hass.async_block_till_done()
+    assert acc.char_brightness.value == 0
+
+    # Set from HomeKit
+    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
+
+    await hass.async_add_job(acc.char_on.client_update_value, 1)
+    await hass.async_block_till_done()
+
+    assert call_turn_on[0]
+    assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_turn_on[0].data[ATTR_BRIGHTNESS_PCT] == 50
+    assert len(events) == 1

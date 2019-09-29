@@ -32,6 +32,8 @@ from .const import (
     CHAR_HUE,
     CHAR_ON,
     CHAR_SATURATION,
+    CONF_TURN_ON_DATA,
+    CONF_DISABLE_CHARACTERISTICS,
     PROP_MAX_VALUE,
     PROP_MIN_VALUE,
     SERV_LIGHTBULB,
@@ -66,6 +68,12 @@ class Light(HomeAccessory):
         self._features = self.hass.states.get(self.entity_id).attributes.get(
             ATTR_SUPPORTED_FEATURES
         )
+
+        self._turn_on_data = self.config.get(CONF_TURN_ON_DATA, {})
+        self._disable_characteristics = self.config.get(
+            CONF_DISABLE_CHARACTERISTICS, []
+        )
+
         if self._features & SUPPORT_BRIGHTNESS:
             self.chars.append(CHAR_BRIGHTNESS)
         if self._features & SUPPORT_COLOR_TEMP:
@@ -75,6 +83,10 @@ class Light(HomeAccessory):
             self.chars.append(CHAR_SATURATION)
             self._hue = None
             self._saturation = None
+
+        self.chars = [
+            char for char in self.chars if char not in self._disable_characteristics
+        ]
 
         serv_light = self.add_preload_service(SERV_LIGHTBULB, self.chars)
         self.char_on = serv_light.configure_char(
@@ -115,7 +127,12 @@ class Light(HomeAccessory):
         _LOGGER.debug("%s: Set state to %d", self.entity_id, value)
         self._flag[CHAR_ON] = True
         params = {ATTR_ENTITY_ID: self.entity_id}
-        service = SERVICE_TURN_ON if value == 1 else SERVICE_TURN_OFF
+        if value == 1:
+            service = SERVICE_TURN_ON
+            if self._turn_on_data:
+                params.update(self._turn_on_data)
+        else:
+            service = SERVICE_TURN_OFF
         self.call_service(DOMAIN, service, params)
 
     @debounce

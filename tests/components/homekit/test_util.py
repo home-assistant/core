@@ -2,11 +2,16 @@
 import pytest
 import voluptuous as vol
 
+
 from homeassistant.components.homekit.const import (
+    CHAR_BRIGHTNESS,
+    CHAR_ROTATION_SPEED,
+    CONF_DISABLE_CHARACTERISTICS,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
+    CONF_TURN_ON_DATA,
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
     HOMEKIT_NOTIFY_ID,
@@ -17,6 +22,8 @@ from homeassistant.components.homekit.const import (
     TYPE_SWITCH,
     TYPE_VALVE,
 )
+from homeassistant.components.fan import ATTR_SPEED
+from homeassistant.components.light import ATTR_BRIGHTNESS_PCT
 from homeassistant.components.homekit.util import (
     HomeKitSpeedMapping,
     SpeedRange,
@@ -75,6 +82,10 @@ def test_validate_entity_config():
             }
         },
         {"switch.test": {CONF_TYPE: "invalid_type"}},
+        {"light.test": {CONF_TURN_ON_DATA: {ATTR_SPEED: "low"}}},
+        {"light.test": {CONF_DISABLE_CHARACTERISTICS: [CHAR_ROTATION_SPEED]}},
+        {"fan.test": {CONF_TURN_ON_DATA: {ATTR_BRIGHTNESS_PCT: 1}}},
+        {"fan.test": {CONF_DISABLE_CHARACTERISTICS: [CHAR_BRIGHTNESS]}},
     ]
 
     for conf in configs:
@@ -145,6 +156,30 @@ def test_validate_entity_config():
     }
     assert vec({"switch.demo": {CONF_TYPE: TYPE_VALVE}}) == {
         "switch.demo": {CONF_TYPE: TYPE_VALVE, CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
+    assert vec({"light.test": {CONF_TURN_ON_DATA: {ATTR_BRIGHTNESS_PCT: 1}}}) == {
+        "light.test": {
+            CONF_TURN_ON_DATA: {ATTR_BRIGHTNESS_PCT: 1},
+            CONF_LOW_BATTERY_THRESHOLD: 20,
+        }
+    }
+    assert vec({"light.test": {CONF_DISABLE_CHARACTERISTICS: [CHAR_BRIGHTNESS]}}) == {
+        "light.test": {
+            CONF_DISABLE_CHARACTERISTICS: [CHAR_BRIGHTNESS],
+            CONF_LOW_BATTERY_THRESHOLD: 20,
+        }
+    }
+    assert vec({"fan.test": {CONF_TURN_ON_DATA: {ATTR_SPEED: "low"}}}) == {
+        "fan.test": {
+            CONF_TURN_ON_DATA: {ATTR_SPEED: "low"},
+            CONF_LOW_BATTERY_THRESHOLD: 20,
+        }
+    }
+    assert vec({"fan.test": {CONF_DISABLE_CHARACTERISTICS: [CHAR_ROTATION_SPEED]}}) == {
+        "fan.test": {
+            CONF_DISABLE_CHARACTERISTICS: [CHAR_ROTATION_SPEED],
+            CONF_LOW_BATTERY_THRESHOLD: 20,
+        }
     }
 
 

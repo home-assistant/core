@@ -5,6 +5,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import fan, media_player, sensor
+from homeassistant.components.fan import FAN_TURN_ON_SCHEMA
+from homeassistant.components.light import LIGHT_TURN_ON_SCHEMA
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_SUPPORTED_FEATURES,
@@ -17,10 +19,19 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.temperature as temp_util
 
 from .const import (
+    CHAR_BRIGHTNESS,
+    CHAR_COLOR_TEMPERATURE,
+    CHAR_HUE,
+    CHAR_ROTATION_DIRECTION,
+    CHAR_ROTATION_SPEED,
+    CHAR_SATURATION,
+    CHAR_SWING_MODE,
+    CONF_DISABLE_CHARACTERISTICS,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
+    CONF_TURN_ON_DATA,
     DEFAULT_LOW_BATTERY_THRESHOLD,
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
@@ -90,6 +101,45 @@ SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend(
     }
 )
 
+LIGHT_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend(
+    {
+        vol.Optional(CONF_TURN_ON_DATA): LIGHT_TURN_ON_SCHEMA,
+        vol.Optional(CONF_DISABLE_CHARACTERISTICS): vol.All(
+            cv.ensure_list,
+            [
+                vol.All(
+                    cv.string,
+                    vol.In(
+                        (
+                            CHAR_BRIGHTNESS,
+                            CHAR_COLOR_TEMPERATURE,
+                            CHAR_HUE,
+                            CHAR_SATURATION,
+                        )
+                    ),
+                )
+            ],
+        ),
+    }
+)
+
+FAN_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend(
+    {
+        vol.Optional(CONF_TURN_ON_DATA): FAN_TURN_ON_SCHEMA,
+        vol.Optional(CONF_DISABLE_CHARACTERISTICS): vol.All(
+            cv.ensure_list,
+            [
+                vol.All(
+                    cv.string,
+                    vol.In(
+                        (CHAR_ROTATION_DIRECTION, CHAR_ROTATION_SPEED, CHAR_SWING_MODE)
+                    ),
+                )
+            ],
+        ),
+    }
+)
+
 
 def validate_entity_config(values):
     """Validate config entry for CONF_ENTITY."""
@@ -122,6 +172,12 @@ def validate_entity_config(values):
 
         elif domain == "switch":
             config = SWITCH_TYPE_SCHEMA(config)
+
+        elif domain == "light":
+            config = LIGHT_TYPE_SCHEMA(config)
+
+        elif domain == "fan":
+            config = FAN_TYPE_SCHEMA(config)
 
         else:
             config = BASIC_INFO_SCHEMA(config)
