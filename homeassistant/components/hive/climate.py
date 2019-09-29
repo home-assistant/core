@@ -143,7 +143,10 @@ class HiveClimateEntity(HiveEntity, ClimateDevice):
     @property
     def preset_mode(self):
         """Return the current preset mode, e.g., home, away, temp."""
-        if self.device_type == "Heating" and self.session.heating.get_boost(self.node_id) == "ON":
+        if (
+            self.device_type == "Heating"
+            and self.session.heating.get_boost(self.node_id) == "ON"
+        ):
             return PRESET_BOOST
         return None
 
