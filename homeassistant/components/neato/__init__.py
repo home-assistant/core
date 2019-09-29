@@ -96,7 +96,7 @@ async def async_setup_entry(hass, entry):
 
     await hass.async_add_executor_job(hub.update_robots)
     for component in ("camera", "vacuum", "switch"):
-        hass.async_add_job(
+        hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
@@ -105,18 +105,13 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, entry):
     """Unload config entry."""
-    try:
-        hass.data.pop(NEATO_LOGIN)
-
-        await asyncio.gather(
-            hass.config_entries.async_forward_entry_unload(entry, "camera"),
-            hass.config_entries.async_forward_entry_unload(entry, "vacuum"),
-            hass.config_entries.async_forward_entry_unload(entry, "switch"),
-        )
-
-        return True
-    except KeyError:
-        return False
+    hass.data.pop(NEATO_LOGIN)
+    await asyncio.gather(
+        hass.config_entries.async_forward_entry_unload(entry, "camera"),
+        hass.config_entries.async_forward_entry_unload(entry, "vacuum"),
+        hass.config_entries.async_forward_entry_unload(entry, "switch"),
+    )
+    return True
 
 
 class NeatoHub:
@@ -143,11 +138,13 @@ class NeatoHub:
         except (HTTPError, ConnError):
             _LOGGER.error("Unable to connect to Neato API")
             self.logged_in = False
+            return False
 
         _LOGGER.debug("Successfully connected to Neato API")
         self._hass.data[NEATO_ROBOTS] = self.my_neato.robots
         self._hass.data[NEATO_PERSISTENT_MAPS] = self.my_neato.persistent_maps
         self._hass.data[NEATO_MAP_DATA] = self.my_neato.maps
+        return True
 
     @Throttle(timedelta(seconds=300))
     def update_robots(self):
