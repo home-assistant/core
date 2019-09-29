@@ -51,7 +51,11 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 SERVICE_DISABLE_SCHEMA = vol.Schema(
-    {vol.Required(SERVICE_DISABLE_ATTR_DURATION): cv.positive_int}
+    {
+        vol.Required(SERVICE_DISABLE_ATTR_DURATION): vol.All(
+            cv.time_period_str, cv.positive_timedelta
+        )
+    }
 )
 
 
@@ -88,18 +92,16 @@ async def async_setup(hass, config):
 
     async def handle_disable(call):
         if api_key is None:
-            LOGGER.error("Pi-hole `api_key` is required in configuration to disable")
-            return
+            raise vol.Invalid("Pi-hole api_key must be provided in configuration")
 
-        duration = call.data[SERVICE_DISABLE_ATTR_DURATION]
+        duration = call.data[SERVICE_DISABLE_ATTR_DURATION].total_seconds()
 
         LOGGER.debug("Disabling %s %s for %d seconds", DOMAIN, host, duration)
         await pi_hole.api.disable(duration)
 
     async def handle_enable(call):
         if api_key is None:
-            LOGGER.error("Pi-hole `api_key` is required in configuration to enable")
-            return
+            raise vol.Invalid("Pi-hole api_key must be provided in configuration")
 
         LOGGER.debug("Enabling %s %s", DOMAIN, host)
         await pi_hole.api.enable()

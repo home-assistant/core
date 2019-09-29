@@ -1,8 +1,8 @@
 disable:
-  description: Disable pi-hole for an amount of time
+  description: Disable Pi-hole for an amount of time
   fields:
     duration:
-      description: Length of time to disable the pi-hole, in seconds
-      example: 600
+      description: Time that the Pi-hole should be disabled for
+      example: "00:00:15"
 enable:
-  description: Enable pi-hole
+  description: Enable Pi-hole
