@@ -34,7 +34,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         return
 
     _LOGGER.debug("Adding switches %s", dev)
-    async_add_entities(dev)
+    async_add_entities(dev, True)
 
 
 class NeatoConnectedSwitch(ToggleEntity):
@@ -50,7 +50,6 @@ class NeatoConnectedSwitch(ToggleEntity):
         self._schedule_state = None
         self._clean_state = None
         self._robot_serial = self.robot.serial
-        self.update()  # TODO: How to get rid of this?
 
     def update(self):
         """Update the states of Neato switches."""
