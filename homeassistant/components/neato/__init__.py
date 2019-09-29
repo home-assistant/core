@@ -62,16 +62,14 @@ async def async_setup(hass, config):
             return True
 
         # The entry is outdated
-        hass.config_entries.async_update_entry(entry, data=config[NEATO_DOMAIN])
-    else:
-        # Create the new entry
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                NEATO_DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=config[NEATO_DOMAIN],
-            )
+        hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
+
+    # Create the new entry
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            NEATO_DOMAIN, context={"source": SOURCE_IMPORT}, data=config[NEATO_DOMAIN]
         )
+    )
 
     return True
 
