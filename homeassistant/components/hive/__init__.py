@@ -1,6 +1,7 @@
 """Support for the Hive devices and services."""
 from functools import wraps
 import logging
+
 from pyhiveapi import Pyhiveapi
 import voluptuous as vol
 

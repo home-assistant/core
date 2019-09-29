@@ -12,7 +12,6 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_OFF,
     CURRENT_HVAC_HEAT,
 )
-
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 
@@ -59,8 +58,7 @@ class HiveClimateEntity(HiveEntity, ClimateDevice):
     def __init__(self, hive_session, hive_device):
         """Initialize the Climate device."""
         super().__init__(hive_session, hive_device)
-        if self.device_type == "Heating":
-            self.thermostat_node_id = hive_device["Thermostat_NodeID"]
+        self.thermostat_node_id = hive_device["Thermostat_NodeID"]
 
     @property
     def unique_id(self):
@@ -80,12 +78,11 @@ class HiveClimateEntity(HiveEntity, ClimateDevice):
     @property
     def name(self):
         """Return the name of the Climate device."""
-        if self.device_type == "Heating":
-            friendly_name = "Heating"
-            if self.node_name is not None:
-                friendly_name = "{} {}".format(self.node_name, friendly_name)
-        elif self.device_type == "TRV":
-            friendly_name = self.node_name
+        friendly_name = "Heating"
+        if self.node_name is not None:
+            if self.device_type == "TRV":
+                friendly_name = self.node_name
+            friendly_name = f"{self.node_name} {friendly_name}"
 
         return friendly_name
 
@@ -145,9 +142,8 @@ class HiveClimateEntity(HiveEntity, ClimateDevice):
     @property
     def preset_mode(self):
         """Return the current preset mode, e.g., home, away, temp."""
-        if self.device_type == "Heating":
-            if self.session.heating.get_boost(self.node_id) == "ON":
-                return PRESET_BOOST
+        if self.device_type == "Heating" and self.session.heating.get_boost(self.node_id) == "ON":
+            return PRESET_BOOST
         return None
 
     @property
