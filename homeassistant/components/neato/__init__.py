@@ -84,9 +84,6 @@ async def async_setup_entry(hass, entry):
         hass.data[NEATO_LOGIN] = NeatoHub(hass, entry.data, Account, Neato)
     elif entry.data[CONF_VENDOR] == "vorwerk":
         hass.data[NEATO_LOGIN] = NeatoHub(hass, entry.data, Account, Vorwerk)
-    else:
-        _LOGGER.debug("Invalid Vendor")
-        return False
 
     hub = hass.data[NEATO_LOGIN]
     await hass.async_add_executor_job(hub.login)
@@ -138,13 +135,12 @@ class NeatoHub:
         except (HTTPError, ConnError):
             _LOGGER.error("Unable to connect to Neato API")
             self.logged_in = False
-            return False
+            return
 
         _LOGGER.debug("Successfully connected to Neato API")
         self._hass.data[NEATO_ROBOTS] = self.my_neato.robots
         self._hass.data[NEATO_PERSISTENT_MAPS] = self.my_neato.persistent_maps
         self._hass.data[NEATO_MAP_DATA] = self.my_neato.maps
-        return True
 
     @Throttle(timedelta(seconds=300))
     def update_robots(self):
