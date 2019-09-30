@@ -141,7 +141,9 @@ async def async_setup(hass, config):
     @callback
     def connection_fail_callback(data):
         """Network failure callback."""
-        _LOGGER.error("Could not establish a connection with the Envisalink- retrying...")
+        _LOGGER.error(
+            "Could not establish a connection with the Envisalink- retrying..."
+        )
 
     @callback
     def connection_success_callback(data):
