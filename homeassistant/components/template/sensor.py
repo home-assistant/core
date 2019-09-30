@@ -163,11 +163,6 @@ class SensorTemplate(Entity):
             """Update template on startup."""
             if self._entities != MATCH_ALL:
                 # Track state change only for valid templates
-                _LOGGER.debug(
-                    ">>>> '%s' Setting up tracking for entities: %s",
-                    self._name,
-                    self._entities,
-                )
                 async_track_state_change(
                     self.hass, self._entities, template_sensor_state_listener
                 )
@@ -211,7 +206,6 @@ class SensorTemplate(Entity):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        _LOGGER.debug(">>>> %s is Available: %s", self, self._available)
         return self._available
 
     @property
@@ -265,12 +259,7 @@ class SensorTemplate(Entity):
             try:
                 value = template.async_render()
                 if property_name == "_available":
-                    _LOGGER.debug(">>>> A Rendering _available:::%s", value)
                     value = value.lower() == "true"
-                    _LOGGER.debug(">>>> B Rendering _available:::%s", value)
-                _LOGGER.debug(
-                    ">>>> setting %s property %s to %s", self, property_name, value
-                )
                 setattr(self, property_name, value)
             except TemplateError as ex:
                 friendly_property_name = property_name[1:].replace("_", " ")

@@ -379,13 +379,6 @@ class TestTemplateSensor:
 
     def test_available_template_with_entities(self):
         """Test availability tempalates with values from other entities."""
-        availability_template = """
-            {% if is_state('availability_boolean.state', 'True') %}
-                {{ 'true' }}
-            {% else %}
-                {{ 'false' }}
-            {% endif %}
-        """
 
         with assert_setup_component(1):
             assert setup_component(
@@ -397,7 +390,7 @@ class TestTemplateSensor:
                         "sensors": {
                             "test_template_sensor": {
                                 "value_template": "{{ states.sensor.test_state.state }}",
-                                "availability_template": availability_template,
+                                "availability_template": "{{ is_state('availability_boolean.state', 'on') }}",
                             }
                         },
                     }
@@ -408,20 +401,24 @@ class TestTemplateSensor:
         self.hass.block_till_done()
 
         # When template returns true..
-        self.hass.states.set("availability_boolean.state", True)
+        self.hass.states.set("availability_boolean.state", STATE_ON)
         self.hass.block_till_done()
 
         # Device State should not be unavailable
-        state = self.hass.states.get("sensor.test_template_sensor")
-        assert state.state != STATE_UNAVAILABLE
+        assert (
+            self.hass.states.get("sensor.test_template_sensor").state
+            != STATE_UNAVAILABLE
+        )
 
         # When Availability template returns false
-        self.hass.states.set("availability_boolean.state", False)
+        self.hass.states.set("availability_boolean.state", STATE_OFF)
         self.hass.block_till_done()
 
         # device state should be unavailable
-        state = self.hass.states.get("sensor.test_template_sensor")
-        assert state.state == STATE_UNAVAILABLE
+        assert (
+            self.hass.states.get("sensor.test_template_sensor").state
+            == STATE_UNAVAILABLE
+        )
 
 
 async def test_available_template_with_entities(hass):

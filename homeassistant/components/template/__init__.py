@@ -23,7 +23,6 @@ def extract_entities(
     device_name, device_type, manual_entity_ids, templates, attribute_templates=None
 ):
     """Extract entity ids from templates and attribute templates."""
-    _LOGGER.debug(">>> device_name:: %s ", device_name)
     if attribute_templates is None:
         attribute_templates = dict()
     entity_ids = set()
@@ -32,13 +31,10 @@ def extract_entities(
         for template_name, template in chain(
             templates.items(), attribute_templates.items()
         ):
-            _LOGGER.debug(">>> template_name:: %s ", template_name)
             if template is None:
                 continue
-            _LOGGER.debug(">>> template:: %s ", template)
 
             template_entity_ids = template.extract_entities()
-            _LOGGER.debug(">>> template_entities:: %s ", template_entity_ids)
 
             if template_entity_ids != MATCH_ALL:
                 entity_ids |= set(template_entity_ids)
@@ -61,5 +57,4 @@ def extract_entities(
     else:
         entity_ids = manual_entity_ids
 
-    _LOGGER.debug(">>> Entities:: %s ", entity_ids)
     return entity_ids
