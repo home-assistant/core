@@ -119,8 +119,7 @@ class ObihaiServiceSensors(Entity):
                 return "mdi:phone-off"
             elif self._state == "Inbound Call":
                 return "mdi:phone-incoming"
-            elif self._state == "Outbound Call":
-                return "mdi:phone-outgoing"
+            return "mdi:phone-outgoing"
         elif "Caller Info" in self._service_name:
             return "mdi:phone-log"
         elif "Port" in self._service_name:
@@ -128,8 +127,7 @@ class ObihaiServiceSensors(Entity):
                 return "mdi:phone-ring"
             elif self._state == "Off Hook":
                 return "mdi:phone-in-talk"
-            elif self._state == "On Hook":
-                return "mdi:phone-hangup"
+            return "mdi:phone-hangup"
         return "mdi:phone"
 
     def update(self):
