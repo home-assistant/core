@@ -882,9 +882,7 @@ async def async_api_arm(hass, config, directive, context):
     )
 
     response = directive.response(
-        name="Arm.Response",
-        namespace="Alexa.SecurityPanelController",
-        payload={"exitDelayInSeconds": 0},
+        name="Arm.Response", namespace="Alexa.SecurityPanelController"
     )
 
     response.add_context_property(
