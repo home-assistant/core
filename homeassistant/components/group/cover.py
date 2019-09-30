@@ -1,5 +1,6 @@
 """This platform allows several cover to be grouped into one cover."""
 import logging
+from typing import Dict, Optional, Set
 
 import voluptuous as vol
 
@@ -11,7 +12,7 @@ from homeassistant.const import (
     CONF_NAME,
     STATE_CLOSED,
 )
-from homeassistant.core import callback
+from homeassistant.core import callback, State
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 
@@ -40,6 +41,9 @@ from homeassistant.components.cover import (
     SUPPORT_STOP_TILT,
     CoverDevice,
 )
+
+
+# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,13 +80,25 @@ class CoverGroup(CoverDevice):
         self._assumed_state = True
 
         self._entities = entities
-        self._covers = {KEY_OPEN_CLOSE: set(), KEY_STOP: set(), KEY_POSITION: set()}
-        self._tilts = {KEY_OPEN_CLOSE: set(), KEY_STOP: set(), KEY_POSITION: set()}
+        self._covers: Dict[str, Set[str]] = {
+            KEY_OPEN_CLOSE: set(),
+            KEY_STOP: set(),
+            KEY_POSITION: set(),
+        }
+        self._tilts: Dict[str, Set[str]] = {
+            KEY_OPEN_CLOSE: set(),
+            KEY_STOP: set(),
+            KEY_POSITION: set(),
+        }
 
     @callback
     def update_supported_features(
-        self, entity_id, old_state, new_state, update_state=True
-    ):
+        self,
+        entity_id: str,
+        old_state: Optional[State],
+        new_state: Optional[State],
+        update_state: bool = True,
+    ) -> None:
         """Update dictionaries with supported features."""
         if not new_state:
             for values in self._covers.values():

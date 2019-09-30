@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "hive"
 DATA_HIVE = "data_hive"
 SERVICES = ["Heating", "HotWater"]
-SERVICE_BOOST_HOTWATER = "boost_hotwater"
+SERVICE_BOOST_HOT_WATER = "boost_hot_water"
 SERVICE_BOOST_HEATING = "boost_heating"
 ATTR_TIME_PERIOD = "time_period"
 ATTR_MODE = "on_off"
@@ -59,7 +59,7 @@ BOOST_HEATING_SCHEMA = vol.Schema(
     }
 )
 
-BOOST_HOTWATER_SCHEMA = vol.Schema(
+BOOST_HOT_WATER_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
         vol.Optional(ATTR_TIME_PERIOD, default="00:30:00"): vol.All(
@@ -100,7 +100,7 @@ def setup(hass, config):
 
         session.heating.turn_boost_on(node_id, minutes, temperature)
 
-    def hotwater_boost(service):
+    def hot_water_boost(service):
         """Handle the service call."""
         node_id = HiveSession.entity_lookup.get(service.data[ATTR_ENTITY_ID])
         if not node_id:
@@ -151,9 +151,9 @@ def setup(hass, config):
             if ha_type == "water_heater":
                 hass.services.register(
                     DOMAIN,
-                    SERVICE_BOOST_HEATING,
-                    hotwater_boost,
-                    schema=BOOST_HOTWATER_SCHEMA,
+                    SERVICE_BOOST_HOT_WATER,
+                    hot_water_boost,
+                    schema=BOOST_HOT_WATER_SCHEMA,
                 )
 
     return True

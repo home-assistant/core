@@ -1,5 +1,5 @@
 """Device automation helpers for toggle entity."""
-from typing import List
+from typing import Any, Dict, List
 import voluptuous as vol
 
 from homeassistant.core import Context, HomeAssistant, CALLBACK_TYPE
@@ -18,6 +18,9 @@ from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers import condition, config_validation as cv, service
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from . import TRIGGER_BASE_SCHEMA
+
+
+# mypy: allow-untyped-calls, allow-untyped-defs
 
 ENTITY_ACTIONS = [
     {
@@ -88,7 +91,7 @@ async def async_call_action_from_config(
     variables: TemplateVarsType,
     context: Context,
     domain: str,
-):
+) -> None:
     """Change state based on configuration."""
     config = ACTION_SCHEMA(config)
     action_type = config[CONF_TYPE]
@@ -156,7 +159,7 @@ async def _async_get_automations(
     hass: HomeAssistant, device_id: str, automation_templates: List[dict], domain: str
 ) -> List[dict]:
     """List device automations."""
-    automations = []
+    automations: List[Dict[str, Any]] = []
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
     entries = [
