@@ -60,28 +60,29 @@ SERVICE_DISABLE_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the pi_hole integration."""
+    hass.data[DOMAIN] = []
 
-    conf = config[DOMAIN]
-    name = conf[CONF_NAME]
-    host = conf[CONF_HOST]
-    use_tls = conf[CONF_SSL]
-    verify_tls = conf[CONF_VERIFY_SSL]
-    location = conf[CONF_LOCATION]
-    api_key = conf.get(CONF_API_KEY)
+    for conf in config[DOMAIN]:
+        name = conf[CONF_NAME]
+        host = conf[CONF_HOST]
+        use_tls = conf[CONF_SSL]
+        verify_tls = conf[CONF_VERIFY_SSL]
+        location = conf[CONF_LOCATION]
+        api_key = conf.get(CONF_API_KEY)
 
-    LOGGER.debug("Setting up %s integration with host %s", DOMAIN, host)
+        LOGGER.debug("Setting up %s integration with host %s", DOMAIN, host)
 
-    session = async_get_clientsession(hass, verify_tls)
-    pi_hole = PiHoleData(
-        Hole(
-            host, hass.loop, session, location=location, tls=use_tls, api_token=api_key
-        ),
-        name,
-    )
+        session = async_get_clientsession(hass, verify_tls)
+        pi_hole = PiHoleData(
+            Hole(
+                host, hass.loop, session, location=location, tls=use_tls, api_token=api_key
+            ),
+            name,
+        )
 
-    await pi_hole.async_update()
+        await pi_hole.async_update()
 
-    hass.data[DOMAIN] = pi_hole
+        hass.data[DOMAIN].append(pi_hole)
 
     async def handle_disable(call):
         if api_key is None:
