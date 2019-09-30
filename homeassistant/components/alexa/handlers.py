@@ -9,6 +9,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
+    STATE_ALARM_DISARMED,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
@@ -39,6 +40,7 @@ from .const import API_TEMP_UNITS, API_THERMOSTAT_MODES, API_THERMOSTAT_PRESETS,
 from .entities import async_get_entities
 from .errors import (
     AlexaInvalidValueError,
+    AlexaSecurityPanelAuthorizationRequired,
     AlexaSecurityPanelUnauthorizedError,
     AlexaTempRangeError,
     AlexaUnsupportedThermostatModeError,
@@ -864,6 +866,10 @@ async def async_api_arm(hass, config, directive, context):
     arm_state = directive.payload["armState"]
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
+    if entity.state != STATE_ALARM_DISARMED:
+        msg = "You must disarm the system before you can set the requested arm state."
+        raise AlexaSecurityPanelAuthorizationRequired(msg)
+
     if arm_state == "ARMED_AWAY":
         service = SERVICE_ALARM_ARM_AWAY
     if arm_state == "ARMED_STAY":
@@ -907,7 +913,8 @@ async def async_api_disarm(hass, config, directive, context):
     if not await hass.services.async_call(
         entity.domain, SERVICE_ALARM_DISARM, data, blocking=True, context=context
     ):
-        raise AlexaSecurityPanelUnauthorizedError("Invalid Code")
+        msg = "Invalid Code"
+        raise AlexaSecurityPanelUnauthorizedError(msg)
 
     response = directive.response()
     response.add_context_property(

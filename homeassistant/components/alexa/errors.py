@@ -86,7 +86,14 @@ class AlexaBridgeUnreachableError(AlexaError):
 
 
 class AlexaSecurityPanelUnauthorizedError(AlexaError):
-    """Class to represent BridgeUnreachable errors."""
+    """Class to represent SecurityPanelController Unauthorized errors."""
 
     namespace = "Alexa.SecurityPanelController"
     error_type = "UNAUTHORIZED"
+
+
+class AlexaSecurityPanelAuthorizationRequired(AlexaError):
+    """Class to represent SecurityPanelController AuthorizationRequired errors."""
+
+    namespace = "Alexa.SecurityPanelController"
+    error_type = "AUTHORIZATION_REQUIRED"
