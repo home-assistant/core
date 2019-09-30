@@ -130,8 +130,7 @@ class ObihaiServiceSensors(Entity):
                 return "mdi:phone-in-talk"
             elif self._state == "On Hook":
                 return "mdi:phone-hangup"
-        else:
-            return "mdi:phone"
+        return "mdi:phone"
 
     def update(self):
         """Update the sensor."""
