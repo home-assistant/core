@@ -44,9 +44,7 @@ async def test_exception(hass):
     """Test if RequestException fires when no connection can be made."""
     flow = config_flow.SomaFlowHandler()
     flow.hass = hass
-    with patch.object(
-        SomaApi, "list_devices", return_value={}, side_effect=RequestException()
-    ):
+    with patch.object(SomaApi, "list_devices", side_effect=RequestException()):
         result = await flow.async_step_import({"host": MOCK_HOST, "port": MOCK_PORT})
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "connection_error"
