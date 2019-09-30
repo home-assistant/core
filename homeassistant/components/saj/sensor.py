@@ -93,12 +93,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return values
 
     def start_update_interval(event):
-        """Start the update interval scheduling"""
+        """Start the update interval scheduling."""
         nonlocal remove_interval_update
         remove_interval_update = async_track_time_interval_backoff(hass, async_saj)
 
     def stop_update_interval(event):
-        """Properly cancel the scheduled update"""
+        """Properly cancel the scheduled update."""
         remove_interval_update()  # pylint: disable=not-callable
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_update_interval)
