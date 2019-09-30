@@ -115,7 +115,7 @@ def get_sercure_android_id_dom():
             )
             android_id = android_id.decode("utf-8").replace("\n", "")
         except Exception:
-            _LOGGER.warning("Can't get secure gate id for the device!")
+            _LOGGER.info("Can't get secure gate id for the device!")
             from uuid import getnode as get_mac
 
             android_id = get_mac()

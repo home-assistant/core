@@ -4,7 +4,6 @@ Support to check for available updates.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/updater/
 """
-# pylint: disable=no-name-in-module, import-error
 import asyncio
 from distutils.version import StrictVersion
 import json
@@ -40,6 +39,8 @@ CONF_COMPONENT_REPORTING = "include_used_components"
 DOMAIN = "ais_updater"
 SERVICE_CHECK_VERSION = "check_version"
 SERVICE_UPGRADE_PACKAGE = "upgrade_package"
+SERVICE_EXECUTE_UPGRADE = "execute_upgrade"
+SERVICE_DOWNLOAD_UPGRADE = "download_upgrade"
 ENTITY_ID = "sensor.version_info"
 ATTR_UPDATE_STATUS = "update_status"
 ATTR_UPDATE_CHECK_TIME = "update_check_time"
@@ -52,9 +53,9 @@ UPDATE_STATUS_UPDATED = "updated"
 UPDATE_STATUS_UNKNOWN = "unknown"
 
 UPDATER_URL = "https://powiedz.co/ords/dom/dom/updater_new"
-UPDATER_UUID_FILE = ".uuid"
-G_CURRENT_ANDROID_VERSION = 0
-G_CURRENT_LINUX_VERSION = 0
+UPDATER_STATUS_FILE = ".update_status"
+G_CURRENT_ANDROID_VERSION = "0"
+G_CURRENT_LINUX_VERSION = "0"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -67,24 +68,33 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def _create_uuid(hass, filename=UPDATER_UUID_FILE):
-    """Create UUID and save it in a file."""
-    with open(hass.config.path(filename), "w") as fptr:
-        _uuid = uuid.uuid4().hex
-        fptr.write(json.dumps({"uuid": _uuid}))
-        return _uuid
+def _set_update_status(hass, status):
+    """save status in a file."""
+    with open(hass.config.path(UPDATER_STATUS_FILE), "w") as fptr:
+        fptr.write(status)
+
+    state = hass.states.get(ENTITY_ID)
+    attr = state.attributes
+    new_attr = attr.copy()
+    info = ""
+    if status == UPDATE_STATUS_DOWNLOADING:
+        info = "Pobieram aktualizacje"
+    elif status == UPDATE_STATUS_INSTALLING:
+        info = "Instaluje aktualizacje"
+    new_attr[ATTR_UPDATE_STATUS] = status
+    new_attr[ATTR_UPDATE_CHECK_TIME] = get_current_dt()
+    hass.states.async_set(ENTITY_ID, info, new_attr)
 
 
-def _load_uuid(hass, filename=UPDATER_UUID_FILE):
-    """Load UUID from a file or return None."""
+def _get_status_from_file(hass):
+    """Load status from a file or return None."""
     try:
-        with open(hass.config.path(filename)) as fptr:
-            jsonf = json.loads(fptr.read())
-            return uuid.UUID(jsonf["uuid"], version=4).hex
-    except (ValueError, AttributeError):
+        with open(hass.config.path(UPDATER_STATUS_FILE)) as fptr:
+            status = fptr.read().replace("\n", "")
+            return status
+    except Exception as e:
+        _LOGGER.error("Error get_status_from_file " + str(e))
         return None
-    except FileNotFoundError:
-        return _create_uuid(hass, filename)
 
 
 async def async_setup(hass, config):
@@ -100,61 +110,21 @@ async def async_setup(hass, config):
             if "say" in now.data:
                 say_it = now.data["say"]
         """Check if a new version is available and report if one is."""
-        result = await get_newest_version(hass, include_components)
+        auto_update = hass.states.get("input_boolean.ais_auto_update").state
+        result = await get_newest_version(hass, include_components, auto_update)
 
         if result is None:
             return
 
-        dom_app_newest_version, android_app_newest_version, linux_apt_newest_version, release_notes, apt, beta = (
-            result
-        )
-        # check if we should update
-        need_to_update = False
-        reinstall_dom_app = False
-        reinstall_android_app = False
-        reinstall_linux_app = False
-        if StrictVersion(dom_app_newest_version) > StrictVersion(current_version):
-            reinstall_dom_app = True
-        if G_CURRENT_ANDROID_VERSION != 0:
-            if StrictVersion(android_app_newest_version) > StrictVersion(
-                G_CURRENT_ANDROID_VERSION
-            ):
-                reinstall_android_app = True
-        if G_CURRENT_LINUX_VERSION != 0:
-            if StrictVersion(linux_apt_newest_version) > StrictVersion(
-                G_CURRENT_LINUX_VERSION
-            ):
-                reinstall_linux_app = True
-
-        if reinstall_dom_app or reinstall_android_app or reinstall_linux_app:
-            need_to_update = True
+        need_to_update, dom_app_newest_version, release_notes = result
 
         # Validate version
         if need_to_update:
             _LOGGER.info("The latest available version is %s", dom_app_newest_version)
-            info = "Dostępna jest aktualizacja. " + release_notes
-
-            hass.states.async_set(
-                ENTITY_ID,
-                info,
-                {
-                    ATTR_FRIENDLY_NAME: "Aktualizacja",
-                    "icon": "mdi:update",
-                    "dom_app_current_version": current_version,
-                    "dom_app_newest_version": dom_app_newest_version,
-                    "reinstall_dom_app": reinstall_dom_app,
-                    "android_app_current_version": G_CURRENT_ANDROID_VERSION,
-                    "android_app_newest_version": android_app_newest_version,
-                    "reinstall_android_app": reinstall_android_app,
-                    "linux_current_version": G_CURRENT_LINUX_VERSION,
-                    "linux_apt_newest_version": linux_apt_newest_version,
-                    "reinstall_linux_app": reinstall_linux_app,
-                    "apt": apt,
-                    "beta": beta,
-                    ATTR_UPDATE_STATUS: UPDATE_STATUS_OUTDATED,
-                    ATTR_UPDATE_CHECK_TIME: get_current_dt(),
-                },
-            )
+            if auto_update:
+                info = "Aktualizuje system do najnowszej wersji. " + release_notes
+            else:
+                info = "Dostępna jest aktualizacja. " + release_notes
 
             hass.states.async_set(
                 "script.ais_update_system",
@@ -166,13 +136,23 @@ async def async_setup(hass, config):
             )
 
             # notify about update
-            hass.components.persistent_notification.async_create(
-                title="Dostępna jest aktualizacja ",
-                message=(
-                    info + "[ Przejdź, by zainstalować](/config/ais_dom_config_update)"
-                ),
-                notification_id="ais_update_notification",
-            )
+            if auto_update:
+                hass.components.persistent_notification.async_create(
+                    title="Aktualizuje system do najnowszej wersji ",
+                    message=(
+                        info + "[ Status aktualizacji](/config/ais_dom_config_update)"
+                    ),
+                    notification_id="ais_update_notification",
+                )
+            else:
+                hass.components.persistent_notification.async_create(
+                    title="Dostępna jest aktualizacja ",
+                    message=(
+                        info
+                        + "[ Przejdź, by zainstalować](/config/ais_dom_config_update)"
+                    ),
+                    notification_id="ais_update_notification",
+                )
 
             # say info about update
             import homeassistant.components.ais_ai_service as ais_ai
@@ -207,27 +187,6 @@ async def async_setup(hass, config):
                         "ais_ai_service", "say_it", {"text": info}
                     )
             info += release_notes
-            hass.states.async_set(
-                ENTITY_ID,
-                info,
-                {
-                    ATTR_FRIENDLY_NAME: "Wersja",
-                    "icon": "mdi:update",
-                    "dom_app_current_version": current_version,
-                    "dom_app_newest_version": current_version,
-                    "reinstall_dom_app": False,
-                    "android_app_current_version": G_CURRENT_ANDROID_VERSION,
-                    "android_app_newest_version": G_CURRENT_ANDROID_VERSION,
-                    "reinstall_android_app": False,
-                    "linux_current_version": G_CURRENT_LINUX_VERSION,
-                    "linux_apt_newest_version": G_CURRENT_LINUX_VERSION,
-                    "reinstall_linux_app": False,
-                    "apt": apt,
-                    "beta": beta,
-                    ATTR_UPDATE_STATUS: UPDATE_STATUS_UPDATED,
-                    ATTR_UPDATE_CHECK_TIME: get_current_dt(),
-                },
-            )
             hass.states.async_set(
                 "script.ais_update_system",
                 "off",
@@ -297,10 +256,17 @@ async def async_setup(hass, config):
         update_thread = threading.Thread(target=upgrade_package_task, args=(package,))
         update_thread.start()
 
+    async def execute_upgrade(call):
+        await do_execute_upgrade(hass, call)
+
+    async def download_upgrade(call):
+        await do_download_upgrade(hass, call)
+
     # register services
     hass.services.async_register(DOMAIN, SERVICE_CHECK_VERSION, check_new_version)
     hass.services.async_register(DOMAIN, SERVICE_UPGRADE_PACKAGE, upgrade_package)
-
+    hass.services.async_register(DOMAIN, SERVICE_EXECUTE_UPGRADE, execute_upgrade)
+    hass.services.async_register(DOMAIN, SERVICE_DOWNLOAD_UPGRADE, download_upgrade)
     return True
 
 
@@ -329,12 +295,12 @@ def get_current_android_apk_version():
         return apk_version
     except Exception as e:
         _LOGGER.info("Can't get android apk version! " + str(e))
-        return 0
+        return "0"
 
 
 def get_current_linux_apt_version():
     pass
-    return 123
+    return "0"
 
 
 async def get_system_info(hass, include_components):
@@ -360,7 +326,7 @@ async def get_system_info(hass, include_components):
     return info_object
 
 
-async def get_newest_version(hass, include_components):
+async def get_newest_version(hass, include_components, go_to_download):
     """Get the newest Ais dom version."""
     hass.states.async_set(
         ENTITY_ID,
@@ -373,7 +339,7 @@ async def get_newest_version(hass, include_components):
         },
     )
 
-    info_object = {}
+    info_object = await get_system_info(hass, include_components)
     session = async_get_clientsession(hass)
     try:
         with async_timeout.timeout(10, loop=hass.loop):
@@ -392,8 +358,8 @@ async def get_newest_version(hass, include_components):
                 "reinstall_dom_app": False,
                 "android_app_current_version": G_CURRENT_ANDROID_VERSION,
                 "reinstall_android_app": False,
-                "linux_current_version": G_CURRENT_LINUX_VERSION,
-                "reinstall_linux_app": False,
+                "linux_apt_current_version": G_CURRENT_LINUX_VERSION,
+                "reinstall_linux_apt": False,
                 "apt": "",
                 "beta": "",
                 ATTR_UPDATE_STATUS: UPDATE_STATUS_UPDATED,
@@ -404,14 +370,54 @@ async def get_newest_version(hass, include_components):
 
     try:
         res = await req.json()
-        return (
-            res["dom_app_version"],
-            res["android_app_version"],
-            res["linux_apt_version"],
-            res["release_notes"],
-            res["apt"],
-            res["beta"],
+        # check if we should update
+        reinstall_dom_app = False
+        reinstall_android_app = False
+        reinstall_linux_apt = False
+        if StrictVersion(res["dom_app_version"]) > StrictVersion(current_version):
+            reinstall_dom_app = True
+        if G_CURRENT_ANDROID_VERSION != "0":
+            if StrictVersion(res["android_app_version"]) > StrictVersion(
+                G_CURRENT_ANDROID_VERSION
+            ):
+                reinstall_android_app = True
+        if G_CURRENT_LINUX_VERSION != "0":
+            if StrictVersion(res["linux_apt_version"]) > StrictVersion(
+                G_CURRENT_LINUX_VERSION
+            ):
+                reinstall_linux_apt = True
+
+        need_to_update = False
+        info = "Twój system jest aktualny. " + res["release_notes"]
+        system_status = UPDATE_STATUS_UPDATED
+        if reinstall_dom_app or reinstall_android_app or reinstall_linux_apt:
+            need_to_update = True
+            info = "Dostępna jest aktualizacja. " + res["release_notes"]
+            system_status = UPDATE_STATUS_OUTDATED
+        hass.states.async_set(
+            ENTITY_ID,
+            info,
+            {
+                ATTR_FRIENDLY_NAME: "Aktualizacja",
+                "icon": "mdi:update",
+                "dom_app_current_version": current_version,
+                "dom_app_newest_version": res["dom_app_version"],
+                "reinstall_dom_app": reinstall_dom_app,
+                "android_app_current_version": G_CURRENT_ANDROID_VERSION,
+                "android_app_newest_version": res["android_app_version"],
+                "reinstall_android_app": reinstall_android_app,
+                "linux_apt_current_version": G_CURRENT_LINUX_VERSION,
+                "linux_apt_newest_version": res["linux_apt_version"],
+                "reinstall_linux_apt": reinstall_linux_apt,
+                "apt": res["apt"],
+                "beta": res["beta"],
+                ATTR_UPDATE_STATUS: system_status,
+                ATTR_UPDATE_CHECK_TIME: get_current_dt(),
+            },
         )
+        if need_to_update and go_to_download:
+            await hass.services.async_call("ais_updater", "download_upgrade")
+        return need_to_update, res["dom_app_version"], res["release_notes"]
     except ValueError:
         _LOGGER.error("Received invalid JSON from AIS dom Update")
         info = "Wersja. Otrzmyano nieprawidłową odpowiedz z usługi AIS dom "
@@ -425,8 +431,8 @@ async def get_newest_version(hass, include_components):
                 "reinstall_dom_app": False,
                 "android_app_current_version": G_CURRENT_ANDROID_VERSION,
                 "reinstall_android_app": False,
-                "linux_current_version": G_CURRENT_LINUX_VERSION,
-                "reinstall_linux_app": False,
+                "linux_apt_current_version": G_CURRENT_LINUX_VERSION,
+                "reinstall_linux_apt": False,
                 "apt": "",
                 "beta": "",
                 ATTR_UPDATE_STATUS: UPDATE_STATUS_UPDATED,
@@ -456,3 +462,75 @@ def get_package_version(package) -> str:
         _LOGGER.info(str(manifest["requirements"][0]))
         return manifest["requirements"][0]
     return ""
+
+
+async def do_execute_upgrade(hass, call):
+    say_it = False
+    if "say" in call.data:
+        say_it = call.data["say"]
+
+    #
+    # check the status of the sensor to choice if it's upgrade or version check
+    state = hass.states.get("sensor.version_info")
+    attr = state.attributes
+    reinstall_dom_app = attr.get("reinstall_dom_app", False)
+    reinstall_android_app = attr.get("reinstall_android_app", False)
+    reinstall_linux_apt = attr.get("reinstall_linux_apt", False)
+
+    if (
+        reinstall_dom_app is False
+        and reinstall_android_app is False
+        and reinstall_linux_apt is False
+    ):
+        await hass.services.async_call(
+            "ais_ai_service", "say_it", {"text": "Sprawdzam dostępność aktualizacji"}
+        )
+        await hass.services.async_call("ais_updater", "check_version", {"say": say_it})
+        return
+
+    # check the newest version before update
+    result = await get_newest_version(hass, False, True)
+    if result is None:
+        return
+
+    need_to_update, dom_app_newest_version, release_notes = result
+
+    if need_to_update:
+        pass
+        # get_newest_version will call download service
+
+
+async def do_download_upgrade(hass, call):
+    await hass.services.async_call(
+        "ais_ai_service", "say_it", {"text": "Pobieram najnowszą wersje systemu."}
+    )
+
+    # save the status to sensor and to file
+    _set_update_status(hass, UPDATE_STATUS_DOWNLOADING)
+
+    # get the version status from sensor
+    state = hass.states.get(ENTITY_ID)
+    attr = state.attributes
+
+    #
+    reinstall_dom_app = attr.get("reinstall_dom_app", False)
+    reinstall_android_app = attr.get("reinstall_android_app", False)
+    reinstall_linux_apt = attr.get("reinstall_linux_apt", False)
+    apt = attr.get("apt", "")
+    beta = attr.get("beta", False)
+
+    # add the grant to save on sdcard
+
+    # download
+    import subprocess
+
+    output = subprocess.check_output(
+        ["pip", "download", "ais-dom==0.98.9", "-d /sdcard"], universal_newlines=True
+    )
+    _LOGGER.info("download_upgrade output: " + str(output))
+    _set_update_status(hass, UPDATE_STATUS_INSTALLING)
+
+    # add the upgrade call to .bash_profile - to be sure that all will be done
+    # call the script
+
+    # when download was started there is no way to stop - we should automatically run next steps
