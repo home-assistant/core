@@ -1,8 +1,10 @@
 """The tests for the UniFi device tracker platform."""
 from collections import deque
 from copy import copy
-from unittest.mock import Mock
+
 from datetime import timedelta
+
+from asynctest import Mock
 
 import pytest
 
@@ -96,7 +98,7 @@ CONTROLLER_DATA = {
     CONF_PASSWORD: "mock-pswd",
     CONF_PORT: 1234,
     CONF_SITE_ID: "mock-site",
-    CONF_VERIFY_SSL: True,
+    CONF_VERIFY_SSL: False,
 }
 
 ENTRY_CONFIG = {CONF_CONTROLLER: CONTROLLER_DATA}
@@ -251,6 +253,45 @@ async def test_tracked_devices(hass, mock_controller):
     assert client_2 is None
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1 is None
+
+
+async def test_wireless_client_go_wired_issue(hass, mock_controller):
+    """Test the solution to catch wireless device go wired UniFi issue.
+
+    UniFi has a known issue that when a wireless device goes away it sometimes gets marked as wired.
+    """
+    client_1_client = copy(CLIENT_1)
+    client_1_client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
+    mock_controller.mock_client_responses.append([client_1_client])
+    mock_controller.mock_device_responses.append({})
+
+    await setup_controller(hass, mock_controller)
+    assert len(mock_controller.mock_requests) == 2
+    assert len(hass.states.async_all()) == 3
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1 is not None
+    assert client_1.state == "home"
+
+    client_1_client["is_wired"] = True
+    client_1_client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
+    mock_controller.mock_client_responses.append([client_1_client])
+    mock_controller.mock_device_responses.append({})
+    await mock_controller.async_update()
+    await hass.async_block_till_done()
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1.state == "not_home"
+
+    client_1_client["is_wired"] = False
+    client_1_client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
+    mock_controller.mock_client_responses.append([client_1_client])
+    mock_controller.mock_device_responses.append({})
+    await mock_controller.async_update()
+    await hass.async_block_till_done()
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1.state == "home"
 
 
 async def test_restoring_client(hass, mock_controller):
