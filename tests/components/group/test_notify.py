@@ -6,7 +6,6 @@ from homeassistant.setup import setup_component
 import homeassistant.components.notify as notify
 import homeassistant.components.group.notify as group
 import homeassistant.components.demo.notify as demo
-from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from tests.common import assert_setup_component, get_test_home_assistant
 
@@ -43,7 +42,7 @@ class TestNotifyGroup(unittest.TestCase):
                 },
             )
 
-        self.service = run_coroutine_threadsafe(
+        self.service = asyncio.run_coroutine_threadsafe(
             group.async_get_service(
                 self.hass,
                 {
@@ -70,7 +69,7 @@ class TestNotifyGroup(unittest.TestCase):
 
     def test_send_message_with_data(self):
         """Test sending a message with to a notify group."""
-        run_coroutine_threadsafe(
+        asyncio.run_coroutine_threadsafe(
             self.service.async_send_message(
                 "Hello", title="Test notification", data={"hello": "world"}
             ),

@@ -27,7 +27,6 @@ from homeassistant.components.homeassistant import (
 import homeassistant.helpers.intent as intent
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity
-from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from tests.common import (
     get_test_home_assistant,
@@ -111,7 +110,7 @@ class TestComponentsCore(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        assert run_coroutine_threadsafe(
+        assert asyncio.run_coroutine_threadsafe(
             async_setup_component(self.hass, "homeassistant", {}), self.hass.loop
         ).result()
 
