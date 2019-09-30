@@ -119,6 +119,7 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
         """Initialize a Climate device."""
         super().__init__(evo_broker, evo_device)
 
+        self._unique_id = evo_device.zoneId
         self._preset_modes = None
 
     async def _set_tcs_mode(self, op_mode: str) -> None:
@@ -145,6 +146,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
         """Initialize a Zone."""
         super().__init__(evo_broker, evo_device)
 
+        self._unique_id = evo_device.systemId
         self._name = evo_device.name
         self._icon = "mdi:radiator"
 

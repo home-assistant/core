@@ -304,10 +304,11 @@ class EvoDevice(Entity):
         self._evo_broker = evo_broker
         self._evo_tcs = evo_broker.tcs
 
-        self._name = self._icon = self._precision = None
-        self._supported_features = None
+        self._unique_id = self._name = self._icon = self._precision = None
 
         self._device_state_attrs = {}
+        self._state_attributes = []
+        self._supported_features = None
 
     @callback
     def _refresh(self) -> None:
@@ -317,6 +318,11 @@ class EvoDevice(Entity):
     def should_poll(self) -> bool:
         """Evohome entities should not be polled."""
         return False
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def name(self) -> str:

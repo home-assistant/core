@@ -49,6 +49,7 @@ class EvoDHW(EvoChild, WaterHeaterDevice):
         """Initialize a evohome DHW controller."""
         super().__init__(evo_broker, evo_device)
 
+        self._unique_id = evo_device.dhwId
         self._name = "DHW controller"
         self._icon = "mdi:thermometer-lines"
 
