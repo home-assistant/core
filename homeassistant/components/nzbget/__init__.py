@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+import pynzbgetapi
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -61,7 +62,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the NZBGet sensors."""
-    import pynzbgetapi
 
     host = config[DOMAIN][CONF_HOST]
     port = config[DOMAIN][CONF_PORT]
@@ -130,7 +130,6 @@ class NZBGetData:
 
     def update(self):
         """Get the latest data from NZBGet instance."""
-        import pynzbgetapi
 
         try:
             self.status = self._api.status()
@@ -142,7 +141,6 @@ class NZBGetData:
 
     def pause_download(self):
         """Pause download queue."""
-        import pynzbgetapi
 
         try:
             self._api.pausedownload()
@@ -151,7 +149,6 @@ class NZBGetData:
 
     def resume_download(self):
         """Resume download queue."""
-        import pynzbgetapi
 
         try:
             self._api.resumedownload()
@@ -160,7 +157,6 @@ class NZBGetData:
 
     def rate(self, limit):
         """Set download speed."""
-        import pynzbgetapi
 
         try:
             if not self._api.rate(limit):
