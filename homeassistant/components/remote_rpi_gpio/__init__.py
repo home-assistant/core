@@ -25,7 +25,9 @@ def setup_output(address, port, invert_logic):
     from gpiozero.pins.pigpio import PiGPIOFactory
 
     try:
-        return LED(port, active_high=invert_logic, pin_factory=PiGPIOFactory(address))
+        return LED(
+            port, active_high=not invert_logic, pin_factory=PiGPIOFactory(address)
+        )
     except (ValueError, IndexError, KeyError):
         return None
 
