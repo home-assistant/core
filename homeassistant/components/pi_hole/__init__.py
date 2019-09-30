@@ -21,7 +21,6 @@ from homeassistant.util import Throttle
 from .const import (
     DOMAIN,
     CONF_LOCATION,
-    DEFAULT_HOST,
     DEFAULT_LOCATION,
     DEFAULT_NAME,
     DEFAULT_SSL,
@@ -34,19 +33,19 @@ from .const import (
 
 LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
+PI_HOLE_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(CONF_API_KEY): cv.string,
-                vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-                vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION): cv.string,
-                vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-            }
-        )
-    },
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION): cv.string,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    }
+)
+
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Schema(vol.All([PI_HOLE_SCHEMA], vol.Length(min=1)))},
     extra=vol.ALLOW_EXTRA,
 )
 

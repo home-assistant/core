@@ -5,7 +5,6 @@ DOMAIN = "pi_hole"
 
 CONF_LOCATION = "location"
 
-DEFAULT_HOST = "pi.hole"
 DEFAULT_LOCATION = "admin"
 DEFAULT_METHOD = "GET"
 DEFAULT_NAME = "Pi-Hole"
