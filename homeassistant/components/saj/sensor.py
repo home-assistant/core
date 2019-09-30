@@ -1,6 +1,6 @@
 """SAJ solar inverter interface."""
 import asyncio
-from datetime import date, timedelta
+from datetime import date
 import logging
 
 import pysaj
@@ -12,6 +12,8 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
     POWER_WATT,
     MASS_KILOGRAMS,
     TEMP_CELSIUS,
@@ -20,13 +22,12 @@ from homeassistant.const import (
 from homeassistant.core import callback, CALLBACK_TYPE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers.event import async_call_later
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_INTERVAL = timedelta(seconds=5)
-MAX_INTERVAL = timedelta(minutes=5)
+MIN_INTERVAL = 5
+MAX_INTERVAL = 300
 
 UNIT_OF_MEASUREMENT_HOURS = "h"
 
@@ -49,6 +50,8 @@ PLATFORM_SCHEMA = vol.All(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up SAJ sensors."""
 
+    remove_interval_update = None
+
     # Init all sensors
     sensor_def = pysaj.Sensors()
 
@@ -62,7 +65,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async_add_entities(hass_sensors)
 
-    async def async_saj(event):
+    async def async_saj():
         """Update all the SAJ sensors."""
         tasks = []
 
@@ -89,7 +92,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             await asyncio.wait(tasks)
         return values
 
-    async_track_time_interval_backoff(hass, async_saj)
+    def start_update_interval(event):
+        """Start the update interval scheduling"""
+        nonlocal remove_interval_update
+        remove_interval_update = async_track_time_interval_backoff(hass, async_saj)
+
+    def stop_update_interval(event):
+        """Properly cancel the scheduled update"""
+        remove_interval_update()  # pylint: disable=not-callable
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_update_interval)
+    hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, stop_update_interval)
 
 
 @callback
@@ -97,24 +110,19 @@ def async_track_time_interval_backoff(hass, action) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively and increases the interval when failed."""
     remove = None
     interval = MIN_INTERVAL
-    failed = 0
 
-    async def interval_listener(now):
+    async def interval_listener(now=None):
         """Handle elapsed interval with backoff."""
-        nonlocal failed, interval, remove
+        nonlocal interval, remove
         try:
-            failed += 1
-            if await action(now):
-                failed = 0
+            if await action():
                 interval = MIN_INTERVAL
             else:
                 interval = min(interval * 2, MAX_INTERVAL)
         finally:
-            remove = async_track_point_in_utc_time(
-                hass, interval_listener, now + interval
-            )
+            remove = async_call_later(hass, interval, interval_listener)
 
-    async_track_point_in_utc_time(hass, interval_listener, dt_util.utcnow())
+    hass.async_create_task(interval_listener())
 
     def remove_listener():
         """Remove interval listener."""
