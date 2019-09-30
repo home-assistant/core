@@ -69,10 +69,10 @@ BINARY_SENSOR_SCHEMA = vol.Schema(
 SENSOR_TYPES = {
     # API Endpoint, Group, Key, unit, icon
     "Temperatures": ["printer", "temperature", "*", TEMP_CELSIUS],
-    "Current State": ["printer", "state", "text", None, "mdi:printer-3d"],
-    "Job Percentage": ["job", "progress", "completion", "%", "mdi:file-percent"],
-    "Time Remaining": ["job", "progress", "printTimeLeft", "seconds", "mdi:clock-end"],
-    "Time Elapsed": ["job", "progress", "printTime", "seconds", "mdi:clock-start"],
+    "Current State": ["printer", "state", None, "text", None, "mdi:printer-3d"],
+    "Job Percentage": ["job", "progress", None, "completion", "%", "mdi:file-percent"],
+    "Time Remaining": ["job", "progress", None, "printTimeLeft", "seconds", "mdi:clock-end"],
+    "Time Elapsed": ["job", "progress", None, "printTime", "seconds", "mdi:clock-start"],
 }
 
 SENSOR_SCHEMA = vol.Schema(
@@ -250,7 +250,7 @@ class OctoPrintAPI:
             self.available = False
             return None
 
-    def update(self, sensor_type, end_point, group, tool=None):
+    def update(self, sensor_type, end_point, group, secondary_group=None, tool=None):
         """Return the value for sensor_type from the provided endpoint."""
         response = self.get(end_point)
         if response is not None:
@@ -258,7 +258,7 @@ class OctoPrintAPI:
         return response
 
 
-def get_value_from_json(json_dict, sensor_type, group, tool):
+def get_value_from_json(json_dict, sensor_type, group, secondary_group, tool):
     """Return the value for sensor_type from the JSON."""
     if group not in json_dict:
         return None
@@ -266,6 +266,8 @@ def get_value_from_json(json_dict, sensor_type, group, tool):
     if sensor_type in json_dict[group]:
         if sensor_type == "target" and json_dict[sensor_type] is None:
             return 0
+        if secondary_group is not None:
+            return json_dict[group][secondary_group][sensor_type]
         return json_dict[group][sensor_type]
 
     if tool is not None:

@@ -52,6 +52,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                         SENSOR_TYPES[octo_type][3],
                         SENSOR_TYPES[octo_type][0],
                         SENSOR_TYPES[octo_type][1],
+                        None,
                         tool,
                     )
                     devices.append(new_sensor)
@@ -59,13 +60,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             new_sensor = OctoPrintSensor(
                 octoprint_api,
                 octo_type,
-                SENSOR_TYPES[octo_type][2],
-                name,
                 SENSOR_TYPES[octo_type][3],
+                name,
+                SENSOR_TYPES[octo_type][4],
                 SENSOR_TYPES[octo_type][0],
                 SENSOR_TYPES[octo_type][1],
+                SENSOR_TYPES[octo_type][2],
                 None,
-                SENSOR_TYPES[octo_type][4],
+                SENSOR_TYPES[octo_type][5],
             )
             devices.append(new_sensor)
     add_entities(devices, True)
@@ -83,6 +85,7 @@ class OctoPrintSensor(Entity):
         unit,
         endpoint,
         group,
+        secondary_group=None,
         tool=None,
         icon=None,
     ):
@@ -127,7 +130,7 @@ class OctoPrintSensor(Entity):
         """Update state of sensor."""
         try:
             self._state = self.api.update(
-                self.sensor_type, self.api_endpoint, self.api_group, self.api_tool
+                self.sensor_type, self.api_endpoint, self.api_group, self.api.secondary_group, self.api_tool
             )
         except requests.exceptions.ConnectionError:
             # Error calling the api, already logged in api.update()
