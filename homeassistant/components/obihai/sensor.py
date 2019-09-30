@@ -117,15 +117,15 @@ class ObihaiServiceSensors(Entity):
         if self._service_name == "Call Direction":
             if self._state == "No Active Calls":
                 return "mdi:phone-off"
-            elif self._state == "Inbound Call":
+            if self._state == "Inbound Call":
                 return "mdi:phone-incoming"
             return "mdi:phone-outgoing"
-        elif "Caller Info" in self._service_name:
+        if "Caller Info" in self._service_name:
             return "mdi:phone-log"
-        elif "Port" in self._service_name:
+        if "Port" in self._service_name:
             if self._state == "Ringing":
                 return "mdi:phone-ring"
-            elif self._state == "Off Hook":
+            if self._state == "Off Hook":
                 return "mdi:phone-in-talk"
             return "mdi:phone-hangup"
         return "mdi:phone"
