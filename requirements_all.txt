@@ -1408,7 +1408,7 @@ pyrepetier==3.0.5
 pysabnzbd==1.1.0
 
 # homeassistant.components.saj
-pysaj==0.0.8
+pysaj==0.0.9
 
 # homeassistant.components.sony_projector
 pysdcp==1

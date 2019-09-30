@@ -3,7 +3,7 @@
   "name": "SAJ",
   "documentation": "https://www.home-assistant.io/components/saj",
   "requirements": [
-    "pysaj==0.0.8"
+    "pysaj==0.0.9"
   ],
   "dependencies": [],
   "codeowners": [
