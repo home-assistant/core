@@ -46,8 +46,6 @@ from homeassistant.helpers.script import Script
 from . import extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
 
-from .const import CONF_AVAILABILITY_TEMPLATE
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_VACUUMS = "vacuums"
