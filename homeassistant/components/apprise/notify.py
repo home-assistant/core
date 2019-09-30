@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from apprise import Apprise, AppriseConfig
+import apprise
 
 import homeassistant.helpers.config_validation as cv
 
@@ -31,11 +31,11 @@ def get_service(hass, config, discovery_info=None):
     """Get the Apprise notification service."""
 
     # Create our object
-    a_obj = Apprise()
+    a_obj = apprise.Apprise()
 
     if config.get(CONF_FILE):
         # Sourced from a Configuration File
-        a_config = AppriseConfig()
+        a_config = apprise.AppriseConfig()
         if not a_config.add(config[CONF_FILE]):
             _LOGGER.error("Invalid Apprise config url provided")
             return None
@@ -50,12 +50,6 @@ def get_service(hass, config, discovery_info=None):
             _LOGGER.error("Invalid Apprise URL(s) supplied")
             return None
 
-    loaded = len(a_obj)
-    if not loaded:
-        _LOGGER.error("No Apprise services were loaded")
-        return None
-
-    _LOGGER.debug("Loaded %d Apprise service(s).", loaded)
     return AppriseNotificationService(a_obj)
 
 
