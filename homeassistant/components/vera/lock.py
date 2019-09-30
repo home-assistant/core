@@ -8,8 +8,7 @@ from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_LAST_USER_ID = "last_user_id"
-ATTR_LAST_USER_NAME = "last_user_name"
+ATTR_LAST_USER_NAME = "changed_by_name"
 ATTR_LOW_BATTERY = "low_battery"
 
 
@@ -50,25 +49,45 @@ class VeraLock(VeraDevice, LockDevice):
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes of the lock."""
+        """Who unlocked the lock and did a low battery alert fire.
+
+        Reports on the previous poll cycle.
+        changed_by_name is a string like 'Bob'.
+        low_battery is 1 if an alert fired, 0 otherwise.
+        """
         data = super().device_state_attributes
 
         # This check will no longer be required once the version of the pyvera
         # library with these two functions included is generally available.
-        if ("get_last_user_alert" in dir(self.vera_device)) and (
+        if not ("get_last_user_alert" in dir(self.vera_device)) and (
             "get_low_battery_alert" in dir(self.vera_device)
         ):
-            last_user = self.vera_device.get_last_user_alert()
-            if last_user is not None:
-                data[ATTR_LAST_USER_ID] = last_user[0]
-                data[ATTR_LAST_USER_NAME] = last_user[1]
-            else:
-                data[ATTR_LAST_USER_ID] = -1
-                data[ATTR_LAST_USER_NAME] = ""
+            return data
 
-            data[ATTR_LOW_BATTERY] = self.vera_device.get_low_battery_alert()
+        last_user = self.vera_device.get_last_user_alert()
+        if last_user is not None:
+            data[ATTR_LAST_USER_NAME] = last_user[1]
 
+        data[ATTR_LOW_BATTERY] = self.vera_device.get_low_battery_alert()
         return data
+
+    @property
+    def changed_by(self):
+        """Who unlocked the lock.
+
+        Reports on the previous poll cycle.
+        changed_by is an integer user ID.
+        """
+        # This check will no longer be required once the version of the pyvera
+        # library with these two functions included is generally available.
+        if not ("get_last_user_alert" in dir(self.vera_device)):
+            return None
+
+        last_user = self.vera_device.get_last_user_alert()
+        if last_user is not None:
+            return last_user[0]
+
+        return None
 
     def update(self):
         """Update state by the Vera device callback."""
