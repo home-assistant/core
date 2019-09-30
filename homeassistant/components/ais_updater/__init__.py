@@ -10,7 +10,7 @@ import json
 import logging
 import os
 import platform
-import uuid
+import subprocess
 import sys
 
 import aiohttp
@@ -41,6 +41,8 @@ SERVICE_CHECK_VERSION = "check_version"
 SERVICE_UPGRADE_PACKAGE = "upgrade_package"
 SERVICE_EXECUTE_UPGRADE = "execute_upgrade"
 SERVICE_DOWNLOAD_UPGRADE = "download_upgrade"
+SERVICE_INSTALL_UPGRADE = "install_upgrade"
+SERVICE_APPLAY_THE_FIX = "applay_the_fix"
 ENTITY_ID = "sensor.version_info"
 ATTR_UPDATE_STATUS = "update_status"
 ATTR_UPDATE_CHECK_TIME = "update_check_time"
@@ -103,14 +105,20 @@ async def async_setup(hass, config):
     config = config.get(DOMAIN, {})
     include_components = config.get(CONF_COMPONENT_REPORTING)
 
-    async def check_new_version(now):
+    async def check_version(now):
         say_it = False
         # check if we have datetime.datetime or call.data object
         if type(now) == "ServiceCall":
             if "say" in now.data:
                 say_it = now.data["say"]
         """Check if a new version is available and report if one is."""
-        auto_update = hass.states.get("input_boolean.ais_auto_update").state
+        if not ais_global.G_AIS_START_IS_DONE:
+            # do not update on start
+            # to prevent the restart loop in case of problem with update
+            auto_update = False
+        else:
+            auto_update = hass.states.get("input_boolean.ais_auto_update").state
+
         result = await get_newest_version(hass, include_components, auto_update)
 
         if result is None:
@@ -200,7 +208,7 @@ async def async_setup(hass, config):
     # Update daily, start at 9AM + some random minutes and seconds based on the system startup
     _dt = dt_util.utcnow()
     event.async_track_utc_time_change(
-        hass, check_new_version, hour=9, minute=_dt.minute, second=_dt.second
+        hass, check_version, hour=9, minute=_dt.minute, second=_dt.second
     )
 
     def upgrade_package_task(package):
@@ -257,16 +265,36 @@ async def async_setup(hass, config):
         update_thread.start()
 
     async def execute_upgrade(call):
+        _set_update_status(hass, UPDATE_STATUS_CHECKING)
         await do_execute_upgrade(hass, call)
 
     async def download_upgrade(call):
+        await hass.services.async_call(
+            "ais_ai_service", "say_it", {"text": "Pobieram najnowszą wersje systemu."}
+        )
+        # save the status to sensor and to file
+        _set_update_status(hass, UPDATE_STATUS_DOWNLOADING)
         await do_download_upgrade(hass, call)
 
+    async def install_upgrade(call):
+        await hass.services.async_call(
+            "ais_ai_service", "say_it", {"text": "Instaluje najnowszą wersje systemu."}
+        )
+        # save the status to sensor and to file
+        _set_update_status(hass, UPDATE_STATUS_INSTALLING)
+        await do_install_upgrade(hass, call)
+
+    async def applay_the_fix(call):
+        _LOGGER.warning("applay_the_fix")
+        await do_applay_the_fix(hass, call)
+
     # register services
-    hass.services.async_register(DOMAIN, SERVICE_CHECK_VERSION, check_new_version)
+    hass.services.async_register(DOMAIN, SERVICE_CHECK_VERSION, check_version)
     hass.services.async_register(DOMAIN, SERVICE_UPGRADE_PACKAGE, upgrade_package)
     hass.services.async_register(DOMAIN, SERVICE_EXECUTE_UPGRADE, execute_upgrade)
     hass.services.async_register(DOMAIN, SERVICE_DOWNLOAD_UPGRADE, download_upgrade)
+    hass.services.async_register(DOMAIN, SERVICE_INSTALL_UPGRADE, install_upgrade)
+    hass.services.async_register(DOMAIN, SERVICE_APPLAY_THE_FIX, applay_the_fix)
     return True
 
 
@@ -278,7 +306,6 @@ def get_current_dt():
 
 
 def get_current_android_apk_version():
-    import subprocess
 
     try:
         apk_version = subprocess.check_output(
@@ -299,8 +326,8 @@ def get_current_android_apk_version():
 
 
 def get_current_linux_apt_version():
-    pass
-    return "0"
+    # TODO get version of the apt
+    return current_version
 
 
 async def get_system_info(hass, include_components):
@@ -341,6 +368,10 @@ async def get_newest_version(hass, include_components, go_to_download):
 
     info_object = await get_system_info(hass, include_components)
     session = async_get_clientsession(hass)
+    release_script = ""
+    fix_script = ""
+    beta = False
+
     try:
         with async_timeout.timeout(10, loop=hass.loop):
             req = await session.post(UPDATER_URL, json=info_object)
@@ -360,8 +391,9 @@ async def get_newest_version(hass, include_components, go_to_download):
                 "reinstall_android_app": False,
                 "linux_apt_current_version": G_CURRENT_LINUX_VERSION,
                 "reinstall_linux_apt": False,
-                "apt": "",
-                "beta": "",
+                "release_script": release_script,
+                "fix_script": fix_script,
+                "beta": beta,
                 ATTR_UPDATE_STATUS: UPDATE_STATUS_UPDATED,
                 ATTR_UPDATE_CHECK_TIME: get_current_dt(),
             },
@@ -394,6 +426,16 @@ async def get_newest_version(hass, include_components, go_to_download):
             need_to_update = True
             info = "Dostępna jest aktualizacja. " + res["release_notes"]
             system_status = UPDATE_STATUS_OUTDATED
+
+        if "release_script" in res:
+            release_script = res["release_script"]
+
+        if "fix_script" in res:
+            fix_script = res["fix_script"]
+
+        if "beta" in res:
+            beta = res["beta"]
+
         hass.states.async_set(
             ENTITY_ID,
             info,
@@ -409,12 +451,15 @@ async def get_newest_version(hass, include_components, go_to_download):
                 "linux_apt_current_version": G_CURRENT_LINUX_VERSION,
                 "linux_apt_newest_version": res["linux_apt_version"],
                 "reinstall_linux_apt": reinstall_linux_apt,
-                "apt": res["apt"],
-                "beta": res["beta"],
+                "release_script": release_script,
+                "fix_script": fix_script,
+                "beta": beta,
                 ATTR_UPDATE_STATUS: system_status,
                 ATTR_UPDATE_CHECK_TIME: get_current_dt(),
             },
         )
+        if fix_script != "":
+            await hass.services.async_call("ais_updater", "applay_the_fix")
         if need_to_update and go_to_download:
             await hass.services.async_call("ais_updater", "download_upgrade")
         return need_to_update, res["dom_app_version"], res["release_notes"]
@@ -433,8 +478,9 @@ async def get_newest_version(hass, include_components, go_to_download):
                 "reinstall_android_app": False,
                 "linux_apt_current_version": G_CURRENT_LINUX_VERSION,
                 "reinstall_linux_apt": False,
-                "apt": "",
-                "beta": "",
+                "release_script": release_script,
+                "fix_script": fix_script,
+                "beta": beta,
                 ATTR_UPDATE_STATUS: UPDATE_STATUS_UPDATED,
                 ATTR_UPDATE_CHECK_TIME: get_current_dt(),
             },
@@ -497,40 +543,239 @@ async def do_execute_upgrade(hass, call):
 
     if need_to_update:
         pass
-        # get_newest_version will call download service
+        # get_newest_version will do call download service
+
+
+def run_shell_command(command):
+    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    while True:
+        # returns None while subprocess is running
+        ret_code = p.poll()
+        line = p.stdout.readline()
+        _LOGGER.info(str(line.decode("utf-8")))
+        if ret_code is not None:
+            break
+
+
+def grant_write_to_sdcard():
+    try:
+        ret_output = subprocess.check_output(
+            'su -c "su -c "pm grant launcher.sviete.pl.domlauncherapp android.permission.READ_EXTERNAL_STORAGE"',
+            shell=True,
+            timeout=15,
+        )
+        _LOGGER.info(str(ret_output.decode("utf-8")))
+        ret_output = subprocess.check_output(
+            'su -c "su -c "pm grant launcher.sviete.pl.domlauncherapp android.permission.WRITE_EXTERNAL_STORAGE"',
+            shell=True,
+            timeout=15,
+        )
+        _LOGGER.info(str(ret_output.decode("utf-8")))
+        ret_output = subprocess.check_output(
+            'su -c "su -c "pm grant pl.sviete.dom android.permission.READ_EXTERNAL_STORAGE"',
+            shell=True,
+            timeout=15,
+        )
+        _LOGGER.info(str(ret_output.decode("utf-8")))
+        ret_output = subprocess.check_output(
+            'su -c "su -c "pm grant pl.sviete.dom android.permission.WRITE_EXTERNAL_STORAGE"',
+            shell=True,
+            timeout=15,
+        )
+        _LOGGER.info(str(ret_output.decode("utf-8")))
+    except Exception as e:
+        _LOGGER.error(str(e))
 
 
 async def do_download_upgrade(hass, call):
-    await hass.services.async_call(
-        "ais_ai_service", "say_it", {"text": "Pobieram najnowszą wersje systemu."}
-    )
-
-    # save the status to sensor and to file
-    _set_update_status(hass, UPDATE_STATUS_DOWNLOADING)
 
     # get the version status from sensor
     state = hass.states.get(ENTITY_ID)
     attr = state.attributes
-
-    #
     reinstall_dom_app = attr.get("reinstall_dom_app", False)
-    reinstall_android_app = attr.get("reinstall_android_app", False)
-    reinstall_linux_apt = attr.get("reinstall_linux_apt", False)
-    apt = attr.get("apt", "")
+    dom_app_newest_version = attr.get("dom_app_newest_version", False)
+    release_script = attr.get("release_script", "")
     beta = attr.get("beta", False)
 
     # add the grant to save on sdcard
+    grant_write_to_sdcard()
 
-    # download
-    import subprocess
+    # create directory if not exists
+    update_dir = hass.config.path("ais_update")
+    if not os.path.exists(update_dir):
+        os.makedirs(update_dir)
 
-    output = subprocess.check_output(
-        ["pip", "download", "ais-dom==0.98.9", "-d /sdcard"], universal_newlines=True
-    )
-    _LOGGER.info("download_upgrade output: " + str(output))
-    _set_update_status(hass, UPDATE_STATUS_INSTALLING)
+    # download release linux script
+    if release_script != "":
+        _LOGGER.info("We have release_script dependencies " + str(release_script))
+        try:
+            file_script = str(os.path.dirname(__file__))
+            file_script += "/scripts/release_script.sh"
+            f = open(str(file_script), "w")
+            f.write("#!/data/data/pl.sviete.dom/files/usr/bin/sh" + os.linesep)
+            for l in release_script.split("-#-"):
+                f.write(l + os.linesep)
+            f.close()
+        except Exception as e:
+            _LOGGER.error("Can't download release_script, error: " + str(e))
+    else:
+        _LOGGER.info("No release_scripts this time!")
 
-    # add the upgrade call to .bash_profile - to be sure that all will be done
-    # call the script
+    # download pip packages
+    if reinstall_dom_app:
+        # download
+        if beta:
+            run_shell_command(
+                [
+                    "pip",
+                    "download",
+                    "ais-dom==" + dom_app_newest_version,
+                    "-d",
+                    update_dir,
+                    "--pre",
+                ]
+            )
+        else:
+            run_shell_command(
+                [
+                    "pip",
+                    "download",
+                    "ais-dom==" + dom_app_newest_version,
+                    "-d",
+                    update_dir,
+                ]
+            )
 
-    # when download was started there is no way to stop - we should automatically run next steps
+    # go next
+    await hass.services.async_call("ais_updater", "install_upgrade")
+
+
+async def do_install_upgrade(hass, call):
+
+    # get the version status from sensor
+    state = hass.states.get(ENTITY_ID)
+    attr = state.attributes
+    reinstall_dom_app = attr.get("reinstall_dom_app", False)
+    dom_app_newest_version = attr.get("dom_app_newest_version", False)
+    reinstall_android_app = attr.get("reinstall_android_app", False)
+    reinstall_linux_apt = attr.get("reinstall_linux_apt", False)
+    release_script = attr.get("release_script", "")
+    beta = attr.get("beta", False)
+
+    # linux
+    if reinstall_linux_apt:
+        run_shell_command(["apt", "update"])
+        run_shell_command(["apt", "upgrade", "-y"])
+    if release_script != "":
+        _LOGGER.info("We have release_script to execute " + str(release_script))
+        try:
+            file_script = str(os.path.dirname(__file__))
+            file_script += "/scripts/release_script.sh"
+            apt_process = subprocess.Popen(
+                file_script, shell=True, stdout=None, stderr=None
+            )
+            apt_process.wait()
+            _LOGGER.info("release_script, return: " + str(apt_process.returncode))
+        except Exception as e:
+            _LOGGER.error("Can't install release_script, error: " + str(e))
+    else:
+        _LOGGER.info("No release_script this time!")
+
+    # pip
+    update_dir = hass.config.path("ais_update")
+    if reinstall_dom_app:
+        # install
+        if beta:
+            run_shell_command(
+                [
+                    "pip",
+                    "install",
+                    "ais-dom==" + dom_app_newest_version,
+                    "--find-links",
+                    update_dir,
+                    "-U",
+                    "--pre",
+                ]
+            )
+        else:
+            run_shell_command(
+                [
+                    "pip",
+                    "install",
+                    "ais-dom==" + dom_app_newest_version,
+                    "--find-links",
+                    update_dir,
+                    "-U",
+                ]
+            )
+
+    # remove update dir
+    update_dir = hass.config.path("ais_update")
+    if os.path.exists(update_dir):
+        run_shell_command(["rm", update_dir, "-rf"])
+
+    # set update status
+    _set_update_status(hass, UPDATE_STATUS_UPDATED)
+
+    # android apk
+    if reinstall_android_app:
+        if beta:
+            run_shell_command(
+                [
+                    "am",
+                    "start",
+                    "-n",
+                    "launcher.sviete.pl.domlauncherapp/.LauncherActivity",
+                    "-e",
+                    "command",
+                    "ais-dom-update",
+                ]
+            )
+        else:
+            run_shell_command(
+                [
+                    "am",
+                    "start",
+                    "-n",
+                    "launcher.sviete.pl.domlauncherapp/.LauncherActivity",
+                    "-e",
+                    "command",
+                    "ais-dom-update-beta",
+                ]
+            )
+    elif reinstall_dom_app:
+        # restart ais-dom
+        await hass.services.async_call("homeassistant", "restart")
+
+
+async def do_applay_the_fix(hass, call):
+
+    # get the version status from sensor
+    state = hass.states.get(ENTITY_ID)
+    attr = state.attributes
+    fix_script = attr.get("fix_script", "")
+
+    # save fix script
+    if fix_script != "":
+        _LOGGER.info("We have fix_script " + str(fix_script))
+        try:
+            file_script = str(os.path.dirname(__file__))
+            file_script += "/scripts/fix_script.sh"
+            f = open(str(file_script), "w")
+            f.write("#!/data/data/pl.sviete.dom/files/usr/bin/sh" + os.linesep)
+            for l in fix_script.split("-#-"):
+                f.write(l + os.linesep)
+            f.close()
+            # execute fix script
+            try:
+                apt_process = subprocess.Popen(
+                    file_script, shell=True, stdout=None, stderr=None
+                )
+                apt_process.wait()
+                _LOGGER.info("fix_script, return: " + str(apt_process.returncode))
+            except Exception as e:
+                _LOGGER.error("Can't execute fix_script, error: " + str(e))
+        except Exception as e:
+            _LOGGER.error("Can prepare fix_script, error: " + str(e))
+    else:
+        _LOGGER.info("No fix_script this time!")

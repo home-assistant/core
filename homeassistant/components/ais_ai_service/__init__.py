@@ -1011,6 +1011,20 @@ def say_curr_entity(hass):
             "automatycznie zredukuje głośność odtwarzania audio.",
         )
         return
+    elif entity_id == "input_boolean.ais_auto_update":
+        state = hass.states.get("input_boolean.ais_auto_update").state
+        info_value = (
+            "Automatyczne aktualizacje wyłączone. Aktualizujesz system samodzielnie w "
+            "dogodnym dla Ciebie czasie. Naciśnąć OK by włączyć aktualizacje automatyczne."
+        )
+        if state == "on":
+            info_value = (
+                "Automatyczne aktualizacje włączone. Codziennie sprawdzimy i automatycznie "
+                "zainstalujemy dostępne aktualizacje składowych systemu. "
+                "Naciśnij OK by wyłączyć aktualizacje automatyczne. "
+            )
+        _say_it(hass, info_value)
+        return
     elif entity_id == "input_select.ais_bookmark_last_played":
         _say_it(hass, info_name + " " + info_data.replace("Local;", ""))
         return

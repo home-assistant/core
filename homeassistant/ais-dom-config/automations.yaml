@@ -79,7 +79,7 @@
        filename: "/data/data/pl.sviete.dom/files/home/AIS/dom_access_code.png"
    - delay: '10'
    - service: ais_ai_service.prepare_remote_menu
-   - delay: '300'
+   - delay: '6000'
    - service: ais_updater.check_version
 
 - id: '201807081858006'
