@@ -14,12 +14,12 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    POWER_WATT,
     MASS_KILOGRAMS,
+    POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import callback, CALLBACK_TYPE
+from homeassistant.core import CALLBACK_TYPE, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
@@ -40,11 +40,7 @@ SAJ_UNIT_MAPPINGS = {
     "": None,
 }
 
-PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend(
-        {vol.Required(CONF_HOST): cv.string}, extra=vol.PREVENT_EXTRA
-    )
-)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
