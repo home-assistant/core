@@ -1,4 +1,5 @@
 """Config flow for the Abode Security System component."""
+import logging
 from collections import OrderedDict
 import voluptuous as vol
 
@@ -7,6 +8,8 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -33,17 +36,20 @@ class AbodeFlowHandler(config_entries.ConfigFlow):
         """Handle a flow initialized by the user."""
         from abodepy import Abode
 
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        if self.hass.data.get(DOMAIN):
+            return self.async_abort(reason="single_instance_allowed")
+
         if not user_input:
             return await self._show_form()
-
-        if user_input[CONF_USERNAME] in configured_instances(self.hass):
-            return await self._show_form({CONF_USERNAME: "identifier_exists"})
 
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
 
         try:
-            Abode(username, password, auto_login=True)
+            Abode(username, password)
 
         # Need to add error checking if Abode server is down/not responding
         except AbodeAuthenticationException:
@@ -65,6 +71,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow):
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
         if import_config[CONF_USERNAME] in configured_instances(self.hass):
+            _LOGGER.warning("Account in configuration.yaml is already configured")
             return await self._show_form({CONF_USERNAME: "identifier_exists"})
 
         return self.async_create_entry(

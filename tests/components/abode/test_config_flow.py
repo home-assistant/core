@@ -3,10 +3,7 @@ from unittest.mock import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.abode import config_flow
-from homeassistant.components.abode.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import MockConfigEntry
 
 
 async def test_show_form(hass):
@@ -20,16 +17,16 @@ async def test_show_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_duplicate_error(hass):
-    """Test that errors are shown when duplicates are added."""
-    conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
-
-    MockConfigEntry(domain=DOMAIN, data=conf).add_to_hass(hass)
+async def test_one_config_allowed(hass):
+    """Test that only one Abode configuration is allowed."""
     flow = config_flow.AbodeFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_user(user_input=conf)
-    assert result["errors"] == {CONF_USERNAME: "identifier_exists"}
+    with patch.object(hass.config_entries, "async_entries"):
+        result = await flow.async_step_user()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_invalid_credentials(hass):

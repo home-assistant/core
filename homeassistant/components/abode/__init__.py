@@ -26,7 +26,6 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-from .config_flow import configured_instances
 from .const import DOMAIN, ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
@@ -106,7 +105,7 @@ class AbodeSystem:
         self.abode = abodepy.Abode(
             username,
             password,
-            auto_login=False,
+            auto_login=True,
             get_devices=True,
             get_automations=True,
             cache_path=cache,
@@ -136,14 +135,6 @@ class AbodeSystem:
 async def async_setup(hass, config):
     """Set up Abode component."""
     if DOMAIN not in config:
-        return True
-
-    config_user = config[DOMAIN][CONF_USERNAME]
-
-    if config_user in configured_instances(hass):
-        _LOGGER.warning(
-            "Account already exists! Ignoring account settings in configuration.yaml"
-        )
         return True
 
     hass.data[DOMAIN] = {}
@@ -179,9 +170,12 @@ async def async_setup_entry(hass, config_entry):
     exclude = config_entry.data.get(CONF_EXCLUDE)
     lights = config_entry.data.get(CONF_LIGHTS)
 
-    # 'exclude' has to be iterable, can't be of type None
+    # 'exclude' and 'lights' has to be iterable, can't be of type None
     if not exclude:
         exclude = []
+
+    if not lights:
+        lights = []
 
     try:
         cache = hass.config.path(DEFAULT_CACHEDB)
@@ -208,6 +202,23 @@ async def async_setup_entry(hass, config_entry):
     await hass.async_add_executor_job(setup_hass_services, hass)
     await hass.async_add_executor_job(setup_hass_events, hass)
     await hass.async_add_executor_job(setup_abode_events, hass)
+
+    return True
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload a config entry."""
+    hass.services.async_remove(DOMAIN, SERVICE_SETTINGS)
+    hass.services.async_remove(DOMAIN, SERVICE_CAPTURE_IMAGE)
+    hass.services.async_remove(DOMAIN, SERVICE_TRIGGER)
+
+    for platform in ABODE_PLATFORMS:
+        await hass.config_entries.async_forward_entry_unload(config_entry, platform)
+
+    await hass.async_add_executor_job(hass.data[DOMAIN].abode.events.stop)
+    await hass.async_add_executor_job(hass.data[DOMAIN].abode.logout)
+
+    hass.data.pop(DOMAIN)
 
     return True
 
