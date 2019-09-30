@@ -701,11 +701,11 @@ class AlexaSecurityPanelController(AlexaCapibility):
         arm_state = self.entity.state
         if arm_state == STATE_ALARM_ARMED_HOME:
             return "ARMED_STAY"
-        elif arm_state == STATE_ALARM_ARMED_AWAY:
+        if arm_state == STATE_ALARM_ARMED_AWAY:
             return "ARMED_AWAY"
-        elif arm_state == STATE_ALARM_ARMED_NIGHT:
+        if arm_state == STATE_ALARM_ARMED_NIGHT:
             return "ARMED_NIGHT"
-        elif arm_state == STATE_ALARM_ARMED_CUSTOM_BYPASS:
+        if arm_state == STATE_ALARM_ARMED_CUSTOM_BYPASS:
             return "ARMED_STAY"
         return "DISARMED"
 
