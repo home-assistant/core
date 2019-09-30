@@ -7,6 +7,7 @@ from plexauth import PlexAuth
 import requests.exceptions
 import voluptuous as vol
 
+from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant import config_entries
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
@@ -22,6 +23,8 @@ from homeassistant.core import callback
 from homeassistant.util.json import load_json
 
 from .const import (  # pylint: disable=unused-import
+    AUTH_CALLBACK_NAME,
+    AUTH_CALLBACK_PATH,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
     CONF_USE_EPISODE_ART,
@@ -233,6 +236,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_plex_website_auth(self):
         """Begin external auth flow on Plex website."""
+        self.hass.http.register_view(PlexAuthorizationCallbackView)
         payload = {
             "X-Plex-Device-Name": X_PLEX_DEVICE_NAME,
             "X-Plex-Version": X_PLEX_VERSION,
@@ -244,10 +248,11 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(self.hass)
         self.plexauth = PlexAuth(payload, session)
         await self.plexauth.initiate_auth()
-        auth_url = self.plexauth.auth_url()
-        self.hass.helpers.event.async_call_later(
-            DELAY_CONFIGURE, self.hass.config_entries.flow.async_configure(self.flow_id)
+        base_url = self.hass.config.api.base_url.rstrip("/")
+        forward_url = "{}{}?flow_id={}".format(
+            base_url, AUTH_CALLBACK_PATH, self.flow_id
         )
+        auth_url = self.plexauth.auth_url(forward_url)
         return self.async_external_step(step_id="obtain_token", url=auth_url)
 
     async def async_step_obtain_token(self, user_input=None):
@@ -306,4 +311,26 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
                     ): bool,
                 }
             ),
+        )
+
+
+class PlexAuthorizationCallbackView(HomeAssistantView):
+    """Handle callback from external auth."""
+
+    url = AUTH_CALLBACK_PATH
+    name = AUTH_CALLBACK_NAME
+    requires_auth = False
+
+    async def get(self, request):
+        """Receive authorization confirmation."""
+        from aiohttp import web_response
+
+        hass = request.app["hass"]
+        await hass.config_entries.flow.async_configure(
+            flow_id=request.query["flow_id"], user_input=None
+        )
+
+        return web_response.Response(
+            headers={"content-type": "text/html"},
+            text="<script>window.close()</script>Success! This window can be closed",
         )
