@@ -103,6 +103,7 @@ class VActuator(SwitchDevice):
                         self._is_on = False
                     elif sample.value == PERIPHERAL_STATE_ON:
                         self._is_on = True
+                    break
         else:
             _LOGGER.error("Sample unavailable")
             self._available = False

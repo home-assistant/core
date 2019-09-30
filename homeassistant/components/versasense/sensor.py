@@ -87,6 +87,7 @@ class VSensor(Entity):
                 if sample.measurement == self._measurement:
                     self._available = True
                     self._state = sample.value
+                    break
         else:
             _LOGGER.error("Sample unavailable")
             self._available = False
