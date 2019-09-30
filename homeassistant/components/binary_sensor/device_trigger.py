@@ -2,9 +2,11 @@
 import voluptuous as vol
 
 from homeassistant.components.automation import state as state_automation
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation import (
+    POSITIVE_TIME_DELTA_DICT,
+    TRIGGER_BASE_SCHEMA,
+)
 from homeassistant.components.device_automation.const import (
-    CONF_SUPPORTS,
     CONF_TURNED_OFF,
     CONF_TURNED_ON,
 )
@@ -176,7 +178,7 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TURNED_OFF + TURNED_ON),
-        vol.Optional(CONF_FOR): vol.All(cv.time_period, cv.positive_timedelta),
+        vol.Optional(CONF_FOR): POSITIVE_TIME_DELTA_DICT,
     }
 )
 
@@ -244,4 +246,6 @@ async def async_get_triggers(hass, device_id):
 
 async def async_get_trigger_capabilities(hass, trigger):
     """List trigger capabilities."""
-    return {CONF_SUPPORTS: [CONF_FOR]}
+    return {
+        "extra_fields": vol.Schema({vol.Optional(CONF_FOR): POSITIVE_TIME_DELTA_DICT})
+    }

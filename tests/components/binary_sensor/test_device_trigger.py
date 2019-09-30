@@ -84,7 +84,11 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
-    expected_capabilities = {"supports": ["for"]}
+    expected_capabilities = {
+        "extra_fields": [
+            {"name": "for", "optional": True, "type": "positive_time_delta_dict"}
+        ]
+    }
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(

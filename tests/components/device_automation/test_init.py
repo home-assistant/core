@@ -176,7 +176,11 @@ async def test_websocket_get_trigger_capabilities(
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
-    expected_capabilities = {"supports": ["for"]}
+    expected_capabilities = {
+        "extra_fields": [
+            {"name": "for", "optional": True, "type": "positive_time_delta_dict"}
+        ]
+    }
 
     client = await hass_ws_client(hass)
     await client.send_json(

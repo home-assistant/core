@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM, CONF_DOMAIN, CONF_DEVICE_ID
 from homeassistant.components import websocket_api
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.loader import async_get_integration, IntegrationNotFound
 
@@ -41,6 +42,8 @@ TYPES = {
     ),
     "action": ("device_action", "async_get_actions", "async_get_action_capabilities"),
 }
+
+POSITIVE_TIME_DELTA_DICT = vol.All(cv.time_period, cv.positive_timedelta)
 
 
 async def async_setup(hass, config):
@@ -138,6 +141,11 @@ async def _async_get_device_automations(hass, automation_type, device_id):
     return automations
 
 
+def _custom_serializer(schema):
+    if schema == POSITIVE_TIME_DELTA_DICT:
+        return {"type": "positive_time_delta_dict"}
+
+
 async def _async_get_device_automation_capabilities(hass, automation_type, automation):
     """List device automations."""
     try:
@@ -153,7 +161,21 @@ async def _async_get_device_automation_capabilities(hass, automation_type, autom
         # The device automation has no capabilities
         return {}
 
-    return await getattr(platform, function_name)(hass, automation)
+    capabilities = await getattr(platform, function_name)(hass, automation)
+
+    import voluptuous_serialize
+
+    capabilities = capabilities.copy()
+
+    extra_fields = capabilities.get("extra_fields")
+    if extra_fields is None:
+        capabilities["extra_fields"] = []
+    else:
+        capabilities["extra_fields"] = voluptuous_serialize.convert(
+            extra_fields, custom_serializer=_custom_serializer
+        )
+
+    return capabilities
 
 
 @websocket_api.async_response
