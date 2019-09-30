@@ -11,7 +11,9 @@ from homeassistant.const import (
     CONF_HOST,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
+    MASS_KILOGRAMS,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -19,15 +21,23 @@ from homeassistant.core import callback, CALLBACK_TYPE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-INTERVAL = timedelta(seconds=5)
-INTERVAL_BACKOFF_1 = timedelta(minutes=1)
-INTERVAL_BACKOFF_2 = timedelta(minutes=2)
-INTERVAL_BACKOFF_3 = timedelta(minutes=5)
+MIN_INTERVAL = timedelta(seconds=5)
+MAX_INTERVAL = timedelta(minutes=5)
+
+UNIT_OF_MEASUREMENT_HOURS = "h"
+
+SAJ_UNIT_MAPPINGS = {
+    "W": POWER_WATT,
+    "kWh": ENERGY_KILO_WATT_HOUR,
+    "h": UNIT_OF_MEASUREMENT_HOURS,
+    "kg": MASS_KILOGRAMS,
+    "°C": TEMP_CELSIUS,
+    "": None,
+}
 
 PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
@@ -51,8 +61,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     saj = pysaj.SAJ(config[CONF_HOST])
 
     async_add_entities(hass_sensors)
-
-    intervals = (INTERVAL, INTERVAL_BACKOFF_1, INTERVAL_BACKOFF_2, INTERVAL_BACKOFF_3)
 
     async def async_saj(event):
         """Update all the SAJ sensors."""
@@ -81,34 +89,28 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             await asyncio.wait(tasks)
         return values
 
-    async_track_time_interval_backoff(hass, async_saj, intervals)
-
-    return True
+    async_track_time_interval_backoff(hass, async_saj)
 
 
 @callback
-@bind_hass
-def async_track_time_interval_backoff(hass, action, intervals) -> CALLBACK_TYPE:
-    """Add a listener that fires repetitively at every timedelta interval."""
-    if not asyncio.iscoroutinefunction:
-        _LOGGER.error("action needs to be a coroutine and return True/False")
-        return
-
-    if not isinstance(intervals, (list, tuple)):
-        intervals = (intervals,)
+def async_track_time_interval_backoff(hass, action) -> CALLBACK_TYPE:
+    """Add a listener that fires repetitively and increases the interval when failed."""
     remove = None
+    interval = MIN_INTERVAL
     failed = 0
 
     async def interval_listener(now):
-        """Handle elapsed intervals with backoff."""
-        nonlocal failed, remove
+        """Handle elapsed interval with backoff."""
+        nonlocal failed, interval, remove
         try:
             failed += 1
             if await action(now):
                 failed = 0
+                interval = MIN_INTERVAL
+            else:
+                interval = min(interval * 2, MAX_INTERVAL)
         finally:
-            delay = intervals[failed] if failed < len(intervals) else intervals[-1]
-            remove = async_track_point_in_utc_time(hass, interval_listener, now + delay)
+            remove = async_track_point_in_utc_time(hass, interval_listener, now + interval)
 
     async_track_point_in_utc_time(hass, interval_listener, dt_util.utcnow())
 
@@ -141,14 +143,14 @@ class SAJsensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return self._sensor.unit
+        return SAJ_UNIT_MAPPINGS[self._sensor.unit]
 
     @property
     def device_class(self):
         """Return the device class the sensor belongs to."""
-        if self._sensor.unit == POWER_WATT:
+        if self.unit_of_measurement == POWER_WATT:
             return DEVICE_CLASS_POWER
-        if self._sensor.unit == TEMP_CELSIUS or self._sensor.unit == TEMP_FAHRENHEIT:
+        if self.unit_of_measurement == TEMP_CELSIUS or self._sensor.unit == TEMP_FAHRENHEIT:
             return DEVICE_CLASS_TEMPERATURE
 
     @property
