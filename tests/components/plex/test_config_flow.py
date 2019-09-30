@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_URL,
 )
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -238,6 +239,8 @@ async def test_unknown_exception(hass):
 async def test_no_servers_found(hass):
     """Test when no servers are on an account."""
 
+    await async_setup_component(hass, "http", {"http": {}})
+
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": "user"}
     )
@@ -271,6 +274,8 @@ async def test_no_servers_found(hass):
 
 async def test_single_available_server(hass):
     """Test creating an entry with one server available."""
+
+    await async_setup_component(hass, "http", {"http": {}})
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": "user"}
@@ -326,6 +331,8 @@ async def test_single_available_server(hass):
 
 async def test_multiple_servers_with_selection(hass):
     """Test creating an entry with multiple servers available."""
+
+    await async_setup_component(hass, "http", {"http": {}})
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": "user"}
@@ -386,6 +393,8 @@ async def test_multiple_servers_with_selection(hass):
 
 async def test_adding_last_unconfigured_server(hass):
     """Test automatically adding last unconfigured server when multiple servers on account."""
+
+    await async_setup_component(hass, "http", {"http": {}})
 
     MockConfigEntry(
         domain=config_flow.DOMAIN,
@@ -482,6 +491,8 @@ async def test_already_configured(hass):
 
 async def test_all_available_servers_configured(hass):
     """Test when all available servers are already configured."""
+
+    await async_setup_component(hass, "http", {"http": {}})
 
     MockConfigEntry(
         domain=config_flow.DOMAIN,
@@ -612,6 +623,8 @@ async def test_option_flow(hass):
 async def test_external_timed_out(hass):
     """Test when external flow times out."""
 
+    await async_setup_component(hass, "http", {"http": {}})
+
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": "user"}
     )
@@ -635,3 +648,31 @@ async def test_external_timed_out(hass):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] == "abort"
         assert result["reason"] == "token_request_timeout"
+
+
+async def test_callback_view(hass, aiohttp_client):
+    """Test callback view."""
+
+    await async_setup_component(hass, "http", {"http": {}})
+
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": "user"}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    with asynctest.patch("plexauth.PlexAuth.initiate_auth"), asynctest.patch(
+        "plexauth.PlexAuth.token", return_value=MOCK_TOKEN
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"manual_setup": False}
+        )
+        assert result["type"] == "external"
+
+        client = await aiohttp_client(hass.http.app)
+        forward_url = "{}?flow_id={}".format(
+            config_flow.AUTH_CALLBACK_PATH, result["flow_id"]
+        )
+
+        resp = await client.get(forward_url)
+        assert resp.status == 200
