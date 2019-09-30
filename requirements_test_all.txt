@@ -349,6 +349,9 @@ pysmartapp==0.3.2
 # homeassistant.components.smartthings
 pysmartthings==0.6.9
 
+# homeassistant.components.soma
+pysoma==0.0.10
+
 # homeassistant.components.sonos
 pysonos==0.0.23
 

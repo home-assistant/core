@@ -254,6 +254,7 @@ homeassistant/components/smarty/* @z0mbieprocess
 homeassistant/components/smtp/* @fabaff
 homeassistant/components/solaredge_local/* @drobtravels @scheric
 homeassistant/components/solax/* @squishykid
+homeassistant/components/soma/* @ratsept
 homeassistant/components/somfy/* @tetienne
 homeassistant/components/songpal/* @rytilahti
 homeassistant/components/spaceapi/* @fabaff
