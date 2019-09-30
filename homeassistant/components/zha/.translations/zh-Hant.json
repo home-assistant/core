@@ -18,6 +18,10 @@
         "title": "ZHA"
     },
     "device_automation": {
+        "action_type": {
+            "squawk": "\u61c9\u7b54",
+            "warn": "\u8b66\u544a"
+        },
         "trigger_subtype": {
             "both_buttons": "\u5169\u500b\u6309\u9215",
             "button_1": "\u7b2c\u4e00\u500b\u6309\u9215",

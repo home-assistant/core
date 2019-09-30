@@ -16,5 +16,10 @@
             }
         },
         "title": "ZHA"
+    },
+    "device_automation": {
+        "action_type": {
+            "warn": "Aviso"
+        }
     }
 }
