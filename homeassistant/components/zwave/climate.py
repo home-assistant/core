@@ -481,7 +481,6 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             (setpoint_low, setpoint_high) = current_setpoints
             target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
             target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-            print("SETTING: ", target_temp_low, target_temp_high)
             if setpoint_low is not None and target_temp_low is not None:
                 _LOGGER.debug("Set low temperature to %s", target_temp_low)
                 setpoint_low.data = target_temp_low
