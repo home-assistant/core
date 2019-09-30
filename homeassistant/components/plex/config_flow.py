@@ -257,7 +257,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_obtain_token(self, user_input=None):
         """Obtain token after external auth completed."""
-        token = await self.plexauth.token(120)
+        token = await self.plexauth.token(10)
 
         if not token:
             return self.async_external_step_done(next_step_id="timed_out")
