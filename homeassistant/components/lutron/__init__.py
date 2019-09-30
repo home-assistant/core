@@ -80,6 +80,11 @@ def setup(hass, base_config):
                         hass.data[LUTRON_DEVICES]["scene"].append(
                             (area.name, keypad.name, button, led)
                         )
+                # All keypads have LEDs except Pico keypads
+                if not keypad.leds:
+                    hass.data[LUTRON_DEVICES]["scene"].append(
+                        (area.name, keypad.name, button, None)
+                    )
 
                 hass.data[LUTRON_BUTTONS].append(LutronButton(hass, keypad, button))
         if area.occupancy_group is not None:
