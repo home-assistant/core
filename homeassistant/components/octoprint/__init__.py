@@ -73,6 +73,9 @@ SENSOR_TYPES = {
     "Job Percentage": ["job", "progress", None, "completion", "%", "mdi:file-percent"],
     "Time Remaining": ["job", "progress", None, "printTimeLeft", "seconds", "mdi:clock-end"],
     "Time Elapsed": ["job", "progress", None, "printTime", "seconds", "mdi:clock-start"],
+    "Job Filename": ["job", "job", "file", "name", "", "mdi:file-document"],
+    "Job Origin": ["job", "job", "file", "origin", "", "mdi:source-branch"],
+    "Job User": ["job", "job", None, "user", "", "mdi:account"],
 }
 
 SENSOR_SCHEMA = vol.Schema(
@@ -254,7 +257,7 @@ class OctoPrintAPI:
         """Return the value for sensor_type from the provided endpoint."""
         response = self.get(end_point)
         if response is not None:
-            return get_value_from_json(response, sensor_type, group, tool)
+            return get_value_from_json(response, sensor_type, group, secondary_group, tool)
         return response
 
 
@@ -266,9 +269,10 @@ def get_value_from_json(json_dict, sensor_type, group, secondary_group, tool):
     if sensor_type in json_dict[group]:
         if sensor_type == "target" and json_dict[sensor_type] is None:
             return 0
-        if secondary_group is not None:
-            return json_dict[group][secondary_group][sensor_type]
         return json_dict[group][sensor_type]
+
+    if secondary_group is not None and sensor_type in json_dict[group][secondary_group]:
+        return json_dict[group][secondary_group][sensor_type]
 
     if tool is not None:
         if sensor_type in json_dict[group][tool]:

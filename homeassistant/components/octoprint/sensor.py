@@ -101,6 +101,7 @@ class OctoPrintSensor(Entity):
         self._unit_of_measurement = unit
         self.api_endpoint = endpoint
         self.api_group = group
+        self.api_secondary_group = secondary_group
         self.api_tool = tool
         self._icon = icon
         _LOGGER.debug("Created OctoPrint sensor %r", self)
@@ -130,7 +131,7 @@ class OctoPrintSensor(Entity):
         """Update state of sensor."""
         try:
             self._state = self.api.update(
-                self.sensor_type, self.api_endpoint, self.api_group, self.api.secondary_group, self.api_tool
+                self.sensor_type, self.api_endpoint, self.api_group, self.api_secondary_group, self.api_tool
             )
         except requests.exceptions.ConnectionError:
             # Error calling the api, already logged in api.update()
