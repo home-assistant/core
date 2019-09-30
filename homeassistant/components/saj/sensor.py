@@ -110,7 +110,9 @@ def async_track_time_interval_backoff(hass, action) -> CALLBACK_TYPE:
             else:
                 interval = min(interval * 2, MAX_INTERVAL)
         finally:
-            remove = async_track_point_in_utc_time(hass, interval_listener, now + interval)
+            remove = async_track_point_in_utc_time(
+                hass, interval_listener, now + interval
+            )
 
     async_track_point_in_utc_time(hass, interval_listener, dt_util.utcnow())
 
@@ -150,7 +152,10 @@ class SAJsensor(Entity):
         """Return the device class the sensor belongs to."""
         if self.unit_of_measurement == POWER_WATT:
             return DEVICE_CLASS_POWER
-        if self.unit_of_measurement == TEMP_CELSIUS or self._sensor.unit == TEMP_FAHRENHEIT:
+        if (
+            self.unit_of_measurement == TEMP_CELSIUS
+            or self._sensor.unit == TEMP_FAHRENHEIT
+        ):
             return DEVICE_CLASS_TEMPERATURE
 
     @property
