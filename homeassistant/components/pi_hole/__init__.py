@@ -72,16 +72,10 @@ async def async_setup(hass, config):
 
     LOGGER.debug("Setting up %s integration with host %s", DOMAIN, host)
 
-    session = async_get_clientsession(hass, True)
+    session = async_get_clientsession(hass, verify_tls)
     pi_hole = PiHoleData(
         Hole(
-            host,
-            hass.loop,
-            session,
-            location=location,
-            tls=use_tls,
-            verify_tls=verify_tls,
-            api_token=api_key,
+            host, hass.loop, session, location=location, tls=use_tls, api_token=api_key
         ),
         name,
     )
