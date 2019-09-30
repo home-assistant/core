@@ -10,9 +10,20 @@
         "error": {
             "faulty_credentials": "Autorizzazione non riuscita",
             "no_servers": "Nessun server collegato all'account",
+            "no_token": "Fornire un token o selezionare la configurazione manuale",
             "not_found": "Server Plex non trovato"
         },
         "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Host",
+                    "port": "Porta",
+                    "ssl": "Usa SSL",
+                    "token": "Token (se richiesto)",
+                    "verify_ssl": "Verificare il certificato SSL"
+                },
+                "title": "Server Plex"
+            },
             "select_server": {
                 "data": {
                     "server": "Server"
@@ -22,6 +33,7 @@
             },
             "user": {
                 "data": {
+                    "manual_setup": "Configurazione manuale",
                     "token": "Token Plex"
                 },
                 "description": "Immettere un token Plex per la configurazione automatica.",
@@ -29,5 +41,16 @@
             }
         },
         "title": "Plex"
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "show_all_controls": "Mostra tutti i controlli",
+                    "use_episode_art": "Usa la grafica dell'episodio"
+                },
+                "description": "Opzioni per i lettori multimediali Plex"
+            }
+        }
     }
 }

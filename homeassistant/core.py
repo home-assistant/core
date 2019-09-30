@@ -28,6 +28,7 @@ from typing import (
     Set,
     TYPE_CHECKING,
     Awaitable,
+    Mapping,
 )
 
 from async_timeout import timeout
@@ -144,8 +145,8 @@ def async_loop_exception_handler(_: Any, context: Dict) -> None:
     if exception:
         kwargs["exc_info"] = (type(exception), exception, exception.__traceback__)
 
-    _LOGGER.error(  # type: ignore
-        "Error doing job: %s", context["message"], **kwargs
+    _LOGGER.error(
+        "Error doing job: %s", context["message"], **kwargs  # type: ignore
     )
 
 
@@ -704,7 +705,7 @@ class State:
         self,
         entity_id: str,
         state: str,
-        attributes: Optional[Dict] = None,
+        attributes: Optional[Mapping] = None,
         last_changed: Optional[datetime.datetime] = None,
         last_updated: Optional[datetime.datetime] = None,
         context: Optional[Context] = None,

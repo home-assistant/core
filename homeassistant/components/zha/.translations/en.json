@@ -18,6 +18,10 @@
         "title": "ZHA"
     },
     "device_automation": {
+        "action_type": {
+            "squawk": "Squawk",
+            "warn": "Warn"
+        },
         "trigger_subtype": {
             "both_buttons": "Both buttons",
             "button_1": "First button",

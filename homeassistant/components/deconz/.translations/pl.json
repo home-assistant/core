@@ -44,18 +44,18 @@
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "Oba przyciski",
-            "button_1": "Pierwszy przycisk",
-            "button_2": "Drugi przycisk",
-            "button_3": "Trzeci przycisk",
-            "button_4": "Czwarty przycisk",
-            "close": "Zamknij",
+            "button_1": "pierwszy przycisk",
+            "button_2": "drugi przycisk",
+            "button_3": "trzeci przycisk",
+            "button_4": "czwarty przycisk",
+            "close": "Zamkni\u0119cie",
             "dim_down": "Przyciemnienie",
             "dim_up": "Przyciemnienie",
-            "left": "Lewo",
-            "open": "Otw\u00f3rz",
-            "right": "Prawo",
-            "turn_off": "Wy\u0142\u0105cz",
-            "turn_on": "W\u0142\u0105cz"
+            "left": "w lewo",
+            "open": "Otwarcie",
+            "right": "w prawo",
+            "turn_off": "Wy\u0142\u0105czenie",
+            "turn_on": "W\u0142\u0105czenie"
         },
         "trigger_type": {
             "remote_button_double_press": "Przycisk \"{subtype}\" podw\u00f3jnie naci\u015bni\u0119ty",
@@ -67,7 +67,7 @@
             "remote_button_short_press": "Przycisk \"{subtype}\" naci\u015bni\u0119ty",
             "remote_button_short_release": "Przycisk \"{subtype}\" zwolniony",
             "remote_button_triple_press": "Przycisk \"{subtype}\" trzykrotnie naci\u015bni\u0119ty",
-            "remote_gyro_activated": "Urz\u0105dzenie potrz\u0105\u015bni\u0119te"
+            "remote_gyro_activated": "Potrz\u0105\u015bni\u0119cie urz\u0105dzeniem"
         }
     },
     "options": {
