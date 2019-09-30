@@ -629,10 +629,9 @@ async def do_download_upgrade(hass, call):
                 [
                     "pip",
                     "download",
-                    "ais-dom==" + dom_app_newest_version,
+                    "ais-dom-beta==" + dom_app_newest_version,
                     "-d",
                     update_dir,
-                    "--pre",
                 ]
             )
         else:
@@ -690,11 +689,10 @@ async def do_install_upgrade(hass, call):
                 [
                     "pip",
                     "install",
-                    "ais-dom==" + dom_app_newest_version,
+                    "ais-dom-beta==" + dom_app_newest_version,
                     "--find-links",
                     update_dir,
                     "-U",
-                    "--pre",
                 ]
             )
         else:
