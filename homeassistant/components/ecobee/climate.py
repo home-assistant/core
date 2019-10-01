@@ -689,6 +689,8 @@ class Thermostat(ClimateDevice):
     def turn_on(self):
         """Set the thermostat to the last active HVAC mode."""
         _LOGGER.debug(
-            f"Turning on ecobee thermostat {self.name} in {self._last_active_hvac_mode} mode"
+            "Turning on ecobee thermostat %s in %s mode",
+            self.name,
+            self._last_active_hvac_mode,
         )
         self.set_hvac_mode(self._last_active_hvac_mode)
