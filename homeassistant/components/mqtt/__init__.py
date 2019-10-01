@@ -39,7 +39,7 @@ from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceDataType
 from homeassistant.loader import bind_hass
-from homeassistant.util.async_ import run_callback_threadsafe, run_coroutine_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception
 
 # Loading the config flow file will register the flow
@@ -463,7 +463,7 @@ def subscribe(
     encoding: str = "utf-8",
 ) -> Callable[[], None]:
     """Subscribe to an MQTT topic."""
-    async_remove = run_coroutine_threadsafe(
+    async_remove = asyncio.run_coroutine_threadsafe(
         async_subscribe(hass, topic, msg_callback, qos, encoding), hass.loop
     ).result()
 

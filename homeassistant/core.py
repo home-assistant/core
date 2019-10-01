@@ -64,11 +64,7 @@ from homeassistant.exceptions import (
     Unauthorized,
     ServiceNotFound,
 )
-from homeassistant.util.async_ import (
-    run_coroutine_threadsafe,
-    run_callback_threadsafe,
-    fire_coroutine_threadsafe,
-)
+from homeassistant.util.async_ import run_callback_threadsafe, fire_coroutine_threadsafe
 from homeassistant import util
 import homeassistant.util.dt as dt_util
 from homeassistant.util import location, slugify
@@ -375,7 +371,9 @@ class HomeAssistant:
 
     def block_till_done(self) -> None:
         """Block till all pending work is done."""
-        run_coroutine_threadsafe(self.async_block_till_done(), self.loop).result()
+        asyncio.run_coroutine_threadsafe(
+            self.async_block_till_done(), self.loop
+        ).result()
 
     async def async_block_till_done(self) -> None:
         """Block till all pending work is done."""
@@ -1168,7 +1166,7 @@ class ServiceRegistry:
         Because the service is sent as an event you are not allowed to use
         the keys ATTR_DOMAIN and ATTR_SERVICE in your service_data.
         """
-        return run_coroutine_threadsafe(  # type: ignore
+        return asyncio.run_coroutine_threadsafe(
             self.async_call(domain, service, service_data, blocking, context),
             self._hass.loop,
         ).result()

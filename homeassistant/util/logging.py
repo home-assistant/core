@@ -8,8 +8,6 @@ import threading
 import traceback
 from typing import Any, Callable, Coroutine, Optional
 
-from .async_ import run_coroutine_threadsafe
-
 
 class HideSensitiveDataFilter(logging.Filter):
     """Filter API password calls."""
@@ -83,7 +81,9 @@ class AsyncHandler:
     def _process(self) -> None:
         """Process log in a thread."""
         while True:
-            record = run_coroutine_threadsafe(self._queue.get(), self.loop).result()
+            record = asyncio.run_coroutine_threadsafe(
+                self._queue.get(), self.loop
+            ).result()
 
             if record is None:
                 self.handler.close()
