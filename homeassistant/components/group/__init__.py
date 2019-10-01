@@ -34,7 +34,6 @@ from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.util.async_ import run_coroutine_threadsafe
 
 
 # mypy: allow-untyped-calls, allow-untyped-defs
@@ -430,7 +429,7 @@ class Group(Entity):
         mode=None,
     ):
         """Initialize a group."""
-        return run_coroutine_threadsafe(
+        return asyncio.run_coroutine_threadsafe(
             Group.async_create_group(
                 hass,
                 name,
@@ -546,7 +545,7 @@ class Group(Entity):
 
     def update_tracked_entity_ids(self, entity_ids):
         """Update the member entity IDs."""
-        run_coroutine_threadsafe(
+        asyncio.run_coroutine_threadsafe(
             self.async_update_tracked_entity_ids(entity_ids), self.hass.loop
         ).result()
 
