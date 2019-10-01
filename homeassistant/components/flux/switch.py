@@ -56,6 +56,11 @@ CONF_STOP_CT = "stop_colortemp"
 CONF_BRIGHTNESS = "brightness"
 CONF_DISABLE_BRIGHTNESS_ADJUST = "disable_brightness_adjust"
 CONF_INTERVAL = "interval"
+CONF_INITIAL_STATE = "initial_state"
+
+INITIAL_STATE_ON = "state_on"
+INITIAL_STATE_OFF = "state_off"
+INITIAL_STATE_LAST = "state_last"
 
 MODE_XY = "xy"
 MODE_MIRED = "mired"
@@ -87,6 +92,9 @@ PLATFORM_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_INTERVAL, default=30): cv.positive_int,
         vol.Optional(ATTR_TRANSITION, default=30): VALID_TRANSITION,
+        vol.Optional(CONF_INITIAL_STATE, default=INITIAL_STATE_LAST): vol.In(
+            [INITIAL_STATE_ON, INITIAL_STATE_OFF, INITIAL_STATE_LAST]
+        ),
     }
 )
 
@@ -146,6 +154,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     mode = config.get(CONF_MODE)
     interval = config.get(CONF_INTERVAL)
     transition = config.get(ATTR_TRANSITION)
+    initial_state = config.get(CONF_INITIAL_STATE)
     flux = FluxSwitch(
         name,
         hass,
@@ -160,6 +169,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         mode,
         interval,
         transition,
+        initial_state,
     )
     async_add_entities([flux])
 
@@ -189,6 +199,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
         mode,
         interval,
         transition,
+        initial_state,
     ):
         """Initialize the Flux switch."""
         self._name = name
@@ -204,6 +215,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
         self._mode = mode
         self._interval = interval
         self._transition = transition
+        self._initial_state = initial_state
         self.unsub_tracker = None
 
     @property
@@ -223,8 +235,11 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
         if self.unsub_tracker is not None:
             return
 
-        state = await self.async_get_last_state()
-        if state and state.state == STATE_ON:
+        if self._initial_state == INITIAL_STATE_LAST:
+            last_state = await self.async_get_last_state()
+            if last_state and last_state.state == STATE_ON:
+                await self.async_turn_on()
+        elif self._initial_state == INITIAL_STATE_ON:
             await self.async_turn_on()
 
     async def async_turn_on(self, **kwargs):
