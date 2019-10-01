@@ -37,6 +37,14 @@ DOMAIN = "geniushub"
 
 # temperature is repeated here, as it gives access to high-precision temps
 GH_ZONE_ATTRS = ["mode", "temperature", "type", "occupied", "override"]
+GH_DEVICE_ATTRS = [
+    "luminance",
+    "measuredTemperature",
+    "occupancyTrigger",
+    "setback",
+    "setTemperature",
+    "wakeupInterval",
+]  # there are multiple devices per Climate entity
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -134,7 +142,7 @@ class GeniusEntity(Entity):
     """Base for all Genius Hub entities."""
 
     def __init__(self):
-        """Initialize the device."""
+        """Initialize the entity."""
         self._name = None
 
     async def async_added_to_hass(self) -> None:
@@ -160,7 +168,7 @@ class GeniusDevice(GeniusEntity):
     """Base for all Genius Hub devices."""
 
     def __init__(self):
-        """Initialize the device."""
+        """Initialize the Device."""
         super().__init__()
 
         self._device = None
@@ -173,13 +181,13 @@ class GeniusDevice(GeniusEntity):
         attrs = {}
         attrs["assigned_zone"] = self._device.data["assignedZones"][0]["name"]
         if self._last_comms:
-            attrs["last_comms"] = dt_util.as_local(self._last_comms).isoformat()
+            attrs["last_comms"] = self._last_comms.isoformat()
 
-        attrs["state"] = dict(self._device.data["state"])
-        attrs["state"].pop(self._state_attr)
+        state = dict(self._device.data["state"])
         if "_state" in self._device.data:  # only for v3 API
-            attrs["state"].update(self._device.data["_state"])
-            attrs["state"].pop("lastComms")
+            state.update(self._device.data["_state"])
+
+        attrs["state"] = {k: v for k, v in state.items() if k in GH_DEVICE_ATTRS}
 
         return convert_dict(attrs)
 
@@ -195,7 +203,7 @@ class GeniusZone(GeniusEntity):
     """Base for all Genius Hub zones."""
 
     def __init__(self):
-        """Initialize the device."""
+        """Initialize the Zone."""
         super().__init__()
 
         self._zone = None
