@@ -264,6 +264,12 @@ class Thermostat(ClimateDevice):
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
         self._name = self.thermostat["name"]
         self.vacation = None
+        self._last_hvac_mode = (
+            ECOBEE_HVAC_TO_HASS[self.thermostat["settings"]["hvacMode"]]
+            if ECOBEE_HVAC_TO_HASS[self.thermostat["settings"]["hvacMode"]]
+            is not HVAC_MODE_OFF
+            else HVAC_MODE_AUTO
+        )
 
         self._operation_list = []
         if self.thermostat["settings"]["heatStages"]:
@@ -597,6 +603,8 @@ class Thermostat(ClimateDevice):
             _LOGGER.error("Invalid mode for set_hvac_mode: %s", hvac_mode)
             return
         self.data.ecobee.set_hvac_mode(self.thermostat_index, ecobee_value)
+        if ecobee_value is not HVAC_MODE_OFF:
+            self._last_hvac_mode = ecobee_value
         self.update_without_throttle = True
 
     def set_fan_min_on_time(self, fan_min_on_time):
@@ -677,3 +685,10 @@ class Thermostat(ClimateDevice):
             vacation_name,
         )
         self.data.ecobee.delete_vacation(self.thermostat_index, vacation_name)
+
+    def turn_on(self):
+        """Set the thermostat to the last active HVAC mode."""
+        _LOGGER.debug(
+            f"Turning on ecobee thermostat {self.name} in {self._last_hvac_mode} mode"
+        )
+        self.set_hvac_mode(self._last_hvac_mode)
