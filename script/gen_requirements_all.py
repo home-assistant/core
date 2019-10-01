@@ -113,6 +113,7 @@ TEST_REQUIREMENTS = (
     "pilight",
     "pillow",
     "plexapi",
+    "plexauth",
     "pmsensor",
     "prometheus_client",
     "ptvsd",
