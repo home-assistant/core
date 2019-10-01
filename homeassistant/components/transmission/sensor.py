@@ -6,7 +6,17 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
+<<<<<<< HEAD
 from .const import DOMAIN, SENSOR_TYPES
+=======
+from .const import (
+    DATA_TRANSMISSION,
+    DATA_UPDATED,
+    DOMAIN,
+    SENSOR_TYPES,
+    STATE_ATTR_TORRENT_INFO,
+)
+>>>>>>> Add information about current downloads.
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +41,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 name,
                 SENSOR_TYPES[sensor_type][0],
                 SENSOR_TYPES[sensor_type][1],
+                SENSOR_TYPES[sensor_type][2],
             )
         )
 
@@ -41,7 +52,17 @@ class TransmissionSensor(Entity):
     """Representation of a Transmission sensor."""
 
     def __init__(
+<<<<<<< HEAD
         self, sensor_type, tm_client, client_name, sensor_name, unit_of_measurement
+=======
+        self,
+        sensor_type,
+        transmission_api,
+        client_name,
+        sensor_name,
+        unit_of_measurement,
+        torrent_info,
+>>>>>>> Add information about current downloads.
     ):
         """Initialize the sensor."""
         self._name = sensor_name
@@ -51,6 +72,7 @@ class TransmissionSensor(Entity):
         self._data = None
         self.client_name = client_name
         self.type = sensor_type
+        self._torrent_info = torrent_info
 
     @property
     def name(self):
@@ -81,6 +103,11 @@ class TransmissionSensor(Entity):
     def available(self):
         """Could the device be accessed during the last update call."""
         return self._tm_client.api.available
+
+    @property
+    def state_attributes(self):
+        """Return the state attributes, if any."""
+        return {STATE_ATTR_TORRENT_INFO: self._torrent_info}
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -133,3 +160,9 @@ class TransmissionSensor(Entity):
                 self._state = self._data.pausedTorrentCount
             elif self.type == "total_torrents":
                 self._state = self._data.torrentCount
+
+        if self.type == "torrent_down_list":
+            self._state = self._transmission_api.get_started_torrent_list()
+            self._torrent_info = self._transmission_api.get_started_torrent_dict()
+        if self.type == "started_torrent_dict":
+            self._state = self._transmission_api.get_started_torrent_dict()

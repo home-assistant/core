@@ -28,6 +28,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     SERVICE_ADD_TORRENT,
+    _TRPC,
 )
 from .errors import AuthenticationError, CannotConnect, UnknownError
 
@@ -232,6 +233,9 @@ class TransmissionData:
         self._api = api
         self.completed_torrents = []
         self.started_torrents = []
+        self.started_torrents_objects = []
+        self.torrent_down_list = []
+        self.started_torrent_dict = {}
 
     @property
     def host(self):
@@ -250,6 +254,7 @@ class TransmissionData:
             self.torrents = self._api.get_torrents()
             self.session = self._api.get_session()
 
+            self.check_started_torrent_info()
             self.check_completed_torrent()
             self.check_started_torrent()
             _LOGGER.debug("Torrent Data for %s Updated", self.host)
@@ -301,6 +306,31 @@ class TransmissionData:
             self.hass.bus.fire("transmission_started_torrent", {"name": var})
         self.started_torrents = actual_started_torrents
 
+    def check_started_torrent_info(self):
+        """Get started torrent info functionality."""
+        all_torrents = self._api.get_torrents()
+        current_down = {}
+
+        for x in all_torrents:
+            if (
+                x.status == _TRPC["downloading"]
+                or x.status == _TRPC["download pending"]
+            ):
+
+                self.started_torrent_dict[x.name] = {
+                    "addedDate": x.addedDate,
+                    "percentDone": "%.2f" % (x.percentDone * 100),
+                    "eta": str(x.eta),
+                }
+                current_down[x.name] = True
+            else:
+                self.started_torrent_dict.pop(x.name)
+
+        # remove torrents that have completed or otherwise been removed
+        for x in self.started_torrent_dict:
+            if x.name not in current_down:
+                self.started_torrent_dict.pop(x.name)
+
     def get_started_torrent_count(self):
         """Get the number of started torrents."""
         return len(self.started_torrents)
@@ -308,6 +338,17 @@ class TransmissionData:
     def get_completed_torrent_count(self):
         """Get the number of completed torrents."""
         return len(self.completed_torrents)
+
+    def get_started_torrent_list(self):
+        """Get the list of started torrents."""
+        if self.started_torrent_dict:
+            return True
+        else:
+            return False
+
+    def get_started_torrent_dict(self):
+        """Get the dict of started torrents."""
+        return self.started_torrent_dict
 
     def start_torrents(self):
         """Start all torrents."""
