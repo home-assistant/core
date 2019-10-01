@@ -805,7 +805,7 @@ mbddns==0.1.2
 messagebird==1.2.0
 
 # homeassistant.components.meteoalarm
-meteoalertapi==0.1.5
+meteoalertapi==0.1.6
 
 # homeassistant.components.meteo_france
 meteofrance==0.3.7
