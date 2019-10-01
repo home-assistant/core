@@ -43,7 +43,7 @@ YesssSMS==0.4.1
 adguardhome==0.2.1
 
 # homeassistant.components.geonetnz_quakes
-aio_geojson_geonetnz_quakes==0.9
+aio_geojson_geonetnz_quakes==0.10
 
 # homeassistant.components.ambient_station
 aioambient==0.3.2
