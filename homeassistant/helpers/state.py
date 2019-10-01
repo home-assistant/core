@@ -121,7 +121,7 @@ def reproduce_state(
     blocking: bool = False,
 ) -> None:
     """Reproduce given state."""
-    return asyncio.run_coroutine_threadsafe(  # type: ignore
+    return asyncio.run_coroutine_threadsafe(
         async_reproduce_state(hass, states, blocking), hass.loop
     ).result()
 

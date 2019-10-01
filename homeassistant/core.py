@@ -1166,7 +1166,7 @@ class ServiceRegistry:
         Because the service is sent as an event you are not allowed to use
         the keys ATTR_DOMAIN and ATTR_SERVICE in your service_data.
         """
-        return asyncio.run_coroutine_threadsafe(  # type: ignore
+        return asyncio.run_coroutine_threadsafe(
             self.async_call(domain, service, service_data, blocking, context),
             self._hass.loop,
         ).result()
