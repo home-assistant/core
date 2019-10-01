@@ -150,49 +150,6 @@ class RunThreadsafeTests(TestCase):
         finally:
             future.done() or future.cancel()
 
-    def test_run_coroutine_threadsafe(self):
-        """Test coroutine submission from a thread to an event loop."""
-        future = self.loop.run_in_executor(None, self.target_coroutine)
-        result = self.loop.run_until_complete(future)
-        self.assertEqual(result, 3)
-
-    def test_run_coroutine_threadsafe_with_exception(self):
-        """Test coroutine submission from thread to event loop on exception."""
-        future = self.loop.run_in_executor(None, self.target_coroutine, True)
-        with self.assertRaises(RuntimeError) as exc_context:
-            self.loop.run_until_complete(future)
-        self.assertIn("Fail!", exc_context.exception.args)
-
-    def test_run_coroutine_threadsafe_with_invalid(self):
-        """Test coroutine submission from thread to event loop on invalid."""
-        callback = lambda: self.target_coroutine(invalid=True)  # noqa
-        future = self.loop.run_in_executor(None, callback)
-        with self.assertRaises(ValueError) as exc_context:
-            self.loop.run_until_complete(future)
-        self.assertIn("Invalid!", exc_context.exception.args)
-
-    def test_run_coroutine_threadsafe_with_timeout(self):
-        """Test coroutine submission from thread to event loop on timeout."""
-        callback = lambda: self.target_coroutine(timeout=0)  # noqa
-        future = self.loop.run_in_executor(None, callback)
-        with self.assertRaises(asyncio.TimeoutError):
-            self.loop.run_until_complete(future)
-        self.run_briefly(self.loop)
-        # Check that there's no pending task (add has been cancelled)
-        if sys.version_info[:2] >= (3, 7):
-            all_tasks = asyncio.all_tasks
-        else:
-            all_tasks = asyncio.Task.all_tasks
-        for task in all_tasks(self.loop):
-            self.assertTrue(task.done())
-
-    def test_run_coroutine_threadsafe_task_cancelled(self):
-        """Test coroutine submission from tread to event loop on cancel."""
-        callback = lambda: self.target_coroutine(cancel=True)  # noqa
-        future = self.loop.run_in_executor(None, callback)
-        with self.assertRaises(asyncio.CancelledError):
-            self.loop.run_until_complete(future)
-
     def test_run_callback_threadsafe(self):
         """Test callback submission from a thread to an event loop."""
         future = self.loop.run_in_executor(None, self.target_callback)
