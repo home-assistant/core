@@ -1,5 +1,6 @@
 """Helpers for device automations."""
 import asyncio
+from datetime import timedelta
 import logging
 from typing import Any, List, MutableMapping
 
@@ -43,7 +44,9 @@ TYPES = {
     "action": ("device_action", "async_get_actions", "async_get_action_capabilities"),
 }
 
-POSITIVE_TIME_DELTA_DICT = vol.All(cv.time_period, cv.positive_timedelta)
+POSITIVE_TIME_DELTA_DICT = vol.All(
+    vol.Any(timedelta, cv.time_period_dict), cv.positive_timedelta
+)
 
 
 async def async_setup(hass, config):
