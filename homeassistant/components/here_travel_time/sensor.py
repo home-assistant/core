@@ -93,13 +93,6 @@ TRACKABLE_DOMAINS = ["device_tracker", "sensor", "zone", "person"]
 
 NO_ROUTE_ERROR_MESSAGE = "HERE could not find a route based on the input"
 
-COORDINATE_SCHEMA = vol.Schema(
-    {
-        vol.Inclusive(CONF_DESTINATION_LATITUDE, "coordinates"): cv.latitude,
-        vol.Inclusive(CONF_DESTINATION_LONGITUDE, "coordinates"): cv.longitude,
-    }
-)
-
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_DESTINATION_LATITUDE, CONF_DESTINATION_ENTITY_ID),
     cv.has_at_least_one_key(CONF_ORIGIN_LATITUDE, CONF_ORIGIN_ENTITY_ID),
