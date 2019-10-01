@@ -78,8 +78,15 @@ class StarlineSensor(BinarySensorDevice):
         """Return the device info."""
         return self._device.device_info
 
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the sensor."""
+        if self._key in ["arm", "alarm"]:
+            return self._device.alarm_state
+        return None
+
     def update(self):
-        """Read new state data from the library."""
+        """Read new state data."""
         self.async_write_ha_state()
 
     async def async_added_to_hass(self):

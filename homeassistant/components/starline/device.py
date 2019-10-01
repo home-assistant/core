@@ -1,5 +1,6 @@
 from datetime import datetime
-from .const import DOMAIN
+from .const import (DOMAIN, BATTERY_LEVEL_MIN, BATTERY_LEVEL_MAX,
+                    GSM_LEVEL_MIN, GSM_LEVEL_MAX)
 
 
 class StarlineDevice():
@@ -64,8 +65,44 @@ class StarlineDevice():
         return self._battery
 
     @property
+    def battery_level_percent(self):
+        return round((self._battery - BATTERY_LEVEL_MIN) / (BATTERY_LEVEL_MAX - BATTERY_LEVEL_MIN) * 100)
+
+    @property
+    def balance(self):
+        return self._balance["active"]
+
+    @property
     def car_state(self):
         return self._car_state
+
+    @property
+    def alarm_state(self):
+        return self._car_alr_state
+
+    @property
+    def temp_inner(self):
+        return self._ctemp
+
+    @property
+    def temp_engine(self):
+        return self._etemp
+
+    @property
+    def gsm_level(self):
+        return self._gsm_lvl
+
+    @property
+    def imei(self):
+        return self._imei
+
+    @property
+    def phone(self):
+        return self._phone
+
+    @property
+    def gsm_level_percent(self):
+        return round((self._gsm_lvl - GSM_LEVEL_MIN) / (GSM_LEVEL_MAX - GSM_LEVEL_MIN) * 100)
 
     @property
     def device_info(self):
