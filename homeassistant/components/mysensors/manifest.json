@@ -9,5 +9,7 @@
   "after_dependencies": [
     "mqtt"
   ],
-  "codeowners": []
+  "codeowners": [
+    "@MartinHjelmare"
+  ]
 }

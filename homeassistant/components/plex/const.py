@@ -7,6 +7,7 @@ DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
 PLATFORMS = ["media_player", "sensor"]
+REFRESH_LISTENERS = "refresh_listeners"
 SERVERS = "servers"
 
 PLEX_CONFIG_FILE = "plex.conf"

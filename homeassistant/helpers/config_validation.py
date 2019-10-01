@@ -90,7 +90,7 @@ def has_at_least_one_key(*keys: str) -> Callable:
         for k in obj.keys():
             if k in keys:
                 return obj
-        raise vol.Invalid("must contain one of {}.".format(", ".join(keys)))
+        raise vol.Invalid("must contain at least one of {}.".format(", ".join(keys)))
 
     return validate
 
@@ -598,8 +598,7 @@ def deprecated(
     else:
         # Unclear when it is None, but it happens, so let's guard.
         # https://github.com/home-assistant/home-assistant/issues/24982
-        # type ignore/unreachable: https://github.com/python/typeshed/pull/3137
-        module_name = __name__  # type: ignore
+        module_name = __name__
 
     if replacement_key and invalidation_version:
         warning = (
@@ -827,10 +826,15 @@ OR_CONDITION_SCHEMA = vol.Schema(
     }
 )
 
-DEVICE_CONDITION_SCHEMA = vol.Schema(
-    {vol.Required(CONF_CONDITION): "device", vol.Required(CONF_DOMAIN): str},
-    extra=vol.ALLOW_EXTRA,
+DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_CONDITION): "device",
+        vol.Required(CONF_DEVICE_ID): str,
+        vol.Required(CONF_DOMAIN): str,
+    }
 )
+
+DEVICE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
 CONDITION_SCHEMA: vol.Schema = vol.Any(
     NUMERIC_STATE_CONDITION_SCHEMA,
@@ -862,10 +866,11 @@ _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema(
     }
 )
 
-DEVICE_ACTION_SCHEMA = vol.Schema(
-    {vol.Required(CONF_DEVICE_ID): string, vol.Required(CONF_DOMAIN): str},
-    extra=vol.ALLOW_EXTRA,
+DEVICE_ACTION_BASE_SCHEMA = vol.Schema(
+    {vol.Required(CONF_DEVICE_ID): string, vol.Required(CONF_DOMAIN): str}
 )
+
+DEVICE_ACTION_SCHEMA = DEVICE_ACTION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
 SCRIPT_SCHEMA = vol.All(
     ensure_list,

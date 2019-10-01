@@ -163,12 +163,12 @@ async def setup_controller(hass, mock_controller, options={}):
 
 
 async def test_platform_manually_configured(hass):
-    """Test that we do not discover anything or try to set up a bridge."""
+    """Test that nothing happens when configuring unifi through device tracker platform."""
     assert (
         await async_setup_component(
             hass, device_tracker.DOMAIN, {device_tracker.DOMAIN: {"platform": "unifi"}}
         )
-        is True
+        is False
     )
     assert unifi.DOMAIN not in hass.data
 

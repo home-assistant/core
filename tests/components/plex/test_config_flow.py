@@ -4,7 +4,14 @@ import plexapi.exceptions
 import requests.exceptions
 
 from homeassistant.components.plex import config_flow
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, CONF_URL
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+    CONF_TOKEN,
+    CONF_URL,
+)
 
 from tests.common import MockConfigEntry
 
@@ -20,6 +27,13 @@ MOCK_FILE_CONTENTS = {
 }
 MOCK_SERVER_1 = MockAvailableServer(MOCK_NAME_1, MOCK_ID_1)
 MOCK_SERVER_2 = MockAvailableServer(MOCK_NAME_2, MOCK_ID_2)
+
+DEFAULT_OPTIONS = {
+    config_flow.MP_DOMAIN: {
+        config_flow.CONF_USE_EPISODE_ART: False,
+        config_flow.CONF_SHOW_ALL_CONTROLS: False,
+    }
+}
 
 
 def init_config_flow(hass):
@@ -44,7 +58,8 @@ async def test_bad_credentials(hass):
     ):
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_TOKEN: MOCK_TOKEN}
+            result["flow_id"],
+            user_input={CONF_TOKEN: MOCK_TOKEN, "manual_setup": False},
         )
 
         assert result["type"] == "form"
@@ -196,7 +211,7 @@ async def test_unknown_exception(hass):
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
             context={"source": "user"},
-            data={CONF_TOKEN: MOCK_TOKEN},
+            data={CONF_TOKEN: MOCK_TOKEN, "manual_setup": False},
         )
 
         assert result["type"] == "abort"
@@ -219,7 +234,8 @@ async def test_no_servers_found(hass):
     with patch("plexapi.myplex.MyPlexAccount", return_value=mm_plex_account):
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_TOKEN: MOCK_TOKEN}
+            result["flow_id"],
+            user_input={CONF_TOKEN: MOCK_TOKEN, "manual_setup": False},
         )
 
         assert result["type"] == "form"
@@ -257,7 +273,8 @@ async def test_single_available_server(hass):
         )._baseurl = PropertyMock(return_value=mock_connections.connections[0].httpuri)
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_TOKEN: MOCK_TOKEN}
+            result["flow_id"],
+            user_input={CONF_TOKEN: MOCK_TOKEN, "manual_setup": False},
         )
 
         assert result["type"] == "create_entry"
@@ -303,7 +320,8 @@ async def test_multiple_servers_with_selection(hass):
         )._baseurl = PropertyMock(return_value=mock_connections.connections[0].httpuri)
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_TOKEN: MOCK_TOKEN}
+            result["flow_id"],
+            user_input={CONF_TOKEN: MOCK_TOKEN, "manual_setup": False},
         )
 
         assert result["type"] == "form"
@@ -364,7 +382,8 @@ async def test_adding_last_unconfigured_server(hass):
         )._baseurl = PropertyMock(return_value=mock_connections.connections[0].httpuri)
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_TOKEN: MOCK_TOKEN}
+            result["flow_id"],
+            user_input={CONF_TOKEN: MOCK_TOKEN, "manual_setup": False},
         )
 
         assert result["type"] == "create_entry"
@@ -447,8 +466,112 @@ async def test_all_available_servers_configured(hass):
     with patch("plexapi.myplex.MyPlexAccount", return_value=mm_plex_account):
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_TOKEN: MOCK_TOKEN}
+            result["flow_id"],
+            user_input={CONF_TOKEN: MOCK_TOKEN, "manual_setup": False},
         )
 
         assert result["type"] == "abort"
         assert result["reason"] == "all_configured"
+
+
+async def test_manual_config(hass):
+    """Test creating via manual configuration."""
+
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": "user"}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_TOKEN: "", "manual_setup": True}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "manual_setup"
+
+    mock_connections = MockConnections(ssl=True)
+
+    with patch("plexapi.server.PlexServer") as mock_plex_server:
+        type(mock_plex_server.return_value).machineIdentifier = PropertyMock(
+            return_value=MOCK_SERVER_1.clientIdentifier
+        )
+        type(mock_plex_server.return_value).friendlyName = PropertyMock(
+            return_value=MOCK_SERVER_1.name
+        )
+        type(  # pylint: disable=protected-access
+            mock_plex_server.return_value
+        )._baseurl = PropertyMock(return_value=mock_connections.connections[0].httpuri)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: MOCK_HOST_1,
+                CONF_PORT: int(MOCK_PORT_1),
+                CONF_SSL: True,
+                CONF_VERIFY_SSL: True,
+                CONF_TOKEN: MOCK_TOKEN,
+            },
+        )
+
+        assert result["type"] == "create_entry"
+        assert result["title"] == MOCK_SERVER_1.name
+        assert result["data"][config_flow.CONF_SERVER] == MOCK_SERVER_1.name
+        assert (
+            result["data"][config_flow.CONF_SERVER_IDENTIFIER]
+            == MOCK_SERVER_1.clientIdentifier
+        )
+        assert (
+            result["data"][config_flow.PLEX_SERVER_CONFIG][CONF_URL]
+            == mock_connections.connections[0].httpuri
+        )
+        assert result["data"][config_flow.PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
+
+
+async def test_no_token(hass):
+    """Test failing when no token provided."""
+
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": "user"}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"manual_setup": False}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"][CONF_TOKEN] == "no_token"
+
+
+async def test_option_flow(hass):
+    """Test config flow selection of one of two bridges."""
+
+    entry = MockConfigEntry(domain=config_flow.DOMAIN, data={}, options=DEFAULT_OPTIONS)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.flow.async_init(
+        entry.entry_id, context={"source": "test"}, data=None
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "plex_mp_settings"
+
+    result = await hass.config_entries.options.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            config_flow.CONF_USE_EPISODE_ART: True,
+            config_flow.CONF_SHOW_ALL_CONTROLS: True,
+        },
+    )
+    assert result["type"] == "create_entry"
+    assert result["data"] == {
+        config_flow.MP_DOMAIN: {
+            config_flow.CONF_USE_EPISODE_ART: True,
+            config_flow.CONF_SHOW_ALL_CONTROLS: True,
+        }
+    }

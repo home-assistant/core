@@ -78,7 +78,7 @@ class UnifiVideoCamera(Camera):
 
     def __init__(self, nvr, uuid, name, password):
         """Initialize an Unifi camera."""
-        super(UnifiVideoCamera, self).__init__()
+        super().__init__()
         self._nvr = nvr
         self._uuid = uuid
         self._name = name

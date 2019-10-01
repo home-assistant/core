@@ -28,6 +28,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
+from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [STATE_ON, STATE_OFF, "true", "false"]
@@ -44,6 +45,7 @@ LIGHT_SCHEMA = vol.Schema(
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_ICON_TEMPLATE): cv.template,
         vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
+        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
         vol.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_LEVEL_TEMPLATE): cv.template,
         vol.Optional(CONF_FRIENDLY_NAME): cv.string,
@@ -65,6 +67,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         state_template = device_config.get(CONF_VALUE_TEMPLATE)
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         entity_picture_template = device_config.get(CONF_ENTITY_PICTURE_TEMPLATE)
+        availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
         on_action = device_config[CONF_ON_ACTION]
         off_action = device_config[CONF_OFF_ACTION]
         level_action = device_config.get(CONF_LEVEL_ACTION)
@@ -92,6 +95,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             if str(temp_ids) != MATCH_ALL:
                 template_entity_ids |= set(temp_ids)
 
+        if availability_template is not None:
+            temp_ids = availability_template.extract_entities()
+            if str(temp_ids) != MATCH_ALL:
+                template_entity_ids |= set(temp_ids)
+
         if not template_entity_ids:
             template_entity_ids = MATCH_ALL
 
@@ -105,6 +113,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 state_template,
                 icon_template,
                 entity_picture_template,
+                availability_template,
                 on_action,
                 off_action,
                 level_action,
@@ -132,6 +141,7 @@ class LightTemplate(Light):
         state_template,
         icon_template,
         entity_picture_template,
+        availability_template,
         on_action,
         off_action,
         level_action,
@@ -147,6 +157,7 @@ class LightTemplate(Light):
         self._template = state_template
         self._icon_template = icon_template
         self._entity_picture_template = entity_picture_template
+        self._availability_template = availability_template
         self._on_script = Script(hass, on_action)
         self._off_script = Script(hass, off_action)
         self._level_script = None
@@ -159,6 +170,7 @@ class LightTemplate(Light):
         self._entity_picture = None
         self._brightness = None
         self._entities = entity_ids
+        self._available = True
 
         if self._template is not None:
             self._template.hass = self.hass
@@ -168,6 +180,8 @@ class LightTemplate(Light):
             self._icon_template.hass = self.hass
         if self._entity_picture_template is not None:
             self._entity_picture_template.hass = self.hass
+        if self._availability_template is not None:
+            self._availability_template.hass = self.hass
 
     @property
     def brightness(self):
@@ -207,6 +221,11 @@ class LightTemplate(Light):
         """Return the entity picture to use in the frontend, if any."""
         return self._entity_picture
 
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return self._available
+
     async def async_added_to_hass(self):
         """Register callbacks."""
 
@@ -218,7 +237,11 @@ class LightTemplate(Light):
         @callback
         def template_light_startup(event):
             """Update template on startup."""
-            if self._template is not None or self._level_template is not None:
+            if (
+                self._template is not None
+                or self._level_template is not None
+                or self._availability_template is not None
+            ):
                 async_track_state_change(
                     self.hass, self._entities, template_light_state_listener
                 )
@@ -298,12 +321,16 @@ class LightTemplate(Light):
         for property_name, template in (
             ("_icon", self._icon_template),
             ("_entity_picture", self._entity_picture_template),
+            ("_available", self._availability_template),
         ):
             if template is None:
                 continue
 
             try:
-                setattr(self, property_name, template.async_render())
+                value = template.async_render()
+                if property_name == "_available":
+                    value = value.lower() == "true"
+                setattr(self, property_name, value)
             except TemplateError as ex:
                 friendly_property_name = property_name[1:].replace("_", " ")
                 if ex.args and ex.args[0].startswith(

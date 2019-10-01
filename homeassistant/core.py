@@ -28,6 +28,7 @@ from typing import (
     Set,
     TYPE_CHECKING,
     Awaitable,
+    Mapping,
 )
 
 from async_timeout import timeout
@@ -144,8 +145,8 @@ def async_loop_exception_handler(_: Any, context: Dict) -> None:
     if exception:
         kwargs["exc_info"] = (type(exception), exception, exception.__traceback__)
 
-    _LOGGER.error(  # type: ignore
-        "Error doing job: %s", context["message"], **kwargs
+    _LOGGER.error(
+        "Error doing job: %s", context["message"], **kwargs  # type: ignore
     )
 
 
@@ -703,8 +704,8 @@ class State:
     def __init__(
         self,
         entity_id: str,
-        state: Any,
-        attributes: Optional[Dict] = None,
+        state: str,
+        attributes: Optional[Mapping] = None,
         last_changed: Optional[datetime.datetime] = None,
         last_updated: Optional[datetime.datetime] = None,
         context: Optional[Context] = None,
@@ -732,7 +733,7 @@ class State:
             )
 
         self.entity_id = entity_id.lower()
-        self.state: str = state
+        self.state = state
         self.attributes = MappingProxyType(attributes or {})
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
@@ -924,7 +925,7 @@ class StateMachine:
     def set(
         self,
         entity_id: str,
-        new_state: Any,
+        new_state: str,
         attributes: Optional[Dict] = None,
         force_update: bool = False,
         context: Optional[Context] = None,
@@ -950,7 +951,7 @@ class StateMachine:
     def async_set(
         self,
         entity_id: str,
-        new_state: Any,
+        new_state: str,
         attributes: Optional[Dict] = None,
         force_update: bool = False,
         context: Optional[Context] = None,
