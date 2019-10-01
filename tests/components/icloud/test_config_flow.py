@@ -29,35 +29,32 @@ GPS_ACCURACY_THRESHOLD = 250
 @pytest.fixture(name="init")
 def mock_controller_init():
     """Mock a successful init."""
-    with patch("pyicloud.PyiCloudService"):
+    with patch("pyicloud.base.PyiCloudService"):
+        yield
+    with patch("pyicloud.base.PyiCloudService.authenticate", return_value=None):
         yield
 
 
 @pytest.fixture(name="session")
 def mock_controller_session():
     """Mock a successful session."""
-    with patch("pyicloud.PyiCloudSession"):
-        yield
-
-
-@pytest.fixture(name="authenticate")
-def mock_controller_authenticate():
-    """Mock a successful authenticate."""
-    with patch("pyicloud.PyiCloudService.authenticate", return_value=None):
+    with patch("pyicloud.base.PyiCloudSession"):
         yield
 
 
 @pytest.fixture(name="requires_2fa")
 def mock_controller_requires_2fa():
     """Mock a successful requires_2fa."""
-    with patch("pyicloud.PyiCloudService.requires_2fa", return_value=True):
+    with patch("pyicloud.base.PyiCloudService.requires_2fa", return_value=True):
         yield
 
 
 @pytest.fixture(name="send_verification_code")
 def mock_controller_send_verification_code():
     """Mock a successful send_verification_code."""
-    with patch("pyicloud.PyiCloudService.send_verification_code", return_value=True):
+    with patch(
+        "pyicloud.base.PyiCloudService.send_verification_code", return_value=True
+    ):
         yield
 
 
@@ -65,7 +62,7 @@ def mock_controller_send_verification_code():
 def mock_controller_validate_verification_code():
     """Mock a successful validate_verification_code."""
     with patch(
-        "pyicloud.PyiCloudService.validate_verification_code", return_value=True
+        "pyicloud.base.PyiCloudService.validate_verification_code", return_value=True
     ):
         yield
 
@@ -81,7 +78,6 @@ async def test_user(
     hass,
     init,
     session,
-    authenticate,
     requires_2fa,
     send_verification_code,
     validate_verification_code,
@@ -110,7 +106,6 @@ async def test_import(
     hass,
     init,
     session,
-    authenticate,
     requires_2fa,
     send_verification_code,
     validate_verification_code,
@@ -153,7 +148,6 @@ async def test_abort_if_already_setup(
     hass,
     init,
     session,
-    authenticate,
     requires_2fa,
     send_verification_code,
     validate_verification_code,
@@ -216,7 +210,7 @@ async def test_abort_on_login_failed(hass):
         assert result["errors"] == {CONF_USERNAME: "login"}
 
 
-async def test_abort_on_fetch_failed(hass, init, session, authenticate, requires_2fa):
+async def test_abort_on_fetch_failed(hass, init, session, requires_2fa):
     """Test when we have errors during fetch."""
     flow = init_config_flow(hass)
 
