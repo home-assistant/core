@@ -41,5 +41,16 @@
             }
         },
         "title": "Plex"
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "show_all_controls": "\u986f\u793a\u6240\u6709\u63a7\u5236",
+                    "use_episode_art": "\u4f7f\u7528\u5f71\u96c6\u5287\u7167"
+                },
+                "description": "Plex \u64ad\u653e\u5668\u9078\u9805"
+            }
+        }
     }
 }

@@ -45,7 +45,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Template lock."""
     device = config.get(CONF_NAME)
-
     value_template = config.get(CONF_VALUE_TEMPLATE)
     availability_template = config.get(CONF_AVAILABILITY_TEMPLATE)
 
@@ -160,10 +159,6 @@ class TemplateLock(LockDevice):
 
         if self._availability_template is not None:
             try:
-                _LOGGER.debug(
-                    ">>> render: %s ",
-                    self._availability_template.async_render().lower(),
-                )
                 self._available = (
                     self._availability_template.async_render().lower() == "true"
                 )

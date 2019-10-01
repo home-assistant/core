@@ -1,5 +1,5 @@
 """Helpers to execute scripts."""
-
+import asyncio
 import logging
 from contextlib import suppress
 from datetime import datetime
@@ -29,7 +29,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 import homeassistant.util.dt as date_util
-from homeassistant.util.async_ import run_coroutine_threadsafe, run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
@@ -136,7 +136,7 @@ class Script:
 
     def run(self, variables=None, context=None):
         """Run script."""
-        run_coroutine_threadsafe(
+        asyncio.run_coroutine_threadsafe(
             self.async_run(variables, context), self.hass.loop
         ).result()
 

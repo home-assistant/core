@@ -43,7 +43,7 @@ YesssSMS==0.4.1
 adguardhome==0.2.1
 
 # homeassistant.components.geonetnz_quakes
-aio_geojson_geonetnz_quakes==0.9
+aio_geojson_geonetnz_quakes==0.10
 
 # homeassistant.components.ambient_station
 aioambient==0.3.2
@@ -261,6 +261,9 @@ pillow==6.1.0
 # homeassistant.components.plex
 plexapi==3.0.6
 
+# homeassistant.components.plex
+plexauth==0.0.4
+
 # homeassistant.components.mhz19
 # homeassistant.components.serial_pm
 pmsensor==0.4
@@ -349,6 +352,9 @@ pysmartapp==0.3.2
 # homeassistant.components.smartthings
 pysmartthings==0.6.9
 
+# homeassistant.components.soma
+pysoma==0.0.10
+
 # homeassistant.components.sonos
 pysonos==0.0.23
 
@@ -356,7 +362,7 @@ pysonos==0.0.23
 pyspcwebgw==0.4.0
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.1.3
+python-ecobee-api==0.1.4
 
 # homeassistant.components.darksky
 python-forecastio==1.4.0

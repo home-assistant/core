@@ -94,13 +94,11 @@ async def async_setup(hass, config):
                     template_payload.async_render(variables=service.data), "utf-8"
                 )
 
+            request_url = template_url.async_render(variables=service.data)
             try:
                 with async_timeout.timeout(timeout):
                     request = await getattr(websession, method)(
-                        template_url.async_render(variables=service.data),
-                        data=payload,
-                        auth=auth,
-                        headers=headers,
+                        request_url, data=payload, auth=auth, headers=headers
                     )
 
                 if request.status < 400:
@@ -112,7 +110,7 @@ async def async_setup(hass, config):
                 _LOGGER.warning("Timeout call %s.", request.url)
 
             except aiohttp.ClientError:
-                _LOGGER.error("Client error %s.", request.url)
+                _LOGGER.error("Client error %s.", request_url)
 
         # register services
         hass.services.async_register(DOMAIN, name, async_service_handler)
