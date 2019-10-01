@@ -4,6 +4,7 @@ Such systems include evohome (multi-zone), and Round Thermostat (single zone).
 """
 from datetime import datetime, timedelta
 import logging
+import re
 from typing import Any, Dict, Optional, Tuple
 
 import aiohttp.client_exceptions
@@ -25,9 +26,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from homeassistant.util.dt import parse_datetime, utcnow
+import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, STORAGE_VERSION, STORAGE_KEY, GWS, TCS
+from .const import DOMAIN, EVO_FOLLOW, STORAGE_VERSION, STORAGE_KEY, GWS, TCS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,18 +56,43 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def _local_dt_to_utc(dt_naive: datetime) -> datetime:
-    dt_aware = utcnow() + (dt_naive - datetime.now())
+def _local_dt_to_aware(dt_naive: datetime) -> datetime:
+    dt_aware = dt_util.now() + (dt_naive - datetime.now())
     if dt_aware.microsecond >= 500000:
         dt_aware += timedelta(seconds=1)
     return dt_aware.replace(microsecond=0)
 
 
-def _utc_to_local_dt(dt_aware: datetime) -> datetime:
-    dt_naive = datetime.now() + (dt_aware - utcnow())
+def _dt_to_local_naive(dt_aware: datetime) -> datetime:
+    dt_naive = datetime.now() + (dt_aware - dt_util.now())
     if dt_naive.microsecond >= 500000:
         dt_naive += timedelta(seconds=1)
     return dt_naive.replace(microsecond=0)
+
+
+def convert_until(status_dict, until_key) -> str:
+    """Convert datetime string from "%Y-%m-%dT%H:%M:%SZ" to local/aware/isoformat."""
+    if until_key in status_dict:  # only present for certain modes
+        dt_utc_naive = dt_util.parse_datetime(status_dict[until_key])
+        status_dict[until_key] = dt_util.as_local(dt_utc_naive).isoformat()
+
+
+def convert_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
+    """Recursively convert a dict's keys to snake_case."""
+
+    def convert_key(key: str) -> str:
+        """Convert a string to snake_case."""
+        string = re.sub(r"[\-\.\s]", "_", str(key))
+        return (string[0]).lower() + re.sub(
+            r"[A-Z]", lambda matched: "_" + matched.group(0).lower(), string[1:]
+        )
+
+    return {
+        (convert_key(k) if isinstance(k, str) else k): (
+            convert_dict(v) if isinstance(v, dict) else v
+        )
+        for k, v in dictionary.items()
+    }
 
 
 def _handle_exception(err) -> bool:
@@ -135,7 +161,7 @@ class EvoBroker:
     """Container for evohome client and data."""
 
     def __init__(self, hass, params) -> None:
-        """Initialize the evohome client and data structure."""
+        """Initialize the evohome client and its data structure."""
         self.hass = hass
         self.params = params
         self.config = {}
@@ -157,7 +183,7 @@ class EvoBroker:
 
         # evohomeasync2 uses naive/local datetimes
         if access_token_expires is not None:
-            access_token_expires = _utc_to_local_dt(access_token_expires)
+            access_token_expires = _dt_to_local_naive(access_token_expires)
 
         client = self.client = evohomeasync2.EvohomeClient(
             self.params[CONF_USERNAME],
@@ -220,7 +246,7 @@ class EvoBroker:
             access_token = app_storage.get(CONF_ACCESS_TOKEN)
             at_expires_str = app_storage.get(CONF_ACCESS_TOKEN_EXPIRES)
             if at_expires_str:
-                at_expires_dt = parse_datetime(at_expires_str)
+                at_expires_dt = dt_util.parse_datetime(at_expires_str)
             else:
                 at_expires_dt = None
 
@@ -230,7 +256,7 @@ class EvoBroker:
 
     async def _save_auth_tokens(self, *args) -> None:
         # evohomeasync2 uses naive/local datetimes
-        access_token_expires = _local_dt_to_utc(self.client.access_token_expires)
+        access_token_expires = _local_dt_to_aware(self.client.access_token_expires)
 
         self._app_storage[CONF_USERNAME] = self.params[CONF_USERNAME]
         self._app_storage[CONF_REFRESH_TOKEN] = self.client.refresh_token
@@ -246,11 +272,11 @@ class EvoBroker:
         )
 
     async def update(self, *args, **kwargs) -> None:
-        """Get the latest state data of the entire evohome Location.
+        """Get the latest state data of an entire evohome Location.
 
-        This includes state data for the Controller and all its child devices,
-        such as the operating mode of the Controller and the current temp of
-        its children (e.g. Zones, DHW controller).
+        This includes state data for a Controller and all its child devices, such as the
+        operating mode of the Controller and the current temp of its children (e.g.
+        Zones, DHW controller).
         """
         loc_idx = self.params[CONF_LOCATION_IDX]
 
@@ -260,9 +286,7 @@ class EvoBroker:
             _handle_exception(err)
         else:
             # inform the evohome devices that state data has been updated
-            self.hass.helpers.dispatcher.async_dispatcher_send(
-                DOMAIN, {"signal": "refresh"}
-            )
+            self.hass.helpers.dispatcher.async_dispatcher_send(DOMAIN)
 
             _LOGGER.debug("Status = %s", status[GWS][0][TCS][0])
 
@@ -270,8 +294,8 @@ class EvoBroker:
 class EvoDevice(Entity):
     """Base for any evohome device.
 
-    This includes the Controller, (up to 12) Heating Zones and
-    (optionally) a DHW controller.
+    This includes the Controller, (up to 12) Heating Zones and (optionally) a
+    DHW controller.
     """
 
     def __init__(self, evo_broker, evo_device) -> None:
@@ -280,71 +304,25 @@ class EvoDevice(Entity):
         self._evo_broker = evo_broker
         self._evo_tcs = evo_broker.tcs
 
-        self._name = self._icon = self._precision = None
-        self._state_attributes = []
+        self._unique_id = self._name = self._icon = self._precision = None
 
+        self._device_state_attrs = {}
+        self._state_attributes = []
         self._supported_features = None
-        self._schedule = {}
 
     @callback
-    def _refresh(self, packet):
-        if packet["signal"] == "refresh":
-            self.async_schedule_update_ha_state(force_refresh=True)
-
-    @property
-    def setpoints(self) -> Dict[str, Any]:
-        """Return the current/next setpoints from the schedule.
-
-        Only Zones & DHW controllers (but not the TCS) can have schedules.
-        """
-        if not self._schedule["DailySchedules"]:
-            return {}
-
-        switchpoints = {}
-
-        day_time = datetime.now()
-        day_of_week = int(day_time.strftime("%w"))  # 0 is Sunday
-
-        # Iterate today's switchpoints until past the current time of day...
-        day = self._schedule["DailySchedules"][day_of_week]
-        sp_idx = -1  # last switchpoint of the day before
-        for i, tmp in enumerate(day["Switchpoints"]):
-            if day_time.strftime("%H:%M:%S") > tmp["TimeOfDay"]:
-                sp_idx = i  # current setpoint
-            else:
-                break
-
-        # Did the current SP start yesterday? Does the next start SP tomorrow?
-        current_sp_day = -1 if sp_idx == -1 else 0
-        next_sp_day = 1 if sp_idx + 1 == len(day["Switchpoints"]) else 0
-
-        for key, offset, idx in [
-            ("current", current_sp_day, sp_idx),
-            ("next", next_sp_day, (sp_idx + 1) * (1 - next_sp_day)),
-        ]:
-
-            spt = switchpoints[key] = {}
-
-            sp_date = (day_time + timedelta(days=offset)).strftime("%Y-%m-%d")
-            day = self._schedule["DailySchedules"][(day_of_week + offset) % 7]
-            switchpoint = day["Switchpoints"][idx]
-
-            dt_naive = datetime.strptime(
-                f"{sp_date}T{switchpoint['TimeOfDay']}", "%Y-%m-%dT%H:%M:%S"
-            )
-
-            spt["from"] = _local_dt_to_utc(dt_naive).isoformat()
-            try:
-                spt["temperature"] = switchpoint["heatSetpoint"]
-            except KeyError:
-                spt["state"] = switchpoint["DhwState"]
-
-        return switchpoints
+    def _refresh(self) -> None:
+        self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
     def should_poll(self) -> bool:
         """Evohome entities should not be polled."""
         return False
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def name(self) -> str:
@@ -354,15 +332,15 @@ class EvoDevice(Entity):
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
         """Return the Evohome-specific state attributes."""
-        status = {}
-        for attr in self._state_attributes:
-            if attr != "setpoints":
-                status[attr] = getattr(self._evo_device, attr)
+        status = self._device_state_attrs
+        if "systemModeStatus" in status:
+            convert_until(status["systemModeStatus"], "timeUntil")
+        if "setpointStatus" in status:
+            convert_until(status["setpointStatus"], "until")
+        if "stateStatus" in status:
+            convert_until(status["stateStatus"], "until")
 
-        if "setpoints" in self._state_attributes:
-            status["setpoints"] = self.setpoints
-
-        return {"status": status}
+        return {"status": convert_dict(status)}
 
     @property
     def icon(self) -> str:
@@ -388,27 +366,98 @@ class EvoDevice(Entity):
         """Return the temperature unit to use in the frontend UI."""
         return TEMP_CELSIUS
 
-    async def _call_client_api(self, api_function) -> None:
+    async def _call_client_api(self, api_function, refresh=True) -> Any:
         try:
-            await api_function
+            result = await api_function
         except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
-            _handle_exception(err)
+            if not _handle_exception(err):
+                return
 
-        self.hass.helpers.event.async_call_later(
-            2, self._evo_broker.update()
-        )  # call update() in 2 seconds
+        if refresh is True:
+            self.hass.helpers.event.async_call_later(1, self._evo_broker.update())
+
+        return result
+
+
+class EvoChild(EvoDevice):
+    """Base for any evohome child.
+
+    This includes (up to 12) Heating Zones and (optionally) a DHW controller.
+    """
+
+    def __init__(self, evo_broker, evo_device) -> None:
+        """Initialize a evohome Controller (hub)."""
+        super().__init__(evo_broker, evo_device)
+        self._schedule = {}
+        self._setpoints = {}
+
+    @property
+    def current_temperature(self) -> Optional[float]:
+        """Return the current temperature of a Zone."""
+        if self._evo_device.temperatureStatus["isAvailable"]:
+            return self._evo_device.temperatureStatus["temperature"]
+        return None
+
+    @property
+    def setpoints(self) -> Dict[str, Any]:
+        """Return the current/next setpoints from the schedule.
+
+        Only Zones & DHW controllers (but not the TCS) can have schedules.
+        """
+        if not self._schedule["DailySchedules"]:
+            return {}  # no schedule {'DailySchedules': []}, so no scheduled setpoints
+
+        day_time = dt_util.now()
+        day_of_week = int(day_time.strftime("%w"))  # 0 is Sunday
+        time_of_day = day_time.strftime("%H:%M:%S")
+
+        # Iterate today's switchpoints until past the current time of day...
+        day = self._schedule["DailySchedules"][day_of_week]
+        sp_idx = -1  # last switchpoint of the day before
+        for i, tmp in enumerate(day["Switchpoints"]):
+            if time_of_day > tmp["TimeOfDay"]:
+                sp_idx = i  # current setpoint
+            else:
+                break
+
+        # Did the current SP start yesterday? Does the next start SP tomorrow?
+        this_sp_day = -1 if sp_idx == -1 else 0
+        next_sp_day = 1 if sp_idx + 1 == len(day["Switchpoints"]) else 0
+
+        for key, offset, idx in [
+            ("this", this_sp_day, sp_idx),
+            ("next", next_sp_day, (sp_idx + 1) * (1 - next_sp_day)),
+        ]:
+            sp_date = (day_time + timedelta(days=offset)).strftime("%Y-%m-%d")
+            day = self._schedule["DailySchedules"][(day_of_week + offset) % 7]
+            switchpoint = day["Switchpoints"][idx]
+
+            dt_local_aware = _local_dt_to_aware(
+                dt_util.parse_datetime(f"{sp_date}T{switchpoint['TimeOfDay']}")
+            )
+
+            self._setpoints[f"{key}_sp_from"] = dt_local_aware.isoformat()
+            try:
+                self._setpoints[f"{key}_sp_temp"] = switchpoint["heatSetpoint"]
+            except KeyError:
+                self._setpoints[f"{key}_sp_state"] = switchpoint["DhwState"]
+
+        return self._setpoints
 
     async def _update_schedule(self) -> None:
-        """Get the latest state data."""
-        if (
-            not self._schedule.get("DailySchedules")
-            or parse_datetime(self.setpoints["next"]["from"]) < utcnow()
-        ):
-            try:
-                self._schedule = await self._evo_device.schedule()
-            except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
-                _handle_exception(err)
+        """Get the latest schedule."""
+        if "DailySchedules" in self._schedule and not self._schedule["DailySchedules"]:
+            if not self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
+                return  # avoid unnecessary I/O - there's nothing to update
+
+        self._schedule = await self._call_client_api(
+            self._evo_device.schedule(), refresh=False
+        )
 
     async def async_update(self) -> None:
         """Get the latest state data."""
-        await self._update_schedule()
+        next_sp_from = self._setpoints.get("next_sp_from", "2000-01-01T00:00:00+00:00")
+        if dt_util.now() >= dt_util.parse_datetime(next_sp_from):
+            await self._update_schedule()  # no schedule, or it's out-of-date
+
+        self._device_state_attrs = {"setpoints": self.setpoints}

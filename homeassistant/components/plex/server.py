@@ -11,8 +11,20 @@ from .const import (
     CONF_SHOW_ALL_CONTROLS,
     CONF_USE_EPISODE_ART,
     DEFAULT_VERIFY_SSL,
+    X_PLEX_DEVICE_NAME,
+    X_PLEX_PLATFORM,
+    X_PLEX_PRODUCT,
+    X_PLEX_VERSION,
 )
 from .errors import NoServersFound, ServerNotSpecified
+
+# Set default headers sent by plexapi
+plexapi.X_PLEX_DEVICE_NAME = X_PLEX_DEVICE_NAME
+plexapi.X_PLEX_PLATFORM = X_PLEX_PLATFORM
+plexapi.X_PLEX_PRODUCT = X_PLEX_PRODUCT
+plexapi.X_PLEX_VERSION = X_PLEX_VERSION
+plexapi.myplex.BASE_HEADERS = plexapi.reset_base_headers()
+plexapi.server.BASE_HEADERS = plexapi.reset_base_headers()
 
 
 class PlexServer:

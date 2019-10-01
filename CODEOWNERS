@@ -235,6 +235,7 @@ homeassistant/components/repetier/* @MTrab
 homeassistant/components/rfxtrx/* @danielhiversen
 homeassistant/components/rmvtransport/* @cgtobi
 homeassistant/components/roomba/* @pschmitt
+homeassistant/components/saj/* @fredericvl
 homeassistant/components/scene/* @home-assistant/core
 homeassistant/components/scrape/* @fabaff
 homeassistant/components/script/* @home-assistant/core
@@ -254,6 +255,7 @@ homeassistant/components/smarty/* @z0mbieprocess
 homeassistant/components/smtp/* @fabaff
 homeassistant/components/solaredge_local/* @drobtravels @scheric
 homeassistant/components/solax/* @squishykid
+homeassistant/components/soma/* @ratsept
 homeassistant/components/somfy/* @tetienne
 homeassistant/components/songpal/* @rytilahti
 homeassistant/components/spaceapi/* @fabaff

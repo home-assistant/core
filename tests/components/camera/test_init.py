@@ -17,7 +17,6 @@ from homeassistant.components.camera.const import DOMAIN, PREF_PRELOAD_STREAM
 from homeassistant.components.camera.prefs import CameraEntityPreferences
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from tests.common import (
     get_test_home_assistant,
@@ -110,7 +109,7 @@ class TestGetImage:
         """Grab an image from camera entity."""
         self.hass.start()
 
-        image = run_coroutine_threadsafe(
+        image = asyncio.run_coroutine_threadsafe(
             camera.async_get_image(self.hass, "camera.demo_camera"), self.hass.loop
         ).result()
 
@@ -123,7 +122,7 @@ class TestGetImage:
             "homeassistant.helpers.entity_component.EntityComponent." "get_entity",
             return_value=None,
         ), pytest.raises(HomeAssistantError):
-            run_coroutine_threadsafe(
+            asyncio.run_coroutine_threadsafe(
                 camera.async_get_image(self.hass, "camera.demo_camera"), self.hass.loop
             ).result()
 
@@ -133,7 +132,7 @@ class TestGetImage:
             "homeassistant.components.camera.Camera.async_camera_image",
             side_effect=asyncio.TimeoutError,
         ), pytest.raises(HomeAssistantError):
-            run_coroutine_threadsafe(
+            asyncio.run_coroutine_threadsafe(
                 camera.async_get_image(self.hass, "camera.demo_camera"), self.hass.loop
             ).result()
 
@@ -143,7 +142,7 @@ class TestGetImage:
             "homeassistant.components.camera.Camera.async_camera_image",
             return_value=mock_coro(None),
         ), pytest.raises(HomeAssistantError):
-            run_coroutine_threadsafe(
+            asyncio.run_coroutine_threadsafe(
                 camera.async_get_image(self.hass, "camera.demo_camera"), self.hass.loop
             ).result()
 

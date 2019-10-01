@@ -1,6 +1,7 @@
 """Helpers for device automations."""
 import asyncio
 import logging
+from typing import Any, List, MutableMapping
 
 import voluptuous as vol
 
@@ -10,6 +11,9 @@ from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.loader import async_get_integration, IntegrationNotFound
 
 from .exceptions import InvalidDeviceAutomationConfig
+
+
+# mypy: allow-untyped-calls, allow-untyped-defs
 
 DOMAIN = "device_automation"
 
@@ -96,7 +100,7 @@ async def _async_get_device_automations(hass, automation_type, device_id):
     )
 
     domains = set()
-    automations = []
+    automations: List[MutableMapping[str, Any]] = []
     device = device_registry.async_get(device_id)
     for entry_id in device.config_entries:
         config_entry = hass.config_entries.async_get_entry(entry_id)
