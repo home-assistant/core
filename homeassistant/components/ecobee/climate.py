@@ -295,13 +295,8 @@ class Thermostat(ClimateDevice):
         else:
             await self.data.update()
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
-        if (
-            ECOBEE_HVAC_TO_HASS[self.thermostat["settings"]["hvacMode"]]
-            is not HVAC_MODE_OFF
-        ):
-            self._last_active_hvac_mode = ECOBEE_HVAC_TO_HASS[
-                self.thermostat["settings"]["hvacMode"]
-            ]
+        if self.hvac_mode is not HVAC_MODE_OFF:
+            self._last_active_hvac_mode = self.hvac_mode
 
     @property
     def available(self):
