@@ -226,7 +226,7 @@ class SolarEdgeData:
                 )
             else:
                 self.data["invertertemperature"] = round(
-                    ((status.inverters.primary.temperature.value - 32) * 5 / 9), 2
+                    ((status.inverters.primary.temperature.value - 32) * 5 / 9), 1
                 )
         if maintenance.system.name:
             self.data["optimizertemperature"] = round(statistics.mean(temperature), 2)
