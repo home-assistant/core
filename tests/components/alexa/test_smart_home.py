@@ -1306,3 +1306,33 @@ async def test_endpoint_bad_health(hass):
     properties.assert_equal(
         "Alexa.EndpointHealth", "connectivity", {"value": "UNREACHABLE"}
     )
+
+
+async def test_alarm_control_panel(hass):
+    """Test alarm_control_panel discovery."""
+    device = ("alarm_control_panel.test_1", "disarmed", {"friendly_name": "Test Alarm Control Panel 1"})
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "alarm_control_panel#test_1"
+    assert appliance["displayCategories"][0] == "SECURITY_PANEL"
+    assert appliance["friendlyName"] == "Test Alarm Control Panel 1"
+    assert_endpoint_capabilities(
+        appliance, "Alexa.SecurityPanelController", "Alexa.EndpointHealth"
+    )
+
+    properties = await reported_properties(hass, "alarm_control_panel#test_1")
+    properties.assert_equal("Alexa.SecurityPanelController", "armState", "DISARMED")
+
+    _, msg = await assert_request_calls_service(
+        "Alexa.SecurityPanelController",
+        "Arm",
+        "alarm_control_panel#test_1",
+        "alarm_control_panel.alarm_arm_home",
+        hass,
+        "Arm.Response",
+        payload={"armState": "ARMED_STAY"},
+    )
+    properties = msg["context"]["properties"][0]
+    assert properties["name"] == "armState"
+    assert properties["namespace"] == "Alexa.SecurityPanelController"
+    assert properties["value"] == "ARMED_STAY"
