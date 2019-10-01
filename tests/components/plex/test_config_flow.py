@@ -666,9 +666,7 @@ async def test_callback_view(hass, aiohttp_client):
         assert result["type"] == "external"
 
         client = await aiohttp_client(hass.http.app)
-        forward_url = "{}?flow_id={}".format(
-            config_flow.AUTH_CALLBACK_PATH, result["flow_id"]
-        )
+        forward_url = f'{config_flow.AUTH_CALLBACK_PATH}?flow_id={result["flow_id"]}'
 
         resp = await client.get(forward_url)
         assert resp.status == 200
