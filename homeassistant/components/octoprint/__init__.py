@@ -71,8 +71,22 @@ SENSOR_TYPES = {
     "Temperatures": ["printer", "temperature", "*", TEMP_CELSIUS],
     "Current State": ["printer", "state", None, "text", None, "mdi:printer-3d"],
     "Job Percentage": ["job", "progress", None, "completion", "%", "mdi:file-percent"],
-    "Time Remaining": ["job", "progress", None, "printTimeLeft", "seconds", "mdi:clock-end"],
-    "Time Elapsed": ["job", "progress", None, "printTime", "seconds", "mdi:clock-start"],
+    "Time Remaining": [
+        "job",
+        "progress",
+        None,
+        "printTimeLeft",
+        "seconds",
+        "mdi:clock-end",
+    ],
+    "Time Elapsed": [
+        "job",
+        "progress",
+        None,
+        "printTime",
+        "seconds",
+        "mdi:clock-start",
+    ],
     "Job Filename": ["job", "job", "file", "name", "", "mdi:file-document"],
     "Job Origin": ["job", "job", "file", "origin", "", "mdi:source-branch"],
     "Job User": ["job", "job", None, "user", "", "mdi:account"],
@@ -257,7 +271,9 @@ class OctoPrintAPI:
         """Return the value for sensor_type from the provided endpoint."""
         response = self.get(end_point)
         if response is not None:
-            return get_value_from_json(response, sensor_type, group, secondary_group, tool)
+            return get_value_from_json(
+                response, sensor_type, group, secondary_group, tool
+            )
         return response
 
 
