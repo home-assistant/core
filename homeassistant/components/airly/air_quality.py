@@ -8,13 +8,7 @@ from aiohttp.client_exceptions import ClientConnectorError
 from airly import Airly
 from airly.exceptions import AirlyError
 
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-    CONF_SCAN_INTERVAL,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.components.air_quality import (
     AirQualityEntity,
     ATTR_AQI,
@@ -178,9 +172,8 @@ class AirlyData:
         self.airly = Airly(self.api_key, self.session, language=self.language)
         self.data = {}
 
-        self.async_update = Throttle(kwargs[CONF_SCAN_INTERVAL])(self._async_update)
-
-    async def _async_update(self):
+    @Throttle(DEFAULT_SCAN_INTERVAL)
+    async def async_update(self):
         """Update Airly data."""
 
         try:
