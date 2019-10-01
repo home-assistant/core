@@ -60,8 +60,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         websession, api_key, latitude, longitude, language, scan_interval=scan_interval
     )
 
-    await data.async_update()
-
     async_add_entities([AirlyAirQuality(data, name)], True)
 
 
