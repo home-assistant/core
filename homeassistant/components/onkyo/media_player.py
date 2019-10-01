@@ -264,7 +264,7 @@ class OnkyoDevice(MediaPlayerDevice):
             if source in self._source_mapping:
                 self._current_source = self._source_mapping[source]
                 break
-            self._current_source = "_".join([i for i in current_source_tuples[1]])
+            self._current_source = "_".join(current_source_tuples[1])
         if preset_raw and self._current_source.lower() == "radio":
             self._attributes[ATTR_PRESET] = preset_raw[1]
         elif ATTR_PRESET in self._attributes:
@@ -413,7 +413,7 @@ class OnkyoDeviceZone(OnkyoDevice):
             if source in self._source_mapping:
                 self._current_source = self._source_mapping[source]
                 break
-            self._current_source = "_".join([i for i in current_source_tuples[1]])
+            self._current_source = "_".join(current_source_tuples[1])
         self._muted = bool(mute_raw[1] == "on")
         if preset_raw and self._current_source.lower() == "radio":
             self._attributes[ATTR_PRESET] = preset_raw[1]

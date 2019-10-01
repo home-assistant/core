@@ -69,7 +69,7 @@ class BTSmartHubScanner(DeviceScanner):
             _LOGGER.warning("Error scanning devices")
             return
 
-        clients = [client for client in data.values()]
+        clients = list(data.values())
         self.last_results = clients
 
     def get_bt_smarthub_data(self):
