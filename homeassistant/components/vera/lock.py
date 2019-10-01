@@ -57,13 +57,6 @@ class VeraLock(VeraDevice, LockDevice):
         """
         data = super().device_state_attributes
 
-        # This check will no longer be required once the version of the pyvera
-        # library with these two functions included is generally available.
-        if not ("get_last_user_alert" in dir(self.vera_device)) and (
-            "get_low_battery_alert" in dir(self.vera_device)
-        ):
-            return data
-
         last_user = self.vera_device.get_last_user_alert()
         if last_user is not None:
             data[ATTR_LAST_USER_NAME] = last_user[1]
@@ -78,15 +71,9 @@ class VeraLock(VeraDevice, LockDevice):
         Reports on the previous poll cycle.
         changed_by is an integer user ID.
         """
-        # This check will no longer be required once the version of the pyvera
-        # library with these two functions included is generally available.
-        if not ("get_last_user_alert" in dir(self.vera_device)):
-            return None
-
         last_user = self.vera_device.get_last_user_alert()
         if last_user is not None:
             return last_user[0]
-
         return None
 
     def update(self):
