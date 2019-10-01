@@ -25,7 +25,7 @@ class StarlineDeviceTracker(TrackerEntity, RestoreEntity):
     @property
     def unique_id(self):
         """Return the unique ID."""
-        return "starline_" + str(self._device.device_id)
+        return f"starline-location-{str(self._device.device_id)}"
 
     @property
     def battery_level(self):
@@ -55,7 +55,7 @@ class StarlineDeviceTracker(TrackerEntity, RestoreEntity):
     @property
     def name(self):
         """Return the name of the device."""
-        return self._device.name
+        return f"{self._device.name} Location"
 
     @property
     def should_poll(self):
@@ -76,11 +76,11 @@ class StarlineDeviceTracker(TrackerEntity, RestoreEntity):
     def icon(self):
         return "mdi:car"
 
+    def update(self):
+        """Mark the device as seen."""
+        self.async_write_ha_state()
+
     async def async_added_to_hass(self):
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()
         self._api.add_update_listener(self.update)
-
-    def update(self):
-        """Mark the device as seen."""
-        self.async_write_ha_state()

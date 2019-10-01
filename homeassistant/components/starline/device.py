@@ -2,7 +2,6 @@ from datetime import datetime
 from .const import DOMAIN
 
 
-# TODO: encode russian letters везде
 class StarlineDevice():
     def __init__(self):
         self._device_id = None
@@ -63,6 +62,10 @@ class StarlineDevice():
     @property
     def battery_level(self):
         return self._battery
+
+    @property
+    def car_state(self):
+        return self._car_state
 
     @property
     def device_info(self):
