@@ -142,8 +142,12 @@ async def _async_get_device_automations(hass, automation_type, device_id):
 
 
 def _custom_serializer(schema):
+    import voluptuous_serialize
+
     if schema == POSITIVE_TIME_DELTA_DICT:
         return {"type": "positive_time_delta_dict"}
+
+    return voluptuous_serialize.UNSUPPORTED
 
 
 async def _async_get_device_automation_capabilities(hass, automation_type, automation):
