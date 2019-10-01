@@ -52,13 +52,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     latitude = config_entry.data[CONF_LATITUDE]
     longitude = config_entry.data[CONF_LONGITUDE]
     language = config_entry.data[CONF_LANGUAGE]
-    scan_interval = DEFAULT_SCAN_INTERVAL
 
     websession = async_get_clientsession(hass)
 
-    data = AirlyData(
-        websession, api_key, latitude, longitude, language, scan_interval=scan_interval
-    )
+    data = AirlyData(websession, api_key, latitude, longitude, language)
 
     async_add_entities([AirlyAirQuality(data, name)], True)
 
@@ -160,7 +157,7 @@ class AirlyAirQuality(AirQualityEntity):
 class AirlyData:
     """Define an object to hold sensor data."""
 
-    def __init__(self, session, api_key, latitude, longitude, language, **kwargs):
+    def __init__(self, session, api_key, latitude, longitude, language):
         """Initialize."""
         self.latitude = latitude
         self.longitude = longitude
