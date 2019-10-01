@@ -44,7 +44,6 @@ from .const import (  # pylint: disable=unused-import
 from .errors import NoServersFound, ServerNotSpecified
 from .server import PlexServer
 
-DELAY_CONFIGURE = 5
 USER_SCHEMA = vol.Schema({vol.Optional("manual_setup"): bool})
 
 _LOGGER = logging.getLogger(__package__)
