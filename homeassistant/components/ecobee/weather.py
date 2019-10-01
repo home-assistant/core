@@ -62,6 +62,12 @@ class EcobeeWeather(WeatherEntity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return a unique identifier for the weather platform."""
+        thermostat = self.data.ecobee.get_thermostat(self._index)
+        return f"{thermostat['identifier']}-weather"
+
+    @property
     def condition(self):
         """Return the current condition."""
         try:
