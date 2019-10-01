@@ -7,7 +7,7 @@ from asyncio.events import AbstractEventLoop
 
 import asyncio
 from asyncio import ensure_future
-from typing import Any, Union, Coroutine, Callable, Generator, TypeVar, Awaitable
+from typing import Any, Coroutine, Callable, TypeVar, Awaitable
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,20 +28,6 @@ except AttributeError:
         finally:
             asyncio.set_event_loop(None)
             loop.close()
-
-
-def run_coroutine_threadsafe(
-    coro: Union[Coroutine, Generator], loop: AbstractEventLoop
-) -> concurrent.futures.Future:
-    """Submit a coroutine object to a given event loop.
-
-    Return a concurrent.futures.Future to access the result.
-    """
-    ident = loop.__dict__.get("_thread_ident")
-    if ident is not None and ident == threading.get_ident():
-        raise RuntimeError("Cannot be called from within the event loop")
-
-    return asyncio.run_coroutine_threadsafe(coro, loop)
 
 
 def fire_coroutine_threadsafe(coro: Coroutine, loop: AbstractEventLoop) -> None:

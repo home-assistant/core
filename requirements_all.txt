@@ -121,7 +121,7 @@ adguardhome==0.2.1
 afsapi==0.0.4
 
 # homeassistant.components.geonetnz_quakes
-aio_geojson_geonetnz_quakes==0.9
+aio_geojson_geonetnz_quakes==0.10
 
 # homeassistant.components.ambient_station
 aioambient==0.3.2
@@ -964,6 +964,9 @@ pizzapi==0.0.3
 # homeassistant.components.plex
 plexapi==3.0.6
 
+# homeassistant.components.plex
+plexauth==0.0.4
+
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
 
@@ -1410,6 +1413,9 @@ pyrepetier==3.0.5
 # homeassistant.components.sabnzbd
 pysabnzbd==1.1.0
 
+# homeassistant.components.saj
+pysaj==0.0.9
+
 # homeassistant.components.sony_projector
 pysdcp==1
 
@@ -1619,7 +1625,7 @@ pyuptimerobot==0.0.5
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.3.4
+pyvera==0.3.6
 
 # homeassistant.components.vesync
 pyvesync==1.1.0

@@ -53,7 +53,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
-from homeassistant.util.async_ import run_callback_threadsafe, run_coroutine_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.components.device_automation import (  # noqa
     _async_get_device_automations as async_get_device_automations,
 )
@@ -92,7 +92,9 @@ def threadsafe_coroutine_factory(func):
     def threadsafe(*args, **kwargs):
         """Call func threadsafe."""
         hass = args[0]
-        return run_coroutine_threadsafe(func(*args, **kwargs), hass.loop).result()
+        return asyncio.run_coroutine_threadsafe(
+            func(*args, **kwargs), hass.loop
+        ).result()
 
     return threadsafe
 
@@ -125,7 +127,7 @@ def get_test_home_assistant():
 
     def start_hass(*mocks):
         """Start hass."""
-        run_coroutine_threadsafe(hass.async_start(), loop).result()
+        asyncio.run_coroutine_threadsafe(hass.async_start(), loop).result()
 
     def stop_hass():
         """Stop hass."""
