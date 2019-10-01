@@ -108,7 +108,7 @@ class WaqiSensor(Entity):
             self.station_name = None
 
         self._data = None
-        self._unique_id = token
+        self._unique_id = f"{token}-{self.uid}"
 
     @property
     def name(self):
@@ -132,9 +132,7 @@ class WaqiSensor(Entity):
     @property
     def available(self):
         """Return sensor availability."""
-        if self._data is not None:
-            return True
-        return False
+        return self._data is not None
 
     @property
     def unique_id(self):
