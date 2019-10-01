@@ -39,6 +39,9 @@
    - service: ais_shell_command.set_ais_secure_android_id_dom
    - delay: '1'
    - service: ais_updater.check_version
+     data:
+       key: autoUpdate
+       val: false
    - service: camera.turn_on
      data:
        entity_id: camera.remote_access
@@ -81,6 +84,9 @@
    - service: ais_ai_service.prepare_remote_menu
    - delay: '6000'
    - service: ais_updater.check_version
+     data:
+       key: autoUpdate
+       val: true
 
 - id: '201807081858006'
   alias: 'AIS Get RSS Help Items For Selected Topic'

@@ -115,13 +115,19 @@ async def async_setup(hass, config):
     include_components = config.get(CONF_COMPONENT_REPORTING)
 
     async def check_version(now):
-        say_it = False
-        # check if we have datetime.datetime or call.data object
-        if type(now) == "ServiceCall":
-            if "say" in now.data:
-                say_it = now.data["say"]
+        # check if the call was from scheduler or service / web app
+        if "ServiceCall" in str(type(now)):
+            # call is from service or automation
+            allow_auto_update = False
+            allow_to_say = True
+            if "autoUpdate" in now.data:
+                allow_auto_update = now.data["autoUpdate"]
+        else:
+            # call is from scheduler
+            allow_auto_update = True
+            allow_to_say = False
         """Check if a new version is available and report if one is."""
-        if not ais_global.G_AIS_START_IS_DONE:
+        if not ais_global.G_AIS_START_IS_DONE or not allow_auto_update:
             # do not update on start
             # to prevent the restart loop in case of problem with update
             auto_update = False
@@ -172,37 +178,22 @@ async def async_setup(hass, config):
                 )
 
             # say info about update
-            import homeassistant.components.ais_ai_service as ais_ai
-
-            if say_it or (
-                ais_ai.CURR_ENTITIE == "script.ais_update_system"
-                and ais_ai.CURR_BUTTON_CODE == 23
-            ):
+            if ais_global.G_AIS_START_IS_DONE and allow_to_say:
                 await hass.services.async_call(
                     "ais_ai_service", "say_it", {"text": info}
                 )
-            else:
-                if ais_global.G_AIS_START_IS_DONE:
-                    await hass.services.async_call(
-                        "ais_ai_service", "say_it", {"text": info}
-                    )
         else:
             # dismiss update notification
             hass.components.persistent_notification.async_dismiss(
                 "ais_update_notification"
             )
             info = "Twój system jest aktualny"
-            # only if not executed by scheduler
-            import homeassistant.components.ais_ai_service as ais_ai
 
-            if say_it or (
-                ais_ai.CURR_ENTITIE == "script.ais_update_system"
-                and ais_ai.CURR_BUTTON_CODE == 23
-            ):
-                if ais_global.G_AIS_START_IS_DONE:
-                    await hass.services.async_call(
-                        "ais_ai_service", "say_it", {"text": info}
-                    )
+            # only if not executed by scheduler
+            if ais_global.G_AIS_START_IS_DONE and allow_to_say:
+                await hass.services.async_call(
+                    "ais_ai_service", "say_it", {"text": info}
+                )
             info += release_notes
             hass.states.async_set(
                 "script.ais_update_system",
@@ -280,10 +271,12 @@ async def async_setup(hass, config):
 
     def download_upgrade(call):
         _LOGGER.info("download_upgrade")
+        _set_update_status(hass, UPDATE_STATUS_DOWNLOADING)
         do_download_upgrade(hass, call)
 
     def install_upgrade(call):
         _LOGGER.info("install_upgrade")
+        _set_update_status(hass, UPDATE_STATUS_INSTALLING)
         do_install_upgrade(hass, call)
 
     def applay_the_fix(call):
@@ -363,9 +356,6 @@ def get_system_info_sync(hass):
     G_CURRENT_ANDROID_VERSION = get_current_android_apk_version()
     G_CURRENT_LINUX_VERSION = get_current_linux_apt_version()
     info_object = {
-        "arch": platform.machine(),
-        "os_name": platform.system(),
-        "python_version": platform.python_version(),
         "gate_id": gate_id,
         "dom_app_version": current_version,
         "android_app_version": G_CURRENT_ANDROID_VERSION,
@@ -482,8 +472,6 @@ async def get_newest_version(hass, include_components, go_to_download):
         if fix_script != "":
             await hass.services.async_call("ais_updater", "applay_the_fix")
         if need_to_update and go_to_download:
-            # save the status to sensor and to file
-            _set_update_status(hass, UPDATE_STATUS_DOWNLOADING)
             # call the download service
             await hass.services.async_call("ais_updater", "download_upgrade")
         return need_to_update, res["dom_app_version"], res["release_notes"]
@@ -535,11 +523,6 @@ def get_package_version(package) -> str:
 
 
 def do_execute_upgrade(hass, call):
-    say_it = False
-    if "say" in call.data:
-        say_it = call.data["say"]
-
-    #
     # check the status of the sensor to choice if it's upgrade or version check
     state = hass.states.get("sensor.version_info")
     attr = state.attributes
@@ -552,12 +535,14 @@ def do_execute_upgrade(hass, call):
         and reinstall_android_app is False
         and reinstall_linux_apt is False
     ):
-        hass.services.async_call(
+        # this call was only version check
+        hass.services.call(
             "ais_ai_service", "say_it", {"text": "Sprawdzam dostępność aktualizacji"}
         )
-        hass.services.async_call("ais_updater", "check_version", {"say": say_it})
+        hass.services.call("ais_updater", "check_version", {"autoUpdate": False})
         return
 
+    # this call was upgrade call
     # check the newest version again before update
     need_to_update = True
     try:
@@ -624,7 +609,7 @@ def do_execute_upgrade(hass, call):
             },
         )
         if fix_script != "":
-            hass.services.async_call("ais_updater", "applay_the_fix")
+            hass.services.call("ais_updater", "applay_the_fix")
 
     except Exception as e:
         _LOGGER.error("Received invalid info from AIS dom Update " + str(e))
@@ -632,8 +617,6 @@ def do_execute_upgrade(hass, call):
         return
 
     if need_to_update:
-        # save the status to sensor and to file
-        _set_update_status(hass, UPDATE_STATUS_DOWNLOADING)
         # call the download service
         hass.services.call("ais_updater", "download_upgrade")
     else:
@@ -744,8 +727,6 @@ def do_download_upgrade(hass, call):
 
     # go next or not
     if l_ret == 0:
-        # save the status to sensor and to file
-        _set_update_status(hass, UPDATE_STATUS_INSTALLING)
         # call installing service
         hass.services.call("ais_updater", "install_upgrade")
     else:
