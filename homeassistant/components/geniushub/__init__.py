@@ -1,7 +1,6 @@
 """Support for a Genius Hub system."""
 from datetime import timedelta
 import logging
-import re
 from typing import Any, Dict, Optional
 
 import aiohttp
@@ -37,14 +36,14 @@ DOMAIN = "geniushub"
 
 # temperature is repeated here, as it gives access to high-precision temps
 GH_ZONE_ATTRS = ["mode", "temperature", "type", "occupied", "override"]
-GH_DEVICE_ATTRS = [
-    "luminance",
-    "measuredTemperature",
-    "occupancyTrigger",
-    "setback",
-    "setTemperature",
-    "wakeupInterval",
-]
+GH_DEVICE_ATTRS = {
+    "luminance": "luminance",
+    "measuredTemperature": "measured_temperature",
+    "occupancyTrigger": "occupancy_trigger",
+    "setback": "setback",
+    "setTemperature": "set_temperature",
+    "wakeupInterval": "wakeup_interval",
+}
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -59,24 +58,6 @@ _V3_API_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Any(_V3_API_SCHEMA, _V1_API_SCHEMA)}, extra=vol.ALLOW_EXTRA
 )
-
-
-def convert_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
-    """Recursively convert a dict's keys to snake_case."""
-
-    def convert_key(key: str) -> str:
-        """Convert a string to snake_case."""
-        string = re.sub(r"[\-\.\s]", "_", str(key))
-        return (string[0]).lower() + re.sub(
-            r"[A-Z]", lambda matched: "_" + matched.group(0).lower(), string[1:]
-        )
-
-    return {
-        (convert_key(k) if isinstance(k, str) else k): (
-            convert_dict(v) if isinstance(v, dict) else v
-        )
-        for k, v in dictionary.items()
-    }
 
 
 async def async_setup(hass, hass_config):
@@ -197,9 +178,11 @@ class GeniusDevice(GeniusEntity):
         if "_state" in self._device.data:  # only for v3 API
             state.update(self._device.data["_state"])
 
-        attrs["state"] = {k: v for k, v in state.items() if k in GH_DEVICE_ATTRS}
+        attrs["state"] = {
+            GH_DEVICE_ATTRS[k]: v for k, v in state.items() if k in GH_DEVICE_ATTRS
+        }
 
-        return convert_dict(attrs)
+        return attrs
 
     async def async_update(self) -> None:
         """Update an entity's state data."""
