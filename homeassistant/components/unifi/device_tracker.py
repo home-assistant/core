@@ -1,9 +1,8 @@
 """Track devices using UniFi controllers."""
 import logging
-import voluptuous as vol
 
 from homeassistant.components.unifi.config_flow import get_controller_from_config_entry
-from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
 from homeassistant.core import callback
@@ -39,13 +38,6 @@ DEVICE_ATTRIBUTES = [
     "vlan",
 ]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
-
-
-async def async_setup_scanner(hass, config, sync_see, discovery_info):
-    """Set up the Unifi integration."""
-    return True
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up device tracker for UniFi component."""
@@ -59,7 +51,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         if (
             entity.config_entry_id == config_entry.entry_id
-            and entity.domain == DOMAIN
+            and entity.domain == DEVICE_TRACKER_DOMAIN
             and "-" in entity.unique_id
         ):
 
