@@ -20,14 +20,25 @@ from homeassistant.helpers.event import track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_SPEED = "speed"
+
 DOMAIN = "nzbget"
 DATA_NZBGET = "data_nzbget"
 DATA_UPDATED = "nzbget_data_updated"
 
 DEFAULT_NAME = "NZBGet"
 DEFAULT_PORT = 6789
+DEFAULT_SPEED_LIMIT = 1000  # 1 Megabyte/Sec
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=5)
+
+SERVICE_PAUSE = "pause"
+SERVICE_RESUME = "resume"
+SERVICE_SET_SPEED = "set_speed"
+
+SPEED_LIMIT_SCHEMA = vol.Schema(
+    {vol.Optional(ATTR_SPEED, default=DEFAULT_SPEED_LIMIT): cv.positive_int}
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -51,6 +62,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the NZBGet sensors."""
+
     host = config[DOMAIN][CONF_HOST]
     port = config[DOMAIN][CONF_PORT]
     ssl = "s" if config[DOMAIN][CONF_SSL] else ""
@@ -70,6 +82,28 @@ def setup(hass, config):
 
     nzbget_data = hass.data[DATA_NZBGET] = NZBGetData(hass, nzbget_api)
     nzbget_data.update()
+
+    def service_handler(service):
+        """Handle service calls."""
+        if service.service == SERVICE_PAUSE:
+            nzbget_data.pause_download()
+        elif service.service == SERVICE_RESUME:
+            nzbget_data.resume_download()
+        elif service.service == SERVICE_SET_SPEED:
+            limit = service.data[ATTR_SPEED]
+            nzbget_data.rate(limit)
+
+    hass.services.register(
+        DOMAIN, SERVICE_PAUSE, service_handler, schema=vol.Schema({})
+    )
+
+    hass.services.register(
+        DOMAIN, SERVICE_RESUME, service_handler, schema=vol.Schema({})
+    )
+
+    hass.services.register(
+        DOMAIN, SERVICE_SET_SPEED, service_handler, schema=SPEED_LIMIT_SCHEMA
+    )
 
     def refresh(event_time):
         """Get the latest data from NZBGet."""
@@ -96,10 +130,36 @@ class NZBGetData:
 
     def update(self):
         """Get the latest data from NZBGet instance."""
+
         try:
             self.status = self._api.status()
             self.available = True
             dispatcher_send(self.hass, DATA_UPDATED)
-        except pynzbgetapi.NZBGetAPIException:
+        except pynzbgetapi.NZBGetAPIException as err:
             self.available = False
-            _LOGGER.error("Unable to refresh NZBGet data")
+            _LOGGER.error("Unable to refresh NZBGet data: %s", err)
+
+    def pause_download(self):
+        """Pause download queue."""
+
+        try:
+            self._api.pausedownload()
+        except pynzbgetapi.NZBGetAPIException as err:
+            _LOGGER.error("Unable to pause queue: %s", err)
+
+    def resume_download(self):
+        """Resume download queue."""
+
+        try:
+            self._api.resumedownload()
+        except pynzbgetapi.NZBGetAPIException as err:
+            _LOGGER.error("Unable to resume download queue: %s", err)
+
+    def rate(self, limit):
+        """Set download speed."""
+
+        try:
+            if not self._api.rate(limit):
+                _LOGGER.error("Limit was out of range")
+        except pynzbgetapi.NZBGetAPIException as err:
+            _LOGGER.error("Unable to set download speed: %s", err)
