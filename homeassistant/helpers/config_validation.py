@@ -374,6 +374,11 @@ def positive_timedelta(value: timedelta) -> timedelta:
     return value
 
 
+positive_time_period_dict = vol.All(
+    vol.Any(timedelta, time_period_dict), positive_timedelta
+)
+
+
 def remove_falsy(value: List[T]) -> List[T]:
     """Remove falsy values from a list."""
     return [v for v in value if v]
@@ -688,6 +693,16 @@ def key_dependency(key, dependency):
         return value
 
     return validator
+
+
+def custom_serializer(schema):
+    """Serialize additional types for voluptuous_serialize."""
+    import voluptuous_serialize
+
+    if schema == positive_time_period_dict:
+        return {"type": "positive_time_period_dict"}
+
+    return voluptuous_serialize.UNSUPPORTED
 
 
 # Schemas

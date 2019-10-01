@@ -1,6 +1,5 @@
 """Helpers for device automations."""
 import asyncio
-from datetime import timedelta
 import logging
 from typing import Any, List, MutableMapping
 
@@ -31,6 +30,7 @@ TRIGGER_BASE_SCHEMA = vol.Schema(
 )
 
 TYPES = {
+    # platform name, get automations function, get capabilities function
     "trigger": (
         "device_trigger",
         "async_get_triggers",
@@ -43,10 +43,6 @@ TYPES = {
     ),
     "action": ("device_action", "async_get_actions", "async_get_action_capabilities"),
 }
-
-POSITIVE_TIME_DELTA_DICT = vol.All(
-    vol.Any(timedelta, cv.time_period_dict), cv.positive_timedelta
-)
 
 
 async def async_setup(hass, config):
@@ -71,7 +67,7 @@ async def _async_get_device_automation_platform(hass, domain, automation_type):
 
     Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.
     """
-    platform_name, _, _ = TYPES[automation_type]
+    platform_name = TYPES[automation_type][0]
     try:
         integration = await async_get_integration(hass, domain)
         platform = integration.get_platform(platform_name)
@@ -106,7 +102,7 @@ async def _async_get_device_automations_from_domain(
     except InvalidDeviceAutomationConfig:
         return None
 
-    _, function_name, _ = TYPES[automation_type]
+    function_name = TYPES[automation_type][1]
 
     return await getattr(platform, function_name)(hass, device_id)
 
@@ -144,15 +140,6 @@ async def _async_get_device_automations(hass, automation_type, device_id):
     return automations
 
 
-def _custom_serializer(schema):
-    import voluptuous_serialize
-
-    if schema == POSITIVE_TIME_DELTA_DICT:
-        return {"type": "positive_time_delta_dict"}
-
-    return voluptuous_serialize.UNSUPPORTED
-
-
 async def _async_get_device_automation_capabilities(hass, automation_type, automation):
     """List device automations."""
     try:
@@ -162,7 +149,7 @@ async def _async_get_device_automation_capabilities(hass, automation_type, autom
     except InvalidDeviceAutomationConfig:
         return {}
 
-    _, _, function_name = TYPES[automation_type]
+    function_name = TYPES[automation_type][2]
 
     if not hasattr(platform, function_name):
         # The device automation has no capabilities
@@ -179,7 +166,7 @@ async def _async_get_device_automation_capabilities(hass, automation_type, autom
         capabilities["extra_fields"] = []
     else:
         capabilities["extra_fields"] = voluptuous_serialize.convert(
-            extra_fields, custom_serializer=_custom_serializer
+            extra_fields, custom_serializer=cv.custom_serializer
         )
 
     return capabilities

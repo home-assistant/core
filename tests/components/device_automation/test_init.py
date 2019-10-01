@@ -178,7 +178,7 @@ async def test_websocket_get_trigger_capabilities(
     entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
     expected_capabilities = {
         "extra_fields": [
-            {"name": "for", "optional": True, "type": "positive_time_delta_dict"}
+            {"name": "for", "optional": True, "type": "positive_time_period_dict"}
         ]
     }
 
