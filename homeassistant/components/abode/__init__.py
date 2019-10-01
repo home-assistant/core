@@ -21,7 +21,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_LIGHTS,
     EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -199,8 +198,8 @@ async def async_setup_entry(hass, config_entry):
             hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
+    await setup_hass_events(hass)
     await hass.async_add_executor_job(setup_hass_services, hass)
-    await hass.async_add_executor_job(setup_hass_events, hass)
     await hass.async_add_executor_job(setup_abode_events, hass)
 
     return True
@@ -275,25 +274,21 @@ def setup_hass_services(hass):
     )
 
 
-def setup_hass_events(hass):
+async def setup_hass_events(hass):
     """Home Assistant start and stop callbacks."""
 
-    def startup(event):
-        """Listen for push events."""
-        hass.data[DOMAIN].abode.events.start()
-
-    def logout(event):
+    async def logout(event):
         """Logout of Abode."""
         if not hass.data[DOMAIN].polling:
-            hass.data[DOMAIN].abode.events.stop()
+            await hass.async_add_executor_job(hass.data[DOMAIN].abode.events.stop)
 
-        hass.data[DOMAIN].abode.logout()
+        await hass.async_add_executor_job(hass.data[DOMAIN].abode.logout)
         _LOGGER.info("Logged out of Abode")
 
     if not hass.data[DOMAIN].polling:
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, startup)
+        await hass.async_add_executor_job(hass.data[DOMAIN].abode.events.start)
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, logout)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, logout)
 
 
 def setup_abode_events(hass):
