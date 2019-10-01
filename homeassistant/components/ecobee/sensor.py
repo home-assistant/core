@@ -55,6 +55,15 @@ class EcobeeSensor(Entity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return a unique identifier for this sensor."""
+        for sensor in self.data.ecobee.get_remote_sensors(self.index):
+            if sensor["name"] == self.sensor_name:
+                if "code" in sensor:
+                    return f"{sensor['code']}-{self.device_class}"
+                return f"{sensor['id']}-{self.device_class}"
+
+    @property
     def device_class(self):
         """Return the device class of the sensor."""
         if self.type in (DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE):
