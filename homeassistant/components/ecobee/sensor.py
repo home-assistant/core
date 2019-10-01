@@ -61,8 +61,7 @@ class EcobeeSensor(Entity):
             if sensor["name"] == self.sensor_name:
                 if "code" in sensor:
                     return f"{sensor['code']}-{self.device_class}"
-                else:
-                    return f"{sensor['id']}-{self.device_class}"
+                return f"{sensor['id']}-{self.device_class}"
 
     @property
     def device_class(self):
