@@ -44,7 +44,7 @@ GH_DEVICE_ATTRS = [
     "setback",
     "setTemperature",
     "wakeupInterval",
-]  # there are multiple devices per Climate entity
+]
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -143,7 +143,7 @@ class GeniusEntity(Entity):
 
     def __init__(self):
         """Initialize the entity."""
-        self._name = None
+        self._unique_id = self._name = None
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
@@ -152,6 +152,11 @@ class GeniusEntity(Entity):
     @callback
     def _refresh(self) -> None:
         self.async_schedule_update_ha_state(force_refresh=True)
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def name(self) -> str:
@@ -167,11 +172,16 @@ class GeniusEntity(Entity):
 class GeniusDevice(GeniusEntity):
     """Base for all Genius Hub devices."""
 
-    def __init__(self):
+    def __init__(self, device):
         """Initialize the Device."""
         super().__init__()
 
-        self._device = None
+        self._device = device
+        # pylint: disable=protected-access
+        self._unique_id = (
+            f"{device._hub.uid}_device_{device.id}" if device._hub.uid else None
+        )
+
         self._last_comms = self._state_attr = None
 
     @property
@@ -202,11 +212,14 @@ class GeniusDevice(GeniusEntity):
 class GeniusZone(GeniusEntity):
     """Base for all Genius Hub zones."""
 
-    def __init__(self):
+    def __init__(self, zone) -> None:
         """Initialize the Zone."""
         super().__init__()
 
-        self._zone = None
+        self._zone = zone
+        # pylint: disable=protected-access
+        self._unique_id = f"{zone._hub.uid}_zone_{zone.id}" if zone._hub.uid else None
+
         self._max_temp = self._min_temp = self._supported_features = None
 
     @property

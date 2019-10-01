@@ -38,9 +38,8 @@ class GeniusBattery(GeniusDevice):
 
     def __init__(self, device, state_attr) -> None:
         """Initialize the sensor."""
-        super().__init__()
+        super().__init__(device)
 
-        self._device = device
         self._state_attr = state_attr
 
         self._name = f"{device.type} {device.id}"

@@ -40,10 +40,7 @@ class GeniusClimateZone(GeniusZone, ClimateDevice):
 
     def __init__(self, zone) -> None:
         """Initialize the climate device."""
-        super().__init__()
-
-        self._zone = zone
-        self.entity_id = f"climate.{DOMAIN}_zone_{zone.id}"
+        super().__init__(zone)
 
         self._max_temp = 28.0
         self._min_temp = 4.0

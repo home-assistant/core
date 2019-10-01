@@ -27,9 +27,8 @@ class GeniusBinarySensor(GeniusDevice, BinarySensorDevice):
 
     def __init__(self, device, state_attr) -> None:
         """Initialize the binary sensor."""
-        super().__init__()
+        super().__init__(device)
 
-        self._device = device
         self._state_attr = state_attr
 
         if device.type[:21] == "Dual Channel Receiver":
