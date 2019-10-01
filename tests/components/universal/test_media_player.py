@@ -1,4 +1,5 @@
 """The tests for the Universal Media player platform."""
+import asyncio
 from copy import copy
 import unittest
 

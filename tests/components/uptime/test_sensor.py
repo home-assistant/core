@@ -1,4 +1,5 @@
 """The tests for the uptime sensor platform."""
+import asyncio
 import unittest
 from unittest.mock import patch
 from datetime import timedelta
