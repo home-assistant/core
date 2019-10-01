@@ -503,3 +503,4 @@ class AlarmControlPanelCapabilities(AlexaEntity):
         """Yield the supported interfaces."""
         if not self.entity.attributes.get("code_arm_required"):
             yield AlexaSecurityPanelController(self.hass, self.entity)
+            yield AlexaEndpointHealth(self.hass, self.entity)
