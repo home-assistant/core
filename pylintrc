@@ -2,7 +2,7 @@
 ignore=tests
 
 [BASIC]
-good-names=i,j,k,ex,Run,_,fp
+good-names=id,i,j,k,ex,Run,_,fp
 
 [MESSAGES CONTROL]
 # Reasons disabled:
