@@ -2,6 +2,7 @@
 import copy
 import logging
 
+from aiohttp import web_response
 import plexapi.exceptions
 from plexauth import PlexAuth
 import requests.exceptions
@@ -248,10 +249,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(self.hass)
         self.plexauth = PlexAuth(payload, session)
         await self.plexauth.initiate_auth()
-        base_url = self.hass.config.api.base_url.rstrip("/")
-        forward_url = "{}{}?flow_id={}".format(
-            base_url, AUTH_CALLBACK_PATH, self.flow_id
-        )
+        forward_url = f"{self.hass.config.api.base_url}{AUTH_CALLBACK_PATH}?flow_id={self.flow_id}"
         auth_url = self.plexauth.auth_url(forward_url)
         return self.async_external_step(step_id="obtain_token", url=auth_url)
 
@@ -323,8 +321,6 @@ class PlexAuthorizationCallbackView(HomeAssistantView):
 
     async def get(self, request):
         """Receive authorization confirmation."""
-        from aiohttp import web_response
-
         hass = request.app["hass"]
         await hass.config_entries.flow.async_configure(
             flow_id=request.query["flow_id"], user_input=None

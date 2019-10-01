@@ -261,9 +261,7 @@ async def test_no_servers_found(hass):
         )
         assert result["type"] == "external"
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"manual_setup": False}
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] == "external_done"
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -640,9 +638,7 @@ async def test_external_timed_out(hass):
         )
         assert result["type"] == "external"
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"manual_setup": False}
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] == "external_done"
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
