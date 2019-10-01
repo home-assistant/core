@@ -182,21 +182,19 @@ class AirlyData:
             index = measurements.current["indexes"][0]
             standards = measurements.current["standards"]
 
-            if index["description"] != NO_AIRLY_SENSORS:
-                for value in values:
-                    self.data[value["name"]] = value["value"]
-                for standard in standards:
-                    self.data[f"{standard['pollutant']}_LIMIT"] = standard["limit"]
-                    self.data[f"{standard['pollutant']}_PERCENT"] = standard["percent"]
-                self.data[ATTR_API_CAQI] = index["value"]
-                self.data[ATTR_API_CAQI_LEVEL] = (
-                    index["level"].lower().replace("_", " ")
-                )
-                self.data[ATTR_API_CAQI_DESCRIPTION] = index["description"]
-                self.data[ATTR_API_ADVICE] = index["advice"]
-                _LOGGER.debug("Data retrieved from Airly")
-            else:
+            if index["description"] == NO_AIRLY_SENSORS:
                 _LOGGER.error("Can't retrieve data: no Airly sensors in this area")
+                return
+            for value in values:
+                self.data[value["name"]] = value["value"]
+            for standard in standards:
+                self.data[f"{standard['pollutant']}_LIMIT"] = standard["limit"]
+                self.data[f"{standard['pollutant']}_PERCENT"] = standard["percent"]
+            self.data[ATTR_API_CAQI] = index["value"]
+            self.data[ATTR_API_CAQI_LEVEL] = index["level"].lower().replace("_", " ")
+            self.data[ATTR_API_CAQI_DESCRIPTION] = index["description"]
+            self.data[ATTR_API_ADVICE] = index["advice"]
+            _LOGGER.debug("Data retrieved from Airly")
         except (
             ValueError,
             AirlyError,
