@@ -164,12 +164,9 @@ class AirlyData:
 
     def __init__(self, session, api_key, latitude, longitude, language, **kwargs):
         """Initialize."""
-        self.session = session
         self.latitude = latitude
         self.longitude = longitude
-        self.language = language
-        self.api_key = api_key
-        self.airly = Airly(self.api_key, self.session, language=self.language)
+        self.airly = Airly(api_key, session, language=language)
         self.data = {}
 
     @Throttle(DEFAULT_SCAN_INTERVAL)
