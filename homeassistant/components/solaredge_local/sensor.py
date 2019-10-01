@@ -220,9 +220,14 @@ class SolarEdgeData:
             self.data["energyThisMonth"] = round(status.energy.thisMonth, 2)
             self.data["energyToday"] = round(status.energy.today, 2)
             self.data["currentPower"] = round(status.powerWatt, 2)
-            self.data[
-                "invertertemperature"
-            ] = status.inverters.primary.temperature.value
+            if status.inverters.primary.temperature.units.celsius:
+                self.data[
+                    "invertertemperature"
+                ] = status.inverters.primary.temperature.value
+            else:
+                self.data["invertertemperature"] = (
+                    (status.inverters.primary.temperature.value - 32) * 5 / 9
+                )
         if maintenance.system.name:
             self.data["optimizertemperature"] = statistics.mean(temperature)
             self.data["optimizervoltage"] = statistics.mean(voltage)
