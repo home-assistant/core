@@ -42,6 +42,48 @@ async def test_valid_config(hass):
     assert state.state == "off"
 
 
+async def test_initial_state_on(hass):
+    """Test configuration with state on."""
+    assert await async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "flux",
+                "name": "flux",
+                "lights": ["light.desk", "light.lamp"],
+                "initial_state": "state_on",
+            }
+        },
+    )
+
+    state = hass.states.get("switch.flux")
+    assert state
+    assert state.state == "on"
+
+
+async def test_initial_state_off(hass):
+    """Test configuration with state off."""
+    mock_restore_cache(hass, [State("switch.flux", "on")])
+
+    assert await async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "flux",
+                "name": "flux",
+                "lights": ["light.desk", "light.lamp"],
+                "initial_state": "state_off",
+            }
+        },
+    )
+
+    state = hass.states.get("switch.flux")
+    assert state
+    assert state.state == "off"
+
+
 async def test_restore_state(hass):
     """Test restoring state."""
     mock_restore_cache(hass, [State("switch.flux", "on")])
