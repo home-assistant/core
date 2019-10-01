@@ -1310,7 +1310,11 @@ async def test_endpoint_bad_health(hass):
 
 async def test_alarm_control_panel(hass):
     """Test alarm_control_panel discovery."""
-    device = ("alarm_control_panel.test_1", "disarmed", {"friendly_name": "Test Alarm Control Panel 1"})
+    device = (
+        "alarm_control_panel.test_1",
+        "disarmed",
+        {"friendly_name": "Test Alarm Control Panel 1"},
+    )
     appliance = await discovery_test(device, hass)
 
     assert appliance["endpointId"] == "alarm_control_panel#test_1"
