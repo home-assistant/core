@@ -376,9 +376,7 @@ class TestMediaPlayer(unittest.TestCase):
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1.schedule_update_ha_state()
         self.hass.block_till_done()
-        asyncio.run_coroutine_threadsafe(
-            ump.async_update(), self.hass.loop
-        ).result()
+        asyncio.run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         assert self.mock_mp_1.entity_id == ump._child_state.entity_id
 
         self.mock_mp_2._state = STATE_PLAYING
@@ -431,9 +429,7 @@ class TestMediaPlayer(unittest.TestCase):
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config["name"])
-        asyncio.run_coroutine_threadsafe(
-            ump.async_update(), self.hass.loop
-        ).result()
+        asyncio.run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
         assert STATE_OFF == ump.state
 
@@ -457,9 +453,7 @@ class TestMediaPlayer(unittest.TestCase):
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config["name"])
-        asyncio.run_coroutine_threadsafe(
-            ump.async_update(), self.hass.loop
-        ).result()
+        asyncio.run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
         assert ump.volume_level is None
 
@@ -640,9 +634,7 @@ class TestMediaPlayer(unittest.TestCase):
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config["name"])
-        asyncio.run_coroutine_threadsafe(
-            ump.async_update(), self.hass.loop
-        ).result()
+        asyncio.run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
         self.mock_mp_2._state = STATE_PLAYING
         self.mock_mp_2.schedule_update_ha_state()
