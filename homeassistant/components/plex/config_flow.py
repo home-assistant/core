@@ -250,7 +250,9 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.plexauth = PlexAuth(payload, session)
         await self.plexauth.initiate_auth()
         forward_url = f"{self.hass.config.api.base_url}{AUTH_CALLBACK_PATH}?flow_id={self.flow_id}"
-        auth_url = self.plexauth.auth_url(forward_url)
+        auth_url = await self.hass.async_add_executor_job(
+            self.plexauth.auth_url, forward_url
+        )
         return self.async_external_step(step_id="obtain_token", url=auth_url)
 
     async def async_step_obtain_token(self, user_input=None):
