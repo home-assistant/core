@@ -57,6 +57,7 @@ FLOWS = [
     "solaredge",
     "somfy",
     "sonos",
+    "starline",
     "tellduslive",
     "toon",
     "tplink",
