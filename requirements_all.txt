@@ -964,6 +964,9 @@ pizzapi==0.0.3
 # homeassistant.components.plex
 plexapi==3.0.6
 
+# homeassistant.components.plex
+plexauth==0.0.4
+
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
 
