@@ -306,6 +306,11 @@ class Thermostat(ClimateDevice):
         return self.thermostat["name"]
 
     @property
+    def unique_id(self):
+        """Return a unique identifier for this ecobee thermostat."""
+        return self.thermostat["identifier"]
+
+    @property
     def temperature_unit(self):
         """Return the unit of measurement."""
         return TEMP_FAHRENHEIT
