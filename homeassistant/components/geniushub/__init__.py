@@ -11,6 +11,7 @@ from geniushubclient import GeniusHub
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
+    CONF_MAC,
     CONF_PASSWORD,
     CONF_TOKEN,
     CONF_USERNAME,
@@ -30,7 +31,6 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
 
 ATTR_DURATION = "duration"
-CONF_HUB_UID = "mac_address"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ MAC_ADDRESS_REGEXP = r"^([0-9A-F]{2}:){5}([0-9A-F]{2})$"
 V1_API_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TOKEN): cv.string,
-        vol.Required(CONF_HUB_UID): vol.Match(MAC_ADDRESS_REGEXP),
+        vol.Required(CONF_MAC): vol.Match(MAC_ADDRESS_REGEXP),
     }
 )
 V3_API_SCHEMA = vol.Schema(
@@ -62,7 +62,7 @@ V3_API_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_HUB_UID): vol.Match(MAC_ADDRESS_REGEXP),
+        vol.Optional(CONF_MAC): vol.Match(MAC_ADDRESS_REGEXP),
     }
 )
 CONFIG_SCHEMA = vol.Schema(
@@ -105,7 +105,7 @@ class GeniusBroker:
     def __init__(self, hass, args, kwargs) -> None:
         """Initialize the geniushub client."""
         self.hass = hass
-        self._hub_uid = kwargs.pop(CONF_HUB_UID, None)
+        self._hub_uid = kwargs.pop(CONF_MAC, None)
 
         self.client = None
 
@@ -113,7 +113,7 @@ class GeniusBroker:
     def hub_uid(self) -> int:
         """Return the Hub UID (MAC address)."""
         # pylint: disable=no-member
-        return self._hub_uid if self._hub_uid else self.client.uid
+        return self._hub_uid if self._hub_uid is not None else self.client.uid
 
     async def async_update(self, now, **kwargs) -> None:
         """Update the geniushub client's data."""
@@ -126,7 +126,7 @@ class GeniusBroker:
 
         async_dispatcher_send(self.hass, DOMAIN)
 
-    def make_debug_log_entries(self):
+    def make_debug_log_entries(self) -> None:
         """Make any useful debug log entries."""
         # pylint: disable=protected-access
         _LOGGER.debug(
