@@ -1,7 +1,7 @@
 {
   "domain": "launch_library",
   "name": "Launch library",
-  "documentation": "https://www.home-assistant.io/components/launch_library",
+  "documentation": "https://www.home-assistant.io/integrations/launch_library",
   "requirements": [
     "pylaunches==0.2.0"
   ],

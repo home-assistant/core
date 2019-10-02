@@ -1,7 +1,7 @@
 {
   "domain": "vera",
   "name": "Vera",
-  "documentation": "https://www.home-assistant.io/components/vera",
+  "documentation": "https://www.home-assistant.io/integrations/vera",
   "requirements": [
     "pyvera==0.3.6"
   ],

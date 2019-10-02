@@ -1,7 +1,7 @@
 {
   "domain": "gtfs",
   "name": "Gtfs",
-  "documentation": "https://www.home-assistant.io/components/gtfs",
+  "documentation": "https://www.home-assistant.io/integrations/gtfs",
   "requirements": [
     "pygtfs==0.1.5"
   ],

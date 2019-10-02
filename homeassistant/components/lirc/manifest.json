@@ -1,7 +1,7 @@
 {
   "domain": "lirc",
   "name": "Lirc",
-  "documentation": "https://www.home-assistant.io/components/lirc",
+  "documentation": "https://www.home-assistant.io/integrations/lirc",
   "requirements": [
     "python-lirc==1.2.3"
   ],
