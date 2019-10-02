@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     EVENT_HOMEASSISTANT_START,
     CONF_DISKS,
+    CONF_SCAN_INTERVAL,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -30,7 +31,7 @@ CONF_VOLUMES = "volumes"
 DEFAULT_NAME = "Synology DSM"
 DEFAULT_PORT = 5001
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
+SCAN_INTERVAL = timedelta(seconds=15)
 
 _UTILISATION_MON_COND = {
     "cpu_other_load": ["CPU Load (Other)", "%", "mdi:chip"],
@@ -88,6 +89,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_DISKS): cv.ensure_list,
         vol.Optional(CONF_VOLUMES): cv.ensure_list,
+        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
     }
 )
 
@@ -101,6 +103,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         Delay the setup until Home Assistant is fully initialized.
         This allows any entities to be created already
         """
+        global SCAN_INTERVAL
         name = config.get(CONF_NAME)
         host = config.get(CONF_HOST)
         port = config.get(CONF_PORT)
@@ -109,6 +112,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         use_ssl = config.get(CONF_SSL)
         unit = hass.config.units.temperature_unit
         monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
+        SCAN_INTERVAL = config.get(CONF_SCAN_INTERVAL)
 
         api = SynoApi(host, port, username, password, unit, use_ssl)
 
@@ -164,7 +168,7 @@ class SynoApi:
         self.utilisation = self._api.utilisation
         self.storage = self._api.storage
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    @Throttle(SCAN_INTERVAL)
     def update(self):
         """Update function for updating api information."""
         self._api.update()
