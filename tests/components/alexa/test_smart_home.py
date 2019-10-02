@@ -1316,7 +1316,7 @@ async def test_alarm_control_panel_disarmed(hass):
         {
             "friendly_name": "Test Alarm Control Panel 1",
             "code_arm_required": False,
-            "code_format": "FORMAT_NUMBER",
+            "code_format": "number",
             "code": "1234",
         },
     )
@@ -1325,9 +1325,15 @@ async def test_alarm_control_panel_disarmed(hass):
     assert appliance["endpointId"] == "alarm_control_panel#test_1"
     assert appliance["displayCategories"][0] == "SECURITY_PANEL"
     assert appliance["friendlyName"] == "Test Alarm Control Panel 1"
-    assert_endpoint_capabilities(
+    capabilities = assert_endpoint_capabilities(
         appliance, "Alexa.SecurityPanelController", "Alexa.EndpointHealth"
     )
+    security_panel_capability = get_capability(
+        capabilities, "Alexa.SecurityPanelController"
+    )
+    assert security_panel_capability is not None
+    configuration = security_panel_capability["configuration"]
+    assert {"type": "FOUR_DIGIT_PIN"} in configuration["supportedAuthorizationTypes"]
 
     properties = await reported_properties(hass, "alarm_control_panel#test_1")
     properties.assert_equal("Alexa.SecurityPanelController", "armState", "DISARMED")
