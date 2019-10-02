@@ -107,7 +107,8 @@ class TransmissionSensor(Entity):
     @property
     def state_attributes(self):
         """Return the state attributes, if any."""
-        return {STATE_ATTR_TORRENT_INFO: self._torrent_info}
+        if self._torrent_info:
+            return {STATE_ATTR_TORRENT_INFO: self._torrent_info}
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -160,9 +161,6 @@ class TransmissionSensor(Entity):
                 self._state = self._data.pausedTorrentCount
             elif self.type == "total_torrents":
                 self._state = self._data.torrentCount
-
-        if self.type == "torrent_down_list":
-            self._state = self._transmission_api.get_started_torrent_list()
-            self._torrent_info = self._transmission_api.get_started_torrent_dict()
-        if self.type == "started_torrent_dict":
-            self._state = self._transmission_api.get_started_torrent_dict()
+            elif self.type == "started_torrent_info":
+                self._state = self._transmission_api.get_started_torrent_info()
+                self._torrent_info = self._transmission_api.get_started_torrent_dict()

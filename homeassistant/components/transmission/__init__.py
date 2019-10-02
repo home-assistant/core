@@ -233,8 +233,6 @@ class TransmissionData:
         self._api = api
         self.completed_torrents = []
         self.started_torrents = []
-        self.started_torrents_objects = []
-        self.torrent_down_list = []
         self.started_torrent_dict = {}
 
     @property
@@ -311,25 +309,31 @@ class TransmissionData:
         all_torrents = self._api.get_torrents()
         current_down = {}
 
-        for x in all_torrents:
-            if (
-                x.status == _TRPC["downloading"]
-                or x.status == _TRPC["download pending"]
-            ):
-
-                self.started_torrent_dict[x.name] = {
-                    "addedDate": x.addedDate,
-                    "percentDone": "%.2f" % (x.percentDone * 100),
-                    "eta": str(x.eta),
+        for torrent in all_torrents:
+            if torrent.status == _TRPC["downloading"]:
+                info = self.started_torrent_dict[torrent.name] = {
+                    "addedDate": torrent.addedDate,
+                    "percentDone": "%.2f" % (torrent.percentDone * 100),
                 }
-                current_down[x.name] = True
-            else:
-                self.started_torrent_dict.pop(x.name)
+                try:
+                    info["eta"] = str(torrent.eta)
+                except ValueError:
+                    info["eta"] = "unknown"
 
-        # remove torrents that have completed or otherwise been removed
-        for x in self.started_torrent_dict:
-            if x.name not in current_down:
-                self.started_torrent_dict.pop(x.name)
+                current_down[torrent.name] = True
+
+            elif torrent.status == _TRPC["download pending"]:
+                self.started_torrent_dict[torrent.name] = {
+                    "addedDate": torrent.addedDate
+                }
+                current_down[torrent.name] = True
+
+            elif torrent.name in self.started_torrent_dict:
+                self.started_torrent_dict.pop(torrent.name)
+
+        for torrent in list(self.started_torrent_dict):
+            if torrent not in current_down:
+                self.started_torrent_dict.pop(torrent)
 
     def get_started_torrent_count(self):
         """Get the number of started torrents."""
@@ -339,16 +343,13 @@ class TransmissionData:
         """Get the number of completed torrents."""
         return len(self.completed_torrents)
 
-    def get_started_torrent_list(self):
-        """Get the list of started torrents."""
-        if self.started_torrent_dict:
-            return True
-        else:
-            return False
-
     def get_started_torrent_dict(self):
-        """Get the dict of started torrents."""
+        """Get the started torrent dict."""
         return self.started_torrent_dict
+
+    def get_started_torrent_info(self):
+        """Return True if there is info in state attribute."""
+        return bool(self.started_torrent_dict)
 
     def start_torrents(self):
         """Start all torrents."""

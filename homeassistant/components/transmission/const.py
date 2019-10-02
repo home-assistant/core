@@ -10,8 +10,7 @@ SENSOR_TYPES = {
     "upload_speed": ["Up Speed", "MB/s", None],
     "completed_torrents": ["Completed Torrents", None, None],
     "started_torrents": ["Started Torrents", None, None],
-    "torrent_down_list": ["Downloading", None, None],
-    "started_torrent_dict": ["Torrent Info", None, None],
+    "started_torrent_info": ["Torrent Info", None, None],
 }
 SWITCH_TYPES = {"on_off": "Switch", "turtle_mode": "Turtle Mode"}
 
@@ -20,6 +19,7 @@ DEFAULT_PORT = 9091
 DEFAULT_SCAN_INTERVAL = 120
 
 STATE_ATTR_TORRENT_INFO = "torrent_info"
+ATTR_TORRENT = "torrent"
 SERVICE_ADD_TORRENT = "add_torrent"
 
 DATA_UPDATED = "transmission_data_updated"
