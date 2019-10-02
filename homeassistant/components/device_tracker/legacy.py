@@ -510,6 +510,11 @@ class Device(RestoreEntity):
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
         if not state:
+            now = dt_util.utcnow()
+            run = RecorderRuns(start=(now - timedelta(hours=24)))
+            last_state = history.get_state(self.hass, now, self.entity_id, run)
+            if last_state:
+                self._state = last_state.state
             return
         self._state = state.state
         self.last_update_home = state.state == STATE_HOME
@@ -610,15 +615,7 @@ async def async_load_config(
         except vol.Invalid as exp:
             async_log_exception(exp, dev_id, devices, hass)
         else:
-            device_entity = Device(hass, **device)
-            now = dt_util.utcnow()
-            run = RecorderRuns(start=(now - timedelta(hours=24)))
-            last_state = history.get_state(hass, now, device_entity.entity_id, run)
-            if last_state:
-                device_entity._state = last_state.state
-            else:
-                LOGGER.warning("can't get last state for %s.", device_entity.entity_id)
-            result.append(device_entity)
+            result.append(Device(hass, **device))
     return result
 
 
