@@ -1,7 +1,6 @@
 {
     "domain": "thingsmobile",
     "name": "ThingsMobile",
-    "config_flow": true,
     "documentation": "https://www.home-assistant.io/components/thingsmobile",
     "requirements": [
       
