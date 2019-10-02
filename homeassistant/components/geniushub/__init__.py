@@ -71,7 +71,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     kwargs = dict(config[DOMAIN])
     if CONF_HOST in kwargs:
         args = (kwargs.pop(CONF_HOST),)
-        hass.data[DOMAIN][CONF_HUB_UID] = None
     else:
         args = (kwargs.pop(CONF_TOKEN),)
     hass.data[DOMAIN][CONF_HUB_UID] = kwargs.pop(CONF_HUB_UID, None)
