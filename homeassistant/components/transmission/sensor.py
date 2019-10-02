@@ -109,6 +109,8 @@ class TransmissionSensor(Entity):
         """Return the state attributes, if any."""
         if self._torrent_info:
             return {STATE_ATTR_TORRENT_INFO: self._torrent_info}
+        else:
+            return None
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
