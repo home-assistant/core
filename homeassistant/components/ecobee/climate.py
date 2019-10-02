@@ -36,7 +36,7 @@ from homeassistant.const import (
 from homeassistant.util.temperature import convert
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, _LOGGER
+from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER, _LOGGER
 from .util import ecobee_date, ecobee_time
 
 ATTR_COOL_TEMP = "cool_temp"
@@ -309,6 +309,28 @@ class Thermostat(ClimateDevice):
     def unique_id(self):
         """Return a unique identifier for this ecobee thermostat."""
         return self.thermostat["identifier"]
+
+    @property
+    def device_info(self):
+        """Return device information for this ecobee thermostat."""
+        try:
+            model = f"{ECOBEE_MODEL_TO_NAME[self.thermostat['modelNumber']]} Thermostat"
+        except KeyError:
+            _LOGGER.error(
+                "Model name for ecobee thermostat %s not recognized. "
+                "Please open an issue on GitHub and provide this information: "
+                "Unrecognized model: %s",
+                self.name,
+                self.thermostat["modelNumber"],
+            )
+            return None
+
+        return {
+            "identifiers": {(DOMAIN, self.thermostat["identifier"])},
+            "name": self.name,
+            "manufacturer": MANUFACTURER,
+            "model": model,
+        }
 
     @property
     def temperature_unit(self):
