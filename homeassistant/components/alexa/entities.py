@@ -76,6 +76,9 @@ class DisplayCategory:
     # Indicates a door.
     DOOR = "DOOR"
 
+    # Indicates a fan.
+    FAN = "FAN"
+
     # Indicates light sources or fixtures.
     LIGHT = "LIGHT"
 
