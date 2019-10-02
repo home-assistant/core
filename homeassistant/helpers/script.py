@@ -8,13 +8,9 @@ from typing import Optional, Sequence, Callable, Dict, List, Set, Tuple, Any
 
 import voluptuous as vol
 
+import homeassistant.components.device_automation as device_automation
 from homeassistant.core import HomeAssistant, Context, callback, CALLBACK_TYPE
-from homeassistant.const import (
-    CONF_CONDITION,
-    CONF_DEVICE_ID,
-    CONF_DOMAIN,
-    CONF_TIMEOUT,
-)
+from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_TIMEOUT
 from homeassistant import exceptions
 from homeassistant.helpers import (
     service,
@@ -27,7 +23,6 @@ from homeassistant.helpers.event import (
     async_track_template,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_integration
 import homeassistant.util.dt as date_util
 from homeassistant.util.async_ import run_callback_threadsafe
 
@@ -84,6 +79,21 @@ def call_from_config(
 ) -> None:
     """Call a script based on a config entry."""
     Script(hass, cv.SCRIPT_SCHEMA(config)).run(variables, context)
+
+
+async def async_validate_action_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config."""
+    action_type = _determine_action(config)
+
+    if action_type == ACTION_DEVICE_AUTOMATION:
+        platform = await device_automation.async_get_device_automation_platform(
+            hass, config, "action"
+        )
+        config = platform.ACTION_SCHEMA(config)
+
+    return config
 
 
 class _StopScript(Exception):
@@ -335,8 +345,9 @@ class Script:
         """
         self.last_action = action.get(CONF_ALIAS, "device automation")
         self._log("Executing step %s" % self.last_action)
-        integration = await async_get_integration(self.hass, action[CONF_DOMAIN])
-        platform = integration.get_platform("device_action")
+        platform = await device_automation.async_get_device_automation_platform(
+            self.hass, action, "action"
+        )
         await platform.async_call_action_from_config(
             self.hass, action, variables, context
         )
