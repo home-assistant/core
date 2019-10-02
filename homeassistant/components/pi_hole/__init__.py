@@ -31,6 +31,22 @@ from .const import (
     SERVICE_ENABLE,
 )
 
+
+def ensure_unique_names(config):
+    """Ensure that each configuration dict contains a unique `name` value."""
+    names = {}
+    for conf in config:
+        if conf[CONF_NAME] not in names:
+            names[conf[CONF_NAME]] = conf[CONF_HOST]
+        else:
+            raise vol.Invalid(
+                "Duplicate name '{}' for '{}' (already in use by '{}'). Each configured Pi-hole must have a unique name.".format(
+                    conf[CONF_NAME], conf[CONF_HOST], names[conf[CONF_NAME]]
+                )
+            )
+    return config
+
+
 LOGGER = logging.getLogger(__name__)
 
 PI_HOLE_SCHEMA = vol.Schema(
@@ -45,7 +61,7 @@ PI_HOLE_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema(vol.All([PI_HOLE_SCHEMA], vol.Length(min=1)))},
+    {DOMAIN: vol.Schema(vol.All([PI_HOLE_SCHEMA], ensure_unique_names))},
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -75,7 +91,12 @@ async def async_setup(hass, config):
         session = async_get_clientsession(hass, verify_tls)
         pi_hole = PiHoleData(
             Hole(
-                host, hass.loop, session, location=location, tls=use_tls, api_token=api_key
+                host,
+                hass.loop,
+                session,
+                location=location,
+                tls=use_tls,
+                api_token=api_key,
             ),
             name,
         )
