@@ -114,11 +114,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     if status.inverters.primary.temperature.units.farenheit:
-        SENSOR_TYPES["temperature"] = [
-            "currentTemp",
-            "Current temperature",
+        SENSOR_TYPES["inverter_temperature"] = [
+            "invertertemperature",
+            "Inverter Temperature",
             "TEMP_FAHRENHEIT",
-            "mdi:oil-temperature",
+            "mdi:thermometer",
         ]
 
     # Create solaredge data service which will retrieve and update the data.
