@@ -10,3 +10,5 @@ CONF_INDEX = "index"
 CONF_REFRESH_TOKEN = "refresh_token"
 
 ECOBEE_PLATFORMS = ["binary_sensor", "climate", "sensor", "weather"]
+
+MANUFACTURER = "ecobee"
