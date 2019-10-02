@@ -1,13 +1,13 @@
 """CPS Sensor."""
+import datetime
+import homeassistant.helpers.config_validation as cv
 import requests
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-import datetime
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-api_fragment = "/chargepoints/search?location={}"
+API_FRAGMENT = "/chargepoints/search?location={}"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required("station_id"): cv.string, vol.Optional("name"): cv.string}
@@ -21,7 +21,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     station = config.get("station_id")
     sensor_list = []
     result = requests.get(
-        conf.get("base_url").format(api_fragment).format(station)
+        conf.get("base_url").format(API_FRAGMENT).format(station)
     ).json()
     for i in result["chargePoints"][0]["connectorStatus"]:
         connector = result["chargePoints"][0]["connectorStatus"][i]
@@ -29,7 +29,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             ChargingStationEntity(
                 name,
                 station,
-                conf.get("base_url").format(api_fragment),
+                conf.get("base_url").format(API_FRAGMENT),
                 connector["socketType"],
                 i,
             )
@@ -45,6 +45,7 @@ class ChargingStationEntity(Entity):
         self.station_id = station_id
         self.api_url = api_url
         self._position = position
+        self._state = None
         result = requests.get(self.api_url.format(self.station_id)).json()
         if name:
             self._name = name
@@ -79,22 +80,22 @@ class ChargingStationEntity(Entity):
         self._state = result["chargePoints"][0]["connectorStatus"][self._position][
             "status"
         ]
-        self.lastStatusUpdateTs = result["chargePoints"][0]["connectorStatus"][
+        self.last_update_ts = result["chargePoints"][0]["connectorStatus"][
             self._position
         ]["lastConnectorStatusUpdateTs"]
         self.lat = result["chargePoints"][0]["lat"]
         self.long = result["chargePoints"][0]["lon"]
-        self.locationOnSite = result["chargePoints"][0]["locationOnSite"]
+        self.location_on_site = result["chargePoints"][0]["locationOnSite"]
 
     @property
     def state_attributes(self):
         """Return the state attributes."""
         state_attr = {
             "last_successful_update": self.last_successful_update,
-            "lastStatusUpdateTs": self.lastStatusUpdateTs,
+            "lastStatusUpdateTs": self.last_update_ts,
             "lat": self.lat,
             "long": self.long,
-            "locationOnSite": self.locationOnSite,
+            "locationOnSite": self.location_on_site,
             "connector_type": self.connector_type,
         }
         return state_attr

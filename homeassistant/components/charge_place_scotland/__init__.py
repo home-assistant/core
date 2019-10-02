@@ -7,7 +7,7 @@ DOMAIN = "charge_place_scotland"
 
 TIMEOUT = 5
 
-_api_base_url = "https://map.chargeplacescotland.org/api/{}"
+API_BASE_URL = "https://map.chargeplacescotland.org/api/{}"
 
 
 async def async_setup(hass, config):
@@ -17,5 +17,5 @@ async def async_setup(hass, config):
     This could be simplified - but I'm going to expand this in the future
     """
 
-    hass.data[DOMAIN] = {"base_url": _api_base_url}
+    hass.data[DOMAIN] = {"base_url": API_BASE_URL}
     return True
