@@ -294,8 +294,8 @@ async def test_report_colored_temp_light_state(hass):
     )
 
     properties = await reported_properties(hass, "light.test_off")
-    properties.assert_equal(
-        "Alexa.ColorTemperatureController", "colorTemperatureInKelvin", 0
+    properties.assert_not_has_property(
+        "Alexa.ColorTemperatureController", "colorTemperatureInKelvin"
     )
 
 
