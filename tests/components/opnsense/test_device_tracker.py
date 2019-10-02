@@ -2,7 +2,7 @@
 
 from unittest import mock
 
-from homeassistant.components.opnsense import CONF_API_SECRET, DOMAIN, OPNSENSE_DATA
+from homeassistant.components.opnsense import CONF_API_SECRET, DOMAIN
 from homeassistant.const import CONF_URL, CONF_API_KEY, CONF_VERIFY_SSL
 from homeassistant.setup import async_setup_component
 import homeassistant.components.device_tracker as device_tracker
