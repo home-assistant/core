@@ -445,7 +445,7 @@ class AlexaTemperatureSensor(AlexaCapibility):
             unit = self.hass.config.units.temperature_unit
             temp = self.entity.attributes.get(climate.ATTR_CURRENT_TEMPERATURE)
 
-        if temp in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        if temp in (STATE_UNAVAILABLE, STATE_UNKNOWN, None):
             return None
 
         try:
@@ -572,6 +572,9 @@ class AlexaThermostatController(AlexaCapibility):
 
     def get_property(self, name):
         """Read and return a property."""
+        if self.entity.state == STATE_UNAVAILABLE:
+            return None
+
         if name == "thermostatMode":
             preset = self.entity.attributes.get(climate.ATTR_PRESET_MODE)
 
