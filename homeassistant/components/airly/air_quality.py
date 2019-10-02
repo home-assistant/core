@@ -161,7 +161,8 @@ class AirlyData:
         """Initialize."""
         self.latitude = latitude
         self.longitude = longitude
-        self.airly = Airly(api_key, session, language=language)
+        self.language = language
+        self.airly = Airly(api_key, session, language=self.language)
         self.data = {}
 
     @Throttle(DEFAULT_SCAN_INTERVAL)
@@ -179,7 +180,7 @@ class AirlyData:
             index = measurements.current["indexes"][0]
             standards = measurements.current["standards"]
 
-            if index["description"] == NO_AIRLY_SENSORS:
+            if index["description"] == NO_AIRLY_SENSORS[self.language]:
                 _LOGGER.error("Can't retrieve data: no Airly sensors in this area")
                 return
             for value in values:

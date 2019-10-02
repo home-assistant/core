@@ -122,6 +122,6 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             await measurements.update()
         current = measurements.current
-        if current["indexes"][0]["description"] == NO_AIRLY_SENSORS:
+        if current["indexes"][0]["description"] == NO_AIRLY_SENSORS["en"]:
             return False
         return True
