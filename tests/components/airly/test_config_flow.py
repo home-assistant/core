@@ -8,7 +8,7 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CON
 from homeassistant.components.airly import config_flow
 from homeassistant.components.airly.const import CONF_LANGUAGE, DOMAIN
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import load_fixture, MockConfigEntry
 
 CONFIG = {
     CONF_NAME: "abcd",
@@ -42,12 +42,17 @@ async def test_show_form_with_input(hass):
 
 
 async def test_invalid_api_key(hass):
-    """Test that errors are shown when API_KEY is invalid."""
-    flow = config_flow.AirlyFlowHandler()
-    flow.hass = hass
+    """Test that errors are shown when API key is invalid."""
+    with patch(
+        "homeassistant.components.airly.config_flow.AirlyFlowHandler" "._test_api_key",
+        return_value=False,
+    ):
+        flow = config_flow.AirlyFlowHandler()
+        flow.hass = hass
 
-    result = await flow.async_step_user(user_input=CONFIG)
-    assert result["errors"] == {"base": "auth"}
+        result = await flow.async_step_user(user_input=CONFIG)
+
+        assert result["errors"] == {"base": "auth"}
 
 
 async def test_invalid_location(hass):
@@ -60,6 +65,7 @@ async def test_invalid_location(hass):
         flow.hass = hass
 
         result = await flow.async_step_user(user_input=CONFIG)
+
         assert result["errors"] == {"base": "wrong_location"}
 
 
@@ -75,6 +81,7 @@ async def test_duplicate_error(hass):
         flow.hass = hass
 
         result = await flow.async_step_user(user_input=CONFIG)
+
         assert result["errors"] == {CONF_NAME: "name_exists"}
 
 
@@ -89,6 +96,7 @@ async def test_create_entry(hass):
         flow.hass = hass
 
         result = await flow.async_step_user(user_input=CONFIG)
+
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == CONFIG[CONF_NAME]
         assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
