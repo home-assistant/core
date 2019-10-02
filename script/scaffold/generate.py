@@ -85,7 +85,7 @@ def _custom_tasks(template, info) -> None:
             }
         )
 
-    if template == "config_flow_discovery":
+    elif template == "config_flow_discovery":
         info.update_manifest(config_flow=True)
         info.update_strings(
             config={
@@ -103,7 +103,7 @@ def _custom_tasks(template, info) -> None:
             }
         )
 
-    if template in ("config_flow", "config_flow_discovery"):
+    else template in ("config_flow", "config_flow_discovery"):
         init_file = info.integration_dir / "__init__.py"
         init_file.write_text(
             init_file.read_text()
