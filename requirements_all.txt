@@ -1986,7 +1986,7 @@ xboxapi==0.1.1
 xfinity-gateway==0.0.4
 
 # homeassistant.components.knx
-xknx==0.11.1
+xknx==0.11.2
 
 # homeassistant.components.bluesound
 # homeassistant.components.startca
