@@ -16,23 +16,29 @@ async def test_get_scanner(hass):
         interface_client = mock.MagicMock()
         mocked_opnsense.diagnostics.InterfaceClient.return_value = interface_client
         interface_client.get_arp.return_value = [
-            {'hostname': '',
-             'intf': 'igb1',
-             'intf_description': 'LAN',
-             'ip': '192.168.0.123',
-             'mac': 'ff:ff:ff:ff:ff:ff',
-             'manufacturer': ''},
-            {'hostname': 'Desktop',
-             'intf': 'igb1',
-             'intf_description': 'LAN',
-             'ip': '192.168.0.167',
-             'mac': 'ff:ff:ff:ff:ff:fe',
-             'manufacturer': 'OEM'}]
+            {
+                "hostname": "",
+                "intf": "igb1",
+                "intf_description": "LAN",
+                "ip": "192.168.0.123",
+                "mac": "ff:ff:ff:ff:ff:ff",
+                "manufacturer": "",
+            },
+            {
+                "hostname": "Desktop",
+                "intf": "igb1",
+                "intf_description": "LAN",
+                "ip": "192.168.0.167",
+                "mac": "ff:ff:ff:ff:ff:fe",
+                "manufacturer": "OEM",
+            },
+        ]
         network_insight_client = mock.MagicMock()
         mocked_opnsense.diagnostics.NetworkInsightClient = network_insight_client
         network_insight_client.get_interfaces.return_value = {
-            'igb0': 'WAN',
-            'igb1': 'LAN'}
+            "igb0": "WAN",
+            "igb1": "LAN",
+        }
 
         result = await async_setup_component(
             hass,
@@ -47,8 +53,8 @@ async def test_get_scanner(hass):
             },
         )
         assert result
-        device_1 = hass.states.get('device_tracker.desktop')
+        device_1 = hass.states.get("device_tracker.desktop")
         assert device_1 is not None
-        assert device_1.state == 'not_home'
-        device_2 = hass.states.get('device_tracker.ff_ff_ff_ff_ff_ff')
-        assert device_2.state == 'not_home'
+        assert device_1.state == "not_home"
+        device_2 = hass.states.get("device_tracker.ff_ff_ff_ff_ff_ff")
+        assert device_2.state == "not_home"
