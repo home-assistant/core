@@ -30,17 +30,6 @@ async def test_show_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_show_form_with_input(hass):
-    """Test that the form is served with input."""
-    flow = config_flow.AirlyFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_user(user_input=CONFIG)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-
 async def test_invalid_api_key(hass):
     """Test that errors are shown when API key is invalid."""
     with patch(
