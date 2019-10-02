@@ -5,6 +5,7 @@ from unittest import mock
 from homeassistant.components.opnsense import CONF_API_SECRET, DOMAIN, OPNSENSE_DATA
 from homeassistant.const import CONF_URL, CONF_API_KEY, CONF_VERIFY_SSL
 from homeassistant.setup import async_setup_component
+import homeassistant.components.device_tracker as device_tracker
 
 from tests.common import MockDependency
 
@@ -12,16 +13,30 @@ from tests.common import MockDependency
 async def test_get_scanner(hass):
     """Test creating an opnsense scanner."""
     with MockDependency("pyopnsense") as mocked_opnsense:
-        get_arp = mock.MagicMock()
-        get_interfaces = mock.MagicMock()
-        get_interfaces.return_value = {}
-        mocked_opnsense.diagnostic.InterfaceClient().get_arp = get_arp
-        mocked_opnsense.diagnostic.NetworkInsightClient().get_interfaces = (
-            get_interfaces
-        )
+        interface_client = mock.MagicMock()
+        mocked_opnsense.diagnostics.InterfaceClient.return_value = interface_client
+        interface_client.get_arp.return_value = [
+            {'hostname': '',
+             'intf': 'igb1',
+             'intf_description': 'LAN',
+             'ip': '192.168.0.123',
+             'mac': 'ff:ff:ff:ff:ff:ff',
+             'manufacturer': ''},
+            {'hostname': 'Desktop',
+             'intf': 'igb1',
+             'intf_description': 'LAN',
+             'ip': '192.168.0.167',
+             'mac': 'ff:ff:ff:ff:ff:fe',
+             'manufacturer': 'OEM'}]
+        network_insight_client = mock.MagicMock()
+        mocked_opnsense.diagnostics.NetworkInsightClient = network_insight_client
+        network_insight_client.get_interfaces.return_value = {
+            'igb0': 'WAN',
+            'igb1': 'LAN'}
+
         result = await async_setup_component(
             hass,
-            DOMAIN,
+            device_tracker.DOMAIN,
             {
                 DOMAIN: {
                     CONF_URL: "https://fake_host_fun/api",
@@ -32,4 +47,8 @@ async def test_get_scanner(hass):
             },
         )
         assert result
-        assert hass.data[OPNSENSE_DATA] is not None
+        device_1 = hass.states.get('device_tracker.desktop')
+        assert device_1 is not None
+        assert device_1.state == 'not_home'
+        device_2 = hass.states.get('device_tracker.ff_ff_ff_ff_ff_ff')
+        assert device_2.state == 'not_home'
