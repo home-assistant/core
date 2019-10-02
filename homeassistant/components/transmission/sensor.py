@@ -105,7 +105,7 @@ class TransmissionSensor(Entity):
         return self._tm_client.api.available
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes, if any."""
         if self._torrent_info:
             return {STATE_ATTR_TORRENT_INFO: self._torrent_info}
