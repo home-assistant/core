@@ -79,13 +79,14 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         args = (kwargs.pop(CONF_HOST),)
     else:
         args = (kwargs.pop(CONF_TOKEN),)
+    hub_uid = kwargs.pop(CONF_MAC, None)
 
-    broker = hass.data[DOMAIN]["broker"] = GeniusBroker(hass, args, kwargs)
+    client = GeniusHub(*args, **kwargs, session=async_get_clientsession(hass))
 
-    broker.client = GeniusHub(*args, **kwargs, session=async_get_clientsession(hass))
+    broker = hass.data[DOMAIN]["broker"] = GeniusBroker(hass, client, hub_uid)
 
     try:
-        await broker.client.update()
+        await client.update()
     except aiohttp.ClientResponseError as err:
         _LOGGER.error("Setup failed, check your configuration, %s", err)
         return False
@@ -102,12 +103,11 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 class GeniusBroker:
     """Container for geniushub client and data."""
 
-    def __init__(self, hass, args, kwargs) -> None:
+    def __init__(self, hass, client, hub_uid) -> None:
         """Initialize the geniushub client."""
         self.hass = hass
-        self._hub_uid = kwargs.pop(CONF_MAC, None)
-
-        self.client = None
+        self.client = client
+        self._hub_uid = hub_uid
 
     @property
     def hub_uid(self) -> int:
