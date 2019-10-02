@@ -16,6 +16,7 @@ homeassistant/scripts/check_config.py @kellerza
 homeassistant/components/adguard/* @frenck
 homeassistant/components/airvisual/* @bachya
 homeassistant/components/alarm_control_panel/* @colinodell
+homeassistant/components/alexa/* @home-assistant/cloud
 homeassistant/components/alpha_vantage/* @fabaff
 homeassistant/components/amazon_polly/* @robbiet480
 homeassistant/components/ambiclimate/* @danielhiversen
@@ -106,6 +107,7 @@ homeassistant/components/geonetnz_quakes/* @exxamalte
 homeassistant/components/gitter/* @fabaff
 homeassistant/components/glances/* @fabaff
 homeassistant/components/gntp/* @robbiet480
+homeassistant/components/google_assistant/* @home-assistant/cloud
 homeassistant/components/google_cloud/* @lufton
 homeassistant/components/google_translate/* @awarecan
 homeassistant/components/google_travel_time/* @robbiet480
