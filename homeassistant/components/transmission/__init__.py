@@ -312,8 +312,8 @@ class TransmissionData:
         for torrent in all_torrents:
             if torrent.status == _TRPC["downloading"]:
                 info = self.started_torrent_dict[torrent.name] = {
-                    "addedDate": torrent.addedDate,
-                    "percentDone": "%.2f" % (torrent.percentDone * 100),
+                    "added_date": torrent.addedDate,
+                    "percent_done": f"{torrent.percentDone * 100:.2f}",
                 }
                 try:
                     info["eta"] = str(torrent.eta)
@@ -324,7 +324,7 @@ class TransmissionData:
 
             elif torrent.status == _TRPC["download pending"]:
                 self.started_torrent_dict[torrent.name] = {
-                    "addedDate": torrent.addedDate
+                    "added_date": torrent.addedDate
                 }
                 current_down[torrent.name] = True
 
@@ -342,10 +342,6 @@ class TransmissionData:
     def get_completed_torrent_count(self):
         """Get the number of completed torrents."""
         return len(self.completed_torrents)
-
-    def get_started_torrent_dict(self):
-        """Get the started torrent dict."""
-        return self.started_torrent_dict
 
     def get_started_torrent_info(self):
         """Return True if there is info in state attribute."""
