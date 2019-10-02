@@ -31,6 +31,7 @@ CONF_TRIPLE_PRESS = "remote_button_triple_press"
 CONF_QUADRUPLE_PRESS = "remote_button_quadruple_press"
 CONF_QUINTUPLE_PRESS = "remote_button_quintuple_press"
 CONF_ROTATED = "remote_button_rotated"
+CONF_ROTATION_STOPPED = "remote_button_rotation_stopped"
 CONF_SHAKE = "remote_gyro_activated"
 
 CONF_TURN_ON = "turn_on"
@@ -73,6 +74,17 @@ HUE_TAP_REMOTE = {
     (CONF_SHORT_PRESS, CONF_BUTTON_2): 16,
     (CONF_SHORT_PRESS, CONF_BUTTON_3): 17,
     (CONF_SHORT_PRESS, CONF_BUTTON_4): 18,
+}
+
+SYMFONISK_SOUND_CONTROLLER_MODEL = "SYMFONISK Sound Controller"
+SYMFONISK_SOUND_CONTROLLER = {
+    (CONF_SHORT_PRESS, CONF_TURN_ON): 1002,
+    (CONF_DOUBLE_PRESS, CONF_TURN_ON): 1004,
+    (CONF_TRIPLE_PRESS, CONF_TURN_ON): 1005,
+    (CONF_ROTATED, CONF_LEFT): 2001,
+    (CONF_ROTATION_STOPPED, CONF_LEFT): 2003,
+    (CONF_ROTATED, CONF_RIGHT): 3001,
+    (CONF_ROTATION_STOPPED, CONF_RIGHT): 3003,
 }
 
 TRADFRI_ON_OFF_SWITCH_MODEL = "TRADFRI on/off switch"
@@ -162,6 +174,7 @@ AQARA_SQUARE_SWITCH = {
 REMOTES = {
     HUE_DIMMER_REMOTE_MODEL: HUE_DIMMER_REMOTE,
     HUE_TAP_REMOTE_MODEL: HUE_TAP_REMOTE,
+    SYMFONISK_SOUND_CONTROLLER_MODEL: SYMFONISK_SOUND_CONTROLLER,
     TRADFRI_ON_OFF_SWITCH_MODEL: TRADFRI_ON_OFF_SWITCH,
     TRADFRI_OPEN_CLOSE_REMOTE_MODEL: TRADFRI_OPEN_CLOSE_REMOTE,
     TRADFRI_REMOTE_MODEL: TRADFRI_REMOTE,
@@ -200,7 +213,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
 
-    if device.model not in REMOTES and trigger not in REMOTES[device.model]:
+    if device.model not in REMOTES or trigger not in REMOTES[device.model]:
         raise InvalidDeviceAutomationConfig
 
     trigger = REMOTES[device.model][trigger]
