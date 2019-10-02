@@ -1,7 +1,7 @@
 {
   "domain": "switcher_kis",
   "name": "Switcher",
-  "documentation": "https://www.home-assistant.io/components/switcher_kis/",
+  "documentation": "https://www.home-assistant.io/integrations/switcher_kis/",
   "codeowners": [
     "@tomerfi"
   ],

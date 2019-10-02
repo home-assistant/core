@@ -1,7 +1,7 @@
 {
   "domain": "mqtt_eventstream",
   "name": "Mqtt eventstream",
-  "documentation": "https://www.home-assistant.io/components/mqtt_eventstream",
+  "documentation": "https://www.home-assistant.io/integrations/mqtt_eventstream",
   "requirements": [],
   "dependencies": [
     "mqtt"

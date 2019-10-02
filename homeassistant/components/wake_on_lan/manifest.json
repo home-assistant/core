@@ -1,7 +1,7 @@
 {
   "domain": "wake_on_lan",
   "name": "Wake on lan",
-  "documentation": "https://www.home-assistant.io/components/wake_on_lan",
+  "documentation": "https://www.home-assistant.io/integrations/wake_on_lan",
   "requirements": [
     "wakeonlan==1.1.6"
   ],

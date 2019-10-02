@@ -1,7 +1,7 @@
 {
   "domain": "solaredge_local",
   "name": "Solar Edge Local",
-  "documentation": "https://www.home-assistant.io/components/solaredge_local",
+  "documentation": "https://www.home-assistant.io/integrations/solaredge_local",
   "requirements": [
     "solaredge-local==0.2.0"
   ],

@@ -1,7 +1,7 @@
 {
   "domain": "startca",
   "name": "Startca",
-  "documentation": "https://www.home-assistant.io/components/startca",
+  "documentation": "https://www.home-assistant.io/integrations/startca",
   "requirements": [
     "xmltodict==0.12.0"
   ],

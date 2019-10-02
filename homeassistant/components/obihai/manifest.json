@@ -1,7 +1,7 @@
 {
     "domain": "obihai",
     "name": "Obihai",
-    "documentation": "https://www.home-assistant.io/components/obihai",
+    "documentation": "https://www.home-assistant.io/integrations/obihai",
     "requirements": [
       "pyobihai==1.2.0"
     ],

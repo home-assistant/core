@@ -2,7 +2,7 @@
   "domain": "iaqualink",
   "name": "Jandy iAqualink",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/iaqualink/",
+  "documentation": "https://www.home-assistant.io/integrations/iaqualink/",
   "dependencies": [],
   "codeowners": [
     "@flz"

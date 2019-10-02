@@ -1,7 +1,7 @@
 {
   "domain": "august",
   "name": "August",
-  "documentation": "https://www.home-assistant.io/components/august",
+  "documentation": "https://www.home-assistant.io/integrations/august",
   "requirements": [
     "py-august==0.7.0"
   ],

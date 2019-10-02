@@ -1,7 +1,7 @@
 {
   "domain": "version",
   "name": "Version",
-  "documentation": "https://www.home-assistant.io/components/version",
+  "documentation": "https://www.home-assistant.io/integrations/version",
   "requirements": [
     "pyhaversion==3.1.0"
   ],
