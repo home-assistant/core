@@ -326,7 +326,7 @@ class AlexaColorTemperatureController(AlexaCapibility):
             return color_util.color_temperature_mired_to_kelvin(
                 self.entity.attributes["color_temp"]
             )
-        return 0
+        return None
 
 
 class AlexaPercentageController(AlexaCapibility):
