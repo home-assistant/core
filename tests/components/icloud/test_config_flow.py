@@ -47,32 +47,28 @@ def mock_controller_session():
 @pytest.fixture(name="requires_2fa")
 def mock_controller_requires_2fa():
     """Mock a successful requires_2fa."""
-    with patch("pyicloud.base.PyiCloudService.requires_2fa", return_value=True):
+    with patch("pyicloud.PyiCloudService.requires_2fa", return_value=True):
         yield
 
 
 @pytest.fixture(name="not_requires_2fa")
 def mock_controller_not_requires_2fa():
     """Mock a successful not requires_2fa."""
-    with patch("pyicloud.base.PyiCloudService.requires_2fa", return_value=False):
+    with patch("pyicloud.PyiCloudService.requires_2fa", return_value=False):
         yield
 
 
 @pytest.fixture(name="send_verification_code")
 def mock_controller_send_verification_code():
     """Mock a successful send_verification_code."""
-    with patch(
-        "pyicloud.base.PyiCloudService.send_verification_code", return_value=True
-    ):
+    with patch("pyicloud.PyiCloudService.send_verification_code", return_value=True):
         yield
 
 
 @pytest.fixture(name="send_verification_code_failed")
 def mock_controller_send_verification_code_failed():
     """Mock a successful send_verification_code failed."""
-    with patch(
-        "pyicloud.base.PyiCloudService.send_verification_code", return_value=False
-    ):
+    with patch("pyicloud.PyiCloudService.send_verification_code", return_value=False):
         yield
 
 
@@ -80,7 +76,7 @@ def mock_controller_send_verification_code_failed():
 def mock_controller_validate_verification_code():
     """Mock a successful validate_verification_code."""
     with patch(
-        "pyicloud.base.PyiCloudService.validate_verification_code", return_value=True
+        "pyicloud.PyiCloudService.validate_verification_code", return_value=True
     ):
         yield
 
@@ -89,7 +85,7 @@ def mock_controller_validate_verification_code():
 def mock_controller_validate_verification_code_failed():
     """Mock a successful validate_verification_code failed."""
     with patch(
-        "pyicloud.base.PyiCloudService.validate_verification_code", return_value=False
+        "pyicloud.PyiCloudService.validate_verification_code", return_value=False
     ):
         yield
 
