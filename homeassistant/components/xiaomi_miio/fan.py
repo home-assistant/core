@@ -12,7 +12,13 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     DOMAIN,
 )
-from homeassistant.const import CONF_NAME, CONF_HOST, CONF_TOKEN, ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_MODE,
+    CONF_NAME,
+    CONF_HOST,
+    CONF_TOKEN,
+    ATTR_ENTITY_ID,
+)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
@@ -75,7 +81,6 @@ ATTR_MODEL = "model"
 ATTR_TEMPERATURE = "temperature"
 ATTR_HUMIDITY = "humidity"
 ATTR_AIR_QUALITY_INDEX = "aqi"
-ATTR_MODE = "mode"
 ATTR_FILTER_HOURS_USED = "filter_hours_used"
 ATTR_FILTER_LIFE = "filter_life_remaining"
 ATTR_FAVORITE_LEVEL = "favorite_level"
