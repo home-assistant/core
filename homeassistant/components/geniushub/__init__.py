@@ -70,7 +70,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType):
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Create a Genius Hub system."""
     hass.data[DOMAIN] = {}
 
@@ -80,7 +80,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     else:
         args = (kwargs.pop(CONF_TOKEN),)
 
-    hass.data[DOMAIN]["broker"] = broker = GeniusBroker(hass, args, kwargs)
+    broker = hass.data[DOMAIN]["broker"] = GeniusBroker(hass, args, kwargs)
+
+    broker.client = GeniusHub(*args, **kwargs, session=async_get_clientsession(hass))
 
     try:
         await broker.client.update()
@@ -88,9 +90,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         _LOGGER.error("Setup failed, check your configuration, %s", err)
         return False
     broker.make_debug_log_entries()
-
-    if broker.hub_uid is None:
-        broker.hub_uid = broker.client.uid  # pylint: disable=no-member
 
     async_track_time_interval(hass, broker.async_update, SCAN_INTERVAL)
 
@@ -103,14 +102,20 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 class GeniusBroker:
     """Container for geniushub client and data."""
 
-    def __init__(self, hass, args, kwargs):
+    def __init__(self, hass, args, kwargs) -> None:
         """Initialize the geniushub client."""
         self.hass = hass
-        self.hub_uid = kwargs.pop(CONF_HUB_UID, None)
+        self._hub_uid = kwargs.pop(CONF_HUB_UID, None)
 
-        self.client = GeniusHub(*args, **kwargs, session=async_get_clientsession(hass))
+        self.client = None
 
-    async def async_update(self, now, **kwargs):
+    @property
+    def hub_uid(self) -> int:
+        """Return the Hub UID (MAC address)."""
+        # pylint: disable=no-member
+        return self._hub_uid if self._hub_uid else self.client.uid
+
+    async def async_update(self, now, **kwargs) -> None:
         """Update the geniushub client's data."""
         try:
             await self.client.update()
@@ -134,7 +139,7 @@ class GeniusBroker:
 class GeniusEntity(Entity):
     """Base for all Genius Hub entities."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the entity."""
         self._unique_id = self._name = None
 
@@ -165,7 +170,7 @@ class GeniusEntity(Entity):
 class GeniusDevice(GeniusEntity):
     """Base for all Genius Hub devices."""
 
-    def __init__(self, broker, device):
+    def __init__(self, broker, device) -> None:
         """Initialize the Device."""
         super().__init__()
 
