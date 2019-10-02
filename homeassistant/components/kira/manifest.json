@@ -1,7 +1,7 @@
 {
   "domain": "kira",
   "name": "Kira",
-  "documentation": "https://www.home-assistant.io/components/kira",
+  "documentation": "https://www.home-assistant.io/integrations/kira",
   "requirements": [
     "pykira==0.1.1"
   ],

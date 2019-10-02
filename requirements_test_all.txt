@@ -80,7 +80,7 @@ aiowwlln==2.0.2
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv==0.0.28
+androidtv==0.0.29
 
 # homeassistant.components.apns
 apns2==0.3.0
@@ -260,6 +260,9 @@ pillow==6.1.0
 
 # homeassistant.components.plex
 plexapi==3.0.6
+
+# homeassistant.components.plex
+plexauth==0.0.4
 
 # homeassistant.components.mhz19
 # homeassistant.components.serial_pm

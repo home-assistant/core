@@ -11,7 +11,7 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
     color_temperature_kelvin_to_mired as kelvin_to_mired,
 )
-from homeassistant.const import CONF_HOST, ATTR_ENTITY_ID, CONF_NAME
+from homeassistant.const import CONF_HOST, ATTR_ENTITY_ID, ATTR_MODE, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -64,7 +64,6 @@ SUPPORT_YEELIGHT_WHITE_TEMP = SUPPORT_YEELIGHT | SUPPORT_COLOR_TEMP
 
 SUPPORT_YEELIGHT_RGB = SUPPORT_YEELIGHT_WHITE_TEMP | SUPPORT_COLOR
 
-ATTR_MODE = "mode"
 ATTR_MINUTES = "minutes"
 
 SERVICE_SET_MODE = "set_mode"

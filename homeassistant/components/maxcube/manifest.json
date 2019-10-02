@@ -1,7 +1,7 @@
 {
   "domain": "maxcube",
   "name": "Maxcube",
-  "documentation": "https://www.home-assistant.io/components/maxcube",
+  "documentation": "https://www.home-assistant.io/integrations/maxcube",
   "requirements": [
     "maxcube-api==0.1.0"
   ],

@@ -7,10 +7,10 @@ import voluptuous as vol
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.config import async_log_exception, config_without_domain
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform
+from homeassistant.helpers import config_per_platform, script
 from homeassistant.loader import IntegrationNotFound
 
-from . import CONF_TRIGGER, DOMAIN, PLATFORM_SCHEMA
+from . import CONF_ACTION, CONF_TRIGGER, DOMAIN, PLATFORM_SCHEMA
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
@@ -32,6 +32,12 @@ async def async_validate_config_item(hass, config, full_config=None):
                 )
             triggers.append(trigger)
         config[CONF_TRIGGER] = triggers
+
+        actions = []
+        for action in config[CONF_ACTION]:
+            action = await script.async_validate_action_config(hass, action)
+            actions.append(action)
+        config[CONF_ACTION] = actions
     except (vol.Invalid, HomeAssistantError, IntegrationNotFound) as ex:
         async_log_exception(ex, DOMAIN, full_config or config, hass)
         return None

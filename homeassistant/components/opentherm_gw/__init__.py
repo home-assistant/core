@@ -12,6 +12,7 @@ from homeassistant.components.sensor import DOMAIN as COMP_SENSOR
 from homeassistant.const import (
     ATTR_DATE,
     ATTR_ID,
+    ATTR_MODE,
     ATTR_TEMPERATURE,
     ATTR_TIME,
     CONF_DEVICE,
@@ -28,7 +29,6 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     ATTR_GW_ID,
-    ATTR_MODE,
     ATTR_LEVEL,
     ATTR_DHW_OVRD,
     CONF_CLIMATE,

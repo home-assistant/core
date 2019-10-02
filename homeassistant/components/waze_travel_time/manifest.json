@@ -1,7 +1,7 @@
 {
   "domain": "waze_travel_time",
   "name": "Waze travel time",
-  "documentation": "https://www.home-assistant.io/components/waze_travel_time",
+  "documentation": "https://www.home-assistant.io/integrations/waze_travel_time",
   "requirements": [
     "WazeRouteCalculator==0.10"
   ],

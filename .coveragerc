@@ -558,6 +558,7 @@ omit =
     homeassistant/components/russound_rio/media_player.py
     homeassistant/components/russound_rnet/media_player.py
     homeassistant/components/sabnzbd/*
+    homeassistant/components/saj/sensor.py
     homeassistant/components/satel_integra/*
     homeassistant/components/scrape/sensor.py
     homeassistant/components/scsgate/*
