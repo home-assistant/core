@@ -100,6 +100,9 @@ class DisplayCategory:
     # order is unimportant.    Applies to Scenes
     SCENE_TRIGGER = "SCENE_TRIGGER"
 
+    # Indicates a security panel.
+    SECURITY_PANEL = "SECURITY_PANEL"
+
     # Indicates an endpoint that locks.
     SMARTLOCK = "SMARTLOCK"
 
