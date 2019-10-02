@@ -1,7 +1,7 @@
 {
   "domain": "tesla",
   "name": "Tesla",
-  "documentation": "https://www.home-assistant.io/components/tesla",
+  "documentation": "https://www.home-assistant.io/integrations/tesla",
   "requirements": [
     "teslajsonpy==0.0.25"
   ],

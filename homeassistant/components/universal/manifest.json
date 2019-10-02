@@ -1,7 +1,7 @@
 {
   "domain": "universal",
   "name": "Universal",
-  "documentation": "https://www.home-assistant.io/components/universal",
+  "documentation": "https://www.home-assistant.io/integrations/universal",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

@@ -1,7 +1,7 @@
 {
   "domain": "sma",
   "name": "Sma",
-  "documentation": "https://www.home-assistant.io/components/sma",
+  "documentation": "https://www.home-assistant.io/integrations/sma",
   "requirements": [
     "pysma==0.3.4"
   ],

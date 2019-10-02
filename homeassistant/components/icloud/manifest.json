@@ -1,7 +1,7 @@
 {
   "domain": "icloud",
   "name": "Icloud",
-  "documentation": "https://www.home-assistant.io/components/icloud",
+  "documentation": "https://www.home-assistant.io/integrations/icloud",
   "requirements": [
     "pyicloud==0.9.1"
   ],

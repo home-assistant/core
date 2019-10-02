@@ -1,7 +1,7 @@
 {
   "domain": "rachio",
   "name": "Rachio",
-  "documentation": "https://www.home-assistant.io/components/rachio",
+  "documentation": "https://www.home-assistant.io/integrations/rachio",
   "requirements": [
     "rachiopy==0.1.3"
   ],

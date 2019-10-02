@@ -1,7 +1,7 @@
 {
   "domain": "onewire",
   "name": "Onewire",
-  "documentation": "https://www.home-assistant.io/components/onewire",
+  "documentation": "https://www.home-assistant.io/integrations/onewire",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

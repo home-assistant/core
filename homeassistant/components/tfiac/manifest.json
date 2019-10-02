@@ -1,7 +1,7 @@
 {
   "domain": "tfiac",
   "name": "Tfiac",
-  "documentation": "https://www.home-assistant.io/components/tfiac",
+  "documentation": "https://www.home-assistant.io/integrations/tfiac",
   "requirements": [
     "pytfiac==0.4"
   ],

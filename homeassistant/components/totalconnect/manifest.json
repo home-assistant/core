@@ -1,7 +1,7 @@
 {
   "domain": "totalconnect",
   "name": "Totalconnect",
-  "documentation": "https://www.home-assistant.io/components/totalconnect",
+  "documentation": "https://www.home-assistant.io/integrations/totalconnect",
   "requirements": [
     "total_connect_client==0.28"
   ],

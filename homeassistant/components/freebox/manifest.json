@@ -1,7 +1,7 @@
 {
   "domain": "freebox",
   "name": "Freebox",
-  "documentation": "https://www.home-assistant.io/components/freebox",
+  "documentation": "https://www.home-assistant.io/integrations/freebox",
   "requirements": [
     "aiofreepybox==0.0.8"
   ],
