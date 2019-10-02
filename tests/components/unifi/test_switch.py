@@ -17,6 +17,7 @@ from homeassistant.components.unifi.const import (
     CONF_SITE_ID,
     CONTROLLER_ID as CONF_CONTROLLER_ID,
     UNIFI_CONFIG,
+    UNIFI_WIRELESS_CLIENTS,
 )
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
@@ -221,7 +222,9 @@ CONTROLLER_ID = CONF_CONTROLLER_ID.format(host="mock-host", site="mock-site")
 def mock_controller(hass):
     """Mock a UniFi Controller."""
     hass.data[UNIFI_CONFIG] = {}
+    hass.data[UNIFI_WIRELESS_CLIENTS] = Mock()
     controller = unifi.UniFiController(hass, None)
+    controller.wireless_clients = set()
 
     controller._site_role = "admin"
 
@@ -326,7 +329,7 @@ async def test_switches(hass, mock_controller):
 
     await setup_controller(hass, mock_controller, options)
     assert len(mock_controller.mock_requests) == 3
-    assert len(hass.states.async_all()) == 5
+    assert len(hass.states.async_all()) == 4
 
     switch_1 = hass.states.get("switch.poe_client_1")
     assert switch_1 is not None
