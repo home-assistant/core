@@ -49,15 +49,20 @@ GH_DEVICE_ATTRS = {
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
+MAC_ADDRESS_REGEXP = r"^([0-9A-F]{2}:){5}([0-9A-F]{2})$"
+
 V1_API_SCHEMA = vol.Schema(
-    {vol.Required(CONF_TOKEN): cv.string, vol.Required(CONF_HUB_UID): cv.string}
+    {
+        vol.Required(CONF_TOKEN): cv.string,
+        vol.Required(CONF_HUB_UID): vol.Match(MAC_ADDRESS_REGEXP),
+    }
 )
 V3_API_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_HUB_UID): cv.string,
+        vol.Optional(CONF_HUB_UID): vol.Match(MAC_ADDRESS_REGEXP),
     }
 )
 CONFIG_SCHEMA = vol.Schema(
@@ -102,7 +107,6 @@ class GeniusBroker:
         """Initialize the geniushub client."""
         self.hass = hass
         self.hub_uid = kwargs.pop(CONF_HUB_UID, None)
-        self.hub_uid = self.hub_uid.upper() if self.hub_uid else None
 
         self.client = GeniusHub(*args, **kwargs, session=async_get_clientsession(hass))
 
