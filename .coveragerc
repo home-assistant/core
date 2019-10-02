@@ -156,7 +156,12 @@ omit =
     homeassistant/components/ebox/sensor.py
     homeassistant/components/ebusd/*
     homeassistant/components/ecoal_boiler/*
-    homeassistant/components/ecobee/*
+    homeassistant/components/ecobee/__init__.py
+    homeassistant/components/ecobee/binary_sensor.py
+    homeassistant/components/ecobee/climate.py
+    homeassistant/components/ecobee/notify.py
+    homeassistant/components/ecobee/sensor.py
+    homeassistant/components/ecobee/weather.py
     homeassistant/components/econet/water_heater.py
     homeassistant/components/ecovacs/*
     homeassistant/components/eddystone_temperature/sensor.py
@@ -553,6 +558,7 @@ omit =
     homeassistant/components/russound_rio/media_player.py
     homeassistant/components/russound_rnet/media_player.py
     homeassistant/components/sabnzbd/*
+    homeassistant/components/saj/sensor.py
     homeassistant/components/satel_integra/*
     homeassistant/components/scrape/sensor.py
     homeassistant/components/scsgate/*
@@ -594,6 +600,8 @@ omit =
     homeassistant/components/solaredge/sensor.py
     homeassistant/components/solaredge_local/sensor.py
     homeassistant/components/solax/sensor.py
+    homeassistant/components/soma/cover.py
+    homeassistant/components/soma/__init__.py
     homeassistant/components/somfy/*
     homeassistant/components/somfy_mylink/*
     homeassistant/components/sonarr/sensor.py
@@ -670,7 +678,11 @@ omit =
     homeassistant/components/tradfri/cover.py
     homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/sensor.py
-    homeassistant/components/transmission/*
+    homeassistant/components/transmission/__init__.py
+    homeassistant/components/transmission/sensor.py
+    homeassistant/components/transmission/switch.py
+    homeassistant/components/transmission/const.py
+    homeassistant/components/transmission/errors.py
     homeassistant/components/travisci/sensor.py
     homeassistant/components/tuya/*
     homeassistant/components/twentemilieu/const.py

@@ -1,4 +1,4 @@
-"""ZHA device automation tests."""
+"""ZHA device automation trigger tests."""
 from unittest.mock import patch
 
 import pytest

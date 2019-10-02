@@ -73,6 +73,7 @@ homeassistant/components/digital_ocean/* @fabaff
 homeassistant/components/discogs/* @thibmaek
 homeassistant/components/doorbird/* @oblogic7
 homeassistant/components/dweet/* @fabaff
+homeassistant/components/ecobee/* @marthoc
 homeassistant/components/ecovacs/* @OverloadUT
 homeassistant/components/egardia/* @jeroenterheerdt
 homeassistant/components/eight_sleep/* @mezz64
@@ -181,6 +182,7 @@ homeassistant/components/monoprice/* @etsinko
 homeassistant/components/moon/* @fabaff
 homeassistant/components/mpd/* @fabaff
 homeassistant/components/mqtt/* @home-assistant/core
+homeassistant/components/mysensors/* @MartinHjelmare
 homeassistant/components/mystrom/* @fabaff
 homeassistant/components/nello/* @pschmitt
 homeassistant/components/ness_alarm/* @nickw444
@@ -224,6 +226,7 @@ homeassistant/components/qld_bushfire/* @exxamalte
 homeassistant/components/qnap/* @colinodell
 homeassistant/components/quantum_gateway/* @cisasteelersfan
 homeassistant/components/qwikswitch/* @kellerza
+homeassistant/components/rainbird/* @konikvranik
 homeassistant/components/raincloud/* @vanstinator
 homeassistant/components/rainforest_eagle/* @gtdiehl
 homeassistant/components/rainmachine/* @bachya
@@ -232,6 +235,7 @@ homeassistant/components/repetier/* @MTrab
 homeassistant/components/rfxtrx/* @danielhiversen
 homeassistant/components/rmvtransport/* @cgtobi
 homeassistant/components/roomba/* @pschmitt
+homeassistant/components/saj/* @fredericvl
 homeassistant/components/scene/* @home-assistant/core
 homeassistant/components/scrape/* @fabaff
 homeassistant/components/script/* @home-assistant/core
@@ -251,6 +255,7 @@ homeassistant/components/smarty/* @z0mbieprocess
 homeassistant/components/smtp/* @fabaff
 homeassistant/components/solaredge_local/* @drobtravels @scheric
 homeassistant/components/solax/* @squishykid
+homeassistant/components/soma/* @ratsept
 homeassistant/components/somfy/* @tetienne
 homeassistant/components/songpal/* @rytilahti
 homeassistant/components/spaceapi/* @fabaff
@@ -286,6 +291,7 @@ homeassistant/components/tplink/* @rytilahti
 homeassistant/components/traccar/* @ludeeus
 homeassistant/components/tradfri/* @ggravlingen
 homeassistant/components/trafikverket_train/* @endor-force
+homeassistant/components/transmission/* @engrbm87
 homeassistant/components/tts/* @robbiet480
 homeassistant/components/twentemilieu/* @frenck
 homeassistant/components/twilio_call/* @robbiet480
@@ -314,6 +320,7 @@ homeassistant/components/wemo/* @sqldiablo
 homeassistant/components/withings/* @vangorra
 homeassistant/components/worldclock/* @fabaff
 homeassistant/components/wwlln/* @bachya
+homeassistant/components/xbox_live/* @MartinHjelmare
 homeassistant/components/xfinity/* @cisasteelersfan
 homeassistant/components/xiaomi_aqara/* @danielhiversen @syssi
 homeassistant/components/xiaomi_miio/* @rytilahti @syssi

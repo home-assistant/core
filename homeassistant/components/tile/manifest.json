@@ -1,7 +1,7 @@
 {
   "domain": "tile",
   "name": "Tile",
-  "documentation": "https://www.home-assistant.io/components/tile",
+  "documentation": "https://www.home-assistant.io/integrations/tile",
   "requirements": [
     "pytile==2.0.6"
   ],

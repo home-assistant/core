@@ -77,7 +77,7 @@ def _setup_plex(hass, config):
     """Pass configuration to a config flow."""
     server_config = dict(config)
     if MP_DOMAIN in server_config:
-        hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = server_config.pop(MP_DOMAIN)
+        hass.data.setdefault(PLEX_MEDIA_PLAYER_OPTIONS, server_config.pop(MP_DOMAIN))
     if CONF_HOST in server_config:
         prefix = "https" if server_config.pop(CONF_SSL) else "http"
         server_config[
@@ -96,7 +96,15 @@ async def async_setup_entry(hass, entry):
     """Set up Plex from a config entry."""
     server_config = entry.data[PLEX_SERVER_CONFIG]
 
-    plex_server = PlexServer(server_config)
+    if MP_DOMAIN not in entry.options:
+        options = dict(entry.options)
+        options.setdefault(
+            MP_DOMAIN,
+            hass.data.get(PLEX_MEDIA_PLAYER_OPTIONS) or MEDIA_PLAYER_SCHEMA({}),
+        )
+        hass.config_entries.async_update_entry(entry, options=options)
+
+    plex_server = PlexServer(server_config, entry.options)
     try:
         await hass.async_add_executor_job(plex_server.connect)
     except requests.exceptions.ConnectionError as error:
@@ -123,13 +131,12 @@ async def async_setup_entry(hass, entry):
     )
     hass.data[PLEX_DOMAIN][SERVERS][plex_server.machine_identifier] = plex_server
 
-    if not hass.data.get(PLEX_MEDIA_PLAYER_OPTIONS):
-        hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = MEDIA_PLAYER_SCHEMA({})
-
     for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
+
+    entry.add_update_listener(async_options_updated)
 
     return True
 
@@ -150,3 +157,9 @@ async def async_unload_entry(hass, entry):
     hass.data[PLEX_DOMAIN][SERVERS].pop(server_id)
 
     return True
+
+
+async def async_options_updated(hass, entry):
+    """Triggered by config entry options updates."""
+    server_id = entry.data[CONF_SERVER_IDENTIFIER]
+    hass.data[PLEX_DOMAIN][SERVERS][server_id].options = entry.options

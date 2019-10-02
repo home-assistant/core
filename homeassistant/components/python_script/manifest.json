@@ -1,7 +1,7 @@
 {
   "domain": "python_script",
   "name": "Python script",
-  "documentation": "https://www.home-assistant.io/components/python_script",
+  "documentation": "https://www.home-assistant.io/integrations/python_script",
   "requirements": [
     "restrictedpython==5.0"
   ],

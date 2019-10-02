@@ -230,4 +230,11 @@ DEMO_DEVICES = [
         "type": "action.devices.types.LOCK",
         "willReportState": False,
     },
+    {
+        "id": "alarm_control_panel.alarm",
+        "name": {"name": "Alarm"},
+        "traits": ["action.devices.traits.ArmDisarm"],
+        "type": "action.devices.types.SECURITYSYSTEM",
+        "willReportState": False,
+    },
 ]

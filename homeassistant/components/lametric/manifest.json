@@ -1,7 +1,7 @@
 {
   "domain": "lametric",
   "name": "Lametric",
-  "documentation": "https://www.home-assistant.io/components/lametric",
+  "documentation": "https://www.home-assistant.io/integrations/lametric",
   "requirements": [
     "lmnotify==0.0.4"
   ],

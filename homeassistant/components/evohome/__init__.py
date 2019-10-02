@@ -311,9 +311,7 @@ class EvoBroker:
             _handle_exception(err)
         else:
             # inform the evohome devices that state data has been updated
-            self.hass.helpers.dispatcher.async_dispatcher_send(
-                DOMAIN, {"signal": "refresh"}
-            )
+            self.hass.helpers.dispatcher.async_dispatcher_send(DOMAIN)
 
             _LOGGER.debug("Status = %s", status[GWS][0][TCS][0])
 
@@ -362,6 +360,11 @@ class EvoDevice(Entity):
     def should_poll(self) -> bool:
         """Evohome entities should not be polled."""
         return False
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def name(self) -> str:

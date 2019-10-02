@@ -59,13 +59,13 @@
         },
         "trigger_type": {
             "remote_button_double_press": "Bot\u00f3n \"{subtype}\" pulsado dos veces consecutivas",
-            "remote_button_long_press": "bot\u00f3n \"{subtype}\" pulsado continuamente",
+            "remote_button_long_press": "Bot\u00f3n \"{subtype}\" pulsado continuamente",
             "remote_button_long_release": "Bot\u00f3n \"{subtype}\" liberado despu\u00e9s de un rato pulsado",
             "remote_button_quadruple_press": "Bot\u00f3n \"{subtype}\" pulsado cuatro veces consecutivas",
             "remote_button_quintuple_press": "Bot\u00f3n \"{subtype}\" pulsado cinco veces consecutivas",
             "remote_button_rotated": "Bot\u00f3n \"{subtype}\" girado",
-            "remote_button_short_press": "bot\u00f3n \"{subtype}\" pulsado",
-            "remote_button_short_release": "bot\u00f3n \"{subtype}\" liberado",
+            "remote_button_short_press": "Bot\u00f3n \"{subtype}\" pulsado",
+            "remote_button_short_release": "Bot\u00f3n \"{subtype}\" liberado",
             "remote_button_triple_press": "Bot\u00f3n \"{subtype}\" pulsado cuatro veces consecutivas",
             "remote_gyro_activated": "Dispositivo sacudido"
         }

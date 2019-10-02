@@ -20,6 +20,7 @@ ENTRY_CONFIG = {
     deconz.config_flow.CONF_BRIDGEID: BRIDGEID,
     deconz.config_flow.CONF_HOST: "1.2.3.4",
     deconz.config_flow.CONF_PORT: 80,
+    deconz.config_flow.CONF_UUID: "456DEF",
 }
 
 DECONZ_CONFIG = {
@@ -147,7 +148,7 @@ async def test_update_address(hass):
             deconz.config_flow.CONF_PORT: 80,
             ssdp.ATTR_SERIAL: BRIDGEID,
             ssdp.ATTR_MANUFACTURERURL: deconz.config_flow.DECONZ_MANUFACTURERURL,
-            deconz.config_flow.ATTR_UUID: "uuid:1234",
+            deconz.config_flow.ATTR_UUID: "uuid:456DEF",
         },
         context={"source": "ssdp"},
     )
