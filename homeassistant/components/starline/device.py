@@ -1,29 +1,35 @@
 from datetime import datetime
+from typing import Optional, Dict, Any, List
 from .const import (DOMAIN, BATTERY_LEVEL_MIN, BATTERY_LEVEL_MAX,
                     GSM_LEVEL_MIN, GSM_LEVEL_MAX)
 
 
 class StarlineDevice():
+    """StarLine device."""
+
     def __init__(self):
-        self._device_id = None
-        self._imei = None
-        self._alias = None
-        self._battery = None
-        self._ctemp = None
-        self._etemp = None
-        self._fw_version = None
-        self._gsm_lvl = None
-        self._phone = None
-        self._status = None
-        self._ts_activity = None
-        self._typename = None
-        self._balance = {}  # type: dict
-        self._car_state = {}  # type: dict
-        self._car_alr_state = {}  # type: dict
-        self._functions = {}  # type: dict
-        self._position = {}  # type: dict
+        """Constructor."""
+
+        self._device_id: Optional[str] = None
+        self._imei: Optional[str] = None
+        self._alias: Optional[str] = None
+        self._battery: Optional[int] = None
+        self._ctemp: Optional[int] = None
+        self._etemp: Optional[int] = None
+        self._fw_version: Optional[str] = None
+        self._gsm_lvl: Optional[int] = None
+        self._phone: Optional[str] = None
+        self._status: Optional[int] = None  # TODO: cast to boolean
+        self._ts_activity: Optional[float] = None
+        self._typename: Optional[str] = None
+        self._balance: Dict[str, Dict[str, Any]] = {}
+        self._car_state: Dict[str, bool] = {}
+        self._car_alr_state: Dict[str, bool] = {}
+        self._functions: List[str] = []
+        self._position: Dict[str, float] = {}
 
     def update(self, device_data):
+        """Update data from server."""
         self._device_id = device_data["device_id"]
         self._imei = device_data["imei"]
         self._alias = device_data["alias"]
@@ -41,6 +47,13 @@ class StarlineDevice():
         self._car_alr_state = device_data["car_alr_state"]
         self._functions = device_data["functions"]
         self._position = device_data["position"]
+
+    def update_car_state(self, car_state):
+        """Update car state from server."""
+        for key in car_state:
+            if key in self._car_state:
+                self._car_state[key] = car_state[key] in ["1", "true", True]
+                # TODO: Там есть интересные параметры типа r_start_remained, надо их притащить тоже
 
     @property
     def device_id(self):

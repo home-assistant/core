@@ -5,7 +5,7 @@ LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "starline"
 UPDATE_INTERVAL = 5  # in minutes
-PLATFORMS = ["device_tracker", "binary_sensor", "sensor"]
+PLATFORMS = ["device_tracker", "binary_sensor", "sensor", "lock"]
 
 CONF_APP_ID = "app_id"
 CONF_APP_SECRET = "app_secret"
@@ -17,3 +17,9 @@ BATTERY_LEVEL_MAX = 13.0
 
 GSM_LEVEL_MIN = 1
 GSM_LEVEL_MAX = 30
+
+ENCODING = "utf-8"
+GET = 'GET'
+POST = 'POST'
+CONNECT_TIMEOUT = 5  # in seconds
+READ_TIMEOUT = 120  # in seconds
