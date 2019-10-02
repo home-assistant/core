@@ -73,7 +73,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         args = (kwargs.pop(CONF_HOST),)
     else:
         args = (kwargs.pop(CONF_TOKEN),)
-    hass.data[DOMAIN][CONF_HUB_UID] = kwargs.pop(CONF_HUB_UID, None)
 
     hass.data[DOMAIN]["broker"] = broker = GeniusBroker(hass, args, kwargs)
 
@@ -83,6 +82,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         _LOGGER.error("Setup failed, check your configuration, %s", err)
         return False
     broker.make_debug_log_entries()
+
+    if broker.hub_uid is None:
+        broker.hub_uid = broker.client.uid  # pylint: disable=no-member
 
     async_track_time_interval(hass, broker.async_update, SCAN_INTERVAL)
 
@@ -98,9 +100,9 @@ class GeniusBroker:
     def __init__(self, hass, args, kwargs):
         """Initialize the geniushub client."""
         self.hass = hass
-        self.client = hass.data[DOMAIN]["client"] = GeniusHub(
-            *args, **kwargs, session=async_get_clientsession(hass)
-        )
+        self.hub_uid = kwargs.pop(CONF_HUB_UID, None)
+        self.hub_uid = self.hub_uid.upper()
+        self.client = GeniusHub(*args, **kwargs, session=async_get_clientsession(hass))
 
     async def async_update(self, now, **kwargs):
         """Update the geniushub client's data."""
@@ -126,9 +128,8 @@ class GeniusBroker:
 class GeniusEntity(Entity):
     """Base for all Genius Hub entities."""
 
-    def __init__(self, hub_uid: str):
+    def __init__(self):
         """Initialize the entity."""
-        self._hub_uid = hub_uid.upper()
         self._unique_id = self._name = None
 
     async def async_added_to_hass(self) -> None:
@@ -158,12 +159,12 @@ class GeniusEntity(Entity):
 class GeniusDevice(GeniusEntity):
     """Base for all Genius Hub devices."""
 
-    def __init__(self, hub_uid: str, device):
+    def __init__(self, broker, device):
         """Initialize the Device."""
-        super().__init__(hub_uid)
+        super().__init__()
 
         self._device = device
-        self._unique_id = f"{self._hub_uid}_device_{device.id}"
+        self._unique_id = f"{broker.hub_uid}_device_{device.id}"
 
         self._last_comms = self._state_attr = None
 
@@ -197,12 +198,12 @@ class GeniusDevice(GeniusEntity):
 class GeniusZone(GeniusEntity):
     """Base for all Genius Hub zones."""
 
-    def __init__(self, hub_uid: str, zone) -> None:
+    def __init__(self, broker, zone) -> None:
         """Initialize the Zone."""
-        super().__init__(hub_uid)
+        super().__init__()
 
         self._zone = zone
-        self._unique_id = f"{self._hub_uid}_device_{zone.id}"
+        self._unique_id = f"{broker.hub_uid}_device_{zone.id}"
 
         self._max_temp = self._min_temp = self._supported_features = None
 

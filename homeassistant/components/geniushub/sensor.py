@@ -6,7 +6,7 @@ from homeassistant.const import DEVICE_CLASS_BATTERY
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
 
-from . import CONF_HUB_UID, DOMAIN, GeniusDevice, GeniusEntity
+from . import DOMAIN, GeniusDevice, GeniusEntity
 
 GH_STATE_ATTR = "batteryLevel"
 
@@ -24,15 +24,14 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    hub = hass.data[DOMAIN]["client"]
-    hub_uid = hub.uid if hub.uid else hass.data[DOMAIN][CONF_HUB_UID]
+    broker = hass.data[DOMAIN]["broker"]
 
     sensors = [
-        GeniusBattery(hub_uid, d, GH_STATE_ATTR)
-        for d in hub.device_objs
+        GeniusBattery(broker, d, GH_STATE_ATTR)
+        for d in broker.client.device_objs
         if GH_STATE_ATTR in d.data["state"]
     ]
-    issues = [GeniusIssue(hub, hub_uid, i) for i in list(GH_LEVEL_MAPPING)]
+    issues = [GeniusIssue(broker, i) for i in list(GH_LEVEL_MAPPING)]
 
     async_add_entities(sensors + issues, update_before_add=True)
 
@@ -40,9 +39,9 @@ async def async_setup_platform(
 class GeniusBattery(GeniusDevice):
     """Representation of a Genius Hub sensor."""
 
-    def __init__(self, hub_uid: str, device, state_attr) -> None:
+    def __init__(self, broker, device, state_attr) -> None:
         """Initialize the sensor."""
-        super().__init__(hub_uid, device)
+        super().__init__(broker, device)
 
         self._state_attr = state_attr
 
@@ -90,11 +89,11 @@ class GeniusBattery(GeniusDevice):
 class GeniusIssue(GeniusEntity):
     """Representation of a Genius Hub sensor."""
 
-    def __init__(self, hub, hub_uid: str, level) -> None:
+    def __init__(self, broker, level) -> None:
         """Initialize the sensor."""
-        super().__init__(hub_uid)
+        super().__init__()
 
-        self._hub = hub
+        self._hub = broker.client
         self._name = f"GeniusHub {GH_LEVEL_MAPPING[level]}"
         self._level = level
         self._issues = []

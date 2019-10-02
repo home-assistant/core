@@ -2,7 +2,7 @@
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import CONF_HUB_UID, DOMAIN, GeniusDevice
+from . import DOMAIN, GeniusDevice
 
 GH_STATE_ATTR = "outputOnOff"
 
@@ -14,12 +14,11 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    hub = hass.data[DOMAIN]["client"]
-    hub_uid = hub.uid if hub.uid else hass.data[DOMAIN][CONF_HUB_UID]
+    broker = hass.data[DOMAIN]["broker"]
 
     switches = [
-        GeniusBinarySensor(hub_uid, d, GH_STATE_ATTR)
-        for d in hub.device_objs
+        GeniusBinarySensor(broker, d, GH_STATE_ATTR)
+        for d in broker.client.device_objs
         if GH_STATE_ATTR in d.data["state"]
     ]
 
@@ -29,9 +28,9 @@ async def async_setup_platform(
 class GeniusBinarySensor(GeniusDevice, BinarySensorDevice):
     """Representation of a Genius Hub binary_sensor."""
 
-    def __init__(self, hub_uid: str, device, state_attr) -> None:
+    def __init__(self, broker, device, state_attr) -> None:
         """Initialize the binary sensor."""
-        super().__init__(hub_uid, device)
+        super().__init__(broker, device)
 
         self._state_attr = state_attr
 

@@ -12,7 +12,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import CONF_HUB_UID, DOMAIN, GeniusZone
+from . import DOMAIN, GeniusZone
 
 # GeniusHub Zones support: Off, Timer, Override/Boost, Footprint & Linked modes
 HA_HVAC_TO_GH = {HVAC_MODE_OFF: "off", HVAC_MODE_HEAT: "timer"}
@@ -31,13 +31,12 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    hub = hass.data[DOMAIN]["client"]
-    hub_uid = hub.uid if hub.uid else hass.data[DOMAIN][CONF_HUB_UID]
+    broker = hass.data[DOMAIN]["broker"]
 
     async_add_entities(
         [
-            GeniusClimateZone(hub_uid, z)
-            for z in hub.zone_objs
+            GeniusClimateZone(broker, z)
+            for z in broker.client.zone_objs
             if z.data["type"] in GH_ZONES
         ]
     )
@@ -46,9 +45,9 @@ async def async_setup_platform(
 class GeniusClimateZone(GeniusZone, ClimateDevice):
     """Representation of a Genius Hub climate device."""
 
-    def __init__(self, hub_uid: str, zone) -> None:
+    def __init__(self, broker, zone) -> None:
         """Initialize the climate device."""
-        super().__init__(hub_uid, zone)
+        super().__init__(broker, zone)
 
         self._max_temp = 28.0
         self._min_temp = 4.0
