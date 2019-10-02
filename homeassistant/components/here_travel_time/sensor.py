@@ -11,6 +11,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    ATTR_MODE,
     CONF_MODE,
     CONF_NAME,
     CONF_UNIT_SYSTEM,
@@ -77,7 +78,6 @@ ATTR_ROUTE = "route"
 ATTR_ORIGIN = "origin"
 ATTR_DESTINATION = "destination"
 
-ATTR_MODE = "mode"
 ATTR_UNIT_SYSTEM = CONF_UNIT_SYSTEM
 ATTR_TRAFFIC_MODE = CONF_TRAFFIC_MODE
 

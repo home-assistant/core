@@ -7,6 +7,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    ATTR_MODE,
     CONF_HOST,
     CONF_PORT,
     CONF_NAME,
@@ -19,7 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_CLIMB = "climb"
 ATTR_ELEVATION = "elevation"
 ATTR_GPS_TIME = "gps_time"
-ATTR_MODE = "mode"
 ATTR_SPEED = "speed"
 
 DEFAULT_HOST = "localhost"

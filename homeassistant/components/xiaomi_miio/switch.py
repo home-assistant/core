@@ -6,7 +6,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import DOMAIN, PLATFORM_SCHEMA, SwitchDevice
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_MODE,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_TOKEN,
+)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
@@ -44,7 +50,6 @@ ATTR_POWER = "power"
 ATTR_TEMPERATURE = "temperature"
 ATTR_LOAD_POWER = "load_power"
 ATTR_MODEL = "model"
-ATTR_MODE = "mode"
 ATTR_POWER_MODE = "power_mode"
 ATTR_WIFI_LED = "wifi_led"
 ATTR_POWER_PRICE = "power_price"
