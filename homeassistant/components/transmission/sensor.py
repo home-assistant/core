@@ -163,4 +163,4 @@ class TransmissionSensor(Entity):
                 self._state = self._data.torrentCount
             elif self.type == "started_torrent_info":
                 self._state = self._transmission_api.get_started_torrent_info()
-                self._torrent_info = self._transmission_api.get_started_torrent_dict()
+                self._torrent_info = self._transmission_api.started_torrent_dict
