@@ -9,8 +9,9 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     STATE_UNAVAILABLE,
 )
-from homeassistant.components import climate
+from homeassistant.components.climate import const as climate
 from homeassistant.components.alexa import smart_home
+from homeassistant.components.alexa.errors import UnsupportedProperty
 from tests.common import async_mock_service
 
 from . import (
@@ -376,6 +377,112 @@ async def test_report_cover_percentage_state(hass):
 
     properties = await reported_properties(hass, "cover.closed")
     properties.assert_equal("Alexa.PercentageController", "percentage", 0)
+
+
+async def test_report_climate_state(hass):
+    """Test ThermostatController reports state correctly."""
+    for auto_modes in (climate.HVAC_MODE_AUTO, climate.HVAC_MODE_HEAT_COOL):
+        hass.states.async_set(
+            "climate.downstairs",
+            auto_modes,
+            {
+                "friendly_name": "Climate Downstairs",
+                "supported_features": 91,
+                climate.ATTR_CURRENT_TEMPERATURE: 34,
+                ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            },
+        )
+        properties = await reported_properties(hass, "climate.downstairs")
+        properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "AUTO")
+        properties.assert_equal(
+            "Alexa.TemperatureSensor",
+            "temperature",
+            {"value": 34.0, "scale": "CELSIUS"},
+        )
+
+    for off_modes in (
+        climate.HVAC_MODE_OFF,
+        climate.HVAC_MODE_FAN_ONLY,
+        climate.HVAC_MODE_DRY,
+    ):
+        hass.states.async_set(
+            "climate.downstairs",
+            off_modes,
+            {
+                "friendly_name": "Climate Downstairs",
+                "supported_features": 91,
+                climate.ATTR_CURRENT_TEMPERATURE: 34,
+                ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            },
+        )
+        properties = await reported_properties(hass, "climate.downstairs")
+        properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "OFF")
+        properties.assert_equal(
+            "Alexa.TemperatureSensor",
+            "temperature",
+            {"value": 34.0, "scale": "CELSIUS"},
+        )
+
+    hass.states.async_set(
+        "climate.heat",
+        "heat",
+        {
+            "friendly_name": "Climate Heat",
+            "supported_features": 91,
+            climate.ATTR_CURRENT_TEMPERATURE: 34,
+            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+        },
+    )
+    properties = await reported_properties(hass, "climate.heat")
+    properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "HEAT")
+    properties.assert_equal(
+        "Alexa.TemperatureSensor", "temperature", {"value": 34.0, "scale": "CELSIUS"}
+    )
+
+    hass.states.async_set(
+        "climate.cool",
+        "cool",
+        {
+            "friendly_name": "Climate Cool",
+            "supported_features": 91,
+            climate.ATTR_CURRENT_TEMPERATURE: 34,
+            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+        },
+    )
+    properties = await reported_properties(hass, "climate.cool")
+    properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "COOL")
+    properties.assert_equal(
+        "Alexa.TemperatureSensor", "temperature", {"value": 34.0, "scale": "CELSIUS"}
+    )
+
+    hass.states.async_set(
+        "climate.unavailable",
+        "unavailable",
+        {"friendly_name": "Climate Unavailable", "supported_features": 91},
+    )
+    properties = await reported_properties(hass, "climate.unavailable")
+    properties.assert_not_has_property("Alexa.ThermostatController", "thermostatMode")
+
+    hass.states.async_set(
+        "climate.unsupported",
+        "blablabla",
+        {
+            "friendly_name": "Climate Unsupported",
+            "supported_features": 91,
+            climate.ATTR_CURRENT_TEMPERATURE: 34,
+            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+        },
+    )
+    with pytest.raises(UnsupportedProperty):
+        properties = await reported_properties(hass, "climate.unsupported")
+        properties.assert_not_has_property(
+            "Alexa.ThermostatController", "thermostatMode"
+        )
+        properties.assert_equal(
+            "Alexa.TemperatureSensor",
+            "temperature",
+            {"value": 34.0, "scale": "CELSIUS"},
+        )
 
 
 async def test_temperature_sensor_sensor(hass):
