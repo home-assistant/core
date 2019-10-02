@@ -4,6 +4,7 @@ import logging
 from typing import Any, List, MutableMapping
 
 import voluptuous as vol
+import voluptuous_serialize
 
 from homeassistant.const import CONF_PLATFORM, CONF_DOMAIN, CONF_DEVICE_ID
 from homeassistant.components import websocket_api
@@ -62,7 +63,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def _async_get_device_automation_platform(hass, domain, automation_type):
+async def async_get_device_automation_platform(hass, domain, automation_type):
     """Load device automation platform for integration.
 
     Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.
@@ -81,22 +82,12 @@ async def _async_get_device_automation_platform(hass, domain, automation_type):
     return platform
 
 
-async def async_get_device_automation_platform(hass, config, automation_type):
-    """Load device automation platform for integration.
-
-    Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.
-    """
-    return await _async_get_device_automation_platform(
-        hass, config[CONF_DOMAIN], automation_type
-    )
-
-
 async def _async_get_device_automations_from_domain(
     hass, domain, automation_type, device_id
 ):
     """List device automations."""
     try:
-        platform = await _async_get_device_automation_platform(
+        platform = await async_get_device_automation_platform(
             hass, domain, automation_type
         )
     except InvalidDeviceAutomationConfig:
@@ -143,7 +134,7 @@ async def _async_get_device_automations(hass, automation_type, device_id):
 async def _async_get_device_automation_capabilities(hass, automation_type, automation):
     """List device automations."""
     try:
-        platform = await _async_get_device_automation_platform(
+        platform = await async_get_device_automation_platform(
             hass, automation[CONF_DOMAIN], automation_type
         )
     except InvalidDeviceAutomationConfig:
@@ -156,9 +147,6 @@ async def _async_get_device_automation_capabilities(hass, automation_type, autom
         return {}
 
     capabilities = await getattr(platform, function_name)(hass, automation)
-
-    import voluptuous_serialize
-
     capabilities = capabilities.copy()
 
     extra_fields = capabilities.get("extra_fields")

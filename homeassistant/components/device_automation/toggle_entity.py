@@ -100,7 +100,6 @@ async def async_call_action_from_config(
     domain: str,
 ) -> None:
     """Change state based on configuration."""
-    config = ACTION_SCHEMA(config)
     action_type = config[CONF_TYPE]
     if action_type == CONF_TURN_ON:
         action = "turn_on"

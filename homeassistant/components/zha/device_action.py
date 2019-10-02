@@ -49,7 +49,6 @@ async def async_call_action_from_config(
     context: Context,
 ) -> None:
     """Perform an action based on configuration."""
-    config = ACTION_SCHEMA(config)
     await ZHA_ACTION_TYPES[DEVICE_ACTION_TYPES[config[CONF_TYPE]]](
         hass, config, variables, context
     )
