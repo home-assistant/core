@@ -65,7 +65,7 @@ async def async_setup(hass, config):
     if DOMAIN in config:
         hass.data[UNIFI_CONFIG] = config[DOMAIN][CONF_CONTROLLERS]
 
-    hass.data[UNIFI_WIRELESS_CLIENTS] = wireless_clients = unifi_wireless_clients(hass)
+    hass.data[UNIFI_WIRELESS_CLIENTS] = wireless_clients = UnifiWirelessClients(hass)
     await wireless_clients.async_load()
 
     return True
@@ -106,7 +106,7 @@ async def async_unload_entry(hass, config_entry):
     return await controller.async_reset()
 
 
-class unifi_wireless_clients:
+class UnifiWirelessClients:
     """Class to store clients known to be wireless.
 
     This is needed since wireless devices going offline might get marked as wired by UniFi.
