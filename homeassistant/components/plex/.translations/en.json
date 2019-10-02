@@ -5,6 +5,7 @@
             "already_configured": "This Plex server is already configured",
             "already_in_progress": "Plex is being configured",
             "invalid_import": "Imported configuration is invalid",
+            "token_request_timeout": "Timed out obtaining token",
             "unknown": "Failed for unknown reason"
         },
         "error": {
@@ -36,7 +37,7 @@
                     "manual_setup": "Manual setup",
                     "token": "Plex token"
                 },
-                "description": "Enter a Plex token for automatic setup or manually configure a server.",
+                "description": "Continue to authorize at plex.tv or manually configure a server.",
                 "title": "Connect Plex server"
             }
         },

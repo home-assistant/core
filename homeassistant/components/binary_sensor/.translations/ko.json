@@ -1,7 +1,7 @@
 {
     "device_automation": {
         "condition_type": {
-            "is_bat_low": "{entity_name} \uc758 \ubc30\ud130\ub9ac \uc794\ub7c9\uc774 \ubd80\uc871\ud569\ub2c8\ub2e4",
+            "is_bat_low": "{entity_name} \ubc30\ud130\ub9ac \uc794\ub7c9\uc774 \ubd80\uc871\ud569\ub2c8\ub2e4",
             "is_cold": "{entity_name} \uc774(\uac00) \ucc28\uac11\uc2b5\ub2c8\ub2e4",
             "is_connected": "{entity_name} \uc774(\uac00) \uc5f0\uacb0\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
             "is_gas": "{entity_name} \uc774(\uac00) \uac00\uc2a4\ub97c \uac10\uc9c0\ud588\uc2b5\ub2c8\ub2e4",
@@ -18,7 +18,7 @@
             "is_no_smoke": "{entity_name} \uc774(\uac00) \uc5f0\uae30\ub97c \uac10\uc9c0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
             "is_no_sound": "{entity_name} \uc774(\uac00) \uc18c\ub9ac\ub97c \uac10\uc9c0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
             "is_no_vibration": "{entity_name} \uc774(\uac00) \uc9c4\ub3d9\uc744 \uac10\uc9c0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
-            "is_not_bat_low": "{entity_name} \uc758 \ubc30\ud130\ub9ac\uac00 \uc815\uc0c1\uc785\ub2c8\ub2e4",
+            "is_not_bat_low": "{entity_name} \ubc30\ud130\ub9ac\uac00 \uc815\uc0c1\uc785\ub2c8\ub2e4",
             "is_not_cold": "{entity_name} \uc774(\uac00) \ucc28\uac11\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.",
             "is_not_connected": "{entity_name} \uc758 \uc5f0\uacb0\uc774 \ub04a\uc5b4\uc84c\uc2b5\ub2c8\ub2e4",
             "is_not_hot": "{entity_name} \uc774(\uac00) \ub728\uac81\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.",
@@ -43,6 +43,10 @@
             "is_sound": "{entity_name} \uc774(\uac00) \uc18c\ub9ac\ub97c \uac10\uc9c0\ud588\uc2b5\ub2c8\ub2e4",
             "is_unsafe": "{entity_name} \uc740(\ub294) \uc548\uc804\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4",
             "is_vibration": "{entity_name} \uc774(\uac00) \uc9c4\ub3d9\uc744 \uac10\uc9c0\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "trigger_type": {
+            "bat_low": "{entity_name} \ubc30\ud130\ub9ac \uc794\ub7c9 \ubd80\uc871",
+            "closed": "{entity_name} \ub2eb\ud798"
         }
     }
 }
