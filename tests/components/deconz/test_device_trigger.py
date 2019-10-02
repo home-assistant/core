@@ -3,7 +3,7 @@ from copy import deepcopy
 
 from homeassistant.components.deconz import device_trigger
 
-from tests.common import async_get_device_automations
+from tests.common import assert_lists_same, async_get_device_automations
 
 from .test_gateway import ENTRY_CONFIG, DECONZ_WEB_REQUEST, setup_deconz_integration
 
@@ -83,6 +83,13 @@ async def test_get_triggers(hass):
             "type": device_trigger.CONF_LONG_RELEASE,
             "subtype": device_trigger.CONF_TURN_OFF,
         },
+        {
+            "device_id": device_id,
+            "domain": "sensor",
+            "entity_id": "sensor.tradfri_on_off_switch_battery_level",
+            "platform": "device",
+            "type": "battery_level",
+        },
     ]
 
-    assert triggers == expected_triggers
+    assert_lists_same(triggers, expected_triggers)
