@@ -8,14 +8,14 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
-from .const import DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT
+from .const import DOMAIN, CONF_SERVER, CONF_SERVERS
 
-REQUIREMENTS = ["pysupla==0.0.3"]
+from pysupla import SuplaAPI
+
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SERVER = "server"
-CONF_SERVERS = "servers"
 
 SUPLA_FUNCTION_HA_CMP_MAP = {
     "CONTROLLINGTHEROLLERSHUTTER": "cover",
@@ -39,17 +39,22 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup_entry(hass, config_entry):
-    """Set up drive as rclone config entry."""
+    """Set up supla as config entry."""
     _LOGGER.info("Set up drive as rclone config entry")
     # hass.async_create_task(
     #     hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
     # )
+    server_address = config_entry.data.get(CONF_SERVER)
+    token = config_entry.data.get(CONF_ACCESS_TOKEN)
+
+    discover_devices(hass, config_entry)
     return True
 
 
-def setup(hass, base_config):
+async def async_setup(hass, base_config):
     """Set up the Supla component."""
-    from pysupla import SuplaAPI
+    if DOMAIN not in base_config:
+        return True
 
     server_confs = base_config[DOMAIN][CONF_SERVERS]
 
@@ -66,7 +71,17 @@ def setup(hass, base_config):
         try:
             srv_info = server.get_server_info()
             if srv_info.get("authenticated"):
-                hass.data[SUPLA_SERVERS][server_conf[CONF_SERVER]] = server
+                # hass.data[SUPLA_SERVERS][server_conf[CONF_SERVER]] = server
+                hass.async_create_task(
+                    hass.config_entries.flow.async_init(
+                        DOMAIN,
+                        context={"source": SOURCE_IMPORT},
+                        data={
+                            CONF_SERVER: server_conf[CONF_SERVER],
+                            CONF_ACCESS_TOKEN: server_conf[CONF_ACCESS_TOKEN],
+                        },
+                    )
+                )
             else:
                 _LOGGER.error(
                     "Server: %s not configured. API call returned: %s",
@@ -80,39 +95,36 @@ def setup(hass, base_config):
             )
             return False
 
-    discover_devices(hass, base_config)
-
     return True
 
 
-def discover_devices(hass, hass_config):
+def discover_devices(hass, config_entry):
     """
     Run periodically to discover new devices.
 
     Currently it's only run at startup.
     """
     component_configs = {}
+    server_address = config_entry.data[CONF_SERVER]
+    server = SuplaAPI(server_address, config_entry.data[CONF_ACCESS_TOKEN])
+    for channel in server.get_channels(include=["iodevice"]):
+        channel_function = channel["function"]["name"]
+        component_name = SUPLA_FUNCTION_HA_CMP_MAP.get(channel_function)
 
-    for server_name, server in hass.data[SUPLA_SERVERS].items():
+        if component_name is None:
+            _LOGGER.warning(
+                "Unsupported function: %s, channel id: %s",
+                channel_function,
+                channel["id"],
+            )
+            continue
 
-        for channel in server.get_channels(include=["iodevice"]):
-            channel_function = channel["function"]["name"]
-            component_name = SUPLA_FUNCTION_HA_CMP_MAP.get(channel_function)
-
-            if component_name is None:
-                _LOGGER.warning(
-                    "Unsupported function: %s, channel id: %s",
-                    channel_function,
-                    channel["id"],
-                )
-                continue
-
-            channel["server_name"] = server_name
-            component_configs.setdefault(component_name, []).append(channel)
+        channel["server_name"] = server_address
+        component_configs.setdefault(component_name, []).append(channel)
 
     # Load discovered devices
     for component_name, channel in component_configs.items():
-        load_platform(hass, component_name, "supla", channel, hass_config)
+        load_platform(hass, component_name, "supla", channel, config_entry)
 
 
 class SuplaChannel(Entity):
