@@ -1,7 +1,7 @@
 {
   "domain": "linux_battery",
   "name": "Linux battery",
-  "documentation": "https://www.home-assistant.io/components/linux_battery",
+  "documentation": "https://www.home-assistant.io/integrations/linux_battery",
   "requirements": [
     "batinfo==0.4.2"
   ],

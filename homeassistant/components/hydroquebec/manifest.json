@@ -1,7 +1,7 @@
 {
   "domain": "hydroquebec",
   "name": "Hydroquebec",
-  "documentation": "https://www.home-assistant.io/components/hydroquebec",
+  "documentation": "https://www.home-assistant.io/integrations/hydroquebec",
   "requirements": [
     "pyhydroquebec==2.2.2"
   ],

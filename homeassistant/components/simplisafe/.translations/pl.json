@@ -2,7 +2,7 @@
     "config": {
         "error": {
             "identifier_exists": "Konto jest ju\u017c zarejestrowane",
-            "invalid_credentials": "Nieprawid\u0142owe po\u015bwiadczenia"
+            "invalid_credentials": "Nieprawid\u0142owe dane uwierzytelniaj\u0105ce"
         },
         "step": {
             "user": {

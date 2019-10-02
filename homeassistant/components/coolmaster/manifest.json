@@ -1,7 +1,7 @@
 {
   "domain": "coolmaster",
   "name": "Coolmaster",
-  "documentation": "https://www.home-assistant.io/components/coolmaster",
+  "documentation": "https://www.home-assistant.io/integrations/coolmaster",
   "requirements": [
     "pycoolmasternet==0.0.4"
   ],

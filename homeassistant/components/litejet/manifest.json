@@ -1,7 +1,7 @@
 {
   "domain": "litejet",
   "name": "Litejet",
-  "documentation": "https://www.home-assistant.io/components/litejet",
+  "documentation": "https://www.home-assistant.io/integrations/litejet",
   "requirements": [
     "pylitejet==0.1"
   ],

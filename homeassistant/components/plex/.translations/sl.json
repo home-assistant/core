@@ -41,5 +41,16 @@
             }
         },
         "title": "Plex"
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "show_all_controls": "Poka\u017ei vse kontrole",
+                    "use_episode_art": "Uporabi naslovno sliko epizode"
+                },
+                "description": "Mo\u017enosti za predvajalnike Plex"
+            }
+        }
     }
 }

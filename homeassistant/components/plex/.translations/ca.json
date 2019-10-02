@@ -5,6 +5,7 @@
             "already_configured": "Aquest servidor Plex ja est\u00e0 configurat",
             "already_in_progress": "S\u2019est\u00e0 configurant Plex",
             "invalid_import": "La configuraci\u00f3 importada \u00e9s inv\u00e0lida",
+            "token_request_timeout": "S'ha acabat el temps d'espera durant l'obtenci\u00f3 del testimoni.",
             "unknown": "Ha fallat per motiu desconegut"
         },
         "error": {
@@ -41,5 +42,16 @@
             }
         },
         "title": "Plex"
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "show_all_controls": "Mostra tots els controls",
+                    "use_episode_art": "Utilitza imatges de l'episodi"
+                },
+                "description": "Opcions per als reproductors multim\u00e8dia Plex"
+            }
+        }
     }
 }

@@ -271,6 +271,8 @@ ATTR_DISCOVERED = "discovered"
 # Location of the device/sensor
 ATTR_LOCATION = "location"
 
+ATTR_MODE = "mode"
+
 ATTR_BATTERY_CHARGING = "battery_charging"
 ATTR_BATTERY_LEVEL = "battery_level"
 ATTR_WAKEUP = "wake_up_interval"

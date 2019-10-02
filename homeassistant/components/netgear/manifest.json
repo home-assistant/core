@@ -1,7 +1,7 @@
 {
   "domain": "netgear",
   "name": "Netgear",
-  "documentation": "https://www.home-assistant.io/components/netgear",
+  "documentation": "https://www.home-assistant.io/integrations/netgear",
   "requirements": [
     "pynetgear==0.6.1"
   ],

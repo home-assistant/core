@@ -2,7 +2,7 @@
   "domain": "tellduslive",
   "name": "Tellduslive",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/tellduslive",
+  "documentation": "https://www.home-assistant.io/integrations/tellduslive",
   "requirements": [
     "tellduslive==0.10.10"
   ],

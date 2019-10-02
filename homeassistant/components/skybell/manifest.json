@@ -1,7 +1,7 @@
 {
   "domain": "skybell",
   "name": "Skybell",
-  "documentation": "https://www.home-assistant.io/components/skybell",
+  "documentation": "https://www.home-assistant.io/integrations/skybell",
   "requirements": [
     "skybellpy==0.4.0"
   ],

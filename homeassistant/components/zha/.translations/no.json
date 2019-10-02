@@ -18,6 +18,10 @@
         "title": "ZHA"
     },
     "device_automation": {
+        "action_type": {
+            "squawk": "Squawk",
+            "warn": "Advarer"
+        },
         "trigger_subtype": {
             "both_buttons": "Begge knapper",
             "button_1": "F\u00f8rste knapp",
@@ -49,7 +53,7 @@
             "device_rotated": "Enheten roterte \"{subtype}\"",
             "device_shaken": "Enhet er ristet",
             "device_slid": "Enheten skled \"{subtype}\"",
-            "device_tilted": "Enhet vippet",
+            "device_tilted": "Enhetn skr\u00e5stilt",
             "remote_button_double_press": "\" {subtype} \"-knappen ble dobbeltklikket",
             "remote_button_long_press": "\" {subtype} \" - knappen ble kontinuerlig trykket",
             "remote_button_long_release": "\" {subtype} \" -knappen sluppet etter langt trykk",

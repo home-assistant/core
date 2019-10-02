@@ -1,7 +1,7 @@
 {
   "domain": "ptvsd",
   "name": "ptvsd",
-  "documentation": "https://www.home-assistant.io/components/ptvsd",
+  "documentation": "https://www.home-assistant.io/integrations/ptvsd",
   "requirements": [
     "ptvsd==4.2.8"
   ],
