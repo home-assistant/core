@@ -129,7 +129,7 @@ class GeniusEntity(Entity):
 
     def __init__(self, hub_uid: str):
         """Initialize the entity."""
-        self._hub_uid = hub_uid
+        self._hub_uid = hub_uid.upper()
         self._unique_id = self._name = None
 
     async def async_added_to_hass(self) -> None:
