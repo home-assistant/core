@@ -26,7 +26,6 @@ DEVICE_ATTRIBUTES = [
     "ip",
     "is_11r",
     "is_guest",
-    "is_wired",
     "mac",
     "name",
     "noted",
@@ -121,6 +120,7 @@ class UniFiClientTracker(ScannerEntity):
         """Set up tracked client."""
         self.client = client
         self.controller = controller
+        self.is_wired = self.client.mac not in controller.wireless_clients
 
     @property
     def entity_registry_enabled_default(self):
@@ -129,13 +129,13 @@ class UniFiClientTracker(ScannerEntity):
             return False
 
         if (
-            not self.client.is_wired
+            not self.is_wired
             and self.controller.option_ssid_filter
             and self.client.essid not in self.controller.option_ssid_filter
         ):
             return False
 
-        if not self.controller.option_track_wired_clients and self.client.is_wired:
+        if not self.controller.option_track_wired_clients and self.is_wired:
             return False
 
         return True
@@ -145,18 +145,31 @@ class UniFiClientTracker(ScannerEntity):
         LOGGER.debug("New UniFi client tracker %s (%s)", self.name, self.client.mac)
 
     async def async_update(self):
-        """Synchronize state with controller."""
+        """Synchronize state with controller.
+
+        Make sure to update self.is_wired if client is wireless, there is an issue when clients go offline that they get marked as wired.
+        """
         LOGGER.debug(
             "Updating UniFi tracked client %s (%s)", self.entity_id, self.client.mac
         )
         await self.controller.request_update()
 
+        if self.is_wired and self.client.mac in self.controller.wireless_clients:
+            self.is_wired = False
+
     @property
     def is_connected(self):
-        """Return true if the client is connected to the network."""
-        if (
-            dt_util.utcnow() - dt_util.utc_from_timestamp(float(self.client.last_seen))
-        ) < self.controller.option_detection_time:
+        """Return true if the client is connected to the network.
+
+        If is_wired and client.is_wired differ it means that the device is offline and UniFi bug shows device as wired.
+        """
+        if self.is_wired == self.client.is_wired and (
+            (
+                dt_util.utcnow()
+                - dt_util.utc_from_timestamp(float(self.client.last_seen))
+            )
+            < self.controller.option_detection_time
+        ):
             return True
 
         return False
@@ -194,6 +207,8 @@ class UniFiClientTracker(ScannerEntity):
         for variable in DEVICE_ATTRIBUTES:
             if variable in self.client.raw:
                 attributes[variable] = self.client.raw[variable]
+
+        attributes["is_wired"] = self.is_wired
 
         return attributes
 

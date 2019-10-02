@@ -88,7 +88,7 @@ def update_items(controller, async_add_entities, switches, switches_off):
         new_switches.append(switches[block_client_id])
         LOGGER.debug("New UniFi Block switch %s (%s)", client.hostname, client.mac)
 
-    # control poe
+    # control POE
     for client_id in controller.api.clients:
 
         poe_client_id = f"poe-{client_id}"
@@ -108,9 +108,10 @@ def update_items(controller, async_add_entities, switches, switches_off):
             pass
         # Network device with active POE
         elif (
-            not client.is_wired
+            client_id in controller.wireless_clients
             or client.sw_mac not in devices
             or not devices[client.sw_mac].ports[client.sw_port].port_poe
+            or not devices[client.sw_mac].ports[client.sw_port].poe_enable
             or controller.mac == client.mac
         ):
             continue
