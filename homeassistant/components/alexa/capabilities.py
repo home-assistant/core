@@ -23,14 +23,15 @@ import homeassistant.util.color as color_util
 import homeassistant.util.dt as dt_util
 
 from .const import (
+    Catalog,
     API_TEMP_UNITS,
     API_THERMOSTAT_MODES,
     API_THERMOSTAT_PRESETS,
     DATE_FORMAT,
     PERCENTAGE_FAN_MAP,
+    RANGE_FAN_MAP,
 )
 from .errors import UnsupportedProperty
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,6 +70,11 @@ class AlexaCapibility:
         return False
 
     @staticmethod
+    def properties_non_controllable():
+        """Return True if non controllable."""
+        return None
+
+    @staticmethod
     def get_property(name):
         """Read and return a property.
 
@@ -85,9 +91,19 @@ class AlexaCapibility:
         return None
 
     @staticmethod
+    def instance():
+        """Applicable to ToggleController, RangeController, and ModeController interfaces"""
+        return None
+
+    @staticmethod
+    def capability_resources():
+        """Applicable to ToggleController, RangeController, and ModeController interfaces"""
+        return None
+
+    @staticmethod
     def configuration():
-        """Applicable only to security control panel."""
-        return []
+        """Configuration object"""
+        return None
 
     def serialize_discovery(self):
         """Serialize according to the Discovery API."""
@@ -103,13 +119,27 @@ class AlexaCapibility:
         }
 
         # pylint: disable=assignment-from-none
+        non_controllable = self.properties_non_controllable()
+        if non_controllable is not None:
+            result["properties"].update({"nonControllable": non_controllable})
+
+        # pylint: disable=assignment-from-none
         supports_deactivation = self.supports_deactivation()
         if supports_deactivation is not None:
             result["supportsDeactivation"] = supports_deactivation
 
+        capability_resources = self.serialize_capability_resources()
+        if capability_resources is not None:
+            result["capabilityResources"] = capability_resources
+
         configuration = self.configuration()
-        if configuration:
+        if configuration is not None:
             result["configuration"] = configuration
+
+        # pylint: disable=assignment-from-none
+        instance = self.instance()
+        if instance is not None:
+            result["instance"] = instance
 
         return result
 
@@ -120,13 +150,51 @@ class AlexaCapibility:
             # pylint: disable=assignment-from-no-return
             prop_value = self.get_property(prop_name)
             if prop_value is not None:
-                yield {
+                result = {
                     "name": prop_name,
                     "namespace": self.name(),
                     "value": prop_value,
                     "timeOfSample": dt_util.utcnow().strftime(DATE_FORMAT),
                     "uncertaintyInMilliseconds": 0,
                 }
+                instance = self.instance()
+                if instance is not None:
+                    result["instance"] = instance
+
+                yield result
+
+    def serialize_capability_resources(self):
+        """Return capabilityResources friendlyNames serialized for an API response.
+        """
+        resources = self.capability_resources()
+        if resources is not None:
+            return {"friendlyNames": self.serialize_friendly_names(resources)}
+
+        return None
+
+    @staticmethod
+    def serialize_friendly_names(resources):
+        """Return capabilityResources, ModeResources, or presetResources friendlyNames
+        serialized for an API response.
+        """
+        friendly_names = []
+        for resource in resources:
+            if resource["type"] == Catalog.LABEL_ASSET:
+                friendly_names.append(
+                    {
+                        "@type": Catalog.LABEL_ASSET,
+                        "value": {"assetId": resource["value"]},
+                    }
+                )
+            else:
+                friendly_names.append(
+                    {
+                        "@type": Catalog.LABEL_TEXT,
+                        "value": {"text": resource["value"], "locale": "en-US"},
+                    }
+                )
+
+        return friendly_names
 
 
 class AlexaEndpointHealth(AlexaCapibility):
@@ -715,4 +783,270 @@ class AlexaSecurityPanelController(AlexaCapibility):
 
         if code_format == FORMAT_NUMBER:
             return {"supportedAuthorizationTypes": [{"type": "FOUR_DIGIT_PIN"}]}
-        return []
+        return None
+
+
+class AlexaModeController(AlexaCapibility):
+    """Implements Alexa.ModeController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-modecontroller.html
+    """
+
+    def __init__(self, entity, instance, non_controllable=False):
+        """Initialize the entity."""
+        super().__init__(entity)
+        self.instance = lambda: instance
+        self.properties_non_controllable = lambda: non_controllable
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.ModeController"
+
+    def properties_supported(self):
+        """Return what properties this entity supports."""
+        return [{"name": "mode"}]
+
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
+    def properties_retrievable(self):
+        """Return True if properties can be retrieved."""
+
+    def get_property(self, name):
+        """Read and return a property."""
+        if name != "mode":
+            raise UnsupportedProperty(name)
+
+        if self.instance() == fan.ATTR_DIRECTION:
+            return self.entity.attributes.get(fan.ATTR_DIRECTION)
+        if self.instance() == fan.ATTR_OSCILLATING:
+            return self.entity.attributes.get(fan.ATTR_OSCILLATING)
+
+        return None
+
+    def configuration(self):
+        """Return configuration"""
+        configuration = self.serialize_mode_resources()
+        if configuration is not None:
+            return configuration
+        return None
+
+    def capability_resources(self):
+        """Return capabilityResources object"""
+        if self.instance() == fan.ATTR_DIRECTION:
+            return [{"type": Catalog.LABEL_ASSET, "value": Catalog.SETTING_DIRECTION}]
+
+        return None
+
+    def mode_resources(self):
+        """Return capabilityResources object"""
+        mode_resources = None
+        if self.instance() == fan.ATTR_DIRECTION:
+            mode_resources = {
+                "ordered": False,
+                "resources": [
+                    {
+                        "value": f"{fan.ATTR_DIRECTION}.{fan.DIRECTION_FORWARD}",
+                        "friendly_names": [
+                            {"type": Catalog.LABEL_TEXT, "value": fan.DIRECTION_FORWARD}
+                        ],
+                    },
+                    {
+                        "value": f"{fan.ATTR_DIRECTION}.{fan.DIRECTION_REVERSE}",
+                        "friendly_names": [
+                            {"type": Catalog.LABEL_TEXT, "value": fan.DIRECTION_REVERSE}
+                        ],
+                    },
+                ],
+            }
+
+        return mode_resources
+
+    def serialize_mode_resources(self):
+        """Return ModeResources, friendlyNames serialized for an API response.
+        """
+        mode_resources = []
+        resources = self.mode_resources()
+        ordered = resources["ordered"]
+        for resource in resources["resources"]:
+            mode_value = resource["value"]
+            friendly_names = resource["friendly_names"]
+            result = {
+                "value": mode_value,
+                "modeResources": {
+                    "friendlyNames": self.serialize_friendly_names(friendly_names)
+                },
+            }
+            mode_resources.append(result)
+
+        return {"ordered": ordered, "supportedModes": mode_resources}
+
+
+class AlexaRangeController(AlexaCapibility):
+    """Implements Alexa.RangeController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-rangecontroller.html
+    """
+
+    def __init__(self, entity, instance, non_controllable=False):
+        """Initialize the entity."""
+        super().__init__(entity)
+        self.instance = lambda: instance
+        self.properties_non_controllable = lambda: non_controllable
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.RangeController"
+
+    def properties_supported(self):
+        """Return what properties this entity supports."""
+        return [{"name": "rangeValue"}]
+
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
+    def properties_retrievable(self):
+        """Return True if properties can be retrieved."""
+        return True
+
+    def get_property(self, name):
+        """Read and return a property."""
+        if name != "rangeValue":
+            raise UnsupportedProperty(name)
+
+        if self.instance() == fan.ATTR_SPEED:
+            speed = self.entity.attributes.get(fan.ATTR_SPEED)
+            return RANGE_FAN_MAP.get(speed, 0)
+
+        return None
+
+    def configuration(self):
+        """Return configuration"""
+        configuration = self.serialize_preset_resources()
+        if configuration is not None:
+            return configuration
+        return None
+
+    def capability_resources(self):
+        """Return capabilityResources object"""
+        if self.instance() == fan.ATTR_SPEED:
+            return [{"type": Catalog.LABEL_ASSET, "value": Catalog.SETTING_FANSPEED}]
+
+        return None
+
+    def preset_resources(self):
+        """Return presetResources object"""
+        preset_resources = None
+
+        if self.instance() == fan.ATTR_SPEED:
+            preset_resources = {
+                "minimumValue": 1,
+                "maximumValue": 3,
+                "precision": 1,
+                "presets": [
+                    {
+                        "rangeValue": 1,
+                        "names": [
+                            {
+                                "type": Catalog.LABEL_ASSET,
+                                "value": Catalog.VALUE_MINIMUM,
+                            },
+                            {"type": Catalog.LABEL_ASSET, "value": Catalog.VALUE_LOW},
+                        ],
+                    },
+                    {
+                        "rangeValue": 2,
+                        "names": [
+                            {"type": Catalog.LABEL_ASSET, "value": Catalog.VALUE_MEDIUM}
+                        ],
+                    },
+                    {
+                        "rangeValue": 3,
+                        "names": [
+                            {
+                                "type": Catalog.LABEL_ASSET,
+                                "value": Catalog.VALUE_MAXIMUM,
+                            },
+                            {"type": Catalog.LABEL_ASSET, "value": Catalog.VALUE_HIGH},
+                        ],
+                    },
+                ],
+            }
+
+        return preset_resources
+
+    def serialize_preset_resources(self):
+        """Return PresetResources, friendlyNames serialized for an API response.
+        """
+        preset_resources = []
+        resources = self.preset_resources()
+        for preset in resources["presets"]:
+            preset_resources.append(
+                {
+                    "rangeValue": preset["rangeValue"],
+                    "presetResources": {
+                        "friendlyNames": self.serialize_friendly_names(preset["names"])
+                    },
+                }
+            )
+
+        return {
+            "supportedRange": {
+                "minimumValue": resources["minimumValue"],
+                "maximumValue": resources["maximumValue"],
+                "precision": resources["precision"],
+            },
+            "presets": preset_resources,
+        }
+
+
+class AlexaToggleController(AlexaCapibility):
+    """Implements Alexa.ToggleController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-togglecontroller.html
+    """
+
+    def __init__(self, entity, instance, non_controllable=False):
+        """Initialize the entity."""
+        super().__init__(entity)
+        self.instance = lambda: instance
+        self.properties_non_controllable = lambda: non_controllable
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.ToggleController"
+
+    def properties_supported(self):
+        """Return what properties this entity supports."""
+        return [{"name": "toggleState"}]
+
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
+    def properties_retrievable(self):
+        """Return True if properties can be retrieved."""
+        return True
+
+    def get_property(self, name):
+        """Read and return a property."""
+        if name != "toggleState":
+            raise UnsupportedProperty(name)
+        if self.instance() == fan.ATTR_OSCILLATING:
+            is_on = bool(self.entity.attributes.get(fan.ATTR_OSCILLATING))
+            return "ON" if is_on else "OFF"
+
+        return None
+
+    def capability_resources(self):
+        """Return capabilityResources object"""
+        if self.instance() == fan.ATTR_OSCILLATING:
+            return [
+                {"type": Catalog.LABEL_ASSET, "value": Catalog.SETTING_OSCILLATE},
+                {"type": Catalog.LABEL_TEXT, "value": "Rotate"},
+                {"type": Catalog.LABEL_TEXT, "value": "Rotation"},
+            ]
+
+        return None

@@ -97,3 +97,17 @@ class AlexaSecurityPanelAuthorizationRequired(AlexaError):
 
     namespace = "Alexa.SecurityPanelController"
     error_type = "AUTHORIZATION_REQUIRED"
+
+
+class AlexaAlreadyInOperationError(AlexaError):
+    """Class to represent AlreadyInOperation errors."""
+
+    namespace = "Alexa"
+    error_type = "ALREADY_IN_OPERATION"
+
+
+class AlexaInvalidDirectiveError(AlexaError):
+    """Class to represent InvalidDirective errors."""
+
+    namespace = "Alexa"
+    error_type = "INVALID_DIRECTIVE"
