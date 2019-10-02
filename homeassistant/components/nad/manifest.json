@@ -1,7 +1,7 @@
 {
   "domain": "nad",
   "name": "Nad",
-  "documentation": "https://www.home-assistant.io/components/nad",
+  "documentation": "https://www.home-assistant.io/integrations/nad",
   "requirements": [
     "nad_receiver==0.0.11"
   ],

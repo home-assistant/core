@@ -2,7 +2,7 @@
   "domain": "plex",
   "name": "Plex",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/plex",
+  "documentation": "https://www.home-assistant.io/integrations/plex",
   "requirements": [
     "plexapi==3.0.6",
     "plexauth==0.0.4"

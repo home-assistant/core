@@ -1,7 +1,7 @@
 {
   "domain": "edimax",
   "name": "Edimax",
-  "documentation": "https://www.home-assistant.io/components/edimax",
+  "documentation": "https://www.home-assistant.io/integrations/edimax",
   "requirements": [
     "pyedimax==0.1"
   ],

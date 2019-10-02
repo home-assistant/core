@@ -1,7 +1,7 @@
 {
   "domain": "alert",
   "name": "Alert",
-  "documentation": "https://www.home-assistant.io/components/alert",
+  "documentation": "https://www.home-assistant.io/integrations/alert",
   "requirements": [],
   "dependencies": [],
   "after_dependencies": [
