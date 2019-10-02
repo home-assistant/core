@@ -19,7 +19,6 @@ async def async_call_action_from_config(
     context: Context,
 ) -> None:
     """Change state based on configuration."""
-    config = ACTION_SCHEMA(config)
     await toggle_entity.async_call_action_from_config(
         hass, config, variables, context, DOMAIN
     )
