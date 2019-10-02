@@ -13,7 +13,7 @@ DOMAIN = "thingsmobile"
 
 TIMEOUT = 5
 
-_api_url = "https://www.thingsmobile.com/services/business-api/simStatus"
+API_URL = "https://www.thingsmobile.com/services/business-api/simStatus"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -41,10 +41,10 @@ async def async_setup(hass, config):
     username = conf.get(CONF_USERNAME)
 
     try:
-        requests.post(_api_url, {"username": username, "token": api_key})
+        requests.post(API_URL, {"username": username, "token": api_key})
         hass.data[DOMAIN] = {
             "body": {"username": username, "token": api_key},
-            "url": _api_url,
+            "url": API_URL,
         }
     except RequestException:
         _LOGGER.error("Could not communicate with things Mobile")

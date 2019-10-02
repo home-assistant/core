@@ -1,11 +1,8 @@
 """Support for TM sensors."""
-import requests
-
 from datetime import timedelta
 import logging
-
+import requests
 import voluptuous as vol
-
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -50,6 +47,7 @@ class ThingsMobileSensor(Entity):
         self._token = token
         self.esim = esim
         self._name = name
+        self.units = ""
         self.entity_id = "sensor.tm_{}".format(esim)
         import datetime
 
@@ -74,18 +72,18 @@ class ThingsMobileSensor(Entity):
         parsed = ET.fromstring(result.text)
         sims = parsed.findall("./sims/sim")
         for sim in sims:
-            self._state = self.GetHumanReadable(sim.find("./balance").text)
+            self._state = self.get_human_readable(sim.find("./balance").text)
             self._name = sim.find("./name").text
 
-    def GetHumanReadable(self, size, precision=2):
+    def get_human_readable(self, size, precision=2):
         """Util function to simplify data."""
         size = int(size)
         suffixes = ["B", "KB", "MB", "GB", "TB"]
-        suffixIndex = 0
-        while size > 1024 and suffixIndex < 4:
-            suffixIndex += 1  # increment the index of the suffix
+        suffix_index = 0
+        while size > 1024 and suffix_index < 4:
+            suffix_index += 1  # increment the index of the suffix
             size = size / 1024  # apply the division
-        self.units = suffixes[suffixIndex]
+        self.units = suffixes[suffix_index]
         return size
 
     def attribute_map(self):
