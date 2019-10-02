@@ -41,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_attach_trigger(
-    hass, config, action, automation_info, *, platform_type: str = "numeric_state"
+    hass, config, action, automation_info, *, platform_type="numeric_state"
 ):
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
