@@ -15,8 +15,9 @@ from typing import Any, Union, TypeVar, Callable, List, Dict, Optional
 from urllib.parse import urlparse
 from uuid import UUID
 
-import voluptuous as vol
 from pkg_resources import parse_version
+import voluptuous as vol
+import voluptuous_serialize
 
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
@@ -374,6 +375,9 @@ def positive_timedelta(value: timedelta) -> timedelta:
     return value
 
 
+positive_time_period_dict = vol.All(time_period_dict, positive_timedelta)
+
+
 def remove_falsy(value: List[T]) -> List[T]:
     """Remove falsy values from a list."""
     return [v for v in value if v]
@@ -688,6 +692,14 @@ def key_dependency(key, dependency):
         return value
 
     return validator
+
+
+def custom_serializer(schema):
+    """Serialize additional types for voluptuous_serialize."""
+    if schema is positive_time_period_dict:
+        return {"type": "positive_time_period_dict"}
+
+    return voluptuous_serialize.UNSUPPORTED
 
 
 # Schemas

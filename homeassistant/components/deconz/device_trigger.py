@@ -206,8 +206,6 @@ def _get_deconz_event_from_device_id(hass, device_id):
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
-    config = TRIGGER_SCHEMA(config)
-
     device_registry = await hass.helpers.device_registry.async_get_registry()
     device = device_registry.async_get(config[CONF_DEVICE_ID])
 

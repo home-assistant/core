@@ -10,7 +10,12 @@ import voluptuous as vol
 
 import homeassistant.components.device_automation as device_automation
 from homeassistant.core import HomeAssistant, Context, callback, CALLBACK_TYPE
-from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_TIMEOUT
+from homeassistant.const import (
+    CONF_CONDITION,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    CONF_TIMEOUT,
+)
 from homeassistant import exceptions
 from homeassistant.helpers import (
     service,
@@ -89,7 +94,7 @@ async def async_validate_action_config(
 
     if action_type == ACTION_DEVICE_AUTOMATION:
         platform = await device_automation.async_get_device_automation_platform(
-            hass, config, "action"
+            hass, config[CONF_DOMAIN], "action"
         )
         config = platform.ACTION_SCHEMA(config)
 
@@ -346,7 +351,7 @@ class Script:
         self.last_action = action.get(CONF_ALIAS, "device automation")
         self._log("Executing step %s" % self.last_action)
         platform = await device_automation.async_get_device_automation_platform(
-            self.hass, action, "action"
+            self.hass, action[CONF_DOMAIN], "action"
         )
         await platform.async_call_action_from_config(
             self.hass, action, variables, context

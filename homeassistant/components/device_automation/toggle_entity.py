@@ -13,7 +13,13 @@ from homeassistant.components.device_automation.const import (
     CONF_TURNED_OFF,
     CONF_TURNED_ON,
 )
-from homeassistant.const import CONF_CONDITION, CONF_ENTITY_ID, CONF_PLATFORM, CONF_TYPE
+from homeassistant.const import (
+    CONF_CONDITION,
+    CONF_ENTITY_ID,
+    CONF_FOR,
+    CONF_PLATFORM,
+    CONF_TYPE,
+)
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers import condition, config_validation as cv, service
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
@@ -81,6 +87,7 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In([CONF_TURNED_OFF, CONF_TURNED_ON]),
+        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
@@ -93,7 +100,6 @@ async def async_call_action_from_config(
     domain: str,
 ) -> None:
     """Change state based on configuration."""
-    config = ACTION_SCHEMA(config)
     action_type = config[CONF_TYPE]
     if action_type == CONF_TURN_ON:
         action = "turn_on"
@@ -149,6 +155,8 @@ async def async_attach_trigger(
         state.CONF_FROM: from_state,
         state.CONF_TO: to_state,
     }
+    if "for" in config:
+        state_config["for"] = config["for"]
 
     return await state.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"
@@ -203,3 +211,12 @@ async def async_get_triggers(
 ) -> List[dict]:
     """List device triggers."""
     return await _async_get_automations(hass, device_id, ENTITY_TRIGGERS, domain)
+
+
+async def async_get_trigger_capabilities(hass: HomeAssistant, trigger: dict) -> dict:
+    """List trigger capabilities."""
+    return {
+        "extra_fields": vol.Schema(
+            {vol.Optional(CONF_FOR): cv.positive_time_period_dict}
+        )
+    }

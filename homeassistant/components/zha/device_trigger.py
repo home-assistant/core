@@ -23,7 +23,6 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
-    config = TRIGGER_SCHEMA(config)
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
     zha_device = await async_get_zha_device(hass, config[CONF_DEVICE_ID])
 

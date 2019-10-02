@@ -56,6 +56,7 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.components.device_automation import (  # noqa
     _async_get_device_automations as async_get_device_automations,
+    _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
 
 _TEST_INSTANCE_PORT = SERVER_PORT
