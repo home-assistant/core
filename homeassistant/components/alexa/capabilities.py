@@ -614,3 +614,38 @@ class AlexaThermostatController(AlexaCapibility):
             return None
 
         return {"value": temp, "scale": API_TEMP_UNITS[unit]}
+
+
+class AlexaPowerLevelController(AlexaCapibility):
+    """Implements Alexa.PowerLevelController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-powerlevelcontroller.html
+    """
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.PowerLevelController"
+
+    def properties_supported(self):
+        """Return what properties this entity supports."""
+        return [{"name": "powerLevel"}]
+
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
+    def properties_retrievable(self):
+        """Return True if properties can be retrieved."""
+        return True
+
+    def get_property(self, name):
+        """Read and return a property."""
+        if name != "powerLevel":
+            raise UnsupportedProperty(name)
+
+        if self.entity.domain == fan.DOMAIN:
+            speed = self.entity.attributes.get(fan.ATTR_SPEED)
+
+            return PERCENTAGE_FAN_MAP.get(speed, None)
+
+        return None
