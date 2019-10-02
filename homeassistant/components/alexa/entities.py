@@ -76,8 +76,17 @@ class DisplayCategory:
     # Indicates a door.
     DOOR = "DOOR"
 
+    # Indicates a doorbell.
+    DOOR_BELL = "DOORBELL"
+
+    # Indicates a fan.
+    FAN = "FAN"
+
     # Indicates light sources or fixtures.
     LIGHT = "LIGHT"
+
+    # Indicates a microwave oven.
+    MICROWAVE = "MICROWAVE"
 
     # Indicates an endpoint that detects and reports motion.
     MOTION_SENSOR = "MOTION_SENSOR"
@@ -90,6 +99,9 @@ class DisplayCategory:
     # might include turning off lights and lowering the thermostat, but the
     # order is unimportant.    Applies to Scenes
     SCENE_TRIGGER = "SCENE_TRIGGER"
+
+    # Indicates a security panel.
+    SECURITY_PANEL = "SECURITY_PANEL"
 
     # Indicates an endpoint that locks.
     SMARTLOCK = "SMARTLOCK"
@@ -324,7 +336,7 @@ class FanCapabilities(AlexaEntity):
 
     def default_display_categories(self):
         """Return the display categories for this entity."""
-        return [DisplayCategory.OTHER]
+        return [DisplayCategory.FAN]
 
     def interfaces(self):
         """Yield the supported interfaces."""

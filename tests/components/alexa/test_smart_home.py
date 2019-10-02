@@ -308,7 +308,7 @@ async def test_fan(hass):
     appliance = await discovery_test(device, hass)
 
     assert appliance["endpointId"] == "fan#test_1"
-    assert appliance["displayCategories"][0] == "OTHER"
+    assert appliance["displayCategories"][0] == "FAN"
     assert appliance["friendlyName"] == "Test fan 1"
     assert_endpoint_capabilities(
         appliance, "Alexa.PowerController", "Alexa.EndpointHealth"
@@ -333,7 +333,7 @@ async def test_variable_fan(hass):
     appliance = await discovery_test(device, hass)
 
     assert appliance["endpointId"] == "fan#test_2"
-    assert appliance["displayCategories"][0] == "OTHER"
+    assert appliance["displayCategories"][0] == "FAN"
     assert appliance["friendlyName"] == "Test fan 2"
 
     assert_endpoint_capabilities(
