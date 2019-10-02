@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Lazy 'tox' to quickly check if branch is up to PR standards.
+Lazy "tox" to quickly check if branch is up to PR standards.
 
 This is NOT a tox replacement, only a quick check during development.
 """
