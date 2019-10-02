@@ -185,6 +185,25 @@ async def test_automation_with_non_existing_integration(hass, caplog):
     assert "Integration 'beer' not found" in caplog.text
 
 
+async def test_automation_with_integration_without_device_action(hass, caplog):
+    """Test automation with integration without device action support."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event1"},
+                "action": {"device_id": "", "domain": "test"},
+            }
+        },
+    )
+
+    assert (
+        "Integration 'test' does not support device automation actions" in caplog.text
+    )
+
+
 async def test_automation_with_integration_without_device_trigger(hass, caplog):
     """Test automation with integration without device trigger support."""
     assert await async_setup_component(
@@ -206,6 +225,23 @@ async def test_automation_with_integration_without_device_trigger(hass, caplog):
     assert (
         "Integration 'test' does not support device automation triggers" in caplog.text
     )
+
+
+async def test_automation_with_bad_action(hass, caplog):
+    """Test automation with bad device action."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event1"},
+                "action": {"device_id": "", "domain": "light"},
+            }
+        },
+    )
+
+    assert "required key not provided" in caplog.text
 
 
 async def test_automation_with_bad_trigger(hass, caplog):
