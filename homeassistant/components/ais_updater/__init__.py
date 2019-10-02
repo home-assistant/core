@@ -122,6 +122,8 @@ async def async_setup(hass, config):
             allow_to_say = True
             if "autoUpdate" in now.data:
                 allow_auto_update = now.data["autoUpdate"]
+            if "sayIt" in now.data:
+                allow_to_say = now.data["sayIt"]
         else:
             # call is from scheduler
             allow_auto_update = True
@@ -539,7 +541,9 @@ def do_execute_upgrade(hass, call):
         hass.services.call(
             "ais_ai_service", "say_it", {"text": "Sprawdzam dostępność aktualizacji"}
         )
-        hass.services.call("ais_updater", "check_version", {"autoUpdate": False})
+        hass.services.call(
+            "ais_updater", "check_version", {"autoUpdate": False, "sayIt": True}
+        )
         return
 
     # this call was upgrade call

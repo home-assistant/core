@@ -40,8 +40,8 @@
    - delay: '1'
    - service: ais_updater.check_version
      data:
-       key: autoUpdate
-       val: false
+       autoUpdate: false
+       sayIt: false
    - service: camera.turn_on
      data:
        entity_id: camera.remote_access
@@ -85,9 +85,8 @@
    - delay: '6000'
    - service: ais_updater.check_version
      data:
-       key: autoUpdate
-       val: true
-
+       autoUpdate: true
+       sayIt: false
 - id: '201807081858006'
   alias: 'AIS Get RSS Help Items For Selected Topic'
   initial_state: True
