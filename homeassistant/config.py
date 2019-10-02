@@ -60,7 +60,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_PERSISTENT_ERRORS = "bootstrap_persistent_errors"
 RE_YAML_ERROR = re.compile(r"homeassistant\.util\.yaml")
 RE_ASCII = re.compile(r"\033\[[^m]*m")
-HA_COMPONENT_URL = "[{}](https://home-assistant.io/components/{}/)"
+HA_COMPONENT_URL = "[{}](https://home-assistant.io/integrations/{}/)"
 YAML_CONFIG_FILE = "configuration.yaml"
 VERSION_FILE = ".HA_VERSION"
 CONFIG_DIR_NAME = ".homeassistant"
@@ -462,7 +462,7 @@ def _format_config_error(ex: Exception, domain: str, config: Dict) -> str:
     if domain != CONF_CORE:
         message += (
             "Please check the docs at "
-            "https://home-assistant.io/components/{}/".format(domain)
+            "https://home-assistant.io/integrations/{}/".format(domain)
         )
 
     return message
