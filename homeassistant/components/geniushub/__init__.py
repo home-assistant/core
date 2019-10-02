@@ -57,6 +57,7 @@ V3_API_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_HUB_UID): cv.string,
     }
 )
 CONFIG_SCHEMA = vol.Schema(
@@ -101,7 +102,8 @@ class GeniusBroker:
         """Initialize the geniushub client."""
         self.hass = hass
         self.hub_uid = kwargs.pop(CONF_HUB_UID, None)
-        self.hub_uid = self.hub_uid.upper()
+        self.hub_uid = self.hub_uid.upper() if self.hub_uid else None
+
         self.client = GeniusHub(*args, **kwargs, session=async_get_clientsession(hass))
 
     async def async_update(self, now, **kwargs):
