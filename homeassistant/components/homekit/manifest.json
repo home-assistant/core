@@ -6,5 +6,7 @@
     "HAP-python==2.6.0"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@fuzzie360"
+  ]
 }
