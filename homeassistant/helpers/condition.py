@@ -526,6 +526,6 @@ async def async_validate_condition_config(
         platform = await async_get_device_automation_platform(
             hass, config[CONF_DOMAIN], "condition"
         )
-        return platform.CONDITION_SCHEMA(config)
+        return cast(ConfigType, platform.CONDITION_SCHEMA(config))  # type: ignore
 
     return config

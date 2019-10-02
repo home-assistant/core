@@ -2,12 +2,14 @@
 import asyncio
 import logging
 from typing import Any, List, MutableMapping
+from types import ModuleType
 
 import voluptuous as vol
 import voluptuous_serialize
 
 from homeassistant.const import CONF_PLATFORM, CONF_DOMAIN, CONF_DEVICE_ID
 from homeassistant.components import websocket_api
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.loader import async_get_integration, IntegrationNotFound
@@ -63,7 +65,9 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_get_device_automation_platform(hass, domain, automation_type):
+async def async_get_device_automation_platform(
+    hass: HomeAssistant, domain: str, automation_type: str
+) -> ModuleType:
     """Load device automation platform for integration.
 
     Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.
