@@ -28,12 +28,14 @@ def mock_pihole_data_call(Hole):
     pass
 
 
-async def test_setup_no_config(hass):
-    """Tests component setup with no config."""
+async def test_setup_minimal_config(hass):
+    """Tests component setup with minimal config."""
     with patch.object(
         Hole, "get_data", new=CoroutineMock(side_effect=mock_pihole_data_call(Hole))
     ):
-        assert await async_setup_component(hass, pi_hole.DOMAIN, {pi_hole.DOMAIN: {}})
+        assert await async_setup_component(
+            hass, pi_hole.DOMAIN, {pi_hole.DOMAIN: [{"host": "pi.hole"}]}
+        )
 
     await hass.async_block_till_done()
 
@@ -88,7 +90,9 @@ async def test_setup_custom_config(hass):
         Hole, "get_data", new=CoroutineMock(side_effect=mock_pihole_data_call(Hole))
     ):
         assert await async_setup_component(
-            hass, pi_hole.DOMAIN, {pi_hole.DOMAIN: {"name": "Custom"}}
+            hass,
+            pi_hole.DOMAIN,
+            {pi_hole.DOMAIN: [{"host": "pi.hole", "name": "Custom"}]},
         )
 
     await hass.async_block_till_done()
