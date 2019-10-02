@@ -1,6 +1,7 @@
 """Support for OPNSense Routers."""
 import logging
 
+from pyopnsense import diagnostics
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -36,8 +37,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the opnsense component."""
-
-    from pyopnsense import diagnostics
 
     conf = config[DOMAIN]
     url = conf[CONF_URL]
