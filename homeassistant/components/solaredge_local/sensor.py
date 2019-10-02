@@ -14,6 +14,7 @@ from homeassistant.const import (
     POWER_WATT,
     ENERGY_WATT_HOUR,
     TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -111,6 +112,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except (ConnectTimeout, HTTPError):
         _LOGGER.error("Could not retrieve details from SolarEdge API")
         return
+
+    if status.inverters.primary.temperature.units.farenheit:
+        SENSOR_TYPES["temperature"] = [
+            "currentTemp",
+            "Current temperature",
+            "TEMP_FAHRENHEIT",
+            "mdi:oil-temperature",
+        ]
 
     # Create solaredge data service which will retrieve and update the data.
     data = SolarEdgeData(hass, api)
@@ -220,14 +229,9 @@ class SolarEdgeData:
             self.data["energyThisMonth"] = round(status.energy.thisMonth, 2)
             self.data["energyToday"] = round(status.energy.today, 2)
             self.data["currentPower"] = round(status.powerWatt, 2)
-            if status.inverters.primary.temperature.units.celsius:
-                self.data["invertertemperature"] = round(
-                    status.inverters.primary.temperature.value, 2
-                )
-            else:
-                self.data["invertertemperature"] = round(
-                    ((status.inverters.primary.temperature.value - 32) * 5 / 9), 1
-                )
+            self.data["invertertemperature"] = round(
+                status.inverters.primary.temperature.value, 2
+            )
         if maintenance.system.name:
             self.data["optimizertemperature"] = round(statistics.mean(temperature), 2)
             self.data["optimizervoltage"] = round(statistics.mean(voltage), 2)
