@@ -129,13 +129,14 @@ class unifi_wireless_clients:
     def get_data(self, config_entry):
         """Get data related to a specific controller."""
         controller_id = get_controller_id_from_config_entry(config_entry)
-        return set(self.data.get(controller_id, list()))
+        data = self.data.get(controller_id, {"wireless_devices": []})
+        return set(data["wireless_devices"])
 
     @callback
     def update_data(self, data, config_entry):
         """Update data and schedule to save to file."""
         controller_id = get_controller_id_from_config_entry(config_entry)
-        self.data[controller_id] = list(data)
+        self.data[controller_id] = {"wireless_devices": list(data)}
 
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 

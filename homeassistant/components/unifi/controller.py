@@ -132,17 +132,17 @@ class UniFiController:
 
     def update_wireless_clients(self):
         """Update set of known to be wireless clients."""
-        wireless_clients = set()
+        new_wireless_clients = set()
 
         for client_id in self.api.clients:
             if (
                 client_id not in self.wireless_clients
                 and not self.api.clients[client_id].is_wired
             ):
-                wireless_clients.add(client_id)
+                new_wireless_clients.add(client_id)
 
-        if wireless_clients:
-            self.wireless_clients |= wireless_clients
+        if new_wireless_clients:
+            self.wireless_clients |= new_wireless_clients
             unifi_wireless_clients = self.hass.data[UNIFI_WIRELESS_CLIENTS]
             unifi_wireless_clients.update_data(self.wireless_clients, self.config_entry)
 

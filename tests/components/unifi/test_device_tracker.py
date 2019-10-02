@@ -21,6 +21,7 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_WIRED_CLIENTS,
     CONTROLLER_ID as CONF_CONTROLLER_ID,
     UNIFI_CONFIG,
+    UNIFI_WIRELESS_CLIENTS,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -110,7 +111,9 @@ CONTROLLER_ID = CONF_CONTROLLER_ID.format(host="mock-host", site="mock-site")
 def mock_controller(hass):
     """Mock a UniFi Controller."""
     hass.data[UNIFI_CONFIG] = {}
+    hass.data[UNIFI_WIRELESS_CLIENTS] = Mock()
     controller = unifi.UniFiController(hass, None)
+    controller.wireless_clients = set()
 
     controller.api = Mock()
     controller.mock_requests = []
