@@ -45,6 +45,15 @@ def setup(hass, config):
     verify_ssl = conf[CONF_VERIFY_SSL]
     tracker_interfaces = conf[CONF_TRACKER_INTERFACE]
 
+    interfaces_client = diagnostics.InterfaceClient(
+        api_key, api_secret, url, verify_ssl
+    )
+    try:
+        interfaces_client.get_arp()
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Failure while connecting to OPNsense API endpoint.")
+        return False
+
     if tracker_interfaces:
         # Verify that specified tracker interfaces are valid
         netinsight_client = diagnostics.NetworkInsightClient(
@@ -58,9 +67,6 @@ def setup(hass, config):
                 )
                 return False
 
-    interfaces_client = diagnostics.InterfaceClient(
-        api_key, api_secret, url, verify_ssl
-    )
     hass.data[OPNSENSE_DATA] = {"interfaces": interfaces_client}
 
     load_platform(hass, "device_tracker", DOMAIN, tracker_interfaces, config)
