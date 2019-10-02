@@ -18,7 +18,7 @@ from homeassistant.components.air_quality import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
 
-from .const import CONF_LANGUAGE, NO_AIRLY_SENSORS
+from .const import NO_AIRLY_SENSORS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,11 +51,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     name = config_entry.data[CONF_NAME]
     latitude = config_entry.data[CONF_LATITUDE]
     longitude = config_entry.data[CONF_LONGITUDE]
-    language = config_entry.data[CONF_LANGUAGE]
 
     websession = async_get_clientsession(hass)
 
-    data = AirlyData(websession, api_key, latitude, longitude, language)
+    data = AirlyData(websession, api_key, latitude, longitude)
 
     async_add_entities([AirlyAirQuality(data, name)], True)
 
@@ -157,12 +156,11 @@ class AirlyAirQuality(AirQualityEntity):
 class AirlyData:
     """Define an object to hold sensor data."""
 
-    def __init__(self, session, api_key, latitude, longitude, language):
+    def __init__(self, session, api_key, latitude, longitude):
         """Initialize."""
         self.latitude = latitude
         self.longitude = longitude
-        self.language = language
-        self.airly = Airly(api_key, session, language=self.language)
+        self.airly = Airly(api_key, session)
         self.data = {}
 
     @Throttle(DEFAULT_SCAN_INTERVAL)
@@ -180,7 +178,7 @@ class AirlyData:
             index = measurements.current["indexes"][0]
             standards = measurements.current["standards"]
 
-            if index["description"] == NO_AIRLY_SENSORS[self.language]:
+            if index["description"] == NO_AIRLY_SENSORS:
                 _LOGGER.error("Can't retrieve data: no Airly sensors in this area")
                 return
             for value in values:

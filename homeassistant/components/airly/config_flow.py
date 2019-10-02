@@ -10,14 +10,7 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CON
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    CONF_LANGUAGE,
-    DEFAULT_LANGUAGE,
-    DEFAULT_NAME,
-    DOMAIN,
-    LANGUAGE_CODES,
-    NO_AIRLY_SENSORS,
-)
+from .const import DEFAULT_NAME, DOMAIN, NO_AIRLY_SENSORS
 
 
 @callback
@@ -70,12 +63,9 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             api_key="",
             latitude=self.hass.config.latitude,
             longitude=self.hass.config.longitude,
-            language=DEFAULT_LANGUAGE,
         )
 
-    def _show_config_form(
-        self, name=None, api_key=None, latitude=None, longitude=None, language=None
-    ):
+    def _show_config_form(self, name=None, api_key=None, latitude=None, longitude=None):
         """Show the configuration form to edit data."""
         return self.async_show_form(
             step_id="user",
@@ -89,9 +79,6 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_LONGITUDE, default=self.hass.config.longitude
                     ): cv.longitude,
                     vol.Optional(CONF_NAME, default=name): str,
-                    vol.Optional(CONF_LANGUAGE, default=language): vol.In(
-                        LANGUAGE_CODES
-                    ),
                 }
             ),
             errors=self._errors,
@@ -122,6 +109,6 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             await measurements.update()
         current = measurements.current
-        if current["indexes"][0]["description"] == NO_AIRLY_SENSORS["en"]:
+        if current["indexes"][0]["description"] == NO_AIRLY_SENSORS:
             return False
         return True

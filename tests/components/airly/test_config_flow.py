@@ -6,7 +6,7 @@ from asynctest import patch
 from homeassistant import data_entry_flow
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.components.airly import config_flow
-from homeassistant.components.airly.const import CONF_LANGUAGE, DOMAIN
+from homeassistant.components.airly.const import DOMAIN
 
 from tests.common import load_fixture, MockConfigEntry
 
@@ -15,7 +15,6 @@ CONFIG = {
     CONF_API_KEY: "foo",
     CONF_LATITUDE: 123,
     CONF_LONGITUDE: 456,
-    CONF_LANGUAGE: "en",
 }
 
 
@@ -91,4 +90,3 @@ async def test_create_entry(hass):
         assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
         assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
         assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
-        assert result["data"][CONF_LANGUAGE] == CONFIG[CONF_LANGUAGE]

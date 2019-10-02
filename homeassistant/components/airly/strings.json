@@ -9,8 +9,7 @@
           "name": "Name of the integration",
           "api_key": "Airly API key",
           "latitude": "Latitude",
-          "longitude": "Longitude",
-          "language": "API messages language"
+          "longitude": "Longitude"
         }
       }
     },
