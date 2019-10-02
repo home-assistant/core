@@ -49,10 +49,10 @@ GH_DEVICE_ATTRS = {
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-_V1_API_SCHEMA = vol.Schema(
+V1_API_SCHEMA = vol.Schema(
     {vol.Required(CONF_TOKEN): cv.string, vol.Required(CONF_HUB_UID): cv.string}
 )
-_V3_API_SCHEMA = vol.Schema(
+V3_API_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -60,7 +60,7 @@ _V3_API_SCHEMA = vol.Schema(
     }
 )
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Any(_V3_API_SCHEMA, _V1_API_SCHEMA)}, extra=vol.ALLOW_EXTRA
+    {DOMAIN: vol.Any(V3_API_SCHEMA, V1_API_SCHEMA)}, extra=vol.ALLOW_EXTRA
 )
 
 
