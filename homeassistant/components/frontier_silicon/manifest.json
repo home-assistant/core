@@ -1,7 +1,7 @@
 {
   "domain": "frontier_silicon",
   "name": "Frontier silicon",
-  "documentation": "https://www.home-assistant.io/components/frontier_silicon",
+  "documentation": "https://www.home-assistant.io/integrations/frontier_silicon",
   "requirements": [
     "afsapi==0.0.4"
   ],

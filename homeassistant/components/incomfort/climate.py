@@ -1,5 +1,5 @@
 """Support for an Intergas boiler via an InComfort/InTouch Lan2RF gateway."""
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, List, Optional
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -13,21 +13,24 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import DOMAIN
 
 
-async def async_setup_platform(
-    hass, hass_config, async_add_entities, discovery_info=None
-):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up an InComfort/InTouch climate device."""
+    if discovery_info is None:
+        return
+
     client = hass.data[DOMAIN]["client"]
     heater = hass.data[DOMAIN]["heater"]
 
-    async_add_entities([InComfortClimate(client, r) for r in heater.rooms])
+    async_add_entities([InComfortClimate(client, heater, r) for r in heater.rooms])
 
 
 class InComfortClimate(ClimateDevice):
     """Representation of an InComfort/InTouch climate device."""
 
-    def __init__(self, client, room):
+    def __init__(self, client, heater, room) -> None:
         """Initialize the climate device."""
+        self._unique_id = f"{heater.serial_no}_{room.room_no}"
+
         self._client = client
         self._room = room
         self._name = f"Room {room.room_no}"
@@ -37,13 +40,18 @@ class InComfortClimate(ClimateDevice):
         async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
 
     @callback
-    def _refresh(self):
+    def _refresh(self) -> None:
         self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
     def should_poll(self) -> bool:
         """Return False as this device should never be polled."""
         return False
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def name(self) -> str:
@@ -78,7 +86,7 @@ class InComfortClimate(ClimateDevice):
     @property
     def target_temperature(self) -> Optional[float]:
         """Return the temperature we try to reach."""
-        return self._room.override
+        return self._room.setpoint
 
     @property
     def supported_features(self) -> int:

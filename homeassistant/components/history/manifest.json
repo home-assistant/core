@@ -1,7 +1,7 @@
 {
   "domain": "history",
   "name": "History",
-  "documentation": "https://www.home-assistant.io/components/history",
+  "documentation": "https://www.home-assistant.io/integrations/history",
   "requirements": [],
   "dependencies": [
     "http",

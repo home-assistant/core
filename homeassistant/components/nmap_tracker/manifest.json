@@ -1,7 +1,7 @@
 {
   "domain": "nmap_tracker",
   "name": "Nmap tracker",
-  "documentation": "https://www.home-assistant.io/components/nmap_tracker",
+  "documentation": "https://www.home-assistant.io/integrations/nmap_tracker",
   "requirements": [
     "python-nmap==0.6.1",
     "getmac==0.8.1"

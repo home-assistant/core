@@ -15,7 +15,6 @@ import pytest
 
 import homeassistant.core as ha
 from homeassistant.exceptions import InvalidEntityFormatError, InvalidStateError
-from homeassistant.util.async_ import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.const import (
@@ -191,7 +190,7 @@ class TestHomeAssistant(unittest.TestCase):
         for _ in range(3):
             self.hass.add_job(test_coro())
 
-        run_coroutine_threadsafe(
+        asyncio.run_coroutine_threadsafe(
             asyncio.wait(self.hass._pending_tasks), loop=self.hass.loop
         ).result()
 
@@ -216,7 +215,9 @@ class TestHomeAssistant(unittest.TestCase):
             yield from asyncio.sleep(0)
             yield from asyncio.sleep(0)
 
-        run_coroutine_threadsafe(wait_finish_callback(), self.hass.loop).result()
+        asyncio.run_coroutine_threadsafe(
+            wait_finish_callback(), self.hass.loop
+        ).result()
 
         assert len(self.hass._pending_tasks) == 2
         self.hass.block_till_done()
@@ -239,7 +240,9 @@ class TestHomeAssistant(unittest.TestCase):
         for _ in range(2):
             self.hass.add_job(test_executor)
 
-        run_coroutine_threadsafe(wait_finish_callback(), self.hass.loop).result()
+        asyncio.run_coroutine_threadsafe(
+            wait_finish_callback(), self.hass.loop
+        ).result()
 
         assert len(self.hass._pending_tasks) == 2
         self.hass.block_till_done()
@@ -263,7 +266,9 @@ class TestHomeAssistant(unittest.TestCase):
         for _ in range(2):
             self.hass.add_job(test_callback)
 
-        run_coroutine_threadsafe(wait_finish_callback(), self.hass.loop).result()
+        asyncio.run_coroutine_threadsafe(
+            wait_finish_callback(), self.hass.loop
+        ).result()
 
         self.hass.block_till_done()
 

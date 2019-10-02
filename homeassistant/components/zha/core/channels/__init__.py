@@ -2,7 +2,7 @@
 Channels module for Zigbee Home Automation.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zha/
+https://home-assistant.io/integrations/zha/
 """
 import asyncio
 from concurrent.futures import TimeoutError as Timeout
@@ -202,7 +202,7 @@ class ZigbeeChannel(LogMixin):
         # Xiaomi devices don't need this and it disrupts pairing
         if self._zha_device.manufacturer != "LUMI":
             await self.bind()
-            if self.cluster.cluster_id in self.cluster.endpoint.in_clusters:
+            if self.cluster.is_server:
                 for report_config in self._report_config:
                     await self.configure_reporting(
                         report_config["attr"], report_config["config"]
@@ -240,6 +240,8 @@ class ZigbeeChannel(LogMixin):
             {
                 "unique_id": self._unique_id,
                 "device_ieee": str(self._zha_device.ieee),
+                "endpoint_id": cluster.endpoint.endpoint_id,
+                "cluster_id": cluster.cluster_id,
                 "command": command,
                 "args": args,
             },

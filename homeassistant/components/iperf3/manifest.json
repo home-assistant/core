@@ -1,9 +1,9 @@
 {
   "domain": "iperf3",
   "name": "Iperf3",
-  "documentation": "https://www.home-assistant.io/components/iperf3",
+  "documentation": "https://www.home-assistant.io/integrations/iperf3",
   "requirements": [
-    "iperf3==0.1.10"
+    "iperf3==0.1.11"
   ],
   "dependencies": [],
   "codeowners": []

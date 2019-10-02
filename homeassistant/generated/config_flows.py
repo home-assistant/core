@@ -3,6 +3,7 @@
 To update, run python3 -m script.hassfest
 """
 
+# fmt: off
 
 FLOWS = [
     "adguard",
@@ -14,6 +15,7 @@ FLOWS = [
     "daikin",
     "deconz",
     "dialogflow",
+    "ecobee",
     "emulated_roku",
     "esphome",
     "geofency",
@@ -29,6 +31,7 @@ FLOWS = [
     "ios",
     "ipma",
     "iqvia",
+    "izone",
     "life360",
     "lifx",
     "linky",
@@ -44,12 +47,15 @@ FLOWS = [
     "openuv",
     "owntracks",
     "plaato",
+    "plex",
     "point",
     "ps4",
     "rainmachine",
     "simplisafe",
     "smartthings",
     "smhi",
+    "solaredge",
+    "soma",
     "somfy",
     "sonos",
     "tellduslive",
@@ -57,6 +63,7 @@ FLOWS = [
     "tplink",
     "traccar",
     "tradfri",
+    "transmission",
     "twentemilieu",
     "twilio",
     "unifi",

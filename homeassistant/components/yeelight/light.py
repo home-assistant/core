@@ -11,7 +11,7 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
     color_temperature_kelvin_to_mired as kelvin_to_mired,
 )
-from homeassistant.const import CONF_HOST, ATTR_ENTITY_ID, CONF_NAME
+from homeassistant.const import CONF_HOST, ATTR_ENTITY_ID, ATTR_MODE, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -64,7 +64,6 @@ SUPPORT_YEELIGHT_WHITE_TEMP = SUPPORT_YEELIGHT | SUPPORT_COLOR_TEMP
 
 SUPPORT_YEELIGHT_RGB = SUPPORT_YEELIGHT_WHITE_TEMP | SUPPORT_COLOR
 
-ATTR_MODE = "mode"
 ATTR_MINUTES = "minutes"
 
 SERVICE_SET_MODE = "set_mode"
@@ -822,7 +821,7 @@ class YeelightWhiteTempLightsupport:
 
 
 class YeelightWhiteTempWithoutNightlightSwitch(
-    YeelightGenericLight, YeelightWhiteTempLightsupport
+    YeelightWhiteTempLightsupport, YeelightGenericLight
 ):
     """White temp light, when nightlight switch is not set to light."""
 
@@ -831,7 +830,7 @@ class YeelightWhiteTempWithoutNightlightSwitch(
         return "current_brightness"
 
 
-class YeelightWithNightLight(YeelightGenericLight, YeelightWhiteTempLightsupport):
+class YeelightWithNightLight(YeelightWhiteTempLightsupport, YeelightGenericLight):
     """Representation of a Yeelight with nightlight support.
 
     It represents case when nightlight switch is set to light.
