@@ -1,0 +1,12 @@
+{
+    "domain": "chargeplacescotland",
+    "name": "ChargePlaceScotland",
+    "config_flow": true,
+    "documentation": "https://www.home-assistant.io/components/chargeplacescotland",
+    "requirements": [
+      
+    ],
+    "dependencies": [],
+    "codeowners": []
+  }
+  
