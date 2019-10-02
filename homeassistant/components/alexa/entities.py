@@ -336,7 +336,7 @@ class FanCapabilities(AlexaEntity):
 
     def default_display_categories(self):
         """Return the display categories for this entity."""
-        return [DisplayCategory.OTHER]
+        return [DisplayCategory.FAN]
 
     def interfaces(self):
         """Yield the supported interfaces."""
