@@ -16,7 +16,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, slugify
 
 from .const import (
     DOMAIN,
@@ -28,7 +28,9 @@ from .const import (
     MIN_TIME_BETWEEN_UPDATES,
     SERVICE_DISABLE,
     SERVICE_DISABLE_ATTR_DURATION,
+    SERVICE_DISABLE_ATTR_NAME,
     SERVICE_ENABLE,
+    SERVICE_ENABLE_ATTR_NAME,
 )
 
 
@@ -69,14 +71,17 @@ SERVICE_DISABLE_SCHEMA = vol.Schema(
     {
         vol.Required(SERVICE_DISABLE_ATTR_DURATION): vol.All(
             cv.time_period_str, cv.positive_timedelta
-        )
+        ),
+        vol.Optional(SERVICE_DISABLE_ATTR_NAME): cv.string,
     }
 )
+
+SERVICE_ENABLE_SCHEMA = vol.Schema({vol.Optional(SERVICE_ENABLE_ATTR_NAME): cv.string})
 
 
 async def async_setup(hass, config):
     """Set up the pi_hole integration."""
-    hass.data[DOMAIN] = []
+    hass.data[DOMAIN] = {}
 
     for conf in config[DOMAIN]:
         name = conf[CONF_NAME]
@@ -103,29 +108,80 @@ async def async_setup(hass, config):
 
         await pi_hole.async_update()
 
-        hass.data[DOMAIN].append(pi_hole)
+        hass.data[DOMAIN][slugify(name)] = pi_hole
 
-    async def handle_disable(call):
-        if api_key is None:
-            raise vol.Invalid("Pi-hole api_key must be provided in configuration")
-
+    async def disable_service_handler(call):
+        """Handle the service call to disable a single Pi-Hole or all configured Pi-Holes."""
         duration = call.data[SERVICE_DISABLE_ATTR_DURATION].total_seconds()
+        name = call.data.get(SERVICE_DISABLE_ATTR_NAME)
 
-        LOGGER.debug("Disabling %s %s for %d seconds", DOMAIN, host, duration)
-        await pi_hole.api.disable(duration)
+        async def do_disable(name):
+            """Disable the named Pi-Hole."""
+            slug = slugify(name)
+            if slug not in hass.data[DOMAIN]:
+                raise vol.Invalid(
+                    "Pi-hole '{}' not found. Check your configuration.".format(name)
+                )
+            else:
+                pi_hole = hass.data[DOMAIN][slug]
+                if pi_hole.api.api_token is None:
+                    raise vol.Invalid(
+                        "Pi-hole '{}' must have an api_key provided in configuration to be disabled.".format(
+                            pi_hole.name
+                        )
+                    )
+                else:
+                    LOGGER.debug(
+                        "Disabling Pi-hole '%s' (%s) for %d seconds",
+                        name,
+                        pi_hole.api.host,
+                        duration,
+                    )
+                    await pi_hole.api.disable(duration)
 
-    async def handle_enable(call):
-        if api_key is None:
-            raise vol.Invalid("Pi-hole api_key must be provided in configuration")
+        if name is not None:
+            await do_disable(name)
+        else:
+            for pi_hole in hass.data[DOMAIN].values():
+                await do_disable(pi_hole.name)
 
-        LOGGER.debug("Enabling %s %s", DOMAIN, host)
-        await pi_hole.api.enable()
+    async def enable_service_handler(call):
+        """Handle the service call to enable a single Pi-Hole or all configured Pi-Holes."""
+
+        name = call.data.get(SERVICE_ENABLE_ATTR_NAME)
+
+        async def do_enable(name):
+            """Enable the named Pi-Hole."""
+            slug = slugify(name)
+            if slug not in hass.data[DOMAIN]:
+                raise vol.Invalid(
+                    "Pi-hole '{}' not found. Check your configuration.".format(name)
+                )
+            else:
+                pi_hole = hass.data[DOMAIN][slug]
+                if pi_hole.api.api_token is None:
+                    raise vol.Invalid(
+                        "Pi-hole '{}' must have an api_key provided in configuration to be enabled.".format(
+                            pi_hole.name
+                        )
+                    )
+                else:
+                    LOGGER.debug("Enabling Pi-hole '%s' (%s)", name, pi_hole.api.host)
+                    await pi_hole.api.enable()
+
+        if name is not None:
+            await do_enable(name)
+        else:
+            for pi_hole in hass.data[DOMAIN].values():
+                await do_enable(pi_hole.name)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_DISABLE, handle_disable, schema=SERVICE_DISABLE_SCHEMA
+        DOMAIN, SERVICE_DISABLE, disable_service_handler, schema=SERVICE_DISABLE_SCHEMA
     )
 
-    hass.services.async_register(DOMAIN, SERVICE_ENABLE, handle_enable)
+    hass.services.async_register(
+        DOMAIN, SERVICE_ENABLE, enable_service_handler, schema=SERVICE_ENABLE_SCHEMA
+    )
 
     hass.async_create_task(async_load_platform(hass, SENSOR_DOMAIN, DOMAIN, {}, config))
 

@@ -18,7 +18,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if discovery_info is None:
         return
 
-    for pi_hole in hass.data[PIHOLE_DOMAIN]:
+    for pi_hole in hass.data[PIHOLE_DOMAIN].values():
         sensors = []
         sensors = [PiHoleSensor(pi_hole, sensor_name) for sensor_name in SENSOR_LIST]
 
