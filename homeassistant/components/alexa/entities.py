@@ -76,6 +76,9 @@ class DisplayCategory:
     # Indicates a door.
     DOOR = "DOOR"
 
+    # Indicates a doorbell.
+    DOOR_BELL = "DOORBELL"
+
     # Indicates a fan.
     FAN = "FAN"
 
