@@ -85,6 +85,9 @@ class DisplayCategory:
     # Indicates light sources or fixtures.
     LIGHT = "LIGHT"
 
+    # Indicates a microwave oven.
+    MICROWAVE = "MICROWAVE"
+
     # Indicates an endpoint that detects and reports motion.
     MOTION_SENSOR = "MOTION_SENSOR"
 
