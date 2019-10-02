@@ -3,7 +3,7 @@
   "name": "Androidtv",
   "documentation": "https://www.home-assistant.io/components/androidtv",
   "requirements": [
-    "adb-shell==0.0.2",
+    "adb-shell==0.0.3",
     "androidtv==0.0.28"
   ],
   "dependencies": [],
