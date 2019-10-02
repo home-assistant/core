@@ -42,7 +42,7 @@ async def test_show_form_with_input(hass):
 
 
 async def test_invalid_api_key(hass):
-    """Test that an invalid API_KEY throws an error."""
+    """Test that errors are shown when API_KEY is invalid."""
     flow = config_flow.AirlyFlowHandler()
     flow.hass = hass
 
@@ -51,7 +51,7 @@ async def test_invalid_api_key(hass):
 
 
 async def test_invalid_location(hass):
-    """Test that an invalid location throws an error."""
+    """Test that errors are shown when location is invalid."""
     with patch(
         "airly._private._RequestsHandler" ".get",
         return_value=json.loads(load_fixture("airly_no_station.json")),
