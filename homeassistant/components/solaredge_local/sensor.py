@@ -117,7 +117,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         SENSOR_TYPES["inverter_temperature"] = [
             "invertertemperature",
             "Inverter Temperature",
-            "TEMP_FAHRENHEIT",
+            TEMP_FAHRENHEIT,
             "mdi:thermometer",
         ]
 
