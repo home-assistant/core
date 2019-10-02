@@ -10,8 +10,9 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_PRESET_MODE,
 )
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import DOMAIN, GeniusZone
+from . import CONF_UID, DOMAIN, GeniusZone
 
 # GeniusHub Zones support: Off, Timer, Override/Boost, Footprint & Linked modes
 HA_HVAC_TO_GH = {HVAC_MODE_OFF: "off", HVAC_MODE_HEAT: "timer"}
@@ -23,24 +24,27 @@ GH_PRESET_TO_HA = {v: k for k, v in HA_PRESET_TO_GH.items()}
 GH_ZONES = ["radiator", "wet underfloor"]
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+):
     """Set up the Genius Hub climate entities."""
     if discovery_info is None:
         return
 
-    client = hass.data[DOMAIN]["client"]
+    hub = hass.data[DOMAIN]["client"]
+    uid = hub.uid if hub.uid else hass.data[DOMAIN][CONF_UID]
 
     async_add_entities(
-        [GeniusClimateZone(z) for z in client.zone_objs if z.data["type"] in GH_ZONES]
+        [GeniusClimateZone(uid, z) for z in hub.zone_objs if z.data["type"] in GH_ZONES]
     )
 
 
 class GeniusClimateZone(GeniusZone, ClimateDevice):
     """Representation of a Genius Hub climate device."""
 
-    def __init__(self, zone) -> None:
+    def __init__(self, uid: str, zone) -> None:
         """Initialize the climate device."""
-        super().__init__(zone)
+        super().__init__(uid, zone)
 
         self._max_temp = 28.0
         self._min_temp = 4.0

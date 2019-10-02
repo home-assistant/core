@@ -7,8 +7,9 @@ from homeassistant.components.water_heater import (
     SUPPORT_OPERATION_MODE,
 )
 from homeassistant.const import STATE_OFF
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import DOMAIN, GeniusZone
+from . import CONF_UID, DOMAIN, GeniusZone
 
 STATE_AUTO = "auto"
 STATE_MANUAL = "manual"
@@ -30,24 +31,31 @@ GH_STATE_TO_HA = {
 GH_HEATERS = ["hot water temperature"]
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+):
     """Set up the Genius Hub water_heater entities."""
     if discovery_info is None:
         return
 
-    client = hass.data[DOMAIN]["client"]
+    hub = hass.data[DOMAIN]["client"]
+    uid = hub.uid if hub.uid else hass.data[DOMAIN][CONF_UID]
 
     async_add_entities(
-        [GeniusWaterHeater(z) for z in client.zone_objs if z.data["type"] in GH_HEATERS]
+        [
+            GeniusWaterHeater(uid, z)
+            for z in hub.zone_objs
+            if z.data["type"] in GH_HEATERS
+        ]
     )
 
 
 class GeniusWaterHeater(GeniusZone, WaterHeaterDevice):
     """Representation of a Genius Hub water_heater device."""
 
-    def __init__(self, zone) -> None:
+    def __init__(self, uid: str, zone) -> None:
         """Initialize the water_heater device."""
-        super().__init__(zone)
+        super().__init__(uid, zone)
 
         self._max_temp = 80.0
         self._min_temp = 30.0

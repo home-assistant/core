@@ -26,9 +26,11 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
 
 ATTR_DURATION = "duration"
+CONF_UID = "mac_address"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +49,9 @@ GH_DEVICE_ATTRS = {
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-_V1_API_SCHEMA = vol.Schema({vol.Required(CONF_TOKEN): cv.string})
+_V1_API_SCHEMA = vol.Schema(
+    {vol.Required(CONF_TOKEN): cv.string, vol.Required(CONF_UID): cv.string}
+)
 _V3_API_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
@@ -60,16 +64,19 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, hass_config):
+async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Create a Genius Hub system."""
-    kwargs = dict(hass_config[DOMAIN])
+    hass.data[DOMAIN] = {}
+
+    kwargs = dict(config[DOMAIN])
     if CONF_HOST in kwargs:
         args = (kwargs.pop(CONF_HOST),)
+        hass.data[DOMAIN][CONF_UID] = None
     else:
         args = (kwargs.pop(CONF_TOKEN),)
+        hass.data[DOMAIN][CONF_UID] = kwargs.pop(CONF_UID)
 
-    hass.data[DOMAIN] = {}
-    broker = GeniusBroker(hass, args, kwargs)
+    hass.data[DOMAIN]["broker"] = broker = GeniusBroker(hass, args, kwargs)
 
     try:
         await broker.client.update()
@@ -81,9 +88,7 @@ async def async_setup(hass, hass_config):
     async_track_time_interval(hass, broker.async_update, SCAN_INTERVAL)
 
     for platform in ["climate", "water_heater", "sensor", "binary_sensor"]:
-        hass.async_create_task(
-            async_load_platform(hass, platform, DOMAIN, {}, hass_config)
-        )
+        hass.async_create_task(async_load_platform(hass, platform, DOMAIN, {}, config))
 
     return True
 
@@ -122,8 +127,9 @@ class GeniusBroker:
 class GeniusEntity(Entity):
     """Base for all Genius Hub entities."""
 
-    def __init__(self):
+    def __init__(self, uid):
         """Initialize the entity."""
+        self._hub_uid = uid
         self._unique_id = self._name = None
 
     async def async_added_to_hass(self) -> None:
@@ -153,15 +159,12 @@ class GeniusEntity(Entity):
 class GeniusDevice(GeniusEntity):
     """Base for all Genius Hub devices."""
 
-    def __init__(self, device):
+    def __init__(self, hub, device):
         """Initialize the Device."""
-        super().__init__()
+        super().__init__(hub)
 
         self._device = device
-        # pylint: disable=protected-access
-        self._unique_id = (
-            f"{device._hub.uid}_device_{device.id}" if device._hub.uid else None
-        )
+        self._unique_id = f"{self._hub_uid}_device_{device.id}"
 
         self._last_comms = self._state_attr = None
 
@@ -195,13 +198,12 @@ class GeniusDevice(GeniusEntity):
 class GeniusZone(GeniusEntity):
     """Base for all Genius Hub zones."""
 
-    def __init__(self, zone) -> None:
+    def __init__(self, hub, zone) -> None:
         """Initialize the Zone."""
-        super().__init__()
+        super().__init__(hub)
 
         self._zone = zone
-        # pylint: disable=protected-access
-        self._unique_id = f"{zone._hub.uid}_zone_{zone.id}" if zone._hub.uid else None
+        self._unique_id = f"{self._hub_uid}_device_{zone.id}"
 
         self._max_temp = self._min_temp = self._supported_features = None
 

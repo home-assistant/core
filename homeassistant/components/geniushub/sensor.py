@@ -3,9 +3,10 @@ from datetime import timedelta
 from typing import Any, Dict
 
 from homeassistant.const import DEVICE_CLASS_BATTERY
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
 
-from . import DOMAIN, GeniusDevice, GeniusEntity
+from . import CONF_UID, DOMAIN, GeniusDevice, GeniusEntity
 
 GH_STATE_ATTR = "batteryLevel"
 
@@ -16,19 +17,22 @@ GH_LEVEL_MAPPING = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+):
     """Set up the Genius Hub sensor entities."""
     if discovery_info is None:
         return
 
-    client = hass.data[DOMAIN]["client"]
+    hub = hass.data[DOMAIN]["client"]
+    uid = hub.uid if hub.uid else hass.data[DOMAIN][CONF_UID]
 
     sensors = [
-        GeniusBattery(d, GH_STATE_ATTR)
-        for d in client.device_objs
+        GeniusBattery(uid, d, GH_STATE_ATTR)
+        for d in hub.device_objs
         if GH_STATE_ATTR in d.data["state"]
     ]
-    issues = [GeniusIssue(client, i) for i in list(GH_LEVEL_MAPPING)]
+    issues = [GeniusIssue(hub, uid, i) for i in list(GH_LEVEL_MAPPING)]
 
     async_add_entities(sensors + issues, update_before_add=True)
 
@@ -36,9 +40,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class GeniusBattery(GeniusDevice):
     """Representation of a Genius Hub sensor."""
 
-    def __init__(self, device, state_attr) -> None:
+    def __init__(self, uid: str, device, state_attr) -> None:
         """Initialize the sensor."""
-        super().__init__(device)
+        super().__init__(uid, device)
 
         self._state_attr = state_attr
 
@@ -86,9 +90,9 @@ class GeniusBattery(GeniusDevice):
 class GeniusIssue(GeniusEntity):
     """Representation of a Genius Hub sensor."""
 
-    def __init__(self, hub, level) -> None:
+    def __init__(self, hub, uid: str, level) -> None:
         """Initialize the sensor."""
-        super().__init__()
+        super().__init__(uid)
 
         self._hub = hub
         self._name = f"GeniusHub {GH_LEVEL_MAPPING[level]}"

@@ -1,21 +1,25 @@
 """Support for Genius Hub binary_sensor devices."""
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import DOMAIN, GeniusDevice
+from . import CONF_UID, DOMAIN, GeniusDevice
 
 GH_STATE_ATTR = "outputOnOff"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+):
     """Set up the Genius Hub sensor entities."""
     if discovery_info is None:
         return
 
-    client = hass.data[DOMAIN]["client"]
+    hub = hass.data[DOMAIN]["client"]
+    uid = hub.uid if hub.uid else hass.data[DOMAIN][CONF_UID]
 
     switches = [
-        GeniusBinarySensor(d, GH_STATE_ATTR)
-        for d in client.device_objs
+        GeniusBinarySensor(uid, d, GH_STATE_ATTR)
+        for d in hub.device_objs
         if GH_STATE_ATTR in d.data["state"]
     ]
 
@@ -25,9 +29,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class GeniusBinarySensor(GeniusDevice, BinarySensorDevice):
     """Representation of a Genius Hub binary_sensor."""
 
-    def __init__(self, device, state_attr) -> None:
+    def __init__(self, uid: str, device, state_attr) -> None:
         """Initialize the binary sensor."""
-        super().__init__(device)
+        super().__init__(uid, device)
 
         self._state_attr = state_attr
 
