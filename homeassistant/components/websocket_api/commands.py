@@ -12,6 +12,9 @@ from homeassistant.helpers.event import async_track_state_change
 from . import const, decorators, messages
 
 
+# mypy: allow-untyped-calls, allow-untyped-defs
+
+
 @callback
 def async_register_commands(hass, async_reg):
     """Register commands."""

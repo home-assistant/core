@@ -1,0 +1,56 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "All verbonne Server sinn scho konfigur\u00e9iert",
+            "already_configured": "D\u00ebse Plex Server ass scho konfigur\u00e9iert",
+            "already_in_progress": "Plex g\u00ebtt konfigur\u00e9iert",
+            "invalid_import": "D\u00e9i importiert Konfiguratioun ass ong\u00eblteg",
+            "unknown": "Onbekannte Feeler opgetrueden"
+        },
+        "error": {
+            "faulty_credentials": "Feeler beider Autorisatioun",
+            "no_servers": "Kee Server as mam Kont verbonnen",
+            "no_token": "Gitt en Token un oder wielt manuelle Setup",
+            "not_found": "Kee Plex Server fonnt"
+        },
+        "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Apparat",
+                    "port": "Port",
+                    "ssl": "SSL benotzen",
+                    "token": "Jeton (falls n\u00e9ideg)",
+                    "verify_ssl": "SSL Zertifikat iwwerpr\u00e9iwen"
+                },
+                "title": "Plex Server"
+            },
+            "select_server": {
+                "data": {
+                    "server": "Server"
+                },
+                "description": "M\u00e9i Server disponibel, wielt een aus:",
+                "title": "Plex Server auswielen"
+            },
+            "user": {
+                "data": {
+                    "manual_setup": "Manuell Konfiguratioun",
+                    "token": "Jeton fir de Plex"
+                },
+                "description": "Gitt een Jeton fir de Plex un fir eng automatesch Konfiguratioun",
+                "title": "Plex Server verbannen"
+            }
+        },
+        "title": "Plex"
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "show_all_controls": "Weis all Kontrollen",
+                    "use_episode_art": "Benotz Biller vun der Episode"
+                },
+                "description": "Optioune fir Plex Medie Spiller"
+            }
+        }
+    }
+}

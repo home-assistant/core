@@ -1,0 +1,56 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Alle knyttet servere som allerede er konfigurert",
+            "already_configured": "Denne Plex-serveren er allerede konfigurert",
+            "already_in_progress": "Plex blir konfigurert",
+            "invalid_import": "Den importerte konfigurasjonen er ugyldig",
+            "unknown": "Mislyktes av ukjent \u00e5rsak"
+        },
+        "error": {
+            "faulty_credentials": "Autorisasjonen mislyktes",
+            "no_servers": "Ingen servere koblet til kontoen",
+            "no_token": "Angi et token eller velg manuelt oppsett",
+            "not_found": "Plex-server ikke funnet"
+        },
+        "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Vert",
+                    "port": "Port",
+                    "ssl": "Bruk SSL",
+                    "token": "Token (hvis n\u00f8dvendig)",
+                    "verify_ssl": "Verifisere SSL-sertifikat"
+                },
+                "title": "Plex server"
+            },
+            "select_server": {
+                "data": {
+                    "server": "Server"
+                },
+                "description": "Flere servere tilgjengelig, velg en:",
+                "title": "Velg Plex-server"
+            },
+            "user": {
+                "data": {
+                    "manual_setup": "Manuelt oppsett",
+                    "token": "Plex token"
+                },
+                "description": "Angi et Plex-token for automatisk oppsett eller Konfigurer en servern manuelt.",
+                "title": "Koble til Plex-server"
+            }
+        },
+        "title": "Plex"
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "show_all_controls": "Vis alle kontroller",
+                    "use_episode_art": "Bruk episode bilde"
+                },
+                "description": "Alternativer for Plex Media Players"
+            }
+        }
+    }
+}

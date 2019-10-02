@@ -43,7 +43,7 @@ stages:
         release="$(Build.SourceBranchName)"
         created_by="$(curl -s https://api.github.com/repos/home-assistant/home-assistant/releases/tags/${release} | jq --raw-output '.author.login')"
 
-        if [[ "${created_by}" =~ ^(balloob|pvizeli|fabaff|robbiet480)$ ]]; then
+        if [[ "${created_by}" =~ ^(balloob|pvizeli|fabaff|robbiet480|bramkragten)$ ]]; then
           exit 0
         fi
 
@@ -233,3 +233,45 @@ stages:
         fi
 
       displayName: 'Create Meta-Image'
+
+- stage: 'Addidional'
+  jobs:
+  - job: 'Updater'
+    pool:
+      vmImage: 'ubuntu-latest'
+    variables:
+    - group: gcloud
+    steps:
+    - template: templates/azp-step-ha-version.yaml@azure
+    - script: |
+        set -e
+
+        export CLOUDSDK_CORE_DISABLE_PROMPTS=1
+
+        curl -o google-cloud-sdk.tar.gz https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz
+        tar -C . -xvf google-cloud-sdk.tar.gz
+        rm -f google-cloud-sdk.tar.gz
+        ./google-cloud-sdk/install.sh
+      displayName: 'Setup gCloud'
+      condition: eq(variables['homeassistantReleaseStable'], 'true')
+    - script: |
+        set -e
+
+        export CLOUDSDK_CORE_DISABLE_PROMPTS=1
+
+        echo "$(gcloudAnalytic)" > gcloud_auth.json
+        ./google-cloud-sdk/bin/gcloud auth activate-service-account --key-file gcloud_auth.json
+        rm -f gcloud_auth.json
+      displayName: 'Auth gCloud'
+      condition: eq(variables['homeassistantReleaseStable'], 'true')
+    - script: |
+        set -e
+
+        export CLOUDSDK_CORE_DISABLE_PROMPTS=1
+
+        ./google-cloud-sdk/bin/gcloud functions deploy Analytics-Receiver \
+          --project home-assistant-analytics \
+          --update-env-vars VERSION=$(homeassistantRelease) \
+          --source gs://analytics-src/function-source.zip
+      displayName: 'Push details to updater'
+      condition: eq(variables['homeassistantReleaseStable'], 'true')

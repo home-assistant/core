@@ -1,7 +1,7 @@
 {
   "domain": "snmp",
   "name": "Snmp",
-  "documentation": "https://www.home-assistant.io/components/snmp",
+  "documentation": "https://www.home-assistant.io/integrations/snmp",
   "requirements": [
     "pysnmp==4.4.11"
   ],

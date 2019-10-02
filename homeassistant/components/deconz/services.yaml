@@ -1,5 +1,5 @@
 configure:
-  description: Set attribute of device in deCONZ. See https://home-assistant.io/components/deconz/#device-services for details.
+  description: Set attribute of device in deCONZ. See https://home-assistant.io/integrations/deconz/#device-services for details.
   fields:
     entity:
       description: Entity id representing a specific device in deCONZ.

@@ -3,6 +3,7 @@ import datetime
 import logging
 
 from homeassistant.components.switch import SwitchDevice
+import homeassistant.util.dt as dt_util
 
 from . import DOMAIN as DOORBIRD_DOMAIN
 
@@ -66,7 +67,7 @@ class DoorBirdSwitch(SwitchDevice):
         else:
             self._state = self._doorstation.device.energize_relay(self._relay)
 
-        now = datetime.datetime.now()
+        now = dt_util.utcnow()
         self._assume_off = now + self._time
 
     def turn_off(self, **kwargs):
@@ -75,6 +76,6 @@ class DoorBirdSwitch(SwitchDevice):
 
     def update(self):
         """Wait for the correct amount of assumed time to pass."""
-        if self._state and self._assume_off <= datetime.datetime.now():
+        if self._state and self._assume_off <= dt_util.utcnow():
             self._state = False
             self._assume_off = datetime.datetime.min

@@ -1,48 +1,20 @@
 """Support for deCONZ devices."""
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
-)
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 from .config_flow import get_master_gateway
-from .const import CONF_BRIDGEID, CONF_MASTER_GATEWAY, DEFAULT_PORT, DOMAIN
-from .gateway import DeconzGateway
+from .const import CONF_BRIDGEID, CONF_MASTER_GATEWAY, CONF_UUID, DOMAIN
+from .gateway import DeconzGateway, get_gateway_from_config_entry
 from .services import async_setup_services, async_unload_services
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_API_KEY): cv.string,
-                vol.Optional(CONF_HOST): cv.string,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
+    {DOMAIN: vol.Schema({}, extra=vol.ALLOW_EXTRA)}, extra=vol.ALLOW_EXTRA
 )
 
 
 async def async_setup(hass, config):
-    """Load configuration for deCONZ component.
-
-    Discovery has loaded the component if DOMAIN is not present in config.
-    """
-    if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
-        deconz_config = config[DOMAIN]
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data=deconz_config,
-            )
-        )
+    """Old way of setting up deCONZ integrations."""
     return True
 
 
@@ -66,6 +38,9 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DOMAIN][gateway.bridgeid] = gateway
 
     await gateway.async_update_device_registry()
+
+    if CONF_UUID not in config_entry.data:
+        await async_add_uuid_to_config_entry(hass, config_entry)
 
     await async_setup_services(hass)
 
@@ -96,11 +71,14 @@ async def async_update_master_gateway(hass, config_entry):
     Makes sure there is always one master available.
     """
     master = not get_master_gateway(hass)
-
-    old_options = dict(config_entry.options)
-
-    new_options = {CONF_MASTER_GATEWAY: master}
-
-    options = {**old_options, **new_options}
+    options = {**config_entry.options, CONF_MASTER_GATEWAY: master}
 
     hass.config_entries.async_update_entry(config_entry, options=options)
+
+
+async def async_add_uuid_to_config_entry(hass, config_entry):
+    """Add UUID to config entry to help discovery identify entries."""
+    gateway = get_gateway_from_config_entry(hass, config_entry)
+    config = {**config_entry.data, CONF_UUID: gateway.api.config.uuid}
+
+    hass.config_entries.async_update_entry(config_entry, data=config)

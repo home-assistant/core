@@ -2,7 +2,7 @@
   "domain": "homekit_controller",
   "name": "Homekit controller",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/homekit_controller",
+  "documentation": "https://www.home-assistant.io/integrations/homekit_controller",
   "requirements": [
     "homekit[IP]==0.15.0"
   ],

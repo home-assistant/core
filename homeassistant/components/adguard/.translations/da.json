@@ -9,7 +9,7 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "Vil du konfigurere Home Assistant til at oprette forbindelse til Adguard Home, der leveres af Hass.io add-on: {addon}?",
+                "description": "Vil du konfigurere Home Assistant til at oprette forbindelse til AdGuard Home, der leveres af Hass.io add-on: {addon}?",
                 "title": "AdGuard Home via Hass.io add-on"
             },
             "user": {

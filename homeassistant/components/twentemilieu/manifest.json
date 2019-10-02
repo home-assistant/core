@@ -2,7 +2,7 @@
     "domain": "twentemilieu",
     "name": "Twente Milieu",
     "config_flow": true,
-    "documentation": "https://www.home-assistant.io/components/twentemilieu",
+    "documentation": "https://www.home-assistant.io/integrations/twentemilieu",
     "requirements": [
         "twentemilieu==0.1.0"
     ],

@@ -93,11 +93,11 @@ async def test_read_window_cover_state(hass, utcnow):
 
     helper.characteristics[POSITION_STATE].value = 0
     state = await helper.poll_and_get_state()
-    assert state.state == "opening"
+    assert state.state == "closing"
 
     helper.characteristics[POSITION_STATE].value = 1
     state = await helper.poll_and_get_state()
-    assert state.state == "closing"
+    assert state.state == "opening"
 
     helper.characteristics[POSITION_STATE].value = 2
     state = await helper.poll_and_get_state()

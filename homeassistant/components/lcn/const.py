@@ -1,4 +1,3 @@
-# coding: utf-8
 """Constants for the LCN component."""
 from itertools import product
 
