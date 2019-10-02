@@ -30,7 +30,7 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
 
 ATTR_DURATION = "duration"
-CONF_UID = "mac_address"
+CONF_HUB_UID = "mac_address"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ GH_DEVICE_ATTRS = {
 SCAN_INTERVAL = timedelta(seconds=60)
 
 _V1_API_SCHEMA = vol.Schema(
-    {vol.Required(CONF_TOKEN): cv.string, vol.Required(CONF_UID): cv.string}
+    {vol.Required(CONF_TOKEN): cv.string, vol.Required(CONF_HUB_UID): cv.string}
 )
 _V3_API_SCHEMA = vol.Schema(
     {
@@ -71,10 +71,10 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     kwargs = dict(config[DOMAIN])
     if CONF_HOST in kwargs:
         args = (kwargs.pop(CONF_HOST),)
-        hass.data[DOMAIN][CONF_UID] = None
+        hass.data[DOMAIN][CONF_HUB_UID] = None
     else:
         args = (kwargs.pop(CONF_TOKEN),)
-        hass.data[DOMAIN][CONF_UID] = kwargs.pop(CONF_UID)
+        hass.data[DOMAIN][CONF_HUB_UID] = kwargs.pop(CONF_HUB_UID)
 
     hass.data[DOMAIN]["broker"] = broker = GeniusBroker(hass, args, kwargs)
 
@@ -127,9 +127,9 @@ class GeniusBroker:
 class GeniusEntity(Entity):
     """Base for all Genius Hub entities."""
 
-    def __init__(self, uid):
+    def __init__(self, hub_uid: str):
         """Initialize the entity."""
-        self._hub_uid = uid
+        self._hub_uid = hub_uid
         self._unique_id = self._name = None
 
     async def async_added_to_hass(self) -> None:
@@ -159,9 +159,9 @@ class GeniusEntity(Entity):
 class GeniusDevice(GeniusEntity):
     """Base for all Genius Hub devices."""
 
-    def __init__(self, hub, device):
+    def __init__(self, hub_uid: str, device):
         """Initialize the Device."""
-        super().__init__(hub)
+        super().__init__(hub_uid)
 
         self._device = device
         self._unique_id = f"{self._hub_uid}_device_{device.id}"
@@ -198,9 +198,9 @@ class GeniusDevice(GeniusEntity):
 class GeniusZone(GeniusEntity):
     """Base for all Genius Hub zones."""
 
-    def __init__(self, hub, zone) -> None:
+    def __init__(self, hub_uid: str, zone) -> None:
         """Initialize the Zone."""
-        super().__init__(hub)
+        super().__init__(hub_uid)
 
         self._zone = zone
         self._unique_id = f"{self._hub_uid}_device_{zone.id}"
