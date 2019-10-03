@@ -4,7 +4,7 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
 from homeassistant.components.device_automation.const import CONF_IS_OFF, CONF_IS_ON
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, CONF_TYPE
+from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, CONF_FOR, CONF_TYPE
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.entity_registry import (
     async_entries_for_device,
@@ -188,6 +188,7 @@ CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(IS_OFF + IS_ON),
+        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
@@ -244,5 +245,16 @@ def async_condition_from_config(
         condition.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
         condition.CONF_STATE: stat,
     }
+    if CONF_FOR in config:
+        state_config[CONF_FOR] = config[CONF_FOR]
 
     return condition.state_from_config(state_config, config_validation)
+
+
+async def async_get_condition_capabilities(hass: HomeAssistant, config: dict) -> dict:
+    """List condition capabilities."""
+    return {
+        "extra_fields": vol.Schema(
+            {vol.Optional(CONF_FOR): cv.positive_time_period_dict}
+        )
+    }

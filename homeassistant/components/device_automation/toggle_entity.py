@@ -80,6 +80,7 @@ CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In([CONF_IS_OFF, CONF_IS_ON]),
+        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
@@ -132,6 +133,8 @@ def async_condition_from_config(
         condition.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
         condition.CONF_STATE: stat,
     }
+    if CONF_FOR in config:
+        state_config[CONF_FOR] = config[CONF_FOR]
 
     return condition.state_from_config(state_config, config_validation)
 
@@ -213,7 +216,16 @@ async def async_get_triggers(
     return await _async_get_automations(hass, device_id, ENTITY_TRIGGERS, domain)
 
 
-async def async_get_trigger_capabilities(hass: HomeAssistant, trigger: dict) -> dict:
+async def async_get_condition_capabilities(hass: HomeAssistant, config: dict) -> dict:
+    """List condition capabilities."""
+    return {
+        "extra_fields": vol.Schema(
+            {vol.Optional(CONF_FOR): cv.positive_time_period_dict}
+        )
+    }
+
+
+async def async_get_trigger_capabilities(hass: HomeAssistant, config: dict) -> dict:
     """List trigger capabilities."""
     return {
         "extra_fields": vol.Schema(

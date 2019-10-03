@@ -170,6 +170,103 @@ async def test_websocket_get_triggers(hass, hass_ws_client, device_reg, entity_r
     assert _same_lists(triggers, expected_triggers)
 
 
+async def test_websocket_get_condition_capabilities(
+    hass, hass_ws_client, device_reg, entity_reg
+):
+    """Test we get the expected condition capabilities for a light through websocket."""
+    await async_setup_component(hass, "device_automation", {})
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
+    expected_capabilities = {
+        "extra_fields": [
+            {"name": "for", "optional": True, "type": "positive_time_period_dict"}
+        ]
+    }
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "device_automation/condition/list",
+            "device_id": device_entry.id,
+        }
+    )
+    msg = await client.receive_json()
+
+    assert msg["id"] == 1
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    conditions = msg["result"]
+
+    id = 2
+    for condition in conditions:
+        await client.send_json(
+            {
+                "id": id,
+                "type": "device_automation/condition/capabilities",
+                "condition": condition,
+            }
+        )
+        msg = await client.receive_json()
+        assert msg["id"] == id
+        assert msg["type"] == TYPE_RESULT
+        assert msg["success"]
+        capabilities = msg["result"]
+        assert capabilities == expected_capabilities
+        id = id + 1
+
+
+async def test_websocket_get_bad_condition_capabilities(
+    hass, hass_ws_client, device_reg, entity_reg
+):
+    """Test we get no condition capabilities for a non existing domain."""
+    await async_setup_component(hass, "device_automation", {})
+    expected_capabilities = {}
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "device_automation/condition/capabilities",
+            "condition": {"domain": "beer"},
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["id"] == 1
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    capabilities = msg["result"]
+    assert capabilities == expected_capabilities
+
+
+async def test_websocket_get_no_condition_capabilities(
+    hass, hass_ws_client, device_reg, entity_reg
+):
+    """Test we get no condition capabilities for a domain with no device condition capabilities."""
+    await async_setup_component(hass, "device_automation", {})
+    expected_capabilities = {}
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "device_automation/condition/capabilities",
+            "condition": {"domain": "deconz"},
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["id"] == 1
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    capabilities = msg["result"]
+    assert capabilities == expected_capabilities
+
+
 async def test_websocket_get_trigger_capabilities(
     hass, hass_ws_client, device_reg, entity_reg
 ):

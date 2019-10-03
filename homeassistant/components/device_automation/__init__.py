@@ -60,6 +60,9 @@ async def async_setup(hass, config):
         websocket_device_automation_list_triggers
     )
     hass.components.websocket_api.async_register_command(
+        websocket_device_automation_get_condition_capabilities
+    )
+    hass.components.websocket_api.async_register_command(
         websocket_device_automation_get_trigger_capabilities
     )
     return True
@@ -204,6 +207,22 @@ async def websocket_device_automation_list_triggers(hass, connection, msg):
     device_id = msg["device_id"]
     triggers = await _async_get_device_automations(hass, "trigger", device_id)
     connection.send_result(msg["id"], triggers)
+
+
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "device_automation/condition/capabilities",
+        vol.Required("condition"): dict,
+    }
+)
+async def websocket_device_automation_get_condition_capabilities(hass, connection, msg):
+    """Handle request for device condition capabilities."""
+    condition = msg["condition"]
+    capabilities = await _async_get_device_automation_capabilities(
+        hass, "condition", condition
+    )
+    connection.send_result(msg["id"], capabilities)
 
 
 @websocket_api.async_response
