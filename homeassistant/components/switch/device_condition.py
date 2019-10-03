@@ -29,6 +29,8 @@ async def async_get_conditions(hass: HomeAssistant, device_id: str) -> List[dict
     return await toggle_entity.async_get_conditions(hass, device_id, DOMAIN)
 
 
-async def async_get_trigger_capabilities(hass: HomeAssistant, trigger: dict) -> dict:
-    """List trigger capabilities."""
-    return await toggle_entity.async_get_trigger_capabilities(hass, trigger)
+async def async_get_condition_capabilities(
+    hass: HomeAssistant, condition: dict
+) -> dict:
+    """List condition capabilities."""
+    return await toggle_entity.async_get_condition_capabilities(hass, condition)

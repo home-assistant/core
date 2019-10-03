@@ -33,4 +33,4 @@ async def async_get_condition_capabilities(
     hass: HomeAssistant, condition: dict
 ) -> dict:
     """List condition capabilities."""
-    return await toggle_entity.async_get_trigger_capabilities(hass, condition)
+    return await toggle_entity.async_get_condition_capabilities(hass, condition)

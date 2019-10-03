@@ -67,8 +67,8 @@ async def test_get_conditions(hass, device_reg, entity_reg):
     assert conditions == expected_conditions
 
 
-async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
-    """Test we get the expected capabilities from a switch trigger."""
+async def test_get_condition_capabilities(hass, device_reg, entity_reg):
+    """Test we get the expected capabilities from a switch condition."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(
@@ -81,10 +81,10 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
             {"name": "for", "optional": True, "type": "positive_time_period_dict"}
         ]
     }
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
-    for trigger in triggers:
+    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    for condition in conditions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "trigger", trigger
+            hass, "condition", condition
         )
         assert capabilities == expected_capabilities
 

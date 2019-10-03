@@ -245,15 +245,13 @@ def async_condition_from_config(
         condition.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
         condition.CONF_STATE: stat,
     }
-    if CONF_FOR in config:  # TODO: This was "for" in trigger PR, why?
+    if CONF_FOR in config:
         state_config[CONF_FOR] = config[CONF_FOR]
 
     return condition.state_from_config(state_config, config_validation)
 
 
-async def async_get_condition_capabilities(
-    hass: HomeAssistant, condition: dict
-) -> dict:
+async def async_get_condition_capabilities(hass: HomeAssistant, config: dict) -> dict:
     """List condition capabilities."""
     return {
         "extra_fields": vol.Schema(
