@@ -147,6 +147,10 @@ async def async_get_trigger_capabilities(hass, trigger):
     """List trigger capabilities."""
     return {
         "extra_fields": vol.Schema(
-            {vol.Optional(CONF_FOR): cv.positive_time_period_dict}
+            {
+                vol.Optional(CONF_ABOVE): vol.Coerce(float),
+                vol.Optional(CONF_BELOW): vol.Coerce(float),
+                vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+            }
         )
     }
