@@ -337,9 +337,6 @@ pyopenuv==1.0.9
 # homeassistant.components.otp
 pyotp==2.3.0
 
-# homeassistant.components.ps4
-pyps4-2ndscreen==1.0.0
-
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.93
 
