@@ -251,7 +251,9 @@ def async_condition_from_config(
     return condition.state_from_config(state_config, config_validation)
 
 
-async def async_get_condition_capabilities(hass, condition):
+async def async_get_condition_capabilities(
+    hass: HomeAssistant, condition: dict
+) -> dict:
     """List condition capabilities."""
     return {
         "extra_fields": vol.Schema(
