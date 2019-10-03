@@ -1,14 +1,14 @@
 """Define tests for the Airly config flow."""
 import json
 
+from airly.exceptions import AirlyError
 from asynctest import patch
+from tests.common import load_fixture, MockConfigEntry
 
 from homeassistant import data_entry_flow
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.components.airly import config_flow
 from homeassistant.components.airly.const import DOMAIN
-
-from tests.common import load_fixture, MockConfigEntry
 
 CONFIG = {
     CONF_NAME: "abcd",
@@ -32,8 +32,8 @@ async def test_show_form(hass):
 async def test_invalid_api_key(hass):
     """Test that errors are shown when API key is invalid."""
     with patch(
-        "homeassistant.components.airly.config_flow.AirlyFlowHandler" "._test_api_key",
-        return_value=False,
+        "airly._private._RequestsHandler" ".get",
+        side_effect=AirlyError(403, {"message": "Invalid authentication credentials"}),
     ):
         flow = config_flow.AirlyFlowHandler()
         flow.hass = hass
