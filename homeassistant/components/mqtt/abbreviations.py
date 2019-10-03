@@ -86,6 +86,7 @@ ABBREVIATIONS = {
     "pl_avail": "payload_available",
     "pl_cln_sp": "payload_clean_spot",
     "pl_cls": "payload_close",
+    "pl_cust": "payload_custom",
     "pl_disarm": "payload_disarm",
     "pl_hi_spd": "payload_high_speed",
     "pl_lock": "payload_lock",
