@@ -650,25 +650,25 @@ def run_shell_command(command):
 def grant_write_to_sdcard():
     try:
         ret_output = subprocess.check_output(
-            'su -c "su -c "pm grant launcher.sviete.pl.domlauncherapp android.permission.READ_EXTERNAL_STORAGE"',
+            'su -c "pm grant launcher.sviete.pl.domlauncherapp android.permission.READ_EXTERNAL_STORAGE"',
             shell=True,
             timeout=15,
         )
         _LOGGER.info(str(ret_output.decode("utf-8")))
         ret_output = subprocess.check_output(
-            'su -c "su -c "pm grant launcher.sviete.pl.domlauncherapp android.permission.WRITE_EXTERNAL_STORAGE"',
+            'su -c "pm grant launcher.sviete.pl.domlauncherapp android.permission.WRITE_EXTERNAL_STORAGE"',
             shell=True,
             timeout=15,
         )
         _LOGGER.info(str(ret_output.decode("utf-8")))
         ret_output = subprocess.check_output(
-            'su -c "su -c "pm grant pl.sviete.dom android.permission.READ_EXTERNAL_STORAGE"',
+            'su -c "pm grant pl.sviete.dom android.permission.READ_EXTERNAL_STORAGE"',
             shell=True,
             timeout=15,
         )
         _LOGGER.info(str(ret_output.decode("utf-8")))
         ret_output = subprocess.check_output(
-            'su -c "su -c "pm grant pl.sviete.dom android.permission.WRITE_EXTERNAL_STORAGE"',
+            'su -c "pm grant pl.sviete.dom android.permission.WRITE_EXTERNAL_STORAGE"',
             shell=True,
             timeout=15,
         )
@@ -683,17 +683,14 @@ def do_download_upgrade(hass, call):
     state = hass.states.get(ENTITY_ID)
     attr = state.attributes
     reinstall_dom_app = attr.get("reinstall_dom_app", False)
-    dom_app_newest_version = attr.get("dom_app_newest_version", False)
+    reinstall_android_app = attr.get("reinstall_android_app", False)
+    dom_app_newest_version = attr.get("dom_app_newest_version", "")
     release_script = attr.get("release_script", "")
     beta = attr.get("beta", False)
 
     # add the grant to save on sdcard
-    grant_write_to_sdcard()
-
-    # create directory if not exists
-    update_dir = hass.config.path(UPDATER_DOWNLOAD_FOLDER)
-    if not os.path.exists(update_dir):
-        os.makedirs(update_dir)
+    if reinstall_android_app:
+        grant_write_to_sdcard()
 
     # download release linux script
     if release_script != "":
@@ -715,6 +712,11 @@ def do_download_upgrade(hass, call):
     l_ret = 0
     # download pip packages
     if reinstall_dom_app:
+        # create directory if not exists
+        update_dir = hass.config.path(UPDATER_DOWNLOAD_FOLDER)
+        if not os.path.exists(update_dir):
+            os.makedirs(update_dir)
+
         # download
         if beta:
             l_ret = run_shell_command(
@@ -824,7 +826,7 @@ def do_install_upgrade(hass, call):
                     "launcher.sviete.pl.domlauncherapp/.LauncherActivity",
                     "-e",
                     "command",
-                    "ais-dom-update",
+                    "ais-dom-update-beta",
                 ]
             )
         else:
@@ -836,9 +838,10 @@ def do_install_upgrade(hass, call):
                     "launcher.sviete.pl.domlauncherapp/.LauncherActivity",
                     "-e",
                     "command",
-                    "ais-dom-update-beta",
+                    "ais-dom-update",
                 ]
             )
+
     elif reinstall_dom_app:
         # set update status
         _set_update_status(hass, UPDATE_STATUS_RESTART)
