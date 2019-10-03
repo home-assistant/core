@@ -43,6 +43,7 @@ from .capabilities import (
     AlexaPercentageController,
     AlexaPlaybackController,
     AlexaPowerController,
+    AlexaPowerLevelController,
     AlexaSceneController,
     AlexaSpeaker,
     AlexaStepSpeaker,
@@ -344,6 +345,7 @@ class FanCapabilities(AlexaEntity):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & fan.SUPPORT_SET_SPEED:
             yield AlexaPercentageController(self.entity)
+            yield AlexaPowerLevelController(self.entity)
         yield AlexaEndpointHealth(self.hass, self.entity)
 
 
