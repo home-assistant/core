@@ -36,11 +36,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up certificate expiry sensor."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
+
+    @callback
+    def do_import(_):
+        """Process YAML import after HA is fully started."""
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
+            )
         )
-    )
+
+    # Delay to avoid validation during setup in case we're checking our own cert.
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, do_import)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
