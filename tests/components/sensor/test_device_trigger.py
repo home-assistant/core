@@ -86,7 +86,9 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
     entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
     expected_capabilities = {
         "extra_fields": [
-            {"name": "for", "optional": True, "type": "positive_time_period_dict"}
+            {"name": "above", "optional": True, "type": "float"},
+            {"name": "below", "optional": True, "type": "float"},
+            {"name": "for", "optional": True, "type": "positive_time_period_dict"},
         ]
     }
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
