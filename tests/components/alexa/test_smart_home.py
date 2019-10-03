@@ -340,6 +340,7 @@ async def test_variable_fan(hass):
         appliance,
         "Alexa.PercentageController",
         "Alexa.PowerController",
+        "Alexa.PowerLevelController",
         "Alexa.EndpointHealth",
     )
 
@@ -360,6 +361,27 @@ async def test_variable_fan(hass):
         "AdjustPercentage",
         "fan#test_2",
         "percentageDelta",
+        "fan.set_speed",
+        "speed",
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.PowerLevelController",
+        "SetPowerLevel",
+        "fan#test_2",
+        "fan.set_speed",
+        hass,
+        payload={"powerLevel": "50"},
+    )
+    assert call.data["speed"] == "medium"
+
+    await assert_percentage_changes(
+        hass,
+        [("high", "-5"), ("high", "5"), ("low", "-80")],
+        "Alexa.PowerLevelController",
+        "AdjustPowerLevel",
+        "fan#test_2",
+        "powerLevelDelta",
         "fan.set_speed",
         "speed",
     )

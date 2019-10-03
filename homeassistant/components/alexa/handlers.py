@@ -779,3 +779,73 @@ async def async_api_set_thermostat_mode(hass, config, directive, context):
 async def async_api_reportstate(hass, config, directive, context):
     """Process a ReportState request."""
     return directive.response(name="StateReport")
+
+
+@HANDLERS.register(("Alexa.PowerLevelController", "SetPowerLevel"))
+async def async_api_set_power_level(hass, config, directive, context):
+    """Process a SetPowerLevel request."""
+    entity = directive.entity
+    percentage = int(directive.payload["powerLevel"])
+    service = None
+    data = {ATTR_ENTITY_ID: entity.entity_id}
+
+    if entity.domain == fan.DOMAIN:
+        service = fan.SERVICE_SET_SPEED
+        speed = "off"
+
+        if percentage <= 33:
+            speed = "low"
+        elif percentage <= 66:
+            speed = "medium"
+        else:
+            speed = "high"
+
+        data[fan.ATTR_SPEED] = speed
+
+    await hass.services.async_call(
+        entity.domain, service, data, blocking=False, context=context
+    )
+
+    return directive.response()
+
+
+@HANDLERS.register(("Alexa.PowerLevelController", "AdjustPowerLevel"))
+async def async_api_adjust_power_level(hass, config, directive, context):
+    """Process an AdjustPowerLevel request."""
+    entity = directive.entity
+    percentage_delta = int(directive.payload["powerLevelDelta"])
+    service = None
+    data = {ATTR_ENTITY_ID: entity.entity_id}
+    current = 0
+
+    if entity.domain == fan.DOMAIN:
+        service = fan.SERVICE_SET_SPEED
+        speed = entity.attributes.get(fan.ATTR_SPEED)
+
+        if speed == "off":
+            current = 0
+        elif speed == "low":
+            current = 33
+        elif speed == "medium":
+            current = 66
+        else:
+            current = 100
+
+        # set percentage
+        percentage = max(0, percentage_delta + current)
+        speed = "off"
+
+        if percentage <= 33:
+            speed = "low"
+        elif percentage <= 66:
+            speed = "medium"
+        else:
+            speed = "high"
+
+        data[fan.ATTR_SPEED] = speed
+
+    await hass.services.async_call(
+        entity.domain, service, data, blocking=False, context=context
+    )
+
+    return directive.response()
