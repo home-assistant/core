@@ -5,6 +5,7 @@
             "already_configured": "Denne Plex-serveren er allerede konfigurert",
             "already_in_progress": "Plex blir konfigurert",
             "invalid_import": "Den importerte konfigurasjonen er ugyldig",
+            "token_request_timeout": "Tidsavbrudd ved innhenting av token",
             "unknown": "Mislyktes av ukjent \u00e5rsak"
         },
         "error": {
@@ -36,7 +37,7 @@
                     "manual_setup": "Manuelt oppsett",
                     "token": "Plex token"
                 },
-                "description": "Angi et Plex-token for automatisk oppsett eller Konfigurer en servern manuelt.",
+                "description": "Fortsett \u00e5 autorisere p\u00e5 plex.tv eller manuelt konfigurere en server.",
                 "title": "Koble til Plex-server"
             }
         },
