@@ -51,9 +51,9 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             async def test_connection():
                 """Try to connect to the OpenTherm Gateway."""
-                gw = pyotgw.pyotgw()
-                status = await gw.connect(self.hass.loop, device)
-                await gw.disconnect()
+                otgw = pyotgw.pyotgw()
+                status = await otgw.connect(self.hass.loop, device)
+                await otgw.disconnect()
                 return status.get(pyotgw.OTGW_ABOUT)
 
             try:
@@ -88,7 +88,7 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_init(info=formatted_config)
 
-    def _show_form(self, errors={}):
+    def _show_form(self, errors=None):
         """Show the config flow form with possible errors."""
         return self.async_show_form(
             step_id="init",

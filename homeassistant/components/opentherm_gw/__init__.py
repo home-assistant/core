@@ -84,10 +84,15 @@ async def async_setup_entry(hass, config_entry):
     for gw_id, cfg in config_entry.data.items():
         gateway = OpenThermGatewayDevice(hass, gw_id, cfg)
         hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][gw_id] = gateway
+
+        # Schedule directly on the loop to avoid blocking HA startup.
+        hass.loop.create_task(gateway.connect_and_subscribe(cfg[CONF_DEVICE]))
+
     for comp in [COMP_BINARY_SENSOR, COMP_CLIMATE, COMP_SENSOR]:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, comp)
         )
+
     register_services(hass)
     return True
 

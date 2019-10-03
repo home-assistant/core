@@ -36,7 +36,7 @@ SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up an OpenTherm Gateway climate entity."""
     ents = []
-    for gw_id, cfg in config_entry.data.items():
+    for gw_id in config_entry.data:
         gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][gw_id]
 
         ents.append(OpenThermClimate(gw_dev))
@@ -64,7 +64,7 @@ class OpenThermClimate(ClimateDevice):
 
     async def async_added_to_hass(self):
         """Connect to the OpenTherm Gateway device."""
-        _LOGGER.debug("Added device %s", self.friendly_name)
+        _LOGGER.debug("Added OpenTherm Gateway climate device %s", self.friendly_name)
         async_dispatcher_connect(
             self.hass, self._gateway.update_signal, self.receive_report
         )

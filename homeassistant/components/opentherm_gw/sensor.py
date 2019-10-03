@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the OpenTherm Gateway sensors."""
     sensors = []
-    for gw_id, cfg in config_entry.data.items():
+    for gw_id in config_entry.data:
         gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][gw_id]
         for var, info in SENSOR_INFO.items():
             device_class = info[0]
