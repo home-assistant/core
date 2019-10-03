@@ -1,7 +1,7 @@
 ais_update_system:
   alias: 'Sprawdz/Zainstaluj aktualizację'
   sequence:
-    - service: ais_shell_command.execute_upgrade
+    - service: ais_update_system.execute_upgrade
 
 ais_restart_system:
   alias: 'Restart bramki'

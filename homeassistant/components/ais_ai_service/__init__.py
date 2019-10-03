@@ -1492,15 +1492,24 @@ def select_entity(hass, long_press):
             if CURR_ENTITIE == "sensor.version_info":
                 # get the info about upgrade
                 state = hass.states.get(CURR_ENTITIE)
-                upgrade = state.attributes.get("reinstall_dom_app")
-                if upgrade is True:
+                reinstall_dom_app = state.attributes.get("reinstall_dom_app", False)
+                reinstall_android_app = state.attributes.get(
+                    "reinstall_android_app", False
+                )
+                reinstall_linux_apt = state.attributes.get("reinstall_linux_apt", False)
+                if (
+                    reinstall_dom_app is False
+                    and reinstall_android_app is False
+                    and reinstall_linux_apt is False
+                ):
+                    _say_it(hass, "Twoja wersja jest aktualna")
+                else:
                     _say_it(
                         hass,
                         "Poczekaj na zakończenie aktualizacji i restart. Do usłyszenia.",
                     )
-                    hass.services.call("ais_shell_command", "execute_upgrade")
-                else:
-                    _say_it(hass, "Twoja wersja jest aktualna")
+                    hass.services.call("ais_updater", "execute_upgrade")
+
             elif CURR_ENTITIE == "sensor.ais_secure_android_id_dom":
                 # spelling
                 state = hass.states.get("sensor.ais_secure_android_id_dom")

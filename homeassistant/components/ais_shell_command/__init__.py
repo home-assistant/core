@@ -33,10 +33,6 @@ def async_setup(hass, config):
         yield from _execute_script(hass, service)
 
     @asyncio.coroutine
-    def execute_upgrade(service):
-        yield from _execute_upgrade(hass, service)
-
-    @asyncio.coroutine
     def execute_restart(service):
         yield from _execute_restart(hass, service)
 
@@ -104,7 +100,6 @@ def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "change_host_name", change_host_name)
     hass.services.async_register(DOMAIN, "execute_command", execute_command)
     hass.services.async_register(DOMAIN, "execute_script", execute_script)
-    hass.services.async_register(DOMAIN, "execute_upgrade", execute_upgrade)
     hass.services.async_register(DOMAIN, "execute_restart", execute_restart)
     hass.services.async_register(DOMAIN, "execute_stop", execute_stop)
     hass.services.async_register(DOMAIN, "key_event", key_event)
@@ -466,76 +461,6 @@ def _execute_script(hass, call):
     process = subprocess.Popen(script, shell=True, stdout=subprocess.PIPE)
     process.wait()
     _LOGGER.info("_execute_script, return: " + str(process.returncode))
-
-
-@asyncio.coroutine
-def _execute_upgrade(hass, call):
-    say_it = False
-    if "say" in call.data:
-        say_it = call.data["say"]
-    # check the status of the sensor to choide the correct upgrade method
-    state = hass.states.get("sensor.version_info")
-    reinstall_android_app = state.attributes.get("reinstall_android_app")
-    reinstall_dom_app = state.attributes.get("reinstall_dom_app")
-    apt = state.attributes.get("apt")
-    beta = state.attributes.get("beta", False)
-
-    if reinstall_dom_app is None or reinstall_dom_app is False:
-        yield from hass.services.async_call(
-            "ais_ai_service", "say_it", {"text": "Sprawdzam dostępność aktualizacji"}
-        )
-        yield from hass.services.async_call(
-            "ais_updater", "check_version", {"say": say_it}
-        )
-    else:
-        yield from hass.services.async_call(
-            "ais_ai_service",
-            "say_it",
-            {"text": "Aktualizuje system do najnowszej wersji. Do usłyszenia."},
-        )
-        if apt is not None and apt != "":
-            _LOGGER.info("We have apt dependencies " + str(apt))
-            try:
-                apt_script = str(os.path.dirname(__file__))
-                apt_script += "/scripts/apt_install.sh"
-                f = open(str(apt_script), "w")
-                f.write("#!/data/data/pl.sviete.dom/files/usr/bin/sh" + os.linesep)
-                for l in apt.split(","):
-                    f.write(l + os.linesep)
-                f.close()
-                import subprocess
-
-                apt_process = subprocess.Popen(
-                    apt_script, shell=True, stdout=None, stderr=None
-                )
-                apt_process.wait()
-                _LOGGER.info("apt_install, return: " + str(apt_process.returncode))
-            except Exception as e:
-                _LOGGER.error("Can't install apt dependencies, error: " + str(e))
-        else:
-            _LOGGER.info("No apt dependencies this time!")
-
-        import subprocess
-
-        if reinstall_android_app is None or reinstall_android_app is False:
-            # partial update (without android app)
-            script = str(os.path.dirname(__file__))
-            script += "/scripts/upgrade_ais.sh"
-            process = subprocess.Popen(script, shell=True, stdout=subprocess.PIPE)
-            process.wait()
-            _LOGGER.info("_execute_upgrade, return: " + str(process.returncode))
-            yield from hass.services.async_call("homeassistant", "restart")
-        else:
-            # full update
-            script = str(os.path.dirname(__file__))
-            if beta:
-                script += "/scripts/upgrade_ais_full_beta.sh"
-            else:
-                script += "/scripts/upgrade_ais_full.sh"
-            process = subprocess.Popen(script, shell=True, stdout=subprocess.PIPE)
-            process.wait()
-            _LOGGER.info("_execute_upgrade, return: " + str(process.returncode))
-            yield from hass.services.async_call("homeassistant", "stop")
 
 
 @asyncio.coroutine
