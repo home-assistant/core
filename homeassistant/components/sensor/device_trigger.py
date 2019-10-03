@@ -5,6 +5,7 @@ import homeassistant.components.automation.numeric_state as numeric_state_automa
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ABOVE,
     CONF_BELOW,
     CONF_ENTITY_ID,
@@ -113,8 +114,14 @@ async def async_get_triggers(hass, device_id):
     for entry in entries:
         device_class = DEVICE_CLASS_NONE
         state = hass.states.get(entry.entity_id)
-        if state:
-            device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+        unit_of_measurement = (
+            state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) if state else None
+        )
+
+        if not state or not unit_of_measurement:
+            continue
+
+        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
         templates = ENTITY_TRIGGERS.get(
             device_class, ENTITY_TRIGGERS[DEVICE_CLASS_NONE]
