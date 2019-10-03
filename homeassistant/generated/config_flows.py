@@ -44,6 +44,7 @@ FLOWS = [
     "mqtt",
     "nest",
     "notion",
+    "opentherm_gw",
     "openuv",
     "owntracks",
     "plaato",

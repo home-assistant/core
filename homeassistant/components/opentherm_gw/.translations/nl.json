@@ -1,0 +1,23 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Gateway is reeds geconfigureerd",
+            "id_exists": "Gateway id bestaat reeds",
+            "serial_error": "Kan niet verbinden met de Gateway",
+            "timeout": "Time-out van de verbinding"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "device": "Pad of URL",
+                    "floor_temperature": "Thermostaat temperaturen naar beneden afronden",
+                    "id": "ID",
+                    "name": "Naam",
+                    "precision": "Thermostaat temperatuur precisie"
+                },
+                "title": "OpenTherm Gateway"
+            }
+        },
+        "title": "OpenTherm Gateway"
+    }
+}

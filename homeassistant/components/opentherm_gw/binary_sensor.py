@@ -12,18 +12,17 @@ from .const import BINARY_SENSOR_INFO, DATA_GATEWAYS, DATA_OPENTHERM_GW
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the OpenTherm Gateway binary sensors."""
-    if discovery_info is None:
-        return
-    gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][discovery_info]
     sensors = []
-    for var, info in BINARY_SENSOR_INFO.items():
-        device_class = info[0]
-        friendly_name_format = info[1]
-        sensors.append(
-            OpenThermBinarySensor(gw_dev, var, device_class, friendly_name_format)
-        )
+    for gw_id, cfg in config_entry.data.items():
+        gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][gw_id]
+        for var, info in BINARY_SENSOR_INFO.items():
+            device_class = info[0]
+            friendly_name_format = info[1]
+            sensors.append(
+                OpenThermBinarySensor(gw_dev, var, device_class, friendly_name_format)
+            )
     async_add_entities(sensors)
 
 

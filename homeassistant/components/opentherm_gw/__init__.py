@@ -6,6 +6,7 @@ import pyotgw
 import pyotgw.vars as gw_vars
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.components.binary_sensor import DOMAIN as COMP_BINARY_SENSOR
 from homeassistant.components.climate import DOMAIN as COMP_CLIMATE
 from homeassistant.components.sensor import DOMAIN as COMP_SENSOR
@@ -16,13 +17,13 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_TIME,
     CONF_DEVICE,
+    CONF_ID,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
 )
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 import homeassistant.helpers.config_validation as cv
@@ -75,25 +76,34 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup_entry(hass, config_entry):
     """Set up the OpenTherm Gateway component."""
-    conf = config[DOMAIN]
-    hass.data[DATA_OPENTHERM_GW] = {DATA_GATEWAYS: {}}
-    for gw_id, cfg in conf.items():
+    if DATA_OPENTHERM_GW not in hass.data:
+        hass.data[DATA_OPENTHERM_GW] = {DATA_GATEWAYS: {}}
+
+    for gw_id, cfg in config_entry.data.items():
         gateway = OpenThermGatewayDevice(hass, gw_id, cfg)
         hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][gw_id] = gateway
+    for comp in [COMP_BINARY_SENSOR, COMP_CLIMATE, COMP_SENSOR]:
         hass.async_create_task(
-            async_load_platform(hass, COMP_CLIMATE, DOMAIN, gw_id, config)
+            hass.config_entries.async_forward_entry_setup(config_entry, comp)
         )
-        hass.async_create_task(
-            async_load_platform(hass, COMP_BINARY_SENSOR, DOMAIN, gw_id, config)
-        )
-        hass.async_create_task(
-            async_load_platform(hass, COMP_SENSOR, DOMAIN, gw_id, config)
-        )
-        # Schedule directly on the loop to avoid blocking HA startup.
-        hass.loop.create_task(gateway.connect_and_subscribe(cfg[CONF_DEVICE]))
     register_services(hass)
+    return True
+
+
+async def async_setup(hass, config):
+    """Set up the OpenTherm Gateway component."""
+    if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
+        conf = config[DOMAIN]
+        for device_id, device_config in conf.items():
+            device_config[CONF_ID] = device_id
+
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=device_config
+                )
+            )
     return True
 
 
