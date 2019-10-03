@@ -3,12 +3,13 @@ import json
 
 from airly.exceptions import AirlyError
 from asynctest import patch
-from tests.common import load_fixture, MockConfigEntry
 
 from homeassistant import data_entry_flow
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.components.airly import config_flow
 from homeassistant.components.airly.const import DOMAIN
+
+from tests.common import load_fixture, MockConfigEntry
 
 CONFIG = {
     CONF_NAME: "abcd",
