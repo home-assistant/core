@@ -2,7 +2,7 @@
 from datetime import timedelta
 import pytest
 
-from homeassistant.components.sensor import DOMAIN, DEVICE_CLASSES
+from homeassistant.components.sensor import DOMAIN
 from homeassistant.components.sensor.device_trigger import ENTITY_TRIGGERS
 from homeassistant.const import STATE_UNKNOWN, CONF_PLATFORM
 from homeassistant.setup import async_setup_component
@@ -19,6 +19,7 @@ from tests.common import (
     async_get_device_automations,
     async_get_device_automation_capabilities,
 )
+from tests.testing_config.custom_components.test.sensor import DEVICE_CLASSES
 
 
 @pytest.fixture
@@ -70,6 +71,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         }
         for device_class in DEVICE_CLASSES
         for trigger in ENTITY_TRIGGERS[device_class]
+        if device_class != "none"
     ]
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
     assert triggers == expected_triggers
