@@ -140,12 +140,12 @@ class StarlineApi(BaseApi):
         for listener in self._update_listeners:
             listener()
 
-    def update(self, now=None) -> None:
+    def update(self) -> None:
         """Update StarLine data."""
         devices = self.get_user_info()
 
         for device_data in devices:
-            device_id = device_data["device_id"]
+            device_id = str(device_data["device_id"])
             if device_id not in self._devices:
                 self._devices[device_id] = StarlineDevice()
             self._devices[device_id].update(device_data)
@@ -180,12 +180,15 @@ class StarlineApi(BaseApi):
 
         code = int(response["code"])
         if code == 200:
+            self._devices[device_id].update_car_state(response)
+            self._call_listeners()
             return response
         return None
 
     def set_arm_state(self, device_id: str, state: bool) -> None:
         """Set security state."""
-        response = self._set_param(device_id, "arm", 1 if state else 0)
-        if response is not None:
-            self._devices[device_id].update_car_state(response)
-            self._call_listeners()
+        self._set_param(device_id, "arm", 1 if state else 0)
+
+    def set_engine_state(self, device_id: str, state: bool) -> None:
+        """Start/stop engine."""
+        self._set_param(device_id, "ign", 1 if state else 0)

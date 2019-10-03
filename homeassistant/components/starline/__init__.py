@@ -1,12 +1,12 @@
 """The StarLine component."""
-import homeassistant.util.dt as dt_util
-
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config, HomeAssistant
 from homeassistant.helpers.event import async_track_utc_time_change
+import homeassistant.util.dt as dt_util
 
 from .api import StarlineApi
 from .config_flow import StarlineFlowHandler
-from .const import DOMAIN, UPDATE_INTERVAL, PLATFORMS
+from .const import DOMAIN, UPDATE_INTERVAL, PLATFORMS, SERVICE_UPDATE_STATE
 
 
 async def async_setup(hass: HomeAssistant, config: Config) -> bool:
@@ -14,10 +14,15 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Set up the StarLine device from a config entry."""
     api = StarlineApi(config_entry.data["user_id"], config_entry.data["slnet_token"])
     api.update()
     hass.data[DOMAIN] = api
+
+    def _update_api(ignored=None):
+        """Update data from StarLine API."""
+        api.update()
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
     for device_id, device in api.devices.items():
@@ -31,10 +36,12 @@ async def async_setup_entry(hass, config_entry):
             hass.config_entries.async_forward_entry_setup(config_entry, domain)
         )
 
+    hass.services.async_register(DOMAIN, SERVICE_UPDATE_STATE, _update_api)
+
     now = dt_util.utcnow()
     async_track_utc_time_change(
         hass,
-        api.update,
+        _update_api,
         minute=range(now.minute % UPDATE_INTERVAL, 60, UPDATE_INTERVAL),
         second=now.second,
     )

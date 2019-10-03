@@ -1,7 +1,7 @@
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
 from homeassistant.helpers.restore_state import RestoreEntity
-
+from .api import StarlineApi, StarlineDevice
 from .const import DOMAIN
 
 
@@ -17,7 +17,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class StarlineDeviceTracker(TrackerEntity, RestoreEntity):
     """StarLine device tracker."""
-    def __init__(self, api, device):
+    def __init__(self, api: StarlineApi, device: StarlineDevice):
         """Set up StarLine entity."""
         self._api = api
         self._device = device

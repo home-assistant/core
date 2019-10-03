@@ -1,5 +1,6 @@
 """Support for StarLine lock."""
 from homeassistant.components.lock import LockDevice
+from .api import StarlineApi, StarlineDevice
 from .const import DOMAIN, LOGGER
 
 
@@ -17,8 +18,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class StarlineLock(LockDevice):
     """Representation of a StarLine lock."""
-
-    def __init__(self, api, device):
+    def __init__(self, api: StarlineApi, device: StarlineDevice):
         """Initialize the lock."""
         self._api = api
         self._device = device
@@ -40,7 +40,7 @@ class StarlineLock(LockDevice):
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes of the sensor."""
+        """Return the state attributes of the lock."""
         return self._device.alarm_state
 
     @property

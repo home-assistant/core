@@ -1,0 +1,3 @@
+update_state:
+  description: >
+    Fetch the last state of the devices from the StarLine server.

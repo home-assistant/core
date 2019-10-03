@@ -30,7 +30,7 @@ class StarlineDevice():
 
     def update(self, device_data):
         """Update data from server."""
-        self._device_id = device_data["device_id"]
+        self._device_id = str(device_data["device_id"])
         self._imei = device_data["imei"]
         self._alias = device_data["alias"]
         self._battery = device_data["battery"]
@@ -53,7 +53,6 @@ class StarlineDevice():
         for key in car_state:
             if key in self._car_state:
                 self._car_state[key] = car_state[key] in ["1", "true", True]
-                # TODO: Там есть интересные параметры типа r_start_remained, надо их притащить тоже
 
     @property
     def device_id(self):
@@ -74,11 +73,38 @@ class StarlineDevice():
         }
 
     @property
+    def balance_attrs(self):
+        return {
+            "operator": self.balance["operator"],
+            "state": self.balance["state"],
+            "updated": self.balance["ts"],
+        }
+
+    @property
+    def gsm_attrs(self):
+        return {
+            "raw": self._gsm_lvl,
+            "imei": self._imei,
+            "phone": self._phone,
+        }
+
+    @property
+    def engine_attrs(self):
+        return {
+            "autostart": self._car_state["r_start"],
+            "ignition": self._car_state["run"],
+        }
+
+    @property
     def battery_level(self):
         return self._battery
 
     @property
     def battery_level_percent(self):
+        if self._battery > BATTERY_LEVEL_MAX:
+            return 100
+        if self._battery < BATTERY_LEVEL_MIN:
+            return 0
         return round((self._battery - BATTERY_LEVEL_MIN) / (BATTERY_LEVEL_MAX - BATTERY_LEVEL_MIN) * 100)
 
     @property
@@ -115,6 +141,10 @@ class StarlineDevice():
 
     @property
     def gsm_level_percent(self):
+        if self._gsm_lvl > GSM_LEVEL_MAX:
+            return 100
+        if self._gsm_lvl < GSM_LEVEL_MIN:
+            return 0
         return round((self._gsm_lvl - GSM_LEVEL_MIN) / (GSM_LEVEL_MAX - GSM_LEVEL_MIN) * 100)
 
     @property

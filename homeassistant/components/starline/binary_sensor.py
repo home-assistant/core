@@ -2,6 +2,7 @@
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, DEVICE_CLASS_OPENING,
     DEVICE_CLASS_LOCK, DEVICE_CLASS_PROBLEM, DEVICE_CLASS_POWER)
+from .api import StarlineApi, StarlineDevice
 from .const import DOMAIN
 
 SENSOR_TYPES = {
@@ -10,8 +11,6 @@ SENSOR_TYPES = {
     "trunk": ["Trunk", DEVICE_CLASS_OPENING, "mdi:car-back", "mdi:car-back"],
     "alarm": ["Alarm", DEVICE_CLASS_PROBLEM, "mdi:car-connected", "mdi:car"],
     "door": ["Doors", DEVICE_CLASS_LOCK, "mdi:car-door", "mdi:car-door-lock"],
-    "ign": ["Engine", DEVICE_CLASS_POWER, "mdi:engine-outline", "mdi:engine-off-outline"],
-    "run": ["Ignition", DEVICE_CLASS_POWER, "mdi:key", "mdi:key-remove"],
 }
 
 
@@ -29,7 +28,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class StarlineSensor(BinarySensorDevice):
     """Representation of a StarLine binary sensor."""
-    def __init__(self, api, device, key, sensor_name, device_class, icon_on, icon_off):
+    def __init__(self, api: StarlineApi, device: StarlineDevice, key: str, sensor_name: str, device_class: str, icon_on: str, icon_off: str):
         """Constructor."""
         self._api = api
         self._device = device

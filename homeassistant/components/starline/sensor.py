@@ -2,7 +2,7 @@
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
-
+from .api import StarlineApi, StarlineDevice
 from .const import DOMAIN
 
 SENSOR_TYPES = {
@@ -28,7 +28,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class StarlineSensor(Entity):
     """Representation of a StarLine sensor."""
-    def __init__(self, api, device, key, sensor_name, unit, icon):
+    def __init__(self, api: StarlineApi, device: StarlineDevice, key: str, sensor_name: str, unit: str, icon: str):
         """Constructor."""
         self._api = api
         self._device = device
@@ -61,6 +61,7 @@ class StarlineSensor(Entity):
                 charging=self._device.car_state["ign"]
             )
         elif self._key == "gsm_lvl":
+            # TODO: check online (status field) for gsm_lvl and all switches
             level = self._device.gsm_level_percent
             if level > 70:
                 return "mdi:signal-cellular-3"
@@ -101,17 +102,9 @@ class StarlineSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         if self._key == "balance":
-            return {
-                "operator": self._device.balance["operator"],
-                "state": self._device.balance["state"],
-                "updated": self._device.balance["ts"],
-            }
+            return self._device.balance_attrs
         elif self._key == "gsm_lvl":
-            return {
-                "raw": self._device.gsm_level,
-                "imei": self._device.imei,
-                "phone": self._device.phone,
-            }
+            return self._device.gsm_attrs
         return None
 
     def update(self):
