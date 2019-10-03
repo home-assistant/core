@@ -20,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 SUPLA_FUNCTION_HA_CMP_MAP = {
     "CONTROLLINGTHEROLLERSHUTTER": "cover",
     "LIGHTSWITCH": "switch",
+    "POWERSWITCH": "switch",
 }
 SUPLA_CHANNELS = "supla_channels"
 SUPLA_SERVERS = "supla_servers"

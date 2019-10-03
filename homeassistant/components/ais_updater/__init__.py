@@ -699,7 +699,10 @@ def do_download_upgrade(hass, call):
             file_script = str(os.path.dirname(__file__))
             file_script += "/scripts/release_script.sh"
             f = open(str(file_script), "w")
-            f.write("#!/data/data/pl.sviete.dom/files/usr/bin/sh" + os.linesep)
+            if platform.machine() == "x86_64":
+                f.write("#!/bin/sh" + os.linesep)
+            else:
+                f.write("#!/data/data/pl.sviete.dom/files/usr/bin/sh" + os.linesep)
             for l in release_script.split("-#-"):
                 f.write(l + os.linesep)
             f.close()
@@ -763,10 +766,7 @@ def do_install_upgrade(hass, call):
     beta = attr.get("beta", False)
 
     # linux
-    if reinstall_linux_apt:
-        run_shell_command(["apt", "update"])
-        run_shell_command(["apt", "upgrade", "-y"])
-    if release_script != "":
+    if reinstall_linux_apt and release_script != "":
         _LOGGER.info("We have release_script to execute " + str(release_script))
         try:
             file_script = str(os.path.dirname(__file__))
@@ -847,6 +847,11 @@ def do_install_upgrade(hass, call):
         _set_update_status(hass, UPDATE_STATUS_RESTART)
         # restart ais-dom
         hass.services.call("homeassistant", "restart")
+    elif reinstall_linux_apt:
+        # check the version again
+        hass.services.call(
+            "ais_updater", "check_version", {"autoUpdate": False, "sayIt": False}
+        )
 
 
 def do_applay_the_fix(hass, call):
@@ -865,7 +870,10 @@ def do_applay_the_fix(hass, call):
             file_script = str(os.path.dirname(__file__))
             file_script += "/scripts/fix_script.sh"
             f = open(str(file_script), "w")
-            f.write("#!/data/data/pl.sviete.dom/files/usr/bin/sh" + os.linesep)
+            if platform.machine() == "x86_64":
+                f.write("#!/bin/sh" + os.linesep)
+            else:
+                f.write("#!/data/data/pl.sviete.dom/files/usr/bin/sh" + os.linesep)
             for l in fix_script.split("-#-"):
                 f.write(l + os.linesep)
             f.close()
