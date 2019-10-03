@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_START,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, DEFAULT_NAME, DEFAULT_PORT
@@ -91,13 +92,13 @@ class SSLCertificate(Entity):
     async def async_added_to_hass(self):
         """Once the entity is added we should update to get the initial data loaded."""
 
+        @callback
         def do_update(_):
             """Run the update method when the start event was fired."""
-            self.update()
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state(True)
 
         if self.hass.is_running:
-            await self.update()
+            self.async_schedule_update_ha_state(True)
         else:
             # Delay until HA is fully started in case we're checking our own cert.
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, do_update)
