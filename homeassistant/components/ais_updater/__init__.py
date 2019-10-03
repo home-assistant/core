@@ -56,7 +56,9 @@ UPDATE_STATUS_RESTART = "restart"
 UPDATE_STATUS_UNKNOWN = "unknown"
 
 UPDATER_URL = "https://powiedz.co/ords/dom/dom/updater_new"
-UPDATER_STATUS_FILE = ".update_status"
+UPDATER_STATUS_FILE = ".ais_update_status"
+UPDATER_DOWNLOAD_FOLDER = "ais_update"
+APT_VERSION_INFO_FILE = ".ais_apt"
 G_CURRENT_ANDROID_VERSION = "0"
 G_CURRENT_LINUX_VERSION = "0"
 
@@ -322,9 +324,15 @@ def get_current_android_apk_version():
         return "0"
 
 
-def get_current_linux_apt_version():
-    # TODO get version of the apt
-    return current_version
+def get_current_linux_apt_version(hass):
+    # get version of the apt from file ~/AIS/.ais_apt
+    try:
+        with open(hass.config.path(APT_VERSION_INFO_FILE)) as fptr:
+            apt_current_version = fptr.read().replace("\n", "")
+            return apt_current_version
+    except Exception as e:
+        _LOGGER.info("Error get_current_linux_apt_version " + str(e))
+        return current_version
 
 
 async def get_system_info(hass, include_components):
@@ -333,7 +341,7 @@ async def get_system_info(hass, include_components):
     global G_CURRENT_LINUX_VERSION
     gate_id = hass.states.get("sensor.ais_secure_android_id_dom").state
     G_CURRENT_ANDROID_VERSION = get_current_android_apk_version()
-    G_CURRENT_LINUX_VERSION = get_current_linux_apt_version()
+    G_CURRENT_LINUX_VERSION = get_current_linux_apt_version(hass)
     info_object = {
         "arch": platform.machine(),
         "os_name": platform.system(),
@@ -356,7 +364,7 @@ def get_system_info_sync(hass):
     global G_CURRENT_LINUX_VERSION
     gate_id = hass.states.get("sensor.ais_secure_android_id_dom").state
     G_CURRENT_ANDROID_VERSION = get_current_android_apk_version()
-    G_CURRENT_LINUX_VERSION = get_current_linux_apt_version()
+    G_CURRENT_LINUX_VERSION = get_current_linux_apt_version(hass)
     info_object = {
         "gate_id": gate_id,
         "dom_app_version": current_version,
@@ -683,7 +691,7 @@ def do_download_upgrade(hass, call):
     grant_write_to_sdcard()
 
     # create directory if not exists
-    update_dir = hass.config.path("ais_update")
+    update_dir = hass.config.path(UPDATER_DOWNLOAD_FOLDER)
     if not os.path.exists(update_dir):
         os.makedirs(update_dir)
 
@@ -772,7 +780,7 @@ def do_install_upgrade(hass, call):
         _LOGGER.info("No release_script this time!")
 
     # pip
-    update_dir = hass.config.path("ais_update")
+    update_dir = hass.config.path(UPDATER_DOWNLOAD_FOLDER)
     if reinstall_dom_app:
         # install
         if beta:
@@ -799,7 +807,7 @@ def do_install_upgrade(hass, call):
             )
 
     # remove update dir
-    update_dir = hass.config.path("ais_update")
+    update_dir = hass.config.path(UPDATER_DOWNLOAD_FOLDER)
     if os.path.exists(update_dir):
         run_shell_command(["rm", update_dir, "-rf"])
 
@@ -839,6 +847,8 @@ def do_install_upgrade(hass, call):
 
 
 def do_applay_the_fix(hass, call):
+    # fix script will not trust the info reported by Asystent domowy
+    # fix have to check himself if the fix is needed or not
 
     # get the version status from sensor
     state = hass.states.get(ENTITY_ID)
@@ -858,11 +868,11 @@ def do_applay_the_fix(hass, call):
             f.close()
             # execute fix script
             try:
-                apt_process = subprocess.Popen(
+                fix_process = subprocess.Popen(
                     file_script, shell=True, stdout=None, stderr=None
                 )
-                apt_process.wait()
-                _LOGGER.info("fix_script, return: " + str(apt_process.returncode))
+                fix_process.wait()
+                _LOGGER.info("fix_script, return: " + str(fix_process.returncode))
             except Exception as e:
                 _LOGGER.error("Can't execute fix_script, error: " + str(e))
         except Exception as e:

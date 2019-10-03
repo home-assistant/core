@@ -44,8 +44,6 @@ class SuplaFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        # if self._async_current_entries():
-        #     return self.async_abort(reason='single_instance_allowed')
         return await self.async_step_init(user_input)
 
     async def async_step_confirm(self, user_input=None):
@@ -59,8 +57,6 @@ class SuplaFlowHandler(config_entries.ConfigFlow):
         """Handle a flow start."""
         errors = {}
         if user_input is not None:
-            _LOGGER.error(user_input[CONF_SERVER])
-            _LOGGER.error(user_input[CONF_ACCESS_TOKEN])
             # Test connection
             server = SuplaAPI(user_input[CONF_SERVER], user_input[CONF_ACCESS_TOKEN])
             srv_info = server.get_server_info()

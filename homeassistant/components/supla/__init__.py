@@ -40,14 +40,9 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup_entry(hass, config_entry):
     """Set up supla as config entry."""
-    _LOGGER.info("Set up drive as rclone config entry")
-    # hass.async_create_task(
-    #     hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
-    # )
-    server_address = config_entry.data.get(CONF_SERVER)
-    token = config_entry.data.get(CONF_ACCESS_TOKEN)
+    _LOGGER.info("supla async_setup_entry")
+    hass.async_create_task(async_discover_devices(hass, config_entry))
 
-    discover_devices(hass, config_entry)
     return True
 
 
@@ -98,7 +93,7 @@ async def async_setup(hass, base_config):
     return True
 
 
-def discover_devices(hass, config_entry):
+async def async_discover_devices(hass, config_entry):
     """
     Run periodically to discover new devices.
 
@@ -107,6 +102,7 @@ def discover_devices(hass, config_entry):
     component_configs = {}
     server_address = config_entry.data[CONF_SERVER]
     server = SuplaAPI(server_address, config_entry.data[CONF_ACCESS_TOKEN])
+    _LOGGER.info("supla async_discover_devices from server " + str(server))
     for channel in server.get_channels(include=["iodevice"]):
         channel_function = channel["function"]["name"]
         component_name = SUPLA_FUNCTION_HA_CMP_MAP.get(channel_function)
