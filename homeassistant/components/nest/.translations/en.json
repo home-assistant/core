@@ -4,7 +4,7 @@
             "already_setup": "You can only configure a single Nest account.",
             "authorize_url_fail": "Unknown error generating an authorize url.",
             "authorize_url_timeout": "Timeout generating authorize url.",
-            "no_flows": "You need to configure Nest before being able to authenticate with it. [Please read the instructions](https://www.home-assistant.io/integrations/nest/)."
+            "no_flows": "You need to configure Nest before being able to authenticate with it. [Please read the instructions](https://www.home-assistant.io/components/nest/)."
         },
         "error": {
             "internal_error": "Internal error validating code",
