@@ -240,7 +240,7 @@ async def async_get_triggers(hass, device_id):
     return triggers
 
 
-async def async_get_trigger_capabilities(hass, trigger):
+async def async_get_trigger_capabilities(hass, config):
     """List trigger capabilities."""
     return {
         "extra_fields": vol.Schema(
