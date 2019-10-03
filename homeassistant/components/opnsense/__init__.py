@@ -67,7 +67,10 @@ def setup(hass, config):
                 )
                 return False
 
-    hass.data[OPNSENSE_DATA] = {"interfaces": interfaces_client}
+    hass.data[OPNSENSE_DATA] = {
+        "interfaces": interfaces_client,
+        CONF_TRACKER_INTERFACE: tracker_interfaces,
+    }
 
     load_platform(hass, "device_tracker", DOMAIN, tracker_interfaces, config)
     return True

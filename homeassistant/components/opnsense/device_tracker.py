@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.components.device_tracker import DeviceScanner
 
-from homeassistant.components.opnsense import OPNSENSE_DATA
+from homeassistant.components.opnsense import OPNSENSE_DATA, CONF_TRACKER_INTERFACE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -11,7 +11,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_get_scanner(hass, config, discovery_info=None):
     """Configure the OPNSense device_tracker."""
     interface_client = hass.data[OPNSENSE_DATA]["interfaces"]
-    scanner = OPNSenseDeviceScanner(interface_client, discovery_info)
+    scanner = OPNSenseDeviceScanner(
+        interface_client, hass.data[OPNSENSE_DATA][CONF_TRACKER_INTERFACE]
+    )
     return scanner
 
 
