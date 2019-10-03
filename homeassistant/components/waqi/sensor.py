@@ -73,7 +73,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             stations = await client.search(location_name)
             _LOGGER.debug("The following stations were returned: %s", stations)
             for station in stations:
-                waqi_sensor = WaqiSensor(client, station, location_name)
+                waqi_sensor = WaqiSensor(client, station)
                 if not station_filter or {
                     waqi_sensor.uid,
                     waqi_sensor.url,
@@ -89,7 +89,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class WaqiSensor(Entity):
     """Implementation of a WAQI sensor."""
 
-    def __init__(self, client, station, location_name):
+    def __init__(self, client, station):
         """Initialize the sensor."""
         self._client = client
         try:
@@ -108,7 +108,6 @@ class WaqiSensor(Entity):
             self.station_name = None
 
         self._data = None
-        self._unique_id = f"{location_name}-{self.uid}"
 
     @property
     def name(self):
@@ -137,7 +136,7 @@ class WaqiSensor(Entity):
     @property
     def unique_id(self):
         """Return unique ID."""
-        return self._unique_id
+        return self.uid
 
     @property
     def unit_of_measurement(self):
