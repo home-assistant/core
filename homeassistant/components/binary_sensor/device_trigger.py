@@ -195,8 +195,8 @@ async def async_attach_trigger(hass, config, action, automation_info):
         state_automation.CONF_FROM: from_state,
         state_automation.CONF_TO: to_state,
     }
-    if "for" in config:
-        state_config["for"] = config["for"]
+    if CONF_FOR in config:
+        state_config[CONF_FOR] = config[CONF_FOR]
 
     return await state_automation.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"
@@ -215,7 +215,7 @@ async def async_get_triggers(hass, device_id):
     ]
 
     for entry in entries:
-        device_class = None
+        device_class = DEVICE_CLASS_NONE
         state = hass.states.get(entry.entity_id)
         if state:
             device_class = state.attributes.get(ATTR_DEVICE_CLASS)

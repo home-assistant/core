@@ -155,8 +155,8 @@ async def async_attach_trigger(
         state.CONF_FROM: from_state,
         state.CONF_TO: to_state,
     }
-    if "for" in config:
-        state_config["for"] = config["for"]
+    if CONF_FOR in config:
+        state_config[CONF_FOR] = config[CONF_FOR]
 
     return await state.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"
