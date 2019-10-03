@@ -47,6 +47,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(
         [SSLCertificate(entry.title, entry.data[CONF_HOST], entry.data[CONF_PORT])],
         False,
+        # Don't update in case we're checking our own cert.
     )
     return True
 
@@ -84,7 +85,7 @@ class SSLCertificate(Entity):
 
     @property
     def available(self):
-        """Icon to use in the frontend, if any."""
+        """Return the availability of the sensor."""
         return self._available
 
     async def async_added_to_hass(self):
@@ -94,7 +95,11 @@ class SSLCertificate(Entity):
             """Run the update method when the start event was fired."""
             self.update()
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, do_update)
+        if self.hass.is_running:
+            await self.update()
+        else:
+            # Delay until HA is fully started in case we're checking our own cert.
+            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, do_update)
 
     def update(self):
         """Fetch the certificate information."""
@@ -120,3 +125,4 @@ class SSLCertificate(Entity):
         expiry = timestamp - datetime.today()
         self._available = True
         self._state = expiry.days
+        self.schedule_update_ha_state()
