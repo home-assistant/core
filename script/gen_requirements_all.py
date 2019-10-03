@@ -138,7 +138,7 @@ TEST_REQUIREMENTS = (
     "pynx584",
     "pyopenuv",
     "pyotp",
-    "pyps4-homeassistant",
+    "pyps4-2ndscreen",
     "pyqwikswitch",
     "PyRMVtransport",
     "pysma",
