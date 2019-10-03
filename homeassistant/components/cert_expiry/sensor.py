@@ -68,6 +68,11 @@ class SSLCertificate(Entity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return a unique id for the sensor."""
+        return f"{self.server_name}:{self.server_port}"
+
+    @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return "days"
