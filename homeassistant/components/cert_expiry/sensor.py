@@ -70,7 +70,7 @@ class SSLCertificate(Entity):
     @property
     def unique_id(self):
         """Return a unique id for the sensor."""
-        return f"cert_expiry-{self.server_name}-{self.server_port}"
+        return f"{self.server_name}:{self.server_port}"
 
     @property
     def unit_of_measurement(self):
