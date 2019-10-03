@@ -1,5 +1,4 @@
 """Google Report State implementation."""
-from uuid import uuid4
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.const import MATCH_ALL
 
@@ -22,14 +21,17 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
         if not entity.is_supported():
             return
 
+        entity_data = entity.query_serialize()
+
+        if old_state:
+            old_entity = GoogleEntity(hass, google_config, old_state)
+
+            # Only report to Google if data that Google cares about has changed
+            if entity_data == old_entity.query_serialize():
+                return
+
         await google_config.async_report_state(
-            {
-                "requestId": uuid4().hex,
-                "agentUserId": google_config.agent_user_id,
-                "payload": {
-                    "devices": {"states": {changed_entity: entity.query_serialize()}}
-                },
-            }
+            {"devices": {"states": {changed_entity: entity_data}}}
         )
 
     return hass.helpers.event.async_track_state_change(

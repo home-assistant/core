@@ -3,7 +3,7 @@ from asyncio import gather
 from collections.abc import Mapping
 from typing import List
 
-from homeassistant.core import Context, callback
+from homeassistant.core import Context, callback, HomeAssistant, State
 from homeassistant.helpers.event import async_call_later
 from homeassistant.const import (
     CONF_NAME,
@@ -61,6 +61,7 @@ class AbstractConfig:
         """Return if we're actively reporting states."""
         return self._unsub_report_state is not None
 
+    @property
     def should_report_state(self):
         """Return if states should be proactively reported."""
         # pylint: disable=no-self-use
@@ -104,6 +105,7 @@ class AbstractConfig:
 
     async def _schedule_callback(self, _now):
         """Handle a scheduled sync callback."""
+        self._google_sync_unsub = None
         await self.async_sync_entities()
 
     @callback
@@ -150,7 +152,7 @@ def get_google_type(domain, device_class):
 class GoogleEntity:
     """Adaptation of Entity expressed in Google's terms."""
 
-    def __init__(self, hass, config, state):
+    def __init__(self, hass: HomeAssistant, config: AbstractConfig, state: State):
         """Initialize a Google entity."""
         self.hass = hass
         self.config = config
@@ -218,7 +220,7 @@ class GoogleEntity:
             "name": {"name": name},
             "attributes": {},
             "traits": [trait.name for trait in traits],
-            "willReportState": False,
+            "willReportState": self.config.should_report_state,
             "type": device_type,
         }
 

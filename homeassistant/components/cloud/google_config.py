@@ -1,5 +1,9 @@
 """Google config for Cloud."""
+import asyncio
+import logging
+
 import async_timeout
+from hass_nabucasa.google_report_state import ErrorResponse
 
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.components.google_assistant.helpers import AbstractConfig
@@ -13,6 +17,8 @@ from .const import (
     DEFAULT_DISABLE_2FA,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class CloudGoogleConfig(AbstractConfig):
     """HA Cloud Configuration for Google Assistant."""
@@ -24,6 +30,7 @@ class CloudGoogleConfig(AbstractConfig):
         self._prefs = prefs
         self._cloud = cloud
         self._cur_entity_prefs = self._prefs.google_entity_configs
+        self._sync_entities_lock = asyncio.Lock()
 
         prefs.async_listen_updates(self._async_prefs_updated)
         hass.bus.async_listen(
@@ -33,7 +40,7 @@ class CloudGoogleConfig(AbstractConfig):
 
     @property
     def enabled(self):
-        """Return if Alexa is enabled."""
+        """Return if Google is enabled."""
         return self._prefs.google_enabled
 
     @property
@@ -80,21 +87,31 @@ class CloudGoogleConfig(AbstractConfig):
 
     async def async_report_state(self, message):
         """Send a state report to Google."""
-        await self._cloud.google_report_state.asynC_send_message(message)
+        try:
+            await self._cloud.google_report_state.async_send_message(message)
+        except ErrorResponse as err:
+            _LOGGER.warning("Error reporting state - %s: %s", err.code, err.message)
 
     async def _async_request_sync_devices(self):
         """Trigger a sync with Google."""
+        if self._sync_entities_lock.locked():
+            return 200
+
         websession = self.hass.helpers.aiohttp_client.async_get_clientsession()
 
-        with async_timeout.timeout(10):
-            await self._cloud.auth.async_check_token()
+        async with self._sync_entities_lock:
+            with async_timeout.timeout(10):
+                await self._cloud.auth.async_check_token()
 
-        with async_timeout.timeout(10):
-            req = await websession.post(
-                self._cloud.google_actions_sync_url,
-                headers={"authorization": self._cloud.id_token},
-            )
-            return req.status
+            _LOGGER.debug("Requesting sync")
+
+            with async_timeout.timeout(30):
+                req = await websession.post(
+                    self._cloud.google_actions_sync_url,
+                    headers={"authorization": self._cloud.id_token},
+                )
+                _LOGGER.debug("Finished requesting syncing: %s", req.status)
+                return req.status
 
     async def async_deactivate_report_state(self):
         """Turn off report state and disable further state reporting.

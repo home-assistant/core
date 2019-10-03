@@ -117,7 +117,7 @@ class CloudClient(Interface):
                 pass
 
         if self.google_config.should_report_state:
-            await self.google_config.async_enable_report_state()
+            self.google_config.async_enable_report_state()
 
     async def cleanups(self) -> None:
         """Cleanup some stuff after logout."""
