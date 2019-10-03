@@ -1,38 +1,31 @@
 """Test pi_hole component."""
 
-from asynctest import CoroutineMock
-from hole import Hole
+from asyncio import Future
 
 from homeassistant.components import pi_hole
-from tests.common import async_setup_component
-from unittest.mock import patch
+from tests.common import async_setup_component, mock_coro_func
+from unittest.mock import patch, Mock
 
-
-def mock_pihole_data_call(Hole):
-    """Need to override so as to allow mocked data."""
-    Hole.__init__ = (
-        lambda self, host, loop, session, location, tls, verify_tls=True, api_token=None: None
-    )
-    Hole.data = {
-        "ads_blocked_today": 0,
-        "ads_percentage_today": 0,
-        "clients_ever_seen": 0,
-        "dns_queries_today": 0,
-        "domains_being_blocked": 0,
-        "queries_cached": 0,
-        "queries_forwarded": 0,
-        "status": 0,
-        "unique_clients": 0,
-        "unique_domains": 0,
-    }
-    pass
+ZERO_DATA = {
+    "ads_blocked_today": 0,
+    "ads_percentage_today": 0,
+    "clients_ever_seen": 0,
+    "dns_queries_today": 0,
+    "domains_being_blocked": 0,
+    "queries_cached": 0,
+    "queries_forwarded": 0,
+    "status": 0,
+    "unique_clients": 0,
+    "unique_domains": 0,
+}
 
 
 async def test_setup_minimal_config(hass):
     """Tests component setup with minimal config."""
-    with patch.object(
-        Hole, "get_data", new=CoroutineMock(side_effect=mock_pihole_data_call(Hole))
-    ):
+    with patch("homeassistant.components.pi_hole.Hole") as _hole:
+        _hole.return_value.get_data = mock_coro_func(return_value=True)
+        _hole.return_value.data = ZERO_DATA
+
         assert await async_setup_component(
             hass, pi_hole.DOMAIN, {pi_hole.DOMAIN: [{"host": "pi.hole"}]}
         )
@@ -84,11 +77,12 @@ async def test_setup_minimal_config(hass):
     assert hass.states.get("sensor.pi_hole_seen_clients").state == "0"
 
 
-async def test_setup_custom_config(hass):
-    """Tests component setup with custom config."""
-    with patch.object(
-        Hole, "get_data", new=CoroutineMock(side_effect=mock_pihole_data_call(Hole))
-    ):
+async def test_setup_name_config(hass):
+    """Tests component setup with a custom name."""
+    with patch("homeassistant.components.pi_hole.Hole") as _hole:
+        _hole.return_value.get_data = mock_coro_func(return_value=True)
+        _hole.return_value.data = ZERO_DATA
+
         assert await async_setup_component(
             hass,
             pi_hole.DOMAIN,
@@ -101,3 +95,68 @@ async def test_setup_custom_config(hass):
         hass.states.get("sensor.custom_ads_blocked_today").name
         == "Custom Ads Blocked Today"
     )
+
+
+async def test_disable_service_call(hass):
+    """Test disable service call with no Pi-hole named."""
+    with patch("homeassistant.components.pi_hole.Hole") as _hole:
+        mock_disable = Mock(return_value=Future())
+        mock_disable.return_value.set_result(True)
+        _hole.return_value.disable = mock_disable
+        _hole.return_value.get_data = mock_coro_func(return_value=True)
+        _hole.return_value.data = ZERO_DATA
+
+        assert await async_setup_component(
+            hass,
+            pi_hole.DOMAIN,
+            {
+                pi_hole.DOMAIN: [
+                    {"host": "pi.hole", "api_key": "1"},
+                    {"host": "pi.hole", "name": "Custom", "api_key": "2"},
+                ]
+            },
+        )
+
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            pi_hole.DOMAIN,
+            pi_hole.SERVICE_DISABLE,
+            {pi_hole.SERVICE_DISABLE_ATTR_DURATION: "00:00:01"},
+            blocking=True,
+        )
+
+        await hass.async_block_till_done()
+
+        assert mock_disable.call_count == 2
+
+
+async def test_enable_service_call(hass):
+    """Test enable service call with no Pi-hole named."""
+    with patch("homeassistant.components.pi_hole.Hole") as _hole:
+        mock_enable = Mock(return_value=Future())
+        mock_enable.return_value.set_result(True)
+        _hole.return_value.enable = mock_enable
+        _hole.return_value.get_data = mock_coro_func(return_value=True)
+        _hole.return_value.data = ZERO_DATA
+
+        assert await async_setup_component(
+            hass,
+            pi_hole.DOMAIN,
+            {
+                pi_hole.DOMAIN: [
+                    {"host": "pi.hole", "api_key": "1"},
+                    {"host": "pi.hole", "name": "Custom", "api_key": "2"},
+                ]
+            },
+        )
+
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            pi_hole.DOMAIN, pi_hole.SERVICE_ENABLE, {}, blocking=True
+        )
+
+        await hass.async_block_till_done()
+
+        assert mock_enable.call_count == 2
