@@ -1,7 +1,7 @@
 """Test requirements module."""
 import os
 from pathlib import Path
-from unittest.mock import patch, call
+from unittest.mock import patch, call, ANY
 from pytest import raises
 
 from homeassistant import setup
@@ -49,6 +49,8 @@ class TestRequirements:
             "package==0.0.1",
             constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
             no_cache_dir=False,
+            # To allow running tests in hass.io images
+            find_links=ANY,
         )
 
     @patch("os.path.dirname")
@@ -69,6 +71,8 @@ class TestRequirements:
             target=self.hass.config.path("deps"),
             constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
             no_cache_dir=False,
+            # To allow running tests in hass.io images
+            find_links=ANY,
         )
 
 
@@ -163,6 +167,8 @@ async def test_install_on_docker(hass):
             "hello==1.0.0",
             constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
             no_cache_dir=True,
+            # To allow running tests in hass.io images
+            find_links=ANY,
         )
 
 
