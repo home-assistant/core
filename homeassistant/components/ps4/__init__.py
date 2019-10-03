@@ -3,8 +3,8 @@ import logging
 import os
 
 import voluptuous as vol
-from pyps4_homeassistant.ddp import async_create_ddp_endpoint
-from pyps4_homeassistant.media_art import COUNTRIES
+from pyps4_2ndscreen.ddp import async_create_ddp_endpoint
+from pyps4_2ndscreen.media_art import COUNTRIES
 
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE,
