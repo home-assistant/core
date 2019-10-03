@@ -94,6 +94,7 @@ class SSLCertificate(Entity):
         def do_update(_):
             """Run the update method when the start event was fired."""
             self.update()
+            self.schedule_update_ha_state()
 
         if self.hass.is_running:
             await self.update()
@@ -125,4 +126,3 @@ class SSLCertificate(Entity):
         expiry = timestamp - datetime.today()
         self._available = True
         self._state = expiry.days
-        self.schedule_update_ha_state()
