@@ -3,7 +3,8 @@ from asyncio import gather
 from collections.abc import Mapping
 from typing import List
 
-from homeassistant.core import Context, callback
+from homeassistant.core import Context, callback, HomeAssistant, State
+from homeassistant.helpers.event import async_call_later
 from homeassistant.const import (
     CONF_NAME,
     STATE_UNAVAILABLE,
@@ -22,9 +23,23 @@ from .const import (
 )
 from .error import SmartHomeError
 
+SYNC_DELAY = 15
+
 
 class AbstractConfig:
     """Hold the configuration for Google Assistant."""
+
+    _unsub_report_state = None
+
+    def __init__(self, hass):
+        """Initialize abstract config."""
+        self.hass = hass
+        self._google_sync_unsub = None
+
+    @property
+    def enabled(self):
+        """Return if Google is enabled."""
+        return False
 
     @property
     def agent_user_id(self):
@@ -41,6 +56,17 @@ class AbstractConfig:
         """Return entity config."""
         return None
 
+    @property
+    def is_reporting_state(self):
+        """Return if we're actively reporting states."""
+        return self._unsub_report_state is not None
+
+    @property
+    def should_report_state(self):
+        """Return if states should be proactively reported."""
+        # pylint: disable=no-self-use
+        return False
+
     def should_expose(self, state) -> bool:
         """Return if entity should be exposed."""
         raise NotImplementedError
@@ -50,11 +76,66 @@ class AbstractConfig:
         # pylint: disable=no-self-use
         return True
 
+    async def async_report_state(self, message):
+        """Send a state report to Google."""
+        raise NotImplementedError
+
+    def async_enable_report_state(self):
+        """Enable proactive mode."""
+        # Circular dep
+        from .report_state import async_enable_report_state
+
+        if self._unsub_report_state is None:
+            self._unsub_report_state = async_enable_report_state(self.hass, self)
+
+    def async_disable_report_state(self):
+        """Disable report state."""
+        if self._unsub_report_state is not None:
+            self._unsub_report_state()
+            self._unsub_report_state = None
+
+    async def async_sync_entities(self):
+        """Sync all entities to Google."""
+        # Remove any pending sync
+        if self._google_sync_unsub:
+            self._google_sync_unsub()
+            self._google_sync_unsub = None
+
+        return await self._async_request_sync_devices()
+
+    async def _schedule_callback(self, _now):
+        """Handle a scheduled sync callback."""
+        self._google_sync_unsub = None
+        await self.async_sync_entities()
+
+    @callback
+    def async_schedule_google_sync(self):
+        """Schedule a sync."""
+        if self._google_sync_unsub:
+            self._google_sync_unsub()
+
+        self._google_sync_unsub = async_call_later(
+            self.hass, SYNC_DELAY, self._schedule_callback
+        )
+
+    async def _async_request_sync_devices(self) -> int:
+        """Trigger a sync with Google.
+
+        Return value is the HTTP status code of the sync request.
+        """
+        raise NotImplementedError
+
+    async def async_deactivate_report_state(self):
+        """Turn off report state and disable further state reporting.
+
+        Called when the user disconnects their account from Google.
+        """
+
 
 class RequestData:
     """Hold data associated with a particular request."""
 
-    def __init__(self, config, user_id, request_id):
+    def __init__(self, config: AbstractConfig, user_id: str, request_id: str):
         """Initialize the request data."""
         self.config = config
         self.request_id = request_id
@@ -71,7 +152,7 @@ def get_google_type(domain, device_class):
 class GoogleEntity:
     """Adaptation of Entity expressed in Google's terms."""
 
-    def __init__(self, hass, config, state):
+    def __init__(self, hass: HomeAssistant, config: AbstractConfig, state: State):
         """Initialize a Google entity."""
         self.hass = hass
         self.config = config
@@ -139,7 +220,7 @@ class GoogleEntity:
             "name": {"name": name},
             "attributes": {},
             "traits": [trait.name for trait in traits],
-            "willReportState": False,
+            "willReportState": self.config.should_report_state,
             "type": device_type,
         }
 

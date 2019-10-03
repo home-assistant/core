@@ -7,6 +7,7 @@ import attr
 import aiohttp
 import async_timeout
 import voluptuous as vol
+from hass_nabucasa import Cloud
 
 from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
@@ -28,6 +29,7 @@ from .const import (
     InvalidTrustedNetworks,
     InvalidTrustedProxies,
     PREF_ALEXA_REPORT_STATE,
+    PREF_GOOGLE_REPORT_STATE,
     RequireRelink,
 )
 
@@ -171,18 +173,9 @@ class GoogleActionsSyncView(HomeAssistantView):
     async def post(self, request):
         """Trigger a Google Actions sync."""
         hass = request.app["hass"]
-        cloud = hass.data[DOMAIN]
-        websession = hass.helpers.aiohttp_client.async_get_clientsession()
-
-        with async_timeout.timeout(REQUEST_TIMEOUT):
-            await hass.async_add_job(cloud.auth.check_token)
-
-        with async_timeout.timeout(REQUEST_TIMEOUT):
-            req = await websession.post(
-                cloud.google_actions_sync_url, headers={"authorization": cloud.id_token}
-            )
-
-        return self.json({}, status_code=req.status)
+        cloud: Cloud = hass.data[DOMAIN]
+        status = await cloud.client.google_config.async_sync_entities()
+        return self.json({}, status_code=status)
 
 
 class CloudLoginView(HomeAssistantView):
@@ -366,6 +359,7 @@ async def websocket_subscription(hass, connection, msg):
         vol.Optional(PREF_ENABLE_GOOGLE): bool,
         vol.Optional(PREF_ENABLE_ALEXA): bool,
         vol.Optional(PREF_ALEXA_REPORT_STATE): bool,
+        vol.Optional(PREF_GOOGLE_REPORT_STATE): bool,
         vol.Optional(PREF_GOOGLE_SECURE_DEVICES_PIN): vol.Any(None, str),
     }
 )
