@@ -33,7 +33,7 @@ async def test_show_form(hass):
 async def test_invalid_api_key(hass):
     """Test that errors are shown when API key is invalid."""
     with patch(
-        "airly._private._RequestsHandler" ".get",
+        "airly._private._RequestsHandler.get",
         side_effect=AirlyError(403, {"message": "Invalid authentication credentials"}),
     ):
         flow = config_flow.AirlyFlowHandler()
@@ -47,7 +47,7 @@ async def test_invalid_api_key(hass):
 async def test_invalid_location(hass):
     """Test that errors are shown when location is invalid."""
     with patch(
-        "airly._private._RequestsHandler" ".get",
+        "airly._private._RequestsHandler.get",
         return_value=json.loads(load_fixture("airly_no_station.json")),
     ):
         flow = config_flow.AirlyFlowHandler()
@@ -62,7 +62,7 @@ async def test_duplicate_error(hass):
     """Test that errors are shown when duplicates are added."""
 
     with patch(
-        "airly._private._RequestsHandler" ".get",
+        "airly._private._RequestsHandler.get",
         return_value=json.loads(load_fixture("airly_valid_station.json")),
     ):
         MockConfigEntry(domain=DOMAIN, data=CONFIG).add_to_hass(hass)
@@ -78,7 +78,7 @@ async def test_create_entry(hass):
     """Test that the user step works."""
 
     with patch(
-        "airly._private._RequestsHandler" ".get",
+        "airly._private._RequestsHandler.get",
         return_value=json.loads(load_fixture("airly_valid_station.json")),
     ):
         flow = config_flow.AirlyFlowHandler()
