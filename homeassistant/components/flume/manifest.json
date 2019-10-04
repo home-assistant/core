@@ -1,0 +1,8 @@
+{
+    "domain": "Flume",
+    "name": "Flume, Chris Mandich",
+    "documentation": "tbd",
+    "dependencies": [],
+    "codeowners": ["@ChrisMandich"],
+    "requirements": []
+  }
