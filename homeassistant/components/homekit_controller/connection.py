@@ -12,6 +12,7 @@ from homekit.model.services import ServicesTypes
 from homekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.async_ import safe_wait
 
 from .const import DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, ENTITY_MAP
 
@@ -165,7 +166,7 @@ class HKDevice:
                 )
             )
 
-        results = await asyncio.gather(*unloads)
+        results = await safe_wait(unloads, logger=_LOGGER)
 
         return False not in results
 

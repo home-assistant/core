@@ -1,5 +1,4 @@
 """Denon HEOS Media Player."""
-import asyncio
 from datetime import timedelta
 import logging
 from typing import Dict
@@ -14,6 +13,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import Throttle
+from homeassistant.util.async_ import safe_wait
 
 from . import services
 from .config_flow import format_title
@@ -143,9 +143,12 @@ class ControllerManager:
 
     async def connect_listeners(self):
         """Subscribe to events of interest."""
-        self._device_registry, self._entity_registry = await asyncio.gather(
-            self._hass.helpers.device_registry.async_get_registry(),
-            self._hass.helpers.entity_registry.async_get_registry(),
+        self._device_registry, self._entity_registry = await safe_wait(
+            (
+                self._hass.helpers.device_registry.async_get_registry(),
+                self._hass.helpers.entity_registry.async_get_registry(),
+            ),
+            logger=_LOGGER,
         )
         # Handle controller events
         self._signals.append(
