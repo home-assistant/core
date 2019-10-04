@@ -51,6 +51,11 @@ class StarlineSwitch(SwitchDevice):
         return f"{self._device.name} {self._switch_name}"
 
     @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._device.online
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes of the switch."""
         if self._key == "ign":

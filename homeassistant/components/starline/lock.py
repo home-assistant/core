@@ -39,6 +39,11 @@ class StarlineLock(LockDevice):
         return f"{self._device.name} Security"
 
     @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._device.online
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes of the lock."""
         return self._device.alarm_state

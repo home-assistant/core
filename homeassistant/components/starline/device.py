@@ -19,7 +19,7 @@ class StarlineDevice():
         self._fw_version: Optional[str] = None
         self._gsm_lvl: Optional[int] = None
         self._phone: Optional[str] = None
-        self._status: Optional[int] = None  # TODO: cast to boolean
+        self._status: Optional[int] = None
         self._ts_activity: Optional[float] = None
         self._typename: Optional[str] = None
         self._balance: Dict[str, Dict[str, Any]] = {}
@@ -86,6 +86,7 @@ class StarlineDevice():
             "raw": self._gsm_lvl,
             "imei": self._imei,
             "phone": self._phone,
+            "online": self.online
         }
 
     @property
@@ -94,6 +95,10 @@ class StarlineDevice():
             "autostart": self._car_state["r_start"],
             "ignition": self._car_state["run"],
         }
+
+    @property
+    def online(self):
+        return int(self._status) > 0
 
     @property
     def battery_level(self):
@@ -129,7 +134,15 @@ class StarlineDevice():
 
     @property
     def gsm_level(self):
-        return self._gsm_lvl
+        return self._gsm_lvl if self.online else 0
+
+    @property
+    def gsm_level_percent(self):
+        if self.gsm_level > GSM_LEVEL_MAX:
+            return 100
+        if self.gsm_level < GSM_LEVEL_MIN:
+            return 0
+        return round((self.gsm_level - GSM_LEVEL_MIN) / (GSM_LEVEL_MAX - GSM_LEVEL_MIN) * 100)
 
     @property
     def imei(self):
@@ -138,14 +151,6 @@ class StarlineDevice():
     @property
     def phone(self):
         return self._phone
-
-    @property
-    def gsm_level_percent(self):
-        if self._gsm_lvl > GSM_LEVEL_MAX:
-            return 100
-        if self._gsm_lvl < GSM_LEVEL_MIN:
-            return 0
-        return round((self._gsm_lvl - GSM_LEVEL_MIN) / (GSM_LEVEL_MAX - GSM_LEVEL_MIN) * 100)
 
     @property
     def device_info(self):

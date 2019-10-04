@@ -1,7 +1,7 @@
 """Reads vehicle status from StarLine API."""
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.icon import icon_for_battery_level, icon_for_signal_level
 from .api import StarlineApi, StarlineDevice
 from .const import DOMAIN
 
@@ -61,14 +61,7 @@ class StarlineSensor(Entity):
                 charging=self._device.car_state["ign"]
             )
         elif self._key == "gsm_lvl":
-            # TODO: check online (status field) for gsm_lvl and all switches
-            level = self._device.gsm_level_percent
-            if level > 70:
-                return "mdi:signal-cellular-3"
-            if level > 30:
-                return "mdi:signal-cellular-2"
-            if level is not None:
-                return "mdi:signal-cellular-1"
+            return icon_for_signal_level(signal_level=self._device.gsm_level_percent)
         return self._icon
 
     @property
