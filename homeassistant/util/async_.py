@@ -77,9 +77,7 @@ def run_callback_threadsafe(
 
 
 async def safe_wait(
-    tasks: List[Awaitable[Any]],
-    logger: Optional[logging.Logger] = None,
-    return_exceptions=False,
+    tasks: Any, logger: Optional[logging.Logger] = None, return_exceptions: bool = False
 ) -> List[Any]:
     """Safe version of wait and gather.
 
@@ -92,7 +90,7 @@ async def safe_wait(
     finished_tasks, _ = await asyncio.wait(all_tasks)
 
     results: List[Any] = []
-    raise_exception: Optional[Exception] = None
+    raise_exception: Optional[BaseException] = None
     for task in finished_tasks:
         if not task.done():
             results.append(None)
