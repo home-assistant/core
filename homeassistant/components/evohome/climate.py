@@ -75,21 +75,20 @@ async def async_setup_platform(
     loc_idx = broker.params[CONF_LOCATION_IDX]
 
     _LOGGER.debug(
-        "Found Location/Controller, id=%s [%s], name=%s (location_idx=%s)",
-        broker.tcs.systemId,
+        "Found the Location/Controller (%s), id=%s, name=%s (location_idx=%s)",
         broker.tcs.modelType,
+        broker.tcs.systemId,
         broker.tcs.location.name,
         loc_idx,
     )
 
-    # special case of RoundThermostat (is single zone)
-    if broker.config["zones"][0]["modelType"] == "RoundModulation":
+    # special case of RoundModulation/RoundWireless (is a single zone system)
+    if broker.config["zones"][0]["zoneType"] == "Thermostat":
         zone = list(broker.tcs.zones.values())[0]
         _LOGGER.debug(
-            "Found %s, id=%s [%s], name=%s",
-            zone.zoneType,
-            zone.zoneId,
+            "Found the Thermostat (%s), id=%s, name=%s",
             zone.modelType,
+            zone.zoneId,
             zone.name,
         )
 
@@ -101,10 +100,10 @@ async def async_setup_platform(
     zones = []
     for zone in broker.tcs.zones.values():
         _LOGGER.debug(
-            "Found %s, id=%s [%s], name=%s",
+            "Found a %s (%s), id=%s, name=%s",
             zone.zoneType,
-            zone.zoneId,
             zone.modelType,
+            zone.zoneId,
             zone.name,
         )
         zones.append(EvoZone(broker, zone))
