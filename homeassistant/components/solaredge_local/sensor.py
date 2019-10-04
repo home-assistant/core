@@ -129,15 +129,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Create a new sensor for each sensor type.
     entities = []
-    for sensor_key in sensors:
+    for sensor_info in sensors.values():
         sensor = SolarEdgeSensor(
             platform_name,
-            sensor_key,
             data,
-            sensors[sensor_key][0],
-            sensors[sensor_key][1],
-            sensors[sensor_key][2],
-            sensors[sensor_key][3],
+            sensor_info[0],
+            sensor_info[1],
+            sensor_info[2],
+            sensor_info[3],
         )
         entities.append(sensor)
 
@@ -147,11 +146,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SolarEdgeSensor(Entity):
     """Representation of an SolarEdge Monitoring API sensor."""
 
-    def __init__(self, platform_name, sensor_key, data, json_key, name, unit, icon):
+    def __init__(self, platform_name, data, json_key, name, unit, icon):
         """Initialize the sensor."""
         self._platform_name = platform_name
-        self._sensor_key = sensor_key
-        self.data = data
+        self._data = data
         self._state = None
 
         self._json_key = json_key
@@ -181,8 +179,8 @@ class SolarEdgeSensor(Entity):
 
     def update(self):
         """Get the latest data from the sensor and update the state."""
-        self.data.update()
-        self._state = self.data.data[self._json_key]
+        self._data.update()
+        self._state = self._data.data[self._json_key]
 
 
 class SolarEdgeData:
