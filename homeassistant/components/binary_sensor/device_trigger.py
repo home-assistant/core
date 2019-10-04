@@ -7,7 +7,7 @@ from homeassistant.components.device_automation.const import (
     CONF_TURNED_OFF,
     CONF_TURNED_ON,
 )
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, CONF_TYPE
+from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, CONF_FOR, CONF_TYPE
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers import config_validation as cv
 
@@ -175,13 +175,13 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TURNED_OFF + TURNED_ON),
+        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
-    config = TRIGGER_SCHEMA(config)
     trigger_type = config[CONF_TYPE]
     if trigger_type in TURNED_ON:
         from_state = "off"
@@ -195,6 +195,8 @@ async def async_attach_trigger(hass, config, action, automation_info):
         state_automation.CONF_FROM: from_state,
         state_automation.CONF_TO: to_state,
     }
+    if CONF_FOR in config:
+        state_config[CONF_FOR] = config[CONF_FOR]
 
     return await state_automation.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"
@@ -213,7 +215,7 @@ async def async_get_triggers(hass, device_id):
     ]
 
     for entry in entries:
-        device_class = None
+        device_class = DEVICE_CLASS_NONE
         state = hass.states.get(entry.entity_id)
         if state:
             device_class = state.attributes.get(ATTR_DEVICE_CLASS)
@@ -236,3 +238,12 @@ async def async_get_triggers(hass, device_id):
         )
 
     return triggers
+
+
+async def async_get_trigger_capabilities(hass, config):
+    """List trigger capabilities."""
+    return {
+        "extra_fields": vol.Schema(
+            {vol.Optional(CONF_FOR): cv.positive_time_period_dict}
+        )
+    }

@@ -2,7 +2,7 @@
 Platform for the iZone AC.
 
 For more details about this component, please refer to the documentation
-https://home-assistant.io/components/izone/
+https://home-assistant.io/integrations/izone/
 """
 import logging
 

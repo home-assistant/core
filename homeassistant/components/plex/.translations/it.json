@@ -5,6 +5,7 @@
             "already_configured": "Questo server Plex \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Plex \u00e8 in fase di configurazione",
             "invalid_import": "La configurazione importata non \u00e8 valida",
+            "token_request_timeout": "Timeout per l'ottenimento del token",
             "unknown": "Non riuscito per motivo sconosciuto"
         },
         "error": {
@@ -36,7 +37,7 @@
                     "manual_setup": "Configurazione manuale",
                     "token": "Token Plex"
                 },
-                "description": "Immettere un token Plex per la configurazione automatica.",
+                "description": "Continuare ad autorizzare plex.tv o configurare manualmente un server.",
                 "title": "Collegare il server Plex"
             }
         },

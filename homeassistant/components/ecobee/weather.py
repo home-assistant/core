@@ -13,7 +13,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import TEMP_FAHRENHEIT
 
-from .const import DOMAIN
+from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER, _LOGGER
 
 ATTR_FORECAST_TEMP_HIGH = "temphigh"
 ATTR_FORECAST_PRESSURE = "pressure"
@@ -65,6 +65,30 @@ class EcobeeWeather(WeatherEntity):
     def unique_id(self):
         """Return a unique identifier for the weather platform."""
         return self.data.ecobee.get_thermostat(self._index)["identifier"]
+
+    @property
+    def device_info(self):
+        """Return device information for the ecobee weather platform."""
+        thermostat = self.data.ecobee.get_thermostat(self._index)
+        try:
+            model = f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]} Thermostat"
+        except KeyError:
+            _LOGGER.error(
+                "Model number for ecobee thermostat %s not recognized. "
+                "Please visit this link and provide the following information: "
+                "https://github.com/home-assistant/home-assistant/issues/27172 "
+                "Unrecognized model number: %s",
+                thermostat["name"],
+                thermostat["modelNumber"],
+            )
+            return None
+
+        return {
+            "identifiers": {(DOMAIN, thermostat["identifier"])},
+            "name": self.name,
+            "manufacturer": MANUFACTURER,
+            "model": model,
+        }
 
     @property
     def condition(self):
