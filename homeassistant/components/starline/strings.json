@@ -36,5 +36,14 @@
         "error": {
             "name_exists": "TODO: Location already exists"
         }
+    },
+    "options": {
+        "step": {
+            "settings": {
+                "data": {
+                    "update_interval": "Update frequency (in seconds)"
+                }
+            }
+        }
     }
 }

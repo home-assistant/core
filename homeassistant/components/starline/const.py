@@ -4,13 +4,15 @@ import logging
 LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "starline"
-UPDATE_INTERVAL = 5  # in minutes
 PLATFORMS = ["device_tracker", "binary_sensor", "sensor", "lock", "switch"]
 
 CONF_APP_ID = "app_id"
 CONF_APP_SECRET = "app_secret"
 CONF_MFA_CODE = "mfa_code"
 CONF_CAPTCHA_CODE = "captcha_code"
+
+CONF_UPDATE_INTERVAL = "update_interval"
+DEFAULT_UPDATE_INTERVAL = 180  # in seconds
 
 SERVICE_UPDATE_STATE = "update_state"
 

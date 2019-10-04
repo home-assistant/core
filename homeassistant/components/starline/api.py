@@ -1,9 +1,12 @@
 import hashlib
 import requests
+from datetime import timedelta
 from typing import Dict, List, Callable, Optional, Any
 
+from homeassistant.helpers.event import async_track_time_interval
+
 from .device import StarlineDevice
-from .const import LOGGER, ENCODING, GET, POST, CONNECT_TIMEOUT, READ_TIMEOUT
+from .const import LOGGER, ENCODING, GET, POST, CONNECT_TIMEOUT, READ_TIMEOUT, DEFAULT_UPDATE_INTERVAL
 
 
 class BaseApi:
@@ -49,7 +52,7 @@ class BaseApi:
 class StarlineAuth(BaseApi):
     """Auth API."""
 
-    def get_app_code(self, app_id: str, app_secret: str) -> dict:
+    def get_app_code(self, app_id: str, app_secret: str) -> str:
         """Get application code for getting application token."""
 
         url = "https://id.starline.ru/apiV3/application/getCode/"
@@ -65,7 +68,7 @@ class StarlineAuth(BaseApi):
             return app_code
         raise Exception(response)
 
-    def get_app_token(self, app_id: str, app_secret: str, app_code: str) -> dict:
+    def get_app_token(self, app_id: str, app_secret: str, app_code: str) -> str:
         """Get application token for authentication."""
 
         url = "https://id.starline.ru/apiV3/application/getToken/"
@@ -130,6 +133,8 @@ class StarlineApi(BaseApi):
         self._slnet_token = slnet_token
         self._devices: Dict[str, StarlineDevice] = {}
         self._update_listeners: List[Callable] = []
+        self._update_interval: int = DEFAULT_UPDATE_INTERVAL
+        self._unsubscribe_auto_updater: Optional[Callable] = None
 
     def add_update_listener(self, listener: Callable) -> None:
         """Add a listener for update notifications."""
@@ -140,7 +145,7 @@ class StarlineApi(BaseApi):
         for listener in self._update_listeners:
             listener()
 
-    def update(self) -> None:
+    def update(self, unused=None) -> None:
         """Update StarLine data."""
         devices = self.get_user_info()
 
@@ -151,6 +156,16 @@ class StarlineApi(BaseApi):
             self._devices[device_id].update(device_data)
 
         self._call_listeners()
+
+    def set_update_interval(self, hass, interval: int):
+        """Set StarLine API update interval."""
+        LOGGER.debug("Setting update interval: %ds", interval)
+        self._update_interval = interval
+        if self._unsubscribe_auto_updater is not None:
+            self._unsubscribe_auto_updater()
+
+        delta = timedelta(seconds=interval)
+        self._unsubscribe_auto_updater = async_track_time_interval(hass, self.update, delta)
 
     @property
     def devices(self):
@@ -170,6 +185,8 @@ class StarlineApi(BaseApi):
         return None
 
     def set_car_state(self, device_id: str, name: str, state: bool):
+        """ Set car state information."""
+
         LOGGER.debug("Setting car %s state: %s=%d", device_id, name, state)
         url = "https://developer.starline.ru/json/v1/device/{}/set_param".format(device_id)
         data = {
@@ -185,3 +202,11 @@ class StarlineApi(BaseApi):
             self._call_listeners()
             return response
         return None
+
+    def unload(self):
+        """Unload StarLine API."""
+        LOGGER.debug("Unloading StarLine API.")
+        if self._unsubscribe_auto_updater is not None:
+            self._unsubscribe_auto_updater()
+            self._unsubscribe_auto_updater = None
+        del self._session

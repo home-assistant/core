@@ -1,12 +1,9 @@
 """The StarLine component."""
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config, HomeAssistant
-from homeassistant.helpers.event import async_track_utc_time_change
-import homeassistant.util.dt as dt_util
 
 from .api import StarlineApi
-from .config_flow import StarlineFlowHandler
-from .const import DOMAIN, UPDATE_INTERVAL, PLATFORMS, SERVICE_UPDATE_STATE
+from .const import DOMAIN, PLATFORMS, SERVICE_UPDATE_STATE, CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
 
 
 async def async_setup(hass: HomeAssistant, config: Config) -> bool:
@@ -14,15 +11,11 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the StarLine device from a config entry."""
     api = StarlineApi(config_entry.data["user_id"], config_entry.data["slnet_token"])
     api.update()
     hass.data[DOMAIN] = api
-
-    def _update_api(ignored=None):
-        """Update data from StarLine API."""
-        api.update()
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
     for device_id, device in api.devices.items():
@@ -36,20 +29,27 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             hass.config_entries.async_forward_entry_setup(config_entry, domain)
         )
 
-    hass.services.async_register(DOMAIN, SERVICE_UPDATE_STATE, _update_api)
+    hass.services.async_register(DOMAIN, SERVICE_UPDATE_STATE, api.update)
 
-    now = dt_util.utcnow()
-    async_track_utc_time_change(
-        hass,
-        _update_api,
-        minute=range(now.minute % UPDATE_INTERVAL, 60, UPDATE_INTERVAL),
-        second=now.second,
-    )
+    config_entry.add_update_listener(async_options_updated)
+    await async_options_updated(hass, config_entry)
+
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     for domain in PLATFORMS:
         await hass.config_entries.async_forward_entry_unload(config_entry, domain)
+
+    api = hass.data[DOMAIN]
+    api.unload()
     return True
+
+
+async def async_options_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    """Triggered by config entry options updates."""
+    api = hass.data[DOMAIN]
+    update_timeout = config_entry.options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
+    const.LOGGER.warning("async_options_updated %s", update_timeout)
+    api.set_update_interval(hass, update_timeout)

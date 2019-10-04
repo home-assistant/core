@@ -4,9 +4,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.core import callback
 
 from .api import StarlineAuth
-from .const import DOMAIN, CONF_APP_ID, CONF_APP_SECRET, CONF_MFA_CODE, CONF_CAPTCHA_CODE, LOGGER
+from .const import DOMAIN, CONF_APP_ID, CONF_APP_SECRET, CONF_MFA_CODE, CONF_CAPTCHA_CODE, LOGGER, CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
 
 
 class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -33,6 +34,12 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._captcha_sid = None
         self._captcha_code = None
         self._phone_number = None
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return StarlineOptionsFlowHandler(config_entry)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -156,16 +163,16 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             status, data = self._auth.get_slid_user_token(self._app_token, self._username, self._password, self._mfa_code, self._captcha_sid, self._captcha_code)
 
             if status:
-                self._user_slid = data['user_token']
+                self._user_slid = data["user_token"]
                 return self._async_get_entry()
 
-            if 'phone' in data:
-                self._phone_number = data['phone']
+            if "phone" in data:
+                self._phone_number = data["phone"]
                 return self._async_form_auth_mfa(error)
 
-            if 'captchaSid' in data:
-                self._captcha_sid = data['captchaSid']
-                self._captcha_image = data['captchaImg']
+            if "captchaSid" in data:
+                self._captcha_sid = data["captchaSid"]
+                self._captcha_image = data["captchaImg"]
                 return self._async_form_auth_captcha(error)
 
             raise Exception(data)
@@ -184,4 +191,32 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 "user_id": self._user_id,
                 "slnet_token": self._slnet_token,
             },
+        )
+
+
+class StarlineOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle StarLine options."""
+
+    def __init__(self, config_entry):
+        """Initialize StarLine options flow."""
+        self.config_entry = config_entry
+        self.options = dict(config_entry.options)
+
+    async def async_step_init(self, user_input=None):
+        """Manage the StarLine options."""
+        return await self.async_step_settings()
+
+    async def async_step_settings(self, user_input=None):
+        """Manage the StarLine options."""
+        if user_input is not None:
+            self.options[CONF_UPDATE_INTERVAL] = user_input[CONF_UPDATE_INTERVAL]
+            return self.async_create_entry(title="", data=self.options)
+
+        return self.async_show_form(
+            step_id="settings",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_UPDATE_INTERVAL, default=self.config_entry.options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)): int,
+                }
+            ),
         )
