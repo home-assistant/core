@@ -32,7 +32,7 @@ CONF_AUTH_KEY = "auth_key"
 CONF_DETECTOR = "detector"
 CONF_LABELS = "labels"
 CONF_AREA = "area"
-CONF_CONTAINS = "contains"
+CONF_COVERS = "covers"
 CONF_TOP = "top"
 CONF_BOTTOM = "bottom"
 CONF_RIGHT = "right"
@@ -45,7 +45,7 @@ AREA_SCHEMA = vol.Schema(
         vol.Optional(CONF_LEFT, default=0): cv.small_float,
         vol.Optional(CONF_RIGHT, default=1): cv.small_float,
         vol.Optional(CONF_TOP, default=0): cv.small_float,
-        vol.Optional(CONF_CONTAINS, default=True): cv.boolean,
+        vol.Optional(CONF_COVERS, default=True): cv.boolean,
     }
 )
 
@@ -145,7 +145,7 @@ class Doods(ImageProcessingEntity):
         # handle labels and specific detection areas
         labels = config[CONF_LABELS]
         self._label_areas = {}
-        self._label_contains = {}
+        self._label_covers = {}
         for label in labels:
             if isinstance(label, dict):
                 label_name = label[CONF_NAME]
@@ -163,7 +163,7 @@ class Doods(ImageProcessingEntity):
                 # Label area
                 label_area = label.get(CONF_AREA)
                 self._label_areas[label_name] = [0, 0, 1, 1]
-                self._label_contains[label_name] = True
+                self._label_covers[label_name] = True
                 if label_area:
                     self._label_areas[label_name] = [
                         label_area[CONF_TOP],
@@ -171,7 +171,7 @@ class Doods(ImageProcessingEntity):
                         label_area[CONF_BOTTOM],
                         label_area[CONF_RIGHT],
                     ]
-                    self._label_contains[label_name] = label_area[CONF_CONTAINS]
+                    self._label_covers[label_name] = label_area[CONF_COVERS]
             else:
                 if label not in detector["labels"] and label != "*":
                     _LOGGER.warning("Detector does not support label %s", label)
@@ -185,7 +185,7 @@ class Doods(ImageProcessingEntity):
 
         # Handle global detection area
         self._area = [0, 0, 1, 1]
-        self._contains = True
+        self._covers = True
         area_config = config.get(CONF_AREA)
         if area_config:
             self._area = [
@@ -194,7 +194,7 @@ class Doods(ImageProcessingEntity):
                 area_config[CONF_BOTTOM],
                 area_config[CONF_RIGHT],
             ]
-            self._contains = area_config[CONF_CONTAINS]
+            self._covers = area_config[CONF_COVERS]
 
         template.attach(hass, self._file_out)
 
@@ -320,7 +320,7 @@ class Doods(ImageProcessingEntity):
                 continue
 
             # Exclude matches outside global area definition
-            if self._contains:
+            if self._covers:
                 if (
                     boxes[0] < self._area[0]
                     or boxes[1] < self._area[1]
@@ -339,7 +339,7 @@ class Doods(ImageProcessingEntity):
 
             # Exclude matches outside label specific area definition
             if self._label_areas.get(label):
-                if self._label_contains[label]:
+                if self._label_covers[label]:
                     if (
                         boxes[0] < self._label_areas[label][0]
                         or boxes[1] < self._label_areas[label][1]
