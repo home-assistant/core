@@ -69,25 +69,28 @@ class EcobeeSensor(Entity):
         identifier = None
         model = None
         for sensor in self.data.ecobee.get_remote_sensors(self.index):
-            if sensor["name"] == self.sensor_name:
-                if "code" in sensor:
-                    identifier = sensor["code"]
-                    model = "ecobee Room Sensor"
-                else:
-                    thermostat = self.data.ecobee.get_thermostat(self.index)
-                    identifier = thermostat["identifier"]
-                    try:
-                        model = f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]} Thermostat"
-                    except KeyError:
-                        _LOGGER.error(
-                            "Model number for ecobee thermostat %s not recognized. "
-                            "Please visit this link and provide the following information: "
-                            "https://github.com/home-assistant/home-assistant/issues/27172 "
-                            "Unrecognized model number: %s",
-                            thermostat["name"],
-                            thermostat["modelNumber"],
-                        )
-                break
+            if sensor["name"] != self.sensor_name:
+                continue
+            if "code" in sensor:
+                identifier = sensor["code"]
+                model = "ecobee Room Sensor"
+            else:
+                thermostat = self.data.ecobee.get_thermostat(self.index)
+                identifier = thermostat["identifier"]
+                try:
+                    model = (
+                        f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]} Thermostat"
+                    )
+                except KeyError:
+                    _LOGGER.error(
+                        "Model number for ecobee thermostat %s not recognized. "
+                        "Please visit this link and provide the following information: "
+                        "https://github.com/home-assistant/home-assistant/issues/27172 "
+                        "Unrecognized model number: %s",
+                        thermostat["name"],
+                        thermostat["modelNumber"],
+                    )
+            break
 
         if identifier is not None and model is not None:
             return {
