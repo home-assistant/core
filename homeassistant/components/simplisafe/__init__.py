@@ -1,5 +1,4 @@
 """Support for SimpliSafe alarm systems."""
-import asyncio
 import logging
 from datetime import timedelta
 
@@ -25,6 +24,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import verify_domain_control
+from homeassistant.util.async_ import safe_wait
 
 from .config_flow import configured_instances
 from .const import DATA_CLIENT, DEFAULT_SCAN_INTERVAL, DOMAIN, TOPIC_UPDATE
@@ -237,6 +237,8 @@ class SimpliSafe:
 
     async def async_update(self):
         """Get updated data from SimpliSafe."""
-        tasks = [self._update_system(system) for system in self.systems.values()]
+        await safe_wait(
+            [self._update_system(system) for system in self.systems.values()],
+            logger=_LOGGER,
+        )
 
-        await asyncio.gather(*tasks)

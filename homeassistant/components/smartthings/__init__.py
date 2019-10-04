@@ -1,5 +1,4 @@
 """Support for SmartThings Cloud."""
-import asyncio
 import importlib
 import logging
 from typing import Iterable
@@ -19,6 +18,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.util.async_ import safe_wait
 
 from .config_flow import SmartThingsFlowHandler  # noqa
 from .const import (
@@ -127,7 +127,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
                 )
                 devices.remove(device)
 
-        await asyncio.gather(*(retrieve_device_status(d) for d in devices.copy()))
+        await safe_wait(
+            (retrieve_device_status(d) for d in devices.copy()), logger=_LOGGER
+        )
 
         # Sync device subscriptions
         await smartapp_sync_subscriptions(
@@ -201,7 +203,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
         hass.config_entries.async_forward_entry_unload(entry, component)
         for component in SUPPORTED_PLATFORMS
     ]
-    return all(await asyncio.gather(*tasks))
+    return all(await safe_wait(tasks, logger=_LOGGER))
 
 
 async def async_remove_entry(hass: HomeAssistantType, entry: ConfigEntry) -> None:
