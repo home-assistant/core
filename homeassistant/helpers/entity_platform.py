@@ -296,47 +296,48 @@ class EntityPlatform:
 
         suggested_object_id = None
 
+        if entity.entity_id is not None:
+            suggested_object_id = split_entity_id(entity.entity_id)[1]
+        else:
+            suggested_object_id = entity.name or DEVICE_DEFAULT_NAME
+
+        if self.entity_namespace is not None:
+            suggested_object_id = "{} {}".format(
+                self.entity_namespace, suggested_object_id
+            )
+
+        if self.config_entry is not None:
+            config_entry_id = self.config_entry.entry_id
+        else:
+            config_entry_id = None
+
+        device_info = entity.device_info
+        device_id = None
+
+        if config_entry_id is not None and device_info is not None:
+            processed_dev_info = {"config_entry_id": config_entry_id}
+            for key in (
+                "connections",
+                "identifiers",
+                "manufacturer",
+                "model",
+                "name",
+                "sw_version",
+                "via_device",
+            ):
+                if key in device_info:
+                    processed_dev_info[key] = device_info[key]
+
+            device = device_registry.async_get_or_create(**processed_dev_info)
+            if device:
+                device_id = device.id
+
+        disabled_by: Optional[str] = None
+        if not entity.entity_registry_enabled_default:
+            disabled_by = DISABLED_INTEGRATION
+
         # Get entity_id from unique ID registration
         if entity.unique_id is not None:
-            if entity.entity_id is not None:
-                suggested_object_id = split_entity_id(entity.entity_id)[1]
-            else:
-                suggested_object_id = entity.name
-
-            if self.entity_namespace is not None:
-                suggested_object_id = "{} {}".format(
-                    self.entity_namespace, suggested_object_id
-                )
-
-            if self.config_entry is not None:
-                config_entry_id = self.config_entry.entry_id
-            else:
-                config_entry_id = None
-
-            device_info = entity.device_info
-            device_id = None
-
-            if config_entry_id is not None and device_info is not None:
-                processed_dev_info = {"config_entry_id": config_entry_id}
-                for key in (
-                    "connections",
-                    "identifiers",
-                    "manufacturer",
-                    "model",
-                    "name",
-                    "sw_version",
-                    "via_device",
-                ):
-                    if key in device_info:
-                        processed_dev_info[key] = device_info[key]
-
-                device = device_registry.async_get_or_create(**processed_dev_info)
-                if device:
-                    device_id = device.id
-
-            disabled_by: Optional[str] = None
-            if not entity.entity_registry_enabled_default:
-                disabled_by = DISABLED_INTEGRATION
 
             entry = entity_registry.async_get_or_create(
                 self.domain,
@@ -367,19 +368,10 @@ class EntityPlatform:
             entity.entity_id
         ):
             # If entity already registered, convert entity id to suggestion
-            suggested_object_id = split_entity_id(entity.entity_id)[1]
             entity.entity_id = None
 
         # Generate entity ID
         if entity.entity_id is None:
-            suggested_object_id = (
-                suggested_object_id or entity.name or DEVICE_DEFAULT_NAME
-            )
-
-            if self.entity_namespace is not None:
-                suggested_object_id = "{} {}".format(
-                    self.entity_namespace, suggested_object_id
-                )
             entity.entity_id = entity_registry.async_generate_entity_id(
                 self.domain, suggested_object_id, self.entities.keys()
             )
