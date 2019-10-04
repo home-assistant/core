@@ -5,6 +5,10 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
     STATE_LOCKED,
     STATE_OFF,
     STATE_ON,
@@ -13,6 +17,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 import homeassistant.components.climate.const as climate
+from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
 from homeassistant.components import light, fan, cover
 import homeassistant.util.color as color_util
 import homeassistant.util.dt as dt_util
@@ -79,6 +84,11 @@ class AlexaCapibility:
         """Applicable only to scenes."""
         return None
 
+    @staticmethod
+    def configuration():
+        """Applicable only to security control panel."""
+        return []
+
     def serialize_discovery(self):
         """Serialize according to the Discovery API."""
         result = {
@@ -96,6 +106,11 @@ class AlexaCapibility:
         supports_deactivation = self.supports_deactivation()
         if supports_deactivation is not None:
             result["supportsDeactivation"] = supports_deactivation
+
+        configuration = self.configuration()
+        if configuration:
+            result["configuration"] = configuration
+
         return result
 
     def serialize_properties(self):
@@ -649,3 +664,55 @@ class AlexaPowerLevelController(AlexaCapibility):
             return PERCENTAGE_FAN_MAP.get(speed, None)
 
         return None
+
+
+class AlexaSecurityPanelController(AlexaCapibility):
+    """Implements Alexa.SecurityPanelController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-securitypanelcontroller.html
+    """
+
+    def __init__(self, hass, entity):
+        """Initialize the entity."""
+        super().__init__(entity)
+        self.hass = hass
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.SecurityPanelController"
+
+    def properties_supported(self):
+        """Return what properties this entity supports."""
+        return [{"name": "armState"}]
+
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
+    def properties_retrievable(self):
+        """Return True if properties can be retrieved."""
+        return True
+
+    def get_property(self, name):
+        """Read and return a property."""
+        if name != "armState":
+            raise UnsupportedProperty(name)
+
+        arm_state = self.entity.state
+        if arm_state == STATE_ALARM_ARMED_HOME:
+            return "ARMED_STAY"
+        if arm_state == STATE_ALARM_ARMED_AWAY:
+            return "ARMED_AWAY"
+        if arm_state == STATE_ALARM_ARMED_NIGHT:
+            return "ARMED_NIGHT"
+        if arm_state == STATE_ALARM_ARMED_CUSTOM_BYPASS:
+            return "ARMED_STAY"
+        return "DISARMED"
+
+    def configuration(self):
+        """Return supported authorization types."""
+        code_format = self.entity.attributes.get(ATTR_CODE_FORMAT)
+
+        if code_format == FORMAT_NUMBER:
+            return {"supportedAuthorizationTypes": [{"type": "FOUR_DIGIT_PIN"}]}
+        return []
