@@ -33,6 +33,15 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 VALID_STATES = {STATE_ON, STATE_OFF}
+
+ATTR_GROUP = [
+    ATTR_BRIGHTNESS,
+    ATTR_EFFECT,
+    ATTR_FLASH,
+    ATTR_WHITE_VALUE,
+    ATTR_TRANSITION,
+]
+
 COLOR_GROUP = [
     ATTR_COLOR_NAME,
     ATTR_COLOR_TEMP,
@@ -83,18 +92,13 @@ async def _async_reproduce_state(
 
     if state.state == STATE_ON:
         service = SERVICE_TURN_ON
-        if ATTR_BRIGHTNESS in state.attributes:
-            service_data[ATTR_BRIGHTNESS] = state.attributes[ATTR_BRIGHTNESS]
-        if ATTR_EFFECT in state.attributes:
-            service_data[ATTR_EFFECT] = state.attributes[ATTR_EFFECT]
-        if ATTR_FLASH in state.attributes:
-            service_data[ATTR_FLASH] = state.attributes[ATTR_FLASH]
-        if ATTR_TRANSITION in state.attributes:
-            service_data[ATTR_TRANSITION] = state.attributes[ATTR_TRANSITION]
-        if ATTR_WHITE_VALUE in state.attributes:
-            service_data[ATTR_WHITE_VALUE] = state.attributes[ATTR_WHITE_VALUE]
+        for attr in ATTR_GROUP:
+            # All attributes that are not colors
+            if attr in state.attributes:
+                service_data[attr] = state.attributes[attr]
 
         for color_attr in COLOR_GROUP:
+            # Choose the first color that is specified
             if color_attr in state.attributes:
                 service_data[color_attr] = state.attributes[color_attr]
                 break
