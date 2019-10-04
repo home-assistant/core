@@ -61,6 +61,7 @@ async def _async_reproduce_state(
         return
 
     # Return if we are already at the right state.
+    # pylint: disable=too-many-boolean-expressions
     if (
         cur_state.state == state.state
         and check_attr_equal(cur_state.attributes, state.attributes, ATTR_BRIGHTNESS)
