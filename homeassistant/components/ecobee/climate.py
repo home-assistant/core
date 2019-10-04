@@ -264,12 +264,7 @@ class Thermostat(ClimateDevice):
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
         self._name = self.thermostat["name"]
         self.vacation = None
-        self._last_active_hvac_mode = (
-            ECOBEE_HVAC_TO_HASS[self.thermostat["settings"]["hvacMode"]]
-            if ECOBEE_HVAC_TO_HASS[self.thermostat["settings"]["hvacMode"]]
-            is not HVAC_MODE_OFF
-            else HVAC_MODE_AUTO
-        )
+        self._last_active_hvac_mode = HVAC_MODE_AUTO
 
         self._operation_list = []
         if self.thermostat["settings"]["heatStages"]:
