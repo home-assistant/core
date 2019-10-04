@@ -8,6 +8,11 @@ from homeassistant.const import (
     STATE_UNLOCKED,
     STATE_UNKNOWN,
     STATE_UNAVAILABLE,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
 )
 from homeassistant.components.climate import const as climate
 from homeassistant.components.alexa import smart_home
@@ -527,3 +532,33 @@ async def test_temperature_sensor_climate(hass):
     properties.assert_equal(
         "Alexa.TemperatureSensor", "temperature", {"value": 34.0, "scale": "CELSIUS"}
     )
+
+
+async def test_report_alarm_control_panel_state(hass):
+    """Test SecurityPanelController implements armState property."""
+    hass.states.async_set("alarm_control_panel.armed_away", STATE_ALARM_ARMED_AWAY, {})
+    hass.states.async_set(
+        "alarm_control_panel.armed_custom_bypass", STATE_ALARM_ARMED_CUSTOM_BYPASS, {}
+    )
+    hass.states.async_set("alarm_control_panel.armed_home", STATE_ALARM_ARMED_HOME, {})
+    hass.states.async_set(
+        "alarm_control_panel.armed_night", STATE_ALARM_ARMED_NIGHT, {}
+    )
+    hass.states.async_set("alarm_control_panel.disarmed", STATE_ALARM_DISARMED, {})
+
+    properties = await reported_properties(hass, "alarm_control_panel.armed_away")
+    properties.assert_equal("Alexa.SecurityPanelController", "armState", "ARMED_AWAY")
+
+    properties = await reported_properties(
+        hass, "alarm_control_panel.armed_custom_bypass"
+    )
+    properties.assert_equal("Alexa.SecurityPanelController", "armState", "ARMED_STAY")
+
+    properties = await reported_properties(hass, "alarm_control_panel.armed_home")
+    properties.assert_equal("Alexa.SecurityPanelController", "armState", "ARMED_STAY")
+
+    properties = await reported_properties(hass, "alarm_control_panel.armed_night")
+    properties.assert_equal("Alexa.SecurityPanelController", "armState", "ARMED_NIGHT")
+
+    properties = await reported_properties(hass, "alarm_control_panel.disarmed")
+    properties.assert_equal("Alexa.SecurityPanelController", "armState", "DISARMED")

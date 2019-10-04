@@ -17,7 +17,7 @@ homeassistant/components/adguard/* @frenck
 homeassistant/components/airly/* @bieniu
 homeassistant/components/airvisual/* @bachya
 homeassistant/components/alarm_control_panel/* @colinodell
-homeassistant/components/alexa/* @home-assistant/cloud
+homeassistant/components/alexa/* @home-assistant/cloud @ochlocracy
 homeassistant/components/alpha_vantage/* @fabaff
 homeassistant/components/amazon_polly/* @robbiet480
 homeassistant/components/ambiclimate/* @danielhiversen
