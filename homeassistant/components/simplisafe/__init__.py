@@ -241,4 +241,3 @@ class SimpliSafe:
             [self._update_system(system) for system in self.systems.values()],
             logger=_LOGGER,
         )
-

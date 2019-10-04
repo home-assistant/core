@@ -1,5 +1,4 @@
 """Support to embed Plex."""
-import asyncio
 import logging
 
 import plexapi.exceptions

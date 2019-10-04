@@ -1,4 +1,5 @@
 """Denon HEOS Media Player."""
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Dict

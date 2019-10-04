@@ -93,7 +93,8 @@ async def _async_get_custom_components(
                 Integration.resolve_from_root, hass, custom_components, comp.name
             )
             for comp in dirs
-        ), logger=_LOGGER
+        ),
+        logger=_LOGGER,
     )
 
     return {

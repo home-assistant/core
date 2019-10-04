@@ -1,5 +1,4 @@
 """Support for restoring entity states on startup."""
-import asyncio
 import logging
 from datetime import timedelta, datetime
 from typing import Any, Dict, List, Set, Optional

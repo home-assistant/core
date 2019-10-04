@@ -1,6 +1,5 @@
 """Support for UV data from openuv.io."""
 import logging
-import asyncio
 
 import voluptuous as vol
 
