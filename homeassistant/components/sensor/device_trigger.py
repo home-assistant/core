@@ -121,7 +121,8 @@ async def async_get_triggers(hass, device_id):
         if not state or not unit_of_measurement:
             continue
 
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+        if ATTR_DEVICE_CLASS in state.attributes:
+            device_class = state.attributes[ATTR_DEVICE_CLASS]
 
         templates = ENTITY_TRIGGERS.get(
             device_class, ENTITY_TRIGGERS[DEVICE_CLASS_NONE]
