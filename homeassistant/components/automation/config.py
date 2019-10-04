@@ -18,33 +18,40 @@ from . import CONF_ACTION, CONF_CONDITION, CONF_TRIGGER, DOMAIN, PLATFORM_SCHEMA
 
 async def async_validate_config_item(hass, config, full_config=None):
     """Validate config item."""
-    try:
-        config = PLATFORM_SCHEMA(config)
+    config = PLATFORM_SCHEMA(config)
 
-        triggers = []
-        for trigger in config[CONF_TRIGGER]:
-            trigger_platform = importlib.import_module(
-                "..{}".format(trigger[CONF_PLATFORM]), __name__
+    triggers = []
+    for trigger in config[CONF_TRIGGER]:
+        trigger_platform = importlib.import_module(
+            "..{}".format(trigger[CONF_PLATFORM]), __name__
+        )
+        if hasattr(trigger_platform, "async_validate_trigger_config"):
+            trigger = await trigger_platform.async_validate_trigger_config(
+                hass, trigger
             )
-            if hasattr(trigger_platform, "async_validate_trigger_config"):
-                trigger = await trigger_platform.async_validate_trigger_config(
-                    hass, trigger
-                )
-            triggers.append(trigger)
-        config[CONF_TRIGGER] = triggers
+        triggers.append(trigger)
+    config[CONF_TRIGGER] = triggers
 
-        if CONF_CONDITION in config:
-            conditions = []
-            for cond in config[CONF_CONDITION]:
-                cond = await condition.async_validate_condition_config(hass, cond)
-                conditions.append(cond)
-            config[CONF_CONDITION] = conditions
+    if CONF_CONDITION in config:
+        conditions = []
+        for cond in config[CONF_CONDITION]:
+            cond = await condition.async_validate_condition_config(hass, cond)
+            conditions.append(cond)
+        config[CONF_CONDITION] = conditions
 
-        actions = []
-        for action in config[CONF_ACTION]:
-            action = await script.async_validate_action_config(hass, action)
-            actions.append(action)
-        config[CONF_ACTION] = actions
+    actions = []
+    for action in config[CONF_ACTION]:
+        action = await script.async_validate_action_config(hass, action)
+        actions.append(action)
+    config[CONF_ACTION] = actions
+
+    return config
+
+
+async def _try_async_validate_config_item(hass, config, full_config=None):
+    """Validate config item."""
+    try:
+        config = await async_validate_config_item(hass, config, full_config)
     except (vol.Invalid, HomeAssistantError, IntegrationNotFound) as ex:
         async_log_exception(ex, DOMAIN, full_config or config, hass)
         return None
@@ -57,7 +64,7 @@ async def async_validate_config(hass, config):
     automations = []
     validated_automations = await asyncio.gather(
         *(
-            async_validate_config_item(hass, p_config, config)
+            _try_async_validate_config_item(hass, p_config, config)
             for _, p_config in config_per_platform(config, DOMAIN)
         )
     )
