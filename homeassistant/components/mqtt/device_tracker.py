@@ -5,9 +5,9 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
-from homeassistant.const import CONF_DEVICES
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_DEVICES, STATE_NOT_HOME, STATE_HOME
 
 from . import CONF_QOS
 
@@ -17,8 +17,8 @@ CONF_PAYLOAD_CUSTOM = "payload_custom"
 CONF_PAYLOAD_HOME = "payload_home"
 CONF_PAYLOAD_NOT_HOME = "payload_not_home"
 
-DEFAULT_PAYLOAD_HOME = "home"
-DEFAULT_PAYLOAD_NOT_HOME = "not_home"
+DEFAULT_PAYLOAD_HOME = STATE_HOME
+DEFAULT_PAYLOAD_NOT_HOME = STATE_NOT_HOME
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend(
     {
