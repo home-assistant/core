@@ -129,6 +129,16 @@ class WaqiSensor(Entity):
         return None
 
     @property
+    def available(self):
+        """Return sensor availability."""
+        return self._data is not None
+
+    @property
+    def unique_id(self):
+        """Return unique ID."""
+        return self.uid
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return "AQI"
