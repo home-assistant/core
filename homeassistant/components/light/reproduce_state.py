@@ -17,15 +17,10 @@ from homeassistant.helpers.typing import HomeAssistantType
 from . import (
     DOMAIN,
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_NAME,
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
-    ATTR_FLASH,
     ATTR_HS_COLOR,
-    ATTR_KELVIN,
-    ATTR_PROFILE,
     ATTR_RGB_COLOR,
-    ATTR_TRANSITION,
     ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
 )
@@ -33,24 +28,8 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 VALID_STATES = {STATE_ON, STATE_OFF}
-
-ATTR_GROUP = [
-    ATTR_BRIGHTNESS,
-    ATTR_EFFECT,
-    ATTR_FLASH,
-    ATTR_WHITE_VALUE,
-    ATTR_TRANSITION,
-]
-
-COLOR_GROUP = [
-    ATTR_COLOR_NAME,
-    ATTR_COLOR_TEMP,
-    ATTR_HS_COLOR,
-    ATTR_KELVIN,
-    ATTR_PROFILE,
-    ATTR_RGB_COLOR,
-    ATTR_XY_COLOR,
-]
+ATTR_GROUP = [ATTR_BRIGHTNESS, ATTR_EFFECT, ATTR_WHITE_VALUE]
+COLOR_GROUP = [ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_RGB_COLOR, ATTR_XY_COLOR]
 
 
 async def _async_reproduce_state(

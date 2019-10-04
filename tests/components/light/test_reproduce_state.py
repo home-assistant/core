@@ -5,14 +5,9 @@ from tests.common import async_mock_service
 
 VALID_BRIGHTNESS = {"brightness": 180}
 VALID_WHITE_VALUE = {"white_value": 200}
-VALID_FLASH = {"flash": "short"}
 VALID_EFFECT = {"effect": "random"}
-VALID_TRANSITION = {"transition": 15}
-VALID_COLOR_NAME = {"color_name": "red"}
 VALID_COLOR_TEMP = {"color_temp": 240}
 VALID_HS_COLOR = {"hs_color": (345, 75)}
-VALID_KELVIN = {"kelvin": 4000}
-VALID_PROFILE = {"profile": "relax"}
 VALID_RGB_COLOR = {"rgb_color": (255, 63, 111)}
 VALID_XY_COLOR = {"xy_color": (0.59, 0.274)}
 
@@ -22,14 +17,9 @@ async def test_reproducing_states(hass, caplog):
     hass.states.async_set("light.entity_off", "off", {})
     hass.states.async_set("light.entity_bright", "on", VALID_BRIGHTNESS)
     hass.states.async_set("light.entity_white", "on", VALID_WHITE_VALUE)
-    hass.states.async_set("light.entity_flash", "on", VALID_FLASH)
     hass.states.async_set("light.entity_effect", "on", VALID_EFFECT)
-    hass.states.async_set("light.entity_trans", "on", VALID_TRANSITION)
-    hass.states.async_set("light.entity_name", "on", VALID_COLOR_NAME)
     hass.states.async_set("light.entity_temp", "on", VALID_COLOR_TEMP)
     hass.states.async_set("light.entity_hs", "on", VALID_HS_COLOR)
-    hass.states.async_set("light.entity_kelvin", "on", VALID_KELVIN)
-    hass.states.async_set("light.entity_profile", "on", VALID_PROFILE)
     hass.states.async_set("light.entity_rgb", "on", VALID_RGB_COLOR)
     hass.states.async_set("light.entity_xy", "on", VALID_XY_COLOR)
 
@@ -42,14 +32,9 @@ async def test_reproducing_states(hass, caplog):
             State("light.entity_off", "off"),
             State("light.entity_bright", "on", VALID_BRIGHTNESS),
             State("light.entity_white", "on", VALID_WHITE_VALUE),
-            State("light.entity_flash", "on", VALID_FLASH),
             State("light.entity_effect", "on", VALID_EFFECT),
-            State("light.entity_trans", "on", VALID_TRANSITION),
-            State("light.entity_name", "on", VALID_COLOR_NAME),
             State("light.entity_temp", "on", VALID_COLOR_TEMP),
             State("light.entity_hs", "on", VALID_HS_COLOR),
-            State("light.entity_kelvin", "on", VALID_KELVIN),
-            State("light.entity_profile", "on", VALID_PROFILE),
             State("light.entity_rgb", "on", VALID_RGB_COLOR),
             State("light.entity_xy", "on", VALID_XY_COLOR),
         ],
@@ -74,21 +59,16 @@ async def test_reproducing_states(hass, caplog):
             State("light.entity_xy", "off"),
             State("light.entity_off", "on", VALID_BRIGHTNESS),
             State("light.entity_bright", "on", VALID_WHITE_VALUE),
-            State("light.entity_white", "on", VALID_FLASH),
-            State("light.entity_flash", "on", VALID_EFFECT),
-            State("light.entity_effect", "on", VALID_TRANSITION),
-            State("light.entity_trans", "on", VALID_COLOR_NAME),
-            State("light.entity_name", "on", VALID_COLOR_TEMP),
+            State("light.entity_white", "on", VALID_EFFECT),
+            State("light.entity_effect", "on", VALID_COLOR_TEMP),
             State("light.entity_temp", "on", VALID_HS_COLOR),
-            State("light.entity_hs", "on", VALID_KELVIN),
-            State("light.entity_kelvin", "on", VALID_PROFILE),
-            State("light.entity_profile", "on", VALID_RGB_COLOR),
+            State("light.entity_hs", "on", VALID_RGB_COLOR),
             State("light.entity_rgb", "on", VALID_XY_COLOR),
         ],
         blocking=True,
     )
 
-    assert len(turn_on_calls) == 12
+    assert len(turn_on_calls) == 7
 
     expected_calls = []
 
@@ -100,41 +80,21 @@ async def test_reproducing_states(hass, caplog):
     expected_bright["entity_id"] = "light.entity_bright"
     expected_calls.append(expected_bright)
 
-    expected_white = VALID_FLASH
+    expected_white = VALID_EFFECT
     expected_white["entity_id"] = "light.entity_white"
     expected_calls.append(expected_white)
 
-    expected_flash = VALID_EFFECT
-    expected_flash["entity_id"] = "light.entity_flash"
-    expected_calls.append(expected_flash)
-
-    expected_effect = VALID_TRANSITION
+    expected_effect = VALID_COLOR_TEMP
     expected_effect["entity_id"] = "light.entity_effect"
     expected_calls.append(expected_effect)
-
-    expected_trans = VALID_COLOR_NAME
-    expected_trans["entity_id"] = "light.entity_trans"
-    expected_calls.append(expected_trans)
-
-    expected_name = VALID_COLOR_TEMP
-    expected_name["entity_id"] = "light.entity_name"
-    expected_calls.append(expected_name)
 
     expected_temp = VALID_HS_COLOR
     expected_temp["entity_id"] = "light.entity_temp"
     expected_calls.append(expected_temp)
 
-    expected_hs = VALID_KELVIN
+    expected_hs = VALID_RGB_COLOR
     expected_hs["entity_id"] = "light.entity_hs"
     expected_calls.append(expected_hs)
-
-    expected_kelvin = VALID_PROFILE
-    expected_kelvin["entity_id"] = "light.entity_kelvin"
-    expected_calls.append(expected_kelvin)
-
-    expected_profile = VALID_RGB_COLOR
-    expected_profile["entity_id"] = "light.entity_profile"
-    expected_calls.append(expected_profile)
 
     expected_rgb = VALID_XY_COLOR
     expected_rgb["entity_id"] = "light.entity_rgb"
