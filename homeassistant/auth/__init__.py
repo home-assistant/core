@@ -46,7 +46,7 @@ async def auth_manager_from_config(
             )
         )
     else:
-        providers = ()
+        providers = []
     # So returned auth providers are in same order as config
     provider_hash: _ProviderDict = OrderedDict()
     for provider in providers:
@@ -58,7 +58,7 @@ async def auth_manager_from_config(
             (auth_mfa_module_from_config(hass, config) for config in module_configs)
         )
     else:
-        modules = ()
+        modules = []
     # So returned auth modules are in same order as config
     module_hash: _MfaModuleDict = OrderedDict()
     for module in modules:
