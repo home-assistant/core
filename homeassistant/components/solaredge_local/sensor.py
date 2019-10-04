@@ -117,7 +117,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # Changing inverter temperature unit.
     sensors = deepcopy(SENSOR_TYPES)
     if status.inverters.primary.temperature.units.farenheit:
-        NEW_SENSORS["inverter_temperature"] = [
+        sensors["inverter_temperature"] = [
             "invertertemperature",
             "Inverter Temperature",
             TEMP_FAHRENHEIT,
