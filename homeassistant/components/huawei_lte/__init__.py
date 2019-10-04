@@ -12,6 +12,7 @@ import attr
 from getmac import get_mac_address
 from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
 from huawei_lte_api.Client import Client
+from huawei_lte_api.Connection import Connection
 from huawei_lte_api.exceptions import (
     ResponseErrorLoginRequiredException,
     ResponseErrorNotSupportedException,
@@ -77,8 +78,8 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Schema(
                     {
                         vol.Required(CONF_URL): cv.url,
-                        vol.Required(CONF_USERNAME): cv.string,
-                        vol.Required(CONF_PASSWORD): cv.string,
+                        vol.Optional(CONF_USERNAME): cv.string,
+                        vol.Optional(CONF_PASSWORD): cv.string,
                         vol.Optional(NOTIFY_DOMAIN): NOTIFY_SCHEMA,
                     }
                 )
@@ -94,7 +95,7 @@ class Router:
     """Class for router state."""
 
     hass: HomeAssistantType = attr.ib()
-    client: Client = attr.ib()
+    connection: Connection = attr.ib()
     url: str = attr.ib()
     mac: str = attr.ib()
 
@@ -102,6 +103,10 @@ class Router:
     subscriptions: Dict[str, Set[str]] = attr.ib(
         init=False, default=defaultdict(set, ((x, {"init"}) for x in ALL_KEYS))
     )
+
+    def __attrs_post_init__(self):
+        """Set up internal state on init."""
+        self.client = Client(self.connection)
 
     @property
     def device_name(self) -> str:
@@ -130,8 +135,13 @@ class Router:
                     "%s not supported by device, excluding from future updates", key
                 )
                 self.subscriptions.pop(key)
+            except ResponseErrorLoginRequiredException:
+                _LOGGER.info(
+                    "%s requires authorization, excluding from future updates", key
+                )
+                self.subscriptions.pop(key)
             finally:
-                _LOGGER.debug("%s=%s", key, self.data[key])
+                _LOGGER.debug("%s=%s", key, self.data.get(key))
 
         get_data(KEY_DEVICE_INFORMATION, self.client.device.information)
         if self.data.get(KEY_DEVICE_INFORMATION):
@@ -148,6 +158,8 @@ class Router:
 
     def cleanup(self, *_) -> None:
         """Clean up resources."""
+        if not isinstance(self.connection, AuthorizedConnection):
+            return
         try:
             self.client.user.logout()
         except ResponseErrorNotSupportedException:
@@ -200,8 +212,8 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
                 context={"source": SOURCE_IMPORT},
                 data={
                     CONF_URL: url,
-                    CONF_USERNAME: router_config[CONF_USERNAME],
-                    CONF_PASSWORD: router_config[CONF_PASSWORD],
+                    CONF_USERNAME: router_config.get(CONF_USERNAME),
+                    CONF_PASSWORD: router_config.get(CONF_PASSWORD),
                 },
             )
         )
@@ -220,10 +232,11 @@ def _setup_lte(hass: HomeAssistantType, config_entry: ConfigEntry) -> None:
         # Config values
         new_data = {}
         for key in CONF_USERNAME, CONF_PASSWORD:
-            value = yaml_config[key]
-            if value != config_entry.data.get(f"{key}_from_yaml"):
-                new_data[f"{key}_from_yaml"] = value
-                new_data[key] = value
+            if key in yaml_config:
+                value = yaml_config[key]
+                if value != config_entry.data.get(f"{key}_from_yaml"):
+                    new_data[f"{key}_from_yaml"] = value
+                    new_data[key] = value
         # Options
         new_options = {}
         yaml_recipient = yaml_config.get(NOTIFY_DOMAIN, {}).get(CONF_RECIPIENT)
@@ -254,12 +267,16 @@ def _setup_lte(hass: HomeAssistantType, config_entry: ConfigEntry) -> None:
         mode = "hostname"
     mac = get_mac_address(**{mode: host})
 
-    username = config_entry.data[CONF_USERNAME]
-    password = config_entry.data[CONF_PASSWORD]
-    connection = AuthorizedConnection(url, username=username, password=password)
+    # Set up a connection: authorized one if username/pass specified (even if empty), unauthorized one otherwise
+    username = config_entry.data.get(CONF_USERNAME)
+    password = config_entry.data.get(CONF_PASSWORD)
+    if username or password:
+        connection = AuthorizedConnection(url, username=username, password=password)
+    else:
+        connection = Connection(url)
 
     # Set up router and store reference to it
-    router = Router(hass, Client(connection), url, mac)
+    router = Router(hass, connection, url, mac)
     hass.data[DOMAIN].routers[url] = router
 
     # Do initial data update

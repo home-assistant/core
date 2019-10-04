@@ -53,13 +53,13 @@ class ConfigFlowHandler(config_entries.ConfigFlow):
                             str,
                         ),
                         (
-                            vol.Required(
+                            vol.Optional(
                                 CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
                             ),
                             str,
                         ),
                         (
-                            vol.Required(
+                            vol.Optional(
                                 CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
                             ),
                             str,
