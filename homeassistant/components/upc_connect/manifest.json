@@ -2,7 +2,7 @@
   "domain": "upc_connect",
   "name": "Upc connect",
   "documentation": "https://www.home-assistant.io/integrations/upc_connect",
-  "requirements": ["connect-box==0.2.4"],
+  "requirements": ["connect-box==0.2.5"],
   "dependencies": [],
   "codeowners": ["@pvizeli"]
 }
