@@ -24,7 +24,7 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if info:
             name = info[CONF_NAME]
             device = info[CONF_DEVICE]
-            gw_id = info.get(CONF_ID, cv.slugify(name))
+            gw_id = cv.slugify(info.get(CONF_ID, name))
 
             entries = [e.data for e in self.hass.config_entries.async_entries(DOMAIN)]
 
