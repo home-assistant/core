@@ -454,6 +454,8 @@ class EvoChild(EvoDevice):
             self._evo_device.schedule(), refresh=False
         )
 
+        _LOGGER.debug("Schedule['%s'] = %s", self.name, self._schedule)
+
     async def async_update(self) -> None:
         """Get the latest state data."""
         next_sp_from = self._setpoints.get("next_sp_from", "2000-01-01T00:00:00+00:00")

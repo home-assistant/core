@@ -1306,3 +1306,127 @@ async def test_endpoint_bad_health(hass):
     properties.assert_equal(
         "Alexa.EndpointHealth", "connectivity", {"value": "UNREACHABLE"}
     )
+
+
+async def test_alarm_control_panel_disarmed(hass):
+    """Test alarm_control_panel discovery."""
+    device = (
+        "alarm_control_panel.test_1",
+        "disarmed",
+        {
+            "friendly_name": "Test Alarm Control Panel 1",
+            "code_arm_required": False,
+            "code_format": "number",
+            "code": "1234",
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "alarm_control_panel#test_1"
+    assert appliance["displayCategories"][0] == "SECURITY_PANEL"
+    assert appliance["friendlyName"] == "Test Alarm Control Panel 1"
+    capabilities = assert_endpoint_capabilities(
+        appliance, "Alexa.SecurityPanelController", "Alexa.EndpointHealth"
+    )
+    security_panel_capability = get_capability(
+        capabilities, "Alexa.SecurityPanelController"
+    )
+    assert security_panel_capability is not None
+    configuration = security_panel_capability["configuration"]
+    assert {"type": "FOUR_DIGIT_PIN"} in configuration["supportedAuthorizationTypes"]
+
+    properties = await reported_properties(hass, "alarm_control_panel#test_1")
+    properties.assert_equal("Alexa.SecurityPanelController", "armState", "DISARMED")
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.SecurityPanelController",
+        "Arm",
+        "alarm_control_panel#test_1",
+        "alarm_control_panel.alarm_arm_home",
+        hass,
+        response_type="Arm.Response",
+        payload={"armState": "ARMED_STAY"},
+    )
+    properties = ReportedProperties(msg["context"]["properties"])
+    properties.assert_equal("Alexa.SecurityPanelController", "armState", "ARMED_STAY")
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.SecurityPanelController",
+        "Arm",
+        "alarm_control_panel#test_1",
+        "alarm_control_panel.alarm_arm_away",
+        hass,
+        response_type="Arm.Response",
+        payload={"armState": "ARMED_AWAY"},
+    )
+    properties = ReportedProperties(msg["context"]["properties"])
+    properties.assert_equal("Alexa.SecurityPanelController", "armState", "ARMED_AWAY")
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.SecurityPanelController",
+        "Arm",
+        "alarm_control_panel#test_1",
+        "alarm_control_panel.alarm_arm_night",
+        hass,
+        response_type="Arm.Response",
+        payload={"armState": "ARMED_NIGHT"},
+    )
+    properties = ReportedProperties(msg["context"]["properties"])
+    properties.assert_equal("Alexa.SecurityPanelController", "armState", "ARMED_NIGHT")
+
+
+async def test_alarm_control_panel_armed(hass):
+    """Test alarm_control_panel discovery."""
+    device = (
+        "alarm_control_panel.test_2",
+        "armed_away",
+        {
+            "friendly_name": "Test Alarm Control Panel 2",
+            "code_arm_required": False,
+            "code_format": "FORMAT_NUMBER",
+            "code": "1234",
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "alarm_control_panel#test_2"
+    assert appliance["displayCategories"][0] == "SECURITY_PANEL"
+    assert appliance["friendlyName"] == "Test Alarm Control Panel 2"
+    assert_endpoint_capabilities(
+        appliance, "Alexa.SecurityPanelController", "Alexa.EndpointHealth"
+    )
+
+    properties = await reported_properties(hass, "alarm_control_panel#test_2")
+    properties.assert_equal("Alexa.SecurityPanelController", "armState", "ARMED_AWAY")
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.SecurityPanelController",
+        "Disarm",
+        "alarm_control_panel#test_2",
+        "alarm_control_panel.alarm_disarm",
+        hass,
+        payload={"authorization": {"type": "FOUR_DIGIT_PIN", "value": "1234"}},
+    )
+    assert call.data["code"] == "1234"
+    properties = ReportedProperties(msg["context"]["properties"])
+    properties.assert_equal("Alexa.SecurityPanelController", "armState", "DISARMED")
+
+    msg = await assert_request_fails(
+        "Alexa.SecurityPanelController",
+        "Arm",
+        "alarm_control_panel#test_2",
+        "alarm_control_panel.alarm_arm_home",
+        hass,
+        payload={"armState": "ARMED_STAY"},
+    )
+    assert msg["event"]["payload"]["type"] == "AUTHORIZATION_REQUIRED"
+
+
+async def test_alarm_control_panel_code_arm_required(hass):
+    """Test alarm_control_panel with code_arm_required discovery."""
+    device = (
+        "alarm_control_panel.test_3",
+        "disarmed",
+        {"friendly_name": "Test Alarm Control Panel 3", "code_arm_required": True},
+    )
+    await discovery_test(device, hass, expected_endpoints=0)
