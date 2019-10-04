@@ -40,12 +40,14 @@ turn_on:
       description: Name of a light profile to use.
       example: relax
     flash:
-      description: If the light should flash.
+      description: If the light should flash. Valid values are short and long.
+      example: short
       values:
         - short
         - long
     effect:
       description: Light effect.
+      example: random
       values:
         - colorloop
         - random
@@ -60,7 +62,8 @@ turn_off:
       description: Duration in seconds it takes to get to next state.
       example: 60
     flash:
-      description: If the light should flash.
+      description: If the light should flash. Valid values are short and long.
+      example: short
       values:
         - short
         - long
@@ -105,12 +108,14 @@ toggle:
       description: Name of a light profile to use.
       example: relax
     flash:
-      description: If the light should flash.
+      description: If the light should flash. Valid values are short and long.
+      example: short
       values:
         - short
         - long
     effect:
       description: Light effect.
+      example: random
       values:
         - colorloop
         - random
