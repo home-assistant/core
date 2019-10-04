@@ -92,7 +92,7 @@ async def safe_wait(
     results: List[Any] = []
     raise_exception: Optional[BaseException] = None
     for task in finished_tasks:
-        if not task.done():
+        if task.cancelled():
             results.append(None)
         elif task.exception():
             if logger:
