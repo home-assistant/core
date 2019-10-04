@@ -31,3 +31,6 @@ GET = 'GET'
 POST = 'POST'
 CONNECT_TIMEOUT = 5  # in seconds
 TOTAL_TIMEOUT = 120  # in seconds
+
+DEVICE_FUNCTION_POSITION = "position"
+DEVICE_FUNCTION_STATE = "state"

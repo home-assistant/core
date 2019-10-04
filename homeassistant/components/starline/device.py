@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 from .const import (DOMAIN, BATTERY_LEVEL_MIN, BATTERY_LEVEL_MAX,
-                    GSM_LEVEL_MIN, GSM_LEVEL_MAX)
+                    GSM_LEVEL_MIN, GSM_LEVEL_MAX,
+                    DEVICE_FUNCTION_POSITION, DEVICE_FUNCTION_STATE)
 
 
 class StarlineDevice():
@@ -53,6 +54,14 @@ class StarlineDevice():
         for key in car_state:
             if key in self._car_state:
                 self._car_state[key] = car_state[key] in ["1", "true", True]
+
+    @property
+    def support_position(self):
+        return DEVICE_FUNCTION_POSITION in self._functions
+
+    @property
+    def support_state(self):
+        return DEVICE_FUNCTION_STATE in self._functions
 
     @property
     def device_id(self):

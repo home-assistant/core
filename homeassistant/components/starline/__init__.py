@@ -47,14 +47,14 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     for domain in PLATFORMS:
         await hass.config_entries.async_forward_entry_unload(config_entry, domain)
 
-    api = hass.data[DOMAIN]
+    api: StarlineApi = hass.data[DOMAIN]
     api.unload()
     return True
 
 
 async def async_options_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Triggered by config entry options updates."""
-    api = hass.data[DOMAIN]
+    api: StarlineApi = hass.data[DOMAIN]
     update_timeout = config_entry.options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
     const.LOGGER.warning("async_options_updated %s", update_timeout)
     api.set_update_interval(hass, update_timeout)

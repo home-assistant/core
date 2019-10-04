@@ -12,13 +12,12 @@ SWITCH_TYPES = {
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the StarLine switch."""
-
-    api = hass.data[DOMAIN]
+    api: StarlineApi = hass.data[DOMAIN]
     entities = []
     for device_id, device in api.devices.items():
-        for key, value in SWITCH_TYPES.items():
-            # TODO: check functions array
-            entities.append(StarlineSwitch(api, device, key, *value))
+        if device.support_state:
+            for key, value in SWITCH_TYPES.items():
+                entities.append(StarlineSwitch(api, device, key, *value))
     async_add_entities(entities)
     return True
 

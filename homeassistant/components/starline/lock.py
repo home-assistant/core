@@ -7,11 +7,11 @@ from .const import DOMAIN
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the StarLine lock."""
 
-    api = hass.data[DOMAIN]
+    api: StarlineApi = hass.data[DOMAIN]
     entities = []
     for device_id, device in api.devices.items():
-        # TODO: check functions array
-        entities.append(StarlineLock(api, device))
+        if device.support_state:
+            entities.append(StarlineLock(api, device))
     async_add_entities(entities)
     return True
 
