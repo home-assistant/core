@@ -28,6 +28,8 @@ VERA_CONTROLLER = "vera_controller"
 
 CONF_CONTROLLER = "vera_controller_url"
 
+CONF_EXCLUDE_SCENES = "exclude_scenes"
+
 VERA_ID_FORMAT = "{}_{}"
 
 ATTR_CURRENT_POWER_W = "current_power_w"
@@ -44,6 +46,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_CONTROLLER): cv.url,
                 vol.Optional(CONF_EXCLUDE, default=[]): VERA_ID_LIST_SCHEMA,
+                vol.Optional(CONF_EXCLUDE_SCENES, default=[]): VERA_ID_LIST_SCHEMA,
                 vol.Optional(CONF_LIGHTS, default=[]): VERA_ID_LIST_SCHEMA,
             }
         )
@@ -78,6 +81,7 @@ def setup(hass, base_config):
     base_url = config.get(CONF_CONTROLLER)
     light_ids = config.get(CONF_LIGHTS)
     exclude_ids = config.get(CONF_EXCLUDE)
+    exclude_scene_ids = config.get(CONF_EXCLUDE_SCENES)
 
     # Initialize the Vera controller.
     controller, _ = veraApi.init_controller(base_url)
@@ -105,8 +109,11 @@ def setup(hass, base_config):
         vera_devices[device_type].append(device)
     hass.data[VERA_DEVICES] = vera_devices
 
+    # Exclude scenes unwanted by user.
+    scenes = [scene for scene in all_scenes if scene.scene_id not in exclude_scene_ids]
+
     vera_scenes = []
-    for scene in all_scenes:
+    for scene in scenes:
         vera_scenes.append(scene)
     hass.data[VERA_SCENES] = vera_scenes
 
