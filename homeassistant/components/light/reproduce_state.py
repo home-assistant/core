@@ -70,21 +70,9 @@ async def _async_reproduce_state(
         return
 
     # Return if we are already at the right state.
-    # pylint: disable=too-many-boolean-expressions
-    if (
-        cur_state.state == state.state
-        and check_attr_equal(cur_state.attributes, state.attributes, ATTR_BRIGHTNESS)
-        and check_attr_equal(cur_state.attributes, state.attributes, ATTR_COLOR_NAME)
-        and check_attr_equal(cur_state.attributes, state.attributes, ATTR_COLOR_TEMP)
-        and check_attr_equal(cur_state.attributes, state.attributes, ATTR_EFFECT)
-        and check_attr_equal(cur_state.attributes, state.attributes, ATTR_FLASH)
-        and check_attr_equal(cur_state.attributes, state.attributes, ATTR_HS_COLOR)
-        and check_attr_equal(cur_state.attributes, state.attributes, ATTR_KELVIN)
-        and check_attr_equal(cur_state.attributes, state.attributes, ATTR_PROFILE)
-        and check_attr_equal(cur_state.attributes, state.attributes, ATTR_RGB_COLOR)
-        and check_attr_equal(cur_state.attributes, state.attributes, ATTR_TRANSITION)
-        and check_attr_equal(cur_state.attributes, state.attributes, ATTR_WHITE_VALUE)
-        and check_attr_equal(cur_state.attributes, state.attributes, ATTR_XY_COLOR)
+    if cur_state.state == state.state and all(
+        check_attr_equal(cur_state.attributes, state.attributes, attr)
+        for attr in ATTR_GROUP + COLOR_GROUP
     ):
         return
 
