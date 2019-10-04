@@ -2,6 +2,7 @@
 import logging
 from datetime import timedelta
 import statistics
+from copy import deepcopy
 
 from requests.exceptions import HTTPError, ConnectTimeout
 from solaredge_local import SolarEdge
@@ -113,6 +114,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Could not retrieve details from SolarEdge API")
         return
 
+    # Changing inverter temperature unit
+    SENSORS = deepcopy(SENSOR_TYPES)
     if status.inverters.primary.temperature.units.farenheit:
         SENSOR_TYPES["inverter_temperature"] = [
             "invertertemperature",
@@ -126,8 +129,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Create a new sensor for each sensor type.
     entities = []
-    for sensor_key in SENSOR_TYPES:
-        sensor = SolarEdgeSensor(platform_name, sensor_key, data)
+    for sensor_key in SENSORS:
+        sensor = SolarEdgeSensor(
+            platform_name,
+            sensor_key,
+            data,
+            SENSORS[sensor_key][0],
+            SENSORS[sensor_key][1],
+            SENSORS[sensor_key][2],
+            SENSORS[sensor_key][3],
+        )
         entities.append(sensor)
 
     add_entities(entities, True)
@@ -136,20 +147,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SolarEdgeSensor(Entity):
     """Representation of an SolarEdge Monitoring API sensor."""
 
-    def __init__(self, platform_name, sensor_key, data):
+    def __init__(self, platform_name, sensor_key, data, json_key, name, unit, icon):
         """Initialize the sensor."""
-        self.platform_name = platform_name
-        self.sensor_key = sensor_key
+        self._platform_name = platform_name
+        self._sensor_key = sensor_key
         self.data = data
         self._state = None
 
-        self._json_key = SENSOR_TYPES[self.sensor_key][0]
-        self._unit_of_measurement = SENSOR_TYPES[self.sensor_key][2]
+        self._json_key = json_key
+        self._name = name
+        self._unit_of_measurement = unit
+        self._icon = icon
 
     @property
     def name(self):
         """Return the name."""
-        return f"{self.platform_name} ({SENSOR_TYPES[self.sensor_key][1]})"
+        return f"{self._platform_name} ({self._name})"
 
     @property
     def unit_of_measurement(self):
@@ -159,7 +172,7 @@ class SolarEdgeSensor(Entity):
     @property
     def icon(self):
         """Return the sensor icon."""
-        return SENSOR_TYPES[self.sensor_key][3]
+        return self._icon
 
     @property
     def state(self):
