@@ -6,20 +6,11 @@ import pyotgw
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_ID,
-    CONF_NAME,
-    PRECISION_HALVES,
-    PRECISION_TENTHS,
-    PRECISION_WHOLE,
-)
+from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_NAME
 
 import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN
-from .const import CONF_FLOOR_TEMP, CONF_PRECISION
 
 
 class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -34,19 +25,13 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             name = info[CONF_NAME]
             device = info[CONF_DEVICE]
             gw_id = info.get(CONF_ID, cv.slugify(name))
-            precision = info.get(CONF_PRECISION)
-            floor_temp = info[CONF_FLOOR_TEMP]
 
-            entries = {
-                k: v
-                for e in self.hass.config_entries.async_entries(DOMAIN)
-                for k, v in e.data.items()
-            }
+            entries = [e.data for e in self.hass.config_entries.async_entries(DOMAIN)]
 
-            if gw_id in entries:
+            if gw_id in [e[CONF_ID] for e in entries]:
                 return self._show_form({"base": "id_exists"})
 
-            if device in [e[CONF_DEVICE] for e in entries.values()]:
+            if device in [e[CONF_DEVICE] for e in entries]:
                 return self._show_form({"base": "already_configured"})
 
             async def test_connection():
@@ -64,7 +49,7 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self._show_form({"base": "serial_error"})
 
             if res:
-                return self._create_entry(gw_id, name, device, precision, floor_temp)
+                return self._create_entry(gw_id, name, device)
 
         return self._show_form()
 
@@ -78,13 +63,10 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         This flow is triggered by `async_setup` for configured devices.
         """
-        climate_config = import_config.get(CLIMATE_DOMAIN, {})
         formatted_config = {
             CONF_NAME: import_config.get(CONF_NAME, import_config[CONF_ID]),
             CONF_DEVICE: import_config[CONF_DEVICE],
             CONF_ID: import_config[CONF_ID],
-            CONF_PRECISION: climate_config.get(CONF_PRECISION),
-            CONF_FLOOR_TEMP: climate_config.get(CONF_FLOOR_TEMP, False),
         }
         return await self.async_step_init(info=formatted_config)
 
@@ -97,28 +79,13 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_NAME): str,
                     vol.Required(CONF_DEVICE): str,
                     vol.Optional(CONF_ID): str,
-                    vol.Optional(CONF_PRECISION): vol.All(
-                        vol.Coerce(float),
-                        vol.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
-                    ),
-                    vol.Optional(CONF_FLOOR_TEMP, default=False): bool,
                 }
             ),
-            errors=errors,
+            errors=errors or {},
         )
 
-    def _create_entry(self, gw_id, name, device, precision, floor_temp):
+    def _create_entry(self, gw_id, name, device):
         """Create entry for the OpenTherm Gateway device."""
         return self.async_create_entry(
-            title="OpenTherm Gateway",
-            data={
-                gw_id: {
-                    CONF_DEVICE: device,
-                    CONF_NAME: name,
-                    CLIMATE_DOMAIN: {
-                        CONF_PRECISION: precision,
-                        CONF_FLOOR_TEMP: floor_temp,
-                    },
-                }
-            },
+            title=name, data={CONF_ID: gw_id, CONF_DEVICE: device, CONF_NAME: name}
         )

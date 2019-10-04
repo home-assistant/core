@@ -17,6 +17,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    CONF_ID,
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
@@ -36,10 +37,12 @@ SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up an OpenTherm Gateway climate entity."""
     ents = []
-    for gw_id in config_entry.data:
-        gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][gw_id]
+    ents.append(
+        OpenThermClimate(
+            hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]]
+        )
+    )
 
-        ents.append(OpenThermClimate(gw_dev))
     async_add_entities(ents)
 
 
@@ -50,7 +53,7 @@ class OpenThermClimate(ClimateDevice):
         """Initialize the device."""
         self._gateway = gw_dev
         self.friendly_name = gw_dev.name
-        self.floor_temp = gw_dev.climate_config[CONF_FLOOR_TEMP]
+        self.floor_temp = gw_dev.climate_config.get(CONF_FLOOR_TEMP)
         self.temp_precision = gw_dev.climate_config.get(CONF_PRECISION)
         self._current_operation = None
         self._current_temperature = None
