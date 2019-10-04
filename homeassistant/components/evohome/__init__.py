@@ -454,7 +454,7 @@ class EvoChild(EvoDevice):
             self._evo_device.schedule(), refresh=False
         )
 
-        _LOGGER.warn("Schedule['%s'] = %s", self.name, self._schedule)
+        _LOGGER.debug("Schedule['%s'] = %s", self.name, self._schedule)
 
     async def async_update(self) -> None:
         """Get the latest state data."""
