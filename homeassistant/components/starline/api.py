@@ -104,7 +104,7 @@ class StarlineAuth(BaseApi):
 
         state = int(response["state"])
         if (state == 1) or (state == 2) or (state == 0 and "captchaSid" in response["desc"]) or (state == 0 and "phone" in response["desc"]):
-            return state == 1, response["desc"]
+            return state, response["desc"]
         raise Exception(response)
 
     def get_user_id(self, slid_token: str) -> (str, str):

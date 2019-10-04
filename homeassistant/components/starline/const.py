@@ -14,6 +14,10 @@ CONF_CAPTCHA_CODE = "captcha_code"
 CONF_UPDATE_INTERVAL = "update_interval"
 DEFAULT_UPDATE_INTERVAL = 180  # in seconds
 
+ERROR_AUTH_APP = "error_auth_app"
+ERROR_AUTH_USER = "error_auth_user"
+ERROR_AUTH_MFA = "error_auth_mfa"
+
 SERVICE_UPDATE_STATE = "update_state"
 
 BATTERY_LEVEL_MIN = 11.8

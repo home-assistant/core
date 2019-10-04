@@ -34,7 +34,9 @@
             }
         },
         "error": {
-            "name_exists": "TODO: Location already exists"
+            "error_auth_app": "Incorrect application id or secret",
+            "error_auth_user": "Incorrect username or password",
+            "error_auth_mfa": "Incorrect code"
         }
     },
     "options": {

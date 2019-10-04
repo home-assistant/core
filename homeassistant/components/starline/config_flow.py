@@ -7,14 +7,14 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.core import callback
 
 from .api import StarlineAuth
-from .const import DOMAIN, CONF_APP_ID, CONF_APP_SECRET, CONF_MFA_CODE, CONF_CAPTCHA_CODE, LOGGER, CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
+from .const import DOMAIN, CONF_APP_ID, CONF_APP_SECRET, CONF_MFA_CODE, CONF_CAPTCHA_CODE, LOGGER, CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL, ERROR_AUTH_APP, ERROR_AUTH_USER, ERROR_AUTH_MFA
 
 
 class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a StarLine config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
+    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize flow."""
@@ -152,22 +152,22 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._app_token = self._auth.get_app_token(self._app_id, self._app_secret, self._app_code)
             return self._async_form_auth_user(error)
         except Exception as e:
-            # TODO: Все ошибки в переводы
-            error = "TODO: Error auth StarLine"
             LOGGER.error("Error auth StarLine: " + str(e))
-            return self._async_form_auth_app(error)
+            return self._async_form_auth_app(ERROR_AUTH_APP)
 
     def _async_authenticate_user(self, error=None):
         """Authenticate user."""
         try:
-            status, data = self._auth.get_slid_user_token(self._app_token, self._username, self._password, self._mfa_code, self._captcha_sid, self._captcha_code)
+            state, data = self._auth.get_slid_user_token(self._app_token, self._username, self._password, self._mfa_code, self._captcha_sid, self._captcha_code)
 
-            if status:
+            if state == 1:
                 self._user_slid = data["user_token"]
                 return self._async_get_entry()
 
             if "phone" in data:
                 self._phone_number = data["phone"]
+                if state == 0:
+                    error = ERROR_AUTH_MFA
                 return self._async_form_auth_mfa(error)
 
             if "captchaSid" in data:
@@ -177,9 +177,8 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             raise Exception(data)
         except Exception as e:
-            error = "TODO: Error auth mfa"
-            LOGGER.error("Error auth mfa: " + str(e))
-            return self._async_form_auth_user(error)
+            LOGGER.error("Error auth user: " + str(e))
+            return self._async_form_auth_user(ERROR_AUTH_USER)
 
     def _async_get_entry(self):
         """Create entry."""
