@@ -336,45 +336,29 @@ class EntityPlatform:
         if not entity.entity_registry_enabled_default:
             disabled_by = DISABLED_INTEGRATION
 
-        # Get entity_id from unique ID registration
-        if entity.unique_id is not None:
+        # Get entity_id from unique ID registration or create new
+        entry = entity_registry.async_get_or_create(
+            self.domain,
+            self.platform_name,
+            entity.unique_id,
+            suggested_object_id=suggested_object_id,
+            config_entry=self.config_entry,
+            device_id=device_id,
+            known_object_ids=self.entities.keys(),
+            disabled_by=disabled_by,
+        )
 
-            entry = entity_registry.async_get_or_create(
-                self.domain,
-                self.platform_name,
-                entity.unique_id,
-                suggested_object_id=suggested_object_id,
-                config_entry=self.config_entry,
-                device_id=device_id,
-                known_object_ids=self.entities.keys(),
-                disabled_by=disabled_by,
+        entity.registry_entry = entry
+        entity.entity_id = entry.entity_id
+
+        if entry.disabled:
+            self.logger.info(
+                "Not adding entity %s because it's disabled",
+                entry.name
+                or entity.name
+                or f'"{self.platform_name} {entity.unique_id}"',
             )
-
-            entity.registry_entry = entry
-            entity.entity_id = entry.entity_id
-
-            if entry.disabled:
-                self.logger.info(
-                    "Not adding entity %s because it's disabled",
-                    entry.name
-                    or entity.name
-                    or f'"{self.platform_name} {entity.unique_id}"',
-                )
-                return
-
-        # We won't generate an entity ID if the platform has already set one
-        # We will however make sure that platform cannot pick a registered ID
-        elif entity.entity_id is not None and entity_registry.async_is_registered(
-            entity.entity_id
-        ):
-            # If entity already registered, convert entity id to suggestion
-            entity.entity_id = None
-
-        # Generate entity ID
-        if entity.entity_id is None:
-            entity.entity_id = entity_registry.async_generate_entity_id(
-                self.domain, suggested_object_id, self.entities.keys()
-            )
+            return
 
         # Make sure it is valid in case an entity set the value themselves
         if not valid_entity_id(entity.entity_id):

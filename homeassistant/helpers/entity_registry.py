@@ -115,6 +115,15 @@ class EntityRegistry:
         return None
 
     @callback
+    def async_get_unique_entity_ids(self, domain):
+        """Return all entity_ids generated from a unique_id for a given domain."""
+        return [
+            value.entity_id
+            for value in self.entities.values()
+            if value.unique_id and value.domain == domain
+        ]
+
+    @callback
     def async_generate_entity_id(
         self, domain, suggested_object_id, known_object_ids=None
     ):
@@ -125,7 +134,7 @@ class EntityRegistry:
         return ensure_unique_string(
             "{}.{}".format(domain, slugify(suggested_object_id)),
             chain(
-                self.entities.keys(),
+                self.async_get_unique_entity_ids(domain),
                 self.hass.states.async_entity_ids(domain),
                 known_object_ids if known_object_ids else [],
             ),
@@ -149,9 +158,16 @@ class EntityRegistry:
         if config_entry:
             config_entry_id = config_entry.entry_id
 
-        entity_id = self.async_get_entity_id(domain, platform, unique_id)
+        if unique_id:
+            entity_id = self.async_get_entity_id(domain, platform, unique_id)
+        else:
+            entity_id = self.async_generate_entity_id(
+                domain,
+                suggested_object_id or f"{platform}_{unique_id}",
+                known_object_ids,
+            )
 
-        if entity_id:
+        if self.async_is_registered(entity_id):
             return self._async_update_entity(
                 entity_id,
                 config_entry_id=config_entry_id or _UNDEF,
@@ -164,10 +180,6 @@ class EntityRegistry:
                     slugify(part) for part in entity_id.split(".", 1)
                 ),
             )
-
-        entity_id = self.async_generate_entity_id(
-            domain, suggested_object_id or f"{platform}_{unique_id}", known_object_ids
-        )
 
         if (
             disabled_by is None
