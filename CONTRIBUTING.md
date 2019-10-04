@@ -6,8 +6,8 @@ The process is straight-forward.
 
  - Read [How to get faster PR reviews](https://github.com/kubernetes/community/blob/master/contributors/guide/pull-requests.md#best-practices-for-faster-reviews) by Kubernetes (but skip step 0)
  - Fork the Home Assistant [git repository](https://github.com/home-assistant/home-assistant).
- - Write the code for your device, notification service, sensor, or IoT thing.
- - Ensure tests work.
+ - Write the Code for your device, notification service, sensor, or IoT thing.
+ - Ensure Tests work.
  - Create a Pull Request against the [**dev**](https://github.com/home-assistant/home-assistant/tree/dev) branch of Home Assistant.
 
 Still interested? Then you should take a peek at the [developer documentation](https://developers.home-assistant.io/) to get more details.
