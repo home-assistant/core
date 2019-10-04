@@ -1,10 +1,11 @@
+"""StarLine API."""
 import aiohttp
 import hashlib
 
 from datetime import timedelta
 from typing import Dict, List, Callable, Optional, Any
 
-from homeassistant.core import Config, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -108,7 +109,7 @@ class StarlineAuth(BaseApi):
 
     async def get_slid_user_token(self, app_token: str, user_login: str, user_password: str,
                                   sms_code: str = None, captcha_sid: str = None,
-                                  captcha_code:str = None) -> (bool, dict):
+                                  captcha_code: str = None) -> (bool, dict):
         """Authenticate user by login, password and application token."""
 
         url = "https://id.starline.ru/apiV3/user/login/"
@@ -211,7 +212,6 @@ class StarlineApi(BaseApi):
 
     async def set_car_state(self, device_id: str, name: str, state: bool):
         """ Set car state information."""
-
         LOGGER.debug("Setting car %s state: %s=%d", device_id, name, state)
         url = "https://developer.starline.ru/json/v1/device/{}/set_param".format(device_id)
         data = {

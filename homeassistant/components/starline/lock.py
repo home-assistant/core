@@ -18,6 +18,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class StarlineLock(LockDevice):
     """Representation of a StarLine lock."""
+
     def __init__(self, api: StarlineApi, device: StarlineDevice):
         """Initialize the lock."""
         self._api = api
@@ -50,6 +51,7 @@ class StarlineLock(LockDevice):
 
     @property
     def icon(self):
+        """Icon to use in the frontend, if any."""
         return "mdi:shield-check-outline" if self.is_locked else "mdi:shield-alert-outline"
 
     @property

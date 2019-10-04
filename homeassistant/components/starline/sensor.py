@@ -27,6 +27,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class StarlineSensor(Entity):
     """Representation of a StarLine sensor."""
+
     def __init__(self, api: StarlineApi, device: StarlineDevice, key: str, sensor_name: str, unit: str, icon: str):
         """Constructor."""
         self._api = api

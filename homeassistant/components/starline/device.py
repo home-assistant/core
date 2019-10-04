@@ -1,3 +1,4 @@
+"""StarLine device."""
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 from .const import (DOMAIN, BATTERY_LEVEL_MIN, BATTERY_LEVEL_MAX,
@@ -10,7 +11,6 @@ class StarlineDevice():
 
     def __init__(self):
         """Constructor."""
-
         self._device_id: Optional[str] = None
         self._imei: Optional[str] = None
         self._alias: Optional[str] = None
@@ -57,26 +57,32 @@ class StarlineDevice():
 
     @property
     def support_position(self):
+        """Is position supported by this device."""
         return DEVICE_FUNCTION_POSITION in self._functions
 
     @property
     def support_state(self):
+        """Is state supported by this device."""
         return DEVICE_FUNCTION_STATE in self._functions
 
     @property
     def device_id(self):
+        """Device ID."""
         return self._device_id
 
     @property
     def name(self):
+        """Device name."""
         return self._alias
 
     @property
     def position(self):
+        """Car position."""
         return self._position
 
     @property
     def gps_attrs(self):
+        """Attributes for device tracker."""
         return {
             "updated": datetime.utcfromtimestamp(self._position["ts"]).isoformat(),
             "online": self.online
@@ -84,6 +90,7 @@ class StarlineDevice():
 
     @property
     def balance_attrs(self):
+        """Attributes for balance sensor."""
         return {
             "operator": self.balance["operator"],
             "state": self.balance["state"],
@@ -92,6 +99,7 @@ class StarlineDevice():
 
     @property
     def gsm_attrs(self):
+        """Attributes for GSM sensor."""
         return {
             "raw": self._gsm_lvl,
             "imei": self._imei,
@@ -101,6 +109,7 @@ class StarlineDevice():
 
     @property
     def engine_attrs(self):
+        """Attributes for engine switch."""
         return {
             "autostart": self._car_state["r_start"],
             "ignition": self._car_state["run"],
@@ -108,14 +117,17 @@ class StarlineDevice():
 
     @property
     def online(self):
+        """Is device online."""
         return int(self._status) == 1
 
     @property
     def battery_level(self):
+        """Car battery level."""
         return self._battery
 
     @property
     def battery_level_percent(self):
+        """Car battery level percent."""
         if self._battery > BATTERY_LEVEL_MAX:
             return 100
         if self._battery < BATTERY_LEVEL_MIN:
@@ -124,30 +136,37 @@ class StarlineDevice():
 
     @property
     def balance(self):
+        """Device balance."""
         return self._balance["active"]
 
     @property
     def car_state(self):
+        """Car state."""
         return self._car_state
 
     @property
     def alarm_state(self):
+        """Car alarm level."""
         return self._car_alr_state
 
     @property
     def temp_inner(self):
+        """Car inner temperature."""
         return self._ctemp
 
     @property
     def temp_engine(self):
+        """Engine temperarure."""
         return self._etemp
 
     @property
     def gsm_level(self):
+        """GSM signal level."""
         return self._gsm_lvl if self.online else 0
 
     @property
     def gsm_level_percent(self):
+        """GSM signal level percent."""
         if self.gsm_level > GSM_LEVEL_MAX:
             return 100
         if self.gsm_level < GSM_LEVEL_MIN:
@@ -156,14 +175,17 @@ class StarlineDevice():
 
     @property
     def imei(self):
+        """Device IMEI."""
         return self._imei
 
     @property
     def phone(self):
+        """Device phone number."""
         return self._phone
 
     @property
     def device_info(self):
+        """Device information for entities."""
         return {
             "identifiers": {(DOMAIN, self._device_id)},
             "manufacturer": "StarLine",

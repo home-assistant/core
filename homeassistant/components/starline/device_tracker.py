@@ -1,3 +1,4 @@
+"""StarLine device tracker."""
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -18,6 +19,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class StarlineDeviceTracker(TrackerEntity, RestoreEntity):
     """StarLine device tracker."""
+
     def __init__(self, api: StarlineApi, device: StarlineDevice):
         """Set up StarLine entity."""
         self._api = api
@@ -75,6 +77,7 @@ class StarlineDeviceTracker(TrackerEntity, RestoreEntity):
 
     @property
     def icon(self):
+        """Return the icon to use in the frontend, if any."""
         return "mdi:map-marker-outline"
 
     def update(self):

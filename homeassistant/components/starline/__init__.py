@@ -56,5 +56,4 @@ async def async_options_updated(hass: HomeAssistant, config_entry: ConfigEntry) 
     """Triggered by config entry options updates."""
     api: StarlineApi = hass.data[DOMAIN]
     update_timeout = config_entry.options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
-    const.LOGGER.warning("async_options_updated %s", update_timeout)
     api.set_update_interval(hass, update_timeout)

@@ -1,7 +1,7 @@
 """Support for StarLine switch."""
 from homeassistant.components.switch import SwitchDevice
 from .api import StarlineApi, StarlineDevice
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 
 SWITCH_TYPES = {
     "ign": ["Engine", "mdi:engine-outline", "mdi:engine-off-outline"],
@@ -63,6 +63,7 @@ class StarlineSwitch(SwitchDevice):
 
     @property
     def icon(self):
+        """Icon to use in the frontend, if any."""
         return self._icon_on if self.is_on else self._icon_off
 
     @property
