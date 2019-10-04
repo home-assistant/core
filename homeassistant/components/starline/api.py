@@ -211,7 +211,7 @@ class StarlineApi(BaseApi):
         return None
 
     async def set_car_state(self, device_id: str, name: str, state: bool):
-        """ Set car state information."""
+        """Set car state information."""
         LOGGER.debug("Setting car %s state: %s=%d", device_id, name, state)
         url = "https://developer.starline.ru/json/v1/device/{}/set_param".format(device_id)
         data = {
