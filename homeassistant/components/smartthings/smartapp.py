@@ -1,5 +1,4 @@
 """SmartApp functionality to receive cloud-push notifications."""
-import asyncio
 import functools
 import logging
 from urllib.parse import urlparse
@@ -30,6 +29,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util.async_ import safe_wait
 
 from .const import (
     APP_NAME_PREFIX,
@@ -361,7 +361,7 @@ async def smartapp_sync_subscriptions(
     tasks.extend([create_subscription(c) for c in capabilities])
 
     if tasks:
-        await asyncio.gather(*tasks)
+        await safe_wait(tasks, logger=_LOGGER)
     else:
         _LOGGER.debug("Subscriptions for app '%s' are up-to-date", installed_app_id)
 

@@ -4,7 +4,6 @@ Virtual gateway for Zigbee Home Automation.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
-
 import asyncio
 import collections
 import itertools
@@ -19,6 +18,7 @@ from homeassistant.helpers.device_registry import (
     async_get_registry as get_dev_reg,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.util.async_ import safe_wait
 
 from ..api import async_get_device_info
 from .const import (
@@ -140,7 +140,7 @@ class ZHAGateway:
             init_tasks.append(
                 init_with_semaphore(self.async_device_restored(device), semaphore)
             )
-        await asyncio.gather(*init_tasks)
+        await safe_wait(init_tasks, logger=_LOGGER)
 
     def device_joined(self, device):
         """Handle device joined.

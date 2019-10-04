@@ -1,5 +1,6 @@
 """Code to handle a Hue bridge."""
 import asyncio
+import logging
 
 import aiohue
 import async_timeout
@@ -8,9 +9,12 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.util.async_ import safe_wait
 
 from .const import DOMAIN, LOGGER
 from .errors import AuthenticationRequired, CannotConnect
+
+_LOGGER = logging.getLogger(__name__)
 
 SERVICE_HUE_SCENE = "hue_activate_scene"
 ATTR_GROUP_NAME = "group_name"
@@ -102,16 +106,19 @@ class HueBridge:
 
         # If setup was successful, we set api variable, forwarded entry and
         # register service
-        results = await asyncio.gather(
-            self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, "light"
+        results = await safe_wait(
+            (
+                self.hass.config_entries.async_forward_entry_unload(
+                    self.config_entry, "light"
+                ),
+                self.hass.config_entries.async_forward_entry_unload(
+                    self.config_entry, "binary_sensor"
+                ),
+                self.hass.config_entries.async_forward_entry_unload(
+                    self.config_entry, "sensor"
+                ),
             ),
-            self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, "binary_sensor"
-            ),
-            self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, "sensor"
-            ),
+            logger=_LOGGER,
         )
         # None and True are OK
         return False not in results

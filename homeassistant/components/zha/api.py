@@ -1,5 +1,4 @@
 """Web socket API for Zigbee Home Automation devices."""
-
 import asyncio
 import logging
 
@@ -10,6 +9,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util.async_ import safe_wait
 
 from .core.const import (
     ATTR_ARGS,
@@ -544,7 +544,7 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
                 destination_address,
             )
         )
-    await asyncio.gather(*bind_tasks)
+    await safe_wait(bind_tasks, logger=_LOGGER)
 
 
 def async_load_api(hass):

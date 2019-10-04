@@ -35,6 +35,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.util.async_ import safe_wait
 
 from .const import DOMAIN, UPDATE_INTERVAL
 
@@ -160,7 +161,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
 
     hass.data[DOMAIN].clear()
 
-    return all(await asyncio.gather(*tasks))
+    return all(await safe_wait(tasks, logger=_LOGGER))
 
 
 def refresh_system(func):

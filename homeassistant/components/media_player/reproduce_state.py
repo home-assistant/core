@@ -1,5 +1,5 @@
 """Module that groups code required to handle state restore for component."""
-import asyncio
+import logging
 from typing import Iterable, Optional
 
 from homeassistant.const import (
@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, State
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util.async_ import safe_wait
 
 from .const import (
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -35,6 +36,7 @@ from .const import (
     DOMAIN,
 )
 
+_LOGGER = logging.getLogger(__name__)
 
 # mypy: allow-untyped-defs
 
@@ -95,6 +97,7 @@ async def async_reproduce_states(
     hass: HomeAssistantType, states: Iterable[State], context: Optional[Context] = None
 ) -> None:
     """Reproduce component states."""
-    await asyncio.gather(
-        *(_async_reproduce_states(hass, state, context) for state in states)
+    await safe_wait(
+        (_async_reproduce_states(hass, state, context) for state in states),
+        logger=_LOGGER,
     )

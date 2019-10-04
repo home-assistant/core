@@ -1,5 +1,4 @@
 """Manage config entries in Home Assistant."""
-import asyncio
 import logging
 import functools
 import uuid
@@ -14,6 +13,7 @@ from homeassistant.exceptions import HomeAssistantError, ConfigEntryNotReady
 from homeassistant.setup import async_setup_component, async_process_deps_reqs
 from homeassistant.util.decorator import Registry
 from homeassistant.helpers import entity_registry
+from homeassistant.util.async_ import safe_wait
 
 # mypy: allow-untyped-defs
 
@@ -435,9 +435,12 @@ class ConfigEntries:
         self._entries.remove(entry)
         self._async_schedule_save()
 
-        dev_reg, ent_reg = await asyncio.gather(
-            self.hass.helpers.device_registry.async_get_registry(),
-            self.hass.helpers.entity_registry.async_get_registry(),
+        dev_reg, ent_reg = await safe_wait(
+            (
+                self.hass.helpers.device_registry.async_get_registry(),
+                self.hass.helpers.entity_registry.async_get_registry(),
+            ),
+            logger=_LOGGER,
         )
 
         dev_reg.async_clear_config_entry(entry_id)
@@ -841,8 +844,9 @@ class EntityRegistryDisabledHandler:
             ", ".join(self.changed),
         )
 
-        await asyncio.gather(
-            *[self.hass.config_entries.async_reload(entry_id) for entry_id in to_reload]
+        await safe_wait(
+            [self.hass.config_entries.async_reload(entry_id) for entry_id in to_reload],
+            logger=_LOGGER,
         )
 
 

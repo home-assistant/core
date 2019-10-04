@@ -18,6 +18,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import Store
+from homeassistant.util.async_ import safe_wait
 
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
@@ -233,18 +234,24 @@ class RestoreEntity(Entity):
     async def async_internal_added_to_hass(self) -> None:
         """Register this entity as a restorable entity."""
         assert self.hass is not None
-        _, data = await asyncio.gather(
-            super().async_internal_added_to_hass(),
-            RestoreStateData.async_get_instance(self.hass),
+        _, data = await safe_wait(
+            (
+                super().async_internal_added_to_hass(),
+                RestoreStateData.async_get_instance(self.hass),
+            ),
+            logger=_LOGGER,
         )
         data.async_restore_entity_added(self.entity_id)
 
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         assert self.hass is not None
-        _, data = await asyncio.gather(
-            super().async_internal_will_remove_from_hass(),
-            RestoreStateData.async_get_instance(self.hass),
+        _, data = await safe_wait(
+            (
+                super().async_internal_will_remove_from_hass(),
+                RestoreStateData.async_get_instance(self.hass),
+            ),
+            logger=_LOGGER,
         )
         data.async_restore_entity_removed(self.entity_id)
 

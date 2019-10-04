@@ -1,5 +1,4 @@
 """Support for climate devices through the SmartThings cloud API."""
-import asyncio
 import logging
 from typing import Iterable, Optional, Sequence
 
@@ -26,6 +25,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.util.async_ import safe_wait
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
@@ -216,7 +216,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
                     round(cooling_setpoint, 3), set_status=True
                 )
             )
-        await asyncio.gather(*tasks)
+        await safe_wait(tasks, logger=_LOGGER)
 
         # State is set optimistically in the commands above, therefore update
         # the entity state ahead of receiving the confirming push updates
@@ -357,7 +357,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
                 STATE_TO_AC_MODE[hvac_mode], set_status=True
             )
         )
-        await asyncio.gather(*tasks)
+        await safe_wait(tasks, logger=_LOGGER)
         # State is set optimistically in the command above, therefore update
         # the entity state ahead of receiving the confirming push updates
         self.async_schedule_update_ha_state()
@@ -378,7 +378,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
         tasks.append(
             self._device.set_cooling_setpoint(kwargs[ATTR_TEMPERATURE], set_status=True)
         )
-        await asyncio.gather(*tasks)
+        await safe_wait(tasks, logger=_LOGGER)
         # State is set optimistically in the command above, therefore update
         # the entity state ahead of receiving the confirming push updates
         self.async_schedule_update_ha_state()

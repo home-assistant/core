@@ -1,5 +1,5 @@
 """Support for lights through the SmartThings cloud API."""
-import asyncio
+import logging
 from typing import Optional, Sequence
 
 from pysmartthings import Capability
@@ -16,9 +16,12 @@ from homeassistant.components.light import (
     Light,
 )
 import homeassistant.util.color as color_util
+from homeassistant.util.async_ import safe_wait
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -103,7 +106,7 @@ class SmartThingsLight(SmartThingsEntity, Light):
             tasks.append(self.async_set_color(kwargs[ATTR_HS_COLOR]))
         if tasks:
             # Set temp/color first
-            await asyncio.gather(*tasks)
+            await safe_wait(tasks, logger=_LOGGER)
 
         # Switch/brightness/transition
         if self._supported_features & SUPPORT_BRIGHTNESS and ATTR_BRIGHTNESS in kwargs:

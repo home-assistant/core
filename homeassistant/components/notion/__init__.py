@@ -21,6 +21,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.async_ import safe_wait
 
 from .config_flow import configured_instances
 from .const import DATA_CLIENT, DEFAULT_SCAN_INTERVAL, DOMAIN, TOPIC_DATA_UPDATE
@@ -183,7 +184,9 @@ class Notion:
             "tasks": self._client.task.async_all(),
         }
 
-        results = await asyncio.gather(*tasks.values(), return_exceptions=True)
+        results = await safe_wait(
+            tasks.values(), return_exceptions=True, logger=_LOGGER
+        )
         for attr, result in zip(tasks, results):
             if isinstance(result, NotionError):
                 _LOGGER.error("There was an error while updating %s: %s", attr, result)

@@ -20,6 +20,7 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service import verify_domain_control
+from homeassistant.util.async_ import safe_wait
 
 from .config_flow import configured_instances
 from .const import DOMAIN
@@ -278,7 +279,7 @@ class OpenUV:
     async def async_update(self):
         """Update sensor/binary sensor data."""
         tasks = [self.async_update_protection_data(), self.async_update_uv_index_data()]
-        await asyncio.gather(*tasks)
+        await safe_wait(tasks, logger=_LOGGER)
 
 
 class OpenUvEntity(Entity):

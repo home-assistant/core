@@ -10,6 +10,7 @@ from netdisco import ssdp, util
 
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.generated.ssdp import SSDP
+from homeassistant.util.async_ import safe_wait
 
 DOMAIN = "ssdp"
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -82,7 +83,9 @@ class Scanner:
             return
 
         to_load = [
-            result for result in await asyncio.gather(*tasks) if result is not None
+            result
+            for result in await safe_wait(tasks, logger=_LOGGER)
+            if result is not None
         ]
 
         if not to_load:

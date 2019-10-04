@@ -11,6 +11,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.loader import bind_hass
+from homeassistant.util.async_ import safe_wait
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,11 +63,12 @@ async def handle_info(
     if info_callbacks:
         for domain, domain_data in zip(
             info_callbacks,
-            await asyncio.gather(
-                *(
+            await safe_wait(
+                (
                     _info_wrapper(hass, info_callback)
                     for info_callback in info_callbacks.values()
-                )
+                ),
+                logger=_LOGGER,
             ),
         ):
             data[domain] = domain_data

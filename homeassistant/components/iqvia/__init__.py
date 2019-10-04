@@ -19,6 +19,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.decorator import Registry
+from homeassistant.util.async_ import safe_wait
 
 from .config_flow import configured_instances
 from .const import (
@@ -171,7 +172,9 @@ class IQVIAData:
             for fetcher_type in fetcher_types:
                 tasks[fetcher_type] = self.fetchers[fetcher_type]()
 
-        results = await asyncio.gather(*tasks.values(), return_exceptions=True)
+        results = await safe_wait(
+            tasks.values(), return_exceptions=True, logger=_LOGGER
+        )
 
         for key, result in zip(tasks, results):
             if isinstance(result, IQVIAError):

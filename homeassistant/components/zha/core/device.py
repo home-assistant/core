@@ -16,6 +16,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.async_ import safe_wait
 
 from .channels import EventRelayChannel
 from .const import (
@@ -359,7 +360,7 @@ class ZHADevice(LogMixin):
                 )
         if zdo_task is not None:
             await zdo_task
-        await asyncio.gather(*channel_tasks)
+        await safe_wait(channel_tasks, logger=_LOGGER)
 
     async def _async_create_task(self, semaphore, channel, func_name, *args):
         """Configure a single channel on this device."""

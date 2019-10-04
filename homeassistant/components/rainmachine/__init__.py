@@ -24,6 +24,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import verify_domain_control
+from homeassistant.util.async_ import safe_wait
 
 from .config_flow import configured_instances
 from .const import (
@@ -410,7 +411,9 @@ class RainMachine:
         ):
             tasks[RESTRICTIONS_UNIVERSAL] = self.client.restrictions.universal()
 
-        results = await asyncio.gather(*tasks.values(), return_exceptions=True)
+        results = await safe_wait(
+            tasks.values(), return_exceptions=True, logger=_LOGGER
+        )
         for operation, result in zip(tasks, results):
             if isinstance(result, RainMachineError):
                 _LOGGER.error(

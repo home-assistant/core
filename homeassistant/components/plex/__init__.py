@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.helpers import config_validation as cv
+from homeassistant.util.async_ import safe_wait
 
 from .const import (
     CONF_USE_EPISODE_ART,
@@ -152,7 +153,7 @@ async def async_unload_entry(hass, entry):
         hass.config_entries.async_forward_entry_unload(entry, platform)
         for platform in PLATFORMS
     ]
-    await asyncio.gather(*tasks)
+    await safe_wait(tasks, logger=_LOGGER)
 
     hass.data[PLEX_DOMAIN][SERVERS].pop(server_id)
 

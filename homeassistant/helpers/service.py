@@ -21,6 +21,7 @@ from homeassistant.util.yaml import load_yaml
 from homeassistant.util.yaml.loader import JSON_TYPE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util.async_ import safe_wait
 
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -139,9 +140,12 @@ async def async_extract_entity_ids(hass, service_call, expand_group=True):
         if isinstance(area_ids, str):
             area_ids = [area_ids]
 
-        dev_reg, ent_reg = await asyncio.gather(
-            hass.helpers.device_registry.async_get_registry(),
-            hass.helpers.entity_registry.async_get_registry(),
+        dev_reg, ent_reg = await safe_wait(
+            (
+                hass.helpers.device_registry.async_get_registry(),
+                hass.helpers.entity_registry.async_get_registry(),
+            ),
+            logger=_LOGGER,
         )
         devices = [
             device
@@ -196,8 +200,8 @@ async def async_get_all_descriptions(hass):
     loaded = {}
 
     if missing:
-        contents = await asyncio.gather(
-            *(_load_services_file(hass, domain) for domain in missing)
+        contents = await safe_wait(
+            (_load_services_file(hass, domain) for domain in missing), logger=_LOGGER
         )
 
         for domain, content in zip(missing, contents):
@@ -342,10 +346,7 @@ async def entity_service_call(
     ]
 
     if tasks:
-        done, pending = await asyncio.wait(tasks)
-        assert not pending
-        for future in done:
-            future.result()  # pop exception if have
+        await safe_wait(tasks, logger=_LOGGER)
 
 
 async def _handle_service_platform_call(
