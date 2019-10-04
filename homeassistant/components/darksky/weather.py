@@ -103,6 +103,11 @@ class DarkSkyWeather(WeatherEntity):
         self._ds_daily = None
 
     @property
+    def available(self):
+        """Return if weather data is available from Dark Sky."""
+        return self._ds_data is not None
+
+    @property
     def attribution(self):
         """Return the attribution."""
         return ATTRIBUTION
@@ -127,9 +132,7 @@ class DarkSkyWeather(WeatherEntity):
     @property
     def humidity(self):
         """Return the humidity."""
-        if "humidity" in self._ds_currently:
-            return round(self._ds_currently.get("humidity") * 100.0, 2)
-        return None
+        return round(self._ds_currently.get("humidity") * 100.0, 2)
 
     @property
     def wind_speed(self):
@@ -178,7 +181,7 @@ class DarkSkyWeather(WeatherEntity):
 
         data = None
 
-        if self._mode == "daily" and self._ds_daily:
+        if self._mode == "daily":
             data = [
                 {
                     ATTR_FORECAST_TIME: utc_from_timestamp(
@@ -195,7 +198,7 @@ class DarkSkyWeather(WeatherEntity):
                 }
                 for entry in self._ds_daily.data
             ]
-        elif self._ds_hourly:
+        else:
             data = [
                 {
                     ATTR_FORECAST_TIME: utc_from_timestamp(
@@ -258,5 +261,5 @@ class DarkSkyData:
     def units(self):
         """Get the unit system of returned data."""
         if self.data is None:
-            return {}
+            return None
         return self.data.json.get("flags").get("units")
