@@ -25,6 +25,8 @@ from typing import (
     cast,
 )
 
+from homeassistant.util.async_ import safe_wait
+
 # Typing imports that create a circular dependency
 # pylint: disable=using-constant-test,unused-import
 if TYPE_CHECKING:
@@ -85,13 +87,13 @@ async def _async_get_custom_components(
         get_sub_directories, custom_components.__path__
     )
 
-    integrations = await asyncio.gather(
-        *(
+    integrations = await safe_wait(
+        (
             hass.async_add_executor_job(
                 Integration.resolve_from_root, hass, custom_components, comp.name
             )
             for comp in dirs
-        )
+        ), logger=_LOGGER
     )
 
     return {

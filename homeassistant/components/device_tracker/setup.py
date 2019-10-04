@@ -1,5 +1,6 @@
 """Device tracker helpers."""
 import asyncio
+import logging
 from typing import Dict, Any, Callable, Optional
 from types import ModuleType
 
@@ -12,6 +13,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import safe_wait
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 
 
@@ -23,6 +25,8 @@ from .const import (
     SOURCE_TYPE_ROUTER,
     LOGGER,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @attr.s
@@ -97,11 +101,12 @@ async def async_extract_config(hass, config):
     """Extract device tracker config and split between legacy and modern."""
     legacy = []
 
-    for platform in await asyncio.gather(
-        *(
+    for platform in await safe_wait(
+        (
             async_create_platform_type(hass, config, p_type, p_config)
             for p_type, p_config in config_per_platform(config, DOMAIN)
-        )
+        ),
+        logger=_LOGGER,
     ):
         if platform is None:
             continue

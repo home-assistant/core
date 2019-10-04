@@ -1,11 +1,11 @@
 """Support for Google Assistant Smart Home API."""
-import asyncio
 from itertools import product
 import logging
 
 from homeassistant.util.decorator import Registry
 
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.util.async_ import safe_wait
 
 from .const import (
     ERR_PROTOCOL_ERROR,
@@ -80,12 +80,13 @@ async def async_devices_sync(hass, data, payload):
         EVENT_SYNC_RECEIVED, {"request_id": data.request_id}, context=data.context
     )
 
-    devices = await asyncio.gather(
-        *(
+    devices = await safe_wait(
+        (
             entity.sync_serialize()
             for entity in async_get_entities(hass, data.config)
             if data.config.should_expose(entity.state)
-        )
+        ),
+        logger=_LOGGER,
     )
 
     response = {

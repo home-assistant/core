@@ -1,13 +1,11 @@
 """Asyncio backports for Python 3.6 compatibility."""
-import concurrent.futures
-import threading
-import logging
-from asyncio import coroutines
-from asyncio.events import AbstractEventLoop
-
 import asyncio
-from asyncio import ensure_future
-from typing import Any, Coroutine, Callable, TypeVar, Awaitable
+from asyncio import coroutines, ensure_future
+from asyncio.events import AbstractEventLoop
+import concurrent.futures
+import logging
+import threading
+from typing import Any, Awaitable, Callable, Coroutine, List, Optional, TypeVar
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,3 +74,37 @@ def run_callback_threadsafe(
 
     loop.call_soon_threadsafe(run_callback)
     return future
+
+
+async def safe_wait(
+    tasks: List[Awaitable[Any]],
+    logger: Optional[logging.Logger] = None,
+    return_exceptions=False,
+) -> List[Any]:
+    """It work like gather but wait don't break any workflows.
+
+    It allow also to log exception in correct namespace.
+    """
+    all_tasks = list(tasks)
+    if not all_tasks:
+        return []
+    finished_tasks, _ = await asyncio.wait(all_tasks)
+
+    results: List[Any] = []
+    raise_exception: Optional[Exception] = None
+    for task in finished_tasks:
+        if not task.done():
+            results.append(None)
+        elif task.exception():
+            if logger:
+                logger.exception(task.exception())
+            if not raise_exception:
+                raise_exception = task.exception()
+            results.append(task.exception())
+        else:
+            results.append(task.result())
+
+    # Raise exception or return results
+    if not return_exceptions and raise_exception:
+        raise raise_exception
+    return results

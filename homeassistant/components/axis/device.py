@@ -1,6 +1,7 @@
 """Axis network device abstraction."""
-
 import asyncio
+import logging
+
 import async_timeout
 
 from homeassistant.const import (
@@ -16,10 +17,13 @@ from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.util.async_ import safe_wait
 
 from .const import CONF_CAMERA, CONF_EVENTS, CONF_MODEL, DOMAIN, LOGGER
 
 from .errors import AuthenticationRequired, CannotConnect
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class AxisNetworkDevice:
@@ -159,7 +163,7 @@ class AxisNetworkDevice:
 
     async def start(self, platform_tasks):
         """Start the event stream when all platforms are loaded."""
-        await asyncio.gather(*platform_tasks)
+        await safe_wait(platform_tasks, logger=_LOGGER)
         self.api.start()
 
     @callback
@@ -187,7 +191,7 @@ class AxisNetworkDevice:
                 for platform in ["binary_sensor", "switch"]
             ]
 
-        await asyncio.gather(*platform_tasks)
+        await safe_wait(platform_tasks, logger=_LOGGER)
 
         for unsub_dispatcher in self.listeners:
             unsub_dispatcher()
@@ -215,10 +219,13 @@ async def get_device(hass, config):
     try:
         with async_timeout.timeout(15):
 
-            await asyncio.gather(
-                hass.async_add_executor_job(device.vapix.params.update_brand),
-                hass.async_add_executor_job(device.vapix.params.update_properties),
-                hass.async_add_executor_job(device.vapix.ports.update),
+            await safe_wait(
+                (
+                    hass.async_add_executor_job(device.vapix.params.update_brand),
+                    hass.async_add_executor_job(device.vapix.params.update_properties),
+                    hass.async_add_executor_job(device.vapix.ports.update),
+                ),
+                logger=_LOGGER,
             )
 
         return device

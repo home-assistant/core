@@ -1,10 +1,12 @@
 """Module that groups code required to handle state restore for component."""
 import asyncio
+import logging
 from typing import Iterable, Optional
 
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import Context, State
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util.async_ import safe_wait
 
 from .const import (
     ATTR_AUX_HEAT,
@@ -23,6 +25,8 @@ from .const import (
     SERVICE_SET_HUMIDITY,
     DOMAIN,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def _async_reproduce_states(
@@ -72,6 +76,7 @@ async def async_reproduce_states(
     hass: HomeAssistantType, states: Iterable[State], context: Optional[Context] = None
 ) -> None:
     """Reproduce component states."""
-    await asyncio.gather(
-        *(_async_reproduce_states(hass, state, context) for state in states)
+    await safe_wait(
+        (_async_reproduce_states(hass, state, context) for state in states),
+        logger=_LOGGING,
     )

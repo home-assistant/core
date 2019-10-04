@@ -44,6 +44,7 @@ from homeassistant.const import (
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.core import Context, State, DOMAIN as HASS_DOMAIN
+from homeassistant.util.async_ import safe_wait
 from .typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
@@ -167,8 +168,8 @@ async def async_reproduce_state(
 
     if to_call:
         # run all domains in parallel
-        await asyncio.gather(
-            *(worker(domain, data) for domain, data in to_call.items())
+        await safe_wait(
+            (worker(domain, data) for domain, data in to_call.items()), logger=_LOGGER
         )
 
 

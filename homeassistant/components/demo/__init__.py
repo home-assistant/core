@@ -6,6 +6,7 @@ import time
 from homeassistant import bootstrap
 import homeassistant.core as ha
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
+from homeassistant.util.async_ import safe_wait
 
 DOMAIN = "demo"
 _LOGGER = logging.getLogger(__name__)
@@ -124,7 +125,7 @@ async def async_setup(hass, config):
         )
     )
 
-    results = await asyncio.gather(*tasks)
+    results = await safe_wait(tasks, logger=_LOGGER)
 
     if any(not result for result in results):
         return False

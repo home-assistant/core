@@ -10,6 +10,7 @@ from homeassistant import requirements, core, loader, config as conf_util
 from homeassistant.config import async_notify_setup_error
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.async_ import safe_wait
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,7 +72,7 @@ async def _async_process_dependencies(
     if not tasks:
         return True
 
-    results = await asyncio.gather(*tasks)
+    results = await safe_wait(tasks, logger=_LOGGER)
 
     failed = [dependencies[idx] for idx, res in enumerate(results) if not res]
 

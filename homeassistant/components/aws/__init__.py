@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import ATTR_CREDENTIALS, CONF_NAME, CONF_PROFILE_NAME
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.util.async_ import safe_wait
 
 # Loading the config flow file will register the flow
 from . import config_flow  # noqa
@@ -125,7 +126,7 @@ async def async_setup_entry(hass, entry):
     for cred in conf[ATTR_CREDENTIALS]:
         tasks.append(_validate_aws_credentials(hass, cred))
     if tasks:
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        results = await safe_wait(tasks, return_exceptions=True, logger=_LOGGING)
         for index, result in enumerate(results):
             name = conf[ATTR_CREDENTIALS][index][CONF_NAME]
             if isinstance(result, Exception):

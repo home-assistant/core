@@ -11,6 +11,7 @@ from homeassistant import data_entry_flow
 from homeassistant.auth.const import ACCESS_TOKEN_EXPIRATION
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import safe_wait
 
 from . import auth_store, models
 from .const import GROUP_ID_ADMIN
@@ -38,8 +39,8 @@ async def auth_manager_from_config(
     """
     store = auth_store.AuthStore(hass)
     if provider_configs:
-        providers = await asyncio.gather(
-            *(
+        providers = await safe_wait(
+            (
                 auth_provider_from_config(hass, store, config)
                 for config in provider_configs
             )
@@ -53,8 +54,8 @@ async def auth_manager_from_config(
         provider_hash[key] = provider
 
     if module_configs:
-        modules = await asyncio.gather(
-            *(auth_mfa_module_from_config(hass, config) for config in module_configs)
+        modules = await safe_wait(
+            (auth_mfa_module_from_config(hass, config) for config in module_configs)
         )
     else:
         modules = ()

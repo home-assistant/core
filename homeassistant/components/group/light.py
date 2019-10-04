@@ -21,6 +21,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import color as color_util
+from homeassistant.util.async_ import safe_wait
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -242,16 +243,19 @@ class LightGroup(light.Light):
 
         emulate_color_temp_data[ATTR_ENTITY_ID] = emulate_color_temp_entity_ids
 
-        await asyncio.gather(
-            self.hass.services.async_call(
-                light.DOMAIN, light.SERVICE_TURN_ON, data, blocking=True
+        await safe_wait(
+            (
+                self.hass.services.async_call(
+                    light.DOMAIN, light.SERVICE_TURN_ON, data, blocking=True
+                ),
+                self.hass.services.async_call(
+                    light.DOMAIN,
+                    light.SERVICE_TURN_ON,
+                    emulate_color_temp_data,
+                    blocking=True,
+                ),
             ),
-            self.hass.services.async_call(
-                light.DOMAIN,
-                light.SERVICE_TURN_ON,
-                emulate_color_temp_data,
-                blocking=True,
-            ),
+            logger=_LOGGER,
         )
 
     async def async_turn_off(self, **kwargs):

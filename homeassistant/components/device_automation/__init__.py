@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.loader import async_get_integration, IntegrationNotFound
+from homeassistant.util.async_ import safe_wait
 
 from .exceptions import InvalidDeviceAutomationConfig
 
@@ -107,9 +108,12 @@ async def _async_get_device_automations_from_domain(
 
 async def _async_get_device_automations(hass, automation_type, device_id):
     """List device automations."""
-    device_registry, entity_registry = await asyncio.gather(
-        hass.helpers.device_registry.async_get_registry(),
-        hass.helpers.entity_registry.async_get_registry(),
+    device_registry, entity_registry = await safe_wait(
+        (
+            hass.helpers.device_registry.async_get_registry(),
+            hass.helpers.entity_registry.async_get_registry(),
+        ),
+        logger=_LOGGER,
     )
 
     domains = set()
@@ -123,13 +127,14 @@ async def _async_get_device_automations(hass, automation_type, device_id):
     for entity_entry in entity_entries:
         domains.add(entity_entry.domain)
 
-    device_automations = await asyncio.gather(
-        *(
+    device_automations = await safe_wait(
+        (
             _async_get_device_automations_from_domain(
                 hass, domain, automation_type, device_id
             )
             for domain in domains
-        )
+        ),
+        logger=_LOGGER,
     )
     for device_automation in device_automations:
         if device_automation is not None:

@@ -20,6 +20,7 @@ from .const import (
     CONF_SERVICE,
     DATA_SESSIONS,
 )
+from homeassistant.util.async_ import safe_wait
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -159,7 +160,7 @@ class AWSLambda(AWSNotify):
                 )
 
             if tasks:
-                await asyncio.gather(*tasks)
+                await safe_wait(tasks, logger=_LOGGER)
 
 
 class AWSSNS(AWSNotify):
@@ -195,7 +196,7 @@ class AWSSNS(AWSNotify):
                 )
 
             if tasks:
-                await asyncio.gather(*tasks)
+                await safe_wait(tasks, logger=_LOGGER)
 
 
 class AWSSQS(AWSNotify):
@@ -234,4 +235,4 @@ class AWSSQS(AWSNotify):
                 )
 
             if tasks:
-                await asyncio.gather(*tasks)
+                await safe_wait(tasks, logger=_LOGGER)

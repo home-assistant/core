@@ -9,6 +9,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
+from homeassistant.util.async_ import safe_wait
 
 from .const import (
     CONF_REFRESH_TOKEN,
@@ -127,4 +128,4 @@ async def async_unload_entry(hass, config_entry):
             hass.config_entries.async_forward_entry_unload(config_entry, platform)
         )
 
-    return all(await asyncio.gather(*tasks))
+    return all(await safe_wait(tasks, logger=_LOGGER))
