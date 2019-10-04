@@ -2,6 +2,7 @@
 import logging
 
 from homematicip.aio.device import (
+    AsyncAccelerationSensor,
     AsyncContactInterface,
     AsyncDevice,
     AsyncFullFlushContactInterface,
@@ -28,6 +29,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_LIGHT,
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_MOVING,
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_PRESENCE,
     DEVICE_CLASS_SAFETY,
@@ -42,6 +44,10 @@ from .device import ATTR_GROUP_MEMBER_UNREACHABLE, ATTR_IS_GROUP, ATTR_MODEL_TYP
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_ACCELERATION_SENSOR_MODE = "acceleration_sensor_mode"
+ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
+ATTR_ACCELERATION_SENSOR_SENSITIVITY = "acceleration_sensor_sensitivity"
+ATTR_ACCELERATION_SENSOR_TRIGGER_ANGLE = "acceleration_sensor_trigger_angle"
 ATTR_LOW_BATTERY = "low_battery"
 ATTR_MOISTURE_DETECTED = "moisture_detected"
 ATTR_MOTION_DETECTED = "motion_detected"
@@ -63,6 +69,13 @@ GROUP_ATTRIBUTES = {
     "waterlevelDetected": ATTR_WATER_LEVEL_DETECTED,
 }
 
+SAM_DEVICE_ATTRIBUTES = {
+    "accelerationSensorNeutralPosition": ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION,
+    "accelerationSensorMode": ATTR_ACCELERATION_SENSOR_MODE,
+    "accelerationSensorSensitivity": ATTR_ACCELERATION_SENSOR_SENSITIVITY,
+    "accelerationSensorTriggerAngle": ATTR_ACCELERATION_SENSOR_TRIGGER_ANGLE,
+}
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the HomematicIP Cloud binary sensor devices."""
@@ -76,6 +89,8 @@ async def async_setup_entry(
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for device in home.devices:
+        if isinstance(device, AsyncAccelerationSensor):
+            devices.append(HomematicipAccelerationSensor(home, device))
         if isinstance(device, (AsyncContactInterface, AsyncFullFlushContactInterface)):
             devices.append(HomematicipContactInterface(home, device))
         if isinstance(
@@ -116,6 +131,32 @@ async def async_setup_entry(
 
     if devices:
         async_add_entities(devices)
+
+
+class HomematicipAccelerationSensor(HomematicipGenericDevice, BinarySensorDevice):
+    """Representation of a HomematicIP Cloud acceleration sensor."""
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this sensor."""
+        return DEVICE_CLASS_MOVING
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if acceleration is detected."""
+        return self._device.accelerationSensorTriggered
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the acceleration sensor."""
+        state_attr = super().device_state_attributes
+
+        for attr, attr_key in SAM_DEVICE_ATTRIBUTES.items():
+            attr_value = getattr(self._device, attr, None)
+            if attr_value:
+                state_attr[attr_key] = attr_value
+
+        return state_attr
 
 
 class HomematicipContactInterface(HomematicipGenericDevice, BinarySensorDevice):
