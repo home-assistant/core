@@ -1,5 +1,4 @@
 """Support for Amazon Web Services (AWS)."""
-import asyncio
 import logging
 from collections import OrderedDict
 
@@ -126,7 +125,7 @@ async def async_setup_entry(hass, entry):
     for cred in conf[ATTR_CREDENTIALS]:
         tasks.append(_validate_aws_credentials(hass, cred))
     if tasks:
-        results = await safe_wait(tasks, return_exceptions=True, logger=_LOGGING)
+        results = await safe_wait(tasks, return_exceptions=True, logger=_LOGGER)
         for index, result in enumerate(results):
             name = conf[ATTR_CREDENTIALS][index][CONF_NAME]
             if isinstance(result, Exception):

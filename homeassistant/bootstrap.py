@@ -1,5 +1,4 @@
 """Provide methods to bootstrap a Home Assistant instance."""
-import asyncio
 import logging
 import logging.handlers
 import os

@@ -1,5 +1,4 @@
 """Helpers for device automations."""
-import asyncio
 import logging
 from typing import Any, List, MutableMapping
 from types import ModuleType

@@ -81,8 +81,9 @@ async def safe_wait(
     logger: Optional[logging.Logger] = None,
     return_exceptions=False,
 ) -> List[Any]:
-    """It work like gather but wait don't break any workflows.
+    """ Safe version of wait and gather.
 
+    It work like gather but wait don't break any workflows.
     It allow also to log exception in correct namespace.
     """
     all_tasks = list(tasks)

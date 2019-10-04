@@ -1,5 +1,4 @@
 """This platform allows several lights to be grouped into one light."""
-import asyncio
 from collections import Counter
 import itertools
 import logging

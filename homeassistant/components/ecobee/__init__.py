@@ -1,5 +1,4 @@
 """Support for ecobee."""
-import asyncio
 from datetime import timedelta
 import voluptuous as vol
 

@@ -1,5 +1,4 @@
 """AWS platform for notify component."""
-import asyncio
 import base64
 import json
 import logging

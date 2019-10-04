@@ -1,5 +1,4 @@
 """Module that groups code required to handle state restore for component."""
-import asyncio
 import logging
 from typing import Iterable, Optional
 
@@ -78,5 +77,5 @@ async def async_reproduce_states(
     """Reproduce component states."""
     await safe_wait(
         (_async_reproduce_states(hass, state, context) for state in states),
-        logger=_LOGGING,
+        logger=_LOGGER,
     )
