@@ -1,6 +1,7 @@
 """Reproduce an Light state."""
 import asyncio
 import logging
+from types import MappingProxyType
 from typing import Iterable, Optional
 
 from homeassistant.const import (
@@ -114,6 +115,8 @@ async def async_reproduce_states(
     )
 
 
-def check_attr_equal(attr1, attr2, attr_str):
+def check_attr_equal(
+    attr1: MappingProxyType, attr2: MappingProxyType, attr_str: str
+) -> bool:
     """Return true if the given attributes are equal."""
     return attr1.get(attr_str) == attr2.get(attr_str)
