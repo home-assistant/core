@@ -267,6 +267,7 @@ class TemplateFan(FanEntity):
         """Return availability of Device."""
         return self._available
 
+    # pylint: disable=arguments-differ
     async def async_turn_on(self, speed: str = None) -> None:
         """Turn on the fan."""
         await self._on_script.async_run({ATTR_SPEED: speed}, context=self._context)
