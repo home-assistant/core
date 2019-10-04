@@ -1,7 +1,7 @@
 """Support for StarLine lock."""
 from homeassistant.components.lock import LockDevice
 from .api import StarlineApi, StarlineDevice
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -57,13 +57,13 @@ class StarlineLock(LockDevice):
         """Return true if lock is locked."""
         return self._device.car_state["arm"]
 
-    def lock(self, **kwargs):
+    async def async_lock(self, **kwargs):
         """Lock the car."""
-        self._api.set_car_state(self._device.device_id, "arm", True)
+        await self._api.set_car_state(self._device.device_id, "arm", True)
 
-    def unlock(self, **kwargs):
+    async def async_unlock(self, **kwargs):
         """Unlock the car."""
-        self._api.set_car_state(self._device.device_id, "arm", False)
+        await self._api.set_car_state(self._device.device_id, "arm", False)
 
     @property
     def device_info(self):

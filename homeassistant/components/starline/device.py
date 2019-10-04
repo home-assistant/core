@@ -99,7 +99,7 @@ class StarlineDevice():
 
     @property
     def online(self):
-        return int(self._status) > 0
+        return int(self._status) == 1
 
     @property
     def battery_level(self):

@@ -24,7 +24,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._password: Optional[str] = None
         self._mfa_code: Optional[str] = None
 
-        self._auth = StarlineAuth()
+        self._auth = StarlineAuth(self.hass)
         self._app_code = None
         self._app_token = None
         self._user_slid = None

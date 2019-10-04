@@ -76,13 +76,13 @@ class StarlineSwitch(SwitchDevice):
         """Return True if entity is on."""
         return self._device.car_state[self._key]
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        self._api.set_car_state(self._device.device_id, self._key, True)
+        await self._api.set_car_state(self._device.device_id, self._key, True)
 
-    def turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
-        self._api.set_car_state(self._device.device_id, self._key, False)
+        await self._api.set_car_state(self._device.device_id, self._key, False)
 
     @property
     def device_info(self):

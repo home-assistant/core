@@ -3,7 +3,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config, HomeAssistant
 
 from .api import StarlineApi
-from .const import DOMAIN, PLATFORMS, SERVICE_UPDATE_STATE, CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
+from .const import (DOMAIN, PLATFORMS, SERVICE_UPDATE_STATE,
+                    CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
 
 
 async def async_setup(hass: HomeAssistant, config: Config) -> bool:
@@ -13,8 +14,12 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the StarLine device from a config entry."""
-    api = StarlineApi(config_entry.data["user_id"], config_entry.data["slnet_token"])
-    api.update()
+    api = StarlineApi(
+        hass,
+        config_entry.data["user_id"],
+        config_entry.data["slnet_token"]
+    )
+    await api.update()
     hass.data[DOMAIN] = api
 
     device_registry = await hass.helpers.device_registry.async_get_registry()

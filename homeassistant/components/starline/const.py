@@ -30,4 +30,4 @@ ENCODING = "utf-8"
 GET = 'GET'
 POST = 'POST'
 CONNECT_TIMEOUT = 5  # in seconds
-READ_TIMEOUT = 120  # in seconds
+TOTAL_TIMEOUT = 120  # in seconds
