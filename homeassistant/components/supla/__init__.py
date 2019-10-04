@@ -68,7 +68,6 @@ async def async_setup_entry(hass, config_entry):
     server_address = config_entry.data[CONF_SERVER]
     supla_server = SuplaAPI(server_address, config_entry.data[CONF_ACCESS_TOKEN])
     hass.data[SUPLA_SERVERS][config_entry.data[CONF_SERVER]] = supla_server
-
     hass.async_create_task(async_discover_devices(hass, config_entry))
 
     return True
@@ -102,6 +101,10 @@ async def async_discover_devices(hass, config_entry):
     # Load discovered devices
     for component_name, channel in component_configs.items():
         load_platform(hass, component_name, "supla", channel, config_entry.data)
+        # TODO
+        # hass.async_add_job(
+        #     hass.config_entries.async_forward_entry_setup(config_entry, channel)
+        # )
 
 
 class SuplaChannel(Entity):
@@ -111,6 +114,11 @@ class SuplaChannel(Entity):
         """Channel data -- raw channel information from PySupla."""
         self.server_name = channel_data["server_name"]
         self.channel_data = channel_data
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return "mdi:cloud"
 
     @property
     def server(self):
@@ -128,7 +136,13 @@ class SuplaChannel(Entity):
     @property
     def name(self) -> Optional[str]:
         """Return the name of the device."""
-        return self.channel_data["caption"]
+        if self.channel_data["caption"]:
+            return self.channel_data["caption"]
+        elif "iodevice" in self.channel_data:
+            return "supla: " + self.channel_data["iodevice"]["name"]
+        elif "type" in self.channel_data:
+            return "supla: " + self.channel_data["type"]["caption"]
+        return ""
 
     def action(self, action, **add_pars):
         """

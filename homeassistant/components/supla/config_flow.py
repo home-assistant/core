@@ -63,7 +63,7 @@ class SuplaFlowHandler(config_entries.ConfigFlow):
             if srv_info.get("authenticated"):
                 """Finish config flow"""
                 return self.async_create_entry(
-                    title=user_input[CONF_SERVER], data=user_input
+                    title="SUPLA: " + user_input[CONF_SERVER], data=user_input
                 )
             else:
                 _LOGGER.error(
