@@ -172,7 +172,7 @@ class IQVIAData:
                 tasks[fetcher_type] = self.fetchers[fetcher_type]()
 
         results = await safe_wait(
-            tasks.values(), raise_first_exception=True, logger=_LOGGER
+            tasks.values(), return_exceptions=True, logger=_LOGGER
         )
 
         for key, result in zip(tasks, results):

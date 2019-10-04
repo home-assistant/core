@@ -79,7 +79,7 @@ def run_callback_threadsafe(
 async def safe_wait(
     tasks: List[Awaitable[Any]],
     logger: Optional[logging.Logger] = None,
-    raise_first_exception=False,
+    return_exceptions=False,
 ) -> List[Any]:
     """ Safe version of wait and gather.
 
@@ -106,6 +106,6 @@ async def safe_wait(
             results.append(task.result())
 
     # Raise exception or return results
-    if not raise_first_exception and raise_exception:
+    if not return_exceptions and raise_exception:
         raise raise_exception
     return results
