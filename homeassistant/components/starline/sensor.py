@@ -45,7 +45,7 @@ class StarlineSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of the sensor."""
-        return f"starline-{self._key}-{str(self._device.device_id)}"
+        return f"starline-{self._key}-{self._device.device_id}"
 
     @property
     def name(self):

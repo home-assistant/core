@@ -31,7 +31,7 @@ class StarlineLock(LockDevice):
     @property
     def unique_id(self):
         """Return the unique ID of the lock."""
-        return f"starline-lock-{str(self._device.device_id)}"
+        return f"starline-lock-{self._device.device_id}"
 
     @property
     def name(self):
@@ -54,13 +54,11 @@ class StarlineLock(LockDevice):
 
     def lock(self, **kwargs):
         """Lock the car."""
-        LOGGER.debug("%s: locking doors", self._device.name)
-        self._api.set_arm_state(self._device.device_id, True)
+        self._api.set_car_state(self._device.device_id, "arm", True)
 
     def unlock(self, **kwargs):
         """Unlock the car."""
-        LOGGER.debug("%s: unlocking doors", self._device.name)
-        self._api.set_arm_state(self._device.device_id, False)
+        self._api.set_car_state(self._device.device_id, "arm", False)
 
     @property
     def device_info(self):

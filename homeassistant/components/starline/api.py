@@ -169,11 +169,12 @@ class StarlineApi(BaseApi):
             return response["devices"] + response["shared_devices"]
         return None
 
-    def _set_param(self, device_id: str, name: str, value: Any):
+    def set_car_state(self, device_id: str, name: str, state: bool):
+        LOGGER.debug("Setting car %s state: %s=%d", device_id, name, state)
         url = "https://developer.starline.ru/json/v1/device/{}/set_param".format(device_id)
         data = {
             "type": name,
-            name: value,
+            name: 1 if state else 0,
         }
         headers = {"Cookie": "slnet=" + self._slnet_token}
         response = self.post(url, json=data, headers=headers)
@@ -184,11 +185,3 @@ class StarlineApi(BaseApi):
             self._call_listeners()
             return response
         return None
-
-    def set_arm_state(self, device_id: str, state: bool) -> None:
-        """Set security state."""
-        self._set_param(device_id, "arm", 1 if state else 0)
-
-    def set_engine_state(self, device_id: str, state: bool) -> None:
-        """Start/stop engine."""
-        self._set_param(device_id, "ign", 1 if state else 0)

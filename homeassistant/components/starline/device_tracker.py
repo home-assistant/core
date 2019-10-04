@@ -25,7 +25,7 @@ class StarlineDeviceTracker(TrackerEntity, RestoreEntity):
     @property
     def unique_id(self):
         """Return the unique ID."""
-        return f"starline-location-{str(self._device.device_id)}"
+        return f"starline-location-{self._device.device_id}"
 
     @property
     def battery_level(self):
@@ -74,7 +74,7 @@ class StarlineDeviceTracker(TrackerEntity, RestoreEntity):
 
     @property
     def icon(self):
-        return "mdi:car"
+        return "mdi:map-marker-outline"
 
     def update(self):
         """Mark the device as seen."""

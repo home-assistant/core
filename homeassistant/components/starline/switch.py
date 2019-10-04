@@ -3,6 +3,12 @@ from homeassistant.components.switch import SwitchDevice
 from .api import StarlineApi, StarlineDevice
 from .const import DOMAIN, LOGGER
 
+SWITCH_TYPES = {
+    "ign": ["Engine", "mdi:engine-outline", "mdi:engine-off-outline"],
+    "webasto": ["Webasto", "mdi:radiator", "mdi:radiator-off"],
+    "out": ["Additional Channel", "mdi:access-point-network", "mdi:access-point-network-off"],
+}
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the StarLine switch."""
@@ -10,8 +16,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     api = hass.data[DOMAIN]
     entities = []
     for device_id, device in api.devices.items():
-        # TODO: check functions array
-        entities.append(StarlineSwitch(api, device))
+        for key, value in SWITCH_TYPES.items():
+            # TODO: check functions array
+            entities.append(StarlineSwitch(api, device, key, *value))
     async_add_entities(entities)
     return True
 
@@ -19,10 +26,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class StarlineSwitch(SwitchDevice):
     """Representation of a StarLine switch."""
 
-    def __init__(self, api: StarlineApi, device: StarlineDevice):
+    def __init__(self, api: StarlineApi, device: StarlineDevice, key: str, switch_name: str, icon_on: str, icon_off: str):
         """Initialize the switch."""
         self._api = api
         self._device = device
+        self._key = key
+        self._switch_name = switch_name
+        self._icon_on = icon_on
+        self._icon_off = icon_off
 
     @property
     def should_poll(self):
@@ -32,21 +43,23 @@ class StarlineSwitch(SwitchDevice):
     @property
     def unique_id(self):
         """Return the unique ID of the switch."""
-        return f"starline-switch-{str(self._device.device_id)}"
+        return f"starline-{self._key}-{self._device.device_id}"
 
     @property
     def name(self):
         """Return the name of the switch."""
-        return f"{self._device.name} Engine"
+        return f"{self._device.name} {self._switch_name}"
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the switch."""
-        return self._device.engine_attrs
+        if self._key == "ign":
+            return self._device.engine_attrs
+        return None
 
     @property
     def icon(self):
-        return "mdi:engine-outline" if self.is_on else "mdi:engine-off-outline"
+        return self._icon_on if self.is_on else self._icon_off
 
     @property
     def assumed_state(self):
@@ -56,17 +69,15 @@ class StarlineSwitch(SwitchDevice):
     @property
     def is_on(self):
         """Return True if entity is on."""
-        return self._device.car_state["ign"]
+        return self._device.car_state[self._key]
 
     def turn_on(self, **kwargs):
         """Turn the entity on."""
-        LOGGER.debug("%s: starting engine", self._device.name)
-        self._api.set_engine_state(self._device.device_id, True)
+        self._api.set_car_state(self._device.device_id, self._key, True)
 
     def turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
-        LOGGER.debug("%s: stopping engine", self._device.name)
-        self._api.set_engine_state(self._device.device_id, False)
+        self._api.set_car_state(self._device.device_id, self._key, False)
 
     @property
     def device_info(self):
