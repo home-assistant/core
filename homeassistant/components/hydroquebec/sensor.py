@@ -89,6 +89,27 @@ SENSOR_TYPES = {
         TEMP_CELSIUS,
         "mdi:thermometer",
     ],
+    "yesterday_compare_total_consumption": [
+        "Yesterday compare total consumption",
+        KILOWATT_HOUR,
+        "mdi:flash",
+    ],
+    "yesterday_compare_lower_price_consumption": [
+        "Yesterday compare lower price consumption",
+        KILOWATT_HOUR,
+        "mdi:flash",
+    ],
+    "yesterday_compare_higher_price_consumption": [
+        "Yesterday compare higher price consumption",
+        KILOWATT_HOUR,
+        "mdi:flash",
+    ],
+    "yesterday_compare_average_temperature":
+    ["Yesterday compare average temperature",
+    TEMP_CELSIUS,
+    "mdi:thermometer",
+    ],
+
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -121,6 +142,13 @@ DAILY_MAP = (
     ("yesterday_lower_price_consumption", "consoRegQuot"),
     ("yesterday_higher_price_consumption", "consoHautQuot"),
 )
+
+DAILY_COMPARE_MAP = (
+    ('yesterday_compare_total_consumption', 'consoTotalQuot'),
+    ('yesterday_compare_lower_price_consumption', 'consoRegQuot'),
+    ('yesterday_compare_higher_price_consumption', 'consoHautQuot'),
+)
+
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
