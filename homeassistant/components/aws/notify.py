@@ -11,6 +11,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_PLATFORM, CONF_NAME
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.util.async_ import safe_wait
 from .const import (
     CONF_CONTEXT,
     CONF_CREDENTIAL_NAME,
@@ -19,7 +20,6 @@ from .const import (
     CONF_SERVICE,
     DATA_SESSIONS,
 )
-from homeassistant.util.async_ import safe_wait
 
 _LOGGER = logging.getLogger(__name__)
 
