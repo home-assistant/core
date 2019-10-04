@@ -1,25 +1,23 @@
 """Support for Google travel time sensors."""
+from datetime import datetime, timedelta
 import logging
-from datetime import datetime
-from datetime import timedelta
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
+    ATTR_ATTRIBUTION,
     CONF_API_KEY,
+    CONF_MODE,
     CONF_NAME,
     EVENT_HOMEASSISTANT_START,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    ATTR_ATTRIBUTION,
-    CONF_MODE,
 )
 from homeassistant.helpers import location
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.travel_time import get_location_from_attributes
 from homeassistant.util import Throttle
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -303,7 +301,7 @@ class GoogleTravelTimeSensor(Entity):
 
         # Check if the entity has location attributes
         if location.has_location(entity):
-            return self._get_location_from_attributes(entity)
+            return get_location_from_attributes(entity)
 
         # Check if device is in a zone
         zone_entity = self._hass.states.get("zone.%s" % entity.state)
@@ -311,7 +309,7 @@ class GoogleTravelTimeSensor(Entity):
             _LOGGER.debug(
                 "%s is in %s, getting zone location", entity_id, zone_entity.entity_id
             )
-            return self._get_location_from_attributes(zone_entity)
+            return get_location_from_attributes(zone_entity)
 
         # If zone was not found in state then use the state as the location
         if entity_id.startswith("sensor."):
@@ -320,16 +318,10 @@ class GoogleTravelTimeSensor(Entity):
         # When everything fails just return nothing
         return None
 
-    @staticmethod
-    def _get_location_from_attributes(entity):
-        """Get the lat/long string from an entities attributes."""
-        attr = entity.attributes
-        return "%s,%s" % (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
-
     def _resolve_zone(self, friendly_name):
         entities = self._hass.states.all()
         for entity in entities:
             if entity.domain == "zone" and entity.name == friendly_name:
-                return self._get_location_from_attributes(entity)
+                return get_location_from_attributes(entity)
 
         return friendly_name

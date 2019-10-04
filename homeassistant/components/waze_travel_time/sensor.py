@@ -10,15 +10,14 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_NAME,
     CONF_REGION,
-    EVENT_HOMEASSISTANT_START,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL,
+    CONF_UNIT_SYSTEM_METRIC,
+    EVENT_HOMEASSISTANT_START,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import location
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.travel_time import get_location_from_attributes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,12 +89,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Wait until start event is sent to load this component.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, lambda _: sensor.update())
-
-
-def _get_location_from_attributes(state):
-    """Get the lat/long string from an states attributes."""
-    attr = state.attributes
-    return "{},{}".format(attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
 
 
 class WazeTravelTime(Entity):
@@ -172,7 +165,7 @@ class WazeTravelTime(Entity):
         # Check if the entity has location attributes.
         if location.has_location(state):
             _LOGGER.debug("Getting %s location", entity_id)
-            return _get_location_from_attributes(state)
+            return get_location_from_attributes(state)
 
         # Check if device is inside a zone.
         zone_state = self.hass.states.get(f"zone.{state.state}")
@@ -180,7 +173,7 @@ class WazeTravelTime(Entity):
             _LOGGER.debug(
                 "%s is in %s, getting zone location", entity_id, zone_state.entity_id
             )
-            return _get_location_from_attributes(zone_state)
+            return get_location_from_attributes(zone_state)
 
         # If zone was not found in state then use the state as the location.
         if entity_id.startswith("sensor."):
@@ -194,7 +187,7 @@ class WazeTravelTime(Entity):
         states = self.hass.states.all()
         for state in states:
             if state.domain == "zone" and state.name == friendly_name:
-                return _get_location_from_attributes(state)
+                return get_location_from_attributes(state)
 
         return friendly_name
 

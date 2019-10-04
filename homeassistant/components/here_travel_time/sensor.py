@@ -9,8 +9,6 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     ATTR_MODE,
     CONF_MODE,
     CONF_NAME,
@@ -18,10 +16,11 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import location
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.travel_time import get_location_from_attributes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -299,7 +298,7 @@ class HERETravelTimeSensor(Entity):
 
         # Check if the entity has location attributes
         if location.has_location(entity):
-            return self._get_location_from_attributes(entity)
+            return get_location_from_attributes(entity)
 
         # Check if device is in a zone
         zone_entity = self.hass.states.get("zone.{}".format(entity.state))
@@ -307,17 +306,11 @@ class HERETravelTimeSensor(Entity):
             _LOGGER.debug(
                 "%s is in %s, getting zone location", entity_id, zone_entity.entity_id
             )
-            return self._get_location_from_attributes(zone_entity)
+            return get_location_from_attributes(zone_entity)
 
         # If zone was not found in state then use the state as the location
         if entity_id.startswith("sensor."):
             return entity.state
-
-    @staticmethod
-    def _get_location_from_attributes(entity: State) -> str:
-        """Get the lat/long string from an entities attributes."""
-        attr = entity.attributes
-        return "{},{}".format(attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
 
 
 class HERETravelTimeData:
