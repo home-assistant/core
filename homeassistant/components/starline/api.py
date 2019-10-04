@@ -10,8 +10,15 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
 from .device import StarlineDevice
-from .const import (LOGGER, ENCODING, GET, POST, CONNECT_TIMEOUT,
-                    TOTAL_TIMEOUT, DEFAULT_UPDATE_INTERVAL)
+from .const import (
+    LOGGER,
+    ENCODING,
+    GET,
+    POST,
+    CONNECT_TIMEOUT,
+    TOTAL_TIMEOUT,
+    DEFAULT_UPDATE_INTERVAL,
+)
 
 
 class BaseApi:
@@ -21,8 +28,15 @@ class BaseApi:
         """Constructor."""
         self._session: aiohttp.ClientSession = async_get_clientsession(hass)
 
-    async def request(self, method: str, url: str, params: dict = None, data: dict = None,
-                      json: dict = None, headers: dict = None) -> aiohttp.ClientResponse:
+    async def request(
+        self,
+        method: str,
+        url: str,
+        params: dict = None,
+        data: dict = None,
+        json: dict = None,
+        headers: dict = None,
+    ) -> aiohttp.ClientResponse:
         """Make request."""
 
         response = await self._session.request(
@@ -32,7 +46,7 @@ class BaseApi:
             data=data,
             json=json,
             headers=headers,
-            timeout=aiohttp.ClientTimeout(total=TOTAL_TIMEOUT, connect=CONNECT_TIMEOUT)
+            timeout=aiohttp.ClientTimeout(total=TOTAL_TIMEOUT, connect=CONNECT_TIMEOUT),
         )
         response.raise_for_status()
         response.encoding = ENCODING
@@ -55,17 +69,18 @@ class BaseApi:
         LOGGER.debug("  Data: {}".format(data))
         return data
 
-    async def post(self, url: str, params: dict = None, data: dict = None,
-                   json: dict = None, headers: dict = None) -> dict:
+    async def post(
+        self,
+        url: str,
+        params: dict = None,
+        data: dict = None,
+        json: dict = None,
+        headers: dict = None,
+    ) -> dict:
         """Make POST request."""
 
         response = await self.request(
-            POST,
-            url,
-            params=params,
-            data=data,
-            json=json,
-            headers=headers
+            POST, url, params=params, data=data, json=json, headers=headers
         )
         data = await response.json(content_type=None)
         LOGGER.debug("  Data: {}".format(data))
@@ -81,7 +96,7 @@ class StarlineAuth(BaseApi):
         url = "https://id.starline.ru/apiV3/application/getCode/"
         payload = {
             "appId": app_id,
-            "secret": hashlib.md5(app_secret.encode(ENCODING)).hexdigest()
+            "secret": hashlib.md5(app_secret.encode(ENCODING)).hexdigest(),
         }
         response = await self.get(url, params=payload)
 
@@ -97,7 +112,7 @@ class StarlineAuth(BaseApi):
         url = "https://id.starline.ru/apiV3/application/getToken/"
         payload = {
             "appId": app_id,
-            "secret": hashlib.md5((app_secret + app_code).encode(ENCODING)).hexdigest()
+            "secret": hashlib.md5((app_secret + app_code).encode(ENCODING)).hexdigest(),
         }
         response = await self.get(url, params=payload)
 
@@ -107,18 +122,22 @@ class StarlineAuth(BaseApi):
             return app_token
         raise Exception(response)
 
-    async def get_slid_user_token(self, app_token: str, user_login: str, user_password: str,
-                                  sms_code: str = None, captcha_sid: str = None,
-                                  captcha_code: str = None) -> (bool, dict):
+    async def get_slid_user_token(
+        self,
+        app_token: str,
+        user_login: str,
+        user_password: str,
+        sms_code: str = None,
+        captcha_sid: str = None,
+        captcha_code: str = None,
+    ) -> (bool, dict):
         """Authenticate user by login, password and application token."""
 
         url = "https://id.starline.ru/apiV3/user/login/"
-        payload = {
-            "token": app_token
-        }
+        payload = {"token": app_token}
         data = {
             "login": user_login,
-            "pass": hashlib.sha1(user_password.encode(ENCODING)).hexdigest()
+            "pass": hashlib.sha1(user_password.encode(ENCODING)).hexdigest(),
         }
         if sms_code is not None:
             data["smsCode"] = sms_code
@@ -128,8 +147,12 @@ class StarlineAuth(BaseApi):
         response = await self.post(url, params=payload, data=data)
 
         state = int(response["state"])
-        if (state == 1) or (state == 2) or (state == 0 and "captchaSid" in response["desc"]) \
-                or (state == 0 and "phone" in response["desc"]):
+        if (
+            (state == 1)
+            or (state == 2)
+            or (state == 0 and "captchaSid" in response["desc"])
+            or (state == 0 and "phone" in response["desc"])
+        ):
             return state, response["desc"]
         raise Exception(response)
 
@@ -137,9 +160,7 @@ class StarlineAuth(BaseApi):
         """Authenticate user by StarLineID token."""
 
         url = "https://developer.starline.ru/json/v2/auth.slid"
-        data = {
-            "slid_token": slid_token
-        }
+        data = {"slid_token": slid_token}
         response = await self.request(POST, url, json=data)
         json = await response.json(content_type=None)
 
@@ -191,7 +212,9 @@ class StarlineApi(BaseApi):
             self._unsubscribe_auto_updater()
 
         delta = timedelta(seconds=interval)
-        self._unsubscribe_auto_updater = async_track_time_interval(hass, self.update, delta)
+        self._unsubscribe_auto_updater = async_track_time_interval(
+            hass, self.update, delta
+        )
 
     @property
     def devices(self):
@@ -201,7 +224,9 @@ class StarlineApi(BaseApi):
     async def get_user_info(self) -> Optional[List[Dict[str, Any]]]:
         """Get user information."""
 
-        url = "https://developer.starline.ru/json/v2/user/{}/user_info".format(self._user_id)
+        url = "https://developer.starline.ru/json/v2/user/{}/user_info".format(
+            self._user_id
+        )
         headers = {"Cookie": "slnet=" + self._slnet_token}
         response = await self.get(url, headers=headers)
 
@@ -213,11 +238,10 @@ class StarlineApi(BaseApi):
     async def set_car_state(self, device_id: str, name: str, state: bool):
         """Set car state information."""
         LOGGER.debug("Setting car %s state: %s=%d", device_id, name, state)
-        url = "https://developer.starline.ru/json/v1/device/{}/set_param".format(device_id)
-        data = {
-            "type": name,
-            name: 1 if state else 0,
-        }
+        url = "https://developer.starline.ru/json/v1/device/{}/set_param".format(
+            device_id
+        )
+        data = {"type": name, name: 1 if state else 0}
         headers = {"Cookie": "slnet=" + self._slnet_token}
         response = await self.post(url, json=data, headers=headers)
 

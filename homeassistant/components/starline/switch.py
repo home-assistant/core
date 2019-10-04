@@ -6,7 +6,11 @@ from .const import DOMAIN
 SWITCH_TYPES = {
     "ign": ["Engine", "mdi:engine-outline", "mdi:engine-off-outline"],
     "webasto": ["Webasto", "mdi:radiator", "mdi:radiator-off"],
-    "out": ["Additional Channel", "mdi:access-point-network", "mdi:access-point-network-off"],
+    "out": [
+        "Additional Channel",
+        "mdi:access-point-network",
+        "mdi:access-point-network-off",
+    ],
 }
 
 
@@ -25,7 +29,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class StarlineSwitch(SwitchDevice):
     """Representation of a StarLine switch."""
 
-    def __init__(self, api: StarlineApi, device: StarlineDevice, key: str, switch_name: str, icon_on: str, icon_off: str):
+    def __init__(
+        self,
+        api: StarlineApi,
+        device: StarlineDevice,
+        key: str,
+        switch_name: str,
+        icon_on: str,
+        icon_off: str,
+    ):
         """Initialize the switch."""
         self._api = api
         self._device = device

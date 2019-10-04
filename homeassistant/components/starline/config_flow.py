@@ -7,7 +7,19 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.core import callback
 
 from .api import StarlineAuth
-from .const import DOMAIN, CONF_APP_ID, CONF_APP_SECRET, CONF_MFA_CODE, CONF_CAPTCHA_CODE, LOGGER, CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL, ERROR_AUTH_APP, ERROR_AUTH_USER, ERROR_AUTH_MFA
+from .const import (
+    DOMAIN,
+    CONF_APP_ID,
+    CONF_APP_SECRET,
+    CONF_MFA_CODE,
+    CONF_CAPTCHA_CODE,
+    LOGGER,
+    CONF_UPDATE_INTERVAL,
+    DEFAULT_UPDATE_INTERVAL,
+    ERROR_AUTH_APP,
+    ERROR_AUTH_USER,
+    ERROR_AUTH_MFA,
+)
 
 
 class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -89,8 +101,12 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="auth_app",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_APP_ID, default=self._app_id or vol.UNDEFINED): str,
-                    vol.Required(CONF_APP_SECRET, default=self._app_secret or vol.UNDEFINED): str,
+                    vol.Required(
+                        CONF_APP_ID, default=self._app_id or vol.UNDEFINED
+                    ): str,
+                    vol.Required(
+                        CONF_APP_SECRET, default=self._app_secret or vol.UNDEFINED
+                    ): str,
                 }
             ),
             errors=errors,
@@ -104,10 +120,16 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth_user",
-            data_schema=vol.Schema({
-                vol.Required(CONF_USERNAME, default=self._username or vol.UNDEFINED): str,
-                vol.Required(CONF_PASSWORD, default=self._password or vol.UNDEFINED): str,
-            }),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME, default=self._username or vol.UNDEFINED
+                    ): str,
+                    vol.Required(
+                        CONF_PASSWORD, default=self._password or vol.UNDEFINED
+                    ): str,
+                }
+            ),
             errors=errors,
         )
 
@@ -119,13 +141,15 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth_mfa",
-            data_schema=vol.Schema({
-                vol.Required(CONF_MFA_CODE, default=self._mfa_code or vol.UNDEFINED): str,
-            }),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_MFA_CODE, default=self._mfa_code or vol.UNDEFINED
+                    ): str
+                }
+            ),
             errors=errors,
-            description_placeholders={
-                "phone_number": self._phone_number,
-            }
+            description_placeholders={"phone_number": self._phone_number},
         )
 
     def _async_form_auth_captcha(self, error=None):
@@ -136,20 +160,26 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth_captcha",
-            data_schema=vol.Schema({
-                vol.Required(CONF_CAPTCHA_CODE, default=self._captcha_code or vol.UNDEFINED): str,
-            }),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_CAPTCHA_CODE, default=self._captcha_code or vol.UNDEFINED
+                    ): str
+                }
+            ),
             errors=errors,
             description_placeholders={
-                "captcha_img": "<img src=\"" + self._captcha_image + "\"/>",
-            }
+                "captcha_img": '<img src="' + self._captcha_image + '"/>'
+            },
         )
 
     def _async_authenticate_app(self, error=None):
         """Authenticate application."""
         try:
             self._app_code = self._auth.get_app_code(self._app_id, self._app_secret)
-            self._app_token = self._auth.get_app_token(self._app_id, self._app_secret, self._app_code)
+            self._app_token = self._auth.get_app_token(
+                self._app_id, self._app_secret, self._app_code
+            )
             return self._async_form_auth_user(error)
         except Exception as e:
             LOGGER.error("Error auth StarLine: " + str(e))
@@ -158,7 +188,14 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def _async_authenticate_user(self, error=None):
         """Authenticate user."""
         try:
-            state, data = self._auth.get_slid_user_token(self._app_token, self._username, self._password, self._mfa_code, self._captcha_sid, self._captcha_code)
+            state, data = self._auth.get_slid_user_token(
+                self._app_token,
+                self._username,
+                self._password,
+                self._mfa_code,
+                self._captcha_sid,
+                self._captcha_code,
+            )
 
             if state == 1:
                 self._user_slid = data["user_token"]
@@ -186,10 +223,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title="Application " + self._app_id,
-            data={
-                "user_id": self._user_id,
-                "slnet_token": self._slnet_token,
-            },
+            data={"user_id": self._user_id, "slnet_token": self._slnet_token},
         )
 
 
@@ -215,7 +249,12 @@ class StarlineOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="settings",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_UPDATE_INTERVAL, default=self.config_entry.options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)): vol.All(vol.Coerce(int), vol.Range(min=10))
+                    vol.Required(
+                        CONF_UPDATE_INTERVAL,
+                        default=self.config_entry.options.get(
+                            CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=10))
                 }
             ),
         )

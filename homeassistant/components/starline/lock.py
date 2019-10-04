@@ -52,7 +52,9 @@ class StarlineLock(LockDevice):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return "mdi:shield-check-outline" if self.is_locked else "mdi:shield-alert-outline"
+        return (
+            "mdi:shield-check-outline" if self.is_locked else "mdi:shield-alert-outline"
+        )
 
     @property
     def is_locked(self):

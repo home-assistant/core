@@ -10,7 +10,7 @@ SENSOR_TYPES = {
     "balance": ["Balance", "$", "mdi:cash-multiple"],
     "ctemp": ["Inner Temperature", TEMP_CELSIUS, "mdi:thermometer"],
     "etemp": ["Engine Temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    "gsm_lvl": ["GSM Signal", "%", "mdi:signal"]
+    "gsm_lvl": ["GSM Signal", "%", "mdi:signal"],
 }
 
 
@@ -28,7 +28,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class StarlineSensor(Entity):
     """Representation of a StarLine sensor."""
 
-    def __init__(self, api: StarlineApi, device: StarlineDevice, key: str, sensor_name: str, unit: str, icon: str):
+    def __init__(
+        self,
+        api: StarlineApi,
+        device: StarlineDevice,
+        key: str,
+        sensor_name: str,
+        unit: str,
+        icon: str,
+    ):
         """Constructor."""
         self._api = api
         self._device = device
@@ -58,7 +66,7 @@ class StarlineSensor(Entity):
         if self._key == "battery":
             return icon_for_battery_level(
                 battery_level=self._device.battery_level_percent,
-                charging=self._device.car_state["ign"]
+                charging=self._device.car_state["ign"],
             )
         elif self._key == "gsm_lvl":
             return icon_for_signal_level(signal_level=self._device.gsm_level_percent)

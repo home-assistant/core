@@ -1,12 +1,21 @@
 """Reads vehicle status from StarLine API."""
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_LOCK, DEVICE_CLASS_PROBLEM, DEVICE_CLASS_POWER)
+    BinarySensorDevice,
+    DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_LOCK,
+    DEVICE_CLASS_PROBLEM,
+    DEVICE_CLASS_POWER,
+)
 from .api import StarlineApi, StarlineDevice
 from .const import DOMAIN
 
 SENSOR_TYPES = {
-    "hbrake": ["Hand Brake", DEVICE_CLASS_POWER, "mdi:car-brake-parking", "mdi:car-brake-parking"],
+    "hbrake": [
+        "Hand Brake",
+        DEVICE_CLASS_POWER,
+        "mdi:car-brake-parking",
+        "mdi:car-brake-parking",
+    ],
     "hood": ["Hood", DEVICE_CLASS_OPENING, "mdi:car", "mdi:car"],
     "trunk": ["Trunk", DEVICE_CLASS_OPENING, "mdi:car-back", "mdi:car-back"],
     "alarm": ["Alarm", DEVICE_CLASS_PROBLEM, "mdi:car-connected", "mdi:car"],
@@ -29,7 +38,16 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class StarlineSensor(BinarySensorDevice):
     """Representation of a StarLine binary sensor."""
 
-    def __init__(self, api: StarlineApi, device: StarlineDevice, key: str, sensor_name: str, device_class: str, icon_on: str, icon_off: str):
+    def __init__(
+        self,
+        api: StarlineApi,
+        device: StarlineDevice,
+        key: str,
+        sensor_name: str,
+        device_class: str,
+        icon_on: str,
+        icon_off: str,
+    ):
         """Constructor."""
         self._api = api
         self._device = device

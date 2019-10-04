@@ -1,12 +1,18 @@
 """StarLine device."""
 from datetime import datetime
 from typing import Optional, Dict, Any, List
-from .const import (DOMAIN, BATTERY_LEVEL_MIN, BATTERY_LEVEL_MAX,
-                    GSM_LEVEL_MIN, GSM_LEVEL_MAX,
-                    DEVICE_FUNCTION_POSITION, DEVICE_FUNCTION_STATE)
+from .const import (
+    DOMAIN,
+    BATTERY_LEVEL_MIN,
+    BATTERY_LEVEL_MAX,
+    GSM_LEVEL_MIN,
+    GSM_LEVEL_MAX,
+    DEVICE_FUNCTION_POSITION,
+    DEVICE_FUNCTION_STATE,
+)
 
 
-class StarlineDevice():
+class StarlineDevice:
     """StarLine device."""
 
     def __init__(self):
@@ -85,7 +91,7 @@ class StarlineDevice():
         """Attributes for device tracker."""
         return {
             "updated": datetime.utcfromtimestamp(self._position["ts"]).isoformat(),
-            "online": self.online
+            "online": self.online,
         }
 
     @property
@@ -104,7 +110,7 @@ class StarlineDevice():
             "raw": self._gsm_lvl,
             "imei": self._imei,
             "phone": self._phone,
-            "online": self.online
+            "online": self.online,
         }
 
     @property
@@ -132,7 +138,11 @@ class StarlineDevice():
             return 100
         if self._battery < BATTERY_LEVEL_MIN:
             return 0
-        return round((self._battery - BATTERY_LEVEL_MIN) / (BATTERY_LEVEL_MAX - BATTERY_LEVEL_MIN) * 100)
+        return round(
+            (self._battery - BATTERY_LEVEL_MIN)
+            / (BATTERY_LEVEL_MAX - BATTERY_LEVEL_MIN)
+            * 100
+        )
 
     @property
     def balance(self):
@@ -171,7 +181,9 @@ class StarlineDevice():
             return 100
         if self.gsm_level < GSM_LEVEL_MIN:
             return 0
-        return round((self.gsm_level - GSM_LEVEL_MIN) / (GSM_LEVEL_MAX - GSM_LEVEL_MIN) * 100)
+        return round(
+            (self.gsm_level - GSM_LEVEL_MIN) / (GSM_LEVEL_MAX - GSM_LEVEL_MIN) * 100
+        )
 
     @property
     def imei(self):

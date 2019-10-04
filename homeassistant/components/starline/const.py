@@ -27,8 +27,8 @@ GSM_LEVEL_MIN = 1
 GSM_LEVEL_MAX = 30
 
 ENCODING = "utf-8"
-GET = 'GET'
-POST = 'POST'
+GET = "GET"
+POST = "POST"
 CONNECT_TIMEOUT = 5  # in seconds
 TOTAL_TIMEOUT = 120  # in seconds
 
