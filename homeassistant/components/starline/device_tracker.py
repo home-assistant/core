@@ -28,14 +28,19 @@ class StarlineDeviceTracker(TrackerEntity, RestoreEntity):
         return f"starline-location-{self._device.device_id}"
 
     @property
-    def battery_level(self):
-        """Return the battery level of the device."""
-        return self._device.battery_level
+    def name(self):
+        """Return the name of the device."""
+        return f"{self._device.name} Location"
 
     @property
     def device_state_attributes(self):
         """Return device specific attributes."""
         return self._device.gps_attrs
+
+    @property
+    def battery_level(self):
+        """Return the battery level of the device."""
+        return self._device.battery_level
 
     @property
     def location_accuracy(self):
@@ -51,11 +56,6 @@ class StarlineDeviceTracker(TrackerEntity, RestoreEntity):
     def longitude(self):
         """Return longitude value of the device."""
         return self._device.position["y"]
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return f"{self._device.name} Location"
 
     @property
     def should_poll(self):

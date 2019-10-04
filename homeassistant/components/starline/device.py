@@ -69,7 +69,8 @@ class StarlineDevice():
     @property
     def gps_attrs(self):
         return {
-            'updated': datetime.utcfromtimestamp(self._position['ts']).isoformat(),
+            "updated": datetime.utcfromtimestamp(self._position["ts"]).isoformat(),
+            "online": self.online
         }
 
     @property
