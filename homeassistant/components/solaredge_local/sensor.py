@@ -114,10 +114,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Could not retrieve details from SolarEdge API")
         return
 
-    # Changing inverter temperature unit
-    SENSORS = deepcopy(SENSOR_TYPES)
+    # Changing inverter temperature unit.
+    NEW_SENSORS = deepcopy(SENSOR_TYPES)
     if status.inverters.primary.temperature.units.farenheit:
-        SENSOR_TYPES["inverter_temperature"] = [
+        NEW_SENSORS["inverter_temperature"] = [
             "invertertemperature",
             "Inverter Temperature",
             TEMP_FAHRENHEIT,
@@ -129,15 +129,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Create a new sensor for each sensor type.
     entities = []
-    for sensor_key in SENSORS:
+    for sensor_key in NEW_SENSORS:
         sensor = SolarEdgeSensor(
             platform_name,
             sensor_key,
             data,
-            SENSORS[sensor_key][0],
-            SENSORS[sensor_key][1],
-            SENSORS[sensor_key][2],
-            SENSORS[sensor_key][3],
+            NEW_SENSORS[sensor_key][0],
+            NEW_SENSORS[sensor_key][1],
+            NEW_SENSORS[sensor_key][2],
+            NEW_SENSORS[sensor_key][3],
         )
         entities.append(sensor)
 
