@@ -17,17 +17,12 @@ CONF_PAYLOAD_CUSTOM = "payload_custom"
 CONF_PAYLOAD_HOME = "payload_home"
 CONF_PAYLOAD_NOT_HOME = "payload_not_home"
 
-DEFAULT_PAYLOAD_HOME = STATE_HOME
-DEFAULT_PAYLOAD_NOT_HOME = STATE_NOT_HOME
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend(
     {
         vol.Required(CONF_DEVICES): {cv.string: mqtt.valid_subscribe_topic},
         vol.Optional(CONF_PAYLOAD_CUSTOM): {cv.string: cv.string},
-        vol.Optional(CONF_PAYLOAD_HOME, default=DEFAULT_PAYLOAD_HOME): cv.string,
-        vol.Optional(
-            CONF_PAYLOAD_NOT_HOME, default=DEFAULT_PAYLOAD_NOT_HOME
-        ): cv.string,
+        vol.Optional(CONF_PAYLOAD_HOME, default=STATE_HOME): cv.string,
+        vol.Optional(CONF_PAYLOAD_NOT_HOME, default=STATE_NOT_HOME): cv.string,
     }
 )
 
@@ -46,9 +41,9 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
         def async_message_received(msg, dev_id=dev_id):
             """Handle received MQTT message."""
             if msg.payload == payload_home:
-                location_name = DEFAULT_PAYLOAD_HOME
+                location_name = STATE_HOME
             elif msg.payload == payload_not_home:
-                location_name = DEFAULT_PAYLOAD_NOT_HOME
+                location_name = STATE_NOT_HOME
             elif payload_custom and msg.payload in payload_custom:
                 location_name = payload_custom[msg.payload]
             else:
