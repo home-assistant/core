@@ -272,7 +272,7 @@ pmsensor==0.4
 prometheus_client==0.7.1
 
 # homeassistant.components.ptvsd
-ptvsd==4.2.8
+ptvsd==4.3.2
 
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
