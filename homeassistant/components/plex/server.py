@@ -109,3 +109,20 @@ class PlexServer:
     def show_all_controls(self):
         """Return show_all_controls option."""
         return self.options[MP_DOMAIN][CONF_SHOW_ALL_CONTROLS]
+
+    @property
+    def library(self):
+        """Return library attribute from server object."""
+        return self._plex_server.library
+
+    def playlist(self, title):
+        """Return playlist from server object."""
+        return self._plex_server.playlist(title)
+
+    def create_playlist(
+        self, title, items=None, section=None, limit=None, smart=None, **kwargs
+    ):
+        """Create playlist using server object."""
+        return self._plex_server.createPlaylist(
+            title, items=items, section=section, limit=limit, smart=smart, **kwargs
+        )

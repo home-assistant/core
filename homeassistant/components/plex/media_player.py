@@ -16,6 +16,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
@@ -543,9 +544,6 @@ class PlexClient(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        if not self._is_player_active:
-            return 0
-
         # force show all controls
         if self.plex_server.show_all_controls:
             return (
@@ -555,13 +553,11 @@ class PlexClient(MediaPlayerDevice):
                 | SUPPORT_STOP
                 | SUPPORT_VOLUME_SET
                 | SUPPORT_PLAY
+                | SUPPORT_PLAY_MEDIA
                 | SUPPORT_TURN_OFF
                 | SUPPORT_VOLUME_MUTE
             )
 
-        # only show controls when we know what device is connecting
-        if not self._make:
-            return 0
         # no mute support
         if self.make.lower() == "shield android tv":
             _LOGGER.debug(
@@ -575,8 +571,10 @@ class PlexClient(MediaPlayerDevice):
                 | SUPPORT_STOP
                 | SUPPORT_VOLUME_SET
                 | SUPPORT_PLAY
+                | SUPPORT_PLAY_MEDIA
                 | SUPPORT_TURN_OFF
             )
+
         # Only supports play,pause,stop (and off which really is stop)
         if self.make.lower().startswith("tivo"):
             _LOGGER.debug(
@@ -585,8 +583,7 @@ class PlexClient(MediaPlayerDevice):
                 self.entity_id,
             )
             return SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP | SUPPORT_TURN_OFF
-        # Not all devices support playback functionality
-        # Playback includes volume, stop/play/pause, etc.
+
         if self.device and "playback" in self._device_protocol_capabilities:
             return (
                 SUPPORT_PAUSE
@@ -595,6 +592,7 @@ class PlexClient(MediaPlayerDevice):
                 | SUPPORT_STOP
                 | SUPPORT_VOLUME_SET
                 | SUPPORT_PLAY
+                | SUPPORT_PLAY_MEDIA
                 | SUPPORT_TURN_OFF
                 | SUPPORT_VOLUME_MUTE
             )
@@ -686,7 +684,7 @@ class PlexClient(MediaPlayerDevice):
         media = None
         if media_type == "MUSIC":
             media = (
-                self.device.server.library.section(src["library_name"])
+                self.plex_server.library.section(src["library_name"])
                 .get(src["artist_name"])
                 .album(src["album_name"])
                 .get(src["track_name"])
@@ -699,9 +697,9 @@ class PlexClient(MediaPlayerDevice):
                 src["episode_number"],
             )
         elif media_type == "PLAYLIST":
-            media = self.device.server.playlist(src["playlist_name"])
+            media = self.plex_server.playlist(src["playlist_name"])
         elif media_type == "VIDEO":
-            media = self.device.server.library.section(src["library_name"]).get(
+            media = self.plex_server.library.section(src["library_name"]).get(
                 src["video_name"]
             )
 
@@ -711,20 +709,22 @@ class PlexClient(MediaPlayerDevice):
             and isinstance(media, plexapi.playlist.Playlist)
         ):
             # delete episode playlist after being loaded into a play queue
-            self._client_play_media(media=media, delete=True, shuffle=src["shuffle"])
+            self._client_play_media(
+                media=media, delete=True, shuffle=src.get("shuffle", False)
+            )
         elif media:
-            self._client_play_media(media=media, shuffle=src["shuffle"])
+            self._client_play_media(media=media, shuffle=src.get("shuffle", False))
 
     def _get_tv_media(self, library_name, show_name, season_number, episode_number):
         """Find TV media and return a Plex media object."""
         target_season = None
         target_episode = None
 
-        show = self.device.server.library.section(library_name).get(show_name)
+        show = self.plex_server.library.section(library_name).get(show_name)
 
         if not season_number:
             playlist_name = f"{self.entity_id} - {show_name} Episodes"
-            return self.device.server.createPlaylist(playlist_name, show.episodes())
+            return self.plex_server.create_playlist(playlist_name, show.episodes())
 
         for season in show.seasons():
             if int(season.seasonNumber) == int(season_number):
@@ -744,7 +744,7 @@ class PlexClient(MediaPlayerDevice):
                 playlist_name = "{} - {} Season {} Episodes".format(
                     self.entity_id, show_name, str(season_number)
                 )
-                return self.device.server.createPlaylist(
+                return self.plex_server.create_playlist(
                     playlist_name, target_season.episodes()
                 )
 
@@ -770,30 +770,7 @@ class PlexClient(MediaPlayerDevice):
             _LOGGER.error("Client cannot play media: %s", self.entity_id)
             return
 
-        playqueue = plexapi.playqueue.PlayQueue.create(
-            self.device.server, media, **params
-        )
-
-        # Delete dynamic playlists used to build playqueue (ex. play tv season)
-        if delete:
-            media.delete()
-
-        server_url = self.device.server.baseurl.split(":")
-        self.device.sendCommand(
-            "playback/playMedia",
-            **dict(
-                {
-                    "machineIdentifier": self.device.server.machineIdentifier,
-                    "address": server_url[1].strip("/"),
-                    "port": server_url[-1],
-                    "key": media.key,
-                    "containerKey": "/playQueues/{}?window=100&own=1".format(
-                        playqueue.playQueueID
-                    ),
-                },
-                **params,
-            ),
-        )
+        self.device.playMedia(media)
         self.update_devices()
 
     @property
