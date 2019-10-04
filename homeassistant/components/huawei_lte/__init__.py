@@ -118,10 +118,9 @@ class Router:
 
     def update(self) -> None:
         """Update router data."""
-        debugging = _LOGGER.isEnabledFor(logging.DEBUG)
 
         def get_data(key: str, func: Callable[[None], Any]) -> None:
-            if debugging or not self.subscriptions[key]:
+            if not self.subscriptions[key]:
                 return
             _LOGGER.debug("Getting %s for subscribers %s", key, self.subscriptions[key])
             try:
