@@ -1,5 +1,4 @@
 """Web socket API for Zigbee Home Automation devices."""
-import asyncio
 import logging
 
 import voluptuous as vol

@@ -1,5 +1,4 @@
 """Component to embed Aqualink devices."""
-import asyncio
 from functools import wraps
 import logging
 

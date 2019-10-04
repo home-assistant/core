@@ -1,5 +1,4 @@
 """Support for Notion."""
-import asyncio
 import logging
 
 from aionotion import async_get_client

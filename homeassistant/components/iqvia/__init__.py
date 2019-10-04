@@ -1,5 +1,4 @@
 """Support for IQVIA."""
-import asyncio
 from datetime import timedelta
 import logging
 
