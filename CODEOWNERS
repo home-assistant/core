@@ -14,6 +14,7 @@ homeassistant/scripts/check_config.py @kellerza
 
 # Integrations
 homeassistant/components/adguard/* @frenck
+homeassistant/components/airly/* @bieniu
 homeassistant/components/airvisual/* @bachya
 homeassistant/components/alarm_control_panel/* @colinodell
 homeassistant/components/alexa/* @home-assistant/cloud
