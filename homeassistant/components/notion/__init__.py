@@ -184,7 +184,7 @@ class Notion:
         }
 
         results = await safe_wait(
-            tasks.values(), return_exceptions=True, logger=_LOGGER
+            tasks.values(), raise_first_exception=True, logger=_LOGGER
         )
         for attr, result in zip(tasks, results):
             if isinstance(result, NotionError):

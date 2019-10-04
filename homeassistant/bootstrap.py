@@ -293,7 +293,7 @@ async def _async_set_up_integrations(
     # and integrations that need faster initialization.
     resolved_domains_task = safe_wait(
         (loader.async_component_dependencies(hass, domain) for domain in domains),
-        return_exceptions=True,
+        raise_first_exception=True,
         logger=_LOGGER,
     )
 
@@ -360,7 +360,7 @@ async def _async_set_up_integrations(
 
     for int_or_exc in await safe_wait(
         (loader.async_get_integration(hass, domain) for domain in stage_2_domains),
-        return_exceptions=True,
+        raise_first_exception=True,
         logger=_LOGGER,
     ):
         # Exceptions are handled in async_setup_component.

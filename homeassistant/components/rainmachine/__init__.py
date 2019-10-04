@@ -411,7 +411,7 @@ class RainMachine:
             tasks[RESTRICTIONS_UNIVERSAL] = self.client.restrictions.universal()
 
         results = await safe_wait(
-            tasks.values(), return_exceptions=True, logger=_LOGGER
+            tasks.values(), raise_first_exception=True, logger=_LOGGER
         )
         for operation, result in zip(tasks, results):
             if isinstance(result, RainMachineError):
