@@ -115,7 +115,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     # Changing inverter temperature unit.
-    NEW_SENSORS = deepcopy(SENSOR_TYPES)
+    sensors = deepcopy(SENSOR_TYPES)
     if status.inverters.primary.temperature.units.farenheit:
         NEW_SENSORS["inverter_temperature"] = [
             "invertertemperature",
@@ -129,15 +129,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Create a new sensor for each sensor type.
     entities = []
-    for sensor_key in NEW_SENSORS:
+    for sensor_key in sensors:
         sensor = SolarEdgeSensor(
             platform_name,
             sensor_key,
             data,
-            NEW_SENSORS[sensor_key][0],
-            NEW_SENSORS[sensor_key][1],
-            NEW_SENSORS[sensor_key][2],
-            NEW_SENSORS[sensor_key][3],
+            sensors[sensor_key][0],
+            sensors[sensor_key][1],
+            sensors[sensor_key][2],
+            sensors[sensor_key][3],
         )
         entities.append(sensor)
 
