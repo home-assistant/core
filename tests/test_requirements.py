@@ -1,7 +1,7 @@
 """Test requirements module."""
 import os
 from pathlib import Path
-from unittest.mock import patch, call, ANY
+from unittest.mock import patch, call
 from pytest import raises
 
 from homeassistant import setup
@@ -36,6 +36,7 @@ class TestRequirements:
     @patch("homeassistant.util.package.is_virtual_env", return_value=True)
     @patch("homeassistant.util.package.is_docker_env", return_value=False)
     @patch("homeassistant.util.package.install_package", return_value=True)
+    @patch.dict(os.environ, {}, clear=True)
     def test_requirement_installed_in_venv(
         self, mock_install, mock_denv, mock_venv, mock_dirname
     ):
@@ -49,14 +50,13 @@ class TestRequirements:
             "package==0.0.1",
             constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
             no_cache_dir=False,
-            # To allow running tests in hass.io images
-            find_links=ANY,
         )
 
     @patch("os.path.dirname")
     @patch("homeassistant.util.package.is_virtual_env", return_value=False)
     @patch("homeassistant.util.package.is_docker_env", return_value=False)
     @patch("homeassistant.util.package.install_package", return_value=True)
+    @patch.dict(os.environ, {}, clear=True)
     def test_requirement_installed_in_deps(
         self, mock_install, mock_denv, mock_venv, mock_dirname
     ):
@@ -71,8 +71,6 @@ class TestRequirements:
             target=self.hass.config.path("deps"),
             constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
             no_cache_dir=False,
-            # To allow running tests in hass.io images
-            find_links=ANY,
         )
 
 
@@ -140,7 +138,7 @@ async def test_install_with_wheels_index(hass):
         mock_dir.return_value = "ha_package_path"
         assert await setup.async_setup_component(hass, "comp", {})
         assert "comp" in hass.config.components
-        print(mock_inst.call_args)
+
         assert mock_inst.call_args == call(
             "hello==1.0.0",
             find_links="https://wheels.hass.io/test",
@@ -158,17 +156,17 @@ async def test_install_on_docker(hass):
         "homeassistant.util.package.is_docker_env", return_value=True
     ), patch("homeassistant.util.package.install_package") as mock_inst, patch(
         "os.path.dirname"
-    ) as mock_dir:
+    ) as mock_dir, patch.dict(
+        os.environ, {}, clear=True
+    ):
         mock_dir.return_value = "ha_package_path"
         assert await setup.async_setup_component(hass, "comp", {})
         assert "comp" in hass.config.components
-        print(mock_inst.call_args)
+
         assert mock_inst.call_args == call(
             "hello==1.0.0",
             constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
             no_cache_dir=True,
-            # To allow running tests in hass.io images
-            find_links=ANY,
         )
 
 
