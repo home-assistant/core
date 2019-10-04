@@ -9,13 +9,15 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.config_entries import SOURCE_IMPORT
-from .const import DOMAIN, CONF_SERVER, CONF_SERVERS
-
 from pysupla import SuplaAPI
 
+REQUIREMENTS = ["pysupla==0.0.3"]
 
 _LOGGER = logging.getLogger(__name__)
+DOMAIN = "supla"
 
+CONF_SERVER = "server"
+CONF_SERVERS = "servers"
 
 SUPLA_FUNCTION_HA_CMP_MAP = {
     "CONTROLLINGTHEROLLERSHUTTER": "cover",
@@ -39,57 +41,35 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_entry(hass, config_entry):
-    """Set up supla as config entry."""
-    _LOGGER.info("supla async_setup_entry")
-    hass.async_create_task(async_discover_devices(hass, config_entry))
+async def async_setup(hass, config):
+    """Set up the Supla component."""
+    hass.data[SUPLA_SERVERS] = {}
+    hass.data[SUPLA_CHANNELS] = {}
+
+    if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
+        server_confs = config[DOMAIN][CONF_SERVERS]
+
+        for server_conf in server_confs:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=server_conf
+                )
+            )
 
     return True
 
 
-async def async_setup(hass, base_config):
-    """Set up the Supla component."""
-    if DOMAIN not in base_config:
-        return True
+async def async_setup_entry(hass, config_entry):
+    """Set up supla as config entry."""
+    _LOGGER.info("supla async_setup_entry")
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
 
-    server_confs = base_config[DOMAIN][CONF_SERVERS]
+    server_address = config_entry.data[CONF_SERVER]
+    supla_server = SuplaAPI(server_address, config_entry.data[CONF_ACCESS_TOKEN])
+    hass.data[SUPLA_SERVERS][config_entry.data[CONF_SERVER]] = supla_server
 
-    hass.data[SUPLA_SERVERS] = {}
-    hass.data[SUPLA_CHANNELS] = {}
-
-    for server_conf in server_confs:
-
-        server_address = server_conf[CONF_SERVER]
-
-        server = SuplaAPI(server_address, server_conf[CONF_ACCESS_TOKEN])
-
-        # Test connection
-        try:
-            srv_info = server.get_server_info()
-            if srv_info.get("authenticated"):
-                # hass.data[SUPLA_SERVERS][server_conf[CONF_SERVER]] = server
-                hass.async_create_task(
-                    hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={"source": SOURCE_IMPORT},
-                        data={
-                            CONF_SERVER: server_conf[CONF_SERVER],
-                            CONF_ACCESS_TOKEN: server_conf[CONF_ACCESS_TOKEN],
-                        },
-                    )
-                )
-            else:
-                _LOGGER.error(
-                    "Server: %s not configured. API call returned: %s",
-                    server_address,
-                    srv_info,
-                )
-                return False
-        except OSError:
-            _LOGGER.exception(
-                "Server: %s not configured. Error on Supla API access: ", server_address
-            )
-            return False
+    hass.async_create_task(async_discover_devices(hass, config_entry))
 
     return True
 
@@ -101,27 +81,27 @@ async def async_discover_devices(hass, config_entry):
     Currently it's only run at startup.
     """
     component_configs = {}
-    server_address = config_entry.data[CONF_SERVER]
-    server = SuplaAPI(server_address, config_entry.data[CONF_ACCESS_TOKEN])
-    _LOGGER.info("supla async_discover_devices from server " + str(server))
-    for channel in server.get_channels(include=["iodevice"]):
-        channel_function = channel["function"]["name"]
-        component_name = SUPLA_FUNCTION_HA_CMP_MAP.get(channel_function)
 
-        if component_name is None:
-            _LOGGER.warning(
-                "Unsupported function: %s, channel id: %s",
-                channel_function,
-                channel["id"],
-            )
-            continue
+    for server_name, server in hass.data[SUPLA_SERVERS].items():
 
-        channel["server_name"] = server_address
-        component_configs.setdefault(component_name, []).append(channel)
+        for channel in server.get_channels(include=["iodevice"]):
+            channel_function = channel["function"]["name"]
+            component_name = SUPLA_FUNCTION_HA_CMP_MAP.get(channel_function)
+
+            if component_name is None:
+                _LOGGER.warning(
+                    "Unsupported function: %s, channel id: %s",
+                    channel_function,
+                    channel["id"],
+                )
+                continue
+
+            channel["server_name"] = server_name
+            component_configs.setdefault(component_name, []).append(channel)
 
     # Load discovered devices
     for component_name, channel in component_configs.items():
-        load_platform(hass, component_name, "supla", channel, config_entry)
+        load_platform(hass, component_name, "supla", channel, config_entry.data)
 
 
 class SuplaChannel(Entity):

@@ -34,7 +34,7 @@ class SuplaFlowHandler(config_entries.ConfigFlow):
         pass
 
     async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
+        """Import the supla server as config entry."""
         _LOGGER.warning("import_config " + str(import_config))
         if import_config[CONF_SERVER] in configured_supla_hosts(self.hass):
             _LOGGER.warning("Account in configuration.yaml is already configured")
