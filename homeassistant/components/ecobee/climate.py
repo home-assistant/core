@@ -317,9 +317,10 @@ class Thermostat(ClimateDevice):
             model = f"{ECOBEE_MODEL_TO_NAME[self.thermostat['modelNumber']]} Thermostat"
         except KeyError:
             _LOGGER.error(
-                "Model name for ecobee thermostat %s not recognized. "
-                "Please open an issue on GitHub and provide this information: "
-                "Unrecognized model: %s",
+                "Model number for ecobee thermostat %s not recognized. "
+                "Please visit this link and provide the following information: "
+                "https://github.com/home-assistant/home-assistant/issues/27172 "
+                "Unrecognized model number: %s",
                 self.name,
                 self.thermostat["modelNumber"],
             )
