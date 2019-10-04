@@ -47,6 +47,16 @@ lock:
       description: An optional code to lock the lock with.
       example: 1234
 
+open:
+  description: Open all or specified locks.
+  fields:
+    entity_id:
+      description: Name of lock to open.
+      example: 'lock.front_door'
+    code:
+      description: An optional code to open the lock with.
+      example: 1234
+
 set_usercode:
   description: Set a usercode to lock.
   fields:
