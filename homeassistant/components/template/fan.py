@@ -269,8 +269,7 @@ class TemplateFan(FanEntity):
 
     async def async_turn_on(self, speed: str = None) -> None:
         """Turn on the fan."""
-        await self._on_script.async_run(
-            {ATTR_SPEED: speed}, context=self._context)
+        await self._on_script.async_run({ATTR_SPEED: speed}, context=self._context)
         self._state = STATE_ON
 
         if speed is not None:
