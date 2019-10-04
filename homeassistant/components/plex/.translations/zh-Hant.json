@@ -5,6 +5,7 @@
             "already_configured": "Plex \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "already_in_progress": "Plex \u5df2\u7d93\u8a2d\u5b9a",
             "invalid_import": "\u532f\u5165\u4e4b\u8a2d\u5b9a\u7121\u6548",
+            "token_request_timeout": "\u53d6\u5f97\u5bc6\u9470\u903e\u6642",
             "unknown": "\u672a\u77e5\u539f\u56e0\u5931\u6557"
         },
         "error": {
@@ -36,7 +37,7 @@
                     "manual_setup": "\u624b\u52d5\u8a2d\u5b9a",
                     "token": "Plex \u5bc6\u9470"
                 },
-                "description": "\u8acb\u8f38\u5165 Plex \u5bc6\u9470\u4ee5\u9032\u884c\u81ea\u52d5\u6216\u624b\u52d5\u8a2d\u5b9a\u4f3a\u670d\u5668\u3002",
+                "description": "\u7e7c\u7e8c\u65bc Plex.tv \u9032\u884c\u8a8d\u8b49\u6216\u624b\u52d5\u8a2d\u5b9a\u4f3a\u670d\u5668\u3002",
                 "title": "\u9023\u7dda\u81f3 Plex \u4f3a\u670d\u5668"
             }
         },
