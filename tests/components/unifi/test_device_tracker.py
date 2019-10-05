@@ -135,7 +135,6 @@ async def setup_unifi_integration(
 
     async def mock_request(self, method, path, json=None):
         mock_requests.append({"method": method, "path": path, "json": json})
-        print(mock_requests, mock_client_responses, mock_device_responses)
         if path == "s/{site}/stat/sta" and mock_client_responses:
             return mock_client_responses.popleft()
         if path == "s/{site}/stat/device" and mock_device_responses:
