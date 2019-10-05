@@ -10,7 +10,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
-    CONF_SCAN_INTERVAL,
     POWER_WATT,
     ENERGY_KILO_WATT_HOUR,
 )
@@ -22,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = "solar-log"
 DEFAULT_NAME = "solarlog"
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
+SCAN_INTERVAL = timedelta(seconds=60)
 
 """Supported sensor types."""
 SENSOR_TYPES = {
@@ -109,7 +108,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
     }
 )
 
@@ -118,7 +116,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
     host = config.get(CONF_HOST)
     platform_name = config.get(CONF_NAME)
-    scan_interval = config.get(CONF_SCAN_INTERVAL)
     # Set up the API connection to retrieve the data.
     try:
         api = SolarLog(f"http://{host}")
@@ -130,12 +127,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     # Create solarlog data service which will retrieve and update the data.
-    data = SolarlogData(hass, api, host, scan_interval)
+    data = SolarlogData(hass, api, host)
 
     # Create a new sensor for each sensor type.
     entities = []
     for sensor_key in SENSOR_TYPES:
-        sensor = SolarlogSensor(platform_name, sensor_key, data, scan_interval)
+        sensor = SolarlogSensor(platform_name, sensor_key, data)
         entities.append(sensor)
 
     add_entities(entities, True)
@@ -145,7 +142,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SolarlogSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, platform_name, sensor_key, data, scan_interval):
+    def __init__(self, platform_name, sensor_key, data):
         """Initialize the sensor."""
         self.platform_name = platform_name
         self.sensor_key = sensor_key
@@ -184,12 +181,12 @@ class SolarlogSensor(Entity):
 class SolarlogData:
     """Get and update the latest data."""
 
-    def __init__(self, hass, api, host, scan_interval):
+    def __init__(self, hass, api, host):
         """Initialize the data object."""
         self.api = api
         self.hass = hass
         self.host = host
-        self.update = Throttle(scan_interval)(self._update)
+        self.update = Throttle(SCAN_INTERVAL)(self._update)
         self.data = {}
 
     def _update(self):
