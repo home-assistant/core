@@ -10,6 +10,9 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_PARAMETER = "parameter"
+ATTR_VALUE = "value"
+
 CONF_SENSORS = "sensors"
 CONF_ID = "id"
 CONF_INVERT_STATE = "invert"
@@ -26,6 +29,8 @@ DOMAIN = "luxtronik"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
+SERVICE_WRITE = "write"
+
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 CONFIG_SCHEMA = vol.Schema(
@@ -41,6 +46,13 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+SERVICE_WRITE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_PARAMETER): cv.string,
+        vol.Required(ATTR_VALUE): vol.Any(cv.Number, cv.string),
+    }
+)
+
 
 def setup(hass, config):
     """Set up the Luxtronik component."""
@@ -54,6 +66,17 @@ def setup(hass, config):
 
     hass.data[DATA_LUXTRONIK] = luxtronik
 
+    def write_parameter(service):
+        """Write a parameter to the Luxtronik heatpump."""
+        parameter = service.data.get(ATTR_PARAMETER)
+        value = service.data.get(ATTR_VALUE)
+        print(parameter, value)
+        luxtronik.write(parameter, value)
+
+    hass.services.register(
+        DOMAIN, SERVICE_WRITE, write_parameter, schema=SERVICE_WRITE_SCHEMA
+    )
+
     return True
 
 
@@ -63,6 +86,10 @@ class Luxtronik:
     def __init__(self, host, port):
         """Initialize the Luxtronik connection."""
         from luxtronik import Luxtronik as Lux
+
+        from luxtronik import LOGGER as LuxLogger
+
+        LuxLogger.setLevel(level="WARNING")
 
         self._host = host
         self._port = port
@@ -79,6 +106,11 @@ class Luxtronik:
         if group == CONF_VISIBILITIES:
             sensor = self._luxtronik.visibilities.get(sensor_id)
         return sensor
+
+    def write(self, parameter, value):
+        """Write a parameter to the Luxtronik heatpump."""
+        self._luxtronik.parameters.set(parameter, value)
+        self._luxtronik.write()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
