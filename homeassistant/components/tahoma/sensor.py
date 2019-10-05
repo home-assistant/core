@@ -44,6 +44,8 @@ class TahomaSensor(TahomaDevice, Entity):
             return None
         if self.tahoma_device.type == "io:SomfyContactIOSystemSensor":
             return None
+        if self.tahoma_device.type == "io:SomfyBasicContactIOSystemSensor":
+            return None
         if self.tahoma_device.type == "io:LightIOSystemSensor":
             return "lx"
         if self.tahoma_device.type == "Humidity Sensor":
@@ -62,6 +64,11 @@ class TahomaSensor(TahomaDevice, Entity):
                 self.tahoma_device.active_states.get("core:StatusState") == "available"
             )
         if self.tahoma_device.type == "io:SomfyContactIOSystemSensor":
+            self.current_value = self.tahoma_device.active_states["core:ContactState"]
+            self._available = bool(
+                self.tahoma_device.active_states.get("core:StatusState") == "available"
+            )
+        if self.tahoma_device.type == "io:SomfyBasicContactIOSystemSensor":
             self.current_value = self.tahoma_device.active_states["core:ContactState"]
             self._available = bool(
                 self.tahoma_device.active_states.get("core:StatusState") == "available"
