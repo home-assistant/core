@@ -43,7 +43,8 @@ MODEL_AIRPURIFIER_SA2 = "zhimi.airpurifier.sa2"
 MODEL_AIRPURIFIER_2S = "zhimi.airpurifier.mc1"
 
 MODEL_AIRHUMIDIFIER_V1 = "zhimi.humidifier.v1"
-MODEL_AIRHUMIDIFIER_CA = "zhimi.humidifier.ca1"
+MODEL_AIRHUMIDIFIER_CA1 = "zhimi.humidifier.ca1"
+MODEL_AIRHUMIDIFIER_CB1 = "zhimi.humidifier.cb1"
 
 MODEL_AIRFRESH_VA2 = "zhimi.airfresh.va2"
 
@@ -68,7 +69,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 MODEL_AIRPURIFIER_SA2,
                 MODEL_AIRPURIFIER_2S,
                 MODEL_AIRHUMIDIFIER_V1,
-                MODEL_AIRHUMIDIFIER_CA,
+                MODEL_AIRHUMIDIFIER_CA1,
+                MODEL_AIRHUMIDIFIER_CB1,
                 MODEL_AIRFRESH_VA2,
             ]
         ),
@@ -235,7 +237,7 @@ AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER = {
     ATTR_BUTTON_PRESSED: "button_pressed",
 }
 
-AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA = {
+AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA_AND_CB = {
     **AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_COMMON,
     ATTR_MOTOR_SPEED: "motor_speed",
     ATTR_DEPTH: "depth",
@@ -335,7 +337,7 @@ FEATURE_FLAGS_AIRHUMIDIFIER = (
     | FEATURE_SET_TARGET_HUMIDITY
 )
 
-FEATURE_FLAGS_AIRHUMIDIFIER_CA = FEATURE_FLAGS_AIRHUMIDIFIER | FEATURE_SET_DRY
+FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB = FEATURE_FLAGS_AIRHUMIDIFIER | FEATURE_SET_DRY
 
 FEATURE_FLAGS_AIRFRESH = (
     FEATURE_SET_BUZZER
@@ -880,9 +882,9 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
 
         super().__init__(name, device, model, unique_id)
 
-        if self._model == MODEL_AIRHUMIDIFIER_CA:
-            self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA
-            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA
+        if self._model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
+            self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB
+            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA_AND_CB
             self._speed_list = [
                 mode.name for mode in OperationMode if mode is not OperationMode.Strong
             ]
