@@ -24,18 +24,10 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 
     devices = []
 
-    # Get all regular switches that are not excluded or marked as lights
     for device in data.abode.get_devices(generic_type=CONST.TYPE_SWITCH):
-        if data.is_excluded(device) or data.is_light(device):
-            continue
-
         devices.append(AbodeSwitch(data, device))
 
-    # Get all Abode automations that can be enabled/disabled
     for automation in data.abode.get_automations(generic_type=CONST.TYPE_AUTOMATION):
-        if data.is_automation_excluded(automation):
-            continue
-
         devices.append(
             AbodeAutomationSwitch(data, automation, TIMELINE.AUTOMATION_EDIT_GROUP)
         )

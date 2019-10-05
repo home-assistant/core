@@ -1,11 +1,16 @@
 """Support for the Abode Security System."""
 import logging
+from copy import deepcopy
 from functools import partial
 from requests.exceptions import HTTPError, ConnectTimeout
+<<<<<<< HEAD
 import abodepy
 import abodepy.helpers.constants as CONST
 from abodepy.exceptions import AbodeException
 import abodepy.helpers.timeline as TIMELINE
+=======
+from abodepy.exceptions import AbodeException
+>>>>>>> Several fixes from code review
 
 import voluptuous as vol
 
@@ -17,9 +22,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_USERNAME,
     CONF_PASSWORD,
-    CONF_EXCLUDE,
     CONF_NAME,
-    CONF_LIGHTS,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.helpers import config_validation as cv
@@ -67,8 +70,6 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_PASSWORD): cv.string,
                 vol.Optional(CONF_NAME): cv.string,
                 vol.Optional(CONF_POLLING, default=False): cv.boolean,
-                vol.Optional(CONF_EXCLUDE, default=[]): ABODE_DEVICE_ID_LIST_SCHEMA,
-                vol.Optional(CONF_LIGHTS, default=[]): ABODE_DEVICE_ID_LIST_SCHEMA,
             }
         )
     },
@@ -98,7 +99,7 @@ ABODE_PLATFORMS = [
 class AbodeSystem:
     """Abode System class."""
 
-    def __init__(self, username, password, cache, name, polling, exclude, lights):
+    def __init__(self, username, password, cache, name, polling):
         """Initialize the system."""
 
         self.abode = abodepy.Abode(
@@ -111,24 +112,7 @@ class AbodeSystem:
         )
         self.name = name
         self.polling = polling
-        self.exclude = exclude
-        self.lights = lights
         self.devices = []
-
-    def is_excluded(self, device):
-        """Check if a device is configured to be excluded."""
-        return device.device_id in self.exclude
-
-    def is_automation_excluded(self, automation):
-        """Check if an automation is configured to be excluded."""
-        return automation.automation_id in self.exclude
-
-    def is_light(self, device):
-        """Check if a switch device is configured as a light."""
-
-        return device.generic_type == CONST.TYPE_LIGHT or (
-            device.generic_type == CONST.TYPE_SWITCH and device.device_id in self.lights
-        )
 
 
 async def async_setup(hass, config):
@@ -136,22 +120,11 @@ async def async_setup(hass, config):
     if DOMAIN not in config:
         return True
 
-    hass.data[DOMAIN] = {}
-
     conf = config[DOMAIN]
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_USERNAME: conf.get(CONF_USERNAME),
-                CONF_PASSWORD: conf.get(CONF_PASSWORD),
-                CONF_NAME: conf.get(CONF_NAME),
-                CONF_POLLING: conf.get(CONF_POLLING),
-                CONF_EXCLUDE: conf.get(CONF_EXCLUDE),
-                CONF_LIGHTS: conf.get(CONF_LIGHTS),
-            },
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=deepcopy(conf)
         )
     )
 
@@ -160,41 +133,22 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up Abode component via config entry (Integrations UI)."""
-    from abodepy.exceptions import AbodeException
-
     username = config_entry.data.get(CONF_USERNAME)
     password = config_entry.data.get(CONF_PASSWORD)
     name = config_entry.data.get(CONF_NAME)
     polling = config_entry.data.get(CONF_POLLING)
-    exclude = config_entry.data.get(CONF_EXCLUDE)
-    lights = config_entry.data.get(CONF_LIGHTS)
-
-    # 'exclude' and 'lights' has to be iterable, can't be of type None
-    if not exclude:
-        exclude = []
-
-    if not lights:
-        lights = []
 
     try:
         cache = hass.config.path(DEFAULT_CACHEDB)
-        hass.data[DOMAIN] = AbodeSystem(
-            username, password, cache, name, polling, exclude, lights
+        hass.data[DOMAIN] = await hass.async_add_executor_job(
+            AbodeSystem, username, password, cache, name, polling
         )
     except (AbodeException, ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Abode: %s", str(ex))
-
-        hass.components.persistent_notification.create(
-            "Error: {}<br />"
-            "You will need to restart hass after fixing."
-            "".format(ex),
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID,
-        )
         return False
 
     for platform in ABODE_PLATFORMS:
-        hass.async_add_job(
+        hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
@@ -261,15 +215,15 @@ def setup_hass_services(hass):
         for device in target_devices:
             device.trigger()
 
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN, SERVICE_SETTINGS, change_setting, schema=CHANGE_SETTING_SCHEMA
     )
 
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN, SERVICE_CAPTURE_IMAGE, capture_image, schema=CAPTURE_IMAGE_SCHEMA
     )
 
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN, SERVICE_TRIGGER, trigger_quick_action, schema=TRIGGER_SCHEMA
     )
 
@@ -277,12 +231,12 @@ def setup_hass_services(hass):
 async def setup_hass_events(hass):
     """Home Assistant start and stop callbacks."""
 
-    async def logout(event):
+    def logout(event):
         """Logout of Abode."""
         if not hass.data[DOMAIN].polling:
-            await hass.async_add_executor_job(hass.data[DOMAIN].abode.events.stop)
+            hass.data[DOMAIN].abode.events.stop()
 
-        await hass.async_add_executor_job(hass.data[DOMAIN].abode.logout)
+        hass.data[DOMAIN].abode.logout()
         _LOGGER.info("Logged out of Abode")
 
     if not hass.data[DOMAIN].polling:
@@ -375,7 +329,7 @@ class AbodeDevice(Entity):
     def device_info(self):
         """Return device registry information for this entity."""
         return {
-            "identifiers": {(DOMAIN, self.unique_id)},
+            "identifiers": {(DOMAIN, self._device.device_id)},
             "manufacturer": "Abode",
             "name": self._device.name,
             "device_type": self._device.type,

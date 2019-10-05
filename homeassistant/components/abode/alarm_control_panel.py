@@ -26,7 +26,14 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up an alarm control panel for an Abode device."""
     data = hass.data[DOMAIN]
 
-    async_add_devices([AbodeAlarm(data, data.abode.get_alarm(), data.name)], True)
+    async_add_devices(
+        [
+            AbodeAlarm(
+                data, await hass.async_add_executor_job(data.abode.get_alarm), data.name
+            )
+        ],
+        True,
+    )
 
 
 class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):

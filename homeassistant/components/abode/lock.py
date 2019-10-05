@@ -23,9 +23,6 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 
     devices = []
     for device in data.abode.get_devices(generic_type=CONST.TYPE_LOCK):
-        if data.is_excluded(device):
-            continue
-
         devices.append(AbodeLock(data, device))
 
     async_add_devices(devices)

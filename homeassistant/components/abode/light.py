@@ -38,11 +38,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 
     devices = []
 
-    # Get all regular lights that are not excluded or switches marked as lights
     for device in data.abode.get_devices(generic_type=device_types):
-        if data.is_excluded(device) or not data.is_light(device):
-            continue
-
         devices.append(AbodeLight(data, device))
 
     async_add_devices(devices)

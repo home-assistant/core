@@ -32,16 +32,11 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     ]
 
     devices = []
-    for device in data.abode.get_devices(generic_type=device_types):
-        if data.is_excluded(device):
-            continue
 
+    for device in data.abode.get_devices(generic_type=device_types):
         devices.append(AbodeBinarySensor(data, device))
 
     for automation in data.abode.get_automations(generic_type=CONST.TYPE_QUICK_ACTION):
-        if data.is_automation_excluded(automation):
-            continue
-
         devices.append(
             AbodeQuickActionBinarySensor(
                 data, automation, TIMELINE.AUTOMATION_EDIT_GROUP

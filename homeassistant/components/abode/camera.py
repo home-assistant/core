@@ -31,9 +31,6 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 
     devices = []
     for device in data.abode.get_devices(generic_type=CONST.TYPE_CAMERA):
-        if data.is_excluded(device):
-            continue
-
         devices.append(AbodeCamera(data, device, TIMELINE.CAPTURE_IMAGE))
 
     async_add_devices(devices)
