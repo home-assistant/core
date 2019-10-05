@@ -30,6 +30,7 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
@@ -38,12 +39,12 @@ from .const import LOGGER
 
 
 DEFAULT_NAME = "Samsung TV Remote"
-DEFAULT_PORT = 55000
 DEFAULT_TIMEOUT = 1
 
 KEY_PRESS_TIMEOUT = 1.2
 KNOWN_DEVICES_KEY = "samsungtv_known_devices"
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
+METHODS = ("websocket", "legacy")
 
 SUPPORT_SAMSUNGTV = (
     SUPPORT_PAUSE
@@ -61,7 +62,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_METHOD): cv.string,
+        vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_MAC): cv.string,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
@@ -75,13 +77,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         known_devices = set()
         hass.data[KNOWN_DEVICES_KEY] = known_devices
 
-    port = DEFAULT_PORT
+    method = None
+    port = None
     timeout = DEFAULT_TIMEOUT
     mac = None
     uuid = None
     # Is this a manual configuration?
     if config.get(CONF_HOST) is not None:
         host = config.get(CONF_HOST)
+        method = config.get(CONF_METHOD)
         port = config.get(CONF_PORT)
         name = config.get(CONF_NAME)
         mac = config.get(CONF_MAC)
@@ -105,7 +109,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     ip_addr = socket.gethostbyname(host)
     if ip_addr not in known_devices:
         known_devices.add(ip_addr)
-        add_entities([SamsungTVDevice(host, port, name, timeout, mac, uuid)])
+        add_entities([SamsungTVDevice(host, method, port, name, timeout, mac, uuid)])
         LOGGER.info("Samsung TV %s:%d added as '%s'", host, port, name)
     else:
         LOGGER.info("Ignoring duplicate Samsung TV %s:%d", host, port)
@@ -114,21 +118,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SamsungTVDevice(MediaPlayerDevice):
     """Representation of a Samsung TV."""
 
-    def __init__(self, host, port, name, timeout, mac, uuid):
+    def __init__(self, host, method, port, name, timeout, mac, uuid):
         """Initialize the Samsung device."""
-        from samsungctl import exceptions
-        from samsungctl import Remote
-        import wakeonlan
-
-        # Save a reference to the imported classes
-        self._exceptions_class = exceptions
-        self._remote_class = Remote
         self._name = name
         self._host = host
         self._port = port
         self._mac = mac
         self._uuid = uuid
-        self._wol = wakeonlan
         # Assume that the TV is not muted
         self._muted = False
         # Assume that the TV is in Play mode
@@ -143,33 +139,64 @@ class SamsungTVDevice(MediaPlayerDevice):
             "name": "HomeAssistant",
             "description": name,
             "id": "ha.component.samsung",
+            "method": method,
             "port": port,
             "host": host,
             "timeout": timeout,
         }
 
-        if self._config["port"] in (8001, 8002):
-            self._config["method"] = "websocket"
-        else:
-            self._config["method"] = "legacy"
+        self._get_remote()
 
     def update(self):
         """Update state of device."""
-        sock = self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(5)
+        self._get_remote(True)
 
-        try:
-            sock.connect((self._host, self._port))
-            sock.close()
-            self._state = STATE_ON
-        except socket.error:
-            self._state = STATE_OFF
-
-    def get_remote(self):
+    def _get_remote(self, clean=False):
         """Create or return a remote control instance."""
+        from samsungctl import Remote, exceptions
+        
+        # Select method by port number, mainly for fallback
+        if self._config["port"] in (8001, 8002):
+            self._config["method"] = "websocket"
+        else if self._config["port"] in (55000):
+            self._config["method"] = "legacy"
+
+        # Try to find correct method automatically
+        else if self._config["method"] not in ("websocket", "legacy"):
+            for method in ("websocket", "legacy"):
+                try:
+                    self._config["method"] = method
+                    self._remote = Remote(self._config)
+                    break
+                except:
+                    self._config["method"] = None
+
+        # Close existing connection
+        if clean and self._remote is not None:
+            self._remote.close()
+            self._remote = None
+
+        # We need to create a new instance to reconnect.
         if self._remote is None:
-            # We need to create a new instance to reconnect.
-            self._remote = self._remote_class(self._config)
+            try:
+                self._remote = Remote(self._config)
+                self._state = STATE_ON
+            except exceptions.UnknownMethod:
+                self._remote = None
+                self._state = STATE_UNKNOWN
+            except (
+                exceptions.UnhandledResponse,
+                exceptions.AccessDenied,
+            ):
+                # We got a response so it's on.
+                self._remote = None
+                self._state = STATE_ON
+            except (
+                exceptions.ConnectionClosed,
+                OSError
+            ):
+                self._remote = None
+                self._state = STATE_OFF
 
         return self._remote
 
@@ -183,26 +210,11 @@ class SamsungTVDevice(MediaPlayerDevice):
             retry_count = 1
             for _ in range(retry_count + 1):
                 try:
-                    self.get_remote().control(key)
+                    self._get_remote().control(key)
                     break
-                except (self._exceptions_class.ConnectionClosed, BrokenPipeError):
-                    # BrokenPipe can occur when the commands is sent to fast
+                except:
+                    LOGGER.debug("Failed sending command %s", key, exc_info=True)
                     self._remote = None
-            self._state = STATE_ON
-        except (
-            self._exceptions_class.UnhandledResponse,
-            self._exceptions_class.AccessDenied,
-        ):
-            # We got a response so it's on.
-            self._state = STATE_ON
-            self._remote = None
-            LOGGER.debug("Failed sending command %s", key, exc_info=True)
-            return
-        except OSError:
-            self._state = STATE_OFF
-            self._remote = None
-        if self._power_off_in_progress():
-            self._state = STATE_OFF
 
     def _power_off_in_progress(self):
         return (
@@ -254,7 +266,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             self.send_key("KEY_POWEROFF")
         # Force closing of remote session to provide instant UI feedback
         try:
-            self.get_remote().close()
+            self._get_remote().close()
             self._remote = None
         except OSError:
             LOGGER.debug("Could not establish connection.")
@@ -320,8 +332,10 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def turn_on(self):
         """Turn the media player on."""
+        import wakeonlan
+
         if self._mac:
-            self._wol.send_magic_packet(self._mac)
+            wakeonlan.send_magic_packet(self._mac)
         else:
             self.send_key("KEY_POWERON")
 
