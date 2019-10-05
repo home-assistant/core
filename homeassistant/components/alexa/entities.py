@@ -34,6 +34,7 @@ from homeassistant.components import (
 from .const import CONF_DESCRIPTION, CONF_DISPLAY_CATEGORIES
 from .capabilities import (
     AlexaBrightnessController,
+    AlexaChannelController,
     AlexaColorController,
     AlexaColorTemperatureController,
     AlexaContactSensor,
@@ -403,6 +404,13 @@ class MediaPlayerCapabilities(AlexaEntity):
 
         if supported & media_player.SUPPORT_SELECT_SOURCE:
             yield AlexaInputController(self.entity)
+
+        changechannel_features = (
+            media_player.const.SUPPORT_NEXT_TRACK
+            | media_player.const.SUPPORT_PREVIOUS_TRACK
+        )
+        if supported & changechannel_features:
+            yield AlexaChannelController(self.entity)
 
 
 @ENTITY_ADAPTERS.register(scene.DOMAIN)
