@@ -1534,7 +1534,7 @@ python-juicenet==0.0.5
 # python-lirc==1.2.3
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.4.5
+python-miio==0.4.6
 
 # homeassistant.components.mpd
 python-mpd2==1.0.0
