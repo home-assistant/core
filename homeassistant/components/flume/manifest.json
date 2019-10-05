@@ -1,7 +1,7 @@
 {
     "domain": "Flume",
     "name": "Flume, Chris Mandich",
-    "documentation": "tbd",
+    "documentation": "https://www.home-assistant.io/integrations/flume/",
     "dependencies": [],
     "codeowners": ["@ChrisMandich"],
     "requirements": ["pytz"]
