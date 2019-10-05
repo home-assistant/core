@@ -1,6 +1,7 @@
 """Support for HERE travel time sensors."""
 from datetime import datetime, timedelta
 import logging
+import re
 from typing import Callable, Dict, Optional, Union
 
 import herepy
@@ -349,23 +350,20 @@ class HERETravelTimeSensor(Entity):
         if self._entity_state_is_valid_coordinate_set(entity.state):
             return entity.state
 
+        # Resolve nested entity
+        if entity.state is not entity_id:
+            _LOGGER.debug("Getting nested entity for state: %s", entity.state)
+            nested_entity = self.hass.states.get(entity.state)
+            if nested_entity is not None:
+                _LOGGER.debug("Resolving nested entity_id: %s", entity.state)
+                return await self._get_location_from_entity(entity.state)
+
         _LOGGER.error(
             "The state of %s is not a valid set of coordinates: %s",
             entity_id,
             entity.state,
         )
         return None
-
-    @staticmethod
-    def _entity_state_is_valid_coordinate_set(state: str) -> bool:
-        """Check that the given string is a valid set of coordinates."""
-        schema = vol.Schema(cv.gps)
-        try:
-            coordinates = state.split(",")
-            schema(coordinates)
-            return True
-        except (vol.MultipleInvalid):
-            return False
 
     @staticmethod
     def _get_location_from_attributes(entity: State) -> str:

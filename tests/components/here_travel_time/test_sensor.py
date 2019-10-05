@@ -973,6 +973,106 @@ async def test_attribution(hass, requests_mock_credentials_check):
     )
 
 
+async def test_sensor_state_is_entity(hass, requests_mock_truck_response):
+    """Test that state of a sensor is an entity works."""
+    zone_config = {
+        "zone": [
+            {
+                "name": "Origin",
+                "latitude": TRUCK_ORIGIN_LATITUDE,
+                "longitude": TRUCK_ORIGIN_LONGITUDE,
+                "radius": 250,
+                "passive": False,
+            }
+        ]
+    }
+    hass.states.async_set("sensor.origin", "zone.origin")
+    assert await async_setup_component(hass, "zone", zone_config)
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin_entity_id": "sensor.origin",
+            "destination_latitude": TRUCK_DESTINATION_LATITUDE,
+            "destination_longitude": TRUCK_DESTINATION_LONGITUDE,
+            "api_key": API_KEY,
+            "mode": TRAVEL_MODE_TRUCK,
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+    sensor = hass.states.get("sensor.test")
+    _assert_truck_sensor(sensor)
+
+
+async def test_input_select_is_entity(hass, requests_mock_truck_response):
+    """Test that state of an input_select is an entity works."""
+    zone_config = {
+        "zone": [
+            {
+                "name": "Origin",
+                "latitude": TRUCK_ORIGIN_LATITUDE,
+                "longitude": TRUCK_ORIGIN_LONGITUDE,
+                "radius": 250,
+                "passive": False,
+            }
+        ]
+    }
+    input_select_config = {
+        "input_select": {
+            "origin": {"options": ["zone.origin"], "initial": "zone.origin"}
+        }
+    }
+    assert await async_setup_component(hass, "input_select", input_select_config)
+    assert await async_setup_component(hass, "zone", zone_config)
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin_entity_id": "input_select.origin",
+            "destination_latitude": TRUCK_DESTINATION_LATITUDE,
+            "destination_longitude": TRUCK_DESTINATION_LONGITUDE,
+            "app_id": APP_ID,
+            "app_code": APP_CODE,
+            "mode": TRAVEL_MODE_TRUCK,
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+    sensor = hass.states.get("sensor.test")
+    _assert_truck_sensor(sensor)
+
+
+async def test_input_text_is_entity(hass, requests_mock_truck_response):
+    """Test that state of an input_text is an entity works."""
+    zone_config = {
+        "zone": [
+            {
+                "name": "Origin",
+                "latitude": TRUCK_ORIGIN_LATITUDE,
+                "longitude": TRUCK_ORIGIN_LONGITUDE,
+                "radius": 250,
+                "passive": False,
+            }
+        ]
+    }
+    input_text_config = {"input_text": {"origin": {"initial": "zone.origin"}}}
+    assert await async_setup_component(hass, "input_text", input_text_config)
+    assert await async_setup_component(hass, "zone", zone_config)
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin_entity_id": "input_text.origin",
+            "destination_latitude": TRUCK_DESTINATION_LATITUDE,
+            "destination_longitude": TRUCK_DESTINATION_LONGITUDE,
+            "api_key": API_KEY,
+            "mode": TRAVEL_MODE_TRUCK,
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+    sensor = hass.states.get("sensor.test")
+    _assert_truck_sensor(sensor)
+
+
 async def test_pattern_entity_state(hass, requests_mock_truck_response, caplog):
     """Test that pattern matching the state of an entity works."""
     caplog.set_level(logging.ERROR)
@@ -990,62 +1090,6 @@ async def test_pattern_entity_state(hass, requests_mock_truck_response, caplog):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-    await hass.async_block_till_done()
-
-    assert len(caplog.records) == 1
-    assert "is not a valid set of coordinates" in caplog.text
-
-
-async def test_pattern_entity_state_with_space(hass, requests_mock_truck_response):
-    """Test that pattern matching the state including a space of an entity works."""
-    hass.states.async_set(
-        "sensor.origin", ", ".join([TRUCK_ORIGIN_LATITUDE, TRUCK_ORIGIN_LONGITUDE])
-    )
-
-    config = {
-        DOMAIN: {
-            "platform": PLATFORM,
-            "name": "test",
-            "origin_entity_id": "sensor.origin",
-            "destination_latitude": TRUCK_DESTINATION_LATITUDE,
-            "destination_longitude": TRUCK_DESTINATION_LONGITUDE,
-            "api_key": API_KEY,
-            "mode": TRAVEL_MODE_TRUCK,
-        }
-    }
-    assert await async_setup_component(hass, DOMAIN, config)
-
-
-async def test_delayed_update(hass, requests_mock_truck_response, caplog):
-    """Test that delayed update does not complain about missing entities."""
-    caplog.set_level(logging.WARNING)
-
-    config = {
-        DOMAIN: {
-            "platform": PLATFORM,
-            "name": "test",
-            "origin_entity_id": "sensor.origin",
-            "destination_latitude": TRUCK_DESTINATION_LATITUDE,
-            "destination_longitude": TRUCK_DESTINATION_LONGITUDE,
-            "api_key": API_KEY,
-            "mode": TRAVEL_MODE_TRUCK,
-        }
-    }
-    sensor_config = {
-        "sensor": {
-            "platform": "template",
-            "sensors": [
-                {"template_sensor": {"value_template": "{{states('sensor.origin')}}"}}
-            ],
-        }
-    }
-    assert await async_setup_component(hass, DOMAIN, config)
-    assert await async_setup_component(hass, "sensor", sensor_config)
-    hass.states.async_set(
-        "sensor.origin", ",".join([TRUCK_ORIGIN_LATITUDE, TRUCK_ORIGIN_LONGITUDE])
-    )
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
