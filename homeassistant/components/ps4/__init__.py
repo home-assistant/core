@@ -172,12 +172,8 @@ def load_games(hass: HomeAssistantType) -> dict:
         _LOGGER.error("Games file was not parsed correctly")
         games = {}
 
-    # If file does not exist, create empty file.
-    if not os.path.isfile(g_file):
-        _LOGGER.info("Creating PS4 Games File")
-        games = {}
-        save_games(hass, games)
-    else:
+    # If file exists
+    if os.path.isfile(g_file):
         games = _reformat_data(hass, games)
     return games
 
