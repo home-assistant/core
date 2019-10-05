@@ -1,5 +1,7 @@
 """Support for Abode Security System switches."""
 import logging
+import abodepy.helpers.constants as CONST
+import abodepy.helpers.timeline as TIMELINE
 
 import abodepy.helpers.constants as CONST
 import abodepy.helpers.timeline as TIMELINE
@@ -19,7 +21,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up Abode switch devices."""
-
     data = hass.data[DOMAIN]
 
     devices = []

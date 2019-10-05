@@ -1,22 +1,22 @@
 """Config flow for the Abode Security System component."""
 import logging
-
 import voluptuous as vol
-
+from abodepy import Abode
 from abodepy.exceptions import AbodeAuthenticationException
-from homeassistant import config_entries
 
+from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class AbodeFlowHandler(config_entries.ConfigFlow):
+class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for Abode."""
 
     VERSION = 1
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize."""
@@ -26,7 +26,6 @@ class AbodeFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        from abodepy import Abode
 
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -38,11 +37,12 @@ class AbodeFlowHandler(config_entries.ConfigFlow):
         password = user_input[CONF_PASSWORD]
 
         try:
-            self.hass.async_add_executor_job(Abode, username, password, True)
+            await self.hass.async_add_executor_job(Abode, username, password, True)
 
-        # Need to add error checking if Abode server is down/not responding
-        except AbodeAuthenticationException:
-            return await self._show_form({"base": "invalid_credentials"})
+        except AbodeAuthenticationException as error:
+            if error.errcode == 400:
+                return await self._show_form({"base": "invalid_credentials"})
+            return await self._show_form({"base": "abode_error"})
 
         return self.async_create_entry(
             title=user_input[CONF_USERNAME],
@@ -59,7 +59,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
-        if self.hass.data.get(DOMAIN):
+        if self._async_current_entries():
             _LOGGER.warning("Only one configuration of abode is allowed.")
             return self.async_abort(reason="single_instance_allowed")
 

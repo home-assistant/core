@@ -1,5 +1,6 @@
 """Support for Abode Security System covers."""
 import logging
+import abodepy.helpers.constants as CONST
 
 import abodepy.helpers.constants as CONST
 

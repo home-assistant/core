@@ -1,9 +1,15 @@
 """Tests for the Abode config flow."""
 from unittest.mock import patch
+from abodepy import Abode
+from abodepy.exceptions import AbodeAuthenticationException
 
 from homeassistant import data_entry_flow
 from homeassistant.components.abode import config_flow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+
+from tests.common import MockConfigEntry
+
+CONF_POLLING = "polling"
 
 
 async def test_show_form(hass):
@@ -22,8 +28,12 @@ async def test_one_config_allowed(hass):
     flow = config_flow.AbodeFlowHandler()
     flow.hass = hass
 
-    with patch.object(hass.config_entries, "async_entries"):
-        result = await flow.async_step_user()
+    MockConfigEntry(
+        domain="abode",
+        data={CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"},
+    ).add_to_hass(hass)
+
+    result = await flow.async_step_user()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "single_instance_allowed"
@@ -31,33 +41,49 @@ async def test_one_config_allowed(hass):
 
 async def test_invalid_credentials(hass):
     """Test that invalid credentials throws an error."""
-    from abodepy.exceptions import AbodeAuthenticationException
 
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
     flow = config_flow.AbodeFlowHandler()
     flow.hass = hass
 
-    with patch("abodepy.Abode", side_effect=AbodeAuthenticationException("errors")):
+    with patch.object(
+        Abode, "login", side_effect=AbodeAuthenticationException((400, "error message"))
+    ) as mocked_abode:
+        mocked_abode.return_value.errcode = 400
         result = await flow.async_step_user(user_input=conf)
+        print(result)
         assert result["errors"] == {"base": "invalid_credentials"}
+
+
+async def test_abode_server_error(hass):
+    """Test other than invalid credentials throws an error."""
+
+    conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
+
+    flow = config_flow.AbodeFlowHandler()
+    flow.hass = hass
+
+    with patch.object(
+        Abode, "login", side_effect=AbodeAuthenticationException("error")
+    ):
+        result = await flow.async_step_user(user_input=conf)
+        assert result["errors"] == {"base": "abode_error"}
 
 
 async def test_step_import(hass):
     """Test that the import step works."""
-    conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
+    conf = {
+        CONF_USERNAME: "user@email.com",
+        CONF_PASSWORD: "password",
+        CONF_POLLING: False,
+    }
 
     flow = config_flow.AbodeFlowHandler()
     flow.hass = hass
 
-    with patch("abodepy.Abode"):
-        result = await flow.async_step_import(import_config=conf)
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "user@email.com"
-        assert result["data"] == {
-            CONF_USERNAME: "user@email.com",
-            CONF_PASSWORD: "password",
-        }
+    result = await flow.async_step_import(import_config=conf)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
 
 async def test_step_user(hass):
@@ -67,7 +93,7 @@ async def test_step_user(hass):
     flow = config_flow.AbodeFlowHandler()
     flow.hass = hass
 
-    with patch("abodepy.Abode"):
+    with patch.object(Abode, "login"):
         result = await flow.async_step_user(user_input=conf)
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "user@email.com"

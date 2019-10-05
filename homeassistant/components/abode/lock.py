@@ -1,5 +1,6 @@
 """Support for the Abode Security System locks."""
 import logging
+import abodepy.helpers.constants as CONST
 
 import abodepy.helpers.constants as CONST
 

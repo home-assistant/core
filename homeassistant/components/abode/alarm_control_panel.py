@@ -22,27 +22,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up an alarm control panel for an Abode device."""
     data = hass.data[DOMAIN]
 
-    async_add_devices(
-        [
-            AbodeAlarm(
-                data, await hass.async_add_executor_job(data.abode.get_alarm), data.name
-            )
-        ],
+    async_add_entities(
+        [AbodeAlarm(data, await hass.async_add_executor_job(data.abode.get_alarm))],
         True,
     )
 
 
 class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):
     """An alarm_control_panel implementation for Abode."""
-
-    def __init__(self, data, device, name):
-        """Initialize the alarm control panel."""
-        super().__init__(data, device)
-        self._name = name
 
     @property
     def icon(self):
@@ -73,11 +64,6 @@ class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         self._device.set_away()
-
-    @property
-    def name(self):
-        """Return the name of the alarm."""
-        return self._name or super().name
 
     @property
     def device_state_attributes(self):

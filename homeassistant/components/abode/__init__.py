@@ -3,14 +3,13 @@ import logging
 from copy import deepcopy
 from functools import partial
 from requests.exceptions import HTTPError, ConnectTimeout
-<<<<<<< HEAD
+
 import abodepy
 import abodepy.helpers.constants as CONST
 from abodepy.exceptions import AbodeException
 import abodepy.helpers.timeline as TIMELINE
-=======
+
 from abodepy.exceptions import AbodeException
->>>>>>> Several fixes from code review
 
 import voluptuous as vol
 
@@ -99,18 +98,10 @@ ABODE_PLATFORMS = [
 class AbodeSystem:
     """Abode System class."""
 
-    def __init__(self, username, password, cache, name, polling):
+    def __init__(self, abode, username, password, cache, polling):
         """Initialize the system."""
 
-        self.abode = abodepy.Abode(
-            username,
-            password,
-            auto_login=True,
-            get_devices=True,
-            get_automations=True,
-            cache_path=cache,
-        )
-        self.name = name
+        self.abode = abode
         self.polling = polling
         self.devices = []
 
@@ -135,13 +126,20 @@ async def async_setup_entry(hass, config_entry):
     """Set up Abode component via config entry (Integrations UI)."""
     username = config_entry.data.get(CONF_USERNAME)
     password = config_entry.data.get(CONF_PASSWORD)
-    name = config_entry.data.get(CONF_NAME)
     polling = config_entry.data.get(CONF_POLLING)
 
     try:
         cache = hass.config.path(DEFAULT_CACHEDB)
+        abode = Abode(
+            username,
+            password,
+            auto_login=True,
+            get_devices=True,
+            get_automations=True,
+            cache_path=cache,
+        )
         hass.data[DOMAIN] = await hass.async_add_executor_job(
-            AbodeSystem, username, password, cache, name, polling
+            AbodeSystem, abode, username, password, cache, polling
         )
     except (AbodeException, ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Abode: %s", str(ex))
