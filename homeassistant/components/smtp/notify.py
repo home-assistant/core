@@ -81,10 +81,8 @@ def get_service(hass, config, discovery_info=None):
         config.get(CONF_DEBUG),
     )
 
-    if mail_service.connection_is_valid():
-        return mail_service
-
-    return None
+    mail_service.connection_is_valid()
+    return mail_service
 
 
 class MailNotificationService(BaseNotificationService):
@@ -143,14 +141,12 @@ class MailNotificationService(BaseNotificationService):
                 self._server,
                 self._port,
             )
-            return False
 
         except (smtplib.SMTPAuthenticationError, ConnectionRefusedError):
             _LOGGER.exception(
                 "Login not possible. "
                 "Please check your setting and/or your credentials"
             )
-            return False
 
         finally:
             if server:
