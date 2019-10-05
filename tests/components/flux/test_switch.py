@@ -10,12 +10,14 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     SUN_EVENT_SUNRISE,
 )
+from homeassistant.core import State
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
     async_mock_service,
+    mock_restore_cache,
 )
 from tests.components.light import common as common_light
 from tests.components.switch import common
@@ -34,6 +36,52 @@ async def test_valid_config(hass):
             }
         },
     )
+
+    state = hass.states.get("switch.flux")
+    assert state
+    assert state.state == "off"
+
+
+async def test_restore_state_last_on(hass):
+    """Test restoring state when the last state is on."""
+    mock_restore_cache(hass, [State("switch.flux", "on")])
+
+    assert await async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "flux",
+                "name": "flux",
+                "lights": ["light.desk", "light.lamp"],
+            }
+        },
+    )
+
+    state = hass.states.get("switch.flux")
+    assert state
+    assert state.state == "on"
+
+
+async def test_restore_state_last_off(hass):
+    """Test restoring state when the last state is off."""
+    mock_restore_cache(hass, [State("switch.flux", "off")])
+
+    assert await async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "flux",
+                "name": "flux",
+                "lights": ["light.desk", "light.lamp"],
+            }
+        },
+    )
+
+    state = hass.states.get("switch.flux")
+    assert state
+    assert state.state == "off"
 
 
 async def test_valid_config_with_info(hass):
