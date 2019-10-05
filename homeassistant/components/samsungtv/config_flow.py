@@ -15,8 +15,14 @@ from homeassistant.components.ssdp import (
 from .const import CONF_MANUFACTURER, CONF_MODEL, DOMAIN
 
 
+DATA_SCHEMA = vol.Schema({CONF_HOST: str, CONF_NAME: str})
+
+
 class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Samsung TV config flow."""
+
+    VERSION = 1
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize flow."""
@@ -56,16 +62,12 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._ip = self._get_ip(self._host)
             return self._async_get_entry()
 
-        fields = OrderedDict()
-        fields[vol.Required(CONF_HOST, default=self._host or vol.UNDEFINED)] = str
-        fields[vol.Optional(CONF_NAME, default=self._title)] = str
-
         errors = {}
         if error is not None:
             errors["base"] = error
 
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(fields), errors=errors
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
     async def async_step_ssdp(self, user_input=None):

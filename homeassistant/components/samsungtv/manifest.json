@@ -1,17 +1,17 @@
 {
   "domain": "samsungtv",
-  "name": "Samsungtv",
+  "name": "Samsung TV",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/samsungtv",
   "requirements": [
     "samsungctl[websocket]==0.7.1",
     "wakeonlan==1.1.6"
   ],
-  "dependencies": [],
-  "codeowners": [],
-  "config_flow": true,
   "ssdp": {
     "device_type": [
       "urn:samsung.com:device:MainTVServer2:1"
     ]
-  }
+  },
+  "dependencies": [],
+  "codeowners": ["@escoand"]
 }
