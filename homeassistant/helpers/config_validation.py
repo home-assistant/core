@@ -600,7 +600,8 @@ def deprecated(
     if module is not None:
         module_name = module.__name__
     else:
-        # Unclear when it is None, but it happens, so let's guard.
+        # If Python is unable to access the sources files, the call stack frame
+        # will be missing information, so let's guard.
         # https://github.com/home-assistant/home-assistant/issues/24982
         module_name = __name__
 
