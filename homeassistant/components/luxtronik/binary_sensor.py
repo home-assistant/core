@@ -96,6 +96,8 @@ class LuxtronikBinarySensor(BinarySensorDevice):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
+        if self._icon:
+            return self._icon
         if not self.is_on:
             return "mdi:circle-outline"
         return "mdi:check-circle-outline"
