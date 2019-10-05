@@ -1,6 +1,7 @@
 """Support for HERE travel time sensors."""
 from datetime import timedelta
 import logging
+import re
 from typing import Callable, Dict, Optional, Union
 
 import herepy
@@ -89,8 +90,6 @@ UNIT_OF_MEASUREMENT = "min"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-TRACKABLE_DOMAINS = ["device_tracker", "sensor", "zone", "person"]
-
 NO_ROUTE_ERROR_MESSAGE = "HERE could not find a route based on the input"
 
 PLATFORM_SCHEMA = vol.All(
@@ -146,15 +145,19 @@ async def async_setup_platform(
 
     if config.get(CONF_ORIGIN_LATITUDE) is not None:
         origin = f"{config[CONF_ORIGIN_LATITUDE]},{config[CONF_ORIGIN_LONGITUDE]}"
+        origin_entity_id = None
     else:
-        origin = config[CONF_ORIGIN_ENTITY_ID]
+        origin = None
+        origin_entity_id = config[CONF_ORIGIN_ENTITY_ID]
 
     if config.get(CONF_DESTINATION_LATITUDE) is not None:
         destination = (
             f"{config[CONF_DESTINATION_LATITUDE]},{config[CONF_DESTINATION_LONGITUDE]}"
         )
+        destination_entity_id = None
     else:
-        destination = config[CONF_DESTINATION_ENTITY_ID]
+        destination = None
+        destination_entity_id = config[CONF_DESTINATION_ENTITY_ID]
 
     travel_mode = config[CONF_MODE]
     traffic_mode = config[CONF_TRAFFIC_MODE]
@@ -166,7 +169,9 @@ async def async_setup_platform(
         here_client, travel_mode, traffic_mode, route_mode, units
     )
 
-    sensor = HERETravelTimeSensor(name, origin, destination, here_data)
+    sensor = HERETravelTimeSensor(
+        name, origin, destination, origin_entity_id, destination_entity_id, here_data
+    )
 
     async_add_entities([sensor], True)
 
@@ -194,29 +199,29 @@ class HERETravelTimeSensor(Entity):
     """Representation of a HERE travel time sensor."""
 
     def __init__(
-        self, name: str, origin: str, destination: str, here_data: "HERETravelTimeData"
+        self,
+        name: str,
+        origin: str,
+        destination: str,
+        origin_entity_id: str,
+        destination_entity_id: str,
+        here_data: "HERETravelTimeData",
     ) -> None:
         """Initialize the sensor."""
         self._name = name
+        self._origin_entity_id = origin_entity_id
+        self._destination_entity_id = destination_entity_id
         self._here_data = here_data
         self._unit_of_measurement = UNIT_OF_MEASUREMENT
-        self._origin_entity_id = None
-        self._destination_entity_id = None
         self._attrs = {
             ATTR_UNIT_SYSTEM: self._here_data.units,
             ATTR_MODE: self._here_data.travel_mode,
             ATTR_TRAFFIC_MODE: self._here_data.traffic_mode,
         }
-
-        # Check if location is a trackable entity
-        if origin.split(".", 1)[0] in TRACKABLE_DOMAINS:
-            self._origin_entity_id = origin
-        else:
+        if self._origin_entity_id is None:
             self._here_data.origin = origin
 
-        if destination.split(".", 1)[0] in TRACKABLE_DOMAINS:
-            self._destination_entity_id = destination
-        else:
+        if self._destination_entity_id is None:
             self._here_data.destination = destination
 
     @property
@@ -309,9 +314,25 @@ class HERETravelTimeSensor(Entity):
             )
             return self._get_location_from_attributes(zone_entity)
 
-        # If zone was not found in state then use the state as the location
-        if entity_id.startswith("sensor."):
+        # Resolve nested entity
+        if entity.state is not entity_id:
+            _LOGGER.debug("Getting nested entity for state: %s", entity.state)
+            nested_entity = self.hass.states.get(entity.state)
+            if nested_entity is not None:
+                _LOGGER.debug("Resolving nested entity_id: %s", entity.state)
+                return await self._get_location_from_entity(entity.state)
+
+        # Check if state is valid coordinate set
+        pattern = r"-?\d{1,2}\.\d+,-?\d{1,3}\.\d+"
+        if re.fullmatch(pattern, entity.state):
             return entity.state
+
+        _LOGGER.error(
+            "The state of %s is not a valid set of coordinates: %s",
+            entity_id,
+            entity.state,
+        )
+        return None
 
     @staticmethod
     def _get_location_from_attributes(entity: State) -> str:
