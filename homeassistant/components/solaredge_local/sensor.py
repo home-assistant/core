@@ -2,6 +2,7 @@
 import logging
 from datetime import timedelta
 import statistics
+from copy import deepcopy
 
 from requests.exceptions import HTTPError, ConnectTimeout
 from solaredge_local import SolarEdge
@@ -14,6 +15,7 @@ from homeassistant.const import (
     POWER_WATT,
     ENERGY_WATT_HOUR,
     TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -58,25 +60,25 @@ SENSOR_TYPES = {
     ],
     "optimizer_current": [
         "optimizercurrent",
-        "Avrage Optimizer Current",
+        "Average Optimizer Current",
         "A",
         "mdi:solar-panel",
     ],
     "optimizer_power": [
         "optimizerpower",
-        "Avrage Optimizer Power",
+        "Average Optimizer Power",
         POWER_WATT,
         "mdi:solar-panel",
     ],
     "optimizer_temperature": [
         "optimizertemperature",
-        "Avrage Optimizer Temperature",
+        "Average Optimizer Temperature",
         TEMP_CELSIUS,
         "mdi:solar-panel",
     ],
     "optimizer_voltage": [
         "optimizervoltage",
-        "Avrage Optimizer Voltage",
+        "Average Optimizer Voltage",
         "V",
         "mdi:solar-panel",
     ],
@@ -112,13 +114,30 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Could not retrieve details from SolarEdge API")
         return
 
+    # Changing inverter temperature unit.
+    sensors = deepcopy(SENSOR_TYPES)
+    if status.inverters.primary.temperature.units.farenheit:
+        sensors["inverter_temperature"] = [
+            "invertertemperature",
+            "Inverter Temperature",
+            TEMP_FAHRENHEIT,
+            "mdi:thermometer",
+        ]
+
     # Create solaredge data service which will retrieve and update the data.
     data = SolarEdgeData(hass, api)
 
     # Create a new sensor for each sensor type.
     entities = []
-    for sensor_key in SENSOR_TYPES:
-        sensor = SolarEdgeSensor(platform_name, sensor_key, data)
+    for sensor_info in sensors.values():
+        sensor = SolarEdgeSensor(
+            platform_name,
+            data,
+            sensor_info[0],
+            sensor_info[1],
+            sensor_info[2],
+            sensor_info[3],
+        )
         entities.append(sensor)
 
     add_entities(entities, True)
@@ -127,20 +146,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SolarEdgeSensor(Entity):
     """Representation of an SolarEdge Monitoring API sensor."""
 
-    def __init__(self, platform_name, sensor_key, data):
+    def __init__(self, platform_name, data, json_key, name, unit, icon):
         """Initialize the sensor."""
-        self.platform_name = platform_name
-        self.sensor_key = sensor_key
-        self.data = data
+        self._platform_name = platform_name
+        self._data = data
         self._state = None
 
-        self._json_key = SENSOR_TYPES[self.sensor_key][0]
-        self._unit_of_measurement = SENSOR_TYPES[self.sensor_key][2]
+        self._json_key = json_key
+        self._name = name
+        self._unit_of_measurement = unit
+        self._icon = icon
 
     @property
     def name(self):
         """Return the name."""
-        return f"{self.platform_name} ({SENSOR_TYPES[self.sensor_key][1]})"
+        return f"{self._platform_name} ({self._name})"
 
     @property
     def unit_of_measurement(self):
@@ -150,7 +170,7 @@ class SolarEdgeSensor(Entity):
     @property
     def icon(self):
         """Return the sensor icon."""
-        return SENSOR_TYPES[self.sensor_key][3]
+        return self._icon
 
     @property
     def state(self):
@@ -159,8 +179,8 @@ class SolarEdgeSensor(Entity):
 
     def update(self):
         """Get the latest data from the sensor and update the state."""
-        self.data.update()
-        self._state = self.data.data[self._json_key]
+        self._data.update()
+        self._state = self._data.data[self._json_key]
 
 
 class SolarEdgeData:
@@ -220,11 +240,11 @@ class SolarEdgeData:
             self.data["energyThisMonth"] = round(status.energy.thisMonth, 2)
             self.data["energyToday"] = round(status.energy.today, 2)
             self.data["currentPower"] = round(status.powerWatt, 2)
-            self.data[
-                "invertertemperature"
-            ] = status.inverters.primary.temperature.value
+            self.data["invertertemperature"] = round(
+                status.inverters.primary.temperature.value, 2
+            )
         if maintenance.system.name:
-            self.data["optimizertemperature"] = statistics.mean(temperature)
-            self.data["optimizervoltage"] = statistics.mean(voltage)
-            self.data["optimizercurrent"] = statistics.mean(current)
-            self.data["optimizerpower"] = power
+            self.data["optimizertemperature"] = round(statistics.mean(temperature), 2)
+            self.data["optimizervoltage"] = round(statistics.mean(voltage), 2)
+            self.data["optimizercurrent"] = round(statistics.mean(current), 2)
+            self.data["optimizerpower"] = round(power, 2)
