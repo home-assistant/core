@@ -1,14 +1,10 @@
 """UniFi POE control platform tests."""
 from collections import deque
-from unittest.mock import Mock
+from copy import deepcopy
 
-import pytest
-
-from tests.common import mock_coro
+from asynctest import Mock, patch
 
 import aiounifi
-from aiounifi.clients import Clients, ClientsAll
-from aiounifi.devices import Devices
 
 from homeassistant import config_entries
 from homeassistant.components import unifi
@@ -35,6 +31,7 @@ CLIENT_1 = {
     "hostname": "client_1",
     "ip": "10.0.0.1",
     "is_wired": True,
+    "last_seen": 1562600145,
     "mac": "00:00:00:00:00:01",
     "name": "POE Client 1",
     "oui": "Producer",
@@ -47,6 +44,7 @@ CLIENT_2 = {
     "hostname": "client_2",
     "ip": "10.0.0.2",
     "is_wired": True,
+    "last_seen": 1562600145,
     "mac": "00:00:00:00:00:02",
     "name": "POE Client 2",
     "oui": "Producer",
@@ -59,6 +57,7 @@ CLIENT_3 = {
     "hostname": "client_3",
     "ip": "10.0.0.3",
     "is_wired": True,
+    "last_seen": 1562600145,
     "mac": "00:00:00:00:00:03",
     "name": "Non-POE Client 3",
     "oui": "Producer",
@@ -71,6 +70,7 @@ CLIENT_4 = {
     "hostname": "client_4",
     "ip": "10.0.0.4",
     "is_wired": True,
+    "last_seen": 1562600145,
     "mac": "00:00:00:00:00:04",
     "name": "Non-POE Client 4",
     "oui": "Producer",
@@ -83,6 +83,7 @@ CLOUDKEY = {
     "hostname": "client_1",
     "ip": "mock-host",
     "is_wired": True,
+    "last_seen": 1562600145,
     "mac": "10:00:00:00:00:01",
     "name": "Cloud key",
     "oui": "Producer",
@@ -96,6 +97,7 @@ POE_SWITCH_CLIENTS = [
         "hostname": "client_1",
         "ip": "10.0.0.1",
         "is_wired": True,
+        "last_seen": 1562600145,
         "mac": "00:00:00:00:00:01",
         "name": "POE Client 1",
         "oui": "Producer",
@@ -108,6 +110,7 @@ POE_SWITCH_CLIENTS = [
         "hostname": "client_2",
         "ip": "10.0.0.2",
         "is_wired": True,
+        "last_seen": 1562600145,
         "mac": "00:00:00:00:00:02",
         "name": "POE Client 2",
         "oui": "Producer",
@@ -122,7 +125,8 @@ DEVICE_1 = {
     "device_id": "mock-id",
     "ip": "10.0.1.1",
     "mac": "00:00:00:00:01:01",
-    "type": "usw",
+    "last_seen": 1562600145,
+    "model": "US16P150",
     "name": "mock-name",
     "port_overrides": [],
     "port_table": [
@@ -179,6 +183,9 @@ DEVICE_1 = {
             "up": True,
         },
     ],
+    "state": 1,
+    "type": "usw",
+    "version": "4.0.42.10433",
 }
 
 BLOCKED = {
@@ -210,126 +217,170 @@ CONTROLLER_DATA = {
     CONF_PASSWORD: "mock-pswd",
     CONF_PORT: 1234,
     CONF_SITE_ID: "mock-site",
-    CONF_VERIFY_SSL: True,
+    CONF_VERIFY_SSL: False,
 }
 
 ENTRY_CONFIG = {CONF_CONTROLLER: CONTROLLER_DATA}
 
 CONTROLLER_ID = CONF_CONTROLLER_ID.format(host="mock-host", site="mock-site")
 
+SITES = {"Site name": {"desc": "Site name", "name": "mock-site", "role": "admin"}}
 
-@pytest.fixture
-def mock_controller(hass):
-    """Mock a UniFi Controller."""
-    hass.data[UNIFI_CONFIG] = {}
-    hass.data[UNIFI_WIRELESS_CLIENTS] = Mock()
-    controller = unifi.UniFiController(hass, None)
-    controller.wireless_clients = set()
 
-    controller._site_role = "admin"
+async def setup_unifi_integration(
+    hass,
+    config,
+    options,
+    sites,
+    clients_response,
+    devices_response,
+    clients_all_response,
+):
+    """Create the UniFi controller."""
+    hass.data[UNIFI_CONFIG] = []
+    hass.data[UNIFI_WIRELESS_CLIENTS] = unifi.UnifiWirelessClients(hass)
+    config_entry = config_entries.ConfigEntry(
+        version=1,
+        domain=unifi.DOMAIN,
+        title="Mock Title",
+        data=config,
+        source="test",
+        connection_class=config_entries.CONN_CLASS_LOCAL_POLL,
+        system_options={},
+        options=options,
+        entry_id=1,
+    )
 
-    controller.api = Mock()
-    controller.mock_requests = []
+    mock_client_responses = deque()
+    mock_client_responses.append(clients_response)
 
-    controller.mock_client_responses = deque()
-    controller.mock_device_responses = deque()
-    controller.mock_client_all_responses = deque()
+    mock_device_responses = deque()
+    mock_device_responses.append(devices_response)
 
-    async def mock_request(method, path, **kwargs):
-        kwargs["method"] = method
-        kwargs["path"] = path
-        controller.mock_requests.append(kwargs)
-        if path == "s/{site}/stat/sta":
-            return controller.mock_client_responses.popleft()
-        if path == "s/{site}/stat/device":
-            return controller.mock_device_responses.popleft()
-        if path == "s/{site}/rest/user":
-            return controller.mock_client_all_responses.popleft()
-        return None
+    mock_client_all_responses = deque()
+    mock_client_all_responses.append(clients_all_response)
 
-    controller.api.clients = Clients({}, mock_request)
-    controller.api.devices = Devices({}, mock_request)
-    controller.api.clients_all = ClientsAll({}, mock_request)
+    mock_requests = []
+
+    async def mock_request(self, method, path, json=None):
+        mock_requests.append({"method": method, "path": path, "json": json})
+        print(mock_requests, mock_client_responses, mock_device_responses)
+        if path == "s/{site}/stat/sta" and mock_client_responses:
+            return mock_client_responses.popleft()
+        if path == "s/{site}/stat/device" and mock_device_responses:
+            return mock_device_responses.popleft()
+        if path == "s/{site}/rest/user" and mock_client_all_responses:
+            return mock_client_all_responses.popleft()
+        return {}
+
+    with patch("aiounifi.Controller.login", return_value=True), patch(
+        "aiounifi.Controller.sites", return_value=sites
+    ), patch("aiounifi.Controller.request", new=mock_request):
+        await unifi.async_setup_entry(hass, config_entry)
+    await hass.async_block_till_done()
+    hass.config_entries._entries.append(config_entry)
+
+    controller_id = unifi.get_controller_id_from_config_entry(config_entry)
+    controller = hass.data[unifi.DOMAIN][controller_id]
+
+    controller.mock_client_responses = mock_client_responses
+    controller.mock_device_responses = mock_device_responses
+    controller.mock_client_all_responses = mock_client_all_responses
+    controller.mock_requests = mock_requests
 
     return controller
 
 
-async def setup_controller(hass, mock_controller, options={}):
-    """Load the UniFi switch platform with the provided controller."""
-    hass.config.components.add(unifi.DOMAIN)
-    hass.data[unifi.DOMAIN] = {CONTROLLER_ID: mock_controller}
-    config_entry = config_entries.ConfigEntry(
-        1,
-        unifi.DOMAIN,
-        "Mock Title",
-        ENTRY_CONFIG,
-        "test",
-        config_entries.CONN_CLASS_LOCAL_POLL,
-        entry_id=1,
-        system_options={},
-        options=options,
-    )
-    mock_controller.config_entry = config_entry
-
-    await mock_controller.async_update()
-    await hass.config_entries.async_forward_entry_setup(config_entry, "switch")
-    # To flush out the service call to update the group
-    await hass.async_block_till_done()
-
-
 async def test_platform_manually_configured(hass):
-    """Test that we do not discover anything or try to set up a bridge."""
+    """Test that we do not discover anything or try to set up a controller."""
     assert (
         await async_setup_component(
-            hass, switch.DOMAIN, {"switch": {"platform": "unifi"}}
+            hass, switch.DOMAIN, {switch.DOMAIN: {"platform": "unifi"}}
         )
         is True
     )
     assert unifi.DOMAIN not in hass.data
 
 
-async def test_no_clients(hass, mock_controller):
+async def test_no_clients(hass):
     """Test the update_clients function when no clients are found."""
-    mock_controller.mock_client_responses.append({})
-    mock_controller.mock_device_responses.append({})
-    await setup_controller(hass, mock_controller)
-    assert len(mock_controller.mock_requests) == 2
-    assert not hass.states.async_all()
+    controller = await setup_unifi_integration(
+        hass,
+        ENTRY_CONFIG,
+        options={
+            unifi.const.CONF_TRACK_CLIENTS: False,
+            unifi.const.CONF_TRACK_DEVICES: False,
+        },
+        sites=SITES,
+        clients_response=[],
+        devices_response=[],
+        clients_all_response=[],
+    )
+
+    assert len(controller.mock_requests) == 3
+    assert len(hass.states.async_all()) == 2
 
 
-async def test_controller_not_client(hass, mock_controller):
+async def test_controller_not_client(hass):
     """Test that the controller doesn't become a switch."""
-    mock_controller.mock_client_responses.append([CLOUDKEY])
-    mock_controller.mock_device_responses.append([DEVICE_1])
-    await setup_controller(hass, mock_controller)
-    assert len(mock_controller.mock_requests) == 2
-    assert not hass.states.async_all()
+    controller = await setup_unifi_integration(
+        hass,
+        ENTRY_CONFIG,
+        options={
+            unifi.const.CONF_TRACK_CLIENTS: False,
+            unifi.const.CONF_TRACK_DEVICES: False,
+        },
+        sites=SITES,
+        clients_response=[CLOUDKEY],
+        devices_response=[DEVICE_1],
+        clients_all_response=[],
+    )
+
+    assert len(controller.mock_requests) == 3
+    assert len(hass.states.async_all()) == 2
     cloudkey = hass.states.get("switch.cloud_key")
     assert cloudkey is None
 
 
-async def test_not_admin(hass, mock_controller):
+async def test_not_admin(hass):
     """Test that switch platform only work on an admin account."""
-    mock_controller.mock_client_responses.append([CLIENT_1])
-    mock_controller.mock_device_responses.append([])
+    sites = deepcopy(SITES)
+    sites["Site name"]["role"] = "not admin"
+    controller = await setup_unifi_integration(
+        hass,
+        ENTRY_CONFIG,
+        options={
+            unifi.const.CONF_TRACK_CLIENTS: False,
+            unifi.const.CONF_TRACK_DEVICES: False,
+        },
+        sites=sites,
+        clients_response=[CLIENT_1],
+        devices_response=[DEVICE_1],
+        clients_all_response=[],
+    )
 
-    mock_controller._site_role = "viewer"
-
-    await setup_controller(hass, mock_controller)
-    assert len(mock_controller.mock_requests) == 2
-    assert len(hass.states.async_all()) == 0
+    assert len(controller.mock_requests) == 3
+    assert len(hass.states.async_all()) == 2
 
 
-async def test_switches(hass, mock_controller):
+async def test_switches(hass):
     """Test the update_items function with some clients."""
-    mock_controller.mock_client_responses.append([CLIENT_1, CLIENT_4])
-    mock_controller.mock_device_responses.append([DEVICE_1])
-    mock_controller.mock_client_all_responses.append([BLOCKED, UNBLOCKED, CLIENT_1])
-    options = {unifi.CONF_BLOCK_CLIENT: [BLOCKED["mac"], UNBLOCKED["mac"]]}
+    controller = await setup_unifi_integration(
+        hass,
+        ENTRY_CONFIG,
+        options={
+            unifi.CONF_BLOCK_CLIENT: [BLOCKED["mac"], UNBLOCKED["mac"]],
+            unifi.const.CONF_TRACK_CLIENTS: False,
+            unifi.const.CONF_TRACK_DEVICES: False,
+        },
+        sites=SITES,
+        clients_response=[CLIENT_1, CLIENT_4],
+        devices_response=[DEVICE_1],
+        clients_all_response=[BLOCKED, UNBLOCKED, CLIENT_1],
+    )
 
-    await setup_controller(hass, mock_controller, options)
-    assert len(mock_controller.mock_requests) == 3
-    assert len(hass.states.async_all()) == 4
+    assert len(controller.mock_requests) == 3
+    assert len(hass.states.async_all()) == 6
 
     switch_1 = hass.states.get("switch.poe_client_1")
     assert switch_1 is not None
@@ -353,25 +404,34 @@ async def test_switches(hass, mock_controller):
     assert unblocked.state == "on"
 
 
-async def test_new_client_discovered(hass, mock_controller):
+async def test_new_client_discovered(hass):
     """Test if 2nd update has a new client."""
-    mock_controller.mock_client_responses.append([CLIENT_1])
-    mock_controller.mock_device_responses.append([DEVICE_1])
+    controller = await setup_unifi_integration(
+        hass,
+        ENTRY_CONFIG,
+        options={
+            unifi.const.CONF_TRACK_CLIENTS: False,
+            unifi.const.CONF_TRACK_DEVICES: False,
+        },
+        sites=SITES,
+        clients_response=[CLIENT_1],
+        devices_response=[DEVICE_1],
+        clients_all_response=[],
+    )
 
-    await setup_controller(hass, mock_controller)
-    assert len(mock_controller.mock_requests) == 2
-    assert len(hass.states.async_all()) == 2
+    assert len(controller.mock_requests) == 3
+    assert len(hass.states.async_all()) == 4
 
-    mock_controller.mock_client_responses.append([CLIENT_1, CLIENT_2])
-    mock_controller.mock_device_responses.append([DEVICE_1])
+    controller.mock_client_responses.append([CLIENT_1, CLIENT_2])
+    controller.mock_device_responses.append([DEVICE_1])
 
     # Calling a service will trigger the updates to run
     await hass.services.async_call(
         "switch", "turn_off", {"entity_id": "switch.poe_client_1"}, blocking=True
     )
-    assert len(mock_controller.mock_requests) == 5
-    assert len(hass.states.async_all()) == 3
-    assert mock_controller.mock_requests[2] == {
+    assert len(controller.mock_requests) == 6
+    assert len(hass.states.async_all()) == 5
+    assert controller.mock_requests[3] == {
         "json": {
             "port_overrides": [{"port_idx": 1, "portconf_id": "1a1", "poe_mode": "off"}]
         },
@@ -382,8 +442,8 @@ async def test_new_client_discovered(hass, mock_controller):
     await hass.services.async_call(
         "switch", "turn_on", {"entity_id": "switch.poe_client_1"}, blocking=True
     )
-    assert len(mock_controller.mock_requests) == 7
-    assert mock_controller.mock_requests[5] == {
+    assert len(controller.mock_requests) == 9
+    assert controller.mock_requests[3] == {
         "json": {
             "port_overrides": [
                 {"port_idx": 1, "portconf_id": "1a1", "poe_mode": "auto"}
@@ -398,66 +458,24 @@ async def test_new_client_discovered(hass, mock_controller):
     assert switch_2.state == "on"
 
 
-async def test_failed_update_successful_login(hass, mock_controller):
-    """Running update can login when requested."""
-    mock_controller.available = False
-    mock_controller.api.clients.update = Mock()
-    mock_controller.api.clients.update.side_effect = aiounifi.LoginRequired
-    mock_controller.api.login = Mock()
-    mock_controller.api.login.return_value = mock_coro()
-
-    await setup_controller(hass, mock_controller)
-    assert len(mock_controller.mock_requests) == 0
-
-    assert mock_controller.available is True
-
-
-async def test_failed_update_failed_login(hass, mock_controller):
-    """Running update can handle a failed login."""
-    mock_controller.api.clients.update = Mock()
-    mock_controller.api.clients.update.side_effect = aiounifi.LoginRequired
-    mock_controller.api.login = Mock()
-    mock_controller.api.login.side_effect = aiounifi.AiounifiException
-
-    await setup_controller(hass, mock_controller)
-    assert len(mock_controller.mock_requests) == 0
-
-    assert mock_controller.available is False
-
-
-async def test_failed_update_unreachable_controller(hass, mock_controller):
-    """Running update can handle a unreachable controller."""
-    mock_controller.mock_client_responses.append([CLIENT_1, CLIENT_2])
-    mock_controller.mock_device_responses.append([DEVICE_1])
-
-    await setup_controller(hass, mock_controller)
-
-    mock_controller.api.clients.update = Mock()
-    mock_controller.api.clients.update.side_effect = aiounifi.AiounifiException
-
-    # Calling a service will trigger the updates to run
-    await hass.services.async_call(
-        "switch", "turn_off", {"entity_id": "switch.poe_client_1"}, blocking=True
-    )
-
-    assert len(mock_controller.mock_requests) == 3
-    assert len(hass.states.async_all()) == 3
-
-    assert mock_controller.available is False
-
-
-async def test_ignore_multiple_poe_clients_on_same_port(hass, mock_controller):
+async def test_ignore_multiple_poe_clients_on_same_port(hass):
     """Ignore when there are multiple POE driven clients on same port.
 
     If there is a non-UniFi switch powered by POE,
     clients will be transparently marked as having POE as well.
     """
-    mock_controller.mock_client_responses.append(POE_SWITCH_CLIENTS)
-    mock_controller.mock_device_responses.append([DEVICE_1])
-    await setup_controller(hass, mock_controller)
-    assert len(mock_controller.mock_requests) == 2
-    # 1 All Lights group, 2 lights
-    assert len(hass.states.async_all()) == 0
+    controller = await setup_unifi_integration(
+        hass,
+        ENTRY_CONFIG,
+        options={},
+        sites=SITES,
+        clients_response=POE_SWITCH_CLIENTS,
+        devices_response=[DEVICE_1],
+        clients_all_response=[],
+    )
+
+    assert len(controller.mock_requests) == 3
+    assert len(hass.states.async_all()) == 5
 
     switch_1 = hass.states.get("switch.poe_client_1")
     switch_2 = hass.states.get("switch.poe_client_2")
@@ -465,22 +483,18 @@ async def test_ignore_multiple_poe_clients_on_same_port(hass, mock_controller):
     assert switch_2 is None
 
 
-async def test_restoring_client(hass, mock_controller):
+async def test_restoring_client(hass):
     """Test the update_items function with some clients."""
-    mock_controller.mock_client_responses.append([CLIENT_2])
-    mock_controller.mock_device_responses.append([DEVICE_1])
-    mock_controller.mock_client_all_responses.append([CLIENT_1])
-    options = {unifi.CONF_BLOCK_CLIENT: ["random mac"]}
-
     config_entry = config_entries.ConfigEntry(
-        1,
-        unifi.DOMAIN,
-        "Mock Title",
-        ENTRY_CONFIG,
-        "test",
-        config_entries.CONN_CLASS_LOCAL_POLL,
-        entry_id=1,
+        version=1,
+        domain=unifi.DOMAIN,
+        title="Mock Title",
+        data=ENTRY_CONFIG,
+        source="test",
+        connection_class=config_entries.CONN_CLASS_LOCAL_POLL,
         system_options={},
+        options={},
+        entry_id=1,
     )
 
     registry = await entity_registry.async_get_registry(hass)
@@ -499,9 +513,78 @@ async def test_restoring_client(hass, mock_controller):
         config_entry=config_entry,
     )
 
-    await setup_controller(hass, mock_controller, options)
-    assert len(mock_controller.mock_requests) == 3
-    assert len(hass.states.async_all()) == 3
+    controller = await setup_unifi_integration(
+        hass,
+        ENTRY_CONFIG,
+        options={
+            unifi.CONF_BLOCK_CLIENT: ["random mac"],
+            unifi.const.CONF_TRACK_CLIENTS: False,
+            unifi.const.CONF_TRACK_DEVICES: False,
+        },
+        sites=SITES,
+        clients_response=[CLIENT_2],
+        devices_response=[DEVICE_1],
+        clients_all_response=[CLIENT_1],
+    )
+
+    assert len(controller.mock_requests) == 3
+    assert len(hass.states.async_all()) == 5
 
     device_1 = hass.states.get("switch.client_1")
     assert device_1 is not None
+
+
+async def test_failed_update_failed_login(hass):
+    """Running update can handle a failed login."""
+    controller = await setup_unifi_integration(
+        hass,
+        ENTRY_CONFIG,
+        options={
+            unifi.CONF_BLOCK_CLIENT: ["random mac"],
+            unifi.const.CONF_TRACK_CLIENTS: False,
+            unifi.const.CONF_TRACK_DEVICES: False,
+        },
+        sites=SITES,
+        clients_response=[],
+        devices_response=[],
+        clients_all_response=[],
+    )
+
+    assert len(controller.mock_requests) == 3
+    assert len(hass.states.async_all()) == 2
+
+    with patch.object(
+        controller.api.clients, "update", side_effect=aiounifi.LoginRequired
+    ), patch.object(controller.api, "login", side_effect=aiounifi.AiounifiException):
+        await controller.async_update()
+    await hass.async_block_till_done()
+
+    assert controller.available is False
+
+
+async def test_failed_update_successful_login(hass):
+    """Running update can login when requested."""
+    controller = await setup_unifi_integration(
+        hass,
+        ENTRY_CONFIG,
+        options={
+            unifi.CONF_BLOCK_CLIENT: ["random mac"],
+            unifi.const.CONF_TRACK_CLIENTS: False,
+            unifi.const.CONF_TRACK_DEVICES: False,
+        },
+        sites=SITES,
+        clients_response=[],
+        devices_response=[],
+        clients_all_response=[],
+    )
+
+    assert len(controller.mock_requests) == 3
+    assert len(hass.states.async_all()) == 2
+
+    with patch.object(
+        controller.api.clients, "update", side_effect=aiounifi.LoginRequired
+    ), patch.object(controller.api, "login", return_value=Mock(True)):
+        await controller.async_update()
+    await hass.async_block_till_done()
+
+    assert controller.available is True
