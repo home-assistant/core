@@ -6,6 +6,7 @@ import pyotgw
 import pyotgw.vars as gw_vars
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.components.binary_sensor import DOMAIN as COMP_BINARY_SENSOR
 from homeassistant.components.climate import DOMAIN as COMP_CLIMATE
 from homeassistant.components.sensor import DOMAIN as COMP_SENSOR
@@ -16,13 +17,13 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_TIME,
     CONF_DEVICE,
+    CONF_ID,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
 )
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 import homeassistant.helpers.config_validation as cv
@@ -36,6 +37,7 @@ from .const import (
     CONF_PRECISION,
     DATA_GATEWAYS,
     DATA_OPENTHERM_GW,
+    DOMAIN,
     SERVICE_RESET_GATEWAY,
     SERVICE_SET_CLOCK,
     SERVICE_SET_CONTROL_SETPOINT,
@@ -49,8 +51,6 @@ from .const import (
 
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "opentherm_gw"
 
 CLIMATE_SCHEMA = vol.Schema(
     {
@@ -75,25 +75,38 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+async def async_setup_entry(hass, config_entry):
+    """Set up the OpenTherm Gateway component."""
+    if DATA_OPENTHERM_GW not in hass.data:
+        hass.data[DATA_OPENTHERM_GW] = {DATA_GATEWAYS: {}}
+
+    gateway = OpenThermGatewayDevice(hass, config_entry)
+    hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]] = gateway
+
+    # Schedule directly on the loop to avoid blocking HA startup.
+    hass.loop.create_task(gateway.connect_and_subscribe())
+
+    for comp in [COMP_BINARY_SENSOR, COMP_CLIMATE, COMP_SENSOR]:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, comp)
+        )
+
+    register_services(hass)
+    return True
+
+
 async def async_setup(hass, config):
     """Set up the OpenTherm Gateway component."""
-    conf = config[DOMAIN]
-    hass.data[DATA_OPENTHERM_GW] = {DATA_GATEWAYS: {}}
-    for gw_id, cfg in conf.items():
-        gateway = OpenThermGatewayDevice(hass, gw_id, cfg)
-        hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][gw_id] = gateway
-        hass.async_create_task(
-            async_load_platform(hass, COMP_CLIMATE, DOMAIN, gw_id, config)
-        )
-        hass.async_create_task(
-            async_load_platform(hass, COMP_BINARY_SENSOR, DOMAIN, gw_id, config)
-        )
-        hass.async_create_task(
-            async_load_platform(hass, COMP_SENSOR, DOMAIN, gw_id, config)
-        )
-        # Schedule directly on the loop to avoid blocking HA startup.
-        hass.loop.create_task(gateway.connect_and_subscribe(cfg[CONF_DEVICE]))
-    register_services(hass)
+    if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
+        conf = config[DOMAIN]
+        for device_id, device_config in conf.items():
+            device_config[CONF_ID] = device_id
+
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=device_config
+                )
+            )
     return True
 
 
@@ -326,20 +339,21 @@ def register_services(hass):
 class OpenThermGatewayDevice:
     """OpenTherm Gateway device class."""
 
-    def __init__(self, hass, gw_id, config):
+    def __init__(self, hass, config_entry):
         """Initialize the OpenTherm Gateway."""
         self.hass = hass
-        self.gw_id = gw_id
-        self.name = config.get(CONF_NAME, gw_id)
-        self.climate_config = config[CONF_CLIMATE]
+        self.device_path = config_entry.data[CONF_DEVICE]
+        self.gw_id = config_entry.data[CONF_ID]
+        self.name = config_entry.data[CONF_NAME]
+        self.climate_config = config_entry.options
         self.status = {}
-        self.update_signal = f"{DATA_OPENTHERM_GW}_{gw_id}_update"
+        self.update_signal = f"{DATA_OPENTHERM_GW}_{self.gw_id}_update"
         self.gateway = pyotgw.pyotgw()
 
-    async def connect_and_subscribe(self, device_path):
+    async def connect_and_subscribe(self):
         """Connect to serial device and subscribe report handler."""
-        await self.gateway.connect(self.hass.loop, device_path)
-        _LOGGER.debug("Connected to OpenTherm Gateway at %s", device_path)
+        await self.gateway.connect(self.hass.loop, self.device_path)
+        _LOGGER.debug("Connected to OpenTherm Gateway at %s", self.device_path)
 
         async def cleanup(event):
             """Reset overrides on the gateway."""
