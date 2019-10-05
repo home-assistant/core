@@ -18,6 +18,7 @@
         },
         "error": {
             "cannot_connect": "Unable to Connect to host",
+            "already_configured": "Host is already configured",
             "wrong_version": "Version not supported (2 or 3 only)"
         },
         "abort": {
