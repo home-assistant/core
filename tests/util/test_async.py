@@ -175,32 +175,34 @@ class RunThreadsafeTests(TestCase):
         self.assertIn("Invalid!", exc_context.exception.args)
 
 
-async def test_safe_wait(loop):
+async def test_safe_wait():
     """Test safe wait function."""
     assert await hasync.safe_wait([mock_coro(1), mock_coro(2)]) == [1, 2]
 
 
-async def test_safe_wait_with_exception(loop, caplog):
+async def test_safe_wait_with_exception(caplog):
     """Test safe wait function."""
     calls = []
 
     async def log_call(param):
         calls.append(param)
 
-    task1 = loop.create_task(log_call(1))
-    task2 = mock_coro(exception=ValueError("test-value-error"))
-    task3 = mock_coro(exception=TypeError("test-type-error"))
-    task4 = loop.create_task(log_call(4))
-
     with pytest.raises(ValueError):
-        assert await hasync.safe_wait([task1, task2, task3, task4])
+        assert await hasync.safe_wait(
+            [
+                log_call(1),
+                mock_coro(exception=ValueError("test-value-error")),
+                mock_coro(exception=TypeError("test-type-error")),
+                log_call(4),
+            ]
+        )
 
     assert calls == [1, 4]
     assert "test-value-error" not in caplog.text
     assert "test-type-error" not in caplog.text
 
 
-async def test_safe_wait_logs_errors(loop, caplog):
+async def test_safe_wait_logs_errors(caplog):
     """Test we log errors if we pass logger."""
     with pytest.raises(ValueError):
         assert await hasync.safe_wait(
@@ -208,3 +210,8 @@ async def test_safe_wait_logs_errors(loop, caplog):
         )
 
     assert "mock-broken" in caplog.text
+
+
+async def test_safe_wait_works_with_generator():
+    """Test we log errors if we pass logger."""
+    assert await hasync.safe_wait(mock_coro(i) for i in range(3)) == [0, 1, 2]

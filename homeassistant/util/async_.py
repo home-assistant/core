@@ -84,8 +84,9 @@ async def safe_wait(
     It work like gather but wait don't break any workflows.
     It allow also to log exception in correct namespace.
     """
-    all_tasks = list(tasks)
-    if not all_tasks:
+    tasks = list(tasks)
+
+    if not tasks:
         return []
 
     results = await asyncio.gather(*tasks, return_exceptions=True)
