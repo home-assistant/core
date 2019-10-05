@@ -59,7 +59,6 @@ def update_items(controller, async_add_entities, sensors):
     new_sensors = []
 
     for client_id in controller.api.clients:
-
         for direction, sensor_class in (
             ("rx", UniFiRxBandwidthSensor),
             ("tx", UniFiTxBandwidthSensor),

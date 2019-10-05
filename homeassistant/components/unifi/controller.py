@@ -42,6 +42,8 @@ from .const import (
 )
 from .errors import AuthenticationRequired, CannotConnect
 
+SUPPORTED_PLATFORMS = ["device_tracker", "sensor", "switch"]
+
 
 class UniFiController:
     """Manages a single UniFi Controller."""
@@ -234,7 +236,7 @@ class UniFiController:
 
         self.config_entry.add_update_listener(self.async_options_updated)
 
-        for platform in ["device_tracker", "sensor", "switch"]:
+        for platform in SUPPORTED_PLATFORMS:
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(
                     self.config_entry, platform
@@ -303,7 +305,7 @@ class UniFiController:
         if self.api is None:
             return True
 
-        for platform in ["device_tracker", "switch"]:
+        for platform in SUPPORTED_PLATFORMS:
             await self.hass.config_entries.async_forward_entry_unload(
                 self.config_entry, platform
             )
