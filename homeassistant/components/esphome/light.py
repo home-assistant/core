@@ -91,7 +91,7 @@ class EsphomeLight(EsphomeEntity, Light):
         """Turn the entity off."""
         data = {"key": self._static_info.key, "state": False}
         if ATTR_FLASH in kwargs:
-            data["flash"] = FLASH_LENGTHS[kwargs[ATTR_FLASH]]
+            data["flash_length"] = FLASH_LENGTHS[kwargs[ATTR_FLASH]]
         if ATTR_TRANSITION in kwargs:
             data["transition_length"] = kwargs[ATTR_TRANSITION]
         await self._client.light_command(**data)
