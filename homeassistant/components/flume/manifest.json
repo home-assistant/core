@@ -4,5 +4,5 @@
     "documentation": "tbd",
     "dependencies": [],
     "codeowners": ["@ChrisMandich"],
-    "requirements": []
+    "requirements": ["pytz"]
   }

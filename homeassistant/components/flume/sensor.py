@@ -4,11 +4,12 @@ from datetime import datetime, timedelta
 import json
 import logging
 
+import pytz
 import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -19,6 +20,7 @@ DEFAULT_NAME = "Flume Sensor"
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
 CONF_DEVICE_ID = "device_id"
+CONF_TIME_ZONE = "time_zone"
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -30,6 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_CLIENT_ID): cv.string,
         vol.Required(CONF_CLIENT_SECRET): cv.string,
         vol.Required(CONF_DEVICE_ID): cv.string,
+        vol.Required(CONF_TIME_ZONE): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
@@ -42,10 +45,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     client_id = config.get(CONF_CLIENT_ID)
     client_secret = config.get(CONF_CLIENT_SECRET)
     device_id = config.get(CONF_DEVICE_ID)
+    time_zone = config.get(CONF_TIME_ZONE)
     name = config.get(CONF_NAME)
 
     Flume = FlumeData(
-        username, password, client_id, client_secret, device_id, SCAN_INTERVAL
+        username,
+        password,
+        client_id,
+        client_secret,
+        device_id,
+        time_zone,
+        SCAN_INTERVAL,
     )
     try:
         Flume.update()
@@ -91,7 +101,14 @@ class FlumeData:
     """Get the latest data and update the states."""
 
     def __init__(
-        self, username, password, client_id, client_secret, device_id, scan_interval
+        self,
+        username,
+        password,
+        client_id,
+        client_secret,
+        device_id,
+        time_zone,
+        scan_interval,
     ):
         """Initialize the data object."""
         self._username = username
@@ -100,6 +117,7 @@ class FlumeData:
         self._client_secret = client_secret
         self._device_id = device_id
         self._scan_interval = scan_interval
+        self._time_zone = time_zone
         self._token = self.getToken()
         self._user_id = self.getUserId()
         self._bearer = self.getBearer()
@@ -158,9 +176,13 @@ class FlumeData:
             + "/query"
         )
 
-        now = datetime.now()
-        since_datetime = (now - self._scan_interval).strftime("%Y-%m-%d %H:%M:00")
-        until_datetime = now.strftime("%Y-%m-%d %H:%M:00")
+        utc_now = pytz.utc.localize(datetime.utcnow())
+        time_zone_now = utc_now.astimezone(pytz.timezone(self._time_zone))
+
+        since_datetime = (time_zone_now - self._scan_interval).strftime(
+            "%Y-%m-%d %H:%M:00"
+        )
+        until_datetime = time_zone_now.strftime("%Y-%m-%d %H:%M:00")
 
         queryDict = {
             "queries": [
