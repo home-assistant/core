@@ -62,4 +62,4 @@ class TestDarkSky(unittest.TestCase):
         )
 
         state = self.hass.states.get("weather.test")
-        assert state.state == "unknown"
+        assert state.state == "unavailable"
