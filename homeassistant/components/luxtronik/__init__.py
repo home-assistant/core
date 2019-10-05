@@ -60,8 +60,9 @@ def setup(hass, config):
 
     host = conf.get(CONF_HOST)
     port = conf.get(CONF_PORT)
+    safe = conf.get(CONF_SAFE)
 
-    luxtronik = Luxtronik(host, port)
+    luxtronik = Luxtronik(host, port, safe)
     luxtronik.update()
 
     hass.data[DATA_LUXTRONIK] = luxtronik
@@ -70,7 +71,6 @@ def setup(hass, config):
         """Write a parameter to the Luxtronik heatpump."""
         parameter = service.data.get(ATTR_PARAMETER)
         value = service.data.get(ATTR_VALUE)
-        print(parameter, value)
         luxtronik.write(parameter, value)
 
     hass.services.register(
@@ -83,7 +83,7 @@ def setup(hass, config):
 class Luxtronik:
     """Handle all communication with Luxtronik."""
 
-    def __init__(self, host, port):
+    def __init__(self, host, port, safe=True):
         """Initialize the Luxtronik connection."""
         from luxtronik import Luxtronik as Lux
 
@@ -93,7 +93,7 @@ class Luxtronik:
 
         self._host = host
         self._port = port
-        self._luxtronik = Lux(host, port)
+        self._luxtronik = Lux(host, port, safe)
         self.update()
 
     def get_sensor(self, group, sensor_id):
