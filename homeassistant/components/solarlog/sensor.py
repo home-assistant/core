@@ -7,12 +7,7 @@ from sunwatcher.solarlog.solarlog import SolarLog
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    POWER_WATT,
-    ENERGY_KILO_WATT_HOUR,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, POWER_WATT, ENERGY_KILO_WATT_HOUR
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
