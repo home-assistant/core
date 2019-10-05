@@ -885,7 +885,7 @@ DEVICE_ACTION_BASE_SCHEMA = vol.Schema(
 
 DEVICE_ACTION_SCHEMA = DEVICE_ACTION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-_SCRIPT_SCENE_SCHEMA = vol.Schema({vol.Required("scene"): string})
+_SCRIPT_SCENE_SCHEMA = vol.Schema({vol.Required("scene"): entity_domain("scene")})
 
 SCRIPT_SCHEMA = vol.All(
     ensure_list,
