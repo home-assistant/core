@@ -138,6 +138,7 @@ TEST_REQUIREMENTS = (
     "pynws",
     "pynx584",
     "pyopenuv",
+    "pyotgw",
     "pyotp",
     "pyps4-homeassistant",
     "pyqwikswitch",
