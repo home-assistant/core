@@ -399,6 +399,7 @@ omit =
     homeassistant/components/lupusec/*
     homeassistant/components/lutron/*
     homeassistant/components/lutron_caseta/*
+    homeassistant/components/luxtronik/*
     homeassistant/components/lw12wifi/light.py
     homeassistant/components/lyft/sensor.py
     homeassistant/components/magicseaweed/sensor.py
