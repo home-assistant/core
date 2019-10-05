@@ -184,7 +184,6 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             self.options.update(user_input)
             return await self.async_step_statistics_sensors()
-            return await self._update_options()
 
         return self.async_show_form(
             step_id="device_tracker",

@@ -230,8 +230,6 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchDevice, RestoreEntity):
         """Return the device state attributes."""
         attributes = {
             "power": self.port.poe_power,
-            "received": self.client.wired_rx_bytes / 1000000,
-            "sent": self.client.wired_tx_bytes / 1000000,
             "switch": self.client.sw_mac,
             "port": self.client.sw_port,
             "poe_mode": self.poe_mode,

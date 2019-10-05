@@ -115,6 +115,11 @@ class UniFiBandwidthSensor(Entity):
             self.is_wired = False
 
     @property
+    def available(self) -> bool:
+        """Return if controller is available."""
+        return self.controller.available
+
+    @property
     def device_info(self):
         """Return a device description for device registry."""
         return {"connections": {(CONNECTION_NETWORK_MAC, self.client.mac)}}
