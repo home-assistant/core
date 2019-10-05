@@ -717,6 +717,7 @@ class AlexaSecurityPanelController(AlexaCapibility):
             return {"supportedAuthorizationTypes": [{"type": "FOUR_DIGIT_PIN"}]}
         return []
 
+
 class AlexaChannelController(AlexaCapibility):
     """Implements Alexa.ChannelController.
 
@@ -748,5 +749,5 @@ class AlexaChannelController(AlexaCapibility):
         return {
             "number": "1",
             "callSign": "",
-            "affiliateCallSign": "",
+            "affiliateCallSign": ""
         }
