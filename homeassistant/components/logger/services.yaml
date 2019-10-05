@@ -2,31 +2,24 @@ set_default_level:
   description: Set the default log level for components.
   fields:
     level:
-      description: "Default severity level. Possible values are notset, debug,
-        info, warn, warning, error, fatal, critical"
+      description: "Default severity level. Possible values are notset, debug, info, warn, warning, error, fatal, critical"
       example: debug
 
 set_level:
   description: Set log level for components.
   fields:
     homeassistant.core:
-      description: "Home Assistant name space severity level. Possible values are notset, debug,
-        info, warn, warning, error, fatal, critical"
+      description: "Home Assistant name space severity level. Possible values are notset, debug, info, warn, warning, error, fatal, critical"
       example: debug
     homeassistant.components.mqtt:
-      description: "Integration name space severity level. Possible values are notset, debug,
-        info, warn, warning, error, fatal, critical"
+      description: "Integration name space severity level. Possible values are notset, debug, info, warn, warning, error, fatal, critical"
       example: warning
     homeassistant.components.smartthings.light:
-      description: "Component platform name space severity level. Possible values are notset, debug,
-          info, warn, warning, error, fatal, critical"
+      description: "Component platform name space severity level. Possible values are notset, debug, info, warn, warning, error, fatal, critical"
       example: info
     custom_components.my_integration:
-      description: "Custom component name space severity level. Possible values are notset, debug,
-        info, warn, warning, error, fatal, critical"
+      description: "Custom component name space severity level. Possible values are notset, debug, info, warn, warning, error, fatal, critical"
       example: debug
     aiohttp:
-      description: "Python module name space severity level. Possible values are notset, debug,
-          info, warn, warning, error, fatal, critical"
+      description: "Python module name space severity level. Possible values are notset, debug, info, warn, warning, error, fatal, critical"
       example: error
-
