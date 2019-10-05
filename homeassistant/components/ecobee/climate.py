@@ -264,6 +264,7 @@ class Thermostat(ClimateDevice):
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
         self._name = self.thermostat["name"]
         self.vacation = None
+        self._last_active_hvac_mode = HVAC_MODE_AUTO
 
         self._operation_list = []
         if self.thermostat["settings"]["heatStages"]:
@@ -289,6 +290,8 @@ class Thermostat(ClimateDevice):
         else:
             await self.data.update()
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
+        if self.hvac_mode is not HVAC_MODE_OFF:
+            self._last_active_hvac_mode = self.hvac_mode
 
     @property
     def available(self):
@@ -700,3 +703,12 @@ class Thermostat(ClimateDevice):
             vacation_name,
         )
         self.data.ecobee.delete_vacation(self.thermostat_index, vacation_name)
+
+    def turn_on(self):
+        """Set the thermostat to the last active HVAC mode."""
+        _LOGGER.debug(
+            "Turning on ecobee thermostat %s in %s mode",
+            self.name,
+            self._last_active_hvac_mode,
+        )
+        self.set_hvac_mode(self._last_active_hvac_mode)
