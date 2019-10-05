@@ -80,7 +80,7 @@ aiowwlln==2.0.2
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv==0.0.29
+androidtv==0.0.30
 
 # homeassistant.components.apns
 apns2==0.3.0
