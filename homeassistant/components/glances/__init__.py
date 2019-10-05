@@ -22,7 +22,7 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
 
 
 async def async_setup_entry(hass, config_entry):
-    """Set up Met as config entry."""
+    """Set up Glances from config entry."""
     client = GlancesData(hass, config_entry)
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = client
     if not await client.async_setup():
@@ -34,12 +34,12 @@ async def async_setup_entry(hass, config_entry):
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
     await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
-    del hass.data[DOMAIN]
+    hass.data[DOMAIN].pop(config_entry.entry_id)
     return True
 
 
 class GlancesData:
-    """Glances Client Object."""
+    """Represents Glances Data."""
 
     def __init__(self, hass, config_entry):
         """Initialize the Glances client."""
@@ -51,7 +51,7 @@ class GlancesData:
 
     @property
     def host(self):
-        """Return api host."""
+        """Return client host."""
         return self.config_entry.data[CONF_HOST]
 
     async def async_update(self):
@@ -62,7 +62,7 @@ class GlancesData:
         except exceptions.GlancesApiError:
             _LOGGER.error("Unable to fetch data from Glances")
             self.available = False
-        _LOGGER.debug("Glances Data updated")
+        _LOGGER.debug("Glances data updated")
         async_dispatcher_send(self.hass, DATA_UPDATED)
 
     async def async_setup(self):
@@ -72,18 +72,20 @@ class GlancesData:
             await self.api.get_data()
             self.available = True
             _LOGGER.debug("Successfully connected to Glances")
+
         except exceptions.GlancesApiConnectionError:
             _LOGGER.debug("Can not connect to Glances")
             raise ConfigEntryNotReady
+
         self.add_options()
         self.set_scan_interval(self.config_entry.options[CONF_SCAN_INTERVAL])
         self.config_entry.add_update_listener(self.async_options_updated)
+
         self.hass.async_create_task(
             self.hass.config_entries.async_forward_entry_setup(
                 self.config_entry, "sensor"
             )
         )
-
         return True
 
     def add_options(self):
@@ -116,7 +118,7 @@ class GlancesData:
 
 
 class GlancesClient(Glances):
-    """Represents a Glance api."""
+    """Represents a Glance client."""
 
     def __init__(
         self,

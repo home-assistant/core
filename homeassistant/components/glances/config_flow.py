@@ -2,7 +2,7 @@
 import glances_api
 import voluptuous as vol
 
-from homeassistant import core, config_entries, exceptions
+from homeassistant import config_entries, core, exceptions
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
